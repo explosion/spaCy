@@ -76,7 +76,7 @@ class SentenceRecognizer(Tagger):
         docs (Iterable[Doc]): The documents to modify.
         batch_tag_ids: The IDs to set, produced by SentenceRecognizer.predict.
 
-        DOCS: https://spacy.io/api/sentencerecognizer#predict
+        DOCS: https://spacy.io/api/sentencerecognizer#set_annotations
         """
         if isinstance(docs, Doc):
             docs = [docs]
@@ -109,7 +109,7 @@ class SentenceRecognizer(Tagger):
         for eg in examples:
             eg_truth = []
             for x in eg.get_aligned("sent_start"):
-                if x == None:
+                if x is None:
                     eg_truth.append(None)
                 elif x == 1:
                     eg_truth.append(labels[1])
@@ -138,7 +138,6 @@ class SentenceRecognizer(Tagger):
         """
         self.set_output(len(self.labels))
         self.model.initialize()
-        util.link_vectors_to_models(self.vocab)
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
@@ -157,7 +156,7 @@ class SentenceRecognizer(Tagger):
         del results["sents_per_type"]
         return results
 
-    def to_bytes(self, exclude=tuple()):
+    def to_bytes(self, *, exclude=tuple()):
         """Serialize the pipe to a bytestring.
 
         exclude (Iterable[str]): String names of serialization fields to exclude.
@@ -171,7 +170,7 @@ class SentenceRecognizer(Tagger):
         serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
         return util.to_bytes(serialize, exclude)
 
-    def from_bytes(self, bytes_data, exclude=tuple()):
+    def from_bytes(self, bytes_data, *, exclude=tuple()):
         """Load the pipe from a bytestring.
 
         bytes_data (bytes): The serialized pipe.
@@ -194,7 +193,7 @@ class SentenceRecognizer(Tagger):
         util.from_bytes(bytes_data, deserialize, exclude)
         return self
 
-    def to_disk(self, path, exclude=tuple()):
+    def to_disk(self, path, *, exclude=tuple()):
         """Serialize the pipe to disk.
 
         path (str / Path): Path to a directory.
@@ -209,7 +208,7 @@ class SentenceRecognizer(Tagger):
         }
         util.to_disk(path, serialize, exclude)
 
-    def from_disk(self, path, exclude=tuple()):
+    def from_disk(self, path, *, exclude=tuple()):
         """Load the pipe from disk. Modifies the object in place and returns it.
 
         path (str / Path): Path to a directory.

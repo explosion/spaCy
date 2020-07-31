@@ -121,7 +121,7 @@ applied to the `Doc` in order. Both [`__call__`](/api/morphologizer#call) and
 
 ## Morphologizer.begin_training {#begin_training tag="method"}
 
-Initialize the pipe for training, using data examples if available. Return an
+Initialize the pipe for training, using data examples if available. Returns an
 [`Optimizer`](https://thinc.ai/docs/api-optimizers) object.
 
 > #### Example
@@ -276,10 +276,11 @@ Serialize the pipe to disk.
 > morphologizer.to_disk("/path/to/morphologizer")
 > ```
 
-| Name      | Type            | Description                                                                                                           |
-| --------- | --------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path`    | str / `Path`    | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
-| `exclude` | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.                                             |
+| Name           | Type            | Description                                                                                                           |
+| -------------- | --------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `path`         | str / `Path`    | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| _keyword-only_ |                 |                                                                                                                       |
+| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.                                             |
 
 ## Morphologizer.from_disk {#from_disk tag="method"}
 
@@ -292,11 +293,12 @@ Load the pipe from disk. Modifies the object in place and returns it.
 > morphologizer.from_disk("/path/to/morphologizer")
 > ```
 
-| Name        | Type            | Description                                                                |
-| ----------- | --------------- | -------------------------------------------------------------------------- |
-| `path`      | str / `Path`    | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| `exclude`   | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.  |
-| **RETURNS** | `Morphologizer` | The modified `Morphologizer` object.                                       |
+| Name           | Type            | Description                                                                |
+| -------------- | --------------- | -------------------------------------------------------------------------- |
+| `path`         | str / `Path`    | A path to a directory. Paths may be either strings or `Path`-like objects. |
+| _keyword-only_ |                 |                                                                            |
+| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.  |
+| **RETURNS**    | `Morphologizer` | The modified `Morphologizer` object.                                       |
 
 ## Morphologizer.to_bytes {#to_bytes tag="method"}
 
@@ -309,10 +311,11 @@ Load the pipe from disk. Modifies the object in place and returns it.
 
 Serialize the pipe to a bytestring.
 
-| Name        | Type            | Description                                                               |
-| ----------- | --------------- | ------------------------------------------------------------------------- |
-| `exclude`   | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS** | bytes           | The serialized form of the `Morphologizer` object.                        |
+| Name           | Type            | Description                                                               |
+| -------------- | --------------- | ------------------------------------------------------------------------- |
+| _keyword-only_ |                 |                                                                           |
+| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS**    | bytes           | The serialized form of the `Morphologizer` object.                        |
 
 ## Morphologizer.from_bytes {#from_bytes tag="method"}
 
@@ -326,11 +329,12 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 > morphologizer.from_bytes(morphologizer_bytes)
 > ```
 
-| Name         | Type            | Description                                                               |
-| ------------ | --------------- | ------------------------------------------------------------------------- |
-| `bytes_data` | bytes           | The data to load from.                                                    |
-| `exclude`    | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS**  | `Morphologizer` | The `Morphologizer` object.                                               |
+| Name           | Type            | Description                                                               |
+| -------------- | --------------- | ------------------------------------------------------------------------- |
+| `bytes_data`   | bytes           | The data to load from.                                                    |
+| _keyword-only_ |                 |                                                                           |
+| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS**    | `Morphologizer` | The `Morphologizer` object.                                               |
 
 ## Morphologizer.labels {#labels tag="property"}
 

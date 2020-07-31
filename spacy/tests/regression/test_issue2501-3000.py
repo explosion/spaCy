@@ -9,7 +9,6 @@ from spacy.matcher import Matcher
 from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
 from spacy.compat import pickle
-from spacy.util import link_vectors_to_models
 import numpy
 import random
 
@@ -190,7 +189,6 @@ def test_issue2871():
         _ = vocab[word]  # noqa: F841
         vocab.set_vector(word, vector_data[0])
     vocab.vectors.name = "dummy_vectors"
-    link_vectors_to_models(vocab)
     assert vocab["dog"].rank == 0
     assert vocab["cat"].rank == 1
     assert vocab["SUFFIX"].rank == 2

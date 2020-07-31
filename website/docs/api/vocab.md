@@ -31,7 +31,6 @@ Create the vocabulary.
 | `lookups_extra` <Tag variant="new">2.3</Tag> | `Lookups`            | A [`Lookups`](/api/lookups) that stores the optional `lexeme_cluster`/`lexeme_prob`/`lexeme_sentiment`/`lexeme_settings` lookup tables. Defaults to `None`. |
 | `oov_prob`                                   | float                | The default OOV probability. Defaults to `-20.0`.                                                                                                           |
 | `vectors_name` <Tag variant="new">2.2</Tag>  | str                  | A name to identify the vectors table.                                                                                                                       |
-| **RETURNS**                                  | `Vocab`              | The newly constructed object.                                                                                                                               |
 
 ## Vocab.\_\_len\_\_ {#len tag="method"}
 
@@ -231,10 +230,11 @@ Save the current state to a directory.
 > nlp.vocab.to_disk("/path/to/vocab")
 > ```
 
-| Name      | Type         | Description                                                                                                           |
-| --------- | ------------ | --------------------------------------------------------------------------------------------------------------------- |
-| `path`    | str / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
-| `exclude` | list         | String names of [serialization fields](#serialization-fields) to exclude.                                             |
+| Name           | Type            | Description                                                                                                           |
+| -------------- | --------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `path`         | str / `Path`    | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| _keyword-only_ |                 |                                                                                                                       |
+| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.                                             |
 
 ## Vocab.from_disk {#from_disk tag="method" new="2"}
 
@@ -247,11 +247,12 @@ Loads state from a directory. Modifies the object in place and returns it.
 > vocab = Vocab().from_disk("/path/to/vocab")
 > ```
 
-| Name        | Type         | Description                                                                |
-| ----------- | ------------ | -------------------------------------------------------------------------- |
-| `path`      | str / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| `exclude`   | list         | String names of [serialization fields](#serialization-fields) to exclude.  |
-| **RETURNS** | `Vocab`      | The modified `Vocab` object.                                               |
+| Name           | Type            | Description                                                                |
+| -------------- | --------------- | -------------------------------------------------------------------------- |
+| `path`         | str / `Path`    | A path to a directory. Paths may be either strings or `Path`-like objects. |
+| _keyword-only_ |                 |                                                                            |
+| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.  |
+| **RETURNS**    | `Vocab`         | The modified `Vocab` object.                                               |
 
 ## Vocab.to_bytes {#to_bytes tag="method"}
 
@@ -263,10 +264,11 @@ Serialize the current state to a binary string.
 > vocab_bytes = nlp.vocab.to_bytes()
 > ```
 
-| Name        | Type  | Description                                                               |
-| ----------- | ----- | ------------------------------------------------------------------------- |
-| `exclude`   | list  | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS** | bytes | The serialized form of the `Vocab` object.                                |
+| Name           | Type            | Description                                                               |
+| -------------- | --------------- | ------------------------------------------------------------------------- |
+| _keyword-only_ |                 |                                                                           |
+| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS**    | bytes           | The serialized form of the `Vocab` object.                                |
 
 ## Vocab.from_bytes {#from_bytes tag="method"}
 
@@ -281,11 +283,12 @@ Load state from a binary string.
 > vocab.from_bytes(vocab_bytes)
 > ```
 
-| Name         | Type    | Description                                                               |
-| ------------ | ------- | ------------------------------------------------------------------------- |
-| `bytes_data` | bytes   | The data to load from.                                                    |
-| `exclude`    | list    | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS**  | `Vocab` | The `Vocab` object.                                                       |
+| Name           | Type            | Description                                                               |
+| -------------- | --------------- | ------------------------------------------------------------------------- |
+| `bytes_data`   | bytes           | The data to load from.                                                    |
+| _keyword-only_ |                 |                                                                           |
+| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS**    | `Vocab`         | The `Vocab` object.                                                       |
 
 ## Attributes {#attributes}
 

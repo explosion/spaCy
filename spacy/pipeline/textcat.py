@@ -163,7 +163,7 @@ class TextCategorizer(Pipe):
         docs (Iterable[Doc]): The documents to modify.
         scores: The scores to set, produced by TextCategorizer.predict.
 
-        DOCS: https://spacy.io/api/textcategorizer#predict
+        DOCS: https://spacy.io/api/textcategorizer#set_annotations
         """
         for i, doc in enumerate(docs):
             for j, label in enumerate(self.labels):
@@ -238,8 +238,11 @@ class TextCategorizer(Pipe):
 
         DOCS: https://spacy.io/api/textcategorizer#rehearse
         """
+
+        if losses is not None:
+            losses.setdefault(self.name, 0.0)
         if self._rehearsal_model is None:
-            return
+            return losses
         try:
             docs = [eg.predicted for eg in examples]
         except AttributeError:
@@ -250,7 +253,7 @@ class TextCategorizer(Pipe):
             raise TypeError(err)
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
-            return
+            return losses
         set_dropout_rate(self.model, drop)
         scores, bp_scores = self.model.begin_update(docs)
         target = self._rehearsal_model(examples)
@@ -259,7 +262,6 @@ class TextCategorizer(Pipe):
         if sgd is not None:
             self.model.finish_update(sgd)
         if losses is not None:
-            losses.setdefault(self.name, 0.0)
             losses[self.name] += (gradient ** 2).sum()
         return losses
 
@@ -356,7 +358,6 @@ class TextCategorizer(Pipe):
         docs = [Doc(Vocab(), words=["hello"])]
         truths, _ = self._examples_to_truth(examples)
         self.set_output(len(self.labels))
-        util.link_vectors_to_models(self.vocab)
         self.model.initialize(X=docs, Y=truths)
         if sgd is None:
             sgd = self.create_optimizer()

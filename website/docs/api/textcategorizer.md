@@ -133,7 +133,7 @@ applied to the `Doc` in order. Both [`__call__`](/api/textcategorizer#call) and
 
 ## TextCategorizer.begin_training {#begin_training tag="method"}
 
-Initialize the pipe for training, using data examples if available. Return an
+Initialize the pipe for training, using data examples if available. Returns an
 [`Optimizer`](https://thinc.ai/docs/api-optimizers) object.
 
 > #### Example
@@ -218,7 +218,7 @@ the "catastrophic forgetting" problem. This feature is experimental.
 >
 > ```python
 > textcat = nlp.add_pipe("textcat")
-> optimizer = nlp.begin_training()
+> optimizer = nlp.resume_training()
 > losses = textcat.rehearse(examples, sgd=optimizer)
 > ```
 
@@ -325,10 +325,11 @@ Serialize the pipe to disk.
 > textcat.to_disk("/path/to/textcat")
 > ```
 
-| Name      | Type            | Description                                                                                                           |
-| --------- | --------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path`    | str / `Path`    | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
-| `exclude` | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.                                             |
+| Name           | Type            | Description                                                                                                           |
+| -------------- | --------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `path`         | str / `Path`    | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| _keyword-only_ |                 |                                                                                                                       |
+| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.                                             |
 
 ## TextCategorizer.from_disk {#from_disk tag="method"}
 
@@ -341,11 +342,12 @@ Load the pipe from disk. Modifies the object in place and returns it.
 > textcat.from_disk("/path/to/textcat")
 > ```
 
-| Name        | Type              | Description                                                                |
-| ----------- | ----------------- | -------------------------------------------------------------------------- |
-| `path`      | str / `Path`      | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| `exclude`   | `Iterable[str]`   | String names of [serialization fields](#serialization-fields) to exclude.  |
-| **RETURNS** | `TextCategorizer` | The modified `TextCategorizer` object.                                     |
+| Name           | Type              | Description                                                                |
+| -------------- | ----------------- | -------------------------------------------------------------------------- |
+| `path`         | str / `Path`      | A path to a directory. Paths may be either strings or `Path`-like objects. |
+| _keyword-only_ |                   |                                                                            |
+| `exclude`      | `Iterable[str]`   | String names of [serialization fields](#serialization-fields) to exclude.  |
+| **RETURNS**    | `TextCategorizer` | The modified `TextCategorizer` object.                                     |
 
 ## TextCategorizer.to_bytes {#to_bytes tag="method"}
 
@@ -358,10 +360,11 @@ Load the pipe from disk. Modifies the object in place and returns it.
 
 Serialize the pipe to a bytestring.
 
-| Name        | Type            | Description                                                               |
-| ----------- | --------------- | ------------------------------------------------------------------------- |
-| `exclude`   | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS** | bytes           | The serialized form of the `TextCategorizer` object.                      |
+| Name           | Type            | Description                                                               |
+| -------------- | --------------- | ------------------------------------------------------------------------- |
+| _keyword-only_ |                 |                                                                           |
+| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS**    | bytes           | The serialized form of the `TextCategorizer` object.                      |
 
 ## TextCategorizer.from_bytes {#from_bytes tag="method"}
 
@@ -375,11 +378,12 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 > textcat.from_bytes(textcat_bytes)
 > ```
 
-| Name         | Type              | Description                                                               |
-| ------------ | ----------------- | ------------------------------------------------------------------------- |
-| `bytes_data` | bytes             | The data to load from.                                                    |
-| `exclude`    | `Iterable[str]`   | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS**  | `TextCategorizer` | The `TextCategorizer` object.                                             |
+| Name           | Type              | Description                                                               |
+| -------------- | ----------------- | ------------------------------------------------------------------------- |
+| `bytes_data`   | bytes             | The data to load from.                                                    |
+| _keyword-only_ |                   |                                                                           |
+| `exclude`      | `Iterable[str]`   | String names of [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS**    | `TextCategorizer` | The `TextCategorizer` object.                                             |
 
 ## TextCategorizer.labels {#labels tag="property"}
 

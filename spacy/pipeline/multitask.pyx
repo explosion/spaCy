@@ -1,7 +1,7 @@
 # cython: infer_types=True, profile=True, binding=True
 from typing import Optional
 import numpy
-from thinc.api import CosineDistance, to_categorical, to_categorical, Model, Config
+from thinc.api import CosineDistance, to_categorical, Model, Config
 from thinc.api import set_dropout_rate
 
 from ..tokens.doc cimport Doc
@@ -9,9 +9,8 @@ from ..tokens.doc cimport Doc
 from .pipe import Pipe
 from .tagger import Tagger
 from ..language import Language
-from ..syntax import nonproj
+from ._parser_internals import nonproj
 from ..attrs import POS, ID
-from ..util import link_vectors_to_models
 from ..errors import Errors
 
 
@@ -91,7 +90,6 @@ class MultitaskObjective(Tagger):
                 if label is not None and label not in self.labels:
                     self.labels[label] = len(self.labels)
         self.model.initialize()
-        link_vectors_to_models(self.vocab)
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
@@ -179,7 +177,6 @@ class ClozeMultitask(Pipe):
         pass
 
     def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None):
-        link_vectors_to_models(self.vocab)
         self.model.initialize()
         X = self.model.ops.alloc((5, self.model.get_ref("tok2vec").get_dim("nO")))
         self.model.output_layer.begin_training(X)
@@ -222,3 +219,6 @@ class ClozeMultitask(Pipe):
 
         if losses is not None:
             losses[self.name] += loss
+
+    def add_label(self, label):
+        raise NotImplementedError

@@ -81,6 +81,7 @@
                 "items": [
                     { "text": "Tokenizer", "url": "/api/tokenizer" },
                     { "text": "Tok2Vec", "url": "/api/tok2vec" },
+                    { "text": "Transformer", "url": "/api/transformer" },
                     { "text": "Lemmatizer", "url": "/api/lemmatizer" },
                     { "text": "Morphologizer", "url": "/api/morphologizer" },
                     { "text": "Tagger", "url": "/api/tagger" },

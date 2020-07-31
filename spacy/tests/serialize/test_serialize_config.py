@@ -5,6 +5,7 @@ from spacy.lang.en import English
 from spacy.language import Language
 from spacy.util import registry, deep_merge_configs, load_model_from_config
 from spacy.ml.models import build_Tok2Vec_model, build_tb_parser_model
+from spacy.ml.models import MultiHashEmbed, MaxoutWindowEncoder
 
 from ..util import make_tempdir
 
@@ -40,7 +41,7 @@ factory = "tagger"
 @architectures = "spacy.Tagger.v1"
 
 [components.tagger.model.tok2vec]
-@architectures = "spacy.Tok2VecTensors.v1"
+@architectures = "spacy.Tok2VecListener.v1"
 width = ${components.tok2vec.model:width}
 """
 
@@ -68,18 +69,18 @@ dropout = null
 @registry.architectures.register("my_test_parser")
 def my_parser():
     tok2vec = build_Tok2Vec_model(
-        width=321,
-        embed_size=5432,
-        pretrained_vectors=None,
-        window_size=3,
-        maxout_pieces=4,
-        subword_features=True,
-        char_embed=True,
-        nM=64,
-        nC=8,
-        conv_depth=2,
-        bilstm_depth=0,
-        dropout=None,
+        MultiHashEmbed(
+            width=321,
+            rows=5432,
+            also_embed_subwords=True,
+            also_use_static_vectors=False
+        ),
+        MaxoutWindowEncoder(
+            width=321,
+            window_size=3,
+            maxout_pieces=4,
+            depth=2
+        )
     )
     parser = build_tb_parser_model(
         tok2vec=tok2vec, nr_feature_tokens=7, hidden_width=65, maxout_pieces=5

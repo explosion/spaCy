@@ -1,16 +1,15 @@
-from .stateclass cimport StateClass
-from .arc_eager cimport TransitionSystem
+from cymem.cymem cimport Pool
+
 from ..vocab cimport Vocab
-from ..tokens.doc cimport Doc
-from ..structs cimport TokenC
-from ._state cimport StateC
-from ._parser_model cimport WeightsC, ActivationsC, SizesC
+from .pipe cimport Pipe
+from ._parser_internals.transition_system cimport Transition, TransitionSystem
+from ._parser_internals._state cimport StateC
+from ..ml.parser_model cimport WeightsC, ActivationsC, SizesC
 
 
-cdef class Parser:
+cdef class Parser(Pipe):
     cdef readonly Vocab vocab
     cdef public object model
-    cdef public str name
     cdef public object _rehearsal_model
     cdef readonly TransitionSystem moves
     cdef readonly object cfg

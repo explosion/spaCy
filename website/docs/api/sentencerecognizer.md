@@ -116,7 +116,7 @@ and [`pipe`](/api/sentencerecognizer#pipe) delegate to the
 
 ## SentenceRecognizer.begin_training {#begin_training tag="method"}
 
-Initialize the pipe for training, using data examples if available. Return an
+Initialize the pipe for training, using data examples if available. Returns an
 [`Optimizer`](https://thinc.ai/docs/api-optimizers) object.
 
 > #### Example
@@ -201,7 +201,7 @@ the "catastrophic forgetting" problem. This feature is experimental.
 >
 > ```python
 > senter = nlp.add_pipe("senter")
-> optimizer = nlp.begin_training()
+> optimizer = nlp.resume_training()
 > losses = senter.rehearse(examples, sgd=optimizer)
 > ```
 
@@ -291,10 +291,11 @@ Serialize the pipe to disk.
 > senter.to_disk("/path/to/senter")
 > ```
 
-| Name      | Type            | Description                                                                                                           |
-| --------- | --------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path`    | str / `Path`    | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
-| `exclude` | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.                                             |
+| Name           | Type            | Description                                                                                                           |
+| -------------- | --------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `path`         | str / `Path`    | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| _keyword-only_ |                 |                                                                                                                       |
+| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.                                             |
 
 ## SentenceRecognizer.from_disk {#from_disk tag="method"}
 
@@ -307,11 +308,12 @@ Load the pipe from disk. Modifies the object in place and returns it.
 > senter.from_disk("/path/to/senter")
 > ```
 
-| Name        | Type                 | Description                                                                |
-| ----------- | -------------------- | -------------------------------------------------------------------------- |
-| `path`      | str / `Path`         | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| `exclude`   | `Iterable[str]`      | String names of [serialization fields](#serialization-fields) to exclude.  |
-| **RETURNS** | `SentenceRecognizer` | The modified `SentenceRecognizer` object.                                  |
+| Name           | Type                 | Description                                                                |
+| -------------- | -------------------- | -------------------------------------------------------------------------- |
+| `path`         | str / `Path`         | A path to a directory. Paths may be either strings or `Path`-like objects. |
+| _keyword-only_ |                      |                                                                            |
+| `exclude`      | `Iterable[str]`      | String names of [serialization fields](#serialization-fields) to exclude.  |
+| **RETURNS**    | `SentenceRecognizer` | The modified `SentenceRecognizer` object.                                  |
 
 ## SentenceRecognizer.to_bytes {#to_bytes tag="method"}
 
@@ -324,10 +326,11 @@ Load the pipe from disk. Modifies the object in place and returns it.
 
 Serialize the pipe to a bytestring.
 
-| Name        | Type            | Description                                                               |
-| ----------- | --------------- | ------------------------------------------------------------------------- |
-| `exclude`   | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS** | bytes           | The serialized form of the `SentenceRecognizer` object.                   |
+| Name           | Type            | Description                                                               |
+| -------------- | --------------- | ------------------------------------------------------------------------- |
+| _keyword-only_ |                 |                                                                           |
+| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS**    | bytes           | The serialized form of the `SentenceRecognizer` object.                   |
 
 ## SentenceRecognizer.from_bytes {#from_bytes tag="method"}
 
@@ -341,11 +344,12 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 > senter.from_bytes(senter_bytes)
 > ```
 
-| Name         | Type                 | Description                                                               |
-| ------------ | -------------------- | ------------------------------------------------------------------------- |
-| `bytes_data` | bytes                | The data to load from.                                                    |
-| `exclude`    | `Iterable[str]`      | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS**  | `SentenceRecognizer` | The `SentenceRecognizer` object.                                          |
+| Name           | Type                 | Description                                                               |
+| -------------- | -------------------- | ------------------------------------------------------------------------- |
+| `bytes_data`   | bytes                | The data to load from.                                                    |
+| _keyword-only_ |                      |                                                                           |
+| `exclude`      | `Iterable[str]`      | String names of [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS**    | `SentenceRecognizer` | The `SentenceRecognizer` object.                                          |
 
 ## Serialization fields {#serialization-fields}
 

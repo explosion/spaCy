@@ -94,7 +94,6 @@ cdef class Span:
         kb_id (uint64): An identifier from a Knowledge Base to capture the meaning of a named entity.
         vector (ndarray[ndim=1, dtype='float32']): A meaning representation
             of the span.
-        RETURNS (Span): The newly constructed object.
 
         DOCS: https://spacy.io/api/span#init
         """

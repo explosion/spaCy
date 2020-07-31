@@ -34,16 +34,15 @@ the
 > tokenizer = nlp.tokenizer
 > ```
 
-| Name             | Type        | Description                                                                                                                    |
-| ---------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `vocab`          | `Vocab`     | A storage container for lexical types.                                                                                         |
-| `rules`          | dict        | Exceptions and special-cases for the tokenizer.                                                                                |
-| `prefix_search`  | callable    | A function matching the signature of `re.compile(string).search` to match prefixes.                                            |
-| `suffix_search`  | callable    | A function matching the signature of `re.compile(string).search` to match suffixes.                                            |
-| `infix_finditer` | callable    | A function matching the signature of `re.compile(string).finditer` to find infixes.                                            |
-| `token_match`    | callable    | A function matching the signature of `re.compile(string).match` to find token matches.                                         |
-| `url_match`      | callable    | A function matching the signature of `re.compile(string).match` to find token matches after considering prefixes and suffixes. |
-| **RETURNS**      | `Tokenizer` | The newly constructed object.                                                                                                  |
+| Name             | Type     | Description                                                                                                                    |
+| ---------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `vocab`          | `Vocab`  | A storage container for lexical types.                                                                                         |
+| `rules`          | dict     | Exceptions and special-cases for the tokenizer.                                                                                |
+| `prefix_search`  | callable | A function matching the signature of `re.compile(string).search` to match prefixes.                                            |
+| `suffix_search`  | callable | A function matching the signature of `re.compile(string).search` to match suffixes.                                            |
+| `infix_finditer` | callable | A function matching the signature of `re.compile(string).finditer` to find infixes.                                            |
+| `token_match`    | callable | A function matching the signature of `re.compile(string).match` to find token matches.                                         |
+| `url_match`      | callable | A function matching the signature of `re.compile(string).match` to find token matches after considering prefixes and suffixes. |
 
 ## Tokenizer.\_\_call\_\_ {#call tag="method"}
 
@@ -159,10 +158,11 @@ Serialize the tokenizer to disk.
 > tokenizer.to_disk("/path/to/tokenizer")
 > ```
 
-| Name      | Type         | Description                                                                                                           |
-| --------- | ------------ | --------------------------------------------------------------------------------------------------------------------- |
-| `path`    | str / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
-| `exclude` | list         | String names of [serialization fields](#serialization-fields) to exclude.                                             |
+| Name           | Type            | Description                                                                                                           |
+| -------------- | --------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `path`         | str / `Path`    | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| _keyword-only_ |                 |                                                                                                                       |
+| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.                                             |
 
 ## Tokenizer.from_disk {#from_disk tag="method"}
 
@@ -175,11 +175,12 @@ Load the tokenizer from disk. Modifies the object in place and returns it.
 > tokenizer.from_disk("/path/to/tokenizer")
 > ```
 
-| Name        | Type         | Description                                                                |
-| ----------- | ------------ | -------------------------------------------------------------------------- |
-| `path`      | str / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| `exclude`   | list         | String names of [serialization fields](#serialization-fields) to exclude.  |
-| **RETURNS** | `Tokenizer`  | The modified `Tokenizer` object.                                           |
+| Name           | Type            | Description                                                                |
+| -------------- | --------------- | -------------------------------------------------------------------------- |
+| `path`         | str / `Path`    | A path to a directory. Paths may be either strings or `Path`-like objects. |
+| _keyword-only_ |                 |                                                                            |
+| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.  |
+| **RETURNS**    | `Tokenizer`     | The modified `Tokenizer` object.                                           |
 
 ## Tokenizer.to_bytes {#to_bytes tag="method"}
 
@@ -192,10 +193,11 @@ Load the tokenizer from disk. Modifies the object in place and returns it.
 
 Serialize the tokenizer to a bytestring.
 
-| Name        | Type  | Description                                                               |
-| ----------- | ----- | ------------------------------------------------------------------------- |
-| `exclude`   | list  | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS** | bytes | The serialized form of the `Tokenizer` object.                            |
+| Name           | Type            | Description                                                               |
+| -------------- | --------------- | ------------------------------------------------------------------------- |
+| _keyword-only_ |                 |                                                                           |
+| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS**    | bytes           | The serialized form of the `Tokenizer` object.                            |
 
 ## Tokenizer.from_bytes {#from_bytes tag="method"}
 
@@ -210,11 +212,12 @@ it.
 > tokenizer.from_bytes(tokenizer_bytes)
 > ```
 
-| Name         | Type        | Description                                                               |
-| ------------ | ----------- | ------------------------------------------------------------------------- |
-| `bytes_data` | bytes       | The data to load from.                                                    |
-| `exclude`    | list        | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS**  | `Tokenizer` | The `Tokenizer` object.                                                   |
+| Name           | Type            | Description                                                               |
+| -------------- | --------------- | ------------------------------------------------------------------------- |
+| `bytes_data`   | bytes           | The data to load from.                                                    |
+| _keyword-only_ |                 |                                                                           |
+| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS**    | `Tokenizer`     | The `Tokenizer` object.                                                   |
 
 ## Attributes {#attributes}
 

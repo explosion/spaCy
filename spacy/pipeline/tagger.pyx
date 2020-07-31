@@ -145,7 +145,7 @@ class Tagger(Pipe):
         docs (Iterable[Doc]): The documents to modify.
         batch_tag_ids: The IDs to set, produced by Tagger.predict.
 
-        DOCS: https://spacy.io/api/tagger#predict
+        DOCS: https://spacy.io/api/tagger#set_annotations
         """
         if isinstance(docs, Doc):
             docs = [docs]
@@ -318,7 +318,6 @@ class Tagger(Pipe):
         self.model.initialize(X=doc_sample)
         # Get batch of example docs, example outputs to call begin_training().
         # This lets the model infer shapes.
-        util.link_vectors_to_models(self.vocab)
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
@@ -370,7 +369,7 @@ class Tagger(Pipe):
         scores.update(Scorer.score_token_attr(examples, "lemma", **kwargs))
         return scores
 
-    def to_bytes(self, exclude=tuple()):
+    def to_bytes(self, *, exclude=tuple()):
         """Serialize the pipe to a bytestring.
 
         exclude (Iterable[str]): String names of serialization fields to exclude.
@@ -388,7 +387,7 @@ class Tagger(Pipe):
         serialize["morph_rules"] = lambda: srsly.msgpack_dumps(morph_rules)
         return util.to_bytes(serialize, exclude)
 
-    def from_bytes(self, bytes_data, exclude=tuple()):
+    def from_bytes(self, bytes_data, *, exclude=tuple()):
         """Load the pipe from a bytestring.
 
         bytes_data (bytes): The serialized pipe.
@@ -424,7 +423,7 @@ class Tagger(Pipe):
         util.from_bytes(bytes_data, deserialize, exclude)
         return self
 
-    def to_disk(self, path, exclude=tuple()):
+    def to_disk(self, path, *, exclude=tuple()):
         """Serialize the pipe to disk.
 
         path (str / Path): Path to a directory.
@@ -443,7 +442,7 @@ class Tagger(Pipe):
         }
         util.to_disk(path, serialize, exclude)
 
-    def from_disk(self, path, exclude=tuple()):
+    def from_disk(self, path, *, exclude=tuple()):
         """Load the pipe from disk. Modifies the object in place and returns it.
 
         path (str / Path): Path to a directory.

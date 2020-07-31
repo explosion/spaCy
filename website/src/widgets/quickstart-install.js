@@ -36,13 +36,18 @@ const DATA = [
         ],
     },
     {
-        id: 'data',
-        title: 'Additional data',
+        id: 'addition',
+        title: 'Additions',
         multiple: true,
         options: [
             {
+                id: 'transformers',
+                title: 'Transformers',
+                help: 'Use transformers like BERT to train your spaCy models',
+            },
+            {
                 id: 'lookups',
-                title: 'Lemmatization',
+                title: 'Lemmatizer data',
                 help: 'Install additional lookup tables and rules for lemmatization',
             },
         ],
@@ -86,13 +91,22 @@ const QuickstartInstall = ({ id, title }) => (
                         set PYTHONPATH=C:\path\to\spaCy
                     </QS>
                     <QS package="source">pip install -r requirements.txt</QS>
-                    <QS data="lookups" package="pip">
+                    <QS addition="transformers" package="pip">
+                        pip install -U spacy-lookups-transformers
+                    </QS>
+                    <QS addition="transformers" package="source">
+                        pip install -U spacy-transformers
+                    </QS>
+                    <QS addition="transformers" package="conda">
+                        conda install -c conda-forge spacy-transformers
+                    </QS>
+                    <QS addition="lookups" package="pip">
                         pip install -U spacy-lookups-data
                     </QS>
-                    <QS data="lookups" package="source">
+                    <QS addition="lookups" package="source">
                         pip install -U spacy-lookups-data
                     </QS>
-                    <QS data="lookups" package="conda">
+                    <QS addition="lookups" package="conda">
                         conda install -c conda-forge spacy-lookups-data
                     </QS>
                     <QS package="source">python setup.py build_ext --inplace</QS>

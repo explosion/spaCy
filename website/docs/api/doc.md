@@ -30,12 +30,11 @@ Construct a `Doc` object. The most common way to get a `Doc` object is via the
 > doc = Doc(nlp.vocab, words=words, spaces=spaces)
 > ```
 
-| Name        | Type     | Description                                                                                                                                                         |
-| ----------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`     | `Vocab`  | A storage container for lexical types.                                                                                                                              |
-| `words`     | iterable | A list of strings to add to the container.                                                                                                                          |
-| `spaces`    | iterable | A list of boolean values indicating whether each word has a subsequent space. Must have the same length as `words`, if specified. Defaults to a sequence of `True`. |
-| **RETURNS** | `Doc`    | The newly constructed object.                                                                                                                                       |
+| Name     | Type     | Description                                                                                                                                                         |
+| -------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`  | `Vocab`  | A storage container for lexical types.                                                                                                                              |
+| `words`  | iterable | A list of strings to add to the container.                                                                                                                          |
+| `spaces` | iterable | A list of boolean values indicating whether each word has a subsequent space. Must have the same length as `words`, if specified. Defaults to a sequence of `True`. |
 
 ## Doc.\_\_getitem\_\_ {#getitem tag="method"}
 
@@ -386,10 +385,11 @@ Save the current state to a directory.
 > doc.to_disk("/path/to/doc")
 > ```
 
-| Name      | Type         | Description                                                                                                           |
-| --------- | ------------ | --------------------------------------------------------------------------------------------------------------------- |
-| `path`    | str / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
-| `exclude` | list         | String names of [serialization fields](#serialization-fields) to exclude.                                             |
+| Name           | Type            | Description                                                                                                           |
+| -------------- | --------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `path`         | str / `Path`    | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| _keyword-only_ |                 |                                                                                                                       |
+| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.                                             |
 
 ## Doc.from_disk {#from_disk tag="method" new="2"}
 
@@ -403,11 +403,12 @@ Loads state from a directory. Modifies the object in place and returns it.
 > doc = Doc(Vocab()).from_disk("/path/to/doc")
 > ```
 
-| Name        | Type         | Description                                                                |
-| ----------- | ------------ | -------------------------------------------------------------------------- |
-| `path`      | str / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| `exclude`   | list         | String names of [serialization fields](#serialization-fields) to exclude.  |
-| **RETURNS** | `Doc`        | The modified `Doc` object.                                                 |
+| Name           | Type            | Description                                                                |
+| -------------- | --------------- | -------------------------------------------------------------------------- |
+| `path`         | str / `Path`    | A path to a directory. Paths may be either strings or `Path`-like objects. |
+| _keyword-only_ |                 |                                                                            |
+| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.  |
+| **RETURNS**    | `Doc`           | The modified `Doc` object.                                                 |
 
 ## Doc.to_bytes {#to_bytes tag="method"}
 
@@ -420,10 +421,11 @@ Serialize, i.e. export the document contents to a binary string.
 > doc_bytes = doc.to_bytes()
 > ```
 
-| Name        | Type  | Description                                                               |
-| ----------- | ----- | ------------------------------------------------------------------------- |
-| `exclude`   | list  | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS** | bytes | A losslessly serialized copy of the `Doc`, including all annotations.     |
+| Name           | Type            | Description                                                               |
+| -------------- | --------------- | ------------------------------------------------------------------------- |
+| _keyword-only_ |                 |                                                                           |
+| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS**    | bytes           | A losslessly serialized copy of the `Doc`, including all annotations.     |
 
 ## Doc.from_bytes {#from_bytes tag="method"}
 
@@ -439,11 +441,12 @@ Deserialize, i.e. import the document contents from a binary string.
 > assert doc.text == doc2.text
 > ```
 
-| Name        | Type  | Description                                                               |
-| ----------- | ----- | ------------------------------------------------------------------------- |
-| `data`      | bytes | The string to load from.                                                  |
-| `exclude`   | list  | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS** | `Doc` | The `Doc` object.                                                         |
+| Name           | Type            | Description                                                               |
+| -------------- | --------------- | ------------------------------------------------------------------------- |
+| `data`         | bytes           | The string to load from.                                                  |
+| _keyword-only_ |                 |                                                                           |
+| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS**    | `Doc`           | The `Doc` object.                                                         |
 
 ## Doc.retokenize {#retokenize tag="contextmanager" new="2.1"}
 

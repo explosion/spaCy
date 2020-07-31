@@ -97,7 +97,6 @@ cdef class StringStore:
         """Create the StringStore.
 
         strings (iterable): A sequence of unicode strings to add to the store.
-        RETURNS (StringStore): The newly constructed object.
         """
         self.mem = Pool()
         self._map = PreshMap()

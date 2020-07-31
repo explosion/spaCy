@@ -50,7 +50,6 @@ cdef class Tokenizer:
             recognised as tokens.
         url_match (callable): A boolean function matching strings to be
             recognised as tokens after considering prefixes and suffixes.
-        RETURNS (Tokenizer): The newly constructed object.
 
         EXAMPLE:
             >>> tokenizer = Tokenizer(nlp.vocab)
@@ -729,7 +728,7 @@ cdef class Tokenizer:
         with path.open("wb") as file_:
             file_.write(self.to_bytes(**kwargs))
 
-    def from_disk(self, path, **kwargs):
+    def from_disk(self, path, *, exclude=tuple()):
         """Loads state from a directory. Modifies the object in place and
         returns it.
 
@@ -742,10 +741,10 @@ cdef class Tokenizer:
         path = util.ensure_path(path)
         with path.open("rb") as file_:
             bytes_data = file_.read()
-        self.from_bytes(bytes_data, **kwargs)
+        self.from_bytes(bytes_data, exclude=exclude)
         return self
 
-    def to_bytes(self, exclude=tuple()):
+    def to_bytes(self, *, exclude=tuple()):
         """Serialize the current state to a binary string.
 
         exclude (list): String names of serialization fields to exclude.
@@ -764,7 +763,7 @@ cdef class Tokenizer:
         }
         return util.to_bytes(serializers, exclude)
 
-    def from_bytes(self, bytes_data, exclude=tuple()):
+    def from_bytes(self, bytes_data, *, exclude=tuple()):
         """Load state from a binary string.
 
         bytes_data (bytes): The data to load from.

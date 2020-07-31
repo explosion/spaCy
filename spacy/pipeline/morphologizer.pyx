@@ -22,17 +22,23 @@ default_model_config = """
 @architectures = "spacy.Tagger.v1"
 
 [model.tok2vec]
-@architectures = "spacy.HashCharEmbedCNN.v1"
-pretrained_vectors = null
+@architectures = "spacy.Tok2Vec.v1"
+
+[model.tok2vec.embed]
+@architectures = "spacy.CharacterEmbed.v1"
 width = 128
-depth = 4
-embed_size = 7000
-window_size = 1
-maxout_pieces = 3
+rows = 7000
 nM = 64
 nC = 8
-dropout = null
+
+[model.tok2vec.encode]
+@architectures = "spacy.MaxoutWindowEncoder.v1"
+width = 128
+depth = 4
+window_size = 1
+maxout_pieces = 3
 """
+
 DEFAULT_MORPH_MODEL = Config().from_str(default_model_config)["model"]
 
 
@@ -149,7 +155,6 @@ class Morphologizer(Tagger):
                     self.cfg["labels_pos"][norm_label] = POS_IDS[pos]
         self.set_output(len(self.labels))
         self.model.initialize()
-        util.link_vectors_to_models(self.vocab)
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
@@ -160,7 +165,7 @@ class Morphologizer(Tagger):
         docs (Iterable[Doc]): The documents to modify.
         batch_tag_ids: The IDs to set, produced by Morphologizer.predict.
 
-        DOCS: https://spacy.io/api/morphologizer#predict
+        DOCS: https://spacy.io/api/morphologizer#set_annotations
         """
         if isinstance(docs, Doc):
             docs = [docs]
@@ -230,7 +235,7 @@ class Morphologizer(Tagger):
             "morph", **kwargs))
         return results
 
-    def to_bytes(self, exclude=tuple()):
+    def to_bytes(self, *, exclude=tuple()):
         """Serialize the pipe to a bytestring.
 
         exclude (Iterable[str]): String names of serialization fields to exclude.
@@ -244,7 +249,7 @@ class Morphologizer(Tagger):
         serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
         return util.to_bytes(serialize, exclude)
 
-    def from_bytes(self, bytes_data, exclude=tuple()):
+    def from_bytes(self, bytes_data, *, exclude=tuple()):
         """Load the pipe from a bytestring.
 
         bytes_data (bytes): The serialized pipe.
@@ -267,7 +272,7 @@ class Morphologizer(Tagger):
         util.from_bytes(bytes_data, deserialize, exclude)
         return self
 
-    def to_disk(self, path, exclude=tuple()):
+    def to_disk(self, path, *, exclude=tuple()):
         """Serialize the pipe to disk.
 
         path (str / Path): Path to a directory.
@@ -282,7 +287,7 @@ class Morphologizer(Tagger):
         }
         util.to_disk(path, serialize, exclude)
 
-    def from_disk(self, path, exclude=tuple()):
+    def from_disk(self, path, *, exclude=tuple()):
         """Load the pipe from disk. Modifies the object in place and returns it.
 
         path (str / Path): Path to a directory.

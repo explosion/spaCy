@@ -312,6 +312,7 @@ def _split(Doc doc, int token_index, orths, heads, attrs):
     """Retokenize the document, such that the token at
     `doc[token_index]` is split into tokens with the orth 'orths'
     token_index(int): token index of the token to split.
+
     orths: IDs of the verbatim text content of the tokens to create
     **attributes: Attributes to assign to each of the newly created tokens. By default,
         attributes are inherited from the original token.

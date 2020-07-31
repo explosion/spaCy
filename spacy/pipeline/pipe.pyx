@@ -3,12 +3,12 @@ import srsly
 
 from ..tokens.doc cimport Doc
 
-from ..util import link_vectors_to_models, create_default_optimizer
+from ..util import create_default_optimizer
 from ..errors import Errors
 from .. import util
 
 
-class Pipe:
+cdef class Pipe:
     """This class is a base class and not instantiated directly. Trainable
     pipeline components like the EntityRecognizer or TextCategorizer inherit
     from it and it defines the interface that components should follow to
@@ -16,8 +16,6 @@ class Pipe:
 
     DOCS: https://spacy.io/api/pipe
     """
-
-    name = None
 
     def __init__(self, vocab, model, name, **cfg):
         """Initialize a pipeline component.
@@ -32,7 +30,9 @@ class Pipe:
         raise NotImplementedError
 
     def __call__(self, Doc doc):
-        """Add context-sensitive embeddings to the Doc.tensor attribute.
+        """Apply the pipe to one document. The document is modified in place,
+        and returned. This usually happens under the hood when the nlp object
+        is called on a text and all components are applied to the Doc.
 
         docs (Doc): The Doc to preocess.
         RETURNS (Doc): The processed Doc.
@@ -74,9 +74,9 @@ class Pipe:
         """Modify a batch of documents, using pre-computed scores.
 
         docs (Iterable[Doc]): The documents to modify.
-        tokvecses: The tensors to set, produced by Pipe.predict.
+        scores: The scores to assign.
 
-        DOCS: https://spacy.io/api/pipe#predict
+        DOCS: https://spacy.io/api/pipe#set_annotations
         """
         raise NotImplementedError
 
@@ -145,8 +145,6 @@ class Pipe:
         DOCS: https://spacy.io/api/pipe#begin_training
         """
         self.model.initialize()
-        if hasattr(self, "vocab"):
-            link_vectors_to_models(self.vocab)
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
@@ -178,7 +176,7 @@ class Pipe:
         """
         return {}
 
-    def to_bytes(self, exclude=tuple()):
+    def to_bytes(self, *, exclude=tuple()):
         """Serialize the pipe to a bytestring.
 
         exclude (Iterable[str]): String names of serialization fields to exclude.
@@ -193,7 +191,7 @@ class Pipe:
             serialize["vocab"] = self.vocab.to_bytes
         return util.to_bytes(serialize, exclude)
 
-    def from_bytes(self, bytes_data, exclude=tuple()):
+    def from_bytes(self, bytes_data, *, exclude=tuple()):
         """Load the pipe from a bytestring.
 
         exclude (Iterable[str]): String names of serialization fields to exclude.
@@ -216,7 +214,7 @@ class Pipe:
         util.from_bytes(bytes_data, deserialize, exclude)
         return self
 
-    def to_disk(self, path, exclude=tuple()):
+    def to_disk(self, path, *, exclude=tuple()):
         """Serialize the pipe to disk.
 
         path (str / Path): Path to a directory.
@@ -230,7 +228,7 @@ class Pipe:
         serialize["model"] = lambda p: self.model.to_disk(p)
         util.to_disk(path, serialize, exclude)
 
-    def from_disk(self, path, exclude=tuple()):
+    def from_disk(self, path, *, exclude=tuple()):
         """Load the pipe from disk.
 
         path (str / Path): Path to a directory.

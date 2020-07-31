@@ -10,7 +10,7 @@ from thinc.api import Config
 from ._util import app, Arg, Opt, show_validation_error, parse_config_overrides
 from ._util import import_code, debug_cli
 from ..gold import Corpus, Example
-from ..syntax import nonproj
+from ..pipeline._parser_internals import nonproj
 from ..language import Language
 from .. import util
 

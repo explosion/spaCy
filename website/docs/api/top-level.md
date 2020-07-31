@@ -304,6 +304,31 @@ factories.
 | `losses`          | Registry for functions that create [losses](https://thinc.ai/docs/api-loss).                                                                                                                                                                      |
 | `initializers`    | Registry for functions that create [initializers](https://thinc.ai/docs/api-initializers).                                                                                                                                                        |
 
+### spacy-transformers registry {#registry-transformers}
+
+The following registries are added by the
+[`spacy-transformers`](https://github.com/explosion/spacy-transformers) package.
+See the [`Transformer`](/api/transformer) API reference and
+[usage docs](/usage/transformers) for details.
+
+> #### Example
+>
+> ```python
+> import spacy_transformers
+>
+> @spacy_transformers.registry.annotation_setters("my_annotation_setter.v1")
+> def configure_custom_annotation_setter():
+>     def annotation_setter(docs, trf_data) -> None:
+>        # Set annotations on the docs
+>
+>     return annotation_sette
+> ```
+
+| Registry name                                                | Description                                                                                                                                                                                                                                       |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`span_getters`](/api/transformer#span_getters)              | Registry for functions that take a batch of `Doc` objects and return a list of `Span` objects to process by the transformer, e.g. sentences.                                                                                                      |
+| [`annotation_setters`](/api/transformers#annotation_setters) | Registry for functions that create annotation setters. Annotation setters are functions that take a batch of `Doc` objects and a [`FullTransformerBatch`](/api/transformer#fulltransformerbatch) and can set additional annotations on the `Doc`. |
+
 ## Training data and alignment {#gold source="spacy/gold"}
 
 ### gold.docs_to_json {#docs_to_json tag="function"}

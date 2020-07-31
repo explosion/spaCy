@@ -21,7 +21,6 @@ class Lemmatizer:
 
         lookups (Lookups): The lookups object containing the (optional) tables
             "lemma_rules", "lemma_index", "lemma_exc" and "lemma_lookup".
-        RETURNS (Lemmatizer): The newly constructed object.
         """
         self.lookups = lookups if lookups is not None else Lookups()
         self.is_base_form = is_base_form

@@ -125,7 +125,7 @@ applied to the `Doc` in order. Both [`__call__`](/api/entitylinker#call) and
 
 ## EntityLinker.begin_training {#begin_training tag="method"}
 
-Initialize the pipe for training, using data examples if available. Return an
+Initialize the pipe for training, using data examples if available. Returns an
 [`Optimizer`](https://thinc.ai/docs/api-optimizers) object. Before calling this
 method, a knowledge base should have been defined with
 [`set_kb`](/api/entitylinker#set_kb).
@@ -265,10 +265,11 @@ Serialize the pipe to disk.
 > entity_linker.to_disk("/path/to/entity_linker")
 > ```
 
-| Name      | Type            | Description                                                                                                           |
-| --------- | --------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path`    | str / `Path`    | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
-| `exclude` | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.                                             |
+| Name           | Type            | Description                                                                                                           |
+| -------------- | --------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `path`         | str / `Path`    | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| _keyword-only_ |                 |                                                                                                                       |
+| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.                                             |
 
 ## EntityLinker.from_disk {#from_disk tag="method"}
 
@@ -281,11 +282,12 @@ Load the pipe from disk. Modifies the object in place and returns it.
 > entity_linker.from_disk("/path/to/entity_linker")
 > ```
 
-| Name        | Type            | Description                                                                |
-| ----------- | --------------- | -------------------------------------------------------------------------- |
-| `path`      | str / `Path`    | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| `exclude`   | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.  |
-| **RETURNS** | `EntityLinker`  | The modified `EntityLinker` object.                                        |
+| Name           | Type            | Description                                                                |
+| -------------- | --------------- | -------------------------------------------------------------------------- |
+| `path`         | str / `Path`    | A path to a directory. Paths may be either strings or `Path`-like objects. |
+| _keyword-only_ |                 |                                                                            |
+| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.  |
+| **RETURNS**    | `EntityLinker`  | The modified `EntityLinker` object.                                        |
 
 ## Serialization fields {#serialization-fields}
 

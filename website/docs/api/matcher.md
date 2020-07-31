@@ -19,11 +19,10 @@ string where an integer is expected) or unexpected property names.
 > matcher = Matcher(nlp.vocab)
 > ```
 
-| Name                                    | Type      | Description                                                                                 |
-| --------------------------------------- | --------- | ------------------------------------------------------------------------------------------- |
-| `vocab`                                 | `Vocab`   | The vocabulary object, which must be shared with the documents the matcher will operate on. |
-| `validate` <Tag variant="new">2.1</Tag> | bool      | Validate all patterns added to this matcher.                                                |
-| **RETURNS**                             | `Matcher` | The newly constructed object.                                                               |
+| Name                                    | Type    | Description                                                                                 |
+| --------------------------------------- | ------- | ------------------------------------------------------------------------------------------- |
+| `vocab`                                 | `Vocab` | The vocabulary object, which must be shared with the documents the matcher will operate on. |
+| `validate` <Tag variant="new">2.1</Tag> | bool    | Validate all patterns added to this matcher.                                                |
 
 ## Matcher.\_\_call\_\_ {#call tag="method"}
 

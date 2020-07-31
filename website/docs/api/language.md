@@ -15,6 +15,58 @@ the tagger or parser that are called on a document in order. You can also add
 your own processing pipeline components that take a `Doc` object, modify it and
 return it.
 
+## Language.\_\_init\_\_ {#init tag="method"}
+
+Initialize a `Language` object.
+
+> #### Example
+>
+> ```python
+> # Construction from subclass
+> from spacy.lang.en import English
+> nlp = English()
+>
+> # Construction from scratch
+> from spacy.vocab import Vocab
+> from spacy.language import Language
+> nlp = Language(Vocab())
+> ```
+
+| Name               | Type        | Description                                                                                |
+| ------------------ | ----------- | ------------------------------------------------------------------------------------------ |
+| `vocab`            | `Vocab`     | A `Vocab` object. If `True`, a vocab is created using the default language data settings.  |
+| _keyword-only_     |             |                                                                                            |
+| `max_length`       | int         | Maximum number of characters allowed in a single text. Defaults to `10 ** 6`.              |
+| `meta`             | dict        | Custom meta data for the `Language` class. Is written to by models to add model meta data. |
+| `create_tokenizer` |  `Callable` | Optional function that receives the `nlp` object and returns a tokenizer.                  |
+
+## Language.from_config {#from_config tag="classmethod"}
+
+Create a `Language` object from a loaded config. Will set up the tokenizer and
+language data, add pipeline components based on the pipeline and components
+define in the config and validate the results. If no config is provided, the
+default config of the given language is used. This is also how spaCy loads a
+model under the hood based on its [`config.cfg`](/api/data-formats#config).
+
+> #### Example
+>
+> ```python
+> from thinc.api import Config
+> from spacy.language import Language
+>
+> config = Config().from_disk("./config.cfg")
+> nlp = Language.from_config(config)
+> ```
+
+| Name           | Type                                                                   | Description                                                                                                                             |
+| -------------- | ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `config`       | `Dict[str, Any]` / [`Config`](https://thinc.ai/docs/api-config#config) | The loaded config.                                                                                                                      |
+| _keyword-only_ |                                                                        |
+| `disable`      | `Iterable[str]`                                                        | List of pipeline component names to disable.                                                                                            |
+| `auto_fill`    | bool                                                                   | Whether to automatically fill in missing values in the config, based on defaults and function argument annotations. Defaults to `True`. |
+| `validate`     | bool                                                                   | Whether to validate the component config and arguments against the types expected by the factory. Defaults to `True`.                   |
+| **RETURNS**    | `Language`                                                             | The initialized object.                                                                                                                 |
+
 ## Language.component {#component tag="classmethod" new="3"}
 
 Register a custom pipeline component under a given name. This allows
@@ -101,57 +153,6 @@ examples, see the
 | `default_score_weights` | `Dict[str, float]`   | The scores to report during training, and their default weight towards the final score used to select the best model. Weights should sum to `1.0` per component and will be combined and normalized for the whole pipeline. |
 | `func`                  | `Optional[Callable]` | Optional function if not used a a decorator.                                                                                                                                                                                |
 
-## Language.\_\_init\_\_ {#init tag="method"}
-
-Initialize a `Language` object.
-
-> #### Example
->
-> ```python
-> from spacy.vocab import Vocab
-> from spacy.language import Language
-> nlp = Language(Vocab())
->
-> from spacy.lang.en import English
-> nlp = English()
-> ```
-
-| Name               | Type        | Description                                                                                |
-| ------------------ | ----------- | ------------------------------------------------------------------------------------------ |
-| `vocab`            | `Vocab`     | A `Vocab` object. If `True`, a vocab is created using the default language data settings.  |
-| _keyword-only_     |             |                                                                                            |
-| `max_length`       | int         | Maximum number of characters allowed in a single text. Defaults to `10 ** 6`.              |
-| `meta`             | dict        | Custom meta data for the `Language` class. Is written to by models to add model meta data. |
-| `create_tokenizer` |  `Callable` | Optional function that receives the `nlp` object and returns a tokenizer.                  |
-| **RETURNS**        | `Language`  | The newly constructed object.                                                              |
-
-## Language.from_config {#from_config tag="classmethod"}
-
-Create a `Language` object from a loaded config. Will set up the tokenizer and
-language data, add pipeline components based on the pipeline and components
-define in the config and validate the results. If no config is provided, the
-default config of the given language is used. This is also how spaCy loads a
-model under the hood based on its [`config.cfg`](/api/data-formats#config).
-
-> #### Example
->
-> ```python
-> from thinc.api import Config
-> from spacy.language import Language
->
-> config = Config().from_disk("./config.cfg")
-> nlp = Language.from_config(config)
-> ```
-
-| Name           | Type                                                                   | Description                                                                                                                             |
-| -------------- | ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `config`       | `Dict[str, Any]` / [`Config`](https://thinc.ai/docs/api-config#config) | The loaded config.                                                                                                                      |
-| _keyword-only_ |                                                                        |
-| `disable`      | `Iterable[str]`                                                        | List of pipeline component names to disable.                                                                                            |
-| `auto_fill`    | bool                                                                   | Whether to automatically fill in missing values in the config, based on defaults and function argument annotations. Defaults to `True`. |
-| `validate`     | bool                                                                   | Whether to validate the component config and arguments against the types expected by the factory. Defaults to `True`.                   |
-| **RETURNS**    | `Language`                                                             | The initialized object.                                                                                                                 |
-
 ## Language.\_\_call\_\_ {#call tag="method"}
 
 Apply the pipeline to some text. The text can span multiple sentences, and can
@@ -164,11 +165,13 @@ contain arbitrary whitespace. Alignment into the original string is preserved.
 > assert (doc[0].text, doc[0].head.tag_) == ("An", "NN")
 > ```
 
-| Name        | Type        | Description                                                                       |
-| ----------- | ----------- | --------------------------------------------------------------------------------- |
-| `text`      | str         | The text to be processed.                                                         |
-| `disable`   | `List[str]` | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). |
-| **RETURNS** | `Doc`       | A container for accessing the annotations.                                        |
+| Name            | Type              | Description                                                                                            |
+| --------------- | ----------------- | ------------------------------------------------------------------------------------------------------ |
+| `text`          | str               | The text to be processed.                                                                              |
+| _keyword-only_  |                   |                                                                                                        |
+| `disable`       | `List[str]`       | Names of pipeline components to [disable](/usage/processing-pipelines#disabling).                      |
+| `component_cfg` | `Dict[str, dict]` | Optional dictionary of keyword arguments for components, keyed by component names. Defaults to `None`. |
+| **RETURNS**     | [`Doc`](/api/doc) | A container for accessing the annotations.                                                             |
 
 ## Language.pipe {#pipe tag="method"}
 
@@ -183,15 +186,57 @@ more efficient than processing texts one-by-one.
 >     assert doc.is_parsed
 > ```
 
-| Name                                         | Type              | Description                                                                                                                                                |
-| -------------------------------------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `texts`                                      | `Iterable[str]`   | A sequence of strings.                                                                                                                                     |
-| `as_tuples`                                  | bool              | If set to `True`, inputs should be a sequence of `(text, context)` tuples. Output will then be a sequence of `(doc, context)` tuples. Defaults to `False`. |
-| `batch_size`                                 | int               | The number of texts to buffer.                                                                                                                             |
-| `disable`                                    | `List[str]`       | Names of pipeline components to [disable](/usage/processing-pipelines#disabling).                                                                          |
-| `component_cfg` <Tag variant="new">2.1</Tag> | `Dict[str, Dict]` | Config parameters for specific pipeline components, keyed by component name.                                                                               |
-| `n_process` <Tag variant="new">2.2.2</Tag>   | int               | Number of processors to use, only supported in Python 3. Defaults to `1`.                                                                                  |
-| **YIELDS**                                   | `Doc`             | Documents in the order of the original text.                                                                                                               |
+| Name                                       | Type              | Description                                                                                                                                                |
+| ------------------------------------------ | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `texts`                                    | `Iterable[str]`   | A sequence of strings.                                                                                                                                     |
+| _keyword-only_                             |                   |                                                                                                                                                            |
+| `as_tuples`                                | bool              | If set to `True`, inputs should be a sequence of `(text, context)` tuples. Output will then be a sequence of `(doc, context)` tuples. Defaults to `False`. |
+| `batch_size`                               | int               | The number of texts to buffer.                                                                                                                             |
+| `disable`                                  | `List[str]`       | Names of pipeline components to [disable](/usage/processing-pipelines#disabling).                                                                          |
+| `cleanup`                                  | bool              | If `True`, unneeded strings are freed to control memory use. Experimental.                                                                                 |
+| `component_cfg`                            | `Dict[str, dict]` | Optional dictionary of keyword arguments for components, keyed by component names. Defaults to `None`.                                                     |
+| `n_process` <Tag variant="new">2.2.2</Tag> | int               | Number of processors to use, only supported in Python 3. Defaults to `1`.                                                                                  |
+| **YIELDS**                                 | `Doc`             | Documents in the order of the original text.                                                                                                               |
+
+## Language.begin_training {#begin_training tag="method"}
+
+Initialize the pipe for training, using data examples if available. Returns an
+[`Optimizer`](https://thinc.ai/docs/api-optimizers) object.
+
+> #### Example
+>
+> ```python
+> optimizer = nlp.begin_training(get_examples)
+> ```
+
+| Name           | Type                                                | Description                                                                                                 |
+| -------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `get_examples` | `Callable[[], Iterable[Example]]`                   | Optional function that returns gold-standard annotations in the form of [`Example`](/api/example) objects.  |
+| _keyword-only_ |                                                     |                                                                                                             |
+| `sgd`          | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | An optional optimizer. Will be created via [`create_optimizer`](/api/language#create_optimizer) if not set. |
+| **RETURNS**    | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | The optimizer.                                                                                              |
+
+## Language.resume_training {#resume_training tag="method,experimental" new="3"}
+
+Continue training a pretrained model. Create and return an optimizer, and
+initialize "rehearsal" for any pipeline component that has a `rehearse` method.
+Rehearsal is used to prevent models from "forgetting" their initialized
+"knowledge". To perform rehearsal, collect samples of text you want the models
+to retain performance on, and call [`nlp.rehearse`](/api/language#rehearse) with
+a batch of [Example](/api/example) objects.
+
+> #### Example
+>
+> ```python
+> optimizer = nlp.resume_training()
+> nlp.rehearse(examples, sgd=optimizer)
+> ```
+
+| Name           | Type                                                | Description                                                                                                 |
+| -------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| _keyword-only_ |                                                     |                                                                                                             |
+| `sgd`          | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | An optional optimizer. Will be created via [`create_optimizer`](/api/language#create_optimizer) if not set. |
+| **RETURNS**    | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | The optimizer.                                                                                              |
 
 ## Language.update {#update tag="method"}
 
@@ -206,15 +251,37 @@ Update the models in the pipeline.
 >     nlp.update([example], sgd=optimizer)
 > ```
 
-| Name                                         | Type                | Description                                                                  |
-| -------------------------------------------- | ------------------- | ---------------------------------------------------------------------------- |
-| `examples`                                   | `Iterable[Example]` | A batch of `Example` objects to learn from.                                  |
-| _keyword-only_                               |                     |                                                                              |
-| `drop`                                       | float               | The dropout rate.                                                            |
-| `sgd`                                        | `Optimizer`         | An [`Optimizer`](https://thinc.ai/docs/api-optimizers) object.               |
-| `losses`                                     | `Dict[str, float]`  | Dictionary to update with the loss, keyed by pipeline component.             |
-| `component_cfg` <Tag variant="new">2.1</Tag> | `Dict[str, Dict]`   | Config parameters for specific pipeline components, keyed by component name. |
-| **RETURNS**                                  | `Dict[str, float]`  | The updated `losses` dictionary.                                             |
+| Name            | Type                                                | Description                                                                                            |
+| --------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `examples`      | `Iterable[Example]`                                 | A batch of `Example` objects to learn from.                                                            |
+| _keyword-only_  |                                                     |                                                                                                        |
+| `drop`          | float                                               | The dropout rate.                                                                                      |
+| `sgd`           | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | The optimizer.                                                                                         |
+| `losses`        | `Dict[str, float]`                                  | Dictionary to update with the loss, keyed by pipeline component.                                       |
+| `component_cfg` | `Dict[str, dict]`                                   | Optional dictionary of keyword arguments for components, keyed by component names. Defaults to `None`. |
+| **RETURNS**     | `Dict[str, float]`                                  | The updated `losses` dictionary.                                                                       |
+
+## Language.rehearse {#rehearse tag="method,experimental"}
+
+Perform a "rehearsal" update from a batch of data. Rehearsal updates teach the
+current model to make predictions similar to an initial model, to try to address
+the "catastrophic forgetting" problem. This feature is experimental.
+
+> #### Example
+>
+> ```python
+> optimizer = nlp.resume_training()
+> losses = nlp.rehearse(examples, sgd=optimizer)
+> ```
+
+| Name           | Type                                                | Description                                                                               |
+| -------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `examples`     | `Iterable[Example]`                                 | A batch of [`Example`](/api/example) objects to learn from.                               |
+| _keyword-only_ |                                                     |                                                                                           |
+| `drop`         | float                                               | The dropout rate.                                                                         |
+| `sgd`          | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | The optimizer.                                                                            |
+| `losses`       | `Dict[str, float]`                                  | Optional record of the loss during training. Updated using the component name as the key. |
+| **RETURNS**    | `Dict[str, float]`                                  | The updated `losses` dictionary.                                                          |
 
 ## Language.evaluate {#evaluate tag="method"}
 
@@ -227,33 +294,15 @@ Evaluate a model's pipeline components.
 > print(scores)
 > ```
 
-| Name                                         | Type                            | Description                                                                           |
-| -------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------- |
-| `examples`                                   | `Iterable[Example]`             | A batch of [`Example`](/api/example) objects to learn from.                           |
-| `verbose`                                    | bool                            | Print debugging information.                                                          |
-| `batch_size`                                 | int                             | The batch size to use.                                                                |
-| `scorer`                                     | `Scorer`                        | Optional [`Scorer`](/api/scorer) to use. If not passed in, a new one will be created. |
-| `component_cfg` <Tag variant="new">2.1</Tag> | `Dict[str, Dict]`               | Config parameters for specific pipeline components, keyed by component name.          |
-| **RETURNS**                                  | `Dict[str, Union[float, Dict]]` | A dictionary of evaluation scores.                                                    |
-
-## Language.begin_training {#begin_training tag="method"}
-
-Allocate models, pre-process training data and acquire an
-[`Optimizer`](https://thinc.ai/docs/api-optimizers).
-
-> #### Example
->
-> ```python
-> optimizer = nlp.begin_training(get_examples)
-> ```
-
-| Name                                         | Type                | Description                                                                                                        |
-| -------------------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `get_examples`                               | `Iterable[Example]` | Optional gold-standard annotations in the form of [`Example`](/api/example) objects.                               |
-| `sgd`                                        | `Optimizer`         | An optional [`Optimizer`](https://thinc.ai/docs/api-optimizers) object. If not set, a default one will be created. |
-| `component_cfg` <Tag variant="new">2.1</Tag> | `Dict[str, Dict]`   | Config parameters for specific pipeline components, keyed by component name.                                       |
-| `**cfg`                                      | -                   | Config parameters (sent to all components).                                                                        |
-| **RETURNS**                                  | `Optimizer`         | An optimizer.                                                                                                      |
+| Name            | Type                            | Description                                                                                            |
+| --------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `examples`      | `Iterable[Example]`             | A batch of [`Example`](/api/example) objects to learn from.                                            |
+| _keyword-only_  |                                 |                                                                                                        |
+| `verbose`       | bool                            | Print debugging information.                                                                           |
+| `batch_size`    | int                             | The batch size to use.                                                                                 |
+| `scorer`        | `Scorer`                        | Optional [`Scorer`](/api/scorer) to use. If not passed in, a new one will be created.                  |
+| `component_cfg` | `Dict[str, dict]`               | Optional dictionary of keyword arguments for components, keyed by component names. Defaults to `None`. |
+| **RETURNS**     | `Dict[str, Union[float, dict]]` | A dictionary of evaluation scores.                                                                     |
 
 ## Language.use_params {#use_params tag="contextmanager, method"}
 
@@ -296,6 +345,7 @@ To create a component and add it to the pipeline, you should always use
 | ------------------------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `factory_name`                        | str              | Name of the registered component factory.                                                                                                                 |
 | `name`                                | str              | Optional unique name of pipeline component instance. If not set, the factory name is used. An error is raised if the name already exists in the pipeline. |
+| _keyword-only_                        |                  |                                                                                                                                                           |
 | `config` <Tag variant="new">3</Tag>   | `Dict[str, Any]` | Optional config parameters to use for this component. Will be merged with the `default_config` specified by the component factory.                        |
 | `validate` <Tag variant="new">3</Tag> | bool             | Whether to validate the component config and arguments against the types expected by the factory. Defaults to `True`.                                     |
 | **RETURNS**                           | callable         | The pipeline component.                                                                                                                                   |
@@ -418,10 +468,13 @@ Replace a component in the pipeline.
 > nlp.replace_pipe("parser", my_custom_parser)
 > ```
 
-| Name        | Type     | Description                       |
-| ----------- | -------- | --------------------------------- |
-| `name`      | str      | Name of the component to replace. |
-| `component` | callable | The pipeline component to insert. |
+| Name                                  | Type             | Description                                                                                                                           |
+| ------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`                                | str              | Name of the component to replace.                                                                                                     |
+| `component`                           | callable         | The pipeline component to insert.                                                                                                     |
+| _keyword-only_                        |                  |                                                                                                                                       |
+| `config` <Tag variant="new">3</Tag>   | `Dict[str, Any]` | Optional config parameters to use for the new component. Will be merged with the `default_config` specified by the component factory. |
+| `validate` <Tag variant="new">3</Tag> | bool             | Whether to validate the component config and arguments against the types expected by the factory. Defaults to `True`.                 |
 
 ## Language.rename_pipe {#rename_pipe tag="method" new="2"}
 
@@ -492,11 +545,12 @@ As of spaCy v3.0, the `disable_pipes` method has been renamed to `select_pipes`:
 
 </Infobox>
 
-| Name        | Type            | Description                                                                          |
-| ----------- | --------------- | ------------------------------------------------------------------------------------ |
-| `disable`   | str / list      | Name(s) of pipeline components to disable.                                           |
-| `enable`    | str / list      | Names(s) of pipeline components that will not be disabled.                           |
-| **RETURNS** | `DisabledPipes` | The disabled pipes that can be restored by calling the object's `.restore()` method. |
+| Name           | Type            | Description                                                                          |
+| -------------- | --------------- | ------------------------------------------------------------------------------------ |
+| _keyword-only_ |                 |                                                                                      |
+| `disable`      | str / list      | Name(s) of pipeline components to disable.                                           |
+| `enable`       | str / list      | Names(s) of pipeline components that will not be disabled.                           |
+| **RETURNS**    | `DisabledPipes` | The disabled pipes that can be restored by calling the object's `.restore()` method. |
 
 ## Language.get_factory_meta {#get_factory_meta tag="classmethod" new="3"}
 
@@ -591,10 +645,11 @@ the model**.
 > nlp.to_disk("/path/to/models")
 > ```
 
-| Name      | Type         | Description                                                                                                           |
-| --------- | ------------ | --------------------------------------------------------------------------------------------------------------------- |
-| `path`    | str / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
-| `exclude` | list         | Names of pipeline components or [serialization fields](#serialization-fields) to exclude.                             |
+| Name           | Type            | Description                                                                                                           |
+| -------------- | --------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `path`         | str / `Path`    | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| _keyword-only_ |                 |                                                                                                                       |
+| `exclude`      | `Iterable[str]` | Names of pipeline components or [serialization fields](#serialization-fields) to exclude.                             |
 
 ## Language.from_disk {#from_disk tag="method" new="2"}
 
@@ -616,11 +671,12 @@ loaded object.
 > nlp = English().from_disk("/path/to/en_model")
 > ```
 
-| Name        | Type         | Description                                                                               |
-| ----------- | ------------ | ----------------------------------------------------------------------------------------- |
-| `path`      | str / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects.                |
-| `exclude`   | list         | Names of pipeline components or [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS** | `Language`   | The modified `Language` object.                                                           |
+| Name           | Type            | Description                                                                               |
+| -------------- | --------------- | ----------------------------------------------------------------------------------------- |
+| `path`         | str / `Path`    | A path to a directory. Paths may be either strings or `Path`-like objects.                |
+| _keyword-only_ |                 |                                                                                           |
+| `exclude`      | `Iterable[str]` | Names of pipeline components or [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS**    | `Language`      | The modified `Language` object.                                                           |
 
 ## Language.to_bytes {#to_bytes tag="method"}
 
@@ -632,10 +688,11 @@ Serialize the current state to a binary string.
 > nlp_bytes = nlp.to_bytes()
 > ```
 
-| Name        | Type  | Description                                                                               |
-| ----------- | ----- | ----------------------------------------------------------------------------------------- |
-| `exclude`   | list  | Names of pipeline components or [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS** | bytes | The serialized form of the `Language` object.                                             |
+| Name           | Type            | Description                                                                               |
+| -------------- | --------------- | ----------------------------------------------------------------------------------------- |
+| _keyword-only_ |                 |                                                                                           |
+| `exclude`      | `Iterable[str]` | Names of pipeline components or [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS**    | bytes           | The serialized form of the `Language` object.                                             |
 
 ## Language.from_bytes {#from_bytes tag="method"}
 
@@ -653,11 +710,12 @@ available to the loaded object.
 > nlp2.from_bytes(nlp_bytes)
 > ```
 
-| Name         | Type       | Description                                                                               |
-| ------------ | ---------- | ----------------------------------------------------------------------------------------- |
-| `bytes_data` | bytes      | The data to load from.                                                                    |
-| `exclude`    | list       | Names of pipeline components or [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS**  | `Language` | The `Language` object.                                                                    |
+| Name           | Type            | Description                                                                               |
+| -------------- | --------------- | ----------------------------------------------------------------------------------------- |
+| `bytes_data`   | bytes           | The data to load from.                                                                    |
+| _keyword-only_ |                 |                                                                                           |
+| `exclude`      | `Iterable[str]` | Names of pipeline components or [serialization fields](#serialization-fields) to exclude. |
+| **RETURNS**    | `Language`      | The `Language` object.                                                                    |
 
 ## Attributes {#attributes}
 
@@ -767,8 +825,8 @@ serialization by passing in the string names via the `exclude` argument.
 The `FactoryMeta` contains the information about the component and its default
 provided by the [`@Language.component`](/api/language#component) or
 [`@Language.factory`](/api/language#factory) decorator. It's created whenever a
-component is added to the pipeline and stored on the `Language` class for each
-component instance and factory instance.
+component is defined and stored on the `Language` class for each component
+instance and factory instance.
 
 | Name                    | Type               | Description                                                                                                                                                                                                                 |
 | ----------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

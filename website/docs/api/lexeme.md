@@ -13,11 +13,10 @@ lemmatization depends on the part-of-speech tag).
 
 Create a `Lexeme` object.
 
-| Name        | Type     | Description                   |
-| ----------- | -------- | ----------------------------- |
-| `vocab`     | `Vocab`  | The parent vocabulary.        |
-| `orth`      | int      | The orth id of the lexeme.    |
-| **RETURNS** | `Lexeme` | The newly constructed object. |
+| Name    | Type    | Description                |
+| ------- | ------- | -------------------------- |
+| `vocab` | `Vocab` | The parent vocabulary.     |
+| `orth`  | int     | The orth id of the lexeme. |
 
 ## Lexeme.set_flag {#set_flag tag="method"}
 

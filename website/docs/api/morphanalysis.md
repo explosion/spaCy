@@ -6,7 +6,6 @@ source: spacy/tokens/morphanalysis.pyx
 
 Stores a single morphological analysis.
 
-
 ## MorphAnalysis.\_\_init\_\_ {#init tag="method"}
 
 Initialize a MorphAnalysis object from a UD FEATS string or a dictionary of
@@ -16,17 +15,15 @@ morphological features.
 >
 > ```python
 > from spacy.tokens import MorphAnalysis
-> 
+>
 > feats = "Feat1=Val1|Feat2=Val2"
 > m = MorphAnalysis(nlp.vocab, feats)
 > ```
 
-| Name        | Type               | Description                   |
-| ----------- | ------------------ | ----------------------------- |
-| `vocab`     | `Vocab`            | The vocab.                    |
-| `features`  | `Union[Dict, str]` | The morphological features.   |
-| **RETURNS** | `MorphAnalysis`    | The newly constructed object. |
-
+| Name       | Type               | Description                 |
+| ---------- | ------------------ | --------------------------- |
+| `vocab`    | `Vocab`            | The vocab.                  |
+| `features` | `Union[Dict, str]` | The morphological features. |
 
 ## MorphAnalysis.\_\_contains\_\_ {#contains tag="method"}
 
@@ -44,7 +41,6 @@ Whether a feature/value pair is in the analysis.
 | ----------- | ----- | ------------------------------------- |
 | **RETURNS** | `str` | A feature/value pair in the analysis. |
 
-
 ## MorphAnalysis.\_\_iter\_\_ {#iter tag="method"}
 
 Iterate over the feature/value pairs in the analysis.
@@ -60,7 +56,6 @@ Iterate over the feature/value pairs in the analysis.
 | Name       | Type  | Description                           |
 | ---------- | ----- | ------------------------------------- |
 | **YIELDS** | `str` | A feature/value pair in the analysis. |
-
 
 ## MorphAnalysis.\_\_len\_\_ {#len tag="method"}
 
@@ -78,7 +73,6 @@ Returns the number of features in the analysis.
 | ----------- | ----- | --------------------------------------- |
 | **RETURNS** | `int` | The number of features in the analysis. |
 
-
 ## MorphAnalysis.\_\_str\_\_ {#str tag="method"}
 
 Returns the morphological analysis in the UD FEATS string format.
@@ -92,9 +86,8 @@ Returns the morphological analysis in the UD FEATS string format.
 > ```
 
 | Name        | Type  | Description                      |
-| ----------- | ----- | ---------------------------------|
+| ----------- | ----- | -------------------------------- |
 | **RETURNS** | `str` | The analysis in UD FEATS format. |
-
 
 ## MorphAnalysis.get {#get tag="method"}
 
@@ -108,11 +101,10 @@ Retrieve values for a feature by field.
 > assert morph.get("Feat1") == ["Val1", "Val2"]
 > ```
 
-| Name        | Type   | Description                         |
-| ----------- | ------ | ----------------------------------- |
-| `field`     | `str`  | The field to retrieve.              |
-| **RETURNS** | `list` | A list of the individual features.  |
-
+| Name        | Type   | Description                        |
+| ----------- | ------ | ---------------------------------- |
+| `field`     | `str`  | The field to retrieve.             |
+| **RETURNS** | `list` | A list of the individual features. |
 
 ## MorphAnalysis.to_dict {#to_dict tag="method"}
 
@@ -128,9 +120,8 @@ map.
 > ```
 
 | Name        | Type   | Description                              |
-| ----------- | ------ | -----------------------------------------|
+| ----------- | ------ | ---------------------------------------- |
 | **RETURNS** | `dict` | The dict representation of the analysis. |
-
 
 ## MorphAnalysis.from_id {#from_id tag="classmethod"}
 
@@ -149,5 +140,3 @@ Create a morphological analysis from a given hash ID.
 | ------- | ------- | -------------------------------- |
 | `vocab` | `Vocab` | The vocab.                       |
 | `key`   | `int`   | The hash of the features string. |
-
-

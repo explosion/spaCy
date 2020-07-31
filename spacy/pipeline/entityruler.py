@@ -86,7 +86,6 @@ class EntityRuler:
         overwrite_ents (bool): If existing entities are present, e.g. entities
             added by the model, overwrite them by matches if necessary.
         ent_id_sep (str): Separator used internally for entity IDs.
-        RETURNS (EntityRuler): The newly constructed object.
 
         DOCS: https://spacy.io/api/entityruler#init
         """
@@ -316,7 +315,7 @@ class EntityRuler:
         return Scorer.score_spans(examples, "ents", **kwargs)
 
     def from_bytes(
-        self, patterns_bytes: bytes, exclude: Iterable[str] = tuple()
+        self, patterns_bytes: bytes, *, exclude: Iterable[str] = tuple()
     ) -> "EntityRuler":
         """Load the entity ruler from a bytestring.
 
@@ -340,7 +339,7 @@ class EntityRuler:
             self.add_patterns(cfg)
         return self
 
-    def to_bytes(self, exclude: Iterable[str] = tuple()) -> bytes:
+    def to_bytes(self, *, exclude: Iterable[str] = tuple()) -> bytes:
         """Serialize the entity ruler patterns to a bytestring.
 
         RETURNS (bytes): The serialized patterns.
@@ -356,7 +355,7 @@ class EntityRuler:
         return srsly.msgpack_dumps(serial)
 
     def from_disk(
-        self, path: Union[str, Path], exclude: Iterable[str] = tuple()
+        self, path: Union[str, Path], *, exclude: Iterable[str] = tuple()
     ) -> "EntityRuler":
         """Load the entity ruler from a file. Expects a file containing
         newline-delimited JSON (JSONL) with one entry per line.
@@ -392,7 +391,9 @@ class EntityRuler:
             from_disk(path, deserializers_patterns, {})
         return self
 
-    def to_disk(self, path: Union[str, Path], exclude: Iterable[str] = tuple()) -> None:
+    def to_disk(
+        self, path: Union[str, Path], *, exclude: Iterable[str] = tuple()
+    ) -> None:
         """Save the entity ruler patterns to a directory. The patterns will be
         saved as newline-delimited JSON (JSONL).
 

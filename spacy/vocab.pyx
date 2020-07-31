@@ -16,7 +16,7 @@ from .errors import Errors
 from .lemmatizer import Lemmatizer
 from .attrs import intify_attrs, NORM, IS_STOP
 from .vectors import Vectors
-from .util import link_vectors_to_models, registry
+from .util import registry
 from .lookups import Lookups, load_lookups
 from . import util
 from .lang.norm_exceptions import BASE_NORMS
@@ -74,7 +74,6 @@ cdef class Vocab:
         lookups (Lookups): Container for large lookup tables and dictionaries.
         oov_prob (float): Default OOV probability.
         vectors_name (unicode): Optional name to identify the vectors table.
-        RETURNS (Vocab): The newly constructed object.
         """
         lex_attr_getters = lex_attr_getters if lex_attr_getters is not None else {}
         if lookups in (None, True, False):
@@ -345,7 +344,6 @@ cdef class Vocab:
             synonym = self.strings[syn_keys[i][0]]
             score = scores[i][0]
             remap[word] = (synonym, score)
-        link_vectors_to_models(self)
         return remap
 
     def get_vector(self, orth, minn=None, maxn=None):
@@ -440,7 +438,7 @@ cdef class Vocab:
             orth = self.strings.add(orth)
         return orth in self.vectors
 
-    def to_disk(self, path, exclude=tuple()):
+    def to_disk(self, path, *, exclude=tuple()):
         """Save the current state to a directory.
 
         path (unicode or Path): A path to a directory, which will be created if
@@ -460,7 +458,7 @@ cdef class Vocab:
         if "lookups" not in "exclude" and self.lookups is not None:
             self.lookups.to_disk(path)
 
-    def from_disk(self, path, exclude=tuple()):
+    def from_disk(self, path, *, exclude=tuple()):
         """Loads state from a directory. Modifies the object in place and
         returns it.
 
@@ -477,8 +475,6 @@ cdef class Vocab:
         if "vectors" not in exclude:
             if self.vectors is not None:
                 self.vectors.from_disk(path, exclude=["strings"])
-            if self.vectors.name is not None:
-                link_vectors_to_models(self)
         if "lookups" not in exclude:
             self.lookups.from_disk(path)
         if "lexeme_norm" in self.lookups:
@@ -489,7 +485,7 @@ cdef class Vocab:
         self._by_orth = PreshMap()
         return self
 
-    def to_bytes(self, exclude=tuple()):
+    def to_bytes(self, *, exclude=tuple()):
         """Serialize the current state to a binary string.
 
         exclude (list): String names of serialization fields to exclude.
@@ -510,7 +506,7 @@ cdef class Vocab:
         }
         return util.to_bytes(getters, exclude)
 
-    def from_bytes(self, bytes_data, exclude=tuple()):
+    def from_bytes(self, bytes_data, *, exclude=tuple()):
         """Load state from a binary string.
 
         bytes_data (bytes): The data to load from.
@@ -538,8 +534,6 @@ cdef class Vocab:
             )
         self.length = 0
         self._by_orth = PreshMap()
-        if self.vectors.name is not None:
-            link_vectors_to_models(self)
         return self
 
     def _reset_cache(self, keys, strings):

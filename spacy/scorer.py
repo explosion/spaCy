@@ -84,7 +84,6 @@ class Scorer:
         **cfg,
     ) -> None:
         """Initialize the Scorer.
-        RETURNS (Scorer): The newly created object.
 
         DOCS: https://spacy.io/api/scorer#init
         """

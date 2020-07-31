@@ -27,11 +27,10 @@ Create the knowledge base.
 > kb = KnowledgeBase(vocab=vocab, entity_vector_length=64)
 > ```
 
-| Name                   | Type            | Description                              |
-| ---------------------- | --------------- | ---------------------------------------- |
-| `vocab`                | `Vocab`         | A `Vocab` object.                        |
-| `entity_vector_length` | int             | Length of the fixed-size entity vectors. |
-| **RETURNS**            | `KnowledgeBase` | The newly constructed object.            |
+| Name                   | Type    | Description                              |
+| ---------------------- | ------- | ---------------------------------------- |
+| `vocab`                | `Vocab` | A `Vocab` object.                        |
+| `entity_vector_length` | int     | Length of the fixed-size entity vectors. |
 
 ## KnowledgeBase.entity_vector_length {#entity_vector_length tag="property"}
 
@@ -255,7 +254,6 @@ but instead these objects are returned by the
 | `entity_freq` | float           | The entity frequency as recorded in the KB.                    |
 | `alias_hash`  | int             | The hash of the textual mention or alias.                      |
 | `prior_prob`  | float           | The prior probability of the `alias` referring to the `entity` |
-| **RETURNS**   | `Candidate`     | The newly constructed object.                                  |
 
 ## Candidate attributes {#candidate_attributes}
 

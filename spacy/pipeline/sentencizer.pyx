@@ -162,7 +162,7 @@ class Sentencizer(Pipe):
         del results["sents_per_type"]
         return results
 
-    def to_bytes(self, exclude=tuple()):
+    def to_bytes(self, *, exclude=tuple()):
         """Serialize the sentencizer to a bytestring.
 
         RETURNS (bytes): The serialized object.
@@ -171,7 +171,7 @@ class Sentencizer(Pipe):
         """
         return srsly.msgpack_dumps({"punct_chars": list(self.punct_chars)})
 
-    def from_bytes(self, bytes_data, exclude=tuple()):
+    def from_bytes(self, bytes_data, *, exclude=tuple()):
         """Load the sentencizer from a bytestring.
 
         bytes_data (bytes): The data to load.
@@ -183,7 +183,7 @@ class Sentencizer(Pipe):
         self.punct_chars = set(cfg.get("punct_chars", self.default_punct_chars))
         return self
 
-    def to_disk(self, path, exclude=tuple()):
+    def to_disk(self, path, *, exclude=tuple()):
         """Serialize the sentencizer to disk.
 
         DOCS: https://spacy.io/api/sentencizer#to_disk
@@ -193,7 +193,7 @@ class Sentencizer(Pipe):
         srsly.write_json(path, {"punct_chars": list(self.punct_chars)})
 
 
-    def from_disk(self, path, exclude=tuple()):
+    def from_disk(self, path, *, exclude=tuple()):
         """Load the sentencizer from disk.
 
         DOCS: https://spacy.io/api/sentencizer#from_disk
@@ -203,3 +203,9 @@ class Sentencizer(Pipe):
         cfg = srsly.read_json(path)
         self.punct_chars = set(cfg.get("punct_chars", self.default_punct_chars))
         return self
+
+    def get_loss(self, examples, scores):
+        raise NotImplementedError
+
+    def add_label(self, label):
+        raise NotImplementedError
