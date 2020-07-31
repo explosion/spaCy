@@ -118,7 +118,7 @@ def test_overfitting_IO():
 
     # Test scoring
     scores = nlp.evaluate(
-        train_examples, component_cfg={"scorer": {"positive_label": "POSITIVE"}}
+        train_examples, scorer_cfg={"positive_label": "POSITIVE"}
     )
     assert scores["cats_f"] == 1.0
     assert scores["cats_score"] == 1.0

@@ -302,6 +302,7 @@ Evaluate a model's pipeline components.
 | `batch_size`    | int                             | The batch size to use.                                                                                 |
 | `scorer`        | `Scorer`                        | Optional [`Scorer`](/api/scorer) to use. If not passed in, a new one will be created.                  |
 | `component_cfg` | `Dict[str, dict]`               | Optional dictionary of keyword arguments for components, keyed by component names. Defaults to `None`. |
+| `scorer_cfg`    | `Dict[str, Any]`                | Optional dictionary of keyword arguments for the `Scorer`. Defaults to `None`.                         |
 | **RETURNS**     | `Dict[str, Union[float, dict]]` | A dictionary of evaluation scores.                                                                     |
 
 ## Language.use_params {#use_params tag="contextmanager, method"}

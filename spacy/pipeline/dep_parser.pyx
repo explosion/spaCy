@@ -34,7 +34,7 @@ DEFAULT_PARSER_MODEL = Config().from_str(default_model_config)["model"]
 
 @Language.factory(
     "parser",
-    assigns=["token.dep", "token.is_sent_start", "doc.sents"],
+    assigns=["token.dep", "token.head", "token.is_sent_start", "doc.sents"],
     default_config={
         "moves": None,
         "update_with_oracle_cut_size": 100,
@@ -120,7 +120,8 @@ cdef class DependencyParser(Parser):
             return dep
         results = {}
         results.update(Scorer.score_spans(examples, "sents", **kwargs))
-        results.update(Scorer.score_deps(examples, "dep", getter=dep_getter,
-            ignore_labels=("p", "punct"), **kwargs))
+        kwargs.setdefault("getter", dep_getter)
+        kwargs.setdefault("ignore_label", ("p", "punct"))
+        results.update(Scorer.score_deps(examples, "dep", **kwargs))
         del results["sents_per_type"]
         return results
