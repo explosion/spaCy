@@ -18,10 +18,6 @@ MatcherPatternType = List[Dict[Union[int, str], Any]]
 
 @Language.factory(
     "attribute_ruler",
-    assigns=[],
-    default_config={},
-    scores=[],
-    default_score_weights={},
 )
 def make_attribute_ruler(
     nlp: Language, name: str, pattern_dicts: Iterable[Dict] = tuple()
