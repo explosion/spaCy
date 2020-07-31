@@ -1,6 +1,6 @@
-from typing import Optional, List, Dict
+from typing import List, Dict
 
-from ...parts_of_speech import NAMES as UPOS_NAMES
+from ...parts_of_speech import NAMES
 from ...pipeline import Lemmatizer
 from ...tokens import Token
 
@@ -13,6 +13,7 @@ class PolishLemmatizer(Lemmatizer):
     def lookup_lemmatize(self, token: Token) -> List[str]:
         string = token.text
         univ_pos = token.pos_
+        morphology = token.morph.to_dict()
         if isinstance(univ_pos, int):
             univ_pos = NAMES.get(univ_pos, "X")
         univ_pos = univ_pos.upper()

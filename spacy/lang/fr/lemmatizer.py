@@ -1,6 +1,5 @@
-from typing import Optional, List
+from typing import List
 
-from ...pipeline.lemmatizer import Lemmatizer
 from ...parts_of_speech import NAMES as UPOS_NAMES
 from ...pipeline import Lemmatizer
 from ...tokens import Token
@@ -41,6 +40,7 @@ class FrenchLemmatizer(Lemmatizer):
         index_table = self.lookups.get_table("lemma_index", {})
         exc_table = self.lookups.get_table("lemma_exc", {})
         rules_table = self.lookups.get_table("lemma_rules", {})
+        lookup_table = self.lookups.get_table("lemma_lookup", {})
         index = index_table.get(univ_pos, {})
         exceptions = exc_table.get(univ_pos, {})
         rules = rules_table.get(univ_pos, [])
