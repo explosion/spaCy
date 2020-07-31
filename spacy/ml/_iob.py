@@ -14,7 +14,7 @@ def IOB() -> Model[Padded, Padded]:
     )
 
 
-def init(model, X: Optional[Padded] = None, Y: Optional[Padded] = None):
+def init(model: Model, X: Optional[Padded] = None, Y: Optional[Padded] = None) -> None:
     if X is not None and Y is not None:
         if X.data.shape != Y.data.shape:
             # TODO: Fix error

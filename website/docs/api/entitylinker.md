@@ -32,12 +32,14 @@ architectures and their arguments and hyperparameters.
 > nlp.add_pipe("entity_linker", config=config)
 > ```
 
+<!-- TODO: finish API docs -->
+
 | Setting          | Type                                       | Description       | Default                                         |
 | ---------------- | ------------------------------------------ | ----------------- | ----------------------------------------------- |
-| `kb`             | `KnowledgeBase`                            | <!-- TODO: -->    | `None`                                          |
-| `labels_discard` | `Iterable[str]`                            | <!-- TODO: -->    | `[]`                                            |
-| `incl_prior`     | bool                                       | <!-- TODO: -->    |  `True`                                         |
-| `incl_context`   | bool                                       | <!-- TODO: -->    | `True`                                          |
+| `kb`             | `KnowledgeBase`                            |                   | `None`                                          |
+| `labels_discard` | `Iterable[str]`                            |                   | `[]`                                            |
+| `incl_prior`     | bool                                       |                   |  `True`                                         |
+| `incl_context`   | bool                                       |                   | `True`                                          |
 | `model`          | [`Model`](https://thinc.ai/docs/api-model) | The model to use. | [EntityLinker](/api/architectures#EntityLinker) |
 
 ```python
@@ -65,16 +67,18 @@ Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
 [`nlp.add_pipe`](/api/language#add_pipe).
 
+<!-- TODO: finish API docs -->
+
 | Name             | Type            | Description                                                                                 |
 | ---------------- | --------------- | ------------------------------------------------------------------------------------------- |
 | `vocab`          | `Vocab`         | The shared vocabulary.                                                                      |
 | `model`          | `Model`         | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component.             |
 | `name`           | str             | String name of the component instance. Used to add entries to the `losses` during training. |
 | _keyword-only_   |                 |                                                                                             |
-| `kb`             | `KnowlegeBase`  | <!-- TODO: -->                                                                              |
-| `labels_discard` | `Iterable[str]` | <!-- TODO: -->                                                                              |
-| `incl_prior`     | bool            | <!-- TODO: -->                                                                              |
-| `incl_context`   | bool            | <!-- TODO: -->                                                                              |
+| `kb`             | `KnowlegeBase`  |                                                                                             |
+| `labels_discard` | `Iterable[str]` |                                                                                             |
+| `incl_prior`     | bool            |                                                                                             |
+| `incl_context`   | bool            |                                                                                             |
 
 ## EntityLinker.\_\_call\_\_ {#call tag="method"}
 

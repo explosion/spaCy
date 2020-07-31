@@ -29,9 +29,11 @@ architectures and their arguments and hyperparameters.
 > nlp.add_pipe("ner", config=config)
 > ```
 
+<!-- TODO: finish API docs -->
+
 | Setting | Type                                       | Description       | Default                                                           |
 | ------- | ------------------------------------------ | ----------------- | ----------------------------------------------------------------- |
-| `moves` | list                                       | <!-- TODO: -->    | `None`                                                            |
+| `moves` | list                                       |                   | `None`                                                            |
 | `model` | [`Model`](https://thinc.ai/docs/api-model) | The model to use. | [TransitionBasedParser](/api/architectures#TransitionBasedParser) |
 
 ```python
@@ -59,17 +61,19 @@ Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
 [`nlp.add_pipe`](/api/language#add_pipe).
 
+<!-- TODO: finish API docs -->
+
 | Name                          | Type                                       | Description                                                                                 |
 | ----------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------- |
 | `vocab`                       | `Vocab`                                    | The shared vocabulary.                                                                      |
 | `model`                       | [`Model`](https://thinc.ai/docs/api-model) | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component.             |
 | `name`                        | str                                        | String name of the component instance. Used to add entries to the `losses` during training. |
-| `moves`                       | list                                       | <!-- TODO: -->                                                                              |
+| `moves`                       | list                                       |                                                                                             |
 | _keyword-only_                |                                            |                                                                                             |
-| `update_with_oracle_cut_size` | int                                        | <!-- TODO: -->                                                                              |
-| `multitasks`                  | `Iterable`                                 | <!-- TODO: -->                                                                              |
-| `learn_tokens`                | bool                                       | <!-- TODO: -->                                                                              |
-| `min_action_freq`             | int                                        | <!-- TODO: -->                                                                              |
+| `update_with_oracle_cut_size` | int                                        |                                                                                             |
+| `multitasks`                  | `Iterable`                                 |                                                                                             |
+| `learn_tokens`                | bool                                       |                                                                                             |
+| `min_action_freq`             | int                                        |                                                                                             |
 
 ## EntityRecognizer.\_\_call\_\_ {#call tag="method"}
 

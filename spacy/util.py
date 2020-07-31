@@ -7,7 +7,7 @@ import importlib.util
 import re
 from pathlib import Path
 import thinc
-from thinc.api import NumpyOps, get_current_ops, Adam, Config, Optimizer, Model
+from thinc.api import NumpyOps, get_current_ops, Adam, Config, Optimizer
 import functools
 import itertools
 import numpy.random
@@ -24,8 +24,6 @@ import tempfile
 import shutil
 import shlex
 import inspect
-from thinc.types import Unserializable
-
 
 try:
     import cupy.random
