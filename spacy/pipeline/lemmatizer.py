@@ -1,6 +1,6 @@
-from typing import Optional, Callable, List, Dict, Any
+from typing import Optional, List, Any
 
-from thinc.api import Config, Model
+from thinc.api import Model
 
 from .pipe import Pipe
 from ..language import Language
@@ -14,11 +14,11 @@ from .. import util
 @Language.factory(
     "lemmatizer",
     assigns=["token.lemma"],
-    default_config={"model": None},
+    default_config={"model": None, "mode": "lookup", "lookups": None},
     scores=["lemma_acc"],
     default_score_weights={"lemma_acc": 1.0},
 )
-def make_lemmatizer(nlp: Language, model: Any, name: str, mode: str = "lookup", lookups: Optional[Lookups] = None):
+def make_lemmatizer(nlp: Language, model: Optional[Model], name: str, mode: str, lookups: Optional[Lookups]):
     tables = ["lemma_lookup", "lemma_rules", "lemma_exc", "lemma_index"]
     if lookups is None:
         lookups = load_lookups(lang=nlp.lang, tables=tables)
@@ -36,7 +36,7 @@ class Lemmatizer(Pipe):
     def __init__(
         self,
         vocab: Vocab,
-        model: Any,
+        model: Optional[Model],
         name: str = "lemmatizer",
         *,
         mode: str = "lookup",
@@ -45,7 +45,7 @@ class Lemmatizer(Pipe):
         """Initialize a Lemmatizer.
 
         vocab (Vocab): The vocab.
-        model (Any): ???
+        model (Model): A model (not yet implemented).
         name (str): The component name. Defaults to "lemmatizer".
         mode (str): The lemmatizer mode: "lookup", "rule". Defaults to "lookup".
         lookups (Lookups): The lookups object containing the (optional) tables

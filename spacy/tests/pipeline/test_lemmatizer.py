@@ -1,6 +1,6 @@
 import pytest
 
-from spacy import util
+from spacy import util, registry
 from spacy.lang.en import English
 from spacy.lookups import Lookups
 
@@ -12,17 +12,31 @@ def nlp():
     return English()
 
 
-@pytest.fixture
-def lemmatizer(nlp):
+@registry.assets("cope_lookups")
+def cope_lookups():
     lookups = Lookups()
     lookups.add_table("lemma_index", {"verb": ("cope", "cop")})
     lookups.add_table("lemma_exc", {"verb": {"coping": ("cope",)}})
     lookups.add_table("lemma_rules", {"verb": [["ing", ""]]})
-    lemmatizer = nlp.add_pipe("lemmatizer", config={"mode": "rule", "lookups": lookups})
+    return lookups
+
+
+@pytest.fixture
+def lemmatizer(nlp):
+    lemmatizer = nlp.add_pipe("lemmatizer", config={"mode": "rule", "lookups": {"@assets": "cope_lookups"}})
     return lemmatizer
 
 
-def test_lemmatizer(nlp, lemmatizer):
+def test_lemmatizer_init(nlp):
+    lemmatizer = nlp.add_pipe("lemmatizer")
+    assert lemmatizer.lookups.tables == []
+    assert lemmatizer.mode == "lookup"
+    doc = nlp("coping")
+    # lookup with no tables sets text as lemma
+    assert doc[0].lemma_ == "coping"
+
+
+def test_lemmatizer_config(nlp, lemmatizer):
     doc = nlp.make_doc("coping")
     doc[0].pos_ = "VERB"
     assert doc[0].lemma_ == ""
