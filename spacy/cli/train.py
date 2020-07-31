@@ -51,7 +51,7 @@ def train_cli(
     referenced in the config.
     """
     util.set_env_log(verbose)
-    verify_cli_args(train_path, dev_path, config_path)
+    verify_cli_args(train_path, dev_path, config_path, output_path)
     overrides = parse_config_overrides(ctx.args)
     import_code(code_path)
     train(
@@ -173,7 +173,6 @@ def train(
                 progress = tqdm.tqdm(total=training["eval_frequency"], leave=False)
     except Exception as e:
         if output_path is not None:
-            raise e
             msg.warn(
                 f"Aborting and saving the final best model. "
                 f"Encountered exception: {str(e)}",
