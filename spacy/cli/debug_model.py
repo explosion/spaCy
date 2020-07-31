@@ -25,7 +25,7 @@ def debug_model_cli(
     P0: bool = Opt(False, "--print-step0", "-P0", help="Print model before training"),
     P1: bool = Opt(False, "--print-step1", "-P1", help="Print model after initialization"),
     P2: bool = Opt(False, "--print-step2", "-P2", help="Print model after training"),
-    P3: bool = Opt(True, "--print-step3", "-P3", help="Print final predictions"),
+    P3: bool = Opt(False, "--print-step3", "-P3", help="Print final predictions"),
     use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU")
     # fmt: on
 ):
