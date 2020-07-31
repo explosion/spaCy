@@ -1,4 +1,3 @@
-import spacy.language
 from spacy.language import Language
 from spacy.pipe_analysis import get_assigns_for_attr, get_requires_for_attr
 from spacy.pipe_analysis import validate_attrs, count_pipeline_interdependencies
@@ -97,7 +96,6 @@ def test_analysis_validate_attrs_invalid(attr):
 
 def test_analysis_validate_attrs_remove_pipe():
     """Test that attributes are validated correctly on remove."""
-    spacy.language.ENABLE_PIPELINE_ANALYSIS = True
 
     @Language.component("pipe_analysis_c6", assigns=["token.tag"])
     def c1(doc):
