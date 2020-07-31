@@ -42,7 +42,7 @@ def test_lemmatizer_serialize(nlp, lemmatizer):
     with make_tempdir() as tmp_dir:
         nlp.to_disk(tmp_dir)
         nlp2 = util.load_model_from_path(tmp_dir)
-        doc2 = nlp2.make_doc(text)
+        doc2 = nlp2.make_doc("coping")
         doc2[0].pos_ = "VERB"
         assert doc2[0].lemma_ == ""
         doc2 = lemmatizer(doc2)
