@@ -489,6 +489,8 @@ All other settings can be passed in by the user via the `config` argument on
 [`@Language.factory`](/api/language#factory) decorator also lets you define a
 `default_config` that's used as a fallback.
 
+<!-- TODO: add example of passing in a custom Python object via the config based on a registered function -->
+
 ```python
 ### With config {highlight="4,9"}
 import spacy

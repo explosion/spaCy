@@ -3,7 +3,8 @@ title: Training Models
 next: /usage/projects
 menu:
   - ['Introduction', 'basics']
-  - ['CLI & Config', 'cli-config']
+  - ['Quickstart', 'quickstart']
+  - ['Config System', 'config']
   - ['Transfer Learning', 'transfer-learning']
   - ['Custom Models', 'custom-models']
   - ['Parallel Training', 'parallel-training']
@@ -29,12 +30,13 @@ ready-to-use spaCy models.
 
 </Infobox>
 
-## Training CLI & config {#cli-config}
+### Training CLI & config {#cli-config}
 
 <!-- TODO: intro describing the new v3 training philosophy -->
 
 The recommended way to train your spaCy models is via the
-[`spacy train`](/api/cli#train) command on the command line.
+[`spacy train`](/api/cli#train) command on the command line. You can pass in the
+following data and information:
 
 1. The **training and evaluation data** in spaCy's
    [binary `.spacy` format](/api/data-formats#binary-training) created using
@@ -68,38 +70,22 @@ workflows, from data preprocessing to training and packaging your model.
 
 </Project>
 
-<Accordion title="Understanding the training output">
+## Quickstart {#quickstart}
 
-When you train a model using the [`spacy train`](/api/cli#train) command, you'll
-see a table showing metrics after each pass over the data. Here's what those
-metrics means:
+> #### Instructions
+>
+> 1. Select your requirements and settings. The quickstart widget will
+>    auto-generate a recommended starter config for you.
+> 2. Use the buttons at the bottom to save the result to your clipboard or a
+>    file `config.cfg`.
+> 3. TOOD: recommended approach for filling config
+> 4. Run [`spacy train`](/api/cli#train) with your config and data.
 
-<!-- TODO: update table below and include note about scores in config -->
+import QuickstartTraining from 'widgets/quickstart-training.js'
 
-| Name       | Description                                                                                       |
-| ---------- | ------------------------------------------------------------------------------------------------- |
-| `Dep Loss` | Training loss for dependency parser. Should decrease, but usually not to 0.                       |
-| `NER Loss` | Training loss for named entity recognizer. Should decrease, but usually not to 0.                 |
-| `UAS`      | Unlabeled attachment score for parser. The percentage of unlabeled correct arcs. Should increase. |
-| `NER P.`   | NER precision on development data. Should increase.                                               |
-| `NER R.`   | NER recall on development data. Should increase.                                                  |
-| `NER F.`   | NER F-score on development data. Should increase.                                                 |
-| `Tag %`    | Fine-grained part-of-speech tag accuracy on development data. Should increase.                    |
-| `Token %`  | Tokenization accuracy on development data.                                                        |
-| `CPU WPS`  | Prediction speed on CPU in words per second, if available. Should stay stable.                    |
-| `GPU WPS`  | Prediction speed on GPU in words per second, if available. Should stay stable.                    |
+<QuickstartTraining />
 
-Note that if the development data has raw text, some of the gold-standard
-entities might not align to the predicted tokenization. These tokenization
-errors are **excluded from the NER evaluation**. If your tokenization makes it
-impossible for the model to predict 50% of your entities, your NER F-score might
-still look good.
-
-</Accordion>
-
----
-
-### Training config files {#config}
+## Training config {#config}
 
 > #### Migration from spaCy v2.x
 >
@@ -237,7 +223,70 @@ compound = 1.001
 
 <!-- TODO: refer to architectures API: /api/architectures. This should document the architectures in spacy/ml/models -->
 
-<!-- TODO: how do we document the default configs? -->
+### Metrics, training output and weighted scores {#metrics}
+
+When you train a model using the [`spacy train`](/api/cli#train) command, you'll
+see a table showing the metrics after each pass over the data. The available
+metrics **depend on the pipeline components**. Pipeline components also define
+which scores are shown and how they should be **weighted in the final score**
+that decides about the best model.
+
+The `training.score_weights` setting in your `config.cfg` lets you customize the
+scores shown in the table and how they should be weighted. In this example, the
+labeled dependency accuracy and NER F-score count towards the final score with
+40% each and the tagging accuracy makes up the remaining 20%. The tokenization
+accuracy and speed are both shown in the table, but not counted towards the
+score.
+
+> #### Why do I need score weights?
+>
+> At the end of your training process, you typically want to select the **best
+> model** – but what "best" means depends on the available components and your
+> specific use case. For instance, you may prefer a model with higher NER and
+> lower POS tagging accuracy over a model with lower NER and higher POS
+> accuracy. You can express this preference in the score weights, e.g. by
+> assigning `ents_f` (NER F-score) a higher weight.
+
+```ini
+[training.score_weights]
+dep_las = 0.4
+ents_f = 0.4
+tag_acc = 0.2
+token_acc = 0.0
+speed = 0.0
+```
+
+The `score_weights` don't _have to_ sum to `1.0` – but it's recommended. When
+you generate a config for a given pipeline, the score weights are generated by
+combining and normalizing the default score weights of the pipeline components.
+The default score weights are defined by each pipeline component via the
+`default_score_weights` setting on the
+[`@Language.component`](/api/language#component) or
+[`@Language.factory`](/api/language#factory). By default, all pipeline
+components are weighted equally.
+
+<Accordion title="Understanding the training output and score types" spaced>
+
+<!-- TODO: come up with good short explanation of precision and recall -->
+
+| Name                       | Description                                                                                                             |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| **Loss**                   | The training loss representing the amount of work left for the optimizer. Should decrease, but usually not to `0`.      |
+| **Precision** (P)          | Should increase.                                                                                                        |
+| **Recall** (R)             | Should increase.                                                                                                        |
+| **F-Score** (F)            | The weighted average of precision and recall. Should increase.                                                          |
+| **UAS** / **LAS**          | Unlabeled and labeled attachment score for the dependency parser, i.e. the percentage of correct arcs. Should increase. |
+| **Words per second** (WPS) | Prediction speed in words per second. Should stay stable.                                                               |
+
+<!-- TODO: is this still relevant? -->
+
+Note that if the development data has raw text, some of the gold-standard
+entities might not align to the predicted tokenization. These tokenization
+errors are **excluded from the NER evaluation**. If your tokenization makes it
+impossible for the model to predict 50% of your entities, your NER F-score might
+still look good.
+
+</Accordion>
 
 ## Transfer learning {#transfer-learning}
 

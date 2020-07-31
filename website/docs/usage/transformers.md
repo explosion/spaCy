@@ -88,7 +88,8 @@ The recommended workflow for training is to use spaCy's
 [`spacy train`](/api/cli#train) command. The training config defines all
 component settings and hyperparameters in one place and lets you describe a tree
 of objects by referring to creation functions, including functions you register
-yourself.
+yourself. For details on how to get started with training your own model, check
+out the [training quickstart](/usage/training#quickstart).
 
 <Project id="en_core_bert">
 
