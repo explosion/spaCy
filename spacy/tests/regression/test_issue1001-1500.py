@@ -6,7 +6,6 @@ from spacy.lang.en import English
 from spacy.lang.lex_attrs import LEX_ATTRS
 from spacy.matcher import Matcher
 from spacy.tokenizer import Tokenizer
-from spacy.lemmatizer import OldLemmatizer
 from spacy.lookups import Lookups
 from spacy.symbols import ORTH, LEMMA, POS, VERB
 

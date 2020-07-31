@@ -1,17 +1,18 @@
 from typing import Optional, List, Dict
 
-from ...lemmatizer import OldLemmatizer
-from ...parts_of_speech import NAMES
+from ...parts_of_speech import NAMES as UPOS_NAMES
+from ...pipeline import Lemmatizer
+from ...tokens import Token
 
 
-class PolishLemmatizer(OldLemmatizer):
+class PolishLemmatizer(Lemmatizer):
     # This lemmatizer implements lookup lemmatization based on the Morfeusz
     # dictionary (morfeusz.sgjp.pl/en) by Institute of Computer Science PAS.
     # It utilizes some prefix based improvements for verb and adjectives
     # lemmatization, as well as case-sensitive lemmatization for nouns.
-    def __call__(
-        self, string: str, univ_pos: str, morphology: Optional[dict] = None
-    ) -> List[str]:
+    def lookup_lemmatize(self, token: Token) -> List[str]:
+        string = token.text
+        univ_pos = token.pos_
         if isinstance(univ_pos, int):
             univ_pos = NAMES.get(univ_pos, "X")
         univ_pos = univ_pos.upper()
@@ -71,15 +72,3 @@ class PolishLemmatizer(OldLemmatizer):
                 return [lookup_table[string]]
             return [string.lower()]
         return [lookup_table.get(string, string)]
-
-    def lookup(self, string: str, orth: Optional[int] = None) -> str:
-        return string.lower()
-
-    def lemmatize(
-        self,
-        string: str,
-        index: Dict[str, List[str]],
-        exceptions: Dict[str, Dict[str, List[str]]],
-        rules: Dict[str, List[List[str]]],
-    ) -> List[str]:
-        raise NotImplementedError

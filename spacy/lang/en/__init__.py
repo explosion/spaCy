@@ -1,37 +1,18 @@
-from typing import Callable
-from thinc.api import Config
+from typing import Optional
+
+from thinc.api import Model
 
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .syntax_iterators import SYNTAX_ITERATORS
-from .lemmatizer import is_base_form
 from .punctuation import TOKENIZER_INFIXES
+from .lemmatizer import EnglishLemmatizer
 from ...language import Language
-from ...lemmatizer import OldLemmatizer
-from ...lookups import load_lookups
-from ...util import registry
-
-
-DEFAULT_CONFIG = """
-[nlp]
-
-"""
-
-
-@registry.lemmatizers("spacy.en.EnglishLemmatizer")
-def create_lemmatizer() -> Callable[[Language], OldLemmatizer]:
-    tables = ["lemma_lookup", "lemma_rules", "lemma_exc", "lemma_index"]
-
-    def lemmatizer_factory(nlp: Language) -> OldLemmatizer:
-        lookups = load_lookups(lang=nlp.lang, tables=tables)
-        return OldLemmatizer(lookups=lookups, is_base_form=is_base_form)
-
-    return lemmatizer_factory
+from ...lookups import Lookups, load_lookups
 
 
 class EnglishDefaults(Language.Defaults):
-    config = Config().from_str(DEFAULT_CONFIG)
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     infixes = TOKENIZER_INFIXES
     lex_attr_getters = LEX_ATTRS
@@ -42,6 +23,26 @@ class EnglishDefaults(Language.Defaults):
 class English(Language):
     lang = "en"
     Defaults = EnglishDefaults
+
+
+@English.factory(
+    "lemmatizer",
+    assigns=["token.lemma"],
+    default_config={"model": None, "mode": "rule", "lookups": None},
+    scores=["lemma_acc"],
+    default_score_weights={"lemma_acc": 1.0},
+)
+def make_lemmatizer(
+    nlp: Language,
+    model: Optional[Model],
+    name: str,
+    mode: str,
+    lookups: Optional[Lookups],
+):
+    tables = ["lemma_lookup", "lemma_rules", "lemma_exc", "lemma_index"]
+    if lookups is None:
+        lookups = load_lookups(lang=nlp.lang, tables=tables)
+    return EnglishLemmatizer(nlp.vocab, model, name, mode=mode, lookups=lookups)
 
 
 __all__ = ["English"]

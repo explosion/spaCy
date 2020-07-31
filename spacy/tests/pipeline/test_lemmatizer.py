@@ -30,15 +30,25 @@ def lemmatizer(nlp):
 def test_lemmatizer_init(nlp):
     lemmatizer = nlp.add_pipe("lemmatizer")
     assert isinstance(lemmatizer.lookups, Lookups)
+    assert lemmatizer.mode == "rule"
     # replace any tables from spacy-lookups-data
     lemmatizer.lookups = Lookups()
-    assert lemmatizer.mode == "lookup"
+    # switch mode to lookup
+    lemmatizer.mode = "lookup"
     doc = nlp("coping")
     # lookup with no tables sets text as lemma
     assert doc[0].lemma_ == "coping"
 
 
 def test_lemmatizer_config(nlp, lemmatizer):
+    doc = nlp.make_doc("coping")
+    doc[0].pos_ = "VERB"
+    assert doc[0].lemma_ == ""
+    doc = lemmatizer(doc)
+    assert doc[0].text == "coping"
+    assert doc[0].lemma_ == "cope"
+
+
     doc = nlp.make_doc("coping")
     doc[0].pos_ = "VERB"
     assert doc[0].lemma_ == ""

@@ -8,10 +8,8 @@ from spacy.attrs import IS_PUNCT, ORTH, LOWER
 from spacy.symbols import POS, VERB
 from spacy.vocab import Vocab
 from spacy.lang.en import English
-from spacy.lemmatizer import OldLemmatizer
 from spacy.lookups import Lookups
 from spacy.tokens import Doc, Span
-from spacy.lang.en.lemmatizer import is_base_form
 
 from ..util import get_doc, make_tempdir
 

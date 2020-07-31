@@ -1,9 +1,15 @@
-from typing import Dict, List
+from typing import Optional, List
 
-from ...lemmatizer import OldLemmatizer
+from thinc.api import Model
+
+from ...lookups import Lookups
+from ...parts_of_speech import NAMES as UPOS_NAMES
+from ...pipeline import Lemmatizer
+from ...tokens import Token
+from ...vocab import Vocab
 
 
-class GreekLemmatizer(OldLemmatizer):
+class GreekLemmatizer(Lemmatizer):
     """
     Greek language lemmatizer applies the default rule based lemmatization
     procedure with some modifications for better Greek language support.
@@ -13,14 +19,39 @@ class GreekLemmatizer(OldLemmatizer):
     The second modification is about removing the base forms function which is
     not applicable for Greek language.
     """
-
-    def lemmatize(
+    def __init__(
         self,
-        string: str,
-        index: Dict[str, List[str]],
-        exceptions: Dict[str, Dict[str, List[str]]],
-        rules: Dict[str, List[List[str]]],
-    ) -> List[str]:
+        vocab: Vocab,
+        model: Optional[Model],
+        name: str = "lemmatizer",
+        *,
+        mode: str = "rule",
+        lookups: Optional[Lookups] = None,
+    ) -> None:
+        super().__init__(vocab, model, name, mode=mode, lookups=lookups)
+        self.cache_features["rule"] = ["LOWER", "POS"]
+
+    def rule_lemmatize(self, token: Token) -> List[str]:
+        """Lemmatize using a rule-based approach.
+
+        token (Token): The token to lemmatize.
+        RETURNS (list): The available lemmas for the string.
+        """
+        string = token.text
+        univ_pos = token.pos_
+        if isinstance(univ_pos, int):
+            univ_pos = UPOS_NAMES.get(univ_pos, "X")
+        univ_pos = univ_pos.lower()
+        if univ_pos in ("", "eol", "space"):
+            return [string.lower()]
+
+        index_table = self.lookups.get_table("lemma_index", {})
+        exc_table = self.lookups.get_table("lemma_exc", {})
+        rules_table = self.lookups.get_table("lemma_rules", {})
+        index = index_table.get(univ_pos, {})
+        exceptions = exc_table.get(univ_pos, {})
+        rules = rules_table.get(univ_pos, {})
+
         string = string.lower()
         forms = []
         if string in index:
