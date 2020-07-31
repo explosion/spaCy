@@ -16,7 +16,7 @@ def debug_model_cli(
     # fmt: off
     ctx: typer.Context,  # This is only used to read additional arguments
     config_path: Path = Arg(..., help="Path to config file", exists=True),
-    pipe_name: str = Arg(..., help="Name of the pipe of which the model should be analysed"),
+    component: str = Arg(..., help="Name of the pipeline component of which the model should be analysed"),
     layers: str = Opt("", "--layers", "-l", help="Comma-separated names of layer IDs to print"),
     dimensions: bool = Opt(False, "--dimensions", "-DIM", help="Show dimensions"),
     parameters: bool = Opt(False, "--parameters", "-PAR", help="Show parameters"),
@@ -61,12 +61,12 @@ def debug_model_cli(
         msg.info(f"Fixing random seed: {seed}")
         fix_random_seed(seed)
 
-    component = nlp.get_pipe(pipe_name)
-    if hasattr(component, "model"):
-        model = component.model
+    pipe = nlp.get_pipe(component)
+    if hasattr(pipe, "model"):
+        model = pipe.model
     else:
         msg.fail(
-            f"The component '{pipe_name}' does not specify an object that holds a Model.",
+            f"The component '{component}' does not specify an object that holds a Model.",
             exits=1,
         )
     debug_model(model, print_settings=print_settings)
