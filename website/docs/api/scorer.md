@@ -94,6 +94,7 @@ Scores a single token attribute.
 | -------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | `examples`     | `Iterable[Example]` | The `Example` objects holding both the predictions and the correct gold-standard annotations.                                 |
 | `attr`         | `str`               | The attribute to score.                                                                                                       |
+| _keyword-only_ |                     |                                                                                                                               |
 | `getter`       | `Callable`          | Defaults to `getattr`. If provided, `getter(token, attr)` should return the value of the attribute for an individual `Token`. |
 | **RETURNS**    | `Dict[str, float]`  | A dictionary containing the score `{attr}_acc`.                                                                               |
 
@@ -114,6 +115,7 @@ format.
 | -------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | `examples`     | `Iterable[Example]` | The `Example` objects holding both the predictions and the correct gold-standard annotations.                                 |
 | `attr`         | `str`               | The attribute to score.                                                                                                       |
+| _keyword-only_ |                     |                                                                                                                               |
 | `getter`       | `Callable`          | Defaults to `getattr`. If provided, `getter(token, attr)` should return the value of the attribute for an individual `Token`. |
 | **RETURNS**    | `Dict`              | A dictionary containing the per-feature PRF scores under the key `{attr}_per_feat`.                                           |
 
@@ -132,6 +134,7 @@ Returns PRF scores for labeled or unlabeled spans.
 | -------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | `examples`     | `Iterable[Example]` | The `Example` objects holding both the predictions and the correct gold-standard annotations.                                                 |
 | `attr`         | `str`               | The attribute to score.                                                                                                                       |
+| _keyword-only_ |                     |                                                                                                                                               |
 | `getter`       | `Callable`          | Defaults to `getattr`. If provided, `getter(doc, attr)` should return the `Span` objects for an individual `Doc`.                             |
 | **RETURNS**    | `Dict`              | A dictionary containing the PRF scores under the keys `{attr}_p`, `{attr}_r`, `{attr}_f` and the per-type PRF scores under `{attr}_per_type`. |
 
@@ -160,6 +163,7 @@ Calculate the UAS, LAS, and LAS per type scores for dependency parses.
 | --------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | `examples`      | `Iterable[Example]` | The `Example` objects holding both the predictions and the correct gold-standard annotations.                                 |
 | `attr`          | `str`               | The attribute containing the dependency label.                                                                                |
+| _keyword-only_  |                     |                                                                                                                               |
 | `getter`        | `Callable`          | Defaults to `getattr`. If provided, `getter(token, attr)` should return the value of the attribute for an individual `Token`. |
 | `head_attr`     | `str`               | The attribute containing the head token.                                                                                      |
 | `head_getter`   | `callable`          | Defaults to `getattr`. If provided, `head_getter(token, attr)` should return the head for an individual `Token`.              |
@@ -195,6 +199,7 @@ depends on the scorer settings:
 | ---------------- | ------------------- | ------------------------------------------------------------------------------------------------------- |
 | `examples`       | `Iterable[Example]` | The `Example` objects holding both the predictions and the correct gold-standard annotations.           |
 | `attr`           | `str`               | The attribute to score.                                                                                 |
+| _keyword-only_   |                     |                                                                                                         |
 | `getter`         | `Callable`          | Defaults to `getattr`. If provided, `getter(doc, attr)` should return the cats for an individual `Doc`. |
 | labels           | `Iterable[str]`     | The set of possible labels. Defaults to `[]`.                                                           |
 | `multi_label`    | `bool`              | Whether the attribute allows multiple labels. Defaults to `True`.                                       |
