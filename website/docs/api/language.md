@@ -598,6 +598,65 @@ contains the information about the component and its default provided by the
 | `name`      | str                           | The pipeline component name. |
 | **RETURNS** | [`FactoryMeta`](#factorymeta) |  The factory meta.           |
 
+## Language.analyze_pipes {#analyze_pipes tag="method" new="3"}
+
+Analyze the current pipeline components and show a summary of the attributes
+they assign and require, and the scores they set. The data is based on the
+information provided in the [`@Language.component`](/api/language#component) and
+[`@Language.factory`](/api/language#factory) decorator. If requirements aren't
+met, e.g. if a component specifies a required property that is not set by a
+previous component, a warning is shown.
+
+<Infobox variant="warning" title="Important note">
+
+The pipeline analysis is static and does **not actually run the components**.
+This means that it relies on the information provided by the components
+themselves. If a custom component declares that it assigns an attribute but it
+doesn't, the pipeline analysis won't catch that.
+
+</Infobox>
+
+> #### Example
+>
+> ```python
+> nlp = spacy.blank("en")
+> nlp.add_pipe("tagger")
+> nlp.add_pipe("entity_linker")
+> nlp.analyze_pipes()
+> ```
+
+<Accordion title="Example output" spaced>
+
+```
+============================= Pipeline Overview =============================
+
+#   Component       Assigns           Requires         Scores      Retokenizes
+-   -------------   ---------------   --------------   ---------   -----------
+0   tagger          token.tag                          tag_acc     False
+                                                       pos_acc
+                                                       lemma_acc
+
+1   entity_linker   token.ent_kb_id   doc.ents                     False
+                                      doc.sents
+                                      token.ent_iob
+                                      token.ent_type
+
+
+================================ Problems (4) ================================
+⚠ 'entity_linker' requirements not met: doc.ents, doc.sents,
+token.ent_iob, token.ent_type
+```
+
+</Accordion>
+
+| Name           | Type        | Description                                                                                                                                                                      |
+| -------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| _keyword-only_ |             |                                                                                                                                                                                  |
+| `keys`         | `List[str]` | The values to display in the table. Corresponds to attributes of the [`FactoryMeta`](/api/language#factorymeta). Defaults to `["assigns", "requires", "scores", "retokenizes"]`. |
+| `pretty`       | bool        | Pretty-print the results with colors and icons. Defaults to `True`.                                                                                                              |
+| `no_print`     | bool        | Don't print anything and return a structured dict instead. Defaults to `False`.                                                                                                  |
+| **RETURNS**    | dict        | Optional dict, if `no_print` is set to `True`.                                                                                                                                   |
+
 ## Language.meta {#meta tag="property"}
 
 Custom meta data for the Language class. If a model is loaded, contains meta

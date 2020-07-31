@@ -311,6 +311,61 @@ nlp.rename_pipe("ner", "entityrecognizer")
 nlp.replace_pipe("tagger", my_custom_tagger)
 ```
 
+### Analyzing pipeline components {#analysis new="3"}
+
+The [`nlp.analyze_pipes`](/api/language#analyze_pipes) method analyzes the
+components in the current pipeline and outputs information about them, like the
+attributes they set on the [`Doc`](/api/doc) and [`Token`](/api/token), whether
+they retokenize the `Doc` and which scores they produce during training. It will
+also show warnings if components require values that aren't set by previous
+component – for instance, if the entity linker is used but no component that
+runs before it sets named entities.
+
+```python
+nlp = spacy.blank("en")
+nlp.add_pipe("tagger")
+nlp.add_pipe("entity_linker")  # this is a problem, because it needs entities
+nlp.analyze_pipes()
+```
+
+```
+### Example output
+============================= Pipeline Overview =============================
+
+#   Component       Assigns           Requires         Scores      Retokenizes
+-   -------------   ---------------   --------------   ---------   -----------
+0   tagger          token.tag                          tag_acc     False
+                                                       pos_acc
+                                                       lemma_acc
+
+1   entity_linker   token.ent_kb_id   doc.ents                     False
+                                      doc.sents
+                                      token.ent_iob
+                                      token.ent_type
+
+
+================================ Problems (4) ================================
+⚠ 'entity_linker' requirements not met: doc.ents, doc.sents,
+token.ent_iob, token.ent_type
+```
+
+If you prefer a structured dictionary containing the component information and
+the problems, you can set `no_print=True`. This will return the data instead of
+printing it.
+
+```
+result = nlp.analyze_pipes(no_print=True)
+```
+
+<Infobox variant="warning" title="Important note">
+
+The pipeline analysis is static and does **not actually run the components**.
+This means that it relies on the information provided by the components
+themselves. If a custom component declares that it assigns an attribute but it
+doesn't, the pipeline analysis won't catch that.
+
+</Infobox>
+
 ## Creating custom pipeline components {#custom-components}
 
 A pipeline component is a function that receives a `Doc` object, modifies it and
