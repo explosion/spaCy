@@ -95,7 +95,7 @@ class EntityRuler(object):
         matches = set(
             [(m_id, start, end) for m_id, start, end in matches if start != end]
         )
-        get_sort_key = lambda m: (m[2] - m[1], m[1])
+        get_sort_key = lambda m: (m[2] - m[1], -m[1])
         matches = sorted(matches, key=get_sort_key, reverse=True)
         entities = list(doc.ents)
         new_entities = []

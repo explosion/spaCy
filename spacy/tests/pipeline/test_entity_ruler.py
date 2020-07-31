@@ -154,3 +154,15 @@ def test_entity_ruler_properties(nlp, patterns):
     ruler = EntityRuler(nlp, patterns=patterns, overwrite_ents=True)
     assert sorted(ruler.labels) == sorted(["HELLO", "BYE", "COMPLEX", "TECH_ORG"])
     assert sorted(ruler.ent_ids) == ["a1", "a2"]
+
+
+def test_entity_ruler_overlapping_spans(nlp):
+    ruler = EntityRuler(nlp)
+    patterns = [
+        {"label": "FOOBAR", "pattern": "foo bar"},
+        {"label": "BARBAZ", "pattern": "bar baz"},
+    ]
+    ruler.add_patterns(patterns)
+    doc = ruler(nlp.make_doc("foo bar baz"))
+    assert len(doc.ents) == 1
+    assert doc.ents[0].label_ == "FOOBAR"
