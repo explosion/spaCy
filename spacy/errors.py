@@ -606,6 +606,7 @@ class Errors:
              'nlp = Chinese(config=cfg)')
     E1001 = ("Target token outside of matched span for match with tokens "
              "'{span}' and offset '{index}' matched by patterns '{patterns}'.")
+    E1002 = ("Span index out of range.")
 
 
 @add_codes
