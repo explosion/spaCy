@@ -55,6 +55,12 @@ class Lemmatizer(Pipe):
         self.model = model
         self.mode = mode
         self.lookups = lookups if lookups is not None else Lookups()
+        self.cache = {
+            "rule": {},
+        }
+        self.cache_features = {
+            "rule": ["ORTH", "POS"],
+        }
 
     def __call__(self, doc: Doc) -> Doc:
         """Apply the lemmatizer to one document.
@@ -64,10 +70,24 @@ class Lemmatizer(Pipe):
 
         DOCS: https://spacy.io/api/lemmatizer#call
         """
-        lemmatize = getattr(self, f"{self.mode}_lemmatize")
-        if callable(lemmatize):
+        if self.cache_features.get(self.mode):
+            features_array = doc.to_array(self.cache_features[self.mode])
+        if self.mode == "lookup":
             for token in doc:
-                token.lemma_ = lemmatize(token)[0]
+                token.lemma_ = self.lookup_lemmatize(token)[0]
+        elif self.mode == "rule":
+            for i, token in enumerate(doc):
+                features = tuple(features_array[i])
+                if features in self.cache[self.mode]:
+                    token.lemma_ = self.cache[self.mode][features]
+                else:
+                    token.lemma_ = self.rule_lemmatize(token)[0]
+                    self.cache[self.mode][features] = token.lemma_
+        else:
+            lemmatize = getattr(self, f"{self.mode}_lemmatize")
+            if callable(lemmatize):
+                for token in doc:
+                    token.lemma_ = lemmatize(token)[0]
         return doc
 
     def lookup_lemmatize(self, token: Token) -> List[str]:
