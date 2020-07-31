@@ -2,7 +2,7 @@ from typing import Dict, Any, Optional
 from pathlib import Path
 from wasabi import msg
 from thinc.api import require_gpu, fix_random_seed, set_dropout_rate, Adam, Config
-from thinc.api import Model, DATA_VALIDATION
+from thinc.api import Model
 import typer
 
 from ._util import Arg, Opt, debug_cli, show_validation_error, parse_config_overrides
@@ -16,7 +16,7 @@ def debug_model_cli(
     # fmt: off
     ctx: typer.Context,  # This is only used to read additional arguments
     config_path: Path = Arg(..., help="Path to config file", exists=True),
-    pipe_name: str = Arg(..., help="Name of the pipe of which the model should be analysed"),
+    section: str = Arg(..., help="Section that defines the model to be analysed"),
     layers: str = Opt("", "--layers", "-l", help="Comma-separated names of layer IDs to print"),
     dimensions: bool = Opt(False, "--dimensions", "-DIM", help="Show dimensions"),
     parameters: bool = Opt(False, "--parameters", "-PAR", help="Show parameters"),
@@ -53,20 +53,20 @@ def debug_model_cli(
     cfg = Config().from_disk(config_path)
     with show_validation_error():
         try:
-            nlp, config = util.load_model_from_config(cfg, overrides=config_overrides)
+            _, config = util.load_model_from_config(cfg, overrides=config_overrides)
         except ValueError as e:
             msg.fail(str(e), exits=1)
-    seed = config.get("training", {}).get("seed", None)
+    seed = config["pretraining"]["seed"]
     if seed is not None:
         msg.info(f"Fixing random seed: {seed}")
         fix_random_seed(seed)
 
-    component = nlp.get_pipe(pipe_name)
+    component = dot_to_object(config, section)
     if hasattr(component, "model"):
         model = component.model
     else:
         msg.fail(
-            f"The component '{pipe_name}' does not specify an object that holds a Model.",
+            f"The section '{section}' does not specify an object that holds a Model.",
             exits=1,
         )
     debug_model(model, print_settings=print_settings)
@@ -90,9 +90,7 @@ def debug_model(model: Model, *, print_settings: Optional[Dict[str, Any]] = None
     # STEP 1: Initializing the model and printing again
     Y = _get_output(model.ops.xp)
     _set_output_dim(nO=Y.shape[-1], model=model)
-    DATA_VALIDATION.set(False)   # The output vector might differ from the official type of the output layer
     model.initialize(X=_get_docs(), Y=Y)
-    DATA_VALIDATION.set(True)
     if print_settings.get("print_after_init"):
         msg.info(f"After initialization:")
         _print_model(model, print_settings)
