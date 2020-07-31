@@ -172,6 +172,16 @@ def test_spans_by_character(doc):
     assert span1.end_char == span2.end_char
     assert span2.label_ == "GPE"
 
+    span2 = doc.char_span(span1.start_char - 3, span1.end_char, label="GPE", mode="inside")
+    assert span1.start_char == span2.start_char
+    assert span1.end_char == span2.end_char
+    assert span2.label_ == "GPE"
+
+    span2 = doc.char_span(span1.start_char + 1, span1.end_char, label="GPE", mode="outside")
+    assert span1.start_char == span2.start_char
+    assert span1.end_char == span2.end_char
+    assert span2.label_ == "GPE"
+
 
 def test_span_to_array(doc):
     span = doc[1:-2]
