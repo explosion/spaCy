@@ -18,7 +18,7 @@ from timeit import default_timer as timer
 
 from .tokens.underscore import Underscore
 from .vocab import Vocab, create_vocab
-from .pipe_analysis import validate_attrs, print_summary
+from .pipe_analysis import validate_attrs, analyze_pipes, print_pipe_analysis
 from .gold import Example
 from .scorer import Scorer
 from .util import create_default_optimizer, registry
@@ -524,19 +524,20 @@ class Language:
         self,
         *,
         keys: List[str] = ["assigns", "requires", "scores", "retokenizes"],
-        pretty: bool = True,
-        no_print: bool = False,
+        pretty: bool = False,
     ) -> Optional[Dict[str, Any]]:
         """Analyze the current pipeline components, print a summary of what
         they assign or require and check that all requirements are met.
 
         keys (List[str]): The meta values to display in the table. Corresponds
             to values in FactoryMeta, defined by @Language.factory decorator.
-        pretty (bool): Pretty-print the results with colors and icons.
-        no_print (bool): Don't print anything and return structured dict instead.
-        RETURNS (dict): The data, if no_print is set to True.
+        pretty (bool): Pretty-print the results.
+        RETURNS (dict): The data.
         """
-        return print_summary(self, keys=keys, pretty=pretty, no_print=no_print)
+        analysis = analyze_pipes(self, keys=keys)
+        if pretty:
+            print_pipe_analysis(analysis, keys=keys)
+        return analysis
 
     def get_pipe(self, name: str) -> Callable[[Doc], Doc]:
         """Get a pipeline component for a given component name.

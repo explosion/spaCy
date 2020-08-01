@@ -98,10 +98,10 @@ decorator. For more details and examples, see the
 | ----------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `name`                  | str                  | The name of the component factory.                                                                                                                                                                                          |
 | _keyword-only_          |                      |                                                                                                                                                                                                                             |
-| `assigns`               | `Iterable[str]`      | `Doc` or `Token` attributes assigned by this component, e.g. `["token.ent_id"]`. Used for pipeline analysis.                                                                                                                |
-| `requires`              | `Iterable[str]`      | `Doc` or `Token` attributes required by this component, e.g. `["token.ent_id"]`. Used for pipeline analysis.                                                                                                                |
-| `retokenizes`           | bool                 | Whether the component changes tokenization. Used for pipeline analysis.                                                                                                                                                     |
-| `scores`                | `Iterable[str]`      | All scores set by the components if it's trainable, e.g. `["ents_f", "ents_r", "ents_p"]`.                                                                                                                                  |
+| `assigns`               | `Iterable[str]`      | `Doc` or `Token` attributes assigned by this component, e.g. `["token.ent_id"]`. Used for [pipe analysis](/usage/processing-pipelines#analysis)..                                                                           |
+| `requires`              | `Iterable[str]`      | `Doc` or `Token` attributes required by this component, e.g. `["token.ent_id"]`. Used for [pipe analysis](/usage/processing-pipelines#analysis).                                                                            |
+| `retokenizes`           | bool                 | Whether the component changes tokenization. Used for [pipe analysis](/usage/processing-pipelines#analysis).                                                                                                                 |
+| `scores`                | `Iterable[str]`      | All scores set by the components if it's trainable, e.g. `["ents_f", "ents_r", "ents_p"]`. Used for [pipe analysis](/usage/processing-pipelines#analysis).                                                                  |
 | `default_score_weights` | `Dict[str, float]`   | The scores to report during training, and their default weight towards the final score used to select the best model. Weights should sum to `1.0` per component and will be combined and normalized for the whole pipeline. |
 | `func`                  | `Optional[Callable]` | Optional function if not used a a decorator.                                                                                                                                                                                |
 
@@ -146,10 +146,10 @@ examples, see the
 | `name`                  | str                  | The name of the component factory.                                                                                                                                                                                          |
 | _keyword-only_          |                      |                                                                                                                                                                                                                             |
 | `default_config`        | `Dict[str, any]`     | The default config, describing the default values of the factory arguments.                                                                                                                                                 |
-| `assigns`               | `Iterable[str]`      | `Doc` or `Token` attributes assigned by this component, e.g. `["token.ent_id"]`. Used for pipeline analysis.                                                                                                                |
-| `requires`              | `Iterable[str]`      | `Doc` or `Token` attributes required by this component, e.g. `["token.ent_id"]`. Used for pipeline analysis.                                                                                                                |
-| `retokenizes`           | bool                 | Whether the component changes tokenization. Used for pipeline analysis.                                                                                                                                                     |
-| `scores`                | `Iterable[str]`      | All scores set by the components if it's trainable, e.g. `["ents_f", "ents_r", "ents_p"]`.                                                                                                                                  |
+| `assigns`               | `Iterable[str]`      | `Doc` or `Token` attributes assigned by this component, e.g. `["token.ent_id"]`. Used for [pipe analysis](/usage/processing-pipelines#analysis).                                                                            |
+| `requires`              | `Iterable[str]`      | `Doc` or `Token` attributes required by this component, e.g. `["token.ent_id"]`. Used for [pipe analysis](/usage/processing-pipelines#analysis).                                                                            |
+| `retokenizes`           | bool                 | Whether the component changes tokenization. Used for [pipe analysis](/usage/processing-pipelines#analysis).                                                                                                                 |
+| `scores`                | `Iterable[str]`      | All scores set by the components if it's trainable, e.g. `["ents_f", "ents_r", "ents_p"]`. Used for [pipe analysis](/usage/processing-pipelines#analysis).                                                                  |
 | `default_score_weights` | `Dict[str, float]`   | The scores to report during training, and their default weight towards the final score used to select the best model. Weights should sum to `1.0` per component and will be combined and normalized for the whole pipeline. |
 | `func`                  | `Optional[Callable]` | Optional function if not used a a decorator.                                                                                                                                                                                |
 
@@ -622,12 +622,45 @@ doesn't, the pipeline analysis won't catch that.
 > nlp = spacy.blank("en")
 > nlp.add_pipe("tagger")
 > nlp.add_pipe("entity_linker")
-> nlp.analyze_pipes()
+> analysis = nlp.analyze_pipes()
 > ```
 
 <Accordion title="Example output" spaced>
 
+```json
+### Structured
+{
+  "summary": {
+    "tagger": {
+      "assigns": ["token.tag"],
+      "requires": [],
+      "scores": ["tag_acc", "pos_acc", "lemma_acc"],
+      "retokenizes": false
+    },
+    "entity_linker": {
+      "assigns": ["token.ent_kb_id"],
+      "requires": ["doc.ents", "doc.sents", "token.ent_iob", "token.ent_type"],
+      "scores": [],
+      "retokenizes": false
+    }
+  },
+  "problems": {
+    "tagger": [],
+    "entity_linker": ["doc.ents", "doc.sents", "token.ent_iob", "token.ent_type"]
+  },
+  "attrs": {
+    "token.ent_iob": { "assigns": [], "requires": ["entity_linker"] },
+    "doc.ents": { "assigns": [], "requires": ["entity_linker"] },
+    "token.ent_kb_id": { "assigns": ["entity_linker"], "requires": [] },
+    "doc.sents": { "assigns": [], "requires": ["entity_linker"] },
+    "token.tag": { "assigns": ["tagger"], "requires": [] },
+    "token.ent_type": { "assigns": [], "requires": ["entity_linker"] }
+  }
+}
 ```
+
+```
+### Pretty
 ============================= Pipeline Overview =============================
 
 #   Component       Assigns           Requires         Scores      Retokenizes
@@ -649,13 +682,12 @@ token.ent_iob, token.ent_type
 
 </Accordion>
 
-| Name           | Type        | Description                                                                                                                                                                      |
-| -------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| _keyword-only_ |             |                                                                                                                                                                                  |
-| `keys`         | `List[str]` | The values to display in the table. Corresponds to attributes of the [`FactoryMeta`](/api/language#factorymeta). Defaults to `["assigns", "requires", "scores", "retokenizes"]`. |
-| `pretty`       | bool        | Pretty-print the results with colors and icons. Defaults to `True`.                                                                                                              |
-| `no_print`     | bool        | Don't print anything and return a structured dict instead. Defaults to `False`.                                                                                                  |
-| **RETURNS**    | dict        | Optional dict, if `no_print` is set to `True`.                                                                                                                                   |
+| Name           | Type        | Description                                                                                                                                                                                                    |
+| -------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| _keyword-only_ |             |                                                                                                                                                                                                                |
+| `keys`         | `List[str]` | The values to display in the table. Corresponds to attributes of the [`FactoryMeta`](/api/language#factorymeta). Defaults to `["assigns", "requires", "scores", "retokenizes"]`.                               |
+| `pretty`       | bool        | Pretty-print the results as a table. Defaults to `False`.                                                                                                                                                      |
+| **RETURNS**    | dict        | Dictionary containing the pipe analysis, keyed by `"summary"` (component meta by pipe), `"problems"` (attribute names by pipe) and `"attrs"` (pipes that assign and require an attribute, keyed by attribute). |
 
 ## Language.meta {#meta tag="property"}
 
@@ -892,8 +924,8 @@ instance and factory instance.
 | ----------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `factory`               | str                | The name of the registered component factory.                                                                                                                                                                               |
 | `default_config`        | `Dict[str, Any]`   | The default config, describing the default values of the factory arguments.                                                                                                                                                 |
-| `assigns`               | `Iterable[str]`    | `Doc` or `Token` attributes assigned by this component, e.g. `["token.ent_id"]`. Used for pipeline analysis.                                                                                                                |
-| `requires`              | `Iterable[str]`    | `Doc` or `Token` attributes required by this component, e.g. `["token.ent_id"]`. Used for pipeline analysis.                                                                                                                |
-| `retokenizes`           | bool               | Whether the component changes tokenization. Used for pipeline analysis.                                                                                                                                                     |
-| `scores`                | `Iterable[str]`    | All scores set by the components if it's trainable, e.g. `["ents_f", "ents_r", "ents_p"]`.                                                                                                                                  |
+| `assigns`               | `Iterable[str]`    | `Doc` or `Token` attributes assigned by this component, e.g. `["token.ent_id"]`. Used for [pipe analysis](/usage/processing-pipelines#analysis).                                                                            |
+| `requires`              | `Iterable[str]`    | `Doc` or `Token` attributes required by this component, e.g. `["token.ent_id"]`. Used for [pipe analysis](/usage/processing-pipelines#analysis).                                                                            |
+| `retokenizes`           | bool               | Whether the component changes tokenization. Used for [pipe analysis](/usage/processing-pipelines#analysis).                                                                                                                 |
+| `scores`                | `Iterable[str]`    | All scores set by the components if it's trainable, e.g. `["ents_f", "ents_r", "ents_p"]`. Used for [pipe analysis](/usage/processing-pipelines#analysis).                                                                  |
 | `default_score_weights` | `Dict[str, float]` | The scores to report during training, and their default weight towards the final score used to select the best model. Weights should sum to `1.0` per component and will be combined and normalized for the whole pipeline. |

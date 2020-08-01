@@ -319,17 +319,61 @@ attributes they set on the [`Doc`](/api/doc) and [`Token`](/api/token), whether
 they retokenize the `Doc` and which scores they produce during training. It will
 also show warnings if components require values that aren't set by previous
 component – for instance, if the entity linker is used but no component that
-runs before it sets named entities.
+runs before it sets named entities. Setting `pretty=True` will pretty-print a
+table instead of only returning the structured data.
+
+> #### ✏️ Things to try
+>
+> 1. Add the components `"ner"` and `"sentencizer"` _before_ the entity linker.
+>    The analysis should now show no problems, because requirements are met.
 
 ```python
+### {executable="true"}
+import spacy
+
 nlp = spacy.blank("en")
 nlp.add_pipe("tagger")
-nlp.add_pipe("entity_linker")  # this is a problem, because it needs entities
-nlp.analyze_pipes()
+# This is a problem because it needs entities and sentence boundaries
+nlp.add_pipe("entity_linker")
+analysis = nlp.analyze_pipes(pretty=True)
+```
+
+<Accordion title="Example output">
+
+```json
+### Structured
+{
+  "summary": {
+    "tagger": {
+      "assigns": ["token.tag"],
+      "requires": [],
+      "scores": ["tag_acc", "pos_acc", "lemma_acc"],
+      "retokenizes": false
+    },
+    "entity_linker": {
+      "assigns": ["token.ent_kb_id"],
+      "requires": ["doc.ents", "doc.sents", "token.ent_iob", "token.ent_type"],
+      "scores": [],
+      "retokenizes": false
+    }
+  },
+  "problems": {
+    "tagger": [],
+    "entity_linker": ["doc.ents", "doc.sents", "token.ent_iob", "token.ent_type"]
+  },
+  "attrs": {
+    "token.ent_iob": { "assigns": [], "requires": ["entity_linker"] },
+    "doc.ents": { "assigns": [], "requires": ["entity_linker"] },
+    "token.ent_kb_id": { "assigns": ["entity_linker"], "requires": [] },
+    "doc.sents": { "assigns": [], "requires": ["entity_linker"] },
+    "token.tag": { "assigns": ["tagger"], "requires": [] },
+    "token.ent_type": { "assigns": [], "requires": ["entity_linker"] }
+  }
+}
 ```
 
 ```
-### Example output
+### Pretty
 ============================= Pipeline Overview =============================
 
 #   Component       Assigns           Requires         Scores      Retokenizes
@@ -349,13 +393,7 @@ nlp.analyze_pipes()
 token.ent_iob, token.ent_type
 ```
 
-If you prefer a structured dictionary containing the component information and
-the problems, you can set `no_print=True`. This will return the data instead of
-printing it.
-
-```
-result = nlp.analyze_pipes(no_print=True)
-```
+</Accordion>
 
 <Infobox variant="warning" title="Important note">
 
