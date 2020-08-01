@@ -1,9 +1,8 @@
 from typing import List, Dict, Iterable, Optional, Union, TYPE_CHECKING
-from wasabi import Printer
-import warnings
+from wasabi import msg
 
 from .tokens import Doc, Token, Span
-from .errors import Errors, Warnings
+from .errors import Errors
 from .util import dot_to_dict
 
 if TYPE_CHECKING:
@@ -11,48 +10,7 @@ if TYPE_CHECKING:
     from .language import Language  # noqa: F401
 
 
-def analyze_pipes(
-    nlp: "Language", name: str, index: int, warn: bool = True
-) -> List[str]:
-    """Analyze a pipeline component with respect to its position in the current
-    pipeline and the other components. Will check whether requirements are
-    fulfilled (e.g. if previous components assign the attributes).
-
-    nlp (Language): The current nlp object.
-    name (str): The name of the pipeline component to analyze.
-    index (int): The index of the component in the pipeline.
-    warn (bool): Show user warning if problem is found.
-    RETURNS (List[str]): The problems found for the given pipeline component.
-    """
-    assert nlp.pipeline[index][0] == name
-    prev_pipes = nlp.pipeline[:index]
-    meta = nlp.get_pipe_meta(name)
-    requires = {annot: False for annot in meta.requires}
-    if requires:
-        for prev_name, prev_pipe in prev_pipes:
-            prev_meta = nlp.get_pipe_meta(prev_name)
-            for annot in prev_meta.assigns:
-                requires[annot] = True
-    problems = []
-    for annot, fulfilled in requires.items():
-        if not fulfilled:
-            problems.append(annot)
-            if warn:
-                warnings.warn(Warnings.W025.format(name=name, attr=annot))
-    return problems
-
-
-def analyze_all_pipes(nlp: "Language", warn: bool = True) -> Dict[str, List[str]]:
-    """Analyze all pipes in the pipeline in order.
-
-    nlp (Language): The current nlp object.
-    warn (bool): Show user warning if problem is found.
-    RETURNS (Dict[str, List[str]]): The problems found, keyed by component name.
-    """
-    problems = {}
-    for i, name in enumerate(nlp.pipe_names):
-        problems[name] = analyze_pipes(nlp, name, i, warn=warn)
-    return problems
+DEFAULT_KEYS = ["requires", "assigns", "scores", "retokenizes"]
 
 
 def validate_attrs(values: Iterable[str]) -> Iterable[str]:
@@ -101,89 +59,77 @@ def validate_attrs(values: Iterable[str]) -> Iterable[str]:
     return values
 
 
-def _get_feature_for_attr(nlp: "Language", attr: str, feature: str) -> List[str]:
-    assert feature in ["assigns", "requires"]
-    result = []
+def get_attr_info(nlp: "Language", attr: str) -> Dict[str, List[str]]:
+    """Check which components in the pipeline assign or require an attribute.
+
+    nlp (Language): The current nlp object.
+    attr (str): The attribute, e.g. "doc.tensor".
+    RETURNS (Dict[str, List[str]]): A dict keyed by "assigns" and "requires",
+        mapped to a list of component names.
+    """
+    result = {"assigns": [], "requires": []}
     for pipe_name in nlp.pipe_names:
         meta = nlp.get_pipe_meta(pipe_name)
-        pipe_assigns = getattr(meta, feature, [])
-        if attr in pipe_assigns:
-            result.append(pipe_name)
+        if attr in meta.assigns:
+            result["assigns"].append(pipe_name)
+        if attr in meta.requires:
+            result["requires"].append(pipe_name)
     return result
 
 
-def get_assigns_for_attr(nlp: "Language", attr: str) -> List[str]:
-    """Get all pipeline components that assign an attr, e.g. "doc.tensor".
-
-    pipeline (Language): The current nlp object.
-    attr (str): The attribute to check.
-    RETURNS (List[str]): Names of components that require the attr.
-    """
-    return _get_feature_for_attr(nlp, attr, "assigns")
-
-
-def get_requires_for_attr(nlp: "Language", attr: str) -> List[str]:
-    """Get all pipeline components that require an attr, e.g. "doc.tensor".
-
-    pipeline (Language): The current nlp object.
-    attr (str): The attribute to check.
-    RETURNS (List[str]): Names of components that require the attr.
-    """
-    return _get_feature_for_attr(nlp, attr, "requires")
-
-
-def print_summary(
-    nlp: "Language", pretty: bool = True, no_print: bool = False
-) -> Optional[Dict[str, Union[List[str], Dict[str, List[str]]]]]:
+def analyze_pipes(
+    nlp: "Language", *, keys: List[str] = DEFAULT_KEYS,
+) -> Dict[str, Union[List[str], Dict[str, List[str]]]]:
     """Print a formatted summary for the current nlp object's pipeline. Shows
     a table with the pipeline components and why they assign and require, as
     well as any problems if available.
 
     nlp (Language): The nlp object.
-    pretty (bool): Pretty-print the results (color etc).
-    no_print (bool): Don't print anything, just return the data.
-    RETURNS (dict): A dict with "overview" and "problems".
+    keys (List[str]): The meta keys to show in the table.
+    RETURNS (dict): A dict with "summary" and "problems".
     """
-    msg = Printer(pretty=pretty, no_print=no_print)
-    overview = []
-    problems = {}
+    result = {"summary": {}, "problems": {}}
+    all_attrs = set()
     for i, name in enumerate(nlp.pipe_names):
         meta = nlp.get_pipe_meta(name)
-        overview.append((i, name, meta.requires, meta.assigns, meta.retokenizes))
-        problems[name] = analyze_pipes(nlp, name, i, warn=False)
+        all_attrs.update(meta.assigns)
+        all_attrs.update(meta.requires)
+        result["summary"][name] = {key: getattr(meta, key, None) for key in keys}
+        prev_pipes = nlp.pipeline[:i]
+        requires = {annot: False for annot in meta.requires}
+        if requires:
+            for prev_name, prev_pipe in prev_pipes:
+                prev_meta = nlp.get_pipe_meta(prev_name)
+                for annot in prev_meta.assigns:
+                    requires[annot] = True
+        result["problems"][name] = []
+        for annot, fulfilled in requires.items():
+            if not fulfilled:
+                result["problems"][name].append(annot)
+    result["attrs"] = {attr: get_attr_info(nlp, attr) for attr in all_attrs}
+    return result
+
+
+def print_pipe_analysis(
+    analysis: Dict[str, Union[List[str], Dict[str, List[str]]]],
+    *,
+    keys: List[str] = DEFAULT_KEYS,
+) -> Optional[Dict[str, Union[List[str], Dict[str, List[str]]]]]:
+    """Print a formatted version of the pipe analysis produced by analyze_pipes.
+
+    analysis (Dict[str, Union[List[str], Dict[str, List[str]]]]): The analysis.
+    keys (List[str]): The meta keys to show in the table.
+    """
     msg.divider("Pipeline Overview")
-    header = ("#", "Component", "Requires", "Assigns", "Retokenizes")
-    msg.table(overview, header=header, divider=True, multiline=True)
-    n_problems = sum(len(p) for p in problems.values())
-    if any(p for p in problems.values()):
+    header = ["#", "Component", *[key.capitalize() for key in keys]]
+    summary = analysis["summary"].items()
+    body = [[i, n, *[v for v in m.values()]] for i, (n, m) in enumerate(summary)]
+    msg.table(body, header=header, divider=True, multiline=True)
+    n_problems = sum(len(p) for p in analysis["problems"].values())
+    if any(p for p in analysis["problems"].values()):
         msg.divider(f"Problems ({n_problems})")
-        for name, problem in problems.items():
+        for name, problem in analysis["problems"].items():
             if problem:
                 msg.warn(f"'{name}' requirements not met: {', '.join(problem)}")
     else:
         msg.good("No problems found.")
-    if no_print:
-        return {"overview": overview, "problems": problems}
-
-
-def count_pipeline_interdependencies(nlp: "Language") -> List[int]:
-    """Count how many subsequent components require an annotation set by each
-    component in the pipeline.
-
-    nlp (Language): The current nlp object.
-    RETURNS (List[int]): The interdependency counts.
-    """
-    pipe_assigns = []
-    pipe_requires = []
-    for name in nlp.pipe_names:
-        meta = nlp.get_pipe_meta(name)
-        pipe_assigns.append(set(meta.assigns))
-        pipe_requires.append(set(meta.requires))
-    counts = []
-    for i, assigns in enumerate(pipe_assigns):
-        count = 0
-        for requires in pipe_requires[i + 1 :]:
-            if assigns.intersection(requires):
-                count += 1
-        counts.append(count)
-    return counts

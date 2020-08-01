@@ -3,8 +3,8 @@ import pytest
 from spacy import registry
 from spacy.gold import Example
 from spacy.vocab import Vocab
-from spacy.syntax.arc_eager import ArcEager
-from spacy.syntax.nn_parser import Parser
+from spacy.pipeline._parser_internals.arc_eager import ArcEager
+from spacy.pipeline.transition_parser import Parser
 from spacy.tokens.doc import Doc
 from thinc.api import Model
 from spacy.pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL

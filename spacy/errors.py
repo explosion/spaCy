@@ -63,8 +63,6 @@ class Warnings:
             "have the spacy-lookups-data package installed.")
     W024 = ("Entity '{entity}' - Alias '{alias}' combination already exists in "
             "the Knowledge Base.")
-    W025 = ("'{name}' requires '{attr}' to be assigned, but none of the "
-            "previous components in the pipeline declare that they assign it.")
     W026 = ("Unable to set all sentence boundaries from dependency parses.")
     W027 = ("Found a large training file of {size} bytes. Note that it may "
             "be more efficient to split your training data into multiple "

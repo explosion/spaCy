@@ -1,12 +1,8 @@
-from libc.string cimport memcpy, memset
-
 from cymem.cymem cimport Pool
-cimport cython
 
-from ..structs cimport TokenC, SpanC
-from ..typedefs cimport attr_t
+from ...structs cimport TokenC, SpanC
+from ...typedefs cimport attr_t
 
-from ..vocab cimport EMPTY_LEXEME
 from ._state cimport StateC
 
 

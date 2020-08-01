@@ -8,9 +8,8 @@ new: 3.0
 
 An `Example` holds the information for one training instance. It stores two
 `Doc` objects: one for holding the gold-standard reference data, and one for
-holding the predictions of the pipeline. An `Alignment` <!-- TODO: link? -->
-object stores the alignment between these two documents, as they can differ in
-tokenization.
+holding the predictions of the pipeline. An `Alignment` object stores the
+alignment between these two documents, as they can differ in tokenization.
 
 ## Example.\_\_init\_\_ {#init tag="method"}
 

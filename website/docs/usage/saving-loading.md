@@ -15,8 +15,6 @@ import Serialization101 from 'usage/101/\_serialization.md'
 
 ### Serializing the pipeline {#pipeline}
 
-<!-- TODO: update this -->
-
 When serializing the pipeline, keep in mind that this will only save out the
 **binary data for the individual components** to allow spaCy to restore them –
 not the entire objects. This is a good thing, because it makes serialization

@@ -3,21 +3,23 @@ import React, { useState, useRef } from 'react'
 import Icon from './icon'
 import classes from '../styles/copy.module.sass'
 
+export function copyToClipboard(ref, callback) {
+    const isClient = typeof window !== 'undefined'
+    if (ref.current && isClient) {
+        ref.current.select()
+        document.execCommand('copy')
+        callback(true)
+        ref.current.blur()
+        setTimeout(() => callback(false), 1000)
+    }
+}
+
 const CopyInput = ({ text, prefix }) => {
     const isClient = typeof window !== 'undefined'
     const supportsCopy = isClient && document.queryCommandSupported('copy')
     const textareaRef = useRef()
     const [copySuccess, setCopySuccess] = useState(false)
-
-    function copyToClipboard() {
-        if (textareaRef.current && isClient) {
-            textareaRef.current.select()
-            document.execCommand('copy')
-            setCopySuccess(true)
-            textareaRef.current.blur()
-            setTimeout(() => setCopySuccess(false), 1000)
-        }
-    }
+    const onClick = () => copyToClipboard(textareaRef, setCopySuccess)
 
     function selectText() {
         if (textareaRef.current && isClient) {
@@ -37,7 +39,7 @@ const CopyInput = ({ text, prefix }) => {
                 onClick={selectText}
             />
             {supportsCopy && (
-                <button title="Copy to clipboard" onClick={copyToClipboard}>
+                <button title="Copy to clipboard" onClick={onClick}>
                     <Icon width={16} name={copySuccess ? 'accept' : 'clipboard'} />
                 </button>
             )}

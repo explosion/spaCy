@@ -1,8 +1,6 @@
-from cymem.cymem cimport Pool
-
 from .stateclass cimport StateClass
-from ..typedefs cimport weight_t, attr_t
-from .transition_system cimport TransitionSystem, Transition
+from ...typedefs cimport weight_t, attr_t
+from .transition_system cimport Transition, TransitionSystem
 
 
 cdef class ArcEager(TransitionSystem):

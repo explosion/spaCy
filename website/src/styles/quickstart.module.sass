@@ -83,6 +83,24 @@
 .fields
     flex: 100%
 
+.select
+    cursor: pointer
+    border: 1px solid var(--color-subtle)
+    border-radius: var(--border-radius)
+    display: inline-block
+    padding: 0.35rem 1.25rem
+    margin: 0 1rem 0.75rem 0
+    font-size: var(--font-size-sm)
+    background: var(--color-back)
+
+.text-input
+    border: 1px solid var(--color-subtle)
+    border-radius: var(--border-radius)
+    display: inline-block
+    padding: 0.35rem 0.75rem
+    font-size: var(--font-size-sm)
+    background: var(--color-back)
+
 .code
     background: var(--color-front)
     color: var(--color-back)
@@ -95,6 +113,7 @@
     border-bottom-right-radius: var(--border-radius)
     -webkit-font-smoothing: subpixel-antialiased
     -moz-osx-font-smoothing: auto
+    position: relative
 
 .results
     display: block
@@ -104,6 +123,9 @@
 
     & > span
         display: block
+
+.hide-prompts .prompt:before
+    content: initial !important
 
 .prompt:before
     color: var(--color-theme)
@@ -115,6 +137,9 @@
 .python:before
     content: ">>>"
 
+.comment
+    color: var(--syntax-comment)
+
 .divider
     padding: 1.5rem 0
 
@@ -123,3 +148,29 @@
 
     .input:checked + .label &
         color: inherit
+
+.copy-area
+    width: 1px
+    height: 1px
+    opacity: 0
+    position: absolute
+
+.menu
+    color: var(--color-subtle)
+    padding-right: 1.5rem
+    display: inline-block
+    position: absolute
+    bottom: var(--spacing-xs)
+    right: 0
+
+.icon-button
+    display: inline-block
+    color: inherit
+    cursor: pointer
+    transition: transform 0.05s ease
+
+    &:not(:last-child)
+        margin-right: 1.5rem
+
+    &:hover
+        transform: scale(1.1)
