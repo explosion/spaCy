@@ -3,7 +3,6 @@ from typing import Optional, List
 from thinc.api import Model
 
 from ...lookups import Lookups
-from ...parts_of_speech import NAMES as UPOS_NAMES
 from ...pipeline import Lemmatizer
 from ...tokens import Token
 from ...vocab import Vocab
@@ -38,10 +37,7 @@ class GreekLemmatizer(Lemmatizer):
         RETURNS (list): The available lemmas for the string.
         """
         string = token.text
-        univ_pos = token.pos_
-        if isinstance(univ_pos, int):
-            univ_pos = UPOS_NAMES.get(univ_pos, "X")
-        univ_pos = univ_pos.lower()
+        univ_pos = token.pos_.lower()
         if univ_pos in ("", "eol", "space"):
             return [string.lower()]
 

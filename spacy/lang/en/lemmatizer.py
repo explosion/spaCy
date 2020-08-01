@@ -1,6 +1,5 @@
 from typing import Optional
 
-from ...parts_of_speech import NAMES as UPOS_NAMES
 from ...pipeline import Lemmatizer
 
 
@@ -16,8 +15,6 @@ class EnglishLemmatizer(Lemmatizer):
         morphology (dict): The token's morphological features following the
             Universal Dependencies scheme.
         """
-        if isinstance(univ_pos, int):
-            univ_pos = UPOS_NAMES.get(univ_pos, "X")
         univ_pos = univ_pos.lower()
         if morphology is None:
             morphology = {}

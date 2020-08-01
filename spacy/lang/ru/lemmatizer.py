@@ -3,7 +3,6 @@ from typing import Optional, List, Dict, Tuple
 from thinc.api import Model
 
 from ...lookups import Lookups
-from ...parts_of_speech import NAMES as UPOS_NAMES
 from ...pipeline import Lemmatizer
 from ...symbols import POS
 from ...tokens import Token

@@ -1,6 +1,5 @@
 from typing import List, Dict
 
-from ...parts_of_speech import NAMES
 from ...pipeline import Lemmatizer
 from ...tokens import Token
 
@@ -14,9 +13,6 @@ class PolishLemmatizer(Lemmatizer):
         string = token.text
         univ_pos = token.pos_
         morphology = token.morph.to_dict()
-        if isinstance(univ_pos, int):
-            univ_pos = NAMES.get(univ_pos, "X")
-        univ_pos = univ_pos.upper()
         lookup_pos = univ_pos.lower()
         if univ_pos == "PROPN":
             lookup_pos = "noun"

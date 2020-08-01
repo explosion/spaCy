@@ -1,6 +1,5 @@
 from typing import List
 
-from ...parts_of_speech import NAMES as UPOS_NAMES
 from ...pipeline import Lemmatizer
 from ...tokens import Token
 
@@ -17,10 +16,7 @@ class FrenchLemmatizer(Lemmatizer):
 
     def rule_lemmatize(self, token: Token) -> List[str]:
         string = token.text
-        univ_pos = token.pos_
-        if isinstance(univ_pos, int):
-            univ_pos = UPOS_NAMES.get(univ_pos, "X")
-        univ_pos = univ_pos.lower()
+        univ_pos = token.pos_.lower()
         if univ_pos in ("", "eol", "space"):
             return [string.lower()]
         elif "lemma_rules" not in self.lookups or univ_pos not in (
