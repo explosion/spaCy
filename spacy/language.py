@@ -18,7 +18,7 @@ from timeit import default_timer as timer
 
 from .tokens.underscore import Underscore
 from .vocab import Vocab, create_vocab
-from .pipe_analysis import analyze_pipes, analyze_all_pipes, validate_attrs
+from .pipe_analysis import validate_attrs, analyze_pipes, print_pipe_analysis
 from .gold import Example
 from .scorer import Scorer
 from .util import create_default_optimizer, registry
@@ -37,8 +37,6 @@ from . import util
 from . import about
 
 
-# TODO: integrate pipeline analyis
-ENABLE_PIPELINE_ANALYSIS = False
 # This is the base config will all settings (training etc.)
 DEFAULT_CONFIG_PATH = Path(__file__).parent / "default_config.cfg"
 DEFAULT_CONFIG = Config().from_disk(DEFAULT_CONFIG_PATH)
@@ -522,6 +520,25 @@ class Language:
             return add_component(func)
         return add_component
 
+    def analyze_pipes(
+        self,
+        *,
+        keys: List[str] = ["assigns", "requires", "scores", "retokenizes"],
+        pretty: bool = False,
+    ) -> Optional[Dict[str, Any]]:
+        """Analyze the current pipeline components, print a summary of what
+        they assign or require and check that all requirements are met.
+
+        keys (List[str]): The meta values to display in the table. Corresponds
+            to values in FactoryMeta, defined by @Language.factory decorator.
+        pretty (bool): Pretty-print the results.
+        RETURNS (dict): The data.
+        """
+        analysis = analyze_pipes(self, keys=keys)
+        if pretty:
+            print_pipe_analysis(analysis, keys=keys)
+        return analysis
+
     def get_pipe(self, name: str) -> Callable[[Doc], Doc]:
         """Get a pipeline component for a given component name.
 
@@ -666,8 +683,6 @@ class Language:
         pipe_index = self._get_pipe_index(before, after, first, last)
         self._pipe_meta[name] = self.get_factory_meta(factory_name)
         self.pipeline.insert(pipe_index, (name, pipe_component))
-        if ENABLE_PIPELINE_ANALYSIS:
-            analyze_pipes(self, name, pipe_index)
         return pipe_component
 
     def _get_pipe_index(
@@ -758,8 +773,6 @@ class Language:
             self.add_pipe(factory_name, name=name)
         else:
             self.add_pipe(factory_name, name=name, before=pipe_index)
-        if ENABLE_PIPELINE_ANALYSIS:
-            analyze_all_pipes(self)
 
     def rename_pipe(self, old_name: str, new_name: str) -> None:
         """Rename a pipeline component.
@@ -793,8 +806,6 @@ class Language:
         # because factory may be used for something else
         self._pipe_meta.pop(name)
         self._pipe_configs.pop(name)
-        if ENABLE_PIPELINE_ANALYSIS:
-            analyze_all_pipes(self)
         return removed
 
     def __call__(
