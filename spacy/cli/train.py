@@ -246,9 +246,7 @@ def create_evaluation_callback(
     cfg: Union[Config, Dict[str, Any]],
 ) -> Callable[[], Tuple[float, Dict[str, float]]]:
     def evaluate() -> Tuple[float, Dict[str, float]]:
-        dev_examples = corpus.dev_dataset(
-            nlp, gold_preproc=cfg["gold_preproc"]
-        )
+        dev_examples = corpus.dev_dataset(nlp, gold_preproc=cfg["gold_preproc"])
         dev_examples = list(dev_examples)
         n_words = sum(len(ex.predicted) for ex in dev_examples)
         batch_size = cfg["eval_batch_size"]
