@@ -636,10 +636,17 @@ class Language:
         reset_weights (bool): Whether to reset the component's weights.
         RETURNS (Tuple[Callable, str]): The component and its factory name.
         """
-        # TODO: handle errors and mismatches
+        # TODO: handle errors and mismatches (vectors etc.)
         if not isinstance(source, self.__class__):
-            raise ValueError("TODO: source needs to be nlp object")
-        # TODO: custom errors if component not in source pipeline
+            raise ValueError(Errors.E946.format(name=source_name, source=type(source)))
+        if not source.has_pipe(source_name):
+            raise ValueError(
+                Errors.E945.format(
+                    name=source_name,
+                    model=f"{source.meta['lang']}_{source.meta['name']}",
+                    opts=", ".join(source.pipe_names),
+                )
+            )
         pipe = source.get_pipe(source_name)
         if reset_weights and hasattr(pipe, "begin_training"):
             pipe.begin_training()
@@ -1476,7 +1483,6 @@ class Language:
                 raise ValueError(Errors.E956.format(name=pipe_name, opts=opts))
             pipe_cfg = util.copy_config(pipeline[pipe_name])
             if pipe_name not in disable:
-                # TODO: update error message
                 if "factory" not in pipe_cfg and "source" not in pipe_cfg:
                     err = Errors.E984.format(name=pipe_name, config=pipe_cfg)
                     raise ValueError(err)

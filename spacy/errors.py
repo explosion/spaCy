@@ -481,6 +481,10 @@ class Errors:
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
+    E945 = ("Can't copy pipeline component '{name}' from source model '{model}': "
+            "not found in pipeline. Available components: {opts}")
+    E946 = ("Can't copy pipeline component '{name}' from source. Expected loaded "
+            "nlp object, but got: {source}")
     E947 = ("Matcher.add received invalid 'greedy' argument: expected "
             "a string value from {expected} but got: '{arg}'")
     E948 = ("Matcher.add received invalid 'patterns' argument: expected "
@@ -567,11 +571,13 @@ class Errors:
             "into {values}, but found {value}.")
     E983 = ("Invalid key for '{dict}': {key}. Available keys: "
             "{keys}")
-    E984 = ("Invalid component config for '{name}': no 'factory' key "
-            "specifying the registered function used to initialize the "
-            "component. For example, factory = \"ner\" will use the 'ner' "
-            "factory and all other settings in the block will be passed "
-            "to it as arguments.\n\n{config}")
+    E984 = ("Invalid component config for '{name}': component block needs either "
+            "a key 'factory' specifying the registered function used to "
+            "initialize the component, or a key 'source' key specifying a "
+            "spaCy model to copy the component from. For example, factory = "
+            "\"ner\" will use the 'ner' factory and all other settings in the "
+            "block will be passed to it as arguments. Alternatively, source = "
+            "\"en_core_web_sm\" will copy the component from that model.\n\n{config}")
     E985 = ("Can't load model from config file: no 'nlp' section found.\n\n{config}")
     E986 = ("Could not create any training batches: check your input. "
             "Perhaps discard_oversize should be set to False ?")
