@@ -50,8 +50,8 @@ def debug_model_cli(
         "print_prediction": P3,
     }
     config_overrides = parse_config_overrides(ctx.args)
-    cfg = Config().from_disk(config_path)
-    with show_validation_error():
+    with show_validation_error(config_path):
+        cfg = Config().from_disk(config_path)
         try:
             _, config = util.load_model_from_config(cfg, overrides=config_overrides)
         except ValueError as e:

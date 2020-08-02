@@ -39,7 +39,7 @@ def init_config(
 ) -> Config:
     if config_path is not None:
         msg.info("Generating config from base config", show=not silent)
-        with show_validation_error():
+        with show_validation_error(config_path, hint_init=False):
             config = Config().from_disk(config_path)
             try:
                 nlp, _ = load_model_from_config(config, auto_fill=True)

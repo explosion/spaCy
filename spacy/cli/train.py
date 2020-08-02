@@ -79,10 +79,11 @@ def train(
     else:
         msg.info("Using CPU")
     msg.info(f"Loading config and nlp from: {config_path}")
-    config = Config().from_disk(config_path)
+    with show_validation_error(config_path):
+        config = Config().from_disk(config_path)
     if config.get("training", {}).get("seed") is not None:
         fix_random_seed(config["training"]["seed"])
-    with show_validation_error():
+    with show_validation_error(config_path):
         nlp, config = util.load_model_from_config(config, overrides=config_overrides)
     if config["training"]["base_model"]:
         # TODO: do something to check base_nlp against regular nlp described in config?
