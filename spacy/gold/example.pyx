@@ -179,7 +179,6 @@ cdef class Example:
                 "links": self._links_to_dict()
             },
             "token_annotation": {
-                "ID": [t.i+1 for t in self.reference],
                 "ORTH": [t.text for t in self.reference],
                 "SPACY": [bool(t.whitespace_) for t in self.reference],
                 "TAG": [t.tag_ for t in self.reference],
