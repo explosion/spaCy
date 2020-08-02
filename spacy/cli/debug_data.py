@@ -33,7 +33,6 @@ def debug_config_cli(
     ctx: typer.Context,  # This is only used to read additional arguments
     config_path: Path = Arg(..., help="Path to config file", exists=True),
     code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
-    output_path: Optional[Path] = Opt(None, "--output", "-o", help="Output path for filled config or '-' for standard output", allow_dash=True),
     auto_fill: bool = Opt(False, "--auto-fill", "-F", help="Whether or not to auto-fill the config with built-in defaults if possible"),
     diff: bool = Opt(False, "--diff", "-D", help="Show a visual diff if config was auto-filled")
     # fmt: on
@@ -57,7 +56,6 @@ def debug_config_cli(
             )
         except ValueError as e:
             msg.fail(str(e), exits=1)
-    is_stdout = output_path is not None and str(output_path) == "-"
     if auto_fill:
         orig_config = config.to_str()
         filled_config = nlp.config.to_str()
@@ -68,12 +66,7 @@ def debug_config_cli(
             if diff:
                 print(diff_strings(config.to_str(), nlp.config.to_str()))
     else:
-        msg.good("Original config is valid", show=not is_stdout)
-    if is_stdout:
-        print(nlp.config.to_str())
-    elif output_path is not None:
-        nlp.config.to_disk(output_path)
-        msg.good(f"Saved updated config to {output_path}")
+        msg.good("Original config is valid")
 
 
 @debug_cli.command(
