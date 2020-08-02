@@ -426,7 +426,7 @@ def test_pipe_factories_from_source_config():
         source_nlp.to_disk(tempdir)
         dest_components_cfg = {
             "parser": {"factory": "parser"},
-            "custom": {"source": str(tempdir), "name": "yolo"},
+            "custom": {"source": str(tempdir), "component": "yolo"},
         }
         dest_config = {"nlp": dest_nlp_cfg, "components": dest_components_cfg}
         nlp = English.from_config(dest_config)
