@@ -6,11 +6,11 @@ menu:
   - ['Download', 'download']
   - ['Info', 'info']
   - ['Validate', 'validate']
+  - ['Init', 'init']
   - ['Convert', 'convert']
   - ['Debug', 'debug']
   - ['Train', 'train']
   - ['Pretrain', 'pretrain']
-  - ['Init Model', 'init-model']
   - ['Evaluate', 'evaluate']
   - ['Package', 'package']
   - ['Project', 'project']
@@ -93,6 +93,80 @@ $ python -m spacy validate
 | Argument   | Type     | Description                                               |
 | ---------- | -------- | --------------------------------------------------------- |
 | **PRINTS** | `stdout` | Details about the compatibility of your installed models. |
+
+## Init {#init new="3"}
+
+The `spacy init` CLI includes helpful commands for initializing training config
+files and model directories.
+
+### init config {#init-config new="3"}
+
+Initialize and export a [`config.cfg` file](/usage/training#config) for training
+and update it with all default values, if possible. Config files used for
+training should always be complete and not contain any hidden defaults or
+missing values, so this command helps you create your final config. It takes
+**one** of the following options:
+
+- `--base`: Base **config** to auto-fill, e.g. created using the
+  [training quickstart](/usage/training#quickstart) widget.
+- `--lang`: Base **language** code to use for blank config.
+- `--model`: Base **model** to copy config from.
+
+> ```bash
+> ### with base config {wrap="true"}
+> $ python -m spacy init config config.cfg --base base.cfg
+> ```
+>
+> ```bash
+> ### blank language {wrap="true"}
+> $ python -m spacy init config config.cfg --lang en --pipeline tagger,parser
+> ```
+
+```bash
+$ python -m spacy init config [output] [--base] [--lang] [--model] [--pipeline]
+```
+
+| Argument           | Type       | Description                                                                                                                                                           |
+| ------------------ | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `output`           | positional | Path to output `.cfg` file. If not set, the config is written to stdout so you can pipe it forward to a file.                                                         |
+| `--base`, `-b`     | option     | Optional base config file to auto-fill with defaults.                                                                                                                 |
+| `--lang`, `-l`     | option     | Optional language code to use for blank config. If a `--pipeline` is specified, the components will be added in order.                                                |
+| `--model`, `-m`    | option     | Optional base model to copy config from. If a `--pipeline` is specified, only those components will be kept, and all other components not in the model will be added. |
+| `--pipeline`, `-p` | option     | Optional comma-separate pipeline of components to add to blank language or model.                                                                                     |
+| **CREATES**        | config     | Complete and auto-filled config file for training.                                                                                                                    |
+
+### init model {#init-model new="2"}
+
+<!-- TODO: update for v3 -->
+
+Create a new model directory from raw data, like word frequencies, Brown
+clusters and word vectors. This command is similar to the `spacy model` command
+in v1.x. Note that in order to populate the model's vocab, you need to pass in a
+JSONL-formatted [vocabulary file](/api/data-formats#vocab-jsonl) as
+`--jsonl-loc` with optional `id` values that correspond to the vectors table.
+Just loading in vectors will not automatically populate the vocab.
+
+<Infobox title="New in v3.0" variant="warning">
+
+The `init-model` command is now available as a subcommand of `spacy init`.
+
+</Infobox>
+
+```bash
+$ python -m spacy init model [lang] [output_dir] [--jsonl-loc] [--vectors-loc]
+[--prune-vectors]
+```
+
+| Argument                                                | Type       | Description                                                                                                                                                                                                                                            |
+| ------------------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `lang`                                                  | positional | Model language [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes), e.g. `en`.                                                                                                                                                           |
+| `output_dir`                                            | positional | Model output directory. Will be created if it doesn't exist.                                                                                                                                                                                           |
+| `--jsonl-loc`, `-j`                                     | option     | Optional location of JSONL-formatted [vocabulary file](/api/data-formats#vocab-jsonl) with lexical attributes.                                                                                                                                         |
+| `--vectors-loc`, `-v`                                   | option     | Optional location of vectors. Should be a file where the first row contains the dimensions of the vectors, followed by a space-separated Word2Vec table. File can be provided in `.txt` format or as a zipped text file in `.zip` or `.tar.gz` format. |
+| `--truncate-vectors`, `-t` <Tag variant="new">2.3</Tag> | option     | Number of vectors to truncate to when reading in vectors file. Defaults to `0` for no truncation.                                                                                                                                                      |
+| `--prune-vectors`, `-V`                                 | option     | Number of vectors to prune the vocabulary to. Defaults to `-1` for no pruning.                                                                                                                                                                         |
+| `--vectors-name`, `-vn`                                 | option     | Name to assign to the word vectors in the `meta.json`, e.g. `en_core_web_md.vectors`.                                                                                                                                                                  |
+| **CREATES**                                             | model      | A spaCy model containing the vocab and vectors.                                                                                                                                                                                                        |
 
 ## Convert {#convert}
 
@@ -468,32 +542,6 @@ tokenization can be provided.
 {"text": "My cynical view on this is that it will never be free to the public. Reason: what would be the draw of joining the military? Right now their selling point is free Healthcare and Education. Ironically both are run horribly and most, that I've talked to, come out wishing they never went in."}
 {"tokens": ["If", "tokens", "are", "provided", "then", "we", "can", "skip", "the", "raw", "input", "text"]}
 ```
-
-## Init Model {#init-model new="2"}
-
-Create a new model directory from raw data, like word frequencies, Brown
-clusters and word vectors. This command is similar to the `spacy model` command
-in v1.x. Note that in order to populate the model's vocab, you need to pass in a
-JSONL-formatted [vocabulary file](/api/data-formats#vocab-jsonl) as
-`--jsonl-loc` with optional `id` values that correspond to the vectors table.
-Just loading in vectors will not automatically populate the vocab.
-
-```bash
-$ python -m spacy init-model [lang] [output_dir] [--jsonl-loc] [--vectors-loc]
-[--prune-vectors]
-```
-
-| Argument                                                    | Type       | Description                                                                                                                                                                                                                                            |
-| ----------------------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `lang`                                                      | positional | Model language [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes), e.g. `en`.                                                                                                                                                           |
-| `output_dir`                                                | positional | Model output directory. Will be created if it doesn't exist.                                                                                                                                                                                           |
-| `--jsonl-loc`, `-j`                                         | option     | Optional location of JSONL-formatted [vocabulary file](/api/data-formats#vocab-jsonl) with lexical attributes.                                                                                                                                         |
-| `--vectors-loc`, `-v`                                       | option     | Optional location of vectors. Should be a file where the first row contains the dimensions of the vectors, followed by a space-separated Word2Vec table. File can be provided in `.txt` format or as a zipped text file in `.zip` or `.tar.gz` format. |
-| `--truncate-vectors`, `-t` <Tag variant="new">2.3</Tag>     | option     | Number of vectors to truncate to when reading in vectors file. Defaults to `0` for no truncation.                                                                                                                                                      |
-| `--prune-vectors`, `-V`                                     | option     | Number of vectors to prune the vocabulary to. Defaults to `-1` for no pruning.                                                                                                                                                                         |
-| `--vectors-name`, `-vn`                                     | option     | Name to assign to the word vectors in the `meta.json`, e.g. `en_core_web_md.vectors`.                                                                                                                                                                  |
-| `--omit-extra-lookups`, `-OEL` <Tag variant="new">2.3</Tag> | flag       | Do not include any of the extra lookups tables (`cluster`/`prob`/`sentiment`) from `spacy-lookups-data` in the model.                                                                                                                                  |
-| **CREATES**                                                 | model      | A spaCy model containing the vocab and vectors.                                                                                                                                                                                                        |
 
 ## Evaluate {#evaluate new="2"}
 
