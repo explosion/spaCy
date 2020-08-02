@@ -101,7 +101,39 @@ files and model directories.
 
 ### init config {#init-config new="3"}
 
-<!-- TODO: write -->
+Initialize and export a [`config.cfg` file](/usage/training#config) for training
+and update it with all default values, if possible. Config files used for
+training should always be complete and not contain any hidden defaults or
+missing values, so this command helps you create your final config. It takes
+**one** of the following options:
+
+- `--base`: Base **config** to auto-fill, e.g. created using the
+  [training quickstart](/usage/training#quickstart) widget.
+- `--lang`: Base **language** code to use for blank config.
+- `--model`: Base **model** to copy config from.
+
+> ```bash
+> ### with base config {wrap="true"}
+> $ python -m spacy init config config.cfg --base base.cfg
+> ```
+>
+> ```bash
+> ### blank language {wrap="true"}
+> $ python -m spacy init config config.cfg --lang en --pipeline tagger,parser
+> ```
+
+```bash
+$ python -m spacy init config [output] [--base] [--lang] [--model] [--pipeline]
+```
+
+| Argument           | Type       | Description                                                                                                                                                           |
+| ------------------ | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `output`           | positional | Path to output `.cfg` file. If not set, the config is written to stdout so you can pipe it forward to a file.                                                         |
+| `--base`, `-b`     | option     | Optional base config file to auto-fill with defaults.                                                                                                                 |
+| `--lang`, `-l`     | option     | Optional language code to use for blank config. If a `--pipeline` is specified, the components will be added in order.                                                |
+| `--model`, `-m`    | option     | Optional base model to copy config from. If a `--pipeline` is specified, only those components will be kept, and all other components not in the model will be added. |
+| `--pipeline`, `-p` | option     | Optional comma-separate pipeline of components to add to blank language or model.                                                                                     |
+| **CREATES**        | config     | Complete and auto-filled config file for training.                                                                                                                    |
 
 ### init model {#init-model new="2"}
 
