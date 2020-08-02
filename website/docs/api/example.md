@@ -41,9 +41,8 @@ both documents.
 ## Example.from_dict {#from_dict tag="classmethod"}
 
 Construct an `Example` object from the `predicted` document and the reference
-annotations provided as a dictionary.
-
-<!-- TODO: document formats? legacy & token_annotation stuff -->
+annotations provided as a dictionary. For more details on the required format,  
+see the [training format documentation](/api/data-formats#dict-input).
 
 > #### Example
 >
