@@ -346,8 +346,6 @@ def _fix_legacy_dict_data(example_dict):
         # If heads are set, we don't also redundantly specify SENT_START.
         token_dict.pop("SENT_START")
         warnings.warn(Warnings.W092)
-    print("token_dict", token_dict)
-    print("doc_dict", doc_dict)
     return {
         "token_annotation": token_dict,
         "doc_annotation": doc_dict

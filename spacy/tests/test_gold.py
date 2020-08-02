@@ -647,11 +647,11 @@ def test_split_sents(merged_dict):
     assert split_examples[1].text == "It is just me"
 
     token_annotation_1 = split_examples[0].to_dict()["token_annotation"]
-    assert token_annotation_1["words"] == ["Hi", "there", "everyone"]
-    assert token_annotation_1["tags"] == ["INTJ", "ADV", "PRON"]
-    assert token_annotation_1["sent_starts"] == [1, 0, 0]
+    assert token_annotation_1["ORTH"] == ["Hi", "there", "everyone"]
+    assert token_annotation_1["TAG"] == ["INTJ", "ADV", "PRON"]
+    assert token_annotation_1["SENT_START"] == [1, 0, 0]
 
     token_annotation_2 = split_examples[1].to_dict()["token_annotation"]
-    assert token_annotation_2["words"] == ["It", "is", "just", "me"]
-    assert token_annotation_2["tags"] == ["PRON", "AUX", "ADV", "PRON"]
-    assert token_annotation_2["sent_starts"] == [1, 0, 0, 0]
+    assert token_annotation_2["ORTH"] == ["It", "is", "just", "me"]
+    assert token_annotation_2["TAG"] == ["PRON", "AUX", "ADV", "PRON"]
+    assert token_annotation_2["SENT_START"] == [1, 0, 0, 0]
