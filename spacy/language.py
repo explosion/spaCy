@@ -1497,7 +1497,7 @@ class Language:
                         # We only need the components here, no other data
                         disable = ["vocab", "tokenizer"]
                         source_nlps[model] = util.load_model(model, disable=disable)
-                    source_name = pipe_cfg.get("name", pipe_name)
+                    source_name = pipe_cfg.get("component", pipe_name)
                     nlp.add_pipe(source_name, source=source_nlps[model], name=pipe_name)
         nlp.config = filled if auto_fill else config
         nlp.resolved = resolved
