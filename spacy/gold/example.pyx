@@ -179,15 +179,16 @@ cdef class Example:
                 "links": self._links_to_dict()
             },
             "token_annotation": {
-                "ids": [t.i+1 for t in self.reference],
-                "words": [t.text for t in self.reference],
-                "tags": [t.tag_ for t in self.reference],
-                "lemmas": [t.lemma_ for t in self.reference],
-                "pos": [t.pos_ for t in self.reference],
-                "morphs": [t.morph_ for t in self.reference],
-                "heads": [t.head.i for t in self.reference],
-                "deps": [t.dep_ for t in self.reference],
-                "sent_starts": [int(bool(t.is_sent_start)) for t in self.reference]
+                "ID": [t.i+1 for t in self.reference],
+                "ORTH": [t.text for t in self.reference],
+                "SPACY": [bool(t.whitespace_) for t in self.reference],
+                "TAG": [t.tag_ for t in self.reference],
+                "LEMMA": [t.lemma_ for t in self.reference],
+                "POS": [t.pos_ for t in self.reference],
+                "MORPH": [t.morph_ for t in self.reference],
+                "HEAD": [t.head.i for t in self.reference],
+                "DEP": [t.dep_ for t in self.reference],
+                "SENT_START": [int(bool(t.is_sent_start)) for t in self.reference]
             }
         }
 
@@ -331,10 +332,14 @@ def _fix_legacy_dict_data(example_dict):
     for key, value in old_token_dict.items():
         if key in ("text", "ids", "brackets"):
             pass
+        elif key in remapping.values():
+            token_dict[key] = value
         elif key.lower() in remapping:
             token_dict[remapping[key.lower()]] = value
         else:
-            raise KeyError(Errors.E983.format(key=key, dict="token_annotation", keys=remapping.keys()))
+            all_keys = set(remapping.values())
+            all_keys.update(remapping.keys())
+            raise KeyError(Errors.E983.format(key=key, dict="token_annotation", keys=all_keys))
     text = example_dict.get("text", example_dict.get("raw"))
     if _has_field(token_dict, "ORTH") and not _has_field(token_dict, "SPACY"):
         token_dict["SPACY"] = _guess_spaces(text, token_dict["ORTH"])
@@ -342,6 +347,8 @@ def _fix_legacy_dict_data(example_dict):
         # If heads are set, we don't also redundantly specify SENT_START.
         token_dict.pop("SENT_START")
         warnings.warn(Warnings.W092)
+    print("token_dict", token_dict)
+    print("doc_dict", doc_dict)
     return {
         "token_annotation": token_dict,
         "doc_annotation": doc_dict
