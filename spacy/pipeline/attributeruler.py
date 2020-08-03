@@ -19,10 +19,6 @@ AttributeRulerPatternType = Dict[str, Union[MatcherPatternType, Dict, int]]
 
 @Language.factory(
     "attribute_ruler",
-    assigns=[],
-    default_config={},
-    scores=[],
-    default_score_weights={},
 )
 def make_attribute_ruler(
     nlp: Language,
