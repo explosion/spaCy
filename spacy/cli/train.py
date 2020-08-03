@@ -14,6 +14,7 @@ from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
 from ._util import import_code
 from ..language import Language
 from .. import util
+from ..gold.example import Example
 from ..errors import Errors
 
 
