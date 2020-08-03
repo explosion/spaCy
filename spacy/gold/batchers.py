@@ -7,19 +7,19 @@ from .example import Example
 from ..util import registry, minibatch
 
 
-Sizing = Union[Iterator[int], int]
+Sizing = Union[Iterable[int], int]
 ItemT = TypeVar("ItemT")
-Batcher = Callable[[Iterable[ItemT]], Iterable[List[ItemT]]]
+BatcherT = Callable[[Iterable[ItemT]], Iterable[List[ItemT]]]
 
 
-@registry.batchers("batch_by_padded.v1")
+@registry.batchers("spacy.batch_by_padded.v1")
 def configure_minibatch_by_padded_size(
     *,
     size: Sizing,
     buffer: int,
     discard_oversize: bool,
     get_length: Optional[Callable[[ItemT], int]]=None
-) -> Batcher:
+) -> BatcherT:
     return partial(
         minibatch_by_padded_size,
         size=size,
@@ -35,19 +35,18 @@ def configure_minibatch_by_words(
     size: Sizing,
     tolerance: float,
     discard_oversize: bool,
-    get_length: Optional[Callable[[ItemT], int]]=None
-) -> Batcher:
+    get_length: Callable[[ItemT], int]=len
+) -> BatcherT:
     return partial(
         minibatch_by_words,
         size=size,
-        buffer=buffer,
         discard_oversize=discard_oversize,
         get_length=get_length
     )
 
 
 @registry.batchers("batch_by_sequence.v1")
-def configure_minibatch(size: Sizing, get_length=None) -> Batcher:
+def configure_minibatch(size: Sizing, get_length=None) -> BatcherT:
     return partial(minibatch, size=size, get_length=get_length)
 
 
@@ -135,25 +134,6 @@ def minibatch_by_words(docs, size, tolerance=0.2, discard_oversize=False, get_le
     batch.extend(overflow)
     if batch:
         yield batch
-
-
-def minibatch(
-    items: Iterable[Any], size: Sizing
-) -> Iterator[Any]:
-    """Iterate over batches of items. `size` may be an iterator,
-    so that batch-size can vary on each step.
-    """
-    if isinstance(size, int):
-        size_ = itertools.repeat(size)
-    else:
-        size_ = size
-    items = iter(items)
-    while True:
-        batch_size = next(size_)
-        batch = list(itertools.islice(items, int(batch_size)))
-        if len(batch) == 0:
-            break
-        yield list(batch)
 
 
 def _batch_by_length(seqs: Sequence[Any], max_words: int, get_length=len) -> List[List[Any]]:
