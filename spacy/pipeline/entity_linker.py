@@ -94,8 +94,8 @@ class EntityLinker(Pipe):
             losses during training.
         kb (KnowledgeBase): The KnowledgeBase holding all entities and their aliases.
         labels_discard (Iterable[str]): NER labels that will automatically get a "NIL" prediction.
-        incl_prior (bool): Whether or not to include prior probabilities from the KB in the final prediction.
-        incl_context (bool): Whether or not to use the sentence context of entities in the final prediction.
+        incl_prior (bool): Whether or not to include prior probabilities from the KB in the model.
+        incl_context (bool): Whether or not to include the local context in the model.
 
         DOCS: https://spacy.io/api/entitylinker#init
         """
