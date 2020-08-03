@@ -3,10 +3,11 @@ import pytest
 from spacy.language import Language
 from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
+from spacy.gold import Example
 from spacy.lang.en import English
+from spacy.util import registry
 
 from .util import add_vecs_to_vocab, assert_docs_equal
-from ..gold import Example
 
 
 @pytest.fixture
@@ -153,6 +154,40 @@ def test_language_pipe_stream(nlp2, n_process, texts):
         assert_docs_equal(doc, expected_doc)
 
 
-def test_language_from_config():
-    English.from_config()
-    # TODO: add more tests
+def test_language_from_config_before_after_init():
+    name = "test_language_from_config_before_after_init"
+    ran_before = False
+    ran_after = False
+
+    @registry.callbacks(f"{name}_before")
+    def make_before_init():
+        def before_init(lang_cls):
+            nonlocal ran_before
+            ran_before = True
+            assert lang_cls is English
+            lang_cls.Defaults.foo = "bar"
+
+        return before_init
+
+    @registry.callbacks(f"{name}_after")
+    def make_after_init():
+        def after_init(nlp):
+            nonlocal ran_after
+            ran_after = True
+            assert isinstance(nlp, English)
+            assert nlp.Defaults.foo == "bar"
+            nlp.meta["foo"] = "bar"
+
+        return after_init
+
+    config = {
+        "nlp": {
+            "before_init": {"@callbacks": f"{name}_before"},
+            "after_init": {"@callbacks": f"{name}_after"},
+        }
+    }
+    nlp = English.from_config(config)
+    assert ran_before
+    assert ran_after
+    assert nlp.Defaults.foo == "bar"
+    assert nlp.meta["foo"] == "bar"

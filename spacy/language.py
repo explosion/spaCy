@@ -1421,6 +1421,10 @@ class Language:
         config["components"] = orig_pipeline
         create_tokenizer = resolved["nlp"]["tokenizer"]
         create_lemmatizer = resolved["nlp"]["lemmatizer"]
+        before_init = resolved["nlp"]["before_init"]
+        after_init = resolved["nlp"]["after_init"]
+        if before_init is not None:
+            before_init(cls)
         nlp = cls(
             create_tokenizer=create_tokenizer, create_lemmatizer=create_lemmatizer,
         )
@@ -1450,6 +1454,8 @@ class Language:
                 )
         nlp.config = filled if auto_fill else config
         nlp.resolved = resolved
+        if after_init is not None:
+            after_init(nlp)
         return nlp
 
     def to_disk(

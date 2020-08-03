@@ -67,6 +67,8 @@ class registry(thinc.registry):
     lookups = catalogue.create("spacy", "lookups", entry_points=True)
     displacy_colors = catalogue.create("spacy", "displacy_colors", entry_points=True)
     assets = catalogue.create("spacy", "assets", entry_points=True)
+    # Callback functions used to manipulate nlp object etc.
+    callbacks = catalogue.create("spacy", "callbacks")
     # These are factories registered via third-party packages and the
     # spacy_factories entry point. This registry only exists so we can easily
     # load them via the entry points. The "true" factories are added via the

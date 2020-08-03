@@ -219,6 +219,8 @@ class ConfigSchemaNlp(BaseModel):
     tokenizer: Callable = Field(..., title="The tokenizer to use")
     lemmatizer: Callable = Field(..., title="The lemmatizer to use")
     load_vocab_data: StrictBool = Field(..., title="Whether to load additional vocab data from spacy-lookups-data")
+    before_init: Optional[Callable] = Field(..., title="Optional callback to modify Language class before initialization")
+    after_init: Optional[Callable] = Field(..., title="Optional callback to modify nlp object after initialization")
     # fmt: on
 
     class Config:
