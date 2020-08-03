@@ -662,8 +662,8 @@ def test_alignment():
     spacy_tokens = ["i", "listened", "to", "obama", "'s", "podcasts", "."]
     align = Alignment.from_strings(other_tokens, spacy_tokens)
     assert list(align.x2y.lengths) == [1, 1, 1, 1, 1, 1, 1, 1]
-    assert list(align.x2y.dataXd) == [0, 1, 2, 3, 4, 4, 5, 6]  # two tokens both refer to "'s"
-    assert list(align.y2x.lengths) == [1, 1, 1, 1, 2, 1, 1]    # the token "'s" splits out in two tokens
+    assert list(align.x2y.dataXd) == [0, 1, 2, 3, 4, 4, 5, 6]
+    assert list(align.y2x.lengths) == [1, 1, 1, 1, 2, 1, 1]
     assert list(align.y2x.dataXd) == [0, 1, 2, 3, 4, 5, 6, 7]
 
 
@@ -672,8 +672,8 @@ def test_alignment_case_insensitive():
     spacy_tokens = ["i", "listened", "to", "Obama", "'s", "PODCASTS", "."]
     align = Alignment.from_strings(other_tokens, spacy_tokens)
     assert list(align.x2y.lengths) == [1, 1, 1, 1, 1, 1, 1, 1]
-    assert list(align.x2y.dataXd) == [0, 1, 2, 3, 4, 4, 5, 6]  # two tokens both refer to "'s"
-    assert list(align.y2x.lengths) == [1, 1, 1, 1, 2, 1, 1]  # the token "'s" splits out in two tokens
+    assert list(align.x2y.dataXd) == [0, 1, 2, 3, 4, 4, 5, 6]
+    assert list(align.y2x.lengths) == [1, 1, 1, 1, 2, 1, 1]
     assert list(align.y2x.dataXd) == [0, 1, 2, 3, 4, 5, 6, 7]
 
 
@@ -690,8 +690,12 @@ def test_alignment_complex():
 def test_alignment_complex_example(en_vocab):
     other_tokens = ["i listened to", "obama", "'", "s", "podcasts", "."]
     spacy_tokens = ["i", "listened", "to", "obama", "'s", "podcasts."]
-    predicted = Doc(en_vocab, words=other_tokens, spaces=[True, False, False, True, False, False])
-    reference = Doc(en_vocab, words=spacy_tokens, spaces=[True, True, True, False, True, False])
+    predicted = Doc(
+        en_vocab, words=other_tokens, spaces=[True, False, False, True, False, False]
+    )
+    reference = Doc(
+        en_vocab, words=spacy_tokens, spaces=[True, True, True, False, True, False]
+    )
     assert predicted.text == "i listened to obama's podcasts."
     assert reference.text == "i listened to obama's podcasts."
     example = Example(predicted, reference)
