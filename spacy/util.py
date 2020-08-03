@@ -68,6 +68,7 @@ class registry(thinc.registry):
     displacy_colors = catalogue.create("spacy", "displacy_colors", entry_points=True)
     assets = catalogue.create("spacy", "assets", entry_points=True)
     batchers = catalogue.create("spacy", "batchers", entry_points=True)
+    readers = catalogue.create("spacy", "readers", entry_points=True)
     # These are factories registered via third-party packages and the
     # spacy_factories entry point. This registry only exists so we can easily
     # load them via the entry points. The "true" factories are added via the
@@ -1080,3 +1081,23 @@ def create_default_optimizer() -> Optimizer:
         L2_is_weight_decay=L2_is_weight_decay,
     )
     return optimizer
+
+
+def minibatch(items, size):
+    """Iterate over batches of items. `size` may be an iterator,
+    so that batch-size can vary on each step.
+    """
+    if isinstance(size, int):
+        size_ = itertools.repeat(size)
+    else:
+        size_ = size
+    items = iter(items)
+    while True:
+        batch_size = next(size_)
+        batch = list(itertools.islice(items, int(batch_size)))
+        if len(batch) == 0:
+            break
+        yield list(batch)
+
+
+
