@@ -95,6 +95,7 @@ annotations. You need to only specify those keys corresponding to the task you
 want to train.
 
 ```python
+### Flat dictionary
 {
     "text": string,                        # Raw text.
     "words": List[string],                 # List of gold tokens.
@@ -161,6 +162,7 @@ the previous section, but there are two main sections `token_annotation` and
 [`Token` attributes](/api/token#attributes) such as "ORTH" and "TAG".
 
 ```python
+### Hierarchical dictionary
 {
     "text": string,                            # Raw text.
     "token_annotation": {

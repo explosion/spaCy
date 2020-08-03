@@ -41,7 +41,7 @@ both documents.
 ## Example.from_dict {#from_dict tag="classmethod"}
 
 Construct an `Example` object from the `predicted` document and the reference
-annotations provided as a dictionary. For more details on the required format,  
+annotations provided as a dictionary. For more details on the required format,
 see the [training format documentation](/api/data-formats#dict-input).
 
 > #### Example
@@ -244,8 +244,9 @@ accuracy of predicted entities against the original gold-standard annotation.
 
 ## Example.to_dict {#to_dict tag="method"}
 
-Return a dictionary representation of the reference annotation contained in this
-`Example`.
+Return a
+[hierarchical dictionary representation](/api/data-formats#dict-hierarch) of the
+reference annotation contained in this `Example`.
 
 > #### Example
 >
