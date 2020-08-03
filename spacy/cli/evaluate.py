@@ -64,9 +64,9 @@ def evaluate(
         msg.fail("Evaluation data not found", data_path, exits=1)
     if displacy_path and not displacy_path.exists():
         msg.fail("Visualization output directory not found", displacy_path, exits=1)
-    corpus = Corpus(data_path, data_path)
+    corpus = Corpus(gold_preproc=gold_preproc)
     nlp = util.load_model(model)
-    dev_dataset = list(corpus.dev_dataset(nlp, gold_preproc=gold_preproc))
+    dev_dataset = list(corpus(nlp, gold_preproc=gold_preproc))
     scores = nlp.evaluate(dev_dataset, verbose=False)
     metrics = {
         "TOK": "token_acc",

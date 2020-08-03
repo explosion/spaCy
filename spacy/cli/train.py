@@ -12,7 +12,6 @@ import typer
 
 from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
 from ._util import import_code
-from ..gold import Corpus, Example
 from ..language import Language
 from .. import util
 from ..errors import Errors
@@ -97,22 +96,20 @@ def train(
     if config["training"]["use_pytorch_for_gpu_memory"]:
         # It feels kind of weird to not have a default for this.
         use_pytorch_for_gpu_memory()
-    training = config["training"]
-    optimizer = training["optimizer"]
-    limit = training["limit"]
-    corpus = Corpus(data_paths["train"], data_paths["dev"], limit=limit)
+    T_loc = data_paths["train"]
+    E_loc = data_paths["dev"]
+    T_cfg = config["training"]
+    E_cfg = config["evaluation"]
+    optimizer = T_cfg["optimizer"]
+    T_reader = T_cfg["reader"]
+    T_batcher = T_cfg["batcher"]
+    E_reader = E_cfg["reader"]
     if resume_training:
         msg.info("Resuming training")
         nlp.resume_training()
     else:
         msg.info(f"Initializing the nlp pipeline: {nlp.pipe_names}")
-        train_examples = corpus.train_dataset(
-            nlp,
-            shuffle=False,
-            gold_preproc=training["gold_preproc"],
-            max_length=training["max_length"],
-        )
-        train_examples = list(train_examples)
+        train_examples = list(T_reader(nlp, T_loc))
         nlp.begin_training(lambda: train_examples)
 
     if tag_map:
@@ -139,38 +136,35 @@ def train(
             msg.fail(err, exits=1)
         tok2vec.from_bytes(weights_data)
 
-    msg.info("Loading training corpus")
-    train_batches = create_train_batches(nlp, corpus, training)
-    evaluate = create_evaluation_callback(nlp, optimizer, corpus, training)
 
     # Create iterator, which yields out info after each optimization step.
     msg.info("Start training")
     training_step_iterator = train_while_improving(
         nlp,
         optimizer,
-        train_batches,
-        evaluate,
-        dropout=training["dropout"],
-        accumulate_gradient=training["accumulate_gradient"],
-        patience=training["patience"],
-        max_steps=training["max_steps"],
-        eval_frequency=training["eval_frequency"],
+        create_train_batches(nlp, T_reader, T_batcher, T_loc, T_cfg["max_epochs"]),
+        create_evaluation_callback(nlp, E_reader, E_loc, E_cfg),
+        dropout=T_cfg["dropout"],
+        accumulate_gradient=T_cfg["accumulate_gradient"],
+        patience=T_cfg["patience"],
+        max_steps=T_cfg["max_steps"],
+        eval_frequency=T_cfg["eval_frequency"],
         raw_text=raw_text,
     )
     msg.info(f"Training. Initial learn rate: {optimizer.learn_rate}")
-    print_row = setup_printer(training, nlp)
+    print_row = setup_printer(T_cfg, nlp)
 
     try:
-        progress = tqdm.tqdm(total=training["eval_frequency"], leave=False)
+        progress = tqdm.tqdm(total=T_cfg["eval_frequency"], leave=False)
         for batch, info, is_best_checkpoint in training_step_iterator:
             progress.update(1)
             if is_best_checkpoint is not None:
                 progress.close()
                 print_row(info)
                 if is_best_checkpoint and output_path is not None:
-                    update_meta(training, nlp, info)
+                    update_meta(T_cfg, nlp, info)
                     nlp.to_disk(output_path / "model-best")
-                progress = tqdm.tqdm(total=training["eval_frequency"], leave=False)
+                progress = tqdm.tqdm(total=T_cfg["eval_frequency"], leave=False)
     except Exception as e:
         if output_path is not None:
             raise e
@@ -193,64 +187,39 @@ def train(
 
 
 def create_train_batches(
-    nlp: Language, corpus: Corpus, cfg: Union[Config, Dict[str, Any]]
+    nlp: Language,
+    reader,
+    batcher,
+    loc: Path,
+    max_epochs: int
 ):
-    max_epochs = cfg["max_epochs"]
-    train_examples = list(
-        corpus.train_dataset(
-            nlp,
-            shuffle=True,
-            gold_preproc=cfg["gold_preproc"],
-            max_length=cfg["max_length"],
-        )
-    )
-    epoch = 0
-    batch_strategy = cfg["batch_by"]
-    while True:
-        if len(train_examples) == 0:
-            raise ValueError(Errors.E988)
-        epoch += 1
-        if batch_strategy == "padded":
-            batches = util.minibatch_by_padded_size(
-                train_examples,
-                size=cfg["batch_size"],
-                buffer=256,
-                discard_oversize=cfg["discard_oversize"],
-            )
-        elif batch_strategy == "words":
-            batches = util.minibatch_by_words(
-                train_examples,
-                size=cfg["batch_size"],
-                discard_oversize=cfg["discard_oversize"],
-            )
-        else:
-            batches = util.minibatch(train_examples, size=cfg["batch_size"])
-        # make sure the minibatch_by_words result is not empty, or we'll have an infinite training loop
-        try:
-            first = next(batches)
-            yield epoch, first
-        except StopIteration:
-            raise ValueError(Errors.E986)
-        for batch in batches:
-            yield epoch, batch
-        if max_epochs >= 1 and epoch >= max_epochs:
-            break
+    epoch = 1
+    train_examples = []
+    # Stream the first epoch, so we start training faster and support
+    # infinite streams.
+    for batch in batcher(reader(nlp, loc)):
+        yield epoch, batch
+        if max_epochs >= 2:
+            train_examples.extend(batch)
+    if not train_examples:
+        # Raise error if no data
+        raise ValueError(Errors.E986)
+    while max_epochs < 1 or epoch < max_epochs:
         random.shuffle(train_examples)
+        for batch in batcher(train_examples):
+            yield epoch, batch
+        epoch += 1
 
 
 def create_evaluation_callback(
     nlp: Language,
     optimizer: Optimizer,
-    corpus: Corpus,
+    reader: Callable,
     cfg: Union[Config, Dict[str, Any]],
 ) -> Callable[[], Tuple[float, Dict[str, float]]]:
     def evaluate() -> Tuple[float, Dict[str, float]]:
-        dev_examples = corpus.dev_dataset(
-            nlp, gold_preproc=cfg["gold_preproc"]
-        )
-        dev_examples = list(dev_examples)
-        n_words = sum(len(ex.predicted) for ex in dev_examples)
-        batch_size = cfg["eval_batch_size"]
+        dev_examples = list(reader(nlp, loc))
+        batch_size = cfg["batch_size"]
         if optimizer.averages:
             with nlp.use_params(optimizer.averages):
                 scores = nlp.evaluate(dev_examples, batch_size=batch_size)
