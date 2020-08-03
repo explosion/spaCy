@@ -58,7 +58,7 @@ class AttributeRuler(Pipe):
         self.vocab = vocab
         self.matcher = Matcher(self.vocab)
         self.attrs = []
-        self.attrs_unnormed = [] # store for reference
+        self._attrs_unnormed = [] # store for reference
         self.indices = []
 
         if pattern_dicts:
@@ -129,7 +129,7 @@ class AttributeRuler(Pipe):
         DOCS: https://spacy.io/api/attributeruler#add
         """
         self.matcher.add(len(self.attrs), patterns)
-        self.attrs_unnormed.append(attrs)
+        self._attrs_unnormed.append(attrs)
         attrs = normalize_token_attrs(self.vocab, attrs)
         self.attrs.append(attrs)
         self.indices.append(index)
@@ -141,10 +141,10 @@ class AttributeRuler(Pipe):
     @property
     def patterns(self) -> List[AttributeRulerPatternType]:
         all_patterns = []
-        for i in range(len(self.attrs_unnormed)):
+        for i in range(len(self.attrs)):
             p = {}
             p["patterns"] = self.matcher.get(i)[1]
-            p["attrs"] = self.attrs_unnormed[i]
+            p["attrs"] = self._attrs_unnormed[i]
             p["index"] = self.indices[i]
             all_patterns.append(p)
         return all_patterns
