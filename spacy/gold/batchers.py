@@ -18,14 +18,14 @@ def configure_minibatch_by_padded_size(
     size: Sizing,
     buffer: int,
     discard_oversize: bool,
-    get_length: Optional[Callable[[ItemT], int]]=None
+    get_length: Optional[Callable[[ItemT], int]] = None
 ) -> BatcherT:
     return partial(
         minibatch_by_padded_size,
         size=size,
         buffer=buffer,
         discard_oversize=discard_oversize,
-        get_length=get_length
+        get_length=get_length,
     )
 
 
@@ -35,13 +35,13 @@ def configure_minibatch_by_words(
     size: Sizing,
     tolerance: float,
     discard_oversize: bool,
-    get_length: Callable[[ItemT], int]=len
+    get_length: Callable[[ItemT], int] = len
 ) -> BatcherT:
     return partial(
         minibatch_by_words,
         size=size,
         discard_oversize=discard_oversize,
-        get_length=get_length
+        get_length=get_length,
     )
 
 
@@ -55,7 +55,7 @@ def minibatch_by_padded_size(
     size: Sizing,
     buffer: int = 256,
     discard_oversize: bool = False,
-    get_length: Optional[Callable]=len
+    get_length: Optional[Callable] = len,
 ) -> Iterator[Iterator["Doc"]]:
     if isinstance(size, int):
         size_ = itertools.repeat(size)
@@ -73,7 +73,9 @@ def minibatch_by_padded_size(
                 yield subbatch
 
 
-def minibatch_by_words(docs, size, tolerance=0.2, discard_oversize=False, get_length=len):
+def minibatch_by_words(
+    docs, size, tolerance=0.2, discard_oversize=False, get_length=len
+):
     """Create minibatches of roughly a given number of words. If any examples
     are longer than the specified batch length, they will appear in a batch by
     themselves, or be discarded if discard_oversize=True.
@@ -136,7 +138,9 @@ def minibatch_by_words(docs, size, tolerance=0.2, discard_oversize=False, get_le
         yield batch
 
 
-def _batch_by_length(seqs: Sequence[Any], max_words: int, get_length=len) -> List[List[Any]]:
+def _batch_by_length(
+    seqs: Sequence[Any], max_words: int, get_length=len
+) -> List[List[Any]]:
     """Given a list of sequences, return a batched list of indices into the
     list, where the batches are grouped by length, in descending order.
 

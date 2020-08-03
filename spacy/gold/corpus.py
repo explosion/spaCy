@@ -14,9 +14,7 @@ if TYPE_CHECKING:
 
 @util.registry.readers("spacy.Corpus.v1")
 def create_docbin_reader(
-    gold_preproc: bool,
-    max_length: int=0,
-    limit: int=0
+    gold_preproc: bool, max_length: int = 0, limit: int = 0
 ) -> Callable[["Language", Path], Iterable[Example]]:
     return Corpus(gold_preproc=gold_preproc, max_length=max_length, limit=limit)
 
@@ -38,12 +36,9 @@ class Corpus:
 
     DOCS: https://spacy.io/api/corpus
     """
+
     def __init__(
-        self,
-        *,
-        limit: int = 0,
-        gold_preproc: bool=False,
-        max_length: bool=False,
+        self, *, limit: int = 0, gold_preproc: bool = False, max_length: bool = False,
     ) -> None:
         self.gold_preproc = gold_preproc
         self.max_length = max_length
@@ -69,11 +64,7 @@ class Corpus:
                 locs.append(path)
         return locs
 
-    def __call__(
-        self,
-        nlp: "Language",
-        loc: Union[Path, str],
-    ) -> Iterator[Example]:
+    def __call__(self, nlp: "Language", loc: Union[Path, str],) -> Iterator[Example]:
         """Yield examples from the data.
 
         nlp (Language): The current nlp object.
