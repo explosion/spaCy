@@ -1,5 +1,5 @@
 import numpy
-from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags
+from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags, Alignment
 from spacy.gold import spans_from_biluo_tags, iob_to_biluo
 from spacy.gold import Corpus, docs_to_json
 from spacy.gold.example import Example
@@ -655,3 +655,13 @@ def test_split_sents(merged_dict):
     assert token_annotation_2["words"] == ["It", "is", "just", "me"]
     assert token_annotation_2["tags"] == ["PRON", "AUX", "ADV", "PRON"]
     assert token_annotation_2["sent_starts"] == [1, 0, 0, 0]
+
+
+def test_alignment():
+    other_tokens = ["obama", "'", "s", "podcasts", "."]
+    spacy_tokens = ["obama", "'s", "podcasts", "."]
+    align = Alignment.from_strings(other_tokens, spacy_tokens)
+    assert list(align.x2y.lengths) == [1, 1, 1, 1, 1]
+    assert list(align.x2y.dataXd) == [0, 1, 1, 2, 3] # the second and third token both refer to "'s"
+    assert list(align.y2x.lengths) == [1, 2, 1, 1]   # the second token "'s" splits out in two
+    assert list(align.y2x.dataXd) == [0, 1, 2, 3, 4]
