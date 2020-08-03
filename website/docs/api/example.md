@@ -278,33 +278,46 @@ Split one `Example` into multiple `Example` objects, one for each sentence.
 | ----------- | --------------- | ---------------------------------------------------------- |
 | **RETURNS** | `List[Example]` | List of `Example` objects, one for each original sentence. |
 
-## Alignment {#alignment-object}
+## Alignment {#alignment-object new="3"}
 
-An `Alignment` object aligns the tokens of the reference document to the tokens
-in the document holding the predictions. It is stored in
-[`example.alignment`](#alignment).
+Calculate alignment tables between two tokenizations.
 
-<!-- TODO: document `from_indices` and `from_strings`, or keep this as internal
-implementation detail? -->
-
-> #### Example
->
-> ```python
-> other_tokens = ["i listened to", "obama", "'", "s", "podcasts", "."]
-> spacy_tokens = ["i", "listened", "to", "obama", "'s", "podcasts."]
-> predicted = Doc(vocab, words=other_tokens, spaces=[True, False, False, True, False, False])
-> reference = Doc(vocab, words=spacy_tokens, spaces=[True, True, True, False, True, False])
-> example = Example(predicted, reference)
-> align = example.alignment
-> assert list(align.x2y.lengths) == [3, 1, 1, 1, 1, 1]
-> assert list(align.x2y.dataXd) == [0, 1, 2, 3, 4, 4, 5, 5]
-> assert list(align.y2x.lengths) == [1, 1, 1, 1, 2, 2]
-> assert list(align.y2x.dataXd) == [0, 0, 0, 1, 2, 3, 4, 5]
-> ```
-
-### Attributes {#alignment-attributes}
+### Alignment attributes {#alignment-attributes"}
 
 | Name  | Type                                               | Description                                                |
 | ----- | -------------------------------------------------- | ---------------------------------------------------------- |
 | `x2y` | [`Ragged`](https://thinc.ai/docs/api-types#ragged) | The `Ragged` object holding the alignment from `x` to `y`. |
 | `y2x` | [`Ragged`](https://thinc.ai/docs/api-types#ragged) | The `Ragged` object holding the alignment from `y` to `x`. |
+
+
+<Infobox title="Important note" variant="warning">
+
+The current implementation of the alignment algorithm assumes that both
+tokenizations add up to the same string. For example, you'll be able to align
+`["I", "'", "m"]` and `["I", "'m"]`, which both add up to `"I'm"`, but not
+`["I", "'m"]` and `["I", "am"]`.
+
+</Infobox>
+
+> #### Example
+>
+> ```python
+> from spacy.gold import Alignment
+>
+> bert_tokens = ["obama", "'", "s", "podcast"]
+> spacy_tokens = ["obama", "'s", "podcast"]
+> alignment = Alignment.from_strings(bert_tokens, spacy_tokens)
+> a2b = alignment.x2y
+> assert list(a2b.dataXd) == [0, 1, 1, 2]
+> ```
+> 
+> If `a2b.dataXd[1] == a2b.dataXd[2] == 1`, that means that `A[1]` (`"'"`) and `A[2]` (`"s"`) both align to `B[1]` (`"'s"`). 
+
+### Alignment.from_strings {#classmethod tag="function"}
+
+| Name        | Type        | Description                                     |
+| ----------- | ----------- | ----------------------------------------------- |
+| `A`         | list        | String values of candidate tokens to align.     |
+| `B`         | list        | String values of reference tokens to align.     |
+| **RETURNS** | `Alignment` | An `Alignment` object describing the alignment. |
+
