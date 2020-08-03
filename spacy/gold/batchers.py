@@ -20,6 +20,7 @@ def configure_minibatch_by_padded_size(
     discard_oversize: bool,
     get_length: Optional[Callable[[ItemT], int]] = None
 ) -> BatcherT:
+    # Avoid displacing optional values from the underlying function.
     optionals = {"get_length": get_length} if get_length is not None else {}
     return partial(
         minibatch_by_padded_size,
