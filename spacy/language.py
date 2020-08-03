@@ -1151,7 +1151,6 @@ class Language:
         scorer: Optional[Scorer] = None,
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
         scorer_cfg: Optional[Dict[str, Any]] = None,
-        exclude: Iterable[str] = tuple(),
     ) -> Dict[str, Union[float, dict]]:
         """Evaluate a model's pipeline components.
 
@@ -1164,7 +1163,6 @@ class Language:
             arguments for specific components.
         scorer_cfg (dict): An optional dictionary with extra keyword arguments
             for the scorer.
-        exclude (Iterable[str]): Names of components that shouldn't be evaluated.
         RETURNS (Scorer): The scorer containing the evaluation results.
 
         DOCS: https://spacy.io/api/language#evaluate
@@ -1198,8 +1196,6 @@ class Language:
         else:
             _ = list(self.tokenizer.pipe(texts))  # noqa: F841
         for name, pipe in self.pipeline:
-            if name in exclude:
-                continue
             kwargs = component_cfg.get(name, {})
             kwargs.setdefault("batch_size", batch_size)
             if not hasattr(pipe, "pipe"):
