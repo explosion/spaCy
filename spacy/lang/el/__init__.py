@@ -45,7 +45,11 @@ def make_lemmatizer(
     if mode == "rule":
         tables = ["lemma_rules", "lemma_exc", "lemma_index"]
         strict = True
-    lookups = load_lookups(lang=nlp.lang, tables=tables, strict=strict)
+    if lookups is None:
+        lookups = load_lookups(lang=nlp.lang, tables=tables, strict=strict)
+    elif strict:
+        for table in tables:
+            assert table in lookups
     return GreekLemmatizer(nlp.vocab, model, name, mode=mode, lookups=lookups)
 
 

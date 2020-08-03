@@ -47,7 +47,11 @@ def make_lemmatizer(
     elif mode == "rule":
         tables = ["lemma_lookup", "lemma_rules", "lemma_exc", "lemma_index"]
     strict = mode in ("lookup", "rule")
-    lookups = load_lookups(lang=nlp.lang, tables=tables, strict=strict)
+    if lookups is None:
+        lookups = load_lookups(lang=nlp.lang, tables=tables, strict=strict)
+    elif strict:
+        for table in tables:
+            assert table in lookups
     return DutchLemmatizer(nlp.vocab, model, name, mode=mode, lookups=lookups)
 
 
