@@ -11,7 +11,7 @@ import random
 import typer
 
 from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
-from ._util import import_code
+from ._util import import_code, get_sourced_components
 from ..gold import Corpus, Example
 from ..language import Language
 from .. import util
@@ -83,14 +83,10 @@ def train(
         config = Config().from_disk(config_path)
     if config.get("training", {}).get("seed") is not None:
         fix_random_seed(config["training"]["seed"])
+    # Use original config here before it's resolved to functions
+    sourced_components = get_sourced_components(config)
     with show_validation_error(config_path):
         nlp, config = util.load_model_from_config(config, overrides=config_overrides)
-    if config["training"]["base_model"]:
-        # TODO: do something to check base_nlp against regular nlp described in config?
-        # If everything matches it will look something like:
-        # base_nlp = util.load_model(config["training"]["base_model"])
-        # nlp = base_nlp
-        raise NotImplementedError("base_model not supported yet.")
     if config["training"]["vectors"] is not None:
         util.load_vectors_into_model(nlp, config["training"]["vectors"])
     verify_config(nlp)
@@ -101,19 +97,25 @@ def train(
     training = config["training"]
     optimizer = training["optimizer"]
     limit = training["limit"]
+    # Components that shouldn't be updated during training
+    frozen_components = config["training"]["frozen_components"]
+    # Sourced components that require resume_training
+    resume_components = [p for p in sourced_components if p not in frozen_components]
     corpus = Corpus(data_paths["train"], data_paths["dev"], limit=limit)
-    if resume_training:
-        msg.info("Resuming training")
-        nlp.resume_training()
-    else:
-        msg.info(f"Initializing the nlp pipeline: {nlp.pipe_names}")
-        train_examples = corpus.train_dataset(
-            nlp,
-            shuffle=False,
-            gold_preproc=training["gold_preproc"],
-            max_length=training["max_length"],
-        )
-        train_examples = list(train_examples)
+
+    train_examples = corpus.train_dataset(
+        nlp,
+        shuffle=False,
+        gold_preproc=training["gold_preproc"],
+        max_length=training["max_length"],
+    )
+    train_examples = list(train_examples)
+    msg.info(f"Pipeline: {nlp.pipe_names}")
+    if resume_components:
+        with nlp.select_pipes(enable=resume_components):
+            msg.info(f"Resuming training for: {resume_components}")
+            nlp.resume_training()
+    with nlp.select_pipes(disable=[*frozen_components, *resume_components]):
         nlp.begin_training(lambda: train_examples)
 
     if tag_map:
@@ -143,7 +145,6 @@ def train(
     msg.info("Loading training corpus")
     train_batches = create_train_batches(nlp, corpus, training)
     evaluate = create_evaluation_callback(nlp, optimizer, corpus, training)
-
     # Create iterator, which yields out info after each optimization step.
     msg.info("Start training")
     training_step_iterator = train_while_improving(
@@ -157,6 +158,7 @@ def train(
         max_steps=training["max_steps"],
         eval_frequency=training["eval_frequency"],
         raw_text=raw_text,
+        exclude=frozen_components,
     )
     msg.info(f"Training. Initial learn rate: {optimizer.learn_rate}")
     print_row = setup_printer(training, nlp)
@@ -248,6 +250,7 @@ def create_evaluation_callback(
     def evaluate() -> Tuple[float, Dict[str, float]]:
         dev_examples = corpus.dev_dataset(nlp, gold_preproc=cfg["gold_preproc"])
         dev_examples = list(dev_examples)
+        # TODO: this is currently assigned but not used
         n_words = sum(len(ex.predicted) for ex in dev_examples)
         batch_size = cfg["eval_batch_size"]
         if optimizer.averages:
@@ -280,6 +283,7 @@ def train_while_improving(
     patience: int,
     max_steps: int,
     raw_text: List[Dict[str, str]],
+    exclude: List[str],
 ):
     """Train until an evaluation stops improving. Works as a generator,
     with each iteration yielding a tuple `(batch, info, is_best_checkpoint)`,
@@ -325,8 +329,6 @@ def train_while_improving(
         dropouts = dropout
     results = []
     losses = {}
-    to_enable = [name for name, proc in nlp.pipeline if hasattr(proc, "model")]
-
     if raw_text:
         random.shuffle(raw_text)
         raw_examples = [
@@ -336,17 +338,19 @@ def train_while_improving(
 
     for step, (epoch, batch) in enumerate(train_data):
         dropout = next(dropouts)
-        with nlp.select_pipes(enable=to_enable):
-            for subbatch in subdivide_batch(batch, accumulate_gradient):
-                nlp.update(subbatch, drop=dropout, losses=losses, sgd=False)
-                if raw_text:
-                    # If raw text is available, perform 'rehearsal' updates,
-                    # which use unlabelled data to reduce overfitting.
-                    raw_batch = list(next(raw_batches))
-                    nlp.rehearse(raw_batch, sgd=optimizer, losses=losses)
-            for name, proc in nlp.pipeline:
-                if hasattr(proc, "model"):
-                    proc.model.finish_update(optimizer)
+        for subbatch in subdivide_batch(batch, accumulate_gradient):
+            nlp.update(
+                subbatch, drop=dropout, losses=losses, sgd=False, exclude=exclude
+            )
+            if raw_text:
+                # If raw text is available, perform 'rehearsal' updates,
+                # which use unlabelled data to reduce overfitting.
+                raw_batch = list(next(raw_batches))
+                nlp.rehearse(raw_batch, sgd=optimizer, losses=losses, exclude=exclude)
+        # TODO: refactor this so we don't have to run it separately in here
+        for name, proc in nlp.pipeline:
+            if name not in exclude and hasattr(proc, "model"):
+                proc.model.finish_update(optimizer)
         optimizer.step_schedules()
         if not (step % eval_frequency):
             score, other_scores = evaluate()

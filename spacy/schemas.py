@@ -181,7 +181,6 @@ class ModelMetaSchema(BaseModel):
 
 class ConfigSchemaTraining(BaseModel):
     # fmt: off
-    base_model: Optional[StrictStr] = Field(..., title="The base model to use")
     vectors: Optional[StrictStr] = Field(..., title="Path to vectors")
     gold_preproc: StrictBool = Field(..., title="Whether to train on gold-standard sentences and tokens")
     max_length: StrictInt = Field(..., title="Maximum length of examples (longer examples are divided into sentences if possible)")
@@ -205,6 +204,7 @@ class ConfigSchemaTraining(BaseModel):
     morph_rules: Optional[StrictStr] = Field(..., title="Path to morphology rules")
     batch_size: Union[Sequence[int], int] = Field(..., title="The batch size or batch size schedule")
     optimizer: Optimizer = Field(..., title="The optimizer to use")
+    frozen_components: List[str] = Field(..., title="Pipeline components that shouldn't be updated during training")
     # fmt: on
 
     class Config:

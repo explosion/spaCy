@@ -621,19 +621,13 @@ class Language:
         return resolved[factory_name]
 
     def create_pipe_from_source(
-        self,
-        source_name: str,
-        source: "Language",
-        *,
-        name: str,
-        reset_weights: bool = False,
+        self, source_name: str, source: "Language", *, name: str,
     ) -> Tuple[Callable[[Doc], Doc], str]:
         """Create a pipeline component by copying it from an existing model.
 
         source_name (str): Name of the component in the source pipeline.
         source (Language): The source nlp object to copy from.
         name (str): Optional alternative name to use in current pipeline.
-        reset_weights (bool): Whether to reset the component's weights.
         RETURNS (Tuple[Callable, str]): The component and its factory name.
         """
         # TODO: handle errors and mismatches (vectors etc.)
@@ -648,8 +642,6 @@ class Language:
                 )
             )
         pipe = source.get_pipe(source_name)
-        if reset_weights and hasattr(pipe, "begin_training"):
-            pipe.begin_training()
         pipe_config = util.copy_config(source.config["components"][source_name])
         self._pipe_configs[name] = pipe_config
         return pipe, pipe_config["factory"]
@@ -705,9 +697,8 @@ class Language:
         if source is not None:
             # We're loading the component from a model. After loading the
             # component, we know its real factory name
-            reset_weights = config.get("reset_weights", False)
             pipe_component, factory_name = self.create_pipe_from_source(
-                factory_name, source, name=name, reset_weights=reset_weights
+                factory_name, source, name=name
             )
         else:
             if not self.has_factory(factory_name):
@@ -956,6 +947,7 @@ class Language:
         sgd: Optional[Optimizer] = None,
         losses: Optional[Dict[str, float]] = None,
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
+        exclude: Iterable[str] = tuple(),
     ):
         """Update the models in the pipeline.
 
@@ -966,6 +958,7 @@ class Language:
         losses (Dict[str, float]): Dictionary to update with the loss, keyed by component.
         component_cfg (Dict[str, Dict]): Config parameters for specific pipeline
             components, keyed by component name.
+        exclude (Iterable[str]): Names of components that shouldn't be updated.
         RETURNS (Dict[str, float]): The updated losses dictionary
 
         DOCS: https://spacy.io/api/language#update
@@ -998,12 +991,12 @@ class Language:
             component_cfg[name].setdefault("drop", drop)
             component_cfg[name].setdefault("set_annotations", False)
         for name, proc in self.pipeline:
-            if not hasattr(proc, "update"):
+            if name in exclude or not hasattr(proc, "update"):
                 continue
             proc.update(examples, sgd=None, losses=losses, **component_cfg[name])
         if sgd not in (None, False):
             for name, proc in self.pipeline:
-                if hasattr(proc, "model"):
+                if name not in exclude and hasattr(proc, "model"):
                     proc.model.finish_update(sgd)
         return losses
 
@@ -1014,6 +1007,7 @@ class Language:
         sgd: Optional[Optimizer] = None,
         losses: Optional[Dict[str, float]] = None,
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
+        exclude: Iterable[str] = tuple(),
     ) -> Dict[str, float]:
         """Make a "rehearsal" update to the models in the pipeline, to prevent
         forgetting. Rehearsal updates run an initial copy of the model over some
@@ -1025,6 +1019,7 @@ class Language:
         sgd (Optional[Optimizer]): An optimizer.
         component_cfg (Dict[str, Dict]): Config parameters for specific pipeline
             components, keyed by component name.
+        exclude (Iterable[str]): Names of components that shouldn't be updated.
         RETURNS (dict): Results from the update.
 
         EXAMPLE:
@@ -1068,7 +1063,7 @@ class Language:
         get_grads.b1 = sgd.b1
         get_grads.b2 = sgd.b2
         for name, proc in pipes:
-            if not hasattr(proc, "rehearse"):
+            if name in exclude or not hasattr(proc, "rehearse"):
                 continue
             grads = {}
             proc.rehearse(
@@ -1119,7 +1114,7 @@ class Language:
         return self._optimizer
 
     def resume_training(
-        self, *, sgd: Optional[Optimizer] = None, device: int = -1
+        self, *, sgd: Optional[Optimizer] = None, device: int = -1,
     ) -> Optimizer:
         """Continue training a pretrained model.
 
@@ -1156,6 +1151,7 @@ class Language:
         scorer: Optional[Scorer] = None,
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
         scorer_cfg: Optional[Dict[str, Any]] = None,
+        exclude: Iterable[str] = tuple(),
     ) -> Dict[str, Union[float, dict]]:
         """Evaluate a model's pipeline components.
 
@@ -1168,6 +1164,7 @@ class Language:
             arguments for specific components.
         scorer_cfg (dict): An optional dictionary with extra keyword arguments
             for the scorer.
+        exclude (Iterable[str]): Names of components that shouldn't be evaluated.
         RETURNS (Scorer): The scorer containing the evaluation results.
 
         DOCS: https://spacy.io/api/language#evaluate
@@ -1201,6 +1198,8 @@ class Language:
         else:
             _ = list(self.tokenizer.pipe(texts))  # noqa: F841
         for name, pipe in self.pipeline:
+            if name in exclude:
+                continue
             kwargs = component_cfg.get(name, {})
             kwargs.setdefault("batch_size", batch_size)
             if not hasattr(pipe, "pipe"):
