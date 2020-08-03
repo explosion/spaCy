@@ -14,15 +14,15 @@ from .. import util
 @Language.factory(
     "lemmatizer",
     assigns=["token.lemma"],
-    default_config={"model": None, "mode": "lookup", "lookups": None},
+    default_config={"model": None, "mode": "lookup", "lookups": None, "overwrite": False},
     scores=["lemma_acc"],
     default_score_weights={"lemma_acc": 1.0},
 )
-def make_lemmatizer(nlp: Language, model: Optional[Model], name: str, mode: str, lookups: Optional[Lookups]):
+def make_lemmatizer(nlp: Language, model: Optional[Model], name: str, mode: str, lookups: Optional[Lookups], overwrite: bool = False):
     tables = ["lemma_lookup", "lemma_rules", "lemma_exc", "lemma_index"]
     if lookups is None:
         lookups = load_lookups(lang=nlp.lang, tables=tables)
-    return Lemmatizer(nlp.vocab, model, name, mode=mode, lookups=lookups)
+    return Lemmatizer(nlp.vocab, model, name, mode=mode, lookups=lookups, overwrite=overwrite)
 
 
 class Lemmatizer(Pipe):
@@ -41,6 +41,7 @@ class Lemmatizer(Pipe):
         *,
         mode: str = "lookup",
         lookups: Optional[Lookups] = None,
+        overwrite: bool = False,
     ) -> None:
         """Initialize a Lemmatizer.
 
@@ -55,6 +56,7 @@ class Lemmatizer(Pipe):
         self.model = model
         self.mode = mode
         self.lookups = lookups if lookups is not None else Lookups()
+        self.overwrite = overwrite
         self.cache = {
             "rule": {},
         }
@@ -72,22 +74,26 @@ class Lemmatizer(Pipe):
         """
         if self.cache_features.get(self.mode):
             features_array = doc.to_array(self.cache_features[self.mode])
+        lemmas = []
         if self.mode == "lookup":
             for token in doc:
-                token.lemma_ = self.lookup_lemmatize(token)[0]
+                lemmas.append(self.lookup_lemmatize(token)[0])
         elif self.mode == "rule":
             for i, token in enumerate(doc):
                 features = tuple(features_array[i])
                 if features in self.cache[self.mode]:
-                    token.lemma_ = self.cache[self.mode][features]
+                    lemmas.append(self.cache[self.mode][features])
                 else:
-                    token.lemma_ = self.rule_lemmatize(token)[0]
-                    self.cache[self.mode][features] = token.lemma_
+                    lemma = self.rule_lemmatize(token)[0]
+                    lemmas.append(lemma)
+                    self.cache[self.mode][features] = lemma
         else:
             lemmatize = getattr(self, f"{self.mode}_lemmatize")
-            if callable(lemmatize):
-                for token in doc:
-                    token.lemma_ = lemmatize(token)[0]
+            for token in doc:
+                lemmas.append(lemmatize(token)[0])
+        for token, lemma in zip(doc, lemmas):
+            if self.overwrite or token.lemma == 0:
+                token.lemma_ = lemma
         return doc
 
     def lookup_lemmatize(self, token: Token) -> List[str]:
