@@ -181,9 +181,17 @@ cdef class Span:
             return Span(self.doc, start + self.start, end + self.start)
         else:
             if i < 0:
-                return self.doc[self.end + i]
+                token = self.doc[self.end + i]
+                if self.start <= token.i < self.end:
+                    return token
+                else:
+                    raise IndexError(Errors.E201)
             else:
-                return self.doc[self.start + i]
+                token = self.doc[self.start + i]
+                if self.start <= token.i < self.end:
+                    return token
+                else:
+                    raise IndexError(Errors.E201)
 
     def __iter__(self):
         """Iterate over `Token` objects.
