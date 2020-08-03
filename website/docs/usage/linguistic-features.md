@@ -1130,7 +1130,6 @@ above:
 
 <Infobox title="Important note" variant="warning">
 
-<!-- TODO: does it though? -->
 The current implementation of the alignment algorithm assumes that both
 tokenizations add up to the same string. For example, you'll be able to align
 `["I", "'", "m"]` and `["I", "'m"]`, which both add up to `"I'm"`, but not
