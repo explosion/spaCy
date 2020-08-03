@@ -44,23 +44,11 @@ following data and information:
 2. A [`config.cfg`](#config) **configuration file** with all settings and
    hyperparameters.
 3. An optional **Python file** to register
-   [custom models and architectures](#custom-models).
-
-<!-- TODO: decide how we want to present the "getting started" workflow here, get a default config etc. -->
+   [custom functions and architectures](#custom-code).
 
 ```bash
 $ python -m spacy train train.spacy dev.spacy config.cfg --output ./output
 ```
-
-> #### Tip: Debug your data
->
-> The [`debug-data` command](/api/cli#debug-data) lets you analyze and validate
-> your training and development data, get useful stats, and find problems like
-> invalid entity annotations, cyclic dependencies, low data labels and more.
->
-> ```bash
-> $ python -m spacy debug-data en train.spacy dev.spacy --verbose
-> ```
 
 <Project id="some_example_project">
 
@@ -74,16 +62,42 @@ workflows, from data preprocessing to training and packaging your model.
 
 > #### Instructions
 >
-> 1. Select your requirements and settings. The quickstart widget will
->    auto-generate a recommended starter config for you.
+> 1. Select your requirements and settings.
 > 2. Use the buttons at the bottom to save the result to your clipboard or a
->    file `config.cfg`.
-> 3. TOOD: recommended approach for filling config
-> 4. Run [`spacy train`](/api/cli#train) with your config and data.
+>    file `base_config.cfg`.
+> 3. Run [`init config`](/api/cli#init-config) to create a full training config.
+> 4. Run [`train`](/api/cli#train) with your config and data.
 
 import QuickstartTraining from 'widgets/quickstart-training.js'
 
-<QuickstartTraining />
+<QuickstartTraining download="base_config.cfg" />
+
+After you've saved the starter config to a file `base_config.cfg`, you can use
+the [`init config`](/api/cli#init-config) command to fill in the remaining
+defaults. Training configs should always be **complete and without hidden
+defaults**, to keep your experiments reproducible.
+
+```bash
+$ python -m spacy init config config.cfg --base base_config.cfg
+```
+
+> #### Tip: Debug your data
+>
+> The [`debug-data` command](/api/cli#debug-data) lets you analyze and validate
+> your training and development data, get useful stats, and find problems like
+> invalid entity annotations, cyclic dependencies, low data labels and more.
+>
+> ```bash
+> $ python -m spacy debug-data en train.spacy dev.spacy --verbose
+> ```
+
+You can now run [`train`](/api/cli#train) with your training and development
+data and the training config. See the [`convert`](/api/cli#convert) command for
+details on how to convert your data to spaCy's binary `.spacy` format.
+
+```bash
+$ python -m spacy train train.spacy dev.spacy config.cfg --output ./output
+```
 
 ## Training config {#config}
 

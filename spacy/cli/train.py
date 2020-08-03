@@ -50,7 +50,7 @@ def train_cli(
     referenced in the config.
     """
     util.set_env_log(verbose)
-    verify_cli_args(train_path, dev_path, config_path)
+    verify_cli_args(train_path, dev_path, config_path, output_path)
     overrides = parse_config_overrides(ctx.args)
     import_code(code_path)
     train(
@@ -78,10 +78,11 @@ def train(
     else:
         msg.info("Using CPU")
     msg.info(f"Loading config and nlp from: {config_path}")
-    config = Config().from_disk(config_path)
+    with show_validation_error(config_path):
+        config = Config().from_disk(config_path)
     if config.get("training", {}).get("seed") is not None:
         fix_random_seed(config["training"]["seed"])
-    with show_validation_error():
+    with show_validation_error(config_path):
         nlp, config = util.load_model_from_config(config, overrides=config_overrides)
     if config["training"]["vectors"] is not None:
         util.load_vectors_into_model(nlp, config["training"]["vectors"])
@@ -161,7 +162,6 @@ def train(
                 progress = tqdm.tqdm(total=T_cfg["eval_frequency"], leave=False)
     except Exception as e:
         if output_path is not None:
-            raise e
             msg.warn(
                 f"Aborting and saving the final best model. "
                 f"Encountered exception: {str(e)}",

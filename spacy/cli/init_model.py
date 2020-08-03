@@ -10,14 +10,14 @@ import gzip
 import zipfile
 import srsly
 import warnings
-from wasabi import Printer
+from wasabi import msg, Printer
+import typer
 
-from ._util import app, Arg, Opt
+from ._util import app, init_cli, Arg, Opt
 from ..vectors import Vectors
 from ..errors import Errors, Warnings
 from ..language import Language
 from ..util import ensure_path, get_lang_class, load_model, OOV_RANK
-from ..lookups import Lookups
 
 try:
     import ftfy
@@ -28,9 +28,15 @@ except ImportError:
 DEFAULT_OOV_PROB = -20
 
 
-@app.command("init-model")
+@init_cli.command("model")
+@app.command(
+    "init-model",
+    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+    hidden=True,  # hide this from main CLI help but still allow it to work with warning
+)
 def init_model_cli(
     # fmt: off
+    ctx: typer.Context,  # This is only used to read additional arguments
     lang: str = Arg(..., help="Model language"),
     output_dir: Path = Arg(..., help="Model output directory"),
     freqs_loc: Optional[Path] = Arg(None, help="Location of words frequencies file", exists=True),
@@ -48,6 +54,12 @@ def init_model_cli(
     Create a new model from raw data. If vectors are provided in Word2Vec format,
     they can be either a .txt or zipped as a .zip or .tar.gz.
     """
+    if ctx.command.name == "init-model":
+        msg.warn(
+            "The init-model command is now available via the 'init model' "
+            "subcommand (without the hyphen). You can run python -m spacy init "
+            "--help for an overview of the other available initialization commands."
+        )
     init_model(
         lang,
         output_dir,
