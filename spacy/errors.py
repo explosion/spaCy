@@ -490,7 +490,7 @@ class Errors:
     E952 = ("The section '{name}' is not a valid section in the provided config.")
     E953 = ("Mismatched IDs received by the Tok2Vec listener: {id1} vs. {id2}")
     E954 = ("The Tok2Vec listener did not receive a valid input.")
-    E955 = ("Can't find table '{table}' for language '{lang}' in spacy-lookups-data.")
+    E955 = ("Can't find table(s) '{table}' for language '{lang}' in spacy-lookups-data.")
     E956 = ("Can't find component '{name}' in [components] block in the config. "
             "Available components: {opts}")
     E957 = ("Writing directly to Language.factories isn't needed anymore in "
