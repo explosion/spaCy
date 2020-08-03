@@ -8,7 +8,7 @@ new: 3.0
 
 An `Example` holds the information for one training instance. It stores two
 `Doc` objects: one for holding the gold-standard reference data, and one for
-holding the predictions of the pipeline. An `Alignment` <!-- TODO: link? -->
+holding the predictions of the pipeline. An [`Alignment`](#alignment-object)
 object stores the alignment between these two documents, as they can differ in
 tokenization.
 
@@ -277,3 +277,34 @@ Split one `Example` into multiple `Example` objects, one for each sentence.
 | Name        | Type            | Description                                                |
 | ----------- | --------------- | ---------------------------------------------------------- |
 | **RETURNS** | `List[Example]` | List of `Example` objects, one for each original sentence. |
+
+## Alignment {#alignment-object}
+
+An `Alignment` object aligns the tokens of the reference document to the tokens
+in the document holding the predictions. It is stored in
+[`example.alignment`](#alignment).
+
+<!-- TODO: document `from_indices` and `from_strings`, or keep this as internal
+implementation detail? -->
+
+> #### Example
+>
+> ```python
+> other_tokens = ["i listened to", "obama", "'", "s", "podcasts", "."]
+> spacy_tokens = ["i", "listened", "to", "obama", "'s", "podcasts."]
+> predicted = Doc(vocab, words=other_tokens, spaces=[True, False, False, True, False, False])
+> reference = Doc(vocab, words=spacy_tokens, spaces=[True, True, True, False, True, False])
+> example = Example(predicted, reference)
+> align = example.alignment
+> assert list(align.x2y.lengths) == [3, 1, 1, 1, 1, 1]
+> assert list(align.x2y.dataXd) == [0, 1, 2, 3, 4, 4, 5, 5]
+> assert list(align.y2x.lengths) == [1, 1, 1, 1, 2, 2]
+> assert list(align.y2x.dataXd) == [0, 0, 0, 1, 2, 3, 4, 5]
+> ```
+
+### Attributes {#alignment-attributes}
+
+| Name  | Type                                               | Description                                                |
+| ----- | -------------------------------------------------- | ---------------------------------------------------------- |
+| `x2y` | [`Ragged`](https://thinc.ai/docs/api-types#ragged) | The `Ragged` object holding the alignment from `x` to `y`. |
+| `y2x` | [`Ragged`](https://thinc.ai/docs/api-types#ragged) | The `Ragged` object holding the alignment from `y` to `x`. |
