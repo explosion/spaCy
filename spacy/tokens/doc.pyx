@@ -352,9 +352,10 @@ cdef class Doc:
     def doc(self):
         return self
 
-    def char_span(self, int start_idx, int end_idx, label=0, kb_id=0, vector=None, mode="strict"):
+    def char_span(self, int start_idx, int end_idx, label=0, kb_id=0, vector=None, alignment_mode="strict"):
         """Create a `Span` object from the slice
-        `doc.text[start_idx : end_idx]`.
+        `doc.text[start_idx : end_idx]`. Returns None if no valid `Span` can be
+        created.
 
         doc (Doc): The parent document.
         start_idx (int): The index of the first character of the span.
@@ -365,9 +366,10 @@ cdef class Doc:
             named entity.
         vector (ndarray[ndim=1, dtype='float32']): A meaning representation of
             the span.
-        mode (str): How character indices snap to token boundaries. Options:
-            "strict" (no snapping), "inside" (span of all tokens completely
-            within the character span), "outside" (span of all tokens at least
+        alignment_mode (str): How character indices are aligned to token
+            boundaries. Options: "strict" (character indices must be aligned
+            with token boundaries), "contract" (span of all tokens completely
+            within the character span), "expand" (span of all tokens at least
             partially covered by the character span). Defaults to "strict".
         RETURNS (Span): The newly constructed object.
 
@@ -377,24 +379,25 @@ cdef class Doc:
             label = self.vocab.strings.add(label)
         if not isinstance(kb_id, int):
             kb_id = self.vocab.strings.add(kb_id)
-        if mode not in ("strict", "inside", "outside"):
-            mode = "strict"
+        if alignment_mode not in ("strict", "contract", "expand"):
+            alignment_mode = "strict"
         cdef int start = token_by_char(self.c, self.length, start_idx)
-        if start < 0 or (mode == "strict" and start_idx != self[start].idx):
+        if start < 0 or (alignment_mode == "strict" and start_idx != self[start].idx):
             return None
         # end_idx is exclusive, so find the token at one char before
         cdef int end = token_by_char(self.c, self.length, end_idx - 1)
-        if end < 0 or (mode == "strict" and end_idx != self[end].idx + len(self[end])):
+        if end < 0 or (alignment_mode == "strict" and end_idx != self[end].idx + len(self[end])):
             return None
-        # Adjust start and end by mode
-        if mode == "inside":
+        # Adjust start and end by alignment_mode
+        if alignment_mode == "contract":
             if self[start].idx < start_idx:
                 start += 1
             if end_idx < self[end].idx + len(self[end]):
                 end -= 1
+            # if no tokens are completely within the span, return None
             if end < start:
                 return None
-        elif mode == "outside":
+        elif alignment_mode == "expand":
             # Don't consider the trailing whitespace to be part of the previous
             # token
             if start_idx == self[start].idx + len(self[start]):
