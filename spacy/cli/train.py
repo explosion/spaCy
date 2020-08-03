@@ -83,33 +83,25 @@ def train(
         fix_random_seed(config["training"]["seed"])
     with show_validation_error():
         nlp, config = util.load_model_from_config(config, overrides=config_overrides)
-    if config["training"]["base_model"]:
-        # TODO: do something to check base_nlp against regular nlp described in config?
-        # If everything matches it will look something like:
-        # base_nlp = util.load_model(config["training"]["base_model"])
-        # nlp = base_nlp
-        raise NotImplementedError("base_model not supported yet.")
     if config["training"]["vectors"] is not None:
         util.load_vectors_into_model(nlp, config["training"]["vectors"])
     verify_config(nlp)
     raw_text, tag_map, morph_rules, weights_data = load_from_paths(config)
-    if config["training"]["use_pytorch_for_gpu_memory"]:
+    if config["device"]["use_pytorch_for_gpu_memory"]:
         # It feels kind of weird to not have a default for this.
         use_pytorch_for_gpu_memory()
     T_loc = data_paths["train"]
     E_loc = data_paths["dev"]
     T_cfg = config["training"]
-    E_cfg = config["evaluation"]
     optimizer = T_cfg["optimizer"]
-    T_reader = T_cfg["reader"]
-    T_batcher = T_cfg["batcher"]
-    E_reader = E_cfg["reader"]
+    reader = T_cfg["reader"]
+    batcher = T_cfg["batcher"]
     if resume_training:
         msg.info("Resuming training")
         nlp.resume_training()
     else:
         msg.info(f"Initializing the nlp pipeline: {nlp.pipe_names}")
-        train_examples = list(T_reader(nlp, T_loc))
+        train_examples = list(reader(nlp, T_loc))
         nlp.begin_training(lambda: train_examples)
 
     if tag_map:
@@ -139,11 +131,13 @@ def train(
 
     # Create iterator, which yields out info after each optimization step.
     msg.info("Start training")
+    score_weights = T_cfg["score_weights"]
+    E_batch_size = T_cfg["eval_batch_size"]
     training_step_iterator = train_while_improving(
         nlp,
         optimizer,
-        create_train_batches(nlp, T_reader, T_batcher, T_loc, T_cfg["max_epochs"]),
-        create_evaluation_callback(nlp, E_reader, E_loc, E_cfg),
+        create_train_batches(nlp, reader, batcher, T_loc, T_cfg["max_epochs"]),
+        create_evaluation_callback(nlp, optimizer, reader, E_loc, score_weights, E_batch_size),
         dropout=T_cfg["dropout"],
         accumulate_gradient=T_cfg["accumulate_gradient"],
         patience=T_cfg["patience"],
@@ -215,18 +209,18 @@ def create_evaluation_callback(
     nlp: Language,
     optimizer: Optimizer,
     reader: Callable,
-    cfg: Union[Config, Dict[str, Any]],
+    loc,
+    weights: Dict[str, float],
+    batch_size: int
 ) -> Callable[[], Tuple[float, Dict[str, float]]]:
     def evaluate() -> Tuple[float, Dict[str, float]]:
         dev_examples = list(reader(nlp, loc))
-        batch_size = cfg["batch_size"]
         if optimizer.averages:
             with nlp.use_params(optimizer.averages):
                 scores = nlp.evaluate(dev_examples, batch_size=batch_size)
         else:
             scores = nlp.evaluate(dev_examples, batch_size=batch_size)
         # Calculate a weighted sum based on score_weights for the main score
-        weights = cfg["score_weights"]
         try:
             weighted_score = sum(scores[s] * weights.get(s, 0.0) for s in weights)
         except KeyError as e:
@@ -430,17 +424,7 @@ def load_from_paths(
             msg.fail("Can't find raw text", raw_text, exits=1)
         raw_text = list(srsly.read_jsonl(config["training"]["raw_text"]))
     tag_map = {}
-    tag_map_path = util.ensure_path(config["training"]["tag_map"])
-    if tag_map_path is not None:
-        if not tag_map_path.exists():
-            msg.fail("Can't find tag map path", tag_map_path, exits=1)
-        tag_map = srsly.read_json(config["training"]["tag_map"])
     morph_rules = {}
-    morph_rules_path = util.ensure_path(config["training"]["morph_rules"])
-    if morph_rules_path is not None:
-        if not morph_rules_path.exists():
-            msg.fail("Can't find tag map path", morph_rules_path, exits=1)
-        morph_rules = srsly.read_json(config["training"]["morph_rules"])
     weights_data = None
     init_tok2vec = util.ensure_path(config["training"]["init_tok2vec"])
     if init_tok2vec is not None:
