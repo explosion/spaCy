@@ -71,7 +71,7 @@ class Corpus:
         loc (Path): The file or directory to read from.
         YIELDS (Example): The examples.
 
-        DOCS: https://spacy.io/api/corpus#train_dataset
+        DOCS: https://spacy.io/api/corpus#call
         """
         loc = util.ensure_path(loc)
         ref_docs = self.read_docbin(nlp.vocab, self.walk_corpus(loc))
