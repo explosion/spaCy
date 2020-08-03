@@ -20,8 +20,7 @@ def noun_chunks(doclike):
     np_left_deps = [doc.vocab.strings.add(label) for label in left_labels]
     np_right_deps = [doc.vocab.strings.add(label) for label in right_labels]
     stop_deps = [doc.vocab.strings.add(label) for label in stop_labels]
-    token = doc[0]
-    while token and token.i < len(doclike):
+    for token in doclike:
         if token.pos in [PROPN, NOUN, PRON]:
             left, right = noun_bounds(
                 doc, token, np_left_deps, np_right_deps, stop_deps
