@@ -39,9 +39,13 @@ def make_lemmatizer(
     mode: str,
     lookups: Optional[Lookups],
 ):
-    tables = ["lemma_lookup", "lemma_rules", "lemma_exc", "lemma_index"]
-    if lookups is None:
-        lookups = load_lookups(lang=nlp.lang, tables=tables)
+    tables = []
+    if mode == "lookup":
+        tables = ["lemma_lookup"]
+    elif mode == "rule":
+        tables = ["lemma_rules", "lemma_exc", "lemma_index"]
+    strict = mode in ("rule", "lookup")
+    lookups = load_lookups(lang=nlp.lang, tables=tables, strict=strict)
     return EnglishLemmatizer(nlp.vocab, model, name, mode=mode, lookups=lookups)
 
 
