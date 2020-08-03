@@ -92,10 +92,10 @@ class EntityLinker(Pipe):
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
         name (str): The component instance name, used to add entries to the
             losses during training.
-        kb (KnowledgeBase): TODO:
-        labels_discard (Iterable[str]): TODO:
-        incl_prior (bool): TODO:
-        incl_context (bool): TODO:
+        kb (KnowledgeBase): The KnowledgeBase holding all entities and their aliases.
+        labels_discard (Iterable[str]): NER labels that will automatically get a "NIL" prediction.
+        incl_prior (bool): Whether or not to include prior probabilities from the KB in the final prediction.
+        incl_context (bool): Whether or not to use the sentence context of entities in the final prediction.
 
         DOCS: https://spacy.io/api/entitylinker#init
         """
