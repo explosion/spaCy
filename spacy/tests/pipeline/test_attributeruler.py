@@ -16,7 +16,7 @@ def nlp():
 def pattern_dicts():
     return [
         {
-            "patterns": [[{"ORTH": "a"}]],
+            "patterns": [[{"ORTH": "a"}], [{"ORTH": "irrelevant"}]],
             "attrs": {"LEMMA": "the", "MORPH": "Case=Nom|Number=Plur"},
         },
         # one pattern sets the lemma
@@ -145,19 +145,20 @@ def test_attributeruler_indices(nlp):
         doc = nlp(text)
 
 
+def test_attributeruler_patterns_prop(nlp, pattern_dicts):
+    a = nlp.add_pipe("attribute_ruler")
+    a.add_patterns(pattern_dicts)
+
+    for p1, p2 in zip(pattern_dicts, a.patterns):
+        assert p1["patterns"] == p2["patterns"]
+        assert p1["attrs"] == p2["attrs"]
+        if p1.get("index"):
+            assert p1["index"] == p2["index"]
+
+
 def test_attributeruler_serialize(nlp, pattern_dicts):
     a = nlp.add_pipe("attribute_ruler")
-    a.add(
-        [[{"ORTH": "a"}, {"ORTH": "test"}]],
-        {"LEMMA": "the", "MORPH": "Case=Nom|Number=Plur"},
-        index=0,
-    )
-    a.add(
-        [[{"ORTH": "This"}, {"ORTH": "is"}]],
-        {"LEMMA": "was", "MORPH": "Case=Nom|Number=Sing"},
-        index=1,
-    )
-    a.add([[{"ORTH": "a"}, {"ORTH": "test"}]], {"LEMMA": "cat"}, index=-1)
+    a.add_patterns(pattern_dicts)
 
     text = "This is a test."
     attrs = ["ORTH", "LEMMA", "MORPH"]

@@ -1,5 +1,5 @@
 import srsly
-from typing import List, Dict, Union, Iterable, Any
+from typing import List, Dict, Union, Iterable, Any, Optional
 from pathlib import Path
 
 from .pipe import Pipe
@@ -14,6 +14,7 @@ from .. import util
 
 
 MatcherPatternType = List[Dict[Union[int, str], Any]]
+AttributeRulerPatternType = Dict[str, Union[MatcherPatternType, Dict, int]]
 
 
 @Language.factory(
@@ -24,7 +25,9 @@ MatcherPatternType = List[Dict[Union[int, str], Any]]
     default_score_weights={},
 )
 def make_attribute_ruler(
-    nlp: Language, name: str, pattern_dicts: Iterable[Dict] = tuple()
+    nlp: Language,
+    name: str,
+    pattern_dicts: Optional[Iterable[AttributeRulerPatternType]] = None,
 ):
     return AttributeRuler(nlp.vocab, name, pattern_dicts=pattern_dicts)
 
@@ -41,13 +44,13 @@ class AttributeRuler(Pipe):
         vocab: Vocab,
         name: str = "attribute_ruler",
         *,
-        pattern_dicts: List[Dict[str, Union[List[MatcherPatternType], Dict, int]]] = {},
+        pattern_dicts: Optional[Iterable[AttributeRulerPatternType]] = None,
     ) -> None:
         """Initialize the AttributeRuler.
 
         vocab (Vocab): The vocab.
         name (str): The pipe name. Defaults to "attribute_ruler".
-        pattern_dicts (List[Dict]): A list of pattern dicts with the keys as
+        pattern_dicts (Iterable[Dict]): A list of pattern dicts with the keys as
         the arguments to AttributeRuler.add (`patterns`/`attrs`/`index`) to add
         as patterns.
 
@@ -59,10 +62,11 @@ class AttributeRuler(Pipe):
         self.vocab = vocab
         self.matcher = Matcher(self.vocab)
         self.attrs = []
+        self.attrs_unnormed = [] # store for reference
         self.indices = []
 
-        for p in pattern_dicts:
-            self.add(**p)
+        if pattern_dicts:
+            self.add_patterns(pattern_dicts)
 
     def __call__(self, doc: Doc) -> Doc:
         """Apply the attributeruler to a Doc and set all attribute exceptions.
@@ -120,7 +124,7 @@ class AttributeRuler(Pipe):
         provided attributes. The token at the specified index within the
         matched span will be assigned the attributes.
 
-        pattern (Iterable[List[Dict]]): A list of Matcher patterns.
+        patterns (Iterable[List[Dict]]): A list of Matcher patterns.
         attrs (Dict): The attributes to assign to the target token in the
             matched span.
         index (int): The index of the token in the matched span to modify. May
@@ -129,9 +133,25 @@ class AttributeRuler(Pipe):
         DOCS: https://spacy.io/api/attributeruler#add
         """
         self.matcher.add(len(self.attrs), patterns)
+        self.attrs_unnormed.append(attrs)
         attrs = normalize_token_attrs(self.vocab, attrs)
         self.attrs.append(attrs)
         self.indices.append(index)
+
+    def add_patterns(self, pattern_dicts: Iterable[AttributeRulerPatternType]) -> None:
+        for p in pattern_dicts:
+            self.add(**p)
+
+    @property
+    def patterns(self) -> List[AttributeRulerPatternType]:
+        all_patterns = []
+        for i in range(len(self.attrs_unnormed)):
+            p = {}
+            p["patterns"] = self.matcher.get(i)[1]
+            p["attrs"] = self.attrs_unnormed[i]
+            p["index"] = self.indices[i]
+            all_patterns.append(p)
+        return all_patterns
 
     def to_bytes(self, exclude: Iterable[str] = tuple()) -> bytes:
         """Serialize the attributeruler to a bytestring.
