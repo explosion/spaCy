@@ -3,6 +3,7 @@ from typing import Optional, List, Any
 from thinc.api import Model
 
 from .pipe import Pipe
+from ..errors import Errors
 from ..language import Language
 from ..lookups import Lookups, Table, load_lookups
 from ..parts_of_speech import NAMES as UPOS_NAMES
@@ -19,9 +20,13 @@ from .. import util
     default_score_weights={"lemma_acc": 1.0},
 )
 def make_lemmatizer(nlp: Language, model: Optional[Model], name: str, mode: str, lookups: Optional[Lookups], overwrite: bool = False):
-    tables = ["lemma_lookup", "lemma_rules", "lemma_exc", "lemma_index"]
-    if lookups is None:
-        lookups = load_lookups(lang=nlp.lang, tables=tables)
+    tables = []
+    if mode == "lookup":
+        tables = ["lemma_lookup"]
+    elif mode == "rule":
+        tables = ["lemma_rules", "lemma_exc", "lemma_index"]
+    strict = mode in ("lookup", "rule")
+    lookups = load_lookups(lang=nlp.lang, tables=tables, strict=strict)
     return Lemmatizer(nlp.vocab, model, name, mode=mode, lookups=lookups, overwrite=overwrite)
 
 
@@ -50,19 +55,28 @@ class Lemmatizer(Pipe):
         name (str): The component name. Defaults to "lemmatizer".
         mode (str): The lemmatizer mode: "lookup", "rule". Defaults to "lookup".
         lookups (Lookups): The lookups object containing the (optional) tables
-            "lemma_rules", "lemma_index", "lemma_exc" and "lemma_lookup".
+            such as "lemma_rules", "lemma_index", "lemma_exc" and
+            "lemma_lookup".
         """
         self.vocab = vocab
         self.model = model
-        self.mode = mode
+        self._mode = mode
         self.lookups = lookups if lookups is not None else Lookups()
         self.overwrite = overwrite
-        self.cache = {
-            "rule": {},
-        }
-        self.cache_features = {
-            "rule": ["ORTH", "POS"],
-        }
+        if self.mode == "lookup":
+            self.lemmatize = self.lookup_lemmatize
+        elif self.mode == "rule":
+            self.lemmatize = self.rule_lemmatize
+        else:
+            try:
+                self.lemmatize = getattr(self, f"{self.mode}_lemmatize")
+            except AttributeError:
+                raise ValueError(Errors.E1001.format(mode=mode))
+        self.cache = {}
+
+    @property
+    def mode(self):
+        return self._mode
 
     def __call__(self, doc: Doc) -> Doc:
         """Apply the lemmatizer to one document.
@@ -72,28 +86,9 @@ class Lemmatizer(Pipe):
 
         DOCS: https://spacy.io/api/lemmatizer#call
         """
-        if self.cache_features.get(self.mode):
-            features_array = doc.to_array(self.cache_features[self.mode])
-        lemmas = []
-        if self.mode == "lookup":
-            for token in doc:
-                lemmas.append(self.lookup_lemmatize(token)[0])
-        elif self.mode == "rule":
-            for i, token in enumerate(doc):
-                features = tuple(features_array[i])
-                if features in self.cache[self.mode]:
-                    lemmas.append(self.cache[self.mode][features])
-                else:
-                    lemma = self.rule_lemmatize(token)[0]
-                    lemmas.append(lemma)
-                    self.cache[self.mode][features] = lemma
-        else:
-            lemmatize = getattr(self, f"{self.mode}_lemmatize")
-            for token in doc:
-                lemmas.append(lemmatize(token)[0])
-        for token, lemma in zip(doc, lemmas):
+        for token in doc:
             if self.overwrite or token.lemma == 0:
-                token.lemma_ = lemma
+                token.lemma_ = self.lemmatize(token)[0]
         return doc
 
     def lookup_lemmatize(self, token: Token) -> List[str]:
@@ -111,6 +106,9 @@ class Lemmatizer(Pipe):
         token (Token): The token to lemmatize.
         RETURNS (list): The available lemmas for the string.
         """
+        cache_key = (token.orth, token.pos, token.morph)
+        if cache_key in self.cache:
+            return self.cache[cache_key]
         string = token.text
         univ_pos = token.pos_
         morphology = token.morph.to_dict()
@@ -166,6 +164,7 @@ class Lemmatizer(Pipe):
             forms.extend(oov_forms)
         if not forms:
             forms.append(orig)
+        self.cache[cache_key] = forms
         return forms
 
     def is_base_form(self, univ_pos: str, morphology: Optional[dict] = None) -> bool:

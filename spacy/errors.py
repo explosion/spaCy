@@ -608,6 +608,7 @@ class Errors:
              "initializing the pipeline:\n"
              'cfg = {"tokenizer": {"segmenter": "pkuseg", "pkuseg_model": name_or_path}}\n'
              'nlp = Chinese(config=cfg)')
+    E1001 = ("Unsupported lemmatizer mode '{mode}'.")
 
 
 @add_codes

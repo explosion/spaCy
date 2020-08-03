@@ -45,15 +45,17 @@ def make_lemmatizer(
     mode: str,
     lookups: Optional[Lookups],
 ):
-    # fmt: off
-    tables = [
-        "lemma_lookup_adj", "lemma_lookup_adp", "lemma_lookup_adv",
-        "lemma_lookup_aux", "lemma_lookup_noun", "lemma_lookup_num",
-        "lemma_lookup_part", "lemma_lookup_pron", "lemma_lookup_verb"
-    ]
-    # fmt: on
-    if lookups is None:
-        lookups = load_lookups(lang=nlp.lang, tables=tables)
+    tables = []
+    if mode == "lookup":
+        # fmt: off
+        tables = [
+            "lemma_lookup_adj", "lemma_lookup_adp", "lemma_lookup_adv",
+            "lemma_lookup_aux", "lemma_lookup_noun", "lemma_lookup_num",
+            "lemma_lookup_part", "lemma_lookup_pron", "lemma_lookup_verb"
+        ]
+        # fmt: on
+    strict = mode in ("lookup")
+    lookups = load_lookups(lang=nlp.lang, tables=tables, strict=strict)
     return PolishLemmatizer(nlp.vocab, model, name, mode=mode, lookups=lookups)
 
 

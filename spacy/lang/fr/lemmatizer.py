@@ -15,6 +15,9 @@ class FrenchLemmatizer(Lemmatizer):
     """
 
     def rule_lemmatize(self, token: Token) -> List[str]:
+        cache_key = (token.orth, token.pos)
+        if cache_key in self.cache:
+            return self.cache[cache_key]
         string = token.text
         univ_pos = token.pos_.lower()
         if univ_pos in ("", "eol", "space"):
@@ -44,6 +47,7 @@ class FrenchLemmatizer(Lemmatizer):
         forms = []
         if string in index:
             forms.append(string)
+            self.cache[cache_key] = forms
             return forms
         forms.extend(exceptions.get(string, []))
         oov_forms = []
@@ -63,4 +67,6 @@ class FrenchLemmatizer(Lemmatizer):
             forms.append(self.lookup_lemmatize(token)[0])
         if not forms:
             forms.append(string)
-        return list(set(forms))
+        forms = list(set(forms))
+        self.cache[cache_key] = forms
+        return forms

@@ -9,17 +9,13 @@ from ...vocab import Vocab
 
 
 class DutchLemmatizer(Lemmatizer):
-    def __init__(
-        self,
-        vocab: Vocab,
-        model: Optional[Model],
-        name: str = "lemmatizer",
-        *,
-        mode: str = "rule",
-        lookups: Optional[Lookups] = None,
-    ) -> None:
-        super().__init__(vocab, model, name, mode=mode, lookups=lookups)
-        self.cache_features["rule"] = ["LOWER", "POS"]
+    def lookup_lemmatize(self, token: Token) -> List[str]:
+        """Overrides parent method so that a lowercased version of the string
+        is used to search the lookup table. This is necessary because our
+        lookup table consists entirely of lowercase keys."""
+        lookup_table = self.lookups.get_table("lemma_lookup", {})
+        string = token.text.lower()
+        return [lookup_table.get(string, string)]
 
     # Note: CGN does not distinguish AUX verbs, so we treat AUX as VERB.
     def rule_lemmatize(self, token: Token) -> List[str]:
@@ -30,10 +26,15 @@ class DutchLemmatizer(Lemmatizer):
         # any problems, and it keeps the exceptions indexes small. If this
         # creates problems for proper nouns, we can introduce a check for
         # univ_pos == "PROPN".
+        cache_key = (token.lower, token.pos)
+        if cache_key in self.cache:
+            return self.cache[cache_key]
         string = token.text
         univ_pos = token.pos_.lower()
         if univ_pos in ("", "eol", "space"):
-            return [string.lower()]
+            forms = [string.lower()]
+            self.cache[cache_key] = forms
+            return forms
 
         index_table = self.lookups.get_table("lemma_index", {})
         exc_table = self.lookups.get_table("lemma_exc", {})
@@ -44,24 +45,31 @@ class DutchLemmatizer(Lemmatizer):
 
         string = string.lower()
         if univ_pos not in ("noun", "verb", "aux", "adj", "adv", "pron", "det", "adp", "num"):
-            return [string]
+            forms = [string]
+            self.cache[cache_key] = forms
+            return forms
         lemma_index = index_table.get(univ_pos, {})
         # string is already lemma
         if string in lemma_index:
-            return [string]
+            forms = [string]
+            self.cache[cache_key] = forms
+            return forms
         exc_table = self.lookups.get_table("lemma_exc", {})
         exceptions = exc_table.get(univ_pos, {})
         # string is irregular token contained in exceptions index.
         try:
-            lemma = exceptions[string]
-            return [lemma[0]]
+            forms = [exceptions[string][0]]
+            self.cache[cache_key] = forms
+            return forms
         except KeyError:
             pass
         # string corresponds to key in lookup table
         lookup_table = self.lookups.get_table("lemma_lookup", {})
         looked_up_lemma = lookup_table.get(string)
         if looked_up_lemma and looked_up_lemma in lemma_index:
-            return [looked_up_lemma]
+            forms = [looked_up_lemma]
+            self.cache[cache_key] = forms
+            return forms
         rules_table = self.lookups.get_table("lemma_rules", {})
         oov_forms = []
         for old, new in rules:
@@ -70,7 +78,9 @@ class DutchLemmatizer(Lemmatizer):
                 if not form:
                     pass
                 elif form in index:
-                    return [form]
+                    forms = [form]
+                    self.cache[cache_key] = forms
+                    return forms
                 else:
                     oov_forms.append(form)
         forms = list(set(oov_forms))
@@ -78,20 +88,21 @@ class DutchLemmatizer(Lemmatizer):
         if forms:
             for form in forms:
                 if form in exceptions:
-                    return [form]
+                    forms = [form]
+                    self.cache[cache_key] = forms
+                    return forms
             if looked_up_lemma:
-                return [looked_up_lemma]
+                forms = [looked_up_lemma]
+                self.cache[cache_key] = forms
+                return forms
             else:
+                self.cache[cache_key] = forms
                 return forms
         elif looked_up_lemma:
-            return [looked_up_lemma]
+            forms = [looked_up_lemma]
+            self.cache[cache_key] = forms
+            return forms
         else:
-            return [string]
-
-    def lookup_lemmatize(self, token: Token) -> List[str]:
-        """Overrides parent method so that a lowercased version of the string
-        is used to search the lookup table. This is necessary because our
-        lookup table consists entirely of lowercase keys."""
-        lookup_table = self.lookups.get_table("lemma_lookup", {})
-        string = token.text.lower()
-        return [lookup_table.get(string, string)]
+            forms = [string]
+            self.cache[cache_key] = forms
+            return forms

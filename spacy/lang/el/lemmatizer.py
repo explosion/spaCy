@@ -28,7 +28,6 @@ class GreekLemmatizer(Lemmatizer):
         lookups: Optional[Lookups] = None,
     ) -> None:
         super().__init__(vocab, model, name, mode=mode, lookups=lookups)
-        self.cache_features["rule"] = ["LOWER", "POS"]
 
     def rule_lemmatize(self, token: Token) -> List[str]:
         """Lemmatize using a rule-based approach.
@@ -36,6 +35,9 @@ class GreekLemmatizer(Lemmatizer):
         token (Token): The token to lemmatize.
         RETURNS (list): The available lemmas for the string.
         """
+        cache_key = (token.lower, token.pos)
+        if cache_key in self.cache:
+            return self.cache[cache_key]
         string = token.text
         univ_pos = token.pos_.lower()
         if univ_pos in ("", "eol", "space"):
@@ -69,4 +71,6 @@ class GreekLemmatizer(Lemmatizer):
             forms.extend(oov_forms)
         if not forms:
             forms.append(string)
-        return list(set(forms))
+        forms = list(set(forms))
+        self.cache[cache_key] = forms
+        return forms
