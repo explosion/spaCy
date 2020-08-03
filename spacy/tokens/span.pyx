@@ -181,15 +181,16 @@ cdef class Span:
             return Span(self.doc, start + self.start, end + self.start)
         else:
             if i < 0:
-                token = self.doc[self.end + i]
-                if self.start <= token.i < self.end:
-                    return token
+                token_i = self.end + i
+                if self.start <= token_i < self.end:
+                    return self.doc[token_i]
                 else:
                     raise IndexError(Errors.E201)
             else:
                 token = self.doc[self.start + i]
-                if self.start <= token.i < self.end:
-                    return token
+                token_i = self.start + i
+                if self.start <= token_i < self.end:
+                    return self.doc[token_i]
                 else:
                     raise IndexError(Errors.E201)
 
