@@ -72,7 +72,7 @@ class Corpus:
     def __call__(
         self,
         nlp: "Language",
-        loc: Path,
+        loc: Union[Path, str],
     ) -> Iterator[Example]:
         """Yield examples from the data.
 
@@ -82,6 +82,7 @@ class Corpus:
 
         DOCS: https://spacy.io/api/corpus#train_dataset
         """
+        loc = util.ensure_path(loc)
         ref_docs = self.read_docbin(nlp.vocab, self.walk_corpus(loc))
         if self.gold_preproc:
             examples = self.make_examples_gold_preproc(nlp, ref_docs)

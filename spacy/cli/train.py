@@ -27,8 +27,8 @@ from ..ml import models  # noqa: F401
 def train_cli(
     # fmt: off
     ctx: typer.Context,  # This is only used to read additional arguments
-    train_path: Path = Arg(..., help="Location of training data", exists=True),
-    dev_path: Path = Arg(..., help="Location of development data", exists=True),
+    train_path: str = Arg(..., help="Location or name of training data"),
+    dev_path: str = Arg(..., help="Location or name of development data"), 
     config_path: Path = Arg(..., help="Path to config file", exists=True),
     output_path: Optional[Path] = Opt(None, "--output", "--output-path", "-o", help="Output directory to store model in"),
     code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
@@ -444,10 +444,6 @@ def verify_cli_args(
     # Make sure all files and paths exists if they are needed
     if not config_path or not config_path.exists():
         msg.fail("Config file not found", config_path, exits=1)
-    if not train_path or not train_path.exists():
-        msg.fail("Training data not found", train_path, exits=1)
-    if not dev_path or not dev_path.exists():
-        msg.fail("Development data not found", dev_path, exits=1)
     if output_path is not None:
         if not output_path.exists():
             output_path.mkdir()
