@@ -201,8 +201,7 @@ def ru_tokenizer():
 @pytest.fixture
 def ru_lemmatizer():
     pytest.importorskip("pymorphy2")
-    nlp = get_lang_class("ru")()
-    return nlp.add_pipe("lemmatizer")
+    return get_lang_class("ru")().add_pipe("lemmatizer")
 
 
 @pytest.fixture(scope="session")
