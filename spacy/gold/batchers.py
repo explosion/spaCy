@@ -12,7 +12,7 @@ ItemT = TypeVar("ItemT")
 BatcherT = Callable[[Iterable[ItemT]], Iterable[List[ItemT]]]
 
 
-@registry.batchers("spacy.batch_by_padded.v1")
+@registry.batchers("batch_by_padded.v1")
 def configure_minibatch_by_padded_size(
     *,
     size: Sizing,
