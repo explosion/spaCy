@@ -1,8 +1,10 @@
 from typing import Union, Iterator, Iterable, Sequence, TypeVar, List, Callable
+from typing import Optional, Any
 from functools import partial
+import itertools
 
 from .example import Example
-from ..util import registry
+from ..util import registry, minibatch
 
 
 Sizing = Union[Iterator[int], int]
@@ -46,12 +48,12 @@ def configure_minibatch_by_words(
 
 @registry.batchers("batch_by_sequence.v1")
 def configure_minibatch(size: Sizing, get_length=None) -> Batcher:
-    return partial(minibatch(size=size, get_length=get_length)
+    return partial(minibatch, size=size, get_length=get_length)
 
 
 def minibatch_by_padded_size(
     docs: Iterator["Doc"],
-    size: Union[Iterator[int], int],
+    size: Sizing,
     buffer: int = 256,
     discard_oversize: bool = False,
     get_length: Optional[Callable]=len
