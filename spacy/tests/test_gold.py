@@ -658,10 +658,37 @@ def test_split_sents(merged_dict):
 
 
 def test_alignment():
-    other_tokens = ["obama", "'", "s", "podcasts", "."]
-    spacy_tokens = ["obama", "'s", "podcasts", "."]
+    other_tokens = ["i", "listened", "to", "obama", "'", "s", "podcasts", "."]
+    spacy_tokens = ["i", "listened", "to", "obama", "'s", "podcasts", "."]
     align = Alignment.from_strings(other_tokens, spacy_tokens)
-    assert list(align.x2y.lengths) == [1, 1, 1, 1, 1]
-    assert list(align.x2y.dataXd) == [0, 1, 1, 2, 3] # the second and third token both refer to "'s"
-    assert list(align.y2x.lengths) == [1, 2, 1, 1]   # the second token "'s" splits out in two
-    assert list(align.y2x.dataXd) == [0, 1, 2, 3, 4]
+    assert list(align.x2y.lengths) == [1, 1, 1, 1, 1, 1, 1, 1]
+    assert list(align.x2y.dataXd) == [0, 1, 2, 3, 4, 4, 5, 6]  # two tokens both refer to "'s"
+    assert list(align.y2x.lengths) == [1, 1, 1, 1, 2, 1, 1]    # the token "'s" splits out in two tokens
+    assert list(align.y2x.dataXd) == [0, 1, 2, 3, 4, 5, 6, 7]
+
+
+def test_alignment_case_insensitive():
+    other_tokens = ["I", "listened", "to", "obama", "'", "s", "podcasts", "."]
+    spacy_tokens = ["i", "listened", "to", "Obama", "'s", "PODCASTS", "."]
+    align = Alignment.from_strings(other_tokens, spacy_tokens)
+    assert list(align.x2y.lengths) == [1, 1, 1, 1, 1, 1, 1, 1]
+    assert list(align.x2y.dataXd) == [0, 1, 2, 3, 4, 4, 5, 6]  # two tokens both refer to "'s"
+    assert list(align.y2x.lengths) == [1, 1, 1, 1, 2, 1, 1]  # the token "'s" splits out in two tokens
+    assert list(align.y2x.dataXd) == [0, 1, 2, 3, 4, 5, 6, 7]
+
+
+def test_alignment_complex():
+    other_tokens = ["i listened to", "obama", "'", "s", "podcasts", "."]
+    spacy_tokens = ["i", "listened", "to", "obama", "'s", "podcasts."]
+    align = Alignment.from_strings(other_tokens, spacy_tokens)
+    assert list(align.x2y.lengths) == [3, 1, 1, 1, 1, 1]
+    assert list(align.x2y.dataXd) == [0, 1, 2, 3, 4, 4, 5, 5]
+    assert list(align.y2x.lengths) == [1, 1, 1, 1, 2, 2]
+    assert list(align.y2x.dataXd) == [0, 0, 0, 1, 2, 3, 4, 5]
+
+
+def test_alignment_different_texts():
+    other_tokens = ["she", "listened", "to", "obama", "'s", "podcasts", "."]
+    spacy_tokens = ["i", "listened", "to", "obama", "'s", "podcasts", "."]
+    with pytest.raises(ValueError):
+        Alignment.from_strings(other_tokens, spacy_tokens)
