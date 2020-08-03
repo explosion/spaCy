@@ -20,12 +20,13 @@ def configure_minibatch_by_padded_size(
     discard_oversize: bool,
     get_length: Optional[Callable[[ItemT], int]] = None
 ) -> BatcherT:
+    optionals = {"get_length": get_length} if get_length is not None else {}
     return partial(
         minibatch_by_padded_size,
         size=size,
         buffer=buffer,
         discard_oversize=discard_oversize,
-        get_length=get_length,
+        **optionals
     )
 
 
@@ -35,19 +36,21 @@ def configure_minibatch_by_words(
     size: Sizing,
     tolerance: float,
     discard_oversize: bool,
-    get_length: Callable[[ItemT], int] = len
+    get_length: Optional[Callable[[ItemT], int]] = None
 ) -> BatcherT:
+    optionals = {"get_length": get_length} if get_length is not None else {}
     return partial(
         minibatch_by_words,
         size=size,
         discard_oversize=discard_oversize,
-        get_length=get_length,
+        **optionals
     )
 
 
 @registry.batchers("batch_by_sequence.v1")
 def configure_minibatch(size: Sizing, get_length=None) -> BatcherT:
-    return partial(minibatch, size=size, get_length=get_length)
+    optionals = ({"get_length": get_length} if get_length is not None else {})
+    return partial(minibatch, size=size, **optionals)
 
 
 def minibatch_by_padded_size(
@@ -55,7 +58,7 @@ def minibatch_by_padded_size(
     size: Sizing,
     buffer: int = 256,
     discard_oversize: bool = False,
-    get_length: Optional[Callable] = len,
+    get_length: Callable = len,
 ) -> Iterator[Iterator["Doc"]]:
     if isinstance(size, int):
         size_ = itertools.repeat(size)
