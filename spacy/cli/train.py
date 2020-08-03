@@ -130,7 +130,6 @@ def train(
             msg.fail(err, exits=1)
         tok2vec.from_bytes(weights_data)
 
-
     # Create iterator, which yields out info after each optimization step.
     msg.info("Start training")
     score_weights = T_cfg["score_weights"]
@@ -139,7 +138,9 @@ def train(
         nlp,
         optimizer,
         create_train_batches(nlp, reader, batcher, T_loc, T_cfg["max_epochs"]),
-        create_evaluation_callback(nlp, optimizer, reader, E_loc, score_weights, E_batch_size),
+        create_evaluation_callback(
+            nlp, optimizer, reader, E_loc, score_weights, E_batch_size
+        ),
         dropout=T_cfg["dropout"],
         accumulate_gradient=T_cfg["accumulate_gradient"],
         patience=T_cfg["patience"],
@@ -181,13 +182,7 @@ def train(
             msg.good(f"Saved model to output directory {final_model_path}")
 
 
-def create_train_batches(
-    nlp: Language,
-    reader,
-    batcher,
-    loc: Path,
-    max_epochs: int
-):
+def create_train_batches(nlp: Language, reader, batcher, loc: Path, max_epochs: int):
     epoch = 1
     train_examples = []
     # Stream the first epoch, so we start training faster and support
@@ -212,7 +207,7 @@ def create_evaluation_callback(
     reader: Callable,
     loc,
     weights: Dict[str, float],
-    batch_size: int
+    batch_size: int,
 ) -> Callable[[], Tuple[float, Dict[str, float]]]:
     def evaluate() -> Tuple[float, Dict[str, float]]:
         dev_examples = list(reader(nlp, loc))
