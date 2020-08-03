@@ -655,3 +655,18 @@ def test_split_sents(merged_dict):
     assert token_annotation_2["words"] == ["It", "is", "just", "me"]
     assert token_annotation_2["tags"] == ["PRON", "AUX", "ADV", "PRON"]
     assert token_annotation_2["sent_starts"] == [1, 0, 0, 0]
+
+
+def test_retokenized_docs(doc):
+    a = doc.to_array(["TAG"])
+    doc1 = Doc(doc.vocab, words=[t.text for t in doc]).from_array(["TAG"], a)
+    doc2 = Doc(doc.vocab, words=[t.text for t in doc]).from_array(["TAG"], a)
+    example = Example(doc1, doc2)
+
+    assert example.get_aligned("ORTH", as_string=True) == ['Sarah', "'s", 'sister', 'flew', 'to', 'Silicon', 'Valley', 'via', 'London', '.']
+
+    with doc1.retokenize() as retokenizer:
+        retokenizer.merge(doc1[0:2])
+        retokenizer.merge(doc1[5:7])
+
+    assert example.get_aligned("ORTH", as_string=True) == [None, 'sister', 'flew', 'to', None, 'via', 'London', '.']
