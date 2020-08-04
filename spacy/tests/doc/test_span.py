@@ -167,7 +167,26 @@ def test_spans_are_hashable(en_tokenizer):
 
 def test_spans_by_character(doc):
     span1 = doc[1:-2]
+
+    # default and specified alignment mode "strict"
     span2 = doc.char_span(span1.start_char, span1.end_char, label="GPE")
+    assert span1.start_char == span2.start_char
+    assert span1.end_char == span2.end_char
+    assert span2.label_ == "GPE"
+
+    span2 = doc.char_span(span1.start_char, span1.end_char, label="GPE", alignment_mode="strict")
+    assert span1.start_char == span2.start_char
+    assert span1.end_char == span2.end_char
+    assert span2.label_ == "GPE"
+
+    # alignment mode "contract"
+    span2 = doc.char_span(span1.start_char - 3, span1.end_char, label="GPE", alignment_mode="contract")
+    assert span1.start_char == span2.start_char
+    assert span1.end_char == span2.end_char
+    assert span2.label_ == "GPE"
+
+    # alignment mode "expand"
+    span2 = doc.char_span(span1.start_char + 1, span1.end_char, label="GPE", alignment_mode="expand")
     assert span1.start_char == span2.start_char
     assert span1.end_char == span2.end_char
     assert span2.label_ == "GPE"
