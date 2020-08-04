@@ -179,12 +179,12 @@ def create_train_batches(iterator, batcher, max_epochs: int):
     # infinite streams.
     for batch in batcher(iterator):
         yield epoch, batch
-        if max_epochs >= 2:
+        if max_epochs != 1:
             examples.extend(batch)
     if not examples:
         # Raise error if no data
         raise ValueError(Errors.E986)
-    while max_epochs < 1 or epoch < max_epochs:
+    while epoch != max_epochs:
         random.shuffle(examples)
         for batch in batcher(examples):
             yield epoch, batch
