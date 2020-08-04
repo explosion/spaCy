@@ -374,7 +374,8 @@ class Errors:
     E138 = ("Invalid JSONL format for raw text '{text}'. Make sure the input "
             "includes either the `text` or `tokens` key. For more info, see "
             "the docs:\nhttps://spacy.io/api/cli#pretrain-jsonl")
-    E139 = ("Knowledge Base for component '{name}' is empty.")
+    E139 = ("Knowledge Base for component '{name}' is empty. Use the methods "
+            "kb.add_entity and kb.add_alias to add entries.")
     E140 = ("The list of entities, prior probabilities and entity vectors "
             "should be of equal length.")
     E141 = ("Entity vectors should be of length {required} instead of the "
@@ -481,6 +482,8 @@ class Errors:
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
+    E946 = ("The Vocab for the knowledge base is not initialized. Did you forget to "
+            "call kb.initialize()?")
     E947 = ("Matcher.add received invalid 'greedy' argument: expected "
             "a string value from {expected} but got: '{arg}'")
     E948 = ("Matcher.add received invalid 'patterns' argument: expected "
