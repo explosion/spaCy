@@ -588,6 +588,7 @@ class Errors(object):
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
     E200 = ("Specifying a base model with a pretrained component '{component}' "
             "can not be combined with adding a pretrained Tok2Vec layer.")
+    E201 = ("Span index out of range.")
 
 
 @add_codes
