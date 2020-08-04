@@ -65,7 +65,7 @@ cdef class Candidate:
         return self.prior_prob
 
 
-def get_candidates_from_index(KnowledgeBase kb, ent_span) -> Iterator[Candidate]:
+def get_candidates(KnowledgeBase kb, span) -> Iterator[Candidate]:
     """
     Return candidate entities for an alias. Each candidate defines the entity, the original alias,
     and the prior probability of that alias resolving to that entity.
@@ -75,21 +75,7 @@ def get_candidates_from_index(KnowledgeBase kb, ent_span) -> Iterator[Candidate]
     but any other custom candidate generation method can be used in combination with the KB as well.
     """
     kb.require_vocab()
-    alias = ent_span.text
-    cdef hash_t alias_hash = kb.vocab.strings[alias]
-    if not alias_hash in kb._alias_index:
-        return []
-    alias_index = <int64_t>kb._alias_index.get(alias_hash)
-    alias_entry = kb._aliases_table[alias_index]
-
-    return [Candidate(kb=kb,
-                      entity_hash=kb._entries[entry_index].entity_hash,
-                      entity_freq=kb._entries[entry_index].freq,
-                      entity_vector=kb._vectors_table[kb._entries[entry_index].vector_index],
-                      alias_hash=alias_hash,
-                      prior_prob=prior_prob)
-            for (entry_index, prior_prob) in zip(alias_entry.entry_indices, alias_entry.probs)
-            if entry_index != 0]
+    return kb.get_alias_candidates(span.text)
 
 
 cdef class KnowledgeBase:
@@ -108,11 +94,13 @@ cdef class KnowledgeBase:
         self._alias_index = PreshMap()
         self.vocab = None
 
-
     def initialize(self, Vocab vocab):
-        self.vocab = vocab
-        self.vocab.strings.add("")
-        self._create_empty_vectors(dummy_hash=self.vocab.strings[""])
+        if self.vocab is None:
+            self.vocab = vocab
+            self.vocab.strings.add("")
+            self._create_empty_vectors(dummy_hash=self.vocab.strings[""])
+        elif self.vocab != vocab:
+            raise ValueError("Attempt to change the 'vocab' instance of an initialized KB")
 
     def require_vocab(self):
         if self.vocab is None:
@@ -301,6 +289,31 @@ cdef class KnowledgeBase:
             probs.push_back(float(prior_prob))
             alias_entry.probs = probs
             self._aliases_table[alias_index] = alias_entry
+
+    def get_alias_candidates(self, unicode alias) -> Iterator[Candidate]:
+        """
+        Return candidate entities for an alias. Each candidate defines the entity, the original alias,
+        and the prior probability of that alias resolving to that entity.
+        If the alias is not known in the KB, and empty list is returned.
+
+        This particular function is optimized to work together with the built-in KB functionality,
+        but any other custom candidate generation method can be used in combination with the KB as well.
+        """
+        self.require_vocab()
+        cdef hash_t alias_hash = self.vocab.strings[alias]
+        if not alias_hash in self._alias_index:
+            return []
+        alias_index = <int64_t>self._alias_index.get(alias_hash)
+        alias_entry = self._aliases_table[alias_index]
+
+        return [Candidate(kb=self,
+                          entity_hash=self._entries[entry_index].entity_hash,
+                          entity_freq=self._entries[entry_index].freq,
+                          entity_vector=self._vectors_table[self._entries[entry_index].vector_index],
+                          alias_hash=alias_hash,
+                          prior_prob=prior_prob)
+                for (entry_index, prior_prob) in zip(alias_entry.entry_indices, alias_entry.probs)
+                if entry_index != 0]
 
     def get_vector(self, unicode entity):
         self.require_vocab()

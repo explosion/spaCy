@@ -1,6 +1,7 @@
+from typing import Callable, Iterable
 import pytest
 
-from spacy.kb import KnowledgeBase, get_candidates_from_index
+from spacy.kb import KnowledgeBase, get_candidates, Candidate
 
 from spacy import util, registry
 from spacy.gold import Example
@@ -117,12 +118,15 @@ def test_kb_default(nlp):
     assert len(entity_linker.kb) == 0
     assert entity_linker.kb.get_size_entities() == 0
     assert entity_linker.kb.get_size_aliases() == 0
-    assert entity_linker.kb.entity_vector_length == 64    # default value from pipeline.entity_linker
+    # 64 is the default value from pipeline.entity_linker
+    assert entity_linker.kb.entity_vector_length == 64
 
 
 def test_kb_custom_length(nlp):
     """Test that the default (empty) KB can be configured with a custom entity length"""
-    entity_linker = nlp.add_pipe("entity_linker", config={"kb": {"entity_vector_length": 35}})
+    entity_linker = nlp.add_pipe(
+        "entity_linker", config={"kb": {"entity_vector_length": 35}}
+    )
     assert len(entity_linker.kb) == 0
     assert entity_linker.kb.get_size_entities() == 0
     assert entity_linker.kb.get_size_aliases() == 0
@@ -149,7 +153,12 @@ def test_candidate_generation(nlp):
     """Test correct candidate generation"""
     mykb = KnowledgeBase(entity_vector_length=1)
     mykb.initialize(nlp.vocab)
-    doc = nlp("douglas adam shrubbery")
+    doc = nlp("douglas adam Adam shrubbery")
+
+    douglas_ent = doc[0:1]
+    adam_ent = doc[1:2]
+    Adam_ent = doc[2:3]
+    shrubbery_ent = doc[3:4]
 
     # adding entities
     mykb.add_entity(entity="Q1", freq=27, entity_vector=[1])
@@ -161,24 +170,85 @@ def test_candidate_generation(nlp):
     mykb.add_alias(alias="adam", entities=["Q2"], probabilities=[0.9])
 
     # test the size of the relevant candidates
-    assert len(get_candidates_from_index(mykb, doc[0:1])) == 2
-    assert len(get_candidates_from_index(mykb, doc[1:2])) == 1
-    assert len(get_candidates_from_index(mykb, doc[2:3])) == 0
+    assert len(get_candidates(mykb, douglas_ent)) == 2
+    assert len(get_candidates(mykb, adam_ent)) == 1
+    assert len(get_candidates(mykb, Adam_ent)) == 0  # default case sensitive
+    assert len(get_candidates(mykb, shrubbery_ent)) == 0
 
     # test the content of the candidates
-    adam_ent = doc[1:2]
-    assert get_candidates_from_index(mykb, adam_ent)[0].entity_ == "Q2"
-    assert get_candidates_from_index(mykb, adam_ent)[0].alias_ == "adam"
-    assert_almost_equal(get_candidates_from_index(mykb, adam_ent)[0].entity_freq, 12)
-    assert_almost_equal(get_candidates_from_index(mykb, adam_ent)[0].prior_prob, 0.9)
+    assert get_candidates(mykb, adam_ent)[0].entity_ == "Q2"
+    assert get_candidates(mykb, adam_ent)[0].alias_ == "adam"
+    assert_almost_equal(get_candidates(mykb, adam_ent)[0].entity_freq, 12)
+    assert_almost_equal(get_candidates(mykb, adam_ent)[0].prior_prob, 0.9)
+
+
+def test_el_pipe_configuration():
+    """Test correct candidate generation as part of the EL pipe"""
+    nlp = English()
+    nlp.add_pipe("sentencizer")
+    pattern = {"label": "PERSON", "pattern": [{"LOWER": "douglas"}]}
+    ruler = nlp.add_pipe("entity_ruler")
+    ruler.add_patterns([pattern])
+
+    @registry.assets.register("myAdamKB.v1")
+    def mykb() -> KnowledgeBase:
+        kb = KnowledgeBase(entity_vector_length=1)
+        kb.initialize(nlp.vocab)
+        kb.add_entity(entity="Q2", freq=12, entity_vector=[2])
+        kb.add_entity(entity="Q3", freq=5, entity_vector=[3])
+        kb.add_alias(alias="douglas", entities=["Q2", "Q3"], probabilities=[0.8, 0.1])
+        return kb
+
+    # run an EL pipe without a trained context encoder, to check the candidate generation step only
+    nlp.add_pipe(
+        "entity_linker",
+        config={
+            "kb": {"@assets": "myAdamKB.v1"},
+            "incl_context": False,
+        },
+    )
+    # With the default get_candidates function, matching is case-sensitive
+    doc = nlp("Douglas and douglas are not the same.")
+    assert doc[0].ent_kb_id_ == "NIL"
+    assert doc[1].ent_kb_id_ == ""
+    assert doc[2].ent_kb_id_ == "Q2"
+
+
+def test_custom_el_pipe():
+    """Test the EL pipe with a custom get_candidates function, which matches lowercased mentions"""
+    nlp = English()
+    nlp.add_pipe("sentencizer")
+    pattern = {"label": "PERSON", "pattern": [{"LOWER": "douglas"}]}
+    ruler = nlp.add_pipe("entity_ruler")
+    ruler.add_patterns([pattern])
+
+    def get_lowercased_candidates(kb, span):
+        kb.require_vocab()
+        result = kb.get_alias_candidates(span.text.lower())
+        return result
+
+    @registry.assets.register("spacy.LowercaseCandidateGenerator.v1")
+    def create_candidates() -> Callable[[KnowledgeBase, "Span"], Iterable[Candidate]]:
+        return get_lowercased_candidates
+
+    nlp.add_pipe(
+        "entity_linker",
+        config={
+            "kb": {"@assets": "myAdamKB.v1"},
+            "incl_context": False,
+            "get_candidates": {"@assets": "spacy.LowercaseCandidateGenerator.v1"},
+        },
+    )
+    doc = nlp("Douglas and douglas are not the same.")
+    assert doc[0].ent_kb_id_ == "Q2"
+    assert doc[1].ent_kb_id_ == ""
+    assert doc[2].ent_kb_id_ == "Q2"
 
 
 def test_append_alias(nlp):
     """Test that we can append additional alias-entity pairs"""
     mykb = KnowledgeBase(entity_vector_length=1)
     mykb.initialize(nlp.vocab)
-    doc = nlp("douglas adam shrubbery")
-    douglas_ent = doc[0:1]
 
     # adding entities
     mykb.add_entity(entity="Q1", freq=27, entity_vector=[1])
@@ -190,20 +260,20 @@ def test_append_alias(nlp):
     mykb.add_alias(alias="adam", entities=["Q2"], probabilities=[0.9])
 
     # test the size of the relevant candidates
-    assert len(get_candidates_from_index(mykb, douglas_ent)) == 2
+    assert len(mykb.get_alias_candidates("douglas")) == 2
 
     # append an alias
     mykb.append_alias(alias="douglas", entity="Q1", prior_prob=0.2)
 
     # test the size of the relevant candidates has been incremented
-    assert len(get_candidates_from_index(mykb, douglas_ent)) == 3
+    assert len(mykb.get_alias_candidates("douglas")) == 3
 
     # append the same alias-entity pair again should not work (will throw a warning)
     with pytest.warns(UserWarning):
         mykb.append_alias(alias="douglas", entity="Q1", prior_prob=0.3)
 
     # test the size of the relevant candidates remained unchanged
-    assert len(get_candidates_from_index(mykb, douglas_ent)) == 3
+    assert len(mykb.get_alias_candidates("douglas")) == 3
 
 
 def test_append_invalid_alias(nlp):

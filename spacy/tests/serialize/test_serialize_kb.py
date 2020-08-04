@@ -1,5 +1,5 @@
 from spacy.util import ensure_path
-from spacy.kb import KnowledgeBase, get_candidates_from_index
+from spacy.kb import KnowledgeBase, get_candidates
 
 from ..util import make_tempdir
 from ...lang.en import English
@@ -64,7 +64,7 @@ def _check_kb(kb):
     # check candidates & probabilities
     nlp = English()
     doc = nlp("double07")
-    candidates = sorted(get_candidates_from_index(kb, doc[0:1]), key=lambda x: x.entity_)
+    candidates = sorted(get_candidates(kb, doc[0:1]), key=lambda x: x.entity_)
     assert len(candidates) == 2
 
     assert candidates[0].entity_ == "Q007"

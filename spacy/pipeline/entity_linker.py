@@ -121,7 +121,8 @@ class EntityLinker(Pipe):
         }
         if not isinstance(kb, KnowledgeBase):
             raise ValueError(Errors.E990.format(type=type(self.kb)))
-        kb.initialize(vocab)
+        if kb.vocab is None:
+            kb.initialize(vocab)
         self.kb = kb
         if "kb" in cfg:
             del cfg["kb"]  # we don't want to duplicate its serialization
@@ -326,10 +327,11 @@ class EntityLinker(Pipe):
                         end_token = sentences[end_sentence].end
                         sent_doc = doc[start_token:end_token].as_doc()
                         # currently, the context is the same for each entity in a sentence (should be refined)
-                        sentence_encoding = self.model.predict([sent_doc])[0]
-                        xp = get_array_module(sentence_encoding)
-                        sentence_encoding_t = sentence_encoding.T
-                        sentence_norm = xp.linalg.norm(sentence_encoding_t)
+                        xp = self.model.ops.xp
+                        if self.cfg.get("incl_context"):
+                            sentence_encoding = self.model.predict([sent_doc])[0]
+                            sentence_encoding_t = sentence_encoding.T
+                            sentence_norm = xp.linalg.norm(sentence_encoding_t)
                         for ent in sent.ents:
                             entity_count += 1
                             to_discard = self.cfg.get("labels_discard", [])

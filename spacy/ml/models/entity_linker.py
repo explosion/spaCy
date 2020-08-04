@@ -3,7 +3,7 @@ from thinc.api import chain, clone, list2ragged, reduce_mean, residual
 from thinc.api import Model, Maxout, Linear
 
 from ...util import registry
-from ...kb import KnowledgeBase, Candidate, get_candidates_from_index
+from ...kb import KnowledgeBase, Candidate, get_candidates
 from ...vocab import Vocab
 
 
@@ -41,4 +41,4 @@ def empty_kb(entity_vector_length: int) -> KnowledgeBase:
 
 @registry.assets.register("spacy.CandidateGenerator.v1")
 def create_candidates() -> Callable[[KnowledgeBase, "Span"], Iterable[Candidate]]:
-    return get_candidates_from_index
+    return get_candidates
