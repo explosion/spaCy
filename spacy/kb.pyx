@@ -65,7 +65,7 @@ cdef class Candidate:
         return self.prior_prob
 
 
-def get_candidates_from_index(KnowledgeBase kb, unicode alias) -> Iterator[Candidate]:
+def get_candidates_from_index(KnowledgeBase kb, ent_span) -> Iterator[Candidate]:
     """
     Return candidate entities for an alias. Each candidate defines the entity, the original alias,
     and the prior probability of that alias resolving to that entity.
@@ -75,6 +75,7 @@ def get_candidates_from_index(KnowledgeBase kb, unicode alias) -> Iterator[Candi
     but any other custom candidate generation method can be used in combination with the KB as well.
     """
     kb.require_vocab()
+    alias = ent_span.text
     cdef hash_t alias_hash = kb.vocab.strings[alias]
     if not alias_hash in kb._alias_index:
         return []

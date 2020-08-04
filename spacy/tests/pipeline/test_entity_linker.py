@@ -149,6 +149,7 @@ def test_candidate_generation(nlp):
     """Test correct candidate generation"""
     mykb = KnowledgeBase(entity_vector_length=1)
     mykb.initialize(nlp.vocab)
+    doc = nlp("douglas adam shrubbery")
 
     # adding entities
     mykb.add_entity(entity="Q1", freq=27, entity_vector=[1])
@@ -160,21 +161,24 @@ def test_candidate_generation(nlp):
     mykb.add_alias(alias="adam", entities=["Q2"], probabilities=[0.9])
 
     # test the size of the relevant candidates
-    assert len(get_candidates_from_index(mykb, "douglas")) == 2
-    assert len(get_candidates_from_index(mykb, "adam")) == 1
-    assert len(get_candidates_from_index(mykb, "shrubbery")) == 0
+    assert len(get_candidates_from_index(mykb, doc[0:1])) == 2
+    assert len(get_candidates_from_index(mykb, doc[1:2])) == 1
+    assert len(get_candidates_from_index(mykb, doc[2:3])) == 0
 
     # test the content of the candidates
-    assert get_candidates_from_index(mykb, "adam")[0].entity_ == "Q2"
-    assert get_candidates_from_index(mykb, "adam")[0].alias_ == "adam"
-    assert_almost_equal(get_candidates_from_index(mykb, "adam")[0].entity_freq, 12)
-    assert_almost_equal(get_candidates_from_index(mykb, "adam")[0].prior_prob, 0.9)
+    adam_ent = doc[1:2]
+    assert get_candidates_from_index(mykb, adam_ent)[0].entity_ == "Q2"
+    assert get_candidates_from_index(mykb, adam_ent)[0].alias_ == "adam"
+    assert_almost_equal(get_candidates_from_index(mykb, adam_ent)[0].entity_freq, 12)
+    assert_almost_equal(get_candidates_from_index(mykb, adam_ent)[0].prior_prob, 0.9)
 
 
 def test_append_alias(nlp):
     """Test that we can append additional alias-entity pairs"""
     mykb = KnowledgeBase(entity_vector_length=1)
     mykb.initialize(nlp.vocab)
+    doc = nlp("douglas adam shrubbery")
+    douglas_ent = doc[0:1]
 
     # adding entities
     mykb.add_entity(entity="Q1", freq=27, entity_vector=[1])
@@ -186,20 +190,20 @@ def test_append_alias(nlp):
     mykb.add_alias(alias="adam", entities=["Q2"], probabilities=[0.9])
 
     # test the size of the relevant candidates
-    assert len(get_candidates_from_index(mykb, "douglas")) == 2
+    assert len(get_candidates_from_index(mykb, douglas_ent)) == 2
 
     # append an alias
     mykb.append_alias(alias="douglas", entity="Q1", prior_prob=0.2)
 
     # test the size of the relevant candidates has been incremented
-    assert len(get_candidates_from_index(mykb, "douglas")) == 3
+    assert len(get_candidates_from_index(mykb, douglas_ent)) == 3
 
     # append the same alias-entity pair again should not work (will throw a warning)
     with pytest.warns(UserWarning):
         mykb.append_alias(alias="douglas", entity="Q1", prior_prob=0.3)
 
     # test the size of the relevant candidates remained unchanged
-    assert len(get_candidates_from_index(mykb, "douglas")) == 3
+    assert len(get_candidates_from_index(mykb, douglas_ent)) == 3
 
 
 def test_append_invalid_alias(nlp):

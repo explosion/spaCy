@@ -337,7 +337,7 @@ class EntityLinker(Pipe):
                                 # ignoring this entity - setting to NIL
                                 final_kb_ids.append(self.NIL)
                             else:
-                                candidates = self.get_candidates(self.kb, ent.text)
+                                candidates = self.get_candidates(self.kb, ent)
                                 if not candidates:
                                     # no prediction possible for this entity - setting to NIL
                                     final_kb_ids.append(self.NIL)
