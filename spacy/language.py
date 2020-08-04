@@ -1413,6 +1413,7 @@ class Language:
         cls,
         config: Union[Dict[str, Any], Config] = {},
         *,
+        vocab: Union[Vocab, bool] = True,
         disable: Iterable[str] = tuple(),
         overrides: Dict[str, Any] = {},
         auto_fill: bool = True,
@@ -1423,6 +1424,7 @@ class Language:
         the default config of the given language is used.
 
         config (Dict[str, Any] / Config): The loaded config.
+        vocab (Vocab): A Vocab object. If True, a vocab is created.
         disable (Iterable[str]): List of pipeline component names to disable.
         auto_fill (bool): Automatically fill in missing values in config based
             on defaults and function argument annotations.
@@ -1462,7 +1464,9 @@ class Language:
         create_tokenizer = resolved["nlp"]["tokenizer"]
         create_lemmatizer = resolved["nlp"]["lemmatizer"]
         nlp = cls(
-            create_tokenizer=create_tokenizer, create_lemmatizer=create_lemmatizer,
+            vocab=vocab,
+            create_tokenizer=create_tokenizer,
+            create_lemmatizer=create_lemmatizer,
         )
         # Note that we don't load vectors here, instead they get loaded explicitly
         # inside stuff like the spacy train function. If we loaded them here,
@@ -1495,9 +1499,11 @@ class Language:
                 else:
                     model = pipe_cfg["source"]
                     if model not in source_nlps:
-                        # We only need the components here, no other data
-                        disable = ["vocab", "tokenizer"]
-                        source_nlps[model] = util.load_model(model, disable=disable)
+                        # We only need the components here and we need to init
+                        # model with the same vocab as the current nlp object
+                        source_nlps[model] = util.load_model(
+                            model, vocab=nlp.vocab, disable=["vocab", "tokenizer"]
+                        )
                     source_name = pipe_cfg.get("component", pipe_name)
                     nlp.add_pipe(source_name, source=source_nlps[model], name=pipe_name)
         nlp.config = filled if auto_fill else config

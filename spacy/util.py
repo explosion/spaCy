@@ -203,43 +203,51 @@ def load_vectors_into_model(
 
 def load_model(
     name: Union[str, Path],
+    *,
+    vocab: Union["Vocab", bool] = True,
     disable: Iterable[str] = tuple(),
     component_cfg: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
 ) -> "Language":
     """Load a model from a package or data path.
 
     name (str): Package name or model path.
+    vocab (Vocab / True): Optional vocab to pass in on initialization. If True,
+        a new Vocab object will be created.
     disable (Iterable[str]): Names of pipeline components to disable.
     component_cfg (Dict[str, dict]): Config overrides for pipeline components,
         keyed by component names.
     RETURNS (Language): The loaded nlp object.
     """
-    cfg = component_cfg
+    kwargs = {"vocab": vocab, "disable": disable, "component_cfg": component_cfg}
     if isinstance(name, str):  # name or string path
         if name.startswith("blank:"):  # shortcut for blank model
             return get_lang_class(name.replace("blank:", ""))()
         if is_package(name):  # installed as package
-            return load_model_from_package(name, disable=disable, component_cfg=cfg)
+            return load_model_from_package(name, **kwargs)
         if Path(name).exists():  # path to model data directory
-            return load_model_from_path(Path(name), disable=disable, component_cfg=cfg)
+            return load_model_from_path(Path(name), **kwargs)
     elif hasattr(name, "exists"):  # Path or Path-like to model data
-        return load_model_from_path(name, disable=disable, component_cfg=cfg)
+        return load_model_from_path(name, **kwargs)
     raise IOError(Errors.E050.format(name=name))
 
 
 def load_model_from_package(
     name: str,
+    *,
+    vocab: Union["Vocab", bool] = True,
     disable: Iterable[str] = tuple(),
     component_cfg: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
 ) -> "Language":
     """Load a model from an installed package."""
     cls = importlib.import_module(name)
-    return cls.load(disable=disable, component_cfg=component_cfg)
+    return cls.load(vocab=vocab, disable=disable, component_cfg=component_cfg)
 
 
 def load_model_from_path(
     model_path: Union[str, Path],
+    *,
     meta: Optional[Dict[str, Any]] = None,
+    vocab: Union["Vocab", bool] = True,
     disable: Iterable[str] = tuple(),
     component_cfg: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
 ) -> "Language":
@@ -255,12 +263,16 @@ def load_model_from_path(
     config = Config().from_disk(config_path)
     override_cfg = {"components": {p: dict_to_dot(c) for p, c in component_cfg.items()}}
     overrides = dict_to_dot(override_cfg)
-    nlp, _ = load_model_from_config(config, disable=disable, overrides=overrides)
+    nlp, _ = load_model_from_config(
+        config, vocab=vocab, disable=disable, overrides=overrides
+    )
     return nlp.from_disk(model_path, exclude=disable)
 
 
 def load_model_from_config(
     config: Union[Dict[str, Any], Config],
+    *,
+    vocab: Union["Vocab", bool] = True,
     disable: Iterable[str] = tuple(),
     overrides: Dict[str, Any] = {},
     auto_fill: bool = False,
@@ -279,6 +291,7 @@ def load_model_from_config(
     lang_cls = get_lang_class(nlp_config["lang"])
     nlp = lang_cls.from_config(
         config,
+        vocab=vocab,
         disable=disable,
         overrides=overrides,
         auto_fill=auto_fill,
@@ -289,6 +302,8 @@ def load_model_from_config(
 
 def load_model_from_init_py(
     init_file: Union[Path, str],
+    *,
+    vocab: Union["Vocab", bool] = True,
     disable: Iterable[str] = tuple(),
     component_cfg: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
 ) -> "Language":
@@ -306,7 +321,7 @@ def load_model_from_init_py(
     if not model_path.exists():
         raise IOError(Errors.E052.format(path=data_path))
     return load_model_from_path(
-        data_path, meta, disable=disable, component_cfg=component_cfg
+        data_path, vocab=vocab, meta=meta, disable=disable, component_cfg=component_cfg
     )
 
 
