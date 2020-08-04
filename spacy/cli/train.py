@@ -12,9 +12,9 @@ import typer
 
 from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
 from ._util import import_code
-from ..gold import Corpus, Example
 from ..language import Language
 from .. import util
+from ..gold.example import Example
 from ..errors import Errors
 
 
@@ -28,8 +28,6 @@ from ..ml import models  # noqa: F401
 def train_cli(
     # fmt: off
     ctx: typer.Context,  # This is only used to read additional arguments
-    train_path: Path = Arg(..., help="Location of training data", exists=True),
-    dev_path: Path = Arg(..., help="Location of development data", exists=True),
     config_path: Path = Arg(..., help="Path to config file", exists=True),
     output_path: Optional[Path] = Opt(None, "--output", "--output-path", "-o", help="Output directory to store model in"),
     code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
@@ -51,12 +49,11 @@ def train_cli(
     referenced in the config.
     """
     util.set_env_log(verbose)
-    verify_cli_args(train_path, dev_path, config_path, output_path)
+    verify_cli_args(config_path, output_path)
     overrides = parse_config_overrides(ctx.args)
     import_code(code_path)
     train(
         config_path,
-        {"train": train_path, "dev": dev_path},
         output_path=output_path,
         config_overrides=overrides,
         use_gpu=use_gpu,
@@ -66,8 +63,6 @@ def train_cli(
 
 def train(
     config_path: Path,
-    data_paths: Dict[str, Path],
-    raw_text: Optional[Path] = None,
     output_path: Optional[Path] = None,
     config_overrides: Dict[str, Any] = {},
     use_gpu: int = -1,
@@ -85,36 +80,24 @@ def train(
         fix_random_seed(config["training"]["seed"])
     with show_validation_error(config_path):
         nlp, config = util.load_model_from_config(config, overrides=config_overrides)
-    if config["training"]["base_model"]:
-        # TODO: do something to check base_nlp against regular nlp described in config?
-        # If everything matches it will look something like:
-        # base_nlp = util.load_model(config["training"]["base_model"])
-        # nlp = base_nlp
-        raise NotImplementedError("base_model not supported yet.")
     if config["training"]["vectors"] is not None:
         util.load_vectors_into_model(nlp, config["training"]["vectors"])
     verify_config(nlp)
     raw_text, tag_map, morph_rules, weights_data = load_from_paths(config)
-    if config["training"]["use_pytorch_for_gpu_memory"]:
+    if config.get("system", {}).get("use_pytorch_for_gpu_memory"):
         # It feels kind of weird to not have a default for this.
         use_pytorch_for_gpu_memory()
-    training = config["training"]
-    optimizer = training["optimizer"]
-    limit = training["limit"]
-    corpus = Corpus(data_paths["train"], data_paths["dev"], limit=limit)
+    T_cfg = config["training"]
+    optimizer = T_cfg["optimizer"]
+    train_corpus = T_cfg["train_corpus"]
+    dev_corpus = T_cfg["dev_corpus"]
+    batcher = T_cfg["batcher"]
     if resume_training:
         msg.info("Resuming training")
         nlp.resume_training()
     else:
         msg.info(f"Initializing the nlp pipeline: {nlp.pipe_names}")
-        train_examples = corpus.train_dataset(
-            nlp,
-            shuffle=False,
-            gold_preproc=training["gold_preproc"],
-            max_length=training["max_length"],
-        )
-        train_examples = list(train_examples)
-        nlp.begin_training(lambda: train_examples)
+        nlp.begin_training(lambda: train_corpus(nlp))
 
     if tag_map:
         # Replace tag map with provided mapping
@@ -140,38 +123,35 @@ def train(
             msg.fail(err, exits=1)
         tok2vec.from_bytes(weights_data)
 
-    msg.info("Loading training corpus")
-    train_batches = create_train_batches(nlp, corpus, training)
-    evaluate = create_evaluation_callback(nlp, optimizer, corpus, training)
-
     # Create iterator, which yields out info after each optimization step.
     msg.info("Start training")
+    score_weights = T_cfg["score_weights"]
     training_step_iterator = train_while_improving(
         nlp,
         optimizer,
-        train_batches,
-        evaluate,
-        dropout=training["dropout"],
-        accumulate_gradient=training["accumulate_gradient"],
-        patience=training["patience"],
-        max_steps=training["max_steps"],
-        eval_frequency=training["eval_frequency"],
-        raw_text=raw_text,
+        create_train_batches(train_corpus(nlp), batcher, T_cfg["max_epochs"]),
+        create_evaluation_callback(nlp, dev_corpus, score_weights),
+        dropout=T_cfg["dropout"],
+        accumulate_gradient=T_cfg["accumulate_gradient"],
+        patience=T_cfg["patience"],
+        max_steps=T_cfg["max_steps"],
+        eval_frequency=T_cfg["eval_frequency"],
+        raw_text=None
     )
     msg.info(f"Training. Initial learn rate: {optimizer.learn_rate}")
-    print_row = setup_printer(training, nlp)
+    print_row = setup_printer(T_cfg, nlp)
 
     try:
-        progress = tqdm.tqdm(total=training["eval_frequency"], leave=False)
+        progress = tqdm.tqdm(total=T_cfg["eval_frequency"], leave=False)
         for batch, info, is_best_checkpoint in training_step_iterator:
             progress.update(1)
             if is_best_checkpoint is not None:
                 progress.close()
                 print_row(info)
                 if is_best_checkpoint and output_path is not None:
-                    update_meta(training, nlp, info)
+                    update_meta(T_cfg, nlp, info)
                     nlp.to_disk(output_path / "model-best")
-                progress = tqdm.tqdm(total=training["eval_frequency"], leave=False)
+                progress = tqdm.tqdm(total=T_cfg["eval_frequency"], leave=False)
     except Exception as e:
         if output_path is not None:
             msg.warn(
@@ -192,70 +172,34 @@ def train(
             msg.good(f"Saved model to output directory {final_model_path}")
 
 
-def create_train_batches(
-    nlp: Language, corpus: Corpus, cfg: Union[Config, Dict[str, Any]]
-):
-    max_epochs = cfg["max_epochs"]
-    train_examples = list(
-        corpus.train_dataset(
-            nlp,
-            shuffle=True,
-            gold_preproc=cfg["gold_preproc"],
-            max_length=cfg["max_length"],
-        )
-    )
-    epoch = 0
-    batch_strategy = cfg["batch_by"]
-    while True:
-        if len(train_examples) == 0:
-            raise ValueError(Errors.E988)
-        epoch += 1
-        if batch_strategy == "padded":
-            batches = util.minibatch_by_padded_size(
-                train_examples,
-                size=cfg["batch_size"],
-                buffer=256,
-                discard_oversize=cfg["discard_oversize"],
-            )
-        elif batch_strategy == "words":
-            batches = util.minibatch_by_words(
-                train_examples,
-                size=cfg["batch_size"],
-                discard_oversize=cfg["discard_oversize"],
-            )
-        else:
-            batches = util.minibatch(train_examples, size=cfg["batch_size"])
-        # make sure the minibatch_by_words result is not empty, or we'll have an infinite training loop
-        try:
-            first = next(batches)
-            yield epoch, first
-        except StopIteration:
-            raise ValueError(Errors.E986)
-        for batch in batches:
+def create_train_batches(iterator, batcher, max_epochs: int):
+    epoch = 1
+    examples = []
+    # Stream the first epoch, so we start training faster and support
+    # infinite streams.
+    for batch in batcher(iterator):
+        yield epoch, batch
+        if max_epochs != 1:
+            examples.extend(batch)
+    if not examples:
+        # Raise error if no data
+        raise ValueError(Errors.E986)
+    while epoch != max_epochs:
+        random.shuffle(examples)
+        for batch in batcher(examples):
             yield epoch, batch
-        if max_epochs >= 1 and epoch >= max_epochs:
-            break
-        random.shuffle(train_examples)
+        epoch += 1
 
 
 def create_evaluation_callback(
     nlp: Language,
-    optimizer: Optimizer,
-    corpus: Corpus,
-    cfg: Union[Config, Dict[str, Any]],
+    dev_corpus: Callable,
+    weights: Dict[str, float],
 ) -> Callable[[], Tuple[float, Dict[str, float]]]:
     def evaluate() -> Tuple[float, Dict[str, float]]:
-        dev_examples = corpus.dev_dataset(nlp, gold_preproc=cfg["gold_preproc"])
-        dev_examples = list(dev_examples)
-        n_words = sum(len(ex.predicted) for ex in dev_examples)
-        batch_size = cfg["eval_batch_size"]
-        if optimizer.averages:
-            with nlp.use_params(optimizer.averages):
-                scores = nlp.evaluate(dev_examples, batch_size=batch_size)
-        else:
-            scores = nlp.evaluate(dev_examples, batch_size=batch_size)
+        dev_examples = list(dev_corpus(nlp))
+        scores = nlp.evaluate(dev_examples)
         # Calculate a weighted sum based on score_weights for the main score
-        weights = cfg["score_weights"]
         try:
             weighted_score = sum(scores[s] * weights.get(s, 0.0) for s in weights)
         except KeyError as e:
@@ -348,7 +292,11 @@ def train_while_improving(
                     proc.model.finish_update(optimizer)
         optimizer.step_schedules()
         if not (step % eval_frequency):
-            score, other_scores = evaluate()
+            if optimizer.averages:
+                with nlp.use_params(optimizer.averages):
+                    score, other_scores = evaluate()
+            else:
+                score, other_scores = evaluate()
             results.append((score, step))
             is_best_checkpoint = score == max(results)[0]
         else:
@@ -459,17 +407,7 @@ def load_from_paths(
             msg.fail("Can't find raw text", raw_text, exits=1)
         raw_text = list(srsly.read_jsonl(config["training"]["raw_text"]))
     tag_map = {}
-    tag_map_path = util.ensure_path(config["training"]["tag_map"])
-    if tag_map_path is not None:
-        if not tag_map_path.exists():
-            msg.fail("Can't find tag map path", tag_map_path, exits=1)
-        tag_map = srsly.read_json(config["training"]["tag_map"])
     morph_rules = {}
-    morph_rules_path = util.ensure_path(config["training"]["morph_rules"])
-    if morph_rules_path is not None:
-        if not morph_rules_path.exists():
-            msg.fail("Can't find tag map path", morph_rules_path, exits=1)
-        morph_rules = srsly.read_json(config["training"]["morph_rules"])
     weights_data = None
     init_tok2vec = util.ensure_path(config["training"]["init_tok2vec"])
     if init_tok2vec is not None:
@@ -481,18 +419,12 @@ def load_from_paths(
 
 
 def verify_cli_args(
-    train_path: Path,
-    dev_path: Path,
     config_path: Path,
     output_path: Optional[Path] = None,
 ) -> None:
     # Make sure all files and paths exists if they are needed
     if not config_path or not config_path.exists():
         msg.fail("Config file not found", config_path, exits=1)
-    if not train_path or not train_path.exists():
-        msg.fail("Training data not found", train_path, exits=1)
-    if not dev_path or not dev_path.exists():
-        msg.fail("Development data not found", dev_path, exits=1)
     if output_path is not None:
         if not output_path.exists():
             output_path.mkdir()
