@@ -163,13 +163,12 @@ def debug_data(
     loading_train_error_message = ""
     loading_dev_error_message = ""
     with msg.loading("Loading corpus..."):
-        corpus = Corpus(train_path, dev_path)
         try:
-            train_dataset = list(corpus.train_dataset(nlp))
+            train_dataset = list(Corpus(train_path)(nlp))
         except ValueError as e:
             loading_train_error_message = f"Training data cannot be loaded: {e}"
         try:
-            dev_dataset = list(corpus.dev_dataset(nlp))
+            dev_dataset = list(Corpus(dev_path)(nlp))
         except ValueError as e:
             loading_dev_error_message = f"Development data cannot be loaded: {e}"
     if loading_train_error_message or loading_dev_error_message:

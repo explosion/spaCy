@@ -374,7 +374,8 @@ class Errors:
     E138 = ("Invalid JSONL format for raw text '{text}'. Make sure the input "
             "includes either the `text` or `tokens` key. For more info, see "
             "the docs:\nhttps://spacy.io/api/cli#pretrain-jsonl")
-    E139 = ("Knowledge Base for component '{name}' is empty.")
+    E139 = ("Knowledge Base for component '{name}' is empty. Use the methods "
+            "kb.add_entity and kb.add_alias to add entries.")
     E140 = ("The list of entities, prior probabilities and entity vectors "
             "should be of equal length.")
     E141 = ("Entity vectors should be of length {required} instead of the "
@@ -481,14 +482,17 @@ class Errors:
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
-    E945 = ("Can't copy pipeline component '{name}' from source model '{model}': "
+    E944 = ("Can't copy pipeline component '{name}' from source model '{model}': "
             "not found in pipeline. Available components: {opts}")
-    E946 = ("Can't copy pipeline component '{name}' from source. Expected loaded "
+    E945 = ("Can't copy pipeline component '{name}' from source. Expected loaded "
             "nlp object, but got: {source}")
+    E946 = ("The Vocab for the knowledge base is not initialized. Did you forget to "
+            "call kb.initialize()?")
     E947 = ("Matcher.add received invalid 'greedy' argument: expected "
             "a string value from {expected} but got: '{arg}'")
     E948 = ("Matcher.add received invalid 'patterns' argument: expected "
             "a List, but got: {arg_type}")
+    E949 = ("Can only create an alignment when the texts are the same.")
     E952 = ("The section '{name}' is not a valid section in the provided config.")
     E953 = ("Mismatched IDs received by the Tok2Vec listener: {id1} vs. {id2}")
     E954 = ("The Tok2Vec listener did not receive a valid input.")
@@ -612,6 +616,9 @@ class Errors:
              "initializing the pipeline:\n"
              'cfg = {"tokenizer": {"segmenter": "pkuseg", "pkuseg_model": name_or_path}}\n'
              'nlp = Chinese(config=cfg)')
+    E1001 = ("Target token outside of matched span for match with tokens "
+             "'{span}' and offset '{index}' matched by patterns '{patterns}'.")
+    E1002 = ("Span index out of range.")
 
 
 @add_codes
