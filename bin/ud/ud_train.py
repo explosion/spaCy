@@ -15,7 +15,8 @@ import spacy.util
 from bin.ud import conll17_ud_eval
 from spacy.tokens import Token, Doc
 from spacy.gold import Example
-from spacy.util import compounding, minibatch, minibatch_by_words
+from spacy.util import compounding, minibatch
+from spacy.gold.batchers import minibatch_by_words
 from spacy.pipeline._parser_internals.nonproj import projectivize
 from spacy.matcher import Matcher
 from spacy import displacy
