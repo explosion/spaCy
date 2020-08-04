@@ -632,10 +632,10 @@ class Language:
         """
         # TODO: handle errors and mismatches (vectors etc.)
         if not isinstance(source, self.__class__):
-            raise ValueError(Errors.E946.format(name=source_name, source=type(source)))
+            raise ValueError(Errors.E945.format(name=source_name, source=type(source)))
         if not source.has_pipe(source_name):
             raise KeyError(
-                Errors.E945.format(
+                Errors.E944.format(
                     name=source_name,
                     model=f"{source.meta['lang']}_{source.meta['name']}",
                     opts=", ".join(source.pipe_names),
