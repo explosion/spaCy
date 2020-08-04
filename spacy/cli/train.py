@@ -28,8 +28,6 @@ from ..ml import models  # noqa: F401
 def train_cli(
     # fmt: off
     ctx: typer.Context,  # This is only used to read additional arguments
-    train_path: str = Arg(..., help="Location or name of training data"),
-    dev_path: str = Arg(..., help="Location or name of development data"), 
     config_path: Path = Arg(..., help="Path to config file", exists=True),
     output_path: Optional[Path] = Opt(None, "--output", "--output-path", "-o", help="Output directory to store model in"),
     code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
@@ -51,12 +49,11 @@ def train_cli(
     referenced in the config.
     """
     util.set_env_log(verbose)
-    verify_cli_args(train_path, dev_path, config_path, output_path)
+    verify_cli_args(config_path, output_path)
     overrides = parse_config_overrides(ctx.args)
     import_code(code_path)
     train(
         config_path,
-        {"train": train_path, "dev": dev_path},
         output_path=output_path,
         config_overrides=overrides,
         use_gpu=use_gpu,
@@ -66,8 +63,6 @@ def train_cli(
 
 def train(
     config_path: Path,
-    data_paths: Dict[str, Path],
-    raw_text: Optional[Path] = None,
     output_path: Optional[Path] = None,
     config_overrides: Dict[str, Any] = {},
     use_gpu: int = -1,
@@ -89,22 +84,20 @@ def train(
         util.load_vectors_into_model(nlp, config["training"]["vectors"])
     verify_config(nlp)
     raw_text, tag_map, morph_rules, weights_data = load_from_paths(config)
-    if config["device"]["use_pytorch_for_gpu_memory"]:
+    if config.get("system", {}).get("use_pytorch_for_gpu_memory"):
         # It feels kind of weird to not have a default for this.
         use_pytorch_for_gpu_memory()
-    T_loc = data_paths["train"]
-    E_loc = data_paths["dev"]
     T_cfg = config["training"]
     optimizer = T_cfg["optimizer"]
-    reader = T_cfg["reader"]
+    train_examples = T_cfg["read_train"]
+    dev_examples = T_cfg["read_dev"]
     batcher = T_cfg["batcher"]
     if resume_training:
         msg.info("Resuming training")
         nlp.resume_training()
     else:
         msg.info(f"Initializing the nlp pipeline: {nlp.pipe_names}")
-        train_examples = list(reader(nlp, T_loc))
-        nlp.begin_training(lambda: train_examples)
+        nlp.begin_training(lambda: train_examples(nlp))
 
     if tag_map:
         # Replace tag map with provided mapping
@@ -133,20 +126,17 @@ def train(
     # Create iterator, which yields out info after each optimization step.
     msg.info("Start training")
     score_weights = T_cfg["score_weights"]
-    E_batch_size = T_cfg["eval_batch_size"]
     training_step_iterator = train_while_improving(
         nlp,
         optimizer,
-        create_train_batches(nlp, reader, batcher, T_loc, T_cfg["max_epochs"]),
-        create_evaluation_callback(
-            nlp, optimizer, reader, E_loc, score_weights, E_batch_size
-        ),
+        create_train_batches(train_examples(nlp), batcher, T_cfg["max_epochs"]),
+        create_evaluation_callback(nlp, dev_examples, score_weights),
         dropout=T_cfg["dropout"],
         accumulate_gradient=T_cfg["accumulate_gradient"],
         patience=T_cfg["patience"],
         max_steps=T_cfg["max_steps"],
         eval_frequency=T_cfg["eval_frequency"],
-        raw_text=raw_text,
+        raw_text=None
     )
     msg.info(f"Training. Initial learn rate: {optimizer.learn_rate}")
     print_row = setup_printer(T_cfg, nlp)
@@ -182,40 +172,33 @@ def train(
             msg.good(f"Saved model to output directory {final_model_path}")
 
 
-def create_train_batches(nlp: Language, reader, batcher, loc: Path, max_epochs: int):
+def create_train_batches(iterator, batcher, max_epochs: int):
     epoch = 1
-    train_examples = []
+    examples = []
     # Stream the first epoch, so we start training faster and support
     # infinite streams.
-    for batch in batcher(reader(nlp, loc)):
+    for batch in batcher(iterator):
         yield epoch, batch
         if max_epochs >= 2:
-            train_examples.extend(batch)
-    if not train_examples:
+            examples.extend(batch)
+    if not examples:
         # Raise error if no data
         raise ValueError(Errors.E986)
     while max_epochs < 1 or epoch < max_epochs:
-        random.shuffle(train_examples)
-        for batch in batcher(train_examples):
+        random.shuffle(examples)
+        for batch in batcher(examples):
             yield epoch, batch
         epoch += 1
 
 
 def create_evaluation_callback(
     nlp: Language,
-    optimizer: Optimizer,
-    reader: Callable,
-    loc,
+    get_examples: Callable,
     weights: Dict[str, float],
-    batch_size: int,
 ) -> Callable[[], Tuple[float, Dict[str, float]]]:
     def evaluate() -> Tuple[float, Dict[str, float]]:
-        dev_examples = list(reader(nlp, loc))
-        if optimizer.averages:
-            with nlp.use_params(optimizer.averages):
-                scores = nlp.evaluate(dev_examples, batch_size=batch_size)
-        else:
-            scores = nlp.evaluate(dev_examples, batch_size=batch_size)
+        dev_examples = list(get_examples(nlp))
+        scores = nlp.evaluate(dev_examples)
         # Calculate a weighted sum based on score_weights for the main score
         try:
             weighted_score = sum(scores[s] * weights.get(s, 0.0) for s in weights)
@@ -309,7 +292,11 @@ def train_while_improving(
                     proc.model.finish_update(optimizer)
         optimizer.step_schedules()
         if not (step % eval_frequency):
-            score, other_scores = evaluate()
+            if optimizer.averages:
+                with nlp.use_params(optimizer.averages):
+                    score, other_scores = evaluate()
+            else:
+                score, other_scores = evaluate()
             results.append((score, step))
             is_best_checkpoint = score == max(results)[0]
         else:
@@ -432,8 +419,6 @@ def load_from_paths(
 
 
 def verify_cli_args(
-    train_path: Path,
-    dev_path: Path,
     config_path: Path,
     output_path: Optional[Path] = None,
 ) -> None:

@@ -42,6 +42,7 @@ class Corpus:
         self, path, *, limit: int = 0, gold_preproc: bool = False, max_length: bool = False,
     ) -> None:
         self.path = util.ensure_path(path)
+        print(self.path)
         self.gold_preproc = gold_preproc
         self.max_length = max_length
         self.limit = limit

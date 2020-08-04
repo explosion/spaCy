@@ -188,7 +188,8 @@ Reader = Callable[["Language", str], Iterable["Example"]]
 class ConfigSchemaTraining(BaseModel):
     # fmt: off
     vectors: Optional[StrictStr] = Field(..., title="Path to vectors")
-    reader: Reader = Field(..., title="Reader for the training data")
+    read_train: Reader = Field(..., title="Reader for the training data")
+    read_dev: Reader = Field(..., title="Reader for the dev data")
     batcher: Batcher = Field(..., title="Batcher for the training data")
     dropout: StrictFloat = Field(..., title="Dropout rate")
     patience: StrictInt = Field(..., title="How many steps to continue without improvement in evaluation score")
@@ -200,7 +201,6 @@ class ConfigSchemaTraining(BaseModel):
     score_weights: Dict[StrictStr, Union[StrictFloat, StrictInt]] = Field(..., title="Scores to report and their weights for selecting final model")
     init_tok2vec: Optional[StrictStr] = Field(..., title="Path to pretrained tok2vec weights")
     raw_text: Optional[StrictStr] = Field(default=None, title="Raw text")
-    eval_batch_size: Union[Sequence[int], int] = Field(..., title="The batch size during evaluation")
     optimizer: Optimizer = Field(..., title="The optimizer to use")
     # fmt: on
 
