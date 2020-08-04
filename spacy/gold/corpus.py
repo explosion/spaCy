@@ -23,6 +23,7 @@ class Corpus:
     """Iterate Example objects from a file or directory of DocBin (.spacy)
     formated data files.
 
+    path (Path): The directory or filename to read from.
     gold_preproc (bool): Whether to set up the Example object with gold-standard
         sentences and tokens for the predictions. Gold preprocessing helps 
         the annotations align to the tokenization, and may result in sequences
