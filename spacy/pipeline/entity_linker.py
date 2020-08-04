@@ -63,7 +63,7 @@ def make_entity_linker(
     labels_discard: Iterable[str],
     incl_prior: bool,
     incl_context: bool,
-    get_candidates: Callable[["KnowledgeBase", str], Iterable["Candidate"]]
+    get_candidates: Callable[["KnowledgeBase", "Span"], Iterable["Candidate"]]
 ):
     return EntityLinker(
         nlp.vocab,
@@ -95,7 +95,7 @@ class EntityLinker(Pipe):
         labels_discard: Iterable[str],
         incl_prior: bool,
         incl_context: bool,
-        get_candidates: Callable[["KnowledgeBase", str], Iterable["Candidate"]]
+        get_candidates: Callable[["KnowledgeBase", "Span"], Iterable["Candidate"]]
     ) -> None:
         """Initialize an entity linker.
 

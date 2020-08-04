@@ -40,5 +40,5 @@ def empty_kb(entity_vector_length: int) -> KnowledgeBase:
 
 
 @registry.assets.register("spacy.CandidateGenerator.v1")
-def create_candidates() -> Callable[["KnowledgeBase", str], Iterable["Candidate"]]:
+def create_candidates() -> Callable[["KnowledgeBase", "Span"], Iterable["Candidate"]]:
     return get_candidates_from_index
