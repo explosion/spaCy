@@ -11,10 +11,19 @@ from ..util import make_tempdir
 
 
 nlp_config_string = """
+[paths]
+train = ""
+dev = ""
+
 [training]
 
-[training.reader]
+[training.read_train]
 @readers = "spacy.Corpus.v1"
+path = ${paths:train}
+
+[training.read_dev]
+@readers = "spacy.Corpus.v1"
+path = ${paths:dev}
 
 [training.batcher]
 @batchers = "batch_by_words.v1"
