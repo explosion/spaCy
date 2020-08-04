@@ -17,11 +17,11 @@ dev = ""
 
 [training]
 
-[training.read_train]
+[training.train_corpus]
 @readers = "spacy.Corpus.v1"
 path = ${paths:train}
 
-[training.read_dev]
+[training.dev_corpus]
 @readers = "spacy.Corpus.v1"
 path = ${paths:dev}
 

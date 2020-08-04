@@ -188,8 +188,8 @@ Reader = Callable[["Language", str], Iterable["Example"]]
 class ConfigSchemaTraining(BaseModel):
     # fmt: off
     vectors: Optional[StrictStr] = Field(..., title="Path to vectors")
-    read_train: Reader = Field(..., title="Reader for the training data")
-    read_dev: Reader = Field(..., title="Reader for the dev data")
+    train_corpus: Reader = Field(..., title="Reader for the training data")
+    dev_corpus: Reader = Field(..., title="Reader for the dev data")
     batcher: Batcher = Field(..., title="Batcher for the training data")
     dropout: StrictFloat = Field(..., title="Dropout rate")
     patience: StrictInt = Field(..., title="How many steps to continue without improvement in evaluation score")

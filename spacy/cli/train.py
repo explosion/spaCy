@@ -89,15 +89,15 @@ def train(
         use_pytorch_for_gpu_memory()
     T_cfg = config["training"]
     optimizer = T_cfg["optimizer"]
-    train_examples = T_cfg["read_train"]
-    dev_examples = T_cfg["read_dev"]
+    train_corpus = T_cfg["train_corpus"]
+    dev_corpus = T_cfg["dev_corpus"]
     batcher = T_cfg["batcher"]
     if resume_training:
         msg.info("Resuming training")
         nlp.resume_training()
     else:
         msg.info(f"Initializing the nlp pipeline: {nlp.pipe_names}")
-        nlp.begin_training(lambda: train_examples(nlp))
+        nlp.begin_training(lambda: train_corpus(nlp))
 
     if tag_map:
         # Replace tag map with provided mapping
@@ -129,8 +129,8 @@ def train(
     training_step_iterator = train_while_improving(
         nlp,
         optimizer,
-        create_train_batches(train_examples(nlp), batcher, T_cfg["max_epochs"]),
-        create_evaluation_callback(nlp, dev_examples, score_weights),
+        create_train_batches(train_corpus(nlp), batcher, T_cfg["max_epochs"]),
+        create_evaluation_callback(nlp, dev_corpus, score_weights),
         dropout=T_cfg["dropout"],
         accumulate_gradient=T_cfg["accumulate_gradient"],
         patience=T_cfg["patience"],
@@ -193,11 +193,11 @@ def create_train_batches(iterator, batcher, max_epochs: int):
 
 def create_evaluation_callback(
     nlp: Language,
-    get_examples: Callable,
+    dev_corpus: Callable,
     weights: Dict[str, float],
 ) -> Callable[[], Tuple[float, Dict[str, float]]]:
     def evaluate() -> Tuple[float, Dict[str, float]]:
-        dev_examples = list(get_examples(nlp))
+        dev_examples = list(dev_corpus(nlp))
         scores = nlp.evaluate(dev_examples)
         # Calculate a weighted sum based on score_weights for the main score
         try:
