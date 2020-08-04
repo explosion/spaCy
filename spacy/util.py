@@ -69,6 +69,8 @@ class registry(thinc.registry):
     assets = catalogue.create("spacy", "assets", entry_points=True)
     # Callback functions used to manipulate nlp object etc.
     callbacks = catalogue.create("spacy", "callbacks")
+    batchers = catalogue.create("spacy", "batchers", entry_points=True)
+    readers = catalogue.create("spacy", "readers", entry_points=True)
     # These are factories registered via third-party packages and the
     # spacy_factories entry point. This registry only exists so we can easily
     # load them via the entry points. The "true" factories are added via the
@@ -205,43 +207,51 @@ def load_vectors_into_model(
 
 def load_model(
     name: Union[str, Path],
+    *,
+    vocab: Union["Vocab", bool] = True,
     disable: Iterable[str] = tuple(),
     component_cfg: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
 ) -> "Language":
     """Load a model from a package or data path.
 
     name (str): Package name or model path.
+    vocab (Vocab / True): Optional vocab to pass in on initialization. If True,
+        a new Vocab object will be created.
     disable (Iterable[str]): Names of pipeline components to disable.
     component_cfg (Dict[str, dict]): Config overrides for pipeline components,
         keyed by component names.
     RETURNS (Language): The loaded nlp object.
     """
-    cfg = component_cfg
+    kwargs = {"vocab": vocab, "disable": disable, "component_cfg": component_cfg}
     if isinstance(name, str):  # name or string path
         if name.startswith("blank:"):  # shortcut for blank model
             return get_lang_class(name.replace("blank:", ""))()
         if is_package(name):  # installed as package
-            return load_model_from_package(name, disable=disable, component_cfg=cfg)
+            return load_model_from_package(name, **kwargs)
         if Path(name).exists():  # path to model data directory
-            return load_model_from_path(Path(name), disable=disable, component_cfg=cfg)
+            return load_model_from_path(Path(name), **kwargs)
     elif hasattr(name, "exists"):  # Path or Path-like to model data
-        return load_model_from_path(name, disable=disable, component_cfg=cfg)
+        return load_model_from_path(name, **kwargs)
     raise IOError(Errors.E050.format(name=name))
 
 
 def load_model_from_package(
     name: str,
+    *,
+    vocab: Union["Vocab", bool] = True,
     disable: Iterable[str] = tuple(),
     component_cfg: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
 ) -> "Language":
     """Load a model from an installed package."""
     cls = importlib.import_module(name)
-    return cls.load(disable=disable, component_cfg=component_cfg)
+    return cls.load(vocab=vocab, disable=disable, component_cfg=component_cfg)
 
 
 def load_model_from_path(
     model_path: Union[str, Path],
+    *,
     meta: Optional[Dict[str, Any]] = None,
+    vocab: Union["Vocab", bool] = True,
     disable: Iterable[str] = tuple(),
     component_cfg: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
 ) -> "Language":
@@ -257,12 +267,16 @@ def load_model_from_path(
     config = Config().from_disk(config_path)
     override_cfg = {"components": {p: dict_to_dot(c) for p, c in component_cfg.items()}}
     overrides = dict_to_dot(override_cfg)
-    nlp, _ = load_model_from_config(config, disable=disable, overrides=overrides)
+    nlp, _ = load_model_from_config(
+        config, vocab=vocab, disable=disable, overrides=overrides
+    )
     return nlp.from_disk(model_path, exclude=disable)
 
 
 def load_model_from_config(
     config: Union[Dict[str, Any], Config],
+    *,
+    vocab: Union["Vocab", bool] = True,
     disable: Iterable[str] = tuple(),
     overrides: Dict[str, Any] = {},
     auto_fill: bool = False,
@@ -281,6 +295,7 @@ def load_model_from_config(
     lang_cls = get_lang_class(nlp_config["lang"])
     nlp = lang_cls.from_config(
         config,
+        vocab=vocab,
         disable=disable,
         overrides=overrides,
         auto_fill=auto_fill,
@@ -291,6 +306,8 @@ def load_model_from_config(
 
 def load_model_from_init_py(
     init_file: Union[Path, str],
+    *,
+    vocab: Union["Vocab", bool] = True,
     disable: Iterable[str] = tuple(),
     component_cfg: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
 ) -> "Language":
@@ -308,7 +325,7 @@ def load_model_from_init_py(
     if not model_path.exists():
         raise IOError(Errors.E052.format(path=data_path))
     return load_model_from_path(
-        data_path, meta, disable=disable, component_cfg=component_cfg
+        data_path, vocab=vocab, meta=meta, disable=disable, component_cfg=component_cfg
     )
 
 
@@ -749,144 +766,6 @@ def normalize_slice(
     return start, stop
 
 
-def minibatch(
-    items: Iterable[Any], size: Union[Iterator[int], int] = 8
-) -> Iterator[Any]:
-    """Iterate over batches of items. `size` may be an iterator,
-    so that batch-size can vary on each step.
-    """
-    if isinstance(size, int):
-        size_ = itertools.repeat(size)
-    else:
-        size_ = size
-    items = iter(items)
-    while True:
-        batch_size = next(size_)
-        batch = list(itertools.islice(items, int(batch_size)))
-        if len(batch) == 0:
-            break
-        yield list(batch)
-
-
-def minibatch_by_padded_size(
-    docs: Iterator["Doc"],
-    size: Union[Iterator[int], int],
-    buffer: int = 256,
-    discard_oversize: bool = False,
-) -> Iterator[Iterator["Doc"]]:
-    if isinstance(size, int):
-        size_ = itertools.repeat(size)
-    else:
-        size_ = size
-    for outer_batch in minibatch(docs, buffer):
-        outer_batch = list(outer_batch)
-        target_size = next(size_)
-        for indices in _batch_by_length(outer_batch, target_size):
-            subbatch = [outer_batch[i] for i in indices]
-            padded_size = max(len(seq) for seq in subbatch) * len(subbatch)
-            if discard_oversize and padded_size >= target_size:
-                pass
-            else:
-                yield subbatch
-
-
-def _batch_by_length(seqs: Sequence[Any], max_words: int) -> List[List[Any]]:
-    """Given a list of sequences, return a batched list of indices into the
-    list, where the batches are grouped by length, in descending order.
-
-    Batches may be at most max_words in size, defined as max sequence length * size.
-    """
-    # Use negative index so we can get sort by position ascending.
-    lengths_indices = [(len(seq), i) for i, seq in enumerate(seqs)]
-    lengths_indices.sort()
-    batches = []
-    batch = []
-    for length, i in lengths_indices:
-        if not batch:
-            batch.append(i)
-        elif length * (len(batch) + 1) <= max_words:
-            batch.append(i)
-        else:
-            batches.append(batch)
-            batch = [i]
-    if batch:
-        batches.append(batch)
-    # Check lengths match
-    assert sum(len(b) for b in batches) == len(seqs)
-    batches = [list(sorted(batch)) for batch in batches]
-    batches.reverse()
-    return batches
-
-
-def minibatch_by_words(docs, size, tolerance=0.2, discard_oversize=False):
-    """Create minibatches of roughly a given number of words. If any examples
-    are longer than the specified batch length, they will appear in a batch by
-    themselves, or be discarded if discard_oversize=True.
-    The argument 'docs' can be a list of strings, Doc's or Example's. """
-    from .gold import Example
-
-    if isinstance(size, int):
-        size_ = itertools.repeat(size)
-    elif isinstance(size, List):
-        size_ = iter(size)
-    else:
-        size_ = size
-    target_size = next(size_)
-    tol_size = target_size * tolerance
-    batch = []
-    overflow = []
-    batch_size = 0
-    overflow_size = 0
-    for doc in docs:
-        if isinstance(doc, Example):
-            n_words = len(doc.reference)
-        elif isinstance(doc, str):
-            n_words = len(doc.split())
-        else:
-            n_words = len(doc)
-        # if the current example exceeds the maximum batch size, it is returned separately
-        # but only if discard_oversize=False.
-        if n_words > target_size + tol_size:
-            if not discard_oversize:
-                yield [doc]
-        # add the example to the current batch if there's no overflow yet and it still fits
-        elif overflow_size == 0 and (batch_size + n_words) <= target_size:
-            batch.append(doc)
-            batch_size += n_words
-        # add the example to the overflow buffer if it fits in the tolerance margin
-        elif (batch_size + overflow_size + n_words) <= (target_size + tol_size):
-            overflow.append(doc)
-            overflow_size += n_words
-        # yield the previous batch and start a new one. The new one gets the overflow examples.
-        else:
-            if batch:
-                yield batch
-            target_size = next(size_)
-            tol_size = target_size * tolerance
-            batch = overflow
-            batch_size = overflow_size
-            overflow = []
-            overflow_size = 0
-            # this example still fits
-            if (batch_size + n_words) <= target_size:
-                batch.append(doc)
-                batch_size += n_words
-            # this example fits in overflow
-            elif (batch_size + n_words) <= (target_size + tol_size):
-                overflow.append(doc)
-                overflow_size += n_words
-            # this example does not fit with the previous overflow: start another new batch
-            else:
-                if batch:
-                    yield batch
-                target_size = next(size_)
-                tol_size = target_size * tolerance
-                batch = [doc]
-                batch_size = n_words
-    batch.extend(overflow)
-    if batch:
-        yield batch
-
 
 def filter_spans(spans: Iterable["Span"]) -> List["Span"]:
     """Filter a sequence of spans and remove duplicates or overlaps. Useful for
@@ -1219,3 +1098,20 @@ def create_default_optimizer() -> Optimizer:
         L2_is_weight_decay=L2_is_weight_decay,
     )
     return optimizer
+
+
+def minibatch(items, size):
+    """Iterate over batches of items. `size` may be an iterator,
+    so that batch-size can vary on each step.
+    """
+    if isinstance(size, int):
+        size_ = itertools.repeat(size)
+    else:
+        size_ = size
+    items = iter(items)
+    while True:
+        batch_size = next(size_)
+        batch = list(itertools.islice(items, int(batch_size)))
+        if len(batch) == 0:
+            break
+        yield list(batch)

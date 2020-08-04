@@ -12,6 +12,7 @@ from .token cimport Token
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..structs cimport LexemeC, TokenC
 from ..attrs cimport TAG, MORPH
+from ..vocab cimport Vocab
 
 from .underscore import is_writable_attr
 from ..attrs import intify_attrs
@@ -57,16 +58,7 @@ cdef class Retokenizer:
                 raise ValueError(Errors.E102.format(token=repr(token)))
             self.tokens_to_merge.add(token.i)
         self._spans_to_merge.append((span.start, span.end))
-        if "_" in attrs:  # Extension attributes
-            extensions = attrs["_"]
-            _validate_extensions(extensions)
-            attrs = {key: value for key, value in attrs.items() if key != "_"}
-            attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
-            attrs["_"] = extensions
-        else:
-            attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
-            if MORPH in attrs:
-                self.doc.vocab.morphology.add(self.doc.vocab.strings.as_string(attrs[MORPH]))
+        attrs = normalize_token_attrs(self.doc.vocab, attrs)
         self.merges.append((span, attrs))
 
     def split(self, Token token, orths, heads, attrs=SimpleFrozenDict()):
@@ -98,9 +90,11 @@ cdef class Retokenizer:
             # NB: Since we support {"KEY": [value, value]} syntax here, this
             # will only "intify" the keys, not the values
             attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
-            if MORPH in attrs:
-                for morph in attrs[MORPH]:
-                    self.doc.vocab.morphology.add(self.doc.vocab.strings.as_string(morph))
+        if MORPH in attrs:
+            for i, morph in enumerate(attrs[MORPH]):
+                # add and set to normalized value
+                morph = self.doc.vocab.morphology.add(self.doc.vocab.strings.as_string(morph))
+                attrs[MORPH][i] = morph
         head_offsets = []
         for head in heads:
             if isinstance(head, Token):
@@ -224,21 +218,7 @@ def _merge(Doc doc, merges):
         token.lex = lex
         # We set trailing space here too
         token.spacy = doc.c[spans[token_index].end-1].spacy
-        py_token = span[0]
-        # Assign attributes
-        for attr_name, attr_value in attributes.items():
-            if attr_name == "_":  # Set extension attributes
-                for ext_attr_key, ext_attr_value in attr_value.items():
-                    py_token._.set(ext_attr_key, ext_attr_value)
-            elif attr_name == TAG:
-                doc.vocab.morphology.assign_tag(token, attr_value)
-            else:
-                # Set attributes on both token and lexeme to take care of token
-                # attribute vs. lexical attribute without having to enumerate
-                # them. If an attribute name is not valid, set_struct_attr will
-                # ignore it.
-                Token.set_struct_attr(token, attr_name, attr_value)
-                Lexeme.set_struct_attr(<LexemeC*>lex, attr_name, attr_value)
+        set_token_attrs(span[0], attributes)
     # Begin by setting all the head indices to absolute token positions
     # This is easier to work with for now than the offsets
     # Before thinking of something simpler, beware the case where a
@@ -423,3 +403,40 @@ cdef make_iob_consistent(TokenC* tokens, int length):
     for i in range(1, length):
         if tokens[i].ent_iob == 1 and tokens[i - 1].ent_type != tokens[i].ent_type:
             tokens[i].ent_iob = 3
+
+
+def normalize_token_attrs(Vocab vocab, attrs):
+    if "_" in attrs:  # Extension attributes
+        extensions = attrs["_"]
+        print("EXTENSIONS", extensions)
+        _validate_extensions(extensions)
+        attrs = {key: value for key, value in attrs.items() if key != "_"}
+        attrs = intify_attrs(attrs, strings_map=vocab.strings)
+        attrs["_"] = extensions
+    else:
+        attrs = intify_attrs(attrs, strings_map=vocab.strings)
+    if MORPH in attrs:
+        # add and set to normalized value
+        morph = vocab.morphology.add(vocab.strings.as_string(attrs[MORPH]))
+        attrs[MORPH] = morph
+    return attrs
+
+
+def set_token_attrs(Token py_token, attrs):
+    cdef TokenC* token = py_token.c
+    cdef const LexemeC* lex = token.lex
+    cdef Doc doc = py_token.doc
+    # Assign attributes
+    for attr_name, attr_value in attrs.items():
+        if attr_name == "_":  # Set extension attributes
+            for ext_attr_key, ext_attr_value in attr_value.items():
+                py_token._.set(ext_attr_key, ext_attr_value)
+        elif attr_name == TAG:
+            doc.vocab.morphology.assign_tag(token, attr_value)
+        else:
+            # Set attributes on both token and lexeme to take care of token
+            # attribute vs. lexical attribute without having to enumerate
+            # them. If an attribute name is not valid, set_struct_attr will
+            # ignore it.
+            Token.set_struct_attr(token, attr_name, attr_value)
+            Lexeme.set_struct_attr(<LexemeC*>lex, attr_name, attr_value)

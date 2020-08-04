@@ -210,7 +210,7 @@ def test_train_empty():
     nlp.begin_training()
     for itn in range(2):
         losses = {}
-        batches = util.minibatch(train_examples)
+        batches = util.minibatch(train_examples, size=8)
         for batch in batches:
             nlp.update(batch, losses=losses)
 
