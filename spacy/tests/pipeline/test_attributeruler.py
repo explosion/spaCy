@@ -2,7 +2,7 @@ import pytest
 import numpy
 from spacy.lang.en import English
 from spacy.pipeline import AttributeRuler
-from spacy import util
+from spacy import util, registry
 
 from ..util import get_doc, make_tempdir
 
@@ -14,6 +14,24 @@ def nlp():
 
 @pytest.fixture
 def pattern_dicts():
+    return [
+        {
+            "patterns": [[{"ORTH": "a"}], [{"ORTH": "irrelevant"}]],
+            "attrs": {"LEMMA": "the", "MORPH": "Case=Nom|Number=Plur"},
+        },
+        # one pattern sets the lemma
+        {"patterns": [[{"ORTH": "test"}]], "attrs": {"LEMMA": "cat"}},
+        # another pattern sets the morphology
+        {
+            "patterns": [[{"ORTH": "test"}]],
+            "attrs": {"MORPH": "Case=Nom|Number=Sing"},
+            "index": 0,
+        },
+    ]
+
+
+@registry.assets("attribute_ruler_patterns")
+def attribute_ruler_patterns():
     return [
         {
             "patterns": [[{"ORTH": "a"}], [{"ORTH": "irrelevant"}]],
@@ -58,6 +76,17 @@ def test_attributeruler_init(nlp, pattern_dicts):
 def test_attributeruler_init_patterns(nlp, pattern_dicts):
     # initialize with patterns
     a = nlp.add_pipe("attribute_ruler", config={"pattern_dicts": pattern_dicts})
+
+    doc = nlp("This is a test.")
+    assert doc[2].lemma_ == "the"
+    assert doc[2].morph_ == "Case=Nom|Number=Plur"
+    assert doc[3].lemma_ == "cat"
+    assert doc[3].morph_ == "Case=Nom|Number=Sing"
+
+    nlp.remove_pipe("attribute_ruler")
+
+    # initialize with patterns from asset
+    a = nlp.add_pipe("attribute_ruler", config={"pattern_dicts": {"@assets": "attribute_ruler_patterns"}})
 
     doc = nlp("This is a test.")
     assert doc[2].lemma_ == "the"
