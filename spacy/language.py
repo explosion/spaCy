@@ -769,12 +769,11 @@ class Language:
         # to Language.pipeline to make sure the configs are handled correctly
         pipe_index = self.pipe_names.index(name)
         self.remove_pipe(name)
-        if not len(self.pipeline):  # we have no components to insert before/after
+        if not len(self.pipeline) or pipe_index == len(self.pipeline):
+            # we have no components to insert before/after, or we're replacing the last component
             self.add_pipe(factory_name, name=name)
-        elif pipe_index < len(self.pipeline):
-            self.add_pipe(factory_name, name=name, before=pipe_index)
         else:
-            self.add_pipe(factory_name, name=name, after=pipe_index-1)
+            self.add_pipe(factory_name, name=name, before=pipe_index)
 
     def rename_pipe(self, old_name: str, new_name: str) -> None:
         """Rename a pipeline component.
