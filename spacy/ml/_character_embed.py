@@ -1,6 +1,7 @@
 from typing import List
 from thinc.api import Model
 from thinc.types import Floats2d
+
 from ..tokens import Doc
 
 
@@ -15,14 +16,14 @@ def CharacterEmbed(nM: int, nC: int) -> Model[List[Doc], List[Floats2d]]:
     )
 
 
-def init(model, X=None, Y=None):
+def init(model: Model, X=None, Y=None):
     vectors_table = model.ops.alloc3f(
         model.get_dim("nC"), model.get_dim("nV"), model.get_dim("nM")
     )
     model.set_param("E", vectors_table)
 
 
-def forward(model, docs, is_train):
+def forward(model: Model, docs: List[Doc], is_train: bool):
     if docs is None:
         return []
     ids = []

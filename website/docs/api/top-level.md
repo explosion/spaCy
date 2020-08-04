@@ -290,6 +290,8 @@ factories.
 >     return Model("custom", forward, dims={"nO": nO})
 > ```
 
+<!-- TODO: finish table -->
+
 | Registry name     | Description                                                                                                                                                                                                                                       |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `architectures`   | Registry for functions that create [model architectures](/api/architectures). Can be used to register custom model architectures and reference them in the `config.cfg`.                                                                          |
@@ -297,7 +299,7 @@ factories.
 | `languages`       | Registry for language-specific `Language` subclasses. Automatically reads from [entry points](/usage/saving-loading#entry-points).                                                                                                                |
 | `lookups`         | Registry for large lookup tables available via `vocab.lookups`.                                                                                                                                                                                   |
 | `displacy_colors` | Registry for custom color scheme for the [`displacy` NER visualizer](/usage/visualizers). Automatically reads from [entry points](/usage/saving-loading#entry-points).                                                                            |
-| `assets`          | <!-- TODO: what is this used for again?-->                                                                                                                                                                                                        |
+| `assets`          |                                                                                                                                                                                                                                                   |
 | `optimizers`      | Registry for functions that create [optimizers](https://thinc.ai/docs/api-optimizers).                                                                                                                                                            |
 | `schedules`       | Registry for functions that create [schedules](https://thinc.ai/docs/api-schedules).                                                                                                                                                              |
 | `layers`          | Registry for functions that create [layers](https://thinc.ai/docs/api-layers).                                                                                                                                                                    |

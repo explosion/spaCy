@@ -1,10 +1,20 @@
+from typing import Optional, Iterable, Tuple, List, TYPE_CHECKING
 import numpy
-
 from thinc.api import chain, Maxout, LayerNorm, Softmax, Linear, zero_init, Model
 from thinc.api import MultiSoftmax, list2array
 
+if TYPE_CHECKING:
+    # This lets us add type hints for mypy etc. without causing circular imports
+    from ...vocab import Vocab  # noqa: F401
+    from ...tokens import Doc  # noqa: F401
 
-def build_multi_task_model(tok2vec, maxout_pieces, token_vector_width, nO=None):
+
+def build_multi_task_model(
+    tok2vec: Model,
+    maxout_pieces: int,
+    token_vector_width: int,
+    nO: Optional[int] = None,
+) -> Model:
     softmax = Softmax(nO=nO, nI=token_vector_width * 2)
     model = chain(
         tok2vec,
@@ -22,7 +32,13 @@ def build_multi_task_model(tok2vec, maxout_pieces, token_vector_width, nO=None):
     return model
 
 
-def build_cloze_multi_task_model(vocab, tok2vec, maxout_pieces, hidden_size, nO=None):
+def build_cloze_multi_task_model(
+    vocab: "Vocab",
+    tok2vec: Model,
+    maxout_pieces: int,
+    hidden_size: int,
+    nO: Optional[int] = None,
+) -> Model:
     # nO = vocab.vectors.data.shape[1]
     output_layer = chain(
         list2array(),
@@ -43,24 +59,24 @@ def build_cloze_multi_task_model(vocab, tok2vec, maxout_pieces, hidden_size, nO=
 
 
 def build_cloze_characters_multi_task_model(
-    vocab, tok2vec, maxout_pieces, hidden_size, nr_char
-):
+    vocab: "Vocab", tok2vec: Model, maxout_pieces: int, hidden_size: int, nr_char: int
+) -> Model:
     output_layer = chain(
         list2array(),
         Maxout(hidden_size, nP=maxout_pieces),
         LayerNorm(nI=hidden_size),
         MultiSoftmax([256] * nr_char, nI=hidden_size),
     )
-
     model = build_masked_language_model(vocab, chain(tok2vec, output_layer))
     model.set_ref("tok2vec", tok2vec)
     model.set_ref("output_layer", output_layer)
     return model
 
 
-def build_masked_language_model(vocab, wrapped_model, mask_prob=0.15):
+def build_masked_language_model(
+    vocab: "Vocab", wrapped_model: Model, mask_prob: float = 0.15
+) -> Model:
     """Convert a model into a BERT-style masked language model"""
-
     random_words = _RandomWords(vocab)
 
     def mlm_forward(model, docs, is_train):
@@ -74,7 +90,7 @@ def build_masked_language_model(vocab, wrapped_model, mask_prob=0.15):
 
         return output, mlm_backward
 
-    def mlm_initialize(model, X=None, Y=None):
+    def mlm_initialize(model: Model, X=None, Y=None):
         wrapped = model.layers[0]
         wrapped.initialize(X=X, Y=Y)
         for dim in wrapped.dim_names:
@@ -90,12 +106,11 @@ def build_masked_language_model(vocab, wrapped_model, mask_prob=0.15):
         dims={dim: None for dim in wrapped_model.dim_names},
     )
     mlm_model.set_ref("wrapped", wrapped_model)
-
     return mlm_model
 
 
 class _RandomWords:
-    def __init__(self, vocab):
+    def __init__(self, vocab: "Vocab") -> None:
         self.words = [lex.text for lex in vocab if lex.prob != 0.0]
         self.probs = [lex.prob for lex in vocab if lex.prob != 0.0]
         self.words = self.words[:10000]
@@ -104,7 +119,7 @@ class _RandomWords:
         self.probs /= self.probs.sum()
         self._cache = []
 
-    def next(self):
+    def next(self) -> str:
         if not self._cache:
             self._cache.extend(
                 numpy.random.choice(len(self.words), 10000, p=self.probs)
@@ -113,9 +128,11 @@ class _RandomWords:
         return self.words[index]
 
 
-def _apply_mask(docs, random_words, mask_prob=0.15):
+def _apply_mask(
+    docs: Iterable["Doc"], random_words: _RandomWords, mask_prob: float = 0.15
+) -> Tuple[numpy.ndarray, List["Doc"]]:
     # This needs to be here to avoid circular imports
-    from ...tokens import Doc
+    from ...tokens import Doc  # noqa: F811
 
     N = sum(len(doc) for doc in docs)
     mask = numpy.random.uniform(0.0, 1.0, (N,))
@@ -141,7 +158,7 @@ def _apply_mask(docs, random_words, mask_prob=0.15):
     return mask, masked_docs
 
 
-def _replace_word(word, random_words, mask="[MASK]"):
+def _replace_word(word: str, random_words: _RandomWords, mask: str = "[MASK]") -> str:
     roll = numpy.random.random()
     if roll < 0.8:
         return mask

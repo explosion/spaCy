@@ -1,7 +1,7 @@
 # cython: infer_types=True, profile=True, binding=True
 from typing import Optional
 import numpy
-from thinc.api import CosineDistance, to_categorical, to_categorical, Model, Config
+from thinc.api import CosineDistance, to_categorical, Model, Config
 from thinc.api import set_dropout_rate
 
 from ..tokens.doc cimport Doc
@@ -9,7 +9,7 @@ from ..tokens.doc cimport Doc
 from .pipe import Pipe
 from .tagger import Tagger
 from ..language import Language
-from ..syntax import nonproj
+from ._parser_internals import nonproj
 from ..attrs import POS, ID
 from ..errors import Errors
 
@@ -219,3 +219,6 @@ class ClozeMultitask(Pipe):
 
         if losses is not None:
             losses[self.name] += loss
+
+    def add_label(self, label):
+        raise NotImplementedError

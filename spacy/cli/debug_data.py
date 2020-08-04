@@ -10,7 +10,7 @@ from thinc.api import Config
 from ._util import app, Arg, Opt, show_validation_error, parse_config_overrides
 from ._util import import_code, debug_cli
 from ..gold import Corpus, Example
-from ..syntax import nonproj
+from ..pipeline._parser_internals import nonproj
 from ..language import Language
 from .. import util
 
@@ -33,7 +33,6 @@ def debug_config_cli(
     ctx: typer.Context,  # This is only used to read additional arguments
     config_path: Path = Arg(..., help="Path to config file", exists=True),
     code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
-    output_path: Optional[Path] = Opt(None, "--output", "-o", help="Output path for filled config or '-' for standard output", allow_dash=True),
     auto_fill: bool = Opt(False, "--auto-fill", "-F", help="Whether or not to auto-fill the config with built-in defaults if possible"),
     diff: bool = Opt(False, "--diff", "-D", help="Show a visual diff if config was auto-filled")
     # fmt: on
@@ -49,7 +48,7 @@ def debug_config_cli(
     """
     overrides = parse_config_overrides(ctx.args)
     import_code(code_path)
-    with show_validation_error():
+    with show_validation_error(config_path):
         config = Config().from_disk(config_path)
         try:
             nlp, _ = util.load_model_from_config(
@@ -57,7 +56,6 @@ def debug_config_cli(
             )
         except ValueError as e:
             msg.fail(str(e), exits=1)
-    is_stdout = output_path is not None and str(output_path) == "-"
     if auto_fill:
         orig_config = config.to_str()
         filled_config = nlp.config.to_str()
@@ -68,12 +66,7 @@ def debug_config_cli(
             if diff:
                 print(diff_strings(config.to_str(), nlp.config.to_str()))
     else:
-        msg.good("Original config is valid", show=not is_stdout)
-    if is_stdout:
-        print(nlp.config.to_str())
-    elif output_path is not None:
-        nlp.config.to_disk(output_path)
-        msg.good(f"Saved updated config to {output_path}")
+        msg.good("Original config is valid")
 
 
 @debug_cli.command(
@@ -142,7 +135,7 @@ def debug_data(
         msg.fail("Development data not found", dev_path, exits=1)
     if not config_path.exists():
         msg.fail("Config file not found", config_path, exists=1)
-    with show_validation_error():
+    with show_validation_error(config_path):
         cfg = Config().from_disk(config_path)
         nlp, config = util.load_model_from_config(cfg, overrides=config_overrides)
     # TODO: handle base model
@@ -169,13 +162,12 @@ def debug_data(
     loading_train_error_message = ""
     loading_dev_error_message = ""
     with msg.loading("Loading corpus..."):
-        corpus = Corpus(train_path, dev_path)
         try:
-            train_dataset = list(corpus.train_dataset(nlp))
+            train_dataset = list(Corpus(train_path)(nlp))
         except ValueError as e:
             loading_train_error_message = f"Training data cannot be loaded: {e}"
         try:
-            dev_dataset = list(corpus.dev_dataset(nlp))
+            dev_dataset = list(Corpus(dev_path)(nlp))
         except ValueError as e:
             loading_dev_error_message = f"Development data cannot be loaded: {e}"
     if loading_train_error_message or loading_dev_error_message:

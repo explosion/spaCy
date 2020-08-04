@@ -1,12 +1,17 @@
 from typing import Dict, List, Union, Optional, Sequence, Any, Callable, Type
+from typing import Iterable, TypeVar
 from enum import Enum
 from pydantic import BaseModel, Field, ValidationError, validator
 from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool
 from pydantic import root_validator
 from collections import defaultdict
 from thinc.api import Optimizer
+from pathlib import Path
 
 from .attrs import NAMES
+
+ItemT = TypeVar("ItemT")
+Batcher = Callable[[Iterable[ItemT]], Iterable[List[ItemT]]]
 
 
 def validate(schema: Type[BaseModel], obj: Dict[str, Any]) -> List[str]:
@@ -178,32 +183,24 @@ class ModelMetaSchema(BaseModel):
 # check that against this schema in the test suite to make sure it's always
 # up to date.
 
+Reader = Callable[["Language", str], Iterable["Example"]]
 
 class ConfigSchemaTraining(BaseModel):
     # fmt: off
-    base_model: Optional[StrictStr] = Field(..., title="The base model to use")
     vectors: Optional[StrictStr] = Field(..., title="Path to vectors")
-    gold_preproc: StrictBool = Field(..., title="Whether to train on gold-standard sentences and tokens")
-    max_length: StrictInt = Field(..., title="Maximum length of examples (longer examples are divided into sentences if possible)")
-    limit: StrictInt = Field(..., title="Number of examples to use (0 for all)")
-    orth_variant_level: StrictFloat = Field(..., title="Orth variants for data augmentation")
+    train_corpus: Reader = Field(..., title="Reader for the training data")
+    dev_corpus: Reader = Field(..., title="Reader for the dev data")
+    batcher: Batcher = Field(..., title="Batcher for the training data")
     dropout: StrictFloat = Field(..., title="Dropout rate")
     patience: StrictInt = Field(..., title="How many steps to continue without improvement in evaluation score")
     max_epochs: StrictInt = Field(..., title="Maximum number of epochs to train for")
     max_steps: StrictInt = Field(..., title="Maximum number of update steps to train for")
     eval_frequency: StrictInt = Field(..., title="How often to evaluate during training (steps)")
-    eval_batch_size: StrictInt = Field(..., title="Evaluation batch size")
     seed: Optional[StrictInt] = Field(..., title="Random seed")
     accumulate_gradient: StrictInt = Field(..., title="Whether to divide the batch up into substeps")
-    use_pytorch_for_gpu_memory: StrictBool = Field(..., title="Allocate memory via PyTorch")
     score_weights: Dict[StrictStr, Union[StrictFloat, StrictInt]] = Field(..., title="Scores to report and their weights for selecting final model")
     init_tok2vec: Optional[StrictStr] = Field(..., title="Path to pretrained tok2vec weights")
-    discard_oversize: StrictBool = Field(..., title="Whether to skip examples longer than batch size")
-    batch_by: StrictStr = Field(..., title="Batch examples by type")
-    raw_text: Optional[StrictStr] = Field(..., title="Raw text")
-    tag_map: Optional[StrictStr] = Field(..., title="Path to JSON-formatted tag map")
-    morph_rules: Optional[StrictStr] = Field(..., title="Path to morphology rules")
-    batch_size: Union[Sequence[int], int] = Field(..., title="The batch size or batch size schedule")
+    raw_text: Optional[StrictStr] = Field(default=None, title="Raw text")
     optimizer: Optimizer = Field(..., title="The optimizer to use")
     # fmt: on
 
@@ -211,6 +208,7 @@ class ConfigSchemaTraining(BaseModel):
         extra = "forbid"
         arbitrary_types_allowed = True
 
+#eval_batch_size: StrictInt = Field(..., title="Evaluation batch size")
 
 class ConfigSchemaNlp(BaseModel):
     # fmt: off

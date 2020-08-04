@@ -2,10 +2,9 @@ from typing import Optional
 from thinc.api import Model, reduce_mean, Linear, list2ragged, Logistic
 from thinc.api import chain, concatenate, clone, Dropout, ParametricAttention
 from thinc.api import SparseLinear, Softmax, softmax_activation, Maxout, reduce_sum
-from thinc.api import HashEmbed, with_ragged, with_array, with_cpu, uniqued
+from thinc.api import HashEmbed, with_array, with_cpu, uniqued
 from thinc.api import Relu, residual, expand_window, FeatureExtractor
 
-from ... import util
 from ...attrs import ID, ORTH, PREFIX, SUFFIX, SHAPE, LOWER
 from ...util import registry
 from ..extract_ngrams import extract_ngrams
@@ -40,7 +39,12 @@ def build_simple_cnn_text_classifier(
 
 
 @registry.architectures.register("spacy.TextCatBOW.v1")
-def build_bow_text_classifier(exclusive_classes, ngram_size, no_output_layer, nO=None):
+def build_bow_text_classifier(
+    exclusive_classes: bool,
+    ngram_size: int,
+    no_output_layer: bool,
+    nO: Optional[int] = None,
+) -> Model:
     with Model.define_operators({">>": chain}):
         sparse_linear = SparseLinear(nO)
         model = extract_ngrams(ngram_size, attr=ORTH) >> sparse_linear
@@ -55,16 +59,16 @@ def build_bow_text_classifier(exclusive_classes, ngram_size, no_output_layer, nO
 
 @registry.architectures.register("spacy.TextCatEnsemble.v1")
 def build_text_classifier(
-    width,
-    embed_size,
-    pretrained_vectors,
-    exclusive_classes,
-    ngram_size,
-    window_size,
-    conv_depth,
-    dropout,
-    nO=None,
-):
+    width: int,
+    embed_size: int,
+    pretrained_vectors: Optional[bool],
+    exclusive_classes: bool,
+    ngram_size: int,
+    window_size: int,
+    conv_depth: int,
+    dropout: Optional[float],
+    nO: Optional[int] = None,
+) -> Model:
     cols = [ORTH, LOWER, PREFIX, SUFFIX, SHAPE, ID]
     with Model.define_operators({">>": chain, "|": concatenate, "**": clone}):
         lower = HashEmbed(
@@ -91,7 +95,6 @@ def build_text_classifier(
             dropout=dropout,
             seed=13,
         )
-
         width_nI = sum(layer.get_dim("nO") for layer in [lower, prefix, suffix, shape])
         trained_vectors = FeatureExtractor(cols) >> with_array(
             uniqued(
@@ -100,7 +103,6 @@ def build_text_classifier(
                 column=cols.index(ORTH),
             )
         )
-
         if pretrained_vectors:
             static_vectors = StaticVectors(width)
             vector_layer = trained_vectors | static_vectors
@@ -152,7 +154,12 @@ def build_text_classifier(
 
 
 @registry.architectures.register("spacy.TextCatLowData.v1")
-def build_text_classifier_lowdata(width, pretrained_vectors, dropout, nO=None):
+def build_text_classifier_lowdata(
+    width: int,
+    pretrained_vectors: Optional[bool],
+    dropout: Optional[float],
+    nO: Optional[int] = None,
+) -> Model:
     # Note, before v.3, this was the default if setting "low_data" and "pretrained_dims"
     with Model.define_operators({">>": chain, "**": clone}):
         model = (

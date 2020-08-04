@@ -44,7 +44,7 @@ def make_lemmatizer(
         tables = ["lemma_lookup"]
     elif mode == "rule":
         tables = ["lemma_rules", "lemma_exc", "lemma_index"]
-    strict = mode in ("rule", "lookup")
+    strict = mode in ("lookup", "rule")
     if lookups is None:
         lookups = load_lookups(lang=nlp.lang, tables=tables, strict=strict)
     elif strict:

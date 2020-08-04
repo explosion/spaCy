@@ -11,8 +11,23 @@ from ..util import make_tempdir
 
 
 nlp_config_string = """
+[paths]
+train = ""
+dev = ""
+
 [training]
-batch_size = 666
+
+[training.train_corpus]
+@readers = "spacy.Corpus.v1"
+path = ${paths:train}
+
+[training.dev_corpus]
+@readers = "spacy.Corpus.v1"
+path = ${paths:dev}
+
+[training.batcher]
+@batchers = "batch_by_words.v1"
+size = 666
 
 [nlp]
 lang = "en"
@@ -93,7 +108,7 @@ def test_create_nlp_from_config():
     with pytest.raises(ConfigValidationError):
         nlp, _ = load_model_from_config(config, auto_fill=False)
     nlp, resolved = load_model_from_config(config, auto_fill=True)
-    assert nlp.config["training"]["batch_size"] == 666
+    assert nlp.config["training"]["batcher"]["size"] == 666
     assert len(nlp.config["training"]) > 1
     assert nlp.pipe_names == ["tok2vec", "tagger"]
     assert len(nlp.config["components"]) == 2

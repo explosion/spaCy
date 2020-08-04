@@ -6,16 +6,15 @@ from thinc.api import expand_window, residual, Maxout, Mish, PyTorchLSTM
 from thinc.types import Floats2d
 
 from ...tokens import Doc
-from ... import util
 from ...util import registry
 from ...ml import _character_embed
 from ..staticvectors import StaticVectors
 from ...pipeline.tok2vec import Tok2VecListener
-from ...attrs import ID, ORTH, NORM, PREFIX, SUFFIX, SHAPE
+from ...attrs import ORTH, NORM, PREFIX, SUFFIX, SHAPE
 
 
 @registry.architectures.register("spacy.Tok2VecListener.v1")
-def tok2vec_listener_v1(width, upstream="*"):
+def tok2vec_listener_v1(width: int, upstream: str = "*"):
     tok2vec = Tok2VecListener(upstream_name=upstream, width=width)
     return tok2vec
 
@@ -45,9 +44,10 @@ def build_hash_embed_cnn_tok2vec(
             width=width,
             depth=depth,
             window_size=window_size,
-            maxout_pieces=maxout_pieces
-        )
+            maxout_pieces=maxout_pieces,
+        ),
     )
+
 
 @registry.architectures.register("spacy.Tok2Vec.v1")
 def build_Tok2Vec_model(
@@ -68,7 +68,6 @@ def MultiHashEmbed(
     width: int, rows: int, also_embed_subwords: bool, also_use_static_vectors: bool
 ):
     cols = [NORM, PREFIX, SUFFIX, SHAPE, ORTH]
-
     seed = 7
 
     def make_hash_embed(feature):
@@ -124,11 +123,11 @@ def CharacterEmbed(width: int, rows: int, nM: int, nC: int):
             chain(
                 FeatureExtractor([NORM]),
                 list2ragged(),
-                with_array(HashEmbed(nO=width, nV=rows, column=0, seed=5))
-            )
+                with_array(HashEmbed(nO=width, nV=rows, column=0, seed=5)),
+            ),
         ),
         with_array(Maxout(width, nM * nC + width, nP=3, normalize=True, dropout=0.0)),
-        ragged2list()
+        ragged2list(),
     )
     return model
 
@@ -155,12 +154,7 @@ def MaxoutWindowEncoder(width: int, window_size: int, maxout_pieces: int, depth:
 def MishWindowEncoder(width, window_size, depth):
     cnn = chain(
         expand_window(window_size=window_size),
-        Mish(
-            nO=width,
-            nI=width * ((window_size * 2) + 1),
-            dropout=0.0,
-            normalize=True
-        ),
+        Mish(nO=width, nI=width * ((window_size * 2) + 1), dropout=0.0, normalize=True),
     )
     model = clone(residual(cnn), depth)
     model.set_dim("nO", width)

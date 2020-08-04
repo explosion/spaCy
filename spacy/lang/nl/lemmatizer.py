@@ -15,6 +15,7 @@ class DutchLemmatizer(Lemmatizer):
         lookup table consists entirely of lowercase keys."""
         lookup_table = self.lookups.get_table("lemma_lookup", {})
         string = token.text.lower()
+        print(string)
         return [lookup_table.get(string, string)]
 
     # Note: CGN does not distinguish AUX verbs, so we treat AUX as VERB.

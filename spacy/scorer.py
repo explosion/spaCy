@@ -1,55 +1,61 @@
+from typing import Optional, Iterable, Dict, Any, Callable, Tuple, TYPE_CHECKING
 import numpy as np
 
+from .gold import Example
+from .tokens import Token, Doc
 from .errors import Errors
 from .util import get_lang_class
 from .morphology import Morphology
 
+if TYPE_CHECKING:
+    # This lets us add type hints for mypy etc. without causing circular imports
+    from .language import Language  # noqa: F401
+
+
+DEFAULT_PIPELINE = ["senter", "tagger", "morphologizer", "parser", "ner", "textcat"]
+
 
 class PRFScore:
-    """
-    A precision / recall / F score
-    """
+    """A precision / recall / F score."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.tp = 0
         self.fp = 0
         self.fn = 0
 
-    def score_set(self, cand, gold):
+    def score_set(self, cand: set, gold: set) -> None:
         self.tp += len(cand.intersection(gold))
         self.fp += len(cand - gold)
         self.fn += len(gold - cand)
 
     @property
-    def precision(self):
+    def precision(self) -> float:
         return self.tp / (self.tp + self.fp + 1e-100)
 
     @property
-    def recall(self):
+    def recall(self) -> float:
         return self.tp / (self.tp + self.fn + 1e-100)
 
     @property
-    def fscore(self):
+    def fscore(self) -> float:
         p = self.precision
         r = self.recall
         return 2 * ((p * r) / (p + r + 1e-100))
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, float]:
         return {"p": self.precision, "r": self.recall, "f": self.fscore}
 
 
 class ROCAUCScore:
-    """
-    An AUC ROC score.
-    """
+    """An AUC ROC score."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.golds = []
         self.cands = []
         self.saved_score = 0.0
         self.saved_score_at_len = 0
 
-    def score_set(self, cand, gold):
+    def score_set(self, cand, gold) -> None:
         self.cands.append(cand)
         self.golds.append(gold)
 
@@ -70,51 +76,52 @@ class ROCAUCScore:
 class Scorer:
     """Compute evaluation scores."""
 
-    def __init__(self, nlp=None, **cfg):
+    def __init__(
+        self,
+        nlp: Optional["Language"] = None,
+        default_lang: str = "xx",
+        default_pipeline=DEFAULT_PIPELINE,
+        **cfg,
+    ) -> None:
         """Initialize the Scorer.
 
         DOCS: https://spacy.io/api/scorer#init
         """
         self.nlp = nlp
         self.cfg = cfg
-
         if not nlp:
-            # create a default pipeline
-            nlp = get_lang_class("xx")()
-            nlp.add_pipe("senter")
-            nlp.add_pipe("tagger")
-            nlp.add_pipe("morphologizer")
-            nlp.add_pipe("parser")
-            nlp.add_pipe("ner")
-            nlp.add_pipe("textcat")
+            nlp = get_lang_class(default_lang)()
+            for pipe in default_pipeline:
+                nlp.add_pipe(pipe)
             self.nlp = nlp
 
-    def score(self, examples):
+    def score(self, examples: Iterable[Example]) -> Dict[str, Any]:
         """Evaluate a list of Examples.
 
         examples (Iterable[Example]): The predicted annotations + correct annotations.
         RETURNS (Dict): A dictionary of scores.
+
         DOCS: https://spacy.io/api/scorer#score
         """
         scores = {}
-
         if hasattr(self.nlp.tokenizer, "score"):
             scores.update(self.nlp.tokenizer.score(examples, **self.cfg))
         for name, component in self.nlp.pipeline:
             if hasattr(component, "score"):
                 scores.update(component.score(examples, **self.cfg))
-
         return scores
 
     @staticmethod
-    def score_tokenization(examples, **cfg):
+    def score_tokenization(examples: Iterable[Example], **cfg) -> Dict[str, float]:
         """Returns accuracy and PRF scores for tokenization.
-
         * token_acc: # correct tokens / # gold tokens
         * token_p/r/f: PRF for token character spans
 
         examples (Iterable[Example]): Examples to score
-        RETURNS (dict): A dictionary containing the scores token_acc/p/r/f.
+        RETURNS (Dict[str, float]): A dictionary containing the scores
+            token_acc/p/r/f.
+
+        DOCS: https://spacy.io/api/scorer#score_tokenization
         """
         acc_score = PRFScore()
         prf_score = PRFScore()
@@ -145,16 +152,24 @@ class Scorer:
         }
 
     @staticmethod
-    def score_token_attr(examples, attr, getter=getattr, **cfg):
+    def score_token_attr(
+        examples: Iterable[Example],
+        attr: str,
+        *,
+        getter: Callable[[Token, str], Any] = getattr,
+        **cfg,
+    ) -> Dict[str, float]:
         """Returns an accuracy score for a token-level attribute.
 
         examples (Iterable[Example]): Examples to score
         attr (str): The attribute to score.
-        getter (callable): Defaults to getattr. If provided,
+        getter (Callable[[Token, str], Any]): Defaults to getattr. If provided,
             getter(token, attr) should return the value of the attribute for an
             individual token.
-        RETURNS (dict): A dictionary containing the accuracy score under the
-            key attr_acc.
+        RETURNS (Dict[str, float]): A dictionary containing the accuracy score
+            under the key attr_acc.
+
+        DOCS: https://spacy.io/api/scorer#score_token_attr
         """
         tag_score = PRFScore()
         for example in examples:
@@ -172,17 +187,21 @@ class Scorer:
                     gold_i = align.x2y[token.i].dataXd[0, 0]
                     pred_tags.add((gold_i, getter(token, attr)))
             tag_score.score_set(pred_tags, gold_tags)
-        return {
-            attr + "_acc": tag_score.fscore,
-        }
+        return {f"{attr}_acc": tag_score.fscore}
 
     @staticmethod
-    def score_token_attr_per_feat(examples, attr, getter=getattr, **cfg):
+    def score_token_attr_per_feat(
+        examples: Iterable[Example],
+        attr: str,
+        *,
+        getter: Callable[[Token, str], Any] = getattr,
+        **cfg,
+    ):
         """Return PRF scores per feat for a token attribute in UFEATS format.
 
         examples (Iterable[Example]): Examples to score
         attr (str): The attribute to score.
-        getter (callable): Defaults to getattr. If provided,
+        getter (Callable[[Token, str], Any]): Defaults to getattr. If provided,
             getter(token, attr) should return the value of the attribute for an
             individual token.
         RETURNS (dict): A dictionary containing the per-feat PRF scores unders
@@ -223,20 +242,26 @@ class Scorer:
                 per_feat[field].score_set(
                     pred_per_feat.get(field, set()), gold_per_feat.get(field, set()),
                 )
-        return {
-            attr + "_per_feat": per_feat,
-        }
+        return {f"{attr}_per_feat": per_feat}
 
     @staticmethod
-    def score_spans(examples, attr, getter=getattr, **cfg):
+    def score_spans(
+        examples: Iterable[Example],
+        attr: str,
+        *,
+        getter: Callable[[Doc, str], Any] = getattr,
+        **cfg,
+    ) -> Dict[str, Any]:
         """Returns PRF scores for labeled spans.
 
         examples (Iterable[Example]): Examples to score
         attr (str): The attribute to score.
-        getter (callable): Defaults to getattr. If provided,
+        getter (Callable[[Doc, str], Any]): Defaults to getattr. If provided,
             getter(doc, attr) should return the spans for the individual doc.
-        RETURNS (dict): A dictionary containing the PRF scores under the
-            keys attr_p/r/f and the per-type PRF scores under attr_per_type.
+        RETURNS (Dict[str, Any]): A dictionary containing the PRF scores under
+            the keys attr_p/r/f and the per-type PRF scores under attr_per_type.
+
+        DOCS: https://spacy.io/api/scorer#score_spans
         """
         score = PRFScore()
         score_per_type = dict()
@@ -256,14 +281,12 @@ class Scorer:
             # Find all predidate labels, for all and per type
             gold_spans = set()
             pred_spans = set()
-
             # Special case for ents:
             # If we have missing values in the gold, we can't easily tell
             # whether our NER predictions are true.
             # It seems bad but it's what we've always done.
             if attr == "ents" and not all(token.ent_iob != 0 for token in gold_doc):
                 continue
-
             for span in getter(gold_doc, attr):
                 gold_span = (span.label_, span.start, span.end - 1)
                 gold_spans.add(gold_span)
@@ -279,38 +302,39 @@ class Scorer:
             # Score for all labels
             score.score_set(pred_spans, gold_spans)
         results = {
-            attr + "_p": score.precision,
-            attr + "_r": score.recall,
-            attr + "_f": score.fscore,
-            attr + "_per_type": {k: v.to_dict() for k, v in score_per_type.items()},
+            f"{attr}_p": score.precision,
+            f"{attr}_r": score.recall,
+            f"{attr}_f": score.fscore,
+            f"{attr}_per_type": {k: v.to_dict() for k, v in score_per_type.items()},
         }
         return results
 
     @staticmethod
     def score_cats(
-        examples,
-        attr,
-        getter=getattr,
-        labels=[],
-        multi_label=True,
-        positive_label=None,
-        **cfg
-    ):
+        examples: Iterable[Example],
+        attr: str,
+        *,
+        getter: Callable[[Doc, str], Any] = getattr,
+        labels: Iterable[str] = tuple(),
+        multi_label: bool = True,
+        positive_label: Optional[str] = None,
+        **cfg,
+    ) -> Dict[str, Any]:
         """Returns PRF and ROC AUC scores for a doc-level attribute with a
         dict with scores for each label like Doc.cats. The reported overall
         score depends on the scorer settings.
 
         examples (Iterable[Example]): Examples to score
         attr (str): The attribute to score.
-        getter (callable): Defaults to getattr. If provided,
+        getter (Callable[[Doc, str], Any]): Defaults to getattr. If provided,
             getter(doc, attr) should return the values for the individual doc.
         labels (Iterable[str]): The set of possible labels. Defaults to [].
         multi_label (bool): Whether the attribute allows multiple labels.
             Defaults to True.
         positive_label (str): The positive label for a binary task with
             exclusive classes. Defaults to None.
-        RETURNS (dict): A dictionary containing the scores, with inapplicable
-                scores as None:
+        RETURNS (Dict[str, Any]): A dictionary containing the scores, with
+            inapplicable scores as None:
             for all:
                 attr_score (one of attr_f / attr_macro_f / attr_macro_auc),
                 attr_score_desc (text description of the overall score),
@@ -319,6 +343,8 @@ class Scorer:
             for binary exclusive with positive label: attr_p/r/f
             for 3+ exclusive classes, macro-averaged fscore: attr_macro_f
             for multilabel, macro-averaged AUC: attr_macro_auc
+
+        DOCS: https://spacy.io/api/scorer#score_cats
         """
         score = PRFScore()
         f_per_type = dict()
@@ -367,64 +393,67 @@ class Scorer:
                     )
                 )
         results = {
-            attr + "_score": None,
-            attr + "_score_desc": None,
-            attr + "_p": None,
-            attr + "_r": None,
-            attr + "_f": None,
-            attr + "_macro_f": None,
-            attr + "_macro_auc": None,
-            attr + "_f_per_type": {k: v.to_dict() for k, v in f_per_type.items()},
-            attr + "_auc_per_type": {k: v.score for k, v in auc_per_type.items()},
+            f"{attr}_score": None,
+            f"{attr}_score_desc": None,
+            f"{attr}_p": None,
+            f"{attr}_r": None,
+            f"{attr}_f": None,
+            f"{attr}_macro_f": None,
+            f"{attr}_macro_auc": None,
+            f"{attr}_f_per_type": {k: v.to_dict() for k, v in f_per_type.items()},
+            f"{attr}_auc_per_type": {k: v.score for k, v in auc_per_type.items()},
         }
         if len(labels) == 2 and not multi_label and positive_label:
-            results[attr + "_p"] = score.precision
-            results[attr + "_r"] = score.recall
-            results[attr + "_f"] = score.fscore
-            results[attr + "_score"] = results[attr + "_f"]
-            results[attr + "_score_desc"] = "F (" + positive_label + ")"
+            results[f"{attr}_p"] = score.precision
+            results[f"{attr}_r"] = score.recall
+            results[f"{attr}_f"] = score.fscore
+            results[f"{attr}_score"] = results[f"{attr}_f"]
+            results[f"{attr}_score_desc"] = f"F ({positive_label})"
         elif not multi_label:
-            results[attr + "_macro_f"] = sum(
+            results[f"{attr}_macro_f"] = sum(
                 [score.fscore for label, score in f_per_type.items()]
             ) / (len(f_per_type) + 1e-100)
-            results[attr + "_score"] = results[attr + "_macro_f"]
-            results[attr + "_score_desc"] = "macro F"
+            results[f"{attr}_score"] = results[f"{attr}_macro_f"]
+            results[f"{attr}_score_desc"] = "macro F"
         else:
-            results[attr + "_macro_auc"] = max(
+            results[f"{attr}_macro_auc"] = max(
                 sum([score.score for label, score in auc_per_type.items()])
                 / (len(auc_per_type) + 1e-100),
                 -1,
             )
-            results[attr + "_score"] = results[attr + "_macro_auc"]
-            results[attr + "_score_desc"] = "macro AUC"
+            results[f"{attr}_score"] = results[f"{attr}_macro_auc"]
+            results[f"{attr}_score_desc"] = "macro AUC"
         return results
 
     @staticmethod
     def score_deps(
-        examples,
-        attr,
-        getter=getattr,
-        head_attr="head",
-        head_getter=getattr,
-        ignore_labels=tuple(),
-        **cfg
-    ):
+        examples: Iterable[Example],
+        attr: str,
+        *,
+        getter: Callable[[Token, str], Any] = getattr,
+        head_attr: str = "head",
+        head_getter: Callable[[Token, str], Any] = getattr,
+        ignore_labels: Tuple[str] = tuple(),
+        **cfg,
+    ) -> Dict[str, Any]:
         """Returns the UAS, LAS, and LAS per type scores for dependency
         parses.
 
         examples (Iterable[Example]): Examples to score
         attr (str): The attribute containing the dependency label.
-        getter (callable): Defaults to getattr. If provided,
+        getter (Callable[[Token, str], Any]): Defaults to getattr. If provided,
             getter(token, attr) should return the value of the attribute for an
             individual token.
         head_attr (str): The attribute containing the head token. Defaults to
             'head'.
-        head_getter (callable): Defaults to getattr. If provided,
+        head_getter (Callable[[Token, str], Any]): Defaults to getattr. If provided,
             head_getter(token, attr) should return the value of the head for an
             individual token.
         ignore_labels (Tuple): Labels to ignore while scoring (e.g., punct).
-        RETURNS (dict): A dictionary containing the scores:
+        RETURNS (Dict[str, Any]): A dictionary containing the scores:
             attr_uas, attr_las, and attr_las_per_type.
+
+        DOCS: https://spacy.io/api/scorer#score_deps
         """
         unlabelled = PRFScore()
         labelled = PRFScore()
@@ -482,10 +511,11 @@ class Scorer:
                 set(item[:2] for item in pred_deps), set(item[:2] for item in gold_deps)
             )
         return {
-            attr + "_uas": unlabelled.fscore,
-            attr + "_las": labelled.fscore,
-            attr
-            + "_las_per_type": {k: v.to_dict() for k, v in labelled_per_dep.items()},
+            f"{attr}_uas": unlabelled.fscore,
+            f"{attr}_las": labelled.fscore,
+            f"{attr}_las_per_type": {
+                k: v.to_dict() for k, v in labelled_per_dep.items()
+            },
         }
 
 

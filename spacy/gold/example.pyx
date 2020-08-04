@@ -10,7 +10,7 @@ from .align import Alignment
 from .iob_utils import biluo_to_iob, biluo_tags_from_offsets, biluo_tags_from_doc
 from .iob_utils import spans_from_biluo_tags
 from ..errors import Errors, Warnings
-from ..syntax import nonproj
+from ..pipeline._parser_internals import nonproj
 
 
 cpdef Doc annotations2doc(vocab, tok_annot, doc_annot):
@@ -32,9 +32,9 @@ cdef class Example:
             raise TypeError(Errors.E972.format(arg="predicted"))
         if reference is None:
             raise TypeError(Errors.E972.format(arg="reference"))
-        self.x = predicted
-        self.y = reference
-        self._alignment = alignment
+        self.predicted = predicted
+        self.reference = reference
+        self._cached_alignment = alignment
 
     def __len__(self):
         return len(self.predicted)
@@ -45,7 +45,8 @@ cdef class Example:
 
         def __set__(self, doc):
             self.x = doc
-            self._alignment = None
+            self._cached_alignment = None
+            self._cached_words_x = [t.text for t in doc]
 
     property reference:
         def __get__(self):
@@ -53,7 +54,8 @@ cdef class Example:
 
         def __set__(self, doc):
             self.y = doc
-            self._alignment = None
+            self._cached_alignment = None
+            self._cached_words_y = [t.text for t in doc]
 
     def copy(self):
         return Example(
@@ -79,13 +81,15 @@ cdef class Example:
 
     @property
     def alignment(self):
-        if self._alignment is None:
-            spacy_words = [token.orth_ for token in self.predicted]
-            gold_words = [token.orth_ for token in self.reference]
-            if gold_words == []:
-                gold_words = spacy_words
-            self._alignment = Alignment.from_strings(spacy_words, gold_words)
-        return self._alignment
+        words_x = [token.text for token in self.x]
+        words_y = [token.text for token in self.y]
+        if self._cached_alignment is None or \
+                words_x != self._cached_words_x or \
+                words_y != self._cached_words_y:
+            self._cached_alignment = Alignment.from_strings(words_x, words_y)
+            self._cached_words_x = words_x
+            self._cached_words_y = words_y
+        return self._cached_alignment
 
     def get_aligned(self, field, as_string=False):
         """Return an aligned array for a token attribute."""

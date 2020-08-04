@@ -26,7 +26,6 @@ def BiluoTagger(
         with_array(softmax_activation()),
         padded2list(),
     )
-
     return Model(
         "biluo-tagger",
         forward,
@@ -52,7 +51,6 @@ def IOBTagger(
         with_array(softmax_activation()),
         padded2list(),
     )
-
     return Model(
         "iob-tagger",
         forward,

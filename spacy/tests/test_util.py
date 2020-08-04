@@ -3,8 +3,9 @@ import pytest
 from .util import get_random_doc
 
 from spacy import util
-from spacy.util import minibatch_by_words, dot_to_object
+from spacy.util import dot_to_object
 from thinc.api import Config, Optimizer
+from spacy.gold.batchers import minibatch_by_words
 
 from ..lang.en import English
 from ..lang.nl import Dutch

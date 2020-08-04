@@ -4,6 +4,8 @@ from thinc.types import Ragged
 from dataclasses import dataclass
 import tokenizations
 
+from ..errors import Errors
+
 
 @dataclass
 class Alignment:
@@ -18,6 +20,8 @@ class Alignment:
 
     @classmethod
     def from_strings(cls, A: List[str], B: List[str]) -> "Alignment":
+        if "".join(A).replace(" ", "").lower() != "".join(B).replace(" ", "").lower():
+            raise ValueError(Errors.E949)
         x2y, y2x = tokenizations.get_alignments(A, B)
         return Alignment.from_indices(x2y=x2y, y2x=y2x)
 

@@ -4,14 +4,14 @@ from thinc.api import Model
 from ..attrs import LOWER
 
 
-def extract_ngrams(ngram_size, attr=LOWER) -> Model:
+def extract_ngrams(ngram_size: int, attr: int = LOWER) -> Model:
     model = Model("extract_ngrams", forward)
     model.attrs["ngram_size"] = ngram_size
     model.attrs["attr"] = attr
     return model
 
 
-def forward(model, docs, is_train: bool):
+def forward(model: Model, docs, is_train: bool):
     batch_keys = []
     batch_vals = []
     for doc in docs:

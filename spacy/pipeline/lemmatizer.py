@@ -75,7 +75,7 @@ class Lemmatizer(Pipe):
             try:
                 self.lemmatize = getattr(self, f"{self.mode}_lemmatize")
             except AttributeError:
-                raise ValueError(Errors.E1001.format(mode=mode))
+                raise ValueError(Errors.E1003.format(mode=mode))
         self.cache = {}
 
     @property
@@ -102,7 +102,10 @@ class Lemmatizer(Pipe):
         RETURNS (list): The available lemmas for the string.
         """
         lookup_table = self.lookups.get_table("lemma_lookup", {})
-        return [lookup_table.get(token.text, token.text)]
+        result = lookup_table.get(token.text, token.text)
+        if isinstance(result, str):
+            result = [result]
+        return result
 
     def rule_lemmatize(self, token: Token) -> List[str]:
         """Lemmatize using a rule-based approach.

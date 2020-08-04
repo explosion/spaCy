@@ -1,7 +1,7 @@
 # cython: infer_types=True
 import numpy
 
-from ..tokens.doc cimport Doc
+from ...tokens.doc cimport Doc
 
 
 cdef class StateClass:
