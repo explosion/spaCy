@@ -14,9 +14,9 @@ if TYPE_CHECKING:
 
 @util.registry.readers("spacy.Corpus.v1")
 def create_docbin_reader(
-    gold_preproc: bool, max_length: int = 0, limit: int = 0
-) -> Callable[["Language", Path], Iterable[Example]]:
-    return Corpus(gold_preproc=gold_preproc, max_length=max_length, limit=limit)
+    path: Path, gold_preproc: bool, max_length: int = 0, limit: int = 0
+) -> Callable[["Language"], Iterable[Example]]:
+    return Corpus(path, gold_preproc=gold_preproc, max_length=max_length, limit=limit)
 
 
 class Corpus:
@@ -38,8 +38,9 @@ class Corpus:
     """
 
     def __init__(
-        self, *, limit: int = 0, gold_preproc: bool = False, max_length: bool = False,
+        self, path, *, limit: int = 0, gold_preproc: bool = False, max_length: bool = False,
     ) -> None:
+        self.path = util.ensure_path(path)
         self.gold_preproc = gold_preproc
         self.max_length = max_length
         self.limit = limit
@@ -64,7 +65,7 @@ class Corpus:
                 locs.append(path)
         return locs
 
-    def __call__(self, nlp: "Language", loc: Union[Path, str],) -> Iterator[Example]:
+    def __call__(self, nlp: "Language") -> Iterator[Example]:
         """Yield examples from the data.
 
         nlp (Language): The current nlp object.
@@ -73,30 +74,12 @@ class Corpus:
 
         DOCS: https://spacy.io/api/corpus#call
         """
-        loc = util.ensure_path(loc)
-        ref_docs = self.read_docbin(nlp.vocab, self.walk_corpus(loc))
+        ref_docs = self.read_docbin(nlp.vocab, self.walk_corpus(self.path))
         if self.gold_preproc:
             examples = self.make_examples_gold_preproc(nlp, ref_docs)
         else:
             examples = self.make_examples(nlp, ref_docs, self.max_length)
         yield from examples
-
-    def count(self, nlp: "Language", loc) -> int:
-        """Returns count of words in train examples.
-
-        nlp (Language): The current nlp. object.
-        RETURNS (int): The word count.
-
-        DOCS: https://spacy.io/api/corpus#count_train
-        """
-        n = 0
-        i = 0
-        for example in self(nlp, loc):
-            n += len(example.predicted)
-            if self.limit >= 0 and i >= self.limit:
-                break
-            i += 1
-        return n
 
     def _make_example(
         self, nlp: "Language", reference: Doc, gold_preproc: bool

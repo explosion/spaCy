@@ -438,8 +438,8 @@ def test_issue4402():
         data = DocBin(docs=docs, attrs=attrs).to_bytes()
         with output_file.open("wb") as file_:
             file_.write(data)
-        reader = Corpus()
-        train_data = list(reader(nlp, str(output_file)))
+        reader = Corpus(output_file)
+        train_data = list(reader(nlp))
         assert len(train_data) == 2
 
         split_train_data = []
