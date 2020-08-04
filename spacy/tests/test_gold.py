@@ -483,14 +483,14 @@ def test_roundtrip_docs_to_docbin(doc):
         reloaded_nlp = English()
         json_file = tmpdir / "roundtrip.json"
         srsly.write_json(json_file, [docs_to_json(doc)])
-        goldcorpus = Corpus(str(json_file), str(json_file))
         output_file = tmpdir / "roundtrip.spacy"
         data = DocBin(docs=[doc]).to_bytes()
         with output_file.open("wb") as file_:
             file_.write(data)
-        goldcorpus = Corpus(train_loc=str(output_file), dev_loc=str(output_file))
-        reloaded_example = next(goldcorpus.dev_dataset(nlp=reloaded_nlp))
-        assert len(doc) == goldcorpus.count_train(reloaded_nlp)
+        reader = Corpus(output_file)
+        reloaded_examples = list(reader(reloaded_nlp))
+        assert len(doc) == sum(len(eg) for eg in reloaded_examples)
+    reloaded_example = reloaded_examples[0]
     assert text == reloaded_example.reference.text
     assert idx == [t.idx for t in reloaded_example.reference]
     assert tags == [t.tag_ for t in reloaded_example.reference]
@@ -515,10 +515,9 @@ def test_make_orth_variants(doc):
         data = DocBin(docs=[doc]).to_bytes()
         with output_file.open("wb") as file_:
             file_.write(data)
-        goldcorpus = Corpus(train_loc=str(output_file), dev_loc=str(output_file))
-
         # due to randomness, test only that this runs with no errors for now
-        train_example = next(goldcorpus.train_dataset(nlp))
+        reader = Corpus(output_file)
+        train_example = next(reader(nlp))
         make_orth_variants_example(nlp, train_example, orth_variant_level=0.2)
 
 
@@ -711,3 +710,17 @@ def test_alignment_different_texts():
     spacy_tokens = ["i", "listened", "to", "obama", "'s", "podcasts", "."]
     with pytest.raises(ValueError):
         Alignment.from_strings(other_tokens, spacy_tokens)
+
+def test_retokenized_docs(doc):
+    a = doc.to_array(["TAG"])
+    doc1 = Doc(doc.vocab, words=[t.text for t in doc]).from_array(["TAG"], a)
+    doc2 = Doc(doc.vocab, words=[t.text for t in doc]).from_array(["TAG"], a)
+    example = Example(doc1, doc2)
+
+    assert example.get_aligned("ORTH", as_string=True) == ['Sarah', "'s", 'sister', 'flew', 'to', 'Silicon', 'Valley', 'via', 'London', '.']
+
+    with doc1.retokenize() as retokenizer:
+        retokenizer.merge(doc1[0:2])
+        retokenizer.merge(doc1[5:7])
+
+    assert example.get_aligned("ORTH", as_string=True) == [None, 'sister', 'flew', 'to', None, 'via', 'London', '.']

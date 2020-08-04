@@ -33,24 +33,31 @@ dropout = null
 """
 DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
 
+default_kb_config = """
+[kb]
+@assets = "spacy.EmptyKB.v1"
+entity_vector_length = 64
+"""
+DEFAULT_NEL_KB = Config().from_str(default_kb_config)["kb"]
+
 
 @Language.factory(
     "entity_linker",
     requires=["doc.ents", "doc.sents", "token.ent_iob", "token.ent_type"],
     assigns=["token.ent_kb_id"],
     default_config={
-        "kb": None,  # TODO - what kind of default makes sense here?
+        "kb": DEFAULT_NEL_KB,
+        "model": DEFAULT_NEL_MODEL,
         "labels_discard": [],
         "incl_prior": True,
         "incl_context": True,
-        "model": DEFAULT_NEL_MODEL,
     },
 )
 def make_entity_linker(
     nlp: Language,
     name: str,
     model: Model,
-    kb: Optional[KnowledgeBase],
+    kb: KnowledgeBase,
     *,
     labels_discard: Iterable[str],
     incl_prior: bool,
@@ -92,10 +99,10 @@ class EntityLinker(Pipe):
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
         name (str): The component instance name, used to add entries to the
             losses during training.
-        kb (KnowledgeBase): TODO:
-        labels_discard (Iterable[str]): TODO:
-        incl_prior (bool): TODO:
-        incl_context (bool): TODO:
+        kb (KnowledgeBase): The KnowledgeBase holding all entities and their aliases.
+        labels_discard (Iterable[str]): NER labels that will automatically get a "NIL" prediction.
+        incl_prior (bool): Whether or not to include prior probabilities from the KB in the model.
+        incl_context (bool): Whether or not to include the local context in the model.
 
         DOCS: https://spacy.io/api/entitylinker#init
         """
@@ -108,14 +115,12 @@ class EntityLinker(Pipe):
             "incl_prior": incl_prior,
             "incl_context": incl_context,
         }
-        self.kb = kb
-        if self.kb is None:
-            # create an empty KB that should be filled by calling from_disk
-            self.kb = KnowledgeBase(vocab=vocab)
-        else:
-            del cfg["kb"]  # we don't want to duplicate its serialization
-        if not isinstance(self.kb, KnowledgeBase):
+        if not isinstance(kb, KnowledgeBase):
             raise ValueError(Errors.E990.format(type=type(self.kb)))
+        kb.initialize(vocab)
+        self.kb = kb
+        if "kb" in cfg:
+            del cfg["kb"]  # we don't want to duplicate its serialization
         self.cfg = dict(cfg)
         self.distance = CosineDistance(normalize=False)
         # how many neightbour sentences to take into account
@@ -437,9 +442,8 @@ class EntityLinker(Pipe):
                 raise ValueError(Errors.E149)
 
         def load_kb(p):
-            self.kb = KnowledgeBase(
-                vocab=self.vocab, entity_vector_length=self.cfg["entity_width"]
-            )
+            self.kb = KnowledgeBase(entity_vector_length=self.cfg["entity_width"])
+            self.kb.initialize(self.vocab)
             self.kb.load_bulk(p)
 
         deserialize = {}
