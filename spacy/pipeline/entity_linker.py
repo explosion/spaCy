@@ -51,6 +51,7 @@ DEFAULT_NEL_KB = Config().from_str(default_kb_config)["kb"]
         "labels_discard": [],
         "incl_prior": True,
         "incl_context": True,
+        "get_candidates": {"@assets": "spacy.CandidateGenerator.v1"},
     },
 )
 def make_entity_linker(
@@ -62,6 +63,7 @@ def make_entity_linker(
     labels_discard: Iterable[str],
     incl_prior: bool,
     incl_context: bool,
+    get_candidates: Callable[["KnowledgeBase", str], Iterable["Candidate"]]
 ):
     return EntityLinker(
         nlp.vocab,
@@ -71,6 +73,7 @@ def make_entity_linker(
         labels_discard=labels_discard,
         incl_prior=incl_prior,
         incl_context=incl_context,
+        get_candidates=get_candidates,
     )
 
 
@@ -92,6 +95,7 @@ class EntityLinker(Pipe):
         labels_discard: Iterable[str],
         incl_prior: bool,
         incl_context: bool,
+        get_candidates: Callable[["KnowledgeBase", str], Iterable["Candidate"]]
     ) -> None:
         """Initialize an entity linker.
 
@@ -121,6 +125,7 @@ class EntityLinker(Pipe):
         self.kb = kb
         if "kb" in cfg:
             del cfg["kb"]  # we don't want to duplicate its serialization
+        self.get_candidates = get_candidates
         self.cfg = dict(cfg)
         self.distance = CosineDistance(normalize=False)
         # how many neightbour sentences to take into account
@@ -332,7 +337,7 @@ class EntityLinker(Pipe):
                                 # ignoring this entity - setting to NIL
                                 final_kb_ids.append(self.NIL)
                             else:
-                                candidates = self.kb.get_candidates(ent.text)
+                                candidates = self.get_candidates(self.kb, ent.text)
                                 if not candidates:
                                     # no prediction possible for this entity - setting to NIL
                                     final_kb_ids.append(self.NIL)

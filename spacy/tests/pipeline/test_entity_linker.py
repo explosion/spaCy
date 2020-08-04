@@ -1,6 +1,6 @@
 import pytest
 
-from spacy.kb import KnowledgeBase
+from spacy.kb import KnowledgeBase, get_candidates_from_index
 
 from spacy import util, registry
 from spacy.gold import Example
@@ -160,15 +160,15 @@ def test_candidate_generation(nlp):
     mykb.add_alias(alias="adam", entities=["Q2"], probabilities=[0.9])
 
     # test the size of the relevant candidates
-    assert len(mykb.get_candidates("douglas")) == 2
-    assert len(mykb.get_candidates("adam")) == 1
-    assert len(mykb.get_candidates("shrubbery")) == 0
+    assert len(get_candidates_from_index(mykb, "douglas")) == 2
+    assert len(get_candidates_from_index(mykb, "adam")) == 1
+    assert len(get_candidates_from_index(mykb, "shrubbery")) == 0
 
     # test the content of the candidates
-    assert mykb.get_candidates("adam")[0].entity_ == "Q2"
-    assert mykb.get_candidates("adam")[0].alias_ == "adam"
-    assert_almost_equal(mykb.get_candidates("adam")[0].entity_freq, 12)
-    assert_almost_equal(mykb.get_candidates("adam")[0].prior_prob, 0.9)
+    assert get_candidates_from_index(mykb, "adam")[0].entity_ == "Q2"
+    assert get_candidates_from_index(mykb, "adam")[0].alias_ == "adam"
+    assert_almost_equal(get_candidates_from_index(mykb, "adam")[0].entity_freq, 12)
+    assert_almost_equal(get_candidates_from_index(mykb, "adam")[0].prior_prob, 0.9)
 
 
 def test_append_alias(nlp):
@@ -186,20 +186,20 @@ def test_append_alias(nlp):
     mykb.add_alias(alias="adam", entities=["Q2"], probabilities=[0.9])
 
     # test the size of the relevant candidates
-    assert len(mykb.get_candidates("douglas")) == 2
+    assert len(get_candidates_from_index(mykb, "douglas")) == 2
 
     # append an alias
     mykb.append_alias(alias="douglas", entity="Q1", prior_prob=0.2)
 
     # test the size of the relevant candidates has been incremented
-    assert len(mykb.get_candidates("douglas")) == 3
+    assert len(get_candidates_from_index(mykb, "douglas")) == 3
 
     # append the same alias-entity pair again should not work (will throw a warning)
     with pytest.warns(UserWarning):
         mykb.append_alias(alias="douglas", entity="Q1", prior_prob=0.3)
 
     # test the size of the relevant candidates remained unchanged
-    assert len(mykb.get_candidates("douglas")) == 3
+    assert len(get_candidates_from_index(mykb, "douglas")) == 3
 
 
 def test_append_invalid_alias(nlp):

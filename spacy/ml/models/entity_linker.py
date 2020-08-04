@@ -1,9 +1,9 @@
-from typing import Optional
+from typing import Optional, Callable, Iterable
 from thinc.api import chain, clone, list2ragged, reduce_mean, residual
 from thinc.api import Model, Maxout, Linear
 
 from ...util import registry
-from ...kb import KnowledgeBase
+from ...kb import KnowledgeBase, get_candidates_from_index
 from ...vocab import Vocab
 
 
@@ -37,3 +37,8 @@ def load_kb(vocab_path: str, kb_path: str) -> KnowledgeBase:
 def empty_kb(entity_vector_length: int) -> KnowledgeBase:
     kb = KnowledgeBase(entity_vector_length=entity_vector_length)
     return kb
+
+
+@registry.assets.register("spacy.CandidateGenerator.v1")
+def create_candidates() -> Callable[["KnowledgeBase", str], Iterable["Candidate"]]:
+    return get_candidates_from_index

@@ -1,5 +1,5 @@
 from spacy.util import ensure_path
-from spacy.kb import KnowledgeBase
+from spacy.kb import KnowledgeBase, get_candidates_from_index
 
 from ..util import make_tempdir
 
@@ -61,7 +61,7 @@ def _check_kb(kb):
         assert alias_string not in kb.get_alias_strings()
 
     # check candidates & probabilities
-    candidates = sorted(kb.get_candidates("double07"), key=lambda x: x.entity_)
+    candidates = sorted(get_candidates_from_index(kb, "double07"), key=lambda x: x.entity_)
     assert len(candidates) == 2
 
     assert candidates[0].entity_ == "Q007"
