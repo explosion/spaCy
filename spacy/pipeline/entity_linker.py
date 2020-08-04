@@ -6,7 +6,7 @@ from thinc.api import CosineDistance, get_array_module, Model, Optimizer, Config
 from thinc.api import set_dropout_rate
 import warnings
 
-from ..kb import KnowledgeBase
+from ..kb import KnowledgeBase, Candidate
 from ..tokens import Doc
 from .pipe import Pipe, deserialize_config
 from ..language import Language
@@ -63,7 +63,7 @@ def make_entity_linker(
     labels_discard: Iterable[str],
     incl_prior: bool,
     incl_context: bool,
-    get_candidates: Callable[["KnowledgeBase", "Span"], Iterable["Candidate"]]
+    get_candidates: Callable[[KnowledgeBase, "Span"], Iterable[Candidate]]
 ):
     return EntityLinker(
         nlp.vocab,
@@ -95,7 +95,7 @@ class EntityLinker(Pipe):
         labels_discard: Iterable[str],
         incl_prior: bool,
         incl_context: bool,
-        get_candidates: Callable[["KnowledgeBase", "Span"], Iterable["Candidate"]]
+        get_candidates: Callable[[KnowledgeBase, "Span"], Iterable[Candidate]]
     ) -> None:
         """Initialize an entity linker.
 
