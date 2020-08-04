@@ -610,6 +610,9 @@ class Errors:
              "initializing the pipeline:\n"
              'cfg = {"tokenizer": {"segmenter": "pkuseg", "pkuseg_model": name_or_path}}\n'
              'nlp = Chinese(config=cfg)')
+    E1001 = ("Target token outside of matched span for match with tokens "
+             "'{span}' and offset '{index}' matched by patterns '{patterns}'.")
+    E1002 = ("Span index out of range.")
 
 
 @add_codes
