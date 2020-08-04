@@ -1,7 +1,6 @@
 import warnings
 
 import numpy
-from typing import Optional, List
 
 from ..tokens.doc cimport Doc
 from ..tokens.span cimport Span
@@ -27,30 +26,15 @@ cpdef Doc annotations2doc(vocab, tok_annot, doc_annot):
     return output
 
 
-class SavedAlignment:
-    def __init__(self,
-        alignment: Optional[Alignment] = None,
-        predicted_tokens: Optional[List[str]] = None,
-        reference_tokens: Optional[List[str]] = None,
-    ):
-        self.alignment = alignment
-        self.predicted_tokens = predicted_tokens
-        self.reference_tokens = reference_tokens
-
-
 cdef class Example:
     def __init__(self, Doc predicted, Doc reference, *, alignment=None):
         if predicted is None:
             raise TypeError(Errors.E972.format(arg="predicted"))
         if reference is None:
             raise TypeError(Errors.E972.format(arg="reference"))
-        self.x = predicted
-        self.y = reference
-        self._saved_alignment = SavedAlignment(
-            alignment=alignment,
-            predicted_tokens=[t.text for t in self.predicted],
-            reference_tokens=[t.text for t in self.reference],
-        )
+        self.predicted = predicted
+        self.reference = reference
+        self._cached_alignment = alignment
 
     def __len__(self):
         return len(self.predicted)
@@ -61,7 +45,8 @@ cdef class Example:
 
         def __set__(self, doc):
             self.x = doc
-            self._saved_alignment = SavedAlignment()
+            self._cached_alignment = None
+            self._cached_words_x = [t.text for t in doc]
 
     property reference:
         def __get__(self):
@@ -69,7 +54,8 @@ cdef class Example:
 
         def __set__(self, doc):
             self.y = doc
-            self._saved_alignment = SavedAlignment()
+            self._cached_alignment = None
+            self._cached_words_y = [t.text for t in doc]
 
     def copy(self):
         return Example(
@@ -95,19 +81,15 @@ cdef class Example:
 
     @property
     def alignment(self):
-        spacy_words = [token.text for token in self.predicted]
-        gold_words = [token.text for token in self.reference]
-        if self._saved_alignment.alignment is None or \
-                spacy_words != self._saved_alignment.predicted_tokens or \
-                gold_words != self._saved_alignment.reference_tokens:
-            if gold_words == []:
-                gold_words = spacy_words
-            self._saved_alignment = SavedAlignment(
-                alignment=Alignment.from_strings(spacy_words, gold_words),
-                predicted_tokens=spacy_words,
-                reference_tokens=gold_words,
-            )
-        return self._saved_alignment.alignment
+        words_x = [token.text for token in self.x]
+        words_y = [token.text for token in self.y]
+        if self._cached_alignment is None or \
+                words_x != self._cached_words_x or \
+                words_y != self._cached_words_y:
+            self._cached_alignment = Alignment.from_strings(words_x, words_y)
+            self._cached_words_x = words_x
+            self._cached_words_y = words_y
+        return self._cached_alignment
 
     def get_aligned(self, field, as_string=False):
         """Return an aligned array for a token attribute."""
