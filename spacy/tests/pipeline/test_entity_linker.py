@@ -121,7 +121,7 @@ def test_kb_default(nlp):
 
 
 def test_kb_custom_length(nlp):
-    """Test that the default (empty) KB is loaded when not providing a config"""
+    """Test that the default (empty) KB can be configured with a custom entity length"""
     entity_linker = nlp.add_pipe("entity_linker", config={"kb": {"entity_vector_length": 35}})
     assert len(entity_linker.kb) == 0
     assert entity_linker.kb.get_size_entities() == 0
