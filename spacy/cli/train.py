@@ -11,7 +11,7 @@ import random
 import typer
 
 from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
-from ._util import import_code
+from ._util import import_code, get_sourced_components
 from ..language import Language
 from .. import util
 from ..gold.example import Example
@@ -78,6 +78,8 @@ def train(
         config = Config().from_disk(config_path)
     if config.get("training", {}).get("seed") is not None:
         fix_random_seed(config["training"]["seed"])
+    # Use original config here before it's resolved to functions
+    sourced_components = get_sourced_components(config)
     with show_validation_error(config_path):
         nlp, config = util.load_model_from_config(config, overrides=config_overrides)
     if config["training"]["vectors"] is not None:
@@ -92,11 +94,16 @@ def train(
     train_corpus = T_cfg["train_corpus"]
     dev_corpus = T_cfg["dev_corpus"]
     batcher = T_cfg["batcher"]
-    if resume_training:
-        msg.info("Resuming training")
-        nlp.resume_training()
-    else:
-        msg.info(f"Initializing the nlp pipeline: {nlp.pipe_names}")
+    # Components that shouldn't be updated during training
+    frozen_components = T_cfg["frozen_components"]
+    # Sourced components that require resume_training
+    resume_components = [p for p in sourced_components if p not in frozen_components]
+    msg.info(f"Pipeline: {nlp.pipe_names}")
+    if resume_components:
+        with nlp.select_pipes(enable=resume_components):
+            msg.info(f"Resuming training for: {resume_components}")
+            nlp.resume_training()
+    with nlp.select_pipes(disable=[*frozen_components, *resume_components]):
         nlp.begin_training(lambda: train_corpus(nlp))
 
     if tag_map:
@@ -136,7 +143,7 @@ def train(
         patience=T_cfg["patience"],
         max_steps=T_cfg["max_steps"],
         eval_frequency=T_cfg["eval_frequency"],
-        raw_text=None
+        raw_text=None,
     )
     msg.info(f"Training. Initial learn rate: {optimizer.learn_rate}")
     print_row = setup_printer(T_cfg, nlp)
@@ -192,9 +199,7 @@ def create_train_batches(iterator, batcher, max_epochs: int):
 
 
 def create_evaluation_callback(
-    nlp: Language,
-    dev_corpus: Callable,
-    weights: Dict[str, float],
+    nlp: Language, dev_corpus: Callable, weights: Dict[str, float],
 ) -> Callable[[], Tuple[float, Dict[str, float]]]:
     def evaluate() -> Tuple[float, Dict[str, float]]:
         dev_examples = list(dev_corpus(nlp))
@@ -223,6 +228,7 @@ def train_while_improving(
     patience: int,
     max_steps: int,
     raw_text: List[Dict[str, str]],
+    exclude: List[str],
 ):
     """Train until an evaluation stops improving. Works as a generator,
     with each iteration yielding a tuple `(batch, info, is_best_checkpoint)`,
@@ -268,8 +274,6 @@ def train_while_improving(
         dropouts = dropout
     results = []
     losses = {}
-    to_enable = [name for name, proc in nlp.pipeline if hasattr(proc, "model")]
-
     if raw_text:
         random.shuffle(raw_text)
         raw_examples = [
@@ -279,17 +283,19 @@ def train_while_improving(
 
     for step, (epoch, batch) in enumerate(train_data):
         dropout = next(dropouts)
-        with nlp.select_pipes(enable=to_enable):
-            for subbatch in subdivide_batch(batch, accumulate_gradient):
-                nlp.update(subbatch, drop=dropout, losses=losses, sgd=False)
-                if raw_text:
-                    # If raw text is available, perform 'rehearsal' updates,
-                    # which use unlabelled data to reduce overfitting.
-                    raw_batch = list(next(raw_batches))
-                    nlp.rehearse(raw_batch, sgd=optimizer, losses=losses)
-            for name, proc in nlp.pipeline:
-                if hasattr(proc, "model"):
-                    proc.model.finish_update(optimizer)
+        for subbatch in subdivide_batch(batch, accumulate_gradient):
+            nlp.update(
+                subbatch, drop=dropout, losses=losses, sgd=False, exclude=exclude
+            )
+            if raw_text:
+                # If raw text is available, perform 'rehearsal' updates,
+                # which use unlabelled data to reduce overfitting.
+                raw_batch = list(next(raw_batches))
+                nlp.rehearse(raw_batch, sgd=optimizer, losses=losses, exclude=exclude)
+        # TODO: refactor this so we don't have to run it separately in here
+        for name, proc in nlp.pipeline:
+            if name not in exclude and hasattr(proc, "model"):
+                proc.model.finish_update(optimizer)
         optimizer.step_schedules()
         if not (step % eval_frequency):
             if optimizer.averages:
@@ -418,10 +424,7 @@ def load_from_paths(
     return raw_text, tag_map, morph_rules, weights_data
 
 
-def verify_cli_args(
-    config_path: Path,
-    output_path: Optional[Path] = None,
-) -> None:
+def verify_cli_args(config_path: Path, output_path: Optional[Path] = None,) -> None:
     # Make sure all files and paths exists if they are needed
     if not config_path or not config_path.exists():
         msg.fail("Config file not found", config_path, exits=1)

@@ -8,7 +8,7 @@ import typer
 from thinc.api import Config
 
 from ._util import app, Arg, Opt, show_validation_error, parse_config_overrides
-from ._util import import_code, debug_cli
+from ._util import import_code, debug_cli, get_sourced_components
 from ..gold import Corpus, Example
 from ..pipeline._parser_internals import nonproj
 from ..language import Language
@@ -138,9 +138,10 @@ def debug_data(
     with show_validation_error(config_path):
         cfg = Config().from_disk(config_path)
         nlp, config = util.load_model_from_config(cfg, overrides=config_overrides)
-    # TODO: handle base model
-    lang = config["nlp"]["lang"]
-    base_model = config["training"]["base_model"]
+    # Use original config here, not resolved version
+    sourced_components = get_sourced_components(cfg)
+    frozen_components = config["training"]["frozen_components"]
+    resume_components = [p for p in sourced_components if p not in frozen_components]
     pipeline = nlp.pipe_names
     factory_names = [nlp.get_pipe_meta(pipe).factory for pipe in nlp.pipe_names]
     tag_map_path = util.ensure_path(config["training"]["tag_map"])
@@ -187,13 +188,15 @@ def debug_data(
 
     train_texts = gold_train_data["texts"]
     dev_texts = gold_dev_data["texts"]
+    frozen_components = config["training"]["frozen_components"]
 
     msg.divider("Training stats")
+    msg.text(f"Language: {config['nlp']['lang']}")
     msg.text(f"Training pipeline: {', '.join(pipeline)}")
-    if base_model:
-        msg.text(f"Starting with base model '{base_model}'")
-    else:
-        msg.text(f"Starting with blank model '{lang}'")
+    if resume_components:
+        msg.text(f"Components from other models: {', '.join(resume_components)}")
+    if frozen_components:
+        msg.text(f"Frozen components: {', '.join(frozen_components)}")
     msg.text(f"{len(train_dataset)} training docs")
     msg.text(f"{len(dev_dataset)} evaluation docs")
 
@@ -204,7 +207,9 @@ def debug_data(
         msg.warn(f"{overlap} training examples also in evaluation data")
     else:
         msg.good("No overlap between training and evaluation data")
-    if not base_model and len(train_dataset) < BLANK_MODEL_THRESHOLD:
+    # TODO: make this feedback more fine-grained and report on updated
+    # components vs. blank components
+    if not resume_components and len(train_dataset) < BLANK_MODEL_THRESHOLD:
         text = (
             f"Low number of examples to train from a blank model ({len(train_dataset)})"
         )
