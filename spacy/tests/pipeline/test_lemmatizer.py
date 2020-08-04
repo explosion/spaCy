@@ -15,6 +15,7 @@ def nlp():
 @registry.assets("cope_lookups")
 def cope_lookups():
     lookups = Lookups()
+    lookups.add_table("lemma_lookup", {"cope": "cope"})
     lookups.add_table("lemma_index", {"verb": ("cope", "cop")})
     lookups.add_table("lemma_exc", {"verb": {"coping": ("cope",)}})
     lookups.add_table("lemma_rules", {"verb": [["ing", ""]]})
@@ -28,7 +29,7 @@ def lemmatizer(nlp):
 
 
 def test_lemmatizer_init(nlp):
-    lemmatizer = nlp.add_pipe("lemmatizer", config={"mode": "lookup"})
+    lemmatizer = nlp.add_pipe("lemmatizer", config={"mode": "lookup", "lookups": {"@assets": "cope_lookups"}})
     assert isinstance(lemmatizer.lookups, Lookups)
     assert lemmatizer.mode == "lookup"
     # replace any tables from spacy-lookups-data
@@ -57,7 +58,7 @@ def test_lemmatizer_config(nlp, lemmatizer):
 
 def test_lemmatizer_serialize(nlp, lemmatizer):
     nlp2 = English()
-    lemmatizer2 = nlp2.add_pipe("lemmatizer")
+    lemmatizer2 = nlp2.add_pipe("lemmatizer", config={"mode": "rule", "lookups": {"@assets": "cope_lookups"}})
     lemmatizer2.from_bytes(lemmatizer.to_bytes())
     assert lemmatizer.to_bytes() == lemmatizer2.to_bytes()
     assert lemmatizer.lookups.tables == lemmatizer2.lookups.tables
