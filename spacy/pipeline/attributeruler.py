@@ -85,7 +85,7 @@ class AttributeRuler(Pipe):
                         span=[t.text for t in span],
                         index=index,
                     )
-                )
+                ) from None
             set_token_attrs(token, attrs)
         return doc
 

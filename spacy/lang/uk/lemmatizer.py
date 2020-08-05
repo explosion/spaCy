@@ -23,7 +23,7 @@ class UkrainianLemmatizer(Lemmatizer):
                 "The Ukrainian lemmatizer requires the pymorphy2 library and "
                 'dictionaries: try to fix it with "pip uninstall pymorphy2" and'
                 '"pip install git+https://github.com/kmike/pymorphy2.git pymorphy2-dicts-uk"'
-            )
+            ) from None
 
     def __call__(
         self, string: str, univ_pos: str, morphology: Optional[dict] = None

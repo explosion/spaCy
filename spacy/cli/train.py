@@ -211,7 +211,7 @@ def create_evaluation_callback(
         except KeyError as e:
             keys = list(scores.keys())
             err = Errors.E983.format(dict="score_weights", key=str(e), keys=keys)
-            raise KeyError(err)
+            raise KeyError(err) from None
         return weighted_score, scores
 
     return evaluate
@@ -369,7 +369,7 @@ def setup_printer(
                 Errors.E983.format(
                     dict="scores (losses)", key=str(e), keys=list(info["losses"].keys())
                 )
-            )
+            ) from None
 
         try:
             scores = [
@@ -382,7 +382,7 @@ def setup_printer(
                     key=str(e),
                     keys=list(info["other_scores"].keys()),
                 )
-            )
+            ) from None
         data = (
             [info["epoch"], info["step"]]
             + losses

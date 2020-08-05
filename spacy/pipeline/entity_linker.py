@@ -195,7 +195,7 @@ class EntityLinker(Pipe):
             types = set([type(eg) for eg in examples])
             raise TypeError(
                 Errors.E978.format(name="EntityLinker", method="update", types=types)
-            )
+            ) from None
         if set_annotations:
             # This seems simpler than other ways to get that exact output -- but
             # it does run the model twice :(
@@ -213,7 +213,7 @@ class EntityLinker(Pipe):
                         sent_index = sentences.index(ent.sent)
                     except AttributeError:
                         # Catch the exception when ent.sent is None and provide a user-friendly warning
-                        raise RuntimeError(Errors.E030)
+                        raise RuntimeError(Errors.E030) from None
                     # get n previous sentences, if there are any
                     start_sentence = max(0, sent_index - self.n_sents)
                     # get n posterior sentences, or as many < n as there are
@@ -439,7 +439,7 @@ class EntityLinker(Pipe):
             try:
                 self.model.from_bytes(p.open("rb").read())
             except AttributeError:
-                raise ValueError(Errors.E149)
+                raise ValueError(Errors.E149) from None
 
         def load_kb(p):
             self.kb = KnowledgeBase(entity_vector_length=self.cfg["entity_width"])
