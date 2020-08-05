@@ -38,7 +38,7 @@ class VietnameseTokenizer(DummyTokenizer):
                     "Pyvi not installed. Either set use_pyvi = False, "
                     "or install it https://pypi.python.org/pypi/pyvi"
                 )
-                raise ImportError(msg)
+                raise ImportError(msg) from None
 
     def __call__(self, text: str) -> Doc:
         if self.use_pyvi:

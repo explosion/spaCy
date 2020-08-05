@@ -869,7 +869,7 @@ class Language:
             try:
                 doc = proc(doc, **component_cfg.get(name, {}))
             except KeyError:
-                raise ValueError(Errors.E109.format(name=name))
+                raise ValueError(Errors.E109.format(name=name)) from None
             if doc is None:
                 raise ValueError(Errors.E005.format(name=name))
         return doc

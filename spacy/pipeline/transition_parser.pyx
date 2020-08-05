@@ -473,7 +473,7 @@ cdef class Parser(Pipe):
                 self._resize()
                 self.model.from_bytes(bytes_data)
             except AttributeError:
-                raise ValueError(Errors.E149)
+                raise ValueError(Errors.E149) from None
         return self
 
     def to_bytes(self, exclude=tuple()):
@@ -498,7 +498,7 @@ cdef class Parser(Pipe):
                 try:
                     self.model.from_bytes(msg['model'])
                 except AttributeError:
-                    raise ValueError(Errors.E149)
+                    raise ValueError(Errors.E149) from None
         return self
 
     def _init_gold_batch(self, examples, min_length=5, max_length=500):

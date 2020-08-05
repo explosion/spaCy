@@ -211,7 +211,7 @@ class ClozeMultitask(Pipe):
             predictions, bp_predictions = self.model.begin_update([eg.predicted for eg in examples])
         except AttributeError:
             types = set([type(eg) for eg in examples])
-            raise TypeError(Errors.E978.format(name="ClozeMultitask", method="rehearse", types=types))
+            raise TypeError(Errors.E978.format(name="ClozeMultitask", method="rehearse", types=types)) from None
         loss, d_predictions = self.get_loss(examples, self.vocab.vectors.data, predictions)
         bp_predictions(d_predictions)
         if sgd is not None:
