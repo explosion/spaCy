@@ -17,9 +17,7 @@ MatcherPatternType = List[Dict[Union[int, str], Any]]
 AttributeRulerPatternType = Dict[str, Union[MatcherPatternType, Dict, int]]
 
 
-@Language.factory(
-    "attribute_ruler",
-)
+@Language.factory("attribute_ruler")
 def make_attribute_ruler(
     nlp: Language,
     name: str,
@@ -58,7 +56,7 @@ class AttributeRuler(Pipe):
         self.vocab = vocab
         self.matcher = Matcher(self.vocab)
         self.attrs = []
-        self._attrs_unnormed = [] # store for reference
+        self._attrs_unnormed = []  # store for reference
         self.indices = []
 
         if pattern_dicts:

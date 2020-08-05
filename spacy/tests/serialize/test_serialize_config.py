@@ -88,14 +88,9 @@ def my_parser():
             width=321,
             rows=5432,
             also_embed_subwords=True,
-            also_use_static_vectors=False
+            also_use_static_vectors=False,
         ),
-        MaxoutWindowEncoder(
-            width=321,
-            window_size=3,
-            maxout_pieces=4,
-            depth=2
-        )
+        MaxoutWindowEncoder(width=321, window_size=3, maxout_pieces=4, depth=2),
     )
     parser = build_tb_parser_model(
         tok2vec=tok2vec, nr_feature_tokens=7, hidden_width=65, maxout_pieces=5
