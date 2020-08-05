@@ -11,7 +11,7 @@ from .span cimport Span
 from .token cimport Token
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..structs cimport LexemeC, TokenC
-from ..attrs cimport TAG, MORPH
+from ..attrs cimport MORPH
 from ..vocab cimport Vocab
 
 from .underscore import is_writable_attr
@@ -218,23 +218,7 @@ def _merge(Doc doc, merges):
         token.lex = lex
         # We set trailing space here too
         token.spacy = doc.c[spans[token_index].end-1].spacy
-<<<<<<< HEAD
-        py_token = span[0]
-        # Assign attributes
-        for attr_name, attr_value in attributes.items():
-            if attr_name == "_":  # Set extension attributes
-                for ext_attr_key, ext_attr_value in attr_value.items():
-                    py_token._.set(ext_attr_key, ext_attr_value)
-            else:
-                # Set attributes on both token and lexeme to take care of token
-                # attribute vs. lexical attribute without having to enumerate
-                # them. If an attribute name is not valid, set_struct_attr will
-                # ignore it.
-                Token.set_struct_attr(token, attr_name, attr_value)
-                Lexeme.set_struct_attr(<LexemeC*>lex, attr_name, attr_value)
-=======
         set_token_attrs(span[0], attributes)
->>>>>>> upstream/develop
     # Begin by setting all the head indices to absolute token positions
     # This is easier to work with for now than the offsets
     # Before thinking of something simpler, beware the case where a
@@ -445,8 +429,6 @@ def set_token_attrs(Token py_token, attrs):
         if attr_name == "_":  # Set extension attributes
             for ext_attr_key, ext_attr_value in attr_value.items():
                 py_token._.set(ext_attr_key, ext_attr_value)
-        elif attr_name == TAG:
-            doc.vocab.morphology.assign_tag(token, attr_value)
         else:
             # Set attributes on both token and lexeme to take care of token
             # attribute vs. lexical attribute without having to enumerate
