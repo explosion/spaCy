@@ -1464,11 +1464,12 @@ class Language:
         config["components"] = orig_pipeline
         create_tokenizer = resolved["nlp"]["tokenizer"]
         create_lemmatizer = resolved["nlp"]["lemmatizer"]
-        before_init = resolved["nlp"]["before_init"]
-        after_init = resolved["nlp"]["after_init"]
+        before_creation = resolved["nlp"]["before_creation"]
+        after_creation = resolved["nlp"]["after_creation"]
+        after_pipeline_creation = resolved["nlp"]["after_pipeline_creation"]
         lang_cls = cls
-        if before_init is not None:
-            lang_cls = before_init(cls)
+        if before_creation is not None:
+            lang_cls = before_creation(cls)
             if (
                 not isinstance(lang_cls, type)
                 or not issubclass(lang_cls, cls)
@@ -1480,6 +1481,10 @@ class Language:
             create_tokenizer=create_tokenizer,
             create_lemmatizer=create_lemmatizer,
         )
+        if after_creation is not None:
+            nlp = after_creation(nlp)
+            if not isinstance(nlp, cls):
+                raise ValueError(Errors.E942.format(name="creation", value=type(nlp)))
         # Note that we don't load vectors here, instead they get loaded explicitly
         # inside stuff like the spacy train function. If we loaded them here,
         # then we would load them twice at runtime: once when we make from config,
@@ -1520,10 +1525,12 @@ class Language:
                     nlp.add_pipe(source_name, source=source_nlps[model], name=pipe_name)
         nlp.config = filled if auto_fill else config
         nlp.resolved = resolved
-        if after_init is not None:
-            nlp = after_init(nlp)
+        if after_pipeline_creation is not None:
+            nlp = after_pipeline_creation(nlp)
             if not isinstance(nlp, cls):
-                raise ValueError(Errors.E942.format(value=type(nlp)))
+                raise ValueError(
+                    Errors.E942.format(name="pipeline_creation", value=type(nlp))
+                )
         return nlp
 
     def to_disk(

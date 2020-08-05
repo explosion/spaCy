@@ -482,10 +482,10 @@ class Errors:
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
-    E942 = ("Executing after_init callback failed. Expected the function to "
+    E942 = ("Executing after_{name} callback failed. Expected the function to "
             "return an initialized nlp object but got: {value}. Maybe "
             "you forgot to return the modified object in your function?")
-    E943 = ("Executing before_init callback failed. Expected the function to "
+    E943 = ("Executing before_creation callback failed. Expected the function to "
             "return an uninitialized Language subclass but got: {value}. Maybe "
             "you forgot to return the modified object in your function or "
             "returned the initialized nlp object instead?")

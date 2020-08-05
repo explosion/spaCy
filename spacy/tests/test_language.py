@@ -158,41 +158,61 @@ def test_language_from_config_before_after_init():
     name = "test_language_from_config_before_after_init"
     ran_before = False
     ran_after = False
+    ran_after_pipeline = False
 
     @registry.callbacks(f"{name}_before")
-    def make_before_init():
-        def before_init(lang_cls):
+    def make_before_creation():
+        def before_creation(lang_cls):
             nonlocal ran_before
             ran_before = True
             assert lang_cls is English
             lang_cls.Defaults.foo = "bar"
             return lang_cls
 
-        return before_init
+        return before_creation
 
     @registry.callbacks(f"{name}_after")
-    def make_after_init():
-        def after_init(nlp):
+    def make_after_creation():
+        def after_creation(nlp):
             nonlocal ran_after
             ran_after = True
             assert isinstance(nlp, English)
+            assert nlp.pipe_names == []
             assert nlp.Defaults.foo == "bar"
             nlp.meta["foo"] = "bar"
             return nlp
 
-        return after_init
+        return after_creation
+
+    @registry.callbacks(f"{name}_after_pipeline")
+    def make_after_pipeline_creation():
+        def after_pipeline_creation(nlp):
+            nonlocal ran_after_pipeline
+            ran_after_pipeline = True
+            assert isinstance(nlp, English)
+            assert nlp.pipe_names == ["sentencizer"]
+            assert nlp.Defaults.foo == "bar"
+            assert nlp.meta["foo"] == "bar"
+            nlp.meta["bar"] = "baz"
+            return nlp
+
+        return after_pipeline_creation
 
     config = {
         "nlp": {
-            "before_init": {"@callbacks": f"{name}_before"},
-            "after_init": {"@callbacks": f"{name}_after"},
-        }
+            "pipeline": ["sentencizer"],
+            "before_creation": {"@callbacks": f"{name}_before"},
+            "after_creation": {"@callbacks": f"{name}_after"},
+            "after_pipeline_creation": {"@callbacks": f"{name}_after_pipeline"},
+        },
+        "components": {"sentencizer": {"factory": "sentencizer"}},
     }
     nlp = English.from_config(config)
-    assert ran_before
-    assert ran_after
+    assert all([ran_before, ran_after, ran_after_pipeline])
     assert nlp.Defaults.foo == "bar"
     assert nlp.meta["foo"] == "bar"
+    assert nlp.meta["bar"] == "baz"
+    assert nlp.pipe_names == ["sentencizer"]
     assert nlp("text")
 
 
@@ -203,15 +223,16 @@ def test_language_from_config_before_after_init_invalid():
     registry.callbacks(f"{name}_before2", func=lambda: lambda nlp: nlp())
     registry.callbacks(f"{name}_after1", func=lambda: lambda nlp: None)
     registry.callbacks(f"{name}_after1", func=lambda: lambda nlp: English)
-    config = {"nlp": {"before_init": {"@callbacks": f"{name}_before1"}}}
-    with pytest.raises(ValueError):
-        English.from_config(config)
-    config = {"nlp": {"before_init": {"@callbacks": f"{name}_before2"}}}
-    with pytest.raises(ValueError):
-        English.from_config(config)
-    config = {"nlp": {"after_init": {"@callbacks": f"{name}_after1"}}}
-    with pytest.raises(ValueError):
-        English.from_config(config)
-    config = {"nlp": {"after_init": {"@callbacks": f"{name}_after2"}}}
-    with pytest.raises(ValueError):
-        English.from_config(config)
+
+    for callback_name in [f"{name}_before1", f"{name}_before2"]:
+        config = {"nlp": {"before_creation": {"@callbacks": callback_name}}}
+        with pytest.raises(ValueError):
+            English.from_config(config)
+    for callback_name in [f"{name}_after1", f"{name}_after2"]:
+        config = {"nlp": {"after_creation": {"@callbacks": callback_name}}}
+        with pytest.raises(ValueError):
+            English.from_config(config)
+    for callback_name in [f"{name}_after1", f"{name}_after2"]:
+        config = {"nlp": {"after_pipeline_creation": {"@callbacks": callback_name}}}
+        with pytest.raises(ValueError):
+            English.from_config(config)
