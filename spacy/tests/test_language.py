@@ -193,3 +193,25 @@ def test_language_from_config_before_after_init():
     assert ran_after
     assert nlp.Defaults.foo == "bar"
     assert nlp.meta["foo"] == "bar"
+    assert nlp("text")
+
+
+def test_language_from_config_before_after_init_invalid():
+    """Check that an error is raised if function doesn't return nlp."""
+    name = "test_language_from_config_before_after_init_invalid"
+    registry.callbacks(f"{name}_before1", func=lambda: lambda nlp: None)
+    registry.callbacks(f"{name}_before2", func=lambda: lambda nlp: nlp())
+    registry.callbacks(f"{name}_after1", func=lambda: lambda nlp: None)
+    registry.callbacks(f"{name}_after1", func=lambda: lambda nlp: English)
+    config = {"nlp": {"before_init": {"@callbacks": f"{name}_before1"}}}
+    with pytest.raises(ValueError):
+        English.from_config(config)
+    config = {"nlp": {"before_init": {"@callbacks": f"{name}_before2"}}}
+    with pytest.raises(ValueError):
+        English.from_config(config)
+    config = {"nlp": {"after_init": {"@callbacks": f"{name}_after1"}}}
+    with pytest.raises(ValueError):
+        English.from_config(config)
+    config = {"nlp": {"after_init": {"@callbacks": f"{name}_after2"}}}
+    with pytest.raises(ValueError):
+        English.from_config(config)

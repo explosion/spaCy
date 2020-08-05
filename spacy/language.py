@@ -1465,9 +1465,16 @@ class Language:
         create_lemmatizer = resolved["nlp"]["lemmatizer"]
         before_init = resolved["nlp"]["before_init"]
         after_init = resolved["nlp"]["after_init"]
+        lang_cls = cls
         if before_init is not None:
-            nlp = before_init(cls)
-        nlp = cls(
+            lang_cls = before_init(cls)
+            if (
+                not isinstance(lang_cls, type)
+                or not issubclass(lang_cls, cls)
+                or lang_cls is not cls
+            ):
+                raise ValueError(Errors.E943.format(value=type(lang_cls)))
+        nlp = lang_cls(
             vocab=vocab,
             create_tokenizer=create_tokenizer,
             create_lemmatizer=create_lemmatizer,
@@ -1514,6 +1521,8 @@ class Language:
         nlp.resolved = resolved
         if after_init is not None:
             nlp = after_init(nlp)
+            if not isinstance(nlp, cls):
+                raise ValueError(Errors.E942.format(value=type(nlp)))
         return nlp
 
     def to_disk(
