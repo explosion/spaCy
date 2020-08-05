@@ -262,7 +262,7 @@ class Morphologizer(Tagger):
             try:
                 self.model.from_bytes(b)
             except AttributeError:
-                raise ValueError(Errors.E149)
+                raise ValueError(Errors.E149) from None
 
         deserialize = {
             "vocab": lambda b: self.vocab.from_bytes(b),
@@ -301,7 +301,7 @@ class Morphologizer(Tagger):
                 try:
                     self.model.from_bytes(file_.read())
                 except AttributeError:
-                    raise ValueError(Errors.E149)
+                    raise ValueError(Errors.E149) from None
 
         deserialize = {
             "vocab": lambda p: self.vocab.from_disk(p),

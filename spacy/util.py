@@ -138,7 +138,7 @@ def get_lang_class(lang: str) -> "Language":
         try:
             module = importlib.import_module(f".lang.{lang}", "spacy")
         except ImportError as err:
-            raise ImportError(Errors.E048.format(lang=lang, err=err))
+            raise ImportError(Errors.E048.format(lang=lang, err=err)) from err
         set_lang_class(lang, getattr(module, module.__all__[0]))
     return registry.languages.get(lang)
 
@@ -502,7 +502,7 @@ def run_command(command: Union[str, List[str]]) -> None:
     except FileNotFoundError:
         raise FileNotFoundError(
             Errors.E970.format(str_command=" ".join(command), tool=command[0])
-        )
+        ) from None
     if status != 0:
         sys.exit(status)
 
@@ -891,7 +891,7 @@ def get_words_and_spaces(
         try:
             word_start = text[text_pos:].index(word)
         except ValueError:
-            raise ValueError(Errors.E194.format(text=text, words=words))
+            raise ValueError(Errors.E194.format(text=text, words=words)) from None
         if word_start > 0:
             text_words.append(text[text_pos : text_pos + word_start])
             text_spaces.append(False)
@@ -918,7 +918,7 @@ def copy_config(config: Union[Dict[str, Any], Config]) -> Config:
     try:
         return Config(config).copy()
     except ValueError:
-        raise ValueError(Errors.E961.format(config=config))
+        raise ValueError(Errors.E961.format(config=config)) from None
 
 
 def deep_merge_configs(
@@ -1002,7 +1002,7 @@ def dot_to_object(config: Config, section: str):
         try:
             component = component[item]
         except (KeyError, TypeError):
-            raise KeyError(Errors.E952.format(name=section))
+            raise KeyError(Errors.E952.format(name=section)) from None
     return component
 
 
