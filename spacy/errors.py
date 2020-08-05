@@ -484,9 +484,11 @@ class Errors:
     # TODO: fix numbering after merging develop into master
     E941 = ("Can't find model '{name}'. It looks like you're trying to load a "
             "model from a shortcut, which is deprecated as of spaCy v3.0. To "
-            "load the model, use its full name instead. For example:\n\n"
+            "load the model, use its full name instead:\n\n"
             "nlp = spacy.load(\"{full}\")\n\nFor more details on the available "
-            "models, see the models directory: https://spacy.io/models")
+            "models, see the models directory: https://spacy.io/models. If you "
+            "want to create a blank model, use spacy.blank: "
+            "nlp = spacy.blank(\"{name}\")")
     E942 = ("Executing after_{name} callback failed. Expected the function to "
             "return an initialized nlp object but got: {value}. Maybe "
             "you forgot to return the modified object in your function?")
