@@ -1,5 +1,5 @@
 import numpy
-from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags
+from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags, Alignment
 from spacy.gold import spans_from_biluo_tags, iob_to_biluo
 from spacy.gold import Corpus, docs_to_json
 from spacy.gold.example import Example
@@ -646,15 +646,70 @@ def test_split_sents(merged_dict):
     assert split_examples[1].text == "It is just me"
 
     token_annotation_1 = split_examples[0].to_dict()["token_annotation"]
-    assert token_annotation_1["words"] == ["Hi", "there", "everyone"]
-    assert token_annotation_1["tags"] == ["INTJ", "ADV", "PRON"]
-    assert token_annotation_1["sent_starts"] == [1, 0, 0]
+    assert token_annotation_1["ORTH"] == ["Hi", "there", "everyone"]
+    assert token_annotation_1["TAG"] == ["INTJ", "ADV", "PRON"]
+    assert token_annotation_1["SENT_START"] == [1, 0, 0]
 
     token_annotation_2 = split_examples[1].to_dict()["token_annotation"]
-    assert token_annotation_2["words"] == ["It", "is", "just", "me"]
-    assert token_annotation_2["tags"] == ["PRON", "AUX", "ADV", "PRON"]
-    assert token_annotation_2["sent_starts"] == [1, 0, 0, 0]
+    assert token_annotation_2["ORTH"] == ["It", "is", "just", "me"]
+    assert token_annotation_2["TAG"] == ["PRON", "AUX", "ADV", "PRON"]
+    assert token_annotation_2["SENT_START"] == [1, 0, 0, 0]
 
+
+def test_alignment():
+    other_tokens = ["i", "listened", "to", "obama", "'", "s", "podcasts", "."]
+    spacy_tokens = ["i", "listened", "to", "obama", "'s", "podcasts", "."]
+    align = Alignment.from_strings(other_tokens, spacy_tokens)
+    assert list(align.x2y.lengths) == [1, 1, 1, 1, 1, 1, 1, 1]
+    assert list(align.x2y.dataXd) == [0, 1, 2, 3, 4, 4, 5, 6]
+    assert list(align.y2x.lengths) == [1, 1, 1, 1, 2, 1, 1]
+    assert list(align.y2x.dataXd) == [0, 1, 2, 3, 4, 5, 6, 7]
+
+
+def test_alignment_case_insensitive():
+    other_tokens = ["I", "listened", "to", "obama", "'", "s", "podcasts", "."]
+    spacy_tokens = ["i", "listened", "to", "Obama", "'s", "PODCASTS", "."]
+    align = Alignment.from_strings(other_tokens, spacy_tokens)
+    assert list(align.x2y.lengths) == [1, 1, 1, 1, 1, 1, 1, 1]
+    assert list(align.x2y.dataXd) == [0, 1, 2, 3, 4, 4, 5, 6]
+    assert list(align.y2x.lengths) == [1, 1, 1, 1, 2, 1, 1]
+    assert list(align.y2x.dataXd) == [0, 1, 2, 3, 4, 5, 6, 7]
+
+
+def test_alignment_complex():
+    other_tokens = ["i listened to", "obama", "'", "s", "podcasts", "."]
+    spacy_tokens = ["i", "listened", "to", "obama", "'s", "podcasts."]
+    align = Alignment.from_strings(other_tokens, spacy_tokens)
+    assert list(align.x2y.lengths) == [3, 1, 1, 1, 1, 1]
+    assert list(align.x2y.dataXd) == [0, 1, 2, 3, 4, 4, 5, 5]
+    assert list(align.y2x.lengths) == [1, 1, 1, 1, 2, 2]
+    assert list(align.y2x.dataXd) == [0, 0, 0, 1, 2, 3, 4, 5]
+
+
+def test_alignment_complex_example(en_vocab):
+    other_tokens = ["i listened to", "obama", "'", "s", "podcasts", "."]
+    spacy_tokens = ["i", "listened", "to", "obama", "'s", "podcasts."]
+    predicted = Doc(
+        en_vocab, words=other_tokens, spaces=[True, False, False, True, False, False]
+    )
+    reference = Doc(
+        en_vocab, words=spacy_tokens, spaces=[True, True, True, False, True, False]
+    )
+    assert predicted.text == "i listened to obama's podcasts."
+    assert reference.text == "i listened to obama's podcasts."
+    example = Example(predicted, reference)
+    align = example.alignment
+    assert list(align.x2y.lengths) == [3, 1, 1, 1, 1, 1]
+    assert list(align.x2y.dataXd) == [0, 1, 2, 3, 4, 4, 5, 5]
+    assert list(align.y2x.lengths) == [1, 1, 1, 1, 2, 2]
+    assert list(align.y2x.dataXd) == [0, 0, 0, 1, 2, 3, 4, 5]
+
+
+def test_alignment_different_texts():
+    other_tokens = ["she", "listened", "to", "obama", "'s", "podcasts", "."]
+    spacy_tokens = ["i", "listened", "to", "obama", "'s", "podcasts", "."]
+    with pytest.raises(ValueError):
+        Alignment.from_strings(other_tokens, spacy_tokens)
 
 def test_retokenized_docs(doc):
     a = doc.to_array(["TAG"])

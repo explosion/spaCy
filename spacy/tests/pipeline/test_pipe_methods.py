@@ -70,6 +70,14 @@ def test_replace_pipe(nlp, name, replacement, invalid_replacement):
     assert nlp.get_pipe(name) == nlp.create_pipe(replacement)
 
 
+def test_replace_last_pipe(nlp):
+    nlp.add_pipe("sentencizer")
+    nlp.add_pipe("ner")
+    assert nlp.pipe_names == ["sentencizer", "ner"]
+    nlp.replace_pipe("ner", "ner")
+    assert nlp.pipe_names == ["sentencizer", "ner"]
+
+
 @pytest.mark.parametrize("old_name,new_name", [("old_pipe", "new_pipe")])
 def test_rename_pipe(nlp, old_name, new_name):
     with pytest.raises(ValueError):

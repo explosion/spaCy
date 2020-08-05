@@ -1,3 +1,4 @@
+from .attributeruler import AttributeRuler
 from .dep_parser import DependencyParser
 from .entity_linker import EntityLinker
 from .ner import EntityRecognizer
@@ -13,6 +14,7 @@ from .tok2vec import Tok2Vec
 from .functions import merge_entities, merge_noun_chunks, merge_subtokens
 
 __all__ = [
+    "AttributeRuler",
     "DependencyParser",
     "EntityLinker",
     "EntityRecognizer",

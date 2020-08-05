@@ -482,12 +482,17 @@ class Errors:
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
+    E944 = ("Can't copy pipeline component '{name}' from source model '{model}': "
+            "not found in pipeline. Available components: {opts}")
+    E945 = ("Can't copy pipeline component '{name}' from source. Expected loaded "
+            "nlp object, but got: {source}")
     E946 = ("The Vocab for the knowledge base is not initialized. Did you forget to "
             "call kb.initialize()?")
     E947 = ("Matcher.add received invalid 'greedy' argument: expected "
             "a string value from {expected} but got: '{arg}'")
     E948 = ("Matcher.add received invalid 'patterns' argument: expected "
             "a List, but got: {arg_type}")
+    E949 = ("Can only create an alignment when the texts are the same.")
     E952 = ("The section '{name}' is not a valid section in the provided config.")
     E953 = ("Mismatched IDs received by the Tok2Vec listener: {id1} vs. {id2}")
     E954 = ("The Tok2Vec listener did not receive a valid input.")
@@ -570,11 +575,13 @@ class Errors:
             "into {values}, but found {value}.")
     E983 = ("Invalid key for '{dict}': {key}. Available keys: "
             "{keys}")
-    E984 = ("Invalid component config for '{name}': no 'factory' key "
-            "specifying the registered function used to initialize the "
-            "component. For example, factory = \"ner\" will use the 'ner' "
-            "factory and all other settings in the block will be passed "
-            "to it as arguments.\n\n{config}")
+    E984 = ("Invalid component config for '{name}': component block needs either "
+            "a key 'factory' specifying the registered function used to "
+            "initialize the component, or a key 'source' key specifying a "
+            "spaCy model to copy the component from. For example, factory = "
+            "\"ner\" will use the 'ner' factory and all other settings in the "
+            "block will be passed to it as arguments. Alternatively, source = "
+            "\"en_core_web_sm\" will copy the component from that model.\n\n{config}")
     E985 = ("Can't load model from config file: no 'nlp' section found.\n\n{config}")
     E986 = ("Could not create any training batches: check your input. "
             "Perhaps discard_oversize should be set to False ?")
@@ -609,6 +616,9 @@ class Errors:
              "initializing the pipeline:\n"
              'cfg = {"tokenizer": {"segmenter": "pkuseg", "pkuseg_model": name_or_path}}\n'
              'nlp = Chinese(config=cfg)')
+    E1001 = ("Target token outside of matched span for match with tokens "
+             "'{span}' and offset '{index}' matched by patterns '{patterns}'.")
+    E1002 = ("Span index out of range.")
 
 
 @add_codes

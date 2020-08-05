@@ -259,7 +259,7 @@ class Tagger(Pipe):
         DOCS: https://spacy.io/api/tagger#get_loss
         """
         loss_func = SequenceCategoricalCrossentropy(names=self.labels, normalize=False)
-        truths = [eg.get_aligned("tag", as_string=True) for eg in examples]
+        truths = [eg.get_aligned("TAG", as_string=True) for eg in examples]
         d_scores, loss = loss_func(scores, truths)
         if self.model.ops.xp.isnan(loss):
             raise ValueError("nan value when computing loss")
