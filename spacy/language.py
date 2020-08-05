@@ -805,7 +805,8 @@ class Language:
         # to Language.pipeline to make sure the configs are handled correctly
         pipe_index = self.pipe_names.index(name)
         self.remove_pipe(name)
-        if not len(self.pipeline):  # we have no components to insert before/after
+        if not len(self.pipeline) or pipe_index == len(self.pipeline):
+            # we have no components to insert before/after, or we're replacing the last component
             self.add_pipe(factory_name, name=name)
         else:
             self.add_pipe(factory_name, name=name, before=pipe_index)
