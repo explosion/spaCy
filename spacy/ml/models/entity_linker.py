@@ -33,9 +33,10 @@ def load_kb(vocab_path: str, kb_path: str) -> KnowledgeBase:
 
 
 @registry.assets.register("spacy.EmptyKB.v1")
-def empty_kb(vocab: Vocab, entity_vector_length: int) -> KnowledgeBase:
-    kb = KnowledgeBase(vocab=vocab, entity_vector_length=entity_vector_length)
-    return kb
+def empty_kb(entity_vector_length: int) -> Callable[[Vocab], KnowledgeBase]:
+    def empty_kb_factory(vocab):
+        return KnowledgeBase(vocab=vocab, entity_vector_length=entity_vector_length)
+    return empty_kb_factory
 
 
 @registry.assets.register("spacy.CandidateGenerator.v1")

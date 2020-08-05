@@ -592,8 +592,6 @@ class Errors:
             "of the training data in spaCy 3.0 onwards. The 'update' "
             "function should now be called with a batch of 'Example' "
             "objects, instead of (text, annotation) tuples. ")
-    E990 = ("An entity linking component needs to be initialized with a "
-            "KnowledgeBase object, but found {type} instead.")
     E991 = ("The function 'select_pipes' should be called with either a "
             "'disable' argument to list the names of the pipe components "
             "that should be disabled, or with an 'enable' argument that "

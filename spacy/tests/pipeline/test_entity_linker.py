@@ -176,21 +176,22 @@ def test_candidate_generation(nlp):
     assert_almost_equal(get_candidates(mykb, adam_ent)[0].prior_prob, 0.9)
 
 
-def test_el_pipe_configuration():
+def test_el_pipe_configuration(nlp):
     """Test correct candidate generation as part of the EL pipe"""
-    nlp = English()
     nlp.add_pipe("sentencizer")
     pattern = {"label": "PERSON", "pattern": [{"LOWER": "douglas"}]}
     ruler = nlp.add_pipe("entity_ruler")
     ruler.add_patterns([pattern])
 
     @registry.assets.register("myAdamKB.v1")
-    def mykb() -> KnowledgeBase:
-        kb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
-        kb.add_entity(entity="Q2", freq=12, entity_vector=[2])
-        kb.add_entity(entity="Q3", freq=5, entity_vector=[3])
-        kb.add_alias(alias="douglas", entities=["Q2", "Q3"], probabilities=[0.8, 0.1])
-        return kb
+    def mykb() -> Callable[["Vocab"], KnowledgeBase]:
+        def create_kb(vocab):
+            kb = KnowledgeBase(vocab, entity_vector_length=1)
+            kb.add_entity(entity="Q2", freq=12, entity_vector=[2])
+            kb.add_entity(entity="Q3", freq=5, entity_vector=[3])
+            kb.add_alias(alias="douglas", entities=["Q2", "Q3"], probabilities=[0.8, 0.1])
+            return kb
+        return create_kb
 
     # run an EL pipe without a trained context encoder, to check the candidate generation step only
     nlp.add_pipe(
@@ -282,15 +283,17 @@ def test_preserving_links_asdoc(nlp):
     """Test that Span.as_doc preserves the existing entity links"""
 
     @registry.assets.register("myLocationsKB.v1")
-    def dummy_kb() -> KnowledgeBase:
-        mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
-        # adding entities
-        mykb.add_entity(entity="Q1", freq=19, entity_vector=[1])
-        mykb.add_entity(entity="Q2", freq=8, entity_vector=[1])
-        # adding aliases
-        mykb.add_alias(alias="Boston", entities=["Q1"], probabilities=[0.7])
-        mykb.add_alias(alias="Denver", entities=["Q2"], probabilities=[0.6])
-        return mykb
+    def dummy_kb() -> Callable[["Vocab"], KnowledgeBase]:
+        def create_kb(vocab):
+            mykb = KnowledgeBase(vocab, entity_vector_length=1)
+            # adding entities
+            mykb.add_entity(entity="Q1", freq=19, entity_vector=[1])
+            mykb.add_entity(entity="Q2", freq=8, entity_vector=[1])
+            # adding aliases
+            mykb.add_alias(alias="Boston", entities=["Q1"], probabilities=[0.7])
+            mykb.add_alias(alias="Denver", entities=["Q2"], probabilities=[0.6])
+            return mykb
+        return create_kb
 
     # set up pipeline with NER (Entity Ruler) and NEL (prior probability only, model not trained)
     nlp.add_pipe("sentencizer")
@@ -384,19 +387,21 @@ def test_overfitting_IO():
         train_examples.append(Example.from_dict(doc, annotation))
 
     @registry.assets.register("myOverfittingKB.v1")
-    def dummy_kb() -> KnowledgeBase:
-        # create artificial KB - assign same prior weight to the two russ cochran's
-        # Q2146908 (Russ Cochran): American golfer
-        # Q7381115 (Russ Cochran): publisher
-        mykb = KnowledgeBase(nlp.vocab, entity_vector_length=3)
-        mykb.add_entity(entity="Q2146908", freq=12, entity_vector=[6, -4, 3])
-        mykb.add_entity(entity="Q7381115", freq=12, entity_vector=[9, 1, -7])
-        mykb.add_alias(
-            alias="Russ Cochran",
-            entities=["Q2146908", "Q7381115"],
-            probabilities=[0.5, 0.5],
-        )
-        return mykb
+    def dummy_kb() -> Callable[["Vocab"], KnowledgeBase]:
+        def create_kb(vocab):
+            # create artificial KB - assign same prior weight to the two russ cochran's
+            # Q2146908 (Russ Cochran): American golfer
+            # Q7381115 (Russ Cochran): publisher
+            mykb = KnowledgeBase(vocab, entity_vector_length=3)
+            mykb.add_entity(entity="Q2146908", freq=12, entity_vector=[6, -4, 3])
+            mykb.add_entity(entity="Q7381115", freq=12, entity_vector=[9, 1, -7])
+            mykb.add_alias(
+                alias="Russ Cochran",
+                entities=["Q2146908", "Q7381115"],
+                probabilities=[0.5, 0.5],
+            )
+            return mykb
+        return create_kb
 
     # Create the Entity Linker component and add it to the pipeline
     nlp.add_pipe(

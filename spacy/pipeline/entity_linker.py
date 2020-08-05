@@ -39,7 +39,7 @@ DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
     requires=["doc.ents", "doc.sents", "token.ent_iob", "token.ent_type"],
     assigns=["token.ent_kb_id"],
     default_config={
-        "kb": {"@assets": "spacy.EmptyKB.v1", "entity_vector_length": 64, "vocab": Vocab()}, # TODO
+        "kb": {"@assets": "spacy.EmptyKB.v1", "entity_vector_length": 64},
         "model": DEFAULT_NEL_MODEL,
         "labels_discard": [],
         "incl_prior": True,
@@ -51,7 +51,7 @@ def make_entity_linker(
     nlp: Language,
     name: str,
     model: Model,
-    kb: KnowledgeBase,
+    kb: Callable[[Vocab], KnowledgeBase],
     *,
     labels_discard: Iterable[str],
     incl_prior: bool,
@@ -84,7 +84,7 @@ class EntityLinker(Pipe):
         model: Model,
         name: str = "entity_linker",
         *,
-        kb: KnowledgeBase,
+        kb: Callable[[Vocab], KnowledgeBase],
         labels_discard: Iterable[str],
         incl_prior: bool,
         incl_context: bool,
@@ -107,18 +107,11 @@ class EntityLinker(Pipe):
         self.model = model
         self.name = name
         cfg = {
-            "kb": kb,
             "labels_discard": list(labels_discard),
             "incl_prior": incl_prior,
             "incl_context": incl_context,
         }
-        if not isinstance(kb, KnowledgeBase):
-            raise ValueError(Errors.E990.format(type=type(self.kb)))
-        if kb.vocab is None:
-            kb.vocab = self.vocab
-        self.kb = kb
-        if "kb" in cfg:
-            del cfg["kb"]  # we don't want to duplicate its serialization
+        self.kb = kb(self.vocab)
         self.get_candidates = get_candidates
         self.cfg = dict(cfg)
         self.distance = CosineDistance(normalize=False)

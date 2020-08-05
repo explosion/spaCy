@@ -1,3 +1,4 @@
+from typing import Callable
 import warnings
 from unittest import TestCase
 import pytest
@@ -71,10 +72,12 @@ def entity_linker():
     nlp = Language()
 
     @registry.assets.register("TestIssue5230KB.v1")
-    def dummy_kb() -> KnowledgeBase:
-        kb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
-        kb.add_entity("test", 0.0, zeros((1, 1), dtype="f"))
-        return kb
+    def dummy_kb() -> Callable[["Vocab"], KnowledgeBase]:
+        def create_kb(vocab):
+            kb = KnowledgeBase(vocab, entity_vector_length=1)
+            kb.add_entity("test", 0.0, zeros((1, 1), dtype="f"))
+            return kb
+        return create_kb
 
     config = {"kb": {"@assets": "TestIssue5230KB.v1"}}
     entity_linker = nlp.add_pipe("entity_linker", config=config)
@@ -130,8 +133,7 @@ def test_save_and_load_knowledge_base():
             pytest.fail(str(e))
 
         try:
-            kb_loaded = KnowledgeBase(entity_vector_length=1)
-            kb_loaded.initialize(nlp.vocab)
+            kb_loaded = KnowledgeBase(nlp.vocab, entity_vector_length=1)
             kb_loaded.load_bulk(path)
         except Exception as e:
             pytest.fail(str(e))
