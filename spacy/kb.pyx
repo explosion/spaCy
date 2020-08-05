@@ -67,11 +67,9 @@ cdef class Candidate:
 
 def get_candidates(KnowledgeBase kb, span) -> Iterator[Candidate]:
     """
-    Return candidate entities for an alias. Each candidate defines the entity, the original alias,
-    and the prior probability of that alias resolving to that entity.
-    If the alias is not known in the KB, and empty list is returned.
-
-    This particular function is optimized to work together with the built-in KB functionality,
+    Return candidate entities for a given span by using the text of the span as the alias
+    and fetching appropriate entries from the index.
+    This particular function is optimized to work with the built-in KB functionality,
     but any other custom candidate generation method can be used in combination with the KB as well.
     """
     kb.require_vocab()
@@ -295,9 +293,6 @@ cdef class KnowledgeBase:
         Return candidate entities for an alias. Each candidate defines the entity, the original alias,
         and the prior probability of that alias resolving to that entity.
         If the alias is not known in the KB, and empty list is returned.
-
-        This particular function is optimized to work together with the built-in KB functionality,
-        but any other custom candidate generation method can be used in combination with the KB as well.
         """
         self.require_vocab()
         cdef hash_t alias_hash = self.vocab.strings[alias]

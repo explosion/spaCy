@@ -213,15 +213,6 @@ def test_el_pipe_configuration():
     assert doc[1].ent_kb_id_ == ""
     assert doc[2].ent_kb_id_ == "Q2"
 
-
-def test_custom_el_pipe():
-    """Test the EL pipe with a custom get_candidates function, which matches lowercased mentions"""
-    nlp = English()
-    nlp.add_pipe("sentencizer")
-    pattern = {"label": "PERSON", "pattern": [{"LOWER": "douglas"}]}
-    ruler = nlp.add_pipe("entity_ruler")
-    ruler.add_patterns([pattern])
-
     def get_lowercased_candidates(kb, span):
         kb.require_vocab()
         result = kb.get_alias_candidates(span.text.lower())
@@ -231,7 +222,9 @@ def test_custom_el_pipe():
     def create_candidates() -> Callable[[KnowledgeBase, "Span"], Iterable[Candidate]]:
         return get_lowercased_candidates
 
-    nlp.add_pipe(
+    # replace the pipe with a new with with a different candidate generator
+    nlp.replace_pipe(
+        "entity_linker",
         "entity_linker",
         config={
             "kb": {"@assets": "myAdamKB.v1"},

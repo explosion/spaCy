@@ -78,6 +78,14 @@ def test_replace_last_pipe(nlp):
     assert nlp.pipe_names == ["sentencizer", "ner"]
 
 
+def test_replace_pipe_config(nlp):
+    nlp.add_pipe("tagger")
+    nlp.add_pipe("sentencizer")
+    assert nlp.get_pipe("tagger").cfg["set_morphology"] == False
+    nlp.replace_pipe("tagger", "tagger", config={"set_morphology": True})
+    assert nlp.get_pipe("tagger").cfg["set_morphology"] == True
+
+
 @pytest.mark.parametrize("old_name,new_name", [("old_pipe", "new_pipe")])
 def test_rename_pipe(nlp, old_name, new_name):
     with pytest.raises(ValueError):
