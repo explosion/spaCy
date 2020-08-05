@@ -82,20 +82,19 @@ cdef class KnowledgeBase:
     DOCS: https://spacy.io/api/kb
     """
 
-    def __init__(self, entity_vector_length):
+    def __init__(self, Vocab vocab, entity_vector_length):
         """Create a KnowledgeBase. Make sure to call kb.initialize() before using it."""
         self.mem = Pool()
         self.entity_vector_length = entity_vector_length
-
         self._entry_index = PreshMap()
         self._alias_index = PreshMap()
-        self.vocab = None
+        self.vocab = vocab
+        self.vocab.strings.add("")
+        self._create_empty_vectors(dummy_hash=self.vocab.strings[""])
 
-    def initialize(self, Vocab vocab):
+    def initialize(self, ):
         if self.vocab is None:
-            self.vocab = vocab
-            self.vocab.strings.add("")
-            self._create_empty_vectors(dummy_hash=self.vocab.strings[""])
+
         elif self.vocab != vocab:
             raise ValueError(Errors.E950)
 

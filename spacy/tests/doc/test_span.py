@@ -291,6 +291,6 @@ def test_span_boundaries(doc):
     for i in range(start, end):
         assert span[i - start] == doc[i]
     with pytest.raises(IndexError):
-        _ = span[-5]
+        span[-5]
     with pytest.raises(IndexError):
-        _ = span[5]
+        span[5]

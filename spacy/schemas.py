@@ -1,17 +1,23 @@
 from typing import Dict, List, Union, Optional, Sequence, Any, Callable, Type
-from typing import Iterable, TypeVar
+from typing import Iterable, TypeVar, TYPE_CHECKING
 from enum import Enum
 from pydantic import BaseModel, Field, ValidationError, validator
 from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool
 from pydantic import root_validator
 from collections import defaultdict
 from thinc.api import Optimizer
-from pathlib import Path
 
 from .attrs import NAMES
 
+if TYPE_CHECKING:
+    # This lets us add type hints for mypy etc. without causing circular imports
+    from .language import Language  # noqa: F401
+    from .gold import Example  # noqa: F401
+
+
 ItemT = TypeVar("ItemT")
 Batcher = Callable[[Iterable[ItemT]], Iterable[List[ItemT]]]
+Reader = Callable[["Language", str], Iterable["Example"]]
 
 
 def validate(schema: Type[BaseModel], obj: Dict[str, Any]) -> List[str]:
@@ -183,7 +189,6 @@ class ModelMetaSchema(BaseModel):
 # check that against this schema in the test suite to make sure it's always
 # up to date.
 
-Reader = Callable[["Language", str], Iterable["Example"]]
 
 class ConfigSchemaTraining(BaseModel):
     # fmt: off
@@ -209,7 +214,6 @@ class ConfigSchemaTraining(BaseModel):
         extra = "forbid"
         arbitrary_types_allowed = True
 
-#eval_batch_size: StrictInt = Field(..., title="Evaluation batch size")
 
 class ConfigSchemaNlp(BaseModel):
     # fmt: off

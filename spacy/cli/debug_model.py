@@ -7,8 +7,6 @@ import typer
 
 from ._util import Arg, Opt, debug_cli, show_validation_error, parse_config_overrides
 from .. import util
-from ..lang.en import English
-from ..util import dot_to_object
 
 
 @debug_cli.command("model")
@@ -130,8 +128,8 @@ def _sentences():
     ]
 
 
-def _get_docs():
-    nlp = English()
+def _get_docs(lang: str = "en"):
+    nlp = util.get_lang_class(lang)()
     return list(nlp.pipe(_sentences()))
 
 

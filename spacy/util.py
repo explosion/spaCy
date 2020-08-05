@@ -1,5 +1,5 @@
 from typing import List, Union, Dict, Any, Optional, Iterable, Callable, Tuple
-from typing import Iterator, Type, Pattern, Sequence, TYPE_CHECKING
+from typing import Iterator, Type, Pattern, TYPE_CHECKING
 from types import ModuleType
 import os
 import importlib
@@ -764,7 +764,6 @@ def normalize_slice(
     return start, stop
 
 
-
 def filter_spans(spans: Iterable["Span"]) -> List["Span"]:
     """Filter a sequence of spans and remove duplicates or overlaps. Useful for
     creating named entities (where one token can only be part of one entity) or
@@ -1113,6 +1112,3 @@ def minibatch(items, size):
         if len(batch) == 0:
             break
         yield list(batch)
-
-
-

@@ -711,16 +711,18 @@ def test_alignment_different_texts():
     with pytest.raises(ValueError):
         Alignment.from_strings(other_tokens, spacy_tokens)
 
+
 def test_retokenized_docs(doc):
     a = doc.to_array(["TAG"])
     doc1 = Doc(doc.vocab, words=[t.text for t in doc]).from_array(["TAG"], a)
     doc2 = Doc(doc.vocab, words=[t.text for t in doc]).from_array(["TAG"], a)
     example = Example(doc1, doc2)
-
-    assert example.get_aligned("ORTH", as_string=True) == ['Sarah', "'s", 'sister', 'flew', 'to', 'Silicon', 'Valley', 'via', 'London', '.']
-
+    # fmt: off
+    expected1 = ["Sarah", "'s", "sister", "flew", "to", "Silicon", "Valley", "via", "London", "."]
+    expected2 = [None, "sister", "flew", "to", None, "via", "London", "."]
+    # fmt: on
+    assert example.get_aligned("ORTH", as_string=True) == expected1
     with doc1.retokenize() as retokenizer:
         retokenizer.merge(doc1[0:2])
         retokenizer.merge(doc1[5:7])
-
-    assert example.get_aligned("ORTH", as_string=True) == [None, 'sister', 'flew', 'to', None, 'via', 'London', '.']
+    assert example.get_aligned("ORTH", as_string=True) == expected2
