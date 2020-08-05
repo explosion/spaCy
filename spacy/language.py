@@ -596,6 +596,32 @@ class Language:
         self._pipe_configs[name] = filled
         return resolved[factory_name]
 
+    def create_pipe_from_source(
+        self, source_name: str, source: "Language", *, name: str,
+    ) -> Tuple[Callable[[Doc], Doc], str]:
+        """Create a pipeline component by copying it from an existing model.
+
+        source_name (str): Name of the component in the source pipeline.
+        source (Language): The source nlp object to copy from.
+        name (str): Optional alternative name to use in current pipeline.
+        RETURNS (Tuple[Callable, str]): The component and its factory name.
+        """
+        # TODO: handle errors and mismatches (vectors etc.)
+        if not isinstance(source, self.__class__):
+            raise ValueError(Errors.E945.format(name=source_name, source=type(source)))
+        if not source.has_pipe(source_name):
+            raise KeyError(
+                Errors.E944.format(
+                    name=source_name,
+                    model=f"{source.meta['lang']}_{source.meta['name']}",
+                    opts=", ".join(source.pipe_names),
+                )
+            )
+        pipe = source.get_pipe(source_name)
+        pipe_config = util.copy_config(source.config["components"][source_name])
+        self._pipe_configs[name] = pipe_config
+        return pipe, pipe_config["factory"]
+
     def add_pipe(
         self,
         factory_name: str,
@@ -605,6 +631,7 @@ class Language:
         after: Optional[Union[str, int]] = None,
         first: Optional[bool] = None,
         last: Optional[bool] = None,
+        source: Optional["Language"] = None,
         config: Optional[Dict[str, Any]] = SimpleFrozenDict(),
         overrides: Optional[Dict[str, Any]] = SimpleFrozenDict(),
         validate: bool = True,
@@ -624,6 +651,8 @@ class Language:
             component directly after.
         first (bool): If True, insert component first in the pipeline.
         last (bool): If True, insert component last in the pipeline.
+        source (Language): Optional loaded nlp object to copy the pipeline
+            component from.
         config (Optional[Dict[str, Any]]): Config parameters to use for this
             component. Will be merged with default config, if available.
         overrides (Optional[Dict[str, Any]]): Config overrides, typically
@@ -638,24 +667,31 @@ class Language:
             bad_val = repr(factory_name)
             err = Errors.E966.format(component=bad_val, name=name)
             raise ValueError(err)
-        if not self.has_factory(factory_name):
-            err = Errors.E002.format(
-                name=factory_name,
-                opts=", ".join(self.factory_names),
-                method="add_pipe",
-                lang=util.get_object_name(self),
-                lang_code=self.lang,
-            )
         name = name if name is not None else factory_name
         if name in self.pipe_names:
             raise ValueError(Errors.E007.format(name=name, opts=self.pipe_names))
-        pipe_component = self.create_pipe(
-            factory_name,
-            name=name,
-            config=config,
-            overrides=overrides,
-            validate=validate,
-        )
+        if source is not None:
+            # We're loading the component from a model. After loading the
+            # component, we know its real factory name
+            pipe_component, factory_name = self.create_pipe_from_source(
+                factory_name, source, name=name
+            )
+        else:
+            if not self.has_factory(factory_name):
+                err = Errors.E002.format(
+                    name=factory_name,
+                    opts=", ".join(self.factory_names),
+                    method="add_pipe",
+                    lang=util.get_object_name(self),
+                    lang_code=self.lang,
+                )
+            pipe_component = self.create_pipe(
+                factory_name,
+                name=name,
+                config=config,
+                overrides=overrides,
+                validate=validate,
+            )
         pipe_index = self._get_pipe_index(before, after, first, last)
         self._pipe_meta[name] = self.get_factory_meta(factory_name)
         self.pipeline.insert(pipe_index, (name, pipe_component))
@@ -745,7 +781,8 @@ class Language:
         # to Language.pipeline to make sure the configs are handled correctly
         pipe_index = self.pipe_names.index(name)
         self.remove_pipe(name)
-        if not len(self.pipeline):  # we have no components to insert before/after
+        if not len(self.pipeline) or pipe_index == len(self.pipeline):
+            # we have no components to insert before/after, or we're replacing the last component
             self.add_pipe(factory_name, name=name)
         else:
             self.add_pipe(factory_name, name=name, before=pipe_index)
@@ -887,6 +924,7 @@ class Language:
         sgd: Optional[Optimizer] = None,
         losses: Optional[Dict[str, float]] = None,
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
+        exclude: Iterable[str] = tuple(),
     ):
         """Update the models in the pipeline.
 
@@ -897,6 +935,7 @@ class Language:
         losses (Dict[str, float]): Dictionary to update with the loss, keyed by component.
         component_cfg (Dict[str, Dict]): Config parameters for specific pipeline
             components, keyed by component name.
+        exclude (Iterable[str]): Names of components that shouldn't be updated.
         RETURNS (Dict[str, float]): The updated losses dictionary
 
         DOCS: https://spacy.io/api/language#update
@@ -929,12 +968,12 @@ class Language:
             component_cfg[name].setdefault("drop", drop)
             component_cfg[name].setdefault("set_annotations", False)
         for name, proc in self.pipeline:
-            if not hasattr(proc, "update"):
+            if name in exclude or not hasattr(proc, "update"):
                 continue
             proc.update(examples, sgd=None, losses=losses, **component_cfg[name])
         if sgd not in (None, False):
             for name, proc in self.pipeline:
-                if hasattr(proc, "model"):
+                if name not in exclude and hasattr(proc, "model"):
                     proc.model.finish_update(sgd)
         return losses
 
@@ -945,6 +984,7 @@ class Language:
         sgd: Optional[Optimizer] = None,
         losses: Optional[Dict[str, float]] = None,
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
+        exclude: Iterable[str] = tuple(),
     ) -> Dict[str, float]:
         """Make a "rehearsal" update to the models in the pipeline, to prevent
         forgetting. Rehearsal updates run an initial copy of the model over some
@@ -956,6 +996,7 @@ class Language:
         sgd (Optional[Optimizer]): An optimizer.
         component_cfg (Dict[str, Dict]): Config parameters for specific pipeline
             components, keyed by component name.
+        exclude (Iterable[str]): Names of components that shouldn't be updated.
         RETURNS (dict): Results from the update.
 
         EXAMPLE:
@@ -999,7 +1040,7 @@ class Language:
         get_grads.b1 = sgd.b1
         get_grads.b2 = sgd.b2
         for name, proc in pipes:
-            if not hasattr(proc, "rehearse"):
+            if name in exclude or not hasattr(proc, "rehearse"):
                 continue
             grads = {}
             proc.rehearse(
@@ -1050,7 +1091,7 @@ class Language:
         return self._optimizer
 
     def resume_training(
-        self, *, sgd: Optional[Optimizer] = None, device: int = -1
+        self, *, sgd: Optional[Optimizer] = None, device: int = -1,
     ) -> Optimizer:
         """Continue training a pretrained model.
 
@@ -1349,6 +1390,7 @@ class Language:
         cls,
         config: Union[Dict[str, Any], Config] = {},
         *,
+        vocab: Union[Vocab, bool] = True,
         disable: Iterable[str] = tuple(),
         overrides: Dict[str, Any] = {},
         auto_fill: bool = True,
@@ -1359,6 +1401,7 @@ class Language:
         the default config of the given language is used.
 
         config (Dict[str, Any] / Config): The loaded config.
+        vocab (Vocab): A Vocab object. If True, a vocab is created.
         disable (Iterable[str]): List of pipeline component names to disable.
         auto_fill (bool): Automatically fill in missing values in config based
             on defaults and function argument annotations.
@@ -1404,25 +1447,39 @@ class Language:
         # then we would load them twice at runtime: once when we make from config,
         # and then again when we load from disk.
         pipeline = config.get("components", {})
+        # If components are loaded from a source (existing models), we cache
+        # them here so they're only loaded once
+        source_nlps = {}
         for pipe_name in config["nlp"]["pipeline"]:
             if pipe_name not in pipeline:
                 opts = ", ".join(pipeline.keys())
                 raise ValueError(Errors.E956.format(name=pipe_name, opts=opts))
             pipe_cfg = util.copy_config(pipeline[pipe_name])
             if pipe_name not in disable:
-                if "factory" not in pipe_cfg:
+                if "factory" not in pipe_cfg and "source" not in pipe_cfg:
                     err = Errors.E984.format(name=pipe_name, config=pipe_cfg)
                     raise ValueError(err)
-                factory = pipe_cfg.pop("factory")
-                # The pipe name (key in the config) here is the unique name of the
-                # component, not necessarily the factory
-                nlp.add_pipe(
-                    factory,
-                    name=pipe_name,
-                    config=pipe_cfg,
-                    overrides=pipe_overrides,
-                    validate=validate,
-                )
+                if "factory" in pipe_cfg:
+                    factory = pipe_cfg.pop("factory")
+                    # The pipe name (key in the config) here is the unique name
+                    # of the component, not necessarily the factory
+                    nlp.add_pipe(
+                        factory,
+                        name=pipe_name,
+                        config=pipe_cfg,
+                        overrides=pipe_overrides,
+                        validate=validate,
+                    )
+                else:
+                    model = pipe_cfg["source"]
+                    if model not in source_nlps:
+                        # We only need the components here and we need to init
+                        # model with the same vocab as the current nlp object
+                        source_nlps[model] = util.load_model(
+                            model, vocab=nlp.vocab, disable=["vocab", "tokenizer"]
+                        )
+                    source_name = pipe_cfg.get("component", pipe_name)
+                    nlp.add_pipe(source_name, source=source_nlps[model], name=pipe_name)
         nlp.config = filled if auto_fill else config
         nlp.resolved = resolved
         return nlp

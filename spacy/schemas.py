@@ -202,6 +202,7 @@ class ConfigSchemaTraining(BaseModel):
     init_tok2vec: Optional[StrictStr] = Field(..., title="Path to pretrained tok2vec weights")
     raw_text: Optional[StrictStr] = Field(default=None, title="Raw text")
     optimizer: Optimizer = Field(..., title="The optimizer to use")
+    frozen_components: List[str] = Field(..., title="Pipeline components that shouldn't be updated during training")
     # fmt: on
 
     class Config:

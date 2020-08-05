@@ -8,6 +8,8 @@ from thinc.api import Model, Linear
 from thinc.config import ConfigValidationError
 from pydantic import StrictInt, StrictStr
 
+from ..util import make_tempdir
+
 
 def test_pipe_function_component():
     name = "test_component"
@@ -374,3 +376,65 @@ def test_language_factories_scores():
     cfg = nlp.config["training"]
     expected_weights = {"a1": 0.25, "a2": 0.25, "b1": 0.1, "b2": 0.35, "b3": 0.05}
     assert cfg["score_weights"] == expected_weights
+
+
+def test_pipe_factories_from_source():
+    """Test adding components from a source model."""
+    source_nlp = English()
+    source_nlp.add_pipe("tagger", name="my_tagger")
+    nlp = English()
+    with pytest.raises(ValueError):
+        nlp.add_pipe("my_tagger", source="en_core_web_sm")
+    nlp.add_pipe("my_tagger", source=source_nlp)
+    assert "my_tagger" in nlp.pipe_names
+    with pytest.raises(KeyError):
+        nlp.add_pipe("custom", source=source_nlp)
+
+
+def test_pipe_factories_from_source_custom():
+    """Test adding components from a source model with custom components."""
+    name = "test_pipe_factories_from_source_custom"
+
+    @Language.factory(name, default_config={"arg": "hello"})
+    def test_factory(nlp, name, arg: str):
+        return lambda doc: doc
+
+    source_nlp = English()
+    source_nlp.add_pipe("tagger")
+    source_nlp.add_pipe(name, config={"arg": "world"})
+    nlp = English()
+    nlp.add_pipe(name, source=source_nlp)
+    assert name in nlp.pipe_names
+    assert nlp.get_pipe_meta(name).default_config["arg"] == "hello"
+    config = nlp.config["components"][name]
+    assert config["factory"] == name
+    assert config["arg"] == "world"
+
+
+def test_pipe_factories_from_source_config():
+    name = "test_pipe_factories_from_source_config"
+
+    @Language.factory(name, default_config={"arg": "hello"})
+    def test_factory(nlp, name, arg: str):
+        return lambda doc: doc
+
+    source_nlp = English()
+    source_nlp.add_pipe("tagger")
+    source_nlp.add_pipe(name, name="yolo", config={"arg": "world"})
+    dest_nlp_cfg = {"lang": "en", "pipeline": ["parser", "custom"]}
+    with make_tempdir() as tempdir:
+        source_nlp.to_disk(tempdir)
+        dest_components_cfg = {
+            "parser": {"factory": "parser"},
+            "custom": {"source": str(tempdir), "component": "yolo"},
+        }
+        dest_config = {"nlp": dest_nlp_cfg, "components": dest_components_cfg}
+        nlp = English.from_config(dest_config)
+    assert nlp.pipe_names == ["parser", "custom"]
+    assert nlp.pipe_factories == {"parser": "parser", "custom": name}
+    meta = nlp.get_pipe_meta("custom")
+    assert meta.factory == name
+    assert meta.default_config["arg"] == "hello"
+    config = nlp.config["components"]["custom"]
+    assert config["factory"] == name
+    assert config["arg"] == "world"

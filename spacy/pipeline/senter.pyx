@@ -108,7 +108,7 @@ class SentenceRecognizer(Tagger):
         truths = []
         for eg in examples:
             eg_truth = []
-            for x in eg.get_aligned("sent_start"):
+            for x in eg.get_aligned("SENT_START"):
                 if x is None:
                     eg_truth.append(None)
                 elif x == 1:
