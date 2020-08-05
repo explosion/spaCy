@@ -9,6 +9,7 @@ from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES, TOKENIZER_INFIX
 from .lemmatizer import GreekLemmatizer
 from ...lookups import Lookups, load_lookups
 from ...language import Language
+from ...pipeline.lemmatizer import load_lemmatizer_lookups
 
 
 class GreekDefaults(Language.Defaults):
@@ -40,16 +41,7 @@ def make_lemmatizer(
     mode: str,
     lookups: Optional[Lookups],
 ):
-    tables = []
-    strict = False
-    if mode == "rule":
-        tables = ["lemma_rules", "lemma_exc", "lemma_index"]
-        strict = True
-    if lookups is None:
-        lookups = load_lookups(lang=nlp.lang, tables=tables, strict=strict)
-    elif strict:
-        for table in tables:
-            assert table in lookups
+    lookups = load_lemmatizer_lookups(nlp.lang, mode, lookups)
     return GreekLemmatizer(nlp.vocab, model, name, mode=mode, lookups=lookups)
 
 

@@ -2,7 +2,7 @@ import pytest
 
 from spacy import util, registry
 from spacy.lang.en import English
-from spacy.lookups import Lookups
+from spacy.lookups import Lookups, load_lookups
 
 from ..util import make_tempdir
 
@@ -10,6 +10,11 @@ from ..util import make_tempdir
 @pytest.fixture
 def nlp():
     return English()
+
+
+@registry.assets("empty_lookups")
+def empty_lookups():
+    return Lookups()
 
 
 @registry.assets("cope_lookups")
@@ -37,6 +42,11 @@ def test_lemmatizer_init(nlp):
     doc = nlp("coping")
     # lookup with no tables sets text as lemma
     assert doc[0].lemma_ == "coping"
+
+    nlp.remove_pipe("lemmatizer")
+
+    with pytest.raises(ValueError):
+        nlp.add_pipe("lemmatizer", config={"mode": "lookup", "lookups": {"@assets": "empty_lookups"}})
 
 
 def test_lemmatizer_config(nlp, lemmatizer):

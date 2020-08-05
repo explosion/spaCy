@@ -10,6 +10,8 @@ from .punctuation import TOKENIZER_SUFFIXES
 from .lemmatizer import DutchLemmatizer
 from ...lookups import Lookups, load_lookups
 from ...language import Language
+from ...pipeline.lemmatizer import LOOKUPS_TABLES_CONFIG
+from ...pipeline.lemmatizer import load_lemmatizer_lookups
 from ...util import registry
 
 
@@ -41,17 +43,9 @@ def make_lemmatizer(
     mode: str,
     lookups: Optional[Lookups],
 ):
-    tables = []
-    if mode == "lookup":
-        tables = ["lemma_lookup"]
-    elif mode == "rule":
-        tables = ["lemma_lookup", "lemma_rules", "lemma_exc", "lemma_index"]
-    strict = mode in ("lookup", "rule")
-    if lookups is None:
-        lookups = load_lookups(lang=nlp.lang, tables=tables, strict=strict)
-    elif strict:
-        for table in tables:
-            assert table in lookups
+    config = dict(LOOKUPS_TABLES_CONFIG)
+    config["rules"] = ["lemma_lookup", "lemma_rules", "lemma_exc", "lemma_index"]
+    lookups = load_lemmatizer_lookups(nlp.lang, mode, lookups, config=config)
     return DutchLemmatizer(nlp.vocab, model, name, mode=mode, lookups=lookups)
 
 

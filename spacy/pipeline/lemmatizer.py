@@ -1,37 +1,75 @@
-from typing import Optional, List, Any
+from typing import Optional, List, Dict
 
 from thinc.api import Model
 
 from .pipe import Pipe
 from ..errors import Errors
 from ..language import Language
-from ..lookups import Lookups, Table, load_lookups
+from ..lookups import Lookups, load_lookups
 from ..parts_of_speech import NAMES as UPOS_NAMES
 from ..tokens import Doc, Token
 from ..vocab import Vocab
 from .. import util
 
 
+LOOKUPS_TABLES_CONFIG = {
+    "lookup": {"required_tables": ["lemma_lookup"]},
+    "rule": {
+        "required_tables": ["lemma_rules"],
+        "optional_tables": ["lemma_exc", "lemma_index"],
+    },
+}
+
+
 @Language.factory(
     "lemmatizer",
     assigns=["token.lemma"],
-    default_config={"model": None, "mode": "lookup", "lookups": None, "overwrite": False},
+    default_config={
+        "model": None,
+        "mode": "lookup",
+        "lookups": None,
+        "overwrite": False,
+    },
     scores=["lemma_acc"],
     default_score_weights={"lemma_acc": 1.0},
 )
-def make_lemmatizer(nlp: Language, model: Optional[Model], name: str, mode: str, lookups: Optional[Lookups], overwrite: bool = False):
-    tables = []
-    if mode == "lookup":
-        tables = ["lemma_lookup"]
-    elif mode == "rule":
-        tables = ["lemma_rules", "lemma_exc", "lemma_index"]
-    strict = mode in ("lookup", "rule")
+def make_lemmatizer(
+    nlp: Language,
+    model: Optional[Model],
+    name: str,
+    mode: str,
+    lookups: Optional[Lookups],
+    overwrite: bool = False,
+):
+    lookups = load_lemmatizer_lookups(nlp.lang, mode, lookups)
+    return Lemmatizer(
+        nlp.vocab, model, name, mode=mode, lookups=lookups, overwrite=overwrite
+    )
+
+
+def load_lemmatizer_lookups(
+    lang: str,
+    mode: str,
+    lookups: Lookups,
+    config: Dict[str, Dict[str, List]] = LOOKUPS_TABLES_CONFIG,
+) -> Lookups:
+    required_tables = config.get(mode, {}).get("required_tables", [])
+    optional_tables = config.get(mode, {}).get("optional_tables", [])
     if lookups is None:
-        lookups = load_lookups(lang=nlp.lang, tables=tables, strict=strict)
-    elif strict:
-        for table in tables:
-            assert table in lookups
-    return Lemmatizer(nlp.vocab, model, name, mode=mode, lookups=lookups, overwrite=overwrite)
+        lookups = load_lookups(lang=lang, tables=required_tables)
+        optional_lookups = load_lookups(
+            lang=lang, tables=optional_tables, strict=False
+        )
+        for table in optional_lookups.tables:
+            lookups.set_table(table, optional_lookups.get_table(table))
+    for table in required_tables:
+        if table not in lookups:
+            raise ValueError(
+                Errors.E1004.format(
+                    mode=mode, tables=required_tables, found=lookups.tables
+                )
+            )
+    return lookups
 
 
 class Lemmatizer(Pipe):

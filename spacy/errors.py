@@ -620,6 +620,10 @@ class Errors:
              "'{span}' and offset '{index}' matched by patterns '{patterns}'.")
     E1002 = ("Span index out of range.")
     E1003 = ("Unsupported lemmatizer mode '{mode}'.")
+    E1004 = ("Missing lemmatizer table(s) found for lemmatizer mode '{mode}'. "
+             "Required tables '{tables}', found '{found}'. If you are not "
+             "providing custom lookups, make sure you have the package "
+             "spacy-lookups-data installed.")
 
 
 @add_codes

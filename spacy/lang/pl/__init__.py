@@ -10,6 +10,8 @@ from .lemmatizer import PolishLemmatizer
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...lookups import Lookups, load_lookups
 from ...language import Language
+from ...pipeline.lemmatizer import LOOKUPS_TABLES_CONFIG
+from ...pipeline.lemmatizer import load_lemmatizer_lookups
 
 
 TOKENIZER_EXCEPTIONS = {
@@ -45,17 +47,21 @@ def make_lemmatizer(
     mode: str,
     lookups: Optional[Lookups],
 ):
-    tables = []
-    if mode == "lookup":
-        # fmt: off
-        tables = [
-            "lemma_lookup_adj", "lemma_lookup_adp", "lemma_lookup_adv",
-            "lemma_lookup_aux", "lemma_lookup_noun", "lemma_lookup_num",
-            "lemma_lookup_part", "lemma_lookup_pron", "lemma_lookup_verb"
+    config = dict(LOOKUPS_TABLES_CONFIG)
+    config["lookup"] = {
+        "required_tables": [
+            "lemma_lookup_adj",
+            "lemma_lookup_adp",
+            "lemma_lookup_adv",
+            "lemma_lookup_aux",
+            "lemma_lookup_noun",
+            "lemma_lookup_num",
+            "lemma_lookup_part",
+            "lemma_lookup_pron",
+            "lemma_lookup_verb",
         ]
-        # fmt: on
-    strict = mode in ("lookup")
-    lookups = load_lookups(lang=nlp.lang, tables=tables, strict=strict)
+    }
+    lookups = load_lemmatizer_lookups(nlp.lang, mode, lookups, config=config)
     return PolishLemmatizer(nlp.vocab, model, name, mode=mode, lookups=lookups)
 
 
