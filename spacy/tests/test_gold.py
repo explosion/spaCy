@@ -1,5 +1,5 @@
 import numpy
-from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags
+from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags, Alignment
 from spacy.gold import spans_from_biluo_tags, iob_to_biluo
 from spacy.gold import Corpus, docs_to_json
 from spacy.gold.example import Example
@@ -483,14 +483,14 @@ def test_roundtrip_docs_to_docbin(doc):
         reloaded_nlp = English()
         json_file = tmpdir / "roundtrip.json"
         srsly.write_json(json_file, [docs_to_json(doc)])
-        goldcorpus = Corpus(str(json_file), str(json_file))
         output_file = tmpdir / "roundtrip.spacy"
         data = DocBin(docs=[doc]).to_bytes()
         with output_file.open("wb") as file_:
             file_.write(data)
-        goldcorpus = Corpus(train_loc=str(output_file), dev_loc=str(output_file))
-        reloaded_example = next(goldcorpus.dev_dataset(nlp=reloaded_nlp))
-        assert len(doc) == goldcorpus.count_train(reloaded_nlp)
+        reader = Corpus(output_file)
+        reloaded_examples = list(reader(reloaded_nlp))
+        assert len(doc) == sum(len(eg) for eg in reloaded_examples)
+    reloaded_example = reloaded_examples[0]
     assert text == reloaded_example.reference.text
     assert idx == [t.idx for t in reloaded_example.reference]
     assert tags == [t.tag_ for t in reloaded_example.reference]
@@ -515,10 +515,9 @@ def test_make_orth_variants(doc):
         data = DocBin(docs=[doc]).to_bytes()
         with output_file.open("wb") as file_:
             file_.write(data)
-        goldcorpus = Corpus(train_loc=str(output_file), dev_loc=str(output_file))
-
         # due to randomness, test only that this runs with no errors for now
-        train_example = next(goldcorpus.train_dataset(nlp))
+        reader = Corpus(output_file)
+        train_example = next(reader(nlp))
         make_orth_variants_example(nlp, train_example, orth_variant_level=0.2)
 
 
@@ -647,11 +646,83 @@ def test_split_sents(merged_dict):
     assert split_examples[1].text == "It is just me"
 
     token_annotation_1 = split_examples[0].to_dict()["token_annotation"]
-    assert token_annotation_1["words"] == ["Hi", "there", "everyone"]
-    assert token_annotation_1["tags"] == ["INTJ", "ADV", "PRON"]
-    assert token_annotation_1["sent_starts"] == [1, 0, 0]
+    assert token_annotation_1["ORTH"] == ["Hi", "there", "everyone"]
+    assert token_annotation_1["TAG"] == ["INTJ", "ADV", "PRON"]
+    assert token_annotation_1["SENT_START"] == [1, 0, 0]
 
     token_annotation_2 = split_examples[1].to_dict()["token_annotation"]
-    assert token_annotation_2["words"] == ["It", "is", "just", "me"]
-    assert token_annotation_2["tags"] == ["PRON", "AUX", "ADV", "PRON"]
-    assert token_annotation_2["sent_starts"] == [1, 0, 0, 0]
+    assert token_annotation_2["ORTH"] == ["It", "is", "just", "me"]
+    assert token_annotation_2["TAG"] == ["PRON", "AUX", "ADV", "PRON"]
+    assert token_annotation_2["SENT_START"] == [1, 0, 0, 0]
+
+
+def test_alignment():
+    other_tokens = ["i", "listened", "to", "obama", "'", "s", "podcasts", "."]
+    spacy_tokens = ["i", "listened", "to", "obama", "'s", "podcasts", "."]
+    align = Alignment.from_strings(other_tokens, spacy_tokens)
+    assert list(align.x2y.lengths) == [1, 1, 1, 1, 1, 1, 1, 1]
+    assert list(align.x2y.dataXd) == [0, 1, 2, 3, 4, 4, 5, 6]
+    assert list(align.y2x.lengths) == [1, 1, 1, 1, 2, 1, 1]
+    assert list(align.y2x.dataXd) == [0, 1, 2, 3, 4, 5, 6, 7]
+
+
+def test_alignment_case_insensitive():
+    other_tokens = ["I", "listened", "to", "obama", "'", "s", "podcasts", "."]
+    spacy_tokens = ["i", "listened", "to", "Obama", "'s", "PODCASTS", "."]
+    align = Alignment.from_strings(other_tokens, spacy_tokens)
+    assert list(align.x2y.lengths) == [1, 1, 1, 1, 1, 1, 1, 1]
+    assert list(align.x2y.dataXd) == [0, 1, 2, 3, 4, 4, 5, 6]
+    assert list(align.y2x.lengths) == [1, 1, 1, 1, 2, 1, 1]
+    assert list(align.y2x.dataXd) == [0, 1, 2, 3, 4, 5, 6, 7]
+
+
+def test_alignment_complex():
+    other_tokens = ["i listened to", "obama", "'", "s", "podcasts", "."]
+    spacy_tokens = ["i", "listened", "to", "obama", "'s", "podcasts."]
+    align = Alignment.from_strings(other_tokens, spacy_tokens)
+    assert list(align.x2y.lengths) == [3, 1, 1, 1, 1, 1]
+    assert list(align.x2y.dataXd) == [0, 1, 2, 3, 4, 4, 5, 5]
+    assert list(align.y2x.lengths) == [1, 1, 1, 1, 2, 2]
+    assert list(align.y2x.dataXd) == [0, 0, 0, 1, 2, 3, 4, 5]
+
+
+def test_alignment_complex_example(en_vocab):
+    other_tokens = ["i listened to", "obama", "'", "s", "podcasts", "."]
+    spacy_tokens = ["i", "listened", "to", "obama", "'s", "podcasts."]
+    predicted = Doc(
+        en_vocab, words=other_tokens, spaces=[True, False, False, True, False, False]
+    )
+    reference = Doc(
+        en_vocab, words=spacy_tokens, spaces=[True, True, True, False, True, False]
+    )
+    assert predicted.text == "i listened to obama's podcasts."
+    assert reference.text == "i listened to obama's podcasts."
+    example = Example(predicted, reference)
+    align = example.alignment
+    assert list(align.x2y.lengths) == [3, 1, 1, 1, 1, 1]
+    assert list(align.x2y.dataXd) == [0, 1, 2, 3, 4, 4, 5, 5]
+    assert list(align.y2x.lengths) == [1, 1, 1, 1, 2, 2]
+    assert list(align.y2x.dataXd) == [0, 0, 0, 1, 2, 3, 4, 5]
+
+
+def test_alignment_different_texts():
+    other_tokens = ["she", "listened", "to", "obama", "'s", "podcasts", "."]
+    spacy_tokens = ["i", "listened", "to", "obama", "'s", "podcasts", "."]
+    with pytest.raises(ValueError):
+        Alignment.from_strings(other_tokens, spacy_tokens)
+
+
+def test_retokenized_docs(doc):
+    a = doc.to_array(["TAG"])
+    doc1 = Doc(doc.vocab, words=[t.text for t in doc]).from_array(["TAG"], a)
+    doc2 = Doc(doc.vocab, words=[t.text for t in doc]).from_array(["TAG"], a)
+    example = Example(doc1, doc2)
+    # fmt: off
+    expected1 = ["Sarah", "'s", "sister", "flew", "to", "Silicon", "Valley", "via", "London", "."]
+    expected2 = [None, "sister", "flew", "to", None, "via", "London", "."]
+    # fmt: on
+    assert example.get_aligned("ORTH", as_string=True) == expected1
+    with doc1.retokenize() as retokenizer:
+        retokenizer.merge(doc1[0:2])
+        retokenizer.merge(doc1[5:7])
+    assert example.get_aligned("ORTH", as_string=True) == expected2

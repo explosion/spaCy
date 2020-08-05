@@ -4,12 +4,12 @@ from thinc.api import SequenceCategoricalCrossentropy, set_dropout_rate, Model
 from thinc.api import Optimizer, Config
 from thinc.util import to_numpy
 
+from ..errors import Errors
 from ..gold import Example, spans_from_biluo_tags, iob_to_biluo, biluo_to_iob
 from ..tokens import Doc
 from ..language import Language
 from ..vocab import Vocab
 from ..scorer import Scorer
-from .. import util
 from .pipe import Pipe
 
 
@@ -37,7 +37,6 @@ DEFAULT_SIMPLE_NER_MODEL = Config().from_str(default_model_config)["model"]
     default_config={"labels": [], "model": DEFAULT_SIMPLE_NER_MODEL},
     scores=["ents_p", "ents_r", "ents_f", "ents_per_type"],
     default_score_weights={"ents_f": 1.0, "ents_p": 0.0, "ents_r": 0.0},
-
 )
 def make_simple_ner(
     nlp: Language, name: str, model: Model, labels: Iterable[str]
@@ -60,7 +59,9 @@ class SimpleNER(Pipe):
         self.vocab = vocab
         self.model = model
         self.name = name
-        self.labels = labels
+        self.cfg = {"labels": []}
+        for label in labels:
+            self.add_label(label)
         self.loss_func = SequenceCategoricalCrossentropy(
             names=self.get_tag_names(), normalize=True, missing_value=None
         )
@@ -70,9 +71,20 @@ class SimpleNER(Pipe):
     def is_biluo(self) -> bool:
         return self.model.name.startswith("biluo")
 
+    @property
+    def labels(self) -> Tuple[str]:
+        return tuple(self.cfg["labels"])
+
     def add_label(self, label: str) -> None:
+        """Add a new label to the pipe.
+        label (str): The label to add.
+        DOCS: https://spacy.io/api/simplener#add_label
+        """
+        if not isinstance(label, str):
+            raise ValueError(Errors.E187)
         if label not in self.labels:
-            self.labels.append(label)
+            self.cfg["labels"].append(label)
+            self.vocab.strings.add(label)
 
     def get_tag_names(self) -> List[str]:
         if self.is_biluo:
@@ -131,11 +143,9 @@ class SimpleNER(Pipe):
         return losses
 
     def get_loss(self, examples: List[Example], scores) -> Tuple[List[Floats2d], float]:
-        loss = 0
-        d_scores = []
         truths = []
         for eg in examples:
-            tags = eg.get_aligned("TAG", as_string=True)
+            tags = eg.get_aligned_ner()
             gold_tags = [(tag if tag != "-" else None) for tag in tags]
             if not self.is_biluo:
                 gold_tags = biluo_to_iob(gold_tags)
@@ -159,7 +169,6 @@ class SimpleNER(Pipe):
         if not hasattr(get_examples, "__call__"):
             gold_tuples = get_examples
             get_examples = lambda: gold_tuples
-        labels = _get_labels(get_examples())
         for label in _get_labels(get_examples()):
             self.add_label(label)
         labels = self.labels

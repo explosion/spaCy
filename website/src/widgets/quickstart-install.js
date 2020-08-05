@@ -92,7 +92,7 @@ const QuickstartInstall = ({ id, title }) => (
                     </QS>
                     <QS package="source">pip install -r requirements.txt</QS>
                     <QS addition="transformers" package="pip">
-                        pip install -U spacy-lookups-transformers
+                        pip install -U spacy-transformers
                     </QS>
                     <QS addition="transformers" package="source">
                         pip install -U spacy-transformers

@@ -8,9 +8,9 @@ import typer
 from thinc.api import Config
 
 from ._util import app, Arg, Opt, show_validation_error, parse_config_overrides
-from ._util import import_code, debug_cli
+from ._util import import_code, debug_cli, get_sourced_components
 from ..gold import Corpus, Example
-from ..syntax import nonproj
+from ..pipeline._parser_internals import nonproj
 from ..language import Language
 from .. import util
 
@@ -33,7 +33,6 @@ def debug_config_cli(
     ctx: typer.Context,  # This is only used to read additional arguments
     config_path: Path = Arg(..., help="Path to config file", exists=True),
     code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
-    output_path: Optional[Path] = Opt(None, "--output", "-o", help="Output path for filled config or '-' for standard output", allow_dash=True),
     auto_fill: bool = Opt(False, "--auto-fill", "-F", help="Whether or not to auto-fill the config with built-in defaults if possible"),
     diff: bool = Opt(False, "--diff", "-D", help="Show a visual diff if config was auto-filled")
     # fmt: on
@@ -49,15 +48,12 @@ def debug_config_cli(
     """
     overrides = parse_config_overrides(ctx.args)
     import_code(code_path)
-    with show_validation_error():
-        config = Config().from_disk(config_path)
+    with show_validation_error(config_path):
+        config = Config().from_disk(config_path, overrides=overrides)
         try:
-            nlp, _ = util.load_model_from_config(
-                config, overrides=overrides, auto_fill=auto_fill
-            )
+            nlp, _ = util.load_model_from_config(config, auto_fill=auto_fill)
         except ValueError as e:
             msg.fail(str(e), exits=1)
-    is_stdout = output_path is not None and str(output_path) == "-"
     if auto_fill:
         orig_config = config.to_str()
         filled_config = nlp.config.to_str()
@@ -68,12 +64,7 @@ def debug_config_cli(
             if diff:
                 print(diff_strings(config.to_str(), nlp.config.to_str()))
     else:
-        msg.good("Original config is valid", show=not is_stdout)
-    if is_stdout:
-        print(nlp.config.to_str())
-    elif output_path is not None:
-        nlp.config.to_disk(output_path)
-        msg.good(f"Saved updated config to {output_path}")
+        msg.good("Original config is valid")
 
 
 @debug_cli.command(
@@ -142,12 +133,13 @@ def debug_data(
         msg.fail("Development data not found", dev_path, exits=1)
     if not config_path.exists():
         msg.fail("Config file not found", config_path, exists=1)
-    with show_validation_error():
-        cfg = Config().from_disk(config_path)
-        nlp, config = util.load_model_from_config(cfg, overrides=config_overrides)
-    # TODO: handle base model
-    lang = config["nlp"]["lang"]
-    base_model = config["training"]["base_model"]
+    with show_validation_error(config_path):
+        cfg = Config().from_disk(config_path, overrides=config_overrides)
+        nlp, config = util.load_model_from_config(cfg)
+    # Use original config here, not resolved version
+    sourced_components = get_sourced_components(cfg)
+    frozen_components = config["training"]["frozen_components"]
+    resume_components = [p for p in sourced_components if p not in frozen_components]
     pipeline = nlp.pipe_names
     factory_names = [nlp.get_pipe_meta(pipe).factory for pipe in nlp.pipe_names]
     tag_map_path = util.ensure_path(config["training"]["tag_map"])
@@ -169,13 +161,12 @@ def debug_data(
     loading_train_error_message = ""
     loading_dev_error_message = ""
     with msg.loading("Loading corpus..."):
-        corpus = Corpus(train_path, dev_path)
         try:
-            train_dataset = list(corpus.train_dataset(nlp))
+            train_dataset = list(Corpus(train_path)(nlp))
         except ValueError as e:
             loading_train_error_message = f"Training data cannot be loaded: {e}"
         try:
-            dev_dataset = list(corpus.dev_dataset(nlp))
+            dev_dataset = list(Corpus(dev_path)(nlp))
         except ValueError as e:
             loading_dev_error_message = f"Development data cannot be loaded: {e}"
     if loading_train_error_message or loading_dev_error_message:
@@ -195,13 +186,15 @@ def debug_data(
 
     train_texts = gold_train_data["texts"]
     dev_texts = gold_dev_data["texts"]
+    frozen_components = config["training"]["frozen_components"]
 
     msg.divider("Training stats")
+    msg.text(f"Language: {config['nlp']['lang']}")
     msg.text(f"Training pipeline: {', '.join(pipeline)}")
-    if base_model:
-        msg.text(f"Starting with base model '{base_model}'")
-    else:
-        msg.text(f"Starting with blank model '{lang}'")
+    if resume_components:
+        msg.text(f"Components from other models: {', '.join(resume_components)}")
+    if frozen_components:
+        msg.text(f"Frozen components: {', '.join(frozen_components)}")
     msg.text(f"{len(train_dataset)} training docs")
     msg.text(f"{len(dev_dataset)} evaluation docs")
 
@@ -212,7 +205,9 @@ def debug_data(
         msg.warn(f"{overlap} training examples also in evaluation data")
     else:
         msg.good("No overlap between training and evaluation data")
-    if not base_model and len(train_dataset) < BLANK_MODEL_THRESHOLD:
+    # TODO: make this feedback more fine-grained and report on updated
+    # components vs. blank components
+    if not resume_components and len(train_dataset) < BLANK_MODEL_THRESHOLD:
         text = (
             f"Low number of examples to train from a blank model ({len(train_dataset)})"
         )

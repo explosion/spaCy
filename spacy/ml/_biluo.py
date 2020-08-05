@@ -80,7 +80,7 @@ def _get_transition_table(
     B_start, B_end = (0, n_labels)
     I_start, I_end = (B_end, B_end + n_labels)
     L_start, L_end = (I_end, I_end + n_labels)
-    U_start, _ = (L_end, L_end + n_labels)
+    U_start, _ = (L_end, L_end + n_labels)  # noqa: F841
     # Using ranges allows us to set specific cells, which is necessary to express
     # that only actions of the same label are valid continuations.
     B_range = numpy.arange(B_start, B_end)

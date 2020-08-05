@@ -347,50 +347,52 @@ serialization by passing in the string names via the `exclude` argument.
 
 Transformer tokens and outputs for one `Doc` object.
 
-| Name      | Type                                               | Description                               |
-| --------- | -------------------------------------------------- | ----------------------------------------- |
-| `tokens`  | `Dict`                                             | <!-- TODO: -->                            |
-| `tensors` | `List[FloatsXd]`                                   | <!-- TODO: -->                            |
-| `align`   | [`Ragged`](https://thinc.ai/docs/api-types#ragged) | <!-- TODO: -->                            |
-| `width`   | int                                                | <!-- TODO: also mention it's property --> |
+<!-- TODO: finish API docs, also mention "width" is property -->
+
+| Name      | Type                                               | Description |
+| --------- | -------------------------------------------------- | ----------- |
+| `tokens`  | `Dict`                                             |             |
+| `tensors` | `List[FloatsXd]`                                   |             |
+| `align`   | [`Ragged`](https://thinc.ai/docs/api-types#ragged) |             |
+| `width`   | int                                                |             |
 
 ### TransformerData.empty {#transformerdata-emoty tag="classmethod"}
 
-<!-- TODO: -->
+<!-- TODO: finish API docs -->
 
-| Name        | Type              | Description    |
-| ----------- | ----------------- | -------------- |
-| **RETURNS** | `TransformerData` | <!-- TODO: --> |
+| Name        | Type              | Description |
+| ----------- | ----------------- | ----------- |
+| **RETURNS** | `TransformerData` |             |
 
 ## FullTransformerBatch {#fulltransformerbatch tag="dataclass"}
 
-<!-- TODO: -->
+<!-- TODO: write, also mention doc_data is property -->
 
-| Name       | Type                                                                                                                       | Description                               |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| `spans`    | `List[List[Span]]`                                                                                                         | <!-- TODO: -->                            |
-| `tokens`   | [`transformers.BatchEncoding`](https://huggingface.co/transformers/main_classes/tokenizer.html#transformers.BatchEncoding) | <!-- TODO: -->                            |
-| `tensors`  | `List[torch.Tensor]`                                                                                                       | <!-- TODO: -->                            |
-| `align`    | [`Ragged`](https://thinc.ai/docs/api-types#ragged)                                                                         | <!-- TODO: -->                            |
-| `doc_data` | `List[TransformerData]`                                                                                                    | <!-- TODO: also mention it's property --> |
+| Name       | Type                                                                                                                       | Description |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| `spans`    | `List[List[Span]]`                                                                                                         |             |
+| `tokens`   | [`transformers.BatchEncoding`](https://huggingface.co/transformers/main_classes/tokenizer.html#transformers.BatchEncoding) |             |
+| `tensors`  | `List[torch.Tensor]`                                                                                                       |             |
+| `align`    | [`Ragged`](https://thinc.ai/docs/api-types#ragged)                                                                         |             |
+| `doc_data` | `List[TransformerData]`                                                                                                    |             |
 
 ### FullTransformerBatch.unsplit_by_doc {#fulltransformerbatch-unsplit_by_doc tag="method"}
 
-<!-- TODO: -->
+<!-- TODO: write -->
 
-| Name        | Type                   | Description    |
-| ----------- | ---------------------- | -------------- |
-| `arrays`    | `List[List[Floats3d]]` | <!-- TODO: --> |
-| **RETURNS** | `FullTransformerBatch` | <!-- TODO: --> |
+| Name        | Type                   | Description |
+| ----------- | ---------------------- | ----------- |
+| `arrays`    | `List[List[Floats3d]]` |             |
+| **RETURNS** | `FullTransformerBatch` |             |
 
 ### FullTransformerBatch.split_by_doc {#fulltransformerbatch-split_by_doc tag="method"}
 
 Split a `TransformerData` object that represents a batch into a list with one
 `TransformerData` per `Doc`.
 
-| Name        | Type                    | Description    |
-| ----------- | ----------------------- | -------------- |
-| **RETURNS** | `List[TransformerData]` | <!-- TODO: --> |
+| Name        | Type                    | Description |
+| ----------- | ----------------------- | ----------- |
+| **RETURNS** | `List[TransformerData]` |             |
 
 ## Span getters {#span_getters tag="registered functions" source="github.com/explosion/spacy-transformers/blob/master/spacy_transformers/span_getters.py"}
 
@@ -421,11 +423,13 @@ getters using the `@registry.span_getters` decorator.
 
 The following built-in functions are available:
 
+<!-- TODO: finish API docs -->
+
 | Name               | Description                                                        |
 | ------------------ | ------------------------------------------------------------------ |
 | `doc_spans.v1`     | Create a span for each doc (no transformation, process each text). |
 | `sent_spans.v1`    | Create a span for each sentence if sentence boundaries are set.    |
-| `strided_spans.v1` | <!-- TODO: -->                                                     |
+| `strided_spans.v1` |                                                                    |
 
 ## Annotation setters {#annotation_setters tag="registered functions" source="github.com/explosion/spacy-transformers/blob/master/spacy_transformers/annotation_setters.py"}
 

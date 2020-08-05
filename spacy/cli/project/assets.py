@@ -1,7 +1,6 @@
 from typing import Optional
 from pathlib import Path
 from wasabi import msg
-import tqdm
 import re
 import shutil
 import requests

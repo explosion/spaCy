@@ -231,10 +231,10 @@ available pipeline components and component functions.
 | `morphologizer` | [`Morphologizer`](/api/morphologizer)           | Assign morphological features and coarse-grained POS tags.                                |
 | `senter`        | [`SentenceRecognizer`](/api/sentencerecognizer) | Assign sentence boundaries.                                                               |
 | `sentencizer`   | [`Sentencizer`](/api/sentencizer)               | Add rule-based sentence segmentation without the dependency parse.                        |
-| `tok2vec`       | [`Tok2Vec`](/api/tok2vec)                       | <!-- TODO: -->                                                                            |
+| `tok2vec`       | [`Tok2Vec`](/api/tok2vec)                       |                                                                                           |
 | `transformer`   | [`Transformer`](/api/transformer)               | Assign the tokens and outputs of a transformer model.                                     |
 
-<!-- TODO: update with more components -->
+<!-- TODO: finish and update with more components -->
 
 <!-- TODO: explain default config and factories -->
 
@@ -310,6 +310,155 @@ nlp.remove_pipe("parser")
 nlp.rename_pipe("ner", "entityrecognizer")
 nlp.replace_pipe("tagger", my_custom_tagger)
 ```
+
+### Sourcing pipeline components from existing models {#sourced-components new="3"}
+
+Pipeline components that are independent can also be reused across models.
+Instead of adding a new blank component to a pipeline, you can also copy an
+existing component from a pretrained model by setting the `source` argument on
+[`nlp.add_pipe`](/api/language#add_pipe). The first argument will then be
+interpreted as the name of the component in the source pipeline – for instance,
+`"ner"`. This is especially useful for
+[training a model](/usage/training#config-components) because it lets you mix
+and match components and create fully custom model packages with updated
+pretrained components and new components trained on your data.
+
+<Infobox variant="warning" title="Important note for pretrained components">
+
+When reusing components across models, keep in mind that the **vocabulary**,
+**vectors** and model settings **must match**. If a pretrained model includes
+[word vectors](/usage/vectors-embeddings) and the component uses them as
+features, the model you copy it to needs to have the _same_ vectors available –
+otherwise, it won't be able to make the same predictions.
+
+</Infobox>
+
+> #### In training config
+>
+> Instead of providing a `factory`, component blocks in the training
+> [config](/usage/training#config) can also define a `source`. The string needs
+> to be a loadable spaCy model package or path. The
+>
+> ```ini
+> [components.ner]
+> source = "en_core_web_sm"
+> component = "ner"
+> ```
+>
+> By default, sourced components will be updated with your data during training.
+> If you want to preserve the component as-is, you can "freeze" it:
+>
+> ```ini
+> [training]
+> frozen_components = ["ner"]
+> ```
+
+```python
+### {executable="true"}
+import spacy
+
+# The source model with different components
+source_nlp = spacy.load("en_core_web_sm")
+print(source_nlp.pipe_names)
+
+# Add only the entity recognizer to the new blank model
+nlp = spacy.blank("en")
+nlp.add_pipe("ner", source=source_nlp)
+print(nlp.pipe_names)
+```
+
+### Analyzing pipeline components {#analysis new="3"}
+
+The [`nlp.analyze_pipes`](/api/language#analyze_pipes) method analyzes the
+components in the current pipeline and outputs information about them, like the
+attributes they set on the [`Doc`](/api/doc) and [`Token`](/api/token), whether
+they retokenize the `Doc` and which scores they produce during training. It will
+also show warnings if components require values that aren't set by previous
+component – for instance, if the entity linker is used but no component that
+runs before it sets named entities. Setting `pretty=True` will pretty-print a
+table instead of only returning the structured data.
+
+> #### ✏️ Things to try
+>
+> 1. Add the components `"ner"` and `"sentencizer"` _before_ the entity linker.
+>    The analysis should now show no problems, because requirements are met.
+
+```python
+### {executable="true"}
+import spacy
+
+nlp = spacy.blank("en")
+nlp.add_pipe("tagger")
+# This is a problem because it needs entities and sentence boundaries
+nlp.add_pipe("entity_linker")
+analysis = nlp.analyze_pipes(pretty=True)
+```
+
+<Accordion title="Example output">
+
+```json
+### Structured
+{
+  "summary": {
+    "tagger": {
+      "assigns": ["token.tag"],
+      "requires": [],
+      "scores": ["tag_acc", "pos_acc", "lemma_acc"],
+      "retokenizes": false
+    },
+    "entity_linker": {
+      "assigns": ["token.ent_kb_id"],
+      "requires": ["doc.ents", "doc.sents", "token.ent_iob", "token.ent_type"],
+      "scores": [],
+      "retokenizes": false
+    }
+  },
+  "problems": {
+    "tagger": [],
+    "entity_linker": ["doc.ents", "doc.sents", "token.ent_iob", "token.ent_type"]
+  },
+  "attrs": {
+    "token.ent_iob": { "assigns": [], "requires": ["entity_linker"] },
+    "doc.ents": { "assigns": [], "requires": ["entity_linker"] },
+    "token.ent_kb_id": { "assigns": ["entity_linker"], "requires": [] },
+    "doc.sents": { "assigns": [], "requires": ["entity_linker"] },
+    "token.tag": { "assigns": ["tagger"], "requires": [] },
+    "token.ent_type": { "assigns": [], "requires": ["entity_linker"] }
+  }
+}
+```
+
+```
+### Pretty
+============================= Pipeline Overview =============================
+
+#   Component       Assigns           Requires         Scores      Retokenizes
+-   -------------   ---------------   --------------   ---------   -----------
+0   tagger          token.tag                          tag_acc     False
+                                                       pos_acc
+                                                       lemma_acc
+
+1   entity_linker   token.ent_kb_id   doc.ents                     False
+                                      doc.sents
+                                      token.ent_iob
+                                      token.ent_type
+
+
+================================ Problems (4) ================================
+⚠ 'entity_linker' requirements not met: doc.ents, doc.sents,
+token.ent_iob, token.ent_type
+```
+
+</Accordion>
+
+<Infobox variant="warning" title="Important note">
+
+The pipeline analysis is static and does **not actually run the components**.
+This means that it relies on the information provided by the components
+themselves. If a custom component declares that it assigns an attribute but it
+doesn't, the pipeline analysis won't catch that.
+
+</Infobox>
 
 ## Creating custom pipeline components {#custom-components}
 
@@ -488,6 +637,8 @@ All other settings can be passed in by the user via the `config` argument on
 [`nlp.add_pipe`](/api/language). The
 [`@Language.factory`](/api/language#factory) decorator also lets you define a
 `default_config` that's used as a fallback.
+
+<!-- TODO: add example of passing in a custom Python object via the config based on a registered function -->
 
 ```python
 ### With config {highlight="4,9"}

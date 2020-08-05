@@ -42,7 +42,7 @@ def test_Example_from_dict_with_tags(pred_words, annots):
     example = Example.from_dict(predicted, annots)
     for i, token in enumerate(example.reference):
         assert token.tag_ == annots["tags"][i]
-    aligned_tags = example.get_aligned("tag", as_string=True)
+    aligned_tags = example.get_aligned("TAG", as_string=True)
     assert aligned_tags == ["NN" for _ in predicted]
 
 
@@ -53,9 +53,13 @@ def test_aligned_tags():
     annots = {"words": gold_words, "tags": gold_tags}
     vocab = Vocab()
     predicted = Doc(vocab, words=pred_words)
-    example = Example.from_dict(predicted, annots)
-    aligned_tags = example.get_aligned("tag", as_string=True)
-    assert aligned_tags == ["VERB", "DET", "NOUN", "SCONJ", "PRON", "VERB", "VERB"]
+    example1 = Example.from_dict(predicted, annots)
+    aligned_tags1 = example1.get_aligned("TAG", as_string=True)
+    assert aligned_tags1 == ["VERB", "DET", "NOUN", "SCONJ", "PRON", "VERB", "VERB"]
+    # ensure that to_dict works correctly
+    example2 = Example.from_dict(predicted, example1.to_dict())
+    aligned_tags2 = example2.get_aligned("TAG", as_string=True)
+    assert aligned_tags2 == ["VERB", "DET", "NOUN", "SCONJ", "PRON", "VERB", "VERB"]
 
 
 def test_aligned_tags_multi():
@@ -66,7 +70,7 @@ def test_aligned_tags_multi():
     vocab = Vocab()
     predicted = Doc(vocab, words=pred_words)
     example = Example.from_dict(predicted, annots)
-    aligned_tags = example.get_aligned("tag", as_string=True)
+    aligned_tags = example.get_aligned("TAG", as_string=True)
     assert aligned_tags == [None, None, "SCONJ", "PRON", "VERB", "VERB"]
 
 

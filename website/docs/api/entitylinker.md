@@ -65,6 +65,8 @@ Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
 [`nlp.add_pipe`](/api/language#add_pipe).
 
+<!-- TODO: finish API docs -->
+
 | Name             | Type            | Description                                                                                 |
 | ---------------- | --------------- | ------------------------------------------------------------------------------------------- |
 | `vocab`          | `Vocab`         | The shared vocabulary.                                                                      |
@@ -126,7 +128,7 @@ applied to the `Doc` in order. Both [`__call__`](/api/entitylinker#call) and
 ## EntityLinker.begin_training {#begin_training tag="method"}
 
 Initialize the pipe for training, using data examples if available. Returns an
-[`Optimizer`](https://thinc.ai/docs/api-optimizers) object. 
+[`Optimizer`](https://thinc.ai/docs/api-optimizers) object.
 
 > #### Example
 >

@@ -88,7 +88,8 @@ The recommended workflow for training is to use spaCy's
 [`spacy train`](/api/cli#train) command. The training config defines all
 component settings and hyperparameters in one place and lets you describe a tree
 of objects by referring to creation functions, including functions you register
-yourself.
+yourself. For details on how to get started with training your own model, check
+out the [training quickstart](/usage/training#quickstart).
 
 <Project id="en_core_bert">
 
@@ -164,10 +165,8 @@ resolved, the function is created and passed into the model as an argument.
 Remember that the `config.cfg` used for training should contain **no missing
 values** and requires all settings to be defined. You don't want any hidden
 defaults creeping in and changing your results! spaCy will tell you if settings
-are missing, and you can run [`spacy debug config`](/api/cli#debug-config) with
-`--auto-fill` to automatically fill in all defaults.
-
-<!-- TODO: update with details on getting started with a config -->
+are missing, and you can run [`spacy init config`](/api/cli#init-config) with to
+automatically fill in all defaults.
 
 </Infobox>
 

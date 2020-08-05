@@ -282,3 +282,15 @@ def test_span_eq_hash(doc, doc_not_parsed):
     assert hash(doc[0:2]) == hash(doc[0:2])
     assert hash(doc[0:2]) != hash(doc[1:3])
     assert hash(doc[0:2]) != hash(doc_not_parsed[0:2])
+
+
+def test_span_boundaries(doc):
+    start = 1
+    end = 5
+    span = doc[start:end]
+    for i in range(start, end):
+        assert span[i - start] == doc[i]
+    with pytest.raises(IndexError):
+        span[-5]
+    with pytest.raises(IndexError):
+        span[5]

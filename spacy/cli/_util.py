@@ -6,7 +6,7 @@ import hashlib
 import typer
 from typer.main import get_command
 from contextlib import contextmanager
-from thinc.config import ConfigValidationError
+from thinc.config import Config, ConfigValidationError
 from configparser import InterpolationError
 import sys
 
@@ -31,6 +31,7 @@ DEBUG_HELP = """Suite of helpful commands for debugging and profiling. Includes
 commands to check and validate your config files, training and evaluation data,
 and custom model implementations.
 """
+INIT_HELP = """Commands for initializing configs and models."""
 
 # Wrappers for Typer's annotations. Initially created to set defaults and to
 # keep the names short, but not needed at the moment.
@@ -40,9 +41,11 @@ Opt = typer.Option
 app = typer.Typer(name=NAME, help=HELP)
 project_cli = typer.Typer(name="project", help=PROJECT_HELP, no_args_is_help=True)
 debug_cli = typer.Typer(name="debug", help=DEBUG_HELP, no_args_is_help=True)
+init_cli = typer.Typer(name="init", help=INIT_HELP, no_args_is_help=True)
 
 app.add_typer(project_cli)
 app.add_typer(debug_cli)
+app.add_typer(init_cli)
 
 
 def setup_cli() -> None:
@@ -172,16 +175,34 @@ def get_checksum(path: Union[Path, str]) -> str:
 
 
 @contextmanager
-def show_validation_error(title: str = "Config validation error"):
+def show_validation_error(
+    file_path: Optional[Union[str, Path]] = None,
+    *,
+    title: str = "Config validation error",
+    hint_init: bool = True,
+):
     """Helper to show custom config validation errors on the CLI.
 
+    file_path (str / Path): Optional file path of config file, used in hints.
     title (str): Title of the custom formatted error.
+    hint_init (bool): Show hint about filling config.
     """
     try:
         yield
     except (ConfigValidationError, InterpolationError) as e:
         msg.fail(title, spaced=True)
-        print(str(e).replace("Config validation error", "").strip())
+        # TODO: This is kinda hacky and we should probably provide a better
+        # helper for this in Thinc
+        err_text = str(e).replace("Config validation error", "").strip()
+        print(err_text)
+        if hint_init and "field required" in err_text:
+            config_path = file_path if file_path is not None else "config.cfg"
+            msg.text(
+                "If your config contains missing values, you can run the 'init "
+                "config' command to fill in all the defaults, if possible:",
+                spaced=True,
+            )
+            print(f"{COMMAND} init config {config_path} --base {config_path}\n")
         sys.exit(1)
 
 
@@ -196,3 +217,15 @@ def import_code(code_path: Optional[Union[Path, str]]) -> None:
             import_file("python_code", code_path)
         except Exception as e:
             msg.fail(f"Couldn't load Python code: {code_path}", e, exits=1)
+
+
+def get_sourced_components(config: Union[Dict[str, Any], Config]) -> List[str]:
+    """RETURNS (List[str]): All sourced components in the original config,
+        e.g. {"source": "en_core_web_sm"}. If the config contains a key
+        "factory", we assume it refers to a component factory.
+    """
+    return [
+        name
+        for name, cfg in config.get("components", {}).items()
+        if "factory" not in cfg and "source" in cfg
+    ]

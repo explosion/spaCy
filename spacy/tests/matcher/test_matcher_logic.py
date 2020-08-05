@@ -21,7 +21,7 @@ re_pattern5 = "B*A*B"
 longest1 = "A A A A A"
 longest2 = "A A A A A"
 longest3 = "A A"
-longest4 = "B A A A A A B"      # "FIRST" would be "B B"
+longest4 = "B A A A A A B"  # "FIRST" would be "B B"
 longest5 = "B B A A A A A B"
 
 

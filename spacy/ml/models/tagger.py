@@ -1,10 +1,11 @@
+from typing import Optional
 from thinc.api import zero_init, with_array, Softmax, chain, Model
 
 from ...util import registry
 
 
 @registry.architectures.register("spacy.Tagger.v1")
-def build_tagger_model(tok2vec, nO=None) -> Model:
+def build_tagger_model(tok2vec: Model, nO: Optional[int] = None) -> Model:
     # TODO: glorot_uniform_init seems to work a bit better than zero_init here?!
     t2v_width = tok2vec.get_dim("nO") if tok2vec.has_dim("nO") else None
     output_layer = Softmax(nO, t2v_width, init_W=zero_init)

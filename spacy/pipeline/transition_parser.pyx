@@ -1,42 +1,32 @@
 # cython: infer_types=True, cdivision=True, boundscheck=False
-cimport cython.parallel
+from __future__ import print_function
+from cymem.cymem cimport Pool
 cimport numpy as np
 from itertools import islice
-from cpython.ref cimport PyObject, Py_XDECREF
-from cpython.exc cimport PyErr_CheckSignals, PyErr_SetFromErrno
-from libc.math cimport exp
 from libcpp.vector cimport vector
-from libc.string cimport memset, memcpy
+from libc.string cimport memset
 from libc.stdlib cimport calloc, free
-from cymem.cymem cimport Pool
-from thinc.backends.linalg cimport Vec, VecVec
 
-from thinc.api import chain, clone, Linear, list2array, NumpyOps, CupyOps, use_ops
-from thinc.api import get_array_module, zero_init, set_dropout_rate
-from itertools import islice
 import srsly
+
+from ._parser_internals.stateclass cimport StateClass
+from ..ml.parser_model cimport alloc_activations, free_activations
+from ..ml.parser_model cimport predict_states, arg_max_if_valid
+from ..ml.parser_model cimport WeightsC, ActivationsC, SizesC, cpu_log_loss
+from ..ml.parser_model cimport get_c_weights, get_c_sizes
+
+from ..tokens.doc cimport Doc
+from ..errors import Errors, Warnings
+from .. import util
+from ..util import create_default_optimizer
+
+from thinc.api import set_dropout_rate
 import numpy.random
 import numpy
 import warnings
 
-from ..tokens.doc cimport Doc
-from ..typedefs cimport weight_t, class_t, hash_t
-from ._parser_model cimport alloc_activations, free_activations
-from ._parser_model cimport predict_states, arg_max_if_valid
-from ._parser_model cimport WeightsC, ActivationsC, SizesC, cpu_log_loss
-from ._parser_model cimport get_c_weights, get_c_sizes
-from .stateclass cimport StateClass
-from ._state cimport StateC
-from .transition_system cimport Transition
 
-from ..util import create_default_optimizer, registry
-from ..compat import copy_array
-from ..errors import Errors, Warnings
-from .. import util
-from . import nonproj
-
-
-cdef class Parser:
+cdef class Parser(Pipe):
     """
     Base class of the DependencyParser and EntityRecognizer.
     """
@@ -107,7 +97,7 @@ cdef class Parser:
 
     @property
     def tok2vec(self):
-        '''Return the embedding and convolutional layer of the model.'''
+        """Return the embedding and convolutional layer of the model."""
         return self.model.get_ref("tok2vec")
 
     @property
@@ -138,13 +128,13 @@ cdef class Parser:
         raise NotImplementedError
 
     def init_multitask_objectives(self, get_examples, pipeline, **cfg):
-        '''Setup models for secondary objectives, to benefit from multi-task
+        """Setup models for secondary objectives, to benefit from multi-task
         learning. This method is intended to be overridden by subclasses.
 
         For instance, the dependency parser can benefit from sharing
         an input representation with a label prediction model. These auxiliary
         models are discarded after training.
-        '''
+        """
         pass
 
     def use_params(self, params):

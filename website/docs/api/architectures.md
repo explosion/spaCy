@@ -6,6 +6,7 @@ menu:
   - ['Tok2Vec', 'tok2vec']
   - ['Transformers', 'transformers']
   - ['Parser & NER', 'parser']
+  - ['Tagging', 'tagger']
   - ['Text Classification', 'textcat']
   - ['Entity Linking', 'entitylinker']
 ---
@@ -17,6 +18,30 @@ TODO: intro and how architectures work, link to
 ## Tok2Vec architectures {#tok2vec source="spacy/ml/models/tok2vec.py"}
 
 ### spacy.HashEmbedCNN.v1 {#HashEmbedCNN}
+
+<!-- TODO: intro -->
+
+> #### Example Config
+>
+> ```ini
+> [model]
+> @architectures = "spacy.HashEmbedCNN.v1"
+> # TODO: ...
+>
+> [model.tok2vec]
+> # ...
+> ```
+
+| Name                 | Type  | Description |
+| -------------------- | ----- | ----------- |
+| `width`              | int   |             |
+| `depth`              | int   |             |
+| `embed_size`         | int   |             |
+| `window_size`        | int   |             |
+| `maxout_pieces`      | int   |             |
+| `subword_features`   | bool  |             |
+| `dropout`            | float |             |
+| `pretrained_vectors` | bool  |             |
 
 ### spacy.HashCharEmbedCNN.v1 {#HashCharEmbedCNN}
 
@@ -99,6 +124,28 @@ architectures into your training config.
 | `use_upper`         | bool                                       |             |
 | `nO`                | int                                        |             |
 
+## Tagging architectures {#tagger source="spacy/ml/models/tagger.py"}
+
+### spacy.Tagger.v1 {#Tagger}
+
+<!-- TODO: intro -->
+
+> #### Example Config
+>
+> ```ini
+> [model]
+> @architectures = "spacy.Tagger.v1"
+> nO = null
+>
+> [model.tok2vec]
+> # ...
+> ```
+
+| Name      | Type                                       | Description |
+| --------- | ------------------------------------------ | ----------- |
+| `tok2vec` | [`Model`](https://thinc.ai/docs/api-model) |             |
+| `nO`      | int                                        |             |
+
 ## Text classification architectures {#textcat source="spacy/ml/models/textcat.py"}
 
 ### spacy.TextCatEnsemble.v1 {#TextCatEnsemble}
@@ -112,3 +159,21 @@ architectures into your training config.
 ## Entity linking architectures {#entitylinker source="spacy/ml/models/entity_linker.py"}
 
 ### spacy.EntityLinker.v1 {#EntityLinker}
+
+<!-- TODO: intro -->
+
+> #### Example Config
+>
+> ```ini
+> [model]
+> @architectures = "spacy.EntityLinker.v1"
+> nO = null
+>
+> [model.tok2vec]
+> # ...
+> ```
+
+| Name      | Type                                       | Description |
+| --------- | ------------------------------------------ | ----------- |
+| `tok2vec` | [`Model`](https://thinc.ai/docs/api-model) |             |
+| `nO`      | int                                        |             |

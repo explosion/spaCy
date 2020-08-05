@@ -13,8 +13,9 @@ from ..util import get_package_path, get_model_meta, is_compatible_version
 @app.command("validate")
 def validate_cli():
     """
-    Validate that the currently installed version of spaCy is compatible
-    with the installed models. Should be run after `pip install -U spacy`.
+    Validate the currently installed models and spaCy version. Checks if the
+    installed models are compatible and shows upgrade instructions if available.
+    Should be run after `pip install -U spacy`.
     """
     validate()
 

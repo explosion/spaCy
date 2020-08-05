@@ -1,6 +1,5 @@
-from typing import Union, List, Iterable, Iterator, TYPE_CHECKING
+from typing import Union, List, Iterable, Iterator, TYPE_CHECKING, Callable
 from pathlib import Path
-import random
 
 from .. import util
 from .example import Example
@@ -12,26 +11,43 @@ if TYPE_CHECKING:
     from ..language import Language  # noqa: F401
 
 
+@util.registry.readers("spacy.Corpus.v1")
+def create_docbin_reader(
+    path: Path, gold_preproc: bool, max_length: int = 0, limit: int = 0
+) -> Callable[["Language"], Iterable[Example]]:
+    return Corpus(path, gold_preproc=gold_preproc, max_length=max_length, limit=limit)
+
+
 class Corpus:
-    """An annotated corpus, reading train and dev datasets from
-    the DocBin (.spacy) format.
+    """Iterate Example objects from a file or directory of DocBin (.spacy)
+    formated data files.
+
+    path (Path): The directory or filename to read from.
+    gold_preproc (bool): Whether to set up the Example object with gold-standard
+        sentences and tokens for the predictions. Gold preprocessing helps
+        the annotations align to the tokenization, and may result in sequences
+        of more consistent length. However, it may reduce run-time accuracy due
+        to train/test skew. Defaults to False.
+    max_length (int): Maximum document length. Longer documents will be
+        split into sentences, if sentence boundaries are available. Defaults to
+        0, which indicates no limit.
+    limit (int): Limit corpus to a subset of examples, e.g. for debugging.
+        Defaults to 0, which indicates no limit.
 
     DOCS: https://spacy.io/api/corpus
     """
 
     def __init__(
-        self, train_loc: Union[str, Path], dev_loc: Union[str, Path], limit: int = 0
+        self,
+        path,
+        *,
+        limit: int = 0,
+        gold_preproc: bool = False,
+        max_length: bool = False,
     ) -> None:
-        """Create a Corpus.
-
-        train (str / Path): File or directory of training data.
-        dev (str / Path): File or directory of development data.
-        limit (int): Max. number of examples returned.
-
-        DOCS: https://spacy.io/api/corpus#init
-        """
-        self.train_loc = train_loc
-        self.dev_loc = dev_loc
+        self.path = util.ensure_path(path)
+        self.gold_preproc = gold_preproc
+        self.max_length = max_length
         self.limit = limit
 
     @staticmethod
@@ -53,6 +69,21 @@ class Corpus:
             elif path.parts[-1].endswith(".spacy"):
                 locs.append(path)
         return locs
+
+    def __call__(self, nlp: "Language") -> Iterator[Example]:
+        """Yield examples from the data.
+
+        nlp (Language): The current nlp object.
+        YIELDS (Example): The examples.
+
+        DOCS: https://spacy.io/api/corpus#call
+        """
+        ref_docs = self.read_docbin(nlp.vocab, self.walk_corpus(self.path))
+        if self.gold_preproc:
+            examples = self.make_examples_gold_preproc(nlp, ref_docs)
+        else:
+            examples = self.make_examples(nlp, ref_docs, self.max_length)
+        yield from examples
 
     def _make_example(
         self, nlp: "Language", reference: Doc, gold_preproc: bool
@@ -114,68 +145,3 @@ class Corpus:
                         i += 1
                         if self.limit >= 1 and i >= self.limit:
                             break
-
-    def count_train(self, nlp: "Language") -> int:
-        """Returns count of words in train examples.
-
-        nlp (Language): The current nlp. object.
-        RETURNS (int): The word count.
-
-        DOCS: https://spacy.io/api/corpus#count_train
-        """
-        n = 0
-        i = 0
-        for example in self.train_dataset(nlp):
-            n += len(example.predicted)
-            if self.limit >= 0 and i >= self.limit:
-                break
-            i += 1
-        return n
-
-    def train_dataset(
-        self,
-        nlp: "Language",
-        *,
-        shuffle: bool = True,
-        gold_preproc: bool = False,
-        max_length: int = 0
-    ) -> Iterator[Example]:
-        """Yield examples from the training data.
-
-        nlp (Language): The current nlp object.
-        shuffle (bool): Whether to shuffle the examples.
-        gold_preproc (bool): Whether to train on gold-standard sentences and tokens.
-        max_length (int): Maximum document length. Longer documents will be
-            split into sentences, if sentence boundaries are available. 0 for
-            no limit.
-        YIELDS (Example): The examples.
-
-        DOCS: https://spacy.io/api/corpus#train_dataset
-        """
-        ref_docs = self.read_docbin(nlp.vocab, self.walk_corpus(self.train_loc))
-        if gold_preproc:
-            examples = self.make_examples_gold_preproc(nlp, ref_docs)
-        else:
-            examples = self.make_examples(nlp, ref_docs, max_length)
-        if shuffle:
-            examples = list(examples)
-            random.shuffle(examples)
-        yield from examples
-
-    def dev_dataset(
-        self, nlp: "Language", *, gold_preproc: bool = False
-    ) -> Iterator[Example]:
-        """Yield examples from the development data.
-
-        nlp (Language): The current nlp object.
-        gold_preproc (bool): Whether to train on gold-standard sentences and tokens.
-        YIELDS (Example): The examples.
-
-        DOCS: https://spacy.io/api/corpus#dev_dataset
-        """
-        ref_docs = self.read_docbin(nlp.vocab, self.walk_corpus(self.dev_loc))
-        if gold_preproc:
-            examples = self.make_examples_gold_preproc(nlp, ref_docs)
-        else:
-            examples = self.make_examples(nlp, ref_docs, max_length=0)
-        yield from examples

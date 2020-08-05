@@ -1,5 +1,5 @@
 from thinc.api import Model, noop, use_ops, Linear
-from ..syntax._parser_model import ParserStepModel
+from .parser_model import ParserStepModel
 
 
 def TransitionModel(tok2vec, lower, upper, dropout=0.2, unseen_classes=set()):

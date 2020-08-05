@@ -1,29 +1,18 @@
 # cython: infer_types=True, cdivision=True, boundscheck=False
-cimport cython.parallel
 cimport numpy as np
 from libc.math cimport exp
-from libcpp.vector cimport vector
 from libc.string cimport memset, memcpy
 from libc.stdlib cimport calloc, free, realloc
-from cymem.cymem cimport Pool
-from thinc.extra.search cimport Beam
 from thinc.backends.linalg cimport Vec, VecVec
 cimport blis.cy
 
 import numpy
 import numpy.random
-from thinc.api import Linear, Model, CupyOps, NumpyOps, use_ops, noop
+from thinc.api import Model, CupyOps, NumpyOps
 
-from ..typedefs cimport weight_t, class_t, hash_t
-from ..tokens.doc cimport Doc
-from .stateclass cimport StateClass
-from .transition_system cimport Transition
-
-from ..compat import copy_array
-from ..errors import Errors, TempErrors
-from ..util import create_default_optimizer
 from .. import util
-from . import nonproj
+from ..typedefs cimport weight_t, class_t, hash_t
+from ..pipeline._parser_internals.stateclass cimport StateClass
 
 
 cdef WeightsC get_c_weights(model) except *:

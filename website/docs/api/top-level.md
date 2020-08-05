@@ -4,6 +4,7 @@ menu:
   - ['spacy', 'spacy']
   - ['displacy', 'displacy']
   - ['registry', 'registry']
+  - ['Readers & Batchers', 'readers-batchers']
   - ['Data & Alignment', 'gold']
   - ['Utility Functions', 'util']
 ---
@@ -31,12 +32,13 @@ loaded in via [`Language.from_disk`](/api/language#from_disk).
 > nlp = spacy.load("en_core_web_sm", disable=["parser", "tagger"])
 > ```
 
-| Name                                       | Type              | Description                                                                       |
-| ------------------------------------------ | ----------------- | --------------------------------------------------------------------------------- |
-| `name`                                     | str / `Path`      | Model to load, i.e. package name or path.                                         |
-| `disable`                                  | `List[str]`       | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). |
-| `component_cfg` <Tag variant="new">3</Tag> | `Dict[str, dict]` | Optional config overrides for pipeline components, keyed by component names.      |
-| **RETURNS**                                | `Language`        | A `Language` object with the loaded model.                                        |
+| Name                                | Type                                                                   | Description                                                                                                                      |
+| ----------------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `name`                              | str / `Path`                                                           | Model to load, i.e. package name or path.                                                                                        |
+| _keyword-only_                      |                                                                        |                                                                                                                                  |
+| `disable`                           | `List[str]`                                                            | Names of pipeline components to [disable](/usage/processing-pipelines#disabling).                                                |
+| `config` <Tag variant="new">3</Tag> | `Dict[str, Any]` / [`Config`](https://thinc.ai/docs/api-config#config) | Optional config overrides, either as nested dict or dict keyed by section value in dot notation, e.g. `"components.name.value"`. |
+| **RETURNS**                         | `Language`                                                             | A `Language` object with the loaded model.                                                                                       |
 
 Essentially, `spacy.load()` is a convenience wrapper that reads the language ID
 and pipeline components from a model's `meta.json`, initializes the `Language`
@@ -83,11 +85,12 @@ meta data as a dictionary instead, you can use the `meta` attribute on your
 > markdown = spacy.info(markdown=True, silent=True)
 > ```
 
-| Name       | Type | Description                                      |
-| ---------- | ---- | ------------------------------------------------ |
-| `model`    | str  | A model, i.e. a package name or path (optional). |
-| `markdown` | bool | Print information as Markdown.                   |
-| `silent`   | bool | Don't print anything, just return.               |
+| Name           | Type | Description                                      |
+| -------------- | ---- | ------------------------------------------------ |
+| `model`        | str  | A model, i.e. a package name or path (optional). |
+| _keyword-only_ |      |                                                  |
+| `markdown`     | bool | Print information as Markdown.                   |
+| `silent`       | bool | Don't print anything, just return.               |
 
 ### spacy.explain {#spacy.explain tag="function"}
 
@@ -290,6 +293,8 @@ factories.
 >     return Model("custom", forward, dims={"nO": nO})
 > ```
 
+<!-- TODO: finish table -->
+
 | Registry name     | Description                                                                                                                                                                                                                                       |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `architectures`   | Registry for functions that create [model architectures](/api/architectures). Can be used to register custom model architectures and reference them in the `config.cfg`.                                                                          |
@@ -297,7 +302,10 @@ factories.
 | `languages`       | Registry for language-specific `Language` subclasses. Automatically reads from [entry points](/usage/saving-loading#entry-points).                                                                                                                |
 | `lookups`         | Registry for large lookup tables available via `vocab.lookups`.                                                                                                                                                                                   |
 | `displacy_colors` | Registry for custom color scheme for the [`displacy` NER visualizer](/usage/visualizers). Automatically reads from [entry points](/usage/saving-loading#entry-points).                                                                            |
-| `assets`          | <!-- TODO: what is this used for again?-->                                                                                                                                                                                                        |
+| `assets`          |                                                                                                                                                                                                                                                   |
+| `callbacks`       | Registry for custom callbacks to [modify the `nlp` object](/usage/training#custom-code-nlp-callbacks) before training.                                                                                                                            |
+| `readers`         | Registry for training and evaluation [data readers](#readers-batchers).                                                                                                                                                                           |
+| `batchers`        | Registry for training and evaluation [data batchers](#readers-batchers).                                                                                                                                                                          |
 | `optimizers`      | Registry for functions that create [optimizers](https://thinc.ai/docs/api-optimizers).                                                                                                                                                            |
 | `schedules`       | Registry for functions that create [schedules](https://thinc.ai/docs/api-schedules).                                                                                                                                                              |
 | `layers`          | Registry for functions that create [layers](https://thinc.ai/docs/api-layers).                                                                                                                                                                    |
@@ -324,10 +332,117 @@ See the [`Transformer`](/api/transformer) API reference and
 >     return annotation_sette
 > ```
 
-| Registry name                                                | Description                                                                                                                                                                                                                                       |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`span_getters`](/api/transformer#span_getters)              | Registry for functions that take a batch of `Doc` objects and return a list of `Span` objects to process by the transformer, e.g. sentences.                                                                                                      |
-| [`annotation_setters`](/api/transformers#annotation_setters) | Registry for functions that create annotation setters. Annotation setters are functions that take a batch of `Doc` objects and a [`FullTransformerBatch`](/api/transformer#fulltransformerbatch) and can set additional annotations on the `Doc`. |
+| Registry name                                               | Description                                                                                                                                                                                                                                       |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`span_getters`](/api/transformer#span_getters)             | Registry for functions that take a batch of `Doc` objects and return a list of `Span` objects to process by the transformer, e.g. sentences.                                                                                                      |
+| [`annotation_setters`](/api/transformer#annotation_setters) | Registry for functions that create annotation setters. Annotation setters are functions that take a batch of `Doc` objects and a [`FullTransformerBatch`](/api/transformer#fulltransformerbatch) and can set additional annotations on the `Doc`. |
+
+## Data readers and batchers {#readers-batchers new="3"}
+
+<!-- TODO: -->
+
+### spacy.Corpus.v1 {#corpus tag="registered function" source="spacy/gold/corpus.py"}
+
+Registered function that creates a [`Corpus`](/api/corpus) of training or
+evaluation data. It takes the same arguments as the `Corpus` class and returns a
+callable that yields [`Example`](/api/example) objects. You can replace it with
+your own registered function in the [`@readers` registry](#regsitry) to
+customize the data loading and streaming.
+
+> #### Example config
+>
+> ```ini
+> [paths]
+> train = "corpus/train.spacy"
+>
+> [training.train_corpus]
+> @readers = "spacy.Corpus.v1"
+> path = ${paths:train}
+> gold_preproc = false
+> max_length = 0
+> limit = 0
+> ```
+
+| Name            | Type   | Description                                                                                                                                     |
+| --------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `path`          | `Path` | The directory or filename to read from. Expects data in spaCy's binary [`.spacy` format](/api/data-formats#binary-training).                    |
+|  `gold_preproc` | bool   | Whether to set up the Example object with gold-standard sentences and tokens for the predictions. See [`Corpus`](/api/corpus#init) for details. |
+| `max_length`    | int    | Maximum document length. Longer documents will be split into sentences, if sentence boundaries are available. Defaults to `0` for no limit.     |
+| `limit`         | int    | Limit corpus to a subset of examples, e.g. for debugging. Defaults to `0` for no limit.                                                         |
+
+### Batchers {#batchers source="spacy/gold/batchers.py"}
+
+<!-- TODO: -->
+
+#### batch_by_words.v1 {#batch_by_words tag="registered function"}
+
+Create minibatches of roughly a given number of words. If any examples are
+longer than the specified batch length, they will appear in a batch by
+themselves, or be discarded if `discard_oversize` is set to `True`. The argument
+`docs` can be a list of strings, [`Doc`](/api/doc) objects or
+[`Example`](/api/example) objects.
+
+> #### Example config
+>
+> ```ini
+> [training.batcher]
+> @batchers = "batch_by_words.v1"
+> size = 100
+> tolerance = 0.2
+> discard_oversize = false
+> get_length = null
+> ```
+
+<!-- TODO: complete table -->
+
+| Name               | Type                   | Description                                                                                                                         |
+| ------------------ | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `size`             | `Iterable[int]` / int  | The batch size. Can also be a block referencing a schedule, e.g. [`compounding`](https://thinc.ai/docs/api-schedules/#compounding). |
+| `tolerance`        | float                  |                                                                                                                                     |
+| `discard_oversize` | bool                   | Discard items that are longer than the specified batch length.                                                                      |
+| `get_length`       | `Callable[[Any], int]` | Optional function that receives a sequence and returns its length. Defaults to the built-in `len()` if not set.                     |
+
+#### batch_by_sequence.v1 {#batch_by_sequence tag="registered function"}
+
+<!-- TODO: -->
+
+> #### Example config
+>
+> ```ini
+> [training.batcher]
+> @batchers = "batch_by_sequence.v1"
+> size = 32
+> get_length = null
+> ```
+
+<!-- TODO: complete table -->
+
+| Name         | Type                   | Description                                                                                                                         |
+| ------------ | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `size`       | `Iterable[int]` / int  | The batch size. Can also be a block referencing a schedule, e.g. [`compounding`](https://thinc.ai/docs/api-schedules/#compounding). |
+| `get_length` | `Callable[[Any], int]` | Optional function that receives a sequence and returns its length. Defaults to the built-in `len()` if not set.                     |
+
+#### batch_by_padded.v1 {#batch_by_padded tag="registered function"}
+
+<!-- TODO: -->
+
+> #### Example config
+>
+> ```ini
+> [training.batcher]
+> @batchers = "batch_by_words.v1"
+> size = 100
+> buffer = TODO:
+> discard_oversize = false
+> get_length = null
+> ```
+
+| Name               | Type                   | Description                                                                                                                         |
+| ------------------ | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `size`             | `Iterable[int]` / int  | The batch size. Can also be a block referencing a schedule, e.g. [`compounding`](https://thinc.ai/docs/api-schedules/#compounding). |
+| `buffer`           | int                    |                                                                                                                                     |
+| `discard_oversize` | bool                   | Discard items that are longer than the specified batch length.                                                                      |
+| `get_length`       | `Callable[[Any], int]` | Optional function that receives a sequence and returns its length. Defaults to the built-in `len()` if not set.                     |
 
 ## Training data and alignment {#gold source="spacy/gold"}
 

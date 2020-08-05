@@ -21,7 +21,8 @@ def assert_almost_equal(a, b):
 
 def test_kb_valid_entities(nlp):
     """Test the valid construction of a KB with 3 entities and two aliases"""
-    mykb = KnowledgeBase(nlp.vocab, entity_vector_length=3)
+    mykb = KnowledgeBase(entity_vector_length=3)
+    mykb.initialize(nlp.vocab)
 
     # adding entities
     mykb.add_entity(entity="Q1", freq=19, entity_vector=[8, 4, 3])
@@ -50,7 +51,8 @@ def test_kb_valid_entities(nlp):
 
 def test_kb_invalid_entities(nlp):
     """Test the invalid construction of a KB with an alias linked to a non-existing entity"""
-    mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
+    mykb = KnowledgeBase(entity_vector_length=1)
+    mykb.initialize(nlp.vocab)
 
     # adding entities
     mykb.add_entity(entity="Q1", freq=19, entity_vector=[1])
@@ -66,7 +68,8 @@ def test_kb_invalid_entities(nlp):
 
 def test_kb_invalid_probabilities(nlp):
     """Test the invalid construction of a KB with wrong prior probabilities"""
-    mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
+    mykb = KnowledgeBase(entity_vector_length=1)
+    mykb.initialize(nlp.vocab)
 
     # adding entities
     mykb.add_entity(entity="Q1", freq=19, entity_vector=[1])
@@ -80,7 +83,8 @@ def test_kb_invalid_probabilities(nlp):
 
 def test_kb_invalid_combination(nlp):
     """Test the invalid construction of a KB with non-matching entity and probability lists"""
-    mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
+    mykb = KnowledgeBase(entity_vector_length=1)
+    mykb.initialize(nlp.vocab)
 
     # adding entities
     mykb.add_entity(entity="Q1", freq=19, entity_vector=[1])
@@ -96,7 +100,8 @@ def test_kb_invalid_combination(nlp):
 
 def test_kb_invalid_entity_vector(nlp):
     """Test the invalid construction of a KB with non-matching entity vector lengths"""
-    mykb = KnowledgeBase(nlp.vocab, entity_vector_length=3)
+    mykb = KnowledgeBase(entity_vector_length=3)
+    mykb.initialize(nlp.vocab)
 
     # adding entities
     mykb.add_entity(entity="Q1", freq=19, entity_vector=[1, 2, 3])
@@ -106,9 +111,47 @@ def test_kb_invalid_entity_vector(nlp):
         mykb.add_entity(entity="Q2", freq=5, entity_vector=[2])
 
 
+def test_kb_default(nlp):
+    """Test that the default (empty) KB is loaded when not providing a config"""
+    entity_linker = nlp.add_pipe("entity_linker", config={})
+    assert len(entity_linker.kb) == 0
+    assert entity_linker.kb.get_size_entities() == 0
+    assert entity_linker.kb.get_size_aliases() == 0
+    # default value from pipeline.entity_linker
+    assert entity_linker.kb.entity_vector_length == 64
+
+
+def test_kb_custom_length(nlp):
+    """Test that the default (empty) KB can be configured with a custom entity length"""
+    entity_linker = nlp.add_pipe(
+        "entity_linker", config={"kb": {"entity_vector_length": 35}}
+    )
+    assert len(entity_linker.kb) == 0
+    assert entity_linker.kb.get_size_entities() == 0
+    assert entity_linker.kb.get_size_aliases() == 0
+    assert entity_linker.kb.entity_vector_length == 35
+
+
+def test_kb_undefined(nlp):
+    """Test that the EL can't train without defining a KB"""
+    entity_linker = nlp.add_pipe("entity_linker", config={})
+    with pytest.raises(ValueError):
+        entity_linker.begin_training()
+
+
+def test_kb_empty(nlp):
+    """Test that the EL can't train with an empty KB"""
+    config = {"kb": {"@assets": "spacy.EmptyKB.v1", "entity_vector_length": 342}}
+    entity_linker = nlp.add_pipe("entity_linker", config=config)
+    assert len(entity_linker.kb) == 0
+    with pytest.raises(ValueError):
+        entity_linker.begin_training()
+
+
 def test_candidate_generation(nlp):
     """Test correct candidate generation"""
-    mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
+    mykb = KnowledgeBase(entity_vector_length=1)
+    mykb.initialize(nlp.vocab)
 
     # adding entities
     mykb.add_entity(entity="Q1", freq=27, entity_vector=[1])
@@ -133,7 +176,8 @@ def test_candidate_generation(nlp):
 
 def test_append_alias(nlp):
     """Test that we can append additional alias-entity pairs"""
-    mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
+    mykb = KnowledgeBase(entity_vector_length=1)
+    mykb.initialize(nlp.vocab)
 
     # adding entities
     mykb.add_entity(entity="Q1", freq=27, entity_vector=[1])
@@ -163,7 +207,8 @@ def test_append_alias(nlp):
 
 def test_append_invalid_alias(nlp):
     """Test that append an alias will throw an error if prior probs are exceeding 1"""
-    mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
+    mykb = KnowledgeBase(entity_vector_length=1)
+    mykb.initialize(nlp.vocab)
 
     # adding entities
     mykb.add_entity(entity="Q1", freq=27, entity_vector=[1])
@@ -184,7 +229,8 @@ def test_preserving_links_asdoc(nlp):
 
     @registry.assets.register("myLocationsKB.v1")
     def dummy_kb() -> KnowledgeBase:
-        mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
+        mykb = KnowledgeBase(entity_vector_length=1)
+        mykb.initialize(nlp.vocab)
         # adding entities
         mykb.add_entity(entity="Q1", freq=19, entity_vector=[1])
         mykb.add_entity(entity="Q2", freq=8, entity_vector=[1])
@@ -289,7 +335,8 @@ def test_overfitting_IO():
         # create artificial KB - assign same prior weight to the two russ cochran's
         # Q2146908 (Russ Cochran): American golfer
         # Q7381115 (Russ Cochran): publisher
-        mykb = KnowledgeBase(nlp.vocab, entity_vector_length=3)
+        mykb = KnowledgeBase(entity_vector_length=3)
+        mykb.initialize(nlp.vocab)
         mykb.add_entity(entity="Q2146908", freq=12, entity_vector=[6, -4, 3])
         mykb.add_entity(entity="Q7381115", freq=12, entity_vector=[9, 1, -7])
         mykb.add_alias(

@@ -10,7 +10,7 @@ from .align import Alignment
 from .iob_utils import biluo_to_iob, biluo_tags_from_offsets, biluo_tags_from_doc
 from .iob_utils import spans_from_biluo_tags
 from ..errors import Errors, Warnings
-from ..syntax import nonproj
+from ..pipeline._parser_internals import nonproj
 
 
 cpdef Doc annotations2doc(vocab, tok_annot, doc_annot):
@@ -32,9 +32,9 @@ cdef class Example:
             raise TypeError(Errors.E972.format(arg="predicted"))
         if reference is None:
             raise TypeError(Errors.E972.format(arg="reference"))
-        self.x = predicted
-        self.y = reference
-        self._alignment = alignment
+        self.predicted = predicted
+        self.reference = reference
+        self._cached_alignment = alignment
 
     def __len__(self):
         return len(self.predicted)
@@ -45,7 +45,8 @@ cdef class Example:
 
         def __set__(self, doc):
             self.x = doc
-            self._alignment = None
+            self._cached_alignment = None
+            self._cached_words_x = [t.text for t in doc]
 
     property reference:
         def __get__(self):
@@ -53,7 +54,8 @@ cdef class Example:
 
         def __set__(self, doc):
             self.y = doc
-            self._alignment = None
+            self._cached_alignment = None
+            self._cached_words_y = [t.text for t in doc]
 
     def copy(self):
         return Example(
@@ -79,13 +81,15 @@ cdef class Example:
 
     @property
     def alignment(self):
-        if self._alignment is None:
-            spacy_words = [token.orth_ for token in self.predicted]
-            gold_words = [token.orth_ for token in self.reference]
-            if gold_words == []:
-                gold_words = spacy_words
-            self._alignment = Alignment.from_strings(spacy_words, gold_words)
-        return self._alignment
+        words_x = [token.text for token in self.x]
+        words_y = [token.text for token in self.y]
+        if self._cached_alignment is None or \
+                words_x != self._cached_words_x or \
+                words_y != self._cached_words_y:
+            self._cached_alignment = Alignment.from_strings(words_x, words_y)
+            self._cached_words_x = words_x
+            self._cached_words_y = words_y
+        return self._cached_alignment
 
     def get_aligned(self, field, as_string=False):
         """Return an aligned array for a token attribute."""
@@ -179,15 +183,15 @@ cdef class Example:
                 "links": self._links_to_dict()
             },
             "token_annotation": {
-                "ids": [t.i+1 for t in self.reference],
-                "words": [t.text for t in self.reference],
-                "tags": [t.tag_ for t in self.reference],
-                "lemmas": [t.lemma_ for t in self.reference],
-                "pos": [t.pos_ for t in self.reference],
-                "morphs": [t.morph_ for t in self.reference],
-                "heads": [t.head.i for t in self.reference],
-                "deps": [t.dep_ for t in self.reference],
-                "sent_starts": [int(bool(t.is_sent_start)) for t in self.reference]
+                "ORTH": [t.text for t in self.reference],
+                "SPACY": [bool(t.whitespace_) for t in self.reference],
+                "TAG": [t.tag_ for t in self.reference],
+                "LEMMA": [t.lemma_ for t in self.reference],
+                "POS": [t.pos_ for t in self.reference],
+                "MORPH": [t.morph_ for t in self.reference],
+                "HEAD": [t.head.i for t in self.reference],
+                "DEP": [t.dep_ for t in self.reference],
+                "SENT_START": [int(bool(t.is_sent_start)) for t in self.reference]
             }
         }
 
@@ -331,10 +335,14 @@ def _fix_legacy_dict_data(example_dict):
     for key, value in old_token_dict.items():
         if key in ("text", "ids", "brackets"):
             pass
+        elif key in remapping.values():
+            token_dict[key] = value
         elif key.lower() in remapping:
             token_dict[remapping[key.lower()]] = value
         else:
-            raise KeyError(Errors.E983.format(key=key, dict="token_annotation", keys=remapping.keys()))
+            all_keys = set(remapping.values())
+            all_keys.update(remapping.keys())
+            raise KeyError(Errors.E983.format(key=key, dict="token_annotation", keys=all_keys))
     text = example_dict.get("text", example_dict.get("raw"))
     if _has_field(token_dict, "ORTH") and not _has_field(token_dict, "SPACY"):
         token_dict["SPACY"] = _guess_spaces(text, token_dict["ORTH"])

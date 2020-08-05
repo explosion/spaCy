@@ -8,7 +8,7 @@ from ..errors import Errors
 from .. import util
 
 
-class Pipe:
+cdef class Pipe:
     """This class is a base class and not instantiated directly. Trainable
     pipeline components like the EntityRecognizer or TextCategorizer inherit
     from it and it defines the interface that components should follow to
@@ -16,8 +16,6 @@ class Pipe:
 
     DOCS: https://spacy.io/api/pipe
     """
-
-    name = None
 
     def __init__(self, vocab, model, name, **cfg):
         """Initialize a pipeline component.
