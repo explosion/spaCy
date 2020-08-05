@@ -16,9 +16,7 @@ def test_serialize_kb_disk(en_vocab):
             dir_path.mkdir()
         file_path = dir_path / "kb"
         kb1.dump(str(file_path))
-
-        kb2 = KnowledgeBase(entity_vector_length=3)
-        kb2.initialize(en_vocab)
+        kb2 = KnowledgeBase(vocab=en_vocab, entity_vector_length=3)
         kb2.load_bulk(str(file_path))
 
     # final assertions
@@ -26,9 +24,7 @@ def test_serialize_kb_disk(en_vocab):
 
 
 def _get_dummy_kb(vocab):
-    kb = KnowledgeBase(entity_vector_length=3)
-    kb.initialize(vocab)
-
+    kb = KnowledgeBase(vocab, entity_vector_length=3)
     kb.add_entity(entity="Q53", freq=33, entity_vector=[0, 5, 3])
     kb.add_entity(entity="Q17", freq=2, entity_vector=[7, 1, 0])
     kb.add_entity(entity="Q007", freq=7, entity_vector=[0, 0, 7])

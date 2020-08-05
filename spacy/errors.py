@@ -486,14 +486,11 @@ class Errors:
             "not found in pipeline. Available components: {opts}")
     E945 = ("Can't copy pipeline component '{name}' from source. Expected loaded "
             "nlp object, but got: {source}")
-    E946 = ("The Vocab for the knowledge base is not initialized. Did you forget to "
-            "call kb.initialize()?")
     E947 = ("Matcher.add received invalid 'greedy' argument: expected "
             "a string value from {expected} but got: '{arg}'")
     E948 = ("Matcher.add received invalid 'patterns' argument: expected "
             "a List, but got: {arg_type}")
     E949 = ("Can only create an alignment when the texts are the same.")
-    E950 = ("Attempt to change the 'vocab' instance of an initialized KB.")
     E952 = ("The section '{name}' is not a valid section in the provided config.")
     E953 = ("Mismatched IDs received by the Tok2Vec listener: {id1} vs. {id2}")
     E954 = ("The Tok2Vec listener did not receive a valid input.")

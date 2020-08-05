@@ -33,20 +33,13 @@ dropout = null
 """
 DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
 
-default_kb_config = """
-[kb]
-@assets = "spacy.EmptyKB.v1"
-entity_vector_length = 64
-"""
-DEFAULT_NEL_KB = Config().from_str(default_kb_config)["kb"]
-
 
 @Language.factory(
     "entity_linker",
     requires=["doc.ents", "doc.sents", "token.ent_iob", "token.ent_type"],
     assigns=["token.ent_kb_id"],
     default_config={
-        "kb": DEFAULT_NEL_KB,
+        "kb": {"@assets": "spacy.EmptyKB.v1", "entity_vector_length": 64, "vocab": Vocab()}, # TODO
         "model": DEFAULT_NEL_MODEL,
         "labels_discard": [],
         "incl_prior": True,
@@ -122,7 +115,7 @@ class EntityLinker(Pipe):
         if not isinstance(kb, KnowledgeBase):
             raise ValueError(Errors.E990.format(type=type(self.kb)))
         if kb.vocab is None:
-            kb.initialize(vocab)
+            kb.vocab = self.vocab
         self.kb = kb
         if "kb" in cfg:
             del cfg["kb"]  # we don't want to duplicate its serialization
@@ -449,8 +442,7 @@ class EntityLinker(Pipe):
                 raise ValueError(Errors.E149)
 
         def load_kb(p):
-            self.kb = KnowledgeBase(entity_vector_length=self.cfg["entity_width"])
-            self.kb.initialize(self.vocab)
+            self.kb = KnowledgeBase(self.vocab, entity_vector_length=self.cfg["entity_width"])
             self.kb.load_bulk(p)
 
         deserialize = {}

@@ -72,8 +72,7 @@ def entity_linker():
 
     @registry.assets.register("TestIssue5230KB.v1")
     def dummy_kb() -> KnowledgeBase:
-        kb = KnowledgeBase(entity_vector_length=1)
-        kb.initialize(nlp.vocab)
+        kb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
         kb.add_entity("test", 0.0, zeros((1, 1), dtype="f"))
         return kb
 
@@ -122,8 +121,7 @@ def test_writer_with_path_py35():
 
 def test_save_and_load_knowledge_base():
     nlp = Language()
-    kb = KnowledgeBase(entity_vector_length=1)
-    kb.initialize(nlp.vocab)
+    kb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
     with make_tempdir() as d:
         path = d / "kb"
         try:

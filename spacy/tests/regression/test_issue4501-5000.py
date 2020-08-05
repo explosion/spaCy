@@ -139,8 +139,7 @@ def test_issue4665():
 def test_issue4674():
     """Test that setting entities with overlapping identifiers does not mess up IO"""
     nlp = English()
-    kb = KnowledgeBase(entity_vector_length=3)
-    kb.initialize(nlp.vocab)
+    kb = KnowledgeBase(nlp.vocab, entity_vector_length=3)
     vector1 = [0.9, 1.1, 1.01]
     vector2 = [1.8, 2.25, 2.01]
     with pytest.warns(UserWarning):
