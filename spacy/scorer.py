@@ -403,24 +403,24 @@ class Scorer:
             f"{attr}_f_per_type": {k: v.to_dict() for k, v in f_per_type.items()},
             f"{attr}_auc_per_type": {k: v.score for k, v in auc_per_type.items()},
         }
+        results[f"{attr}_p"] = score.precision
+        results[f"{attr}_r"] = score.recall
+        results[f"{attr}_f"] = score.fscore
+        results[f"{attr}_macro_f"] = sum(
+            [score.fscore for label, score in f_per_type.items()]
+        ) / (len(f_per_type) + 1e-100)
+        results[f"{attr}_macro_auc"] = max(
+            sum([score.score for label, score in auc_per_type.items()])
+            / (len(auc_per_type) + 1e-100),
+            -1,
+        )
         if len(labels) == 2 and not multi_label and positive_label:
-            results[f"{attr}_p"] = score.precision
-            results[f"{attr}_r"] = score.recall
-            results[f"{attr}_f"] = score.fscore
             results[f"{attr}_score"] = results[f"{attr}_f"]
             results[f"{attr}_score_desc"] = f"F ({positive_label})"
         elif not multi_label:
-            results[f"{attr}_macro_f"] = sum(
-                [score.fscore for label, score in f_per_type.items()]
-            ) / (len(f_per_type) + 1e-100)
             results[f"{attr}_score"] = results[f"{attr}_macro_f"]
             results[f"{attr}_score_desc"] = "macro F"
         else:
-            results[f"{attr}_macro_auc"] = max(
-                sum([score.score for label, score in auc_per_type.items()])
-                / (len(auc_per_type) + 1e-100),
-                -1,
-            )
             results[f"{attr}_score"] = results[f"{attr}_macro_auc"]
             results[f"{attr}_score_desc"] = "macro AUC"
         return results
