@@ -44,7 +44,7 @@ from thinc.api import fix_random_seed, compounding, decaying  # noqa: F401
 
 from .symbols import ORTH
 from .compat import cupy, CudaStream, is_windows
-from .errors import Errors, Warnings
+from .errors import Errors, Warnings, OLD_MODEL_SHORTCUTS
 from . import about
 
 if TYPE_CHECKING:
@@ -232,6 +232,8 @@ def load_model(
             return load_model_from_path(Path(name), **kwargs)
     elif hasattr(name, "exists"):  # Path or Path-like to model data
         return load_model_from_path(name, **kwargs)
+    if name in OLD_MODEL_SHORTCUTS:
+        raise IOError(Errors.E941.format(name=name, full=OLD_MODEL_SHORTCUTS[name]))
     raise IOError(Errors.E050.format(name=name))
 
 
