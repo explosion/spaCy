@@ -11,18 +11,17 @@ from spacy.util import get_lang_class
 LANGUAGES = ["el", "en", "fr", "nl"]
 # fmt: on
 
-@registry.assets("lemmatizer_init_lookups")
-def lemmatizer_init_lookups():
-    lookups = Lookups()
-    lookups.add_table("lemma_lookup", {"cope": "cope"})
-    lookups.add_table("lemma_index", {"verb": ("cope", "cop")})
-    lookups.add_table("lemma_exc", {"verb": {"coping": ("cope",)}})
-    lookups.add_table("lemma_rules", {"verb": [["ing", ""]]})
-    return lookups
-
-
 @pytest.mark.parametrize("lang", LANGUAGES)
 def test_lemmatizer_initialize(lang, capfd):
+    @registry.assets("lemmatizer_init_lookups")
+    def lemmatizer_init_lookups():
+        lookups = Lookups()
+        lookups.add_table("lemma_lookup", {"cope": "cope"})
+        lookups.add_table("lemma_index", {"verb": ("cope", "cop")})
+        lookups.add_table("lemma_exc", {"verb": {"coping": ("cope",)}})
+        lookups.add_table("lemma_rules", {"verb": [["ing", ""]]})
+        return lookups
+
     """Test that languages can be initialized."""
     nlp = get_lang_class(lang)()
     nlp.add_pipe("lemmatizer", config={"lookups": {"@assets": "lemmatizer_init_lookups"}})

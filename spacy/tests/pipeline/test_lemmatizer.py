@@ -12,28 +12,31 @@ def nlp():
     return English()
 
 
-@registry.assets("empty_lookups")
-def empty_lookups():
-    return Lookups()
-
-
-@registry.assets("cope_lookups")
-def cope_lookups():
-    lookups = Lookups()
-    lookups.add_table("lemma_lookup", {"cope": "cope"})
-    lookups.add_table("lemma_index", {"verb": ("cope", "cop")})
-    lookups.add_table("lemma_exc", {"verb": {"coping": ("cope",)}})
-    lookups.add_table("lemma_rules", {"verb": [["ing", ""]]})
-    return lookups
-
-
 @pytest.fixture
 def lemmatizer(nlp):
+    @registry.assets("cope_lookups")
+    def cope_lookups():
+        lookups = Lookups()
+        lookups.add_table("lemma_lookup", {"cope": "cope"})
+        lookups.add_table("lemma_index", {"verb": ("cope", "cop")})
+        lookups.add_table("lemma_exc", {"verb": {"coping": ("cope",)}})
+        lookups.add_table("lemma_rules", {"verb": [["ing", ""]]})
+        return lookups
+
     lemmatizer = nlp.add_pipe("lemmatizer", config={"mode": "rule", "lookups": {"@assets": "cope_lookups"}})
     return lemmatizer
 
 
 def test_lemmatizer_init(nlp):
+    @registry.assets("cope_lookups")
+    def cope_lookups():
+        lookups = Lookups()
+        lookups.add_table("lemma_lookup", {"cope": "cope"})
+        lookups.add_table("lemma_index", {"verb": ("cope", "cop")})
+        lookups.add_table("lemma_exc", {"verb": {"coping": ("cope",)}})
+        lookups.add_table("lemma_rules", {"verb": [["ing", ""]]})
+        return lookups
+
     lemmatizer = nlp.add_pipe("lemmatizer", config={"mode": "lookup", "lookups": {"@assets": "cope_lookups"}})
     assert isinstance(lemmatizer.lookups, Lookups)
     assert lemmatizer.mode == "lookup"
@@ -44,6 +47,10 @@ def test_lemmatizer_init(nlp):
     assert doc[0].lemma_ == "coping"
 
     nlp.remove_pipe("lemmatizer")
+
+    @registry.assets("empty_lookups")
+    def empty_lookups():
+        return Lookups()
 
     with pytest.raises(ValueError):
         nlp.add_pipe("lemmatizer", config={"mode": "lookup", "lookups": {"@assets": "empty_lookups"}})
@@ -67,6 +74,15 @@ def test_lemmatizer_config(nlp, lemmatizer):
 
 
 def test_lemmatizer_serialize(nlp, lemmatizer):
+    @registry.assets("cope_lookups")
+    def cope_lookups():
+        lookups = Lookups()
+        lookups.add_table("lemma_lookup", {"cope": "cope"})
+        lookups.add_table("lemma_index", {"verb": ("cope", "cop")})
+        lookups.add_table("lemma_exc", {"verb": {"coping": ("cope",)}})
+        lookups.add_table("lemma_rules", {"verb": [["ing", ""]]})
+        return lookups
+
     nlp2 = English()
     lemmatizer2 = nlp2.add_pipe("lemmatizer", config={"mode": "rule", "lookups": {"@assets": "cope_lookups"}})
     lemmatizer2.from_bytes(lemmatizer.to_bytes())
