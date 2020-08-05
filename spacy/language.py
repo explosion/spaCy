@@ -1466,7 +1466,7 @@ class Language:
         before_init = resolved["nlp"]["before_init"]
         after_init = resolved["nlp"]["after_init"]
         if before_init is not None:
-            before_init(cls)
+            nlp = before_init(cls)
         nlp = cls(
             vocab=vocab,
             create_tokenizer=create_tokenizer,
@@ -1513,7 +1513,7 @@ class Language:
         nlp.config = filled if auto_fill else config
         nlp.resolved = resolved
         if after_init is not None:
-            after_init(nlp)
+            nlp = after_init(nlp)
         return nlp
 
     def to_disk(

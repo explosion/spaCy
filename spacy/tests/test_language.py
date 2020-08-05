@@ -166,6 +166,7 @@ def test_language_from_config_before_after_init():
             ran_before = True
             assert lang_cls is English
             lang_cls.Defaults.foo = "bar"
+            return lang_cls
 
         return before_init
 
@@ -177,6 +178,7 @@ def test_language_from_config_before_after_init():
             assert isinstance(nlp, English)
             assert nlp.Defaults.foo == "bar"
             nlp.meta["foo"] = "bar"
+            return nlp
 
         return after_init
 
