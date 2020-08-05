@@ -2,6 +2,7 @@ import pytest
 from thinc.config import Config, ConfigValidationError
 import spacy
 from spacy.lang.en import English
+from spacy.lang.de import German
 from spacy.language import Language
 from spacy.util import registry, deep_merge_configs, load_model_from_config
 from spacy.ml.models import build_Tok2Vec_model, build_tb_parser_model
@@ -282,3 +283,33 @@ def test_serialize_config_missing_pipes():
     assert "tok2vec" not in config["components"]
     with pytest.raises(ValueError):
         load_model_from_config(config, auto_fill=True)
+
+
+def test_config_overrides():
+    overrides_nested = {"nlp": {"lang": "de", "pipeline": ["tagger"]}}
+    overrides_dot = {"nlp.lang": "de", "nlp.pipeline": ["tagger"]}
+    # load_model from config with overrides passed directly to Config
+    config = Config().from_str(nlp_config_string, overrides=overrides_dot)
+    nlp, _ = load_model_from_config(config, auto_fill=True)
+    assert isinstance(nlp, German)
+    assert nlp.pipe_names == ["tagger"]
+    # Serialized roundtrip with config passed in
+    base_config = Config().from_str(nlp_config_string)
+    base_nlp, _ = load_model_from_config(base_config, auto_fill=True)
+    assert isinstance(base_nlp, English)
+    assert base_nlp.pipe_names == ["tok2vec", "tagger"]
+    with make_tempdir() as d:
+        base_nlp.to_disk(d)
+        nlp = spacy.load(d, config=overrides_nested)
+    assert isinstance(nlp, German)
+    assert nlp.pipe_names == ["tagger"]
+    with make_tempdir() as d:
+        base_nlp.to_disk(d)
+        nlp = spacy.load(d, config=overrides_dot)
+    assert isinstance(nlp, German)
+    assert nlp.pipe_names == ["tagger"]
+    with make_tempdir() as d:
+        base_nlp.to_disk(d)
+        nlp = spacy.load(d)
+    assert isinstance(nlp, English)
+    assert nlp.pipe_names == ["tok2vec", "tagger"]

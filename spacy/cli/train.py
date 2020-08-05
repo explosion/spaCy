@@ -75,13 +75,13 @@ def train(
         msg.info("Using CPU")
     msg.info(f"Loading config and nlp from: {config_path}")
     with show_validation_error(config_path):
-        config = Config().from_disk(config_path)
+        config = Config().from_disk(config_path, overrides=config_overrides)
     if config.get("training", {}).get("seed") is not None:
         fix_random_seed(config["training"]["seed"])
     # Use original config here before it's resolved to functions
     sourced_components = get_sourced_components(config)
     with show_validation_error(config_path):
-        nlp, config = util.load_model_from_config(config, overrides=config_overrides)
+        nlp, config = util.load_model_from_config(config)
     if config["training"]["vectors"] is not None:
         util.load_vectors_into_model(nlp, config["training"]["vectors"])
     verify_config(nlp)
@@ -144,7 +144,7 @@ def train(
         max_steps=T_cfg["max_steps"],
         eval_frequency=T_cfg["eval_frequency"],
         raw_text=None,
-        exclude=frozen_components
+        exclude=frozen_components,
     )
     msg.info(f"Training. Initial learn rate: {optimizer.learn_rate}")
     print_row = setup_printer(T_cfg, nlp)
