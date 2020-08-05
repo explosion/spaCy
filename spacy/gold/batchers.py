@@ -45,7 +45,9 @@ def configure_minibatch_by_words(
 
 
 @registry.batchers("batch_by_sequence.v1")
-def configure_minibatch(size: Sizing, get_length=None) -> BatcherT:
+def configure_minibatch(
+    size: Sizing, get_length: Optional[Callable[[ItemT], int]] = None
+) -> BatcherT:
     optionals = {"get_length": get_length} if get_length is not None else {}
     return partial(minibatch, size=size, **optionals)
 
@@ -79,7 +81,8 @@ def minibatch_by_words(
     """Create minibatches of roughly a given number of words. If any examples
     are longer than the specified batch length, they will appear in a batch by
     themselves, or be discarded if discard_oversize=True.
-    The argument 'docs' can be a list of strings, Doc's or Example's. """
+    The argument 'docs' can be a list of strings, Docs or Examples.
+    """
     if isinstance(size, int):
         size_ = itertools.repeat(size)
     elif isinstance(size, List):

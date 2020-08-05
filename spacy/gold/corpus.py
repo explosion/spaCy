@@ -74,7 +74,6 @@ class Corpus:
         """Yield examples from the data.
 
         nlp (Language): The current nlp object.
-        loc (Path): The file or directory to read from.
         YIELDS (Example): The examples.
 
         DOCS: https://spacy.io/api/corpus#call
