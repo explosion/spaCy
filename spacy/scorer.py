@@ -354,9 +354,13 @@ class Scorer:
                 labels.update(eg.predicted.cats.keys())
                 labels.update(eg.reference.cats.keys())
         for example in examples:
+            # Through this loop, None in the gold_cats indicates missing label.
             pred_cats = getter(example.predicted, attr)
             gold_cats = getter(example.reference, attr)
 
+            # I think the AUC metric is applicable regardless of whether we're
+            # doing multi-label classification? Unsure. If not, move this into
+            # the elif pred_cats and gold_cats block below.
             for label in labels:
                 pred_score = pred_cats.get(label, 0.0)
                 gold_score = gold_cats.get(label, 0.0)
@@ -374,6 +378,7 @@ class Scorer:
                         elif pred_score < 0.5 and gold_score > 0:
                             f_per_type[label].fn += 1
             elif pred_cats and gold_cats:
+                # Get the highest-scoring for each.
                 pred_label, pred_score = max(pred_cats.items(), key=lambda it: it[1])
                 gold_label, gold_score = max(gold_cats.items(), key=lambda it: it[1])
                 if gold_score is not None:
@@ -384,7 +389,7 @@ class Scorer:
                         f_per_type[pred_label].fp += 1
             elif gold_cats:
                 gold_label, gold_score = max(gold_cats, key=lambda it: it[1])
-                if gold_score is not None:
+                if gold_score is not None and gold_score > 0:
                     f_per_type[gold_label].fn += 1
             else:
                 pred_label, pred_score = max(pred_cats, key=lambda it: it[1])
