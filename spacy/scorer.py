@@ -348,6 +348,11 @@ class Scorer:
         """
         f_per_type = {label: PRFScore() for label in labels}
         auc_per_type = {label: ROCAUCScore() for label in labels}
+        labels = set(labels)
+        if labels:
+            for eg in examples:
+                labels.update(eg.predicted.cats.keys())
+                labels.update(eg.reference.cats.keys())
         for example in examples:
             pred_cats = getter(example.predicted, attr)
             gold_cats = getter(example.reference, attr)
@@ -359,8 +364,8 @@ class Scorer:
                     auc_per_type[label].score_set(pred_score, gold_score)
             if multi_label:
                 for label in labels:
-                    pred_score = pred.get(label, 0.0)
-                    gold_score = gold.get(label, 0.0)
+                    pred_score = pred_cats.get(label, 0.0)
+                    gold_score = gold_cats.get(label, 0.0)
                     if gold_score is not None:
                         if pred_score >= 0.5 and gold_score > 0:
                             f_per_type[label].tp += 1
@@ -369,8 +374,8 @@ class Scorer:
                         elif pred_score < 0.5 and gold_score > 0:
                             f_per_type[label].fn += 1
             elif pred_cats and gold_cats:
-                pred_label, pred_score = max(pred_cats, key=lambda it: it[1])
-                gold_label, gold_score = max(gold_cats, key=lambda it: it[1])
+                pred_label, pred_score = max(pred_cats.items(), key=lambda it: it[1])
+                gold_label, gold_score = max(gold_cats.items(), key=lambda it: it[1])
                 if gold_score is not None:
                     if pred_label == gold_label:
                         f_per_type[pred_label].tp += 1
@@ -389,9 +394,10 @@ class Scorer:
             micro_prf.tp = label_prf.tp
             micro_prf.fn = label_prf.fn
             micro_prf.fp = label_prf.fp
-        macro_p = sum(prf.precision for prf in f_per_type.values()) / len(f_per_type)
-        macro_f = sum(prf.recall for prf in f_per_type.values()) / len(f_per_type)
-        macro_f = sum(prf.fscore for prf in f_per_type.values()) / len(f_per_type)
+        n_cats = len(f_per_type) + 1e-100
+        macro_p = sum(prf.precision for prf in f_per_type.values()) / n_cats
+        macro_r = sum(prf.recall for prf in f_per_type.values()) / n_cats
+        macro_f = sum(prf.fscore for prf in f_per_type.values()) / n_cats
         results = {
             f"{attr}_score": None,
             f"{attr}_score_desc": None,
