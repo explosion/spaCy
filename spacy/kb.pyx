@@ -72,7 +72,6 @@ def get_candidates(KnowledgeBase kb, span) -> Iterator[Candidate]:
     This particular function is optimized to work with the built-in KB functionality,
     but any other custom candidate generation method can be used in combination with the KB as well.
     """
-    kb.require_vocab()
     return kb.get_alias_candidates(span.text)
 
 
@@ -98,7 +97,7 @@ cdef class KnowledgeBase:
             self.vocab.strings.add("")
             self._create_empty_vectors(dummy_hash=self.vocab.strings[""])
         elif self.vocab != vocab:
-            raise ValueError("Attempt to change the 'vocab' instance of an initialized KB")
+            raise ValueError(Errors.E950)
 
     def require_vocab(self):
         if self.vocab is None:

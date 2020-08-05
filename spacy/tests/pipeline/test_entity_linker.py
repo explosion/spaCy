@@ -208,21 +208,20 @@ def test_el_pipe_configuration():
         },
     )
     # With the default get_candidates function, matching is case-sensitive
-    doc = nlp("Douglas and douglas are not the same.")
+    text = "Douglas and douglas are not the same."
+    doc = nlp(text)
     assert doc[0].ent_kb_id_ == "NIL"
     assert doc[1].ent_kb_id_ == ""
     assert doc[2].ent_kb_id_ == "Q2"
 
     def get_lowercased_candidates(kb, span):
-        kb.require_vocab()
-        result = kb.get_alias_candidates(span.text.lower())
-        return result
+        return kb.get_alias_candidates(span.text.lower())
 
     @registry.assets.register("spacy.LowercaseCandidateGenerator.v1")
     def create_candidates() -> Callable[[KnowledgeBase, "Span"], Iterable[Candidate]]:
         return get_lowercased_candidates
 
-    # replace the pipe with a new with with a different candidate generator
+    # replace the pipe with a new one with with a different candidate generator
     nlp.replace_pipe(
         "entity_linker",
         "entity_linker",
@@ -232,7 +231,7 @@ def test_el_pipe_configuration():
             "get_candidates": {"@assets": "spacy.LowercaseCandidateGenerator.v1"},
         },
     )
-    doc = nlp("Douglas and douglas are not the same.")
+    doc = nlp(text)
     assert doc[0].ent_kb_id_ == "Q2"
     assert doc[1].ent_kb_id_ == ""
     assert doc[2].ent_kb_id_ == "Q2"
