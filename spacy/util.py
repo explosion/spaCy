@@ -210,7 +210,7 @@ def load_model(
     *,
     vocab: Union["Vocab", bool] = True,
     disable: Iterable[str] = tuple(),
-    component_cfg: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
+    config: Union[Dict[str, Any], Config] = SimpleFrozenDict(),
 ) -> "Language":
     """Load a model from a package or data path.
 
@@ -218,11 +218,11 @@ def load_model(
     vocab (Vocab / True): Optional vocab to pass in on initialization. If True,
         a new Vocab object will be created.
     disable (Iterable[str]): Names of pipeline components to disable.
-    component_cfg (Dict[str, dict]): Config overrides for pipeline components,
-        keyed by component names.
+    config (Dict[str, Any] / Config): Config overrides as nested dict or dict
+        keyed by section values in dot notation.
     RETURNS (Language): The loaded nlp object.
     """
-    kwargs = {"vocab": vocab, "disable": disable, "component_cfg": component_cfg}
+    kwargs = {"vocab": vocab, "disable": disable, "config": config}
     if isinstance(name, str):  # name or string path
         if name.startswith("blank:"):  # shortcut for blank model
             return get_lang_class(name.replace("blank:", ""))()
@@ -240,11 +240,11 @@ def load_model_from_package(
     *,
     vocab: Union["Vocab", bool] = True,
     disable: Iterable[str] = tuple(),
-    component_cfg: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
+    config: Union[Dict[str, Any], Config] = SimpleFrozenDict(),
 ) -> "Language":
     """Load a model from an installed package."""
     cls = importlib.import_module(name)
-    return cls.load(vocab=vocab, disable=disable, component_cfg=component_cfg)
+    return cls.load(vocab=vocab, disable=disable, config=config)
 
 
 def load_model_from_path(
@@ -253,7 +253,7 @@ def load_model_from_path(
     meta: Optional[Dict[str, Any]] = None,
     vocab: Union["Vocab", bool] = True,
     disable: Iterable[str] = tuple(),
-    component_cfg: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
+    config: Union[Dict[str, Any], Config] = SimpleFrozenDict(),
 ) -> "Language":
     """Load a model from a data directory path. Creates Language class with
     pipeline from config.cfg and then calls from_disk() with path."""
@@ -264,12 +264,8 @@ def load_model_from_path(
     config_path = model_path / "config.cfg"
     if not config_path.exists() or not config_path.is_file():
         raise IOError(Errors.E053.format(path=config_path, name="config.cfg"))
-    config = Config().from_disk(config_path)
-    override_cfg = {"components": {p: dict_to_dot(c) for p, c in component_cfg.items()}}
-    overrides = dict_to_dot(override_cfg)
-    nlp, _ = load_model_from_config(
-        config, vocab=vocab, disable=disable, overrides=overrides
-    )
+    config = Config().from_disk(config_path, overrides=dict_to_dot(config))
+    nlp, _ = load_model_from_config(config, vocab=vocab, disable=disable)
     return nlp.from_disk(model_path, exclude=disable)
 
 
@@ -278,7 +274,6 @@ def load_model_from_config(
     *,
     vocab: Union["Vocab", bool] = True,
     disable: Iterable[str] = tuple(),
-    overrides: Dict[str, Any] = {},
     auto_fill: bool = False,
     validate: bool = True,
 ) -> Tuple["Language", Config]:
@@ -294,12 +289,7 @@ def load_model_from_config(
     # registry, including custom subclasses provided via entry points
     lang_cls = get_lang_class(nlp_config["lang"])
     nlp = lang_cls.from_config(
-        config,
-        vocab=vocab,
-        disable=disable,
-        overrides=overrides,
-        auto_fill=auto_fill,
-        validate=validate,
+        config, vocab=vocab, disable=disable, auto_fill=auto_fill, validate=validate,
     )
     return nlp, nlp.resolved
 
@@ -309,14 +299,10 @@ def load_model_from_init_py(
     *,
     vocab: Union["Vocab", bool] = True,
     disable: Iterable[str] = tuple(),
-    component_cfg: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
+    config: Union[Dict[str, Any], Config] = SimpleFrozenDict(),
 ) -> "Language":
     """Helper function to use in the `load()` method of a model package's
     __init__.py.
-
-    init_file (str): Path to model's __init__.py, i.e. `__file__`.
-    **overrides: Specific overrides, like pipeline components to disable.
-    RETURNS (Language): `Language` class with loaded model.
     """
     model_path = Path(init_file).parent
     meta = get_model_meta(model_path)
@@ -325,7 +311,7 @@ def load_model_from_init_py(
     if not model_path.exists():
         raise IOError(Errors.E052.format(path=data_path))
     return load_model_from_path(
-        data_path, vocab=vocab, meta=meta, disable=disable, component_cfg=component_cfg
+        data_path, vocab=vocab, meta=meta, disable=disable, config=config
     )
 
 

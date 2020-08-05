@@ -32,13 +32,13 @@ loaded in via [`Language.from_disk`](/api/language#from_disk).
 > nlp = spacy.load("en_core_web_sm", disable=["parser", "tagger"])
 > ```
 
-| Name                                       | Type              | Description                                                                       |
-| ------------------------------------------ | ----------------- | --------------------------------------------------------------------------------- |
-| `name`                                     | str / `Path`      | Model to load, i.e. package name or path.                                         |
-| _keyword-only_                             |                   |                                                                                   |
-| `disable`                                  | `List[str]`       | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). |
-| `component_cfg` <Tag variant="new">3</Tag> | `Dict[str, dict]` | Optional config overrides for pipeline components, keyed by component names.      |
-| **RETURNS**                                | `Language`        | A `Language` object with the loaded model.                                        |
+| Name                                | Type                                                                   | Description                                                                                                                      |
+| ----------------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `name`                              | str / `Path`                                                           | Model to load, i.e. package name or path.                                                                                        |
+| _keyword-only_                      |                                                                        |                                                                                                                                  |
+| `disable`                           | `List[str]`                                                            | Names of pipeline components to [disable](/usage/processing-pipelines#disabling).                                                |
+| `config` <Tag variant="new">3</Tag> | `Dict[str, Any]` / [`Config`](https://thinc.ai/docs/api-config#config) | Optional config overrides, either as nested dict or dict keyed by section value in dot notation, e.g. `"components.name.value"`. |
+| **RETURNS**                         | `Language`                                                             | A `Language` object with the loaded model.                                                                                       |
 
 Essentially, `spacy.load()` is a convenience wrapper that reads the language ID
 and pipeline components from a model's `meta.json`, initializes the `Language`

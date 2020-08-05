@@ -558,7 +558,6 @@ class Language:
         name: Optional[str] = None,
         *,
         config: Optional[Dict[str, Any]] = SimpleFrozenDict(),
-        overrides: Optional[Dict[str, Any]] = SimpleFrozenDict(),
         validate: bool = True,
     ) -> Callable[[Doc], Doc]:
         """Create a pipeline component. Mostly used internally. To create and
@@ -569,8 +568,6 @@ class Language:
             Defaults to factory name if not set.
         config (Optional[Dict[str, Any]]): Config parameters to use for this
             component. Will be merged with default config, if available.
-        overrides (Optional[Dict[str, Any]]): Config overrides, typically
-            passed in via the CLI.
         validate (bool): Whether to validate the component config against the
             arguments and types expected by the factory.
         RETURNS (Callable[[Doc], Doc]): The pipeline component.
@@ -613,7 +610,7 @@ class Language:
         # registered functions twice
         # TODO: customize validation to make it more readable / relate it to
         # pipeline component and why it failed, explain default config
-        resolved, filled = registry.resolve(cfg, validate=validate, overrides=overrides)
+        resolved, filled = registry.resolve(cfg, validate=validate)
         filled = filled[factory_name]
         filled["factory"] = factory_name
         filled.pop("@factories", None)
@@ -657,7 +654,6 @@ class Language:
         last: Optional[bool] = None,
         source: Optional["Language"] = None,
         config: Optional[Dict[str, Any]] = SimpleFrozenDict(),
-        overrides: Optional[Dict[str, Any]] = SimpleFrozenDict(),
         validate: bool = True,
     ) -> Callable[[Doc], Doc]:
         """Add a component to the processing pipeline. Valid components are
@@ -679,8 +675,6 @@ class Language:
             component from.
         config (Optional[Dict[str, Any]]): Config parameters to use for this
             component. Will be merged with default config, if available.
-        overrides (Optional[Dict[str, Any]]): Config overrides, typically
-            passed in via the CLI.
         validate (bool): Whether to validate the component config against the
             arguments and types expected by the factory.
         RETURNS (Callable[[Doc], Doc]): The pipeline component.
@@ -710,11 +704,7 @@ class Language:
                     lang_code=self.lang,
                 )
             pipe_component = self.create_pipe(
-                factory_name,
-                name=name,
-                config=config,
-                overrides=overrides,
-                validate=validate,
+                factory_name, name=name, config=config, validate=validate,
             )
         pipe_index = self._get_pipe_index(before, after, first, last)
         self._pipe_meta[name] = self.get_factory_meta(factory_name)
@@ -1416,7 +1406,6 @@ class Language:
         *,
         vocab: Union[Vocab, bool] = True,
         disable: Iterable[str] = tuple(),
-        overrides: Dict[str, Any] = {},
         auto_fill: bool = True,
         validate: bool = True,
     ) -> "Language":
@@ -1456,9 +1445,8 @@ class Language:
         config = util.copy_config(config)
         orig_pipeline = config.pop("components", {})
         config["components"] = {}
-        non_pipe_overrides, pipe_overrides = _get_config_overrides(overrides)
         resolved, filled = registry.resolve(
-            config, validate=validate, schema=ConfigSchema, overrides=non_pipe_overrides
+            config, validate=validate, schema=ConfigSchema
         )
         filled["components"] = orig_pipeline
         config["components"] = orig_pipeline
@@ -1507,11 +1495,7 @@ class Language:
                     # The pipe name (key in the config) here is the unique name
                     # of the component, not necessarily the factory
                     nlp.add_pipe(
-                        factory,
-                        name=pipe_name,
-                        config=pipe_cfg,
-                        overrides=pipe_overrides,
-                        validate=validate,
+                        factory, name=pipe_name, config=pipe_cfg, validate=validate,
                     )
                 else:
                     model = pipe_cfg["source"]
@@ -1694,15 +1678,6 @@ class FactoryMeta:
     retokenizes: bool = False
     scores: Iterable[str] = tuple()
     default_score_weights: Optional[Dict[str, float]] = None  # noqa: E704
-
-
-def _get_config_overrides(
-    items: Dict[str, Any], prefix: str = "components"
-) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-    prefix = f"{prefix}."
-    non_pipe = {k: v for k, v in items.items() if not k.startswith(prefix)}
-    pipe = {k.replace(prefix, ""): v for k, v in items.items() if k.startswith(prefix)}
-    return non_pipe, pipe
 
 
 def _fix_pretrained_vectors_name(nlp: Language) -> None:
