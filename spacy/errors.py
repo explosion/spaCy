@@ -133,6 +133,8 @@ class Warnings(object):
             "normalization table, please ignore this warning.")
     W034 = ("Please install the package spacy-lookups-data in order to include "
             "the default lexeme normalization table for the language '{lang}'.")
+    W035 = ('Discarding subpattern "{pattern}" due to an unrecognized '
+            "attribute or operator.")
 
 
 @add_codes
