@@ -21,7 +21,7 @@ export const Pre = props => {
     return <pre className={classes.pre}>{props.children}</pre>
 }
 
-export const InlineCode = ({ wrap, className, children, ...props }) => {
+export const InlineCode = ({ wrap = false, className, children, ...props }) => {
     const codeClassNames = classNames(classes.inlineCode, className, {
         [classes.wrap]: wrap || (isString(children) && children.length >= 20),
     })
@@ -30,10 +30,6 @@ export const InlineCode = ({ wrap, className, children, ...props }) => {
             {children}
         </code>
     )
-}
-
-InlineCode.defaultProps = {
-    wrap: false,
 }
 
 InlineCode.propTypes = {

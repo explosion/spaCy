@@ -33,7 +33,7 @@ const data = [
     },
 ]
 
-const QuickstartInstall = ({ id, title, description, defaultLang, children }) => (
+const QuickstartInstall = ({ id, title, description, defaultLang = 'en', children }) => (
     <StaticQuery
         query={query}
         render={({ site }) => {
@@ -84,10 +84,6 @@ const QuickstartInstall = ({ id, title, description, defaultLang, children }) =>
         }}
     />
 )
-
-QuickstartInstall.defaultProps = {
-    defaultLang: 'en',
-}
 
 export default QuickstartInstall
 

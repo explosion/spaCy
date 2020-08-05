@@ -9,7 +9,7 @@ import { InlineCode } from '../components/code'
 const DEFAULT_REPO = 'https://github.com/explosion/projects'
 const COMMAND = 'python -m spacy project clone'
 
-const Project = ({ id, repo, children }) => {
+export default function Project({ id, repo, children }) {
     const repoArg = repo ? ` --repo ${repo}` : ''
     const text = `${COMMAND} ${id}${repoArg}`
     const url = `${repo || DEFAULT_REPO}/${id}`
@@ -28,5 +28,3 @@ const Project = ({ id, repo, children }) => {
         </Infobox>
     )
 }
-
-export default Project

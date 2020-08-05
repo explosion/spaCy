@@ -14,7 +14,7 @@ export function copyToClipboard(ref, callback) {
     }
 }
 
-const CopyInput = ({ text, prefix }) => {
+export default function CopyInput({ text, prefix }) {
     const isClient = typeof window !== 'undefined'
     const supportsCopy = isClient && document.queryCommandSupported('copy')
     const textareaRef = useRef()
@@ -46,5 +46,3 @@ const CopyInput = ({ text, prefix }) => {
         </div>
     )
 }
-
-export default CopyInput

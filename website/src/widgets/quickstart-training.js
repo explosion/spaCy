@@ -55,7 +55,7 @@ const DATA = [
     },
 ]
 
-const QuickstartTraining = ({ id, title, download = 'config.cfg' }) => {
+export default function QuickstartTraining({ id, title, download = 'config.cfg' }) {
     const [lang, setLang] = useState(DEFAULT_LANG)
     const [pipeline, setPipeline] = useState([])
     const setters = { lang: setLang, components: setPipeline }
@@ -124,5 +124,3 @@ const query = graphql`
         }
     }
 `
-
-export default QuickstartTraining
