@@ -222,6 +222,9 @@ class ConfigSchemaNlp(BaseModel):
     tokenizer: Callable = Field(..., title="The tokenizer to use")
     lemmatizer: Callable = Field(..., title="The lemmatizer to use")
     load_vocab_data: StrictBool = Field(..., title="Whether to load additional vocab data from spacy-lookups-data")
+    before_creation: Optional[Callable[[Type["Language"]], Type["Language"]]] = Field(..., title="Optional callback to modify Language class before initialization")
+    after_creation: Optional[Callable[["Language"], "Language"]] = Field(..., title="Optional callback to modify nlp object after creation and before the pipeline is constructed")
+    after_pipeline_creation: Optional[Callable[["Language"], "Language"]] = Field(..., title="Optional callback to modify nlp object after the pipeline is constructed")
     # fmt: on
 
     class Config:
