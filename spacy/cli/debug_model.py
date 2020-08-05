@@ -54,7 +54,7 @@ def debug_model_cli(
             nlp, config = util.load_model_from_config(cfg)
         except ValueError as e:
             msg.fail(str(e), exits=1)
-    seed = config.get("training", {}).get("seed", None)
+    seed = config["pretraining"]["seed"]
     if seed is not None:
         msg.info(f"Fixing random seed: {seed}")
         fix_random_seed(seed)

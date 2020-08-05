@@ -32,15 +32,13 @@ architectures and their arguments and hyperparameters.
 > nlp.add_pipe("entity_linker", config=config)
 > ```
 
-<!-- TODO: finish API docs -->
-
-| Setting          | Type                                       | Description       | Default                                         |
-| ---------------- | ------------------------------------------ | ----------------- | ----------------------------------------------- |
-| `kb`             | `KnowledgeBase`                            |                   | `None`                                          |
-| `labels_discard` | `Iterable[str]`                            |                   | `[]`                                            |
-| `incl_prior`     | bool                                       |                   |  `True`                                         |
-| `incl_context`   | bool                                       |                   | `True`                                          |
-| `model`          | [`Model`](https://thinc.ai/docs/api-model) | The model to use. | [EntityLinker](/api/architectures#EntityLinker) |
+| Setting          | Type                                       | Description                                                             | Default                                         |
+| ---------------- | ------------------------------------------ | ----------------------------------------------------------------------- | ----------------------------------------------- |
+| `kb`             | `KnowledgeBase`                            | The [`KnowledgeBase`](/api/kb) holding all entities and their aliases.  | `None`                                          |
+| `labels_discard` | `Iterable[str]`                            | NER labels that will automatically get a "NIL" prediction.              | `[]`                                            |
+| `incl_prior`     | bool                                       | Whether or not to include prior probabilities from the KB in the model. | `True`                                          |
+| `incl_context`   | bool                                       | Whether or not to include the local context in the model.               | `True`                                          |
+| `model`          | [`Model`](https://thinc.ai/docs/api-model) | The model to use.                                                       | [EntityLinker](/api/architectures#EntityLinker) |
 
 ```python
 https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/entity_linker.py
@@ -75,10 +73,10 @@ shortcut for this and instantiate the component using its string name and
 | `model`          | `Model`         | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component.             |
 | `name`           | str             | String name of the component instance. Used to add entries to the `losses` during training. |
 | _keyword-only_   |                 |                                                                                             |
-| `kb`             | `KnowlegeBase`  |                                                                                             |
-| `labels_discard` | `Iterable[str]` |                                                                                             |
-| `incl_prior`     | bool            |                                                                                             |
-| `incl_context`   | bool            |                                                                                             |
+| `kb`             | `KnowlegeBase`  | The [`KnowledgeBase`](/api/kb) holding all entities and their aliases.                      |
+| `labels_discard` | `Iterable[str]` | NER labels that will automatically get a "NIL" prediction.                                  |
+| `incl_prior`     | bool            | Whether or not to include prior probabilities from the KB in the model.                     |
+| `incl_context`   | bool            | Whether or not to include the local context in the model.                                   |
 
 ## EntityLinker.\_\_call\_\_ {#call tag="method"}
 
@@ -130,15 +128,12 @@ applied to the `Doc` in order. Both [`__call__`](/api/entitylinker#call) and
 ## EntityLinker.begin_training {#begin_training tag="method"}
 
 Initialize the pipe for training, using data examples if available. Returns an
-[`Optimizer`](https://thinc.ai/docs/api-optimizers) object. Before calling this
-method, a knowledge base should have been defined with
-[`set_kb`](/api/entitylinker#set_kb).
+[`Optimizer`](https://thinc.ai/docs/api-optimizers) object.
 
 > #### Example
 >
 > ```python
 > entity_linker = nlp.add_pipe("entity_linker", last=True)
-> entity_linker.set_kb(kb)
 > optimizer = entity_linker.begin_training(pipeline=nlp.pipeline)
 > ```
 
@@ -209,22 +204,6 @@ pipe's entity linking model and context encoder. Delegates to
 | `sgd`             | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | The optimizer.                                                                                                                                |
 | `losses`          | `Dict[str, float]`                                  | Optional record of the loss during training. Updated using the component name as the key.                                                     |
 | **RETURNS**       | `Dict[str, float]`                                  | The updated `losses` dictionary.                                                                                                              |
-
-## EntityLinker.set_kb {#set_kb tag="method"}
-
-Define the knowledge base (KB) used for disambiguating named entities to KB
-identifiers.
-
-> #### Example
->
-> ```python
-> entity_linker = nlp.add_pipe("entity_linker")
-> entity_linker.set_kb(kb)
-> ```
-
-| Name | Type            | Description                     |
-| ---- | --------------- | ------------------------------- |
-| `kb` | `KnowledgeBase` | The [`KnowledgeBase`](/api/kb). |
 
 ## EntityLinker.create_optimizer {#create_optimizer tag="method"}
 
