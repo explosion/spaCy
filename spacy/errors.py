@@ -482,6 +482,11 @@ class Errors:
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
+    E941 = ("Can't find model '{name}'. It looks like you're trying to load a "
+            "model from a shortcut, which is deprecated as of spaCy v3.0. To "
+            "load the model, use its full name instead. For example:\n\n"
+            "nlp = spacy.load(\"{full}\")\n\nFor more details on the available "
+            "models, see the models directory: https://spacy.io/models")
     E942 = ("Executing after_{name} callback failed. Expected the function to "
             "return an initialized nlp object but got: {value}. Maybe "
             "you forgot to return the modified object in your function?")
@@ -633,6 +638,15 @@ class TempErrors:
     T003 = ("Resizing pretrained Tagger models is not currently supported.")
     T007 = ("Can't yet set {attr} from Span. Vote for this feature on the "
             "issue tracker: http://github.com/explosion/spaCy/issues")
+
+
+# Deprecated model shortcuts, only used in errors and warnings
+OLD_MODEL_SHORTCUTS = {
+    "en": "en_core_web_sm", "de": "de_core_news_sm", "es": "es_core_news_sm",
+    "pt": "pt_core_news_sm", "fr": "fr_core_news_sm", "it": "it_core_news_sm",
+    "nl": "nl_core_news_sm", "el": "el_core_news_sm", "nb": "nb_core_news_sm",
+    "lt": "lt_core_news_sm", "xx": "xx_ent_wiki_sm"
+}
 
 
 # fmt: on

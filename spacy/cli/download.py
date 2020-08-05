@@ -7,23 +7,7 @@ import typer
 from ._util import app, Arg, Opt
 from .. import about
 from ..util import is_package, get_base_version, run_command
-
-# These are the old shortcuts we previously supported in spacy download. As of
-# v3, shortcuts are deprecated so we're not expecting to add anything to this
-# list. It only exists to show users warnings.
-OLD_SHORTCUTS = {
-    "en": "en_core_web_sm",
-    "de": "de_core_news_sm",
-    "es": "es_core_news_sm",
-    "pt": "pt_core_news_sm",
-    "fr": "fr_core_news_sm",
-    "it": "it_core_news_sm",
-    "nl": "nl_core_news_sm",
-    "el": "el_core_news_sm",
-    "nb": "nb_core_news_sm",
-    "lt": "lt_core_news_sm",
-    "xx": "xx_ent_wiki_sm",
-}
+from ..errors import OLD_MODEL_SHORTCUTS
 
 
 @app.command(
@@ -66,12 +50,12 @@ def download(model: str, direct: bool = False, *pip_args) -> None:
         download_model(dl_tpl.format(m=model_name, v=version), pip_args)
     else:
         model_name = model
-        if model in OLD_SHORTCUTS:
+        if model in OLD_MODEL_SHORTCUTS:
             msg.warn(
-                f"As of spaCy v3.0, shortcuts like '{model}' are deprecated. "
-                f"Please use the full model name '{OLD_SHORTCUTS[model]}' instead."
+                f"As of spaCy v3.0, shortcuts like '{model}' are deprecated. Please"
+                f"use the full model name '{OLD_MODEL_SHORTCUTS[model]}' instead."
             )
-            model_name = OLD_SHORTCUTS[model]
+            model_name = OLD_MODEL_SHORTCUTS[model]
         compatibility = get_compatibility()
         version = get_version(model_name, compatibility)
         download_model(dl_tpl.format(m=model_name, v=version), pip_args)
