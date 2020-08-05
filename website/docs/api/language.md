@@ -363,7 +363,7 @@ that take a `Doc` object, modify it and return it. Only one of `before`,
 <Infobox title="Changed in v3.0" variant="warning">
 
 As of v3.0, the [`Language.add_pipe`](/api/language#add_pipe) method doesn't
-take callables anymore and instead expects the name of a component factory
+take callables anymore and instead expects the **name of a component factory**
 registered using [`@Language.component`](/api/language#component) or
 [`@Language.factory`](/api/language#factory). It now takes care of creating the
 component, adds it to the pipeline and returns it.
@@ -379,20 +379,25 @@ component, adds it to the pipeline and returns it.
 >
 > nlp.add_pipe("component", before="ner")
 > component = nlp.add_pipe("component", name="custom_name", last=True)
+>
+> # Add component from source model
+> source_nlp = spacy.load("en_core_web_sm")
+> nlp.add_pipe("ner", source=source_nlp)
 > ```
 
-| Name                                   | Type             | Description                                                                                                                                               |
-| -------------------------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `factory_name`                         | str              | Name of the registered component factory.                                                                                                                 |
-| `name`                                 | str              | Optional unique name of pipeline component instance. If not set, the factory name is used. An error is raised if the name already exists in the pipeline. |
-| _keyword-only_                         |                  |                                                                                                                                                           |
-| `before`                               | str / int        | Component name or index to insert component directly before.                                                                                              |
-| `after`                                | str / int        | Component name or index to insert component directly after:                                                                                               |
-| `first`                                | bool             | Insert component first / not first in the pipeline.                                                                                                       |
-| `last`                                 | bool             | Insert component last / not last in the pipeline.                                                                                                         |
-| `config` <Tag variant="new">3</Tag>    | `Dict[str, Any]` | Optional config parameters to use for this component. Will be merged with the `default_config` specified by the component factory.                        |
-| `validate` <Tag variant="new">3</Tag>  | bool             | Whether to validate the component config and arguments against the types expected by the factory. Defaults to `True`.                                     |
-| **RETURNS** <Tag variant="new">3</Tag> | callable         | The pipeline component.                                                                                                                                   |
+| Name                                   | Type             | Description                                                                                                                                                                                                                                              |
+| -------------------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `factory_name`                         | str              | Name of the registered component factory.                                                                                                                                                                                                                |
+| `name`                                 | str              | Optional unique name of pipeline component instance. If not set, the factory name is used. An error is raised if the name already exists in the pipeline.                                                                                                |
+| _keyword-only_                         |                  |                                                                                                                                                                                                                                                          |
+| `before`                               | str / int        | Component name or index to insert component directly before.                                                                                                                                                                                             |
+| `after`                                | str / int        | Component name or index to insert component directly after:                                                                                                                                                                                              |
+| `first`                                | bool             | Insert component first / not first in the pipeline.                                                                                                                                                                                                      |
+| `last`                                 | bool             | Insert component last / not last in the pipeline.                                                                                                                                                                                                        |
+| `config` <Tag variant="new">3</Tag>    | `Dict[str, Any]` | Optional config parameters to use for this component. Will be merged with the `default_config` specified by the component factory.                                                                                                                       |
+| `source` <Tag variant="new">3</Tag>    | `Language`       | Optional source model to copy component from. If a source is provided, the `factory_name` is interpreted as the name of the component in the source pipeline. Make sure that the vocab, vectors and settings of the source model match the target model. |
+| `validate` <Tag variant="new">3</Tag>  | bool             | Whether to validate the component config and arguments against the types expected by the factory. Defaults to `True`.                                                                                                                                    |
+| **RETURNS** <Tag variant="new">3</Tag> | callable         | The pipeline component.                                                                                                                                                                                                                                  |
 
 ## Language.has_factory {#has_factory tag="classmethod" new="3"}
 

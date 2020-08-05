@@ -1,5 +1,5 @@
 from typing import List, Union, Dict, Any, Optional, Iterable, Callable, Tuple
-from typing import Iterator, Type, Pattern, Sequence, TYPE_CHECKING
+from typing import Iterator, Type, Pattern, TYPE_CHECKING
 from types import ModuleType
 import os
 import importlib
@@ -764,7 +764,6 @@ def normalize_slice(
         stop += length
     stop = min(length, max(start, stop))
     return start, stop
-
 
 
 def filter_spans(spans: Iterable["Span"]) -> List["Span"]:

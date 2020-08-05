@@ -144,6 +144,7 @@ def train(
         max_steps=T_cfg["max_steps"],
         eval_frequency=T_cfg["eval_frequency"],
         raw_text=None,
+        exclude=frozen_components
     )
     msg.info(f"Training. Initial learn rate: {optimizer.learn_rate}")
     print_row = setup_printer(T_cfg, nlp)

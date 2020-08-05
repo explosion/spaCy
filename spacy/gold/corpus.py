@@ -1,6 +1,5 @@
-from typing import Union, List, Iterable, Iterator, TYPE_CHECKING, Callable, Tuple
+from typing import Union, List, Iterable, Iterator, TYPE_CHECKING, Callable
 from pathlib import Path
-import random
 
 from .. import util
 from .example import Example
@@ -25,7 +24,7 @@ class Corpus:
 
     path (Path): The directory or filename to read from.
     gold_preproc (bool): Whether to set up the Example object with gold-standard
-        sentences and tokens for the predictions. Gold preprocessing helps 
+        sentences and tokens for the predictions. Gold preprocessing helps
         the annotations align to the tokenization, and may result in sequences
         of more consistent length. However, it may reduce run-time accuracy due
         to train/test skew. Defaults to False.
@@ -39,7 +38,12 @@ class Corpus:
     """
 
     def __init__(
-        self, path, *, limit: int = 0, gold_preproc: bool = False, max_length: bool = False,
+        self,
+        path,
+        *,
+        limit: int = 0,
+        gold_preproc: bool = False,
+        max_length: bool = False,
     ) -> None:
         self.path = util.ensure_path(path)
         self.gold_preproc = gold_preproc

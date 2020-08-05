@@ -1,5 +1,4 @@
 from typing import Optional, List, Dict
-from timeit import default_timer as timer
 from wasabi import Printer
 from pathlib import Path
 import re

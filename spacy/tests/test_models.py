@@ -24,12 +24,14 @@ def get_textcat_kwargs():
         "nO": 7,
     }
 
+
 def get_textcat_cnn_kwargs():
     return {
         "tok2vec": test_tok2vec(),
         "exclusive_classes": False,
         "nO": 13,
     }
+
 
 def get_all_params(model):
     params = []
@@ -59,17 +61,11 @@ def get_tok2vec_kwargs():
     # This actually creates models, so seems best to put it in a function.
     return {
         "embed": MultiHashEmbed(
-            width=32,
-            rows=500,
-            also_embed_subwords=True,
-            also_use_static_vectors=False
+            width=32, rows=500, also_embed_subwords=True, also_use_static_vectors=False
         ),
         "encode": MaxoutWindowEncoder(
-            width=32,
-            depth=2,
-            maxout_pieces=2,
-            window_size=1,
-        )
+            width=32, depth=2, maxout_pieces=2, window_size=1,
+        ),
     }
 
 

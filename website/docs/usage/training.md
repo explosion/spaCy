@@ -149,12 +149,14 @@ not just define static settings, but also construct objects like architectures,
 schedules, optimizers or any other custom components. The main top-level
 sections of a config file are:
 
-| Section       | Description                                                                                                           |
-| ------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `training`    | Settings and controls for the training and evaluation process.                                                        |
-| `pretraining` | Optional settings and controls for the [language model pretraining](#pretraining).                                    |
-| `nlp`         | Definition of the `nlp` object, its tokenizer and [processing pipeline](/usage/processing-pipelines) component names. |
-| `components`  | Definitions of the [pipeline components](/usage/processing-pipelines) and their models.                               |
+| Section       | Description                                                                                                                                            |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `nlp`         | Definition of the `nlp` object, its tokenizer and [processing pipeline](/usage/processing-pipelines) component names.                                  |
+| `components`  | Definitions of the [pipeline components](/usage/processing-pipelines) and their models.                                                                |
+| `paths`       | Paths to data and other assets. Can be re-used across the config as variables, e.g. `${paths:train}`, and [overwritten](#config-overrides) on the CLI. |
+| `system`      | Settings related to system and hardware.                                                                                                               |
+| `training`    | Settings and controls for the training and evaluation process.                                                                                         |
+| `pretraining` | Optional settings and controls for the [language model pretraining](#pretraining).                                                                     |
 
 <Infobox title="Config format and settings" emoji="📖">
 
@@ -168,7 +170,7 @@ available for the different architectures are documented with the
 
 </Infobox>
 
-#### Overwriting config settings on the command line {#config-overrides}
+### Overwriting config settings on the command line {#config-overrides}
 
 The config system means that you can define all settings **in one place** and in
 a consistent format. There are no command-line arguments that need to be set,
@@ -192,7 +194,87 @@ of the training, the final filled `config.cfg` is exported with your model, so
 you'll always have a record of the settings that were used, including your
 overrides.
 
-#### Using registered functions {#config-functions}
+### Defining pipeline components {#config-components}
+
+When you train a model, you typically train a
+[pipeline](/usage/processing-pipelines) of **one or more components**. The
+`[components]` block in the config defines the available pipeline components and
+how they should be created – either by a built-in or custom
+[factory](/usage/processing-pipelines#built-in), or
+[sourced](/usage/processing-pipelines#sourced-components) from an existing
+pretrained model. For example, `[components.parser]` defines the component named
+`"parser"` in the pipeline. There are different ways you might want to treat
+your components during training, and the most common scenarios are:
+
+1. Train a **new component** from scratch on your data.
+2. Update an existing **pretrained component** with more examples.
+3. Include an existing pretrained component without updating it.
+4. Include a non-trainable component, like a rule-based
+   [`EntityRuler`](/api/entityruler) or [`Sentencizer`](/api/sentencizer), or a
+   fully [custom component](/usage/processing-pipelines#custom-components).
+
+If a component block defines a `factory`, spaCy will look it up in the
+[built-in](/usage/processing-pipelines#built-in) or
+[custom](/usage/processing-pipelines#custom-components) components and create a
+new component from scratch. All settings defined in the config block will be
+passed to the component factory as arguments. This lets you configure the model
+settings and hyperparameters. If a component block defines a `source`, the
+component will be copied over from an existing pretrained model, with its
+existing weights. This lets you include an already trained component in your
+model pipeline, or update a pretrained components with more data specific to
+your use case.
+
+```ini
+### config.cfg (excerpt)
+[components]
+
+# "parser" and "ner" are sourced from pretrained model
+[components.parser]
+source = "en_core_web_sm"
+
+[components.ner]
+source = "en_core_web_sm"
+
+# "textcat" and "custom" are created blank from built-in / custom factory
+[components.textcat]
+factory = "textcat"
+
+[components.custom]
+factory = "your_custom_factory"
+your_custom_setting = true
+```
+
+The `pipeline` setting in the `[nlp]` block defines the pipeline components
+added to the pipeline, in order. For example, `"parser"` here references
+`[components.parser]`. By default, spaCy will **update all components that can
+be updated**. Trainable components that are created from scratch are initialized
+with random weights. For sourced components, spaCy will keep the existing
+weights and [resume training](/api/language#resume_training).
+
+If you don't want a component to be updated, you can **freeze** it by adding it
+to the `frozen_components` list in the `[training]` block. Frozen components are
+**not updated** during training and are included in the final trained model
+as-is.
+
+> #### Note on frozen components
+>
+> Even though frozen components are not **updated** during training, they will
+> still **run** during training and evaluation. This is very important, because
+> they may still impact your model's performance – for instance, a sentence
+> boundary detector can impact what the parser or entity recognizer considers a
+> valid parse. So the evaluation results should always reflect what your model
+> will produce at runtime.
+
+```ini
+[nlp]
+lang = "en"
+pipeline = ["parser", "ner", "textcat", "custom"]
+
+[training]
+frozen_components = ["parser", "custom"]
+```
+
+### Using registered functions {#config-functions}
 
 The training configuration defined in the config file doesn't have to only
 consist of static values. Some settings can also be **functions**. For instance,
@@ -373,7 +455,9 @@ In your config, you can now reference the schedule in the
 starting with an `@`, it's interpreted as a reference to a function. All other
 settings in the block will be passed to the function as keyword arguments. Keep
 in mind that the config shouldn't have any hidden defaults and all arguments on
-the functions need to be represented in the config.
+the functions need to be represented in the config. If your function defines
+**default argument values**, spaCy is able to auto-fill your config when you run
+[`init config`](/api/cli#init-config).
 
 <!-- TODO: this needs to be updated once we've decided on a workflow for "fill config" -->
 
@@ -405,7 +489,7 @@ using [`pydantic`](https://github.com/samuelcolvin/pydantic). If your registered
 function provides type hints, the values that are passed in will be checked
 against the expected types. For example, `start: int` in the example above will
 ensure that the value received as the argument `start` is an integer. If the
-value can't be cast to an integer, spaCy will raise an error.
+value can't be coerced into an integer, spaCy will raise an error.
 `start: pydantic.StrictInt` will force the value to be an integer and raise an
 error if it's not – for instance, if your config defines a float.
 

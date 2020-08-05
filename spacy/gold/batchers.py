@@ -3,7 +3,6 @@ from typing import Optional, Any
 from functools import partial
 import itertools
 
-from .example import Example
 from ..util import registry, minibatch
 
 
@@ -41,16 +40,13 @@ def configure_minibatch_by_words(
 ) -> BatcherT:
     optionals = {"get_length": get_length} if get_length is not None else {}
     return partial(
-        minibatch_by_words,
-        size=size,
-        discard_oversize=discard_oversize,
-        **optionals
+        minibatch_by_words, size=size, discard_oversize=discard_oversize, **optionals
     )
 
 
 @registry.batchers("batch_by_sequence.v1")
 def configure_minibatch(size: Sizing, get_length=None) -> BatcherT:
-    optionals = ({"get_length": get_length} if get_length is not None else {})
+    optionals = {"get_length": get_length} if get_length is not None else {}
     return partial(minibatch, size=size, **optionals)
 
 
