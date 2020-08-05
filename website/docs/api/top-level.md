@@ -4,6 +4,7 @@ menu:
   - ['spacy', 'spacy']
   - ['displacy', 'displacy']
   - ['registry', 'registry']
+  - ['Loaders & Batchers', 'loaders-batchers']
   - ['Data & Alignment', 'gold']
   - ['Utility Functions', 'util']
 ---
@@ -34,6 +35,7 @@ loaded in via [`Language.from_disk`](/api/language#from_disk).
 | Name                                       | Type              | Description                                                                       |
 | ------------------------------------------ | ----------------- | --------------------------------------------------------------------------------- |
 | `name`                                     | str / `Path`      | Model to load, i.e. package name or path.                                         |
+| _keyword-only_                             |                   |                                                                                   |
 | `disable`                                  | `List[str]`       | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). |
 | `component_cfg` <Tag variant="new">3</Tag> | `Dict[str, dict]` | Optional config overrides for pipeline components, keyed by component names.      |
 | **RETURNS**                                | `Language`        | A `Language` object with the loaded model.                                        |
@@ -83,11 +85,12 @@ meta data as a dictionary instead, you can use the `meta` attribute on your
 > markdown = spacy.info(markdown=True, silent=True)
 > ```
 
-| Name       | Type | Description                                      |
-| ---------- | ---- | ------------------------------------------------ |
-| `model`    | str  | A model, i.e. a package name or path (optional). |
-| `markdown` | bool | Print information as Markdown.                   |
-| `silent`   | bool | Don't print anything, just return.               |
+| Name           | Type | Description                                      |
+| -------------- | ---- | ------------------------------------------------ |
+| `model`        | str  | A model, i.e. a package name or path (optional). |
+| _keyword-only_ |      |                                                  |
+| `markdown`     | bool | Print information as Markdown.                   |
+| `silent`       | bool | Don't print anything, just return.               |
 
 ### spacy.explain {#spacy.explain tag="function"}
 
@@ -330,6 +333,10 @@ See the [`Transformer`](/api/transformer) API reference and
 | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`span_getters`](/api/transformer#span_getters)              | Registry for functions that take a batch of `Doc` objects and return a list of `Span` objects to process by the transformer, e.g. sentences.                                                                                                      |
 | [`annotation_setters`](/api/transformers#annotation_setters) | Registry for functions that create annotation setters. Annotation setters are functions that take a batch of `Doc` objects and a [`FullTransformerBatch`](/api/transformer#fulltransformerbatch) and can set additional annotations on the `Doc`. |
+
+## Training data loaders and batchers {#loaders-batchers new="3"}
+
+<!-- TODO: -->
 
 ## Training data and alignment {#gold source="spacy/gold"}
 
