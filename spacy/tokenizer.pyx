@@ -9,7 +9,6 @@ from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 cimport cython
 
-from typing import Dict, List, Union, Pattern, Optional, Any
 import re
 import warnings
 

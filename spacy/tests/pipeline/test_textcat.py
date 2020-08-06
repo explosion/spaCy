@@ -117,8 +117,10 @@ def test_overfitting_IO():
         assert cats2["POSITIVE"] + cats2["NEGATIVE"] == pytest.approx(1.0, 0.1)
 
     # Test scoring
-    scores = nlp.evaluate(train_examples, scorer_cfg={"positive_label": "POSITIVE"})
-    assert scores["cats_f"] == 1.0
+    scores = nlp.evaluate(
+        train_examples, scorer_cfg={"positive_label": "POSITIVE"}
+    )
+    assert scores["cats_micro_f"] == 1.0
     assert scores["cats_score"] == 1.0
     assert "cats_score_desc" in scores
 

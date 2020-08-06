@@ -89,6 +89,21 @@ class AttributeRuler(Pipe):
             set_token_attrs(token, attrs)
         return doc
 
+    def pipe(self, stream, *, batch_size=128):
+        """Apply the pipe to a stream of documents. This usually happens under
+        the hood when the nlp object is called on a text and all components are
+        applied to the Doc.
+
+        stream (Iterable[Doc]): A stream of documents.
+        batch_size (int): The number of documents to buffer.
+        YIELDS (Doc): Processed documents in order.
+
+        DOCS: https://spacy.io/attributeruler/pipe#pipe
+        """
+        for doc in stream:
+            doc = self(doc)
+            yield doc
+
     def load_from_tag_map(
         self, tag_map: Dict[str, Dict[Union[int, str], Union[int, str]]]
     ) -> None:

@@ -30,35 +30,14 @@ ready-to-use spaCy models.
 
 </Infobox>
 
-### Training CLI & config {#cli-config}
-
-<!-- TODO: intro describing the new v3 training philosophy -->
+## Quickstart {#quickstart}
 
 The recommended way to train your spaCy models is via the
-[`spacy train`](/api/cli#train) command on the command line. You can pass in the
-following data and information:
-
-1. The **training and evaluation data** in spaCy's
-   [binary `.spacy` format](/api/data-formats#binary-training) created using
-   [`spacy convert`](/api/cli#convert).
-2. A [`config.cfg`](#config) **configuration file** with all settings and
-   hyperparameters.
-3. An optional **Python file** to register
-   [custom functions and architectures](#custom-code).
-
-```bash
-$ python -m spacy train train.spacy dev.spacy config.cfg --output ./output
-```
-
-<Project id="some_example_project">
-
-The easiest way to get started with an end-to-end training process is to clone a
-[project](/usage/projects) template. Projects let you manage multi-step
-workflows, from data preprocessing to training and packaging your model.
-
-</Project>
-
-## Quickstart {#quickstart}
+[`spacy train`](/api/cli#train) command on the command line. It only needs a
+single [`config.cfg`](#config) **configuration file** that includes all settings
+and hyperparameters. You can optionally [overwritten](#config-overrides)
+settings on the command line, and load in a Python file to register
+[custom functions](#custom-code) and architectures.
 
 > #### Instructions
 >
@@ -88,16 +67,25 @@ $ python -m spacy init config config.cfg --base base_config.cfg
 > invalid entity annotations, cyclic dependencies, low data labels and more.
 >
 > ```bash
-> $ python -m spacy debug data en train.spacy dev.spacy --verbose
+> $ python -m spacy debug data config.cfg --verbose
 > ```
 
-You can now run [`train`](/api/cli#train) with your training and development
-data and the training config. See the [`convert`](/api/cli#convert) command for
-details on how to convert your data to spaCy's binary `.spacy` format.
+You can now add your data and run [`train`](/api/cli#train) with your config.
+See the [`convert`](/api/cli#convert) command for details on how to convert your
+data to spaCy's binary `.spacy` format. You can either include the data paths in
+the `[paths]` section of your config, or pass them in via the command line.
 
 ```bash
-$ python -m spacy train train.spacy dev.spacy config.cfg --output ./output
+$ python -m spacy train config.cfg --output ./output --paths.train ./train.spacy --paths.dev ./dev.spacy
 ```
+
+<Project id="some_example_project">
+
+The easiest way to get started with an end-to-end training process is to clone a
+[project](/usage/projects) template. Projects let you manage multi-step
+workflows, from data preprocessing to training and packaging your model.
+
+</Project>
 
 ## Training config {#config}
 
@@ -149,19 +137,19 @@ not just define static settings, but also construct objects like architectures,
 schedules, optimizers or any other custom components. The main top-level
 sections of a config file are:
 
-| Section       | Description                                                                                                                                            |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `nlp`         | Definition of the `nlp` object, its tokenizer and [processing pipeline](/usage/processing-pipelines) component names.                                  |
-| `components`  | Definitions of the [pipeline components](/usage/processing-pipelines) and their models.                                                                |
-| `paths`       | Paths to data and other assets. Can be re-used across the config as variables, e.g. `${paths:train}`, and [overwritten](#config-overrides) on the CLI. |
-| `system`      | Settings related to system and hardware.                                                                                                               |
-| `training`    | Settings and controls for the training and evaluation process.                                                                                         |
-| `pretraining` | Optional settings and controls for the [language model pretraining](#pretraining).                                                                     |
+| Section       | Description                                                                                                                                                     |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `nlp`         | Definition of the `nlp` object, its tokenizer and [processing pipeline](/usage/processing-pipelines) component names.                                           |
+| `components`  | Definitions of the [pipeline components](/usage/processing-pipelines) and their models.                                                                         |
+| `paths`       | Paths to data and other assets. Re-used across the config as variables, e.g. `${paths:train}`, and can be [overwritten](#config-overrides) on the CLI.          |
+| `system`      | Settings related to system and hardware. Re-used across the config as variables, e.g. `${system.seed}`, and can be [overwritten](#config-overrides) on the CLI. |
+| `training`    | Settings and controls for the training and evaluation process.                                                                                                  |
+| `pretraining` | Optional settings and controls for the [language model pretraining](#pretraining).                                                                              |
 
 <Infobox title="Config format and settings" emoji="📖">
 
 For a full overview of spaCy's config format and settings, see the
-[training format documentation](/api/data-formats#config) and
+[data format documentation](/api/data-formats#config) and
 [Thinc's config system docs](https://thinc.ai/usage/config). The settings
 available for the different architectures are documented with the
 [model architectures API](/api/architectures). See the Thinc documentation for
@@ -172,8 +160,6 @@ available for the different architectures are documented with the
 
 ### Overwriting config settings on the command line {#config-overrides}
 
-<!-- TODO: change example to use file path overrides -->
-
 The config system means that you can define all settings **in one place** and in
 a consistent format. There are no command-line arguments that need to be set,
 and no hidden defaults. However, there can still be scenarios where you may want
@@ -183,18 +169,20 @@ hard-code in a config file, or **system-dependent settings**.
 
 For cases like this, you can set additional command-line options starting with
 `--` that correspond to the config section and value to override. For example,
-`--training.batch_size 128` sets the `batch_size` value in the `[training]`
-block to `128`.
+`--paths.train ./corpus/train.spacy` sets the `train` value in the `[paths]`
+block.
 
 ```bash
-$ python -m spacy train train.spacy dev.spacy config.cfg
---training.batch_size 128 --nlp.vectors /path/to/vectors
+$ python -m spacy train config.cfg --paths.train ./corpus/train.spacy
+--paths.dev ./corpus/dev.spacy --training.batch_size 128
 ```
 
 Only existing sections and values in the config can be overwritten. At the end
 of the training, the final filled `config.cfg` is exported with your model, so
 you'll always have a record of the settings that were used, including your
-overrides.
+overrides. Overrides are added before [variables](#config-interpolation) are
+resolved, by the way – so if you need to use a value in multiple places,
+reference it across your config and override it on the CLI once.
 
 ### Defining pipeline components {#config-components}
 
@@ -398,7 +386,7 @@ still look good.
 
 > ```bash
 > ### Example {wrap="true"}
-> $ python -m spacy train train.spacy dev.spacy config.cfg --code functions.py
+> $ python -m spacy train config.cfg --code functions.py
 > ```
 
 The [`spacy train`](/api/cli#train) recipe lets you specify an optional argument
@@ -517,7 +505,7 @@ to your Python file. Before loading the config, spaCy will import the
 
 ```bash
 ### Training with custom code {wrap="true"}
-python -m spacy train train.spacy dev.spacy config.cfg --output ./output --code ./functions.py
+python -m spacy train config.cfg --output ./output --code ./functions.py
 ```
 
 #### Example: Custom batch size schedule {#custom-code-schedule}
@@ -610,7 +598,7 @@ config and customize the implementations, see the usage guide on
 
 ### Pretraining with spaCy {#pretraining}
 
-<!-- TODO: document spacy pretrain -->
+<!-- TODO: document spacy pretrain, objectives etc. -->
 
 ## Parallel Training with Ray {#parallel-training}
 

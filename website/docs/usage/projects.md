@@ -210,7 +210,7 @@ commands:
   - name: train
     help: 'Train a spaCy model using the specified corpus and config'
     script:
-      - 'python -m spacy train ./corpus/training.spacy ./corpus/evaluation.spacy ./configs/config.cfg -o training/'
+      - 'python -m spacy train ./configs/config.cfg -o training/ --paths.train ./corpus/training.spacy --paths.dev ./corpus/evaluation.spacy'
     deps:
       - 'configs/config.cfg'
       - 'corpus/training.spacy'
