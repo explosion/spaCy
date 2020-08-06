@@ -37,7 +37,7 @@ const DropdownNavigation = ({ items, defaultValue }) => {
     )
 }
 
-const Sidebar = ({ items, pageMenu, slug }) => {
+export default function Sidebar({ items = [], pageMenu = [], slug }) {
     const [initialized, setInitialized] = useState(false)
     const [activeSection, setActiveSection] = useState(null)
     const activeRef = useRef()
@@ -109,11 +109,6 @@ const Sidebar = ({ items, pageMenu, slug }) => {
     )
 }
 
-Sidebar.defaultProps = {
-    items: [],
-    pageMenu: [],
-}
-
 Sidebar.propTypes = {
     items: PropTypes.arrayOf(
         PropTypes.shape({
@@ -140,5 +135,3 @@ Sidebar.propTypes = {
         })
     ),
 }
-
-export default Sidebar

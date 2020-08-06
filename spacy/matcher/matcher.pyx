@@ -131,7 +131,7 @@ cdef class Matcher:
                     for attr, _ in spec[1]:
                         self._seen_attrs.add(attr)
             except OverflowError, AttributeError:
-                raise ValueError(Errors.E154.format())
+                raise ValueError(Errors.E154.format()) from None
         self._patterns.setdefault(key, [])
         self._callbacks[key] = on_match
         self._filter[key] = greedy

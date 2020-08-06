@@ -85,7 +85,7 @@ def try_mecab_import() -> None:
             "Korean support requires [mecab-ko](https://bitbucket.org/eunjeon/mecab-ko/src/master/README.md), "
             "[mecab-ko-dic](https://bitbucket.org/eunjeon/mecab-ko-dic), "
             "and [natto-py](https://github.com/buruzaemon/natto-py)"
-        )
+        ) from None
 
 
 def check_spaces(text, tokens):

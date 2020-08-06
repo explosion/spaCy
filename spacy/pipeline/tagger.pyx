@@ -186,7 +186,7 @@ class Tagger(Pipe):
                 return
         except AttributeError:
             types = set([type(eg) for eg in examples])
-            raise TypeError(Errors.E978.format(name="Tagger", method="update", types=types))
+            raise TypeError(Errors.E978.format(name="Tagger", method="update", types=types)) from None
         set_dropout_rate(self.model, drop)
         tag_scores, bp_tag_scores = self.model.begin_update(
             [eg.predicted for eg in examples])
@@ -223,7 +223,7 @@ class Tagger(Pipe):
             docs = [eg.predicted for eg in examples]
         except AttributeError:
             types = set([type(eg) for eg in examples])
-            raise TypeError(Errors.E978.format(name="Tagger", method="rehearse", types=types))
+            raise TypeError(Errors.E978.format(name="Tagger", method="rehearse", types=types)) from None
         if self._rehearsal_model is None:
             return
         if not any(len(doc) for doc in docs):
@@ -275,7 +275,7 @@ class Tagger(Pipe):
             try:
                 y = example.y
             except AttributeError:
-                raise TypeError(Errors.E978.format(name="Tagger", method="begin_training", types=type(example)))
+                raise TypeError(Errors.E978.format(name="Tagger", method="begin_training", types=type(example))) from None
             for token in y:
                 tags.add(token.tag_)
         for tag in sorted(tags):
@@ -342,7 +342,7 @@ class Tagger(Pipe):
             try:
                 self.model.from_bytes(b)
             except AttributeError:
-                raise ValueError(Errors.E149)
+                raise ValueError(Errors.E149) from None
 
         deserialize = {
             "vocab": lambda b: self.vocab.from_bytes(b),
@@ -381,7 +381,7 @@ class Tagger(Pipe):
                 try:
                     self.model.from_bytes(file_.read())
                 except AttributeError:
-                    raise ValueError(Errors.E149)
+                    raise ValueError(Errors.E149) from None
 
         deserialize = {
             "vocab": lambda p: self.vocab.from_disk(p),

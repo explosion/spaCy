@@ -198,7 +198,7 @@ def try_sudachi_import(split_mode="A"):
             "(https://github.com/WorksApplications/SudachiPy). "
             "Install with `pip install sudachipy sudachidict_core` or "
             "install spaCy with `pip install spacy[ja]`."
-        )
+        ) from None
 
 
 def resolve_pos(orth, tag, next_tag):
@@ -261,7 +261,7 @@ def get_dtokens_and_spaces(dtokens, text, gap_tag="空白"):
         try:
             word_start = text[text_pos:].index(word)
         except ValueError:
-            raise ValueError(Errors.E194.format(text=text, words=words))
+            raise ValueError(Errors.E194.format(text=text, words=words)) from None
 
         # space token
         if word_start > 0:

@@ -51,7 +51,7 @@ const icons = {
     download: DownloadIcon,
 }
 
-const Icon = ({ name, width, height, inline, variant, className }) => {
+export default function Icon({ name, width = 20, height, inline = false, variant, className }) {
     const IconComponent = icons[name]
     const iconClassNames = classNames(classes.root, className, {
         [classes.inline]: inline,
@@ -69,11 +69,6 @@ const Icon = ({ name, width, height, inline, variant, className }) => {
     )
 }
 
-Icon.defaultProps = {
-    width: 20,
-    inline: false,
-}
-
 Icon.propTypes = {
     name: PropTypes.oneOf(Object.keys(icons)),
     width: PropTypes.number,
@@ -82,5 +77,3 @@ Icon.propTypes = {
     variant: PropTypes.oneOf(['success', 'error', 'subtle']),
     className: PropTypes.string,
 }
-
-export default Icon

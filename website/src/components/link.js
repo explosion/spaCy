@@ -15,19 +15,19 @@ const Whitespace = ({ children }) => (
     <> {children} </>
 )
 
-const Link = ({
+export default function Link({
     children,
     to,
     href,
     onClick,
     activeClassName,
-    hidden,
-    hideIcon,
-    ws,
-    forceExternal,
+    hidden = false,
+    hideIcon = false,
+    ws = false,
+    forceExternal = false,
     className,
     ...other
-}) => {
+}) {
     const dest = to || href
     const external = forceExternal || /(http(s?)):\/\//gi.test(dest)
     const isApi = !external && !hidden && !hideIcon && /^\/?api/.test(dest)
@@ -100,13 +100,6 @@ export const OptionalLink = ({ to, href, children, ...props }) => {
     )
 }
 
-Link.defaultProps = {
-    hidden: false,
-    hideIcon: false,
-    ws: false,
-    forceExternal: false,
-}
-
 Link.propTypes = {
     children: PropTypes.node.isRequired,
     to: PropTypes.string,
@@ -118,5 +111,3 @@ Link.propTypes = {
     ws: PropTypes.bool,
     className: PropTypes.string,
 }
-
-export default Link

@@ -31,7 +31,7 @@ class ThaiTokenizer(DummyTokenizer):
             raise ImportError(
                 "The Thai tokenizer requires the PyThaiNLP library: "
                 "https://github.com/PyThaiNLP/pythainlp"
-            )
+            ) from None
         self.word_tokenize = word_tokenize
         self.vocab = nlp.vocab
 

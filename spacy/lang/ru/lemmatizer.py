@@ -34,7 +34,7 @@ class RussianLemmatizer(Lemmatizer):
                 'try to fix it with "pip install pymorphy2==0.8" '
                 'or "pip install git+https://github.com/kmike/pymorphy2.git pymorphy2-dicts-uk"'
                 "if you need Ukrainian too"
-            )
+            ) from None
         if RussianLemmatizer._morph is None:
             RussianLemmatizer._morph = MorphAnalyzer()
 

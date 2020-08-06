@@ -1,5 +1,4 @@
 import spacy
-import pytest
 from spacy.lang.en import English
 from spacy.tokens import Doc, DocBin
 

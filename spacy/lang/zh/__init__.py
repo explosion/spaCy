@@ -129,7 +129,7 @@ class ChineseTokenizer(DummyTokenizer):
                         "pkuseg not installed: unable to reset pkuseg "
                         "user dict. Please " + _PKUSEG_INSTALL_MSG
                     )
-                    raise ImportError(msg)
+                    raise ImportError(msg) from None
             for word in words:
                 self.pkuseg_seg.preprocesser.insert(word.strip(), "")
         else:
@@ -208,7 +208,7 @@ class ChineseTokenizer(DummyTokenizer):
                     raise ImportError(
                         "pkuseg not installed. To use this model, "
                         + _PKUSEG_INSTALL_MSG
-                    )
+                    ) from None
                 self.pkuseg_seg = pkuseg.pkuseg(str(tempdir))
             if pkuseg_data["processors_data"]:
                 processors_data = pkuseg_data["processors_data"]
@@ -258,7 +258,7 @@ class ChineseTokenizer(DummyTokenizer):
                     raise ImportError(
                         "pkuseg not installed. To use this model, "
                         + _PKUSEG_INSTALL_MSG
-                    )
+                    ) from None
             if path.exists():
                 self.pkuseg_seg = pkuseg.pkuseg(path)
 
@@ -267,7 +267,7 @@ class ChineseTokenizer(DummyTokenizer):
                 import pkuseg
             except ImportError:
                 if self.segmenter == Segmenter.pkuseg:
-                    raise ImportError(self._pkuseg_install_msg)
+                    raise ImportError(self._pkuseg_install_msg) from None
             if self.segmenter == Segmenter.pkuseg:
                 data = srsly.read_msgpack(path)
                 (user_dict, do_process, common_words, other_words) = data
@@ -311,7 +311,7 @@ def try_jieba_import(segmenter: str) -> None:
                 "Jieba not installed. To use jieba, install it with `pip "
                 " install jieba` or from https://github.com/fxsjy/jieba"
             )
-            raise ImportError(msg)
+            raise ImportError(msg) from None
 
 
 def try_pkuseg_import(segmenter: str, pkuseg_model: str, pkuseg_user_dict: str) -> None:
@@ -332,11 +332,11 @@ def try_pkuseg_import(segmenter: str, pkuseg_model: str, pkuseg_user_dict: str) 
     except ImportError:
         if segmenter == Segmenter.pkuseg:
             msg = "pkuseg not installed. To use pkuseg, " + _PKUSEG_INSTALL_MSG
-            raise ImportError(msg)
+            raise ImportError(msg) from None
     except FileNotFoundError:
         if segmenter == Segmenter.pkuseg:
             msg = "Unable to load pkuseg model from: " + pkuseg_model
-            raise FileNotFoundError(msg)
+            raise FileNotFoundError(msg) from None
 
 
 def _get_pkuseg_trie_data(node, path=""):

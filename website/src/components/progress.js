@@ -20,7 +20,7 @@ function getScrollY() {
     return isNaN(pos) ? 0 : pos
 }
 
-const Progress = () => {
+export default function Progress() {
     const progressRef = useRef()
     const [initialized, setInitialized] = useState(false)
     const [offset, setOffset] = useState(getOffset())
@@ -53,5 +53,3 @@ const Progress = () => {
     const value = scrollY === 0 ? 0 : total || 0
     return <progress ref={progressRef} className={classes.root} value={value} max="100" />
 }
-
-export default Progress

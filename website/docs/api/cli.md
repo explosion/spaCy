@@ -221,17 +221,21 @@ config from being resolved. This means that you may not see all validation
 errors at once and some issues are only shown once previous errors have been
 fixed.
 
+Instead of specifying all required settings in the config file, you can rely on
+an auto-fill functionality that uses spaCy's built-in defaults. The resulting
+full config can be written to file and used in downstream training tasks.
+
 ```bash
-$ python -m spacy debug config [config_path] [--code] [overrides]
+$ python -m spacy debug config [config_path] [--code_path] [--output] [--auto_fill] [--diff] [overrides]
 ```
 
-> #### Example
+> #### Example 1
 >
 > ```bash
 > $ python -m spacy debug config ./config.cfg
 > ```
 
-<Accordion title="Example output" spaced>
+<Accordion title="Example 1 output" spaced>
 
 ```
 ✘ Config validation error
@@ -250,12 +254,30 @@ training -> width                extra fields not permitted
 
 </Accordion>
 
-| Argument       | Type       | Description                                                                                                                                                   |
-| -------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `config_path`  | positional | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters.                                                         |
-| `--code`, `-c` | option     | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-models) for new architectures.          |
-| `--help`, `-h` | flag       | Show help message and available arguments.                                                                                                                    |
-| overrides      |            | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--training.use_gpu 1`. |
+> #### Example 2
+>
+> ```bash
+> $ python -m spacy debug config ./minimal_config.cfg -F -o ./filled_config.cfg
+> ```
+
+<Accordion title="Example 2 output" spaced>
+
+```
+✔ Auto-filled config is valid
+✔ Saved updated config to ./filled_config.cfg
+```
+
+</Accordion>
+
+| Argument              | Type       | Default | Description                                                                                                                                                   |
+| --------------------- | ---------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `config_path`         | positional | -       | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters.                                                         |
+| `--code_path`, `-c`   | option     | `None`  | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-models) for new architectures.          |
+| `--auto_fill`, `-F`   | option     | `False` | Whether or not to auto-fill the config with built-in defaults if possible. If `False`, the provided config needs to be complete.                              |
+| `--output_path`, `-o` | option     | `None`  | Output path where the filled config can be stored. Use '-' for standard output.                                                                               |
+| `--diff`, `-D`        | option     | `False` | Show a visual diff if config was auto-filled.                                                                                                                 |
+| `--help`, `-h`        | flag       | `False` | Show help message and available arguments.                                                                                                                    |
+| overrides             |            | `None`  | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--training.use_gpu 1`. |
 
 ### debug data {#debug-data}
 
@@ -433,7 +455,135 @@ will not be available.
 | `--help`, `-h`             | flag       | Show help message and available arguments.                                                                                                                    |
 | overrides                  |            | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--training.use_gpu 1`. |
 
-<!-- TODO: document debug profile and debug model? -->
+<!-- TODO: document debug profile?-->
+
+### debug model {#debug-model}
+
+Debug a Thinc [`Model`](https://thinc.ai/docs/api-model) by running it on a
+sample text and checking how it updates its internal weights and parameters.
+
+```bash
+$ python -m spacy debug model [config_path] [component] [--layers] [-DIM] [-PAR] [-GRAD] [-ATTR] [-P0] [-P1] [-P2] [P3] [--gpu_id]
+```
+
+> #### Example 1
+>
+> ```bash
+> $ python -m spacy debug model ./config.cfg tagger -P0
+> ```
+
+<Accordion title="Example 1 output" spaced>
+
+```
+ℹ Using CPU
+ℹ Fixing random seed: 0
+ℹ Analysing model with ID 62
+
+========================== STEP 0 - before training ==========================
+ℹ Layer 0: model ID 62:
+'extract_features>>list2ragged>>with_array-ints-getitem>>hashembed|ints-getitem>>hashembed|ints-getitem>>hashembed|ints-getitem>>hashembed>>with_array-maxout>>layernorm>>dropout>>ragged2list>>with_array-residual>>residual>>residual>>residual>>with_array-softmax'
+ℹ Layer 1: model ID 59:
+'extract_features>>list2ragged>>with_array-ints-getitem>>hashembed|ints-getitem>>hashembed|ints-getitem>>hashembed|ints-getitem>>hashembed>>with_array-maxout>>layernorm>>dropout>>ragged2list>>with_array-residual>>residual>>residual>>residual'
+ℹ Layer 2: model ID 61: 'with_array-softmax'
+ℹ Layer 3: model ID 24:
+'extract_features>>list2ragged>>with_array-ints-getitem>>hashembed|ints-getitem>>hashembed|ints-getitem>>hashembed|ints-getitem>>hashembed>>with_array-maxout>>layernorm>>dropout>>ragged2list'
+ℹ Layer 4: model ID 58: 'with_array-residual>>residual>>residual>>residual'
+ℹ Layer 5: model ID 60: 'softmax'
+ℹ Layer 6: model ID 13: 'extract_features'
+ℹ Layer 7: model ID 14: 'list2ragged'
+ℹ Layer 8: model ID 16:
+'with_array-ints-getitem>>hashembed|ints-getitem>>hashembed|ints-getitem>>hashembed|ints-getitem>>hashembed'
+ℹ Layer 9: model ID 22: 'with_array-maxout>>layernorm>>dropout'
+ℹ Layer 10: model ID 23: 'ragged2list'
+ℹ Layer 11: model ID 57: 'residual>>residual>>residual>>residual'
+ℹ Layer 12: model ID 15:
+'ints-getitem>>hashembed|ints-getitem>>hashembed|ints-getitem>>hashembed|ints-getitem>>hashembed'
+ℹ Layer 13: model ID 21: 'maxout>>layernorm>>dropout'
+ℹ Layer 14: model ID 32: 'residual'
+ℹ Layer 15: model ID 40: 'residual'
+ℹ Layer 16: model ID 48: 'residual'
+ℹ Layer 17: model ID 56: 'residual'
+ℹ Layer 18: model ID 3: 'ints-getitem>>hashembed'
+ℹ Layer 19: model ID 6: 'ints-getitem>>hashembed'
+ℹ Layer 20: model ID 9: 'ints-getitem>>hashembed'
+...
+```
+
+</Accordion>
+
+In this example log, we just print the name of each layer after creation of the
+model ("Step 0"), which helps us to understand the internal structure of the
+Neural Network, and to focus on specific layers that we want to inspect further
+(see next example).
+
+> #### Example 2
+>
+> ```bash
+> $ python -m spacy debug model ./config.cfg tagger -l "5,15" -DIM -PAR -P0 -P1 -P2
+> ```
+
+<Accordion title="Example 2 output" spaced>
+
+```
+ℹ Using CPU
+ℹ Fixing random seed: 0
+ℹ Analysing model with ID 62
+
+========================= STEP 0 - before training =========================
+ℹ Layer 5: model ID 60: 'softmax'
+ℹ  - dim nO: None
+ℹ  - dim nI: 96
+ℹ  - param W: None
+ℹ  - param b: None
+ℹ Layer 15: model ID 40: 'residual'
+ℹ  - dim nO: None
+ℹ  - dim nI: None
+
+======================= STEP 1 - after initialization =======================
+ℹ Layer 5: model ID 60: 'softmax'
+ℹ  - dim nO: 4
+ℹ  - dim nI: 96
+ℹ  - param W: (4, 96) - sample: [0. 0. 0. 0. 0.]
+ℹ  - param b: (4,) - sample: [0. 0. 0. 0.]
+ℹ Layer 15: model ID 40: 'residual'
+ℹ  - dim nO: 96
+ℹ  - dim nI: None
+
+========================== STEP 2 - after training ==========================
+ℹ Layer 5: model ID 60: 'softmax'
+ℹ  - dim nO: 4
+ℹ  - dim nI: 96
+ℹ  - param W: (4, 96) - sample: [ 0.00283958 -0.00294119  0.00268396 -0.00296219
+-0.00297141]
+ℹ  - param b: (4,) - sample: [0.00300002 0.00300002 0.00300002 0.00300002]
+ℹ Layer 15: model ID 40: 'residual'
+ℹ  - dim nO: 96
+ℹ  - dim nI: None
+```
+
+</Accordion>
+
+In this example log, we see how initialization of the model (Step 1) propagates
+the correct values for the `nI` (input) and `nO` (output) dimensions of the
+various layers. In the `softmax` layer, this step also defines the `W` matrix as
+an all-zero matrix determined by the `nO` and `nI` dimensions. After a first
+training step (Step 2), this matrix has clearly updated its values through the
+training feedback loop.
+
+| Argument                | Type       | Default | Description                                                                                          |
+| ----------------------- | ---------- | ------- | ---------------------------------------------------------------------------------------------------- |
+| `config_path`           | positional |         | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. |
+| `component`             | positional |         | Name of the pipeline component of which the model should be analysed.                                |
+| `--layers`, `-l`        | option     |         | Comma-separated names of layer IDs to print.                                                         |
+| `--dimensions`, `-DIM`  | option     | `False` | Show dimensions of each layer.                                                                       |
+| `--parameters`, `-PAR`  | option     | `False` | Show parameters of each layer.                                                                       |
+| `--gradients`, `-GRAD`  | option     | `False` | Show gradients of each layer.                                                                        |
+| `--attributes`, `-ATTR` | option     | `False` | Show attributes of each layer.                                                                       |
+| `--print-step0`, `-P0`  | option     | `False` | Print model before training.                                                                         |
+| `--print-step1`, `-P1`  | option     | `False` | Print model after initialization.                                                                    |
+| `--print-step2`, `-P2`  | option     | `False` | Print model after training.                                                                          |
+| `--print-step3`, `-P3`  | option     | `False` | Print final predictions.                                                                             |
+| `--help`, `-h`          | flag       |         | Show help message and available arguments.                                                           |
 
 ## Train {#train}
 

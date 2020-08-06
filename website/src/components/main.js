@@ -19,7 +19,14 @@ export const Content = ({ Component = 'div', className, children }) => (
     <Component className={classNames(classes.content, className)}>{children}</Component>
 )
 
-const Main = ({ sidebar, asides, wrapContent, theme, footer, children }) => {
+export default function Main({
+    sidebar = false,
+    asides = false,
+    wrapContent = false,
+    theme = 'blue',
+    footer,
+    children,
+}) {
     const pattern = patterns[theme]
     const mainClassNames = classNames(classes.root, {
         [classes.withSidebar]: sidebar,
@@ -37,13 +44,6 @@ const Main = ({ sidebar, asides, wrapContent, theme, footer, children }) => {
     )
 }
 
-Main.defaultProps = {
-    sidebar: false,
-    asides: false,
-    wrapContent: false,
-    theme: 'blue',
-}
-
 Main.propTypes = {
     sidebar: PropTypes.bool,
     asides: PropTypes.bool,
@@ -51,5 +51,3 @@ Main.propTypes = {
     theme: PropTypes.string.isRequired,
     footer: PropTypes.node,
 }
-
-export default Main

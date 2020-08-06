@@ -5,7 +5,7 @@ import { window } from 'browser-monads'
 import Icon from './icon'
 import classes from '../styles/search.module.sass'
 
-const Search = ({ id, placeholder, settings }) => {
+export default function Search({ id = 'docsearch', placeholder = 'Search docs', settings = {} }) {
     const { apiKey, indexName } = settings
     if (!apiKey && !indexName) return null
     const [initialized, setInitialized] = useState(false)
@@ -36,12 +36,6 @@ const Search = ({ id, placeholder, settings }) => {
     )
 }
 
-Search.defaultProps = {
-    id: 'docsearch',
-    placeholder: 'Search docs',
-    settings: {},
-}
-
 Search.propTypes = {
     settings: PropTypes.shape({
         apiKey: PropTypes.string.isRequired,
@@ -50,5 +44,3 @@ Search.propTypes = {
     id: PropTypes.string.isRequired,
     placeholder: PropTypes.string.isRequired,
 }
-
-export default Search

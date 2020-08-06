@@ -6,32 +6,34 @@ import Link from './link'
 import { H5 } from './typography'
 import classes from '../styles/card.module.sass'
 
-const Card = ({ title, to, image, header, small, onClick, children }) => (
-    <div className={classNames(classes.root, { [classes.small]: !!small })}>
-        {header && (
+export default function Card({ title, to, image, header, small, onClick, children }) {
+    return (
+        <div className={classNames(classes.root, { [classes.small]: !!small })}>
+            {header && (
+                <Link to={to} onClick={onClick} hidden>
+                    {header}
+                </Link>
+            )}
+            {(title || image) && (
+                <H5 className={classes.title}>
+                    {image && (
+                        <div className={classes.image}>
+                            <img src={image} width={35} alt="" />
+                        </div>
+                    )}
+                    {title && (
+                        <Link to={to} onClick={onClick} hidden>
+                            {title}
+                        </Link>
+                    )}
+                </H5>
+            )}
             <Link to={to} onClick={onClick} hidden>
-                {header}
+                {children}
             </Link>
-        )}
-        {(title || image) && (
-            <H5 className={classes.title}>
-                {image && (
-                    <div className={classes.image}>
-                        <img src={image} width={35} alt="" />
-                    </div>
-                )}
-                {title && (
-                    <Link to={to} onClick={onClick} hidden>
-                        {title}
-                    </Link>
-                )}
-            </H5>
-        )}
-        <Link to={to} onClick={onClick} hidden>
-            {children}
-        </Link>
-    </div>
-)
+        </div>
+    )
+}
 
 Card.propTypes = {
     title: PropTypes.node,
@@ -41,5 +43,3 @@ Card.propTypes = {
     onClick: PropTypes.func,
     children: PropTypes.node,
 }
-
-export default Card

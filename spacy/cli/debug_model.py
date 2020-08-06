@@ -7,8 +7,6 @@ import typer
 
 from ._util import Arg, Opt, debug_cli, show_validation_error, parse_config_overrides
 from .. import util
-from ..lang.en import English
-from ..util import dot_to_object
 
 
 @debug_cli.command("model")
@@ -51,12 +49,12 @@ def debug_model_cli(
     }
     config_overrides = parse_config_overrides(ctx.args)
     with show_validation_error(config_path):
-        cfg = Config().from_disk(config_path)
+        cfg = Config().from_disk(config_path, overrides=config_overrides)
         try:
-            nlp, config = util.load_model_from_config(cfg, overrides=config_overrides)
+            nlp, config = util.load_model_from_config(cfg)
         except ValueError as e:
             msg.fail(str(e), exits=1)
-    seed = config.get("training", {}).get("seed", None)
+    seed = config["pretraining"]["seed"]
     if seed is not None:
         msg.info(f"Fixing random seed: {seed}")
         fix_random_seed(seed)
@@ -130,8 +128,8 @@ def _sentences():
     ]
 
 
-def _get_docs():
-    nlp = English()
+def _get_docs(lang: str = "en"):
+    nlp = util.get_lang_class(lang)()
     return list(nlp.pipe(_sentences()))
 
 

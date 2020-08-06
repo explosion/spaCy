@@ -19,14 +19,9 @@ def test_empty_doc():
             width=width,
             rows=embed_size,
             also_use_static_vectors=False,
-            also_embed_subwords=True
+            also_embed_subwords=True,
         ),
-        MaxoutWindowEncoder(
-            width=width,
-            depth=4,
-            window_size=1,
-            maxout_pieces=3
-        )
+        MaxoutWindowEncoder(width=width, depth=4, window_size=1, maxout_pieces=3),
     )
     tok2vec.initialize()
     vectors, backprop = tok2vec.begin_update([doc])
@@ -44,14 +39,9 @@ def test_tok2vec_batch_sizes(batch_size, width, embed_size):
             width=width,
             rows=embed_size,
             also_use_static_vectors=False,
-            also_embed_subwords=True
+            also_embed_subwords=True,
         ),
-        MaxoutWindowEncoder(
-            width=width,
-            depth=4,
-            window_size=1,
-            maxout_pieces=3,
-        )
+        MaxoutWindowEncoder(width=width, depth=4, window_size=1, maxout_pieces=3,),
     )
     tok2vec.initialize()
     vectors, backprop = tok2vec.begin_update(batch)

@@ -203,7 +203,7 @@ class TextCategorizer(Pipe):
             types = set([type(eg) for eg in examples])
             raise TypeError(
                 Errors.E978.format(name="TextCategorizer", method="update", types=types)
-            )
+            ) from None
         set_dropout_rate(self.model, drop)
         scores, bp_scores = self.model.begin_update([eg.predicted for eg in examples])
         loss, d_scores = self.get_loss(examples, scores)
@@ -250,7 +250,7 @@ class TextCategorizer(Pipe):
             err = Errors.E978.format(
                 name="TextCategorizer", method="rehearse", types=types
             )
-            raise TypeError(err)
+            raise TypeError(err) from None
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
             return losses
@@ -351,11 +351,11 @@ class TextCategorizer(Pipe):
                 err = Errors.E978.format(
                     name="TextCategorizer", method="update", types=type(example)
                 )
-                raise TypeError(err)
+                raise TypeError(err) from None
             for cat in y.cats:
                 self.add_label(cat)
         self.require_labels()
-        docs = [Doc(Vocab(), words=["hello"])]
+        docs = [Doc(self.vocab, words=["hello"])]
         truths, _ = self._examples_to_truth(examples)
         self.set_output(len(self.labels))
         self.model.initialize(X=docs, Y=truths)

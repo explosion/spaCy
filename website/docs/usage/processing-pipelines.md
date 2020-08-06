@@ -311,6 +311,62 @@ nlp.rename_pipe("ner", "entityrecognizer")
 nlp.replace_pipe("tagger", my_custom_tagger)
 ```
 
+### Sourcing pipeline components from existing models {#sourced-components new="3"}
+
+Pipeline components that are independent can also be reused across models.
+Instead of adding a new blank component to a pipeline, you can also copy an
+existing component from a pretrained model by setting the `source` argument on
+[`nlp.add_pipe`](/api/language#add_pipe). The first argument will then be
+interpreted as the name of the component in the source pipeline – for instance,
+`"ner"`. This is especially useful for
+[training a model](/usage/training#config-components) because it lets you mix
+and match components and create fully custom model packages with updated
+pretrained components and new components trained on your data.
+
+<Infobox variant="warning" title="Important note for pretrained components">
+
+When reusing components across models, keep in mind that the **vocabulary**,
+**vectors** and model settings **must match**. If a pretrained model includes
+[word vectors](/usage/vectors-embeddings) and the component uses them as
+features, the model you copy it to needs to have the _same_ vectors available –
+otherwise, it won't be able to make the same predictions.
+
+</Infobox>
+
+> #### In training config
+>
+> Instead of providing a `factory`, component blocks in the training
+> [config](/usage/training#config) can also define a `source`. The string needs
+> to be a loadable spaCy model package or path. The
+>
+> ```ini
+> [components.ner]
+> source = "en_core_web_sm"
+> component = "ner"
+> ```
+>
+> By default, sourced components will be updated with your data during training.
+> If you want to preserve the component as-is, you can "freeze" it:
+>
+> ```ini
+> [training]
+> frozen_components = ["ner"]
+> ```
+
+```python
+### {executable="true"}
+import spacy
+
+# The source model with different components
+source_nlp = spacy.load("en_core_web_sm")
+print(source_nlp.pipe_names)
+
+# Add only the entity recognizer to the new blank model
+nlp = spacy.blank("en")
+nlp.add_pipe("ner", source=source_nlp)
+print(nlp.pipe_names)
+```
+
 ### Analyzing pipeline components {#analysis new="3"}
 
 The [`nlp.analyze_pipes`](/api/language#analyze_pipes) method analyzes the
