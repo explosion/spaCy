@@ -1,7 +1,7 @@
 import React, { Fragment, useState, useEffect, useRef } from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
-import { window } from 'browser-monads'
+import { window, document } from 'browser-monads'
 
 import Section from './section'
 import Icon from './icon'
@@ -25,12 +25,12 @@ function getRawContent(ref) {
 }
 
 const Quickstart = ({
-    data,
+    data = [],
     title,
     description,
-    copy,
+    copy = true,
     download,
-    id,
+    id = 'quickstart',
     setters = {},
     hidePrompts,
     children,
@@ -240,12 +240,6 @@ const Quickstart = ({
             </div>
         </Section>
     )
-}
-
-Quickstart.defaultProps = {
-    data: [],
-    id: 'quickstart',
-    copy: true,
 }
 
 Quickstart.propTypes = {

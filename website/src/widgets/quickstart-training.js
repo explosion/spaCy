@@ -55,7 +55,7 @@ const DATA = [
     },
 ]
 
-const QuickstartTraining = ({ id, title, download = 'config.cfg' }) => {
+export default function QuickstartTraining({ id, title, download = 'config.cfg' }) {
     const [lang, setLang] = useState(DEFAULT_LANG)
     const [pipeline, setPipeline] = useState([])
     const setters = { lang: setLang, components: setPipeline }
@@ -68,6 +68,10 @@ const QuickstartTraining = ({ id, title, download = 'config.cfg' }) => {
                     id: code,
                     title: name,
                 }))
+                const recommendedTrf = Object.assign(
+                    {},
+                    ...langs.map(({ code }) => ({ [code]: { sm: 'TODO', lg: 'TODO' } }))
+                )
                 return (
                     <Quickstart
                         download={download}
@@ -78,6 +82,10 @@ const QuickstartTraining = ({ id, title, download = 'config.cfg' }) => {
                         hidePrompts
                     >
                         <QS comment>{COMMENT}</QS>
+                        <span>[paths]</span>
+                        <span>train = ""</span>
+                        <span>dev = ""</span>
+                        <br />
                         <span>[nlp]</span>
                         <span>lang = "{lang}"</span>
                         <span>pipeline = {JSON.stringify(pipeline).replace(/,/g, ', ')}</span>
@@ -85,14 +93,20 @@ const QuickstartTraining = ({ id, title, download = 'config.cfg' }) => {
                         <span>[components]</span>
                         <br />
                         <span>[components.transformer]</span>
-                        <QS optimize="efficiency">name = "{MODELS_SMALL[lang]}"</QS>
-                        <QS optimize="accuracy">name = "{MODELS_LARGE[lang]}"</QS>
+                        <QS optimize="efficiency">name = "{recommendedTrf[lang].sm}"</QS>
+                        <QS optimize="accuracy">name = "{recommendedTrf[lang].lg}"</QS>
                         {!!pipeline.length && <br />}
                         {pipeline.map((pipe, i) => (
                             <>
                                 {i !== 0 && <br />}
                                 <span>[components.{pipe}]</span>
                                 <span>factory = "{pipe}"</span>
+                                <QS config="independent">
+                                    <br />
+                                    [components.parser.model.tok2vec]
+                                    <br />
+                                    @architectures = "spacy.Tok2Vec.v1"
+                                </QS>
                             </>
                         ))}
                     </Quickstart>
@@ -114,5 +128,3 @@ const query = graphql`
         }
     }
 `
-
-export default QuickstartTraining

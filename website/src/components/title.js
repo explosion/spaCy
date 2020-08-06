@@ -24,7 +24,7 @@ const MetaItem = ({ label, url, children, help }) => (
     </span>
 )
 
-const Title = ({
+export default function Title({
     id,
     title,
     tag,
@@ -35,7 +35,7 @@ const Title = ({
     apiDetails,
     children,
     ...props
-}) => {
+}) {
     const hasApiDetails = Object.values(apiDetails || {}).some(v => v)
     const metaIconProps = { className: classes.metaIcon, width: 18 }
     return (
@@ -111,5 +111,3 @@ Title.propTypes = {
     image: PropTypes.string,
     children: PropTypes.node,
 }
-
-export default Title

@@ -139,7 +139,7 @@ cdef class Example:
 
     def get_aligned_spans_y2x(self, y_spans):
         return self._get_aligned_spans(self.x, y_spans, self.alignment.y2x)
-    
+
     def _get_aligned_spans(self, doc, spans, align):
         seen = set()
         output = []
@@ -207,7 +207,7 @@ cdef class Example:
         sent_starts and return a list of the new Examples"""
         if not self.reference.is_sentenced:
             return [self]
-        
+
         align = self.alignment.y2x
         seen_indices = set()
         output = []
@@ -267,7 +267,7 @@ def _annot2array(vocab, tok_annot, doc_annot):
                 values.append([vocab.strings.add(v) for v in value])
             except TypeError:
                 types= set([type(v) for v in value])
-                raise TypeError(Errors.E969.format(field=key, types=types))
+                raise TypeError(Errors.E969.format(field=key, types=types)) from None
 
     array = numpy.asarray(values, dtype="uint64")
     return attrs, array.T

@@ -88,8 +88,8 @@ def pretrain(
         msg.info("Using CPU")
     msg.info(f"Loading config from: {config_path}")
     with show_validation_error(config_path):
-        config = Config().from_disk(config_path)
-        nlp, config = util.load_model_from_config(config, overrides=config_overrides)
+        config = Config().from_disk(config_path, overrides=config_overrides)
+        nlp, config = util.load_model_from_config(config)
     # TODO: validate that [pretraining] block exists
     if not output_dir.exists():
         output_dir.mkdir()

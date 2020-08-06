@@ -8,7 +8,7 @@ import { OutputArea, OutputAreaModel } from '@jupyterlab/outputarea'
 import { RenderMimeRegistry, standardRendererFactories } from '@jupyterlab/rendermime'
 import { window } from 'browser-monads'
 
-class Juniper extends React.Component {
+export default class Juniper extends React.Component {
     outputRef = null
     inputRef = null
     state = { kernel: null, renderers: null, fromStorage: null }
@@ -270,5 +270,3 @@ Juniper.propTypes = {
         output: PropTypes.string,
     }),
 }
-
-export default Juniper

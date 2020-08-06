@@ -5,7 +5,7 @@ import { navigate } from 'gatsby'
 
 import classes from '../styles/dropdown.module.sass'
 
-const Dropdown = ({ defaultValue, className, onChange, children }) => {
+export default function Dropdown({ defaultValue, className, onChange, children }) {
     const defaultOnChange = ({ target }) => navigate(target.value)
     return (
         <select
@@ -24,5 +24,3 @@ Dropdown.propTypes = {
     onChange: PropTypes.func,
     children: PropTypes.node.isRequired,
 }
-
-export default Dropdown

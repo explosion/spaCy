@@ -204,7 +204,7 @@ cdef class Pipe:
             try:
                 self.model.from_bytes(b)
             except AttributeError:
-                raise ValueError(Errors.E149)
+                raise ValueError(Errors.E149) from None
 
         deserialize = {}
         if hasattr(self, "vocab"):
@@ -242,7 +242,7 @@ cdef class Pipe:
             try:
                 self.model.from_bytes(p.open("rb").read())
             except AttributeError:
-                raise ValueError(Errors.E149)
+                raise ValueError(Errors.E149) from None
 
         deserialize = {}
         deserialize["vocab"] = lambda p: self.vocab.from_disk(p)

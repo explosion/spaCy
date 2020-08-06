@@ -49,11 +49,9 @@ def debug_config_cli(
     overrides = parse_config_overrides(ctx.args)
     import_code(code_path)
     with show_validation_error(config_path):
-        config = Config().from_disk(config_path)
+        config = Config().from_disk(config_path, overrides=overrides)
         try:
-            nlp, _ = util.load_model_from_config(
-                config, overrides=overrides, auto_fill=auto_fill
-            )
+            nlp, _ = util.load_model_from_config(config, auto_fill=auto_fill)
         except ValueError as e:
             msg.fail(str(e), exits=1)
     if auto_fill:
@@ -136,8 +134,8 @@ def debug_data(
     if not config_path.exists():
         msg.fail("Config file not found", config_path, exists=1)
     with show_validation_error(config_path):
-        cfg = Config().from_disk(config_path)
-        nlp, config = util.load_model_from_config(cfg, overrides=config_overrides)
+        cfg = Config().from_disk(config_path, overrides=config_overrides)
+        nlp, config = util.load_model_from_config(cfg)
     # Use original config here, not resolved version
     sourced_components = get_sourced_components(cfg)
     frozen_components = config["training"]["frozen_components"]
