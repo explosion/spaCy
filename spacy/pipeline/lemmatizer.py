@@ -7,6 +7,7 @@ from ..errors import Errors
 from ..language import Language
 from ..lookups import Lookups, load_lookups
 from ..parts_of_speech import NAMES as UPOS_NAMES
+from ..scorer import Scorer
 from ..tokens import Doc, Token
 from ..vocab import Vocab
 from .. import util
