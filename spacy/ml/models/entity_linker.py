@@ -25,11 +25,12 @@ def build_nel_encoder(tok2vec: Model, nO: Optional[int] = None) -> Model:
 
 
 @registry.assets.register("spacy.KBFromFile.v1")
-def load_kb(vocab_path: str, kb_path: str) -> KnowledgeBase:
-    vocab = Vocab().from_disk(vocab_path)
-    kb = KnowledgeBase(vocab, entity_vector_length=1)
-    kb.load_bulk(kb_path)
-    return kb
+def load_kb(kb_path: str) -> Callable[[Vocab], KnowledgeBase]:
+    def kb_from_file(vocab):
+        kb = KnowledgeBase(vocab, entity_vector_length=1)
+        kb.load_bulk(kb_path)
+        return kb
+    return kb_from_file
 
 
 @registry.assets.register("spacy.EmptyKB.v1")

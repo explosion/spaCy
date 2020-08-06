@@ -120,7 +120,7 @@ def test_kb_default(nlp):
 def test_kb_custom_length(nlp):
     """Test that the default (empty) KB can be configured with a custom entity length"""
     entity_linker = nlp.add_pipe(
-        "entity_linker", config={"kb": {"entity_vector_length": 35}}
+        "entity_linker", config={"kb_loader": {"entity_vector_length": 35}}
     )
     assert len(entity_linker.kb) == 0
     assert entity_linker.kb.get_size_entities() == 0
@@ -137,7 +137,7 @@ def test_kb_undefined(nlp):
 
 def test_kb_empty(nlp):
     """Test that the EL can't train with an empty KB"""
-    config = {"kb": {"@assets": "spacy.EmptyKB.v1", "entity_vector_length": 342}}
+    config = {"kb_loader": {"@assets": "spacy.EmptyKB.v1", "entity_vector_length": 342}}
     entity_linker = nlp.add_pipe("entity_linker", config=config)
     assert len(entity_linker.kb) == 0
     with pytest.raises(ValueError):
@@ -197,7 +197,7 @@ def test_el_pipe_configuration(nlp):
     nlp.add_pipe(
         "entity_linker",
         config={
-            "kb": {"@assets": "myAdamKB.v1"},
+            "kb_loader": {"@assets": "myAdamKB.v1"},
             "incl_context": False,
         },
     )
@@ -220,7 +220,7 @@ def test_el_pipe_configuration(nlp):
         "entity_linker",
         "entity_linker",
         config={
-            "kb": {"@assets": "myAdamKB.v1"},
+            "kb_loader": {"@assets": "myAdamKB.v1"},
             "incl_context": False,
             "get_candidates": {"@assets": "spacy.LowercaseCandidateGenerator.v1"},
         },
@@ -303,7 +303,7 @@ def test_preserving_links_asdoc(nlp):
     ]
     ruler = nlp.add_pipe("entity_ruler")
     ruler.add_patterns(patterns)
-    el_config = {"kb": {"@assets": "myLocationsKB.v1"}, "incl_prior": False}
+    el_config = {"kb_loader": {"@assets": "myLocationsKB.v1"}, "incl_prior": False}
     el_pipe = nlp.add_pipe("entity_linker", config=el_config, last=True)
     el_pipe.begin_training()
     el_pipe.incl_context = False
@@ -405,7 +405,7 @@ def test_overfitting_IO():
 
     # Create the Entity Linker component and add it to the pipeline
     nlp.add_pipe(
-        "entity_linker", config={"kb": {"@assets": "myOverfittingKB.v1"}}, last=True
+        "entity_linker", config={"kb_loader": {"@assets": "myOverfittingKB.v1"}}, last=True
     )
 
     # train the NEL pipe

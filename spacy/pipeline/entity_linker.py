@@ -39,7 +39,7 @@ DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
     requires=["doc.ents", "doc.sents", "token.ent_iob", "token.ent_type"],
     assigns=["token.ent_kb_id"],
     default_config={
-        "kb": {"@assets": "spacy.EmptyKB.v1", "entity_vector_length": 64},
+        "kb_loader": {"@assets": "spacy.EmptyKB.v1", "entity_vector_length": 64},
         "model": DEFAULT_NEL_MODEL,
         "labels_discard": [],
         "incl_prior": True,
@@ -51,7 +51,7 @@ def make_entity_linker(
     nlp: Language,
     name: str,
     model: Model,
-    kb: Callable[[Vocab], KnowledgeBase],
+    kb_loader: Callable[[Vocab], KnowledgeBase],
     *,
     labels_discard: Iterable[str],
     incl_prior: bool,
@@ -62,7 +62,7 @@ def make_entity_linker(
         nlp.vocab,
         model,
         name,
-        kb=kb,
+        kb_loader=kb_loader,
         labels_discard=labels_discard,
         incl_prior=incl_prior,
         incl_context=incl_context,
@@ -84,7 +84,7 @@ class EntityLinker(Pipe):
         model: Model,
         name: str = "entity_linker",
         *,
-        kb: Callable[[Vocab], KnowledgeBase],
+        kb_loader: Callable[[Vocab], KnowledgeBase],
         labels_discard: Iterable[str],
         incl_prior: bool,
         incl_context: bool,
@@ -96,7 +96,7 @@ class EntityLinker(Pipe):
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
         name (str): The component instance name, used to add entries to the
             losses during training.
-        kb (KnowledgeBase): The KnowledgeBase holding all entities and their aliases.
+        kb_loader (Callable[[Vocab], KnowledgeBase]): A function that creates a KnowledgeBase from a Vocab instance
         labels_discard (Iterable[str]): NER labels that will automatically get a "NIL" prediction.
         incl_prior (bool): Whether or not to include prior probabilities from the KB in the model.
         incl_context (bool): Whether or not to include the local context in the model.
@@ -111,7 +111,7 @@ class EntityLinker(Pipe):
             "incl_prior": incl_prior,
             "incl_context": incl_context,
         }
-        self.kb = kb(self.vocab)
+        self.kb = kb_loader(self.vocab)
         self.get_candidates = get_candidates
         self.cfg = dict(cfg)
         self.distance = CosineDistance(normalize=False)
@@ -409,7 +409,6 @@ class EntityLinker(Pipe):
         DOCS: https://spacy.io/api/entitylinker#to_disk
         """
         serialize = {}
-        self.cfg["entity_width"] = self.kb.entity_vector_length
         serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
         serialize["vocab"] = lambda p: self.vocab.to_disk(p)
         serialize["kb"] = lambda p: self.kb.dump(p)
@@ -435,7 +434,6 @@ class EntityLinker(Pipe):
                 raise ValueError(Errors.E149)
 
         def load_kb(p):
-            self.kb = KnowledgeBase(self.vocab, entity_vector_length=self.cfg["entity_width"])
             self.kb.load_bulk(p)
 
         deserialize = {}
