@@ -20,7 +20,7 @@ def create_docbin_reader(
 
 class Corpus:
     """Iterate Example objects from a file or directory of DocBin (.spacy)
-    formated data files.
+    formatted data files.
 
     path (Path): The directory or filename to read from.
     gold_preproc (bool): Whether to set up the Example object with gold-standard

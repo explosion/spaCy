@@ -17,12 +17,32 @@ label schemes used in its components, depending on the data it was trained on.
 
 ### Binary training format {#binary-training new="3"}
 
-The built-in [`convert`](/api/cli#convert) command helps you convert the
-`.conllu` format used by the
-[Universal Dependencies corpora](https://github.com/UniversalDependencies) as
-well as spaCy's previous [JSON format](#json-input).
+> #### Example
+>
+> ```python
+> from pathlib import Path
+> from spacy.tokens import DocBin
+> from spacy.gold import Corpus
+> output_file = Path(dir) / "output.spacy"
+> data = DocBin(docs=docs).to_bytes()
+> with output_file.open("wb") as file_:
+>    file_.write(data)
+> reader = Corpus(output_file)
+> ```
 
-<!-- TODO: document DocBin format -->
+The main data format used in spaCy v3 is a binary format created by serializing
+a [`DocBin`](/api/docbin) object, which represents a collection of `Doc`
+objects. Typically, the extension for these binary files is `.spacy`, and they
+are used as input format for specifying a [training corpus](/api/corpus) and for
+spaCy's CLI [`train`](/api/cli#train) command.
+
+This binary format is extremely efficient in storage, especially when packing
+multiple documents together. 
+
+The built-in [`convert`](/api/cli#convert) command helps you convert spaCy's
+previous [JSON format](#json-input) to this new `DocBin` format. It also
+supports conversion of the `.conllu` format used by the
+[Universal Dependencies corpora](https://github.com/UniversalDependencies).
 
 ### JSON training format {#json-input tag="deprecated"}
 
@@ -30,7 +50,7 @@ well as spaCy's previous [JSON format](#json-input).
 
 As of v3.0, the JSON input format is deprecated and is replaced by the
 [binary format](#binary-training). Instead of converting [`Doc`](/api/doc)
-objects to JSON, you can now now serialize them directly using the
+objects to JSON, you can now serialize them directly using the
 [`DocBin`](/api/docbin) container and then use them as input data.
 
 [`spacy convert`](/api/cli) lets you convert your JSON data to the new `.spacy`
