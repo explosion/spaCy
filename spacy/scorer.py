@@ -318,7 +318,7 @@ class Scorer:
         labels: Iterable[str] = tuple(),
         multi_label: bool = True,
         positive_label: Optional[str] = None,
-        threshold=Optional[float] = None,
+        threshold: Optional[float] = None,
         **cfg,
     ) -> Dict[str, Any]:
         """Returns PRF and ROC AUC scores for a doc-level attribute with a
