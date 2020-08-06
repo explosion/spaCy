@@ -138,6 +138,21 @@ class Lemmatizer(Pipe):
                 token.lemma_ = self.lemmatize(token)[0]
         return doc
 
+    def pipe(self, stream, *, batch_size=128):
+        """Apply the pipe to a stream of documents. This usually happens under
+        the hood when the nlp object is called on a text and all components are
+        applied to the Doc.
+
+        stream (Iterable[Doc]): A stream of documents.
+        batch_size (int): The number of documents to buffer.
+        YIELDS (Doc): Processed documents in order.
+
+        DOCS: https://spacy.io/api/lemmatizer#pipe
+        """
+        for doc in stream:
+            doc = self(doc)
+            yield doc
+
     def lookup_lemmatize(self, token: Token) -> List[str]:
         """Lemmatize using a lookup-based approach.
 
@@ -219,6 +234,9 @@ class Lemmatizer(Pipe):
 
     def is_base_form(self, univ_pos: str, morphology: Optional[dict] = None) -> bool:
         return False
+
+    def score(self, examples, **kwargs):
+        return Scorer.score_token_attr(examples, "lemma", **kwargs)
 
     def to_disk(self, path, *, exclude=tuple()):
         """Save the current state to a directory.
