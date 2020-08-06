@@ -425,7 +425,8 @@ class Scorer:
             f"{attr}_auc_per_type": {k: v.score for k, v in auc_per_type.items()},
         }
         if len(labels) == 2 and not multi_label and positive_label:
-            results[f"{attr}_score"] = results[f"{attr}_f"]
+            positive_label_f = results[f"{attr}_f_per_type"][positive_label]['f']
+            results[f"{attr}_score"] = positive_label_f
             results[f"{attr}_score_desc"] = f"F ({positive_label})"
         elif not multi_label:
             results[f"{attr}_score"] = results[f"{attr}_macro_f"]
