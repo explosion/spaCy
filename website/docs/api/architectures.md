@@ -260,7 +260,7 @@ If the `nO` dimension is not set, the TextCategorizer component will set it when
 
 ## Entity linking architectures {#entitylinker source="spacy/ml/models/entity_linker.py"}
 
-An Entity Linker component disambiguates textual mentions (tagged as named
+An `EntityLinker` component disambiguates textual mentions (tagged as named
 entities) to unique identifiers, grounding the named entities into the "real
 world". This requires 3 main components:
 
@@ -312,7 +312,7 @@ If the `nO` dimension is not set, the Entity Linking component will set it when
 
 ### spacy.EmptyKB.v1 {#EmptyKB}
 
-A function that creates a default, empty Knowledge Base from a
+A function that creates a default, empty `KnowledgeBase` from a
 [`Vocab`](/api/vocab) instance.
 
 | Name                   | Type | Description                                                               |

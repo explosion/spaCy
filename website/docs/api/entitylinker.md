@@ -9,11 +9,12 @@ api_string_name: entity_linker
 api_trainable: true
 ---
 
-An Entity Linker component disambiguates textual mentions (tagged as named
+An `EntityLinker` component disambiguates textual mentions (tagged as named
 entities) to unique identifiers, grounding the named entities into the "real
-world". It requires a Knowledge base, a function to generate plausible
-candidates from that Knowledge base given a certain textual mention, and a ML
-model to pick the right candidate, given the local context of the mention.
+world". It requires a `KnowledgeBase`, as well as a function to generate
+plausible candidates from that `KnowledgeBase` given a certain textual mention,
+and a ML model to pick the right candidate, given the local context of the
+mention.
 
 ## Config and implementation {#config}
 

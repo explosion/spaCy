@@ -380,8 +380,9 @@ table instead of only returning the structured data.
 
 > #### ✏️ Things to try
 >
-> 1. Add the components `"ner"` and `"sentencizer"` _before_ the entity linker.
->    The analysis should now show no problems, because requirements are met.
+> 1. Add the components `"ner"` and `"sentencizer"` _before_ the
+>    `"entity_linker"`. The analysis should now show no problems, because
+>    requirements are met.
 
 ```python
 ### {executable="true"}
