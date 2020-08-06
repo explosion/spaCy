@@ -7,9 +7,8 @@ from .lex_attrs import LEX_ATTRS
 from .syntax_iterators import SYNTAX_ITERATORS
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
 from .lemmatizer import GreekLemmatizer
-from ...lookups import Lookups, load_lookups
+from ...lookups import Lookups
 from ...language import Language
-from ...pipeline.lemmatizer import load_lemmatizer_lookups
 
 
 class GreekDefaults(Language.Defaults):
@@ -41,7 +40,7 @@ def make_lemmatizer(
     mode: str,
     lookups: Optional[Lookups],
 ):
-    lookups = load_lemmatizer_lookups(nlp.lang, mode, lookups)
+    lookups = GreekLemmatizer.load_lookups(nlp.lang, mode, lookups)
     return GreekLemmatizer(nlp.vocab, model, name, mode=mode, lookups=lookups)
 
 

@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 from thinc.api import Model
 
@@ -9,13 +9,27 @@ from ...vocab import Vocab
 
 
 class DutchLemmatizer(Lemmatizer):
+    @classmethod
+    def get_lookups_config(cls, mode: str) -> Dict:
+        if mode == "rule":
+            return {
+                "required_tables": [
+                    "lemma_lookup",
+                    "lemma_rules",
+                    "lemma_exc",
+                    "lemma_index",
+                ],
+                "optional_tables": [],
+            }
+        else:
+            return super().get_lookups_config(mode)
+
     def lookup_lemmatize(self, token: Token) -> List[str]:
         """Overrides parent method so that a lowercased version of the string
         is used to search the lookup table. This is necessary because our
         lookup table consists entirely of lowercase keys."""
         lookup_table = self.lookups.get_table("lemma_lookup", {})
         string = token.text.lower()
-        print(string)
         return [lookup_table.get(string, string)]
 
     # Note: CGN does not distinguish AUX verbs, so we treat AUX as VERB.
@@ -45,7 +59,17 @@ class DutchLemmatizer(Lemmatizer):
         rules = rules_table.get(univ_pos, {})
 
         string = string.lower()
-        if univ_pos not in ("noun", "verb", "aux", "adj", "adv", "pron", "det", "adp", "num"):
+        if univ_pos not in (
+            "noun",
+            "verb",
+            "aux",
+            "adj",
+            "adv",
+            "pron",
+            "det",
+            "adp",
+            "num",
+        ):
             forms = [string]
             self.cache[cache_key] = forms
             return forms

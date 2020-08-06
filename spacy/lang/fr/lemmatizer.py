@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 
 from ...pipeline import Lemmatizer
 from ...tokens import Token
@@ -13,6 +13,21 @@ class FrenchLemmatizer(Lemmatizer):
     the rule-based lemmatization. As a last resort, the lemmatizer checks in
     the lookup table.
     """
+
+    @classmethod
+    def get_lookups_config(cls, mode: str) -> Dict:
+        if mode == "rule":
+            return {
+                "required_tables": [
+                    "lemma_lookup",
+                    "lemma_rules",
+                    "lemma_exc",
+                    "lemma_index",
+                ],
+                "optional_tables": [],
+            }
+        else:
+            return super().get_lookups_config(mode)
 
     def rule_lemmatize(self, token: Token) -> List[str]:
         cache_key = (token.orth, token.pos)

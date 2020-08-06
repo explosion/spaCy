@@ -10,7 +10,6 @@ from .punctuation import TOKENIZER_INFIXES
 from .lemmatizer import EnglishLemmatizer
 from ...language import Language
 from ...lookups import Lookups, load_lookups
-from ...pipeline.lemmatizer import load_lemmatizer_lookups
 
 
 class EnglishDefaults(Language.Defaults):
@@ -40,7 +39,7 @@ def make_lemmatizer(
     mode: str,
     lookups: Optional[Lookups],
 ):
-    lookups = load_lemmatizer_lookups(nlp.lang, mode, lookups)
+    lookups = EnglishLemmatizer.load_lookups(nlp.lang, mode, lookups)
     return EnglishLemmatizer(nlp.vocab, model, name, mode=mode, lookups=lookups)
 
 

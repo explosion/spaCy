@@ -18,16 +18,6 @@ class GreekLemmatizer(Lemmatizer):
     The second modification is about removing the base forms function which is
     not applicable for Greek language.
     """
-    def __init__(
-        self,
-        vocab: Vocab,
-        model: Optional[Model],
-        name: str = "lemmatizer",
-        *,
-        mode: str = "rule",
-        lookups: Optional[Lookups] = None,
-    ) -> None:
-        super().__init__(vocab, model, name, mode=mode, lookups=lookups)
 
     def rule_lemmatize(self, token: Token) -> List[str]:
         """Lemmatize using a rule-based approach.

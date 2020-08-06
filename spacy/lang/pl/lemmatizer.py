@@ -9,6 +9,26 @@ class PolishLemmatizer(Lemmatizer):
     # dictionary (morfeusz.sgjp.pl/en) by Institute of Computer Science PAS.
     # It utilizes some prefix based improvements for verb and adjectives
     # lemmatization, as well as case-sensitive lemmatization for nouns.
+
+    @classmethod
+    def get_lookups_config(cls, mode: str) -> Dict:
+        if mode == "lookup":
+            return {
+                "required_tables": [
+                    "lemma_lookup_adj",
+                    "lemma_lookup_adp",
+                    "lemma_lookup_adv",
+                    "lemma_lookup_aux",
+                    "lemma_lookup_noun",
+                    "lemma_lookup_num",
+                    "lemma_lookup_part",
+                    "lemma_lookup_pron",
+                    "lemma_lookup_verb",
+                ]
+            }
+        else:
+            return super().get_lookups_config(mode)
+
     def lookup_lemmatize(self, token: Token) -> List[str]:
         string = token.text
         univ_pos = token.pos_

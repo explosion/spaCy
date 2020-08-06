@@ -12,15 +12,6 @@ from ..vocab import Vocab
 from .. import util
 
 
-LOOKUPS_TABLES_CONFIG = {
-    "lookup": {"required_tables": ["lemma_lookup"]},
-    "rule": {
-        "required_tables": ["lemma_rules"],
-        "optional_tables": ["lemma_exc", "lemma_index"],
-    },
-}
-
-
 @Language.factory(
     "lemmatizer",
     assigns=["token.lemma"],
@@ -41,35 +32,10 @@ def make_lemmatizer(
     lookups: Optional[Lookups],
     overwrite: bool = False,
 ):
-    lookups = load_lemmatizer_lookups(nlp.lang, mode, lookups)
+    lookups = Lemmatizer.load_lookups(nlp.lang, mode, lookups)
     return Lemmatizer(
         nlp.vocab, model, name, mode=mode, lookups=lookups, overwrite=overwrite
     )
-
-
-def load_lemmatizer_lookups(
-    lang: str,
-    mode: str,
-    lookups: Lookups,
-    config: Dict[str, Dict[str, List]] = LOOKUPS_TABLES_CONFIG,
-) -> Lookups:
-    required_tables = config.get(mode, {}).get("required_tables", [])
-    optional_tables = config.get(mode, {}).get("optional_tables", [])
-    if lookups is None:
-        lookups = load_lookups(lang=lang, tables=required_tables)
-        optional_lookups = load_lookups(
-            lang=lang, tables=optional_tables, strict=False
-        )
-        for table in optional_lookups.tables:
-            lookups.set_table(table, optional_lookups.get_table(table))
-    for table in required_tables:
-        if table not in lookups:
-            raise ValueError(
-                Errors.E1004.format(
-                    mode=mode, tables=required_tables, found=lookups.tables
-                )
-            )
-    return lookups
 
 
 class Lemmatizer(Pipe):
@@ -79,6 +45,45 @@ class Lemmatizer(Pipe):
 
     DOCS: https://spacy.io/api/lemmatizer
     """
+
+    @classmethod
+    def get_lookups_config(cls, mode: str) -> Dict:
+        if mode == "lookup":
+            return {
+                "required_tables": ["lemma_lookup"],
+            }
+        elif mode == "rule":
+            return {
+                "required_tables": ["lemma_rules"],
+                "optional_tables": ["lemma_exc", "lemma_index"],
+            }
+        return {}
+
+    @classmethod
+    def load_lookups(
+        cls,
+        lang: str,
+        mode: str,
+        lookups: Optional[Lookups],
+    ) -> Lookups:
+        config = cls.get_lookups_config(mode)
+        required_tables = config.get("required_tables", [])
+        optional_tables = config.get("optional_tables", [])
+        if lookups is None:
+            lookups = load_lookups(lang=lang, tables=required_tables)
+            optional_lookups = load_lookups(
+                lang=lang, tables=optional_tables, strict=False
+            )
+            for table in optional_lookups.tables:
+                lookups.set_table(table, optional_lookups.get_table(table))
+        for table in required_tables:
+            if table not in lookups:
+                raise ValueError(
+                    Errors.E1004.format(
+                        mode=mode, tables=required_tables, found=lookups.tables
+                    )
+                )
+        return lookups
 
     def __init__(
         self,

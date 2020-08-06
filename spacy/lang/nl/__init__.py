@@ -1,4 +1,5 @@
 from typing import Optional
+from copy import deepcopy
 
 from thinc.api import Model
 
@@ -8,11 +9,9 @@ from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_INFIXES
 from .punctuation import TOKENIZER_SUFFIXES
 from .lemmatizer import DutchLemmatizer
-from ...lookups import Lookups, load_lookups
+from ...lookups import Lookups
 from ...language import Language
-from ...pipeline.lemmatizer import LOOKUPS_TABLES_CONFIG
-from ...pipeline.lemmatizer import load_lemmatizer_lookups
-from ...util import registry
+from ...pipeline.lemmatizer import Lemmatizer
 
 
 class DutchDefaults(Language.Defaults):
@@ -43,9 +42,7 @@ def make_lemmatizer(
     mode: str,
     lookups: Optional[Lookups],
 ):
-    config = dict(LOOKUPS_TABLES_CONFIG)
-    config["rules"] = ["lemma_lookup", "lemma_rules", "lemma_exc", "lemma_index"]
-    lookups = load_lemmatizer_lookups(nlp.lang, mode, lookups, config=config)
+    lookups = DutchLemmatizer.load_lookups(nlp.lang, mode, lookups)
     return DutchLemmatizer(nlp.vocab, model, name, mode=mode, lookups=lookups)
 
 
