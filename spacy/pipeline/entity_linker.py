@@ -56,7 +56,7 @@ def make_entity_linker(
     labels_discard: Iterable[str],
     incl_prior: bool,
     incl_context: bool,
-    get_candidates: Callable[[KnowledgeBase, "Span"], Iterable[Candidate]]
+    get_candidates: Callable[[KnowledgeBase, "Span"], Iterable[Candidate]],
 ):
     return EntityLinker(
         nlp.vocab,
@@ -88,7 +88,7 @@ class EntityLinker(Pipe):
         labels_discard: Iterable[str],
         incl_prior: bool,
         incl_context: bool,
-        get_candidates: Callable[[KnowledgeBase, "Span"], Iterable[Candidate]]
+        get_candidates: Callable[[KnowledgeBase, "Span"], Iterable[Candidate]],
     ) -> None:
         """Initialize an entity linker.
 
@@ -96,7 +96,7 @@ class EntityLinker(Pipe):
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
         name (str): The component instance name, used to add entries to the
             losses during training.
-        kb_loader (Callable[[Vocab], KnowledgeBase]): A function that creates a KnowledgeBase from a Vocab instance
+        kb_loader (Callable[[Vocab], KnowledgeBase]): A function that creates a KnowledgeBase from a Vocab instance.
         labels_discard (Iterable[str]): NER labels that will automatically get a "NIL" prediction.
         incl_prior (bool): Whether or not to include prior probabilities from the KB in the model.
         incl_context (bool): Whether or not to include the local context in the model.

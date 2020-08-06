@@ -189,17 +189,17 @@ def test_el_pipe_configuration(nlp):
             kb = KnowledgeBase(vocab, entity_vector_length=1)
             kb.add_entity(entity="Q2", freq=12, entity_vector=[2])
             kb.add_entity(entity="Q3", freq=5, entity_vector=[3])
-            kb.add_alias(alias="douglas", entities=["Q2", "Q3"], probabilities=[0.8, 0.1])
+            kb.add_alias(
+                alias="douglas", entities=["Q2", "Q3"], probabilities=[0.8, 0.1]
+            )
             return kb
+
         return create_kb
 
     # run an EL pipe without a trained context encoder, to check the candidate generation step only
     nlp.add_pipe(
         "entity_linker",
-        config={
-            "kb_loader": {"@assets": "myAdamKB.v1"},
-            "incl_context": False,
-        },
+        config={"kb_loader": {"@assets": "myAdamKB.v1"}, "incl_context": False},
     )
     # With the default get_candidates function, matching is case-sensitive
     text = "Douglas and douglas are not the same."
@@ -293,6 +293,7 @@ def test_preserving_links_asdoc(nlp):
             mykb.add_alias(alias="Boston", entities=["Q1"], probabilities=[0.7])
             mykb.add_alias(alias="Denver", entities=["Q2"], probabilities=[0.6])
             return mykb
+
         return create_kb
 
     # set up pipeline with NER (Entity Ruler) and NEL (prior probability only, model not trained)
@@ -401,11 +402,14 @@ def test_overfitting_IO():
                 probabilities=[0.5, 0.5],
             )
             return mykb
+
         return create_kb
 
     # Create the Entity Linker component and add it to the pipeline
     nlp.add_pipe(
-        "entity_linker", config={"kb_loader": {"@assets": "myOverfittingKB.v1"}}, last=True
+        "entity_linker",
+        config={"kb_loader": {"@assets": "myOverfittingKB.v1"}},
+        last=True,
     )
 
     # train the NEL pipe

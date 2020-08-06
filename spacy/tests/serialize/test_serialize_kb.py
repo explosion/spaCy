@@ -79,19 +79,33 @@ def _check_kb(kb):
 
 def test_serialize_subclassed_kb(en_vocab):
     """Check that IO of a KB works fine as part of an EL pipe."""
+
     class SubKnowledgeBase(KnowledgeBase):
         def __init__(self, vocab, entity_vector_length, custom_field):
             super().__init__(vocab, entity_vector_length)
             self.custom_field = custom_field
 
     @registry.assets.register("spacy.CustomKB.v1")
-    def custom_kb(entity_vector_length: int, custom_field: int) -> Callable[["Vocab"], KnowledgeBase]:
+    def custom_kb(
+        entity_vector_length: int, custom_field: int
+    ) -> Callable[["Vocab"], KnowledgeBase]:
         def custom_kb_factory(vocab):
-            return SubKnowledgeBase(vocab=vocab, entity_vector_length=entity_vector_length, custom_field=custom_field)
+            return SubKnowledgeBase(
+                vocab=vocab,
+                entity_vector_length=entity_vector_length,
+                custom_field=custom_field,
+            )
+
         return custom_kb_factory
 
     nlp = English()
-    config = {"kb_loader": {"@assets": "spacy.CustomKB.v1", "entity_vector_length": 342, "custom_field": 666}}
+    config = {
+        "kb_loader": {
+            "@assets": "spacy.CustomKB.v1",
+            "entity_vector_length": 342,
+            "custom_field": 666,
+        }
+    }
     entity_linker = nlp.add_pipe("entity_linker", config=config)
     assert type(entity_linker.kb) == SubKnowledgeBase
     assert entity_linker.kb.entity_vector_length == 342
