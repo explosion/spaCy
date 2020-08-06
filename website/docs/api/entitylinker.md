@@ -23,22 +23,24 @@ architectures and their arguments and hyperparameters.
 > ```python
 > from spacy.pipeline.entity_linker import DEFAULT_NEL_MODEL
 > config = {
->    "kb": None,
 >    "labels_discard": [],
 >    "incl_prior": True,
 >    "incl_context": True,
 >    "model": DEFAULT_NEL_MODEL,
+>    "kb_loader": {'@assets': 'spacy.EmptyKB.v1', 'entity_vector_length': 64},
+>    "get_candidates": {'@assets': 'spacy.CandidateGenerator.v1'},
 > }
 > nlp.add_pipe("entity_linker", config=config)
 > ```
 
-| Setting          | Type                                       | Description                                                             | Default                                         |
-| ---------------- | ------------------------------------------ | ----------------------------------------------------------------------- | ----------------------------------------------- |
-| `kb`             | `KnowledgeBase`                            | The [`KnowledgeBase`](/api/kb) holding all entities and their aliases.  | `None`                                          |
-| `labels_discard` | `Iterable[str]`                            | NER labels that will automatically get a "NIL" prediction.              | `[]`                                            |
-| `incl_prior`     | bool                                       | Whether or not to include prior probabilities from the KB in the model. | `True`                                          |
-| `incl_context`   | bool                                       | Whether or not to include the local context in the model.               | `True`                                          |
-| `model`          | [`Model`](https://thinc.ai/docs/api-model) | The model to use.                                                       | [EntityLinker](/api/architectures#EntityLinker) |
+| Setting          | Type                                                     | Description                                                               | Default                                                |
+| ---------------- | -------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `labels_discard` | `Iterable[str]`                                          | NER labels that will automatically get a "NIL" prediction.                | `[]`                                                   |
+| `incl_prior`     | bool                                                     | Whether or not to include prior probabilities from the KB in the model.   | `True`                                                 |
+| `incl_context`   | bool                                                     | Whether or not to include the local context in the model.                 | `True`                                                 |
+| `model`          | [`Model`](https://thinc.ai/docs/api-model)               | The model to use.                                                         | [EntityLinker](/api/architectures#EntityLinker)        |
+| `kb_loader`      | `Callable[[Vocab], KnowledgeBase]`                       | Function that creates a [`KnowledgeBase`](/api/kb) from a Vocab instance. | An empty KnowledgeBase with `entity_vector_length` 64. |
+| `get_candidates` | `Callable[[KnowledgeBase, "Span"], Iterable[Candidate]]` | Function that generates plausible candidates for a given `Span` object.   | Built-in dictionary-lookup function.                   |
 
 ```python
 https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/entity_linker.py
