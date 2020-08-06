@@ -83,12 +83,12 @@ $ python -m spacy init config config.cfg --base base_config.cfg
 
 > #### Tip: Debug your data
 >
-> The [`debug-data` command](/api/cli#debug-data) lets you analyze and validate
+> The [`debug data` command](/api/cli#debug-data) lets you analyze and validate
 > your training and development data, get useful stats, and find problems like
 > invalid entity annotations, cyclic dependencies, low data labels and more.
 >
 > ```bash
-> $ python -m spacy debug-data en train.spacy dev.spacy --verbose
+> $ python -m spacy debug data en train.spacy dev.spacy --verbose
 > ```
 
 You can now run [`train`](/api/cli#train) with your training and development

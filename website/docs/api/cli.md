@@ -132,7 +132,7 @@ $ python -m spacy init config [output] [--base] [--lang] [--model] [--pipeline]
 | `--base`, `-b`     | option     | Optional base config file to auto-fill with defaults.                                                                                                                 |
 | `--lang`, `-l`     | option     | Optional language code to use for blank config. If a `--pipeline` is specified, the components will be added in order.                                                |
 | `--model`, `-m`    | option     | Optional base model to copy config from. If a `--pipeline` is specified, only those components will be kept, and all other components not in the model will be added. |
-| `--pipeline`, `-p` | option     | Optional comma-separate pipeline of components to add to blank language or model.                                                                                     |
+| `--pipeline`, `-p` | option     | Optional comma-separated pipeline of components to add to blank language or model.                                                                                     |
 | **CREATES**        | config     | Complete and auto-filled config file for training.                                                                                                                    |
 
 ### init model {#init-model new="2"}
@@ -271,7 +271,7 @@ low data labels and more.
 
 <Infobox title="New in v3.0" variant="warning">
 
-The `debug-data` command is now available as a subcommand of `spacy debug`. It
+The `debug data` command is now available as a subcommand of `spacy debug`. It
 takes the same arguments as `train` and reads settings off the
 [`config.cfg` file](/usage/training#config) and optional
 [overrides](/usage/training#config-overrides) on the CLI.
