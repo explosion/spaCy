@@ -340,9 +340,9 @@ class Scorer:
         RETURNS (Dict[str, Any]): A dictionary containing the scores, with
             inapplicable scores as None:
             for all:
-                attr_score (one of attr_f / attr_macro_f / attr_macro_auc),
+                attr_score (one of attr_micro_f / attr_macro_f / attr_macro_auc),
                 attr_score_desc (text description of the overall score),
-                attr_f,
+                attr_micro_f,
                 attr_macro_f,
                 attr_auc,
                 attr_f_per_type,
