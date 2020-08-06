@@ -158,9 +158,21 @@ architectures into your training config.
 
 ## Entity linking architectures {#entitylinker source="spacy/ml/models/entity_linker.py"}
 
+An Entity Linker component disambiguates textual mentions (tagged as named
+entities) to unique identifiers, grounding the named entities into the "real
+world". This requires 3 main components:
+
+- A [`KnowledgeBase`](/api/kb) (KB) holding the unique identifiers, potential
+  synonyms and prior probabilities.
+- A candidate generation step to produce a set of likely identifiers, given a
+  certain textual mention.
+- A Machine learning [`Model`](https://thinc.ai/docs/api-model) that picks the
+  most plausible ID from the set of candidates.
+
 ### spacy.EntityLinker.v1 {#EntityLinker}
 
-<!-- TODO: intro -->
+The `EntityLinker` model architecture is a `Thinc` `Model` with a Linear output
+layer.
 
 > #### Example Config
 >
@@ -170,10 +182,46 @@ architectures into your training config.
 > nO = null
 >
 > [model.tok2vec]
-> # ...
+> @architectures = "spacy.HashEmbedCNN.v1"
+> pretrained_vectors = null
+> width = 96
+> depth = 2
+> embed_size = 300
+> window_size = 1
+> maxout_pieces = 3
+> subword_features = true
+> dropout = null
+> 
+> [kb_loader]
+> @assets = "spacy.EmptyKB.v1"
+> entity_vector_length = 64
+> 
+> [get_candidates]
+> @assets = "spacy.CandidateGenerator.v1"
 > ```
 
-| Name      | Type                                       | Description |
-| --------- | ------------------------------------------ | ----------- |
-| `tok2vec` | [`Model`](https://thinc.ai/docs/api-model) |             |
-| `nO`      | int                                        |             |
+| Name      | Type                                       | Description                                                                              |
+| --------- | ------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| `tok2vec` | [`Model`](https://thinc.ai/docs/api-model) | The [`tok2vec`](#tok2vec) layer of the model.                                            |
+| `nO`      | int                                        | Output dimension, determined by the length of the vectors encoding each entity in the KB |
+
+If the `nO` dimension is not set, the Entity Linking component will set it when
+`begin_training` is called.
+
+### spacy.EmptyKB.v1 {#EmptyKB}
+
+A function that creates a default, empty Knowledge Base from a [`Vocab`](/api/vocab) instance.
+
+| Name                   | Type | Description                                              |
+| ---------------------- | ---- | -------------------------------------------------------- |
+| `entity_vector_length` | int  | The length of the vectors encoding each entity in the KB - 64 by default. |
+
+### spacy.CandidateGenerator.v1 {#CandidateGenerator}
+
+A function that takes as input a [`KnowledgeBase`](/api/kb) and a [`Span`](/api/span) object denoting a
+named entity, and returns a list of plausible
+[`Candidate` objects](/api/kb/#candidate_init).
+
+The default `CandidateGenerator` simply uses the text of a mention to find its
+potential aliases in the Knowledgebase. Note that this function is
+case-dependent.
