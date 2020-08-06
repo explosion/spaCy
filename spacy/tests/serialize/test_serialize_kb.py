@@ -87,7 +87,7 @@ def test_serialize_subclassed_kb(en_vocab):
     @registry.assets.register("spacy.CustomKB.v1")
     def custom_kb(entity_vector_length: int, custom_field: int) -> Callable[["Vocab"], KnowledgeBase]:
         def custom_kb_factory(vocab):
-            return SubKnowledgeBass(vocab=vocab, entity_vector_length=entity_vector_length, custom_field=custom_field)
+            return SubKnowledgeBase(vocab=vocab, entity_vector_length=entity_vector_length, custom_field=custom_field)
         return custom_kb_factory
 
     nlp = English()
