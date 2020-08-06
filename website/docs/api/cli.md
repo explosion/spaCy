@@ -202,7 +202,7 @@ $ python -m spacy convert [input_file] [output_dir] [--converter]
 | ID      | Description                                                                                                                                                                                                                                                                                                                                                                                    |
 | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `auto`  | Automatically pick converter based on file extension and file content (default).                                                                                                                                                                                                                                                                                                               |
-| `json`  | JSON-formatted training data used in spaCy v2.x and produced by [`docs2json`](/api/top-level#docs_to_json).                                                                                                                                                                                                                                                                                    |
+| `json`  | JSON-formatted training data used in spaCy v2.x.                                                                                                                                                                                                                                                                                                                                               |
 | `conll` | Universal Dependencies `.conllu` or `.conll` format.                                                                                                                                                                                                                                                                                                                                           |
 | `ner`   | NER with IOB/IOB2 tags, one token per line with columns separated by whitespace. The first column is the token and the final column is the IOB tag. Sentences are separated by blank lines and documents are separated by the line `-DOCSTART- -X- O O`. Supports CoNLL 2003 NER format. See [sample data](https://github.com/explosion/spaCy/tree/master/examples/training/ner_example_data). |
 | `iob`   | NER with IOB/IOB2 tags, one sentence per line with tokens separated by whitespace and annotation separated by `|`, either `word|B-ENT` or `word|POS|B-ENT`. See [sample data](https://github.com/explosion/spaCy/tree/master/examples/training/ner_example_data).                                                                                                                              |
@@ -602,13 +602,15 @@ $ python -m spacy train [config_path] [--output] [--code] [--verbose] [overrides
 
 <!-- TODO: document new pretrain command and link to new pretraining docs -->
 
-Pre-train the "token to vector" (`tok2vec`) layer of pipeline components on
-[raw text](/api/data-formats#pretrain), using an approximate language-modeling
-objective. Specifically, we load pretrained vectors, and train a component like
-a CNN, BiLSTM, etc to predict vectors which match the pretrained ones. The
-weights are saved to a directory after each epoch. You can then pass a path to
-one of these pretrained weights files to the `spacy train` command. This
-technique may be especially helpful if you have little labelled data.
+Pre-train the "token to vector" ([`Tok2vec`](/api/tok2vec)) layer of pipeline
+components on [raw text](/api/data-formats#pretrain), using an approximate
+language-modeling objective. Specifically, we load pretrained vectors, and train
+a component like a CNN, BiLSTM, etc to predict vectors which match the
+pretrained ones. The weights are saved to a directory after each epoch. You can
+then include a **path to one of these pretrained weights files** in your
+[training config](/usage/training#config) as the `init_tok2vec` setting when you
+train your model. This technique may be especially helpful if you have little
+labelled data.
 
 <Infobox title="Changed in v3.0" variant="warning">
 

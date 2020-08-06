@@ -204,7 +204,7 @@ a Python file. For more details on training with custom code, see the
 [training documentation](/usage/training#custom-code).
 
 ```bash
-$ python -m spacy train ./train.spacy ./dev.spacy ./config.cfg --code ./code.py
+$ python -m spacy train ./config.cfg --code ./code.py
 ```
 
 ### Customizing the model implementations {#training-custom-model}

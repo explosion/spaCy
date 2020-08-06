@@ -2,16 +2,173 @@
 title: Data formats
 teaser: Details on spaCy's input and output data formats
 menu:
+  - ['Training Config', 'config']
   - ['Training Data', 'training']
   - ['Pretraining Data', 'pretraining']
-  - ['Training Config', 'config']
   - ['Vocabulary', 'vocab']
 ---
 
 This section documents input and output formats of data used by spaCy, including
-training data and lexical vocabulary data. For an overview of label schemes used
-by the models, see the [models directory](/models). Each model documents the
-label schemes used in its components, depending on the data it was trained on.
+the [training config](/usage/training#config), training data and lexical
+vocabulary data. For an overview of label schemes used by the models, see the
+[models directory](/models). Each model documents the label schemes used in its
+components, depending on the data it was trained on.
+
+## Training config {#config new="3"}
+
+Config files define the training process and model pipeline and can be passed to
+[`spacy train`](/api/cli#train). They use
+[Thinc's configuration system](https://thinc.ai/docs/usage-config) under the
+hood. For details on how to use training configs, see the
+[usage documentation](/usage/training#config).
+
+<!-- TODO: add details on getting started and init config -->
+
+> #### What does the @ mean?
+>
+> The `@` syntax lets you refer to function names registered in the
+> [function registry](/api/top-level#registry). For example,
+> `@architectures = "spacy.HashEmbedCNN.v1"` refers to a registered function of
+> the name [spacy.HashEmbedCNN.v1](/api/architectures#HashEmbedCNN) and all
+> other values defined in its block will be passed into that function as
+> arguments. Those arguments depend on the registered function. See the usage
+> guide on [registered functions](/usage/training#config-functions) for details.
+
+```ini
+https://github.com/explosion/spaCy/blob/develop/spacy/default_config.cfg
+```
+
+<Infobox title="Notes on data validation" emoji="💡">
+
+Under the hood, spaCy's configs are powered by our machine learning library
+[Thinc's config system](https://thinc.ai/docs/usage-config), which uses
+[`pydantic`](https://github.com/samuelcolvin/pydantic/) for data validation
+based on type hints. See
+[`spacy/schemas.py`](https://github.com/explosion/spaCy/blob/develop/spacy/schemas.py)
+for the schemas used to validate the default config. Arguments of registered
+functions are validated against their type annotations, if available. To debug
+your config and check that it's valid, you can run the
+[`spacy debug config`](/api/cli#debug-config) command.
+
+</Infobox>
+
+<!-- TODO: once we know how we want to implement "starter config" workflow or outputting a full default config for the user, update this section with the command -->
+
+### nlp {#config-nlp tag="section"}
+
+> #### Example
+>
+> ```ini
+> [nlp]
+> lang = "en"
+> pipeline = ["tagger", "parser", "ner"]
+> load_vocab_data = true
+> before_creation = null
+> after_creation = null
+> after_pipeline_creation = null
+>
+> [nlp.tokenizer]
+> @tokenizers = "spacy.Tokenizer.v1"
+> ```
+
+Defines the `nlp` object, its tokenizer and
+[processing pipeline](/usage/processing-pipelines) component names.
+
+| Name                      | Type        | Description                                                                                                                                                                                      | Default                       |
+| ------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------- |
+| `lang`                    | str         | The language code to use.                                                                                                                                                                        | `null`                        |
+| `pipeline`                | `List[str]` | Names of pipeline components in order. Should correspond to sections in the `[components]` block, e.g. `[components.ner]`. See docs on [defining components](/usage/training#config-components). | `[]`                          |
+| `load_vocab_data`         | bool        | Whether to load additional lexeme and vocab data from [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) if available.                                                      | `true`                        |
+| `before_creation`         | callable    | Optional [callback](/usage/training#custom-code-nlp-callbacks) to modify `Language` subclass before it's initialized.                                                                            | `null`                        |
+| `after_creation`          | callable    | Optional [callback](/usage/training#custom-code-nlp-callbacks) to modify `nlp` object right after it's initialized.                                                                              | `null`                        |
+| `after_pipeline_creation` | callable    | Optional [callback](/usage/training#custom-code-nlp-callbacks) to modify `nlp` object after the pipeline components have been added.                                                             | `null`                        |
+| `tokenizer`               | callable    | The tokenizer to use.                                                                                                                                                                            | [`Tokenizer`](/api/tokenizer) |
+
+### components {#config-components tag="section"}
+
+> #### Example
+>
+> ```ini
+> [components.textcat]
+> factory = "textcat"
+> labels = ["POSITIVE", "NEGATIVE"]
+>
+> [components.textcat.model]
+> @architectures = "spacy.TextCatBOW.v1"
+> exclusive_classes = false
+> ngram_size = 1
+> no_output_layer = false
+> ```
+
+This section includes definitions of the
+[pipeline components](/usage/processing-pipelines) and their models, if
+available. Components in this section can be referenced in the `pipeline` of the
+`[nlp]` block. Component blocks need to specify either a `factory` (named
+function to use to create component) or a `source` (name of path of pretrained
+model to copy components from). See the docs on
+[defining pipeline components](/usage/training#config-components) for details.
+
+### paths, system {#config-variables tag="variables"}
+
+These sections define variables that can be referenced across the other sections
+as variables. For example `${paths:train}` uses the value of `train` defined in
+the block `[paths]`. If your config includes custom registered functions that
+need paths, you can define them here. All config values can also be
+[overwritten](/usage/training#config-overrides) on the CLI when you run
+[`spacy train`](/api/cli#train), which is especially relevant for data paths
+that you don't want to hard-code in your config file.
+
+```bash
+$ python -m spacy train ./config.cfg --paths.train ./corpus/train.spacy
+```
+
+### training {#config-training tag="section"}
+
+This section defines settings and controls for the training and evaluation
+process that are used when you run [`spacy train`](/api/cli#train).
+
+<!-- TODO: complete -->
+
+| Name                  | Type                                                | Description                                                                                                                                     | Default                                             |
+| --------------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| `seed`                | int                                                 | The random seed.                                                                                                                                | `${system:seed}`                                    |
+| `dropout`             | float                                               | The dropout rate.                                                                                                                               | `0.1`                                               |
+| `accumulate_gradient` | int                                                 | Whether to divide the batch up into substeps.                                                                                                   | `1`                                                 |
+| `init_tok2vec`        | str                                                 | Optional path to pretrained tok2vec weights created with [`spacy pretrain`](/api/cli#pretrain).                                                 | `${paths:init_tok2vec}`                             |
+| `raw_text`            | str                                                 |                                                                                                                                                 | `${paths:raw}`                                      |
+| `vectors`             | str                                                 |                                                                                                                                                 | `null`                                              |
+| `patience`            | int                                                 | How many steps to continue without improvement in evaluation score.                                                                             | `1600`                                              |
+| `max_epochs`          | int                                                 | Maximum number of epochs to train for.                                                                                                          | `0`                                                 |
+| `max_steps`           | int                                                 | Maximum number of update steps to train for.                                                                                                    | `20000`                                             |
+| `eval_frequency`      | int                                                 | How often to evaluate during training (steps).                                                                                                  | `200`                                               |
+| `score_weights`       | `Dict[str, float]`                                  | Score names shown in metrics mapped to their weight towards the final weighted score. See [here](/usage/training#metrics) for details.          | `{}`                                                |
+| `frozen_components`   | `List[str]`                                         | Pipeline component names that are "frozen" and shouldn't be updated during training. See [here](/usage/training#config-components) for details. | `[]`                                                |
+| `train_corpus`        | callable                                            | Callable that takes the current `nlp` object and yields [`Example`](/api/example) objects.                                                      | [`Corpus`](/api/corpus)                             |
+| `dev_corpus`          | callable                                            | Callable that takes the current `nlp` object and yields [`Example`](/api/example) objects.                                                      | [`Corpus`](/api/corpus)                             |
+| `batcher`             | callable                                            | Callable that takes an iterator of [`Doc`](/api/doc) objects and yields batches of `Doc`s.                                                      | [`batch_by_words`](/api/top-level#batch_by_words)   |
+| `optimizer`           | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | The optimizer. The learning rate schedule and other settings can be configured as part of the optimizer.                                        | [`Adam`](https://thinc.ai/docs/api-optimizers#adam) |
+
+### pretraining {#config-pretraining tag="section,optional"}
+
+This section is optional and defines settings and controls for
+[language model pretraining](/usage/training#pretraining). It's used when you
+run [`spacy pretrain`](/api/cli#pretrain).
+
+<!-- TODO: complete -->
+
+| Name                         | Type                                                | Description                                                                   | Default                                             |
+| ---------------------------- | --------------------------------------------------- | ----------------------------------------------------------------------------- | --------------------------------------------------- |
+| `max_epochs`                 | int                                                 | Maximum number of epochs.                                                     | `1000`                                              |
+| `min_length`                 | int                                                 | Minimum length of examples.                                                   | `5`                                                 |
+| `max_length`                 | int                                                 | Maximum length of examples.                                                   | `500`                                               |
+| `dropout`                    | float                                               | The dropout rate.                                                             | `0.2`                                               |
+| `n_save_every`               | int                                                 | Saving frequency.                                                             | `null`                                              |
+| `batch_size`                 | int / `Sequence[int]`                               | The batch size or batch size [schedule](https://thinc.ai/docs/api-schedules). | `3000`                                              |
+| `seed`                       | int                                                 | The random seed.                                                              | `${system.seed}`                                    |
+| `use_pytorch_for_gpu_memory` | bool                                                | Allocate memory via PyTorch.                                                  | `${system:use_pytorch_for_gpu_memory}`              |
+| `tok2vec_model`              | str                                                 | tok2vec model section in the config.                                          | `"components.tok2vec.model"`                        |
+| `objective`                  | dict                                                | The pretraining objective.                                                    | `{"type": "characters", "n_characters": 4}`         |
+| `optimizer`                  | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | The optimizer.                                                                | [`Adam`](https://thinc.ai/docs/api-optimizers#adam) |
 
 ## Training data {#training}
 
@@ -100,9 +257,7 @@ instance. It stores two [`Doc`](/api/doc) objects: one for holding the
 gold-standard reference data, and one for holding the predictions of the
 pipeline. Examples can be created using the
 [`Example.from_dict`](/api/example#from_dict) method with a reference `Doc` and
-a dictionary of gold-standard annotations. There are currently two formats
-supported for this dictionary of annotations: one with a simple, **flat
-structure** of keywords, and one with a more **hierarchical structure**.
+a dictionary of gold-standard annotations.
 
 > #### Example
 >
@@ -121,8 +276,6 @@ to keep track of your settings and hyperparameters and your own
 [registered functions](/usage/training/#custom-code) to customize the setup.
 
 </Infobox>
-
-#### Flat structure {#dict-flat}
 
 > #### Example
 >
@@ -157,12 +310,12 @@ to keep track of your settings and hyperparameters and your own
 | `sent_starts` | `List[bool]`                 | List of boolean values indicating whether each token is the first of a sentence or not.                                                                                                        |
 | `deps`        | `List[str]`                  | List of string values indicating the [dependency relation](/usage/linguistic-features#dependency-parse) of a token to its head.                                                                |
 | `heads`       | `List[int]`                  | List of integer values indicating the dependency head of each token, referring to the absolute index of each token in the text.                                                                |
-| `entities`    | `List[str]`                  | Option 1: List of [BILUO tags](#biluo) per token of the format `"{action}-{label}"`, or `None` for unannotated tokens.                                                                         |
-| `entities`    | `List[Tuple[int, int, str]]` | Option 2: List of `"(start, end, label)"` tuples defining all entities in the text.                                                                                                            |
+| `entities`    | `List[str]`                  | **Option 1:** List of [BILUO tags](#biluo) per token of the format `"{action}-{label}"`, or `None` for unannotated tokens.                                                                     |
+| `entities`    | `List[Tuple[int, int, str]]` | **Option 2:** List of `"(start, end, label)"` tuples defining all entities in the text.                                                                                                        |
 | `cats`        | `Dict[str, float]`           | Dictionary of `label`/`value` pairs indicating how relevant a certain [text category](/api/textcategorizer) is for the text.                                                                   |
 | `links`       | `Dict[(int, int), Dict]`     | Dictionary of `offset`/`dict` pairs defining [named entity links](/usage/linguistic-features#entity-linking). The character offsets are linked to a dictionary of relevant knowledge base IDs. |
 
-<Infobox variant="warning" title="Important notes and caveats">
+<Infobox title="Notes and caveats">
 
 - Multiple formats are possible for the "entities" entry, but you have to pick
   one.
@@ -174,75 +327,33 @@ to keep track of your settings and hyperparameters and your own
 
 </Infobox>
 
-<!-- TODO: finish reformatting below -->
-
-##### Examples
-
 ```python
+### Examples
 # Training data for a part-of-speech tagger
 doc = Doc(vocab, words=["I", "like", "stuff"])
-example = Example.from_dict(doc, {"tags": ["NOUN", "VERB", "NOUN"]})
+gold_dict = {"tags": ["NOUN", "VERB", "NOUN"]}
+example = Example.from_dict(doc, gold_dict)
 
 # Training data for an entity recognizer (option 1)
 doc = nlp("Laura flew to Silicon Valley.")
-biluo_tags = ["U-PERS", "O", "O", "B-LOC", "L-LOC"]
-example = Example.from_dict(doc, {"entities": biluo_tags})
+gold_dict = {"entities": ["U-PERS", "O", "O", "B-LOC", "L-LOC"]}
+example = Example.from_dict(doc, gold_dict)
 
 # Training data for an entity recognizer (option 2)
 doc = nlp("Laura flew to Silicon Valley.")
-entity_tuples = [
-        (0, 5, "PERSON"),
-        (14, 28, "LOC"),
-    ]
-example = Example.from_dict(doc, {"entities": entity_tuples})
+gold_dict = {"entities": [(0, 5, "PERSON"), (14, 28, "LOC")]}
+example = Example.from_dict(doc, gold_dict)
 
 # Training data for text categorization
 doc = nlp("I'm pretty happy about that!")
-example = Example.from_dict(doc, {"cats": {"POSITIVE": 1.0, "NEGATIVE": 0.0}})
+gold_dict = {"cats": {"POSITIVE": 1.0, "NEGATIVE": 0.0}}
+example = Example.from_dict(doc, gold_dict)
 
 # Training data for an Entity Linking component
 doc = nlp("Russ Cochran his reprints include EC Comics.")
-example = Example.from_dict(doc, {"links": {(0, 12): {"Q7381115": 1.0, "Q2146908": 0.0}}})
+gold_dict = {"links": {(0, 12): {"Q7381115": 1.0, "Q2146908": 0.0}}}
+example = Example.from_dict(doc, gold_dict)
 ```
-
-#### Hierachical structure {#dict-hierarch}
-
-Internally, a more hierarchical dictionary structure is used to store
-gold-standard annotations. Its format is similar to the structure described in
-the previous section, but there are two main sections `token_annotation` and
-`doc_annotation`, and the keys for token annotations should be uppercase
-[`Token` attributes](/api/token#attributes) such as "ORTH" and "TAG".
-
-```python
-### Hierarchical dictionary
-{
-    "text": string,                            # Raw text.
-    "token_annotation": {
-        "ORTH": List[string],                  # List of gold tokens.
-        "LEMMA": List[string],                 # List of lemmas.
-        "SPACY": List[bool],                   # List of boolean values indicating whether the corresponding tokens is followed by a space or not.
-        "TAG": List[string],                   # List of fine-grained [POS tags](/usage/linguistic-features#pos-tagging).
-        "POS": List[string],                   # List of coarse-grained [POS tags](/usage/linguistic-features#pos-tagging).
-        "MORPH": List[string],                 # List of [morphological features](/usage/linguistic-features#rule-based-morphology).
-        "SENT_START": List[bool],              # List of boolean values indicating whether each token is the first of a sentence or not.
-        "DEP": List[string],                   # List of string values indicating the [dependency relation](/usage/linguistic-features#dependency-parse) of a token to its head.
-        "HEAD": List[int],                     # List of integer values indicating the dependency head of each token, referring to the absolute index of each token in the text.
-    },
-    "doc_annotation": {
-        "entities": List[(int, int, string)],  # List of [BILUO tags](#biluo) per token of the format `"{action}-{label}"`, or `None` for unannotated tokens.
-        "cats": Dict[str, float],              # Dictionary of `label:value` pairs indicating how relevant a certain [category](/api/textcategorizer) is for the text.
-        "links": Dict[(int, int), Dict],       # Dictionary of `offset:dict` pairs defining [named entity links](/usage/linguistic-features#entity-linking). The charachter offsets are linked to a dictionary of relevant knowledge base IDs.
-    }
-}
-```
-
-There are a few caveats to take into account:
-
-- Any values for sentence starts will be ignored if there are annotations for
-  dependency relations.
-- If the dictionary contains values for "text" and "ORTH", but not "SPACY", the
-  latter are inferred automatically. If "ORTH" is not provided either, the
-  values are inferred from the `doc` argument.
 
 ## Pretraining data {#pretraining}
 
@@ -276,29 +387,6 @@ provided.
 {"text": "My cynical view on this is that it will never be free to the public. Reason: what would be the draw of joining the military? Right now their selling point is free Healthcare and Education. Ironically both are run horribly and most, that I've talked to, come out wishing they never went in."}
 {"tokens": ["If", "tokens", "are", "provided", "then", "we", "can", "skip", "the", "raw", "input", "text"]}
 ```
-
-## Training config {#config new="3"}
-
-Config files define the training process and model pipeline and can be passed to
-[`spacy train`](/api/cli#train). They use
-[Thinc's configuration system](https://thinc.ai/docs/usage-config) under the
-hood. For details on how to use training configs, see the
-[usage documentation](/usage/training#config).
-
-<Infobox variant="warning">
-
-The `@` syntax lets you refer to function names registered in the
-[function registry](/api/top-level#registry). For example,
-`@architectures = "spacy.HashEmbedCNN.v1"` refers to a registered function of
-the name `"spacy.HashEmbedCNN.v1"` and all other values defined in its block
-will be passed into that function as arguments. Those arguments depend on the
-registered function. See the [model architectures](/api/architectures) docs for
-API details.
-
-</Infobox>
-
-<!-- TODO: we need to come up with a good way to present the sections and their expected values visually? -->
-<!-- TODO: once we know how we want to implement "starter config" workflow or outputting a full default config for the user, update this section with the command -->
 
 ## Lexical data for vocabulary {#vocab-jsonl new="2"}
 
