@@ -414,9 +414,9 @@ class Scorer:
         results = {
             f"{attr}_score": None,
             f"{attr}_score_desc": None,
-            f"{attr}_p": micro_prf.precision,
-            f"{attr}_r": micro_prf.recall,
-            f"{attr}_f": micro_prf.fscore,
+            f"{attr}_micro_p": micro_prf.precision,
+            f"{attr}_micro_r": micro_prf.recall,
+            f"{attr}_micro_f": micro_prf.fscore,
             f"{attr}_macro_p": macro_p,
             f"{attr}_macro_r": macro_r,
             f"{attr}_macro_f": macro_f,
