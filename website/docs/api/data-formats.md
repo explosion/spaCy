@@ -3,6 +3,7 @@ title: Data formats
 teaser: Details on spaCy's input and output data formats
 menu:
   - ['Training Data', 'training']
+  - ['Pretraining Data', 'pretraining']
   - ['Training Config', 'config']
   - ['Vocabulary', 'vocab']
 ---
@@ -16,17 +17,30 @@ label schemes used in its components, depending on the data it was trained on.
 
 ### Binary training format {#binary-training new="3"}
 
+The built-in [`convert`](/api/cli#convert) command helps you convert the
+`.conllu` format used by the
+[Universal Dependencies corpora](https://github.com/UniversalDependencies) as
+well as spaCy's previous [JSON format](#json-input).
+
 <!-- TODO: document DocBin format -->
 
-### JSON input format for training {#json-input}
+### JSON training format {#json-input tag="deprecated"}
 
-spaCy takes training data in JSON format. The built-in
-[`convert`](/api/cli#convert) command helps you convert the `.conllu` format
-used by the
-[Universal Dependencies corpora](https://github.com/UniversalDependencies) to
-spaCy's training format. To convert one or more existing `Doc` objects to
-spaCy's JSON format, you can use the
-[`gold.docs_to_json`](/api/top-level#docs_to_json) helper.
+<Infobox variant="warning" title="Changed in v3.0">
+
+As of v3.0, the JSON input format is deprecated and is replaced by the
+[binary format](#binary-training). Instead of converting [`Doc`](/api/doc)
+objects to JSON, you can now now serialize them directly using the
+[`DocBin`](/api/docbin) container and then use them as input data.
+
+[`spacy convert`](/api/cli) lets you convert your JSON data to the new `.spacy`
+format:
+
+```bash
+$ python -m spacy convert ./data.json ./output
+```
+
+</Infobox>
 
 > #### Annotating entities {#biluo}
 >
@@ -68,61 +82,99 @@ spaCy's JSON format, you can use the
 }]
 ```
 
+<Accordion title="Sample JSON data" spaced>
+
 Here's an example of dependencies, part-of-speech tags and names entities, taken
 from the English Wall Street Journal portion of the Penn Treebank:
 
 ```json
-https://github.com/explosion/spaCy/tree/master/examples/training/training-data.json
+https://github.com/explosion/spaCy/blob/v2.3.x/examples/training/training-data.json
 ```
 
-### Annotations in dictionary format {#dict-input}
+</Accordion>
 
-To create [`Example`](/api/example) objects, you can create a dictionary of the
-gold-standard annotations `gold_dict`, and then call
+### Annotation format for creating training examples {#dict-input}
 
-```python
-example = Example.from_dict(doc, gold_dict)
-```
+An [`Example`](/api/example) object holds the information for one training
+instance. It stores two [`Doc`](/api/doc) objects: one for holding the
+gold-standard reference data, and one for holding the predictions of the
+pipeline. Examples can be created using the
+[`Example.from_dict`](/api/example#from_dict) method with a reference `Doc` and
+a dictionary of gold-standard annotations. There are currently two formats
+supported for this dictionary of annotations: one with a simple, **flat
+structure** of keywords, and one with a more **hierarchical structure**.
 
-There are currently two formats supported for this dictionary of annotations:
-one with a simple, flat structure of keywords, and one with a more hierarchical
-structure.
+> #### Example
+>
+> ```python
+> example = Example.from_dict(doc, gold_dict)
+> ```
+
+<Infobox title="Important note" variant="warning">
+
+`Example` objects are used as part of the
+[internal training API](/usage/training#api) and they're expected when you call
+[`nlp.update`](/api/language#update). However, for most use cases, you
+**shouldn't** have to write your own training scripts. It's recommended to train
+your models via the [`spacy train`](/api/cli#train) command with a config file
+to keep track of your settings and hyperparameters and your own
+[registered functions](/usage/training/#custom-code) to customize the setup.
+
+</Infobox>
 
 #### Flat structure {#dict-flat}
 
-Here is the full overview of potential entries in a flat dictionary of
-annotations. You need to only specify those keys corresponding to the task you
-want to train.
+> #### Example
+>
+> ```python
+> {
+>    "text": str,
+>    "words": List[str],
+>    "lemmas": List[str],
+>    "spaces": List[bool],
+>    "tags": List[str],
+>    "pos": List[str],
+>    "morphs": List[str],
+>    "sent_starts": List[bool],
+>    "deps": List[string],
+>    "heads": List[int],
+>    "entities": List[str],
+>    "entities": List[(int, int, str)],
+>    "cats": Dict[str, float],
+>    "links": Dict[(int, int), dict],
+> }
+> ```
 
-```python
-### Flat dictionary
-{
-    "text": string,                        # Raw text.
-    "words": List[string],                 # List of gold tokens.
-    "lemmas": List[string],                # List of lemmas.
-    "spaces": List[bool],                  # List of boolean values indicating whether the corresponding tokens is followed by a space or not.
-    "tags": List[string],                  # List of fine-grained [POS tags](/usage/linguistic-features#pos-tagging).
-    "pos": List[string],                   # List of coarse-grained [POS tags](/usage/linguistic-features#pos-tagging).
-    "morphs": List[string],                # List of [morphological features](/usage/linguistic-features#rule-based-morphology).
-    "sent_starts": List[bool],             # List of boolean values indicating whether each token is the first of a sentence or not.
-    "deps": List[string],                  # List of string values indicating the [dependency relation](/usage/linguistic-features#dependency-parse) of a token to its head.
-    "heads": List[int],                    # List of integer values indicating the dependency head of each token, referring to the absolute index of each token in the text.
-    "entities": List[string],              # Option 1: List of [BILUO tags](#biluo) per token of the format `"{action}-{label}"`, or `None` for unannotated tokens.
-    "entities": List[(int, int, string)],  # Option 2: List of `"(start, end, label)"` tuples defining all entities in.
-    "cats": Dict[str, float],              # Dictionary of `label:value` pairs indicating how relevant a certain [category](/api/textcategorizer) is for the text.
-    "links": Dict[(int, int), Dict],       # Dictionary of `offset:dict` pairs defining [named entity links](/usage/linguistic-features#entity-linking). The charachter offsets are linked to a dictionary of relevant knowledge base IDs.
-}
-```
+| Name          | Type                         | Description                                                                                                                                                                                    |
+| ------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `text`        | str                          | Raw text.                                                                                                                                                                                      |
+| `words`       | `List[str]`                  | List of gold-standard tokens.                                                                                                                                                                  |
+| `lemmas`      | `List[str]`                  | List of lemmas.                                                                                                                                                                                |
+| `spaces`      | `List[bool]`                 | List of boolean values indicating whether the corresponding tokens is followed by a space or not.                                                                                              |
+| `tags`        | `List[str]`                  | List of fine-grained [POS tags](/usage/linguistic-features#pos-tagging).                                                                                                                       |
+| `pos`         | `List[str]`                  | List of coarse-grained [POS tags](/usage/linguistic-features#pos-tagging).                                                                                                                     |
+| `morphs`      | `List[str]`                  | List of [morphological features](/usage/linguistic-features#rule-based-morphology).                                                                                                            |
+| `sent_starts` | `List[bool]`                 | List of boolean values indicating whether each token is the first of a sentence or not.                                                                                                        |
+| `deps`        | `List[str]`                  | List of string values indicating the [dependency relation](/usage/linguistic-features#dependency-parse) of a token to its head.                                                                |
+| `heads`       | `List[int]`                  | List of integer values indicating the dependency head of each token, referring to the absolute index of each token in the text.                                                                |
+| `entities`    | `List[str]`                  | Option 1: List of [BILUO tags](#biluo) per token of the format `"{action}-{label}"`, or `None` for unannotated tokens.                                                                         |
+| `entities`    | `List[Tuple[int, int, str]]` | Option 2: List of `"(start, end, label)"` tuples defining all entities in the text.                                                                                                            |
+| `cats`        | `Dict[str, float]`           | Dictionary of `label`/`value` pairs indicating how relevant a certain [text category](/api/textcategorizer) is for the text.                                                                   |
+| `links`       | `Dict[(int, int), Dict]`     | Dictionary of `offset`/`dict` pairs defining [named entity links](/usage/linguistic-features#entity-linking). The character offsets are linked to a dictionary of relevant knowledge base IDs. |
 
-There are a few caveats to take into account:
+<Infobox variant="warning" title="Important notes and caveats">
 
 - Multiple formats are possible for the "entities" entry, but you have to pick
   one.
 - Any values for sentence starts will be ignored if there are annotations for
   dependency relations.
-- If the dictionary contains values for "text" and "words", but not "spaces",
-  the latter are inferred automatically. If "words" is not provided either, the
-  values are inferred from the `doc` argument.
+- If the dictionary contains values for `"text"` and `"words"`, but not
+  `"spaces"`, the latter are inferred automatically. If "words" is not provided
+  either, the values are inferred from the `Doc` argument.
+
+</Infobox>
+
+<!-- TODO: finish reformatting below -->
 
 ##### Examples
 
@@ -191,6 +243,39 @@ There are a few caveats to take into account:
 - If the dictionary contains values for "text" and "ORTH", but not "SPACY", the
   latter are inferred automatically. If "ORTH" is not provided either, the
   values are inferred from the `doc` argument.
+
+## Pretraining data {#pretraining}
+
+The [`spacy pretrain`](/api/cli#pretrain) command lets you pretrain the tok2vec
+layer of pipeline components from raw text. Raw text can be provided as a
+`.jsonl` (newline-delimited JSON) file containing one input text per line
+(roughly paragraph length is good). Optionally, custom tokenization can be
+provided.
+
+> #### Tip: Writing JSONL
+>
+> Our utility library [`srsly`](https://github.com/explosion/srsly) provides a
+> handy `write_jsonl` helper that takes a file path and list of dictionaries and
+> writes out JSONL-formatted data.
+>
+> ```python
+> import srsly
+> data = [{"text": "Some text"}, {"text": "More..."}]
+> srsly.write_jsonl("/path/to/text.jsonl", data)
+> ```
+
+| Key      | Type | Description                                                |
+| -------- | ---- | ---------------------------------------------------------- |
+| `text`   | str  | The raw input text. Is not required if `tokens` available. |
+| `tokens` | list | Optional tokenization, one string per token.               |
+
+```json
+### Example
+{"text": "Can I ask where you work now and what you do, and if you enjoy it?"}
+{"text": "They may just pull out of the Seattle market completely, at least until they have autonomous vehicles."}
+{"text": "My cynical view on this is that it will never be free to the public. Reason: what would be the draw of joining the military? Right now their selling point is free Healthcare and Education. Ironically both are run horribly and most, that I've talked to, come out wishing they never went in."}
+{"tokens": ["If", "tokens", "are", "provided", "then", "we", "can", "skip", "the", "raw", "input", "text"]}
+```
 
 ## Training config {#config new="3"}
 

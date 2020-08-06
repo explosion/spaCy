@@ -172,6 +172,8 @@ available for the different architectures are documented with the
 
 ### Overwriting config settings on the command line {#config-overrides}
 
+<!-- TODO: change example to use file path overrides -->
+
 The config system means that you can define all settings **in one place** and in
 a consistent format. There are no command-line arguments that need to be set,
 and no hidden defaults. However, there can still be scenarios where you may want

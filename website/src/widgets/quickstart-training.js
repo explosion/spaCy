@@ -82,6 +82,10 @@ export default function QuickstartTraining({ id, title, download = 'config.cfg' 
                         hidePrompts
                     >
                         <QS comment>{COMMENT}</QS>
+                        <span>[paths]</span>
+                        <span>train = ""</span>
+                        <span>dev = ""</span>
+                        <br />
                         <span>[nlp]</span>
                         <span>lang = "{lang}"</span>
                         <span>pipeline = {JSON.stringify(pipeline).replace(/,/g, ', ')}</span>
