@@ -77,8 +77,8 @@ def _check_kb(kb):
     assert 0.099 < candidates[1].prior_prob < 0.101
 
 
-def test_serialize_subclassed_kb(en_vocab):
-    """Check that IO of a KB works fine as part of an EL pipe."""
+def test_serialize_subclassed_kb():
+    """Check that IO of a custom KB works fine as part of an EL pipe."""
 
     class SubKnowledgeBase(KnowledgeBase):
         def __init__(self, vocab, entity_vector_length, custom_field):
