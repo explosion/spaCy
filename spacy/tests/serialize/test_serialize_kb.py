@@ -111,7 +111,7 @@ def test_serialize_subclassed_kb():
     assert entity_linker.kb.entity_vector_length == 342
     assert entity_linker.kb.custom_field == 666
 
-    # Also test the results are still the same after IO
+    # Make sure the custom KB is serialized correctly
     with make_tempdir() as tmp_dir:
         nlp.to_disk(tmp_dir)
         nlp2 = util.load_model_from_path(tmp_dir)
