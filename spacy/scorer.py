@@ -242,7 +242,8 @@ class Scorer:
                 per_feat[field].score_set(
                     pred_per_feat.get(field, set()), gold_per_feat.get(field, set()),
                 )
-        return {f"{attr}_per_feat": per_feat}
+        result = {k: v.to_dict() for k, v in per_feat.items()}
+        return {f"{attr}_per_feat": result}
 
     @staticmethod
     def score_spans(
