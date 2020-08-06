@@ -311,9 +311,7 @@ class Tagger(Pipe):
 
         DOCS: https://spacy.io/api/tagger#score
         """
-        scores = {}
-        scores.update(Scorer.score_token_attr(examples, "tag", **kwargs))
-        return scores
+        return Scorer.score_token_attr(examples, "tag", **kwargs)
 
     def to_bytes(self, *, exclude=tuple()):
         """Serialize the pipe to a bytestring.
