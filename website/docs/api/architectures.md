@@ -148,11 +148,113 @@ architectures into your training config.
 
 ## Text classification architectures {#textcat source="spacy/ml/models/textcat.py"}
 
+A text classification architecture needs to take a `Doc` as input, and produce a
+score for each potential label class. Textcat challenges can be binary (e.g.
+sentiment analysis) or involve multiple possible labels. Multi-label challenges
+can either have mutually exclusive labels (each example has exactly one label),
+or multiple labels may be applicable at the same time.
+
+As the properties of text classification problems can vary widely, we provide
+several different built-in architectures. It is recommended to experiment with
+different architectures and settings to determine what works best on your
+specific data and challenge.
+
 ### spacy.TextCatEnsemble.v1 {#TextCatEnsemble}
+
+Stacked ensemble of a bag-of-words model and a neural network model. The neural
+network has an internal CNN Tok2Vec layer and uses attention.
+
+> #### Example Config
+>
+> ```ini
+> [model]
+> @architectures = "spacy.TextCatEnsemble.v1"
+> exclusive_classes = false
+> pretrained_vectors = null
+> width = 64
+> embed_size = 2000
+> conv_depth = 2
+> window_size = 1
+> ngram_size = 1
+> dropout = null
+> nO = null
+> ```
+
+| Name                 | Type  | Description                                                                                                                                 |
+| -------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `exclusive_classes`  | bool  | Whether or not categories are mutually exclusive.                                                                                           |
+| `pretrained_vectors` | bool  | Whether or not pretrained vectors will be used in addition to the feature vectors.                                                          |
+| `width`              | int   | Output dimension of the feature encoding step.                                                                                              |
+| `embed_size`         | int   | Input dimension of the feature encoding step.                                                                                               |
+| `conv_depth`         | int   | Depth of the Tok2Vec layer.                                                                                                                 |
+| `window_size`        | int   | The number of contextual vectors to [concatenate](https://thinc.ai/docs/api-layers#expand_window) from the left and from the right.         |
+| `ngram_size`         | int   | Determines the maximum length of the n-grams in the BOW model. For instance, `ngram_size=3`would give unigram, trigram and bigram features. |
+| `dropout`            | float | The dropout rate.                                                                                                                           |
+| `nO`                 | int   | Output dimension, determined by the number of different labels.                                                                             |
+
+If the `nO` dimension is not set, the TextCategorizer component will set it when
+`begin_training` is called.
+
+### spacy.TextCatCNN.v1 {#TextCatCNN}
+
+> #### Example Config
+>
+> ```ini
+> [model]
+> @architectures = "spacy.TextCatCNN.v1"
+> exclusive_classes = false
+> nO = null
+>
+> [model.tok2vec]
+> @architectures = "spacy.HashEmbedCNN.v1"
+> pretrained_vectors = null
+> width = 96
+> depth = 4
+> embed_size = 2000
+> window_size = 1
+> maxout_pieces = 3
+> subword_features = true
+> dropout = null
+> ```
+
+A neural network model where token vectors are calculated using a CNN. The
+vectors are mean pooled and used as features in a feed-forward network. This
+architecture is usually less accurate than the ensemble, but runs faster.
+
+| Name                | Type                                       | Description                                                     |
+| ------------------- | ------------------------------------------ | --------------------------------------------------------------- |
+| `exclusive_classes` | bool                                       | Whether or not categories are mutually exclusive.               |
+| `tok2vec`           | [`Model`](https://thinc.ai/docs/api-model) | The [`tok2vec`](#tok2vec) layer of the model.                   |
+| `nO`                | int                                        | Output dimension, determined by the number of different labels. |
+
+If the `nO` dimension is not set, the TextCategorizer component will set it when
+`begin_training` is called.
 
 ### spacy.TextCatBOW.v1 {#TextCatBOW}
 
-### spacy.TextCatCNN.v1 {#TextCatCNN}
+An ngram "bag-of-words" model. This architecture should run much faster than the
+others, but may not be as accurate, especially if texts are short.
+
+> #### Example Config
+>
+> ```ini
+> [model]
+> @architectures = "spacy.TextCatBOW.v1"
+> exclusive_classes = false
+> ngram_size: 1
+> no_output_layer: false
+> nO = null
+> ```
+
+| Name                | Type  | Description                                                                                                                                 |
+| ------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `exclusive_classes` | bool  | Whether or not categories are mutually exclusive.                                                                                           |
+| `ngram_size`        | int   | Determines the maximum length of the n-grams in the BOW model. For instance, `ngram_size=3`would give unigram, trigram and bigram features. |
+| `no_output_layer`   | float | Whether or not to add an output layer to the model (`Softmax` activation if `exclusive_classes=True`, else `Logistic`.                      |
+| `nO`                | int   | Output dimension, determined by the number of different labels.                                                                             |
+
+If the `nO` dimension is not set, the TextCategorizer component will set it when
+`begin_training` is called.
 
 ### spacy.TextCatLowData.v1 {#TextCatLowData}
 
@@ -191,11 +293,11 @@ layer.
 > maxout_pieces = 3
 > subword_features = true
 > dropout = null
-> 
+>
 > [kb_loader]
 > @assets = "spacy.EmptyKB.v1"
 > entity_vector_length = 64
-> 
+>
 > [get_candidates]
 > @assets = "spacy.CandidateGenerator.v1"
 > ```
@@ -210,17 +312,18 @@ If the `nO` dimension is not set, the Entity Linking component will set it when
 
 ### spacy.EmptyKB.v1 {#EmptyKB}
 
-A function that creates a default, empty Knowledge Base from a [`Vocab`](/api/vocab) instance.
+A function that creates a default, empty Knowledge Base from a
+[`Vocab`](/api/vocab) instance.
 
-| Name                   | Type | Description                                              |
-| ---------------------- | ---- | -------------------------------------------------------- |
+| Name                   | Type | Description                                                               |
+| ---------------------- | ---- | ------------------------------------------------------------------------- |
 | `entity_vector_length` | int  | The length of the vectors encoding each entity in the KB - 64 by default. |
 
 ### spacy.CandidateGenerator.v1 {#CandidateGenerator}
 
-A function that takes as input a [`KnowledgeBase`](/api/kb) and a [`Span`](/api/span) object denoting a
-named entity, and returns a list of plausible
-[`Candidate` objects](/api/kb/#candidate_init).
+A function that takes as input a [`KnowledgeBase`](/api/kb) and a
+[`Span`](/api/span) object denoting a named entity, and returns a list of
+plausible [`Candidate` objects](/api/kb/#candidate_init).
 
 The default `CandidateGenerator` simply uses the text of a mention to find its
 potential aliases in the Knowledgebase. Note that this function is
