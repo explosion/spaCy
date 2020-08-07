@@ -20,7 +20,6 @@ embed_size = 2000
 window_size = 1
 maxout_pieces = 3
 subword_features = true
-dropout = null
 """
 DEFAULT_TOK2VEC_MODEL = Config().from_str(default_model_config)["model"]
 

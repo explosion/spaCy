@@ -3,7 +3,7 @@ from thinc.api import zero_init, with_array, Softmax, chain, Model
 from thinc.types import Floats2d
 
 from ...util import registry
-from ..tokens import Doc
+from ...tokens import Doc
 
 
 @registry.architectures.register("spacy.Tagger.v1")

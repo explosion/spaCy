@@ -77,7 +77,7 @@ def build_Tok2Vec_model(
     """Construct a tok2vec model out of embedding and encoding subnetworks.
     See https://explosion.ai/blog/deep-learning-formula-nlp
 
-    embed (Model[List[Doc], List[Floats2d]]): Embed tokens into context-indepdent
+    embed (Model[List[Doc], List[Floats2d]]): Embed tokens into context-independent
         word vector representations.
     encode (Model[List[Floats2d], List[Floats2d]]): Encode context into the
         embeddings, using an architecture such as a CNN, BiLSTM or transformer.
@@ -187,7 +187,7 @@ def CharacterEmbed(width: int, rows: int, nM: int, nC: int):
         are between 16 and 64.
     nC (int): The number of UTF-8 bytes to embed per word. Recommended values
         are between 3 and 8, although it may depend on the length of words in the
-        language. 
+        language.
     """
     model = chain(
         concatenate(
@@ -212,7 +212,7 @@ def MaxoutWindowEncoder(
     normalization and residual connections.
 
     width (int): The input and output width. These are required to be the same,
-        to allow residual connections. This value will be determined by the 
+        to allow residual connections. This value will be determined by the
         width of the inputs. Recommended values are between 64 and 300.
     window_size (int): The number of words to concatenate around each token
         to construct the convolution. Recommended value is 1.
@@ -244,7 +244,7 @@ def MishWindowEncoder(
     normalization and residual connections.
 
     width (int): The input and output width. These are required to be the same,
-        to allow residual connections. This value will be determined by the 
+        to allow residual connections. This value will be determined by the
         width of the inputs. Recommended values are between 64 and 300.
     window_size (int): The number of words to concatenate around each token
         to construct the convolution. Recommended value is 1.
@@ -266,7 +266,7 @@ def BiLSTMEncoder(
     """Encode context using bidirectonal LSTM layers. Requires PyTorch.
 
     width (int): The input and output width. These are required to be the same,
-        to allow residual connections. This value will be determined by the 
+        to allow residual connections. This value will be determined by the
         width of the inputs. Recommended values are between 64 and 300.
     window_size (int): The number of words to concatenate around each token
         to construct the convolution. Recommended value is 1.

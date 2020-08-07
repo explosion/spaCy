@@ -48,7 +48,6 @@ embed_size = 2000
 window_size = 1
 maxout_pieces = 3
 subword_features = true
-dropout = null
 """
 
 

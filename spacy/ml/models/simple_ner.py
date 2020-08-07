@@ -10,7 +10,7 @@ from .._iob import IOB
 from ...util import registry
 
 
-@registry.architectures.register("spacy.BiluoTagger.v1")
+@registry.architectures.register("spacy.BILUOTagger.v1")
 def BiluoTagger(
     tok2vec: Model[List[Doc], List[Floats2d]]
 ) -> Model[List[Doc], List[Floats2d]]:
@@ -59,7 +59,7 @@ def IOBTagger(
     token and uses greedy decoding with transition-constraints to return a valid
     IOB tag sequence.
 
-    A IOB tag sequence encodes a sequence of non-overlapping labelled spans
+    An IOB tag sequence encodes a sequence of non-overlapping labelled spans
     into tags assigned to each token. The first token of a span is given the
     tag B-LABEL, and subsequent tokens are given the tag I-LABEL.
     All other tokens are assigned the tag O.

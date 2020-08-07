@@ -5,6 +5,7 @@ from thinc.types import Floats2d
 from ...util import registry
 from .._precomputable_affine import PrecomputableAffine
 from ..tb_framework import TransitionModel
+from ...tokens import Doc
 
 
 @registry.architectures.register("spacy.TransitionBasedParser.v1")
@@ -18,7 +19,7 @@ def build_tb_parser_model(
 ) -> Model:
     """
     Build a transition-based parser model. Can apply to NER or dependency-parsing.
-    
+
     Transition-based parsing is an approach to structured prediction where the
     task of predicting the structure is mapped to a series of state transitions.
     You might find this tutorial helpful as background:
@@ -35,7 +36,7 @@ def build_tb_parser_model(
         and applying the non-linearity.
     * upper (optional): A feed-forward network that predicts scores from the
         state representation. If not present, the output from the lower model is
-        ued as action scores directly.
+        used as action scores directly.
 
     tok2vec (Model[List[Doc], List[Floats2d]]):
         Subnetwork to map tokens into vector representations.
@@ -44,10 +45,10 @@ def build_tb_parser_model(
         2, 8 and 13 feature sets are designed for the parser, while the 3 and 6
         feature sets are designed for the NER. The recommended feature sets are
         3 for NER, and 8 for the dependency parser.
-        
+
         TODO: This feature should be split into two, state_type: ["deps", "ner"]
         and extra_state_features: [True, False]. This would map into:
-        
+
         (deps, False): 8
         (deps, True): 13
         (ner, False): 3
