@@ -139,7 +139,7 @@ lemmatization entirely.
 ## Lemmatizer.get_lookups_config {#get_lookups_config tag="classmethod"}
 
 Returns the lookups configuration settings for a given mode for use in
-[`Lemmatizer.load_lookups`](/api/lemmatizer#load_lookups).
+[`Lemmatizer.load_lookups`](#load_lookups).
 
 | Name        | Type | Description                                       |
 | ----------- | ---- | ------------------------------------------------- |
