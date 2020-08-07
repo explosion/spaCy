@@ -120,6 +120,8 @@ class Lemmatizer(Pipe):
         lookups (Lookups): The lookups object containing the (optional) tables
             such as "lemma_rules", "lemma_index", "lemma_exc" and
             "lemma_lookup". Defaults to None
+        overwrite (bool): Whether to overwrite existing lemmas. Defaults to
+            `False`.
 
         DOCS: https://spacy.io/api/lemmatizer#init
         """
