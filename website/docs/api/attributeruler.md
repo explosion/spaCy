@@ -25,8 +25,8 @@ how the component should be configured. You can override its settings via the
 >
 > ```python
 > config = {
->    "validation": True,
 >    "pattern_dicts": None,
+>    "validate": True,
 > }
 > nlp.add_pipe("attribute_ruler", config=config)
 > ```
@@ -34,7 +34,7 @@ how the component should be configured. You can override its settings via the
 | Setting         | Type             | Description                                                                                                                             | Default |
 | --------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------- |
 | `pattern_dicts` | `Iterable[dict]` | A list of pattern dicts with the keys as the arguments to [`AttributeRuler.add`](#add) (`patterns`/`attrs`/`index`) to add as patterns. | `None`  |
-| `validation`    | bool             | Whether patterns should be validated, passed to `Matcher` as `validate`.                                                                | `False` |
+| `validate`      | bool             | Whether patterns should be validated (passed to the `Matcher`).                                                                         | `False` |
 
 ```python
 https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/attributeruler.py
