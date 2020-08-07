@@ -8,7 +8,6 @@ from ..util import make_tempdir
 
 test_strings = [([], []), (["rats", "are", "cute"], ["i", "like", "rats"])]
 test_strings_attrs = [(["rats", "are", "cute"], "Hello")]
-default_strings = ("_SP", "POS=SPACE")
 
 
 @pytest.mark.parametrize("text", ["rat"])
@@ -34,10 +33,8 @@ def test_serialize_vocab_roundtrip_bytes(strings1, strings2):
     assert vocab1.to_bytes() == vocab1_b
     new_vocab1 = Vocab().from_bytes(vocab1_b)
     assert new_vocab1.to_bytes() == vocab1_b
-    assert len(new_vocab1.strings) == len(strings1) + 2  # adds _SP and POS=SPACE
-    assert sorted([s for s in new_vocab1.strings]) == sorted(
-        strings1 + list(default_strings)
-    )
+    assert len(new_vocab1.strings) == len(strings1)
+    assert sorted([s for s in new_vocab1.strings]) == sorted(strings1)
 
 
 @pytest.mark.parametrize("strings1,strings2", test_strings)
@@ -52,16 +49,12 @@ def test_serialize_vocab_roundtrip_disk(strings1, strings2):
         vocab1_d = Vocab().from_disk(file_path1)
         vocab2_d = Vocab().from_disk(file_path2)
         # check strings rather than lexemes, which are only reloaded on demand
-        assert strings1 == [s for s in vocab1_d.strings if s not in default_strings]
-        assert strings2 == [s for s in vocab2_d.strings if s not in default_strings]
+        assert strings1 == [s for s in vocab1_d.strings]
+        assert strings2 == [s for s in vocab2_d.strings]
         if strings1 == strings2:
-            assert [s for s in vocab1_d.strings if s not in default_strings] == [
-                s for s in vocab2_d.strings if s not in default_strings
-            ]
+            assert [s for s in vocab1_d.strings] == [s for s in vocab2_d.strings]
         else:
-            assert [s for s in vocab1_d.strings if s not in default_strings] != [
-                s for s in vocab2_d.strings if s not in default_strings
-            ]
+            assert [s for s in vocab1_d.strings] != [s for s in vocab2_d.strings]
 
 
 @pytest.mark.parametrize("strings,lex_attr", test_strings_attrs)
@@ -80,7 +73,7 @@ def test_deserialize_vocab_seen_entries(strings, lex_attr):
     # Reported in #2153
     vocab = Vocab(strings=strings)
     vocab.from_bytes(vocab.to_bytes())
-    assert len(vocab.strings) == len(strings) + 2  # adds _SP and POS=SPACE
+    assert len(vocab.strings) == len(strings)
 
 
 @pytest.mark.parametrize("strings,lex_attr", test_strings_attrs)

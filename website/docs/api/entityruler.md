@@ -27,7 +27,7 @@ how the component should be configured. You can override its settings via the
 > ```python
 > config = {
 >    "phrase_matcher_attr": None,
->    "validation": True,
+>    "validate": True,
 >    "overwrite_ents": False,
 >    "ent_id_sep": "||",
 > }
@@ -37,7 +37,7 @@ how the component should be configured. You can override its settings via the
 | Setting               | Type | Description                                                                                                                                 | Default |
 | --------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
 | `phrase_matcher_attr` | str  | Optional attribute name match on for the internal [`PhraseMatcher`](/api/phrasematcher), e.g. `LOWER` to match on the lowercase token text. | `None`  |
-| `validation`          | bool | Whether patterns should be validated, passed to Matcher and PhraseMatcher as `validate`.                                                    | `False` |
+| `validate`            | bool | Whether patterns should be validated (passed to the `Matcher` and `PhraseMatcher`).                                                         | `False` |
 | `overwrite_ents`      | bool | If existing entities are present, e.g. entities added by the model, overwrite them by matches if necessary.                                 | `False` |
 | `ent_id_sep`          | str  | Separator used internally for entity IDs.                                                                                                   | `"||"`  |
 

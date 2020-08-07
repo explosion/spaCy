@@ -17,13 +17,18 @@ MatcherPatternType = List[Dict[Union[int, str], Any]]
 AttributeRulerPatternType = Dict[str, Union[MatcherPatternType, Dict, int]]
 
 
-@Language.factory("attribute_ruler")
+@Language.factory(
+    "attribute_ruler", default_config={"pattern_dicts": None, "validate": False}
+)
 def make_attribute_ruler(
     nlp: Language,
     name: str,
-    pattern_dicts: Optional[Iterable[AttributeRulerPatternType]] = None,
+    pattern_dicts: Optional[Iterable[AttributeRulerPatternType]],
+    validate: bool,
 ):
-    return AttributeRuler(nlp.vocab, name, pattern_dicts=pattern_dicts)
+    return AttributeRuler(
+        nlp.vocab, name, pattern_dicts=pattern_dicts, validate=validate
+    )
 
 
 class AttributeRuler(Pipe):
@@ -39,6 +44,7 @@ class AttributeRuler(Pipe):
         name: str = "attribute_ruler",
         *,
         pattern_dicts: Optional[Iterable[AttributeRulerPatternType]] = None,
+        validate: bool = False,
     ) -> None:
         """Initialize the AttributeRuler.
 
@@ -54,7 +60,7 @@ class AttributeRuler(Pipe):
         """
         self.name = name
         self.vocab = vocab
-        self.matcher = Matcher(self.vocab)
+        self.matcher = Matcher(self.vocab, validate=validate)
         self.attrs = []
         self._attrs_unnormed = []  # store for reference
         self.indices = []

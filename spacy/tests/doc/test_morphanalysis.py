@@ -1,23 +1,17 @@
 import pytest
-from spacy.symbols import POS, PRON, VERB
 
 
 @pytest.fixture
 def i_has(en_tokenizer):
     doc = en_tokenizer("I has")
-    tag_map = {
-        "PRP": {POS: PRON, "PronType": "prs"},
-        "VBZ": {
-            POS: VERB,
-            "VerbForm": "fin",
-            "Tense": "pres",
-            "Number": "sing",
-            "Person": "three",
-        },
+    doc[0].morph_ = {"PronType": "prs"}
+    doc[1].morph_ = {
+        "VerbForm": "fin",
+        "Tense": "pres",
+        "Number": "sing",
+        "Person": "three",
     }
-    en_tokenizer.vocab.morphology.load_tag_map(tag_map)
-    doc[0].tag_ = "PRP"
-    doc[1].tag_ = "VBZ"
+
     return doc
 
 

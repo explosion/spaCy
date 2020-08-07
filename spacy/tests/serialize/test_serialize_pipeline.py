@@ -44,8 +44,8 @@ def blank_parser(en_vocab):
 def taggers(en_vocab):
     cfg = {"model": DEFAULT_TAGGER_MODEL}
     model = registry.make_from_config(cfg, validate=True)["model"]
-    tagger1 = Tagger(en_vocab, model, set_morphology=True)
-    tagger2 = Tagger(en_vocab, model, set_morphology=True)
+    tagger1 = Tagger(en_vocab, model)
+    tagger2 = Tagger(en_vocab, model)
     return tagger1, tagger2
 
 
@@ -125,8 +125,8 @@ def test_serialize_tagger_roundtrip_disk(en_vocab, taggers):
         tagger2.to_disk(file_path2)
         cfg = {"model": DEFAULT_TAGGER_MODEL}
         model = registry.make_from_config(cfg, validate=True)["model"]
-        tagger1_d = Tagger(en_vocab, model, set_morphology=True).from_disk(file_path1)
-        tagger2_d = Tagger(en_vocab, model, set_morphology=True).from_disk(file_path2)
+        tagger1_d = Tagger(en_vocab, model).from_disk(file_path1)
+        tagger2_d = Tagger(en_vocab, model).from_disk(file_path2)
         assert tagger1_d.to_bytes() == tagger2_d.to_bytes()
 
 

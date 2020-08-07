@@ -1,8 +1,7 @@
-from typing import Optional, List, Dict
+from typing import List, Dict
 
-from ...lemmatizer import Lemmatizer
-from ...symbols import POS, NOUN, VERB, ADJ, ADV, PRON, DET, AUX, PUNCT, ADP
-from ...symbols import SCONJ, CCONJ
+from ...pipeline import Lemmatizer
+from ...tokens import Token
 
 
 class FrenchLemmatizer(Lemmatizer):
@@ -15,65 +14,55 @@ class FrenchLemmatizer(Lemmatizer):
     the lookup table.
     """
 
-    def __call__(
-        self, string: str, univ_pos: str, morphology: Optional[dict] = None
-    ) -> List[str]:
-        lookup_table = self.lookups.get_table("lemma_lookup", {})
-        if "lemma_rules" not in self.lookups:
-            return [lookup_table.get(string, string)]
-        if univ_pos in (NOUN, "NOUN", "noun"):
-            univ_pos = "noun"
-        elif univ_pos in (VERB, "VERB", "verb"):
-            univ_pos = "verb"
-        elif univ_pos in (ADJ, "ADJ", "adj"):
-            univ_pos = "adj"
-        elif univ_pos in (ADP, "ADP", "adp"):
-            univ_pos = "adp"
-        elif univ_pos in (ADV, "ADV", "adv"):
-            univ_pos = "adv"
-        elif univ_pos in (AUX, "AUX", "aux"):
-            univ_pos = "aux"
-        elif univ_pos in (CCONJ, "CCONJ", "cconj"):
-            univ_pos = "cconj"
-        elif univ_pos in (DET, "DET", "det"):
-            univ_pos = "det"
-        elif univ_pos in (PRON, "PRON", "pron"):
-            univ_pos = "pron"
-        elif univ_pos in (PUNCT, "PUNCT", "punct"):
-            univ_pos = "punct"
-        elif univ_pos in (SCONJ, "SCONJ", "sconj"):
-            univ_pos = "sconj"
+    @classmethod
+    def get_lookups_config(cls, mode: str) -> Dict:
+        if mode == "rule":
+            return {
+                "required_tables": [
+                    "lemma_lookup",
+                    "lemma_rules",
+                    "lemma_exc",
+                    "lemma_index",
+                ],
+                "optional_tables": [],
+            }
         else:
-            return [self.lookup(string)]
+            return super().get_lookups_config(mode)
+
+    def rule_lemmatize(self, token: Token) -> List[str]:
+        cache_key = (token.orth, token.pos)
+        if cache_key in self.cache:
+            return self.cache[cache_key]
+        string = token.text
+        univ_pos = token.pos_.lower()
+        if univ_pos in ("", "eol", "space"):
+            return [string.lower()]
+        elif "lemma_rules" not in self.lookups or univ_pos not in (
+            "noun",
+            "verb",
+            "adj",
+            "adp",
+            "adv",
+            "aux",
+            "cconj",
+            "det",
+            "pron",
+            "punct",
+            "sconj",
+        ):
+            return self.lookup_lemmatize(token)
         index_table = self.lookups.get_table("lemma_index", {})
         exc_table = self.lookups.get_table("lemma_exc", {})
         rules_table = self.lookups.get_table("lemma_rules", {})
-        lemmas = self.lemmatize(
-            string,
-            index_table.get(univ_pos, {}),
-            exc_table.get(univ_pos, {}),
-            rules_table.get(univ_pos, []),
-        )
-        return lemmas
-
-    def lookup(self, string: str, orth: Optional[int] = None) -> str:
         lookup_table = self.lookups.get_table("lemma_lookup", {})
-        if orth is not None and orth in lookup_table:
-            return lookup_table[orth][0]
-        return string
-
-    def lemmatize(
-        self,
-        string: str,
-        index: Dict[str, List[str]],
-        exceptions: Dict[str, Dict[str, List[str]]],
-        rules: Dict[str, List[List[str]]],
-    ) -> List[str]:
-        lookup_table = self.lookups.get_table("lemma_lookup", {})
+        index = index_table.get(univ_pos, {})
+        exceptions = exc_table.get(univ_pos, {})
+        rules = rules_table.get(univ_pos, [])
         string = string.lower()
         forms = []
         if string in index:
             forms.append(string)
+            self.cache[cache_key] = forms
             return forms
         forms.extend(exceptions.get(string, []))
         oov_forms = []
@@ -90,45 +79,9 @@ class FrenchLemmatizer(Lemmatizer):
         if not forms:
             forms.extend(oov_forms)
         if not forms and string in lookup_table.keys():
-            forms.append(lookup_table[string][0])
+            forms.append(self.lookup_lemmatize(token)[0])
         if not forms:
             forms.append(string)
-        return list(set(forms))
-
-
-def is_base_form(univ_pos: str, morphology: Optional[dict] = None) -> bool:
-    """
-    Check whether we're dealing with an uninflected paradigm, so we can
-    avoid lemmatization entirely.
-    """
-    morphology = {} if morphology is None else morphology
-    others = [
-        key
-        for key in morphology
-        if key not in (POS, "Number", "POS", "VerbForm", "Tense")
-    ]
-    if univ_pos == "noun" and morphology.get("Number") == "sing":
-        return True
-    elif univ_pos == "verb" and morphology.get("VerbForm") == "inf":
-        return True
-    # This maps 'VBP' to base form -- probably just need 'IS_BASE'
-    # morphology
-    elif univ_pos == "verb" and (
-        morphology.get("VerbForm") == "fin"
-        and morphology.get("Tense") == "pres"
-        and morphology.get("Number") is None
-        and not others
-    ):
-        return True
-    elif univ_pos == "adj" and morphology.get("Degree") == "pos":
-        return True
-    elif "VerbForm=inf" in morphology:
-        return True
-    elif "VerbForm=none" in morphology:
-        return True
-    elif "Number=sing" in morphology:
-        return True
-    elif "Degree=pos" in morphology:
-        return True
-    else:
-        return False
+        forms = list(set(forms))
+        self.cache[cache_key] = forms
+        return forms

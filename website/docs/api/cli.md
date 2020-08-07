@@ -132,7 +132,7 @@ $ python -m spacy init config [output] [--base] [--lang] [--model] [--pipeline]
 | `--base`, `-b`     | option     | Optional base config file to auto-fill with defaults.                                                                                                                 |
 | `--lang`, `-l`     | option     | Optional language code to use for blank config. If a `--pipeline` is specified, the components will be added in order.                                                |
 | `--model`, `-m`    | option     | Optional base model to copy config from. If a `--pipeline` is specified, only those components will be kept, and all other components not in the model will be added. |
-| `--pipeline`, `-p` | option     | Optional comma-separated pipeline of components to add to blank language or model.                                                                                     |
+| `--pipeline`, `-p` | option     | Optional comma-separated pipeline of components to add to blank language or model.                                                                                    |
 | **CREATES**        | config     | Complete and auto-filled config file for training.                                                                                                                    |
 
 ### init model {#init-model new="2"}
@@ -446,7 +446,8 @@ Debug a Thinc [`Model`](https://thinc.ai/docs/api-model) by running it on a
 sample text and checking how it updates its internal weights and parameters.
 
 ```bash
-$ python -m spacy debug model [config_path] [component] [--layers] [-DIM] [-PAR] [-GRAD] [-ATTR] [-P0] [-P1] [-P2] [P3] [--gpu_id]
+$ python -m spacy debug model [config_path] [component] [--layers] [-DIM]
+[-PAR] [-GRAD] [-ATTR] [-P0] [-P1] [-P2] [P3] [--gpu-id]
 ```
 
 <Accordion title="Example outputs" spaced>
@@ -641,18 +642,19 @@ $ python -m spacy pretrain [texts_loc] [output_dir] [config_path]
 
 ## Evaluate {#evaluate new="2"}
 
-<!-- TODO: document new evaluate command -->
-
-Evaluate a model's accuracy and speed on JSON-formatted annotated data. Will
-print the results and optionally export
-[displaCy visualizations](/usage/visualizers) of a sample set of parses to
-`.html` files. Visualizations for the dependency parse and NER will be exported
-as separate files if the respective component is present in the model's
-pipeline.
+Evaluate a model. Expects a loadable spaCy model and evaluation data in the
+[binary `.spacy` format](/api/data-formats#binary-training). The
+`--gold-preproc` option sets up the evaluation examples with gold-standard
+sentences and tokens for the predictions. Gold preprocessing helps the
+annotations align to the tokenization, and may result in sequences of more
+consistent length. However, it may reduce runtime accuracy due to train/test
+skew. To render a sample of dependency parses in a HTML file using the
+[displaCy visualizations](/usage/visualizers), set as output directory as the
+`--displacy-path` argument.
 
 ```bash
-$ python -m spacy evaluate [model] [data_path] [--output] [--displacy-path]
-[--displacy-limit] [--gpu-id] [--gold-preproc]
+$ python -m spacy evaluate [model] [data_path] [--output] [--gold-preproc]
+[--gpu-id] [--displacy-path] [--displacy-limit]
 ```
 
 | Argument                  | Type                 | Description                                                                                                                                              |
@@ -660,10 +662,10 @@ $ python -m spacy evaluate [model] [data_path] [--output] [--displacy-path]
 | `model`                   | positional           | Model to evaluate. Can be a package or a path to a model data directory.                                                                                 |
 | `data_path`               | positional           | Location of evaluation data in spaCy's [binary format](/api/data-formats#training).                                                                      |
 | `--output`, `-o`          | option               | Output JSON file for metrics. If not set, no metrics will be exported.                                                                                   |
+| `--gold-preproc`, `-G`    | flag                 | Use gold preprocessing.                                                                                                                                  |
+| `--gpu-id`, `-g`          | option               | GPU to use, if any. Defaults to `-1` for CPU.                                                                                                            |
 | `--displacy-path`, `-dp`  | option               | Directory to output rendered parses as HTML. If not set, no visualizations will be generated.                                                            |
 | `--displacy-limit`, `-dl` | option               | Number of parses to generate per file. Defaults to `25`. Keep in mind that a significantly higher number might cause the `.html` files to render slowly. |
-| `--gpu-id`, `-g`          | option               | GPU to use, if any. Defaults to `-1` for CPU.                                                                                                            |
-| `--gold-preproc`, `-G`    | flag                 | Use gold preprocessing.                                                                                                                                  |
 | **CREATES**               | `stdout`, JSON, HTML | Training results and optional metrics and visualizations.                                                                                                |
 
 ## Package {#package}

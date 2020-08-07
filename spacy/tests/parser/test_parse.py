@@ -82,10 +82,10 @@ def test_parser_merge_pp(en_tokenizer):
     text = "A phrase with another phrase occurs"
     heads = [1, 4, -1, 1, -2, 0]
     deps = ["det", "nsubj", "prep", "det", "pobj", "ROOT"]
-    tags = ["DT", "NN", "IN", "DT", "NN", "VBZ"]
+    pos = ["DET", "NOUN", "ADP", "DET", "NOUN", "VERB"]
     tokens = en_tokenizer(text)
     doc = get_doc(
-        tokens.vocab, words=[t.text for t in tokens], deps=deps, heads=heads, tags=tags
+        tokens.vocab, words=[t.text for t in tokens], deps=deps, heads=heads, pos=pos,
     )
     with doc.retokenize() as retokenizer:
         for np in doc.noun_chunks:

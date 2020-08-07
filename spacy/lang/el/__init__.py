@@ -1,38 +1,17 @@
-from typing import Callable
-from thinc.api import Config
+from typing import Optional
+from thinc.api import Model
 
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
-from .lemmatizer import GreekLemmatizer
 from .syntax_iterators import SYNTAX_ITERATORS
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
-from ...lookups import load_lookups
+from .lemmatizer import GreekLemmatizer
+from ...lookups import Lookups
 from ...language import Language
-from ...util import registry
-
-
-DEFAULT_CONFIG = """
-[nlp]
-
-[nlp.lemmatizer]
-@lemmatizers = "spacy.el.GreekLemmatizer"
-"""
-
-
-@registry.lemmatizers("spacy.el.GreekLemmatizer")
-def create_lemmatizer() -> Callable[[Language], GreekLemmatizer]:
-    tables = ["lemma_index", "lemma_exc", "lemma_rules"]
-
-    def lemmatizer_factory(nlp: Language) -> GreekLemmatizer:
-        lookups = load_lookups(lang=nlp.lang, tables=tables)
-        return GreekLemmatizer(lookups=lookups)
-
-    return lemmatizer_factory
 
 
 class GreekDefaults(Language.Defaults):
-    config = Config().from_str(DEFAULT_CONFIG)
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     prefixes = TOKENIZER_PREFIXES
     suffixes = TOKENIZER_SUFFIXES
@@ -45,6 +24,24 @@ class GreekDefaults(Language.Defaults):
 class Greek(Language):
     lang = "el"
     Defaults = GreekDefaults
+
+
+@Greek.factory(
+    "lemmatizer",
+    assigns=["token.lemma"],
+    default_config={"model": None, "mode": "rule", "lookups": None},
+    scores=["lemma_acc"],
+    default_score_weights={"lemma_acc": 1.0},
+)
+def make_lemmatizer(
+    nlp: Language,
+    model: Optional[Model],
+    name: str,
+    mode: str,
+    lookups: Optional[Lookups],
+):
+    lookups = GreekLemmatizer.load_lookups(nlp.lang, mode, lookups)
+    return GreekLemmatizer(nlp.vocab, model, name, mode=mode, lookups=lookups)
 
 
 __all__ = ["Greek"]
