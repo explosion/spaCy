@@ -27,12 +27,12 @@ lemmatizers, see the
 > nlp.add_pipe("lemmatizer", config=config)
 > ```
 
-| Setting     | Type                                       | Description                                                                                                                                                                    | Default    |
-| ----------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- |
-| `mode`      | str                                        | The lemmatizer mode, e.g. "lookup" or "rule".                                                                                                                                  | `"lookup"` |
-| `lookups`   | [`Lookups`](/api/lookups)                  | The lookups object containing the tables such as "lemma_rules", "lemma_index", "lemma_exc" and "lemma_lookup". If `None`, default tables are loaded from `spacy-lookups-data`. | `None`     |
-| `overwrite` | bool                                       | Whether to overwrite existing lemmas.                                                                                                                                          | `False`    |
-| `model`     | [`Model`](https://thinc.ai/docs/api-model) | **Not yet implemented:** the model to use.                                                                                                                                     | `None`     |
+| Setting     | Type                                       | Description                                                                                                                                                                            | Default    |
+| ----------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| `mode`      | str                                        | The lemmatizer mode, e.g. "lookup" or "rule".                                                                                                                                          | `"lookup"` |
+| `lookups`   | [`Lookups`](/api/lookups)                  | The lookups object containing the tables such as `"lemma_rules"`, `"lemma_index"`, `"lemma_exc"` and `"lemma_lookup"`. If `None`, default tables are loaded from `spacy-lookups-data`. | `None`     |
+| `overwrite` | bool                                       | Whether to overwrite existing lemmas.                                                                                                                                                  | `False`    |
+| `model`     | [`Model`](https://thinc.ai/docs/api-model) | **Not yet implemented:** the model to use.                                                                                                                                             | `None`     |
 
 ```python
 https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/lemmatizer.py

@@ -12,14 +12,15 @@ passed on to the next component.
 > - **Creates:** Objects, attributes and properties modified and set by the
 >   component.
 
-| Name          | Component                                                          | Creates                                                     | Description                                      |
-| ------------- | ------------------------------------------------------------------ | ----------------------------------------------------------- | ------------------------------------------------ |
-| **tokenizer** | [`Tokenizer`](/api/tokenizer)                                      | `Doc`                                                       | Segment text into tokens.                        |
-| **tagger**    | [`Tagger`](/api/tagger)                                            | `Doc[i].tag`                                                | Assign part-of-speech tags.                      |
-| **parser**    | [`DependencyParser`](/api/dependencyparser)                        | `Doc[i].head`, `Doc[i].dep`, `Doc.sents`, `Doc.noun_chunks` | Assign dependency labels.                        |
-| **ner**       | [`EntityRecognizer`](/api/entityrecognizer)                        | `Doc.ents`, `Doc[i].ent_iob`, `Doc[i].ent_type`             | Detect and label named entities.                 |
-| **textcat**   | [`TextCategorizer`](/api/textcategorizer)                          | `Doc.cats`                                                  | Assign document labels.                          |
-| ...           | [custom components](/usage/processing-pipelines#custom-components) | `Doc._.xxx`, `Token._.xxx`, `Span._.xxx`                    | Assign custom attributes, methods or properties. |
+| Name           | Component                                                          | Creates                                                   | Description                                      |
+| -------------- | ------------------------------------------------------------------ | --------------------------------------------------------- | ------------------------------------------------ |
+| **tokenizer**  | [`Tokenizer`](/api/tokenizer)                                      | `Doc`                                                     | Segment text into tokens.                        |
+| **tagger**     | [`Tagger`](/api/tagger)                                            | `Token.tag`                                               | Assign part-of-speech tags.                      |
+| **parser**     | [`DependencyParser`](/api/dependencyparser)                        | `Token.head`, `Token.dep`, `Doc.sents`, `Doc.noun_chunks` | Assign dependency labels.                        |
+| **ner**        | [`EntityRecognizer`](/api/entityrecognizer)                        | `Doc.ents`, `Token.ent_iob`, `Token.ent_type`             | Detect and label named entities.                 |
+| **lemmatizer** | [`Lemmatizer`](/api/lemmatizer)                                    | `Token.lemma`                                             | Assign base forms.                               |
+| **textcat**    | [`TextCategorizer`](/api/textcategorizer)                          | `Doc.cats`                                                | Assign document labels.                          |
+| ...            | [custom components](/usage/processing-pipelines#custom-components) | `Doc._.xxx`, `Token._.xxx`, `Span._.xxx`                  | Assign custom attributes, methods or properties. |
 
 The processing pipeline always **depends on the statistical model** and its
 capabilities. For example, a pipeline can only include an entity recognizer
