@@ -9,7 +9,7 @@ from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .syntax_iterators import SYNTAX_ITERATORS
 from .lemmatizer import FrenchLemmatizer
-from ...lookups import Lookups, load_lookups
+from ...lookups import Lookups
 from ...language import Language
 
 

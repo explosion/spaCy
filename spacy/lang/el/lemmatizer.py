@@ -1,11 +1,7 @@
-from typing import Optional, List
+from typing import List
 
-from thinc.api import Model
-
-from ...lookups import Lookups
 from ...pipeline import Lemmatizer
 from ...tokens import Token
-from ...vocab import Vocab
 
 
 class GreekLemmatizer(Lemmatizer):

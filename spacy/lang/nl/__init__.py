@@ -1,5 +1,4 @@
 from typing import Optional
-from copy import deepcopy
 
 from thinc.api import Model
 
@@ -11,7 +10,6 @@ from .punctuation import TOKENIZER_SUFFIXES
 from .lemmatizer import DutchLemmatizer
 from ...lookups import Lookups
 from ...language import Language
-from ...pipeline.lemmatizer import Lemmatizer
 
 
 class DutchDefaults(Language.Defaults):

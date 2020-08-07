@@ -1,11 +1,7 @@
-from typing import List, Optional, Dict
+from typing import List, Dict
 
-from thinc.api import Model
-
-from ...lookups import Lookups
 from ...pipeline import Lemmatizer
 from ...tokens import Token
-from ...vocab import Vocab
 
 
 class DutchLemmatizer(Lemmatizer):
@@ -19,7 +15,6 @@ class DutchLemmatizer(Lemmatizer):
                     "lemma_exc",
                     "lemma_index",
                 ],
-                "optional_tables": [],
             }
         else:
             return super().get_lookups_config(mode)

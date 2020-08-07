@@ -9,7 +9,7 @@ from .syntax_iterators import SYNTAX_ITERATORS
 from .punctuation import TOKENIZER_INFIXES
 from .lemmatizer import EnglishLemmatizer
 from ...language import Language
-from ...lookups import Lookups, load_lookups
+from ...lookups import Lookups
 
 
 class EnglishDefaults(Language.Defaults):

@@ -6,6 +6,7 @@ from ...pipeline import Lemmatizer
 class EnglishLemmatizer(Lemmatizer):
     """English lemmtizer. Only overrides is_base_form.
     """
+
     def is_base_form(self, univ_pos: str, morphology: Optional[dict] = None) -> bool:
         """
         Check whether we're dealing with an uninflected paradigm, so we can
