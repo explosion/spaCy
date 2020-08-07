@@ -45,6 +45,7 @@ def build_bow_text_classifier(
     no_output_layer: bool,
     nO: Optional[int] = None,
 ) -> Model:
+    # Don't document this yet, I'm not sure it's right.
     with Model.define_operators({">>": chain}):
         sparse_linear = SparseLinear(nO)
         model = extract_ngrams(ngram_size, attr=ORTH) >> sparse_linear
@@ -69,6 +70,7 @@ def build_text_classifier(
     dropout: Optional[float],
     nO: Optional[int] = None,
 ) -> Model:
+    # Don't document this yet, I'm not sure it's right.
     cols = [ORTH, LOWER, PREFIX, SUFFIX, SHAPE, ID]
     with Model.define_operators({">>": chain, "|": concatenate, "**": clone}):
         lower = HashEmbed(
@@ -160,6 +162,7 @@ def build_text_classifier_lowdata(
     dropout: Optional[float],
     nO: Optional[int] = None,
 ) -> Model:
+    # Don't document this yet, I'm not sure it's right.
     # Note, before v.3, this was the default if setting "low_data" and "pretrained_dims"
     with Model.define_operators({">>": chain, "**": clone}):
         model = (
