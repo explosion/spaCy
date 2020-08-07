@@ -61,12 +61,7 @@ class Lemmatizer(Pipe):
         return {}
 
     @classmethod
-    def load_lookups(
-        cls,
-        lang: str,
-        mode: str,
-        lookups: Optional[Lookups],
-    ) -> Lookups:
+    def load_lookups(cls, lang: str, mode: str, lookups: Optional[Lookups],) -> Lookups:
         config = cls.get_lookups_config(mode)
         required_tables = config.get("required_tables", [])
         optional_tables = config.get("optional_tables", [])

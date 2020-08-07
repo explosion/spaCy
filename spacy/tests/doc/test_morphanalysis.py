@@ -1,5 +1,4 @@
 import pytest
-from spacy.symbols import POS, PRON, VERB
 
 
 @pytest.fixture

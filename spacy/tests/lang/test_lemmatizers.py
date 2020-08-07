@@ -11,6 +11,7 @@ from spacy.util import get_lang_class
 LANGUAGES = ["el", "en", "fr", "nl"]
 # fmt: on
 
+
 @pytest.mark.parametrize("lang", LANGUAGES)
 def test_lemmatizer_initialize(lang, capfd):
     @registry.assets("lemmatizer_init_lookups")
@@ -24,7 +25,9 @@ def test_lemmatizer_initialize(lang, capfd):
 
     """Test that languages can be initialized."""
     nlp = get_lang_class(lang)()
-    nlp.add_pipe("lemmatizer", config={"lookups": {"@assets": "lemmatizer_init_lookups"}})
+    nlp.add_pipe(
+        "lemmatizer", config={"lookups": {"@assets": "lemmatizer_init_lookups"}}
+    )
     # Check for stray print statements (see #3342)
     doc = nlp("test")  # noqa: F841
     captured = capfd.readouterr()

@@ -23,7 +23,9 @@ def lemmatizer(nlp):
         lookups.add_table("lemma_rules", {"verb": [["ing", ""]]})
         return lookups
 
-    lemmatizer = nlp.add_pipe("lemmatizer", config={"mode": "rule", "lookups": {"@assets": "cope_lookups"}})
+    lemmatizer = nlp.add_pipe(
+        "lemmatizer", config={"mode": "rule", "lookups": {"@assets": "cope_lookups"}}
+    )
     return lemmatizer
 
 
@@ -37,7 +39,9 @@ def test_lemmatizer_init(nlp):
         lookups.add_table("lemma_rules", {"verb": [["ing", ""]]})
         return lookups
 
-    lemmatizer = nlp.add_pipe("lemmatizer", config={"mode": "lookup", "lookups": {"@assets": "cope_lookups"}})
+    lemmatizer = nlp.add_pipe(
+        "lemmatizer", config={"mode": "lookup", "lookups": {"@assets": "cope_lookups"}}
+    )
     assert isinstance(lemmatizer.lookups, Lookups)
     assert lemmatizer.mode == "lookup"
     # replace any tables from spacy-lookups-data
@@ -53,7 +57,10 @@ def test_lemmatizer_init(nlp):
         return Lookups()
 
     with pytest.raises(ValueError):
-        nlp.add_pipe("lemmatizer", config={"mode": "lookup", "lookups": {"@assets": "empty_lookups"}})
+        nlp.add_pipe(
+            "lemmatizer",
+            config={"mode": "lookup", "lookups": {"@assets": "empty_lookups"}},
+        )
 
 
 def test_lemmatizer_config(nlp, lemmatizer):
@@ -63,7 +70,6 @@ def test_lemmatizer_config(nlp, lemmatizer):
     doc = lemmatizer(doc)
     assert doc[0].text == "coping"
     assert doc[0].lemma_ == "cope"
-
 
     doc = nlp.make_doc("coping")
     doc[0].pos_ = "VERB"
@@ -84,7 +90,9 @@ def test_lemmatizer_serialize(nlp, lemmatizer):
         return lookups
 
     nlp2 = English()
-    lemmatizer2 = nlp2.add_pipe("lemmatizer", config={"mode": "rule", "lookups": {"@assets": "cope_lookups"}})
+    lemmatizer2 = nlp2.add_pipe(
+        "lemmatizer", config={"mode": "rule", "lookups": {"@assets": "cope_lookups"}}
+    )
     lemmatizer2.from_bytes(lemmatizer.to_bytes())
     assert lemmatizer.to_bytes() == lemmatizer2.to_bytes()
     assert lemmatizer.lookups.tables == lemmatizer2.lookups.tables
