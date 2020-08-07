@@ -29,7 +29,6 @@ embed_size = 2000
 window_size = 1
 maxout_pieces = 2
 subword_features = true
-dropout = null
 """
 DEFAULT_MT_MODEL = Config().from_str(default_model_config)["model"]
 

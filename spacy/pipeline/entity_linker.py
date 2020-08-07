@@ -29,7 +29,6 @@ embed_size = 300
 window_size = 1
 maxout_pieces = 3
 subword_features = true
-dropout = null
 """
 DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
 

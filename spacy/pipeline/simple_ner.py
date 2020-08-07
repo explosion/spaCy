@@ -15,7 +15,7 @@ from .pipe import Pipe
 
 default_model_config = """
 [model]
-@architectures = "spacy.BiluoTagger.v1"
+@architectures = "spacy.BILUOTagger.v1"
 
 [model.tok2vec]
 @architectures = "spacy.HashEmbedCNN.v1"
@@ -26,7 +26,6 @@ embed_size = 7000
 window_size = 1
 maxout_pieces = 3
 subword_features = true
-dropout = null
 """
 DEFAULT_SIMPLE_NER_MODEL = Config().from_str(default_model_config)["model"]
 

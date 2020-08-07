@@ -217,7 +217,7 @@ $ python -m spacy convert ./data.json ./output
 
 </Infobox>
 
-> #### Annotating entities {#biluo}
+> #### Annotating entities
 >
 > Named entities are provided in the
 > [BILUO](/usage/linguistic-features#accessing-ner) notation. Tokens outside an
@@ -328,7 +328,7 @@ to keep track of your settings and hyperparameters and your own
 | `sent_starts` | `List[bool]`                 | List of boolean values indicating whether each token is the first of a sentence or not.                                                                                                        |
 | `deps`        | `List[str]`                  | List of string values indicating the [dependency relation](/usage/linguistic-features#dependency-parse) of a token to its head.                                                                |
 | `heads`       | `List[int]`                  | List of integer values indicating the dependency head of each token, referring to the absolute index of each token in the text.                                                                |
-| `entities`    | `List[str]`                  | **Option 1:** List of [BILUO tags](#biluo) per token of the format `"{action}-{label}"`, or `None` for unannotated tokens.                                                                     |
+| `entities`    | `List[str]`                  | **Option 1:** List of [BILUO tags](/usage/linguistic-features#accessing-ner) per token of the format `"{action}-{label}"`, or `None` for unannotated tokens.                                   |
 | `entities`    | `List[Tuple[int, int, str]]` | **Option 2:** List of `"(start, end, label)"` tuples defining all entities in the text.                                                                                                        |
 | `cats`        | `Dict[str, float]`           | Dictionary of `label`/`value` pairs indicating how relevant a certain [text category](/api/textcategorizer) is for the text.                                                                   |
 | `links`       | `Dict[(int, int), Dict]`     | Dictionary of `offset`/`dict` pairs defining [named entity links](/usage/linguistic-features#entity-linking). The character offsets are linked to a dictionary of relevant knowledge base IDs. |
