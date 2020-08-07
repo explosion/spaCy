@@ -122,7 +122,7 @@ related to more general machine learning functionality.
 | **Lemmatization**                     | Assigning the base forms of words. For example, the lemma of "was" is "be", and the lemma of "rats" is "rat".      |
 | **Sentence Boundary Detection** (SBD) | Finding and segmenting individual sentences.                                                                       |
 | **Named Entity Recognition** (NER)    | Labelling named "real-world" objects, like persons, companies or locations.                                        |
-| **Entity Linking** (EL)               | Disambiguating textual entities to unique identifiers in a Knowledge Base.                                         |
+| **Entity Linking** (EL)               | Disambiguating textual entities to unique identifiers in a knowledge base.                                         |
 | **Similarity**                        | Comparing words, text spans and documents and how similar they are to each other.                                  |
 | **Text Classification**               | Assigning categories or labels to a whole document, or parts of a document.                                        |
 | **Rule-based Matching**               | Finding sequences of tokens based on their texts and linguistic annotations, similar to regular expressions.       |
@@ -379,7 +379,7 @@ spaCy will also export the `Vocab` when you save a `Doc` or `nlp` object. This
 will give you the object and its encoded annotations, plus the "key" to decode
 it.
 
-## Knowledge Base {#kb}
+## Knowledge base {#kb}
 
 To support the entity linking task, spaCy stores external knowledge in a
 [`KnowledgeBase`](/api/kb). The knowledge base (KB) uses the `Vocab` to store
@@ -426,7 +426,7 @@ print("Number of aliases in KB:", kb.get_size_aliases()) # 2
 
 ### Candidate generation
 
-Given a textual entity, the Knowledge Base can provide a list of plausible
+Given a textual entity, the knowledge base can provide a list of plausible
 candidates or entity identifiers. The [`EntityLinker`](/api/entitylinker) will
 take this list of candidates as input, and disambiguate the mention to the most
 probable identifier, given the document context.

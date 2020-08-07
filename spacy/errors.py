@@ -169,9 +169,9 @@ class Errors:
             "training a named entity recognizer, also make sure that none of "
             "your annotated entity spans have leading or trailing whitespace "
             "or punctuation. "
-            "You can also use the experimental `debug-data` command to "
+            "You can also use the experimental `debug data` command to "
             "validate your JSON-formatted training data. For details, run:\n"
-            "python -m spacy debug-data --help")
+            "python -m spacy debug data --help")
     E025 = ("String is too long: {length} characters. Max is 2**30.")
     E026 = ("Error accessing token at position {i}: out of bounds in Doc of "
             "length {length}.")
