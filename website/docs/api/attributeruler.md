@@ -25,8 +25,8 @@ how the component should be configured. You can override its settings via the
 >
 > ```python
 > config = {
->    "validation": True,
 >    "pattern_dicts": None,
+>    "validate": True,
 > }
 > nlp.add_pipe("attribute_ruler", config=config)
 > ```
@@ -34,7 +34,7 @@ how the component should be configured. You can override its settings via the
 | Setting         | Type             | Description                                                                                                                             | Default |
 | --------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------- |
 | `pattern_dicts` | `Iterable[dict]` | A list of pattern dicts with the keys as the arguments to [`AttributeRuler.add`](#add) (`patterns`/`attrs`/`index`) to add as patterns. | `None`  |
-| `validation`    | bool             | Whether patterns should be validated, passed to `Matcher` as `validate`.                                                                | `False` |
+| `validate`      | bool             | Whether patterns should be validated (passed to the `Matcher`).                                                                         | `False` |
 
 ```python
 https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/attributeruler.py
@@ -65,8 +65,8 @@ pattern_dicts = \[
 | `vocab`         | `Vocab`           | The shared nlp object to pass the vocab to the matchers and process phrase patterns.                                                                                                                                          |
 | `name`          | str               | Instance name of the current pipeline component. Typically passed in automatically from the factory when the component is added. Used to disable the current entity ruler while creating phrase patterns with the nlp object. |
 | _keyword-only_  |                   |                                                                                                                                                                                                                               |
-| `pattern_dicts` | `Iterable[Dict]]` | Optional patterns to load in on initialization.                                                                                                                                                                               |
-| `validate`      | bool              | Whether patterns should be validated, passed to Matcher and PhraseMatcher as `validate`. Defaults to `False`.                                                                                                                 |
+| `pattern_dicts` | `Iterable[Dict]]` | Optional patterns to load in on initialization. Defaults to `None`.                                                                                                                                                           |
+| `validate`      | bool              | Whether patterns should be validated (passed to the `Matcher`). Defaults to `False`.                                                                                                                                          |
 
 ## AttributeRuler.\_\_call\_\_ {#call tag="method"}
 
