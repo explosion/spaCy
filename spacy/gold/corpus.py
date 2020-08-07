@@ -39,7 +39,7 @@ class Corpus:
 
     def __init__(
         self,
-        path,
+        path: Union[str, Path],
         *,
         limit: int = 0,
         gold_preproc: bool = False,
@@ -136,8 +136,7 @@ class Corpus:
         for loc in locs:
             loc = util.ensure_path(loc)
             if loc.parts[-1].endswith(".spacy"):
-                with loc.open("rb") as file_:
-                    doc_bin = DocBin().from_bytes(file_.read())
+                doc_bin = DocBin().from_disk(loc)
                 docs = doc_bin.get_docs(vocab)
                 for doc in docs:
                     if len(doc):
