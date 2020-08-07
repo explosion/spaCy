@@ -340,7 +340,7 @@ See the [`Transformer`](/api/transformer) API reference and
 
 ## Batchers {#batchers source="spacy/gold/batchers.py" new="3"}
 
-<!-- TODO: intro and also describe signature of functions -->
+<!-- TODO: intro -->
 
 #### batch_by_words.v1 {#batch_by_words tag="registered function"}
 
@@ -361,18 +361,15 @@ themselves, or be discarded if `discard_oversize` is set to `True`. The argument
 > get_length = null
 > ```
 
-<!-- TODO: complete table -->
-
-| Name               | Type                   | Description                                                                                                                         |
-| ------------------ | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `size`             | `Iterable[int]` / int  | The batch size. Can also be a block referencing a schedule, e.g. [`compounding`](https://thinc.ai/docs/api-schedules/#compounding). |
-| `tolerance`        | float                  |                                                                                                                                     |
-| `discard_oversize` | bool                   | Discard items that are longer than the specified batch length.                                                                      |
-| `get_length`       | `Callable[[Any], int]` | Optional function that receives a sequence and returns its length. Defaults to the built-in `len()` if not set.                     |
+| Name               | Type                   | Description                                                                                                                                               |
+| ------------------ | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `seqs`             | `Iterable[Any]`        | The sequences to minibatch.                                                                                                                               |
+| `size`             | `Iterable[int]` / int  | The target number of words per batch. Can also be a block referencing a schedule, e.g. [`compounding`](https://thinc.ai/docs/api-schedules/#compounding). |
+| `tolerance`        | float                  | What percentage of the size to allow batches to exceed.                                                                                                   |
+| `discard_oversize` | bool                   | Whether to discard sequences that by themselves exceed the tolerated size.                                                                                |
+| `get_length`       | `Callable[[Any], int]` | Optional function that receives a sequence item and returns its length. Defaults to the built-in `len()` if not set.                                      |
 
 #### batch_by_sequence.v1 {#batch_by_sequence tag="registered function"}
-
-<!-- TODO: -->
 
 > #### Example config
 >
@@ -383,34 +380,37 @@ themselves, or be discarded if `discard_oversize` is set to `True`. The argument
 > get_length = null
 > ```
 
-<!-- TODO: complete table -->
+Create a batcher that creates batches of the specified size.
 
-| Name         | Type                   | Description                                                                                                                         |
-| ------------ | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `size`       | `Iterable[int]` / int  | The batch size. Can also be a block referencing a schedule, e.g. [`compounding`](https://thinc.ai/docs/api-schedules/#compounding). |
-| `get_length` | `Callable[[Any], int]` | Optional function that receives a sequence and returns its length. Defaults to the built-in `len()` if not set.                     |
+| Name         | Type                   | Description                                                                                                                                               |
+| ------------ | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `size`       | `Iterable[int]` / int  | The target number of items per batch. Can also be a block referencing a schedule, e.g. [`compounding`](https://thinc.ai/docs/api-schedules/#compounding). |
+| `get_length` | `Callable[[Any], int]` | Optional function that receives a sequence item and returns its length. Defaults to the built-in `len()` if not set.                                      |
 
 #### batch_by_padded.v1 {#batch_by_padded tag="registered function"}
-
-<!-- TODO: -->
 
 > #### Example config
 >
 > ```ini
 > [training.batcher]
-> @batchers = "batch_by_words.v1"
+> @batchers = "batch_by_padded.v1"
 > size = 100
-> buffer = TODO:
+> buffer = 256
 > discard_oversize = false
 > get_length = null
 > ```
 
-| Name               | Type                   | Description                                                                                                                         |
-| ------------------ | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `size`             | `Iterable[int]` / int  | The batch size. Can also be a block referencing a schedule, e.g. [`compounding`](https://thinc.ai/docs/api-schedules/#compounding). |
-| `buffer`           | int                    |                                                                                                                                     |
-| `discard_oversize` | bool                   | Discard items that are longer than the specified batch length.                                                                      |
-| `get_length`       | `Callable[[Any], int]` | Optional function that receives a sequence and returns its length. Defaults to the built-in `len()` if not set.                     |
+Minibatch a sequence by the size of padded batches that would result, with
+sequences binned by length within a window. The padded size is defined as the
+maximum length of sequences within the batch multiplied by the number of
+sequences in the batch.
+
+| Name               | Type                   | Description                                                                                                                                                                                                                         |
+| ------------------ | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `size`             | `Iterable[int]` / int  | The largest padded size to batch sequences into. Can also be a block referencing a schedule, e.g. [`compounding`](https://thinc.ai/docs/api-schedules/#compounding).                                                                |
+| `buffer`           | int                    | The number of sequences to accumulate before sorting by length. A larger buffer will result in more even sizing, but if the buffer is very large, the iteration order will be less random, which can result in suboptimal training. |
+| `discard_oversize` | bool                   | Whether to discard sequences that are by themselves longer than the largest padded batch size.                                                                                                                                      |
+| `get_length`       | `Callable[[Any], int]` | Optional function that receives a sequence item and returns its length. Defaults to the built-in `len()` if not set.                                                                                                                |
 
 ## Training data and alignment {#gold source="spacy/gold"}
 

@@ -417,20 +417,18 @@ network has an internal CNN Tok2Vec layer and uses attention.
 > nO = null
 > ```
 
-| Name                 | Type  | Description                                                                                                                                 |
-| -------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `exclusive_classes`  | bool  | Whether or not categories are mutually exclusive.                                                                                           |
-| `pretrained_vectors` | bool  | Whether or not pretrained vectors will be used in addition to the feature vectors.                                                          |
-| `width`              | int   | Output dimension of the feature encoding step.                                                                                              |
-| `embed_size`         | int   | Input dimension of the feature encoding step.                                                                                               |
-| `conv_depth`         | int   | Depth of the Tok2Vec layer.                                                                                                                 |
-| `window_size`        | int   | The number of contextual vectors to [concatenate](https://thinc.ai/docs/api-layers#expand_window) from the left and from the right.         |
-| `ngram_size`         | int   | Determines the maximum length of the n-grams in the BOW model. For instance, `ngram_size=3`would give unigram, trigram and bigram features. |
-| `dropout`            | float | The dropout rate.                                                                                                                           |
-| `nO`                 | int   | Output dimension, determined by the number of different labels.                                                                             |
-
-If the `nO` dimension is not set, the TextCategorizer component will set it when
-`begin_training` is called.
+| Name                        | Type  | Description                                                                                                                                              |
+| --------------------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `exclusive_classes`         | bool  | Whether or not categories are mutually exclusive.                                                                                                        |
+| `pretrained_vectors`        | bool  | Whether or not pretrained vectors will be used in addition to the feature vectors.                                                                       |
+| `width`                     | int   | Output dimension of the feature encoding step.                                                                                                           |
+| `embed_size`                | int   | Input dimension of the feature encoding step.                                                                                                            |
+| `conv_depth`                | int   | Depth of the Tok2Vec layer.                                                                                                                              |
+| `window_size`               | int   | The number of contextual vectors to [concatenate](https://thinc.ai/docs/api-layers#expand_window) from the left and from the right.                      |
+| `ngram_size`                | int   | Determines the maximum length of the n-grams in the BOW model. For instance, `ngram_size=3`would give unigram, trigram and bigram features.              |
+| `dropout`                   | float | The dropout rate.                                                                                                                                        |
+| `nO`                        | int   | Output dimension, determined by the number of different labels. If not set, the the [`TextCategorizer`](/api/textcategorizer) component will set it when |
+| `begin_training` is called. |
 
 ### spacy.TextCatCNN.v1 {#TextCatCNN}
 
@@ -457,14 +455,12 @@ A neural network model where token vectors are calculated using a CNN. The
 vectors are mean pooled and used as features in a feed-forward network. This
 architecture is usually less accurate than the ensemble, but runs faster.
 
-| Name                | Type                                       | Description                                                     |
-| ------------------- | ------------------------------------------ | --------------------------------------------------------------- |
-| `exclusive_classes` | bool                                       | Whether or not categories are mutually exclusive.               |
-| `tok2vec`           | [`Model`](https://thinc.ai/docs/api-model) | The [`tok2vec`](#tok2vec) layer of the model.                   |
-| `nO`                | int                                        | Output dimension, determined by the number of different labels. |
-
-If the `nO` dimension is not set, the TextCategorizer component will set it when
-`begin_training` is called.
+| Name                        | Type                                       | Description                                                                                                                                              |
+| --------------------------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `exclusive_classes`         | bool                                       | Whether or not categories are mutually exclusive.                                                                                                        |
+| `tok2vec`                   | [`Model`](https://thinc.ai/docs/api-model) | The [`tok2vec`](#tok2vec) layer of the model.                                                                                                            |
+| `nO`                        | int                                        | Output dimension, determined by the number of different labels. If not set, the the [`TextCategorizer`](/api/textcategorizer) component will set it when |
+| `begin_training` is called. |
 
 ### spacy.TextCatBOW.v1 {#TextCatBOW}
 
@@ -482,17 +478,17 @@ If the `nO` dimension is not set, the TextCategorizer component will set it when
 An ngram "bag-of-words" model. This architecture should run much faster than the
 others, but may not be as accurate, especially if texts are short.
 
-| Name                | Type  | Description                                                                                                                                 |
-| ------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `exclusive_classes` | bool  | Whether or not categories are mutually exclusive.                                                                                           |
-| `ngram_size`        | int   | Determines the maximum length of the n-grams in the BOW model. For instance, `ngram_size=3`would give unigram, trigram and bigram features. |
-| `no_output_layer`   | float | Whether or not to add an output layer to the model (`Softmax` activation if `exclusive_classes=True`, else `Logistic`.                      |
-| `nO`                | int   | Output dimension, determined by the number of different labels.                                                                             |
+| Name                        | Type  | Description                                                                                                                                              |
+| --------------------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `exclusive_classes`         | bool  | Whether or not categories are mutually exclusive.                                                                                                        |
+| `ngram_size`                | int   | Determines the maximum length of the n-grams in the BOW model. For instance, `ngram_size=3`would give unigram, trigram and bigram features.              |
+| `no_output_layer`           | float | Whether or not to add an output layer to the model (`Softmax` activation if `exclusive_classes=True`, else `Logistic`.                                   |
+| `nO`                        | int   | Output dimension, determined by the number of different labels. If not set, the the [`TextCategorizer`](/api/textcategorizer) component will set it when |
+| `begin_training` is called. |
 
-If the `nO` dimension is not set, the TextCategorizer component will set it when
-`begin_training` is called.
-
+<!-- TODO:
 ### spacy.TextCatLowData.v1 {#TextCatLowData}
+-->
 
 ## Entity linking architectures {#entitylinker source="spacy/ml/models/entity_linker.py"}
 
