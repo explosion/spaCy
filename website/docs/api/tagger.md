@@ -47,7 +47,7 @@ https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/tagger.pyx
 >
 > # Construction via create_pipe with custom model
 > config = {"model": {"@architectures": "my_tagger"}}
-> parser = nlp.add_pipe("tagger", config=config)
+> tagger = nlp.add_pipe("tagger", config=config)
 >
 > # Construction from class
 > from spacy.pipeline import Tagger
@@ -285,16 +285,14 @@ Add a new label to the pipe.
 > #### Example
 >
 > ```python
-> from spacy.symbols import POS
 > tagger = nlp.add_pipe("tagger")
-> tagger.add_label("MY_LABEL", {POS: "NOUN"})
+> tagger.add_label("MY_LABEL")
 > ```
 
-| Name        | Type             | Description                                                     |
-| ----------- | ---------------- | --------------------------------------------------------------- |
-| `label`     | str              | The label to add.                                               |
-| `values`    | `Dict[int, str]` | Optional values to map to the label, e.g. a tag map dictionary. |
-| **RETURNS** | int              | `0` if the label is already present, otherwise `1`.             |
+| Name        | Type | Description                                         |
+| ----------- | ---- | --------------------------------------------------- |
+| `label`     | str  | The label to add.                                   |
+| **RETURNS** | int  | `0` if the label is already present, otherwise `1`. |
 
 ## Tagger.to_disk {#to_disk tag="method"}
 
@@ -369,9 +367,7 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 
 ## Tagger.labels {#labels tag="property"}
 
-The labels currently added to the component. Note that even for a blank
-component, this will always include the built-in coarse-grained part-of-speech
-tags by default, e.g. `VERB`, `NOUN` and so on.
+The labels currently added to the component.
 
 > #### Example
 >
@@ -396,9 +392,8 @@ serialization by passing in the string names via the `exclude` argument.
 > data = tagger.to_disk("/path", exclude=["vocab"])
 > ```
 
-| Name      | Description                                                                                |
-| --------- | ------------------------------------------------------------------------------------------ |
-| `vocab`   | The shared [`Vocab`](/api/vocab).                                                          |
-| `cfg`     | The config file. You usually don't want to exclude this.                                   |
-| `model`   | The binary model data. You usually don't want to exclude this.                             |
-| `tag_map` | The [tag map](/usage/adding-languages#tag-map) mapping fine-grained to coarse-grained tag. |
+| Name    | Description                                                    |
+| ------- | -------------------------------------------------------------- |
+| `vocab` | The shared [`Vocab`](/api/vocab).                              |
+| `cfg`   | The config file. You usually don't want to exclude this.       |
+| `model` | The binary model data. You usually don't want to exclude this. |
