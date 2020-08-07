@@ -205,7 +205,9 @@ def CharacterEmbed(width: int, rows: int, nM: int, nC: int):
 
 
 @registry.architectures.register("spacy.MaxoutWindowEncoder.v1")
-def MaxoutWindowEncoder(width: int, window_size: int, maxout_pieces: int, depth: int) -> Model[List[Floats2d], List[Floats2d]]:
+def MaxoutWindowEncoder(
+    width: int, window_size: int, maxout_pieces: int, depth: int
+) -> Model[List[Floats2d], List[Floats2d]]:
     """Encode context using convolutions with maxout activation, layer
     normalization and residual connections.
 
@@ -235,7 +237,9 @@ def MaxoutWindowEncoder(width: int, window_size: int, maxout_pieces: int, depth:
 
 
 @registry.architectures.register("spacy.MishWindowEncoder.v1")
-def MishWindowEncoder(width: int, window_size: int, depth: int) -> Model[List[Floats2d], List[Floats2d]]:
+def MishWindowEncoder(
+    width: int, window_size: int, depth: int
+) -> Model[List[Floats2d], List[Floats2d]]:
     """Encode context using convolutions with mish activation, layer
     normalization and residual connections.
 
@@ -256,7 +260,9 @@ def MishWindowEncoder(width: int, window_size: int, depth: int) -> Model[List[Fl
 
 
 @registry.architectures.register("spacy.TorchBiLSTMEncoder.v1")
-def BiLSTMEncoder(width: int, depth: int, dropout: float) -> Model[List[Floats2d], List[Floats2d]]:
+def BiLSTMEncoder(
+    width: int, depth: int, dropout: float
+) -> Model[List[Floats2d], List[Floats2d]]:
     """Encode context using bidirectonal LSTM layers. Requires PyTorch.
 
     width (int): The input and output width. These are required to be the same,
