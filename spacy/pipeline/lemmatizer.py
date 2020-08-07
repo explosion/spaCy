@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any
 
 from thinc.api import Model
 
@@ -6,7 +6,6 @@ from .pipe import Pipe
 from ..errors import Errors
 from ..language import Language
 from ..lookups import Lookups, load_lookups
-from ..parts_of_speech import NAMES as UPOS_NAMES
 from ..scorer import Scorer
 from ..tokens import Doc, Token
 from ..vocab import Vocab
@@ -49,6 +48,14 @@ class Lemmatizer(Pipe):
 
     @classmethod
     def get_lookups_config(cls, mode: str) -> Dict:
+        """Returns the lookups configuration settings for a given mode for use
+        in Lemmatizer.load_lookups.
+
+        mode (str): The lemmatizer mode.
+        RETURNS (dict): The lookups configuration settings for this mode.
+
+        DOCS: https://spacy.io/api/lemmatizer#get_lookups_config
+        """
         if mode == "lookup":
             return {
                 "required_tables": ["lemma_lookup"],
@@ -62,6 +69,19 @@ class Lemmatizer(Pipe):
 
     @classmethod
     def load_lookups(cls, lang: str, mode: str, lookups: Optional[Lookups],) -> Lookups:
+        """Load and validate lookups tables. If the provided lookups is None,
+        load the default lookups tables according to the language and mode
+        settings. Confirm that all required tables for the language and mode
+        are present.
+
+        lang (str): The language code.
+        mode (str): The lemmatizer mode.
+        lookups (Lookups): The provided lookups, may be None if the default
+            lookups should be loaded.
+        RETURNS (Lookups): The Lookups object.
+
+        DOCS: https://spacy.io/api/lemmatizer#get_lookups_config
+        """
         config = cls.get_lookups_config(mode)
         required_tables = config.get("required_tables", [])
         optional_tables = config.get("optional_tables", [])
@@ -99,7 +119,9 @@ class Lemmatizer(Pipe):
         mode (str): The lemmatizer mode: "lookup", "rule". Defaults to "lookup".
         lookups (Lookups): The lookups object containing the (optional) tables
             such as "lemma_rules", "lemma_index", "lemma_exc" and
-            "lemma_lookup".
+            "lemma_lookup". Defaults to None
+
+        DOCS: https://spacy.io/api/lemmatizer#init
         """
         self.vocab = vocab
         self.model = model
@@ -154,6 +176,8 @@ class Lemmatizer(Pipe):
 
         token (Token): The token to lemmatize.
         RETURNS (list): The available lemmas for the string.
+
+        DOCS: https://spacy.io/api/lemmatizer#lookup_lemmatize
         """
         lookup_table = self.lookups.get_table("lemma_lookup", {})
         result = lookup_table.get(token.text, token.text)
@@ -166,20 +190,18 @@ class Lemmatizer(Pipe):
 
         token (Token): The token to lemmatize.
         RETURNS (list): The available lemmas for the string.
+
+        DOCS: https://spacy.io/api/lemmatizer#rule_lemmatize
         """
         cache_key = (token.orth, token.pos, token.morph)
         if cache_key in self.cache:
             return self.cache[cache_key]
         string = token.text
-        univ_pos = token.pos_
-        morphology = token.morph.to_dict()
-        if isinstance(univ_pos, int):
-            univ_pos = UPOS_NAMES.get(univ_pos, "X")
-        univ_pos = univ_pos.lower()
+        univ_pos = token.pos_.lower()
         if univ_pos in ("", "eol", "space"):
             return [string.lower()]
         # See Issue #435 for example of where this logic is requied.
-        if self.is_base_form(univ_pos, morphology):
+        if self.is_base_form(token):
             return [string.lower()]
         index_table = self.lookups.get_table("lemma_index", {})
         exc_table = self.lookups.get_table("lemma_exc", {})
@@ -228,10 +250,25 @@ class Lemmatizer(Pipe):
         self.cache[cache_key] = forms
         return forms
 
-    def is_base_form(self, univ_pos: str, morphology: Optional[dict] = None) -> bool:
+    def is_base_form(self, token: Token) -> bool:
+        """Check whether the token is a base form that does not need further
+        analysis for lemmatization.
+
+        token (Token): The token.
+        RETURNS (bool): Whether the token is a base form.
+
+        DOCS: https://spacy.io/api/lemmatizer#is_base_form
+        """
         return False
 
-    def score(self, examples, **kwargs):
+    def score(self, examples, **kwargs) -> Dict[str, Any]:
+        """Score a batch of examples.
+
+        examples (Iterable[Example]): The examples to score.
+        RETURNS (Dict[str, Any]): The scores.
+
+        DOCS: https://spacy.io/api/lemmatizer#score
+        """
         return Scorer.score_token_attr(examples, "lemma", **kwargs)
 
     def to_disk(self, path, *, exclude=tuple()):
