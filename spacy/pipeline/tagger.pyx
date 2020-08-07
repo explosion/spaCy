@@ -286,7 +286,7 @@ class Tagger(Pipe):
             sgd = self.create_optimizer()
         return sgd
 
-    def add_label(self, label, values=None):
+    def add_label(self, label):
         """Add a new label to the pipe.
 
         label (str): The label to add.
