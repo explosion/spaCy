@@ -177,28 +177,26 @@ run [`spacy pretrain`](/api/cli#pretrain).
 > #### Example
 >
 > ```python
-> from pathlib import Path
 > from spacy.tokens import DocBin
 > from spacy.gold import Corpus
-> output_file = Path(dir) / "output.spacy"
-> data = DocBin(docs=docs).to_bytes()
-> with output_file.open("wb") as file_:
->    file_.write(data)
-> reader = Corpus(output_file)
+>
+> doc_bin = DocBin(docs=docs)
+> doc_bin.to_disk("./data.spacy")
+> reader = Corpus("./data.spacy")
 > ```
 
-The main data format used in spaCy v3 is a binary format created by serializing
-a [`DocBin`](/api/docbin) object, which represents a collection of `Doc`
-objects. Typically, the extension for these binary files is `.spacy`, and they
-are used as input format for specifying a [training corpus](/api/corpus) and for
-spaCy's CLI [`train`](/api/cli#train) command.
+The main data format used in spaCy v3.0 is a **binary format** created by
+serializing a [`DocBin`](/api/docbin) object, which represents a collection of
+`Doc` objects. This means that you can train spaCy models using the same format
+it outputs: annotated `Doc` objects. The binary format is extremely **efficient
+in storage**, especially when packing multiple documents together.
 
-This binary format is extremely efficient in storage, especially when packing
-multiple documents together. 
-
-The built-in [`convert`](/api/cli#convert) command helps you convert spaCy's
-previous [JSON format](#json-input) to this new `DocBin` format. It also
-supports conversion of the `.conllu` format used by the
+Typically, the extension for these binary files is `.spacy`, and they are used
+as input format for specifying a [training corpus](/api/corpus) and for spaCy's
+CLI [`train`](/api/cli#train) command. The built-in
+[`convert`](/api/cli#convert) command helps you convert spaCy's previous
+[JSON format](#json-input) to the new binary format format. It also supports
+conversion of the `.conllu` format used by the
 [Universal Dependencies corpora](https://github.com/UniversalDependencies).
 
 ### JSON training format {#json-input tag="deprecated"}

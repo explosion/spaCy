@@ -39,7 +39,7 @@ class Corpus:
 
     def __init__(
         self,
-        path,
+        path: Union[str, Path],
         *,
         limit: int = 0,
         gold_preproc: bool = False,
