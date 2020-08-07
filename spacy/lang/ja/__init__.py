@@ -38,8 +38,6 @@ def create_tokenizer(split_mode: Optional[str] = None):
 class JapaneseTokenizer(DummyTokenizer):
     def __init__(self, nlp: Language, split_mode: Optional[str] = None) -> None:
         self.vocab = nlp.vocab
-        # TODO: is this the right way to do it?
-        self.vocab.morphology.load_tag_map(TAG_MAP)
         self.split_mode = split_mode
         self.tokenizer = try_sudachi_import(self.split_mode)
 

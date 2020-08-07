@@ -1,32 +1,16 @@
-from typing import Callable
-from thinc.api import Config
+from typing import Optional
+
+from thinc.api import Model
 
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
-from ...util import registry
-from ...language import Language
 from .lemmatizer import UkrainianLemmatizer
-
-
-DEFAULT_CONFIG = """
-[nlp]
-
-[nlp.lemmatizer]
-@lemmatizers = "spacy.uk.UkrainianLemmatizer"
-"""
-
-
-@registry.lemmatizers("spacy.uk.UkrainianLemmatizer")
-def create_ukrainian_lemmatizer() -> Callable[[Language], UkrainianLemmatizer]:
-    def lemmatizer_factory(nlp: Language) -> UkrainianLemmatizer:
-        return UkrainianLemmatizer()
-
-    return lemmatizer_factory
+from ...language import Language
+from ...lookups import Lookups
 
 
 class UkrainianDefaults(Language.Defaults):
-    config = Config().from_str(DEFAULT_CONFIG)
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     lex_attr_getters = LEX_ATTRS
     stop_words = STOP_WORDS
@@ -35,6 +19,23 @@ class UkrainianDefaults(Language.Defaults):
 class Ukrainian(Language):
     lang = "uk"
     Defaults = UkrainianDefaults
+
+
+@Ukrainian.factory(
+    "lemmatizer",
+    assigns=["token.lemma"],
+    default_config={"model": None, "mode": "pymorphy2", "lookups": None},
+    scores=["lemma_acc"],
+    default_score_weights={"lemma_acc": 1.0},
+)
+def make_lemmatizer(
+    nlp: Language,
+    model: Optional[Model],
+    name: str,
+    mode: str,
+    lookups: Optional[Lookups],
+):
+    return UkrainianLemmatizer(nlp.vocab, model, name, mode=mode, lookups=lookups)
 
 
 __all__ = ["Ukrainian"]

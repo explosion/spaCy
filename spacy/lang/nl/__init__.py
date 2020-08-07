@@ -1,5 +1,6 @@
-from typing import Callable
-from thinc.api import Config
+from typing import Optional
+
+from thinc.api import Model
 
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
@@ -7,32 +8,11 @@ from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_INFIXES
 from .punctuation import TOKENIZER_SUFFIXES
 from .lemmatizer import DutchLemmatizer
-from ...lookups import load_lookups
+from ...lookups import Lookups
 from ...language import Language
-from ...util import registry
-
-
-DEFAULT_CONFIG = """
-[nlp]
-
-[nlp.lemmatizer]
-@lemmatizers = "spacy.nl.DutchLemmatizer"
-"""
-
-
-@registry.lemmatizers("spacy.nl.DutchLemmatizer")
-def create_lemmatizer() -> Callable[[Language], DutchLemmatizer]:
-    tables = ["lemma_rules", "lemma_index", "lemma_exc", "lemma_lookup"]
-
-    def lemmatizer_factory(nlp: Language) -> DutchLemmatizer:
-        lookups = load_lookups(lang=nlp.lang, tables=tables)
-        return DutchLemmatizer(lookups=lookups)
-
-    return lemmatizer_factory
 
 
 class DutchDefaults(Language.Defaults):
-    config = Config().from_str(DEFAULT_CONFIG)
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     prefixes = TOKENIZER_PREFIXES
     infixes = TOKENIZER_INFIXES
@@ -44,6 +24,24 @@ class DutchDefaults(Language.Defaults):
 class Dutch(Language):
     lang = "nl"
     Defaults = DutchDefaults
+
+
+@Dutch.factory(
+    "lemmatizer",
+    assigns=["token.lemma"],
+    default_config={"model": None, "mode": "rule", "lookups": None},
+    scores=["lemma_acc"],
+    default_score_weights={"lemma_acc": 1.0},
+)
+def make_lemmatizer(
+    nlp: Language,
+    model: Optional[Model],
+    name: str,
+    mode: str,
+    lookups: Optional[Lookups],
+):
+    lookups = DutchLemmatizer.load_lookups(nlp.lang, mode, lookups)
+    return DutchLemmatizer(nlp.vocab, model, name, mode=mode, lookups=lookups)
 
 
 __all__ = ["Dutch"]

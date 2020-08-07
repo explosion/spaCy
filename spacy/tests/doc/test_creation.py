@@ -1,21 +1,12 @@
 import pytest
 from spacy.vocab import Vocab
 from spacy.tokens import Doc
-from spacy.lemmatizer import Lemmatizer
-from spacy.lookups import Lookups
 from spacy import util
 
 
 @pytest.fixture
-def lemmatizer():
-    lookups = Lookups()
-    lookups.add_table("lemma_lookup", {"dogs": "dog", "boxen": "box", "mice": "mouse"})
-    return Lemmatizer(lookups)
-
-
-@pytest.fixture
-def vocab(lemmatizer):
-    return Vocab(lemmatizer=lemmatizer)
+def vocab():
+    return Vocab()
 
 
 def test_empty_doc(vocab):
@@ -28,14 +19,6 @@ def test_single_word(vocab):
     assert doc.text == "a "
     doc = Doc(vocab, words=["a"], spaces=[False])
     assert doc.text == "a"
-
-
-def test_lookup_lemmatization(vocab):
-    doc = Doc(vocab, words=["dogs", "dogses"])
-    assert doc[0].text == "dogs"
-    assert doc[0].lemma_ == "dog"
-    assert doc[1].text == "dogses"
-    assert doc[1].lemma_ == "dogses"
 
 
 def test_create_from_words_and_text(vocab):

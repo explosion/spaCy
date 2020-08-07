@@ -9,11 +9,10 @@ from .lexeme cimport EMPTY_LEXEME, OOV_RANK
 from .lexeme cimport Lexeme
 from .typedefs cimport attr_t
 from .tokens.token cimport Token
-from .attrs cimport LANG, ORTH, TAG, POS
+from .attrs cimport LANG, ORTH
 
 from .compat import copy_reg
 from .errors import Errors
-from .lemmatizer import Lemmatizer
 from .attrs import intify_attrs, NORM, IS_STOP
 from .vectors import Vectors
 from .util import registry
@@ -23,7 +22,7 @@ from .lang.norm_exceptions import BASE_NORMS
 from .lang.lex_attrs import LEX_ATTRS, is_stop, get_lang
 
 
-def create_vocab(lang, defaults, lemmatizer=None, vectors_name=None, load_data=True):
+def create_vocab(lang, defaults, vectors_name=None, load_data=True):
     # If the spacy-lookups-data package is installed, we pre-populate the lookups
     # with lexeme data, if available
     if load_data:
@@ -43,7 +42,6 @@ def create_vocab(lang, defaults, lemmatizer=None, vectors_name=None, load_data=T
     )
     return Vocab(
         lex_attr_getters=lex_attrs,
-        lemmatizer=lemmatizer,
         lookups=lookups,
         writing_system=defaults.writing_system,
         get_noun_chunks=defaults.syntax_iterators.get("noun_chunks"),
@@ -58,17 +56,13 @@ cdef class Vocab:
 
     DOCS: https://spacy.io/api/vocab
     """
-    def __init__(self, lex_attr_getters=None, lemmatizer=None,
-                 strings=tuple(), lookups=None, tag_map={},
+    def __init__(self, lex_attr_getters=None, strings=tuple(), lookups=None,
                  oov_prob=-20., vectors_name=None, writing_system={},
                  get_noun_chunks=None, **deprecated_kwargs):
         """Create the vocabulary.
 
         lex_attr_getters (dict): A dictionary mapping attribute IDs to
             functions to compute them. Defaults to `None`.
-        tag_map (dict): Dictionary mapping fine-grained tags to coarse-grained
-            parts-of-speech, and optionally morphological attributes.
-        lemmatizer (object): A lemmatizer. Defaults to `None`.
         strings (StringStore): StringStore that maps strings to integers, and
             vice versa.
         lookups (Lookups): Container for large lookup tables and dictionaries.
@@ -78,8 +72,6 @@ cdef class Vocab:
         lex_attr_getters = lex_attr_getters if lex_attr_getters is not None else {}
         if lookups in (None, True, False):
             lookups = Lookups()
-        if lemmatizer in (None, True, False):
-            lemmatizer = Lemmatizer(lookups)
         self.cfg = {'oov_prob': oov_prob}
         self.mem = Pool()
         self._by_orth = PreshMap()
@@ -89,7 +81,7 @@ cdef class Vocab:
             for string in strings:
                 _ = self[string]
         self.lex_attr_getters = lex_attr_getters
-        self.morphology = Morphology(self.strings, tag_map, lemmatizer)
+        self.morphology = Morphology(self.strings)
         self.vectors = Vectors(name=vectors_name)
         self.lookups = lookups
         self.writing_system = writing_system
@@ -268,12 +260,6 @@ cdef class Vocab:
             # Set the special tokens up to have arbitrary attributes
             lex = <LexemeC*>self.get_by_orth(self.mem, props[ORTH])
             token.lex = lex
-            if TAG in props:
-                self.morphology.assign_tag(token, props[TAG])
-            elif POS in props:
-                # Don't allow POS to be set without TAG -- this causes problems,
-                # see #1773
-                props.pop(POS)
             for attr_id, value in props.items():
                 Token.set_struct_attr(token, attr_id, value)
                 # NORM is the only one that overlaps between the two
