@@ -1089,9 +1089,10 @@ In situations like that, you often want to align the tokenization so that you
 can merge annotations from different sources together, or take vectors predicted
 by a
 [pretrained BERT model](https://github.com/huggingface/pytorch-transformers) and
-apply them to spaCy tokens. spaCy's [`Alignment`](/api/example#alignment-object) object
-allows the one-to-one mappings of token indices in both directions as well as
-taking into account indices where multiple tokens align to one single token.
+apply them to spaCy tokens. spaCy's [`Alignment`](/api/example#alignment-object)
+object allows the one-to-one mappings of token indices in both directions as
+well as taking into account indices where multiple tokens align to one single
+token.
 
 > #### ✏️ Things to try
 >
@@ -1490,7 +1491,7 @@ language name, and even train models with it and refer to it in your
 >
 > ```bash
 > ### {wrap="true"}
-> $ python -m spacy train train.spacy dev.spacy config.cfg --code code.py
+> $ python -m spacy train config.cfg --code code.py
 > ```
 
 ```python

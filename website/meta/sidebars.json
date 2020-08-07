@@ -85,6 +85,7 @@
                     { "text": "Lemmatizer", "url": "/api/lemmatizer" },
                     { "text": "Morphologizer", "url": "/api/morphologizer" },
                     { "text": "Tagger", "url": "/api/tagger" },
+                    { "text": "AttributeRuler", "url": "/api/attributeruler" },
                     { "text": "DependencyParser", "url": "/api/dependencyparser" },
                     { "text": "EntityRecognizer", "url": "/api/entityrecognizer" },
                     { "text": "EntityRuler", "url": "/api/entityruler" },

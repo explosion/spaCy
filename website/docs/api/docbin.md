@@ -125,7 +125,8 @@ Serialize the `DocBin`'s annotations to a bytestring.
 > #### Example
 >
 > ```python
-> doc_bin = DocBin(attrs=["DEP", "HEAD"])
+> docs = [nlp("Hello world!")]
+> doc_bin = DocBin(docs=docs)
 > doc_bin_bytes = doc_bin.to_bytes()
 > ```
 
@@ -148,3 +149,36 @@ Deserialize the `DocBin`'s annotations from a bytestring.
 | ------------ | -------- | ---------------------- |
 | `bytes_data` | bytes    | The data to load from. |
 | **RETURNS**  | `DocBin` | The loaded `DocBin`.   |
+
+## DocBin.to_disk {#to_disk tag="method" new="3"}
+
+Save the serialized `DocBin` to a file. Typically uses the `.spacy` extension
+and the result can be used as the input data for
+[`spacy train`](/api/cli#train).
+
+> #### Example
+>
+> ```python
+> docs = [nlp("Hello world!")]
+> doc_bin = DocBin(docs=docs)
+> doc_bin.to_disk("./data.spacy")
+> ```
+
+| Argument | Type         | Description                                           |
+| -------- | ------------ | ----------------------------------------------------- |
+| `path`   | str / `Path` | The file path, typically with the `.spacy` extension. |
+
+## DocBin.from_disk {#from_disk tag="method" new="3"}
+
+Load a serialized `DocBin` from a file. Typically uses the `.spacy` extension.
+
+> #### Example
+>
+> ```python
+> doc_bin = DocBin().from_disk("./data.spacy")
+> ```
+
+| Argument    | Type         | Description                                           |
+| ----------- | ------------ | ----------------------------------------------------- |
+| `path`      | str / `Path` | The file path, typically with the `.spacy` extension. |
+| **RETURNS** | `DocBin`     | The loaded `DocBin`.                                  |

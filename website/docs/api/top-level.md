@@ -4,7 +4,7 @@ menu:
   - ['spacy', 'spacy']
   - ['displacy', 'displacy']
   - ['registry', 'registry']
-  - ['Readers & Batchers', 'readers-batchers']
+  - ['Batchers', 'batchers']
   - ['Data & Alignment', 'gold']
   - ['Utility Functions', 'util']
 ---
@@ -299,13 +299,14 @@ factories.
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `architectures`   | Registry for functions that create [model architectures](/api/architectures). Can be used to register custom model architectures and reference them in the `config.cfg`.                                                                          |
 | `factories`       | Registry for functions that create [pipeline components](/usage/processing-pipelines#custom-components). Added automatically when you use the `@spacy.component` decorator and also reads from [entry points](/usage/saving-loading#entry-points) |
+| `tokenizers`      | Registry for tokenizer factories. Registered functions should return a callback that receives the `nlp` object and returns a [`Tokenizer`](/api/tokenizer) or a custom callable.                                                                  |
 | `languages`       | Registry for language-specific `Language` subclasses. Automatically reads from [entry points](/usage/saving-loading#entry-points).                                                                                                                |
 | `lookups`         | Registry for large lookup tables available via `vocab.lookups`.                                                                                                                                                                                   |
 | `displacy_colors` | Registry for custom color scheme for the [`displacy` NER visualizer](/usage/visualizers). Automatically reads from [entry points](/usage/saving-loading#entry-points).                                                                            |
 | `assets`          |                                                                                                                                                                                                                                                   |
 | `callbacks`       | Registry for custom callbacks to [modify the `nlp` object](/usage/training#custom-code-nlp-callbacks) before training.                                                                                                                            |
-| `readers`         | Registry for training and evaluation [data readers](#readers-batchers).                                                                                                                                                                           |
-| `batchers`        | Registry for training and evaluation [data batchers](#readers-batchers).                                                                                                                                                                          |
+| `readers`         | Registry for training and evaluation data readers like [`Corpus`](/api/corpus).                                                                                                                                                                   |
+| `batchers`        | Registry for training and evaluation [data batchers](#batchers).                                                                                                                                                                                  |
 | `optimizers`      | Registry for functions that create [optimizers](https://thinc.ai/docs/api-optimizers).                                                                                                                                                            |
 | `schedules`       | Registry for functions that create [schedules](https://thinc.ai/docs/api-schedules).                                                                                                                                                              |
 | `layers`          | Registry for functions that create [layers](https://thinc.ai/docs/api-layers).                                                                                                                                                                    |
@@ -337,42 +338,9 @@ See the [`Transformer`](/api/transformer) API reference and
 | [`span_getters`](/api/transformer#span_getters)             | Registry for functions that take a batch of `Doc` objects and return a list of `Span` objects to process by the transformer, e.g. sentences.                                                                                                      |
 | [`annotation_setters`](/api/transformer#annotation_setters) | Registry for functions that create annotation setters. Annotation setters are functions that take a batch of `Doc` objects and a [`FullTransformerBatch`](/api/transformer#fulltransformerbatch) and can set additional annotations on the `Doc`. |
 
-## Data readers and batchers {#readers-batchers new="3"}
+## Batchers {#batchers source="spacy/gold/batchers.py" new="3"}
 
-<!-- TODO: -->
-
-### spacy.Corpus.v1 {#corpus tag="registered function" source="spacy/gold/corpus.py"}
-
-Registered function that creates a [`Corpus`](/api/corpus) of training or
-evaluation data. It takes the same arguments as the `Corpus` class and returns a
-callable that yields [`Example`](/api/example) objects. You can replace it with
-your own registered function in the [`@readers` registry](#regsitry) to
-customize the data loading and streaming.
-
-> #### Example config
->
-> ```ini
-> [paths]
-> train = "corpus/train.spacy"
->
-> [training.train_corpus]
-> @readers = "spacy.Corpus.v1"
-> path = ${paths:train}
-> gold_preproc = false
-> max_length = 0
-> limit = 0
-> ```
-
-| Name            | Type   | Description                                                                                                                                     |
-| --------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `path`          | `Path` | The directory or filename to read from. Expects data in spaCy's binary [`.spacy` format](/api/data-formats#binary-training).                    |
-|  `gold_preproc` | bool   | Whether to set up the Example object with gold-standard sentences and tokens for the predictions. See [`Corpus`](/api/corpus#init) for details. |
-| `max_length`    | int    | Maximum document length. Longer documents will be split into sentences, if sentence boundaries are available. Defaults to `0` for no limit.     |
-| `limit`         | int    | Limit corpus to a subset of examples, e.g. for debugging. Defaults to `0` for no limit.                                                         |
-
-### Batchers {#batchers source="spacy/gold/batchers.py"}
-
-<!-- TODO: -->
+<!-- TODO: intro and also describe signature of functions -->
 
 #### batch_by_words.v1 {#batch_by_words tag="registered function"}
 
@@ -445,28 +413,6 @@ themselves, or be discarded if `discard_oversize` is set to `True`. The argument
 | `get_length`       | `Callable[[Any], int]` | Optional function that receives a sequence and returns its length. Defaults to the built-in `len()` if not set.                     |
 
 ## Training data and alignment {#gold source="spacy/gold"}
-
-### gold.docs_to_json {#docs_to_json tag="function"}
-
-Convert a list of Doc objects into the
-[JSON-serializable format](/api/data-formats#json-input) used by the
-[`spacy train`](/api/cli#train) command. Each input doc will be treated as a
-'paragraph' in the output doc.
-
-> #### Example
->
-> ```python
-> from spacy.gold import docs_to_json
->
-> doc = nlp("I like London")
-> json_data = docs_to_json([doc])
-> ```
-
-| Name        | Type             | Description                                |
-| ----------- | ---------------- | ------------------------------------------ |
-| `docs`      | iterable / `Doc` | The `Doc` object(s) to convert.            |
-| `id`        | int              | ID to assign to the JSON. Defaults to `0`. |
-| **RETURNS** | dict             | The data in spaCy's JSON format.           |
 
 ### gold.biluo_tags_from_offsets {#biluo_tags_from_offsets tag="function"}
 

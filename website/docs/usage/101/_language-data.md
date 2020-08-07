@@ -10,8 +10,9 @@ The **shared language data** in the directory root includes rules that can be
 generalized across languages – for example, rules for basic punctuation, emoji,
 emoticons and single-letter abbreviations. The **individual language data** in a
 submodule contains rules that are only relevant to a particular language. It
-also takes care of putting together all components and creating the `Language`
-subclass – for example, `English` or `German`.
+also takes care of putting together all components and creating the
+[`Language`](/api/language) subclass – for example, `English` or `German`. The
+values are defined in the [`Language.Defaults`](/api/language#defaults).
 
 > ```python
 > from spacy.lang.en import English
@@ -20,14 +21,6 @@ subclass – for example, `English` or `German`.
 > nlp_en = English()  # Includes English data
 > nlp_de = German()  # Includes German data
 > ```
-
-<!-- TODO: upgrade graphic
-
-![Language data architecture](../../images/language_data.svg)
-
--->
-
-<!-- TODO: remove this table in favor of more specific Language.Defaults docs in linguistic features? -->
 
 | Name                                                                               | Description                                                                                                                                              |
 | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |

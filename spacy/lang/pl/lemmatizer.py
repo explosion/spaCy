@@ -1,7 +1,7 @@
-from typing import Optional, List, Dict
+from typing import List, Dict
 
-from ...lemmatizer import Lemmatizer
-from ...parts_of_speech import NAMES
+from ...pipeline import Lemmatizer
+from ...tokens import Token
 
 
 class PolishLemmatizer(Lemmatizer):
@@ -9,12 +9,30 @@ class PolishLemmatizer(Lemmatizer):
     # dictionary (morfeusz.sgjp.pl/en) by Institute of Computer Science PAS.
     # It utilizes some prefix based improvements for verb and adjectives
     # lemmatization, as well as case-sensitive lemmatization for nouns.
-    def __call__(
-        self, string: str, univ_pos: str, morphology: Optional[dict] = None
-    ) -> List[str]:
-        if isinstance(univ_pos, int):
-            univ_pos = NAMES.get(univ_pos, "X")
-        univ_pos = univ_pos.upper()
+
+    @classmethod
+    def get_lookups_config(cls, mode: str) -> Dict:
+        if mode == "lookup":
+            return {
+                "required_tables": [
+                    "lemma_lookup_adj",
+                    "lemma_lookup_adp",
+                    "lemma_lookup_adv",
+                    "lemma_lookup_aux",
+                    "lemma_lookup_noun",
+                    "lemma_lookup_num",
+                    "lemma_lookup_part",
+                    "lemma_lookup_pron",
+                    "lemma_lookup_verb",
+                ]
+            }
+        else:
+            return super().get_lookups_config(mode)
+
+    def lookup_lemmatize(self, token: Token) -> List[str]:
+        string = token.text
+        univ_pos = token.pos_
+        morphology = token.morph.to_dict()
         lookup_pos = univ_pos.lower()
         if univ_pos == "PROPN":
             lookup_pos = "noun"
@@ -71,15 +89,3 @@ class PolishLemmatizer(Lemmatizer):
                 return [lookup_table[string]]
             return [string.lower()]
         return [lookup_table.get(string, string)]
-
-    def lookup(self, string: str, orth: Optional[int] = None) -> str:
-        return string.lower()
-
-    def lemmatize(
-        self,
-        string: str,
-        index: Dict[str, List[str]],
-        exceptions: Dict[str, Dict[str, List[str]]],
-        rules: Dict[str, List[List[str]]],
-    ) -> List[str]:
-        raise NotImplementedError

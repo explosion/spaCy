@@ -30,8 +30,8 @@ bow_model_config = """
 [model]
 @architectures = "spacy.TextCatBOW.v1"
 exclusive_classes = false
-ngram_size: 1
-no_output_layer: false
+ngram_size = 1
+no_output_layer = false
 """
 
 cnn_model_config = """
@@ -48,7 +48,6 @@ embed_size = 2000
 window_size = 1
 maxout_pieces = 3
 subword_features = true
-dropout = null
 """
 
 

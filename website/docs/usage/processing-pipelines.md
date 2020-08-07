@@ -228,15 +228,12 @@ available pipeline components and component functions.
 | `entity_linker` | [`EntityLinker`](/api/entitylinker)             | Assign knowledge base IDs to named entities. Should be added after the entity recognizer. |
 | `entity_ruler`  | [`EntityRuler`](/api/entityruler)               | Assign named entities based on pattern rules and dictionaries.                            |
 | `textcat`       | [`TextCategorizer`](/api/textcategorizer)       | Assign text categories.                                                                   |
+| `lemmatizer`    | [`Lemmatizer`](/api/lemmatizer)                 | Assign base forms to words.                                                               |
 | `morphologizer` | [`Morphologizer`](/api/morphologizer)           | Assign morphological features and coarse-grained POS tags.                                |
 | `senter`        | [`SentenceRecognizer`](/api/sentencerecognizer) | Assign sentence boundaries.                                                               |
 | `sentencizer`   | [`Sentencizer`](/api/sentencizer)               | Add rule-based sentence segmentation without the dependency parse.                        |
 | `tok2vec`       | [`Tok2Vec`](/api/tok2vec)                       |                                                                                           |
 | `transformer`   | [`Transformer`](/api/transformer)               | Assign the tokens and outputs of a transformer model.                                     |
-
-<!-- TODO: finish and update with more components -->
-
-<!-- TODO: explain default config and factories -->
 
 ### Disabling and modifying pipeline components {#disabling}
 
@@ -380,8 +377,9 @@ table instead of only returning the structured data.
 
 > #### ✏️ Things to try
 >
-> 1. Add the components `"ner"` and `"sentencizer"` _before_ the entity linker.
->    The analysis should now show no problems, because requirements are met.
+> 1. Add the components `"ner"` and `"sentencizer"` _before_ the
+>    `"entity_linker"`. The analysis should now show no problems, because
+>    requirements are met.
 
 ```python
 ### {executable="true"}

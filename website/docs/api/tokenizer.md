@@ -5,9 +5,20 @@ tag: class
 source: spacy/tokenizer.pyx
 ---
 
+> #### Default config
+>
+> ```ini
+> [nlp.tokenizer]
+> @tokenizers = "spacy.Tokenizer.v1"
+> ```
+
 Segment text, and create `Doc` objects with the discovered segment boundaries.
 For a deeper understanding, see the docs on
 [how spaCy's tokenizer works](/usage/linguistic-features#how-tokenizer-works).
+The tokenizer is typically created automatically when the a
+[`Language`](/api/language) subclass is initialized and it reads its settings
+like punctuation and special case rules from the
+[`Language.Defaults`](/api/language#defaults) provided by the language subclass.
 
 ## Tokenizer.\_\_init\_\_ {#init tag="method"}
 

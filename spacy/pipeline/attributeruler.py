@@ -17,13 +17,18 @@ MatcherPatternType = List[Dict[Union[int, str], Any]]
 AttributeRulerPatternType = Dict[str, Union[MatcherPatternType, Dict, int]]
 
 
-@Language.factory("attribute_ruler")
+@Language.factory(
+    "attribute_ruler", default_config={"pattern_dicts": None, "validate": False}
+)
 def make_attribute_ruler(
     nlp: Language,
     name: str,
-    pattern_dicts: Optional[Iterable[AttributeRulerPatternType]] = None,
+    pattern_dicts: Optional[Iterable[AttributeRulerPatternType]],
+    validate: bool,
 ):
-    return AttributeRuler(nlp.vocab, name, pattern_dicts=pattern_dicts)
+    return AttributeRuler(
+        nlp.vocab, name, pattern_dicts=pattern_dicts, validate=validate
+    )
 
 
 class AttributeRuler(Pipe):
@@ -39,6 +44,7 @@ class AttributeRuler(Pipe):
         name: str = "attribute_ruler",
         *,
         pattern_dicts: Optional[Iterable[AttributeRulerPatternType]] = None,
+        validate: bool = False,
     ) -> None:
         """Initialize the AttributeRuler.
 
@@ -54,7 +60,7 @@ class AttributeRuler(Pipe):
         """
         self.name = name
         self.vocab = vocab
-        self.matcher = Matcher(self.vocab)
+        self.matcher = Matcher(self.vocab, validate=validate)
         self.attrs = []
         self._attrs_unnormed = []  # store for reference
         self.indices = []
@@ -63,7 +69,7 @@ class AttributeRuler(Pipe):
             self.add_patterns(pattern_dicts)
 
     def __call__(self, doc: Doc) -> Doc:
-        """Apply the attributeruler to a Doc and set all attribute exceptions.
+        """Apply the AttributeRuler to a Doc and set all attribute exceptions.
 
         doc (Doc): The document to process.
         RETURNS (Doc): The processed Doc.
@@ -89,9 +95,31 @@ class AttributeRuler(Pipe):
             set_token_attrs(token, attrs)
         return doc
 
+    def pipe(self, stream, *, batch_size=128):
+        """Apply the pipe to a stream of documents. This usually happens under
+        the hood when the nlp object is called on a text and all components are
+        applied to the Doc.
+
+        stream (Iterable[Doc]): A stream of documents.
+        batch_size (int): The number of documents to buffer.
+        YIELDS (Doc): Processed documents in order.
+
+        DOCS: https://spacy.io/attributeruler/pipe#pipe
+        """
+        for doc in stream:
+            doc = self(doc)
+            yield doc
+
     def load_from_tag_map(
         self, tag_map: Dict[str, Dict[Union[int, str], Union[int, str]]]
     ) -> None:
+        """Load attribute ruler patterns from a tag map.
+
+        tag_map (dict): The tag map that maps fine-grained tags to
+            coarse-grained tags and morphological features.
+
+        DOCS: https://spacy.io/api/attributeruler#load_from_morph_rules
+        """
         for tag, attrs in tag_map.items():
             pattern = [{"TAG": tag}]
             attrs, morph_attrs = _split_morph_attrs(attrs)
@@ -102,6 +130,14 @@ class AttributeRuler(Pipe):
     def load_from_morph_rules(
         self, morph_rules: Dict[str, Dict[str, Dict[Union[int, str], Union[int, str]]]]
     ) -> None:
+        """Load attribute ruler patterns from morph rules.
+
+        morph_rules (dict): The morph rules that map token text and
+            fine-grained tags to coarse-grained tags, lemmas and morphological
+            features.
+
+        DOCS: https://spacy.io/api/attributeruler#load_from_morph_rules
+        """
         for tag in morph_rules:
             for word in morph_rules[tag]:
                 pattern = [{"ORTH": word, "TAG": tag}]
@@ -133,11 +169,20 @@ class AttributeRuler(Pipe):
         self.indices.append(index)
 
     def add_patterns(self, pattern_dicts: Iterable[AttributeRulerPatternType]) -> None:
+        """Add patterns from a list of pattern dicts with the keys as the
+        arguments to AttributeRuler.add.
+        pattern_dicts (Iterable[dict]): A list of pattern dicts with the keys
+            as the arguments to AttributeRuler.add (patterns/attrs/index) to
+            add as patterns.
+
+        DOCS: https://spacy.io/api/attributeruler#add_patterns
+        """
         for p in pattern_dicts:
             self.add(**p)
 
     @property
     def patterns(self) -> List[AttributeRulerPatternType]:
+        """All the added patterns."""
         all_patterns = []
         for i in range(len(self.attrs)):
             p = {}
@@ -148,7 +193,7 @@ class AttributeRuler(Pipe):
         return all_patterns
 
     def to_bytes(self, exclude: Iterable[str] = tuple()) -> bytes:
-        """Serialize the attributeruler to a bytestring.
+        """Serialize the AttributeRuler to a bytestring.
 
         exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (bytes): The serialized object.
@@ -164,7 +209,7 @@ class AttributeRuler(Pipe):
         return util.to_bytes(serialize, exclude)
 
     def from_bytes(self, bytes_data: bytes, exclude: Iterable[str] = tuple()):
-        """Load the attributeruler from a bytestring.
+        """Load the AttributeRuler from a bytestring.
 
         bytes_data (bytes): The data to load.
         exclude (Iterable[str]): String names of serialization fields to exclude.
@@ -200,7 +245,7 @@ class AttributeRuler(Pipe):
         return self
 
     def to_disk(self, path: Union[Path, str], exclude: Iterable[str] = tuple()) -> None:
-        """Serialize the attributeruler to disk.
+        """Serialize the AttributeRuler to disk.
 
         path (Union[Path, str]): A path to a directory.
         exclude (Iterable[str]): String names of serialization fields to exclude.
@@ -218,7 +263,7 @@ class AttributeRuler(Pipe):
     def from_disk(
         self, path: Union[Path, str], exclude: Iterable[str] = tuple()
     ) -> None:
-        """Load the attributeruler from disk.
+        """Load the AttributeRuler from disk.
 
         path (Union[Path, str]): A path to a directory.
         exclude (Iterable[str]): String names of serialization fields to exclude.

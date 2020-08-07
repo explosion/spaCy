@@ -25,12 +25,12 @@ function getRawContent(ref) {
 }
 
 const Quickstart = ({
-    data,
+    data = [],
     title,
     description,
-    copy,
+    copy = true,
     download,
-    id,
+    id = 'quickstart',
     setters = {},
     hidePrompts,
     children,
@@ -240,12 +240,6 @@ const Quickstart = ({
             </div>
         </Section>
     )
-}
-
-Quickstart.defaultProps = {
-    data: [],
-    id: 'quickstart',
-    copy: true,
 }
 
 Quickstart.propTypes = {

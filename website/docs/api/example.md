@@ -244,8 +244,7 @@ accuracy of predicted entities against the original gold-standard annotation.
 
 ## Example.to_dict {#to_dict tag="method"}
 
-Return a
-[hierarchical dictionary representation](/api/data-formats#dict-hierarch) of the
+Return a [dictionary representation](/api/data-formats#dict-input) of the
 reference annotation contained in this `Example`.
 
 > #### Example
@@ -256,7 +255,7 @@ reference annotation contained in this `Example`.
 
 | Name        | Type             | Description                                            |
 | ----------- | ---------------- | ------------------------------------------------------ |
-| **RETURNS** | `Dict[str, obj]` | Dictionary representation of the reference annotation. |
+| **RETURNS** | `Dict[str, Any]` | Dictionary representation of the reference annotation. |
 
 ## Example.split_sents {#split_sents tag="method"}
 

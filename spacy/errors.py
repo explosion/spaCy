@@ -169,9 +169,9 @@ class Errors:
             "training a named entity recognizer, also make sure that none of "
             "your annotated entity spans have leading or trailing whitespace "
             "or punctuation. "
-            "You can also use the experimental `debug-data` command to "
+            "You can also use the experimental `debug data` command to "
             "validate your JSON-formatted training data. For details, run:\n"
-            "python -m spacy debug-data --help")
+            "python -m spacy debug data --help")
     E025 = ("String is too long: {length} characters. Max is 2**30.")
     E026 = ("Error accessing token at position {i}: out of bounds in Doc of "
             "length {length}.")
@@ -510,7 +510,7 @@ class Errors:
     E952 = ("The section '{name}' is not a valid section in the provided config.")
     E953 = ("Mismatched IDs received by the Tok2Vec listener: {id1} vs. {id2}")
     E954 = ("The Tok2Vec listener did not receive a valid input.")
-    E955 = ("Can't find table '{table}' for language '{lang}' in spacy-lookups-data.")
+    E955 = ("Can't find table(s) '{table}' for language '{lang}' in spacy-lookups-data.")
     E956 = ("Can't find component '{name}' in [components] block in the config. "
             "Available components: {opts}")
     E957 = ("Writing directly to Language.factories isn't needed anymore in "
@@ -633,6 +633,11 @@ class Errors:
     E1001 = ("Target token outside of matched span for match with tokens "
              "'{span}' and offset '{index}' matched by patterns '{patterns}'.")
     E1002 = ("Span index out of range.")
+    E1003 = ("Unsupported lemmatizer mode '{mode}'.")
+    E1004 = ("Missing lemmatizer table(s) found for lemmatizer mode '{mode}'. "
+             "Required tables '{tables}', found '{found}'. If you are not "
+             "providing custom lookups, make sure you have the package "
+             "spacy-lookups-data installed.")
 
 
 @add_codes

@@ -48,7 +48,6 @@ window_size = 1
 embed_size = 2000
 maxout_pieces = 3
 subword_features = true
-dropout = null
 
 [components.tagger]
 factory = "tagger"
@@ -78,7 +77,6 @@ embed_size = 5555
 window_size = 1
 maxout_pieces = 7
 subword_features = false
-dropout = null
 """
 
 

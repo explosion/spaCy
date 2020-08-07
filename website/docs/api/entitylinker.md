@@ -9,6 +9,13 @@ api_string_name: entity_linker
 api_trainable: true
 ---
 
+An `EntityLinker` component disambiguates textual mentions (tagged as named
+entities) to unique identifiers, grounding the named entities into the "real
+world". It requires a `KnowledgeBase`, as well as a function to generate
+plausible candidates from that `KnowledgeBase` given a certain textual mention,
+and a ML model to pick the right candidate, given the local context of the
+mention.
+
 ## Config and implementation {#config}
 
 The default config is defined by the pipeline component factory and describes
@@ -23,22 +30,24 @@ architectures and their arguments and hyperparameters.
 > ```python
 > from spacy.pipeline.entity_linker import DEFAULT_NEL_MODEL
 > config = {
->    "kb": None,
 >    "labels_discard": [],
 >    "incl_prior": True,
 >    "incl_context": True,
 >    "model": DEFAULT_NEL_MODEL,
+>    "kb_loader": {'@assets': 'spacy.EmptyKB.v1', 'entity_vector_length': 64},
+>    "get_candidates": {'@assets': 'spacy.CandidateGenerator.v1'},
 > }
 > nlp.add_pipe("entity_linker", config=config)
 > ```
 
-| Setting          | Type                                       | Description                                                             | Default                                         |
-| ---------------- | ------------------------------------------ | ----------------------------------------------------------------------- | ----------------------------------------------- |
-| `kb`             | `KnowledgeBase`                            | The [`KnowledgeBase`](/api/kb) holding all entities and their aliases.  | `None`                                          |
-| `labels_discard` | `Iterable[str]`                            | NER labels that will automatically get a "NIL" prediction.              | `[]`                                            |
-| `incl_prior`     | bool                                       | Whether or not to include prior probabilities from the KB in the model. | `True`                                          |
-| `incl_context`   | bool                                       | Whether or not to include the local context in the model.               | `True`                                          |
-| `model`          | [`Model`](https://thinc.ai/docs/api-model) | The model to use.                                                       | [EntityLinker](/api/architectures#EntityLinker) |
+| Setting          | Type                                                     | Description                                                                 | Default                                                |
+| ---------------- | -------------------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `labels_discard` | `Iterable[str]`                                          | NER labels that will automatically get a "NIL" prediction.                  | `[]`                                                   |
+| `incl_prior`     | bool                                                     | Whether or not to include prior probabilities from the KB in the model.     | `True`                                                 |
+| `incl_context`   | bool                                                     | Whether or not to include the local context in the model.                   | `True`                                                 |
+| `model`          | [`Model`](https://thinc.ai/docs/api-model)               | The model to use.                                                           | [EntityLinker](/api/architectures#EntityLinker)        |
+| `kb_loader`      | `Callable[[Vocab], KnowledgeBase]`                       | Function that creates a [`KnowledgeBase`](/api/kb) from a `Vocab` instance. | An empty KnowledgeBase with `entity_vector_length` 64. |
+| `get_candidates` | `Callable[[KnowledgeBase, "Span"], Iterable[Candidate]]` | Function that generates plausible candidates for a given `Span` object.     | Built-in dictionary-lookup function.                   |
 
 ```python
 https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/entity_linker.py
@@ -53,7 +62,11 @@ https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/entity_linker.py
 > entity_linker = nlp.add_pipe("entity_linker")
 >
 > # Construction via add_pipe with custom model
-> config = {"model": {"@architectures": "my_el"}}
+> config = {"model": {"@architectures": "my_el.v1"}}
+> entity_linker = nlp.add_pipe("entity_linker", config=config)
+>
+> # Construction via add_pipe with custom KB and candidate generation
+> config = {"kb_loader": {"@assets": "my_kb.v1"}, "get_candidates": {"@assets": "my_candidates.v1"},}
 > entity_linker = nlp.add_pipe("entity_linker", config=config)
 >
 > # Construction from class
@@ -65,18 +78,20 @@ Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
 [`nlp.add_pipe`](/api/language#add_pipe).
 
-<!-- TODO: finish API docs -->
+Note that both the internal KB as well as the Candidate generator can be
+customized by providing custom registered functions.
 
-| Name             | Type            | Description                                                                                 |
-| ---------------- | --------------- | ------------------------------------------------------------------------------------------- |
-| `vocab`          | `Vocab`         | The shared vocabulary.                                                                      |
-| `model`          | `Model`         | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component.             |
-| `name`           | str             | String name of the component instance. Used to add entries to the `losses` during training. |
-| _keyword-only_   |                 |                                                                                             |
-| `kb`             | `KnowlegeBase`  | The [`KnowledgeBase`](/api/kb) holding all entities and their aliases.                      |
-| `labels_discard` | `Iterable[str]` | NER labels that will automatically get a "NIL" prediction.                                  |
-| `incl_prior`     | bool            | Whether or not to include prior probabilities from the KB in the model.                     |
-| `incl_context`   | bool            | Whether or not to include the local context in the model.                                   |
+| Name             | Type                                                     | Description                                                                                 |
+| ---------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `vocab`          | `Vocab`                                                  | The shared vocabulary.                                                                      |
+| `model`          | `Model`                                                  | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component.             |
+| `name`           | str                                                      | String name of the component instance. Used to add entries to the `losses` during training. |
+| _keyword-only_   |                                                          |                                                                                             |
+| `kb_loader`      | `Callable[[Vocab], KnowledgeBase]`                       | Function that creates a [`KnowledgeBase`](/api/kb) from a `Vocab` instance.                 |
+| `get_candidates` | `Callable[[KnowledgeBase, "Span"], Iterable[Candidate]]` | Function that generates plausible candidates for a given `Span` object.                     |
+| `labels_discard` | `Iterable[str]`                                          | NER labels that will automatically get a "NIL" prediction.                                  |
+| `incl_prior`     | bool                                                     | Whether or not to include prior probabilities from the KB in the model.                     |
+| `incl_context`   | bool                                                     | Whether or not to include the local context in the model.                                   |
 
 ## EntityLinker.\_\_call\_\_ {#call tag="method"}
 
