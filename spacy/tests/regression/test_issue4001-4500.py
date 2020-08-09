@@ -138,8 +138,7 @@ def test_issue4042_bug2():
         if not output_dir.exists():
             output_dir.mkdir()
         ner1.to_disk(output_dir)
-        config = {
-        }
+        config = {}
         ner2 = nlp1.create_pipe("ner", config=config)
         ner2.from_disk(output_dir)
         assert len(ner2.labels) == 2
@@ -301,8 +300,7 @@ def test_issue4313():
     beam_width = 16
     beam_density = 0.0001
     nlp = English()
-    config = {
-    }
+    config = {}
     ner = nlp.create_pipe("ner", config=config)
     ner.add_label("SOME_LABEL")
     ner.begin_training([])

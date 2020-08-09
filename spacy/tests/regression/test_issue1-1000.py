@@ -1,11 +1,9 @@
 import pytest
 import random
-
 from spacy import util
 from spacy.gold import Example
 from spacy.matcher import Matcher
 from spacy.attrs import IS_PUNCT, ORTH, LOWER
-from spacy.symbols import POS, VERB
 from spacy.vocab import Vocab
 from spacy.lang.en import English
 from spacy.lookups import Lookups

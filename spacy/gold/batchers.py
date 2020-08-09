@@ -1,4 +1,4 @@
-from typing import Union, Iterator, Iterable, Sequence, TypeVar, List, Callable
+from typing import Union, Iterable, Sequence, TypeVar, List, Callable
 from typing import Optional, Any
 from functools import partial
 import itertools
@@ -20,7 +20,7 @@ def configure_minibatch_by_padded_size(
     get_length: Optional[Callable[[ItemT], int]] = None
 ) -> BatcherT:
     """Create a batcher that uses the `batch_by_padded_size` strategy.
-    
+
     The padded size is defined as the maximum length of sequences within the
     batch multiplied by the number of sequences in the batch.
 
@@ -92,7 +92,7 @@ def minibatch_by_padded_size(
 ) -> Iterable[List[ItemT]]:
     """Minibatch a sequence by the size of padded batches that would result,
     with sequences binned by length within a window.
-    
+
     The padded size is defined as the maximum length of sequences within the
     batch multiplied by the number of sequences in the batch.
 
@@ -123,7 +123,11 @@ def minibatch_by_padded_size(
 
 
 def minibatch_by_words(
-    seqs: Iterable[ItemT], size: Sizing, tolerance=0.2, discard_oversize=False, get_length=len
+    seqs: Iterable[ItemT],
+    size: Sizing,
+    tolerance=0.2,
+    discard_oversize=False,
+    get_length=len,
 ) -> Iterable[List[ItemT]]:
     """Create minibatches of roughly a given number of words. If any examples
     are longer than the specified batch length, they will appear in a batch by

@@ -34,11 +34,11 @@ def make_tok2vec(nlp: Language, name: str, model: Model) -> "Tok2Vec":
 class Tok2Vec(Pipe):
     """Apply a "token-to-vector" model and set its outputs in the doc.tensor
     attribute. This is mostly useful to share a single subnetwork between multiple
-    components, e.g. to have one embedding and CNN network shared between a 
+    components, e.g. to have one embedding and CNN network shared between a
     parser, tagger and NER.
 
     In order to use the `Tok2Vec` predictions, subsequent components should use
-    the `Tok2VecListener` layer as the tok2vec subnetwork of their model. This 
+    the `Tok2VecListener` layer as the tok2vec subnetwork of their model. This
     layer will read data from the `doc.tensor` attribute during prediction.
     During training, the `Tok2Vec` component will save its prediction and backprop
     callback for each batch, so that the subsequent components can backpropagate
@@ -46,6 +46,7 @@ class Tok2Vec(Pipe):
     avoid relying on object identity within the models to achieve the parameter
     sharing.
     """
+
     def __init__(self, vocab: Vocab, model: Model, name: str = "tok2vec") -> None:
         """Initialize a tok2vec component.
 
@@ -239,6 +240,7 @@ class Tok2VecListener(Model):
     from the Tok2Vec component into downstream components, and communicating
     gradients back upstream.
     """
+
     name = "tok2vec-listener"
 
     def __init__(self, upstream_name: str, width: int) -> None:

@@ -15,5 +15,7 @@ def morphology():
 def test_morphology_pickle_roundtrip(morphology):
     b = pickle.dumps(morphology)
     reloaded_morphology = pickle.loads(b)
-    assert reloaded_morphology.get(morphology.strings["Feat1=Val1|Feat2=Val2"]) == "Feat1=Val1|Feat2=Val2"
-    assert reloaded_morphology.get(morphology.strings["Feat3=Val3|Feat4=Val4"]) == "Feat3=Val3|Feat4=Val4"
+    feat = reloaded_morphology.get(morphology.strings["Feat1=Val1|Feat2=Val2"])
+    assert feat == "Feat1=Val1|Feat2=Val2"
+    feat = reloaded_morphology.get(morphology.strings["Feat3=Val3|Feat4=Val4"])
+    assert feat == "Feat3=Val3|Feat4=Val4"
