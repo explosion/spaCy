@@ -145,8 +145,6 @@ def test_accept_blocked_token():
     nlp1 = English()
     doc1 = nlp1("I live in New York")
     config = {
-        "learn_tokens": False,
-        "min_action_freq": 30,
     }
     ner1 = nlp1.create_pipe("ner", config=config)
     assert [token.ent_iob_ for token in doc1] == ["", "", "", "", ""]
@@ -167,8 +165,6 @@ def test_accept_blocked_token():
     nlp2 = English()
     doc2 = nlp2("I live in New York")
     config = {
-        "learn_tokens": False,
-        "min_action_freq": 30,
     }
     ner2 = nlp2.create_pipe("ner", config=config)
 
@@ -225,8 +221,6 @@ def test_overwrite_token():
     assert [token.ent_type_ for token in doc] == ["", "", "", "", ""]
     # Check that a new ner can overwrite O
     config = {
-        "learn_tokens": False,
-        "min_action_freq": 30,
     }
     ner2 = nlp.create_pipe("ner", config=config)
     ner2.moves.add_action(5, "")

@@ -139,8 +139,6 @@ def test_issue4042_bug2():
             output_dir.mkdir()
         ner1.to_disk(output_dir)
         config = {
-            "learn_tokens": False,
-            "min_action_freq": 30,
         }
         ner2 = nlp1.create_pipe("ner", config=config)
         ner2.from_disk(output_dir)
@@ -304,8 +302,6 @@ def test_issue4313():
     beam_density = 0.0001
     nlp = English()
     config = {
-        "learn_tokens": False,
-        "min_action_freq": 30,
     }
     ner = nlp.create_pipe("ner", config=config)
     ner.add_label("SOME_LABEL")

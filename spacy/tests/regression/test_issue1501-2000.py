@@ -272,8 +272,6 @@ def test_issue1963(en_tokenizer):
 def test_issue1967(label):
     nlp = Language()
     config = {
-        "learn_tokens": False,
-        "min_action_freq": 30,
     }
     ner = nlp.create_pipe("ner", config=config)
     example = Example.from_dict(
