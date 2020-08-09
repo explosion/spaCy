@@ -236,3 +236,33 @@ def test_language_from_config_before_after_init_invalid():
         config = {"nlp": {"after_pipeline_creation": {"@callbacks": callback_name}}}
         with pytest.raises(ValueError):
             English.from_config(config)
+
+
+def test_language_custom_tokenizer():
+    """Test that a fully custom tokenizer can be plugged in via the registry."""
+    name = "test_language_custom_tokenizer"
+
+    class CustomTokenizer:
+        """Dummy "tokenizer" that splits on spaces and adds prefix to each word."""
+
+        def __init__(self, nlp, prefix):
+            self.vocab = nlp.vocab
+            self.prefix = prefix
+
+        def __call__(self, text):
+            words = [f"{self.prefix}{word}" for word in text.split(" ")]
+            return Doc(self.vocab, words=words)
+
+    @registry.tokenizers(name)
+    def custom_create_tokenizer(prefix: str = "_"):
+        def create_tokenizer(nlp):
+            return CustomTokenizer(nlp, prefix=prefix)
+
+        return create_tokenizer
+
+    config = {"nlp": {"tokenizer": {"@tokenizers": name}}}
+    nlp = English.from_config(config)
+    doc = nlp("hello world")
+    assert [t.text for t in doc] == ["_hello", "_world"]
+    doc = list(nlp.pipe(["hello world"]))[0]
+    assert [t.text for t in doc] == ["_hello", "_world"]
