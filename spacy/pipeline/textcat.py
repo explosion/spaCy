@@ -69,8 +69,19 @@ subword_features = true
     default_score_weights={"cats_score": 1.0},
 )
 def make_textcat(
-    nlp: Language, name: str, model: Model, labels: Iterable[str]
+    nlp: Language, name: str, model: Model[List[Doc], List[Floats2d]], labels: Iterable[str]
 ) -> "TextCategorizer":
+    """Create a TextCategorizer compoment. The text categorizer predicts categories
+    over a whole document. It can learn one or more labels, and the labels can
+    be mutually exclusive (i.e. one true label per doc) or non-mutually exclusive
+    (i.e. zero or more labels may be true per doc). The multi-label setting is
+    controlled by the model instance that's provided.
+
+    model (Model[List[Doc], List[Floats2d]]): A model instance that predicts
+        scores for each category.
+    labels (list): A list of categories to learn. If empty, the model infers the
+        categories from the data.
+    """
     return TextCategorizer(nlp.vocab, model, name, labels=labels)
 
 
