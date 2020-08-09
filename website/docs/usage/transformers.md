@@ -32,8 +32,6 @@ transformer pipeline component is available to spaCy.
 $ pip install spacy-transformers
 ```
 
-<!-- TODO: the text below has been copied from the spacy-transformers repo and needs to be updated and adjusted -->
-
 ## Runtime usage {#runtime}
 
 Transformer models can be used as **drop-in replacements** for other types of
@@ -99,9 +97,9 @@ evaluate, package and visualize your model.
 
 </Project>
 
-The `[components]` section in the [`config.cfg`](#TODO:) describes the pipeline
-components and the settings used to construct them, including their model
-implementation. Here's a config snippet for the
+The `[components]` section in the [`config.cfg`](/api/data-formats#config)
+describes the pipeline components and the settings used to construct them,
+including their model implementation. Here's a config snippet for the
 [`Transformer`](/api/transformer) component, along with matching Python code. In
 this case, the `[components.transformer]` block describes the `transformer`
 component:

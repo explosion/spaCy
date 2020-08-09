@@ -293,8 +293,6 @@ factories.
 >     return Model("custom", forward, dims={"nO": nO})
 > ```
 
-<!-- TODO: finish table -->
-
 | Registry name     | Description                                                                                                                                                                                                                                       |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `architectures`   | Registry for functions that create [model architectures](/api/architectures). Can be used to register custom model architectures and reference them in the `config.cfg`.                                                                          |
@@ -303,7 +301,7 @@ factories.
 | `languages`       | Registry for language-specific `Language` subclasses. Automatically reads from [entry points](/usage/saving-loading#entry-points).                                                                                                                |
 | `lookups`         | Registry for large lookup tables available via `vocab.lookups`.                                                                                                                                                                                   |
 | `displacy_colors` | Registry for custom color scheme for the [`displacy` NER visualizer](/usage/visualizers). Automatically reads from [entry points](/usage/saving-loading#entry-points).                                                                            |
-| `assets`          |                                                                                                                                                                                                                                                   |
+| `assets`          | Registry for data assets, knowledge bases etc.                                                                                                                                                                                                    |
 | `callbacks`       | Registry for custom callbacks to [modify the `nlp` object](/usage/training#custom-code-nlp-callbacks) before training.                                                                                                                            |
 | `readers`         | Registry for training and evaluation data readers like [`Corpus`](/api/corpus).                                                                                                                                                                   |
 | `batchers`        | Registry for training and evaluation [data batchers](#batchers).                                                                                                                                                                                  |
