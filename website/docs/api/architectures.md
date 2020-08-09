@@ -525,12 +525,11 @@ A neural network model where token vectors are calculated using a CNN. The
 vectors are mean pooled and used as features in a feed-forward network. This
 architecture is usually less accurate than the ensemble, but runs faster.
 
-| Name                        | Type                                       | Description                                                                                                                                              |
-| --------------------------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `exclusive_classes`         | bool                                       | Whether or not categories are mutually exclusive.                                                                                                        |
-| `tok2vec`                   | [`Model`](https://thinc.ai/docs/api-model) | The [`tok2vec`](#tok2vec) layer of the model.                                                                                                            |
-| `nO`                        | int                                        | Output dimension, determined by the number of different labels. If not set, the the [`TextCategorizer`](/api/textcategorizer) component will set it when |
-| `begin_training` is called. |
+| Name                | Type                                       | Description                                                                                                                                                                          |
+| ------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `exclusive_classes` | bool                                       | Whether or not categories are mutually exclusive.                                                                                                                                    |
+| `tok2vec`           | [`Model`](https://thinc.ai/docs/api-model) | The [`tok2vec`](#tok2vec) layer of the model.                                                                                                                                        |
+| `nO`                | int                                        | Output dimension, determined by the number of different labels. If not set, the the [`TextCategorizer`](/api/textcategorizer) component will set it when `begin_training` is called. |
 
 ### spacy.TextCatBOW.v1 {#TextCatBOW}
 
@@ -548,13 +547,12 @@ architecture is usually less accurate than the ensemble, but runs faster.
 An ngram "bag-of-words" model. This architecture should run much faster than the
 others, but may not be as accurate, especially if texts are short.
 
-| Name                        | Type  | Description                                                                                                                                              |
-| --------------------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `exclusive_classes`         | bool  | Whether or not categories are mutually exclusive.                                                                                                        |
-| `ngram_size`                | int   | Determines the maximum length of the n-grams in the BOW model. For instance, `ngram_size=3`would give unigram, trigram and bigram features.              |
-| `no_output_layer`           | float | Whether or not to add an output layer to the model (`Softmax` activation if `exclusive_classes=True`, else `Logistic`.                                   |
-| `nO`                        | int   | Output dimension, determined by the number of different labels. If not set, the the [`TextCategorizer`](/api/textcategorizer) component will set it when |
-| `begin_training` is called. |
+| Name                | Type  | Description                                                                                                                                                                          |
+| ------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `exclusive_classes` | bool  | Whether or not categories are mutually exclusive.                                                                                                                                    |
+| `ngram_size`        | int   | Determines the maximum length of the n-grams in the BOW model. For instance, `ngram_size=3`would give unigram, trigram and bigram features.                                          |
+| `no_output_layer`   | float | Whether or not to add an output layer to the model (`Softmax` activation if `exclusive_classes=True`, else `Logistic`.                                                               |
+| `nO`                | int   | Output dimension, determined by the number of different labels. If not set, the the [`TextCategorizer`](/api/textcategorizer) component will set it when `begin_training` is called. |
 
 <!-- TODO:
 ### spacy.TextCatLowData.v1 {#TextCatLowData}
