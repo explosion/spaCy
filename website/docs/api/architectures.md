@@ -3,7 +3,7 @@ title: Model Architectures
 teaser: Pre-defined model architectures included with the core library
 source: spacy/ml/models
 menu:
-  - ['Tok2Vec', 'tok2vec']
+  - ['Tok2Vec', 'tok2vec-arch']
   - ['Transformers', 'transformers']
   - ['Parser & NER', 'parser']
   - ['Tagging', 'tagger']
@@ -236,7 +236,7 @@ and residual connections.
 > depth = 4
 > ```
 
-Encode context using bidirectonal LSTM layers. Requires
+Encode context using bidirectional LSTM layers. Requires
 [PyTorch](https://pytorch.org).
 
 | Name          | Type | Description                                                                                                                                                                                            |
@@ -278,8 +278,6 @@ architectures into your training config.
 
 ### spacy-transformers.Tok2VecListener.v1 {#Tok2VecListener}
 
-<!-- TODO: description -->
-
 > #### Example Config
 >
 > ```ini
@@ -291,10 +289,41 @@ architectures into your training config.
 > @layers = "reduce_mean.v1"
 > ```
 
-| Name          | Type                      | Description                                                                                    |
-| ------------- | ------------------------- | ---------------------------------------------------------------------------------------------- |
-| `grad_factor` | float                     | Factor for weighting the gradient if multiple components listen to the same transformer model. |
-| `pooling`     | `Model[Ragged, Floats2d]` | Pooling layer to determine how the vector for each spaCy token will be computed.               |
+Create a `TransformerListener` layer, which will connect to a
+[`Transformer`](/api/transformer) component earlier in the pipeline. The layer
+takes a list of [`Doc`](/api/doc) objects as input, and produces a list of
+2-dimensional arrays as output, with each array having one row per token. Most
+spaCy models expect a sublayer with this signature, making it easy to connect
+them to a transformer model via this sublayer. Transformer models usually
+operate over wordpieces, which usually don't align one-to-one against spaCy
+tokens. The layer therefore requires a reduction operation in order to calculate
+a single token vector given zero or more wordpiece vectors.
+
+| Name          | Type                                       | Description                                                                                                                                                                                                                                                         |
+| ------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pooling`     | [`Model`](https://thinc.ai/docs/api-model) | **Input:** [`Ragged`](https://thinc.ai/docs/api-types#ragged). **Output:** [`Floats2d`](https://thinc.ai/docs/api-types#types)                                                                                                                                      | A reduction layer used to calculate the token vectors based on zero or more wordpiece vectors. If in doubt, mean pooling (see [`reduce_mean`](https://thinc.ai/docs/api-layers#reduce_mean)) is usually a good choice. |
+| `grad_factor` | float                                      | Reweight gradients from the component before passing them upstream. You can set this to `0` to "freeze" the transformer weights with respect to the component, or use it to make some components more significant than others. Leaving it at `1.0` is usually fine. |
+
+### spacy-transformers.Tok2VecTransformer.v1 {#Tok2VecTransformer}
+
+> #### Example Config
+>
+> ```ini
+> # TODO:
+> ```
+
+Use a transformer as a [`Tok2Vec`](/api/tok2vec) layer directly. This does
+**not** allow multiple components to share the transformer weights, and does
+**not** allow the transformer to set annotations into the [`Doc`](/api/doc)
+object, but it's a **simpler solution** if you only need the transformer within
+one component.
+
+| Name               | Type                                       | Description                                                                                                                                                                                                                                                         |
+| ------------------ | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `get_spans`        | callable                                   | Function that takes a batch of [`Doc`](/api/doc) object and returns lists of [`Span`](/api) objects to process by the transformer. [See here](/api/transformer#span_getters) for built-in options and examples.                                                     |
+| `tokenizer_config` | `Dict[str, Any]`                           | Tokenizer settings passed to [`transformers.AutoTokenizer`](https://huggingface.co/transformers/model_doc/auto.html#transformers.AutoTokenizer).                                                                                                                    |
+| `pooling`          | [`Model`](https://thinc.ai/docs/api-model) | **Input:** [`Ragged`](https://thinc.ai/docs/api-types#ragged). **Output:** [`Floats2d`](https://thinc.ai/docs/api-types#types)                                                                                                                                      | A reduction layer used to calculate the token vectors based on zero or more wordpiece vectors. If in doubt, mean pooling (see [`reduce_mean`](https://thinc.ai/docs/api-layers#reduce_mean)) is usually a good choice. |
+| `grad_factor`      | float                                      | Reweight gradients from the component before passing them upstream. You can set this to `0` to "freeze" the transformer weights with respect to the component, or use it to make some components more significant than others. Leaving it at `1.0` is usually fine. |
 
 ## Parser & NER architectures {#parser}
 
@@ -595,8 +624,6 @@ A function that creates a default, empty `KnowledgeBase` from a
 
 A function that takes as input a [`KnowledgeBase`](/api/kb) and a
 [`Span`](/api/span) object denoting a named entity, and returns a list of
-plausible [`Candidate` objects](/api/kb/#candidate_init).
-
-The default `CandidateGenerator` simply uses the text of a mention to find its
-potential aliases in the Knowledgebase. Note that this function is
-case-dependent.
+plausible [`Candidate` objects](/api/kb/#candidate_init). The default
+`CandidateGenerator` simply uses the text of a mention to find its potential
+aliases in the `KnowledgeBase`. Note that this function is case-dependent.
