@@ -1,5 +1,6 @@
 from typing import Iterable, Tuple, Optional, Dict, List, Callable, Iterator, Any
 from thinc.api import get_array_module, Model, Optimizer, set_dropout_rate, Config
+from thinc.types import Floats2d
 import numpy
 
 from .pipe import Pipe
@@ -69,7 +70,10 @@ subword_features = true
     default_score_weights={"cats_score": 1.0},
 )
 def make_textcat(
-    nlp: Language, name: str, model: Model[List[Doc], List[Floats2d]], labels: Iterable[str]
+    nlp: Language,
+    name: str,
+    model: Model[List[Doc], List[Floats2d]],
+    labels: Iterable[str],
 ) -> "TextCategorizer":
     """Create a TextCategorizer compoment. The text categorizer predicts categories
     over a whole document. It can learn one or more labels, and the labels can
