@@ -62,6 +62,16 @@ def make_entity_linker(
     incl_prior: bool,
     incl_context: bool,
 ):
+    """Construct an EntityLinker component.
+
+    model (Model[List[Doc], Floats2d]): A model that learns document vector
+        representations. Given a batch of Doc objects, it should return a single
+        array, with one row per item in the batch.
+    kb (KnowledgeBase): The knowledge-base to link entities to.
+    labels_discard (Iterable[str]): NER labels that will automatically get a "NIL" prediction.
+    incl_prior (bool): Whether or not to include prior probabilities from the KB in the model.
+    incl_context (bool): Whether or not to include the local context in the model.
+    """
     return EntityLinker(
         nlp.vocab,
         model,
