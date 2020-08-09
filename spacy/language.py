@@ -27,7 +27,6 @@ from .lang.tokenizer_exceptions import URL_MATCH, BASE_EXCEPTIONS
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
 from .lang.punctuation import TOKENIZER_INFIXES
 from .tokens import Doc
-from .lookups import load_lookups
 from .tokenizer import Tokenizer
 from .errors import Errors, Warnings
 from .schemas import ConfigSchema
@@ -1439,10 +1438,7 @@ class Language:
                 or lang_cls is not cls
             ):
                 raise ValueError(Errors.E943.format(value=type(lang_cls)))
-        nlp = lang_cls(
-            vocab=vocab,
-            create_tokenizer=create_tokenizer,
-        )
+        nlp = lang_cls(vocab=vocab, create_tokenizer=create_tokenizer)
         if after_creation is not None:
             nlp = after_creation(nlp)
             if not isinstance(nlp, cls):

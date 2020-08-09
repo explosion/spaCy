@@ -271,10 +271,7 @@ def test_issue1963(en_tokenizer):
 @pytest.mark.parametrize("label", ["U-JOB-NAME"])
 def test_issue1967(label):
     nlp = Language()
-    config = {
-        "learn_tokens": False,
-        "min_action_freq": 30,
-    }
+    config = {}
     ner = nlp.create_pipe("ner", config=config)
     example = Example.from_dict(
         Doc(ner.vocab, words=["word"]),

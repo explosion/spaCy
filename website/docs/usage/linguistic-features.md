@@ -750,16 +750,13 @@ print([w.text for w in nlp("gimme that")])  # ['gim', 'me', 'that']
 
 The special case doesn't have to match an entire whitespace-delimited substring.
 The tokenizer will incrementally split off punctuation, and keep looking up the
-remaining substring:
+remaining substring. The special case rules also have precedence over the
+punctuation splitting.
 
 ```python
 assert "gimme" not in [w.text for w in nlp("gimme!")]
 assert "gimme" not in [w.text for w in nlp('("...gimme...?")')]
-```
 
-The special case rules have precedence over the punctuation splitting:
-
-```python
 nlp.tokenizer.add_special_case("...gimme...?", [{"ORTH": "...gimme...?"}])
 assert len(nlp("...gimme...?")) == 1
 ```
@@ -812,19 +809,6 @@ domain. There are six things you may need to define:
    be split, overriding the infix rules. Useful for things like numbers.
 6. An optional boolean function `url_match`, which is similar to `token_match`
    except that prefixes and suffixes are removed before applying the match.
-
-<Infobox title="Important note: token match in spaCy v2.2" variant="warning">
-
-In spaCy v2.2.2-v2.2.4, the `token_match` was equivalent to the `url_match`
-above and there was no match pattern applied before prefixes and suffixes were
-analyzed. As of spaCy v2.3.0, the `token_match` has been reverted to its
-behavior in v2.2.1 and earlier with precedence over prefixes and suffixes.
-
-The `url_match` is introduced in v2.3.0 to handle cases like URLs where the
-tokenizer should remove prefixes and suffixes (e.g., a comma at the end of a
-URL) before applying the match.
-
-</Infobox>
 
 You shouldn't usually need to create a `Tokenizer` subclass. Standard usage is
 to use `re.compile()` to build a regular expression object, and pass its
@@ -905,12 +889,13 @@ function that behaves the same way.
 
 <Infobox title="Important note" variant="warning">
 
-If you're using a statistical model, writing to the `nlp.Defaults` or
-`English.Defaults` directly won't work, since the regular expressions are read
-from the model and will be compiled when you load it. If you modify
-`nlp.Defaults`, you'll only see the effect if you call
-[`spacy.blank`](/api/top-level#spacy.blank). If you want to modify the tokenizer
-loaded from a statistical model, you should modify `nlp.tokenizer` directly.
+If you're using a statistical model, writing to the
+[`nlp.Defaults`](/api/language#defaults) or `English.Defaults` directly won't
+work, since the regular expressions are read from the model and will be compiled
+when you load it. If you modify `nlp.Defaults`, you'll only see the effect if
+you call [`spacy.blank`](/api/top-level#spacy.blank). If you want to modify the
+tokenizer loaded from a statistical model, you should modify `nlp.tokenizer`
+directly.
 
 </Infobox>
 
@@ -961,51 +946,50 @@ and language-specific definitions such as
 [`lang/de/punctuation.py`](https://github.com/explosion/spaCy/blob/master/spacy/lang/de/punctuation.py)
 for German.
 
-### Hooking an arbitrary tokenizer into the pipeline {#custom-tokenizer}
+### Hooking a custom tokenizer into the pipeline {#custom-tokenizer}
 
 The tokenizer is the first component of the processing pipeline and the only one
 that can't be replaced by writing to `nlp.pipeline`. This is because it has a
 different signature from all the other components: it takes a text and returns a
-`Doc`, whereas all other components expect to already receive a tokenized `Doc`.
+[`Doc`](/api/doc), whereas all other components expect to already receive a
+tokenized `Doc`.
 
 ![The processing pipeline](../images/pipeline.svg)
 
 To overwrite the existing tokenizer, you need to replace `nlp.tokenizer` with a
-custom function that takes a text, and returns a `Doc`.
+custom function that takes a text, and returns a [`Doc`](/api/doc).
+
+> #### Creating a Doc
+>
+> Constructing a [`Doc`](/api/doc) object manually requires at least two
+> arguments: the shared `Vocab` and a list of words. Optionally, you can pass in
+> a list of `spaces` values indicating whether the token at this position is
+> followed by a space (default `True`). See the section on
+> [pre-tokenized text](#own-annotations) for more info.
+>
+> ```python
+> words = ["Let", "'s", "go", "!"]
+> spaces = [False, True, False, False]
+> doc = Doc(nlp.vocab, words=words, spaces=spaces)
+> ```
 
 ```python
-nlp = spacy.load("en_core_web_sm")
+nlp = spacy.blank("en")
 nlp.tokenizer = my_tokenizer
 ```
 
-| Argument    | Type  | Description               |
-| ----------- | ----- | ------------------------- |
-| `text`      | str   | The raw text to tokenize. |
-| **RETURNS** | `Doc` | The tokenized document.   |
+| Argument    | Type              | Description               |
+| ----------- | ----------------- | ------------------------- |
+| `text`      | str               | The raw text to tokenize. |
+| **RETURNS** | [`Doc`](/api/doc) | The tokenized document.   |
 
-<Infobox title="Important note: using a custom tokenizer" variant="warning">
+#### Example 1: Basic whitespace tokenizer {#custom-tokenizer-example}
 
-In spaCy v1.x, you had to add a custom tokenizer by passing it to the `make_doc`
-keyword argument, or by passing a tokenizer "factory" to `create_make_doc`. This
-was unnecessarily complicated. Since spaCy v2.0, you can write to
-`nlp.tokenizer` instead. If your tokenizer needs the vocab, you can write a
-function and use `nlp.vocab`.
-
-```diff
-- nlp = spacy.load("en_core_web_sm", make_doc=my_tokenizer)
-- nlp = spacy.load("en_core_web_sm", create_make_doc=my_tokenizer_factory)
-
-+ nlp.tokenizer = my_tokenizer
-+ nlp.tokenizer = my_tokenizer_factory(nlp.vocab)
-```
-
-</Infobox>
-
-### Example: A custom whitespace tokenizer {#custom-tokenizer-example}
-
-To construct the tokenizer, we usually want attributes of the `nlp` pipeline.
-Specifically, we want the tokenizer to hold a reference to the vocabulary
-object. Let's say we have the following class as our tokenizer:
+Here's an example of the most basic whitespace tokenizer. It takes the shared
+vocab, so it can construct `Doc` objects. When it's called on a text, it returns
+a `Doc` object consisting of the text split on single space characters. We can
+then overwrite the `nlp.tokenizer` attribute with an instance of our custom
+tokenizer.
 
 ```python
 ### {executable="true"}
@@ -1017,68 +1001,189 @@ class WhitespaceTokenizer:
         self.vocab = vocab
 
     def __call__(self, text):
-        words = text.split(' ')
-        # All tokens 'own' a subsequent space character in this tokenizer
-        spaces = [True] * len(words)
-        return Doc(self.vocab, words=words, spaces=spaces)
+        words = text.split(" ")
+        return Doc(self.vocab, words=words)
 
-nlp = spacy.load("en_core_web_sm")
+nlp = spacy.blank("en")
 nlp.tokenizer = WhitespaceTokenizer(nlp.vocab)
 doc = nlp("What's happened to me? he thought. It wasn't a dream.")
-print([t.text for t in doc])
+print([token.text for token in doc])
 ```
 
-As you can see, we need a `Vocab` instance to construct this — but we won't have
-it until we get back the loaded `nlp` object. The simplest solution is to build
-the tokenizer in two steps. This also means that you can reuse the "tokenizer
-factory" and initialize it with different instances of `Vocab`.
+#### Example 2: Third-party tokenizers (BERT word pieces) {#custom-tokenizer-example2}
 
-### Bringing your own annotations {#own-annotations}
+You can use the same approach to plug in any other third-party tokenizers. Your
+custom callable just needs to return a `Doc` object with the tokens produced by
+your tokenizer. In this example, the wrapper uses the **BERT word piece
+tokenizer**, provided by the
+[`tokenizers`](https://github.com/huggingface/tokenizers) library. The tokens
+available in the `Doc` object returned by spaCy now match the exact word pieces
+produced by the tokenizer.
 
-spaCy generally assumes by default that your data is raw text. However,
+> #### 💡 Tip: spacy-transformers
+>
+> If you're working with transformer models like BERT, check out the
+> [`spacy-transformers`](https://github.com/explosion/spacy-transformers)
+> extension package and [documentation](/usage/transformers). It includes a
+> pipeline component for using pretrained transformer weights and **training
+> transformer models** in spaCy, as well as helpful utilities for aligning word
+> pieces to linguistic tokenization.
+
+```python
+### Custom BERT word piece tokenizer
+from tokenizers import BertWordPieceTokenizer
+from spacy.tokens import Doc
+import spacy
+
+class BertTokenizer:
+    def __init__(self, vocab, vocab_file, lowercase=True):
+        self.vocab = vocab
+        self._tokenizer = BertWordPieceTokenizer(vocab_file, lowercase=lowercase)
+
+    def __call__(self, text):
+        tokens = self._tokenizer.encode(text)
+        words = []
+        spaces = []
+        for i, (text, (start, end)) in enumerate(zip(tokens.tokens, tokens.offsets)):
+            words.append(text)
+            if i < len(tokens.tokens) - 1:
+                # If next start != current end we assume a space in between
+                next_start, next_end = tokens.offsets[i + 1]
+                spaces.append(next_start > end)
+            else:
+                spaces.append(True)
+        return Doc(self.vocab, words=words, spaces=spaces)
+
+nlp = spacy.blank("en")
+nlp.tokenizer = BertTokenizer(nlp.vocab, "bert-base-uncased-vocab.txt")
+doc = nlp("Justin Drew Bieber is a Canadian singer, songwriter, and actor.")
+print(doc.text, [token.text for token in doc])
+# [CLS]justin drew bi##eber is a canadian singer, songwriter, and actor.[SEP]
+# ['[CLS]', 'justin', 'drew', 'bi', '##eber', 'is', 'a', 'canadian', 'singer',
+#  ',', 'songwriter', ',', 'and', 'actor', '.', '[SEP]']
+```
+
+<Infobox title="Important note on tokenization and models" variant="warning">
+
+Keep in mind that your model's result may be less accurate if the tokenization
+during training differs from the tokenization at runtime. So if you modify a
+pretrained model's tokenization afterwards, it may produce very different
+predictions. You should therefore train your model with the **same tokenizer**
+it will be using at runtime. See the docs on
+[training with custom tokenization](#custom-tokenizer-training) for details.
+
+</Infobox>
+
+#### Training with custom tokenization {#custom-tokenizer-training new="3"}
+
+spaCy's [training config](/usage/training#config) describe the settings,
+hyperparameters, pipeline and tokenizer used for constructing and training the
+model. The `[nlp.tokenizer]` block refers to a **registered function** that
+takes the `nlp` object and returns a tokenizer. Here, we're registering a
+function called `whitespace_tokenizer` in the
+[`@tokenizers` registry](/api/registry). To make sure spaCy knows how to
+construct your tokenizer during training, you can pass in your Python file by
+setting `--code functions.py` when you run [`spacy train`](/api/cli#train).
+
+> #### config.cfg
+>
+> ```ini
+> [nlp.tokenizer]
+> @tokenizers = "whitespace_tokenizer"
+> ```
+
+```python
+### functions.py {highlight="1"}
+@spacy.registry.tokenizers("whitespace_tokenizer")
+def create_whitespace_tokenizer():
+    def create_tokenizer(nlp):
+        return WhitespaceTokenizer(nlp.vocab)
+
+    return create_tokenizer
+```
+
+Registered functions can also take arguments that are then passed in from the
+config. This allows you to quickly change and keep track of different settings.
+Here, the registered function called `bert_word_piece_tokenizer` takes two
+arguments: the path to a vocabulary file and whether to lowercase the text. The
+Python type hints `str` and `bool` ensure that the received values have the
+correct type.
+
+> #### config.cfg
+>
+> ```ini
+> [nlp.tokenizer]
+> @tokenizers = "bert_word_piece_tokenizer"
+> vocab_file = "bert-base-uncased-vocab.txt"
+> lowercase = true
+> ```
+
+```python
+### functions.py {highlight="1"}
+@spacy.registry.tokenizers("bert_word_piece_tokenizer")
+def create_whitespace_tokenizer(vocab_file: str, lowercase: bool):
+    def create_tokenizer(nlp):
+        return BertWordPieceTokenizer(nlp.vocab, vocab_file, lowercase)
+
+    return create_tokenizer
+```
+
+To avoid hard-coding local paths into your config file, you can also set the
+vocab path on the CLI by using the `--nlp.tokenizer.vocab_file`
+[override](/usage/training#config-overrides) when you run
+[`spacy train`](/api/cli#train). For more details on using registered functions,
+see the docs in [training with custom code](/usage/training#custom-code).
+
+<Infobox variant="warning">
+
+Remember that a registered function should always be a function that spaCy
+**calls to create something**, not the "something" itself. In this case, it
+**creates a function** that takes the `nlp` object and returns a callable that
+takes a text and returns a `Doc`.
+
+</Infobox>
+
+#### Using pre-tokenized text {#own-annotations}
+
+spaCy generally assumes by default that your data is **raw text**. However,
 sometimes your data is partially annotated, e.g. with pre-existing tokenization,
-part-of-speech tags, etc. The most common situation is that you have pre-defined
-tokenization. If you have a list of strings, you can create a `Doc` object
-directly. Optionally, you can also specify a list of boolean values, indicating
-whether each word has a subsequent space.
+part-of-speech tags, etc. The most common situation is that you have
+**pre-defined tokenization**. If you have a list of strings, you can create a
+[`Doc`](/api/doc) object directly. Optionally, you can also specify a list of
+boolean values, indicating whether each word is followed by a space.
+
+> #### ✏️ Things to try
+>
+> 1. Change a boolean value in the list of `spaces`. You should see it reflected
+>    in the `doc.text` and whether the token is followed by a space.
+> 2. Remove `spaces=spaces` from the `Doc`. You should see that every token is
+>    now followed by a space.
+> 3. Copy-paste a random sentence from the internet and manually construct a
+>    `Doc` with `words` and `spaces` so that the `doc.text` matches the original
+>    input text.
 
 ```python
 ### {executable="true"}
 import spacy
 from spacy.tokens import Doc
-from spacy.lang.en import English
 
-nlp = English()
-doc = Doc(nlp.vocab, words=["Hello", ",", "world", "!"],
-          spaces=[False, True, False, False])
+nlp = spacy.blank("en")
+words = ["Hello", ",", "world", "!"]
+spaces = [False, True, False, False]
+doc = Doc(nlp.vocab, words=words, spaces=spaces)
+print(doc.text)
 print([(t.text, t.text_with_ws, t.whitespace_) for t in doc])
 ```
 
-If provided, the spaces list must be the same length as the words list. The
+If provided, the spaces list must be the **same length** as the words list. The
 spaces list affects the `doc.text`, `span.text`, `token.idx`, `span.start_char`
 and `span.end_char` attributes. If you don't provide a `spaces` sequence, spaCy
-will assume that all words are whitespace delimited.
+will assume that all words are followed by a space. Once you have a
+[`Doc`](/api/doc) object, you can write to its attributes to set the
+part-of-speech tags, syntactic dependencies, named entities and other
+attributes.
 
-```python
-### {executable="true"}
-import spacy
-from spacy.tokens import Doc
-from spacy.lang.en import English
-
-nlp = English()
-bad_spaces = Doc(nlp.vocab, words=["Hello", ",", "world", "!"])
-good_spaces = Doc(nlp.vocab, words=["Hello", ",", "world", "!"],
-                  spaces=[False, True, False, False])
-
-print(bad_spaces.text)   # 'Hello , world !'
-print(good_spaces.text)  # 'Hello, world!'
-```
-
-Once you have a [`Doc`](/api/doc) object, you can write to its attributes to set
-the part-of-speech tags, syntactic dependencies, named entities and other
-attributes. For details, see the respective usage pages.
-
-### Aligning tokenization {#aligning-tokenization}
+#### Aligning tokenization {#aligning-tokenization}
 
 spaCy's tokenization is non-destructive and uses language-specific rules
 optimized for compatibility with treebank annotations. Other tools and resources

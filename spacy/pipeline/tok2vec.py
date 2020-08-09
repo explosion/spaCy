@@ -32,11 +32,28 @@ def make_tok2vec(nlp: Language, name: str, model: Model) -> "Tok2Vec":
 
 
 class Tok2Vec(Pipe):
+    """Apply a "token-to-vector" model and set its outputs in the doc.tensor
+    attribute. This is mostly useful to share a single subnetwork between multiple
+    components, e.g. to have one embedding and CNN network shared between a
+    parser, tagger and NER.
+
+    In order to use the `Tok2Vec` predictions, subsequent components should use
+    the `Tok2VecListener` layer as the tok2vec subnetwork of their model. This
+    layer will read data from the `doc.tensor` attribute during prediction.
+    During training, the `Tok2Vec` component will save its prediction and backprop
+    callback for each batch, so that the subsequent components can backpropagate
+    to the shared weights. This implementation is used because it allows us to
+    avoid relying on object identity within the models to achieve the parameter
+    sharing.
+    """
+
     def __init__(self, vocab: Vocab, model: Model, name: str = "tok2vec") -> None:
         """Initialize a tok2vec component.
 
         vocab (Vocab): The shared vocabulary.
-        model (thinc.api.Model): The Thinc Model powering the pipeline component.
+        model (thinc.api.Model[List[Doc], List[Floats2d]]):
+            The Thinc Model powering the pipeline component. It should take
+            a list of Doc objects as input, and output a list of 2d float arrays.
         name (str): The component instance name.
 
         DOCS: https://spacy.io/api/tok2vec#init
@@ -48,9 +65,18 @@ class Tok2Vec(Pipe):
         self.cfg = {}
 
     def add_listener(self, listener: "Tok2VecListener") -> None:
+        """Add a listener for a downstream component. Usually internals."""
         self.listeners.append(listener)
 
     def find_listeners(self, model: Model) -> None:
+        """Walk over a model, looking for layers that are Tok2vecListener
+        subclasses that have an upstream_name that matches this component.
+        Listeners can also set their upstream_name attribute to the wildcard
+        string '*' to match any `Tok2Vec`.
+
+        You're unlikely to ever need multiple `Tok2Vec` components, so it's
+        fine to leave your listeners upstream_name on '*'.
+        """
         for node in model.walk():
             if isinstance(node, Tok2VecListener) and node.upstream_name in (
                 "*",
@@ -59,7 +85,8 @@ class Tok2Vec(Pipe):
                 self.add_listener(node)
 
     def __call__(self, doc: Doc) -> Doc:
-        """Add context-sensitive embeddings to the Doc.tensor attribute.
+        """Add context-sensitive embeddings to the Doc.tensor attribute, allowing
+        them to be used as features by downstream components.
 
         docs (Doc): The Doc to preocess.
         RETURNS (Doc): The processed Doc.
@@ -205,11 +232,27 @@ class Tok2Vec(Pipe):
 class Tok2VecListener(Model):
     """A layer that gets fed its answers from an upstream connection,
     for instance from a component earlier in the pipeline.
+
+    The Tok2VecListener layer is used as a sublayer within a component such
+    as a parser, NER or text categorizer. Usually you'll have multiple listeners
+    connecting to a single upstream Tok2Vec component, that's earlier in the
+    pipeline. The Tok2VecListener layers act as proxies, passing the predictions
+    from the Tok2Vec component into downstream components, and communicating
+    gradients back upstream.
     """
 
     name = "tok2vec-listener"
 
     def __init__(self, upstream_name: str, width: int) -> None:
+        """
+        upstream_name (str): A string to identify the 'upstream' Tok2Vec component
+            to communicate with. The upstream name should either be the wildcard
+            string '*', or the name of the `Tok2Vec` component. You'll almost
+            never have multiple upstream Tok2Vec components, so the wildcard
+            string will almost always be fine.
+        width (int):
+            The width of the vectors produced by the upstream tok2vec component.
+        """
         Model.__init__(self, name=self.name, forward=forward, dims={"nO": width})
         self.upstream_name = upstream_name
         self._batch_id = None
@@ -217,15 +260,25 @@ class Tok2VecListener(Model):
         self._backprop = None
 
     @classmethod
-    def get_batch_id(cls, inputs) -> int:
+    def get_batch_id(cls, inputs: List[Doc]) -> int:
+        """Calculate a content-sensitive hash of the batch of documents, to check
+        whether the next batch of documents is unexpected.
+        """
         return sum(sum(token.orth for token in doc) for doc in inputs)
 
     def receive(self, batch_id: int, outputs, backprop) -> None:
+        """Store a batch of training predictions and a backprop callback. The
+        predictions and callback are produced by the upstream Tok2Vec component,
+        and later will be used when the listener's component's model is called.
+        """
         self._batch_id = batch_id
         self._outputs = outputs
         self._backprop = backprop
 
     def verify_inputs(self, inputs) -> bool:
+        """Check that the batch of Doc objects matches the ones we have a
+        prediction for.
+        """
         if self._batch_id is None and self._outputs is None:
             raise ValueError(Errors.E954)
         else:
@@ -237,6 +290,7 @@ class Tok2VecListener(Model):
 
 
 def forward(model: Tok2VecListener, inputs, is_train: bool):
+    """Supply the outputs from the upstream Tok2Vec component."""
     if is_train:
         model.verify_inputs(inputs)
         return model._outputs, model._backprop

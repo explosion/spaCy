@@ -242,6 +242,21 @@ a batch of [Example](/api/example) objects.
 
 Update the models in the pipeline.
 
+<Infobox variant="warning" title="Changed in v3.0">
+
+The `Language.update` method now takes a batch of [`Example`](/api/example)
+objects instead of the raw texts and annotations or `Doc` and `GoldParse`
+objects. An [`Example`](/api/example) streamlines how data is passed around. It
+stores two `Doc` objects: one for holding the gold-standard reference data, and
+one for holding the predictions of the pipeline.
+
+For most use cases, you shouldn't have to write your own training scripts
+anymore. Instead, you can use [`spacy train`](/api/cli#train) with a config file
+and custom registered functions if needed. See the
+[training documentation](/usage/training) for details.
+
+</Infobox>
+
 > #### Example
 >
 > ```python
@@ -253,7 +268,7 @@ Update the models in the pipeline.
 
 | Name            | Type                                                | Description                                                                                            |
 | --------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `examples`      | `Iterable[Example]`                                 | A batch of `Example` objects to learn from.                                                            |
+| `examples`      | `Iterable[Example]`                                 | A batch of [`Example`](/api/example) objects to learn from.                                            |
 | _keyword-only_  |                                                     |                                                                                                        |
 | `drop`          | float                                               | The dropout rate.                                                                                      |
 | `sgd`           | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | The optimizer.                                                                                         |

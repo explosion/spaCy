@@ -75,8 +75,8 @@ class Morphologizer(Tagger):
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
         name (str): The component instance name, used to add entries to the
             losses during training.
-        labels_morph (dict): TODO:
-        labels_pos (dict): TODO:
+        labels_morph (dict): Mapping of morph + POS tags to morph labels.
+        labels_pos (dict): Mapping of morph + POS tags to POS tags.
 
         DOCS: https://spacy.io/api/morphologizer#init
         """

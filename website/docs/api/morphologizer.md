@@ -63,16 +63,14 @@ Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
 [`nlp.add_pipe`](/api/language#add_pipe).
 
-<!-- TODO: finish API docs -->
-
 | Name           | Type    | Description                                                                                 |
 | -------------- | ------- | ------------------------------------------------------------------------------------------- |
 | `vocab`        | `Vocab` | The shared vocabulary.                                                                      |
 | `model`        | `Model` | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component.             |
 | `name`         | str     | String name of the component instance. Used to add entries to the `losses` during training. |
 | _keyword-only_ |         |                                                                                             |
-| `labels_morph` | dict    |                                                                                             |
-| `labels_pos`   | dict    |                                                                                             |
+| `labels_morph` | dict    | Mapping of morph + POS tags to morph labels.                                                |
+| `labels_pos`   | dict    | Mapping of morph + POS tags to POS tags.                                                    |
 
 ## Morphologizer.\_\_call\_\_ {#call tag="method"}
 

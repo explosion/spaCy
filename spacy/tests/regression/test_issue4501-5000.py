@@ -185,20 +185,16 @@ def test_issue4725_1():
     vocab = Vocab(vectors_name="test_vocab_add_vector")
     nlp = English(vocab=vocab)
     config = {
-        "learn_tokens": False,
-        "min_action_freq": 342,
         "update_with_oracle_cut_size": 111,
     }
     ner = nlp.create_pipe("ner", config=config)
     with make_tempdir() as tmp_path:
         with (tmp_path / "ner.pkl").open("wb") as file_:
             pickle.dump(ner, file_)
-            assert ner.cfg["min_action_freq"] == 342
             assert ner.cfg["update_with_oracle_cut_size"] == 111
 
         with (tmp_path / "ner.pkl").open("rb") as file_:
             ner2 = pickle.load(file_)
-            assert ner2.cfg["min_action_freq"] == 342
             assert ner2.cfg["update_with_oracle_cut_size"] == 111
 
 

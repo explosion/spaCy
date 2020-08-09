@@ -9,6 +9,28 @@ api_string_name: lemmatizer
 api_trainable: false
 ---
 
+Component for assigning base forms to tokens using rules based on part-of-speech
+tags, or lookup tables. Functionality to train the component is coming soon.
+Different [`Language`](/api/language) subclasses can implement their own
+lemmatizer components via
+[language-specific factories](/usage/processing-pipelines#factories-language).
+The default data used is provided by the
+[`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data)
+extension package.
+
+<Infobox variant="warning" title="New in v3.0">
+
+As of v3.0, the `Lemmatizer` is a **standalone pipeline component** that can be
+added to your pipeline, and not a hidden part of the vocab that runs behind the
+scenes. This makes it easier to customize how lemmas should be assigned in your
+pipeline.
+
+If the lemmatization mode is set to `"rule"` and requires part-of-speech tags to
+be assigned, make sure a [`Tagger`](/api/tagger) or another component assigning
+tags is available in the pipeline and runs _before_ the lemmatizer.
+
+</Infobox>
+
 ## Config and implementation
 
 The default config is defined by the pipeline component factory and describes
@@ -29,7 +51,7 @@ lemmatizers, see the
 
 | Setting     | Type                                       | Description                                                                                                                                                                            | Default    |
 | ----------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
-| `mode`      | str                                        | The lemmatizer mode, e.g. "lookup" or "rule".                                                                                                                                          | `"lookup"` |
+| `mode`      | str                                        | The lemmatizer mode, e.g. `"lookup"` or `"rule"`.                                                                                                                                      | `"lookup"` |
 | `lookups`   | [`Lookups`](/api/lookups)                  | The lookups object containing the tables such as `"lemma_rules"`, `"lemma_index"`, `"lemma_exc"` and `"lemma_lookup"`. If `None`, default tables are loaded from `spacy-lookups-data`. | `None`     |
 | `overwrite` | bool                                       | Whether to overwrite existing lemmas.                                                                                                                                                  | `False`    |
 | `model`     | [`Model`](https://thinc.ai/docs/api-model) | **Not yet implemented:** the model to use.                                                                                                                                             | `None`     |
@@ -55,15 +77,15 @@ Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
 [`nlp.add_pipe`](/api/language#add_pipe).
 
-| Name           | Type                                       | Description                                                                                                                      |
-| -------------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`        | [`Vocab`](/api/vocab)                      | The vocab.                                                                                                                       |
-| `model`        | [`Model`](https://thinc.ai/docs/api-model) | A model (not yet implemented).                                                                                                   |
-| `name`         | str                                        | String name of the component instance. Used to add entries to the `losses` during training.                                      |
-| _keyword-only_ |                                            |                                                                                                                                  |
-| mode           | str                                        | The lemmatizer mode, e.g. "lookup" or "rule". Defaults to "lookup".                                                              |
-| lookups        | [`Lookups`](/api/lookups)                  | A lookups object containing the tables such as "lemma_rules", "lemma_index", "lemma_exc" and "lemma_lookup". Defaults to `None`. |
-| overwrite      | bool                                       | Whether to overwrite existing lemmas.                                                                                            |
+| Name           | Type                                       | Description                                                                                                                              |
+| -------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`        | [`Vocab`](/api/vocab)                      | The vocab.                                                                                                                               |
+| `model`        | [`Model`](https://thinc.ai/docs/api-model) | A model (not yet implemented).                                                                                                           |
+| `name`         | str                                        | String name of the component instance. Used to add entries to the `losses` during training.                                              |
+| _keyword-only_ |                                            |                                                                                                                                          |
+| mode           | str                                        | The lemmatizer mode, e.g. `"lookup"` or `"rule"`. Defaults to `"lookup"`.                                                                |
+| lookups        | [`Lookups`](/api/lookups)                  | A lookups object containing the tables such as `"lemma_rules"`, `"lemma_index"`, `"lemma_exc"` and `"lemma_lookup"`. Defaults to `None`. |
+| overwrite      | bool                                       | Whether to overwrite existing lemmas.                                                                                                    |
 
 ## Lemmatizer.\_\_call\_\_ {#call tag="method"}
 

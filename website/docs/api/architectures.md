@@ -3,7 +3,7 @@ title: Model Architectures
 teaser: Pre-defined model architectures included with the core library
 source: spacy/ml/models
 menu:
-  - ['Tok2Vec', 'tok2vec']
+  - ['Tok2Vec', 'tok2vec-arch']
   - ['Transformers', 'transformers']
   - ['Parser & NER', 'parser']
   - ['Tagging', 'tagger']
@@ -69,6 +69,47 @@ blog post for background.
 | -------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `embed`  | [`Model`](https://thinc.ai/docs/api-model) | **Input:** `List[Doc]`. **Output:** `List[Floats2d]`. Embed tokens into context-independent word vector representations.                                   |
 | `encode` | [`Model`](https://thinc.ai/docs/api-model) | **Input:** `List[Floats2d]`. **Output:** `List[Floats2d]`. Encode context into the embeddings, using an architecture such as a CNN, BiLSTM or transformer. |
+
+### spacy.Tok2VecListener.v1 {#Tok2VecListener}
+
+> #### Example config
+>
+> ```ini
+> [components.tok2vec]
+> factory = "tok2vec"
+>
+> [components.tok2vec.model]
+> @architectures = "spacy.HashEmbedCNN.v1"
+> width = 342
+>
+> [components.tagger]
+> factory = "tagger"
+>
+> [components.tagger.model]
+> @architectures = "spacy.Tagger.v1"
+>
+> [components.tagger.model.tok2vec]
+> @architectures = "spacy.Tok2VecListener.v1"
+> width = ${components.tok2vec.model:width}
+> ```
+
+A listener is used as a sublayer within a component such as a
+[`DependencyParser`](/api/dependencyparser),
+[`EntityRecognizer`](/api/entityrecognizer)or
+[`TextCategorizer`](/api/textcategorizer). Usually you'll have multiple
+listeners connecting to a single upstream [`Tok2Vec`](/api/tok2vec) component
+that's earlier in the pipeline. The listener layers act as **proxies**, passing
+the predictions from the `Tok2Vec` component into downstream components, and
+communicating gradients back upstream.
+
+Instead of defining its own `Tok2Vec` instance, a model architecture like
+[Tagger](/api/architectures#tagger) can define a listener as its `tok2vec`
+argument that connects to the shared `tok2vec` component in the pipeline.
+
+| Name       | Type | Description                                                                                                                                                                                                                                                                                            |
+| ---------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `width`    | int  | The width of the vectors produced by the "upstream" [`Tok2Vec`](/api/tok2vec) component.                                                                                                                                                                                                               |
+| `upstream` | str  | A string to identify the "upstream" `Tok2Vec` component to communicate with. The upstream name should either be the wildcard string `"*"`, or the name of the `Tok2Vec` component. You'll almost never have multiple upstream `Tok2Vec` components, so the wildcard string will almost always be fine. |
 
 ### spacy.MultiHashEmbed.v1 {#MultiHashEmbed}
 
@@ -195,7 +236,7 @@ and residual connections.
 > depth = 4
 > ```
 
-Encode context using bidirectonal LSTM layers. Requires
+Encode context using bidirectional LSTM layers. Requires
 [PyTorch](https://pytorch.org).
 
 | Name          | Type | Description                                                                                                                                                                                            |
@@ -237,8 +278,6 @@ architectures into your training config.
 
 ### spacy-transformers.Tok2VecListener.v1 {#Tok2VecListener}
 
-<!-- TODO: description -->
-
 > #### Example Config
 >
 > ```ini
@@ -250,10 +289,41 @@ architectures into your training config.
 > @layers = "reduce_mean.v1"
 > ```
 
-| Name          | Type                      | Description                                                                                    |
-| ------------- | ------------------------- | ---------------------------------------------------------------------------------------------- |
-| `grad_factor` | float                     | Factor for weighting the gradient if multiple components listen to the same transformer model. |
-| `pooling`     | `Model[Ragged, Floats2d]` | Pooling layer to determine how the vector for each spaCy token will be computed.               |
+Create a `TransformerListener` layer, which will connect to a
+[`Transformer`](/api/transformer) component earlier in the pipeline. The layer
+takes a list of [`Doc`](/api/doc) objects as input, and produces a list of
+2-dimensional arrays as output, with each array having one row per token. Most
+spaCy models expect a sublayer with this signature, making it easy to connect
+them to a transformer model via this sublayer. Transformer models usually
+operate over wordpieces, which usually don't align one-to-one against spaCy
+tokens. The layer therefore requires a reduction operation in order to calculate
+a single token vector given zero or more wordpiece vectors.
+
+| Name          | Type                                       | Description                                                                                                                                                                                                                                                         |
+| ------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pooling`     | [`Model`](https://thinc.ai/docs/api-model) | **Input:** [`Ragged`](https://thinc.ai/docs/api-types#ragged). **Output:** [`Floats2d`](https://thinc.ai/docs/api-types#types)                                                                                                                                      | A reduction layer used to calculate the token vectors based on zero or more wordpiece vectors. If in doubt, mean pooling (see [`reduce_mean`](https://thinc.ai/docs/api-layers#reduce_mean)) is usually a good choice. |
+| `grad_factor` | float                                      | Reweight gradients from the component before passing them upstream. You can set this to `0` to "freeze" the transformer weights with respect to the component, or use it to make some components more significant than others. Leaving it at `1.0` is usually fine. |
+
+### spacy-transformers.Tok2VecTransformer.v1 {#Tok2VecTransformer}
+
+> #### Example Config
+>
+> ```ini
+> # TODO:
+> ```
+
+Use a transformer as a [`Tok2Vec`](/api/tok2vec) layer directly. This does
+**not** allow multiple components to share the transformer weights, and does
+**not** allow the transformer to set annotations into the [`Doc`](/api/doc)
+object, but it's a **simpler solution** if you only need the transformer within
+one component.
+
+| Name               | Type                                       | Description                                                                                                                                                                                                                                                         |
+| ------------------ | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `get_spans`        | callable                                   | Function that takes a batch of [`Doc`](/api/doc) object and returns lists of [`Span`](/api) objects to process by the transformer. [See here](/api/transformer#span_getters) for built-in options and examples.                                                     |
+| `tokenizer_config` | `Dict[str, Any]`                           | Tokenizer settings passed to [`transformers.AutoTokenizer`](https://huggingface.co/transformers/model_doc/auto.html#transformers.AutoTokenizer).                                                                                                                    |
+| `pooling`          | [`Model`](https://thinc.ai/docs/api-model) | **Input:** [`Ragged`](https://thinc.ai/docs/api-types#ragged). **Output:** [`Floats2d`](https://thinc.ai/docs/api-types#types)                                                                                                                                      | A reduction layer used to calculate the token vectors based on zero or more wordpiece vectors. If in doubt, mean pooling (see [`reduce_mean`](https://thinc.ai/docs/api-layers#reduce_mean)) is usually a good choice. |
+| `grad_factor`      | float                                      | Reweight gradients from the component before passing them upstream. You can set this to `0` to "freeze" the transformer weights with respect to the component, or use it to make some components more significant than others. Leaving it at `1.0` is usually fine. |
 
 ## Parser & NER architectures {#parser}
 
@@ -417,20 +487,18 @@ network has an internal CNN Tok2Vec layer and uses attention.
 > nO = null
 > ```
 
-| Name                 | Type  | Description                                                                                                                                 |
-| -------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `exclusive_classes`  | bool  | Whether or not categories are mutually exclusive.                                                                                           |
-| `pretrained_vectors` | bool  | Whether or not pretrained vectors will be used in addition to the feature vectors.                                                          |
-| `width`              | int   | Output dimension of the feature encoding step.                                                                                              |
-| `embed_size`         | int   | Input dimension of the feature encoding step.                                                                                               |
-| `conv_depth`         | int   | Depth of the Tok2Vec layer.                                                                                                                 |
-| `window_size`        | int   | The number of contextual vectors to [concatenate](https://thinc.ai/docs/api-layers#expand_window) from the left and from the right.         |
-| `ngram_size`         | int   | Determines the maximum length of the n-grams in the BOW model. For instance, `ngram_size=3`would give unigram, trigram and bigram features. |
-| `dropout`            | float | The dropout rate.                                                                                                                           |
-| `nO`                 | int   | Output dimension, determined by the number of different labels.                                                                             |
-
-If the `nO` dimension is not set, the TextCategorizer component will set it when
-`begin_training` is called.
+| Name                        | Type  | Description                                                                                                                                              |
+| --------------------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `exclusive_classes`         | bool  | Whether or not categories are mutually exclusive.                                                                                                        |
+| `pretrained_vectors`        | bool  | Whether or not pretrained vectors will be used in addition to the feature vectors.                                                                       |
+| `width`                     | int   | Output dimension of the feature encoding step.                                                                                                           |
+| `embed_size`                | int   | Input dimension of the feature encoding step.                                                                                                            |
+| `conv_depth`                | int   | Depth of the Tok2Vec layer.                                                                                                                              |
+| `window_size`               | int   | The number of contextual vectors to [concatenate](https://thinc.ai/docs/api-layers#expand_window) from the left and from the right.                      |
+| `ngram_size`                | int   | Determines the maximum length of the n-grams in the BOW model. For instance, `ngram_size=3`would give unigram, trigram and bigram features.              |
+| `dropout`                   | float | The dropout rate.                                                                                                                                        |
+| `nO`                        | int   | Output dimension, determined by the number of different labels. If not set, the the [`TextCategorizer`](/api/textcategorizer) component will set it when |
+| `begin_training` is called. |
 
 ### spacy.TextCatCNN.v1 {#TextCatCNN}
 
@@ -457,14 +525,12 @@ A neural network model where token vectors are calculated using a CNN. The
 vectors are mean pooled and used as features in a feed-forward network. This
 architecture is usually less accurate than the ensemble, but runs faster.
 
-| Name                | Type                                       | Description                                                     |
-| ------------------- | ------------------------------------------ | --------------------------------------------------------------- |
-| `exclusive_classes` | bool                                       | Whether or not categories are mutually exclusive.               |
-| `tok2vec`           | [`Model`](https://thinc.ai/docs/api-model) | The [`tok2vec`](#tok2vec) layer of the model.                   |
-| `nO`                | int                                        | Output dimension, determined by the number of different labels. |
-
-If the `nO` dimension is not set, the TextCategorizer component will set it when
-`begin_training` is called.
+| Name                        | Type                                       | Description                                                                                                                                              |
+| --------------------------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `exclusive_classes`         | bool                                       | Whether or not categories are mutually exclusive.                                                                                                        |
+| `tok2vec`                   | [`Model`](https://thinc.ai/docs/api-model) | The [`tok2vec`](#tok2vec) layer of the model.                                                                                                            |
+| `nO`                        | int                                        | Output dimension, determined by the number of different labels. If not set, the the [`TextCategorizer`](/api/textcategorizer) component will set it when |
+| `begin_training` is called. |
 
 ### spacy.TextCatBOW.v1 {#TextCatBOW}
 
@@ -482,17 +548,17 @@ If the `nO` dimension is not set, the TextCategorizer component will set it when
 An ngram "bag-of-words" model. This architecture should run much faster than the
 others, but may not be as accurate, especially if texts are short.
 
-| Name                | Type  | Description                                                                                                                                 |
-| ------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `exclusive_classes` | bool  | Whether or not categories are mutually exclusive.                                                                                           |
-| `ngram_size`        | int   | Determines the maximum length of the n-grams in the BOW model. For instance, `ngram_size=3`would give unigram, trigram and bigram features. |
-| `no_output_layer`   | float | Whether or not to add an output layer to the model (`Softmax` activation if `exclusive_classes=True`, else `Logistic`.                      |
-| `nO`                | int   | Output dimension, determined by the number of different labels.                                                                             |
+| Name                        | Type  | Description                                                                                                                                              |
+| --------------------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `exclusive_classes`         | bool  | Whether or not categories are mutually exclusive.                                                                                                        |
+| `ngram_size`                | int   | Determines the maximum length of the n-grams in the BOW model. For instance, `ngram_size=3`would give unigram, trigram and bigram features.              |
+| `no_output_layer`           | float | Whether or not to add an output layer to the model (`Softmax` activation if `exclusive_classes=True`, else `Logistic`.                                   |
+| `nO`                        | int   | Output dimension, determined by the number of different labels. If not set, the the [`TextCategorizer`](/api/textcategorizer) component will set it when |
+| `begin_training` is called. |
 
-If the `nO` dimension is not set, the TextCategorizer component will set it when
-`begin_training` is called.
-
+<!-- TODO:
 ### spacy.TextCatLowData.v1 {#TextCatLowData}
+-->
 
 ## Entity linking architectures {#entitylinker source="spacy/ml/models/entity_linker.py"}
 
@@ -558,8 +624,6 @@ A function that creates a default, empty `KnowledgeBase` from a
 
 A function that takes as input a [`KnowledgeBase`](/api/kb) and a
 [`Span`](/api/span) object denoting a named entity, and returns a list of
-plausible [`Candidate` objects](/api/kb/#candidate_init).
-
-The default `CandidateGenerator` simply uses the text of a mention to find its
-potential aliases in the Knowledgebase. Note that this function is
-case-dependent.
+plausible [`Candidate` objects](/api/kb/#candidate_init). The default
+`CandidateGenerator` simply uses the text of a mention to find its potential
+aliases in the `KnowledgeBase`. Note that this function is case-dependent.

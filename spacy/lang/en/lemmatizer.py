@@ -1,5 +1,3 @@
-from typing import Optional
-
 from ...pipeline import Lemmatizer
 from ...tokens import Token
 

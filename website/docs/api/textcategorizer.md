@@ -9,6 +9,12 @@ api_string_name: textcat
 api_trainable: true
 ---
 
+The text categorizer predicts **categories over a whole document**. It can learn
+one or more labels, and the labels can be mutually exclusive (i.e. one true
+label per document) or non-mutually exclusive (i.e. zero or more labels may be
+true per document). The multi-label setting is controlled by the model instance
+that's provided.
+
 ## Config and implementation {#config}
 
 The default config is defined by the pipeline component factory and describes
@@ -29,10 +35,10 @@ architectures and their arguments and hyperparameters.
 > nlp.add_pipe("textcat", config=config)
 > ```
 
-| Setting  | Type                                       | Description        | Default                                               |
-| -------- | ------------------------------------------ | ------------------ | ----------------------------------------------------- |
-| `labels` | `Iterable[str]`                            | The labels to use. | `[]`                                                  |
-| `model`  | [`Model`](https://thinc.ai/docs/api-model) | The model to use.  | [TextCatEnsemble](/api/architectures#TextCatEnsemble) |
+| Setting  | Type                                       | Description                                                                             | Default                                               |
+| -------- | ------------------------------------------ | --------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `labels` | `List[str]`                                | A list of categories to learn. If empty, the model infers the categories from the data. | `[]`                                                  |
+| `model`  | [`Model`](https://thinc.ai/docs/api-model) | A model instance that predicts scores for each category.                                | [TextCatEnsemble](/api/architectures#TextCatEnsemble) |
 
 ```python
 https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/textcat.py
@@ -66,23 +72,6 @@ shortcut for this and instantiate the component using its string name and
 | `name`         | str                                        | String name of the component instance. Used to add entries to the `losses` during training. |
 | _keyword-only_ |                                            |                                                                                             |
 | `labels`       | `Iterable[str]`                            | The labels to use.                                                                          |
-
-<!-- TODO move to config page
-### Architectures {#architectures new="2.1"}
-
-Text classification models can be used to solve a wide variety of problems.
-Differences in text length, number of labels, difficulty, and runtime
-performance constraints mean that no single algorithm performs well on all types
-of problems. To handle a wider variety of problems, the `TextCategorizer` object
-allows configuration of its model architecture, using the `architecture` keyword
-argument.
-
-| Name           | Description                                                                                                                                                                                                                                                                                                                                                                                                      |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `"ensemble"`   | **Default:** Stacked ensemble of a bag-of-words model and a neural network model. The neural network uses a CNN with mean pooling and attention. The "ngram_size" and "attr" arguments can be used to configure the feature extraction for the bag-of-words model.                                                                                                                                               |
-| `"simple_cnn"` | A neural network model where token vectors are calculated using a CNN. The vectors are mean pooled and used as features in a feed-forward network. This architecture is usually less accurate than the ensemble, but runs faster.                                                                                                                                                                                |
-| `"bow"`        | An ngram "bag-of-words" model. This architecture should run much faster than the others, but may not be as accurate, especially if texts are short. The features extracted can be controlled using the keyword arguments `ngram_size` and `attr`. For instance, `ngram_size=3` and `attr="lower"` would give lower-cased unigram, trigram and bigram features. 2, 3 or 4 are usually good choices of ngram size. |
--->
 
 ## TextCategorizer.\_\_call\_\_ {#call tag="method"}
 

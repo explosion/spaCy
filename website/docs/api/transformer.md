@@ -25,8 +25,15 @@ work out-of-the-box.
 
 </Infobox>
 
-This pipeline component lets you use transformer models in your pipeline. The
-component assigns the output of the transformer to the Doc's extension
+This pipeline component lets you use transformer models in your pipeline.
+Supports all models that are available via the
+[HuggingFace `transformers`](https://huggingface.co/transformers) library.
+Usually you will connect subsequent components to the shared transformer using
+the [TransformerListener](/api/architectures#TransformerListener) layer. This
+works similarly to spaCy's [Tok2Vec](/api/tok2vec) component and
+[Tok2VecListener](/api/architectures/Tok2VecListener) sublayer.
+
+The component assigns the output of the transformer to the `Doc`'s extension
 attributes. We also calculate an alignment between the word-piece tokens and the
 spaCy tokenization, so that we can use the last hidden states to set the
 `Doc.tensor` attribute. When multiple word-piece tokens align to the same spaCy
@@ -53,11 +60,11 @@ architectures and their arguments and hyperparameters.
 > nlp.add_pipe("transformer", config=DEFAULT_CONFIG)
 > ```
 
-| Setting             | Type                                       | Description                                                                                                                                                         | Default                                                 |
-| ------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| `max_batch_items`   | int                                        | Maximum size of a padded batch.                                                                                                                                     | `4096`                                                  |
-| `annotation_setter` | Callable                                   | Function that takes a batch of `Doc` objects and a [`FullTransformerBatch`](/api/transformer#fulltransformerbatch) and can set additional annotations on the `Doc`. | `null_annotation_setter`                                |
-| `model`             | [`Model`](https://thinc.ai/docs/api-model) | The model to use.                                                                                                                                                   | [TransformerModel](/api/architectures#TransformerModel) |
+| Setting             | Type                                       | Description                                                                                                                                                                                                                                                                                     | Default                                                 |
+| ------------------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| `max_batch_items`   | int                                        | Maximum size of a padded batch.                                                                                                                                                                                                                                                                 | `4096`                                                  |
+| `annotation_setter` | Callable                                   | Function that takes a batch of `Doc` objects and a [`FullTransformerBatch`](/api/transformer#fulltransformerbatch) and can set additional annotations on the `Doc`. The `Doc._.transformer_data` attribute is set prior to calling the callback. By default, no additional annotations are set. | `null_annotation_setter`                                |
+| `model`             | [`Model`](https://thinc.ai/docs/api-model) | **Input:** `List[Doc]`. **Output:** [`FullTransformerBatch`](/api/transformer#fulltransformerbatch). The Thinc [`Model`](https://thinc.ai/docs/api-model) wrapping the transformer.                                                                                                             | [TransformerModel](/api/architectures#TransformerModel) |
 
 ```python
 https://github.com/explosion/spacy-transformers/blob/master/spacy_transformers/pipeline_component.py
@@ -86,18 +93,22 @@ https://github.com/explosion/spacy-transformers/blob/master/spacy_transformers/p
 > trf = Transformer(nlp.vocab, model)
 > ```
 
-Create a new pipeline instance. In your application, you would normally use a
-shortcut for this and instantiate the component using its string name and
-[`nlp.add_pipe`](/api/language#create_pipe).
+Construct a `Transformer` component. One or more subsequent spaCy components can
+use the transformer outputs as features in its model, with gradients
+backpropagated to the single shared weights. The activations from the
+transformer are saved in the [`Doc._.trf_data`](#custom-attributes) extension
+attribute. You can also provide a callback to set additional annotations. In
+your application, you would normally use a shortcut for this and instantiate the
+component using its string name and [`nlp.add_pipe`](/api/language#create_pipe).
 
-| Name                | Type                                       | Description                                                                                                                                                                                                                             |
-| ------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`             | `Vocab`                                    | The shared vocabulary.                                                                                                                                                                                                                  |
-| `model`             | [`Model`](https://thinc.ai/docs/api-model) | The Thinc [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component.                                                                                                                                                   |
-| `annotation_setter` | `Callable`                                 | Function that takes a batch of `Doc` objects and a [`FullTransformerBatch`](/api/transformer#fulltransformerbatch) and can set additional annotations on the `Doc`. Defaults to `null_annotation_setter`, a function that does nothing. |
-| _keyword-only_      |                                            |                                                                                                                                                                                                                                         |
-| `name`              | str                                        | String name of the component instance. Used to add entries to the `losses` during training.                                                                                                                                             |
-| `max_batch_items`   | int                                        | Maximum size of a padded batch. Defaults to `128*32`.                                                                                                                                                                                   |
+| Name                | Type                                       | Description                                                                                                                                                                                                                                                                                     |
+| ------------------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`             | `Vocab`                                    | The shared vocabulary.                                                                                                                                                                                                                                                                          |
+| `model`             | [`Model`](https://thinc.ai/docs/api-model) | **Input:** `List[Doc]`. **Output:** [`FullTransformerBatch`](/api/transformer#fulltransformerbatch). The Thinc [`Model`](https://thinc.ai/docs/api-model) wrapping the transformer. Usually you will want to use the [TransformerModel](/api/architectures#TransformerModel) layer for this.    |
+| `annotation_setter` | `Callable`                                 | Function that takes a batch of `Doc` objects and a [`FullTransformerBatch`](/api/transformer#fulltransformerbatch) and can set additional annotations on the `Doc`. The `Doc._.transformer_data` attribute is set prior to calling the callback. By default, no additional annotations are set. |
+| _keyword-only_      |                                            |                                                                                                                                                                                                                                                                                                 |
+| `name`              | str                                        | String name of the component instance. Used to add entries to the `losses` during training.                                                                                                                                                                                                     |
+| `max_batch_items`   | int                                        | Maximum size of a padded batch. Defaults to `128*32`.                                                                                                                                                                                                                                           |
 
 ## Transformer.\_\_call\_\_ {#call tag="method"}
 
@@ -184,7 +195,10 @@ Apply the pipeline's model to a batch of docs, without modifying them.
 
 ## Transformer.set_annotations {#set_annotations tag="method"}
 
-Modify a batch of documents, using pre-computed scores.
+Assign the extracted features to the Doc objects. By default, the
+[`TransformerData`](/api/transformer#transformerdata) object is written to the
+[`Doc._.trf_data`](#custom-attributes) attribute. Your annotation_setter
+callback is then called, if provided.
 
 > #### Example
 >
@@ -201,8 +215,19 @@ Modify a batch of documents, using pre-computed scores.
 
 ## Transformer.update {#update tag="method"}
 
-Learn from a batch of documents and gold-standard information, updating the
-pipe's model. Delegates to [`predict`](/api/transformer#predict).
+Prepare for an update to the transformer. Like the [`Tok2Vec`](/api/tok2vec)
+component, the `Transformer` component is unusual in that it does not receive
+"gold standard" annotations to calculate a weight update. The optimal output of
+the transformer data is unknown – it's a hidden layer inside the network that is
+updated by backpropagating from output layers.
+
+The `Transformer` component therefore does **not** perform a weight update
+during its own `update` method. Instead, it runs its transformer model and
+communicates the output and the backpropagation callback to any **downstream
+components** that have been connected to it via the
+[TransformerListener](/api/architectures#TransformerListener) sublayer. If there
+are multiple listeners, the last layer will actually backprop to the transformer
+and call the optimizer, while the others simply increment the gradients.
 
 > #### Example
 >
@@ -212,15 +237,15 @@ pipe's model. Delegates to [`predict`](/api/transformer#predict).
 > losses = trf.update(examples, sgd=optimizer)
 > ```
 
-| Name              | Type                                                | Description                                                                                                                               |
-| ----------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `examples`        | `Iterable[Example]`                                 | A batch of [`Example`](/api/example) objects to learn from.                                                                               |
-| _keyword-only_    |                                                     |                                                                                                                                           |
-| `drop`            | float                                               | The dropout rate.                                                                                                                         |
-| `set_annotations` | bool                                                | Whether or not to update the `Example` objects with the predictions, delegating to [`set_annotations`](/api/transformer#set_annotations). |
-| `sgd`             | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | The optimizer.                                                                                                                            |
-| `losses`          | `Dict[str, float]`                                  | Optional record of the loss during training. Updated using the component name as the key.                                                 |
-| **RETURNS**       | `Dict[str, float]`                                  | The updated `losses` dictionary.                                                                                                          |
+| Name              | Type                                                | Description                                                                                                                                                |
+| ----------------- | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `examples`        | `Iterable[Example]`                                 | A batch of [`Example`](/api/example) objects. Only the [`Example.predicted`](/api/example#predicted) `Doc` object is used, the reference `Doc` is ignored. |
+| _keyword-only_    |                                                     |                                                                                                                                                            |
+| `drop`            | float                                               | The dropout rate.                                                                                                                                          |
+| `set_annotations` | bool                                                | Whether or not to update the `Example` objects with the predictions, delegating to [`set_annotations`](/api/transformer#set_annotations).                  |
+| `sgd`             | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | The optimizer.                                                                                                                                             |
+| `losses`          | `Dict[str, float]`                                  | Optional record of the loss during training. Updated using the component name as the key.                                                                  |
+| **RETURNS**       | `Dict[str, float]`                                  | The updated `losses` dictionary.                                                                                                                           |
 
 ## Transformer.create_optimizer {#create_optimizer tag="method"}
 
@@ -394,21 +419,23 @@ Split a `TransformerData` object that represents a batch into a list with one
 | ----------- | ----------------------- | ----------- |
 | **RETURNS** | `List[TransformerData]` |             |
 
-## Span getters {#span_getters tag="registered functions" source="github.com/explosion/spacy-transformers/blob/master/spacy_transformers/span_getters.py"}
-
-<!-- TODO: details on what this is for -->
+## Span getters {#span_getters source="github.com/explosion/spacy-transformers/blob/master/spacy_transformers/span_getters.py"}
 
 Span getters are functions that take a batch of [`Doc`](/api/doc) objects and
 return a lists of [`Span`](/api/span) objects for each doc, to be processed by
-the transformer. The returned spans can overlap. Span getters can be referenced
-in the config's `[components.transformer.model.get_spans]` block to customize
-the sequences processed by the transformer. You can also register custom span
-getters using the `@registry.span_getters` decorator.
+the transformer. This is used to manage long documents, by cutting them into
+smaller sequences before running the transformer. The spans are allowed to
+overlap, and you can also omit sections of the Doc if they are not relevant.
+
+Span getters can be referenced in the `[components.transformer.model.get_spans]`
+block of the config to customize the sequences processed by the transformer. You
+can also register custom span getters using the `@spacy.registry.span_getters`
+decorator.
 
 > #### Example
 >
 > ```python
-> @registry.span_getters("sent_spans.v1")
+> @spacy.registry.span_getters("sent_spans.v1")
 > def configure_get_sent_spans() -> Callable:
 >     def get_sent_spans(docs: Iterable[Doc]) -> List[List[Span]]:
 >         return [list(doc.sents) for doc in docs]
@@ -421,15 +448,55 @@ getters using the `@registry.span_getters` decorator.
 | `docs`      | `Iterable[Doc]`    | A batch of `Doc` objects.                |
 | **RETURNS** | `List[List[Span]]` | The spans to process by the transformer. |
 
-The following built-in functions are available:
+### doc_spans.v1 {#doc_spans tag="registered function"}
 
-<!-- TODO: finish API docs -->
+> #### Example config
+>
+> ```ini
+> [transformer.model.get_spans]
+> @span_getters = "doc_spans.v1"
+> ```
 
-| Name               | Description                                                        |
-| ------------------ | ------------------------------------------------------------------ |
-| `doc_spans.v1`     | Create a span for each doc (no transformation, process each text). |
-| `sent_spans.v1`    | Create a span for each sentence if sentence boundaries are set.    |
-| `strided_spans.v1` |                                                                    |
+Create a span getter that uses the whole document as its spans. This is the best
+approach if your [`Doc`](/api/doc) objects already refer to relatively short
+texts.
+
+### sent_spans.v1 {#sent_spans tag="registered function"}
+
+> #### Example config
+>
+> ```ini
+> [transformer.model.get_spans]
+> @span_getters = "sent_spans.v1"
+> ```
+
+Create a span getter that uses sentence boundary markers to extract the spans.
+This requires sentence boundaries to be set (e.g. by the
+[`Sentencizer`](/api/sentencizer)), and may result in somewhat uneven batches,
+depending on the sentence lengths. However, it does provide the transformer with
+more meaningful windows to attend over.
+
+### strided_spans.v1 {#strided_spans tag="registered function"}
+
+> #### Example config
+>
+> ```ini
+> [transformer.model.get_spans]
+> @span_getters = "strided_spans.v1"
+> window = 128
+> stride = 96
+> ```
+
+Create a span getter for strided spans. If you set the `window` and `stride` to
+the same value, the spans will cover each token once. Setting `stride` lower
+than `window` will allow for an overlap, so that some tokens are counted twice.
+This can be desirable, because it allows all tokens to have both a left and
+right context.
+
+| Name      | Type | Description      |
+| --------- | ---- | ---------------- |
+|  `window` | int  | The window size. |
+| `stride`  | int  | The stride size. |
 
 ## Annotation setters {#annotation_setters tag="registered functions" source="github.com/explosion/spacy-transformers/blob/master/spacy_transformers/annotation_setters.py"}
 

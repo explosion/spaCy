@@ -37,7 +37,6 @@ DEFAULT_PARSER_MODEL = Config().from_str(default_model_config)["model"]
     default_config={
         "moves": None,
         "update_with_oracle_cut_size": 100,
-        "multitasks": [],
         "learn_tokens": False,
         "min_action_freq": 30,
         "model": DEFAULT_PARSER_MODEL,
@@ -51,17 +50,52 @@ def make_parser(
     model: Model,
     moves: Optional[list],
     update_with_oracle_cut_size: int,
-    multitasks: Iterable,
     learn_tokens: bool,
     min_action_freq: int
 ):
+    """Create a transition-based DependencyParser component. The dependency parser
+    jointly learns sentence segmentation and labelled dependency parsing, and can
+    optionally learn to merge tokens that had been over-segmented by the tokenizer.
+
+    The parser uses a variant of the non-monotonic arc-eager transition-system
+    described by Honnibal and Johnson (2014), with the addition of a "break"
+    transition to perform the sentence segmentation. Nivre's pseudo-projective
+    dependency transformation is used to allow the parser to predict
+    non-projective parses.
+
+    The parser is trained using an imitation learning objective. The parser follows
+    the actions predicted by the current weights, and at each state, determines
+    which actions are compatible with the optimal parse that could be reached
+    from the current state. The weights such that the scores assigned to the
+    set of optimal actions is increased, while scores assigned to other
+    actions are decreased. Note that more than one action may be optimal for
+    a given state.
+
+    model (Model): The model for the transition-based parser. The model needs
+        to have a specific substructure of named components --- see the
+        spacy.ml.tb_framework.TransitionModel for details.
+    moves (List[str]): A list of transition names. Inferred from the data if not
+        provided.
+    update_with_oracle_cut_size (int):
+        During training, cut long sequences into shorter segments by creating
+        intermediate states based on the gold-standard history. The model is
+        not very sensitive to this parameter, so you usually won't need to change
+        it. 100 is a good default.
+    learn_tokens (bool): Whether to learn to merge subtokens that are split
+        relative to the gold standard. Experimental.
+    min_action_freq (int): The minimum frequency of labelled actions to retain.
+        Rarer labelled actions have their label backed-off to "dep". While this
+        primarily affects the label accuracy, it can also affect the attachment
+        structure, as the labels are used to represent the pseudo-projectivity
+        transformation.
+    """
     return DependencyParser(
         nlp.vocab,
         model,
         name,
         moves=moves,
         update_with_oracle_cut_size=update_with_oracle_cut_size,
-        multitasks=multitasks,
+        multitasks=[],
         learn_tokens=learn_tokens,
         min_action_freq=min_action_freq
     )

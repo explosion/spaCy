@@ -1,10 +1,8 @@
 import pytest
-
 from spacy import util
 from spacy.gold import Example
 from spacy.lang.en import English
 from spacy.language import Language
-from spacy.symbols import POS, NOUN
 
 from ..util import make_tempdir
 

@@ -11,7 +11,7 @@ import Link from './link'
 import GitHubCode from './github'
 import classes from '../styles/code.module.sass'
 
-const WRAP_THRESHOLD = 15
+const WRAP_THRESHOLD = 16
 
 export default props => (
     <Pre>

@@ -601,9 +601,7 @@ $ python -m spacy train [config_path] [--output] [--code] [--verbose] [overrides
 
 ## Pretrain {#pretrain new="2.1" tag="experimental"}
 
-<!-- TODO: document new pretrain command and link to new pretraining docs -->
-
-Pre-train the "token to vector" ([`Tok2vec`](/api/tok2vec)) layer of pipeline
+Pretrain the "token to vector" ([`Tok2vec`](/api/tok2vec)) layer of pipeline
 components on [raw text](/api/data-formats#pretrain), using an approximate
 language-modeling objective. Specifically, we load pretrained vectors, and train
 a component like a CNN, BiLSTM, etc to predict vectors which match the
@@ -611,7 +609,8 @@ pretrained ones. The weights are saved to a directory after each epoch. You can
 then include a **path to one of these pretrained weights files** in your
 [training config](/usage/training#config) as the `init_tok2vec` setting when you
 train your model. This technique may be especially helpful if you have little
-labelled data.
+labelled data. See the usage docs on [pretraining](/usage/training#pretraining)
+for more info.
 
 <Infobox title="Changed in v3.0" variant="warning">
 
@@ -634,8 +633,8 @@ $ python -m spacy pretrain [texts_loc] [output_dir] [config_path]
 | `output_dir`            | positional | Directory to write models to on each epoch.                                                                                                                                  |
 | `config_path`           | positional | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters.                                                                        |
 | `--code`, `-c`          | option     | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-models) for new architectures.                         |
-| `--resume-path`, `-r`   | option     | TODO:                                                                                                                                                                        |
-| `--epoch-resume`, `-er` | option     | TODO:                                                                                                                                                                        |
+| `--resume-path`, `-r`   | option     | Path to pretrained weights from which to resume pretraining.                                                                                                                 |
+| `--epoch-resume`, `-er` | option     | The epoch to resume counting from when using `--resume-path`. Prevents unintended overwriting of existing weight files.                                                      |
 | `--help`, `-h`          | flag       | Show help message and available arguments.                                                                                                                                   |
 | overrides               |            | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--training.use_gpu 1`.                |
 | **CREATES**             | weights    | The pretrained weights that can be used to initialize `spacy train`.                                                                                                         |

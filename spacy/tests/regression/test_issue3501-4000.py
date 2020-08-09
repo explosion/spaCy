@@ -157,7 +157,11 @@ def test_issue3540(en_vocab):
 
     with doc.retokenize() as retokenizer:
         heads = [(doc[3], 1), doc[2]]
-        attrs = {"POS": ["PROPN", "PROPN"], "LEMMA": ["New", "York"], "DEP": ["pobj", "compound"]}
+        attrs = {
+            "POS": ["PROPN", "PROPN"],
+            "LEMMA": ["New", "York"],
+            "DEP": ["pobj", "compound"],
+        }
         retokenizer.split(doc[3], ["New", "York"], heads=heads, attrs=attrs)
 
     gold_text = ["I", "live", "in", "New", "York", "right", "now"]

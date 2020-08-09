@@ -1,8 +1,7 @@
 import pytest
-
 from spacy import util, registry
 from spacy.lang.en import English
-from spacy.lookups import Lookups, load_lookups
+from spacy.lookups import Lookups
 
 from ..util import make_tempdir
 
