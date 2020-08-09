@@ -48,8 +48,6 @@ features and a CNN with layer-normalized maxout.
 
 ### spacy.Tok2Vec.v1 {#Tok2Vec}
 
-<!-- TODO: example config -->
-
 > #### Example config
 >
 > ```ini
@@ -57,18 +55,22 @@ features and a CNN with layer-normalized maxout.
 > @architectures = "spacy.Tok2Vec.v1"
 >
 > [model.embed]
+> @architectures = "spacy.CharacterEmbed.v1"
+> # ...
 >
 > [model.encode]
+> @architectures = "spacy.MaxoutWindowEncoder.v1"
+> # ...
 > ```
 
 Construct a tok2vec model out of embedding and encoding subnetworks. See the
 ["Embed, Encode, Attend, Predict"](https://explosion.ai/blog/deep-learning-formula-nlp)
 blog post for background.
 
-| Name     | Type                                       | Description                                                                                                                                                |
-| -------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `embed`  | [`Model`](https://thinc.ai/docs/api-model) | **Input:** `List[Doc]`. **Output:** `List[Floats2d]`. Embed tokens into context-independent word vector representations.                                   |
-| `encode` | [`Model`](https://thinc.ai/docs/api-model) | **Input:** `List[Floats2d]`. **Output:** `List[Floats2d]`. Encode context into the embeddings, using an architecture such as a CNN, BiLSTM or transformer. |
+| Name     | Type                                       | Description                                                                                                                                                                                                                                      |
+| -------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `embed`  | [`Model`](https://thinc.ai/docs/api-model) | **Input:** `List[Doc]`. **Output:** `List[Floats2d]`. Embed tokens into context-independent word vector representations. For example, [CharacterEmbed](/api/architectures#CharacterEmbed) or [MultiHashEmbed](/api/architectures#MultiHashEmbed) |
+| `encode` | [`Model`](https://thinc.ai/docs/api-model) | **Input:** `List[Floats2d]`. **Output:** `List[Floats2d]`. Encode context into the embeddings, using an architecture such as a CNN, BiLSTM or transformer. For example, [MaxoutWindowEncoder](/api/architectures#MaxoutWindowEncoder).           |
 
 ### spacy.Tok2VecListener.v1 {#Tok2VecListener}
 
@@ -113,8 +115,6 @@ argument that connects to the shared `tok2vec` component in the pipeline.
 
 ### spacy.MultiHashEmbed.v1 {#MultiHashEmbed}
 
-<!-- TODO: check example config -->
-
 > #### Example config
 >
 > ```ini
@@ -143,17 +143,15 @@ representation.
 
 ### spacy.CharacterEmbed.v1 {#CharacterEmbed}
 
-<!-- TODO: check example config -->
-
 > #### Example config
 >
 > ```ini
 > [model]
 > @architectures = "spacy.CharacterEmbed.v1"
-> width = 64
-> rows = 2000
-> nM = 16
-> nC = 4
+> width = 128
+> rows = 7000
+> nM = 64
+> nC = 8
 > ```
 
 Construct an embedded representations based on character embeddings, using a
@@ -186,9 +184,9 @@ construct a single vector to represent the information.
 > ```ini
 > [model]
 > @architectures = "spacy.MaxoutWindowEncoder.v1"
-> width = 64
+> width = 128
 > window_size = 1
-> maxout_pieces = 2
+> maxout_pieces = 3
 > depth = 4
 > ```
 
@@ -254,8 +252,6 @@ architectures into your training config.
 
 ### spacy-transformers.TransformerModel.v1 {#TransformerModel}
 
-<!-- TODO: description -->
-
 > #### Example Config
 >
 > ```ini
@@ -269,6 +265,8 @@ architectures into your training config.
 > window = 128
 > stride = 96
 > ```
+
+<!-- TODO: description -->
 
 | Name               | Type             | Description                                                                                                                                                                                                     |
 | ------------------ | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -309,7 +307,11 @@ a single token vector given zero or more wordpiece vectors.
 > #### Example Config
 >
 > ```ini
-> # TODO:
+> [model]
+> @architectures = "spacy.Tok2VecTransformer.v1"
+> name = "albert-base-v2"
+> tokenizer_config = {"use_fast": false}
+> grad_factor = 1.0
 > ```
 
 Use a transformer as a [`Tok2Vec`](/api/tok2vec) layer directly. This does
@@ -553,10 +555,6 @@ others, but may not be as accurate, especially if texts are short.
 | `ngram_size`        | int   | Determines the maximum length of the n-grams in the BOW model. For instance, `ngram_size=3`would give unigram, trigram and bigram features.                                          |
 | `no_output_layer`   | float | Whether or not to add an output layer to the model (`Softmax` activation if `exclusive_classes=True`, else `Logistic`.                                                               |
 | `nO`                | int   | Output dimension, determined by the number of different labels. If not set, the the [`TextCategorizer`](/api/textcategorizer) component will set it when `begin_training` is called. |
-
-<!-- TODO:
-### spacy.TextCatLowData.v1 {#TextCatLowData}
--->
 
 ## Entity linking architectures {#entitylinker source="spacy/ml/models/entity_linker.py"}
 

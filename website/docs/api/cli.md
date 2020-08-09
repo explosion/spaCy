@@ -438,7 +438,29 @@ will not be available.
 | `--help`, `-h`             | flag       | Show help message and available arguments.                                                                                                                           |
 | overrides                  |            | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. |
 
-<!-- TODO: document debug profile?-->
+### debug profile {#debug-profile}
+
+Profile which functions take the most time in a spaCy pipeline. Input should be
+formatted as one JSON object per line with a key `"text"`. It can either be
+provided as a JSONL file, or be read from `sys.sytdin`. If no input file is
+specified, the IMDB dataset is loaded via
+[`ml_datasets`](https://github.com/explosion/ml_datasets).
+
+<Infobox title="New in v3.0" variant="warning">
+
+The `profile` command is now available as a subcommand of `spacy debug`.
+
+</Infobox>
+
+```bash
+$ python -m spacy debug profile [model] [inputs] [--n-texts]
+```
+
+| Argument          | Type                                                              | Description                                             |
+| ----------------- | ----------------------------------------------------------------- | ------------------------------------------------------- |
+| `model`           | positional                                                        | A loadable spaCy model.                                 |
+| `inputs`          | positional                                                        | Optional path to input file, or `-` for standard input. |
+| `--n-texts`, `-n` | Maximum number of texts to use if available. Defaults to `10000`. |
 
 ### debug model {#debug-model}
 
@@ -546,20 +568,20 @@ $ python -m spacy debug model ./config.cfg tagger -l "5,15" -DIM -PAR -P0 -P1 -P
 
 </Accordion>
 
-| Argument                | Type       | Default | Description                                                                                           |
-| ----------------------- | ---------- | ------- | ----------------------------------------------------------------------------------------------------- |
-| `config_path`           | positional |         | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. |
-| `component`             | positional |         | Name of the pipeline component of which the model should be analyzed.                                 |
-| `--layers`, `-l`        | option     |         | Comma-separated names of layer IDs to print.                                                          |
-| `--dimensions`, `-DIM`  | option     | `False` | Show dimensions of each layer.                                                                        |
-| `--parameters`, `-PAR`  | option     | `False` | Show parameters of each layer.                                                                        |
-| `--gradients`, `-GRAD`  | option     | `False` | Show gradients of each layer.                                                                         |
-| `--attributes`, `-ATTR` | option     | `False` | Show attributes of each layer.                                                                        |
-| `--print-step0`, `-P0`  | option     | `False` | Print model before training.                                                                          |
-| `--print-step1`, `-P1`  | option     | `False` | Print model after initialization.                                                                     |
-| `--print-step2`, `-P2`  | option     | `False` | Print model after training.                                                                           |
-| `--print-step3`, `-P3`  | option     | `False` | Print final predictions.                                                                              |
-| `--help`, `-h`          | flag       |         | Show help message and available arguments.                                                            |
+| Argument                | Type       | Description                                                                                           | Default |
+| ----------------------- | ---------- | ----------------------------------------------------------------------------------------------------- | ------- |
+| `config_path`           | positional | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. |         |
+| `component`             | positional | Name of the pipeline component of which the model should be analyzed.                                 |         |
+| `--layers`, `-l`        | option     | Comma-separated names of layer IDs to print.                                                          |         |
+| `--dimensions`, `-DIM`  | option     | Show dimensions of each layer.                                                                        | `False` |
+| `--parameters`, `-PAR`  | option     | Show parameters of each layer.                                                                        | `False` |
+| `--gradients`, `-GRAD`  | option     | Show gradients of each layer.                                                                         | `False` |
+| `--attributes`, `-ATTR` | option     | Show attributes of each layer.                                                                        | `False` |
+| `--print-step0`, `-P0`  | option     | Print model before training.                                                                          | `False` |
+| `--print-step1`, `-P1`  | option     | Print model after initialization.                                                                     | `False` |
+| `--print-step2`, `-P2`  | option     | Print model after training.                                                                           | `False` |
+| `--print-step3`, `-P3`  | option     | Print final predictions.                                                                              | `False` |
+| `--help`, `-h`          | flag       | Show help message and available arguments.                                                            |         |
 
 ## Train {#train}
 

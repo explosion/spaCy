@@ -37,20 +37,19 @@ import Accordion from 'components/accordion.js'
 
 <Accordion title="Does the order of pipeline components matter?" id="pipeline-components-order">
 
-<!-- TODO: note on v3 tok2vec own model vs. upstream listeners -->
+The statistical components like the tagger or parser are typically independent
+and don't share any data between each other. For example, the named entity
+recognizer doesn't use any features set by the tagger and parser, and so on.
+This means that you can swap them, or remove single components from the pipeline
+without affecting the others. However, components may share a "token-to-vector"
+component like [`Tok2Vec`](/api/tok2vec) or [`Transformer`](/api/transformer).
 
-In spaCy v2.x, the statistical components like the tagger or parser are
-independent and don't share any data between themselves. For example, the named
-entity recognizer doesn't use any features set by the tagger and parser, and so
-on. This means that you can swap them, or remove single components from the
-pipeline without affecting the others.
-
-However, custom components may depend on annotations set by other components.
-For example, a custom lemmatizer may need the part-of-speech tags assigned, so
-it'll only work if it's added after the tagger. The parser will respect
-pre-defined sentence boundaries, so if a previous component in the pipeline sets
-them, its dependency predictions may be different. Similarly, it matters if you
-add the [`EntityRuler`](/api/entityruler) before or after the statistical entity
+Custom components may also depend on annotations set by other components. For
+example, a custom lemmatizer may need the part-of-speech tags assigned, so it'll
+only work if it's added after the tagger. The parser will respect pre-defined
+sentence boundaries, so if a previous component in the pipeline sets them, its
+dependency predictions may be different. Similarly, it matters if you add the
+[`EntityRuler`](/api/entityruler) before or after the statistical entity
 recognizer: if it's added before, the entity recognizer will take the existing
 entities into account when making predictions. The
 [`EntityLinker`](/api/entitylinker), which resolves named entities to knowledge

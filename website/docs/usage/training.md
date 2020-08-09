@@ -371,7 +371,7 @@ that reference this variable.
 
 ### Model architectures {#model-architectures}
 
-<!-- TODO: refer to architectures API: /api/architectures. This should document the architectures in spacy/ml/models -->
+<!-- TODO: refer to architectures API: /api/architectures -->
 
 ### Metrics, training output and weighted scores {#metrics}
 

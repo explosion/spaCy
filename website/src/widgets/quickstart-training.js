@@ -4,12 +4,10 @@ import { StaticQuery, graphql } from 'gatsby'
 import { Quickstart, QS } from '../components/quickstart'
 
 const DEFAULT_LANG = 'en'
-const MODELS_SMALL = { en: 'roberta-base-small' }
-const MODELS_LARGE = { en: 'roberta-base' }
-
 const COMPONENTS = ['tagger', 'parser', 'ner', 'textcat']
 const COMMENT = `# This is an auto-generated partial config for training a model.
-# TODO: intructions for how to fill and use it`
+# To use it for training, auto-fill it with all default values.
+# python -m spacy init config config.cfg --base base_config.cfg`
 const DATA = [
     {
         id: 'lang',
