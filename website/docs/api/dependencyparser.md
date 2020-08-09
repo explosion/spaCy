@@ -8,6 +8,23 @@ api_string_name: parser
 api_trainable: true
 ---
 
+A transition-based dependency parser component. The dependency parser jointly
+learns sentence segmentation and labelled dependency parsing, and can optionally
+learn to merge tokens that had been over-segmented by the tokenizer. The parser
+uses a variant of the **non-monotonic arc-eager transition-system** described by
+[Honnibal and Johnson (2014)](https://www.aclweb.org/anthology/D15-1162/), with
+the addition of a "break" transition to perform the sentence segmentation.
+[Nivre (2005)](https://www.aclweb.org/anthology/P05-1013/)'s **pseudo-projective
+dependency transformation** is used to allow the parser to predict
+non-projective parses.
+
+The parser is trained using an **imitation learning objective**. It follows the
+actions predicted by the current weights, and at each state, determines which
+actions are compatible with the optimal parse that could be reached from the
+current state. The weights such that the scores assigned to the set of optimal
+actions is increased, while scores assigned to other actions are decreased. Note
+that more than one action may be optimal for a given state.
+
 ## Config and implementation {#config}
 
 The default config is defined by the pipeline component factory and describes
@@ -23,18 +40,21 @@ architectures and their arguments and hyperparameters.
 > from spacy.pipeline.dep_parser import DEFAULT_PARSER_MODEL
 > config = {
 >    "moves": None,
->   # TODO: rest
+>    "update_with_oracle_cut_size": 100,
+>    "learn_tokens": False,
+>    "min_action_freq": 30,
 >    "model": DEFAULT_PARSER_MODEL,
 > }
 > nlp.add_pipe("parser", config=config)
 > ```
 
-<!-- TODO: finish API docs -->
-
-| Setting | Type                                       | Description       | Default                                                           |
-| ------- | ------------------------------------------ | ----------------- | ----------------------------------------------------------------- |
-| `moves` | list                                       |                   | `None`                                                            |
-| `model` | [`Model`](https://thinc.ai/docs/api-model) | The model to use. | [TransitionBasedParser](/api/architectures#TransitionBasedParser) |
+| Setting                       | Type                                       | Description                                                                                                                                                                                                                                                                                 | Default                                                           |
+| ----------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `moves`                       | `List[str]`                                | A list of transition names. Inferred from the data if not provided.                                                                                                                                                                                                                         | `None`                                                            |
+| `update_with_oracle_cut_size` | int                                        | During training, cut long sequences into shorter segments by creating intermediate states based on the gold-standard history. The model is not very sensitive to this parameter, so you usually won't need to change it.                                                                    | `100`                                                             |
+| `learn_tokens`                | bool                                       | Whether to learn to merge subtokens that are split relative to the gold standard. Experimental.                                                                                                                                                                                             | `False`                                                           |
+| `min_action_freq`             | int                                        | The minimum frequency of labelled actions to retain. Rarer labelled actions have their label backed-off to "dep". While this primarily affects the label accuracy, it can also affect the attachment structure, as the labels are used to represent the pseudo-projectivity transformation. | `30`                                                              |
+| `model`                       | [`Model`](https://thinc.ai/docs/api-model) | The model to use.                                                                                                                                                                                                                                                                           | [TransitionBasedParser](/api/architectures#TransitionBasedParser) |
 
 ```python
 https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/dep_parser.pyx
@@ -61,19 +81,16 @@ Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
 [`nlp.add_pipe`](/api/language#add_pipe).
 
-<!-- TODO: finish API docs -->
-
-| Name                          | Type                                       | Description                                                                                 |
-| ----------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| `vocab`                       | `Vocab`                                    | The shared vocabulary.                                                                      |
-| `model`                       | [`Model`](https://thinc.ai/docs/api-model) | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component.             |
-| `name`                        | str                                        | String name of the component instance. Used to add entries to the `losses` during training. |
-| `moves`                       | list                                       |                                                                                             |
-| _keyword-only_                |                                            |                                                                                             |
-| `update_with_oracle_cut_size` | int                                        |                                                                                             |
-| `multitasks`                  | `Iterable`                                 |                                                                                             |
-| `learn_tokens`                | bool                                       |                                                                                             |
-| `min_action_freq`             | int                                        |                                                                                             |
+| Name                          | Type                                       | Description                                                                                                                                                                                                                                                                                 |
+| ----------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`                       | `Vocab`                                    | The shared vocabulary.                                                                                                                                                                                                                                                                      |
+| `model`                       | [`Model`](https://thinc.ai/docs/api-model) | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component.                                                                                                                                                                                                             |
+| `name`                        | str                                        | String name of the component instance. Used to add entries to the `losses` during training.                                                                                                                                                                                                 |
+| `moves`                       | `List[str]`                                | A list of transition names. Inferred from the data if not provided.                                                                                                                                                                                                                         |
+| _keyword-only_                |                                            |                                                                                                                                                                                                                                                                                             |
+| `update_with_oracle_cut_size` | int                                        | During training, cut long sequences into shorter segments by creating intermediate states based on the gold-standard history. The model is not very sensitive to this parameter, so you usually won't need to change it. `100` is a good default.                                           |
+| `learn_tokens`                | bool                                       | Whether to learn to merge subtokens that are split relative to the gold standard. Experimental.                                                                                                                                                                                             |
+| `min_action_freq`             | int                                        | The minimum frequency of labelled actions to retain. Rarer labelled actions have their label backed-off to "dep". While this primarily affects the label accuracy, it can also affect the attachment structure, as the labels are used to represent the pseudo-projectivity transformation. |
 
 ## DependencyParser.\_\_call\_\_ {#call tag="method"}
 

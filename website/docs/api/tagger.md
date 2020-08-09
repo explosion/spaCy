@@ -28,10 +28,10 @@ architectures and their arguments and hyperparameters.
 > nlp.add_pipe("tagger", config=config)
 > ```
 
-| Setting          | Type                                       | Description                            | Default                             |
-| ---------------- | ------------------------------------------ | -------------------------------------- | ----------------------------------- |
-| `set_morphology` | bool                                       | Whether to set morphological features. | `False`                             |
-| `model`          | [`Model`](https://thinc.ai/docs/api-model) | The model to use.                      | [Tagger](/api/architectures#Tagger) |
+| Setting          | Type                                       | Description                                                                                                                                                                                                      | Default                             |
+| ---------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| `set_morphology` | bool                                       | Whether to set morphological features.                                                                                                                                                                           | `False`                             |
+| `model`          | [`Model`](https://thinc.ai/docs/api-model) | A model instance that predicts the tag probabilities. The output vectors should match the number of tags in size, and be normalized as probabilities (all scores between 0 and 1, with the rows summing to `1`). | [Tagger](/api/architectures#Tagger) |
 
 ```python
 https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/tagger.pyx
@@ -58,13 +58,13 @@ Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
 [`nlp.add_pipe`](/api/language#add_pipe).
 
-| Name             | Type    | Description                                                                                 |
-| ---------------- | ------- | ------------------------------------------------------------------------------------------- |
-| `vocab`          | `Vocab` | The shared vocabulary.                                                                      |
-| `model`          | `Model` | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component.             |
-| `name`           | str     | String name of the component instance. Used to add entries to the `losses` during training. |
-| _keyword-only_   |         |                                                                                             |
-| `set_morphology` | bool    | Whether to set morphological features.                                                      |
+| Name             | Type                                       | Description                                                                                                                                                                                                      |
+| ---------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`          | `Vocab`                                    | The shared vocabulary.                                                                                                                                                                                           |
+| `model`          | [`Model`](https://thinc.ai/docs/api-model) | A model instance that predicts the tag probabilities. The output vectors should match the number of tags in size, and be normalized as probabilities (all scores between 0 and 1, with the rows summing to `1`). |
+| `name`           | str                                        | String name of the component instance. Used to add entries to the `losses` during training.                                                                                                                      |
+| _keyword-only_   |                                            |                                                                                                                                                                                                                  |
+| `set_morphology` | bool                                       | Whether to set morphological features.                                                                                                                                                                           |
 
 ## Tagger.\_\_call\_\_ {#call tag="method"}
 

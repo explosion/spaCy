@@ -70,6 +70,47 @@ blog post for background.
 | `embed`  | [`Model`](https://thinc.ai/docs/api-model) | **Input:** `List[Doc]`. **Output:** `List[Floats2d]`. Embed tokens into context-independent word vector representations.                                   |
 | `encode` | [`Model`](https://thinc.ai/docs/api-model) | **Input:** `List[Floats2d]`. **Output:** `List[Floats2d]`. Encode context into the embeddings, using an architecture such as a CNN, BiLSTM or transformer. |
 
+### spacy.Tok2VecListener.v1 {#Tok2VecListener}
+
+> #### Example config
+>
+> ```ini
+> [components.tok2vec]
+> factory = "tok2vec"
+>
+> [components.tok2vec.model]
+> @architectures = "spacy.HashEmbedCNN.v1"
+> width = 342
+>
+> [components.tagger]
+> factory = "tagger"
+>
+> [components.tagger.model]
+> @architectures = "spacy.Tagger.v1"
+>
+> [components.tagger.model.tok2vec]
+> @architectures = "spacy.Tok2VecListener.v1"
+> width = ${components.tok2vec.model:width}
+> ```
+
+A listener is used as a sublayer within a component such as a
+[`DependencyParser`](/api/dependencyparser),
+[`EntityRecognizer`](/api/entityrecognizer)or
+[`TextCategorizer`](/api/textcategorizer). Usually you'll have multiple
+listeners connecting to a single upstream [`Tok2Vec`](/api/tok2vec) component
+that's earlier in the pipeline. The listener layers act as **proxies**, passing
+the predictions from the `Tok2Vec` component into downstream components, and
+communicating gradients back upstream.
+
+Instead of defining its own `Tok2Vec` instance, a model architecture like
+[Tagger](/api/architectures#tagger) can define a listener as its `tok2vec`
+argument that connects to the shared `tok2vec` component in the pipeline.
+
+| Name       | Type | Description                                                                                                                                                                                                                                                                                            |
+| ---------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `width`    | int  | The width of the vectors produced by the "upstream" [`Tok2Vec`](/api/tok2vec) component.                                                                                                                                                                                                               |
+| `upstream` | str  | A string to identify the "upstream" `Tok2Vec` component to communicate with. The upstream name should either be the wildcard string `"*"`, or the name of the `Tok2Vec` component. You'll almost never have multiple upstream `Tok2Vec` components, so the wildcard string will almost always be fine. |
+
 ### spacy.MultiHashEmbed.v1 {#MultiHashEmbed}
 
 <!-- TODO: check example config -->

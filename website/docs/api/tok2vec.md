@@ -8,7 +8,20 @@ api_string_name: tok2vec
 api_trainable: true
 ---
 
-<!-- TODO: intro describing component -->
+Apply a "token-to-vector" model and set its outputs in the doc.tensor attribute.
+This is mostly useful to **share a single subnetwork** between multiple
+components, e.g. to have one embedding and CNN network shared between a
+[`DependencyParser`](/api/dependencyparser), [`Tagger`](/api/tagger) and
+[`EntityRecognizer`](/api/entityrecognizer).
+
+In order to use the `Tok2Vec` predictions, subsequent components should use the
+[Tok2VecListener](/api/architectures#Tok2VecListener) layer as the tok2vec
+subnetwork of their model. This layer will read data from the `doc.tensor`
+attribute during prediction. During training, the `Tok2Vec` component will save
+its prediction and backprop callback for each batch, so that the subsequent
+components can backpropagate to the shared weights. This implementation is used
+because it allows us to avoid relying on object identity within the models to
+achieve the parameter sharing.
 
 ## Config and implementation {#config}
 
@@ -27,9 +40,9 @@ architectures and their arguments and hyperparameters.
 > nlp.add_pipe("tok2vec", config=config)
 > ```
 
-| Setting | Type                                       | Description       | Default                                         |
-| ------- | ------------------------------------------ | ----------------- | ----------------------------------------------- |
-| `model` | [`Model`](https://thinc.ai/docs/api-model) | The model to use. | [HashEmbedCNN](/api/architectures#HashEmbedCNN) |
+| Setting | Type                                       | Description                                                             | Default                                         |
+| ------- | ------------------------------------------ | ----------------------------------------------------------------------- | ----------------------------------------------- |
+| `model` | [`Model`](https://thinc.ai/docs/api-model) | **Input:** `List[Doc]`. **Output:** `List[Floats2d]`. The model to use. | [HashEmbedCNN](/api/architectures#HashEmbedCNN) |
 
 ```python
 https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/tok2vec.py
@@ -64,9 +77,11 @@ shortcut for this and instantiate the component using its string name and
 
 ## Tok2Vec.\_\_call\_\_ {#call tag="method"}
 
-Apply the pipe to one document. The document is modified in place, and returned.
-This usually happens under the hood when the `nlp` object is called on a text
-and all pipeline components are applied to the `Doc` in order. Both
+Apply the pipe to one document and add context-sensitive embeddings to the
+`Doc.tensor` attribute, allowing them to be used as features by downstream
+components. The document is modified in place, and returned. This usually
+happens under the hood when the `nlp` object is called on a text and all
+pipeline components are applied to the `Doc` in order. Both
 [`__call__`](/api/tok2vec#call) and [`pipe`](/api/tok2vec#pipe) delegate to the
 [`predict`](/api/tok2vec#predict) and
 [`set_annotations`](/api/tok2vec#set_annotations) methods.

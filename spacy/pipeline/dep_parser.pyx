@@ -71,6 +71,11 @@ def make_parser(
     actions are decreased. Note that more than one action may be optimal for
     a given state.
 
+    model (Model): The model for the transition-based parser. The model needs
+        to have a specific substructure of named components --- see the
+        spacy.ml.tb_framework.TransitionModel for details.
+    moves (List[str]): A list of transition names. Inferred from the data if not
+        provided.
     update_with_oracle_cut_size (int):
         During training, cut long sequences into shorter segments by creating
         intermediate states based on the gold-standard history. The model is
