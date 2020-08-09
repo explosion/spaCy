@@ -25,12 +25,12 @@ work out-of-the-box.
 
 </Infobox>
 
-This pipeline component lets you use transformer models in your pipeline, using
-the [HuggingFace `transformers`](https://huggingface.co/transformers) library
-under the hood. Usually you will connect subsequent components to the shared
-transformer using the
-[TransformerListener](/api/architectures#TransformerListener) layer. This works
-similarly to spaCy's [Tok2Vec](/api/tok2vec) component and
+This pipeline component lets you use transformer models in your pipeline.
+Supports all models that are available via the
+[HuggingFace `transformers`](https://huggingface.co/transformers) library.
+Usually you will connect subsequent components to the shared transformer using
+the [TransformerListener](/api/architectures#TransformerListener) layer. This
+works similarly to spaCy's [Tok2Vec](/api/tok2vec) component and
 [Tok2VecListener](/api/architectures/Tok2VecListener) sublayer.
 
 The component assigns the output of the transformer to the `Doc`'s extension
@@ -419,7 +419,7 @@ Split a `TransformerData` object that represents a batch into a list with one
 | ----------- | ----------------------- | ----------- |
 | **RETURNS** | `List[TransformerData]` |             |
 
-## Span getters {#span_getters tag="registered functions" source="github.com/explosion/spacy-transformers/blob/master/spacy_transformers/span_getters.py"}
+## Span getters {#span_getters source="github.com/explosion/spacy-transformers/blob/master/spacy_transformers/span_getters.py"}
 
 Span getters are functions that take a batch of [`Doc`](/api/doc) objects and
 return a lists of [`Span`](/api/span) objects for each doc, to be processed by
@@ -427,15 +427,15 @@ the transformer. This is used to manage long documents, by cutting them into
 smaller sequences before running the transformer. The spans are allowed to
 overlap, and you can also omit sections of the Doc if they are not relevant.
 
-Span getters can be referenced in the config's
-`[components.transformer.model.get_spans]` block to customize the sequences
-processed by the transformer. You can also register custom span getters using
-the `@registry.span_getters` decorator.
+Span getters can be referenced in the `[components.transformer.model.get_spans]`
+block of the config to customize the sequences processed by the transformer. You
+can also register custom span getters using the `@spacy.registry.span_getters`
+decorator.
 
 > #### Example
 >
 > ```python
-> @registry.span_getters("sent_spans.v1")
+> @spacy.registry.span_getters("sent_spans.v1")
 > def configure_get_sent_spans() -> Callable:
 >     def get_sent_spans(docs: Iterable[Doc]) -> List[List[Span]]:
 >         return [list(doc.sents) for doc in docs]
@@ -448,15 +448,55 @@ the `@registry.span_getters` decorator.
 | `docs`      | `Iterable[Doc]`    | A batch of `Doc` objects.                |
 | **RETURNS** | `List[List[Span]]` | The spans to process by the transformer. |
 
-The following built-in functions are available:
+### doc_spans.v1 {#doc_spans tag="registered function"}
 
-<!-- TODO: finish API docs -->
+> #### Example config
+>
+> ```ini
+> [transformer.model.get_spans]
+> @span_getters = "doc_spans.v1"
+> ```
 
-| Name               | Description                                                        |
-| ------------------ | ------------------------------------------------------------------ |
-| `doc_spans.v1`     | Create a span for each doc (no transformation, process each text). |
-| `sent_spans.v1`    | Create a span for each sentence if sentence boundaries are set.    |
-| `strided_spans.v1` |                                                                    |
+Create a span getter that uses the whole document as its spans. This is the best
+approach if your [`Doc`](/api/doc) objects already refer to relatively short
+texts.
+
+### sent_spans.v1 {#sent_spans tag="registered function"}
+
+> #### Example config
+>
+> ```ini
+> [transformer.model.get_spans]
+> @span_getters = "sent_spans.v1"
+> ```
+
+Create a span getter that uses sentence boundary markers to extract the spans.
+This requires sentence boundaries to be set (e.g. by the
+[`Sentencizer`](/api/sentencizer)), and may result in somewhat uneven batches,
+depending on the sentence lengths. However, it does provide the transformer with
+more meaningful windows to attend over.
+
+### strided_spans.v1 {#strided_spans tag="registered function"}
+
+> #### Example config
+>
+> ```ini
+> [transformer.model.get_spans]
+> @span_getters = "strided_spans.v1"
+> window = 128
+> stride = 96
+> ```
+
+Create a span getter for strided spans. If you set the `window` and `stride` to
+the same value, the spans will cover each token once. Setting `stride` lower
+than `window` will allow for an overlap, so that some tokens are counted twice.
+This can be desirable, because it allows all tokens to have both a left and
+right context.
+
+| Name      | Type | Description      |
+| --------- | ---- | ---------------- |
+|  `window` | int  | The window size. |
+| `stride`  | int  | The stride size. |
 
 ## Annotation setters {#annotation_setters tag="registered functions" source="github.com/explosion/spacy-transformers/blob/master/spacy_transformers/annotation_setters.py"}
 

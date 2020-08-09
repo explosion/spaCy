@@ -8,9 +8,9 @@ api_string_name: tok2vec
 api_trainable: true
 ---
 
-Apply a "token-to-vector" model and set its outputs in the doc.tensor attribute.
-This is mostly useful to **share a single subnetwork** between multiple
-components, e.g. to have one embedding and CNN network shared between a
+Apply a "token-to-vector" model and set its outputs in the `Doc.tensor`
+attribute. This is mostly useful to **share a single subnetwork** between
+multiple components, e.g. to have one embedding and CNN network shared between a
 [`DependencyParser`](/api/dependencyparser), [`Tagger`](/api/tagger) and
 [`EntityRecognizer`](/api/entityrecognizer).
 
