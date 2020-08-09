@@ -9,7 +9,8 @@ new: 2
 The `PhraseMatcher` lets you efficiently match large terminology lists. While
 the [`Matcher`](/api/matcher) lets you match sequences based on lists of token
 descriptions, the `PhraseMatcher` accepts match patterns in the form of `Doc`
-objects.
+objects. See the [usage guide](/usage/rule-based-matching#phrasematcher) for
+examples.
 
 ## PhraseMatcher.\_\_init\_\_ {#init tag="method"}
 

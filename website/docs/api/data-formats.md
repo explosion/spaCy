@@ -20,9 +20,9 @@ Config files define the training process and model pipeline and can be passed to
 [`spacy train`](/api/cli#train). They use
 [Thinc's configuration system](https://thinc.ai/docs/usage-config) under the
 hood. For details on how to use training configs, see the
-[usage documentation](/usage/training#config).
-
-<!-- TODO: add details on getting started and init config -->
+[usage documentation](/usage/training#config). To get started with a blank
+config or fill a partial config with all defaults, you can use the
+[`init config`](/api/cli#init-config) command.
 
 > #### What does the @ mean?
 >
@@ -51,8 +51,6 @@ your config and check that it's valid, you can run the
 [`spacy debug config`](/api/cli#debug-config) command.
 
 </Infobox>
-
-<!-- TODO: once we know how we want to implement "starter config" workflow or outputting a full default config for the user, update this section with the command -->
 
 ### nlp {#config-nlp tag="section"}
 
@@ -153,8 +151,6 @@ process that are used when you run [`spacy train`](/api/cli#train).
 This section is optional and defines settings and controls for
 [language model pretraining](/usage/training#pretraining). It's used when you
 run [`spacy pretrain`](/api/cli#pretrain).
-
-<!-- TODO: complete -->
 
 | Name                         | Type                                                | Description                                                                   | Default                                             |
 | ---------------------------- | --------------------------------------------------- | ----------------------------------------------------------------------------- | --------------------------------------------------- |
