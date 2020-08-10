@@ -209,15 +209,13 @@ class TextCategorizer(Pipe):
         if losses is None:
             losses = {}
         losses.setdefault(self.name, 0.0)
-        try:
-            if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
-                # Handle cases where there are no tokens in any docs.
-                return losses
-        except AttributeError:
+        if not all(isinstance(eg, Example) for eg in examples):
             types = set([type(eg) for eg in examples])
-            raise TypeError(
-                Errors.E978.format(name="TextCategorizer", method="update", types=types)
-            ) from None
+            err = Errors.E978.format(name="TextCategorizer.update", types=types)
+            raise TypeError(err) from None
+        if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
+            # Handle cases where there are no tokens in any docs.
+            return losses
         set_dropout_rate(self.model, drop)
         scores, bp_scores = self.model.begin_update([eg.predicted for eg in examples])
         loss, d_scores = self.get_loss(examples, scores)
@@ -252,19 +250,15 @@ class TextCategorizer(Pipe):
 
         DOCS: https://spacy.io/api/textcategorizer#rehearse
         """
-
         if losses is not None:
             losses.setdefault(self.name, 0.0)
         if self._rehearsal_model is None:
             return losses
-        try:
-            docs = [eg.predicted for eg in examples]
-        except AttributeError:
+        if not all(isinstance(eg, Example) for eg in examples):
             types = set([type(eg) for eg in examples])
-            err = Errors.E978.format(
-                name="TextCategorizer", method="rehearse", types=types
-            )
-            raise TypeError(err) from None
+            err = Errors.E978.format(name="TextCategorizer.rehearse", types=types)
+            raise TypeError(err)
+        docs = [eg.predicted for eg in examples]
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
             return losses
@@ -359,14 +353,12 @@ class TextCategorizer(Pipe):
         # TODO: begin_training is not guaranteed to see all data / labels ?
         examples = list(get_examples())
         for example in examples:
-            try:
-                y = example.y
-            except AttributeError:
+            if not isinstance(example, Example):
                 err = Errors.E978.format(
-                    name="TextCategorizer", method="update", types=type(example)
+                    name="TextCategorizer.update", types=type(example)
                 )
-                raise TypeError(err) from None
-            for cat in y.cats:
+                raise TypeError(err)
+            for cat in example.y.cats:
                 self.add_label(cat)
         self.require_labels()
         docs = [Doc(self.vocab, words=["hello"])]

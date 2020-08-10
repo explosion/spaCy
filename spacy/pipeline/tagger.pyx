@@ -16,6 +16,7 @@ from ..attrs import POS, ID
 from ..parts_of_speech import X
 from ..errors import Errors, TempErrors, Warnings
 from ..scorer import Scorer
+from ..gold import Example
 from .. import util
 
 
@@ -187,19 +188,17 @@ class Tagger(Pipe):
         if losses is None:
             losses = {}
         losses.setdefault(self.name, 0.0)
-        try:
-            if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
-                # Handle cases where there are no tokens in any docs.
-                return
-        except AttributeError:
+        if not all(isinstance(eg, Example) for eg in examples):
             types = set([type(eg) for eg in examples])
-            raise TypeError(Errors.E978.format(name="Tagger", method="update", types=types)) from None
+            raise TypeError(Errors.E978.format(name="Tagger.update", types=types))
+        if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
+            # Handle cases where there are no tokens in any docs.
+            return
         set_dropout_rate(self.model, drop)
-        tag_scores, bp_tag_scores = self.model.begin_update(
-            [eg.predicted for eg in examples])
+        tag_scores, bp_tag_scores = self.model.begin_update([eg.predicted for eg in examples])
         for sc in tag_scores:
             if self.model.ops.xp.isnan(sc.sum()):
-                raise ValueError("nan value in scores")
+                raise ValueError(Errors.E940)
         loss, d_tag_scores = self.get_loss(examples, tag_scores)
         bp_tag_scores(d_tag_scores)
         if sgd not in (None, False):
@@ -226,11 +225,10 @@ class Tagger(Pipe):
 
         DOCS: https://spacy.io/api/tagger#rehearse
         """
-        try:
-            docs = [eg.predicted for eg in examples]
-        except AttributeError:
+        if not all(isinstance(eg, Example) for eg in examples):
             types = set([type(eg) for eg in examples])
-            raise TypeError(Errors.E978.format(name="Tagger", method="rehearse", types=types)) from None
+            raise TypeError(Errors.E978.format(name="Tagger.rehearse", types=types))
+        docs = [eg.predicted for eg in examples]
         if self._rehearsal_model is None:
             return
         if not any(len(doc) for doc in docs):
@@ -279,11 +277,9 @@ class Tagger(Pipe):
         """
         tags = set()
         for example in get_examples():
-            try:
-                y = example.y
-            except AttributeError:
-                raise TypeError(Errors.E978.format(name="Tagger", method="begin_training", types=type(example))) from None
-            for token in y:
+            if not isinstance(example, Example):
+                raise TypeError(Errors.E978.format(name="Tagger.begin_training", types=type(example)))
+            for token in example.y:
                 tags.add(token.tag_)
         for tag in sorted(tags):
             self.add_label(tag)

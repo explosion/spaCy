@@ -8,6 +8,7 @@ from ..tokens.doc cimport Doc
 
 from .pipe import Pipe
 from .tagger import Tagger
+from ..gold import Example
 from ..language import Language
 from ._parser_internals import nonproj
 from ..attrs import POS, ID
@@ -206,18 +207,18 @@ class ClozeMultitask(Pipe):
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
         set_dropout_rate(self.model, drop)
-        try:
-            predictions, bp_predictions = self.model.begin_update([eg.predicted for eg in examples])
-        except AttributeError:
+        if not all(isinstance(eg, Example) for eg in examples):
             types = set([type(eg) for eg in examples])
-            raise TypeError(Errors.E978.format(name="ClozeMultitask", method="rehearse", types=types)) from None
+            raise TypeError(Errors.E978.format(name="ClozeMultitask.rehearse", types=types))
+        docs = [eg.predicted for eg in examples]
+        predictions, bp_predictions = self.model.begin_update()
         loss, d_predictions = self.get_loss(examples, self.vocab.vectors.data, predictions)
         bp_predictions(d_predictions)
         if sgd is not None:
             self.model.finish_update(sgd)
-
         if losses is not None:
             losses[self.name] += loss
+        return losses
 
     def add_label(self, label):
         raise NotImplementedError

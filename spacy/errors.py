@@ -482,6 +482,7 @@ class Errors:
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
+    E940 = ("Found NaN values in scores.")
     E941 = ("Can't find model '{name}'. It looks like you're trying to load a "
             "model from a shortcut, which is deprecated as of spaCy v3.0. To "
             "load the model, use its full name instead:\n\n"
@@ -578,8 +579,8 @@ class Errors:
             "but received None.")
     E977 = ("Can not compare a MorphAnalysis with a string object. "
             "This is likely a bug in spaCy, so feel free to open an issue.")
-    E978 = ("The '{method}' method of {name} takes a list of Example objects, "
-            "but found {types} instead.")
+    E978 = ("The {name} method takes a list of Example objects, but found "
+            "{types} instead.")
     E979 = ("Cannot convert {type} to an Example object.")
     E980 = ("Each link annotation should refer to a dictionary with at most one "
             "identifier mapping to 1.0, and all others to 0.0.")

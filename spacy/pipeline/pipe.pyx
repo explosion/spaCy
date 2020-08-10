@@ -1,8 +1,10 @@
 # cython: infer_types=True, profile=True
 import srsly
+from thinc.api import set_dropout_rate
 
 from ..tokens.doc cimport Doc
 
+from ..gold import Example
 from ..util import create_default_optimizer
 from ..errors import Errors
 from .. import util
@@ -79,6 +81,44 @@ cdef class Pipe:
         DOCS: https://spacy.io/api/pipe#set_annotations
         """
         raise NotImplementedError
+
+    def update(self, examples, *, drop=0.0, set_annotations=False, sgd=None, losses=None):
+        """Learn from a batch of documents and gold-standard information,
+        updating the pipe's model. Delegates to predict and get_loss.
+
+        examples (Iterable[Example]): A batch of Example objects.
+        drop (float): The dropout rate.
+        set_annotations (bool): Whether or not to update the Example objects
+            with the predictions.
+        sgd (thinc.api.Optimizer): The optimizer.
+        losses (Dict[str, float]): Optional record of the loss during training.
+            Updated using the component name as the key.
+        RETURNS (Dict[str, float]): The updated losses dictionary.
+
+        DOCS: https://spacy.io/api/pipe#update
+        """
+        if losses is None:
+            losses = {}
+        if not hasattr(self, "model"):
+            return losses
+        losses.setdefault(self.name, 0.0)
+        if not all(isinstance(eg, Example) for eg in examples):
+            types = set([type(eg) for eg in examples])
+            raise TypeError(Errors.E978.format(name="Pipe.update", types=types))
+        if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
+            # Handle cases where there are no tokens in any docs.
+            return
+        set_dropout_rate(self.model, drop)
+        scores, bp_scores = self.model.begin_update([eg.predicted for eg in examples])
+        loss, d_scores = self.get_loss(examples, scores)
+        bp_scores(d_scores)
+        if sgd not in (None, False):
+            self.model.finish_update(sgd)
+        losses[self.name] += loss
+        if set_annotations:
+            docs = [eg.predicted for eg in examples]
+            self.set_annotations(docs, scores=scores)
+        return losses
 
     def rehearse(self, examples, *, sgd=None, losses=None, **config):
         """Perform a "rehearsal" update from a batch of data. Rehearsal updates

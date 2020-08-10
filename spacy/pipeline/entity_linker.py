@@ -198,13 +198,11 @@ class EntityLinker(Pipe):
         if not examples:
             return losses
         sentence_docs = []
-        try:
-            docs = [eg.predicted for eg in examples]
-        except AttributeError:
+        if not all(isinstance(eg, Example) for eg in examples):
             types = set([type(eg) for eg in examples])
-            raise TypeError(
-                Errors.E978.format(name="EntityLinker", method="update", types=types)
-            ) from None
+            err = Errors.E978.format(name="EntityLinker.update", types=types)
+            raise TypeError(err)
+        docs = [eg.predicted for eg in examples]
         if set_annotations:
             # This seems simpler than other ways to get that exact output -- but
             # it does run the model twice :(

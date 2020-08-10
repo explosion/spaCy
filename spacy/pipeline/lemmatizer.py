@@ -135,10 +135,10 @@ class Lemmatizer(Pipe):
         elif self.mode == "rule":
             self.lemmatize = self.rule_lemmatize
         else:
-            try:
-                self.lemmatize = getattr(self, f"{self.mode}_lemmatize")
-            except AttributeError:
+            mode_attr = f"{self.mode}_lemmatize"
+            if not hasattr(self, mode_attr):
                 raise ValueError(Errors.E1003.format(mode=mode))
+            self.lemmatize = getattr(self, mode_attr)
         self.cache = {}
 
     @property

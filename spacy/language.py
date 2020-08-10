@@ -936,16 +936,12 @@ class Language:
         if len(examples) == 0:
             return losses
         if not isinstance(examples, IterableInstance):
-            raise TypeError(
-                Errors.E978.format(
-                    name="language", method="update", types=type(examples)
-                )
-            )
+            err = Errors.E978.format(name="Language.update", types=type(examples))
+            raise TypeError(err)
         wrong_types = set([type(eg) for eg in examples if not isinstance(eg, Example)])
         if wrong_types:
-            raise TypeError(
-                Errors.E978.format(name="language", method="update", types=wrong_types)
-            )
+            err = Errors.E978.format(name="Language.update", types=wrong_types)
+            raise TypeError(err)
         if sgd is None:
             if self._optimizer is None:
                 self._optimizer = create_default_optimizer()
@@ -1000,18 +996,12 @@ class Language:
         if len(examples) == 0:
             return
         if not isinstance(examples, IterableInstance):
-            raise TypeError(
-                Errors.E978.format(
-                    name="language", method="rehearse", types=type(examples)
-                )
-            )
+            err = Errors.E978.format(name="Language.rehearse", types=type(examples))
+            raise TypeError(err)
         wrong_types = set([type(eg) for eg in examples if not isinstance(eg, Example)])
         if wrong_types:
-            raise TypeError(
-                Errors.E978.format(
-                    name="language", method="rehearse", types=wrong_types
-                )
-            )
+            err = Errors.E978.format(name="Language.rehearse", types=wrong_types)
+            raise TypeError(err)
         if sgd is None:
             if self._optimizer is None:
                 self._optimizer = create_default_optimizer()
@@ -1134,15 +1124,11 @@ class Language:
         DOCS: https://spacy.io/api/language#evaluate
         """
         if not isinstance(examples, IterableInstance):
-            err = Errors.E978.format(
-                name="language", method="evaluate", types=type(examples)
-            )
+            err = Errors.E978.format(name="Language.evaluate", types=type(examples))
             raise TypeError(err)
         wrong_types = set([type(eg) for eg in examples if not isinstance(eg, Example)])
         if wrong_types:
-            err = Errors.E978.format(
-                name="language", method="evaluate", types=wrong_types
-            )
+            err = Errors.E978.format(name="Language.evaluate", types=wrong_types)
             raise TypeError(err)
         if component_cfg is None:
             component_cfg = {}

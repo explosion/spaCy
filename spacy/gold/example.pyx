@@ -263,12 +263,10 @@ def _annot2array(vocab, tok_annot, doc_annot):
             values.append([vocab.morphology.add(v) for v in value])
         else:
             attrs.append(key)
-            try:
-                values.append([vocab.strings.add(v) for v in value])
-            except TypeError:
-                types= set([type(v) for v in value])
+            if not all(isinstance(v, str) for v in value):
+                types = set([type(v) for v in value])
                 raise TypeError(Errors.E969.format(field=key, types=types)) from None
-
+            values.append([vocab.strings.add(v) for v in value])
     array = numpy.asarray(values, dtype="uint64")
     return attrs, array.T
 
