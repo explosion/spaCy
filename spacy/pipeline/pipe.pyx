@@ -2,7 +2,6 @@
 import srsly
 
 from ..tokens.doc cimport Doc
-
 from ..util import create_default_optimizer
 from ..errors import Errors
 from .. import util
@@ -16,18 +15,44 @@ cdef class Pipe:
 
     DOCS: https://spacy.io/api/pipe
     """
-
-    def __init__(self, vocab, model, name, **cfg):
+    def __init__(
+        self,
+        vocab,
+        model,
+        *,
+        name,
+        set_annotations,
+        get_loss,
+        get_scores
+    ):
         """Initialize a pipeline component.
 
         vocab (Vocab): The shared vocabulary.
-        model (thinc.api.Model): The Thinc Model powering the pipeline component.
+        model (Model[List[Doc], PredictionsT]):
+            The Thinc Model powering the pipeline component. The model must
+            take a list of Doc objects as input, and can have any type
+            of output. However, its output type must match the type expected
+            by the set_annotations and get_loss callbacks.
         name (str): The component instance name.
-        **cfg: Additonal settings and config parameters.
+        set_annotations (Callable[[List[Doc], PredictionT], None]):
+            A callback to set annotations on a batch of Doc objects, given
+            the predictions from the model.
+        get_loss (Callable[[List[Example], PredictionT], None]):
+            A callback to compute the loss from a batch of training examples
+            and model outputs.
+        get_scores (Callable[[List[Example]], Dict]):
+            A callback to compute evaluation metrics from a list of annotated
+            and predicted examples.
 
         DOCS: https://spacy.io/api/pipe#init
         """
-        raise NotImplementedError
+        self.cfg = {}
+        self.vocab = vocab
+        self.model = model
+        self.name = name
+        self._set_annotations = set_annotations
+        self._get_loss = get_loss
+        self._get_scores = get_scores
 
     def __call__(self, Doc doc):
         """Apply the pipe to one document. The document is modified in place,
@@ -68,17 +93,17 @@ cdef class Pipe:
 
         DOCS: https://spacy.io/api/pipe#predict
         """
-        raise NotImplementedError
+        return self.model.predict(docs)
 
-    def set_annotations(self, docs, scores):
+    def set_annotations(self, docs, predictions):
         """Modify a batch of documents, using pre-computed scores.
 
         docs (Iterable[Doc]): The documents to modify.
-        scores: The scores to assign.
+        predictions: The predictions on which to base the annotations.
 
         DOCS: https://spacy.io/api/pipe#set_annotations
         """
-        raise NotImplementedError
+        self._set_annotations(docs, predictions)
 
     def rehearse(self, examples, *, sgd=None, losses=None, **config):
         """Perform a "rehearsal" update from a batch of data. Rehearsal updates
@@ -97,7 +122,7 @@ cdef class Pipe:
         """
         pass
 
-    def get_loss(self, examples, scores):
+    def get_loss(self, examples, predictions):
         """Find the loss and gradient of loss for the batch of documents and
         their predicted scores.
 
@@ -107,7 +132,7 @@ cdef class Pipe:
 
         DOCS: https://spacy.io/api/pipe#get_loss
         """
-        raise NotImplementedError
+        return self._get_loss(examples, predictions)
 
     def add_label(self, label):
         """Add an output label, to be predicted by the model. It's possible to
@@ -166,7 +191,7 @@ cdef class Pipe:
         with self.model.use_params(params):
             yield
 
-    def score(self, examples, **kwargs):
+    def score(self, examples):
         """Score a batch of examples.
 
         examples (Iterable[Example]): The examples to score.
@@ -174,7 +199,7 @@ cdef class Pipe:
 
         DOCS: https://spacy.io/api/pipe#score
         """
-        return {}
+        return self._get_scores(examples)
 
     def to_bytes(self, *, exclude=tuple()):
         """Serialize the pipe to a bytestring.
