@@ -1205,7 +1205,7 @@ class EntityLinker(Pipe):
         self.kb = None
         self.cfg = dict(cfg)
         
-        # how many neightbour sentences to take into account
+        # how many neighbour sentences to take into account
         self.n_sents = cfg.get("n_sents", 0)
 
     def set_kb(self, kb):
