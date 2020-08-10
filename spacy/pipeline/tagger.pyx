@@ -43,7 +43,7 @@ DEFAULT_TAGGER_MODEL = Config().from_str(default_model_config)["model"]
     scores=["tag_acc"],
     default_score_weights={"tag_acc": 1.0},
 )
-def make_tagger(nlp: Language, name: str, model: Model[List[Doc], List[Floats2d]]):
+def make_tagger(nlp: Language, name: str, model: Model):
     """Construct a part-of-speech tagger component.
 
     model (Model[List[Doc], List[Floats2d]]): A model instance that predicts
