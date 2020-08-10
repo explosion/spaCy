@@ -2,6 +2,7 @@ import pytest
 import numpy
 from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
+from spacy.lexeme import Lexeme
 from spacy.lang.en import English
 from spacy.attrs import ENT_TYPE, ENT_IOB, SENT_START, HEAD, DEP, MORPH
 
@@ -389,3 +390,11 @@ def test_doc_lang(en_vocab):
     assert doc.lang == en_vocab.strings["en"]
     assert doc[0].lang_ == "en"
     assert doc[0].lang == en_vocab.strings["en"]
+
+
+def test_token_lexeme(en_vocab):
+    """Test that tokens expose their lexeme."""
+    token = Doc(en_vocab, words=["Hello", "world"])[0]
+    assert isinstance(token.lex, Lexeme)
+    assert token.lex.text == token.text
+    assert en_vocab[token.orth] == token.lex
