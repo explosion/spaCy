@@ -1,6 +1,6 @@
 # cython: infer_types=True, profile=True
 import srsly
-from thinc.api import set_dropout_rate
+from thinc.api import set_dropout_rate, Model
 
 from ..tokens.doc cimport Doc
 
@@ -18,7 +18,6 @@ cdef class Pipe:
 
     DOCS: https://spacy.io/api/pipe
     """
-
     def __init__(self, vocab, model, name, **cfg):
         """Initialize a pipeline component.
 
@@ -29,7 +28,10 @@ cdef class Pipe:
 
         DOCS: https://spacy.io/api/pipe#init
         """
-        raise NotImplementedError
+        self.vocab = vocab
+        self.model = model
+        self.name = name
+        self.cfg = dict(cfg)
 
     def __call__(self, Doc doc):
         """Apply the pipe to one document. The document is modified in place,
@@ -70,7 +72,7 @@ cdef class Pipe:
 
         DOCS: https://spacy.io/api/pipe#predict
         """
-        raise NotImplementedError
+        raise NotImplementedError(Errors.E931.format(method="predict", name=self.name))
 
     def set_annotations(self, docs, scores):
         """Modify a batch of documents, using pre-computed scores.
@@ -80,7 +82,7 @@ cdef class Pipe:
 
         DOCS: https://spacy.io/api/pipe#set_annotations
         """
-        raise NotImplementedError
+        raise NotImplementedError(Errors.E931.format(method="set_annotations", name=self.name))
 
     def update(self, examples, *, drop=0.0, set_annotations=False, sgd=None, losses=None):
         """Learn from a batch of documents and gold-standard information,
@@ -99,7 +101,7 @@ cdef class Pipe:
         """
         if losses is None:
             losses = {}
-        if not hasattr(self, "model"):
+        if not hasattr(self, "model") or not isinstance(self.model, Model):
             return losses
         losses.setdefault(self.name, 0.0)
         if not all(isinstance(eg, Example) for eg in examples):
@@ -147,7 +149,7 @@ cdef class Pipe:
 
         DOCS: https://spacy.io/api/pipe#get_loss
         """
-        raise NotImplementedError
+        raise NotImplementedError(Errors.E931.format(method="get_loss", name=self.name))
 
     def add_label(self, label):
         """Add an output label, to be predicted by the model. It's possible to
@@ -159,7 +161,7 @@ cdef class Pipe:
 
         DOCS: https://spacy.io/api/pipe#add_label
         """
-        raise NotImplementedError
+        raise NotImplementedError(Errors.E931.format(method="add_label", name=self.name))
 
     def create_optimizer(self):
         """Create an optimizer for the pipeline component.

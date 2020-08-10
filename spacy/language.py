@@ -10,7 +10,7 @@ from contextlib import contextmanager
 from copy import copy, deepcopy
 from pathlib import Path
 import warnings
-from thinc.api import get_current_ops, Config, require_gpu, Optimizer
+from thinc.api import get_current_ops, Config, require_gpu, Optimizer, Model
 import srsly
 import multiprocessing as mp
 from itertools import chain, cycle
@@ -958,7 +958,11 @@ class Language:
             proc.update(examples, sgd=None, losses=losses, **component_cfg[name])
         if sgd not in (None, False):
             for name, proc in self.pipeline:
-                if name not in exclude and hasattr(proc, "model"):
+                if (
+                    name not in exclude
+                    and hasattr(proc, "model")
+                    and isinstance(proc.model, Model)
+                ):
                     proc.model.finish_update(sgd)
         return losses
 
@@ -1649,7 +1653,7 @@ def _fix_pretrained_vectors_name(nlp: Language) -> None:
     else:
         raise ValueError(Errors.E092)
     for name, proc in nlp.pipeline:
-        if not hasattr(proc, "cfg"):
+        if not hasattr(proc, "cfg") or not isinstance(proc.cfg, dict):
             continue
         proc.cfg.setdefault("deprecation_fixes", {})
         proc.cfg["deprecation_fixes"]["vectors_name"] = nlp.vocab.vectors.name

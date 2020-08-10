@@ -482,6 +482,11 @@ class Errors:
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
+    E931 = ("Encountered Pipe subclass without Pipe.{method} method in component "
+            "'{name}'. If the component is trainable and you want to use this "
+            "method, make sure it's overwritten on the subclass. If your "
+            "component isn't trainable, add a method that does nothing or "
+            "don't use the Pipe base class.")
     E940 = ("Found NaN values in scores.")
     E941 = ("Can't find model '{name}'. It looks like you're trying to load a "
             "model from a shortcut, which is deprecated as of spaCy v3.0. To "

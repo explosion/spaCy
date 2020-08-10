@@ -6,7 +6,7 @@ from wasabi import msg
 import thinc
 import thinc.schedules
 from thinc.api import use_pytorch_for_gpu_memory, require_gpu, fix_random_seed
-from thinc.api import Config, Optimizer
+from thinc.api import Config, Optimizer, Model
 import random
 import typer
 
@@ -295,7 +295,11 @@ def train_while_improving(
                 nlp.rehearse(raw_batch, sgd=optimizer, losses=losses, exclude=exclude)
         # TODO: refactor this so we don't have to run it separately in here
         for name, proc in nlp.pipeline:
-            if name not in exclude and hasattr(proc, "model"):
+            if (
+                name not in exclude
+                and hasattr(proc, "model")
+                and isinstance(proc.model, Model)
+            ):
                 proc.model.finish_update(optimizer)
         optimizer.step_schedules()
         if not (step % eval_frequency):
