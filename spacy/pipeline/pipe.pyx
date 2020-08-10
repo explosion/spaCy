@@ -1,4 +1,4 @@
-# cython: infer_types=True, profile=True, binding=True
+# cython: infer_types=True, profile=True
 import srsly
 
 from ..tokens.doc cimport Doc

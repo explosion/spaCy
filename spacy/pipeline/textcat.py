@@ -172,7 +172,7 @@ class TextCategorizer(Pipe):
         return scores
 
     def set_annotations(self, docs: Iterable[Doc], scores) -> None:
-        """Modify a batch of documents, using pre-computed scores.
+        """Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 
         docs (Iterable[Doc]): The documents to modify.
         scores: The scores to set, produced by TextCategorizer.predict.
