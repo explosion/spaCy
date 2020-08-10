@@ -136,7 +136,8 @@ Initialize the pipe for training, using data examples if available. Returns an
 
 ## SentenceRecognizer.predict {#predict tag="method"}
 
-Apply the pipeline's model to a batch of docs, without modifying them.
+Apply the component's model to a batch of [`Doc`](/api/doc) objects, without
+modifying them.
 
 > #### Example
 >
@@ -152,7 +153,7 @@ Apply the pipeline's model to a batch of docs, without modifying them.
 
 ## SentenceRecognizer.set_annotations {#set_annotations tag="method"}
 
-Modify a batch of documents, using pre-computed scores.
+Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 
 > #### Example
 >
@@ -169,8 +170,9 @@ Modify a batch of documents, using pre-computed scores.
 
 ## SentenceRecognizer.update {#update tag="method"}
 
-Learn from a batch of documents and gold-standard information, updating the
-pipe's model. Delegates to [`predict`](/api/sentencerecognizer#predict) and
+Learn from a batch of [`Example`](/api/example) objects containing the
+predictions and gold-standard annotations, and update the component's model.
+Delegates to [`predict`](/api/sentencerecognizer#predict) and
 [`get_loss`](/api/sentencerecognizer#get_loss).
 
 > #### Example

@@ -227,6 +227,11 @@ cdef class Token:
             self.c.morph = key
 
     @property
+    def lex(self):
+        """RETURNS (Lexeme): The underlying lexeme."""
+        return self.vocab[self.c.lex.orth]
+
+    @property
     def lex_id(self):
         """RETURNS (int): Sequential ID of the token's lexical type."""
         return self.c.lex.id

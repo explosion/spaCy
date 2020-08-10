@@ -151,7 +151,8 @@ Initialize the pipe for training, using data examples if available. Returns an
 
 ## EntityRecognizer.predict {#predict tag="method"}
 
-Apply the pipeline's model to a batch of docs, without modifying them.
+Apply the component's model to a batch of [`Doc`](/api/doc) objects, without
+modifying them.
 
 > #### Example
 >
@@ -167,7 +168,7 @@ Apply the pipeline's model to a batch of docs, without modifying them.
 
 ## EntityRecognizer.set_annotations {#set_annotations tag="method"}
 
-Modify a batch of documents, using pre-computed scores.
+Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 
 > #### Example
 >
