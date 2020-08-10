@@ -5,6 +5,7 @@ menu:
   - ['Processing Text', 'processing']
   - ['How Pipelines Work', 'pipelines']
   - ['Custom Components', 'custom-components']
+  # - ['Trainable Components', 'trainable-components']
   - ['Extension Attributes', 'custom-components-attributes']
   - ['Plugins & Wrappers', 'plugins']
 ---
@@ -885,10 +886,14 @@ available, falls back to looking up the regular factory name.
 </Infobox>
 
 <!-- TODO:
+## Trainable components {#trainable-components new="3"}
 
-### Trainable components {#trainable new="3"}
+spaCy's [`Pipe`](/api/pipe) class helps you implement your own trainable
+components that have their own model instance, make predictions over `Doc`
+objects and can be updated using [`spacy train`](/api/cli#train). This lets you
+plug fully custom machine learning components into your pipeline.
 
--->
+--->
 
 ## Extension attributes {#custom-components-attributes new="2"}
 

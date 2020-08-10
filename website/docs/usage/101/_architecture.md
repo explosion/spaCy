@@ -83,4 +83,4 @@ operates on a `Doc` and gives you access to the matched tokens **in context**.
 | [`MorphAnalysis`](/api/morphanalysis) | A morphological analysis.                                                                                        |
 | [`KnowledgeBase`](/api/kb)            | Storage for entities and aliases of a knowledge base for entity linking.                                         |
 | [`Scorer`](/api/scorer)               | Compute evaluation scores.                                                                                       |
-| [`Corpus`](/api/corpis)               | Class for managing annotated corpora for training and evaluation data.                                           |
+| [`Corpus`](/api/corpus)               | Class for managing annotated corpora for training and evaluation data.                                           |
