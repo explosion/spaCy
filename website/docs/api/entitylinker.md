@@ -162,9 +162,9 @@ Initialize the pipe for training, using data examples if available. Returns an
 
 ## EntityLinker.predict {#predict tag="method"}
 
-Apply the pipeline's model to a batch of docs, without modifying them. Returns
-the KB IDs for each entity in each doc, including `NIL` if there is no
-prediction.
+Apply the component's model to a batch of [`Doc`](/api/doc) objects, without
+modifying them. Returns the KB IDs for each entity in each doc, including `NIL`
+if there is no prediction.
 
 > #### Example
 >

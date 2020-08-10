@@ -179,7 +179,8 @@ Initialize the pipe for training, using data examples if available. Returns an
 
 ## Transformer.predict {#predict tag="method"}
 
-Apply the pipeline's model to a batch of docs, without modifying them.
+Apply the component's model to a batch of [`Doc`](/api/doc) objects, without
+modifying them.
 
 > #### Example
 >

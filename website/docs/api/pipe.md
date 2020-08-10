@@ -8,7 +8,18 @@ This class is a base class and **not instantiated directly**. Trainable pipeline
 components like the [`EntityRecognizer`](/api/entityrecognizer) or
 [`TextCategorizer`](/api/textcategorizer) inherit from it and it defines the
 interface that components should follow to function as trainable components in a
-spaCy pipeline.
+spaCy pipeline. See the docs on
+[writing trainable components](/usage/processing-pipelines#trainable) for how to
+use the `Pipe` base class to implement custom components.
+
+> #### Why is Pipe implemented in Cython?
+>
+> The `Pipe` class is implemented in a `.pyx` module, the extension used by
+> [Cython](/api/cython). This is needed so that **other** Cython classes, like
+> the [`EntityRecognizer`](/api/entityrecognizer) can inherit from it. But it
+> doesn't mean you have to implement trainable components in Cython – pure
+> Python components like the [`TextCategorizer`](/api/textcategorizer) can also
+> inherit from `Pipe`.
 
 ```python
 https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/pipe.pyx
@@ -115,7 +126,8 @@ Initialize the pipe for training, using data examples if available. Returns an
 
 ## Pipe.predict {#predict tag="method"}
 
-Apply the pipeline's model to a batch of docs, without modifying them.
+Apply the component's model to a batch of [`Doc`](/api/doc) objects, without
+modifying them.
 
 <Infobox variant="danger">
 
@@ -137,7 +149,7 @@ This method needs to be overwritten with your own custom `predict` method.
 
 ## Pipe.set_annotations {#set_annotations tag="method"}
 
-Modify a batch of documents, using pre-computed scores.
+Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 
 <Infobox variant="danger">
 
@@ -161,8 +173,8 @@ method.
 
 ## Pipe.update {#update tag="method"}
 
-Learn from a batch of documents and gold-standard information, updating the
-pipe's model. Delegates to [`predict`](/api/pipe#predict).
+Learn from a batch of [`Example`](/api/example) objects containing the
+predictions and gold-standard annotations, and update the component's model.
 
 <Infobox variant="danger">
 
