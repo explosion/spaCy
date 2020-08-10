@@ -14,8 +14,6 @@ of the pipeline. The `Language` object coordinates these components. It takes
 raw text and sends it through the pipeline, returning an **annotated document**.
 It also orchestrates training and serialization.
 
-<!-- TODO: update graphic -->
-
 ![Library architecture](../../images/architecture.svg)
 
 ### Container objects {#architecture-containers}
