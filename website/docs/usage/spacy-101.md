@@ -6,11 +6,11 @@ menu:
   - ['Features', 'features']
   - ['Linguistic Annotations', 'annotations']
   - ['Pipelines', 'pipelines']
+  - ['Architecture', 'architecture']
   - ['Vocab', 'vocab']
   - ['Serialization', 'serialization']
   - ['Training', 'training']
   - ['Language Data', 'language-data']
-  - ['Architecture', 'architecture']
   - ['Community & FAQ', 'community-faq']
 ---
 
@@ -71,12 +71,11 @@ systems, or to pre-process text for **deep learning**.
 - [Named entities](#annotations-ner)
 - [Word vectors and similarity](#vectors-similarity)
 - [Pipelines](#pipelines)
+- [Library architecture](#architecture)
 - [Vocab, hashes and lexemes](#vocab)
 - [Serialization](#serialization)
 - [Training](#training)
 - [Language data](#language-data)
-- [Lightning tour](#lightning-tour)
-- [Architecture](#architecture)
 - [Community & FAQ](#community)
 
 </Infobox>
@@ -266,6 +265,12 @@ guide on [language processing pipelines](/usage/processing-pipelines).
 
 </Infobox>
 
+## Architecture {#architecture}
+
+import Architecture101 from 'usage/101/\_architecture.md'
+
+<Architecture101 />
+
 ## Vocab, hashes and lexemes {#vocab}
 
 Whenever possible, spaCy tries to store data in a vocabulary, the
@@ -410,12 +415,6 @@ guides on [training](/usage/training).
 import LanguageData101 from 'usage/101/\_language-data.md'
 
 <LanguageData101 />
-
-## Architecture {#architecture}
-
-import Architecture101 from 'usage/101/\_architecture.md'
-
-<Architecture101 />
 
 ## Community & FAQ {#community-faq}
 
