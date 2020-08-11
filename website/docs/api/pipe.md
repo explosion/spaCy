@@ -9,8 +9,8 @@ components like the [`EntityRecognizer`](/api/entityrecognizer) or
 [`TextCategorizer`](/api/textcategorizer) inherit from it and it defines the
 interface that components should follow to function as trainable components in a
 spaCy pipeline. See the docs on
-[writing trainable components](/usage/processing-pipelines#trainable) for how to
-use the `Pipe` base class to implement custom components.
+[writing trainable components](/usage/processing-pipelines#trainable-components)
+for how to use the `Pipe` base class to implement custom components.
 
 > #### Why is Pipe implemented in Cython?
 >
@@ -106,14 +106,20 @@ applied to the `Doc` in order. Both [`__call__`](/api/pipe#call) and
 
 ## Pipe.begin_training {#begin_training tag="method"}
 
-Initialize the pipe for training, using data examples if available. Returns an
-[`Optimizer`](https://thinc.ai/docs/api-optimizers) object.
+Initialize the component for training and return an
+[`Optimizer`](https://thinc.ai/docs/api-optimizers). `get_examples` should be a
+function that returns an iterable of [`Example`](/api/example) objects. The data
+examples are used to **initialize the model** of the component and can either be
+the full training data or a representative sample. Initialization includes
+validating the network,
+[inferring missing shapes](https://thinc.ai/docs/usage-models#validation) and
+setting up the label scheme based on the data.
 
 > #### Example
 >
 > ```python
 > pipe = nlp.add_pipe("your_custom_pipe")
-> optimizer = pipe.begin_training(pipeline=nlp.pipeline)
+> optimizer = pipe.begin_training(lambda: [], pipeline=nlp.pipeline)
 > ```
 
 | Name           | Type                                                | Description                                                                                                |
@@ -200,7 +206,7 @@ This method needs to be overwritten with your own custom `update` method.
 | `losses`          | `Dict[str, float]`                                  | Optional record of the loss during training. Updated using the component name as the key.                                          |
 | **RETURNS**       | `Dict[str, float]`                                  | The updated `losses` dictionary.                                                                                                   |
 
-## Pipe.rehearse {#rehearse tag="method,experimental"}
+## Pipe.rehearse {#rehearse tag="method,experimental" new="3"}
 
 Perform a "rehearsal" update from a batch of data. Rehearsal updates teach the
 current model to make predictions similar to an initial model, to try to address

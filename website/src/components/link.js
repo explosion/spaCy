@@ -8,12 +8,20 @@ import Icon from './icon'
 import classes from '../styles/link.module.sass'
 import { isString } from './util'
 
-const internalRegex = /(http(s?)):\/\/(prodi.gy|spacy.io|irl.spacy.io)/gi
+const internalRegex = /(http(s?)):\/\/(prodi.gy|spacy.io|irl.spacy.io|explosion.ai|course.spacy.io)/gi
 
 const Whitespace = ({ children }) => (
     // Ensure that links are always wrapped in spaces
     <> {children} </>
 )
+
+function getIcon(dest) {
+    if (/(github.com)/.test(dest)) return 'code'
+    if (/^\/?api\/architectures#/.test(dest)) return 'network'
+    if (/^\/?api/.test(dest)) return 'docs'
+    if (/^\/?models\/(.+)/.test(dest)) return 'package'
+    return null
+}
 
 export default function Link({
     children,
@@ -30,22 +38,19 @@ export default function Link({
 }) {
     const dest = to || href
     const external = forceExternal || /(http(s?)):\/\//gi.test(dest)
-    const isApi = !external && !hidden && !hideIcon && /^\/?api/.test(dest)
-    const isArch = !external && !hidden && !hideIcon && /^\/?api\/architectures#/.test(dest)
-    const isSource = external && !hidden && !hideIcon && /(github.com)/.test(dest)
-    const withIcon = isApi || isArch || isSource
+    const icon = getIcon(dest)
+    const withIcon = !hidden && !hideIcon && !!icon
     const sourceWithText = withIcon && isString(children)
     const linkClassNames = classNames(classes.root, className, {
         [classes.hidden]: hidden,
-        [classes.nowrap]: (withIcon && !sourceWithText) || isArch,
+        [classes.nowrap]: (withIcon && !sourceWithText) || icon === 'network',
         [classes.withIcon]: withIcon,
     })
     const Wrapper = ws ? Whitespace : Fragment
-    const icon = isArch ? 'network' : isApi ? 'docs' : isSource ? 'code' : null
     const content = (
         <>
             {sourceWithText ? <span className={classes.sourceText}>{children}</span> : children}
-            {icon && <Icon name={icon} width={16} inline className={classes.icon} />}
+            {withIcon && <Icon name={icon} width={16} inline className={classes.icon} />}
         </>
     )
 

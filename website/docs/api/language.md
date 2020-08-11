@@ -200,12 +200,28 @@ more efficient than processing texts one-by-one.
 
 ## Language.begin_training {#begin_training tag="method"}
 
-Initialize the pipe for training, using data examples if available. Returns an
-[`Optimizer`](https://thinc.ai/docs/api-optimizers) object.
+Initialize the pipeline for training and return an
+[`Optimizer`](https://thinc.ai/docs/api-optimizers). `get_examples` should be a
+function that returns an iterable of [`Example`](/api/example) objects. The data
+examples can either be the full training data or a representative sample. They
+are used to **initialize the models** of trainable pipeline components and are
+passed each component's [`begin_training`](/api/pipe#begin_training) method, if
+available. Initialization includes validating the network,
+[inferring missing shapes](https://thinc.ai/docs/usage-models#validation) and
+setting up the label scheme based on the data.
+
+<Infobox variant="warning" title="Changed in v3.0">
+
+The `Language.update` method now takes a **function** that is called with no
+arguments and returns a sequence of [`Example`](/api/example) objects instead of
+tuples of `Doc` and `GoldParse` objects.
+
+</Infobox>
 
 > #### Example
 >
 > ```python
+> get_examples = lambda: examples
 > optimizer = nlp.begin_training(get_examples)
 > ```
 
@@ -276,7 +292,7 @@ and custom registered functions if needed. See the
 | `component_cfg` | `Dict[str, dict]`                                   | Optional dictionary of keyword arguments for components, keyed by component names. Defaults to `None`. |
 | **RETURNS**     | `Dict[str, float]`                                  | The updated `losses` dictionary.                                                                       |
 
-## Language.rehearse {#rehearse tag="method,experimental"}
+## Language.rehearse {#rehearse tag="method,experimental" new="3"}
 
 Perform a "rehearsal" update from a batch of data. Rehearsal updates teach the
 current model to make predictions similar to an initial model, to try to address
@@ -301,6 +317,13 @@ the "catastrophic forgetting" problem. This feature is experimental.
 ## Language.evaluate {#evaluate tag="method"}
 
 Evaluate a model's pipeline components.
+
+<Infobox variant="warning" title="Changed in v3.0">
+
+The `Language.update` method now takes a batch of [`Example`](/api/example)
+objects instead of tuples of `Doc` and `GoldParse` objects.
+
+</Infobox>
 
 > #### Example
 >

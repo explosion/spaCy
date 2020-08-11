@@ -121,15 +121,21 @@ applied to the `Doc` in order. Both [`__call__`](/api/morphologizer#call) and
 
 ## Morphologizer.begin_training {#begin_training tag="method"}
 
-Initialize the pipe for training, using data examples if available. Returns an
-[`Optimizer`](https://thinc.ai/docs/api-optimizers) object.
+Initialize the component for training and return an
+[`Optimizer`](https://thinc.ai/docs/api-optimizers). `get_examples` should be a
+function that returns an iterable of [`Example`](/api/example) objects. The data
+examples are used to **initialize the model** of the component and can either be
+the full training data or a representative sample. Initialization includes
+validating the network,
+[inferring missing shapes](https://thinc.ai/docs/usage-models#validation) and
+setting up the label scheme based on the data.
 
 > #### Example
 >
 > ```python
 > morphologizer = nlp.add_pipe("morphologizer")
 > nlp.pipeline.append(morphologizer)
-> optimizer = morphologizer.begin_training(pipeline=nlp.pipeline)
+> optimizer = morphologizer.begin_training(lambda: [], pipeline=nlp.pipeline)
 > ```
 
 | Name           | Type                                                | Description                                                                                                           |

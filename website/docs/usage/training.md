@@ -687,13 +687,13 @@ give you everything you need to train fully custom models with
 
 </Infobox>
 
-<!-- TODO: maybe add something about why the Example class is great and its benefits, and how it's passed around, holds the alignment etc -->
-
 The [`Example`](/api/example) object contains annotated training data, also
 called the **gold standard**. It's initialized with a [`Doc`](/api/doc) object
 that will hold the predictions, and another `Doc` object that holds the
-gold-standard annotations. Here's an example of a simple `Example` for
-part-of-speech tags:
+gold-standard annotations. It also includes the **alignment** between those two
+documents if they differ in tokenization. The `Example` class ensures that spaCy
+can rely on one **standardized format** that's passed through the pipeline.
+Here's an example of a simple `Example` for part-of-speech tags:
 
 ```python
 words = ["I", "like", "stuff"]
@@ -744,7 +744,8 @@ example = Example.from_dict(doc, {"entities": ["U-ORG", "O", "U-TECHNOLOGY", "O"
 
 As of v3.0, the [`Example`](/api/example) object replaces the `GoldParse` class.
 It can be constructed in a very similar way, from a `Doc` and a dictionary of
-annotations:
+annotations. For more details, see the
+[migration guide](/usage/v3#migrating-training).
 
 ```diff
 - gold = GoldParse(doc, entities=entities)

@@ -182,10 +182,10 @@ run [`spacy pretrain`](/api/cli#pretrain).
 > ```
 
 The main data format used in spaCy v3.0 is a **binary format** created by
-serializing a [`DocBin`](/api/docbin) object, which represents a collection of
-`Doc` objects. This means that you can train spaCy models using the same format
-it outputs: annotated `Doc` objects. The binary format is extremely **efficient
-in storage**, especially when packing multiple documents together.
+serializing a [`DocBin`](/api/docbin), which represents a collection of `Doc`
+objects. This means that you can train spaCy models using the same format it
+outputs: annotated `Doc` objects. The binary format is extremely **efficient in
+storage**, especially when packing multiple documents together.
 
 Typically, the extension for these binary files is `.spacy`, and they are used
 as input format for specifying a [training corpus](/api/corpus) and for spaCy's
