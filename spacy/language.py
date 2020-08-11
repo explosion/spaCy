@@ -961,7 +961,7 @@ class Language:
                 if (
                     name not in exclude
                     and hasattr(proc, "model")
-                    and isinstance(proc.model, Model)
+                and proc.model not in (True, False, None)
                 ):
                     proc.model.finish_update(sgd)
         return losses

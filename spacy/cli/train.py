@@ -298,7 +298,7 @@ def train_while_improving(
             if (
                 name not in exclude
                 and hasattr(proc, "model")
-                and isinstance(proc.model, Model)
+                and proc.model not in (True, False, None)
             ):
                 proc.model.finish_update(optimizer)
         optimizer.step_schedules()

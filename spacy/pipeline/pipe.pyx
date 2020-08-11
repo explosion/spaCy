@@ -101,7 +101,7 @@ cdef class Pipe:
         """
         if losses is None:
             losses = {}
-        if not hasattr(self, "model") or not isinstance(self.model, Model):
+        if not hasattr(self, "model") or self.model in (None, True, False):
             return losses
         losses.setdefault(self.name, 0.0)
         if not all(isinstance(eg, Example) for eg in examples):
