@@ -15,7 +15,7 @@ from .pipe import deserialize_config
 from .tagger import Tagger
 from .. import util
 from ..scorer import Scorer
-from ..gold import validate_examples, iter_get_examples
+from ..gold import validate_examples
 
 
 default_model_config = """
@@ -141,7 +141,10 @@ class Morphologizer(Tagger):
 
         DOCS: https://spacy.io/api/morphologizer#begin_training
         """
-        for example in iter_get_examples(get_examples, "Morphologizer"):
+        if not hasattr(get_examples, "__call__"):
+            err = Errors.E930.format(name="Morphologizer", obj=type(get_examples))
+            raise ValueError(err)
+        for example in get_examples():
             for i, token in enumerate(example.reference):
                 pos = token.pos_
                 morph = token.morph_

@@ -42,24 +42,6 @@ def validate_examples(examples, method):
         raise TypeError(err)
 
 
-def iter_get_examples(get_examples, name, method="begin_training"):
-    """Process a get_examples callback provided to begin_training and raise
-    errors if the format is unexpected.
-
-    get_examples (Callable[[], Iterable[Example]]): The callback.
-    name (str): Name of the class, used for error messages.
-    method (str): Optional alternative method name.
-    YIELDS (Example): The examples.
-    """
-    if not hasattr(get_examples, "__call__"):
-        raise ValueError(Errors.E930.format(name=name, obj=type(get_examples)))
-    for example in get_examples():
-        if not isinstance(example, Example):
-            err = Errors.E978.format(name=f"{name}.{method}", types=type(example))
-            raise ValueError(err)
-        yield example
-
-
 cdef class Example:
     def __init__(self, Doc predicted, Doc reference, *, alignment=None):
         if predicted is None:

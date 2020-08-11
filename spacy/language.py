@@ -18,7 +18,7 @@ from timeit import default_timer as timer
 from .tokens.underscore import Underscore
 from .vocab import Vocab, create_vocab
 from .pipe_analysis import validate_attrs, analyze_pipes, print_pipe_analysis
-from .gold import Example, validate_examples, iter_get_examples
+from .gold import Example, validate_examples
 from .scorer import Scorer
 from .util import create_default_optimizer, registry
 from .util import SimpleFrozenDict, combine_score_weights
@@ -1041,7 +1041,15 @@ class Language:
         if get_examples is None:
             get_examples = lambda: []
         else:  # Populate vocab
-            for example in iter_get_examples(get_examples, "Language"):
+            if not hasattr(get_examples, "__call__"):
+                err = Errors.E930.format(name="Language", obj=type(get_examples))
+                raise ValueError(err)
+            for example in get_examples():
+                if not isinstance(example, Example):
+                    err = Errors.E978.format(
+                        name="Language.begin_training", types=type(example)
+                    )
+                    raise ValueError(err)
                 for word in [t.text for t in example.reference]:
                     _ = self.vocab[word]  # noqa: F841
         if device >= 0:  # TODO: do we need this here?

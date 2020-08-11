@@ -5,7 +5,7 @@ import numpy
 
 from .pipe import Pipe
 from ..language import Language
-from ..gold import Example, validate_examples, iter_get_examples
+from ..gold import Example, validate_examples
 from ..errors import Errors
 from ..scorer import Scorer
 from .. import util
@@ -345,14 +345,19 @@ class TextCategorizer(Pipe):
 
         DOCS: https://spacy.io/api/textcategorizer#begin_training
         """
+        if not hasattr(get_examples, "__call__"):
+            err = Errors.E930.format(name="TextCategorizer", obj=type(get_examples))
+            raise ValueError(err)
         subbatch = []  # Select a subbatch of examples to initialize the model
-        for example in iter_get_examples(get_examples, "TextCategorizer"):
+        for example in get_examples():
             if len(subbatch) < 2:
                 subbatch.append(example)
             for cat in example.y.cats:
                 self.add_label(cat)
         self.require_labels()
-        docs = [Doc(self.vocab, words=["hello"])]
+        docs = [eg.reference for eg in subbatch]
+        if not docs:  # need at least one doc
+            docs = [Doc(self.vocab, words=["hello"])]
         truths, _ = self._examples_to_truth(subbatch)
         self.set_output(len(self.labels))
         self.model.initialize(X=docs, Y=truths)

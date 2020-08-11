@@ -8,7 +8,7 @@ from ..tokens.doc cimport Doc
 
 from .pipe import Pipe
 from .tagger import Tagger
-from ..gold import validate_examples, iter_get_examples
+from ..gold import validate_examples
 from ..language import Language
 from ._parser_internals import nonproj
 from ..attrs import POS, ID
@@ -82,7 +82,10 @@ class MultitaskObjective(Tagger):
         pass
 
     def begin_training(self, get_examples, pipeline=None, sgd=None):
-        for example in iter_get_examples(get_examples, "MultitaskObjective"):
+        if not hasattr(get_examples, "__call__"):
+            err = Errors.E930.format(name="MultitaskObjective", obj=type(get_examples))
+            raise ValueError(err)
+        for example in get_examples():
             for token in example.y:
                 label = self.make_label(token)
                 if label is not None and label not in self.labels:

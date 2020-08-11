@@ -20,7 +20,7 @@ from ..ml.parser_model cimport WeightsC, ActivationsC, SizesC, cpu_log_loss
 from ..ml.parser_model cimport get_c_weights, get_c_sizes
 from ..tokens.doc cimport Doc
 
-from ..gold import validate_examples, iter_get_examples
+from ..gold import validate_examples
 from ..errors import Errors, Warnings
 from .. import util
 
@@ -402,13 +402,16 @@ cdef class Parser(Pipe):
         self.model.attrs["resize_output"](self.model, nO)
 
     def begin_training(self, get_examples, pipeline=None, sgd=None, **kwargs):
+        if not hasattr(get_examples, "__call__"):
+            err = Errors.E930.format(name="DependencyParser/EntityRecognizer", obj=type(get_examples))
+            raise ValueError(err)
         self.cfg.update(kwargs)
         lexeme_norms = self.vocab.lookups.get_table("lexeme_norm", {})
         if len(lexeme_norms) == 0 and self.vocab.lang in util.LEXEME_NORM_LANGS:
             langs = ", ".join(util.LEXEME_NORM_LANGS)
             warnings.warn(Warnings.W033.format(model="parser or NER", langs=langs))
         actions = self.moves.get_actions(
-            examples=iter_get_examples(get_examples, "DependencyParser/EntityRecognizer"),
+            examples=get_examples(),
             min_freq=self.cfg['min_action_freq'],
             learn_tokens=self.cfg["learn_tokens"]
         )
@@ -423,8 +426,7 @@ cdef class Parser(Pipe):
         if sgd is None:
             sgd = self.create_optimizer()
         doc_sample = []
-        examples = iter_get_examples(get_examples, "DependencyParser/EntityRecognizer")
-        for example in islice(examples, 10):
+        for example in islice(get_examples(), 10):
             doc_sample.append(example.predicted)
 
         if pipeline is not None:

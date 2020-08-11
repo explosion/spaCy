@@ -6,7 +6,7 @@ from thinc.util import to_numpy
 
 from ..errors import Errors
 from ..gold import Example, spans_from_biluo_tags, iob_to_biluo, biluo_to_iob
-from ..gold import validate_examples, iter_get_examples
+from ..gold import validate_examples
 from ..tokens import Doc
 from ..language import Language
 from ..vocab import Vocab
@@ -169,7 +169,10 @@ class SimpleNER(Pipe):
         sgd: Optional[Optimizer] = None,
     ):
         all_labels = set()
-        for example in iter_get_examples(get_examples, "SimpleNER"):
+        if not hasattr(get_examples, "__call__"):
+            err = Errors.E930.format(name="SimpleNER", obj=type(get_examples))
+            raise ValueError(err)
+        for example in get_examples():
             all_labels.update(_get_labels(example))
         for label in sorted(all_labels):
             self.add_label(label)

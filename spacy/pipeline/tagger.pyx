@@ -16,7 +16,7 @@ from ..attrs import POS, ID
 from ..parts_of_speech import X
 from ..errors import Errors, TempErrors, Warnings
 from ..scorer import Scorer
-from ..gold import validate_examples, iter_get_examples
+from ..gold import validate_examples
 from .. import util
 
 
@@ -272,8 +272,11 @@ class Tagger(Pipe):
 
         DOCS: https://spacy.io/api/tagger#begin_training
         """
+        if not hasattr(get_examples, "__call__"):
+            err = Errors.E930.format(name="Tagger", obj=type(get_examples))
+            raise ValueError(err)
         tags = set()
-        for example in iter_get_examples(get_examples, "Tagger"):
+        for example in get_examples():
             for token in example.y:
                 tags.add(token.tag_)
         for tag in sorted(tags):
