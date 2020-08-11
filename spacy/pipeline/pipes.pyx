@@ -1375,7 +1375,7 @@ class EntityLinker(Pipe):
                 # This may go wrong if there are entities across sentences - which shouldn't happen normally.
                 for sent_index, sent in enumerate(sentences):
                     if sent.ents:
-                        # get n_neightbour sentences, clipped to the length of the document
+                        # get n_neighbour sentences, clipped to the length of the document
                         start_sentence = max(0, sent_index - self.n_sents)
                         end_sentence = min(len(sentences) -1, sent_index + self.n_sents)
 
