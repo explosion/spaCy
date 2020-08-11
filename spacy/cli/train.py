@@ -6,7 +6,7 @@ from wasabi import msg
 import thinc
 import thinc.schedules
 from thinc.api import use_pytorch_for_gpu_memory, require_gpu, fix_random_seed
-from thinc.api import Config, Optimizer, Model
+from thinc.api import Config, Optimizer
 import random
 import typer
 
