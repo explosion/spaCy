@@ -295,7 +295,11 @@ def train_while_improving(
                 nlp.rehearse(raw_batch, sgd=optimizer, losses=losses, exclude=exclude)
         # TODO: refactor this so we don't have to run it separately in here
         for name, proc in nlp.pipeline:
-            if name not in exclude and hasattr(proc, "model"):
+            if (
+                name not in exclude
+                and hasattr(proc, "model")
+                and proc.model not in (True, False, None)
+            ):
                 proc.model.finish_update(optimizer)
         optimizer.step_schedules()
         if not (step % eval_frequency):

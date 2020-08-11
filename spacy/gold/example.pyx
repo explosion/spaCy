@@ -1,5 +1,5 @@
+from collections import Iterable as IterableInstance
 import warnings
-
 import numpy
 
 from ..tokens.doc cimport Doc
@@ -24,6 +24,22 @@ cpdef Doc annotations2doc(vocab, tok_annot, doc_annot):
     # links are currently added with ENT_KB_ID on the token level
     output.cats.update(doc_annot.get("cats", {}))
     return output
+
+
+def validate_examples(examples, method):
+    """Check that a batch of examples received during processing is valid.
+    This function lives here to prevent circular imports.
+
+    examples (Iterable[Examples]): A batch of examples.
+    method (str): The method name to show in error messages.
+    """
+    if not isinstance(examples, IterableInstance):
+        err = Errors.E978.format(name=method, types=type(examples))
+        raise TypeError(err)
+    wrong = set([type(eg) for eg in examples if not isinstance(eg, Example)])
+    if wrong:
+        err = Errors.E978.format(name=method, types=wrong)
+        raise TypeError(err)
 
 
 cdef class Example:
@@ -263,12 +279,10 @@ def _annot2array(vocab, tok_annot, doc_annot):
             values.append([vocab.morphology.add(v) for v in value])
         else:
             attrs.append(key)
-            try:
-                values.append([vocab.strings.add(v) for v in value])
-            except TypeError:
-                types= set([type(v) for v in value])
+            if not all(isinstance(v, str) for v in value):
+                types = set([type(v) for v in value])
                 raise TypeError(Errors.E969.format(field=key, types=types)) from None
-
+            values.append([vocab.strings.add(v) for v in value])
     array = numpy.asarray(values, dtype="uint64")
     return attrs, array.T
 

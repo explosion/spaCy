@@ -1,9 +1,10 @@
 # cython: infer_types=True, profile=True
 import srsly
+from thinc.api import set_dropout_rate, Model
 
 from ..tokens.doc cimport Doc
 
-from ..util import create_default_optimizer
+from ..gold import validate_examples
 from ..errors import Errors
 from .. import util
 
@@ -16,7 +17,6 @@ cdef class Pipe:
 
     DOCS: https://spacy.io/api/pipe
     """
-
     def __init__(self, vocab, model, name, **cfg):
         """Initialize a pipeline component.
 
@@ -27,7 +27,10 @@ cdef class Pipe:
 
         DOCS: https://spacy.io/api/pipe#init
         """
-        raise NotImplementedError
+        self.vocab = vocab
+        self.model = model
+        self.name = name
+        self.cfg = dict(cfg)
 
     def __call__(self, Doc doc):
         """Apply the pipe to one document. The document is modified in place,
@@ -68,7 +71,7 @@ cdef class Pipe:
 
         DOCS: https://spacy.io/api/pipe#predict
         """
-        raise NotImplementedError
+        raise NotImplementedError(Errors.E931.format(method="predict", name=self.name))
 
     def set_annotations(self, docs, scores):
         """Modify a batch of documents, using pre-computed scores.
@@ -78,7 +81,43 @@ cdef class Pipe:
 
         DOCS: https://spacy.io/api/pipe#set_annotations
         """
-        raise NotImplementedError
+        raise NotImplementedError(Errors.E931.format(method="set_annotations", name=self.name))
+
+    def update(self, examples, *, drop=0.0, set_annotations=False, sgd=None, losses=None):
+        """Learn from a batch of documents and gold-standard information,
+        updating the pipe's model. Delegates to predict and get_loss.
+
+        examples (Iterable[Example]): A batch of Example objects.
+        drop (float): The dropout rate.
+        set_annotations (bool): Whether or not to update the Example objects
+            with the predictions.
+        sgd (thinc.api.Optimizer): The optimizer.
+        losses (Dict[str, float]): Optional record of the loss during training.
+            Updated using the component name as the key.
+        RETURNS (Dict[str, float]): The updated losses dictionary.
+
+        DOCS: https://spacy.io/api/pipe#update
+        """
+        if losses is None:
+            losses = {}
+        if not hasattr(self, "model") or self.model in (None, True, False):
+            return losses
+        losses.setdefault(self.name, 0.0)
+        validate_examples(examples, "Pipe.update")
+        if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
+            # Handle cases where there are no tokens in any docs.
+            return
+        set_dropout_rate(self.model, drop)
+        scores, bp_scores = self.model.begin_update([eg.predicted for eg in examples])
+        loss, d_scores = self.get_loss(examples, scores)
+        bp_scores(d_scores)
+        if sgd not in (None, False):
+            self.model.finish_update(sgd)
+        losses[self.name] += loss
+        if set_annotations:
+            docs = [eg.predicted for eg in examples]
+            self.set_annotations(docs, scores=scores)
+        return losses
 
     def rehearse(self, examples, *, sgd=None, losses=None, **config):
         """Perform a "rehearsal" update from a batch of data. Rehearsal updates
@@ -107,7 +146,7 @@ cdef class Pipe:
 
         DOCS: https://spacy.io/api/pipe#get_loss
         """
-        raise NotImplementedError
+        raise NotImplementedError(Errors.E931.format(method="get_loss", name=self.name))
 
     def add_label(self, label):
         """Add an output label, to be predicted by the model. It's possible to
@@ -119,7 +158,7 @@ cdef class Pipe:
 
         DOCS: https://spacy.io/api/pipe#add_label
         """
-        raise NotImplementedError
+        raise NotImplementedError(Errors.E931.format(method="add_label", name=self.name))
 
     def create_optimizer(self):
         """Create an optimizer for the pipeline component.
@@ -128,9 +167,9 @@ cdef class Pipe:
 
         DOCS: https://spacy.io/api/pipe#create_optimizer
         """
-        return create_default_optimizer()
+        return util.create_default_optimizer()
 
-    def begin_training(self, get_examples=lambda: [], *, pipeline=None, sgd=None):
+    def begin_training(self, get_examples, *, pipeline=None, sgd=None):
         """Initialize the pipe for training, using data examples if available.
 
         get_examples (Callable[[], Iterable[Example]]): Optional function that

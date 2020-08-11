@@ -45,18 +45,12 @@ Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
 [`nlp.add_pipe`](/api/language#create_pipe).
 
-<Infobox variant="danger">
-
-This method needs to be overwritten with your own custom `__init__` method.
-
-</Infobox>
-
-| Name    | Type                                       | Description                                                                                 |
-| ------- | ------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| `vocab` | `Vocab`                                    | The shared vocabulary.                                                                      |
-| `model` | [`Model`](https://thinc.ai/docs/api-model) | The Thinc [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component.       |
-| `name`  | str                                        | String name of the component instance. Used to add entries to the `losses` during training. |
-| `**cfg` |                                            | Additional config parameters and settings.                                                  |
+| Name    | Type                                       | Description                                                                                                                     |
+| ------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab` | `Vocab`                                    | The shared vocabulary.                                                                                                          |
+| `model` | [`Model`](https://thinc.ai/docs/api-model) | The Thinc [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component.                                           |
+| `name`  | str                                        | String name of the component instance. Used to add entries to the `losses` during training.                                     |
+| `**cfg` |                                            | Additional config parameters and settings. Will be available as the dictionary `Pipe.cfg` and is serialized with the component. |
 
 ## Pipe.\_\_call\_\_ {#call tag="method"}
 
@@ -181,12 +175,6 @@ method.
 
 Learn from a batch of [`Example`](/api/example) objects containing the
 predictions and gold-standard annotations, and update the component's model.
-
-<Infobox variant="danger">
-
-This method needs to be overwritten with your own custom `update` method.
-
-</Infobox>
 
 > #### Example
 >
@@ -383,6 +371,15 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 | _keyword-only_ |                 |                                                                           |
 | `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
 | **RETURNS**    | `Pipe`          | The pipe.                                                                 |
+
+## Attributes {#attributes}
+
+| Name    | Type                                       | Description                                                                                           |
+| ------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| `vocab` | [`Vocab`](/api/vocab)                      | The shared vocabulary that's passed in on initialization.                                             |
+| `model` | [`Model`](https://thinc.ai/docs/api-model) | The model powering the component.                                                                     |
+| `name`  | str                                        | The name of the component instance in the pipeline. Can be used in the losses.                        |
+| `cfg`   | dict                                       | Keyword arguments passed to [`Pipe.__init__`](/api/pipe#init). Will be serialized with the component. |
 
 ## Serialization fields {#serialization-fields}
 

@@ -5,7 +5,6 @@ import random
 import itertools
 import weakref
 import functools
-from collections import Iterable as IterableInstance
 from contextlib import contextmanager
 from copy import copy, deepcopy
 from pathlib import Path
@@ -19,7 +18,7 @@ from timeit import default_timer as timer
 from .tokens.underscore import Underscore
 from .vocab import Vocab, create_vocab
 from .pipe_analysis import validate_attrs, analyze_pipes, print_pipe_analysis
-from .gold import Example
+from .gold import Example, validate_examples
 from .scorer import Scorer
 from .util import create_default_optimizer, registry
 from .util import SimpleFrozenDict, combine_score_weights
@@ -935,17 +934,7 @@ class Language:
             losses = {}
         if len(examples) == 0:
             return losses
-        if not isinstance(examples, IterableInstance):
-            raise TypeError(
-                Errors.E978.format(
-                    name="language", method="update", types=type(examples)
-                )
-            )
-        wrong_types = set([type(eg) for eg in examples if not isinstance(eg, Example)])
-        if wrong_types:
-            raise TypeError(
-                Errors.E978.format(name="language", method="update", types=wrong_types)
-            )
+        validate_examples(examples, "Language.update")
         if sgd is None:
             if self._optimizer is None:
                 self._optimizer = create_default_optimizer()
@@ -962,7 +951,11 @@ class Language:
             proc.update(examples, sgd=None, losses=losses, **component_cfg[name])
         if sgd not in (None, False):
             for name, proc in self.pipeline:
-                if name not in exclude and hasattr(proc, "model"):
+                if (
+                    name not in exclude
+                    and hasattr(proc, "model")
+                    and proc.model not in (True, False, None)
+                ):
                     proc.model.finish_update(sgd)
         return losses
 
@@ -999,19 +992,7 @@ class Language:
         """
         if len(examples) == 0:
             return
-        if not isinstance(examples, IterableInstance):
-            raise TypeError(
-                Errors.E978.format(
-                    name="language", method="rehearse", types=type(examples)
-                )
-            )
-        wrong_types = set([type(eg) for eg in examples if not isinstance(eg, Example)])
-        if wrong_types:
-            raise TypeError(
-                Errors.E978.format(
-                    name="language", method="rehearse", types=wrong_types
-                )
-            )
+        validate_examples(examples, "Language.rehearse")
         if sgd is None:
             if self._optimizer is None:
                 self._optimizer = create_default_optimizer()
@@ -1060,7 +1041,15 @@ class Language:
         if get_examples is None:
             get_examples = lambda: []
         else:  # Populate vocab
+            if not hasattr(get_examples, "__call__"):
+                err = Errors.E930.format(name="Language", obj=type(get_examples))
+                raise ValueError(err)
             for example in get_examples():
+                if not isinstance(example, Example):
+                    err = Errors.E978.format(
+                        name="Language.begin_training", types=type(example)
+                    )
+                    raise ValueError(err)
                 for word in [t.text for t in example.reference]:
                     _ = self.vocab[word]  # noqa: F841
         if device >= 0:  # TODO: do we need this here?
@@ -1133,17 +1122,7 @@ class Language:
 
         DOCS: https://spacy.io/api/language#evaluate
         """
-        if not isinstance(examples, IterableInstance):
-            err = Errors.E978.format(
-                name="language", method="evaluate", types=type(examples)
-            )
-            raise TypeError(err)
-        wrong_types = set([type(eg) for eg in examples if not isinstance(eg, Example)])
-        if wrong_types:
-            err = Errors.E978.format(
-                name="language", method="evaluate", types=wrong_types
-            )
-            raise TypeError(err)
+        validate_examples(examples, "Language.evaluate")
         if component_cfg is None:
             component_cfg = {}
         if scorer_cfg is None:
@@ -1663,7 +1642,7 @@ def _fix_pretrained_vectors_name(nlp: Language) -> None:
     else:
         raise ValueError(Errors.E092)
     for name, proc in nlp.pipeline:
-        if not hasattr(proc, "cfg"):
+        if not hasattr(proc, "cfg") or not isinstance(proc.cfg, dict):
             continue
         proc.cfg.setdefault("deprecation_fixes", {})
         proc.cfg["deprecation_fixes"]["vectors_name"] = nlp.vocab.vectors.name

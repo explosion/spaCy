@@ -1,4 +1,4 @@
-from typing import List, Iterable, Optional, Dict, Tuple, Callable
+from typing import List, Iterable, Optional, Dict, Tuple, Callable, Set
 from thinc.types import Floats2d
 from thinc.api import SequenceCategoricalCrossentropy, set_dropout_rate, Model
 from thinc.api import Optimizer, Config
@@ -6,6 +6,7 @@ from thinc.util import to_numpy
 
 from ..errors import Errors
 from ..gold import Example, spans_from_biluo_tags, iob_to_biluo, biluo_to_iob
+from ..gold import validate_examples
 from ..tokens import Doc
 from ..language import Language
 from ..vocab import Vocab
@@ -127,6 +128,7 @@ class SimpleNER(Pipe):
         if losses is None:
             losses = {}
         losses.setdefault("ner", 0.0)
+        validate_examples(examples, "SimpleNER.update")
         if not any(_has_ner(eg) for eg in examples):
             return losses
         docs = [eg.predicted for eg in examples]
@@ -142,6 +144,7 @@ class SimpleNER(Pipe):
         return losses
 
     def get_loss(self, examples: List[Example], scores) -> Tuple[List[Floats2d], float]:
+        validate_examples(examples, "SimpleNER.get_loss")
         truths = []
         for eg in examples:
             tags = eg.get_aligned_ner()
@@ -161,14 +164,17 @@ class SimpleNER(Pipe):
 
     def begin_training(
         self,
-        get_examples: Callable,
+        get_examples: Callable[[], Iterable[Example]],
         pipeline: Optional[List[Tuple[str, Callable[[Doc], Doc]]]] = None,
         sgd: Optional[Optimizer] = None,
     ):
+        all_labels = set()
         if not hasattr(get_examples, "__call__"):
-            gold_tuples = get_examples
-            get_examples = lambda: gold_tuples
-        for label in _get_labels(get_examples()):
+            err = Errors.E930.format(name="SimpleNER", obj=type(get_examples))
+            raise ValueError(err)
+        for example in get_examples():
+            all_labels.update(_get_labels(example))
+        for label in sorted(all_labels):
             self.add_label(label)
         labels = self.labels
         n_actions = self.model.attrs["get_num_actions"](len(labels))
@@ -185,6 +191,7 @@ class SimpleNER(Pipe):
         pass
 
     def score(self, examples, **kwargs):
+        validate_examples(examples, "SimpleNER.score")
         return Scorer.score_spans(examples, "ents", **kwargs)
 
 
@@ -196,10 +203,9 @@ def _has_ner(example: Example) -> bool:
         return False
 
 
-def _get_labels(examples: List[Example]) -> List[str]:
+def _get_labels(example: Example) -> Set[str]:
     labels = set()
-    for eg in examples:
-        for ner_tag in eg.get_aligned("ENT_TYPE", as_string=True):
-            if ner_tag != "O" and ner_tag != "-":
-                labels.add(ner_tag)
-    return list(sorted(labels))
+    for ner_tag in example.get_aligned("ENT_TYPE", as_string=True):
+        if ner_tag != "O" and ner_tag != "-":
+            labels.add(ner_tag)
+    return labels

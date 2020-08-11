@@ -6,15 +6,16 @@ from thinc.api import SequenceCategoricalCrossentropy, Model, Config
 from ..tokens.doc cimport Doc
 from ..vocab cimport Vocab
 from ..morphology cimport Morphology
+
 from ..parts_of_speech import IDS as POS_IDS
 from ..symbols import POS
-
 from ..language import Language
 from ..errors import Errors
 from .pipe import deserialize_config
 from .tagger import Tagger
 from .. import util
 from ..scorer import Scorer
+from ..gold import validate_examples
 
 
 default_model_config = """
@@ -126,7 +127,7 @@ class Morphologizer(Tagger):
             self.cfg["labels_pos"][norm_label] = POS_IDS[pos]
         return 1
 
-    def begin_training(self, get_examples=lambda: [], *, pipeline=None, sgd=None):
+    def begin_training(self, get_examples, *, pipeline=None, sgd=None):
         """Initialize the pipe for training, using data examples if available.
 
         get_examples (Callable[[], Iterable[Example]]): Optional function that
@@ -140,6 +141,9 @@ class Morphologizer(Tagger):
 
         DOCS: https://spacy.io/api/morphologizer#begin_training
         """
+        if not hasattr(get_examples, "__call__"):
+            err = Errors.E930.format(name="Morphologizer", obj=type(get_examples))
+            raise ValueError(err)
         for example in get_examples():
             for i, token in enumerate(example.reference):
                 pos = token.pos_
@@ -192,6 +196,7 @@ class Morphologizer(Tagger):
 
         DOCS: https://spacy.io/api/morphologizer#get_loss
         """
+        validate_examples(examples, "Morphologizer.get_loss")
         loss_func = SequenceCategoricalCrossentropy(names=self.labels, normalize=False)
         truths = []
         for eg in examples:
@@ -228,6 +233,7 @@ class Morphologizer(Tagger):
 
         DOCS: https://spacy.io/api/morphologizer#score
         """
+        validate_examples(examples, "Morphologizer.score")
         results = {}
         results.update(Scorer.score_token_attr(examples, "pos", **kwargs))
         results.update(Scorer.score_token_attr(examples, "morph", **kwargs))

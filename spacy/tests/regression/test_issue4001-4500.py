@@ -303,7 +303,7 @@ def test_issue4313():
     config = {}
     ner = nlp.create_pipe("ner", config=config)
     ner.add_label("SOME_LABEL")
-    ner.begin_training([])
+    ner.begin_training(lambda: [])
     # add a new label to the doc
     doc = nlp("What do you think about Apple ?")
     assert len(ner.labels) == 1

@@ -11,7 +11,7 @@ from ..tokens import Doc
 from .pipe import Pipe, deserialize_config
 from ..language import Language
 from ..vocab import Vocab
-from ..gold import Example
+from ..gold import Example, validate_examples
 from ..errors import Errors, Warnings
 from .. import util
 
@@ -142,7 +142,7 @@ class EntityLinker(Pipe):
 
     def begin_training(
         self,
-        get_examples: Callable[[], Iterable[Example]] = lambda: [],
+        get_examples: Callable[[], Iterable[Example]],
         *,
         pipeline: Optional[List[Tuple[str, Callable[[Doc], Doc]]]] = None,
         sgd: Optional[Optimizer] = None,
@@ -197,14 +197,9 @@ class EntityLinker(Pipe):
         losses.setdefault(self.name, 0.0)
         if not examples:
             return losses
+        validate_examples(examples, "EntityLinker.update")
         sentence_docs = []
-        try:
-            docs = [eg.predicted for eg in examples]
-        except AttributeError:
-            types = set([type(eg) for eg in examples])
-            raise TypeError(
-                Errors.E978.format(name="EntityLinker", method="update", types=types)
-            ) from None
+        docs = [eg.predicted for eg in examples]
         if set_annotations:
             # This seems simpler than other ways to get that exact output -- but
             # it does run the model twice :(
@@ -250,6 +245,7 @@ class EntityLinker(Pipe):
         return losses
 
     def get_loss(self, examples: Iterable[Example], sentence_encodings):
+        validate_examples(examples, "EntityLinker.get_loss")
         entity_encodings = []
         for eg in examples:
             kb_ids = eg.get_aligned("ENT_KB_ID", as_string=True)

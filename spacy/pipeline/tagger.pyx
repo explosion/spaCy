@@ -16,6 +16,7 @@ from ..attrs import POS, ID
 from ..parts_of_speech import X
 from ..errors import Errors, TempErrors, Warnings
 from ..scorer import Scorer
+from ..gold import validate_examples
 from .. import util
 
 
@@ -187,19 +188,15 @@ class Tagger(Pipe):
         if losses is None:
             losses = {}
         losses.setdefault(self.name, 0.0)
-        try:
-            if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
-                # Handle cases where there are no tokens in any docs.
-                return
-        except AttributeError:
-            types = set([type(eg) for eg in examples])
-            raise TypeError(Errors.E978.format(name="Tagger", method="update", types=types)) from None
+        validate_examples(examples, "Tagger.update")
+        if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
+            # Handle cases where there are no tokens in any docs.
+            return
         set_dropout_rate(self.model, drop)
-        tag_scores, bp_tag_scores = self.model.begin_update(
-            [eg.predicted for eg in examples])
+        tag_scores, bp_tag_scores = self.model.begin_update([eg.predicted for eg in examples])
         for sc in tag_scores:
             if self.model.ops.xp.isnan(sc.sum()):
-                raise ValueError("nan value in scores")
+                raise ValueError(Errors.E940)
         loss, d_tag_scores = self.get_loss(examples, tag_scores)
         bp_tag_scores(d_tag_scores)
         if sgd not in (None, False):
@@ -226,11 +223,8 @@ class Tagger(Pipe):
 
         DOCS: https://spacy.io/api/tagger#rehearse
         """
-        try:
-            docs = [eg.predicted for eg in examples]
-        except AttributeError:
-            types = set([type(eg) for eg in examples])
-            raise TypeError(Errors.E978.format(name="Tagger", method="rehearse", types=types)) from None
+        validate_examples(examples, "Tagger.rehearse")
+        docs = [eg.predicted for eg in examples]
         if self._rehearsal_model is None:
             return
         if not any(len(doc) for doc in docs):
@@ -256,6 +250,7 @@ class Tagger(Pipe):
 
         DOCS: https://spacy.io/api/tagger#get_loss
         """
+        validate_examples(examples, "Tagger.get_loss")
         loss_func = SequenceCategoricalCrossentropy(names=self.labels, normalize=False)
         truths = [eg.get_aligned("TAG", as_string=True) for eg in examples]
         d_scores, loss = loss_func(scores, truths)
@@ -263,7 +258,7 @@ class Tagger(Pipe):
             raise ValueError("nan value when computing loss")
         return float(loss), d_scores
 
-    def begin_training(self, get_examples=lambda: [], *, pipeline=None, sgd=None):
+    def begin_training(self, get_examples, *, pipeline=None, sgd=None):
         """Initialize the pipe for training, using data examples if available.
 
         get_examples (Callable[[], Iterable[Example]]): Optional function that
@@ -277,13 +272,12 @@ class Tagger(Pipe):
 
         DOCS: https://spacy.io/api/tagger#begin_training
         """
+        if not hasattr(get_examples, "__call__"):
+            err = Errors.E930.format(name="Tagger", obj=type(get_examples))
+            raise ValueError(err)
         tags = set()
         for example in get_examples():
-            try:
-                y = example.y
-            except AttributeError:
-                raise TypeError(Errors.E978.format(name="Tagger", method="begin_training", types=type(example))) from None
-            for token in y:
+            for token in example.y:
                 tags.add(token.tag_)
         for tag in sorted(tags):
             self.add_label(tag)
@@ -318,6 +312,7 @@ class Tagger(Pipe):
 
         DOCS: https://spacy.io/api/tagger#score
         """
+        validate_examples(examples, "Tagger.score")
         return Scorer.score_token_attr(examples, "tag", **kwargs)
 
     def to_bytes(self, *, exclude=tuple()):

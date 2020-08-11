@@ -54,7 +54,7 @@ def test_textcat_learns_multilabel():
     textcat = TextCategorizer(nlp.vocab, width=8)
     for letter in letters:
         textcat.add_label(letter)
-    optimizer = textcat.begin_training()
+    optimizer = textcat.begin_training(lambda: [])
     for i in range(30):
         losses = {}
         examples = [Example.from_dict(doc, {"cats": cats}) for doc, cat in docs]

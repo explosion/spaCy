@@ -7,6 +7,7 @@ from ._parser_internals.ner cimport BiluoPushDown
 
 from ..language import Language
 from ..scorer import Scorer
+from ..gold import validate_examples
 
 
 default_model_config = """
@@ -50,7 +51,7 @@ def make_ner(
 ):
     """Create a transition-based EntityRecognizer component. The entity recognizer
     identifies non-overlapping labelled spans of tokens.
-    
+
     The transition-based algorithm used encodes certain assumptions that are
     effective for "traditional" named entity recognition tasks, but may not be
     a good fit for every span identification problem. Specifically, the loss
@@ -120,4 +121,5 @@ cdef class EntityRecognizer(Parser):
 
         DOCS: https://spacy.io/api/entityrecognizer#score
         """
+        validate_examples(examples, "EntityRecognizer.score")
         return Scorer.score_spans(examples, "ents", **kwargs)
