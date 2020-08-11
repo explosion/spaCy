@@ -127,6 +127,7 @@ class Lemmatizer(Pipe):
         """
         self.vocab = vocab
         self.model = model
+        self.name = name
         self._mode = mode
         self.lookups = lookups if lookups is not None else Lookups()
         self.overwrite = overwrite
