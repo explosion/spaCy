@@ -62,7 +62,7 @@ def tagger():
     # need to add model for two reasons:
     # 1. no model leads to error in serialization,
     # 2. the affected line is the one for model serialization
-    tagger.begin_training(pipeline=nlp.pipeline)
+    tagger.begin_training(lambda: [], pipeline=nlp.pipeline)
     return tagger
 
 
@@ -81,7 +81,7 @@ def entity_linker():
     # need to add model for two reasons:
     # 1. no model leads to error in serialization,
     # 2. the affected line is the one for model serialization
-    entity_linker.begin_training(pipeline=nlp.pipeline)
+    entity_linker.begin_training(lambda: [], pipeline=nlp.pipeline)
     return entity_linker
 
 

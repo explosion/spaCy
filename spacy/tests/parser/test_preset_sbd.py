@@ -28,7 +28,7 @@ def parser(vocab):
     parser.cfg["hidden_width"] = 32
     # parser.add_label('right')
     parser.add_label("left")
-    parser.begin_training([], **parser.cfg)
+    parser.begin_training(lambda: [], **parser.cfg)
     sgd = Adam(0.001)
 
     for i in range(10):

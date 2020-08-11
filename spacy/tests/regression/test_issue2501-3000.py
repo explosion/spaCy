@@ -20,7 +20,7 @@ def test_issue2564():
     nlp = Language()
     tagger = nlp.add_pipe("tagger")
     tagger.add_label("A")
-    tagger.begin_training()
+    tagger.begin_training(lambda: [])
     doc = nlp("hello world")
     assert doc.is_tagged
     docs = nlp.pipe(["hello", "world"])

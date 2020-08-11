@@ -5,7 +5,7 @@ import numpy
 
 from .pipe import Pipe
 from ..language import Language
-from ..gold import Example
+from ..gold import Example, validate_examples, iter_get_examples
 from ..errors import Errors
 from ..scorer import Scorer
 from .. import util
@@ -209,10 +209,7 @@ class TextCategorizer(Pipe):
         if losses is None:
             losses = {}
         losses.setdefault(self.name, 0.0)
-        if not all(isinstance(eg, Example) for eg in examples):
-            types = set([type(eg) for eg in examples])
-            err = Errors.E978.format(name="TextCategorizer.update", types=types)
-            raise TypeError(err) from None
+        validate_examples(examples, "TextCategorizer.update")
         if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
             # Handle cases where there are no tokens in any docs.
             return losses
@@ -254,10 +251,7 @@ class TextCategorizer(Pipe):
             losses.setdefault(self.name, 0.0)
         if self._rehearsal_model is None:
             return losses
-        if not all(isinstance(eg, Example) for eg in examples):
-            types = set([type(eg) for eg in examples])
-            err = Errors.E978.format(name="TextCategorizer.rehearse", types=types)
-            raise TypeError(err)
+        validate_examples(examples, "TextCategorizer.rehearse")
         docs = [eg.predicted for eg in examples]
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
@@ -297,6 +291,7 @@ class TextCategorizer(Pipe):
 
         DOCS: https://spacy.io/api/textcategorizer#get_loss
         """
+        validate_examples(examples, "TextCategorizer.get_loss")
         truths, not_missing = self._examples_to_truth(examples)
         not_missing = self.model.ops.asarray(not_missing)
         d_scores = (scores - truths) / scores.shape[0]
@@ -332,7 +327,7 @@ class TextCategorizer(Pipe):
 
     def begin_training(
         self,
-        get_examples: Callable[[], Iterable[Example]] = lambda: [],
+        get_examples: Callable[[], Iterable[Example]],
         *,
         pipeline: Optional[List[Tuple[str, Callable[[Doc], Doc]]]] = None,
         sgd: Optional[Optimizer] = None,
@@ -350,19 +345,15 @@ class TextCategorizer(Pipe):
 
         DOCS: https://spacy.io/api/textcategorizer#begin_training
         """
-        # TODO: begin_training is not guaranteed to see all data / labels ?
-        examples = list(get_examples())
-        for example in examples:
-            if not isinstance(example, Example):
-                err = Errors.E978.format(
-                    name="TextCategorizer.update", types=type(example)
-                )
-                raise TypeError(err)
+        subbatch = []  # Select a subbatch of examples to initialize the model
+        for example in iter_get_examples(get_examples, "TextCategorizer"):
+            if len(subbatch) < 2:
+                subbatch.append(example)
             for cat in example.y.cats:
                 self.add_label(cat)
         self.require_labels()
         docs = [Doc(self.vocab, words=["hello"])]
-        truths, _ = self._examples_to_truth(examples)
+        truths, _ = self._examples_to_truth(subbatch)
         self.set_output(len(self.labels))
         self.model.initialize(X=docs, Y=truths)
         if sgd is None:
@@ -384,6 +375,7 @@ class TextCategorizer(Pipe):
 
         DOCS: https://spacy.io/api/textcategorizer#score
         """
+        validate_examples(examples, "TextCategorizer.score")
         return Scorer.score_cats(
             examples,
             "cats",

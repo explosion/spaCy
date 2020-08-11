@@ -4,8 +4,7 @@ from thinc.api import set_dropout_rate, Model
 
 from ..tokens.doc cimport Doc
 
-from ..gold import Example
-from ..util import create_default_optimizer
+from ..gold import validate_examples
 from ..errors import Errors
 from .. import util
 
@@ -104,9 +103,7 @@ cdef class Pipe:
         if not hasattr(self, "model") or self.model in (None, True, False):
             return losses
         losses.setdefault(self.name, 0.0)
-        if not all(isinstance(eg, Example) for eg in examples):
-            types = set([type(eg) for eg in examples])
-            raise TypeError(Errors.E978.format(name="Pipe.update", types=types))
+        validate_examples(examples, "Pipe.update")
         if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
             # Handle cases where there are no tokens in any docs.
             return
@@ -170,9 +167,9 @@ cdef class Pipe:
 
         DOCS: https://spacy.io/api/pipe#create_optimizer
         """
-        return create_default_optimizer()
+        return util.create_default_optimizer()
 
-    def begin_training(self, get_examples=lambda: [], *, pipeline=None, sgd=None):
+    def begin_training(self, get_examples, *, pipeline=None, sgd=None):
         """Initialize the pipe for training, using data examples if available.
 
         get_examples (Callable[[], Iterable[Example]]): Optional function that

@@ -16,7 +16,7 @@ from ..attrs import POS, ID
 from ..parts_of_speech import X
 from ..errors import Errors, TempErrors, Warnings
 from ..scorer import Scorer
-from ..gold import Example
+from ..gold import validate_examples, iter_get_examples
 from .. import util
 
 
@@ -188,9 +188,7 @@ class Tagger(Pipe):
         if losses is None:
             losses = {}
         losses.setdefault(self.name, 0.0)
-        if not all(isinstance(eg, Example) for eg in examples):
-            types = set([type(eg) for eg in examples])
-            raise TypeError(Errors.E978.format(name="Tagger.update", types=types))
+        validate_examples(examples, "Tagger.update")
         if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
             # Handle cases where there are no tokens in any docs.
             return
@@ -225,9 +223,7 @@ class Tagger(Pipe):
 
         DOCS: https://spacy.io/api/tagger#rehearse
         """
-        if not all(isinstance(eg, Example) for eg in examples):
-            types = set([type(eg) for eg in examples])
-            raise TypeError(Errors.E978.format(name="Tagger.rehearse", types=types))
+        validate_examples(examples, "Tagger.rehearse")
         docs = [eg.predicted for eg in examples]
         if self._rehearsal_model is None:
             return
@@ -254,6 +250,7 @@ class Tagger(Pipe):
 
         DOCS: https://spacy.io/api/tagger#get_loss
         """
+        validate_examples(examples, "Tagger.get_loss")
         loss_func = SequenceCategoricalCrossentropy(names=self.labels, normalize=False)
         truths = [eg.get_aligned("TAG", as_string=True) for eg in examples]
         d_scores, loss = loss_func(scores, truths)
@@ -261,7 +258,7 @@ class Tagger(Pipe):
             raise ValueError("nan value when computing loss")
         return float(loss), d_scores
 
-    def begin_training(self, get_examples=lambda: [], *, pipeline=None, sgd=None):
+    def begin_training(self, get_examples, *, pipeline=None, sgd=None):
         """Initialize the pipe for training, using data examples if available.
 
         get_examples (Callable[[], Iterable[Example]]): Optional function that
@@ -276,9 +273,7 @@ class Tagger(Pipe):
         DOCS: https://spacy.io/api/tagger#begin_training
         """
         tags = set()
-        for example in get_examples():
-            if not isinstance(example, Example):
-                raise TypeError(Errors.E978.format(name="Tagger.begin_training", types=type(example)))
+        for example in iter_get_examples(get_examples, "Tagger"):
             for token in example.y:
                 tags.add(token.tag_)
         for tag in sorted(tags):
@@ -314,6 +309,7 @@ class Tagger(Pipe):
 
         DOCS: https://spacy.io/api/tagger#score
         """
+        validate_examples(examples, "Tagger.score")
         return Scorer.score_token_attr(examples, "tag", **kwargs)
 
     def to_bytes(self, *, exclude=tuple()):

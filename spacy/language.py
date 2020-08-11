@@ -5,12 +5,11 @@ import random
 import itertools
 import weakref
 import functools
-from collections import Iterable as IterableInstance
 from contextlib import contextmanager
 from copy import copy, deepcopy
 from pathlib import Path
 import warnings
-from thinc.api import get_current_ops, Config, require_gpu, Optimizer, Model
+from thinc.api import get_current_ops, Config, require_gpu, Optimizer
 import srsly
 import multiprocessing as mp
 from itertools import chain, cycle
@@ -19,7 +18,7 @@ from timeit import default_timer as timer
 from .tokens.underscore import Underscore
 from .vocab import Vocab, create_vocab
 from .pipe_analysis import validate_attrs, analyze_pipes, print_pipe_analysis
-from .gold import Example
+from .gold import Example, validate_examples, iter_get_examples
 from .scorer import Scorer
 from .util import create_default_optimizer, registry
 from .util import SimpleFrozenDict, combine_score_weights
@@ -935,13 +934,7 @@ class Language:
             losses = {}
         if len(examples) == 0:
             return losses
-        if not isinstance(examples, IterableInstance):
-            err = Errors.E978.format(name="Language.update", types=type(examples))
-            raise TypeError(err)
-        wrong_types = set([type(eg) for eg in examples if not isinstance(eg, Example)])
-        if wrong_types:
-            err = Errors.E978.format(name="Language.update", types=wrong_types)
-            raise TypeError(err)
+        validate_examples(examples, "Language.update")
         if sgd is None:
             if self._optimizer is None:
                 self._optimizer = create_default_optimizer()
@@ -961,7 +954,7 @@ class Language:
                 if (
                     name not in exclude
                     and hasattr(proc, "model")
-                and proc.model not in (True, False, None)
+                    and proc.model not in (True, False, None)
                 ):
                     proc.model.finish_update(sgd)
         return losses
@@ -999,13 +992,7 @@ class Language:
         """
         if len(examples) == 0:
             return
-        if not isinstance(examples, IterableInstance):
-            err = Errors.E978.format(name="Language.rehearse", types=type(examples))
-            raise TypeError(err)
-        wrong_types = set([type(eg) for eg in examples if not isinstance(eg, Example)])
-        if wrong_types:
-            err = Errors.E978.format(name="Language.rehearse", types=wrong_types)
-            raise TypeError(err)
+        validate_examples(examples, "Language.rehearse")
         if sgd is None:
             if self._optimizer is None:
                 self._optimizer = create_default_optimizer()
@@ -1054,7 +1041,7 @@ class Language:
         if get_examples is None:
             get_examples = lambda: []
         else:  # Populate vocab
-            for example in get_examples():
+            for example in iter_get_examples(get_examples, "Language"):
                 for word in [t.text for t in example.reference]:
                     _ = self.vocab[word]  # noqa: F841
         if device >= 0:  # TODO: do we need this here?
@@ -1127,13 +1114,7 @@ class Language:
 
         DOCS: https://spacy.io/api/language#evaluate
         """
-        if not isinstance(examples, IterableInstance):
-            err = Errors.E978.format(name="Language.evaluate", types=type(examples))
-            raise TypeError(err)
-        wrong_types = set([type(eg) for eg in examples if not isinstance(eg, Example)])
-        if wrong_types:
-            err = Errors.E978.format(name="Language.evaluate", types=wrong_types)
-            raise TypeError(err)
+        validate_examples(examples, "Language.evaluate")
         if component_cfg is None:
             component_cfg = {}
         if scorer_cfg is None:

@@ -1,5 +1,4 @@
 from typing import Optional, List, Dict, Any
-
 from thinc.api import Model
 
 from .pipe import Pipe
@@ -9,6 +8,7 @@ from ..lookups import Lookups, load_lookups
 from ..scorer import Scorer
 from ..tokens import Doc, Token
 from ..vocab import Vocab
+from ..gold import validate_examples
 from .. import util
 
 
@@ -271,6 +271,7 @@ class Lemmatizer(Pipe):
 
         DOCS: https://spacy.io/api/lemmatizer#score
         """
+        validate_examples(examples, "Lemmatizer.score")
         return Scorer.score_token_attr(examples, "lemma", **kwargs)
 
     def to_disk(self, path, *, exclude=tuple()):

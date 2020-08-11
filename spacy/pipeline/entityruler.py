@@ -9,6 +9,7 @@ from ..util import ensure_path, to_disk, from_disk
 from ..tokens import Doc, Span
 from ..matcher import Matcher, PhraseMatcher
 from ..scorer import Scorer
+from ..gold import validate_examples
 
 
 DEFAULT_ENT_ID_SEP = "||"
@@ -312,6 +313,7 @@ class EntityRuler:
         return label
 
     def score(self, examples, **kwargs):
+        validate_examples(examples, "EntityRuler.score")
         return Scorer.score_spans(examples, "ents", **kwargs)
 
     def from_bytes(

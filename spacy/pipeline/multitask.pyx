@@ -8,7 +8,7 @@ from ..tokens.doc cimport Doc
 
 from .pipe import Pipe
 from .tagger import Tagger
-from ..gold import Example
+from ..gold import validate_examples, iter_get_examples
 from ..language import Language
 from ._parser_internals import nonproj
 from ..attrs import POS, ID
@@ -81,10 +81,8 @@ class MultitaskObjective(Tagger):
     def set_annotations(self, docs, dep_ids):
         pass
 
-    def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None):
-        gold_examples = nonproj.preprocess_training_data(get_examples())
-        # for raw_text, doc_annot in gold_tuples:
-        for example in gold_examples:
+    def begin_training(self, get_examples, pipeline=None, sgd=None):
+        for example in iter_get_examples(get_examples, "MultitaskObjective"):
             for token in example.y:
                 label = self.make_label(token)
                 if label is not None and label not in self.labels:
@@ -176,7 +174,7 @@ class ClozeMultitask(Pipe):
     def set_annotations(self, docs, dep_ids):
         pass
 
-    def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None):
+    def begin_training(self, get_examples, pipeline=None, sgd=None):
         self.model.initialize()
         X = self.model.ops.alloc((5, self.model.get_ref("tok2vec").get_dim("nO")))
         self.model.output_layer.begin_training(X)
@@ -190,6 +188,7 @@ class ClozeMultitask(Pipe):
         return tokvecs, vectors
 
     def get_loss(self, examples, vectors, prediction):
+        validate_examples(examples, "ClozeMultitask.get_loss")
         # The simplest way to implement this would be to vstack the
         # token.vector values, but that's a bit inefficient, especially on GPU.
         # Instead we fetch the index into the vectors table for each of our tokens,
@@ -207,9 +206,7 @@ class ClozeMultitask(Pipe):
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
         set_dropout_rate(self.model, drop)
-        if not all(isinstance(eg, Example) for eg in examples):
-            types = set([type(eg) for eg in examples])
-            raise TypeError(Errors.E978.format(name="ClozeMultitask.rehearse", types=types))
+        validate_examples(examples, "ClozeMultitask.rehearse")
         docs = [eg.predicted for eg in examples]
         predictions, bp_predictions = self.model.begin_update()
         loss, d_predictions = self.get_loss(examples, self.vocab.vectors.data, predictions)

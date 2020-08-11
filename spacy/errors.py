@@ -482,6 +482,9 @@ class Errors:
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
+    E930 = ("Received invalid get_examples callback in {name}.begin_training. "
+            "Expected function that returns an iterable of Example objects but "
+            "got: {obj}")
     E931 = ("Encountered Pipe subclass without Pipe.{method} method in component "
             "'{name}'. If the component is trainable and you want to use this "
             "method, make sure it's overwritten on the subclass. If your "
@@ -584,8 +587,7 @@ class Errors:
             "but received None.")
     E977 = ("Can not compare a MorphAnalysis with a string object. "
             "This is likely a bug in spaCy, so feel free to open an issue.")
-    E978 = ("The {name} method takes a list of Example objects, but found "
-            "{types} instead.")
+    E978 = ("The {name} method takes a list of Example objects, but got: {types}")
     E979 = ("Cannot convert {type} to an Example object.")
     E980 = ("Each link annotation should refer to a dictionary with at most one "
             "identifier mapping to 1.0, and all others to 0.0.")
