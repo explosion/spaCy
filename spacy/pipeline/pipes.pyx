@@ -1205,7 +1205,7 @@ class EntityLinker(Pipe):
         self.kb = None
         self.cfg = dict(cfg)
         
-        # how many neightbour sentences to take into account
+        # how many neighbour sentences to take into account
         self.n_sents = cfg.get("n_sents", 0)
 
     def set_kb(self, kb):
@@ -1375,7 +1375,7 @@ class EntityLinker(Pipe):
                 # This may go wrong if there are entities across sentences - which shouldn't happen normally.
                 for sent_index, sent in enumerate(sentences):
                     if sent.ents:
-                        # get n_neightbour sentences, clipped to the length of the document
+                        # get n_neighbour sentences, clipped to the length of the document
                         start_sentence = max(0, sent_index - self.n_sents)
                         end_sentence = min(len(sentences) -1, sent_index + self.n_sents)
 
