@@ -41,6 +41,7 @@
         "gatsby-transformer-sharp": "^2.1.13",
         "html-to-react": "^1.3.4",
         "intersection-observer": "^0.5.1",
+        "jinja-to-js": "^3.2.3",
         "node-sass": "^4.11.0",
         "parse-numeric-range": "0.0.2",
         "prismjs": "^1.15.0",
@@ -52,20 +53,22 @@
         "remark-react": "^5.0.1"
     },
     "scripts": {
-        "build": "gatsby build",
-        "dev": "gatsby develop",
+        "build": "npm run python:setup && gatsby build",
+        "dev": "npm run python:setup && gatsby develop",
         "dev:nightly": "BRANCH=nightly.spacy.io npm run dev",
         "lint": "eslint **",
         "clear": "rm -rf .cache",
-        "test": "echo \"Write tests! -> https://gatsby.app/unit-testing\""
+        "test": "echo \"Write tests! -> https://gatsby.app/unit-testing\"",
+        "python:install": "pip install setup/requirements.txt",
+        "python:setup": "cd setup && ./setup.sh"
     },
     "devDependencies": {
+        "@sindresorhus/slugify": "^0.8.0",
         "browser-monads": "^1.0.0",
         "md-attr-parser": "^1.2.1",
         "prettier": "^1.16.4",
         "raw-loader": "^1.0.0",
-        "unist-util-visit": "^1.4.0",
-        "@sindresorhus/slugify": "^0.8.0"
+        "unist-util-visit": "^1.4.0"
     },
     "repository": {
         "type": "git",
