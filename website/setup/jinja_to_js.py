@@ -867,8 +867,10 @@ class JinjaToJS(object):
         )
 
         with option(kwargs, use_python_bool_wrapper=False):
-            if operand.op == "in":
+            if operand.op == "in" or operand.op == "notin":
                 # Special case for "in" operator
+                if operand.op == "notin":
+                    self.output.write("!")
                 self._process_node(operand.expr, **kwargs)
                 self.output.write(".includes(")
                 self._process_node(node.expr, **kwargs)

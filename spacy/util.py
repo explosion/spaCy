@@ -264,11 +264,31 @@ def load_model_from_path(
     if not meta:
         meta = get_model_meta(model_path)
     config_path = model_path / "config.cfg"
+    nlp, _ = load_model_from_config_path(
+        config_path, overrides=dict_to_dot(config), vocab=vocab, disable=disable
+    )
+    return nlp.from_disk(model_path, exclude=disable)
+
+
+def load_model_from_config_path(
+    config_path: Union[str, Path],
+    *,
+    vocab: Union["Vocab", bool] = True,
+    disable: Iterable[str] = tuple(),
+    auto_fill: bool = False,
+    validate: bool = True,
+    overrides: Dict[str, Any] = SimpleFrozenDict(),
+    interpolate: bool = False,
+) -> Tuple["Language", Config]:
+    config_path = ensure_path(config_path)
     if not config_path.exists() or not config_path.is_file():
         raise IOError(Errors.E053.format(path=config_path, name="config.cfg"))
-    config = Config().from_disk(config_path, overrides=dict_to_dot(config))
-    nlp, _ = load_model_from_config(config, vocab=vocab, disable=disable)
-    return nlp.from_disk(model_path, exclude=disable)
+    config = Config().from_disk(
+        config_path, overrides=overrides, interpolate=interpolate
+    )
+    return load_model_from_config(
+        config, vocab=vocab, disable=disable, auto_fill=auto_fill, validate=validate,
+    )
 
 
 def load_model_from_config(
@@ -921,45 +941,6 @@ def copy_config(config: Union[Dict[str, Any], Config]) -> Config:
         return Config(config).copy()
     except ValueError:
         raise ValueError(Errors.E961.format(config=config)) from None
-
-
-def deep_merge_configs(
-    config: Union[Dict[str, Any], Config], defaults: Union[Dict[str, Any], Config]
-) -> Config:
-    """Deep merge two configs, a base config and its defaults. Ignores
-    references to registered functions to avoid filling in
-
-    config (Dict[str, Any]): The config.
-    destination (Dict[str, Any]): The config defaults.
-    RETURNS (Dict[str, Any]): The merged config.
-    """
-    config = copy_config(config)
-    merged = _deep_merge_configs(config, defaults)
-    return Config(merged)
-
-
-def _deep_merge_configs(
-    config: Union[Dict[str, Any], Config], defaults: Union[Dict[str, Any], Config]
-) -> Union[Dict[str, Any], Config]:
-    for key, value in defaults.items():
-        if isinstance(value, dict):
-            node = config.setdefault(key, {})
-            if not isinstance(node, dict):
-                continue
-            promises = [key for key in value if key.startswith("@")]
-            promise = promises[0] if promises else None
-            # We only update the block from defaults if it refers to the same
-            # registered function
-            if (
-                promise
-                and any(k.startswith("@") for k in node)
-                and (promise in node and node[promise] != value[promise])
-            ):
-                continue
-            defaults = _deep_merge_configs(node, value)
-        elif key not in config:
-            config[key] = value
-    return config
 
 
 def dot_to_dict(values: Dict[str, Any]) -> Dict[str, dict]:

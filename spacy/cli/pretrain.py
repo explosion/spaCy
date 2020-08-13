@@ -5,7 +5,7 @@ import time
 import re
 from collections import Counter
 from pathlib import Path
-from thinc.api import use_pytorch_for_gpu_memory, require_gpu, Config
+from thinc.api import use_pytorch_for_gpu_memory, require_gpu
 from thinc.api import set_dropout_rate, to_categorical, fix_random_seed
 from thinc.api import CosineDistance, L2Distance
 from wasabi import msg
@@ -88,8 +88,9 @@ def pretrain(
         msg.info("Using CPU")
     msg.info(f"Loading config from: {config_path}")
     with show_validation_error(config_path):
-        config = Config().from_disk(config_path, overrides=config_overrides)
-        nlp, config = util.load_model_from_config(config)
+        nlp, config = util.load_model_from_config_path(
+            config_path, overrides=config_overrides
+        )
     # TODO: validate that [pretraining] block exists
     if not output_dir.exists():
         output_dir.mkdir()
