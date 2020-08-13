@@ -1,0 +1,139 @@
+{# Template for "CPU" configs. The transformer will use a different template. #}
+# This is an auto-generated partial config for training a model.
+# To use it for training, auto-fill it with all default values.
+# python -m spacy init config config.cfg --base base_config.cfg
+[paths]
+train = ""
+dev = ""
+
+[nlp]
+lang = "{{ lang }}"
+pipeline = {{ pipeline|safe }}
+vectors = null
+tokenizer = {"@tokenizers": "spacy.Tokenizer.v1"}
+
+[components]
+
+[components.transformer]
+factory = "transformer"
+
+[components.transformer.model]
+@architectures = "spacy-transformers.TransformerModel.v1"
+{#- name = {{ transformer_info["name"] }} #}
+name = "roberta-base"
+tokenizer_config = {"use_fast": true}
+
+[components.transformer.model.get_spans]
+@span_getters = "strided_spans.v1"
+window = 128
+stride = 96
+
+{% if "tagger" in components %}
+[components.tagger]
+factory = "tagger"
+
+[components.tagger.model]
+@architectures = "spacy.Tagger.v1"
+nO = null
+
+[components.tagger.model.tok2vec]
+@architectures = "spacy-transformers.TransformerListener.v1"
+grad_factor = 1.0
+
+[components.ner.model.tok2vec.pooling]
+@layers = "reduce_mean.v1"
+{%- endif %}
+
+{% if "parser" in components -%}
+[components.parser]
+factory = "parser"
+
+[components.parser.model]
+@architectures = "spacy.TransitionBasedParser.v1"
+nr_feature_tokens = 8
+hidden_width = 128
+maxout_pieces = 3
+use_upper = false
+nO = null
+
+[components.parser.model.tok2vec]
+@architectures = "spacy-transformers.TransformerListener.v1"
+grad_factor = 1.0
+
+[components.ner.model.tok2vec.pooling]
+@layers = "reduce_mean.v1"
+{%- endif %}
+
+{% if "ner" in components -%}
+[components.ner]
+factory = "ner"
+
+[components.ner.model]
+@architectures = "spacy.TransitionBasedParser.v1"
+nr_feature_tokens = 3
+hidden_width = 64
+maxout_pieces = 2
+use_upper = false
+nO = null
+
+[components.ner.model.tok2vec]
+@architectures = "spacy-transformers.TransformerListener.v1"
+grad_factor = 1.0
+
+[components.parser.model.tok2vec.pooling]
+@layers = "reduce_mean.v1"
+{% endif -%}
+
+[training]
+{#- accumulate_gradient = {{ transformer_info["size_factor"] }} #}
+accumulate_gradient = 3
+
+[training.optimizer]
+@optimizers = "Adam.v1"
+beta1 = 0.9
+beta2 = 0.999
+L2_is_weight_decay = true
+L2 = 0.01
+grad_clip = 1.0
+use_averages = false
+eps = 1e-8
+
+[training.optimizer.learn_rate]
+@schedules = "warmup_linear.v1"
+warmup_steps = 250
+total_steps = 20000
+initial_rate = 5e-5
+
+[training.train_corpus]
+@readers = "spacy.Corpus.v1"
+path = ${paths:train}
+gold_preproc = false
+max_length = 500
+limit = 0
+
+[training.dev_corpus]
+@readers = "spacy.Corpus.v1"
+path = ${paths:dev}
+gold_preproc = false
+max_length = 0
+limit = 0
+
+[training.batcher]
+@batchers = "batch_by_padded.v1"
+discard_oversize = true
+batch_size = 2000
+
+[training.score_weights]
+{%- if "tagger" in components %}
+tag_acc = {{ (1.0 / components|length)|round(2) }}
+{%- endif -%}
+{%- if "parser" in components %}
+dep_uas = 0.0
+dep_las = {{ (1.0 / components|length)|round(2) }}
+sents_f = 0.0
+{%- endif %}
+{%- if "ner" in components %}
+ents_f = {{ (1.0 / components|length)|round(2) }}
+ents_p = 0.0
+ents_r = 0.0
+{%- endif -%}
