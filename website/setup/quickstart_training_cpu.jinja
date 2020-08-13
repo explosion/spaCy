@@ -76,7 +76,7 @@ maxout_pieces = 2
 use_upper = true
 nO = null
 
-[components.parser.model.tok2vec]
+[components.ner.model.tok2vec]
 @architectures = "spacy.Tok2VecListener.v1"
 width = ${components.tok2vec.model.encode:width}
 {% endif -%}
