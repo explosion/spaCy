@@ -24,6 +24,7 @@ import tempfile
 import shutil
 import shlex
 import inspect
+import logging
 
 try:
     import cupy.random
@@ -56,6 +57,10 @@ if TYPE_CHECKING:
 
 OOV_RANK = numpy.iinfo(numpy.uint64).max
 LEXEME_NORM_LANGS = ["da", "de", "el", "en", "id", "lb", "pt", "ru", "sr", "ta", "th"]
+
+
+logging.basicConfig()
+logger = logging.getLogger("spacy")
 
 
 class registry(thinc.registry):

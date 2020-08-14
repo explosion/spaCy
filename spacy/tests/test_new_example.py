@@ -46,6 +46,7 @@ def test_Example_from_dict_with_tags(pred_words, annots):
     assert aligned_tags == ["NN" for _ in predicted]
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_aligned_tags():
     pred_words = ["Apply", "some", "sunscreen", "unless", "you", "can", "not"]
     gold_words = ["Apply", "some", "sun", "screen", "unless", "you", "cannot"]
@@ -198,8 +199,8 @@ def test_Example_from_dict_with_entities(annots):
 def test_Example_from_dict_with_entities_invalid(annots):
     vocab = Vocab()
     predicted = Doc(vocab, words=annots["words"])
-    example = Example.from_dict(predicted, annots)
-    # TODO: shouldn't this throw some sort of warning ?
+    with pytest.warns(UserWarning):
+        example = Example.from_dict(predicted, annots)
     assert len(list(example.reference.ents)) == 0
 
 

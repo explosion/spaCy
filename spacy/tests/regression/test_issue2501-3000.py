@@ -136,7 +136,6 @@ def test_issue2782(text, lang_cls):
     assert doc[0].like_num
 
 
-@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_issue2800():
     """Test issue that arises when too many labels are added to NER model.
     Used to cause segfault.
