@@ -104,7 +104,7 @@ def test_overfitting_IO():
     doc = nlp(test_text)
     cats = doc.cats
     # note that by default, exclusive_classes = false so we need a bigger error margin
-    assert cats["POSITIVE"] > 0.9
+    assert cats["POSITIVE"] > 0.8
     assert cats["POSITIVE"] + cats["NEGATIVE"] == pytest.approx(1.0, 0.1)
 
     # Also test the results are still the same after IO
@@ -113,7 +113,7 @@ def test_overfitting_IO():
         nlp2 = util.load_model_from_path(tmp_dir)
         doc2 = nlp2(test_text)
         cats2 = doc2.cats
-        assert cats2["POSITIVE"] > 0.9
+        assert cats2["POSITIVE"] > 0.8
         assert cats2["POSITIVE"] + cats2["NEGATIVE"] == pytest.approx(1.0, 0.1)
 
     # Test scoring
