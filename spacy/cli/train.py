@@ -102,9 +102,9 @@ def train(
     if resume_components:
         with nlp.select_pipes(enable=resume_components):
             msg.info(f"Resuming training for: {resume_components}")
-            nlp.resume_training()
+            nlp.resume_training(sgd=optimizer)
     with nlp.select_pipes(disable=[*frozen_components, *resume_components]):
-        nlp.begin_training(lambda: train_corpus(nlp))
+        nlp.begin_training(lambda: train_corpus(nlp), sgd=optimizer)
 
     if tag_map:
         # Replace tag map with provided mapping
