@@ -21,7 +21,7 @@ from .pipe_analysis import validate_attrs, analyze_pipes, print_pipe_analysis
 from .gold import Example, validate_examples
 from .scorer import Scorer
 from .util import create_default_optimizer, registry
-from .util import SimpleFrozenDict, combine_score_weights
+from .util import SimpleFrozenDict, combine_score_weights, CONFIG_SECTION_ORDER
 from .lang.tokenizer_exceptions import URL_MATCH, BASE_EXCEPTIONS
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
 from .lang.punctuation import TOKENIZER_INFIXES
@@ -36,7 +36,7 @@ from . import about
 
 # This is the base config will all settings (training etc.)
 DEFAULT_CONFIG_PATH = Path(__file__).parent / "default_config.cfg"
-DEFAULT_CONFIG = Config().from_disk(DEFAULT_CONFIG_PATH, interpolate=False)
+DEFAULT_CONFIG = util.load_config(DEFAULT_CONFIG_PATH)
 
 
 class BaseDefaults:
@@ -45,7 +45,7 @@ class BaseDefaults:
     Language.Defaults.
     """
 
-    config: Config = Config()
+    config: Config = Config(section_order=CONFIG_SECTION_ORDER)
     tokenizer_exceptions: Dict[str, List[dict]] = BASE_EXCEPTIONS
     prefixes: Optional[List[Union[str, Pattern]]] = TOKENIZER_PREFIXES
     suffixes: Optional[List[Union[str, Pattern]]] = TOKENIZER_SUFFIXES
@@ -583,7 +583,7 @@ class Language:
         # We're calling the internal _fill here to avoid constructing the
         # registered functions twice
         resolved, filled = registry.resolve(cfg, validate=validate)
-        filled = filled[factory_name]
+        filled = Config(filled[factory_name])
         filled["factory"] = factory_name
         filled.pop("@factories", None)
         # Merge the final filled config with the raw config (including non-
@@ -1390,7 +1390,9 @@ class Language:
         DOCS: https://spacy.io/api/language#from_config
         """
         if auto_fill:
-            config = Config(cls.default_config).merge(config)
+            config = Config(
+                cls.default_config, section_order=CONFIG_SECTION_ORDER
+            ).merge(config)
         if "nlp" not in config:
             raise ValueError(Errors.E985.format(config=config))
         config_lang = config["nlp"]["lang"]

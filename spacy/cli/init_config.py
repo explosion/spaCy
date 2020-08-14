@@ -1,12 +1,11 @@
 from typing import Optional, List
 from enum import Enum
 from pathlib import Path
-from thinc.api import Config
 from wasabi import Printer
 import srsly
 import re
 
-from ..util import load_model_from_config, get_lang_class
+from .. import util
 from ._util import init_cli, Arg, Opt, show_validation_error, COMMAND
 
 
@@ -50,7 +49,7 @@ def init_config(
         from jinja2 import Template
     except ImportError:
         msg.fail("This command requires jinja2", "pip install jinja2", exits=1)
-    lang_defaults = get_lang_class(lang).Defaults
+    lang_defaults = util.get_lang_class(lang).Defaults
     has_letters = lang_defaults.writing_system.get("has_letters", True)
     has_transformer = False  # TODO: check this somehow
     if has_transformer:
@@ -80,9 +79,9 @@ def init_config(
         msg.text(f"- {label}: {value}")
     with show_validation_error(hint_init=False):
         with msg.loading("Auto-filling config..."):
-            config = Config().from_str(base_template, interpolate=False)
+            config = util.load_config_from_str(base_template)
             try:
-                nlp, _ = load_model_from_config(config, auto_fill=True)
+                nlp, _ = util.load_model_from_config(config, auto_fill=True)
             except ValueError as e:
                 msg.fail(str(e), exits=1)
     msg.good("Auto-filled config with all values")

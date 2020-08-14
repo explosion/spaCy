@@ -58,6 +58,12 @@ _PRINT_ENV = False
 OOV_RANK = numpy.iinfo(numpy.uint64).max
 LEXEME_NORM_LANGS = ["da", "de", "el", "en", "id", "lb", "pt", "ru", "sr", "ta", "th"]
 
+# Default order of sections in the config.cfg. Not all sections needs to exist,
+# and additional sections are added at the end, in alphabetical order.
+# fmt: off
+CONFIG_SECTION_ORDER = ["paths", "variables", "system", "nlp", "components", "training", "pretraining"]
+# fmt: on
+
 
 class registry(thinc.registry):
     languages = catalogue.create("spacy", "languages", entry_points=True)
@@ -264,31 +270,9 @@ def load_model_from_path(
     if not meta:
         meta = get_model_meta(model_path)
     config_path = model_path / "config.cfg"
-    nlp, _ = load_model_from_config_path(
-        config_path, overrides=dict_to_dot(config), vocab=vocab, disable=disable
-    )
+    config = load_config(config_path, overrides=dict_to_dot(config))
+    nlp, _ = load_model_from_config(config, vocab=vocab, disable=disable)
     return nlp.from_disk(model_path, exclude=disable)
-
-
-def load_model_from_config_path(
-    config_path: Union[str, Path],
-    *,
-    vocab: Union["Vocab", bool] = True,
-    disable: Iterable[str] = tuple(),
-    auto_fill: bool = False,
-    validate: bool = True,
-    overrides: Dict[str, Any] = SimpleFrozenDict(),
-    interpolate: bool = False,
-) -> Tuple["Language", Config]:
-    config_path = ensure_path(config_path)
-    if not config_path.exists() or not config_path.is_file():
-        raise IOError(Errors.E053.format(path=config_path, name="config.cfg"))
-    config = Config().from_disk(
-        config_path, overrides=overrides, interpolate=interpolate
-    )
-    return load_model_from_config(
-        config, vocab=vocab, disable=disable, auto_fill=auto_fill, validate=validate,
-    )
 
 
 def load_model_from_config(
@@ -334,6 +318,29 @@ def load_model_from_init_py(
         raise IOError(Errors.E052.format(path=data_path))
     return load_model_from_path(
         data_path, vocab=vocab, meta=meta, disable=disable, config=config
+    )
+
+
+def load_config(
+    path: Union[str, Path],
+    overrides: Dict[str, Any] = SimpleFrozenDict(),
+    interpolate: bool = False,
+) -> Config:
+    """Load a config file. Takes care of path validation and section order."""
+    config_path = ensure_path(path)
+    if not config_path.exists() or not config_path.is_file():
+        raise IOError(Errors.E053.format(path=config_path, name="config.cfg"))
+    return Config(section_order=CONFIG_SECTION_ORDER).from_disk(
+        config_path, overrides=overrides, interpolate=interpolate
+    )
+
+
+def load_config_from_str(
+    text: str, overrides: Dict[str, Any] = SimpleFrozenDict(), interpolate: bool = False
+):
+    """Load a full config from a string."""
+    return Config(section_order=CONFIG_SECTION_ORDER).from_str(
+        text, overrides=overrides, interpolate=interpolate,
     )
 
 

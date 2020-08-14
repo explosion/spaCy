@@ -49,10 +49,9 @@ def debug_model_cli(
     }
     config_overrides = parse_config_overrides(ctx.args)
     with show_validation_error(config_path):
+        config = util.load_config(config_path, overrides=config_overrides)
         try:
-            nlp, config = util.load_model_from_config_path(
-                config_path, overrides=config_overrides
-            )
+            nlp, config = util.load_model_from_config(config_path)
         except ValueError as e:
             msg.fail(str(e), exits=1)
     seed = config["pretraining"]["seed"]
