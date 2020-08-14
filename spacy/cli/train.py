@@ -48,7 +48,6 @@ def train_cli(
     used to register custom functions and architectures that can then be
     referenced in the config.
     """
-    util.set_env_log(verbose)
     verify_cli_args(config_path, output_path)
     overrides = parse_config_overrides(ctx.args)
     import_code(code_path)

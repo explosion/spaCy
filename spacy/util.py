@@ -54,7 +54,6 @@ if TYPE_CHECKING:
     from .vocab import Vocab  # noqa: F401
 
 
-_PRINT_ENV = False
 OOV_RANK = numpy.iinfo(numpy.uint64).max
 LEXEME_NORM_LANGS = ["da", "de", "el", "en", "id", "lb", "pt", "ru", "sr", "ta", "th"]
 
@@ -107,11 +106,6 @@ class SimpleFrozenDict(dict):
 
     def update(self, other):
         raise NotImplementedError(self.error)
-
-
-def set_env_log(value: bool) -> None:
-    global _PRINT_ENV
-    _PRINT_ENV = value
 
 
 def lang_class_is_loaded(lang: str) -> bool:
@@ -602,27 +596,6 @@ def get_async(stream, numpy_array):
         return array
 
 
-def env_opt(name: str, default: Optional[Any] = None) -> Optional[Any]:
-    if type(default) is float:
-        type_convert = float
-    else:
-        type_convert = int
-    if "SPACY_" + name.upper() in os.environ:
-        value = type_convert(os.environ["SPACY_" + name.upper()])
-        if _PRINT_ENV:
-            print(name, "=", repr(value), "via", "$SPACY_" + name.upper())
-        return value
-    elif name in os.environ:
-        value = type_convert(os.environ[name])
-        if _PRINT_ENV:
-            print(name, "=", repr(value), "via", "$" + name)
-        return value
-    else:
-        if _PRINT_ENV:
-            print(name, "=", repr(default), "by default")
-        return default
-
-
 def read_regex(path: Union[str, Path]) -> Pattern:
     path = ensure_path(path)
     with path.open(encoding="utf8") as file_:
@@ -1067,24 +1040,7 @@ class DummyTokenizer:
 
 
 def create_default_optimizer() -> Optimizer:
-    # TODO: Do we still want to allow env_opt?
-    learn_rate = env_opt("learn_rate", 0.001)
-    beta1 = env_opt("optimizer_B1", 0.9)
-    beta2 = env_opt("optimizer_B2", 0.999)
-    eps = env_opt("optimizer_eps", 1e-8)
-    L2 = env_opt("L2_penalty", 1e-6)
-    grad_clip = env_opt("grad_norm_clip", 10.0)
-    L2_is_weight_decay = env_opt("L2_is_weight_decay", False)
-    optimizer = Adam(
-        learn_rate,
-        L2=L2,
-        beta1=beta1,
-        beta2=beta2,
-        eps=eps,
-        grad_clip=grad_clip,
-        L2_is_weight_decay=L2_is_weight_decay,
-    )
-    return optimizer
+    return Adam()
 
 
 def minibatch(items, size):
