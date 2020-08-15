@@ -154,6 +154,7 @@ def test_example_from_dict_some_ner(en_vocab):
     assert ner_tags == ["U-LOC", None, None, None]
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_json2docs_no_ner(en_vocab):
     data = [
         {
@@ -506,6 +507,7 @@ def test_roundtrip_docs_to_docbin(doc):
     assert cats["BAKING"] == reloaded_example.reference.cats["BAKING"]
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_make_orth_variants(doc):
     nlp = English()
     with make_tempdir() as tmpdir:
@@ -586,7 +588,7 @@ def test_tuple_format_implicit():
         ("Uber blew through $1 million a week", {"entities": [(0, 4, "ORG")]}),
         (
             "Spotify steps up Asia expansion",
-            {"entities": [(0, 8, "ORG"), (17, 21, "LOC")]},
+            {"entities": [(0, 7, "ORG"), (17, 21, "LOC")]},
         ),
         ("Google rebrands its business apps", {"entities": [(0, 6, "ORG")]}),
     ]
@@ -601,7 +603,7 @@ def test_tuple_format_implicit_invalid():
         ("Uber blew through $1 million a week", {"frumble": [(0, 4, "ORG")]}),
         (
             "Spotify steps up Asia expansion",
-            {"entities": [(0, 8, "ORG"), (17, 21, "LOC")]},
+            {"entities": [(0, 7, "ORG"), (17, 21, "LOC")]},
         ),
         ("Google rebrands its business apps", {"entities": [(0, 6, "ORG")]}),
     ]

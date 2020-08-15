@@ -193,7 +193,8 @@ class Tok2Vec(Pipe):
         batch_id = Tok2VecListener.get_batch_id(docs)
         for listener in self.listeners[:-1]:
             listener.receive(batch_id, tokvecs, accumulate_gradient)
-        self.listeners[-1].receive(batch_id, tokvecs, backprop)
+        if self.listeners:
+            self.listeners[-1].receive(batch_id, tokvecs, backprop)
         if set_annotations:
             self.set_annotations(docs, tokvecs)
         return losses

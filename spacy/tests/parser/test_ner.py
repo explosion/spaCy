@@ -1,16 +1,16 @@
 import pytest
-
 from spacy import util
 from spacy.lang.en import English
-
 from spacy.language import Language
 from spacy.lookups import Lookups
 from spacy.pipeline._parser_internals.ner import BiluoPushDown
 from spacy.gold import Example
 from spacy.tokens import Doc
 from spacy.vocab import Vocab
+import logging
 
 from ..util import make_tempdir
+
 
 TRAIN_DATA = [
     ("Who is Shaka Khan?", {"entities": [(7, 17, "PERSON")]}),
@@ -56,6 +56,7 @@ def test_get_oracle_moves(tsys, doc, entity_annots):
     assert names == ["U-PERSON", "O", "O", "B-GPE", "L-GPE", "O"]
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_get_oracle_moves_negative_entities(tsys, doc, entity_annots):
     entity_annots = [(s, e, "!" + label) for s, e, label in entity_annots]
     example = Example.from_dict(doc, {"entities": entity_annots})
@@ -332,19 +333,21 @@ def test_overfitting_IO():
         assert ents2[0].label_ == "LOC"
 
 
-def test_ner_warns_no_lookups():
+def test_ner_warns_no_lookups(caplog):
     nlp = English()
     assert nlp.lang in util.LEXEME_NORM_LANGS
     nlp.vocab.lookups = Lookups()
     assert not len(nlp.vocab.lookups)
     nlp.add_pipe("ner")
-    with pytest.warns(UserWarning):
+    with caplog.at_level(logging.DEBUG):
         nlp.begin_training()
+        assert "W033" in caplog.text
+    caplog.clear()
     nlp.vocab.lookups.add_table("lexeme_norm")
     nlp.vocab.lookups.get_table("lexeme_norm")["a"] = "A"
-    with pytest.warns(None) as record:
+    with caplog.at_level(logging.DEBUG):
         nlp.begin_training()
-        assert not record.list
+        assert "W033" not in caplog.text
 
 
 @Language.factory("blocker")

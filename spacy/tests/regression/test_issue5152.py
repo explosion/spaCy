@@ -1,8 +1,7 @@
-import pytest
 from spacy.lang.en import English
+import pytest
 
 
-@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_issue5152():
     # Test that the comparison between a Span and a Token, goes well
     # There was a bug when the number of tokens in the span equaled the number of characters in the token (!)
@@ -14,6 +13,8 @@ def test_issue5152():
     span_2 = text[0:3]  # Talk about being
     span_3 = text_var[0:3]  # Talk of being
     token = y[0]  # Let
-    assert span.similarity(token) == 0.0
+    with pytest.warns(UserWarning):
+        assert span.similarity(token) == 0.0
     assert span.similarity(span_2) == 1.0
-    assert span_2.similarity(span_3) < 1.0
+    with pytest.warns(UserWarning):
+        assert span_2.similarity(span_3) < 1.0

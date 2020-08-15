@@ -9,6 +9,7 @@ from thinc.api import use_pytorch_for_gpu_memory, require_gpu, fix_random_seed
 from thinc.api import Config, Optimizer
 import random
 import typer
+import logging
 
 from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
 from ._util import import_code, get_sourced_components
@@ -16,7 +17,6 @@ from ..language import Language
 from .. import util
 from ..gold.example import Example
 from ..errors import Errors
-
 
 # Don't remove - required to load the built-in architectures
 from ..ml import models  # noqa: F401
@@ -48,7 +48,7 @@ def train_cli(
     used to register custom functions and architectures that can then be
     referenced in the config.
     """
-    util.set_env_log(verbose)
+    util.logger.setLevel(logging.DEBUG if verbose else logging.ERROR)
     verify_cli_args(config_path, output_path)
     overrides = parse_config_overrides(ctx.args)
     import_code(code_path)
@@ -102,9 +102,9 @@ def train(
     if resume_components:
         with nlp.select_pipes(enable=resume_components):
             msg.info(f"Resuming training for: {resume_components}")
-            nlp.resume_training()
+            nlp.resume_training(sgd=optimizer)
     with nlp.select_pipes(disable=[*frozen_components, *resume_components]):
-        nlp.begin_training(lambda: train_corpus(nlp))
+        nlp.begin_training(lambda: train_corpus(nlp), sgd=optimizer)
 
     if tag_map:
         # Replace tag map with provided mapping
