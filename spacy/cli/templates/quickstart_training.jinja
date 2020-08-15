@@ -1,27 +1,31 @@
 {# This is a template for training configs used for the quickstart widget in
 the docs and the init config command. It encodes various best practices and
 can help generate the best possible configuration, given a user's requirements. #}
-# This is an auto-generated config for training a model with 'spacy train'
+{%- set use_transformer = (transformer_data and hardware != "cpu") -%}
+{%- set transformer = transformer_data[optimize] if use_transformer else {} -%}
 [paths]
 train = ""
 dev = ""
 
+[system]
+use_pytorch_for_gpu_memory = {{ "true" if use_transformer else "false" }}
+
 [nlp]
 lang = "{{ lang }}"
-pipeline = {{ pipeline|safe }}
+{%- set full_pipeline = ["transformer" if use_transformer else "tok2vec"] + components %}
+pipeline = {{ full_pipeline|pprint()|replace("'", '"')|safe }}
 tokenizer = {"@tokenizers": "spacy.Tokenizer.v1"}
 
 [components]
 
 {# TRANSFORMER PIPELINE #}
-{%- if has_transformer -%}
+{%- if use_transformer -%}
 [components.transformer]
 factory = "transformer"
 
 [components.transformer.model]
 @architectures = "spacy-transformers.TransformerModel.v1"
-{#- name = {{ transformer_info["name"] }} #}
-name = "roberta-base"
+name = "{{ transformer["name"] }}"
 tokenizer_config = {"use_fast": true}
 
 [components.transformer.model.get_spans]
@@ -38,7 +42,7 @@ factory = "tagger"
 nO = null
 
 [components.tagger.model.tok2vec]
-@architectures = "spacy-transformers.TransformerListener.v1"
+@architectures = "spacy-transformers.Tok2VecListener.v1"
 grad_factor = 1.0
 
 [components.tagger.model.tok2vec.pooling]
@@ -58,7 +62,7 @@ use_upper = false
 nO = null
 
 [components.parser.model.tok2vec]
-@architectures = "spacy-transformers.TransformerListener.v1"
+@architectures = "spacy-transformers.Tok2VecListener.v1"
 grad_factor = 1.0
 
 [components.parser.model.tok2vec.pooling]
@@ -78,7 +82,7 @@ use_upper = false
 nO = null
 
 [components.ner.model.tok2vec]
-@architectures = "spacy-transformers.TransformerListener.v1"
+@architectures = "spacy-transformers.Tok2VecListener.v1"
 grad_factor = 1.0
 
 [components.ner.model.tok2vec.pooling]
@@ -170,12 +174,14 @@ factory = "{{ pipe }}"
 {% endfor %}
 
 [training]
-vectors = {{ ('"en_vectors_web_lg"' if optimize == "accuracy" and not has_transformer else false)|safe }}
-
-{% if has_transformer -%}
-{#- accumulate_gradient = {{ transformer_info["size_factor"] }} #}
-accumulate_gradient = 3
+{% if use_transformer or optimize == "efficiency" or not word_vectors -%}
+vectors = null
+{% else -%}
+vectors = "{{ word_vectors }}"
 {% endif -%}
+{% if use_transformer -%}
+accumulate_gradient = {{ transformer["size_factor"] }}
+{% endif %}
 
 [training.optimizer]
 @optimizers = "Adam.v1"
@@ -196,7 +202,7 @@ max_length = {{ 500 if hardware == "gpu" else 0 }}
 path = ${paths:dev}
 max_length = 0
 
-{% if has_transformer %}
+{% if use_transformer %}
 [training.batcher]
 @batchers = "batch_by_padded.v1"
 discard_oversize = true

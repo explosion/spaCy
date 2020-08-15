@@ -3,6 +3,7 @@ from enum import Enum
 from pathlib import Path
 from wasabi import Printer, diff_strings
 from thinc.api import Config
+from pydantic import BaseModel
 import srsly
 import re
 
@@ -10,12 +11,29 @@ from .. import util
 from ._util import init_cli, Arg, Opt, show_validation_error, COMMAND
 
 
-TEMPLATE_PATH = Path(__file__).parent / "templates" / "quickstart_training.jinja"
+TEMPLATE_ROOT = Path(__file__).parent / "templates"
+TEMPLATE_PATH = TEMPLATE_ROOT / "quickstart_training.jinja"
+RECOMMENDATIONS_PATH = TEMPLATE_ROOT / "quickstart_training_recommendations.json"
 
 
 class Optimizations(str, Enum):
     efficiency = "efficiency"
     accuracy = "accuracy"
+
+
+class RecommendationsTrfItem(BaseModel):
+    name: str
+    size_factor: int
+
+
+class RecommendationsTrf(BaseModel):
+    efficiency: RecommendationsTrfItem
+    accuracy: RecommendationsTrfItem
+
+
+class RecommendationSchema(BaseModel):
+    word_vectors: Optional[str] = None
+    transformer: Optional[RecommendationsTrf] = None
 
 
 @init_cli.command("config")
@@ -89,41 +107,49 @@ def init_config(
         from jinja2 import Template
     except ImportError:
         msg.fail("This command requires jinja2", "pip install jinja2", exits=1)
+    recommendations = srsly.read_json(RECOMMENDATIONS_PATH)
     lang_defaults = util.get_lang_class(lang).Defaults
     has_letters = lang_defaults.writing_system.get("has_letters", True)
-    has_transformer = False  # TODO: check this somehow
-    if has_transformer:
-        require_spacy_transformers(msg)
+    # Filter out duplicates since tok2vec and transformer are added by template
+    pipeline = [pipe for pipe in pipeline if pipe not in ("tok2vec", "transformer")]
+    reco = RecommendationSchema(**recommendations.get(lang, {})).dict()
     with TEMPLATE_PATH.open("r") as f:
         template = Template(f.read())
     variables = {
         "lang": lang,
-        "pipeline": srsly.json_dumps(pipeline).replace(",", ", "),
         "components": pipeline,
         "optimize": optimize,
         "hardware": "cpu" if cpu else "gpu",
-        "has_transformer": has_transformer,
+        "transformer_data": reco["transformer"],
+        "word_vectors": reco["word_vectors"],
         "has_letters": has_letters,
     }
-    base_template = template.render(**variables).strip()
+    base_template = template.render(variables).strip()
     # Giving up on getting the newlines right in jinja for now
     base_template = re.sub(r"\n\n\n+", "\n\n", base_template)
+    # Access variables declared in templates
+    template_vars = template.make_module(variables)
     use_case = {
         "Language": lang,
         "Pipeline": ", ".join(pipeline),
         "Optimize for": optimize,
         "Hardware": variables["hardware"].upper(),
+        "Transformer": template_vars.transformer.get("name", False),
     }
-    msg.good("Generated template specific for your use case:")
+    msg.info("Generated template specific for your use case")
     for label, value in use_case.items():
         msg.text(f"- {label}: {value}")
+    use_transformer = bool(template_vars.use_transformer)
+    if use_transformer:
+        require_spacy_transformers(msg)
     with show_validation_error(hint_fill=False):
-        with msg.loading("Auto-filling config..."):
-            config = util.load_config_from_str(base_template)
-            try:
-                nlp, _ = util.load_model_from_config(config, auto_fill=True)
-            except ValueError as e:
-                msg.fail(str(e), exits=1)
+        config = util.load_config_from_str(base_template)
+        try:
+            nlp, _ = util.load_model_from_config(config, auto_fill=True)
+        except ValueError as e:
+            msg.fail(str(e), exits=1)
+    if use_transformer:
+        nlp.config.pop("pretraining", {})  # TODO: solve this better
     msg.good("Auto-filled config with all values")
     save_config(nlp.config, output_file, is_stdout=is_stdout)
 

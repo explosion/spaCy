@@ -20,8 +20,9 @@ Config files define the training process and model pipeline and can be passed to
 [`spacy train`](/api/cli#train). They use
 [Thinc's configuration system](https://thinc.ai/docs/usage-config) under the
 hood. For details on how to use training configs, see the
-[usage documentation](/usage/training#config). To get started with a blank
-config or fill a partial config with all defaults, you can use the
+[usage documentation](/usage/training#config). To get started with the
+recommended settings for your use case, check out the
+[quickstart widget](/usage/training#quickstart) or run the
 [`init config`](/api/cli#init-config) command.
 
 > #### What does the @ mean?

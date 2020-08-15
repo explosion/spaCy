@@ -1,12 +1,14 @@
 import pytest
-
 from spacy.gold import docs_to_json, biluo_tags_from_offsets
 from spacy.gold.converters import iob2docs, conll_ner2docs, conllu2docs
 from spacy.lang.en import English
 from spacy.schemas import ProjectConfigSchema, validate
 from spacy.cli.pretrain import make_docs
-from spacy.cli.init_config import init_config
+from spacy.cli.init_config import init_config, RECOMMENDATIONS_PATH
+from spacy.cli.init_config import RecommendationSchema
 from spacy.cli._util import validate_project_commands, parse_config_overrides
+from spacy.util import get_lang_class
+import srsly
 
 
 def test_cli_converters_conllu2json():
@@ -330,3 +332,10 @@ def test_parse_config_overrides_invalid(args):
 def test_init_config(lang, pipeline, optimize):
     # TODO: add more tests and also check for GPU with transformers
     init_config("-", lang=lang, pipeline=pipeline, optimize=optimize, cpu=True)
+
+
+def test_model_recommendations():
+    recommendations = srsly.read_json(RECOMMENDATIONS_PATH)
+    for lang, data in recommendations.items():
+        assert get_lang_class(lang)
+        assert RecommendationSchema(**data)

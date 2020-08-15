@@ -101,39 +101,62 @@ files and model directories.
 
 ### init config {#init-config new="3"}
 
-Initialize and export a [`config.cfg` file](/usage/training#config) for training
-and update it with all default values, if possible. Config files used for
-training should always be complete and not contain any hidden defaults or
-missing values, so this command helps you create your final config. It takes
-**one** of the following options:
-
-- `--base`: Base **config** to auto-fill, e.g. created using the
-  [training quickstart](/usage/training#quickstart) widget.
-- `--lang`: Base **language** code to use for blank config.
-- `--model`: Base **model** to copy config from.
+Initialize and save a [`config.cfg` file](/usage/training#config) using the
+**recommended settings** for your use case. It works just like the
+[quickstart widget](/usage/training#quickstart), only that it also auto-fills
+all default values and exports a [training](/usage/training#config)-ready
+config. The settings you specify will impact the suggested model architectures
+and pipeline setup, as well as the hyperparameters. You can also adjust and
+customize those settings in your config file later.
 
 > ```bash
-> ### with base config {wrap="true"}
-> $ python -m spacy init config config.cfg --base base.cfg
-> ```
->
-> ```bash
-> ### blank language {wrap="true"}
-> $ python -m spacy init config config.cfg --lang en --pipeline tagger,parser
+> ### Example {wrap="true"}
+> $ python -m spacy init config config.cfg --lang en --pipeline ner,textcat --optimize accuracy
 > ```
 
 ```bash
-$ python -m spacy init config [output] [--base] [--lang] [--model] [--pipeline]
+$ python -m spacy init config [output_file] [--lang] [--pipeline]
+[--optimize] [--cpu]
 ```
 
-| Argument           | Type       | Description                                                                                                                                                           |
-| ------------------ | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `output`           | positional | Path to output `.cfg` file. If not set, the config is written to stdout so you can pipe it forward to a file.                                                         |
-| `--base`, `-b`     | option     | Optional base config file to auto-fill with defaults.                                                                                                                 |
-| `--lang`, `-l`     | option     | Optional language code to use for blank config. If a `--pipeline` is specified, the components will be added in order.                                                |
-| `--model`, `-m`    | option     | Optional base model to copy config from. If a `--pipeline` is specified, only those components will be kept, and all other components not in the model will be added. |
-| `--pipeline`, `-p` | option     | Optional comma-separated pipeline of components to add to blank language or model.                                                                                    |
-| **CREATES**        | config     | Complete and auto-filled config file for training.                                                                                                                    |
+| Argument           | Type       | Description                                                                                                                                                                                                                                                                                                       |
+| ------------------ | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `output_file`      | positional | Path to output `.cfg` file. If not set, the config is written to stdout so you can pipe it forward to a file.                                                                                                                                                                                                     |
+| `--lang`, `-l`     | option     | Optional code of the [language](/usage/models#languages) to use. Defaults to `"en"`.                                                                                                                                                                                                                              |
+| `--pipeline`, `-p` | option     | Comma-separated list of trainable [pipeline components](/usage/processing-pipelines#built-in) to include in the model. Defaults to `"tagger,parser,ner"`.                                                                                                                                                         |
+| `--optimize`, `-o` | option     | `"efficiency"` or `"accuracy"`. Whether to optimize for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger and slower model). This will impact the choice of architecture, pretrained weights and related hyperparameters. Defaults to `"efficiency"`. |
+| `--cpu`, `-C`      | flag       | Whether the model needs to run on CPU. This will impact the choice of architecture, pretrained weights and related hyperparameters.                                                                                                                                                                               |
+| `--help`, `-h`     | flag       | Show help message and available arguments.                                                                                                                                                                                                                                                                        |
+| **CREATES**        | file       | The config file for training.                                                                                                                                                                                                                                                                                     |
+
+### init fill-config {#init-fill-config new="3"}
+
+Auto-fill a partial [`config.cfg` file](/usage/training#config) file with **all
+default values**, e.g. a config generated with the
+[quickstart widget](/usage/training#quickstart). Config files used for training
+should always be complete and not contain any hidden defaults or missing values,
+so this command helps you create your final training config. In order to find
+the available settings and defaults, all functions referenced in the config will
+be created, and their signatures are used to find the defaults. If your config
+contains a problem that can't be resolved automatically, spaCy will show you a
+validation error with more details.
+
+> ```bash
+> ### Example {wrap="true"}
+> $ python -m spacy init fill-config base.cfg config.cfg
+> ```
+
+```bash
+$ python -m spacy init fill-config [base_path] [output_file] [--diff]
+```
+
+| Argument       | Type       | Description                                                                                                   |
+| -------------- | ---------- | ------------------------------------------------------------------------------------------------------------- |
+| `base_path`    | positional | Path to base config to fill, e.g. generated by the [quickstart widget](/usage/training#quickstart).           |
+| `output_file`  | positional | Path to output `.cfg` file. If not set, the config is written to stdout so you can pipe it forward to a file. |
+| `--diff`, `-D` | flag       | Print a visual diff highlighting the changes.                                                                 |
+| `--help`, `-h` | flag       | Show help message and available arguments.                                                                    |
+| **CREATES**    | file       | Complete and auto-filled config file for training.                                                            |
 
 ### init model {#init-model new="2"}
 
