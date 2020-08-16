@@ -82,12 +82,8 @@ def fill_config(
     is_stdout = str(output_file) == "-"
     msg = Printer(no_print=is_stdout)
     with show_validation_error(hint_fill=False):
-        with msg.loading("Auto-filling config..."):
-            config = util.load_config(base_path)
-            try:
-                nlp, _ = util.load_model_from_config(config, auto_fill=True)
-            except ValueError as e:
-                msg.fail(str(e), exits=1)
+        config = util.load_config(base_path)
+        nlp, _ = util.load_model_from_config(config, auto_fill=True)
     before = config.to_str()
     after = nlp.config.to_str()
     if before == after:
@@ -152,10 +148,7 @@ def init_config(
         require_spacy_transformers(msg)
     with show_validation_error(hint_fill=False):
         config = util.load_config_from_str(base_template)
-        try:
-            nlp, _ = util.load_model_from_config(config, auto_fill=True)
-        except ValueError as e:
-            msg.fail(str(e), exits=1)
+        nlp, _ = util.load_model_from_config(config, auto_fill=True)
     if use_transformer:
         nlp.config.pop("pretraining", {})  # TODO: solve this better
     msg.good("Auto-filled config with all values")

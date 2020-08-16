@@ -49,10 +49,7 @@ def debug_config_cli(
     import_code(code_path)
     with show_validation_error(config_path):
         config = util.load_config(config_path, overrides=overrides)
-        try:
-            nlp, _ = util.load_model_from_config(config, auto_fill=auto_fill)
-        except ValueError as e:
-            msg.fail(str(e), exits=1)
+        nlp, _ = util.load_model_from_config(config, auto_fill=auto_fill)
     if auto_fill:
         orig_config = config.to_str()
         filled_config = nlp.config.to_str()
