@@ -88,13 +88,21 @@ def fill_config(
                 nlp, _ = util.load_model_from_config(config, auto_fill=True)
             except ValueError as e:
                 msg.fail(str(e), exits=1)
-    msg.good("Auto-filled config with all values")
+    before = config.to_str()
+    after = nlp.config.to_str()
+    if before == after:
+        msg.warn("Nothing to auto-fill: base config is already complete")
+    else:
+        msg.good("Auto-filled config with all values")
     if diff and not is_stdout:
-        msg.divider("START CONFIG DIFF")
-        print("")
-        print(diff_strings(config.to_str(), nlp.config.to_str()))
-        msg.divider("END CONFIG DIFF")
-        print("")
+        if before == after:
+            msg.warn("No diff to show: nothing was auto-filled")
+        else:
+            msg.divider("START CONFIG DIFF")
+            print("")
+            print(diff_strings(before, after))
+            msg.divider("END CONFIG DIFF")
+            print("")
     save_config(nlp.config, output_file, is_stdout=is_stdout)
 
 
