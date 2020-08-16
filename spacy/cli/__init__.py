@@ -15,7 +15,7 @@ from .debug_model import debug_model  # noqa: F401
 from .evaluate import evaluate  # noqa: F401
 from .convert import convert  # noqa: F401
 from .init_model import init_model  # noqa: F401
-from .init_config import init_config  # noqa: F401
+from .init_config import init_config, fill_config  # noqa: F401
 from .validate import validate  # noqa: F401
 from .project.clone import project_clone  # noqa: F401
 from .project.assets import project_assets  # noqa: F401

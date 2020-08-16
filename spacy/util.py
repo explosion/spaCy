@@ -58,6 +58,12 @@ if TYPE_CHECKING:
 OOV_RANK = numpy.iinfo(numpy.uint64).max
 LEXEME_NORM_LANGS = ["da", "de", "el", "en", "id", "lb", "pt", "ru", "sr", "ta", "th"]
 
+# Default order of sections in the config.cfg. Not all sections needs to exist,
+# and additional sections are added at the end, in alphabetical order.
+# fmt: off
+CONFIG_SECTION_ORDER = ["paths", "variables", "system", "nlp", "components", "training", "pretraining"]
+# fmt: on
+
 
 logging.basicConfig()
 logger = logging.getLogger("spacy")
@@ -263,9 +269,7 @@ def load_model_from_path(
     if not meta:
         meta = get_model_meta(model_path)
     config_path = model_path / "config.cfg"
-    if not config_path.exists() or not config_path.is_file():
-        raise IOError(Errors.E053.format(path=config_path, name="config.cfg"))
-    config = Config().from_disk(config_path, overrides=dict_to_dot(config))
+    config = load_config(config_path, overrides=dict_to_dot(config))
     nlp, _ = load_model_from_config(config, vocab=vocab, disable=disable)
     return nlp.from_disk(model_path, exclude=disable)
 
@@ -313,6 +317,29 @@ def load_model_from_init_py(
         raise IOError(Errors.E052.format(path=data_path))
     return load_model_from_path(
         data_path, vocab=vocab, meta=meta, disable=disable, config=config
+    )
+
+
+def load_config(
+    path: Union[str, Path],
+    overrides: Dict[str, Any] = SimpleFrozenDict(),
+    interpolate: bool = False,
+) -> Config:
+    """Load a config file. Takes care of path validation and section order."""
+    config_path = ensure_path(path)
+    if not config_path.exists() or not config_path.is_file():
+        raise IOError(Errors.E053.format(path=config_path, name="config.cfg"))
+    return Config(section_order=CONFIG_SECTION_ORDER).from_disk(
+        config_path, overrides=overrides, interpolate=interpolate
+    )
+
+
+def load_config_from_str(
+    text: str, overrides: Dict[str, Any] = SimpleFrozenDict(), interpolate: bool = False
+):
+    """Load a full config from a string."""
+    return Config(section_order=CONFIG_SECTION_ORDER).from_str(
+        text, overrides=overrides, interpolate=interpolate,
     )
 
 
@@ -899,45 +926,6 @@ def copy_config(config: Union[Dict[str, Any], Config]) -> Config:
         return Config(config).copy()
     except ValueError:
         raise ValueError(Errors.E961.format(config=config)) from None
-
-
-def deep_merge_configs(
-    config: Union[Dict[str, Any], Config], defaults: Union[Dict[str, Any], Config]
-) -> Config:
-    """Deep merge two configs, a base config and its defaults. Ignores
-    references to registered functions to avoid filling in
-
-    config (Dict[str, Any]): The config.
-    destination (Dict[str, Any]): The config defaults.
-    RETURNS (Dict[str, Any]): The merged config.
-    """
-    config = copy_config(config)
-    merged = _deep_merge_configs(config, defaults)
-    return Config(merged)
-
-
-def _deep_merge_configs(
-    config: Union[Dict[str, Any], Config], defaults: Union[Dict[str, Any], Config]
-) -> Union[Dict[str, Any], Config]:
-    for key, value in defaults.items():
-        if isinstance(value, dict):
-            node = config.setdefault(key, {})
-            if not isinstance(node, dict):
-                continue
-            promises = [key for key in value if key.startswith("@")]
-            promise = promises[0] if promises else None
-            # We only update the block from defaults if it refers to the same
-            # registered function
-            if (
-                promise
-                and any(k.startswith("@") for k in node)
-                and (promise in node and node[promise] != value[promise])
-            ):
-                continue
-            defaults = _deep_merge_configs(node, value)
-        elif key not in config:
-            config[key] = value
-    return config
 
 
 def dot_to_dict(values: Dict[str, Any]) -> Dict[str, dict]:

@@ -1,4 +1,6 @@
 # Forked from: https://github.com/jonbretman/jinja-to-js
+# With additional functionality: in/not in, replace, pprint, round, + for lists,
+# rendering empty dicts
 # This script is mostly used to generate the JavaScript function for the
 # training quicktart widget.
 import contextlib
@@ -315,7 +317,7 @@ class JinjaToJS(object):
         if callable(handler):
             handler(node, **kwargs)
         else:
-            raise Exception("Unknown node %s" % node)
+            raise Exception(f"Unknown node {node} ({node_name})")
 
     def _process_extends(self, node, **kwargs):
         """
@@ -430,6 +432,13 @@ class JinjaToJS(object):
                     self.stored_names.add(node.name)
 
                 self.output.write(node.name)
+
+    def _process_dict(self, node, **kwargs):
+        with self._interpolation():
+            with self._python_bool_wrapper(**kwargs):
+                if node.items:
+                    raise ValueError(f"Can't process non-empty dict in epxression: {node}")
+                self.output.write("{}")
 
     def _process_getattr(self, node, **kwargs):
         """
@@ -697,6 +706,27 @@ class JinjaToJS(object):
                 self._process_node(node.node, **new_kwargs)
                 self.output.write(")")
 
+    def _process_filter_replace(self, node, **kwargs):
+        # We're getting a quoted string from Python/Jinja as the pattern to
+        # replace, but to replace all occurrences in JS, we typically need a
+        # regex, which would be annoying to convert. So we're using split/join
+        # instead here.
+        with self._interpolation():
+            with self._python_bool_wrapper(**kwargs) as new_kwargs:
+                self._process_node(node.node, **new_kwargs)
+                self.output.write(".split(")
+                self._process_node(node.args[0], **new_kwargs)
+                self.output.write(").join(")
+                self._process_node(node.args[1], **new_kwargs)
+                self.output.write(")")
+
+    def _process_filter_pprint(self, node, **kwargs):
+        with self._interpolation():
+            with self._python_bool_wrapper(**kwargs) as new_kwargs:
+                self.output.write("JSON.stringify(")
+                self._process_node(node.node, **new_kwargs)
+                self.output.write(")")
+
     def _process_filter_attr(self, node, **kwargs):
         with self._interpolation():
             with self._python_bool_wrapper(**kwargs) as new_kwargs:
@@ -746,7 +776,10 @@ class JinjaToJS(object):
             with self._python_bool_wrapper(**kwargs) as new_kwargs:
                 self.output.write("Math.round((")
                 self._process_node(node.node, **new_kwargs)
-                self.output.write("+ Number.EPSILON) * 100) / 100")
+                self.output.write("+ Number.EPSILON) * 10**")
+                self._process_node(node.args[0], **new_kwargs)
+                self.output.write(") / 10**")
+                self._process_node(node.args[0], **new_kwargs)
 
     def _process_filter_last(self, node, **kwargs):
         with self._interpolation():
@@ -867,8 +900,10 @@ class JinjaToJS(object):
         )
 
         with option(kwargs, use_python_bool_wrapper=False):
-            if operand.op == "in":
+            if operand.op == "in" or operand.op == "notin":
                 # Special case for "in" operator
+                if operand.op == "notin":
+                    self.output.write("!")
                 self._process_node(operand.expr, **kwargs)
                 self.output.write(".includes(")
                 self._process_node(node.expr, **kwargs)
@@ -1027,7 +1062,18 @@ class JinjaToJS(object):
             self.output.write(")")
 
     def _process_add(self, node, **kwargs):
-        self._process_math(node, math_operator=" + ", **kwargs)
+        # Handle + operator for lists, which behaves differently in JS. Currently
+        # only works if we have an explicit list node on either side (in which
+        # case we assume both are lists).
+        if isinstance(node.left, nodes.List) or isinstance(node.right, nodes.List):
+            with self._interpolation():
+                with self._python_bool_wrapper(**kwargs) as new_kwargs:
+                    self._process_node(node.left, **new_kwargs)
+                    self.output.write(".concat(")
+                    self._process_node(node.right, **new_kwargs)
+                    self.output.write(")")
+        else:
+            self._process_math(node, math_operator=" + ", **kwargs)
 
     def _process_sub(self, node, **kwargs):
         self._process_math(node, math_operator=" - ", **kwargs)
@@ -1190,16 +1236,22 @@ def main(
     # fmt: off
     template_path: Path = typer.Argument(..., exists=True, dir_okay=False, help="Path to .jinja file"),
     output: Path = typer.Argument(None, help="Path to output module (stdout if unset)"),
+    data_path: Path = typer.Option(None, "--data", help="Optional JSON file with additional data to be included as DATA")
     # fmt: on
 ):
     """Convert a jinja2 template to a JavaScript module."""
-    compiler = JinjaToJS(
-        template_path.parent, template_path.parts[-1], js_module_format="es6"
-    )
+    data = "{}"
+    if data_path is not None:
+        with data_path.open("r", encoding="utf8") as f:
+            data = json.dumps(json.loads(f.read()))  # dump and load for compactness
+    tpl_file = template_path.parts[-1]
+    compiler = JinjaToJS(template_path.parent, tpl_file, js_module_format="es6")
+    header = f"// This file was auto-generated by {__file__} based on {tpl_file}"
+    data_str = f"export const DATA = {data}"
     result = compiler.get_output()
     if output is not None:
         with output.open("w") as f:
-            f.write(result)
+            f.write(f"{header}\n{result}\n{data_str}")
         print(f"Updated {output.parts[-1]}")
     else:
         print(result)

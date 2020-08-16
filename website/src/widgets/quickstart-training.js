@@ -2,14 +2,17 @@ import React, { useState } from 'react'
 import { StaticQuery, graphql } from 'gatsby'
 import highlightCode from 'gatsby-remark-prismjs/highlight-code.js'
 
-import { Quickstart, QS } from '../components/quickstart'
-import generator from './quickstart-training-generator'
+import { Quickstart } from '../components/quickstart'
+import generator, { DATA as GENERATOR_DATA } from './quickstart-training-generator'
 import { isString, htmlToReact } from '../components/util'
 
 const DEFAULT_LANG = 'en'
 const DEFAULT_HARDWARE = 'gpu'
 const DEFAULT_OPT = 'efficiency'
 const COMPONENTS = ['tagger', 'parser', 'ner', 'textcat']
+const COMMENT = `# This is an auto-generated partial config. To use it with 'spacy train'
+# you can run spacy init fill-config to auto-fill all default settings:
+# python -m spacy init fill-config ./base_config.cfg ./config.cfg`
 
 const DATA = [
     {
@@ -61,14 +64,17 @@ export default function QuickstartTraining({ id, title, download = 'config.cfg' 
         hardware: setHardware,
         optimize: setOptimize,
     }
+    const reco = GENERATOR_DATA[lang] || {}
     const content = generator({
         lang,
-        pipeline: stringify(components),
         components,
         optimize,
         hardware,
+        transformer_data: reco.transformer,
+        word_vectors: reco.word_vectors,
     })
-    const rawContent = content.trim().replace(/\n\n\n+/g, '\n\n')
+    const rawStr = content.trim().replace(/\n\n\n+/g, '\n\n')
+    const rawContent = `${COMMENT}\n${rawStr}`
     const displayContent = highlightCode('ini', rawContent)
         .split('\n')
         .map(line => (line.startsWith('#') ? `<span class="token comment">${line}</span>` : line))
