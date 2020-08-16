@@ -29,40 +29,26 @@ We recommend an NVIDIA GPU with at least 10GB of memory in order to work with
 transformer models. The exact requirements will depend on the transformer you
 model you choose and whether you're training the pipeline or simply running it.
 Training a transformer-based model without a GPU will be too slow for most
-practical purposes. A GPU will usually also achieve better
-price-for-performance when processing large batches of documents. The only
-context where a GPU might not be worthwhile is if you're serving the model in
-a context where documents are received individually, rather than in batches. In
-this context, CPU may be more cost effective.
-
-You'll also need to make sure your GPU drivers are up-to-date and v9+ of the
-CUDA runtime is installed. Unfortunately, there's little we can do to help with
-this part: the steps will vary depending on your device, operating system and
-the version of CUDA you're targetting (you'll want to use one that's well
-supported by cupy, PyTorch and Tensorflow).
+practical purposes. You'll also need to make sure your GPU drivers are up-to-date
+and v9+ of the CUDA runtime is installed.
 
 Once you have CUDA installed, you'll need to install two pip packages, `cupy`
-and `spacy-transformers`. The `cupy` library is just like `numpy`, but for GPU.
-The best way to install it is to choose a wheel that matches the version of CUDA
-you're using. For instance, if you're using CUDA 10.2, you would run
-`pip install cupy-cuda102`. Finally, if you've installed CUDA in a non-standard
-location, you'll need to set the `CUDA_PATH` environment variable to the base
-of your CUDA installation. See the cupy documentation for more details.
-download a few extra dependencies. 
-
-If provisioning a fresh environment, you'll generally have to download about
-5GB of data in total: 3GB for CUDA, about 400MB for the CuPy wheel, 800MB for
-PyTorch (required by `spacy-transformers`), 500MB for the transformer weights,
-and about 200MB in various other binaries.
-
-In summary, let's say you're using CUDA 10.2, and you've installed it in
-`/opt/nvidia/cuda`:
+and `spacy-transformers`. [CuPy](https://docs.cupy.dev/en/stable/install.html)
+is just like `numpy`, but for GPU. The best way to install it is to choose a
+wheel that matches the version of CUDA you're using. You may also need to set the
+`CUDA_PATH` environment variable if your CUDA runtime is installed in
+a non-standard location. Putting it all together, if you had installed CUDA 10.2
+in `/opt/nvidia/cuda`, you would run:
 
 ```
 export CUDA_PATH="/opt/nvidia/cuda"
 pip install cupy-cuda102
 pip install spacy-transformers
 ```
+
+Provisioning a new machine will require about 5GB of data to be downloaded in total:
+3GB for the CUDA runtime, 800MB for PyTorch, 400MB for CuPy, 500MB for the transformer
+weights, and about 200MB for spaCy and its various requirements.
 
 ## Runtime usage {#runtime}
 
@@ -305,8 +291,6 @@ more source rows the token is aligned against. Here we use the
 averages the wordpiece rows. We could instead use `reduce_last`,
 [`reduce_max`](https://thinc.ai/docs/api-layers#reduce_max), or a custom
 function you write yourself.
-
-<!--TODO: reduce_last: undocumented? -->
 
 You can have multiple components all listening to the same transformer model,
 and all passing gradients back to it. By default, all of the gradients will be
