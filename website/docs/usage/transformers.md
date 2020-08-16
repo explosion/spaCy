@@ -10,26 +10,58 @@ next: /usage/training
 
 ## Installation {#install hidden="true"}
 
-spaCy v3.0 lets you use almost **any statistical model** to power your pipeline.
-You can use models implemented in a variety of
-[frameworks](https://thinc.ai/docs/usage-frameworks), including TensorFlow,
-PyTorch and MXNet. To keep things sane, spaCy expects models from these
-frameworks to be wrapped with a common interface, using our machine learning
-library [Thinc](https://thinc.ai). A transformer model is just a statistical
-model, so the
-[`spacy-transformers`](https://github.com/explosion/spacy-transformers) package
-actually has very little work to do: it just has to provide a few functions that
-do the required plumbing. It also provides a pipeline component,
-[`Transformer`](/api/transformer), that lets you do multi-task learning and lets
-you save the transformer outputs for later use.
+Transformers are a family of neural network architectures that compute dense,
+context-sensitive representations for the tokens in your documents. Downstream
+models in your pipeline can then use these representations as input features to
+improve their predictions. You can connect multiple components to a single
+transformer model, with any or all of those components giving feedback to the
+transformer to fine-tune it to your tasks. spaCy's transformer support
+interoperates with PyTorch and the [Huggingface transformers](https://huggingface.co/transformers/)
+library, giving you access to thousands of pretrained models for your pipelines.
+There are many [great guides](http://jalammar.github.io/illustrated-transformer/)
+to transformer models, but for practical purposes, you can simply think of them
+as a drop-in replacement that let you achieve higher accuracy in exchange for
+higher training and runtime costs.
 
-To use transformers with spaCy, you need the
-[`spacy-transformers`](https://github.com/explosion/spacy-transformers) package
-installed. It takes care of all the setup behind the scenes, and makes sure the
-transformer pipeline component is available to spaCy.
+## System requirements
 
-```bash
-$ pip install spacy-transformers
+We recommend an NVIDIA GPU with at least 10GB of memory in order to work with
+transformer models. The exact requirements will depend on the transformer you
+model you choose and whether you're training the pipeline or simply running it.
+Training a transformer-based model without a GPU will be too slow for most
+practical purposes. A GPU will usually also achieve better
+price-for-performance when processing large batches of documents. The only
+context where a GPU might not be worthwhile is if you're serving the model in
+a context where documents are received individually, rather than in batches. In
+this context, CPU may be more cost effective.
+
+You'll also need to make sure your GPU drivers are up-to-date and v9+ of the
+CUDA runtime is installed. Unfortunately, there's little we can do to help with
+this part: the steps will vary depending on your device, operating system and
+the version of CUDA you're targetting (you'll want to use one that's well
+supported by cupy, PyTorch and Tensorflow).
+
+Once you have CUDA installed, you'll need to install two pip packages, `cupy`
+and `spacy-transformers`. The `cupy` library is just like `numpy`, but for GPU.
+The best way to install it is to choose a wheel that matches the version of CUDA
+you're using. For instance, if you're using CUDA 10.2, you would run
+`pip install cupy-cuda102`. Finally, if you've installed CUDA in a non-standard
+location, you'll need to set the `CUDA_PATH` environment variable to the base
+of your CUDA installation. See the cupy documentation for more details.
+download a few extra dependencies. 
+
+If provisioning a fresh environment, you'll generally have to download about
+5GB of data in total: 3GB for CUDA, about 400MB for the CuPy wheel, 800MB for
+PyTorch (required by `spacy-transformers`), 500MB for the transformer weights,
+and about 200MB in various other binaries.
+
+In summary, let's say you're using CUDA 10.2, and you've installed it in
+`/opt/nvidia/cuda`:
+
+```
+export CUDA_PATH="/opt/nvidia/cuda"
+pip install cupy-cuda102
+pip install spacy-transformers
 ```
 
 ## Runtime usage {#runtime}
@@ -54,6 +86,13 @@ $ python -m spacy download en_core_trf_lg
 ```python
 ### Example
 import spacy
+from thinc.api import use_pytorch_for_gpu_memory, require_gpu
+
+# Use the GPU, with memory allocations directed via PyTorch.
+# This prevents out-of-memory errors that would otherwise occur from competing
+# memory pools.
+use_pytorch_for_gpu_memory()
+require_gpu(0)
 
 nlp = spacy.load("en_core_trf_lg")
 for doc in nlp.pipe(["some text", "some other text"]):
