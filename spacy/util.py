@@ -24,6 +24,7 @@ import tempfile
 import shutil
 import shlex
 import inspect
+import logging
 
 try:
     import cupy.random
@@ -54,9 +55,18 @@ if TYPE_CHECKING:
     from .vocab import Vocab  # noqa: F401
 
 
-_PRINT_ENV = False
 OOV_RANK = numpy.iinfo(numpy.uint64).max
 LEXEME_NORM_LANGS = ["da", "de", "el", "en", "id", "lb", "pt", "ru", "sr", "ta", "th"]
+
+# Default order of sections in the config.cfg. Not all sections needs to exist,
+# and additional sections are added at the end, in alphabetical order.
+# fmt: off
+CONFIG_SECTION_ORDER = ["paths", "variables", "system", "nlp", "components", "training", "pretraining"]
+# fmt: on
+
+
+logging.basicConfig()
+logger = logging.getLogger("spacy")
 
 
 class registry(thinc.registry):
@@ -107,11 +117,6 @@ class SimpleFrozenDict(dict):
 
     def update(self, other):
         raise NotImplementedError(self.error)
-
-
-def set_env_log(value: bool) -> None:
-    global _PRINT_ENV
-    _PRINT_ENV = value
 
 
 def lang_class_is_loaded(lang: str) -> bool:
@@ -264,9 +269,7 @@ def load_model_from_path(
     if not meta:
         meta = get_model_meta(model_path)
     config_path = model_path / "config.cfg"
-    if not config_path.exists() or not config_path.is_file():
-        raise IOError(Errors.E053.format(path=config_path, name="config.cfg"))
-    config = Config().from_disk(config_path, overrides=dict_to_dot(config))
+    config = load_config(config_path, overrides=dict_to_dot(config))
     nlp, _ = load_model_from_config(config, vocab=vocab, disable=disable)
     return nlp.from_disk(model_path, exclude=disable)
 
@@ -314,6 +317,29 @@ def load_model_from_init_py(
         raise IOError(Errors.E052.format(path=data_path))
     return load_model_from_path(
         data_path, vocab=vocab, meta=meta, disable=disable, config=config
+    )
+
+
+def load_config(
+    path: Union[str, Path],
+    overrides: Dict[str, Any] = SimpleFrozenDict(),
+    interpolate: bool = False,
+) -> Config:
+    """Load a config file. Takes care of path validation and section order."""
+    config_path = ensure_path(path)
+    if not config_path.exists() or not config_path.is_file():
+        raise IOError(Errors.E053.format(path=config_path, name="config.cfg"))
+    return Config(section_order=CONFIG_SECTION_ORDER).from_disk(
+        config_path, overrides=overrides, interpolate=interpolate
+    )
+
+
+def load_config_from_str(
+    text: str, overrides: Dict[str, Any] = SimpleFrozenDict(), interpolate: bool = False
+):
+    """Load a full config from a string."""
+    return Config(section_order=CONFIG_SECTION_ORDER).from_str(
+        text, overrides=overrides, interpolate=interpolate,
     )
 
 
@@ -600,27 +626,6 @@ def get_async(stream, numpy_array):
         array = cupy.ndarray(numpy_array.shape, order="C", dtype=numpy_array.dtype)
         array.set(numpy_array, stream=stream)
         return array
-
-
-def env_opt(name: str, default: Optional[Any] = None) -> Optional[Any]:
-    if type(default) is float:
-        type_convert = float
-    else:
-        type_convert = int
-    if "SPACY_" + name.upper() in os.environ:
-        value = type_convert(os.environ["SPACY_" + name.upper()])
-        if _PRINT_ENV:
-            print(name, "=", repr(value), "via", "$SPACY_" + name.upper())
-        return value
-    elif name in os.environ:
-        value = type_convert(os.environ[name])
-        if _PRINT_ENV:
-            print(name, "=", repr(value), "via", "$" + name)
-        return value
-    else:
-        if _PRINT_ENV:
-            print(name, "=", repr(default), "by default")
-        return default
 
 
 def read_regex(path: Union[str, Path]) -> Pattern:
@@ -923,45 +928,6 @@ def copy_config(config: Union[Dict[str, Any], Config]) -> Config:
         raise ValueError(Errors.E961.format(config=config)) from None
 
 
-def deep_merge_configs(
-    config: Union[Dict[str, Any], Config], defaults: Union[Dict[str, Any], Config]
-) -> Config:
-    """Deep merge two configs, a base config and its defaults. Ignores
-    references to registered functions to avoid filling in
-
-    config (Dict[str, Any]): The config.
-    destination (Dict[str, Any]): The config defaults.
-    RETURNS (Dict[str, Any]): The merged config.
-    """
-    config = copy_config(config)
-    merged = _deep_merge_configs(config, defaults)
-    return Config(merged)
-
-
-def _deep_merge_configs(
-    config: Union[Dict[str, Any], Config], defaults: Union[Dict[str, Any], Config]
-) -> Union[Dict[str, Any], Config]:
-    for key, value in defaults.items():
-        if isinstance(value, dict):
-            node = config.setdefault(key, {})
-            if not isinstance(node, dict):
-                continue
-            promises = [key for key in value if key.startswith("@")]
-            promise = promises[0] if promises else None
-            # We only update the block from defaults if it refers to the same
-            # registered function
-            if (
-                promise
-                and any(k.startswith("@") for k in node)
-                and (promise in node and node[promise] != value[promise])
-            ):
-                continue
-            defaults = _deep_merge_configs(node, value)
-        elif key not in config:
-            config[key] = value
-    return config
-
-
 def dot_to_dict(values: Dict[str, Any]) -> Dict[str, dict]:
     """Convert dot notation to a dict. For example: {"token.pos": True,
     "token._.xyz": True} becomes {"token": {"pos": True, "_": {"xyz": True }}}.
@@ -1067,24 +1033,7 @@ class DummyTokenizer:
 
 
 def create_default_optimizer() -> Optimizer:
-    # TODO: Do we still want to allow env_opt?
-    learn_rate = env_opt("learn_rate", 0.001)
-    beta1 = env_opt("optimizer_B1", 0.9)
-    beta2 = env_opt("optimizer_B2", 0.999)
-    eps = env_opt("optimizer_eps", 1e-8)
-    L2 = env_opt("L2_penalty", 1e-6)
-    grad_clip = env_opt("grad_norm_clip", 10.0)
-    L2_is_weight_decay = env_opt("L2_is_weight_decay", False)
-    optimizer = Adam(
-        learn_rate,
-        L2=L2,
-        beta1=beta1,
-        beta2=beta2,
-        eps=eps,
-        grad_clip=grad_clip,
-        L2_is_weight_decay=L2_is_weight_decay,
-    )
-    return optimizer
+    return Adam()
 
 
 def minibatch(items, size):

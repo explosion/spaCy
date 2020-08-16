@@ -179,7 +179,6 @@ def test_issue4707():
     assert "entity_ruler" in new_nlp.pipe_names
 
 
-@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_issue4725_1():
     """ Ensure the pickling of the NER goes well"""
     vocab = Vocab(vectors_name="test_vocab_add_vector")
@@ -198,7 +197,6 @@ def test_issue4725_1():
             assert ner2.cfg["update_with_oracle_cut_size"] == 111
 
 
-@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_issue4725_2():
     # ensures that this runs correctly and doesn't hang or crash because of the global vectors
     # if it does crash, it's usually because of calling 'spawn' for multiprocessing (e.g. on Windows),

@@ -55,12 +55,6 @@ class Warnings:
             "loaded. (Shape: {shape})")
     W021 = ("Unexpected hash collision in PhraseMatcher. Matches may be "
             "incorrect. Modify PhraseMatcher._terminal_hash to fix.")
-    W022 = ("Training a new part-of-speech tagger using a model with no "
-            "lemmatization rules or data. This means that the trained model "
-            "may not be able to lemmatize correctly. If this is intentional "
-            "or the language you're using doesn't have lemmatization data, "
-            "you can ignore this warning. If this is surprising, make sure you "
-            "have the spacy-lookups-data package installed.")
     W024 = ("Entity '{entity}' - Alias '{alias}' combination already exists in "
             "the Knowledge Base.")
     W026 = ("Unable to set all sentence boundaries from dependency parses.")
@@ -482,6 +476,15 @@ class Errors:
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
+    E930 = ("Received invalid get_examples callback in {name}.begin_training. "
+            "Expected function that returns an iterable of Example objects but "
+            "got: {obj}")
+    E931 = ("Encountered Pipe subclass without Pipe.{method} method in component "
+            "'{name}'. If the component is trainable and you want to use this "
+            "method, make sure it's overwritten on the subclass. If your "
+            "component isn't trainable, add a method that does nothing or "
+            "don't use the Pipe base class.")
+    E940 = ("Found NaN values in scores.")
     E941 = ("Can't find model '{name}'. It looks like you're trying to load a "
             "model from a shortcut, which is deprecated as of spaCy v3.0. To "
             "load the model, use its full name instead:\n\n"
@@ -578,8 +581,7 @@ class Errors:
             "but received None.")
     E977 = ("Can not compare a MorphAnalysis with a string object. "
             "This is likely a bug in spaCy, so feel free to open an issue.")
-    E978 = ("The '{method}' method of {name} takes a list of Example objects, "
-            "but found {types} instead.")
+    E978 = ("The {name} method takes a list of Example objects, but got: {types}")
     E979 = ("Cannot convert {type} to an Example object.")
     E980 = ("Each link annotation should refer to a dictionary with at most one "
             "identifier mapping to 1.0, and all others to 0.0.")

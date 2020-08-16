@@ -8,11 +8,8 @@ from ..ml.parser_model cimport WeightsC, ActivationsC, SizesC
 
 
 cdef class Parser(Pipe):
-    cdef readonly Vocab vocab
-    cdef public object model
     cdef public object _rehearsal_model
     cdef readonly TransitionSystem moves
-    cdef readonly object cfg
     cdef public object _multitasks
 
     cdef void _parseC(self, StateC** states,

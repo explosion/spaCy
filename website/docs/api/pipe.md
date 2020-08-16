@@ -9,8 +9,8 @@ components like the [`EntityRecognizer`](/api/entityrecognizer) or
 [`TextCategorizer`](/api/textcategorizer) inherit from it and it defines the
 interface that components should follow to function as trainable components in a
 spaCy pipeline. See the docs on
-[writing trainable components](/usage/processing-pipelines#trainable) for how to
-use the `Pipe` base class to implement custom components.
+[writing trainable components](/usage/processing-pipelines#trainable-components)
+for how to use the `Pipe` base class to implement custom components.
 
 > #### Why is Pipe implemented in Cython?
 >
@@ -45,18 +45,12 @@ Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
 [`nlp.add_pipe`](/api/language#create_pipe).
 
-<Infobox variant="danger">
-
-This method needs to be overwritten with your own custom `__init__` method.
-
-</Infobox>
-
-| Name    | Type                                       | Description                                                                                 |
-| ------- | ------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| `vocab` | `Vocab`                                    | The shared vocabulary.                                                                      |
-| `model` | [`Model`](https://thinc.ai/docs/api-model) | The Thinc [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component.       |
-| `name`  | str                                        | String name of the component instance. Used to add entries to the `losses` during training. |
-| `**cfg` |                                            | Additional config parameters and settings.                                                  |
+| Name    | Type                                       | Description                                                                                                                     |
+| ------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab` | `Vocab`                                    | The shared vocabulary.                                                                                                          |
+| `model` | [`Model`](https://thinc.ai/docs/api-model) | The Thinc [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component.                                           |
+| `name`  | str                                        | String name of the component instance. Used to add entries to the `losses` during training.                                     |
+| `**cfg` |                                            | Additional config parameters and settings. Will be available as the dictionary `Pipe.cfg` and is serialized with the component. |
 
 ## Pipe.\_\_call\_\_ {#call tag="method"}
 
@@ -106,14 +100,20 @@ applied to the `Doc` in order. Both [`__call__`](/api/pipe#call) and
 
 ## Pipe.begin_training {#begin_training tag="method"}
 
-Initialize the pipe for training, using data examples if available. Returns an
-[`Optimizer`](https://thinc.ai/docs/api-optimizers) object.
+Initialize the component for training and return an
+[`Optimizer`](https://thinc.ai/docs/api-optimizers). `get_examples` should be a
+function that returns an iterable of [`Example`](/api/example) objects. The data
+examples are used to **initialize the model** of the component and can either be
+the full training data or a representative sample. Initialization includes
+validating the network,
+[inferring missing shapes](https://thinc.ai/docs/usage-models#validation) and
+setting up the label scheme based on the data.
 
 > #### Example
 >
 > ```python
 > pipe = nlp.add_pipe("your_custom_pipe")
-> optimizer = pipe.begin_training(pipeline=nlp.pipeline)
+> optimizer = pipe.begin_training(lambda: [], pipeline=nlp.pipeline)
 > ```
 
 | Name           | Type                                                | Description                                                                                                |
@@ -176,12 +176,6 @@ method.
 Learn from a batch of [`Example`](/api/example) objects containing the
 predictions and gold-standard annotations, and update the component's model.
 
-<Infobox variant="danger">
-
-This method needs to be overwritten with your own custom `update` method.
-
-</Infobox>
-
 > #### Example
 >
 > ```python
@@ -200,7 +194,7 @@ This method needs to be overwritten with your own custom `update` method.
 | `losses`          | `Dict[str, float]`                                  | Optional record of the loss during training. Updated using the component name as the key.                                          |
 | **RETURNS**       | `Dict[str, float]`                                  | The updated `losses` dictionary.                                                                                                   |
 
-## Pipe.rehearse {#rehearse tag="method,experimental"}
+## Pipe.rehearse {#rehearse tag="method,experimental" new="3"}
 
 Perform a "rehearsal" update from a batch of data. Rehearsal updates teach the
 current model to make predictions similar to an initial model, to try to address
@@ -377,6 +371,15 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 | _keyword-only_ |                 |                                                                           |
 | `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
 | **RETURNS**    | `Pipe`          | The pipe.                                                                 |
+
+## Attributes {#attributes}
+
+| Name    | Type                                       | Description                                                                                           |
+| ------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| `vocab` | [`Vocab`](/api/vocab)                      | The shared vocabulary that's passed in on initialization.                                             |
+| `model` | [`Model`](https://thinc.ai/docs/api-model) | The model powering the component.                                                                     |
+| `name`  | str                                        | The name of the component instance in the pipeline. Can be used in the losses.                        |
+| `cfg`   | dict                                       | Keyword arguments passed to [`Pipe.__init__`](/api/pipe#init). Will be serialized with the component. |
 
 ## Serialization fields {#serialization-fields}
 

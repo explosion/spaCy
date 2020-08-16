@@ -1,7 +1,7 @@
 from typing import Dict, Any, Optional
 from pathlib import Path
 from wasabi import msg
-from thinc.api import require_gpu, fix_random_seed, set_dropout_rate, Adam, Config
+from thinc.api import require_gpu, fix_random_seed, set_dropout_rate, Adam
 from thinc.api import Model, data_validation
 import typer
 
@@ -49,16 +49,12 @@ def debug_model_cli(
     }
     config_overrides = parse_config_overrides(ctx.args)
     with show_validation_error(config_path):
-        cfg = Config().from_disk(config_path, overrides=config_overrides)
-        try:
-            nlp, config = util.load_model_from_config(cfg)
-        except ValueError as e:
-            msg.fail(str(e), exits=1)
+        config = util.load_config(config_path, overrides=config_overrides)
+        nlp, config = util.load_model_from_config(config_path)
     seed = config["pretraining"]["seed"]
     if seed is not None:
         msg.info(f"Fixing random seed: {seed}")
         fix_random_seed(seed)
-
     pipe = nlp.get_pipe(component)
     if hasattr(pipe, "model"):
         model = pipe.model

@@ -16,9 +16,11 @@ menu:
   - ['Project', 'project']
 ---
 
-For a list of available commands, type `spacy --help`.
-
-<!-- TODO: add notes on autocompletion etc. -->
+spaCy's CLI provides a range of helpful commands for downloading and training
+models, converting data and debugging your config, data and installation. For a
+list of available commands, you can type `python -m spacy --help`. You can also
+add the `--help` flag to any command or subcommand to see the description,
+available arguments and usage.
 
 ## Download {#download}
 
@@ -41,13 +43,13 @@ the model name to be specified with its version (e.g. `en_core_web_sm-2.2.0`).
 $ python -m spacy download [model] [--direct] [pip args]
 ```
 
-| Argument                              | Type       | Description                                                                                                                                                                                                    |
-| ------------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `model`                               | positional | Model name, e.g. `en_core_web_sm`..                                                                                                                                                                            |
-| `--direct`, `-d`                      | flag       | Force direct download of exact model version.                                                                                                                                                                  |
-| pip args <Tag variant="new">2.1</Tag> | -          | Additional installation options to be passed to `pip install` when installing the model package. For example, `--user` to install to the user home directory or `--no-deps` to not install model dependencies. |
-| `--help`, `-h`                        | flag       | Show help message and available arguments.                                                                                                                                                                     |
-| **CREATES**                           | directory  | The installed model package in your `site-packages` directory.                                                                                                                                                 |
+| Argument                              | Type          | Description                                                                                                                                                                                                    |
+| ------------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `model`                               | positional    | Model name, e.g. [`en_core_web_sm`](/models/en#en_core_web_sm).                                                                                                                                                |
+| `--direct`, `-d`                      | flag          | Force direct download of exact model version.                                                                                                                                                                  |
+| `--help`, `-h`                        | flag          | Show help message and available arguments.                                                                                                                                                                     |
+| pip args <Tag variant="new">2.1</Tag> | option / flag | Additional installation options to be passed to `pip install` when installing the model package. For example, `--user` to install to the user home directory or `--no-deps` to not install model dependencies. |
+| **CREATES**                           | directory     | The installed model package in your `site-packages` directory.                                                                                                                                                 |
 
 ## Info {#info}
 
@@ -101,39 +103,62 @@ files and model directories.
 
 ### init config {#init-config new="3"}
 
-Initialize and export a [`config.cfg` file](/usage/training#config) for training
-and update it with all default values, if possible. Config files used for
-training should always be complete and not contain any hidden defaults or
-missing values, so this command helps you create your final config. It takes
-**one** of the following options:
-
-- `--base`: Base **config** to auto-fill, e.g. created using the
-  [training quickstart](/usage/training#quickstart) widget.
-- `--lang`: Base **language** code to use for blank config.
-- `--model`: Base **model** to copy config from.
+Initialize and save a [`config.cfg` file](/usage/training#config) using the
+**recommended settings** for your use case. It works just like the
+[quickstart widget](/usage/training#quickstart), only that it also auto-fills
+all default values and exports a [training](/usage/training#config)-ready
+config. The settings you specify will impact the suggested model architectures
+and pipeline setup, as well as the hyperparameters. You can also adjust and
+customize those settings in your config file later.
 
 > ```bash
-> ### with base config {wrap="true"}
-> $ python -m spacy init config config.cfg --base base.cfg
-> ```
->
-> ```bash
-> ### blank language {wrap="true"}
-> $ python -m spacy init config config.cfg --lang en --pipeline tagger,parser
+> ### Example {wrap="true"}
+> $ python -m spacy init config config.cfg --lang en --pipeline ner,textcat --optimize accuracy
 > ```
 
 ```bash
-$ python -m spacy init config [output] [--base] [--lang] [--model] [--pipeline]
+$ python -m spacy init config [output_file] [--lang] [--pipeline]
+[--optimize] [--cpu]
 ```
 
-| Argument           | Type       | Description                                                                                                                                                           |
-| ------------------ | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `output`           | positional | Path to output `.cfg` file. If not set, the config is written to stdout so you can pipe it forward to a file.                                                         |
-| `--base`, `-b`     | option     | Optional base config file to auto-fill with defaults.                                                                                                                 |
-| `--lang`, `-l`     | option     | Optional language code to use for blank config. If a `--pipeline` is specified, the components will be added in order.                                                |
-| `--model`, `-m`    | option     | Optional base model to copy config from. If a `--pipeline` is specified, only those components will be kept, and all other components not in the model will be added. |
-| `--pipeline`, `-p` | option     | Optional comma-separated pipeline of components to add to blank language or model.                                                                                    |
-| **CREATES**        | config     | Complete and auto-filled config file for training.                                                                                                                    |
+| Argument           | Type       | Description                                                                                                                                                                                                                                                                                                       |
+| ------------------ | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `output_file`      | positional | Path to output `.cfg` file. If not set, the config is written to stdout so you can pipe it forward to a file.                                                                                                                                                                                                     |
+| `--lang`, `-l`     | option     | Optional code of the [language](/usage/models#languages) to use. Defaults to `"en"`.                                                                                                                                                                                                                              |
+| `--pipeline`, `-p` | option     | Comma-separated list of trainable [pipeline components](/usage/processing-pipelines#built-in) to include in the model. Defaults to `"tagger,parser,ner"`.                                                                                                                                                         |
+| `--optimize`, `-o` | option     | `"efficiency"` or `"accuracy"`. Whether to optimize for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger and slower model). This will impact the choice of architecture, pretrained weights and related hyperparameters. Defaults to `"efficiency"`. |
+| `--cpu`, `-C`      | flag       | Whether the model needs to run on CPU. This will impact the choice of architecture, pretrained weights and related hyperparameters.                                                                                                                                                                               |
+| `--help`, `-h`     | flag       | Show help message and available arguments.                                                                                                                                                                                                                                                                        |
+| **CREATES**        | file       | The config file for training.                                                                                                                                                                                                                                                                                     |
+
+### init fill-config {#init-fill-config new="3"}
+
+Auto-fill a partial [`config.cfg` file](/usage/training#config) file with **all
+default values**, e.g. a config generated with the
+[quickstart widget](/usage/training#quickstart). Config files used for training
+should always be complete and not contain any hidden defaults or missing values,
+so this command helps you create your final training config. In order to find
+the available settings and defaults, all functions referenced in the config will
+be created, and their signatures are used to find the defaults. If your config
+contains a problem that can't be resolved automatically, spaCy will show you a
+validation error with more details.
+
+> ```bash
+> ### Example {wrap="true"}
+> $ python -m spacy init fill-config base.cfg config.cfg
+> ```
+
+```bash
+$ python -m spacy init fill-config [base_path] [output_file] [--diff]
+```
+
+| Argument       | Type       | Description                                                                                                   |
+| -------------- | ---------- | ------------------------------------------------------------------------------------------------------------- |
+| `base_path`    | positional | Path to base config to fill, e.g. generated by the [quickstart widget](/usage/training#quickstart).           |
+| `output_file`  | positional | Path to output `.cfg` file. If not set, the config is written to stdout so you can pipe it forward to a file. |
+| `--diff`, `-D` | flag       | Print a visual diff highlighting the changes.                                                                 |
+| `--help`, `-h` | flag       | Show help message and available arguments.                                                                    |
+| **CREATES**    | file       | Complete and auto-filled config file for training.                                                            |
 
 ### init model {#init-model new="2"}
 
@@ -166,6 +191,7 @@ $ python -m spacy init model [lang] [output_dir] [--jsonl-loc] [--vectors-loc]
 | `--truncate-vectors`, `-t` <Tag variant="new">2.3</Tag> | option     | Number of vectors to truncate to when reading in vectors file. Defaults to `0` for no truncation.                                                                                                                                                      |
 | `--prune-vectors`, `-V`                                 | option     | Number of vectors to prune the vocabulary to. Defaults to `-1` for no pruning.                                                                                                                                                                         |
 | `--vectors-name`, `-vn`                                 | option     | Name to assign to the word vectors in the `meta.json`, e.g. `en_core_web_md.vectors`.                                                                                                                                                                  |
+| `--help`, `-h`                                          | flag       | Show help message and available arguments.                                                                                                                                                                                                             |
 | **CREATES**                                             | model      | A spaCy model containing the vocab and vectors.                                                                                                                                                                                                        |
 
 ## Convert {#convert}
@@ -234,34 +260,33 @@ $ python -m spacy debug config [config_path] [--code_path] [--output] [--auto_fi
 
 <Accordion title="Example output" spaced>
 
-<!-- TODO: update examples with validation error of final config -->
-
 ```
 ✘ Config validation error
 
-training -> use_gpu              field required
-training -> omit_extra_lookups   field required
-training -> batch_by             field required
-training -> raw_text             field required
-training -> tag_map              field required
-training -> evaluation_batch_size   extra fields not permitted
-training -> vectors              extra fields not permitted
-training -> width                extra fields not permitted
+training -> dropout     field required
+training -> optimizer   field required
+training -> optimize    extra fields not permitted
 
-{'gold_preproc': False, 'max_length': 3000, 'limit': 0, 'orth_variant_level': 0.0, 'dropout': 0.1, 'patience': 6000, 'max_epochs': 0, 'max_steps': 100000, 'eval_frequency': 400, 'seed': 0, 'accumulate_gradient': 4, 'width': 768, 'use_pytorch_for_gpu_memory': True, 'scores': ['speed', 'tags_acc', 'uas', 'las', 'ents_f'], 'score_weights': {'las': 0.4, 'ents_f': 0.4, 'tags_acc': 0.2}, 'init_tok2vec': None, 'vectors': None, 'discard_oversize': True, 'evaluation_batch_size': 16, 'batch_size': {'@schedules': 'compounding.v1', 'start': 800, 'stop': 800, 'compound': 1.001}, 'optimizer': {'@optimizers': 'Adam.v1', 'beta1': 0.9, 'beta2': 0.999, 'L2_is_weight_decay': True, 'L2': 0.01, 'grad_clip': 1.0, 'use_averages': False, 'eps': 1e-08, 'learn_rate': {'@schedules': 'warmup_linear.v1', 'warmup_steps': 250, 'total_steps': 20000, 'initial_rate': 5e-05}}}
+{'vectors': 'en_vectors_web_lg', 'seed': 0, 'accumulate_gradient': 1, 'init_tok2vec': None, 'raw_text': None, 'patience': 1600, 'max_epochs': 0, 'max_steps': 20000, 'eval_frequency': 200, 'frozen_components': [], 'optimize': None, 'batcher': {'@batchers': 'batch_by_words.v1', 'discard_oversize': False, 'tolerance': 0.2, 'get_length': None, 'size': {'@schedules': 'compounding.v1', 'start': 100, 'stop': 1000, 'compound': 1.001, 't': 0.0}}, 'dev_corpus': {'@readers': 'spacy.Corpus.v1', 'path': '', 'max_length': 0, 'gold_preproc': False, 'limit': 0}, 'score_weights': {'tag_acc': 0.5, 'dep_uas': 0.25, 'dep_las': 0.25, 'sents_f': 0.0}, 'train_corpus': {'@readers': 'spacy.Corpus.v1', 'path': '', 'max_length': 0, 'gold_preproc': False, 'limit': 0}}
+
+If your config contains missing values, you can run the 'init fill-config'
+command to fill in all the defaults, if possible:
+
+python -m spacy init fill-config tmp/starter-config_invalid.cfg --base tmp/starter-config_invalid.cfg
 ```
 
 </Accordion>
 
-| Argument              | Type       | Default | Description                                                                                                                                                          |
-| --------------------- | ---------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `config_path`         | positional | -       | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters.                                                                |
-| `--code_path`, `-c`   | option     | `None`  | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-models) for new architectures.                 |
-| `--auto_fill`, `-F`   | option     | `False` | Whether or not to auto-fill the config with built-in defaults if possible. If `False`, the provided config needs to be complete.                                     |
-| `--output_path`, `-o` | option     | `None`  | Output path where the filled config can be stored. Use '-' for standard output.                                                                                      |
-| `--diff`, `-D`        | option     | `False` | Show a visual diff if config was auto-filled.                                                                                                                        |
-| `--help`, `-h`        | flag       | `False` | Show help message and available arguments.                                                                                                                           |
-| overrides             |            | `None`  | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. |
+| Argument              | Type          | Default                                                                                                                                                              | Description |
+| --------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| `config_path`         | positional    | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters.                                                                |
+| `--code_path`, `-c`   | option        | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-models) for new architectures.                 |
+| `--auto_fill`, `-F`   | option        | Whether or not to auto-fill the config with built-in defaults if possible. If `False`, the provided config needs to be complete.                                     |
+| `--output_path`, `-o` | option        | Output path where the filled config can be stored. Use '-' for standard output.                                                                                      |
+| `--diff`, `-D`        | option        | `Show a visual diff if config was auto-filled.                                                                                                                       |
+| `--help`, `-h`        | flag          | Show help message and available arguments.                                                                                                                           |
+| overrides             | option / flag | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. |
+| **PRINTS**            | stdout        | Config validation errors, if available.                                                                                                                              |
 
 ### debug data {#debug-data}
 
@@ -428,15 +453,16 @@ will not be available.
 
 </Accordion>
 
-| Argument                   | Type       | Description                                                                                                                                                          |
-| -------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `config_path`              | positional | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters.                                                                |
-| `--code`, `-c`             | option     | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-models) for new architectures.                 |
-| `--ignore-warnings`, `-IW` | flag       | Ignore warnings, only show stats and errors.                                                                                                                         |
-| `--verbose`, `-V`          | flag       | Print additional information and explanations.                                                                                                                       |
-| `--no-format`, `-NF`       | flag       | Don't pretty-print the results. Use this if you want to write to a file.                                                                                             |
-| `--help`, `-h`             | flag       | Show help message and available arguments.                                                                                                                           |
-| overrides                  |            | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. |
+| Argument                   | Type          | Description                                                                                                                                                          |
+| -------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `config_path`              | positional    | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters.                                                                |
+| `--code`, `-c`             | option        | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-models) for new architectures.                 |
+| `--ignore-warnings`, `-IW` | flag          | Ignore warnings, only show stats and errors.                                                                                                                         |
+| `--verbose`, `-V`          | flag          | Print additional information and explanations.                                                                                                                       |
+| `--no-format`, `-NF`       | flag          | Don't pretty-print the results. Use this if you want to write to a file.                                                                                             |
+| `--help`, `-h`             | flag          | Show help message and available arguments.                                                                                                                           |
+| overrides                  | option / flag | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. |
+| **PRINTS**                 | stdout        | Debugging information.                                                                                                                                               |
 
 ### debug profile {#debug-profile}
 
@@ -456,11 +482,13 @@ The `profile` command is now available as a subcommand of `spacy debug`.
 $ python -m spacy debug profile [model] [inputs] [--n-texts]
 ```
 
-| Argument          | Type                                                              | Description                                             |
-| ----------------- | ----------------------------------------------------------------- | ------------------------------------------------------- |
-| `model`           | positional                                                        | A loadable spaCy model.                                 |
-| `inputs`          | positional                                                        | Optional path to input file, or `-` for standard input. |
-| `--n-texts`, `-n` | Maximum number of texts to use if available. Defaults to `10000`. |
+| Argument          | Type       | Description                                                       |
+| ----------------- | ---------- | ----------------------------------------------------------------- |
+| `model`           | positional | A loadable spaCy model.                                           |
+| `inputs`          | positional | Optional path to input file, or `-` for standard input.           |
+| `--n-texts`, `-n` | option     | Maximum number of texts to use if available. Defaults to `10000`. |
+| `--help`, `-h`    | flag       | Show help message and available arguments.                        |
+| **PRINTS**        | stdout     | Profiling information for the model.                              |
 
 ### debug model {#debug-model}
 
@@ -568,20 +596,21 @@ $ python -m spacy debug model ./config.cfg tagger -l "5,15" -DIM -PAR -P0 -P1 -P
 
 </Accordion>
 
-| Argument                | Type       | Description                                                                                           | Default |
-| ----------------------- | ---------- | ----------------------------------------------------------------------------------------------------- | ------- |
-| `config_path`           | positional | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. |         |
-| `component`             | positional | Name of the pipeline component of which the model should be analyzed.                                 |         |
-| `--layers`, `-l`        | option     | Comma-separated names of layer IDs to print.                                                          |         |
-| `--dimensions`, `-DIM`  | option     | Show dimensions of each layer.                                                                        | `False` |
-| `--parameters`, `-PAR`  | option     | Show parameters of each layer.                                                                        | `False` |
-| `--gradients`, `-GRAD`  | option     | Show gradients of each layer.                                                                         | `False` |
-| `--attributes`, `-ATTR` | option     | Show attributes of each layer.                                                                        | `False` |
-| `--print-step0`, `-P0`  | option     | Print model before training.                                                                          | `False` |
-| `--print-step1`, `-P1`  | option     | Print model after initialization.                                                                     | `False` |
-| `--print-step2`, `-P2`  | option     | Print model after training.                                                                           | `False` |
-| `--print-step3`, `-P3`  | option     | Print final predictions.                                                                              | `False` |
-| `--help`, `-h`          | flag       | Show help message and available arguments.                                                            |         |
+| Argument                | Type       | Description                                                                                           |
+| ----------------------- | ---------- | ----------------------------------------------------------------------------------------------------- |
+| `config_path`           | positional | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. |  |
+| `component`             | positional | Name of the pipeline component of which the model should be analyzed.                                 |   |
+| `--layers`, `-l`        | option     | Comma-separated names of layer IDs to print.                                                          |  |
+| `--dimensions`, `-DIM`  | option     | Show dimensions of each layer.                                                                        |
+| `--parameters`, `-PAR`  | option     | Show parameters of each layer.                                                                        |
+| `--gradients`, `-GRAD`  | option     | Show gradients of each layer.                                                                         |
+| `--attributes`, `-ATTR` | option     | Show attributes of each layer.                                                                        |
+| `--print-step0`, `-P0`  | option     | Print model before training.                                                                          |
+| `--print-step1`, `-P1`  | option     | Print model after initialization.                                                                     |
+| `--print-step2`, `-P2`  | option     | Print model after training.                                                                           |
+| `--print-step3`, `-P3`  | option     | Print final predictions.                                                                              |
+| `--help`, `-h`          | flag       | Show help message and available arguments.                                                            |
+| **PRINTS**              | stdout     | Debugging information.                                                                                |
 
 ## Train {#train}
 
@@ -611,15 +640,15 @@ in the section `[paths]`.
 $ python -m spacy train [config_path] [--output] [--code] [--verbose] [overrides]
 ```
 
-| Argument          | Type       | Description                                                                                                                                                          |
-| ----------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `config_path`     | positional | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters.                                                                |
-| `--output`, `-o`  | positional | Directory to store model in. Will be created if it doesn't exist.                                                                                                    |
-| `--code`, `-c`    | option     | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-models) for new architectures.                 |
-| `--verbose`, `-V` | flag       | Show more detailed messages during training.                                                                                                                         |
-| `--help`, `-h`    | flag       | Show help message and available arguments.                                                                                                                           |
-| overrides         |            | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. |
-| **CREATES**       | model      | The final model and the best model.                                                                                                                                  |
+| Argument          | Type          | Description                                                                                                                                                          |
+| ----------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `config_path`     | positional    | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters.                                                                |
+| `--output`, `-o`  | positional    | Directory to store model in. Will be created if it doesn't exist.                                                                                                    |
+| `--code`, `-c`    | option        | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-models) for new architectures.                 |
+| `--verbose`, `-V` | flag          | Show more detailed messages during training.                                                                                                                         |
+| `--help`, `-h`    | flag          | Show help message and available arguments.                                                                                                                           |
+| overrides         | option / flag | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. |
+| **CREATES**       | model         | The final model and the best model.                                                                                                                                  |
 
 ## Pretrain {#pretrain new="2.1" tag="experimental"}
 
@@ -649,17 +678,17 @@ $ python -m spacy pretrain [texts_loc] [output_dir] [config_path]
 [--code] [--resume-path] [--epoch-resume] [overrides]
 ```
 
-| Argument                | Type       | Description                                                                                                                                                                  |
-| ----------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `texts_loc`             | positional | Path to JSONL file with raw texts to learn from, with text provided as the key `"text"` or tokens as the key `"tokens"`. [See here](/api/data-formats#pretrain) for details. |
-| `output_dir`            | positional | Directory to write models to on each epoch.                                                                                                                                  |
-| `config_path`           | positional | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters.                                                                        |
-| `--code`, `-c`          | option     | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-models) for new architectures.                         |
-| `--resume-path`, `-r`   | option     | Path to pretrained weights from which to resume pretraining.                                                                                                                 |
-| `--epoch-resume`, `-er` | option     | The epoch to resume counting from when using `--resume-path`. Prevents unintended overwriting of existing weight files.                                                      |
-| `--help`, `-h`          | flag       | Show help message and available arguments.                                                                                                                                   |
-| overrides               |            | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--training.use_gpu 1`.                |
-| **CREATES**             | weights    | The pretrained weights that can be used to initialize `spacy train`.                                                                                                         |
+| Argument                | Type          | Description                                                                                                                                                                  |
+| ----------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `texts_loc`             | positional    | Path to JSONL file with raw texts to learn from, with text provided as the key `"text"` or tokens as the key `"tokens"`. [See here](/api/data-formats#pretrain) for details. |
+| `output_dir`            | positional    | Directory to write models to on each epoch.                                                                                                                                  |
+| `config_path`           | positional    | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters.                                                                        |
+| `--code`, `-c`          | option        | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-models) for new architectures.                         |
+| `--resume-path`, `-r`   | option        | Path to pretrained weights from which to resume pretraining.                                                                                                                 |
+| `--epoch-resume`, `-er` | option        | The epoch to resume counting from when using `--resume-path`. Prevents unintended overwriting of existing weight files.                                                      |
+| `--help`, `-h`          | flag          | Show help message and available arguments.                                                                                                                                   |
+| overrides               | option / flag | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--training.use_gpu 1`.                |
+| **CREATES**             | weights       | The pretrained weights that can be used to initialize `spacy train`.                                                                                                         |
 
 ## Evaluate {#evaluate new="2"}
 
@@ -687,6 +716,7 @@ $ python -m spacy evaluate [model] [data_path] [--output] [--gold-preproc]
 | `--gpu-id`, `-g`          | option               | GPU to use, if any. Defaults to `-1` for CPU.                                                                                                            |
 | `--displacy-path`, `-dp`  | option               | Directory to output rendered parses as HTML. If not set, no visualizations will be generated.                                                            |
 | `--displacy-limit`, `-dl` | option               | Number of parses to generate per file. Defaults to `25`. Keep in mind that a significantly higher number might cause the `.html` files to render slowly. |
+| `--help`, `-h`            | flag                 | Show help message and available arguments.                                                                                                               |
 | **CREATES**               | `stdout`, JSON, HTML | Training results and optional metrics and visualizations.                                                                                                |
 
 ## Package {#package}
@@ -826,6 +856,7 @@ $ python -m spacy project run [subcommand] [project_dir] [--force] [--dry]
 | `--force`, `-F` | flag       | Force re-running steps, even if nothing changed.                  |
 | `--dry`, `-D`   | flag       |  Perform a dry run and don't execute scripts.                     |
 | `--help`, `-h`  | flag       | Show help message and available arguments.                        |
+| **EXECUTES**    | script     | The command defined in the `project.yml`.                         |
 
 ### project dvc {#project-dvc}
 
@@ -859,10 +890,11 @@ $ python -m spacy project dvc [project_dir] [workflow] [--force] [--verbose]
 > python -m spacy project dvc all
 > ```
 
-| Argument          | Type       | Description                                                                       |
-| ----------------- | ---------- | --------------------------------------------------------------------------------- |
-| `project_dir`     | positional | Path to project directory. Defaults to current working directory.                 |
-| `workflow`        | positional | Name of workflow defined in `project.yml`. Defaults to first workflow if not set. |
-| `--force`, `-F`   | flag       | Force-updating config file.                                                       |
-| `--verbose`, `-V` | flag       |  Print more output generated by DVC.                                              |
-| `--help`, `-h`    | flag       | Show help message and available arguments.                                        |
+| Argument          | Type       | Description                                                                                   |
+| ----------------- | ---------- | --------------------------------------------------------------------------------------------- |
+| `project_dir`     | positional | Path to project directory. Defaults to current working directory.                             |
+| `workflow`        | positional | Name of workflow defined in `project.yml`. Defaults to first workflow if not set.             |
+| `--force`, `-F`   | flag       | Force-updating config file.                                                                   |
+| `--verbose`, `-V` | flag       |  Print more output generated by DVC.                                                          |
+| `--help`, `-h`    | flag       | Show help message and available arguments.                                                    |
+| **CREATES**       | file       | A `dvc.yaml` file in the project directory, based on the steps defined in the given workflow. |

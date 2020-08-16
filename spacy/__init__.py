@@ -14,7 +14,7 @@ from . import pipeline  # noqa: F401
 from .cli.info import info  # noqa: F401
 from .glossary import explain  # noqa: F401
 from .about import __version__  # noqa: F401
-from .util import registry  # noqa: F401
+from .util import registry, logger  # noqa: F401
 
 from .errors import Errors
 from .language import Language

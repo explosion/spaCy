@@ -4,7 +4,7 @@ import spacy
 from spacy.lang.en import English
 from spacy.lang.de import German
 from spacy.language import Language
-from spacy.util import registry, deep_merge_configs, load_model_from_config
+from spacy.util import registry, load_model_from_config
 from spacy.ml.models import build_Tok2Vec_model, build_tb_parser_model
 from spacy.ml.models import MultiHashEmbed, MaxoutWindowEncoder
 
@@ -194,37 +194,6 @@ def test_serialize_parser():
         assert upper.get_dim("nI") == 66
 
 
-def test_deep_merge_configs():
-    config = {"a": "hello", "b": {"c": "d"}}
-    defaults = {"a": "world", "b": {"c": "e", "f": "g"}}
-    merged = deep_merge_configs(config, defaults)
-    assert len(merged) == 2
-    assert merged["a"] == "hello"
-    assert merged["b"] == {"c": "d", "f": "g"}
-    config = {"a": "hello", "b": {"@test": "x", "foo": 1}}
-    defaults = {"a": "world", "b": {"@test": "x", "foo": 100, "bar": 2}, "c": 100}
-    merged = deep_merge_configs(config, defaults)
-    assert len(merged) == 3
-    assert merged["a"] == "hello"
-    assert merged["b"] == {"@test": "x", "foo": 1, "bar": 2}
-    assert merged["c"] == 100
-    config = {"a": "hello", "b": {"@test": "x", "foo": 1}, "c": 100}
-    defaults = {"a": "world", "b": {"@test": "y", "foo": 100, "bar": 2}}
-    merged = deep_merge_configs(config, defaults)
-    assert len(merged) == 3
-    assert merged["a"] == "hello"
-    assert merged["b"] == {"@test": "x", "foo": 1}
-    assert merged["c"] == 100
-    # Test that leaving out the factory just adds to existing
-    config = {"a": "hello", "b": {"foo": 1}, "c": 100}
-    defaults = {"a": "world", "b": {"@test": "y", "foo": 100, "bar": 2}}
-    merged = deep_merge_configs(config, defaults)
-    assert len(merged) == 3
-    assert merged["a"] == "hello"
-    assert merged["b"] == {"@test": "y", "foo": 1, "bar": 2}
-    assert merged["c"] == 100
-
-
 def test_config_nlp_roundtrip():
     """Test that a config prduced by the nlp object passes training config
     validation."""
@@ -311,3 +280,22 @@ def test_config_overrides():
         nlp = spacy.load(d)
     assert isinstance(nlp, English)
     assert nlp.pipe_names == ["tok2vec", "tagger"]
+
+
+def test_config_interpolation():
+    config = Config().from_str(nlp_config_string, interpolate=False)
+    assert config["training"]["train_corpus"]["path"] == "${paths:train}"
+    interpolated = config.interpolate()
+    assert interpolated["training"]["train_corpus"]["path"] == ""
+    nlp = English.from_config(config)
+    assert nlp.config["training"]["train_corpus"]["path"] == "${paths:train}"
+    # Ensure that variables are preserved in nlp config
+    width = "${components.tok2vec.model:width}"
+    assert config["components"]["tagger"]["model"]["tok2vec"]["width"] == width
+    assert nlp.config["components"]["tagger"]["model"]["tok2vec"]["width"] == width
+    interpolated2 = nlp.config.interpolate()
+    assert interpolated2["training"]["train_corpus"]["path"] == ""
+    assert interpolated2["components"]["tagger"]["model"]["tok2vec"]["width"] == 342
+    nlp2 = English.from_config(interpolated)
+    assert nlp2.config["training"]["train_corpus"]["path"] == ""
+    assert nlp2.config["components"]["tagger"]["model"]["tok2vec"]["width"] == 342

@@ -60,7 +60,6 @@ def evaluate(
     fix_random_seed()
     if use_gpu >= 0:
         require_gpu(use_gpu)
-    util.set_env_log(False)
     data_path = util.ensure_path(data_path)
     output_path = util.ensure_path(output)
     displacy_path = util.ensure_path(displacy_path)

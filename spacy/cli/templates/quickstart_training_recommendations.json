@@ -1,0 +1,13 @@
+{
+  "en": {
+    "word_vectors": "en_vectors_web_lg",
+    "transformer": {
+      "efficiency": { "name": "roberta-base", "size_factor": 3 },
+      "accuracy": { "name": "roberta-base", "size_factor": 3 }
+    }
+  },
+  "de": {
+    "word_vectors": null,
+    "transformer": null
+  }
+}

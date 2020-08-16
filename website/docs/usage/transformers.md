@@ -163,8 +163,9 @@ resolved, the function is created and passed into the model as an argument.
 Remember that the `config.cfg` used for training should contain **no missing
 values** and requires all settings to be defined. You don't want any hidden
 defaults creeping in and changing your results! spaCy will tell you if settings
-are missing, and you can run [`spacy init config`](/api/cli#init-config) with to
-automatically fill in all defaults.
+are missing, and you can run
+[`spacy init fill-config`](/api/cli#init-fill-config) to automatically fill in
+all defaults.
 
 </Infobox>
 

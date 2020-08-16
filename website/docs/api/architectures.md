@@ -274,7 +274,7 @@ architectures into your training config.
 | `get_spans`        | `Callable`       | Function that takes a batch of [`Doc`](/api/doc) object and returns lists of [`Span`](/api) objects to process by the transformer. [See here](/api/transformer#span_getters) for built-in options and examples. |
 | `tokenizer_config` | `Dict[str, Any]` | Tokenizer settings passed to [`transformers.AutoTokenizer`](https://huggingface.co/transformers/model_doc/auto.html#transformers.AutoTokenizer).                                                                |
 
-### spacy-transformers.Tok2VecListener.v1 {#Tok2VecListener}
+### spacy-transformers.Tok2VecListener.v1 {#transformers-Tok2VecListener}
 
 > #### Example Config
 >

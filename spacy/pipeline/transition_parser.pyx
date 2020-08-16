@@ -8,22 +8,21 @@ from libc.string cimport memset
 from libc.stdlib cimport calloc, free
 
 import srsly
+from thinc.api import set_dropout_rate
+import numpy.random
+import numpy
+import warnings
 
 from ._parser_internals.stateclass cimport StateClass
 from ..ml.parser_model cimport alloc_activations, free_activations
 from ..ml.parser_model cimport predict_states, arg_max_if_valid
 from ..ml.parser_model cimport WeightsC, ActivationsC, SizesC, cpu_log_loss
 from ..ml.parser_model cimport get_c_weights, get_c_sizes
-
 from ..tokens.doc cimport Doc
+
+from ..gold import validate_examples
 from ..errors import Errors, Warnings
 from .. import util
-from ..util import create_default_optimizer
-
-from thinc.api import set_dropout_rate
-import numpy.random
-import numpy
-import warnings
 
 
 cdef class Parser(Pipe):
@@ -266,6 +265,7 @@ cdef class Parser(Pipe):
         if losses is None:
             losses = {}
         losses.setdefault(self.name, 0.)
+        validate_examples(examples, "Parser.update")
         for multitask in self._multitasks:
             multitask.update(examples, drop=drop, sgd=sgd)
         n_examples = len([eg for eg in examples if self.moves.has_gold(eg)])
@@ -329,7 +329,7 @@ cdef class Parser(Pipe):
         if self._rehearsal_model is None:
             return None
         losses.setdefault(self.name, 0.)
-
+        validate_examples(examples, "Parser.rehearse")
         docs = [eg.predicted for eg in examples]
         states = self.moves.init_batch(docs)
         # This is pretty dirty, but the NER can resize itself in init_batch,
@@ -398,21 +398,18 @@ cdef class Parser(Pipe):
             losses[self.name] += (d_scores**2).sum()
         return d_scores
 
-    def create_optimizer(self):
-        return create_default_optimizer()
-
     def set_output(self, nO):
         self.model.attrs["resize_output"](self.model, nO)
 
     def begin_training(self, get_examples, pipeline=None, sgd=None, **kwargs):
+        if not hasattr(get_examples, "__call__"):
+            err = Errors.E930.format(name="DependencyParser/EntityRecognizer", obj=type(get_examples))
+            raise ValueError(err)
         self.cfg.update(kwargs)
         lexeme_norms = self.vocab.lookups.get_table("lexeme_norm", {})
         if len(lexeme_norms) == 0 and self.vocab.lang in util.LEXEME_NORM_LANGS:
             langs = ", ".join(util.LEXEME_NORM_LANGS)
-            warnings.warn(Warnings.W033.format(model="parser or NER", langs=langs))
-        if not hasattr(get_examples, '__call__'):
-            gold_tuples = get_examples
-            get_examples = lambda: gold_tuples
+            util.logger.debug(Warnings.W033.format(model="parser or NER", langs=langs))
         actions = self.moves.get_actions(
             examples=get_examples(),
             min_freq=self.cfg['min_action_freq'],

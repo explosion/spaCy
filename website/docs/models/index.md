@@ -45,9 +45,9 @@ three components:
 2. **Genre:** Type of text the model is trained on, e.g. `web` or `news`.
 3. **Size:** Model size indicator, `sm`, `md` or `lg`.
 
-For example, `en_core_web_sm` is a small English model trained on written web
-text (blogs, news, comments), that includes vocabulary, vectors, syntax and
-entities.
+For example, [`en_core_web_sm`](/models/en#en_core_web_sm) is a small English
+model trained on written web text (blogs, news, comments), that includes
+vocabulary, vectors, syntax and entities.
 
 ### Model versioning {#model-versioning}
 

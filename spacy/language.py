@@ -5,7 +5,6 @@ import random
 import itertools
 import weakref
 import functools
-from collections import Iterable as IterableInstance
 from contextlib import contextmanager
 from copy import copy, deepcopy
 from pathlib import Path
@@ -19,10 +18,10 @@ from timeit import default_timer as timer
 from .tokens.underscore import Underscore
 from .vocab import Vocab, create_vocab
 from .pipe_analysis import validate_attrs, analyze_pipes, print_pipe_analysis
-from .gold import Example
+from .gold import Example, validate_examples
 from .scorer import Scorer
 from .util import create_default_optimizer, registry
-from .util import SimpleFrozenDict, combine_score_weights
+from .util import SimpleFrozenDict, combine_score_weights, CONFIG_SECTION_ORDER
 from .lang.tokenizer_exceptions import URL_MATCH, BASE_EXCEPTIONS
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
 from .lang.punctuation import TOKENIZER_INFIXES
@@ -37,7 +36,7 @@ from . import about
 
 # This is the base config will all settings (training etc.)
 DEFAULT_CONFIG_PATH = Path(__file__).parent / "default_config.cfg"
-DEFAULT_CONFIG = Config().from_disk(DEFAULT_CONFIG_PATH)
+DEFAULT_CONFIG = util.load_config(DEFAULT_CONFIG_PATH)
 
 
 class BaseDefaults:
@@ -46,7 +45,7 @@ class BaseDefaults:
     Language.Defaults.
     """
 
-    config: Config = Config()
+    config: Config = Config(section_order=CONFIG_SECTION_ORDER)
     tokenizer_exceptions: Dict[str, List[dict]] = BASE_EXCEPTIONS
     prefixes: Optional[List[Union[str, Pattern]]] = TOKENIZER_PREFIXES
     suffixes: Optional[List[Union[str, Pattern]]] = TOKENIZER_SUFFIXES
@@ -135,7 +134,7 @@ class Language:
         # of the rest.
         util.registry._entry_point_factories.get_all()
 
-        self._config = util.deep_merge_configs(self.default_config, DEFAULT_CONFIG)
+        self._config = DEFAULT_CONFIG.merge(self.default_config)
         self._meta = dict(meta)
         self._path = None
         self._optimizer = None
@@ -168,9 +167,7 @@ class Language:
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
-        cls.default_config = util.deep_merge_configs(
-            cls.Defaults.config, DEFAULT_CONFIG
-        )
+        cls.default_config = DEFAULT_CONFIG.merge(cls.Defaults.config)
         cls.default_config["nlp"]["lang"] = cls.lang
 
     @property
@@ -533,6 +530,7 @@ class Language:
         name: Optional[str] = None,
         *,
         config: Optional[Dict[str, Any]] = SimpleFrozenDict(),
+        raw_config: Optional[Config] = None,
         validate: bool = True,
     ) -> Callable[[Doc], Doc]:
         """Create a pipeline component. Mostly used internally. To create and
@@ -543,6 +541,7 @@ class Language:
             Defaults to factory name if not set.
         config (Optional[Dict[str, Any]]): Config parameters to use for this
             component. Will be merged with default config, if available.
+        raw_config (Optional[Config]): Internals: the non-interpolated config.
         validate (bool): Whether to validate the component config against the
             arguments and types expected by the factory.
         RETURNS (Callable[[Doc], Doc]): The pipeline component.
@@ -569,7 +568,7 @@ class Language:
         # This is unideal, but the alternative would mean you always need to
         # specify the full config settings, which is not really viable.
         if pipe_meta.default_config:
-            config = util.deep_merge_configs(config, pipe_meta.default_config)
+            config = Config(pipe_meta.default_config).merge(config)
         # We need to create a top-level key because Thinc doesn't allow resolving
         # top-level references to registered functions. Also gives nicer errors.
         # The name allows components to know their pipe name and use it in the
@@ -583,12 +582,14 @@ class Language:
         cfg = {factory_name: config}
         # We're calling the internal _fill here to avoid constructing the
         # registered functions twice
-        # TODO: customize validation to make it more readable / relate it to
-        # pipeline component and why it failed, explain default config
         resolved, filled = registry.resolve(cfg, validate=validate)
-        filled = filled[factory_name]
+        filled = Config(filled[factory_name])
         filled["factory"] = factory_name
         filled.pop("@factories", None)
+        # Merge the final filled config with the raw config (including non-
+        # interpolated variables)
+        if raw_config:
+            filled = filled.merge(raw_config)
         self._pipe_configs[name] = filled
         return resolved[factory_name]
 
@@ -614,7 +615,10 @@ class Language:
                 )
             )
         pipe = source.get_pipe(source_name)
-        pipe_config = util.copy_config(source.config["components"][source_name])
+        # Make sure the source config is interpolated so we don't end up with
+        # orphaned variables in our final config
+        source_config = source.config.interpolate()
+        pipe_config = util.copy_config(source_config["components"][source_name])
         self._pipe_configs[name] = pipe_config
         return pipe, pipe_config["factory"]
 
@@ -629,6 +633,7 @@ class Language:
         last: Optional[bool] = None,
         source: Optional["Language"] = None,
         config: Optional[Dict[str, Any]] = SimpleFrozenDict(),
+        raw_config: Optional[Config] = None,
         validate: bool = True,
     ) -> Callable[[Doc], Doc]:
         """Add a component to the processing pipeline. Valid components are
@@ -650,6 +655,7 @@ class Language:
             component from.
         config (Optional[Dict[str, Any]]): Config parameters to use for this
             component. Will be merged with default config, if available.
+        raw_config (Optional[Config]): Internals: the non-interpolated config.
         validate (bool): Whether to validate the component config against the
             arguments and types expected by the factory.
         RETURNS (Callable[[Doc], Doc]): The pipeline component.
@@ -679,7 +685,11 @@ class Language:
                     lang_code=self.lang,
                 )
             pipe_component = self.create_pipe(
-                factory_name, name=name, config=config, validate=validate,
+                factory_name,
+                name=name,
+                config=config,
+                raw_config=raw_config,
+                validate=validate,
             )
         pipe_index = self._get_pipe_index(before, after, first, last)
         self._pipe_meta[name] = self.get_factory_meta(factory_name)
@@ -935,17 +945,7 @@ class Language:
             losses = {}
         if len(examples) == 0:
             return losses
-        if not isinstance(examples, IterableInstance):
-            raise TypeError(
-                Errors.E978.format(
-                    name="language", method="update", types=type(examples)
-                )
-            )
-        wrong_types = set([type(eg) for eg in examples if not isinstance(eg, Example)])
-        if wrong_types:
-            raise TypeError(
-                Errors.E978.format(name="language", method="update", types=wrong_types)
-            )
+        validate_examples(examples, "Language.update")
         if sgd is None:
             if self._optimizer is None:
                 self._optimizer = create_default_optimizer()
@@ -962,7 +962,11 @@ class Language:
             proc.update(examples, sgd=None, losses=losses, **component_cfg[name])
         if sgd not in (None, False):
             for name, proc in self.pipeline:
-                if name not in exclude and hasattr(proc, "model"):
+                if (
+                    name not in exclude
+                    and hasattr(proc, "model")
+                    and proc.model not in (True, False, None)
+                ):
                     proc.model.finish_update(sgd)
         return losses
 
@@ -999,19 +1003,7 @@ class Language:
         """
         if len(examples) == 0:
             return
-        if not isinstance(examples, IterableInstance):
-            raise TypeError(
-                Errors.E978.format(
-                    name="language", method="rehearse", types=type(examples)
-                )
-            )
-        wrong_types = set([type(eg) for eg in examples if not isinstance(eg, Example)])
-        if wrong_types:
-            raise TypeError(
-                Errors.E978.format(
-                    name="language", method="rehearse", types=wrong_types
-                )
-            )
+        validate_examples(examples, "Language.rehearse")
         if sgd is None:
             if self._optimizer is None:
                 self._optimizer = create_default_optimizer()
@@ -1060,7 +1052,15 @@ class Language:
         if get_examples is None:
             get_examples = lambda: []
         else:  # Populate vocab
+            if not hasattr(get_examples, "__call__"):
+                err = Errors.E930.format(name="Language", obj=type(get_examples))
+                raise ValueError(err)
             for example in get_examples():
+                if not isinstance(example, Example):
+                    err = Errors.E978.format(
+                        name="Language.begin_training", types=type(example)
+                    )
+                    raise ValueError(err)
                 for word in [t.text for t in example.reference]:
                     _ = self.vocab[word]  # noqa: F841
         if device >= 0:  # TODO: do we need this here?
@@ -1133,17 +1133,7 @@ class Language:
 
         DOCS: https://spacy.io/api/language#evaluate
         """
-        if not isinstance(examples, IterableInstance):
-            err = Errors.E978.format(
-                name="language", method="evaluate", types=type(examples)
-            )
-            raise TypeError(err)
-        wrong_types = set([type(eg) for eg in examples if not isinstance(eg, Example)])
-        if wrong_types:
-            err = Errors.E978.format(
-                name="language", method="evaluate", types=wrong_types
-            )
-            raise TypeError(err)
+        validate_examples(examples, "Language.evaluate")
         if component_cfg is None:
             component_cfg = {}
         if scorer_cfg is None:
@@ -1400,7 +1390,9 @@ class Language:
         DOCS: https://spacy.io/api/language#from_config
         """
         if auto_fill:
-            config = util.deep_merge_configs(config, cls.default_config)
+            config = Config(
+                cls.default_config, section_order=CONFIG_SECTION_ORDER
+            ).merge(config)
         if "nlp" not in config:
             raise ValueError(Errors.E985.format(config=config))
         config_lang = config["nlp"]["lang"]
@@ -1438,16 +1430,20 @@ class Language:
                 or lang_cls is not cls
             ):
                 raise ValueError(Errors.E943.format(value=type(lang_cls)))
+        # Note that we don't load vectors here, instead they get loaded explicitly
+        # inside stuff like the spacy train function. If we loaded them here,
+        # then we would load them twice at runtime: once when we make from config,
+        # and then again when we load from disk.
         nlp = lang_cls(vocab=vocab, create_tokenizer=create_tokenizer)
         if after_creation is not None:
             nlp = after_creation(nlp)
             if not isinstance(nlp, cls):
                 raise ValueError(Errors.E942.format(name="creation", value=type(nlp)))
-        # Note that we don't load vectors here, instead they get loaded explicitly
-        # inside stuff like the spacy train function. If we loaded them here,
-        # then we would load them twice at runtime: once when we make from config,
-        # and then again when we load from disk.
-        pipeline = config.get("components", {})
+        # To create the components we need to use the final interpolated config
+        # so all values are available (if component configs use variables).
+        # Later we replace the component config with the raw config again.
+        interpolated = filled.interpolate() if not filled.is_interpolated else filled
+        pipeline = interpolated.get("components", {})
         # If components are loaded from a source (existing models), we cache
         # them here so they're only loaded once
         source_nlps = {}
@@ -1456,6 +1452,7 @@ class Language:
                 opts = ", ".join(pipeline.keys())
                 raise ValueError(Errors.E956.format(name=pipe_name, opts=opts))
             pipe_cfg = util.copy_config(pipeline[pipe_name])
+            raw_config = Config(filled["components"][pipe_name])
             if pipe_name not in disable:
                 if "factory" not in pipe_cfg and "source" not in pipe_cfg:
                     err = Errors.E984.format(name=pipe_name, config=pipe_cfg)
@@ -1465,7 +1462,11 @@ class Language:
                     # The pipe name (key in the config) here is the unique name
                     # of the component, not necessarily the factory
                     nlp.add_pipe(
-                        factory, name=pipe_name, config=pipe_cfg, validate=validate,
+                        factory,
+                        name=pipe_name,
+                        config=pipe_cfg,
+                        validate=validate,
+                        raw_config=raw_config,
                     )
                 else:
                     model = pipe_cfg["source"]
@@ -1663,7 +1664,7 @@ def _fix_pretrained_vectors_name(nlp: Language) -> None:
     else:
         raise ValueError(Errors.E092)
     for name, proc in nlp.pipeline:
-        if not hasattr(proc, "cfg"):
+        if not hasattr(proc, "cfg") or not isinstance(proc.cfg, dict):
             continue
         proc.cfg.setdefault("deprecation_fixes", {})
         proc.cfg["deprecation_fixes"]["vectors_name"] = nlp.vocab.vectors.name

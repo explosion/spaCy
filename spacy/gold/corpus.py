@@ -62,7 +62,7 @@ class Corpus:
             if str(path) in seen:
                 continue
             seen.add(str(path))
-            if path.parts[-1].startswith("."):
+            if path.parts and path.parts[-1].startswith("."):
                 continue
             elif path.is_dir():
                 paths.extend(path.iterdir())

@@ -41,6 +41,6 @@ Search.propTypes = {
         apiKey: PropTypes.string.isRequired,
         indexName: PropTypes.string.isRequired,
     }).isRequired,
-    id: PropTypes.string.isRequired,
-    placeholder: PropTypes.string.isRequired,
+    id: PropTypes.string,
+    placeholder: PropTypes.string,
 }

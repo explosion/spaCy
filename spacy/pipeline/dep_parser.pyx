@@ -9,6 +9,7 @@ from .functions import merge_subtokens
 from ..language import Language
 from ._parser_internals import nonproj
 from ..scorer import Scorer
+from ..gold import validate_examples
 
 
 default_model_config = """
@@ -147,6 +148,7 @@ cdef class DependencyParser(Parser):
 
         DOCS: https://spacy.io/api/dependencyparser#score
         """
+        validate_examples(examples, "DependencyParser.score")
         def dep_getter(token, attr):
             dep = getattr(token, attr)
             dep = token.vocab.strings.as_string(dep).lower()

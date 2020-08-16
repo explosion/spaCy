@@ -1,5 +1,4 @@
 from typing import Optional, List, Dict, Any
-
 from thinc.api import Model
 
 from .pipe import Pipe
@@ -9,6 +8,7 @@ from ..lookups import Lookups, load_lookups
 from ..scorer import Scorer
 from ..tokens import Doc, Token
 from ..vocab import Vocab
+from ..gold import validate_examples
 from .. import util
 
 
@@ -127,6 +127,7 @@ class Lemmatizer(Pipe):
         """
         self.vocab = vocab
         self.model = model
+        self.name = name
         self._mode = mode
         self.lookups = lookups if lookups is not None else Lookups()
         self.overwrite = overwrite
@@ -135,10 +136,10 @@ class Lemmatizer(Pipe):
         elif self.mode == "rule":
             self.lemmatize = self.rule_lemmatize
         else:
-            try:
-                self.lemmatize = getattr(self, f"{self.mode}_lemmatize")
-            except AttributeError:
+            mode_attr = f"{self.mode}_lemmatize"
+            if not hasattr(self, mode_attr):
                 raise ValueError(Errors.E1003.format(mode=mode))
+            self.lemmatize = getattr(self, mode_attr)
         self.cache = {}
 
     @property
@@ -271,6 +272,7 @@ class Lemmatizer(Pipe):
 
         DOCS: https://spacy.io/api/lemmatizer#score
         """
+        validate_examples(examples, "Lemmatizer.score")
         return Scorer.score_token_attr(examples, "lemma", **kwargs)
 
     def to_disk(self, path, *, exclude=tuple()):

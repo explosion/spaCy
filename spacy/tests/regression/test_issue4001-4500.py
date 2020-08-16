@@ -81,7 +81,6 @@ def test_issue4030():
     assert doc.cats["inoffensive"] == 0.0
 
 
-@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_issue4042():
     """Test that serialization of an EntityRuler before NER works fine."""
     nlp = English()
@@ -110,7 +109,6 @@ def test_issue4042():
         assert doc2.ents[0].label_ == "MY_ORG"
 
 
-@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_issue4042_bug2():
     """
     Test that serialization of an NER works fine when new labels were added.
@@ -242,7 +240,6 @@ def test_issue4190():
     assert result_1b == result_2
 
 
-@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_issue4267():
     """ Test that running an entity_ruler after ner gives consistent results"""
     nlp = English()
@@ -303,7 +300,7 @@ def test_issue4313():
     config = {}
     ner = nlp.create_pipe("ner", config=config)
     ner.add_label("SOME_LABEL")
-    ner.begin_training([])
+    ner.begin_training(lambda: [])
     # add a new label to the doc
     doc = nlp("What do you think about Apple ?")
     assert len(ner.labels) == 1
@@ -324,7 +321,6 @@ def test_issue4313():
                 entity_scores[(start, end, label)] += score
 
 
-@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_issue4348():
     """Test that training the tagger with empty data, doesn't throw errors"""
     nlp = English()

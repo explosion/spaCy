@@ -5,8 +5,17 @@ import classNames from 'classnames'
 import Icon from './icon'
 import classes from '../styles/infobox.module.sass'
 
-export default function Infobox({ title, emoji, id, variant = 'default', className, children }) {
+export default function Infobox({
+    title,
+    emoji,
+    id,
+    variant = 'default',
+    list = false,
+    className,
+    children,
+}) {
     const infoboxClassNames = classNames(classes.root, className, {
+        [classes.list]: !!list,
         [classes.warning]: variant === 'warning',
         [classes.danger]: variant === 'danger',
     })

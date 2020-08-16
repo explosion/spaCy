@@ -179,13 +179,13 @@ def show_validation_error(
     file_path: Optional[Union[str, Path]] = None,
     *,
     title: str = "Config validation error",
-    hint_init: bool = True,
+    hint_fill: bool = True,
 ):
     """Helper to show custom config validation errors on the CLI.
 
     file_path (str / Path): Optional file path of config file, used in hints.
     title (str): Title of the custom formatted error.
-    hint_init (bool): Show hint about filling config.
+    hint_fill (bool): Show hint about filling config.
     """
     try:
         yield
@@ -195,14 +195,14 @@ def show_validation_error(
         # helper for this in Thinc
         err_text = str(e).replace("Config validation error", "").strip()
         print(err_text)
-        if hint_init and "field required" in err_text:
+        if hint_fill and "field required" in err_text:
             config_path = file_path if file_path is not None else "config.cfg"
             msg.text(
                 "If your config contains missing values, you can run the 'init "
-                "config' command to fill in all the defaults, if possible:",
+                "fill-config' command to fill in all the defaults, if possible:",
                 spaced=True,
             )
-            print(f"{COMMAND} init config {config_path} --base {config_path}\n")
+            print(f"{COMMAND} init fill-config {config_path} --base {config_path}\n")
         sys.exit(1)
 
 

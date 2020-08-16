@@ -1,13 +1,19 @@
 import React, { useState } from 'react'
 import { StaticQuery, graphql } from 'gatsby'
+import highlightCode from 'gatsby-remark-prismjs/highlight-code.js'
 
-import { Quickstart, QS } from '../components/quickstart'
+import { Quickstart } from '../components/quickstart'
+import generator, { DATA as GENERATOR_DATA } from './quickstart-training-generator'
+import { isString, htmlToReact } from '../components/util'
 
 const DEFAULT_LANG = 'en'
+const DEFAULT_HARDWARE = 'gpu'
+const DEFAULT_OPT = 'efficiency'
 const COMPONENTS = ['tagger', 'parser', 'ner', 'textcat']
-const COMMENT = `# This is an auto-generated partial config for training a model.
-# To use it for training, auto-fill it with all default values.
-# python -m spacy init config config.cfg --base base_config.cfg`
+const COMMENT = `# This is an auto-generated partial config. To use it with 'spacy train'
+# you can run spacy init fill-config to auto-fill all default settings:
+# python -m spacy init fill-config ./base_config.cfg ./config.cfg`
+
 const DATA = [
     {
         id: 'lang',
@@ -25,9 +31,8 @@ const DATA = [
         id: 'hardware',
         title: 'Hardware',
         options: [
-            { id: 'cpu-only', title: 'CPU only' },
-            { id: 'cpu', title: 'CPU preferred' },
-            { id: 'gpu', title: 'GPU', checked: true },
+            { id: 'cpu', title: 'CPU preferred', checked: DEFAULT_HARDWARE === 'cpu' },
+            { id: 'gpu', title: 'GPU', checked: DEFAULT_HARDWARE === 'gpu' },
         ],
     },
     {
@@ -35,28 +40,45 @@ const DATA = [
         title: 'Optimize for',
         help: '...',
         options: [
-            { id: 'efficiency', title: 'efficiency', checked: true },
-            { id: 'accuracy', title: 'accuracy' },
+            { id: 'efficiency', title: 'efficiency', checked: DEFAULT_OPT === 'efficiency' },
+            { id: 'accuracy', title: 'accuracy', checked: DEFAULT_OPT === 'accuracy' },
         ],
-    },
-    {
-        id: 'config',
-        title: 'Configuration',
-        options: [
-            {
-                id: 'independent',
-                title: 'independent components',
-                help: "Make components independent and don't share weights",
-            },
-        ],
-        multiple: true,
     },
 ]
 
+function stringify(value) {
+    if (isString(value) && value.startsWith('${')) return value
+    const string = JSON.stringify(value)
+    if (Array.isArray(value)) return string.replace(/,/g, ', ')
+    return string
+}
+
 export default function QuickstartTraining({ id, title, download = 'config.cfg' }) {
     const [lang, setLang] = useState(DEFAULT_LANG)
-    const [pipeline, setPipeline] = useState([])
-    const setters = { lang: setLang, components: setPipeline }
+    const [components, setComponents] = useState([])
+    const [[hardware], setHardware] = useState([DEFAULT_HARDWARE])
+    const [[optimize], setOptimize] = useState([DEFAULT_OPT])
+    const setters = {
+        lang: setLang,
+        components: setComponents,
+        hardware: setHardware,
+        optimize: setOptimize,
+    }
+    const reco = GENERATOR_DATA[lang] || {}
+    const content = generator({
+        lang,
+        components,
+        optimize,
+        hardware,
+        transformer_data: reco.transformer,
+        word_vectors: reco.word_vectors,
+    })
+    const rawStr = content.trim().replace(/\n\n\n+/g, '\n\n')
+    const rawContent = `${COMMENT}\n${rawStr}`
+    const displayContent = highlightCode('ini', rawContent)
+        .split('\n')
+        .map(line => (line.startsWith('#') ? `<span class="token comment">${line}</span>` : line))
+        .join('\n')
     return (
         <StaticQuery
             query={query}
@@ -66,47 +88,19 @@ export default function QuickstartTraining({ id, title, download = 'config.cfg' 
                     id: code,
                     title: name,
                 }))
-                const recommendedTrf = Object.assign(
-                    {},
-                    ...langs.map(({ code }) => ({ [code]: { sm: 'TODO', lg: 'TODO' } }))
-                )
                 return (
                     <Quickstart
                         download={download}
+                        rawContent={content}
                         data={DATA}
                         title={title}
                         id={id}
                         setters={setters}
                         hidePrompts
+                        small
+                        codeLang="ini"
                     >
-                        <QS comment>{COMMENT}</QS>
-                        <span>[paths]</span>
-                        <span>train = ""</span>
-                        <span>dev = ""</span>
-                        <br />
-                        <span>[nlp]</span>
-                        <span>lang = "{lang}"</span>
-                        <span>pipeline = {JSON.stringify(pipeline).replace(/,/g, ', ')}</span>
-                        <br />
-                        <span>[components]</span>
-                        <br />
-                        <span>[components.transformer]</span>
-                        <QS optimize="efficiency">name = "{recommendedTrf[lang].sm}"</QS>
-                        <QS optimize="accuracy">name = "{recommendedTrf[lang].lg}"</QS>
-                        {!!pipeline.length && <br />}
-                        {pipeline.map((pipe, i) => (
-                            <>
-                                {i !== 0 && <br />}
-                                <span>[components.{pipe}]</span>
-                                <span>factory = "{pipe}"</span>
-                                <QS config="independent">
-                                    <br />
-                                    [components.parser.model.tok2vec]
-                                    <br />
-                                    @architectures = "spacy.Tok2Vec.v1"
-                                </QS>
-                            </>
-                        ))}
+                        {htmlToReact(displayContent)}
                     </Quickstart>
                 )
             }}

@@ -9,6 +9,7 @@ from thinc.api import use_pytorch_for_gpu_memory, require_gpu, fix_random_seed
 from thinc.api import Config, Optimizer
 import random
 import typer
+import logging
 
 from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
 from ._util import import_code, get_sourced_components
@@ -16,7 +17,6 @@ from ..language import Language
 from .. import util
 from ..gold.example import Example
 from ..errors import Errors
-
 
 # Don't remove - required to load the built-in architectures
 from ..ml import models  # noqa: F401
@@ -48,7 +48,7 @@ def train_cli(
     used to register custom functions and architectures that can then be
     referenced in the config.
     """
-    util.set_env_log(verbose)
+    util.logger.setLevel(logging.DEBUG if verbose else logging.ERROR)
     verify_cli_args(config_path, output_path)
     overrides = parse_config_overrides(ctx.args)
     import_code(code_path)
@@ -75,7 +75,7 @@ def train(
         msg.info("Using CPU")
     msg.info(f"Loading config and nlp from: {config_path}")
     with show_validation_error(config_path):
-        config = Config().from_disk(config_path, overrides=config_overrides)
+        config = util.load_config(config_path, overrides=config_overrides)
     if config.get("training", {}).get("seed") is not None:
         fix_random_seed(config["training"]["seed"])
     # Use original config here before it's resolved to functions
@@ -102,9 +102,9 @@ def train(
     if resume_components:
         with nlp.select_pipes(enable=resume_components):
             msg.info(f"Resuming training for: {resume_components}")
-            nlp.resume_training()
+            nlp.resume_training(sgd=optimizer)
     with nlp.select_pipes(disable=[*frozen_components, *resume_components]):
-        nlp.begin_training(lambda: train_corpus(nlp))
+        nlp.begin_training(lambda: train_corpus(nlp), sgd=optimizer)
 
     if tag_map:
         # Replace tag map with provided mapping
@@ -295,7 +295,11 @@ def train_while_improving(
                 nlp.rehearse(raw_batch, sgd=optimizer, losses=losses, exclude=exclude)
         # TODO: refactor this so we don't have to run it separately in here
         for name, proc in nlp.pipeline:
-            if name not in exclude and hasattr(proc, "model"):
+            if (
+                name not in exclude
+                and hasattr(proc, "model")
+                and proc.model not in (True, False, None)
+            ):
                 proc.model.finish_update(optimizer)
         optimizer.step_schedules()
         if not (step % eval_frequency):

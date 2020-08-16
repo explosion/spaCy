@@ -7,6 +7,7 @@ from ..tokens.doc cimport Doc
 from .pipe import Pipe
 from ..language import Language
 from ..scorer import Scorer
+from ..gold import validate_examples
 from .. import util
 
 
@@ -58,7 +59,7 @@ class Sentencizer(Pipe):
         else:
             self.punct_chars = set(self.default_punct_chars)
 
-    def begin_training(self, get_examples=lambda: [], pipeline=None, sgd=None):
+    def begin_training(self, get_examples, pipeline=None, sgd=None):
         pass
 
     def __call__(self, doc):
@@ -158,6 +159,7 @@ class Sentencizer(Pipe):
 
         DOCS: https://spacy.io/api/sentencizer#score
         """
+        validate_examples(examples, "Sentencizer.score")
         results = Scorer.score_spans(examples, "sents", **kwargs)
         del results["sents_per_type"]
         return results

@@ -2,7 +2,7 @@ from typing import Iterator, Sequence, Iterable, Optional, Dict, Callable, List,
 from thinc.api import Model, set_dropout_rate, Optimizer, Config
 
 from .pipe import Pipe
-from ..gold import Example
+from ..gold import Example, validate_examples
 from ..tokens import Doc
 from ..vocab import Vocab
 from ..language import Language
@@ -166,9 +166,8 @@ class Tok2Vec(Pipe):
         """
         if losses is None:
             losses = {}
+        validate_examples(examples, "Tok2Vec.update")
         docs = [eg.predicted for eg in examples]
-        if isinstance(docs, Doc):
-            docs = [docs]
         set_dropout_rate(self.model, drop)
         tokvecs, bp_tokvecs = self.model.begin_update(docs)
         d_tokvecs = [self.model.ops.alloc2f(*t2v.shape) for t2v in tokvecs]
@@ -194,7 +193,8 @@ class Tok2Vec(Pipe):
         batch_id = Tok2VecListener.get_batch_id(docs)
         for listener in self.listeners[:-1]:
             listener.receive(batch_id, tokvecs, accumulate_gradient)
-        self.listeners[-1].receive(batch_id, tokvecs, backprop)
+        if self.listeners:
+            self.listeners[-1].receive(batch_id, tokvecs, backprop)
         if set_annotations:
             self.set_annotations(docs, tokvecs)
         return losses
@@ -204,7 +204,7 @@ class Tok2Vec(Pipe):
 
     def begin_training(
         self,
-        get_examples: Callable[[], Iterable[Example]] = lambda: [],
+        get_examples: Callable[[], Iterable[Example]],
         *,
         pipeline: Optional[List[Tuple[str, Callable[[Doc], Doc]]]] = None,
         sgd: Optional[Optimizer] = None,

@@ -37,27 +37,37 @@ The recommended way to train your spaCy models is via the
 single [`config.cfg`](#config) **configuration file** that includes all settings
 and hyperparameters. You can optionally [overwritten](#config-overrides)
 settings on the command line, and load in a Python file to register
-[custom functions](#custom-code) and architectures.
+[custom functions](#custom-code) and architectures. This quickstart widget helps
+you generate a starter config with the **recommended settings** for your
+specific use case. It's also available in spaCy as the
+[`init config`](/api/cli#init-config) command.
 
-> #### Instructions
+> #### Instructions: widget
 >
 > 1. Select your requirements and settings.
 > 2. Use the buttons at the bottom to save the result to your clipboard or a
 >    file `base_config.cfg`.
-> 3. Run [`init config`](/api/cli#init-config) to create a full training config.
+> 3. Run [`init fill-config`](/api/cli#init-fill-config) to create a full
+>    config.
 > 4. Run [`train`](/api/cli#train) with your config and data.
+>
+> #### Instructions: CLI
+>
+> 1. Run the [`init config`](/api/cli#init-config) command and specify your
+>    requirements and settings as CLI arguments.
+> 2. Run [`train`](/api/cli#train) with the exported config and data.
 
 import QuickstartTraining from 'widgets/quickstart-training.js'
 
 <QuickstartTraining download="base_config.cfg" />
 
 After you've saved the starter config to a file `base_config.cfg`, you can use
-the [`init config`](/api/cli#init-config) command to fill in the remaining
-defaults. Training configs should always be **complete and without hidden
-defaults**, to keep your experiments reproducible.
+the [`init fill-config`](/api/cli#init-fill-config) command to fill in the
+remaining defaults. Training configs should always be **complete and without
+hidden defaults**, to keep your experiments reproducible.
 
 ```bash
-$ python -m spacy init config config.cfg --base base_config.cfg
+$ python -m spacy init fill-config base_config.cfg config.cfg
 ```
 
 > #### Tip: Debug your data
@@ -70,10 +80,13 @@ $ python -m spacy init config config.cfg --base base_config.cfg
 > $ python -m spacy debug data config.cfg --verbose
 > ```
 
-You can now add your data and run [`train`](/api/cli#train) with your config.
-See the [`convert`](/api/cli#convert) command for details on how to convert your
-data to spaCy's binary `.spacy` format. You can either include the data paths in
-the `[paths]` section of your config, or pass them in via the command line.
+Instead of exporting your starter config from the quickstart widget and
+auto-filling it, you can also use the [`init config`](/api/cli#init-config)
+command and specify your requirement and settings and CLI arguments. You can now
+add your data and run [`train`](/api/cli#train) with your config. See the
+[`convert`](/api/cli#convert) command for details on how to convert your data to
+spaCy's binary `.spacy` format. You can either include the data paths in the
+`[paths]` section of your config, or pass them in via the command line.
 
 ```bash
 $ python -m spacy train config.cfg --output ./output --paths.train ./train.spacy --paths.dev ./dev.spacy
@@ -601,7 +614,7 @@ settings in the block will be passed to the function as keyword arguments. Keep
 in mind that the config shouldn't have any hidden defaults and all arguments on
 the functions need to be represented in the config. If your function defines
 **default argument values**, spaCy is able to auto-fill your config when you run
-[`init config`](/api/cli#init-config).
+[`init fill-config`](/api/cli#init-fill-config).
 
 ```ini
 ### config.cfg (excerpt)
@@ -687,13 +700,13 @@ give you everything you need to train fully custom models with
 
 </Infobox>
 
-<!-- TODO: maybe add something about why the Example class is great and its benefits, and how it's passed around, holds the alignment etc -->
-
 The [`Example`](/api/example) object contains annotated training data, also
 called the **gold standard**. It's initialized with a [`Doc`](/api/doc) object
 that will hold the predictions, and another `Doc` object that holds the
-gold-standard annotations. Here's an example of a simple `Example` for
-part-of-speech tags:
+gold-standard annotations. It also includes the **alignment** between those two
+documents if they differ in tokenization. The `Example` class ensures that spaCy
+can rely on one **standardized format** that's passed through the pipeline.
+Here's an example of a simple `Example` for part-of-speech tags:
 
 ```python
 words = ["I", "like", "stuff"]
@@ -744,7 +757,8 @@ example = Example.from_dict(doc, {"entities": ["U-ORG", "O", "U-TECHNOLOGY", "O"
 
 As of v3.0, the [`Example`](/api/example) object replaces the `GoldParse` class.
 It can be constructed in a very similar way, from a `Doc` and a dictionary of
-annotations:
+annotations. For more details, see the
+[migration guide](/usage/v3#migrating-training).
 
 ```diff
 - gold = GoldParse(doc, entities=entities)

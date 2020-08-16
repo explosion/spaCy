@@ -35,7 +35,7 @@ def test_init_parser(parser):
 def _train_parser(parser):
     fix_random_seed(1)
     parser.add_label("left")
-    parser.begin_training([], **parser.cfg)
+    parser.begin_training(lambda: [], **parser.cfg)
     sgd = Adam(0.001)
 
     for i in range(5):
@@ -75,7 +75,7 @@ def test_add_label_deserializes_correctly():
     ner1.add_label("C")
     ner1.add_label("B")
     ner1.add_label("A")
-    ner1.begin_training([])
+    ner1.begin_training(lambda: [])
     ner2 = EntityRecognizer(Vocab(), model, **config)
 
     # the second model needs to be resized before we can call from_bytes

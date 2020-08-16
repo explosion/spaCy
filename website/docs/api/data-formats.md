@@ -20,8 +20,9 @@ Config files define the training process and model pipeline and can be passed to
 [`spacy train`](/api/cli#train). They use
 [Thinc's configuration system](https://thinc.ai/docs/usage-config) under the
 hood. For details on how to use training configs, see the
-[usage documentation](/usage/training#config). To get started with a blank
-config or fill a partial config with all defaults, you can use the
+[usage documentation](/usage/training#config). To get started with the
+recommended settings for your use case, check out the
+[quickstart widget](/usage/training#quickstart) or run the
 [`init config`](/api/cli#init-config) command.
 
 > #### What does the @ mean?
@@ -182,10 +183,10 @@ run [`spacy pretrain`](/api/cli#pretrain).
 > ```
 
 The main data format used in spaCy v3.0 is a **binary format** created by
-serializing a [`DocBin`](/api/docbin) object, which represents a collection of
-`Doc` objects. This means that you can train spaCy models using the same format
-it outputs: annotated `Doc` objects. The binary format is extremely **efficient
-in storage**, especially when packing multiple documents together.
+serializing a [`DocBin`](/api/docbin), which represents a collection of `Doc`
+objects. This means that you can train spaCy models using the same format it
+outputs: annotated `Doc` objects. The binary format is extremely **efficient in
+storage**, especially when packing multiple documents together.
 
 Typically, the extension for these binary files is `.spacy`, and they are used
 as input format for specifying a [training corpus](/api/corpus) and for spaCy's
