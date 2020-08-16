@@ -154,7 +154,7 @@ def init_config(
     save_config(nlp.config, output_file, is_stdout=is_stdout)
 
 
-def save_config(config: Config, output_file: Path, is_stdout: bool = False):
+def save_config(config: Config, output_file: Path, is_stdout: bool = False) -> None:
     msg = Printer(no_print=is_stdout)
     if is_stdout:
         print(config.to_str())
@@ -166,7 +166,7 @@ def save_config(config: Config, output_file: Path, is_stdout: bool = False):
         print(f"{COMMAND} train {output_file.parts[-1]} {' '.join(variables)}")
 
 
-def require_spacy_transformers(msg: Printer):
+def require_spacy_transformers(msg: Printer) -> None:
     try:
         import spacy_transformers  # noqa: F401
     except ImportError:
