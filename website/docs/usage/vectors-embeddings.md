@@ -2,28 +2,17 @@
 title: Vectors and Embeddings
 menu:
   - ["What's a Word Vector?", 'whats-a-vector']
-  - ['Word Vectors', 'vectors']
-  - ['Other Embeddings', 'embeddings']
+  - ['Using Word Vectors', 'usage']
+  - ['Converting and Importing', 'converting']
 next: /usage/transformers
 ---
 
-An old idea in linguistics is that you can "know a word by the company it
-keeps": that is, word meanings can be understood relationally, based on their
-patterns of usage. This idea inspired a branch of NLP research known as
-"distributional semantics" that has aimed to compute databases of lexical
-knowledge automatically. The [Word2vec](https://en.wikipedia.org/wiki/Word2vec)
-family of algorithms are a key milestone in this line of research. For
-simplicity, we will refer to a distributional word representation as a "word
-vector", and algorithms that computes word vectors (such as
-[GloVe](https://nlp.stanford.edu/projects/glove/),
-[FastText](https://fasttext.cc), etc.) as "Word2vec algorithms".
-
+Word vector tables (or "embeddings") let you find similar terms, and can improve
+the accuracy of some of your components. You can even use word vectors as a
+quick-and-dirty text-classification solution when you don't have any training data.
 Word vector tables are included in some of the spaCy [model packages](/models)
 we distribute, and you can easily create your own model packages with word
-vectors you train or download yourself. In some cases you can also add word
-vectors to an existing pipeline, although each pipeline can only have a single
-word vectors table, and a model package that already has word vectors is
-unlikely to work correctly if you replace the vectors with new ones.
+vectors you train or download yourself.
 
 ## What's a word vector? {#whats-a-vector}
 
@@ -42,6 +31,17 @@ def what_is_a_word_vector(
     return vectors_table[key2row.get(word_id, default_row)]
 ```
 
+An old idea in linguistics is that you can "know a word by the company it
+keeps": that is, word meanings can be understood relationally, based on their
+patterns of usage. This idea inspired a branch of NLP research known as
+"distributional semantics" that has aimed to compute databases of lexical
+knowledge automatically. The [Word2vec](https://en.wikipedia.org/wiki/Word2vec)
+family of algorithms are a key milestone in this line of research. For
+simplicity, we will refer to a distributional word representation as a "word
+vector", and algorithms that computes word vectors (such as
+[GloVe](https://nlp.stanford.edu/projects/glove/),
+[FastText](https://fasttext.cc), etc.) as "Word2vec algorithms".
+
 Word2vec algorithms try to produce vectors tables that let you estimate useful
 relationships between words using simple linear algebra operations. For
 instance, you can often find close synonyms of a word by finding the vectors
@@ -51,14 +51,15 @@ statistical models.
 
 ### Word vectors vs. contextual language models {#vectors-vs-language-models}
 
-The key difference between word vectors and contextual language models such as
-ElMo, BERT and GPT-2 is that word vectors model **lexical types**, rather than
-_tokens_. If you have a list of terms with no context around them, a model like
-BERT can't really help you. BERT is designed to understand language **in
-context**, which isn't what you have. A word vectors table will be a much better
-fit for your task. However, if you do have words in context — whole sentences or
-paragraphs of running text — word vectors will only provide a very rough
-approximation of what the text is about.
+The key difference between word vectors and contextual language models such
+as [transformers](/usage/transformers)
+is that word vectors model **lexical types**, rather than
+_tokens_. If you have a list of terms with no context around them,
+a transformer model like BERT can't really help you. BERT is designed to understand
+language **in context**, which isn't what you have. A word vectors table will be
+a much better fit for your task. However, if you do have words in context — whole
+sentences or paragraphs of running text — word vectors will only provide a very
+rough approximation of what the text is about.
 
 Word vectors are also very computationally efficient, as they map a word to a
 vector with a single indexing operation. Word vectors are therefore useful as a
@@ -69,7 +70,7 @@ gradients to the pretrained word vectors table. The static vectors table is
 usually used in combination with a smaller table of learned task-specific
 embeddings.
 
-## Using word vectors directly {#vectors}
+## Using word vectors {#usage}
 
 spaCy stores word vector information in the
 [`Vocab.vectors`](/api/vocab#attributes) attribute, so you can access the whole
@@ -85,7 +86,141 @@ whether you've configured spaCy to use GPU memory), with dtype `float32`. The
 array is read-only so that spaCy can avoid unnecessary copy operations where
 possible. You can modify the vectors via the `Vocab` or `Vectors` table.
 
-### Converting word vectors for use in spaCy
+### Word vectors and similarity
+
+A common use-case of word vectors is to answer _similarity questions_. You can
+ask how similar a `token`, `span`, `doc` or `lexeme` is to another object using
+the `.similarity()` method. You can even check the similarity of mismatched
+types, asking how similar a whole document is to a particular word, how similar
+a span is to a document, etc. By default, the `.similarity()` method will use
+return the cosine of the `.vector` attribute of the two objects being compared.
+You can customize this behavior by setting one or more
+[user hooks](/usage/processing-pipelines#custom-components-user-hooks) for the
+types you want to customize.
+
+Word vector similarity is a practical technique for many situations, especially
+since it's easy to use and relatively efficient to compute. However, it's
+important to maintain realistic expectations about what information it can
+provide. Words can be related to each over in many ways, so a single
+"similarity" score will always be a mix of different signals. The word vectors
+model is also not trained for your specific use-case, so you have no way of
+telling it which results are more or less useful for your purpose. These
+problems are even more accute when you go from measuring the similarity of
+single words to the similarity of spans or documents. The vector averaging
+process is insensitive to the order of the words, so `doc1.similarity(doc2)`
+will mostly be based on the overlap in lexical items between the two documents
+objects. Two documents expressing the same meaning with dissimilar wording will
+return a lower similarity score than two documents that happen to contain the
+same words while expressing different meanings.
+
+### Using word vectors in your models
+
+Many neural network models are able to use word vector tables as additional
+features, which sometimes results in significant improvements in accuracy.
+spaCy's built-in embedding layer, `spacy.MultiHashEmbed.v1`, can be configured
+to use word vector tables using the `also_use_static_vectors` flag. This
+setting is also available on the `spacy.MultiHashEmbedCNN.v1` layer, which
+builds the default token-to-vector encoding architecture.
+
+```
+[tagger.model.tok2vec.embed]
+@architectures = "spacy.MultiHashEmbed.v1"
+width = 128
+rows = 7000
+also_embed_subwords = true
+also_use_static_vectors = true
+```
+
+<Infobox title="How it works">
+The configuration system will look up the string `spacy.MultiHashEmbed.v1`
+in the `architectures` registry, and call the returned object with the
+rest of the arguments from the block. This will result in a call to the
+`spacy.ml.models.tok2vec.MultiHashEmbed` function, which will return
+a Thinc model object with the type signature `Model[List[Doc],
+List[Floats2d]]`. Because the embedding layer takes a list of `Doc` objects as
+input, it does not need to store a copy of the vectors table. The vectors will
+be retrieved from the `Doc` objects that are passed in, via the
+`doc.vocab.vectors` attribute. This part of the process is handled by the
+`spacy.ml.staticvectors.StaticVectors` layer.
+</Infobox>
+
+#### Creating a custom embedding layer
+
+The `MultiHashEmbed` layer is spaCy's recommended strategy for constructing
+initial word representations for your neural network models, but you can also
+implement your own. You can register any function to a string name, and then
+reference that function within your config (see the [training]("/usage/training")
+section for more details). To try this out, you can save the following little
+example to a new Python file:
+
+```
+from spacy.ml.staticvectors import StaticVectors
+from spacy.util import registry
+
+print("I was imported!")
+
+@registry.architectures("my_example.MyEmbedding.v1")
+def MyEmbedding(output_width: int) -> Model[List[Doc], List[Floats2d]]:
+    print("I was called!")
+    return StaticVectors(nO=output_width)
+```
+
+If you pass the path to your file to the `spacy train` command using the `-c`
+argument, your file will be imported, which means the decorator registering the
+function will be run. Your function is now on equal footing with any of spaCy's
+built-ins, so you can drop it in instead of any other model with the same input
+and output signature. For instance, you could use it in the tagger model as
+follows:
+
+```
+[tagger.model.tok2vec.embed]
+@architectures = "my_example.MyEmbedding.v1"
+output_width = 128
+```
+
+Now that you have a custom function wired into the network, you can start
+implementing the logic you're interested in. For example, let's say you want to
+try a relatively simple embedding strategy that makes use of static word vectors,
+but combines them via summation with a smaller table of learned embeddings.
+
+```python
+from thinc.api import add, chain, remap_ids, Embed
+from spacy.ml.staticvectors import StaticVectors
+
+@registry.architectures("my_example.MyEmbedding.v1")
+def MyCustomVectors(
+    output_width: int,
+    vector_width: int,
+    embed_rows: int,
+    key2row: Dict[int, int]
+) -> Model[List[Doc], List[Floats2d]]:
+    return add(
+        StaticVectors(nO=output_width),
+        chain(
+           FeatureExtractor(["ORTH"]),
+           remap_ids(key2row),
+           Embed(nO=output_width, nV=embed_rows)
+        )
+    )
+```
+
+#### When should you add word vectors to your model?
+        
+Word vectors are not compatible with most [transformer models](/usage/transformers),
+but if you're training another type of NLP network, it's almost always worth
+adding word vectors to your model. As well as improving your final accuracy,
+word vectors often make experiments more consistent, as the accuracy you
+reach will be less sensitive to how the network is randomly initialized. High
+variance due to random chance can slow down your progress significantly, as you
+need to run many experiments to filter the signal from the noise.
+
+Word vector features need to be enabled prior to training, and the same word vectors
+table will need to be available at runtime as well. You cannot add word vector
+features once the model has already been trained, and you usually cannot
+replace one word vectors table with another without causing a significant loss
+of performance.
+
+## Converting word vectors for use in spaCy {#converting}
 
 Custom word vectors can be trained using a number of open-source libraries, such
 as [Gensim](https://radimrehurek.com/gensim), [Fast Text](https://fasttext.cc),
@@ -185,6 +320,13 @@ vector among those retained.
 
 ### Adding vectors {#adding-vectors}
 
+You can also add word vectors individually, using the method `vocab.set_vector`.
+This is often the easiest approach if you have vectors in an arbitrary format,
+as you can read in the vectors with your own logic, and just set them with
+a simple loop. This method is likely to be slower than approaches that work
+with the whole vectors table at once, but it's a great approach for once-off
+conversions before you save out your model to disk.
+
 ```python
 ### Adding vectors
 from spacy.vocab import Vocab
@@ -196,29 +338,3 @@ vocab = Vocab()
 for word, vector in vector_data.items():
     vocab.set_vector(word, vector)
 ```
-
-### Using custom similarity methods {#custom-similarity}
-
-By default, [`Token.vector`](/api/token#vector) returns the vector for its
-underlying [`Lexeme`](/api/lexeme), while [`Doc.vector`](/api/doc#vector) and
-[`Span.vector`](/api/span#vector) return an average of the vectors of their
-tokens. You can customize these behaviors by modifying the `doc.user_hooks`,
-`doc.user_span_hooks` and `doc.user_token_hooks` dictionaries.
-
-<Infobox title="Custom user hooks" emoji="📖">
-
-For more details on **adding hooks** and **overwriting** the built-in `Doc`,
-`Span` and `Token` methods, see the usage guide on
-[user hooks](/usage/processing-pipelines#custom-components-user-hooks).
-
-</Infobox>
-
-<!--  TODO:
-
-### Storing vectors on a GPU {#gpu}
-
--->
-
-## Other embeddings {#embeddings}
-
-<!-- TODO: something about other embeddings -->
