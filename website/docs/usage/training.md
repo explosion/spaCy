@@ -430,13 +430,11 @@ components are weighted equally.
 
 <Accordion title="Understanding the training output and score types" spaced>
 
-<!-- TODO: come up with good short explanation of precision and recall -->
-
 | Name                       | Description                                                                                                             |
 | -------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | **Loss**                   | The training loss representing the amount of work left for the optimizer. Should decrease, but usually not to `0`.      |
-| **Precision** (P)          | Should increase.                                                                                                        |
-| **Recall** (R)             | Should increase.                                                                                                        |
+| **Precision** (P)          | The percentage of generated predictions that are correct. Should increase.                                                                                                        |
+| **Recall** (R)             | The percentage of gold-standard annotations that are in fact predicted. Should increase.                                                                                                        |
 | **F-Score** (F)            | The weighted average of precision and recall. Should increase.                                                          |
 | **UAS** / **LAS**          | Unlabeled and labeled attachment score for the dependency parser, i.e. the percentage of correct arcs. Should increase. |
 | **Words per second** (WPS) | Prediction speed in words per second. Should stay stable.                                                               |
