@@ -64,7 +64,8 @@ export const TypeAnnotation = ({ lang = 'python', link = true, children }) => {
     // Hacky, but we're temporarily replacing a dot to prevent it from being split during highlighting
     const TMP_DOT = '•'
     const code = Array.isArray(children) ? children.join('') : children || ''
-    const rawStr = code.replace('.', TMP_DOT)
+    const [rawText, meta] = code.split(/(?= \(.+\)$)/)
+    const rawStr = rawText.replace('.', TMP_DOT)
     const rawHtml = lang === 'none' || !code ? code : highlightCode(lang, rawStr)
     const html = rawHtml.replace(TMP_DOT, '.').replace(/\n/g, ' ')
     const result = htmlToReact(html)
@@ -83,6 +84,7 @@ export const TypeAnnotation = ({ lang = 'python', link = true, children }) => {
             {elements.map((el, i) => (
                 <Fragment key={i}>{linkType(el, !!link)}</Fragment>
             ))}
+            {meta && <span className={classes.typeAnnotationMeta}>{meta}</span>}
         </code>
     )
 }

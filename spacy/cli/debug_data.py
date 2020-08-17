@@ -3,7 +3,7 @@ from pathlib import Path
 from collections import Counter
 import sys
 import srsly
-from wasabi import Printer, MESSAGES, msg, diff_strings
+from wasabi import Printer, MESSAGES, msg
 import typer
 
 from ._util import app, Arg, Opt, show_validation_error, parse_config_overrides
@@ -32,8 +32,6 @@ def debug_config_cli(
     ctx: typer.Context,  # This is only used to read additional arguments
     config_path: Path = Arg(..., help="Path to config file", exists=True),
     code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
-    auto_fill: bool = Opt(False, "--auto-fill", "-F", help="Whether or not to auto-fill the config with built-in defaults if possible"),
-    diff: bool = Opt(False, "--diff", "-D", help="Show a visual diff if config was auto-filled")
     # fmt: on
 ):
     """Debug a config.cfg file and show validation errors. The command will
@@ -49,18 +47,8 @@ def debug_config_cli(
     import_code(code_path)
     with show_validation_error(config_path):
         config = util.load_config(config_path, overrides=overrides)
-        nlp, _ = util.load_model_from_config(config, auto_fill=auto_fill)
-    if auto_fill:
-        orig_config = config.to_str()
-        filled_config = nlp.config.to_str()
-        if orig_config == filled_config:
-            msg.good("Original config is valid, no values were auto-filled")
-        else:
-            msg.good("Auto-filled config is valid")
-            if diff:
-                print(diff_strings(config.to_str(), nlp.config.to_str()))
-    else:
-        msg.good("Original config is valid")
+        nlp, _ = util.load_model_from_config(config)
+    msg.good("Original config is valid")
 
 
 @debug_cli.command(
