@@ -162,14 +162,12 @@ $ python -m spacy init fill-config [base_path] [output_file] [--diff]
 
 ### init model {#init-model new="2" tag="command"}
 
-<!-- TODO: update for v3 -->
-
 Create a new model directory from raw data, like word frequencies, Brown
-clusters and word vectors. This command is similar to the `spacy model` command
-in v1.x. Note that in order to populate the model's vocab, you need to pass in a
-JSONL-formatted [vocabulary file](/api/data-formats#vocab-jsonl) as
-`--jsonl-loc` with optional `id` values that correspond to the vectors table.
-Just loading in vectors will not automatically populate the vocab.
+clusters and word vectors. Note that in order to populate the model's vocab, you
+need to pass in a JSONL-formatted
+[vocabulary file](/api/data-formats#vocab-jsonl) as `--jsonl-loc` with optional
+`id` values that correspond to the vectors table. Just loading in vectors will
+not automatically populate the vocab.
 
 <Infobox title="New in v3.0" variant="warning">
 

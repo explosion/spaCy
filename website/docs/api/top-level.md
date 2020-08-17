@@ -316,7 +316,7 @@ factories.
 The following registries are added by the
 [`spacy-transformers`](https://github.com/explosion/spacy-transformers) package.
 See the [`Transformer`](/api/transformer) API reference and
-[usage docs](/usage/transformers) for details.
+[usage docs](/usage/embeddings-transformers) for details.
 
 > #### Example
 >

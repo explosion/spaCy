@@ -9,7 +9,12 @@ import { isString, github, headingTextClassName } from './util'
 import classes from '../styles/typography.module.sass'
 
 export const H1 = ({ Component = 'h1', className, ...props }) => (
-    <Headline Component={Component} className={classNames(classes.h1, className)} {...props} />
+    <Headline
+        Component={Component}
+        className={classNames(classes.h1, className)}
+        permalink={false}
+        {...props}
+    />
 )
 export const H2 = ({ className, ...props }) => (
     <Headline Component="h2" className={classNames(classes.h2, className)} {...props} />
@@ -90,6 +95,7 @@ const Headline = ({
     source,
     hidden,
     action,
+    permalink = true,
     className,
     children,
 }) => {
@@ -102,7 +108,7 @@ const Headline = ({
     const tags = tag ? tag.split(',').map(t => t.trim()) : []
     return (
         <Component id={id} name={name} className={headingClassNames}>
-            <Permalink id={id}>{children} </Permalink>
+            <Permalink id={permalink ? id : null}>{children} </Permalink>
             {tags.map((tag, i) => (
                 <Tag spaced key={i}>
                     {tag}

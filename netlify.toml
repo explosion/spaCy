@@ -36,11 +36,11 @@ redirects = [
     {from = "/docs/api/features", to = "/models/#architecture", force = true},
     {from = "/docs/api/philosophy", to = "/usage/spacy-101", force = true},
     {from = "/docs/usage/showcase", to = "/universe", force = true},
-    {from = "/tutorials/load-new-word-vectors", to = "/usage/vectors-similarity#custom", force = true},
+    {from = "/tutorials/load-new-word-vectors", to = "/usage/linguistic-features", force = true},
     {from = "/tutorials", to = "/usage/examples", force = true},
     # Old documentation pages (v2.x)
     {from = "/usage/adding-languages", to = "/usage/linguistic-features", force = true},
-    {from = "/usage/vectors-similarity", to = "/usage/vectors-embeddings", force = true},
+    {from = "/usage/vectors-similarity", to = "/usage/linguistic-features#vectors-similarity", force = true},
     {from = "/api/goldparse", to = "/api/top-level", force = true},
     {from = "/api/goldcorpus", to = "/api/corpus", force = true},
     {from = "/api/annotation", to = "/api/data-formats", force = true},

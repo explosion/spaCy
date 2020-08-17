@@ -243,11 +243,15 @@ Encode context using bidirectional LSTM layers. Requires
 | `window_size` | The number of words to concatenate around each token to construct the convolution. Recommended value is `1`. ~~int~~                                                                                           |
 | `depth`       | The number of convolutional layers. Recommended value is `4`. ~~int~~                                                                                                                                          |
 
+### spacy.StaticVectors.v1 {#StaticVectors}
+
+<!-- TODO: -->
+
 ## Transformer architectures {#transformers source="github.com/explosion/spacy-transformers/blob/master/spacy_transformers/architectures.py"}
 
 The following architectures are provided by the package
 [`spacy-transformers`](https://github.com/explosion/spacy-transformers). See the
-[usage documentation](/usage/transformers) for how to integrate the
+[usage documentation](/usage/embeddings-transformers) for how to integrate the
 architectures into your training config.
 
 ### spacy-transformers.TransformerModel.v1 {#TransformerModel}

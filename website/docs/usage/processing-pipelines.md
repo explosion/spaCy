@@ -1,6 +1,6 @@
 ---
 title: Language Processing Pipelines
-next: /usage/vectors-embeddings
+next: /usage/embeddings-transformers
 menu:
   - ['Processing Text', 'processing']
   - ['How Pipelines Work', 'pipelines']
@@ -324,9 +324,9 @@ pretrained components and new components trained on your data.
 
 When reusing components across models, keep in mind that the **vocabulary**,
 **vectors** and model settings **must match**. If a pretrained model includes
-[word vectors](/usage/vectors-embeddings) and the component uses them as
-features, the model you copy it to needs to have the _same_ vectors available –
-otherwise, it won't be able to make the same predictions.
+[word vectors](/usage/linguistic-features#vectors-similarity) and the component
+uses them as features, the model you copy it to needs to have the _same_ vectors
+available – otherwise, it won't be able to make the same predictions.
 
 </Infobox>
 
@@ -1202,7 +1202,7 @@ document similarity method.
 Hooks let you customize some of the behaviors of the `Doc`, `Span` or `Token`
 objects by adding a component to the pipeline. For instance, to customize the
 [`Doc.similarity`](/api/doc#similarity) method, you can add a component that
-sets a custom function to `doc.user_hooks['similarity']`. The built-in
+sets a custom function to `doc.user_hooks["similarity"]`. The built-in
 `Doc.similarity` method will check the `user_hooks` dict, and delegate to your
 function if you've set one. Similar results can be achieved by setting functions
 to `Doc.user_span_hooks` and `Doc.user_token_hooks`.
