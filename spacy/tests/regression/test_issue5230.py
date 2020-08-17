@@ -127,7 +127,7 @@ def test_save_and_load_knowledge_base():
     with make_tempdir() as d:
         path = d / "kb"
         try:
-            kb.dump(path)
+            kb.to_disk(path)
         except Exception as e:
             pytest.fail(str(e))
 

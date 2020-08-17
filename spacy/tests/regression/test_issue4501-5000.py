@@ -155,7 +155,7 @@ def test_issue4674():
         if not dir_path.exists():
             dir_path.mkdir()
         file_path = dir_path / "kb"
-        kb.dump(str(file_path))
+        kb.to_disk(str(file_path))
         kb2 = KnowledgeBase(nlp.vocab, entity_vector_length=3)
         kb2.load_bulk(str(file_path))
     assert kb2.get_size_entities() == 1

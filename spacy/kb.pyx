@@ -319,7 +319,7 @@ cdef class KnowledgeBase:
         return 0.0
 
 
-    def dump(self, loc):
+    def to_disk(self, loc):
         cdef Writer writer = Writer(loc)
         writer.write_header(self.get_size_entities(), self.entity_vector_length)
 
@@ -454,7 +454,8 @@ cdef class Writer:
         if isinstance(loc, Path):
             loc = bytes(loc)
         if path.exists(loc):
-            assert not path.isdir(loc), "%s is directory." % loc
+            if path.isdir(loc):
+                raise ValueError(Errors.E928.format(loc=loc))
         cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
         self._fp = fopen(<char*>bytes_loc, 'wb')
         if not self._fp:
@@ -498,8 +499,10 @@ cdef class Reader:
     def __init__(self, object loc):
         if isinstance(loc, Path):
             loc = bytes(loc)
-        assert path.exists(loc)
-        assert not path.isdir(loc)
+        if not path.exists(loc):
+            raise ValueError(Errors.E929.format(loc=loc))
+        if path.isdir(loc):
+            raise ValueError(Errors.E928.format(loc=loc))
         cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
         self._fp = fopen(<char*>bytes_loc, 'rb')
         if not self._fp:

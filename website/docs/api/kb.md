@@ -200,14 +200,14 @@ probability of the fact that the mention links to the entity ID.
 | `alias`     | str   | The textual mention or alias                                   |
 | **RETURNS** | float | The prior probability of the `alias` referring to the `entity` |
 
-## KnowledgeBase.dump {#dump tag="method"}
+## KnowledgeBase.to_disk {#to_disk tag="method"}
 
 Save the current state of the knowledge base to a directory.
 
 > #### Example
 >
 > ```python
-> kb.dump(loc)
+> kb.to_disk(loc)
 > ```
 
 | Name  | Type         | Description                                                                                                           |

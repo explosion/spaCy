@@ -80,7 +80,7 @@ def main(model, output_dir=None):
         if not output_dir.exists():
             output_dir.mkdir()
         kb_path = str(output_dir / "kb")
-        kb.dump(kb_path)
+        kb.to_disk(kb_path)
         print()
         print("Saved KB to", kb_path)
 

@@ -476,6 +476,10 @@ class Errors:
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
+    E928 = ("A 'KnowledgeBase' should be written to / read from a file, but the "
+            "provided argument {loc} is an existing directory.")
+    E929 = ("A 'KnowledgeBase' could not be read from {loc} - the path does "
+            "not seem to exist.")
     E930 = ("Received invalid get_examples callback in {name}.begin_training. "
             "Expected function that returns an iterable of Example objects but "
             "got: {obj}")

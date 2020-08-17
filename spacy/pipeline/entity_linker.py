@@ -416,7 +416,7 @@ class EntityLinker(Pipe):
         serialize = {}
         serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
         serialize["vocab"] = lambda p: self.vocab.to_disk(p)
-        serialize["kb"] = lambda p: self.kb.dump(p)
+        serialize["kb"] = lambda p: self.kb.to_disk(p)
         serialize["model"] = lambda p: self.model.to_disk(p)
         util.to_disk(path, serialize, exclude)
 

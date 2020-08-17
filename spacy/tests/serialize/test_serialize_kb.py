@@ -19,7 +19,7 @@ def test_serialize_kb_disk(en_vocab):
         if not dir_path.exists():
             dir_path.mkdir()
         file_path = dir_path / "kb"
-        kb1.dump(str(file_path))
+        kb1.to_disk(str(file_path))
         kb2 = KnowledgeBase(vocab=en_vocab, entity_vector_length=3)
         kb2.load_bulk(str(file_path))
 
