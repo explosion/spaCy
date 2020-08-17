@@ -43,33 +43,33 @@ can also submit a [regression test](#fixing-bugs) straight away. When you're
 opening an issue to report the bug, simply refer to your pull request in the
 issue body. A few more tips:
 
--   **Describing your issue:** Try to provide as many details as possible. What
-    exactly goes wrong? _How_ is it failing? Is there an error?
-    "XY doesn't work" usually isn't that helpful for tracking down problems. Always
-    remember to include the code you ran and if possible, extract only the relevant
-    parts and don't just dump your entire script. This will make it easier for us to
-    reproduce the error.
+- **Describing your issue:** Try to provide as many details as possible. What
+  exactly goes wrong? _How_ is it failing? Is there an error?
+  "XY doesn't work" usually isn't that helpful for tracking down problems. Always
+  remember to include the code you ran and if possible, extract only the relevant
+  parts and don't just dump your entire script. This will make it easier for us to
+  reproduce the error.
 
--   **Getting info about your spaCy installation and environment:** If you're
-    using spaCy v1.7+, you can use the command line interface to print details and
-    even format them as Markdown to copy-paste into GitHub issues:
-    `python -m spacy info --markdown`.
+- **Getting info about your spaCy installation and environment:** If you're
+  using spaCy v1.7+, you can use the command line interface to print details and
+  even format them as Markdown to copy-paste into GitHub issues:
+  `python -m spacy info --markdown`.
 
--   **Checking the model compatibility:** If you're having problems with a
-    [statistical model](https://spacy.io/models), it may be because the
-    model is incompatible with your spaCy installation. In spaCy v2.0+, you can check
-    this on the command line by running `python -m spacy validate`.
+- **Checking the model compatibility:** If you're having problems with a
+  [statistical model](https://spacy.io/models), it may be because the
+  model is incompatible with your spaCy installation. In spaCy v2.0+, you can check
+  this on the command line by running `python -m spacy validate`.
 
--   **Sharing a model's output, like dependencies and entities:** spaCy v2.0+
-    comes with [built-in visualizers](https://spacy.io/usage/visualizers) that
-    you can run from within your script or a Jupyter notebook. For some issues, it's
-    helpful to **include a screenshot** of the visualization. You can simply drag and
-    drop the image into GitHub's editor and it will be uploaded and included.
+- **Sharing a model's output, like dependencies and entities:** spaCy v2.0+
+  comes with [built-in visualizers](https://spacy.io/usage/visualizers) that
+  you can run from within your script or a Jupyter notebook. For some issues, it's
+  helpful to **include a screenshot** of the visualization. You can simply drag and
+  drop the image into GitHub's editor and it will be uploaded and included.
 
--   **Sharing long blocks of code or logs:** If you need to include long code,
-    logs or tracebacks, you can wrap them in `<details>` and `</details>`. This
-    [collapses the content](https://developer.mozilla.org/en/docs/Web/HTML/Element/details)
-    so it only becomes visible on click, making the issue easier to read and follow.
+- **Sharing long blocks of code or logs:** If you need to include long code,
+  logs or tracebacks, you can wrap them in `<details>` and `</details>`. This
+  [collapses the content](https://developer.mozilla.org/en/docs/Web/HTML/Element/details)
+  so it only becomes visible on click, making the issue easier to read and follow.
 
 ### Issue labels
 
@@ -94,39 +94,39 @@ shipped in the core library, and what could be provided in other packages. Our
 philosophy is to prefer a smaller core library. We generally ask the following
 questions:
 
--   **What would this feature look like if implemented in a separate package?**
-    Some features would be very difficult to implement externally – for example,
-    changes to spaCy's built-in methods. In contrast, a library of word
-    alignment functions could easily live as a separate package that depended on
-    spaCy — there's little difference between writing `import word_aligner` and
-    `import spacy.word_aligner`. spaCy v2.0+ makes it easy to implement
-    [custom pipeline components](https://spacy.io/usage/processing-pipelines#custom-components),
-    and add your own attributes, properties and methods to the `Doc`, `Token` and
-    `Span`. If you're looking to implement a new spaCy feature, starting with a
-    custom component package is usually the best strategy. You won't have to worry
-    about spaCy's internals and you can test your module in an isolated
-    environment. And if it works well, we can always integrate it into the core
-    library later.
+- **What would this feature look like if implemented in a separate package?**
+  Some features would be very difficult to implement externally – for example,
+  changes to spaCy's built-in methods. In contrast, a library of word
+  alignment functions could easily live as a separate package that depended on
+  spaCy — there's little difference between writing `import word_aligner` and
+  `import spacy.word_aligner`. spaCy v2.0+ makes it easy to implement
+  [custom pipeline components](https://spacy.io/usage/processing-pipelines#custom-components),
+  and add your own attributes, properties and methods to the `Doc`, `Token` and
+  `Span`. If you're looking to implement a new spaCy feature, starting with a
+  custom component package is usually the best strategy. You won't have to worry
+  about spaCy's internals and you can test your module in an isolated
+  environment. And if it works well, we can always integrate it into the core
+  library later.
 
--   **Would the feature be easier to implement if it relied on "heavy" dependencies spaCy doesn't currently require?**
-    Python has a very rich ecosystem. Libraries like scikit-learn, SciPy, Gensim or
-    TensorFlow/Keras do lots of useful things — but we don't want to have them as
-    dependencies. If the feature requires functionality in one of these libraries,
-    it's probably better to break it out into a different package.
+- **Would the feature be easier to implement if it relied on "heavy" dependencies spaCy doesn't currently require?**
+  Python has a very rich ecosystem. Libraries like scikit-learn, SciPy, Gensim or
+  TensorFlow/Keras do lots of useful things — but we don't want to have them as
+  dependencies. If the feature requires functionality in one of these libraries,
+  it's probably better to break it out into a different package.
 
--   **Is the feature orthogonal to the current spaCy functionality, or overlapping?**
-    spaCy strongly prefers to avoid having 6 different ways of doing the same thing.
-    As better techniques are developed, we prefer to drop support for "the old way".
-    However, it's rare that one approach _entirely_ dominates another. It's very
-    common that there's still a use-case for the "obsolete" approach. For instance,
-    [WordNet](https://wordnet.princeton.edu/) is still very useful — but word
-    vectors are better for most use-cases, and the two approaches to lexical
-    semantics do a lot of the same things. spaCy therefore only supports word
-    vectors, and support for WordNet is currently left for other packages.
+- **Is the feature orthogonal to the current spaCy functionality, or overlapping?**
+  spaCy strongly prefers to avoid having 6 different ways of doing the same thing.
+  As better techniques are developed, we prefer to drop support for "the old way".
+  However, it's rare that one approach _entirely_ dominates another. It's very
+  common that there's still a use-case for the "obsolete" approach. For instance,
+  [WordNet](https://wordnet.princeton.edu/) is still very useful — but word
+  vectors are better for most use-cases, and the two approaches to lexical
+  semantics do a lot of the same things. spaCy therefore only supports word
+  vectors, and support for WordNet is currently left for other packages.
 
--   **Do you need the feature to get basic things done?** We do want spaCy to be
-    at least somewhat self-contained. If we keep needing some feature in our
-    recipes, that does provide some argument for bringing it "in house".
+- **Do you need the feature to get basic things done?** We do want spaCy to be
+  at least somewhat self-contained. If we keep needing some feature in our
+  recipes, that does provide some argument for bringing it "in house".
 
 ### Getting started
 
@@ -203,10 +203,10 @@ your files on save:
 
 ```json
 {
-    "python.formatting.provider": "black",
-    "[python]": {
-        "editor.formatOnSave": true
-    }
+  "python.formatting.provider": "black",
+  "[python]": {
+    "editor.formatOnSave": true
+  }
 }
 ```
 
@@ -216,7 +216,7 @@ list of available editor integrations.
 #### Disabling formatting
 
 There are a few cases where auto-formatting doesn't improve readability – for
-example, in some of the the language data files like the `tag_map.py`, or in
+example, in some of the language data files like the `tag_map.py`, or in
 the tests that construct `Doc` objects from lists of words and other labels.
 Wrapping a block in `# fmt: off` and `# fmt: on` lets you disable formatting
 for that particular code. Here's an example:
@@ -397,10 +397,10 @@ Python. If it's not fast enough the first time, just switch to Cython.
 
 ### Resources to get you started
 
--   [PEP 8 Style Guide for Python Code](https://www.python.org/dev/peps/pep-0008/) (python.org)
--   [Official Cython documentation](http://docs.cython.org/en/latest/) (cython.org)
--   [Writing C in Cython](https://explosion.ai/blog/writing-c-in-cython) (explosion.ai)
--   [Multi-threading spaCy’s parser and named entity recogniser](https://explosion.ai/blog/multithreading-with-cython) (explosion.ai)
+- [PEP 8 Style Guide for Python Code](https://www.python.org/dev/peps/pep-0008/) (python.org)
+- [Official Cython documentation](http://docs.cython.org/en/latest/) (cython.org)
+- [Writing C in Cython](https://explosion.ai/blog/writing-c-in-cython) (explosion.ai)
+- [Multi-threading spaCy’s parser and named entity recogniser](https://explosion.ai/blog/multithreading-with-cython) (explosion.ai)
 
 ## Adding tests
 
@@ -440,25 +440,25 @@ simply click on the "Suggest edits" button at the bottom of a page.
 We're very excited about all the new possibilities for **community extensions**
 and plugins in spaCy v2.0, and we can't wait to see what you build with it!
 
--   An extension or plugin should add substantial functionality, be
-    **well-documented** and **open-source**. It should be available for users to download
-    and install as a Python package – for example via [PyPi](http://pypi.python.org).
+- An extension or plugin should add substantial functionality, be
+  **well-documented** and **open-source**. It should be available for users to download
+  and install as a Python package – for example via [PyPi](http://pypi.python.org).
 
--   Extensions that write to `Doc`, `Token` or `Span` attributes should be wrapped
-    as [pipeline components](https://spacy.io/usage/processing-pipelines#custom-components)
-    that users can **add to their processing pipeline** using `nlp.add_pipe()`.
+- Extensions that write to `Doc`, `Token` or `Span` attributes should be wrapped
+  as [pipeline components](https://spacy.io/usage/processing-pipelines#custom-components)
+  that users can **add to their processing pipeline** using `nlp.add_pipe()`.
 
--   When publishing your extension on GitHub, **tag it** with the topics
-    [`spacy`](https://github.com/topics/spacy?o=desc&s=stars) and
-    [`spacy-extensions`](https://github.com/topics/spacy-extension?o=desc&s=stars)
-    to make it easier to find. Those are also the topics we're linking to from the
-    spaCy website. If you're sharing your project on Twitter, feel free to tag
-    [@spacy_io](https://twitter.com/spacy_io) so we can check it out.
+- When publishing your extension on GitHub, **tag it** with the topics
+  [`spacy`](https://github.com/topics/spacy?o=desc&s=stars) and
+  [`spacy-extensions`](https://github.com/topics/spacy-extension?o=desc&s=stars)
+  to make it easier to find. Those are also the topics we're linking to from the
+  spaCy website. If you're sharing your project on Twitter, feel free to tag
+  [@spacy_io](https://twitter.com/spacy_io) so we can check it out.
 
--   Once your extension is published, you can open an issue on the
-    [issue tracker](https://github.com/explosion/spacy/issues) to suggest it for the
-    [resources directory](https://spacy.io/usage/resources#extensions) on the
-    website.
+- Once your extension is published, you can open an issue on the
+  [issue tracker](https://github.com/explosion/spacy/issues) to suggest it for the
+  [resources directory](https://spacy.io/usage/resources#extensions) on the
+  website.
 
 📖 **For more tips and best practices, see the [checklist for developing spaCy extensions](https://spacy.io/usage/processing-pipelines#extensions).**
 

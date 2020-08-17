@@ -169,7 +169,7 @@ python setup.py build_ext --inplace            # compile spaCy
 
 Compared to regular install via pip, the
 [`requirements.txt`](https://github.com/explosion/spaCy/tree/master/requirements.txt)
-additionally installs developer dependencies such as Cython. See the the
+additionally installs developer dependencies such as Cython. See the 
 [quickstart widget](#quickstart) to get the right commands for your platform and
 Python version.
 
