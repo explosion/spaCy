@@ -9,6 +9,12 @@ api_string_name: textcat
 api_trainable: true
 ---
 
+The text categorizer predicts **categories over a whole document**. It can learn
+one or more labels, and the labels can be mutually exclusive (i.e. one true
+label per document) or non-mutually exclusive (i.e. zero or more labels may be
+true per document). The multi-label setting is controlled by the model instance
+that's provided.
+
 ## Config and implementation {#config}
 
 The default config is defined by the pipeline component factory and describes
@@ -29,10 +35,10 @@ architectures and their arguments and hyperparameters.
 > nlp.add_pipe("textcat", config=config)
 > ```
 
-| Setting  | Type                                       | Description        | Default                                               |
-| -------- | ------------------------------------------ | ------------------ | ----------------------------------------------------- |
-| `labels` | `Iterable[str]`                            | The labels to use. | `[]`                                                  |
-| `model`  | [`Model`](https://thinc.ai/docs/api-model) | The model to use.  | [TextCatEnsemble](/api/architectures#TextCatEnsemble) |
+| Setting  | Type                                       | Description                                                                             | Default                                               |
+| -------- | ------------------------------------------ | --------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `labels` | `List[str]`                                | A list of categories to learn. If empty, the model infers the categories from the data. | `[]`                                                  |
+| `model`  | [`Model`](https://thinc.ai/docs/api-model) | A model instance that predicts scores for each category.                                | [TextCatEnsemble](/api/architectures#TextCatEnsemble) |
 
 ```python
 https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/textcat.py
@@ -66,23 +72,6 @@ shortcut for this and instantiate the component using its string name and
 | `name`         | str                                        | String name of the component instance. Used to add entries to the `losses` during training. |
 | _keyword-only_ |                                            |                                                                                             |
 | `labels`       | `Iterable[str]`                            | The labels to use.                                                                          |
-
-<!-- TODO move to config page
-### Architectures {#architectures new="2.1"}
-
-Text classification models can be used to solve a wide variety of problems.
-Differences in text length, number of labels, difficulty, and runtime
-performance constraints mean that no single algorithm performs well on all types
-of problems. To handle a wider variety of problems, the `TextCategorizer` object
-allows configuration of its model architecture, using the `architecture` keyword
-argument.
-
-| Name           | Description                                                                                                                                                                                                                                                                                                                                                                                                      |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `"ensemble"`   | **Default:** Stacked ensemble of a bag-of-words model and a neural network model. The neural network uses a CNN with mean pooling and attention. The "ngram_size" and "attr" arguments can be used to configure the feature extraction for the bag-of-words model.                                                                                                                                               |
-| `"simple_cnn"` | A neural network model where token vectors are calculated using a CNN. The vectors are mean pooled and used as features in a feed-forward network. This architecture is usually less accurate than the ensemble, but runs faster.                                                                                                                                                                                |
-| `"bow"`        | An ngram "bag-of-words" model. This architecture should run much faster than the others, but may not be as accurate, especially if texts are short. The features extracted can be controlled using the keyword arguments `ngram_size` and `attr`. For instance, `ngram_size=3` and `attr="lower"` would give lower-cased unigram, trigram and bigram features. 2, 3 or 4 are usually good choices of ngram size. |
--->
 
 ## TextCategorizer.\_\_call\_\_ {#call tag="method"}
 
@@ -133,14 +122,20 @@ applied to the `Doc` in order. Both [`__call__`](/api/textcategorizer#call) and
 
 ## TextCategorizer.begin_training {#begin_training tag="method"}
 
-Initialize the pipe for training, using data examples if available. Returns an
-[`Optimizer`](https://thinc.ai/docs/api-optimizers) object.
+Initialize the component for training and return an
+[`Optimizer`](https://thinc.ai/docs/api-optimizers). `get_examples` should be a
+function that returns an iterable of [`Example`](/api/example) objects. The data
+examples are used to **initialize the model** of the component and can either be
+the full training data or a representative sample. Initialization includes
+validating the network,
+[inferring missing shapes](https://thinc.ai/docs/usage-models#validation) and
+setting up the label scheme based on the data.
 
 > #### Example
 >
 > ```python
 > textcat = nlp.add_pipe("textcat")
-> optimizer = textcat.begin_training(pipeline=nlp.pipeline)
+> optimizer = textcat.begin_training(lambda: [], pipeline=nlp.pipeline)
 > ```
 
 | Name           | Type                                                | Description                                                                                                        |
@@ -153,7 +148,8 @@ Initialize the pipe for training, using data examples if available. Returns an
 
 ## TextCategorizer.predict {#predict tag="method"}
 
-Apply the pipeline's model to a batch of docs, without modifying them.
+Apply the component's model to a batch of [`Doc`](/api/doc) objects, without
+modifying them.
 
 > #### Example
 >
@@ -169,7 +165,7 @@ Apply the pipeline's model to a batch of docs, without modifying them.
 
 ## TextCategorizer.set_annotations {#set_annotations tag="method"}
 
-Modify a batch of documents, using pre-computed scores.
+Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 
 > #### Example
 >
@@ -186,8 +182,9 @@ Modify a batch of documents, using pre-computed scores.
 
 ## TextCategorizer.update {#update tag="method"}
 
-Learn from a batch of documents and gold-standard information, updating the
-pipe's model. Delegates to [`predict`](/api/textcategorizer#predict) and
+Learn from a batch of [`Example`](/api/example) objects containing the
+predictions and gold-standard annotations, and update the component's model.
+Delegates to [`predict`](/api/textcategorizer#predict) and
 [`get_loss`](/api/textcategorizer#get_loss).
 
 > #### Example
@@ -208,7 +205,7 @@ pipe's model. Delegates to [`predict`](/api/textcategorizer#predict) and
 | `losses`          | `Dict[str, float]`                                  | Optional record of the loss during training. Updated using the component name as the key.                                                     |
 | **RETURNS**       | `Dict[str, float]`                                  | The updated `losses` dictionary.                                                                                                              |
 
-## TextCategorizer.rehearse {#rehearse tag="method,experimental"}
+## TextCategorizer.rehearse {#rehearse tag="method,experimental" new="3"}
 
 Perform a "rehearsal" update from a batch of data. Rehearsal updates teach the
 current model to make predictions similar to an initial model, to try to address

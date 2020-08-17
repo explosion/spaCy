@@ -1,0 +1,237 @@
+{# This is a template for training configs used for the quickstart widget in
+the docs and the init config command. It encodes various best practices and
+can help generate the best possible configuration, given a user's requirements. #}
+{%- set use_transformer = (transformer_data and hardware != "cpu") -%}
+{%- set transformer = transformer_data[optimize] if use_transformer else {} -%}
+[paths]
+train = ""
+dev = ""
+
+[system]
+use_pytorch_for_gpu_memory = {{ "true" if use_transformer else "false" }}
+
+[nlp]
+lang = "{{ lang }}"
+{%- set full_pipeline = ["transformer" if use_transformer else "tok2vec"] + components %}
+pipeline = {{ full_pipeline|pprint()|replace("'", '"')|safe }}
+tokenizer = {"@tokenizers": "spacy.Tokenizer.v1"}
+
+[components]
+
+{# TRANSFORMER PIPELINE #}
+{%- if use_transformer -%}
+[components.transformer]
+factory = "transformer"
+
+[components.transformer.model]
+@architectures = "spacy-transformers.TransformerModel.v1"
+name = "{{ transformer["name"] }}"
+tokenizer_config = {"use_fast": true}
+
+[components.transformer.model.get_spans]
+@span_getters = "strided_spans.v1"
+window = 128
+stride = 96
+
+{% if "tagger" in components %}
+[components.tagger]
+factory = "tagger"
+
+[components.tagger.model]
+@architectures = "spacy.Tagger.v1"
+nO = null
+
+[components.tagger.model.tok2vec]
+@architectures = "spacy-transformers.Tok2VecListener.v1"
+grad_factor = 1.0
+
+[components.tagger.model.tok2vec.pooling]
+@layers = "reduce_mean.v1"
+{%- endif %}
+
+{% if "parser" in components -%}
+[components.parser]
+factory = "parser"
+
+[components.parser.model]
+@architectures = "spacy.TransitionBasedParser.v1"
+nr_feature_tokens = 8
+hidden_width = 128
+maxout_pieces = 3
+use_upper = false
+nO = null
+
+[components.parser.model.tok2vec]
+@architectures = "spacy-transformers.Tok2VecListener.v1"
+grad_factor = 1.0
+
+[components.parser.model.tok2vec.pooling]
+@layers = "reduce_mean.v1"
+{%- endif %}
+
+{% if "ner" in components -%}
+[components.ner]
+factory = "ner"
+
+[components.ner.model]
+@architectures = "spacy.TransitionBasedParser.v1"
+nr_feature_tokens = 3
+hidden_width = 64
+maxout_pieces = 2
+use_upper = false
+nO = null
+
+[components.ner.model.tok2vec]
+@architectures = "spacy-transformers.Tok2VecListener.v1"
+grad_factor = 1.0
+
+[components.ner.model.tok2vec.pooling]
+@layers = "reduce_mean.v1"
+{% endif -%}
+
+{# NON-TRANSFORMER PIPELINE #}
+{% else -%}
+
+{%- if hardware == "gpu" -%}
+# There are no recommended transformer weights available for language '{{ lang }}'
+# yet, so the pipeline described here is not transformer-based.
+{%- endif %}
+
+[components.tok2vec]
+factory = "tok2vec"
+
+[components.tok2vec.model]
+@architectures = "spacy.Tok2Vec.v1"
+
+[components.tok2vec.model.embed]
+@architectures = "spacy.MultiHashEmbed.v1"
+width = ${components.tok2vec.model.encode:width}
+rows = {{ 2000 if optimize == "efficiency" else 7000 }}
+also_embed_subwords = {{ true if has_letters else false }}
+also_use_static_vectors = {{ true if optimize == "accuracy" else false }}
+
+[components.tok2vec.model.encode]
+@architectures = "spacy.MaxoutWindowEncoder.v1"
+width = {{ 96 if optimize == "efficiency" else 256 }}
+depth = {{ 4 if optimize == "efficiency" else 8 }}
+window_size = 1
+maxout_pieces = 3
+
+{% if "tagger" in components %}
+[components.tagger]
+factory = "tagger"
+
+[components.tagger.model]
+@architectures = "spacy.Tagger.v1"
+nO = null
+
+[components.tagger.model.tok2vec]
+@architectures = "spacy.Tok2VecListener.v1"
+width = ${components.tok2vec.model.encode:width}
+{%- endif %}
+
+{% if "parser" in components -%}
+[components.parser]
+factory = "parser"
+
+[components.parser.model]
+@architectures = "spacy.TransitionBasedParser.v1"
+nr_feature_tokens = 8
+hidden_width = 128
+maxout_pieces = 3
+use_upper = true
+nO = null
+
+[components.parser.model.tok2vec]
+@architectures = "spacy.Tok2VecListener.v1"
+width = ${components.tok2vec.model.encode:width}
+{%- endif %}
+
+{% if "ner" in components %}
+[components.ner]
+factory = "ner"
+
+[components.ner.model]
+@architectures = "spacy.TransitionBasedParser.v1"
+nr_feature_tokens = 6
+hidden_width = 64
+maxout_pieces = 2
+use_upper = true
+nO = null
+
+[components.ner.model.tok2vec]
+@architectures = "spacy.Tok2VecListener.v1"
+width = ${components.tok2vec.model.encode:width}
+{% endif %}
+{% endif %}
+
+{% for pipe in components %}
+{% if pipe not in ["tagger", "parser", "ner"] %}
+{# Other components defined by the user: we just assume they're factories #}
+[components.{{ pipe }}]
+factory = "{{ pipe }}"
+{% endif %}
+{% endfor %}
+
+[training]
+{% if use_transformer or optimize == "efficiency" or not word_vectors -%}
+vectors = null
+{% else -%}
+vectors = "{{ word_vectors }}"
+{% endif -%}
+{% if use_transformer -%}
+accumulate_gradient = {{ transformer["size_factor"] }}
+{% endif %}
+
+[training.optimizer]
+@optimizers = "Adam.v1"
+
+[training.optimizer.learn_rate]
+@schedules = "warmup_linear.v1"
+warmup_steps = 250
+total_steps = 20000
+initial_rate = 5e-5
+
+[training.train_corpus]
+@readers = "spacy.Corpus.v1"
+path = ${paths:train}
+max_length = {{ 500 if hardware == "gpu" else 0 }}
+
+[training.dev_corpus]
+@readers = "spacy.Corpus.v1"
+path = ${paths:dev}
+max_length = 0
+
+{% if use_transformer %}
+[training.batcher]
+@batchers = "batch_by_padded.v1"
+discard_oversize = true
+size = 2000
+buffer = 256
+{%- else %}
+[training.batcher]
+@batchers = "batch_by_words.v1"
+discard_oversize = false
+tolerance = 0.2
+
+[training.batcher.size]
+@schedules = "compounding.v1"
+start = 100
+stop = 1000
+compound = 1.001
+{% endif %}
+
+[training.score_weights]
+{%- if "tagger" in components %}
+tag_acc = {{ (1.0 / components|length)|round(2) }}
+{%- endif -%}
+{%- if "parser" in components %}
+dep_uas = 0.0
+dep_las = {{ (1.0 / components|length)|round(2) }}
+sents_f = 0.0
+{%- endif %}
+{%- if "ner" in components %}
+ents_f = {{ (1.0 / components|length)|round(2) }}
+ents_p = 0.0
+ents_r = 0.0
+{%- endif -%}

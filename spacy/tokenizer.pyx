@@ -9,7 +9,6 @@ from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 cimport cython
 
-from typing import Dict, List, Union, Pattern, Optional, Any
 import re
 import warnings
 
@@ -25,6 +24,7 @@ from .util import registry
 from .attrs import intify_attrs
 from .symbols import ORTH
 from .scorer import Scorer
+from .gold import validate_examples
 
 
 cdef class Tokenizer:
@@ -713,6 +713,7 @@ cdef class Tokenizer:
         return tokens
 
     def score(self, examples, **kwargs):
+        validate_examples(examples, "Tokenizer.score")
         return Scorer.score_tokenization(examples)
 
     def to_disk(self, path, **kwargs):

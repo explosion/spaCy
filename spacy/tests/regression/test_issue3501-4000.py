@@ -91,7 +91,6 @@ def test_issue_3526_3(en_vocab):
         assert new_ruler.overwrite is not ruler.overwrite
 
 
-@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_issue_3526_4(en_vocab):
     nlp = Language(vocab=en_vocab)
     patterns = [{"label": "ORG", "pattern": "Apple"}]
@@ -149,13 +148,19 @@ def test_issue3540(en_vocab):
     gold_text = ["I", "live", "in", "NewYork", "right", "now"]
     assert [token.text for token in doc] == gold_text
     gold_lemma = ["I", "live", "in", "NewYork", "right", "now"]
+    for i, lemma in enumerate(gold_lemma):
+        doc[i].lemma_ = lemma
     assert [token.lemma_ for token in doc] == gold_lemma
     vectors_1 = [token.vector for token in doc]
     assert len(vectors_1) == len(doc)
 
     with doc.retokenize() as retokenizer:
         heads = [(doc[3], 1), doc[2]]
-        attrs = {"POS": ["PROPN", "PROPN"], "DEP": ["pobj", "compound"]}
+        attrs = {
+            "POS": ["PROPN", "PROPN"],
+            "LEMMA": ["New", "York"],
+            "DEP": ["pobj", "compound"],
+        }
         retokenizer.split(doc[3], ["New", "York"], heads=heads, attrs=attrs)
 
     gold_text = ["I", "live", "in", "New", "York", "right", "now"]
@@ -246,7 +251,6 @@ def test_issue3803():
     assert [t.like_num for t in doc] == [True, True, True, True, True, True]
 
 
-@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_issue3830_no_subtok():
     """Test that the parser doesn't have subtok label if not learn_tokens"""
     config = {
@@ -264,7 +268,6 @@ def test_issue3830_no_subtok():
     assert "subtok" not in parser.labels
 
 
-@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_issue3830_with_subtok():
     """Test that the parser does have subtok label if learn_tokens=True."""
     config = {
@@ -327,7 +330,6 @@ def test_issue3879(en_vocab):
     assert len(matcher(doc)) == 2  # fails because of a FP match 'is a test'
 
 
-@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_issue3880():
     """Test that `nlp.pipe()` works when an empty string ends the batch.
 

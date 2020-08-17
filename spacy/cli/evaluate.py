@@ -17,23 +17,28 @@ from .. import displacy
 def evaluate_cli(
     # fmt: off
     model: str = Arg(..., help="Model name or path"),
-    data_path: Path = Arg(..., help="Location of JSON-formatted evaluation data", exists=True),
+    data_path: Path = Arg(..., help="Location of binary evaluation data in .spacy format", exists=True),
     output: Optional[Path] = Opt(None, "--output", "-o", help="Output JSON file for metrics", dir_okay=False),
-    gpu_id: int = Opt(-1, "--gpu-id", "-g", help="Use GPU"),
+    use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU"),
     gold_preproc: bool = Opt(False, "--gold-preproc", "-G", help="Use gold preprocessing"),
     displacy_path: Optional[Path] = Opt(None, "--displacy-path", "-dp", help="Directory to output rendered parses as HTML", exists=True, file_okay=False),
     displacy_limit: int = Opt(25, "--displacy-limit", "-dl", help="Limit of parses to render as HTML"),
     # fmt: on
 ):
     """
-    Evaluate a model. To render a sample of parses in a HTML file, set an
-    output directory as the displacy_path argument.
+    Evaluate a model. Expects a loadable spaCy model and evaluation data in the
+    binary .spacy format. The --gold-preproc option sets up the evaluation
+    examples with gold-standard sentences and tokens for the predictions. Gold
+    preprocessing helps the annotations align to the tokenization, and may
+    result in sequences of more consistent length. However, it may reduce
+    runtime accuracy due to train/test skew. To render a sample of dependency
+    parses in a HTML file, set as output directory as the displacy_path argument.
     """
     evaluate(
         model,
         data_path,
         output=output,
-        gpu_id=gpu_id,
+        use_gpu=use_gpu,
         gold_preproc=gold_preproc,
         displacy_path=displacy_path,
         displacy_limit=displacy_limit,
@@ -45,7 +50,7 @@ def evaluate(
     model: str,
     data_path: Path,
     output: Optional[Path] = None,
-    gpu_id: int = -1,
+    use_gpu: int = -1,
     gold_preproc: bool = False,
     displacy_path: Optional[Path] = None,
     displacy_limit: int = 25,
@@ -53,9 +58,8 @@ def evaluate(
 ) -> Scorer:
     msg = Printer(no_print=silent, pretty=not silent)
     fix_random_seed()
-    if gpu_id >= 0:
-        require_gpu(gpu_id)
-    util.set_env_log(False)
+    if use_gpu >= 0:
+        require_gpu(use_gpu)
     data_path = util.ensure_path(data_path)
     output_path = util.ensure_path(output)
     displacy_path = util.ensure_path(displacy_path)

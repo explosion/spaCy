@@ -28,10 +28,10 @@ architectures and their arguments and hyperparameters.
 > nlp.add_pipe("tagger", config=config)
 > ```
 
-| Setting          | Type                                       | Description                            | Default                             |
-| ---------------- | ------------------------------------------ | -------------------------------------- | ----------------------------------- |
-| `set_morphology` | bool                                       | Whether to set morphological features. | `False`                             |
-| `model`          | [`Model`](https://thinc.ai/docs/api-model) | The model to use.                      | [Tagger](/api/architectures#Tagger) |
+| Setting          | Type                                       | Description                                                                                                                                                                                                      | Default                             |
+| ---------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| `set_morphology` | bool                                       | Whether to set morphological features.                                                                                                                                                                           | `False`                             |
+| `model`          | [`Model`](https://thinc.ai/docs/api-model) | A model instance that predicts the tag probabilities. The output vectors should match the number of tags in size, and be normalized as probabilities (all scores between 0 and 1, with the rows summing to `1`). | [Tagger](/api/architectures#Tagger) |
 
 ```python
 https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/tagger.pyx
@@ -47,7 +47,7 @@ https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/tagger.pyx
 >
 > # Construction via create_pipe with custom model
 > config = {"model": {"@architectures": "my_tagger"}}
-> parser = nlp.add_pipe("tagger", config=config)
+> tagger = nlp.add_pipe("tagger", config=config)
 >
 > # Construction from class
 > from spacy.pipeline import Tagger
@@ -58,13 +58,13 @@ Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
 [`nlp.add_pipe`](/api/language#add_pipe).
 
-| Name             | Type    | Description                                                                                 |
-| ---------------- | ------- | ------------------------------------------------------------------------------------------- |
-| `vocab`          | `Vocab` | The shared vocabulary.                                                                      |
-| `model`          | `Model` | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component.             |
-| `name`           | str     | String name of the component instance. Used to add entries to the `losses` during training. |
-| _keyword-only_   |         |                                                                                             |
-| `set_morphology` | bool    | Whether to set morphological features.                                                      |
+| Name             | Type                                       | Description                                                                                                                                                                                                      |
+| ---------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`          | `Vocab`                                    | The shared vocabulary.                                                                                                                                                                                           |
+| `model`          | [`Model`](https://thinc.ai/docs/api-model) | A model instance that predicts the tag probabilities. The output vectors should match the number of tags in size, and be normalized as probabilities (all scores between 0 and 1, with the rows summing to `1`). |
+| `name`           | str                                        | String name of the component instance. Used to add entries to the `losses` during training.                                                                                                                      |
+| _keyword-only_   |                                            |                                                                                                                                                                                                                  |
+| `set_morphology` | bool                                       | Whether to set morphological features.                                                                                                                                                                           |
 
 ## Tagger.\_\_call\_\_ {#call tag="method"}
 
@@ -114,14 +114,20 @@ applied to the `Doc` in order. Both [`__call__`](/api/tagger#call) and
 
 ## Tagger.begin_training {#begin_training tag="method"}
 
-Initialize the pipe for training, using data examples if available. Returns an
-[`Optimizer`](https://thinc.ai/docs/api-optimizers) object.
+Initialize the component for training and return an
+[`Optimizer`](https://thinc.ai/docs/api-optimizers). `get_examples` should be a
+function that returns an iterable of [`Example`](/api/example) objects. The data
+examples are used to **initialize the model** of the component and can either be
+the full training data or a representative sample. Initialization includes
+validating the network,
+[inferring missing shapes](https://thinc.ai/docs/usage-models#validation) and
+setting up the label scheme based on the data.
 
 > #### Example
 >
 > ```python
 > tagger = nlp.add_pipe("tagger")
-> optimizer = tagger.begin_training(pipeline=nlp.pipeline)
+> optimizer = tagger.begin_training(lambda: [], pipeline=nlp.pipeline)
 > ```
 
 | Name           | Type                                                | Description                                                                                                |
@@ -134,7 +140,8 @@ Initialize the pipe for training, using data examples if available. Returns an
 
 ## Tagger.predict {#predict tag="method"}
 
-Apply the pipeline's model to a batch of docs, without modifying them.
+Apply the component's model to a batch of [`Doc`](/api/doc) objects, without
+modifying them.
 
 > #### Example
 >
@@ -150,7 +157,7 @@ Apply the pipeline's model to a batch of docs, without modifying them.
 
 ## Tagger.set_annotations {#set_annotations tag="method"}
 
-Modify a batch of documents, using pre-computed scores.
+Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 
 > #### Example
 >
@@ -167,8 +174,9 @@ Modify a batch of documents, using pre-computed scores.
 
 ## Tagger.update {#update tag="method"}
 
-Learn from a batch of documents and gold-standard information, updating the
-pipe's model. Delegates to [`predict`](/api/tagger#predict) and
+Learn from a batch of [`Example`](/api/example) objects containing the
+predictions and gold-standard annotations, and update the component's model.
+Delegates to [`predict`](/api/tagger#predict) and
 [`get_loss`](/api/tagger#get_loss).
 
 > #### Example
@@ -189,7 +197,7 @@ pipe's model. Delegates to [`predict`](/api/tagger#predict) and
 | `losses`          | `Dict[str, float]`                                  | Optional record of the loss during training. The value keyed by the model's name is updated.                                         |
 | **RETURNS**       | `Dict[str, float]`                                  | The updated `losses` dictionary.                                                                                                     |
 
-## Tagger.rehearse {#rehearse tag="method,experimental"}
+## Tagger.rehearse {#rehearse tag="method,experimental" new="3"}
 
 Perform a "rehearsal" update from a batch of data. Rehearsal updates teach the
 current model to make predictions similar to an initial model, to try to address
@@ -285,16 +293,14 @@ Add a new label to the pipe.
 > #### Example
 >
 > ```python
-> from spacy.symbols import POS
 > tagger = nlp.add_pipe("tagger")
-> tagger.add_label("MY_LABEL", {POS: "NOUN"})
+> tagger.add_label("MY_LABEL")
 > ```
 
-| Name        | Type             | Description                                                     |
-| ----------- | ---------------- | --------------------------------------------------------------- |
-| `label`     | str              | The label to add.                                               |
-| `values`    | `Dict[int, str]` | Optional values to map to the label, e.g. a tag map dictionary. |
-| **RETURNS** | int              | `0` if the label is already present, otherwise `1`.             |
+| Name        | Type | Description                                         |
+| ----------- | ---- | --------------------------------------------------- |
+| `label`     | str  | The label to add.                                   |
+| **RETURNS** | int  | `0` if the label is already present, otherwise `1`. |
 
 ## Tagger.to_disk {#to_disk tag="method"}
 
@@ -369,9 +375,7 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 
 ## Tagger.labels {#labels tag="property"}
 
-The labels currently added to the component. Note that even for a blank
-component, this will always include the built-in coarse-grained part-of-speech
-tags by default, e.g. `VERB`, `NOUN` and so on.
+The labels currently added to the component.
 
 > #### Example
 >
@@ -396,9 +400,8 @@ serialization by passing in the string names via the `exclude` argument.
 > data = tagger.to_disk("/path", exclude=["vocab"])
 > ```
 
-| Name      | Description                                                                                |
-| --------- | ------------------------------------------------------------------------------------------ |
-| `vocab`   | The shared [`Vocab`](/api/vocab).                                                          |
-| `cfg`     | The config file. You usually don't want to exclude this.                                   |
-| `model`   | The binary model data. You usually don't want to exclude this.                             |
-| `tag_map` | The [tag map](/usage/adding-languages#tag-map) mapping fine-grained to coarse-grained tag. |
+| Name    | Description                                                    |
+| ------- | -------------------------------------------------------------- |
+| `vocab` | The shared [`Vocab`](/api/vocab).                              |
+| `cfg`   | The config file. You usually don't want to exclude this.       |
+| `model` | The binary model data. You usually don't want to exclude this. |

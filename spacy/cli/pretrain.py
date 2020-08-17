@@ -5,7 +5,7 @@ import time
 import re
 from collections import Counter
 from pathlib import Path
-from thinc.api import use_pytorch_for_gpu_memory, require_gpu, Config
+from thinc.api import use_pytorch_for_gpu_memory, require_gpu
 from thinc.api import set_dropout_rate, to_categorical, fix_random_seed
 from thinc.api import CosineDistance, L2Distance
 from wasabi import msg
@@ -35,7 +35,7 @@ def pretrain_cli(
     config_path: Path = Arg(..., help="Path to config file", exists=True, dir_okay=False),
     code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     resume_path: Optional[Path] = Opt(None, "--resume-path", "-r", help="Path to pretrained weights from which to resume pretraining"),
-    epoch_resume: Optional[int] = Opt(None, "--epoch-resume", "-er", help="The epoch to resume counting from when using '--resume_path'. Prevents unintended overwriting of existing weight files."),
+    epoch_resume: Optional[int] = Opt(None, "--epoch-resume", "-er", help="The epoch to resume counting from when using --resume-path. Prevents unintended overwriting of existing weight files."),
     use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU"),
     # fmt: on
 ):
@@ -88,8 +88,8 @@ def pretrain(
         msg.info("Using CPU")
     msg.info(f"Loading config from: {config_path}")
     with show_validation_error(config_path):
-        config = Config().from_disk(config_path)
-        nlp, config = util.load_model_from_config(config, overrides=config_overrides)
+        config = util.load_config(config_path, overrides=config_overrides)
+        nlp, config = util.load_model_from_config(config)
     # TODO: validate that [pretraining] block exists
     if not output_dir.exists():
         output_dir.mkdir()

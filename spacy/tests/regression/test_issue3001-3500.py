@@ -90,7 +90,6 @@ def test_issue3199():
     assert list(doc[0:3].noun_chunks) == []
 
 
-@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_issue3209():
     """Test issue that occurred in spaCy nightly where NER labels were being
     mapped to classes incorrectly after loading the model, when the labels
@@ -241,11 +240,11 @@ def test_issue3449():
     assert t3[5].text == "I"
 
 
-@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_issue3456():
     # this crashed because of a padding error in layer.ops.unflatten in thinc
     nlp = English()
-    nlp.add_pipe("tagger")
+    tagger = nlp.add_pipe("tagger")
+    tagger.add_label("A")
     nlp.begin_training()
     list(nlp.pipe(["hi", ""]))
 

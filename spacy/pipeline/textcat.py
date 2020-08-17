@@ -1,10 +1,11 @@
 from typing import Iterable, Tuple, Optional, Dict, List, Callable, Iterator, Any
 from thinc.api import get_array_module, Model, Optimizer, set_dropout_rate, Config
+from thinc.types import Floats2d
 import numpy
 
 from .pipe import Pipe
 from ..language import Language
-from ..gold import Example
+from ..gold import Example, validate_examples
 from ..errors import Errors
 from ..scorer import Scorer
 from .. import util
@@ -30,8 +31,8 @@ bow_model_config = """
 [model]
 @architectures = "spacy.TextCatBOW.v1"
 exclusive_classes = false
-ngram_size: 1
-no_output_layer: false
+ngram_size = 1
+no_output_layer = false
 """
 
 cnn_model_config = """
@@ -48,7 +49,6 @@ embed_size = 2000
 window_size = 1
 maxout_pieces = 3
 subword_features = true
-dropout = null
 """
 
 
@@ -70,8 +70,22 @@ dropout = null
     default_score_weights={"cats_score": 1.0},
 )
 def make_textcat(
-    nlp: Language, name: str, model: Model, labels: Iterable[str]
+    nlp: Language,
+    name: str,
+    model: Model[List[Doc], List[Floats2d]],
+    labels: Iterable[str],
 ) -> "TextCategorizer":
+    """Create a TextCategorizer compoment. The text categorizer predicts categories
+    over a whole document. It can learn one or more labels, and the labels can
+    be mutually exclusive (i.e. one true label per doc) or non-mutually exclusive
+    (i.e. zero or more labels may be true per doc). The multi-label setting is
+    controlled by the model instance that's provided.
+
+    model (Model[List[Doc], List[Floats2d]]): A model instance that predicts
+        scores for each category.
+    labels (list): A list of categories to learn. If empty, the model infers the
+        categories from the data.
+    """
     return TextCategorizer(nlp.vocab, model, name, labels=labels)
 
 
@@ -158,7 +172,7 @@ class TextCategorizer(Pipe):
         return scores
 
     def set_annotations(self, docs: Iterable[Doc], scores) -> None:
-        """Modify a batch of documents, using pre-computed scores.
+        """Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 
         docs (Iterable[Doc]): The documents to modify.
         scores: The scores to set, produced by TextCategorizer.predict.
@@ -195,15 +209,10 @@ class TextCategorizer(Pipe):
         if losses is None:
             losses = {}
         losses.setdefault(self.name, 0.0)
-        try:
-            if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
-                # Handle cases where there are no tokens in any docs.
-                return losses
-        except AttributeError:
-            types = set([type(eg) for eg in examples])
-            raise TypeError(
-                Errors.E978.format(name="TextCategorizer", method="update", types=types)
-            )
+        validate_examples(examples, "TextCategorizer.update")
+        if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
+            # Handle cases where there are no tokens in any docs.
+            return losses
         set_dropout_rate(self.model, drop)
         scores, bp_scores = self.model.begin_update([eg.predicted for eg in examples])
         loss, d_scores = self.get_loss(examples, scores)
@@ -238,19 +247,12 @@ class TextCategorizer(Pipe):
 
         DOCS: https://spacy.io/api/textcategorizer#rehearse
         """
-
         if losses is not None:
             losses.setdefault(self.name, 0.0)
         if self._rehearsal_model is None:
             return losses
-        try:
-            docs = [eg.predicted for eg in examples]
-        except AttributeError:
-            types = set([type(eg) for eg in examples])
-            err = Errors.E978.format(
-                name="TextCategorizer", method="rehearse", types=types
-            )
-            raise TypeError(err)
+        validate_examples(examples, "TextCategorizer.rehearse")
+        docs = [eg.predicted for eg in examples]
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
             return losses
@@ -289,6 +291,7 @@ class TextCategorizer(Pipe):
 
         DOCS: https://spacy.io/api/textcategorizer#get_loss
         """
+        validate_examples(examples, "TextCategorizer.get_loss")
         truths, not_missing = self._examples_to_truth(examples)
         not_missing = self.model.ops.asarray(not_missing)
         d_scores = (scores - truths) / scores.shape[0]
@@ -324,7 +327,7 @@ class TextCategorizer(Pipe):
 
     def begin_training(
         self,
-        get_examples: Callable[[], Iterable[Example]] = lambda: [],
+        get_examples: Callable[[], Iterable[Example]],
         *,
         pipeline: Optional[List[Tuple[str, Callable[[Doc], Doc]]]] = None,
         sgd: Optional[Optimizer] = None,
@@ -342,21 +345,20 @@ class TextCategorizer(Pipe):
 
         DOCS: https://spacy.io/api/textcategorizer#begin_training
         """
-        # TODO: begin_training is not guaranteed to see all data / labels ?
-        examples = list(get_examples())
-        for example in examples:
-            try:
-                y = example.y
-            except AttributeError:
-                err = Errors.E978.format(
-                    name="TextCategorizer", method="update", types=type(example)
-                )
-                raise TypeError(err)
-            for cat in y.cats:
+        if not hasattr(get_examples, "__call__"):
+            err = Errors.E930.format(name="TextCategorizer", obj=type(get_examples))
+            raise ValueError(err)
+        subbatch = []  # Select a subbatch of examples to initialize the model
+        for example in get_examples():
+            if len(subbatch) < 2:
+                subbatch.append(example)
+            for cat in example.y.cats:
                 self.add_label(cat)
         self.require_labels()
-        docs = [Doc(self.vocab, words=["hello"])]
-        truths, _ = self._examples_to_truth(examples)
+        docs = [eg.reference for eg in subbatch]
+        if not docs:  # need at least one doc
+            docs = [Doc(self.vocab, words=["hello"])]
+        truths, _ = self._examples_to_truth(subbatch)
         self.set_output(len(self.labels))
         self.model.initialize(X=docs, Y=truths)
         if sgd is None:
@@ -378,6 +380,7 @@ class TextCategorizer(Pipe):
 
         DOCS: https://spacy.io/api/textcategorizer#score
         """
+        validate_examples(examples, "TextCategorizer.score")
         return Scorer.score_cats(
             examples,
             "cats",

@@ -5,7 +5,7 @@ import classNames from 'classnames'
 import Link from './link'
 import classes from '../styles/accordion.module.sass'
 
-const Accordion = ({ title, id, expanded, spaced, children }) => {
+export default function Accordion({ title, id, expanded = false, spaced = false, children }) {
     const [isExpanded, setIsExpanded] = useState(true)
     const rootClassNames = classNames(classes.root, {
         [classes.spaced]: !!spaced,
@@ -59,14 +59,8 @@ const Accordion = ({ title, id, expanded, spaced, children }) => {
     )
 }
 
-Accordion.defaultProps = {
-    expanded: false,
-}
-
 Accordion.propTypes = {
     title: PropTypes.string,
     id: PropTypes.string,
     children: PropTypes.node.isRequired,
 }
-
-export default Accordion

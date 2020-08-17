@@ -31,43 +31,15 @@ cdef class Morphology:
     VALUE_SEP = ","
     EMPTY_MORPH = "_" # not an empty string so that the PreshMap key is not 0
 
-    def __init__(self, StringStore strings, tag_map, lemmatizer, exc=None):
+    def __init__(self, StringStore strings):
         self.mem = Pool()
         self.strings = strings
         self.tags = PreshMap()
-        self.load_tag_map(tag_map)
-        self.lemmatizer = lemmatizer
-
-        self._cache = PreshMapArray(self.n_tags)
-        self._exc = {}
-        if exc is not None:
-            self.load_morph_exceptions(exc)
-
-    def load_tag_map(self, tag_map):
-        self.tag_map = {}
-        self.reverse_index = {}
-        # Add special space symbol. We prefix with underscore, to make sure it
-        # always sorts to the end.
-        if '_SP' in tag_map:
-            space_attrs = tag_map.get('_SP')
-        else:
-            space_attrs = tag_map.get('SP', {POS: SPACE})
-        if '_SP' not in tag_map:
-            self.strings.add('_SP')
-            tag_map = dict(tag_map)
-            tag_map['_SP'] = space_attrs
-        for i, (tag_str, attrs) in enumerate(sorted(tag_map.items())):
-            attrs = self.normalize_attrs(attrs)
-            self.add(attrs)
-            self.tag_map[tag_str] = dict(attrs)
-            self.reverse_index[self.strings.add(tag_str)] = i
-        self.tag_names = tuple(sorted(self.tag_map.keys()))
-        self.n_tags = len(self.tag_map)
-        self._cache = PreshMapArray(self.n_tags)
 
     def __reduce__(self):
-        return (Morphology, (self.strings, self.tag_map, self.lemmatizer,
-                self.exc), None, None)
+        tags = set([self.get(self.strings[s]) for s in self.strings])
+        tags -= set([""])
+        return (unpickle_morphology, (self.strings, sorted(tags)), None, None)
 
     def add(self, features):
         """Insert a morphological analysis in the morphology table, if not
@@ -185,115 +157,6 @@ cdef class Morphology:
         else:
             return self.strings[tag.key]
 
-    def lemmatize(self, const univ_pos_t univ_pos, attr_t orth, morphology):
-        if orth not in self.strings:
-            return orth
-        cdef unicode py_string = self.strings[orth]
-        if self.lemmatizer is None:
-            return self.strings.add(py_string.lower())
-        cdef list lemma_strings
-        cdef unicode lemma_string
-        # Normalize features into a dict keyed by the field, to make life easier
-        # for the lemmatizer. Handles string-to-int conversion too.
-        string_feats = {}
-        for key, value in morphology.items():
-            if value is True:
-                name, value = self.strings.as_string(key).split('_', 1)
-                string_feats[name] = value
-            else:
-                string_feats[self.strings.as_string(key)] = self.strings.as_string(value)
-        lemma_strings = self.lemmatizer(py_string, univ_pos, string_feats)
-        lemma_string = lemma_strings[0]
-        lemma = self.strings.add(lemma_string)
-        return lemma
-
-    def add_special_case(self, unicode tag_str, unicode orth_str, attrs,
-                         force=False):
-        """Add a special-case rule to the morphological analyser. Tokens whose
-        tag and orth match the rule will receive the specified properties.
-
-        tag (str): The part-of-speech tag to key the exception.
-        orth (str): The word-form to key the exception.
-        """
-        attrs = dict(attrs)
-        attrs = self.normalize_attrs(attrs)
-        self.add(attrs)
-        attrs = intify_attrs(attrs, self.strings, _do_deprecated=True)
-        self._exc[(tag_str, self.strings.add(orth_str))] = attrs
-
-    cdef int assign_untagged(self, TokenC* token) except -1:
-        """Set morphological attributes on a token without a POS tag. Uses
-        the lemmatizer's lookup() method, which looks up the string in the
-        table provided by the language data as lemma_lookup (if available).
-        """
-        if token.lemma == 0:
-            orth_str = self.strings[token.lex.orth]
-            lemma = self.lemmatizer.lookup(orth_str, orth=token.lex.orth)
-            token.lemma = self.strings.add(lemma)
-
-    cdef int assign_tag(self, TokenC* token, tag_str) except -1:
-        cdef attr_t tag = self.strings.as_int(tag_str)
-        if tag in self.reverse_index:
-            tag_id = self.reverse_index[tag]
-            self.assign_tag_id(token, tag_id)
-        else:
-            token.tag = tag
-
-    cdef int assign_tag_id(self, TokenC* token, int tag_id) except -1:
-        if tag_id > self.n_tags:
-            raise ValueError(Errors.E014.format(tag=tag_id))
-        # Ensure spaces get tagged as space.
-        # It seems pretty arbitrary to put this logic here, but there's really
-        # nowhere better. I guess the justification is that this is where the
-        # specific word and the tag interact. Still, we should have a better
-        # way to enforce this rule, or figure out why the statistical model fails.
-        # Related to Issue #220
-        if Lexeme.c_check_flag(token.lex, IS_SPACE):
-            tag_id = self.reverse_index[self.strings.add('_SP')]
-        tag_str = self.tag_names[tag_id]
-        features = dict(self.tag_map.get(tag_str, {}))
-        if features:
-            pos = self.strings.as_int(features.pop(POS))
-        else:
-            pos = 0
-        cdef attr_t lemma = <attr_t>self._cache.get(tag_id, token.lex.orth)
-        if lemma == 0:
-            # Ugh, self.lemmatize has opposite arg order from self.lemmatizer :(
-            lemma = self.lemmatize(pos, token.lex.orth, features)
-            self._cache.set(tag_id, token.lex.orth, <void*>lemma)
-        token.lemma = lemma
-        token.pos = <univ_pos_t>pos
-        token.tag = self.strings[tag_str]
-        token.morph = self.add(features)
-        if (self.tag_names[tag_id], token.lex.orth) in self._exc:
-            self._assign_tag_from_exceptions(token, tag_id)
-
-    cdef int _assign_tag_from_exceptions(self, TokenC* token, int tag_id) except -1:
-        key = (self.tag_names[tag_id], token.lex.orth)
-        cdef dict attrs
-        attrs = self._exc[key]
-        token.pos = attrs.get(POS, token.pos)
-        token.lemma = attrs.get(LEMMA, token.lemma)
-
-    def load_morph_exceptions(self, dict morph_rules):
-        self._exc = {}
-        # Map (form, pos) to attributes
-        for tag, exc in morph_rules.items():
-            for orth, attrs in exc.items():
-                attrs = self.normalize_attrs(attrs)
-                self.add_special_case(self.strings.as_string(tag), self.strings.as_string(orth), attrs)
-
-    @property
-    def exc(self):
-        # generate the serializable exc in the MORPH_RULES format from the
-        # internal tuple-key format
-        morph_rules = {}
-        for (tag, orth) in sorted(self._exc):
-            if not tag in morph_rules:
-                morph_rules[tag] = {}
-            morph_rules[tag][self.strings[orth]] = self._exc[(tag, orth)]
-        return morph_rules
-
     @staticmethod
     def feats_to_dict(feats):
         if not feats or feats == Morphology.EMPTY_MORPH:
@@ -338,3 +201,9 @@ cdef int get_n_by_field(attr_t* results, const MorphAnalysisC* morph, attr_t fie
             results[n_results] = morph.features[i]
             n_results += 1
     return n_results
+
+def unpickle_morphology(strings, tags):
+    cdef Morphology morphology = Morphology(strings)
+    for tag in tags:
+        morphology.add(tag)
+    return morphology

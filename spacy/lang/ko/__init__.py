@@ -7,6 +7,7 @@ from .lex_attrs import LEX_ATTRS
 from ...language import Language
 from ...tokens import Doc
 from ...compat import copy_reg
+from ...symbols import POS
 from ...util import DummyTokenizer, registry
 
 
@@ -29,8 +30,6 @@ def create_tokenizer():
 class KoreanTokenizer(DummyTokenizer):
     def __init__(self, nlp: Optional[Language] = None):
         self.vocab = nlp.vocab
-        # TODO: is this the right way to do it?
-        self.vocab.morphology.load_tag_map(TAG_MAP)
         MeCab = try_mecab_import()
         self.mecab_tokenizer = MeCab("-F%f[0],%f[7]")
 
@@ -44,6 +43,7 @@ class KoreanTokenizer(DummyTokenizer):
         for token, dtoken in zip(doc, dtokens):
             first_tag, sep, eomi_tags = dtoken["tag"].partition("+")
             token.tag_ = first_tag  # stem(어간) or pre-final(선어말 어미)
+            token.pos = TAG_MAP[token.tag_][POS]
             token.lemma_ = dtoken["lemma"]
         doc.user_data["full_tags"] = [dt["tag"] for dt in dtokens]
         return doc
@@ -85,7 +85,7 @@ def try_mecab_import() -> None:
             "Korean support requires [mecab-ko](https://bitbucket.org/eunjeon/mecab-ko/src/master/README.md), "
             "[mecab-ko-dic](https://bitbucket.org/eunjeon/mecab-ko-dic), "
             "and [natto-py](https://github.com/buruzaemon/natto-py)"
-        )
+        ) from None
 
 
 def check_spaces(text, tokens):

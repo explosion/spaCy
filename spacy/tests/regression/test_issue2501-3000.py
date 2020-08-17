@@ -19,8 +19,8 @@ def test_issue2564():
     """Test the tagger sets is_tagged correctly when used via Language.pipe."""
     nlp = Language()
     tagger = nlp.add_pipe("tagger")
-    with pytest.warns(UserWarning):
-        tagger.begin_training()  # initialise weights
+    tagger.add_label("A")
+    tagger.begin_training(lambda: [])
     doc = nlp("hello world")
     assert doc.is_tagged
     docs = nlp.pipe(["hello", "world"])
@@ -136,7 +136,6 @@ def test_issue2782(text, lang_cls):
     assert doc[0].like_num
 
 
-@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_issue2800():
     """Test issue that arises when too many labels are added to NER model.
     Used to cause segfault.

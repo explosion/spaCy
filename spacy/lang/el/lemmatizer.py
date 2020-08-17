@@ -1,6 +1,7 @@
-from typing import Dict, List
+from typing import List
 
-from ...lemmatizer import Lemmatizer
+from ...pipeline import Lemmatizer
+from ...tokens import Token
 
 
 class GreekLemmatizer(Lemmatizer):
@@ -14,13 +15,27 @@ class GreekLemmatizer(Lemmatizer):
     not applicable for Greek language.
     """
 
-    def lemmatize(
-        self,
-        string: str,
-        index: Dict[str, List[str]],
-        exceptions: Dict[str, Dict[str, List[str]]],
-        rules: Dict[str, List[List[str]]],
-    ) -> List[str]:
+    def rule_lemmatize(self, token: Token) -> List[str]:
+        """Lemmatize using a rule-based approach.
+
+        token (Token): The token to lemmatize.
+        RETURNS (list): The available lemmas for the string.
+        """
+        cache_key = (token.lower, token.pos)
+        if cache_key in self.cache:
+            return self.cache[cache_key]
+        string = token.text
+        univ_pos = token.pos_.lower()
+        if univ_pos in ("", "eol", "space"):
+            return [string.lower()]
+
+        index_table = self.lookups.get_table("lemma_index", {})
+        exc_table = self.lookups.get_table("lemma_exc", {})
+        rules_table = self.lookups.get_table("lemma_rules", {})
+        index = index_table.get(univ_pos, {})
+        exceptions = exc_table.get(univ_pos, {})
+        rules = rules_table.get(univ_pos, {})
+
         string = string.lower()
         forms = []
         if string in index:
@@ -42,4 +57,6 @@ class GreekLemmatizer(Lemmatizer):
             forms.extend(oov_forms)
         if not forms:
             forms.append(string)
-        return list(set(forms))
+        forms = list(set(forms))
+        self.cache[cache_key] = forms
+        return forms

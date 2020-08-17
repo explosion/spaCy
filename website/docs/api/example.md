@@ -8,8 +8,9 @@ new: 3.0
 
 An `Example` holds the information for one training instance. It stores two
 `Doc` objects: one for holding the gold-standard reference data, and one for
-holding the predictions of the pipeline. An `Alignment` object stores the
-alignment between these two documents, as they can differ in tokenization.
+holding the predictions of the pipeline. An [`Alignment`](#alignment-object)
+object stores the alignment between these two documents, as they can differ in
+tokenization.
 
 ## Example.\_\_init\_\_ {#init tag="method"}
 
@@ -40,9 +41,8 @@ both documents.
 ## Example.from_dict {#from_dict tag="classmethod"}
 
 Construct an `Example` object from the `predicted` document and the reference
-annotations provided as a dictionary.
-
-<!-- TODO: document formats? legacy & token_annotation stuff -->
+annotations provided as a dictionary. For more details on the required format,
+see the [training format documentation](/api/data-formats#dict-input).
 
 > #### Example
 >
@@ -244,8 +244,8 @@ accuracy of predicted entities against the original gold-standard annotation.
 
 ## Example.to_dict {#to_dict tag="method"}
 
-Return a dictionary representation of the reference annotation contained in this
-`Example`.
+Return a [dictionary representation](/api/data-formats#dict-input) of the
+reference annotation contained in this `Example`.
 
 > #### Example
 >
@@ -255,7 +255,7 @@ Return a dictionary representation of the reference annotation contained in this
 
 | Name        | Type             | Description                                            |
 | ----------- | ---------------- | ------------------------------------------------------ |
-| **RETURNS** | `Dict[str, obj]` | Dictionary representation of the reference annotation. |
+| **RETURNS** | `Dict[str, Any]` | Dictionary representation of the reference annotation. |
 
 ## Example.split_sents {#split_sents tag="method"}
 
@@ -276,3 +276,46 @@ Split one `Example` into multiple `Example` objects, one for each sentence.
 | Name        | Type            | Description                                                |
 | ----------- | --------------- | ---------------------------------------------------------- |
 | **RETURNS** | `List[Example]` | List of `Example` objects, one for each original sentence. |
+
+## Alignment {#alignment-object new="3"}
+
+Calculate alignment tables between two tokenizations.
+
+### Alignment attributes {#alignment-attributes"}
+
+| Name  | Type                                               | Description                                                |
+| ----- | -------------------------------------------------- | ---------------------------------------------------------- |
+| `x2y` | [`Ragged`](https://thinc.ai/docs/api-types#ragged) | The `Ragged` object holding the alignment from `x` to `y`. |
+| `y2x` | [`Ragged`](https://thinc.ai/docs/api-types#ragged) | The `Ragged` object holding the alignment from `y` to `x`. |
+
+<Infobox title="Important note" variant="warning">
+
+The current implementation of the alignment algorithm assumes that both
+tokenizations add up to the same string. For example, you'll be able to align
+`["I", "'", "m"]` and `["I", "'m"]`, which both add up to `"I'm"`, but not
+`["I", "'m"]` and `["I", "am"]`.
+
+</Infobox>
+
+> #### Example
+>
+> ```python
+> from spacy.gold import Alignment
+>
+> bert_tokens = ["obama", "'", "s", "podcast"]
+> spacy_tokens = ["obama", "'s", "podcast"]
+> alignment = Alignment.from_strings(bert_tokens, spacy_tokens)
+> a2b = alignment.x2y
+> assert list(a2b.dataXd) == [0, 1, 1, 2]
+> ```
+>
+> If `a2b.dataXd[1] == a2b.dataXd[2] == 1`, that means that `A[1]` (`"'"`) and
+> `A[2]` (`"s"`) both align to `B[1]` (`"'s"`).
+
+### Alignment.from_strings {#classmethod tag="function"}
+
+| Name        | Type        | Description                                     |
+| ----------- | ----------- | ----------------------------------------------- |
+| `A`         | list        | String values of candidate tokens to align.     |
+| `B`         | list        | String values of reference tokens to align.     |
+| **RETURNS** | `Alignment` | An `Alignment` object describing the alignment. |

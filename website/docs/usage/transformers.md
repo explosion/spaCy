@@ -10,29 +10,45 @@ next: /usage/training
 
 ## Installation {#install hidden="true"}
 
-spaCy v3.0 lets you use almost **any statistical model** to power your pipeline.
-You can use models implemented in a variety of
-[frameworks](https://thinc.ai/docs/usage-frameworks), including TensorFlow,
-PyTorch and MXNet. To keep things sane, spaCy expects models from these
-frameworks to be wrapped with a common interface, using our machine learning
-library [Thinc](https://thinc.ai). A transformer model is just a statistical
-model, so the
-[`spacy-transformers`](https://github.com/explosion/spacy-transformers) package
-actually has very little work to do: it just has to provide a few functions that
-do the required plumbing. It also provides a pipeline component,
-[`Transformer`](/api/transformer), that lets you do multi-task learning and lets
-you save the transformer outputs for later use.
+Transformers are a family of neural network architectures that compute dense,
+context-sensitive representations for the tokens in your documents. Downstream
+models in your pipeline can then use these representations as input features to
+improve their predictions. You can connect multiple components to a single
+transformer model, with any or all of those components giving feedback to the
+transformer to fine-tune it to your tasks. spaCy's transformer support
+interoperates with PyTorch and the [Huggingface transformers](https://huggingface.co/transformers/)
+library, giving you access to thousands of pretrained models for your pipelines.
+There are many [great guides](http://jalammar.github.io/illustrated-transformer/)
+to transformer models, but for practical purposes, you can simply think of them
+as a drop-in replacement that let you achieve higher accuracy in exchange for
+higher training and runtime costs.
 
-To use transformers with spaCy, you need the
-[`spacy-transformers`](https://github.com/explosion/spacy-transformers) package
-installed. It takes care of all the setup behind the scenes, and makes sure the
-transformer pipeline component is available to spaCy.
+## System requirements
 
-```bash
-$ pip install spacy-transformers
+We recommend an NVIDIA GPU with at least 10GB of memory in order to work with
+transformer models. The exact requirements will depend on the transformer you
+model you choose and whether you're training the pipeline or simply running it.
+Training a transformer-based model without a GPU will be too slow for most
+practical purposes. You'll also need to make sure your GPU drivers are up-to-date
+and v9+ of the CUDA runtime is installed.
+
+Once you have CUDA installed, you'll need to install two pip packages, `cupy`
+and `spacy-transformers`. [CuPy](https://docs.cupy.dev/en/stable/install.html)
+is just like `numpy`, but for GPU. The best way to install it is to choose a
+wheel that matches the version of CUDA you're using. You may also need to set the
+`CUDA_PATH` environment variable if your CUDA runtime is installed in
+a non-standard location. Putting it all together, if you had installed CUDA 10.2
+in `/opt/nvidia/cuda`, you would run:
+
+```
+export CUDA_PATH="/opt/nvidia/cuda"
+pip install cupy-cuda102
+pip install spacy-transformers
 ```
 
-<!-- TODO: the text below has been copied from the spacy-transformers repo and needs to be updated and adjusted -->
+Provisioning a new machine will require about 5GB of data to be downloaded in total:
+3GB for the CUDA runtime, 800MB for PyTorch, 400MB for CuPy, 500MB for the transformer
+weights, and about 200MB for spaCy and its various requirements.
 
 ## Runtime usage {#runtime}
 
@@ -56,6 +72,13 @@ $ python -m spacy download en_core_trf_lg
 ```python
 ### Example
 import spacy
+from thinc.api import use_pytorch_for_gpu_memory, require_gpu
+
+# Use the GPU, with memory allocations directed via PyTorch.
+# This prevents out-of-memory errors that would otherwise occur from competing
+# memory pools.
+use_pytorch_for_gpu_memory()
+require_gpu(0)
 
 nlp = spacy.load("en_core_trf_lg")
 for doc in nlp.pipe(["some text", "some other text"]):
@@ -99,9 +122,9 @@ evaluate, package and visualize your model.
 
 </Project>
 
-The `[components]` section in the [`config.cfg`](#TODO:) describes the pipeline
-components and the settings used to construct them, including their model
-implementation. Here's a config snippet for the
+The `[components]` section in the [`config.cfg`](/api/data-formats#config)
+describes the pipeline components and the settings used to construct them,
+including their model implementation. Here's a config snippet for the
 [`Transformer`](/api/transformer) component, along with matching Python code. In
 this case, the `[components.transformer]` block describes the `transformer`
 component:
@@ -165,8 +188,9 @@ resolved, the function is created and passed into the model as an argument.
 Remember that the `config.cfg` used for training should contain **no missing
 values** and requires all settings to be defined. You don't want any hidden
 defaults creeping in and changing your results! spaCy will tell you if settings
-are missing, and you can run [`spacy init config`](/api/cli#init-config) with to
-automatically fill in all defaults.
+are missing, and you can run
+[`spacy init fill-config`](/api/cli#init-fill-config) to automatically fill in
+all defaults.
 
 </Infobox>
 
@@ -204,7 +228,7 @@ a Python file. For more details on training with custom code, see the
 [training documentation](/usage/training#custom-code).
 
 ```bash
-$ python -m spacy train ./train.spacy ./dev.spacy ./config.cfg --code ./code.py
+$ python -m spacy train ./config.cfg --code ./code.py
 ```
 
 ### Customizing the model implementations {#training-custom-model}
@@ -267,8 +291,6 @@ more source rows the token is aligned against. Here we use the
 averages the wordpiece rows. We could instead use `reduce_last`,
 [`reduce_max`](https://thinc.ai/docs/api-layers#reduce_max), or a custom
 function you write yourself.
-
-<!--TODO: reduce_last: undocumented? -->
 
 You can have multiple components all listening to the same transformer model,
 and all passing gradients back to it. By default, all of the gradients will be

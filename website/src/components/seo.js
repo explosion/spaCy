@@ -25,89 +25,95 @@ function getImage(section, nightly) {
     return socialImageDefault
 }
 
-const SEO = ({ description, lang, title, section, sectionTitle, bodyClass, nightly }) => (
-    <StaticQuery
-        query={query}
-        render={data => {
-            const siteMetadata = data.site.siteMetadata
-            const metaDescription = description || siteMetadata.description
-            const pageTitle = getPageTitle(
-                title,
-                siteMetadata.title,
-                siteMetadata.slogan,
-                sectionTitle
-            )
-            const socialImage = siteMetadata.siteUrl + getImage(section, nightly)
-            const meta = [
-                {
-                    name: 'description',
-                    content: metaDescription,
-                },
-                {
-                    property: 'og:title',
-                    content: pageTitle,
-                },
-                {
-                    property: 'og:description',
-                    content: metaDescription,
-                },
-                {
-                    property: 'og:type',
-                    content: `website`,
-                },
-                {
-                    property: 'og:site_name',
-                    content: title,
-                },
-                {
-                    property: 'og:image',
-                    content: socialImage,
-                },
-                {
-                    name: 'twitter:card',
-                    content: 'summary_large_image',
-                },
-                {
-                    name: 'twitter:image',
-                    content: socialImage,
-                },
-                {
-                    name: 'twitter:creator',
-                    content: `@${siteMetadata.social.twitter}`,
-                },
-                {
-                    name: 'twitter:site',
-                    content: `@${siteMetadata.social.twitter}`,
-                },
-                {
-                    name: 'twitter:title',
-                    content: pageTitle,
-                },
-                {
-                    name: 'twitter:description',
-                    content: metaDescription,
-                },
-                {
-                    name: 'docsearch:language',
-                    content: lang,
-                },
-            ]
+export default function SEO({
+    description,
+    lang = 'en',
+    title,
+    section,
+    sectionTitle,
+    bodyClass,
+    nightly,
+}) {
+    return (
+        <StaticQuery
+            query={query}
+            render={data => {
+                const siteMetadata = data.site.siteMetadata
+                const metaDescription = description || siteMetadata.description
+                const pageTitle = getPageTitle(
+                    title,
+                    siteMetadata.title,
+                    siteMetadata.slogan,
+                    sectionTitle
+                )
+                const socialImage = siteMetadata.siteUrl + getImage(section, nightly)
+                const meta = [
+                    {
+                        name: 'description',
+                        content: metaDescription,
+                    },
+                    {
+                        property: 'og:title',
+                        content: pageTitle,
+                    },
+                    {
+                        property: 'og:description',
+                        content: metaDescription,
+                    },
+                    {
+                        property: 'og:type',
+                        content: `website`,
+                    },
+                    {
+                        property: 'og:site_name',
+                        content: title,
+                    },
+                    {
+                        property: 'og:image',
+                        content: socialImage,
+                    },
+                    {
+                        name: 'twitter:card',
+                        content: 'summary_large_image',
+                    },
+                    {
+                        name: 'twitter:image',
+                        content: socialImage,
+                    },
+                    {
+                        name: 'twitter:creator',
+                        content: `@${siteMetadata.social.twitter}`,
+                    },
+                    {
+                        name: 'twitter:site',
+                        content: `@${siteMetadata.social.twitter}`,
+                    },
+                    {
+                        name: 'twitter:title',
+                        content: pageTitle,
+                    },
+                    {
+                        name: 'twitter:description',
+                        content: metaDescription,
+                    },
+                    {
+                        name: 'docsearch:language',
+                        content: lang,
+                    },
+                ]
 
-            return (
-                <Helmet
-                    defer={false}
-                    htmlAttributes={{ lang }}
-                    bodyAttributes={{ class: bodyClass }}
-                    title={pageTitle}
-                    meta={meta}
-                />
-            )
-        }}
-    />
-)
-
-SEO.defaultProps = {
-    lang: 'en',
+                return (
+                    <Helmet
+                        defer={false}
+                        htmlAttributes={{ lang }}
+                        bodyAttributes={{ class: bodyClass }}
+                        title={pageTitle}
+                        meta={meta}
+                    />
+                )
+            }}
+        />
+    )
 }
 
 SEO.propTypes = {
@@ -119,8 +125,6 @@ SEO.propTypes = {
     section: PropTypes.string,
     bodyClass: PropTypes.string,
 }
-
-export default SEO
 
 const query = graphql`
     query DefaultSEOQuery {

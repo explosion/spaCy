@@ -11,7 +11,7 @@ from ..tokens import Doc
 from .pipe import Pipe, deserialize_config
 from ..language import Language
 from ..vocab import Vocab
-from ..gold import Example
+from ..gold import Example, validate_examples
 from ..errors import Errors, Warnings
 from .. import util
 
@@ -29,7 +29,6 @@ embed_size = 300
 window_size = 1
 maxout_pieces = 3
 subword_features = true
-dropout = null
 """
 DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
 
@@ -58,6 +57,16 @@ def make_entity_linker(
     incl_context: bool,
     get_candidates: Callable[[KnowledgeBase, "Span"], Iterable[Candidate]],
 ):
+    """Construct an EntityLinker component.
+
+    model (Model[List[Doc], Floats2d]): A model that learns document vector
+        representations. Given a batch of Doc objects, it should return a single
+        array, with one row per item in the batch.
+    kb (KnowledgeBase): The knowledge-base to link entities to.
+    labels_discard (Iterable[str]): NER labels that will automatically get a "NIL" prediction.
+    incl_prior (bool): Whether or not to include prior probabilities from the KB in the model.
+    incl_context (bool): Whether or not to include the local context in the model.
+    """
     return EntityLinker(
         nlp.vocab,
         model,
@@ -125,7 +134,7 @@ class EntityLinker(Pipe):
 
     def begin_training(
         self,
-        get_examples: Callable[[], Iterable[Example]] = lambda: [],
+        get_examples: Callable[[], Iterable[Example]],
         *,
         pipeline: Optional[List[Tuple[str, Callable[[Doc], Doc]]]] = None,
         sgd: Optional[Optimizer] = None,
@@ -180,14 +189,9 @@ class EntityLinker(Pipe):
         losses.setdefault(self.name, 0.0)
         if not examples:
             return losses
+        validate_examples(examples, "EntityLinker.update")
         sentence_docs = []
-        try:
-            docs = [eg.predicted for eg in examples]
-        except AttributeError:
-            types = set([type(eg) for eg in examples])
-            raise TypeError(
-                Errors.E978.format(name="EntityLinker", method="update", types=types)
-            )
+        docs = [eg.predicted for eg in examples]
         if set_annotations:
             # This seems simpler than other ways to get that exact output -- but
             # it does run the model twice :(
@@ -205,7 +209,7 @@ class EntityLinker(Pipe):
                         sent_index = sentences.index(ent.sent)
                     except AttributeError:
                         # Catch the exception when ent.sent is None and provide a user-friendly warning
-                        raise RuntimeError(Errors.E030)
+                        raise RuntimeError(Errors.E030) from None
                     # get n previous sentences, if there are any
                     start_sentence = max(0, sent_index - self.n_sents)
                     # get n posterior sentences, or as many < n as there are
@@ -233,6 +237,7 @@ class EntityLinker(Pipe):
         return losses
 
     def get_loss(self, examples: Iterable[Example], sentence_encodings):
+        validate_examples(examples, "EntityLinker.get_loss")
         entity_encodings = []
         for eg in examples:
             kb_ids = eg.get_aligned("ENT_KB_ID", as_string=True)
@@ -431,7 +436,7 @@ class EntityLinker(Pipe):
             try:
                 self.model.from_bytes(p.open("rb").read())
             except AttributeError:
-                raise ValueError(Errors.E149)
+                raise ValueError(Errors.E149) from None
 
         def load_kb(p):
             self.kb.load_bulk(p)

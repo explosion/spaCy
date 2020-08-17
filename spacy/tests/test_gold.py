@@ -154,6 +154,7 @@ def test_example_from_dict_some_ner(en_vocab):
     assert ner_tags == ["U-LOC", None, None, None]
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_json2docs_no_ner(en_vocab):
     data = [
         {
@@ -484,12 +485,10 @@ def test_roundtrip_docs_to_docbin(doc):
         json_file = tmpdir / "roundtrip.json"
         srsly.write_json(json_file, [docs_to_json(doc)])
         output_file = tmpdir / "roundtrip.spacy"
-        data = DocBin(docs=[doc]).to_bytes()
-        with output_file.open("wb") as file_:
-            file_.write(data)
+        DocBin(docs=[doc]).to_disk(output_file)
         reader = Corpus(output_file)
         reloaded_examples = list(reader(reloaded_nlp))
-        assert len(doc) == sum(len(eg) for eg in reloaded_examples)
+    assert len(doc) == sum(len(eg) for eg in reloaded_examples)
     reloaded_example = reloaded_examples[0]
     assert text == reloaded_example.reference.text
     assert idx == [t.idx for t in reloaded_example.reference]
@@ -508,17 +507,16 @@ def test_roundtrip_docs_to_docbin(doc):
     assert cats["BAKING"] == reloaded_example.reference.cats["BAKING"]
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_make_orth_variants(doc):
     nlp = English()
     with make_tempdir() as tmpdir:
         output_file = tmpdir / "roundtrip.spacy"
-        data = DocBin(docs=[doc]).to_bytes()
-        with output_file.open("wb") as file_:
-            file_.write(data)
+        DocBin(docs=[doc]).to_disk(output_file)
         # due to randomness, test only that this runs with no errors for now
         reader = Corpus(output_file)
         train_example = next(reader(nlp))
-        make_orth_variants_example(nlp, train_example, orth_variant_level=0.2)
+    make_orth_variants_example(nlp, train_example, orth_variant_level=0.2)
 
 
 @pytest.mark.skip("Outdated")
@@ -590,7 +588,7 @@ def test_tuple_format_implicit():
         ("Uber blew through $1 million a week", {"entities": [(0, 4, "ORG")]}),
         (
             "Spotify steps up Asia expansion",
-            {"entities": [(0, 8, "ORG"), (17, 21, "LOC")]},
+            {"entities": [(0, 7, "ORG"), (17, 21, "LOC")]},
         ),
         ("Google rebrands its business apps", {"entities": [(0, 6, "ORG")]}),
     ]
@@ -605,7 +603,7 @@ def test_tuple_format_implicit_invalid():
         ("Uber blew through $1 million a week", {"frumble": [(0, 4, "ORG")]}),
         (
             "Spotify steps up Asia expansion",
-            {"entities": [(0, 8, "ORG"), (17, 21, "LOC")]},
+            {"entities": [(0, 7, "ORG"), (17, 21, "LOC")]},
         ),
         ("Google rebrands its business apps", {"entities": [(0, 6, "ORG")]}),
     ]

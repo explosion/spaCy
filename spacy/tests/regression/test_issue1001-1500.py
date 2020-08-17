@@ -6,9 +6,7 @@ from spacy.lang.en import English
 from spacy.lang.lex_attrs import LEX_ATTRS
 from spacy.matcher import Matcher
 from spacy.tokenizer import Tokenizer
-from spacy.lemmatizer import Lemmatizer
-from spacy.lookups import Lookups
-from spacy.symbols import ORTH, LEMMA, POS, VERB
+from spacy.symbols import ORTH, LEMMA, POS
 
 
 def test_issue1061():
@@ -57,6 +55,7 @@ def test_issue1242():
     assert len(docs[1]) == 1
 
 
+@pytest.mark.skip(reason="v3 no longer supports LEMMA/POS in tokenizer special cases")
 def test_issue1250():
     """Test cached special cases."""
     special_case = [{ORTH: "reimbur", LEMMA: "reimburse", POS: "VERB"}]
@@ -85,20 +84,6 @@ def test_issue1375():
     with pytest.raises(IndexError):
         assert doc[2].nbor(1)
     assert doc[1].nbor(1).text == "2"
-
-
-def test_issue1387():
-    tag_map = {"VBG": {POS: VERB, "VerbForm": "part"}}
-    lookups = Lookups()
-    lookups.add_table("lemma_index", {"verb": ("cope", "cop")})
-    lookups.add_table("lemma_exc", {"verb": {"coping": ("cope",)}})
-    lookups.add_table("lemma_rules", {"verb": [["ing", ""]]})
-    lemmatizer = Lemmatizer(lookups)
-    vocab = Vocab(lemmatizer=lemmatizer, tag_map=tag_map)
-    doc = Doc(vocab, words=["coping"])
-    doc[0].tag_ = "VBG"
-    assert doc[0].text == "coping"
-    assert doc[0].lemma_ == "cope"
 
 
 def test_issue1434():

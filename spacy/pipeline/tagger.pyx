@@ -1,8 +1,9 @@
 # cython: infer_types=True, profile=True, binding=True
+from typing import List
 import numpy
 import srsly
-
 from thinc.api import Model, set_dropout_rate, SequenceCategoricalCrossentropy, Config
+from thinc.types import Floats2d
 import warnings
 
 from ..tokens.doc cimport Doc
@@ -15,6 +16,7 @@ from ..attrs import POS, ID
 from ..parts_of_speech import X
 from ..errors import Errors, TempErrors, Warnings
 from ..scorer import Scorer
+from ..gold import validate_examples
 from .. import util
 
 
@@ -31,7 +33,6 @@ embed_size = 2000
 window_size = 1
 maxout_pieces = 3
 subword_features = true
-dropout = null
 """
 DEFAULT_TAGGER_MODEL = Config().from_str(default_model_config)["model"]
 
@@ -39,12 +40,19 @@ DEFAULT_TAGGER_MODEL = Config().from_str(default_model_config)["model"]
 @Language.factory(
     "tagger",
     assigns=["token.tag"],
-    default_config={"model": DEFAULT_TAGGER_MODEL, "set_morphology": False},
-    scores=["tag_acc", "pos_acc", "lemma_acc"],
+    default_config={"model": DEFAULT_TAGGER_MODEL},
+    scores=["tag_acc"],
     default_score_weights={"tag_acc": 1.0},
 )
-def make_tagger(nlp: Language, name: str, model: Model, set_morphology: bool):
-    return Tagger(nlp.vocab, model, name, set_morphology=set_morphology)
+def make_tagger(nlp: Language, name: str, model: Model):
+    """Construct a part-of-speech tagger component.
+
+    model (Model[List[Doc], List[Floats2d]]): A model instance that predicts
+        the tag probabilities. The output vectors should match the number of tags
+        in size, and be normalized as probabilities (all scores between 0 and 1,
+        with the rows summing to 1).
+    """
+    return Tagger(nlp.vocab, model, name)
 
 
 class Tagger(Pipe):
@@ -52,13 +60,14 @@ class Tagger(Pipe):
 
     DOCS: https://spacy.io/api/tagger
     """
-    def __init__(self, vocab, model, name="tagger", *, set_morphology=False):
+    def __init__(self, vocab, model, name="tagger", *, labels=None):
         """Initialize a part-of-speech tagger.
 
         vocab (Vocab): The shared vocabulary.
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
         name (str): The component instance name, used to add entries to the
             losses during training.
+        labels (List): The set of labels. Defaults to None.
         set_morphology (bool): Whether to set morphological features.
 
         DOCS: https://spacy.io/api/tagger#init
@@ -67,7 +76,7 @@ class Tagger(Pipe):
         self.model = model
         self.name = name
         self._rehearsal_model = None
-        cfg = {"set_morphology": set_morphology}
+        cfg = {"labels": labels or []}
         self.cfg = dict(sorted(cfg.items()))
 
     @property
@@ -80,7 +89,7 @@ class Tagger(Pipe):
 
         DOCS: https://spacy.io/api/tagger#labels
         """
-        return tuple(self.vocab.morphology.tag_names)
+        return tuple(self.cfg["labels"])
 
     def __call__(self, doc):
         """Apply the pipe to a Doc.
@@ -150,9 +159,7 @@ class Tagger(Pipe):
         if isinstance(docs, Doc):
             docs = [docs]
         cdef Doc doc
-        cdef int idx = 0
         cdef Vocab vocab = self.vocab
-        assign_morphology = self.cfg.get("set_morphology", True)
         for i, doc in enumerate(docs):
             doc_tag_ids = batch_tag_ids[i]
             if hasattr(doc_tag_ids, "get"):
@@ -160,15 +167,7 @@ class Tagger(Pipe):
             for j, tag_id in enumerate(doc_tag_ids):
                 # Don't clobber preset POS tags
                 if doc.c[j].tag == 0:
-                    if doc.c[j].pos == 0 and assign_morphology:
-                        # Don't clobber preset lemmas
-                        lemma = doc.c[j].lemma
-                        vocab.morphology.assign_tag_id(&doc.c[j], tag_id)
-                        if lemma != 0 and lemma != doc.c[j].lex.orth:
-                            doc.c[j].lemma = lemma
-                    else:
-                        doc.c[j].tag = self.vocab.strings[self.labels[tag_id]]
-                idx += 1
+                    doc.c[j].tag = self.vocab.strings[self.labels[tag_id]]
             doc.is_tagged = True
 
     def update(self, examples, *, drop=0., sgd=None, losses=None, set_annotations=False):
@@ -189,19 +188,15 @@ class Tagger(Pipe):
         if losses is None:
             losses = {}
         losses.setdefault(self.name, 0.0)
-        try:
-            if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
-                # Handle cases where there are no tokens in any docs.
-                return
-        except AttributeError:
-            types = set([type(eg) for eg in examples])
-            raise TypeError(Errors.E978.format(name="Tagger", method="update", types=types))
+        validate_examples(examples, "Tagger.update")
+        if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
+            # Handle cases where there are no tokens in any docs.
+            return
         set_dropout_rate(self.model, drop)
-        tag_scores, bp_tag_scores = self.model.begin_update(
-            [eg.predicted for eg in examples])
+        tag_scores, bp_tag_scores = self.model.begin_update([eg.predicted for eg in examples])
         for sc in tag_scores:
             if self.model.ops.xp.isnan(sc.sum()):
-                raise ValueError("nan value in scores")
+                raise ValueError(Errors.E940)
         loss, d_tag_scores = self.get_loss(examples, tag_scores)
         bp_tag_scores(d_tag_scores)
         if sgd not in (None, False):
@@ -228,11 +223,8 @@ class Tagger(Pipe):
 
         DOCS: https://spacy.io/api/tagger#rehearse
         """
-        try:
-            docs = [eg.predicted for eg in examples]
-        except AttributeError:
-            types = set([type(eg) for eg in examples])
-            raise TypeError(Errors.E978.format(name="Tagger", method="rehearse", types=types))
+        validate_examples(examples, "Tagger.rehearse")
+        docs = [eg.predicted for eg in examples]
         if self._rehearsal_model is None:
             return
         if not any(len(doc) for doc in docs):
@@ -258,6 +250,7 @@ class Tagger(Pipe):
 
         DOCS: https://spacy.io/api/tagger#get_loss
         """
+        validate_examples(examples, "Tagger.get_loss")
         loss_func = SequenceCategoricalCrossentropy(names=self.labels, normalize=False)
         truths = [eg.get_aligned("TAG", as_string=True) for eg in examples]
         d_scores, loss = loss_func(scores, truths)
@@ -265,7 +258,7 @@ class Tagger(Pipe):
             raise ValueError("nan value when computing loss")
         return float(loss), d_scores
 
-    def begin_training(self, get_examples=lambda: [], *, pipeline=None, sgd=None):
+    def begin_training(self, get_examples, *, pipeline=None, sgd=None):
         """Initialize the pipe for training, using data examples if available.
 
         get_examples (Callable[[], Iterable[Example]]): Optional function that
@@ -279,55 +272,25 @@ class Tagger(Pipe):
 
         DOCS: https://spacy.io/api/tagger#begin_training
         """
-        lemma_tables = ["lemma_rules", "lemma_index", "lemma_exc", "lemma_lookup"]
-        if not any(table in self.vocab.lookups for table in lemma_tables):
-            warnings.warn(Warnings.W022)
-        lexeme_norms = self.vocab.lookups.get_table("lexeme_norm", {})
-        if len(lexeme_norms) == 0 and self.vocab.lang in util.LEXEME_NORM_LANGS:
-            langs = ", ".join(util.LEXEME_NORM_LANGS)
-            warnings.warn(Warnings.W033.format(model="part-of-speech tagger", langs=langs))
-        orig_tag_map = dict(self.vocab.morphology.tag_map)
-        new_tag_map = {}
+        if not hasattr(get_examples, "__call__"):
+            err = Errors.E930.format(name="Tagger", obj=type(get_examples))
+            raise ValueError(err)
+        tags = set()
         for example in get_examples():
-            try:
-                y = example.y
-            except AttributeError:
-                raise TypeError(Errors.E978.format(name="Tagger", method="begin_training", types=type(example)))
-            for token in y:
-                tag = token.tag_
-                if tag in orig_tag_map:
-                    new_tag_map[tag] = orig_tag_map[tag]
-                else:
-                    new_tag_map[tag] = {POS: X}
-
-        cdef Vocab vocab = self.vocab
-        if new_tag_map:
-            if "_SP" in orig_tag_map:
-                new_tag_map["_SP"] = orig_tag_map["_SP"]
-            vocab.morphology.load_tag_map(new_tag_map)
+            for token in example.y:
+                tags.add(token.tag_)
+        for tag in sorted(tags):
+            self.add_label(tag)
         self.set_output(len(self.labels))
-        doc_sample = [Doc(self.vocab, words=["hello", "world"])]
-        if pipeline is not None:
-            for name, component in pipeline:
-                if component is self:
-                    break
-                if hasattr(component, "pipe"):
-                    doc_sample = list(component.pipe(doc_sample))
-                else:
-                    doc_sample = [component(doc) for doc in doc_sample]
-        self.model.initialize(X=doc_sample)
-        # Get batch of example docs, example outputs to call begin_training().
-        # This lets the model infer shapes.
+        self.model.initialize()
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
 
-    def add_label(self, label, values=None):
+    def add_label(self, label):
         """Add a new label to the pipe.
 
         label (str): The label to add.
-        values (Dict[int, str]): Optional values to map to the label, e.g. a
-            tag map dictionary.
         RETURNS (int): 0 if label is already present, otherwise 1.
 
         DOCS: https://spacy.io/api/tagger#add_label
@@ -336,22 +299,8 @@ class Tagger(Pipe):
             raise ValueError(Errors.E187)
         if label in self.labels:
             return 0
-        if self.model.has_dim("nO"):
-            # Here's how the model resizing will work, once the
-            # neuron-to-tag mapping is no longer controlled by
-            # the Morphology class, which sorts the tag names.
-            # The sorting makes adding labels difficult.
-            # smaller = self.model._layers[-1]
-            # larger = Softmax(len(self.labels)+1, smaller.nI)
-            # copy_array(larger.W[:smaller.nO], smaller.W)
-            # copy_array(larger.b[:smaller.nO], smaller.b)
-            # self.model._layers[-1] = larger
-            raise ValueError(TempErrors.T003)
-        tag_map = dict(self.vocab.morphology.tag_map)
-        if values is None:
-            values = {POS: "X"}
-        tag_map[label] = values
-        self.vocab.morphology.load_tag_map(tag_map)
+        self.cfg["labels"].append(label)
+        self.vocab.strings.add(label)
         return 1
 
     def score(self, examples, **kwargs):
@@ -363,11 +312,8 @@ class Tagger(Pipe):
 
         DOCS: https://spacy.io/api/tagger#score
         """
-        scores = {}
-        scores.update(Scorer.score_token_attr(examples, "tag", **kwargs))
-        scores.update(Scorer.score_token_attr(examples, "pos", **kwargs))
-        scores.update(Scorer.score_token_attr(examples, "lemma", **kwargs))
-        return scores
+        validate_examples(examples, "Tagger.score")
+        return Scorer.score_token_attr(examples, "tag", **kwargs)
 
     def to_bytes(self, *, exclude=tuple()):
         """Serialize the pipe to a bytestring.
@@ -381,10 +327,6 @@ class Tagger(Pipe):
         serialize["model"] = self.model.to_bytes
         serialize["vocab"] = self.vocab.to_bytes
         serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
-        tag_map = dict(sorted(self.vocab.morphology.tag_map.items()))
-        serialize["tag_map"] = lambda: srsly.msgpack_dumps(tag_map)
-        morph_rules = dict(self.vocab.morphology.exc)
-        serialize["morph_rules"] = lambda: srsly.msgpack_dumps(morph_rules)
         return util.to_bytes(serialize, exclude)
 
     def from_bytes(self, bytes_data, *, exclude=tuple()):
@@ -400,23 +342,10 @@ class Tagger(Pipe):
             try:
                 self.model.from_bytes(b)
             except AttributeError:
-                raise ValueError(Errors.E149)
-
-        def load_tag_map(b):
-            tag_map = srsly.msgpack_loads(b)
-            self.vocab.morphology.load_tag_map(tag_map)
-
-        def load_morph_rules(b):
-            morph_rules = srsly.msgpack_loads(b)
-            self.vocab.morphology.load_morph_exceptions(morph_rules)
-
-        self.vocab.morphology = Morphology(self.vocab.strings, dict(),
-            lemmatizer=self.vocab.morphology.lemmatizer)
+                raise ValueError(Errors.E149) from None
 
         deserialize = {
             "vocab": lambda b: self.vocab.from_bytes(b),
-            "tag_map": load_tag_map,
-            "morph_rules": load_morph_rules,
             "cfg": lambda b: self.cfg.update(srsly.json_loads(b)),
             "model": lambda b: load_model(b),
         }
@@ -431,12 +360,8 @@ class Tagger(Pipe):
 
         DOCS: https://spacy.io/api/tagger#to_disk
         """
-        tag_map = dict(sorted(self.vocab.morphology.tag_map.items()))
-        morph_rules = dict(self.vocab.morphology.exc)
         serialize = {
             "vocab": lambda p: self.vocab.to_disk(p),
-            "tag_map": lambda p: srsly.write_msgpack(p, tag_map),
-            "morph_rules": lambda p: srsly.write_msgpack(p, morph_rules),
             "model": lambda p: self.model.to_disk(p),
             "cfg": lambda p: srsly.write_json(p, self.cfg),
         }
@@ -456,24 +381,11 @@ class Tagger(Pipe):
                 try:
                     self.model.from_bytes(file_.read())
                 except AttributeError:
-                    raise ValueError(Errors.E149)
-
-        def load_tag_map(p):
-            tag_map = srsly.read_msgpack(p)
-            self.vocab.morphology.load_tag_map(tag_map)
-
-        def load_morph_rules(p):
-            morph_rules = srsly.read_msgpack(p)
-            self.vocab.morphology.load_morph_exceptions(morph_rules)
-
-        self.vocab.morphology = Morphology(self.vocab.strings, dict(),
-            lemmatizer=self.vocab.morphology.lemmatizer)
+                    raise ValueError(Errors.E149) from None
 
         deserialize = {
             "vocab": lambda p: self.vocab.from_disk(p),
             "cfg": lambda p: self.cfg.update(deserialize_config(p)),
-            "tag_map": load_tag_map,
-            "morph_rules": load_morph_rules,
             "model": load_model,
         }
         util.from_disk(path, deserialize, exclude)

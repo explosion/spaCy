@@ -8,12 +8,13 @@ warnings.filterwarnings("ignore", message="numpy.ufunc size changed")  # noqa
 
 # These are imported as part of the API
 from thinc.api import prefer_gpu, require_gpu  # noqa: F401
+from thinc.api import Config
 
 from . import pipeline  # noqa: F401
 from .cli.info import info  # noqa: F401
 from .glossary import explain  # noqa: F401
 from .about import __version__  # noqa: F401
-from .util import registry  # noqa: F401
+from .util import registry, logger  # noqa: F401
 
 from .errors import Errors
 from .language import Language
@@ -26,17 +27,17 @@ if sys.maxunicode == 65535:
 def load(
     name: Union[str, Path],
     disable: Iterable[str] = tuple(),
-    component_cfg: Dict[str, Dict[str, Any]] = util.SimpleFrozenDict(),
+    config: Union[Dict[str, Any], Config] = util.SimpleFrozenDict(),
 ) -> Language:
     """Load a spaCy model from an installed package or a local path.
 
     name (str): Package name or model path.
     disable (Iterable[str]): Names of pipeline components to disable.
-    component_cfg (Dict[str, dict]): Config overrides for pipeline components,
-        keyed by component names.
+    config (Dict[str, Any] / Config): Config overrides as nested dict or dict
+        keyed by section values in dot notation.
     RETURNS (Language): The loaded nlp object.
     """
-    return util.load_model(name, disable=disable, component_cfg=component_cfg)
+    return util.load_model(name, disable=disable, config=config)
 
 
 def blank(name: str, **overrides) -> Language:

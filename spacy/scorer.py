@@ -242,7 +242,8 @@ class Scorer:
                 per_feat[field].score_set(
                     pred_per_feat.get(field, set()), gold_per_feat.get(field, set()),
                 )
-        return {f"{attr}_per_feat": per_feat}
+        result = {k: v.to_dict() for k, v in per_feat.items()}
+        return {f"{attr}_per_feat": result}
 
     @staticmethod
     def score_spans(
@@ -318,6 +319,7 @@ class Scorer:
         labels: Iterable[str] = tuple(),
         multi_label: bool = True,
         positive_label: Optional[str] = None,
+        threshold: Optional[float] = None,
         **cfg,
     ) -> Dict[str, Any]:
         """Returns PRF and ROC AUC scores for a doc-level attribute with a
@@ -333,94 +335,104 @@ class Scorer:
             Defaults to True.
         positive_label (str): The positive label for a binary task with
             exclusive classes. Defaults to None.
+        threshold (float): Cutoff to consider a prediction "positive". Defaults
+            to 0.5 for multi-label, and 0.0 (i.e. whatever's highest scoring)
+            otherwise.
         RETURNS (Dict[str, Any]): A dictionary containing the scores, with
             inapplicable scores as None:
             for all:
-                attr_score (one of attr_f / attr_macro_f / attr_macro_auc),
+                attr_score (one of attr_micro_f / attr_macro_f / attr_macro_auc),
                 attr_score_desc (text description of the overall score),
+                attr_micro_f,
+                attr_macro_f,
+                attr_auc,
                 attr_f_per_type,
                 attr_auc_per_type
-            for binary exclusive with positive label: attr_p/r/f
-            for 3+ exclusive classes, macro-averaged fscore: attr_macro_f
-            for multilabel, macro-averaged AUC: attr_macro_auc
 
         DOCS: https://spacy.io/api/scorer#score_cats
         """
-        score = PRFScore()
-        f_per_type = dict()
-        auc_per_type = dict()
-        for label in labels:
-            f_per_type[label] = PRFScore()
-            auc_per_type[label] = ROCAUCScore()
+        if threshold is None:
+            threshold = 0.5 if multi_label else 0.0
+        f_per_type = {label: PRFScore() for label in labels}
+        auc_per_type = {label: ROCAUCScore() for label in labels}
+        labels = set(labels)
+        if labels:
+            for eg in examples:
+                labels.update(eg.predicted.cats.keys())
+                labels.update(eg.reference.cats.keys())
         for example in examples:
-            gold_doc = example.reference
-            pred_doc = example.predicted
-            gold_values = getter(gold_doc, attr)
-            pred_values = getter(pred_doc, attr)
-            if (
-                len(gold_values) > 0
-                and set(f_per_type) == set(auc_per_type) == set(gold_values)
-                and set(gold_values) == set(pred_values)
-            ):
-                gold_val = max(gold_values, key=gold_values.get)
-                pred_val = max(pred_values, key=pred_values.get)
-                if positive_label:
-                    score.score_set(
-                        set([positive_label]) & set([pred_val]),
-                        set([positive_label]) & set([gold_val]),
-                    )
-                for label in set(gold_values):
-                    auc_per_type[label].score_set(
-                        pred_values[label], gold_values[label]
-                    )
-                    f_per_type[label].score_set(
-                        set([label]) & set([pred_val]), set([label]) & set([gold_val])
-                    )
-            elif len(f_per_type) > 0:
-                model_labels = set(f_per_type)
-                eval_labels = set(gold_values)
-                raise ValueError(
-                    Errors.E162.format(
-                        model_labels=model_labels, eval_labels=eval_labels
-                    )
-                )
-            elif len(auc_per_type) > 0:
-                model_labels = set(auc_per_type)
-                eval_labels = set(gold_values)
-                raise ValueError(
-                    Errors.E162.format(
-                        model_labels=model_labels, eval_labels=eval_labels
-                    )
-                )
+            # Through this loop, None in the gold_cats indicates missing label.
+            pred_cats = getter(example.predicted, attr)
+            gold_cats = getter(example.reference, attr)
+
+            # I think the AUC metric is applicable regardless of whether we're
+            # doing multi-label classification? Unsure. If not, move this into
+            # the elif pred_cats and gold_cats block below.
+            for label in labels:
+                pred_score = pred_cats.get(label, 0.0)
+                gold_score = gold_cats.get(label, 0.0)
+                if gold_score is not None:
+                    auc_per_type[label].score_set(pred_score, gold_score)
+            if multi_label:
+                for label in labels:
+                    pred_score = pred_cats.get(label, 0.0)
+                    gold_score = gold_cats.get(label, 0.0)
+                    if gold_score is not None:
+                        if pred_score >= threshold and gold_score > 0:
+                            f_per_type[label].tp += 1
+                        elif pred_score >= threshold and gold_score == 0:
+                            f_per_type[label].fp += 1
+                        elif pred_score < threshold and gold_score > 0:
+                            f_per_type[label].fn += 1
+            elif pred_cats and gold_cats:
+                # Get the highest-scoring for each.
+                pred_label, pred_score = max(pred_cats.items(), key=lambda it: it[1])
+                gold_label, gold_score = max(gold_cats.items(), key=lambda it: it[1])
+                if gold_score is not None:
+                    if pred_label == gold_label and pred_score >= threshold:
+                        f_per_type[pred_label].tp += 1
+                    else:
+                        f_per_type[gold_label].fn += 1
+                        if pred_score >= threshold:
+                            f_per_type[pred_label].fp += 1
+            elif gold_cats:
+                gold_label, gold_score = max(gold_cats, key=lambda it: it[1])
+                if gold_score is not None and gold_score > 0:
+                    f_per_type[gold_label].fn += 1
+            else:
+                pred_label, pred_score = max(pred_cats, key=lambda it: it[1])
+                if pred_score >= threshold:
+                    f_per_type[pred_label].fp += 1
+        micro_prf = PRFScore()
+        for label_prf in f_per_type.values():
+            micro_prf.tp = label_prf.tp
+            micro_prf.fn = label_prf.fn
+            micro_prf.fp = label_prf.fp
+        n_cats = len(f_per_type) + 1e-100
+        macro_p = sum(prf.precision for prf in f_per_type.values()) / n_cats
+        macro_r = sum(prf.recall for prf in f_per_type.values()) / n_cats
+        macro_f = sum(prf.fscore for prf in f_per_type.values()) / n_cats
         results = {
             f"{attr}_score": None,
             f"{attr}_score_desc": None,
-            f"{attr}_p": None,
-            f"{attr}_r": None,
-            f"{attr}_f": None,
-            f"{attr}_macro_f": None,
+            f"{attr}_micro_p": micro_prf.precision,
+            f"{attr}_micro_r": micro_prf.recall,
+            f"{attr}_micro_f": micro_prf.fscore,
+            f"{attr}_macro_p": macro_p,
+            f"{attr}_macro_r": macro_r,
+            f"{attr}_macro_f": macro_f,
             f"{attr}_macro_auc": None,
             f"{attr}_f_per_type": {k: v.to_dict() for k, v in f_per_type.items()},
             f"{attr}_auc_per_type": {k: v.score for k, v in auc_per_type.items()},
         }
         if len(labels) == 2 and not multi_label and positive_label:
-            results[f"{attr}_p"] = score.precision
-            results[f"{attr}_r"] = score.recall
-            results[f"{attr}_f"] = score.fscore
-            results[f"{attr}_score"] = results[f"{attr}_f"]
+            positive_label_f = results[f"{attr}_f_per_type"][positive_label]["f"]
+            results[f"{attr}_score"] = positive_label_f
             results[f"{attr}_score_desc"] = f"F ({positive_label})"
         elif not multi_label:
-            results[f"{attr}_macro_f"] = sum(
-                [score.fscore for label, score in f_per_type.items()]
-            ) / (len(f_per_type) + 1e-100)
             results[f"{attr}_score"] = results[f"{attr}_macro_f"]
             results[f"{attr}_score_desc"] = "macro F"
         else:
-            results[f"{attr}_macro_auc"] = max(
-                sum([score.score for label, score in auc_per_type.items()])
-                / (len(auc_per_type) + 1e-100),
-                -1,
-            )
             results[f"{attr}_score"] = results[f"{attr}_macro_auc"]
             results[f"{attr}_score_desc"] = "macro AUC"
         return results

@@ -8,7 +8,7 @@ import classes from '../styles/tag.module.sass'
 
 const MIN_VERSION = 3
 
-const Tag = ({ spaced, variant, tooltip, children }) => {
+export default function Tag({ spaced = false, variant, tooltip, children }) {
     if (variant === 'new') {
         const isValid = isString(children) && !isNaN(children)
         const version = isValid ? Number(children).toFixed(1) : children
@@ -49,14 +49,8 @@ const TagTemplate = ({ spaced, tooltip, children }) => {
     )
 }
 
-Tag.defaultProps = {
-    spaced: false,
-}
-
 Tag.propTypes = {
     spaced: PropTypes.bool,
     tooltip: PropTypes.string,
     children: PropTypes.node.isRequired,
 }
-
-export default Tag

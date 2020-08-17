@@ -55,12 +55,6 @@ class Warnings:
             "loaded. (Shape: {shape})")
     W021 = ("Unexpected hash collision in PhraseMatcher. Matches may be "
             "incorrect. Modify PhraseMatcher._terminal_hash to fix.")
-    W022 = ("Training a new part-of-speech tagger using a model with no "
-            "lemmatization rules or data. This means that the trained model "
-            "may not be able to lemmatize correctly. If this is intentional "
-            "or the language you're using doesn't have lemmatization data, "
-            "you can ignore this warning. If this is surprising, make sure you "
-            "have the spacy-lookups-data package installed.")
     W024 = ("Entity '{entity}' - Alias '{alias}' combination already exists in "
             "the Knowledge Base.")
     W026 = ("Unable to set all sentence boundaries from dependency parses.")
@@ -169,9 +163,9 @@ class Errors:
             "training a named entity recognizer, also make sure that none of "
             "your annotated entity spans have leading or trailing whitespace "
             "or punctuation. "
-            "You can also use the experimental `debug-data` command to "
+            "You can also use the experimental `debug data` command to "
             "validate your JSON-formatted training data. For details, run:\n"
-            "python -m spacy debug-data --help")
+            "python -m spacy debug data --help")
     E025 = ("String is too long: {length} characters. Max is 2**30.")
     E026 = ("Error accessing token at position {i}: out of bounds in Doc of "
             "length {length}.")
@@ -482,6 +476,29 @@ class Errors:
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
+    E930 = ("Received invalid get_examples callback in {name}.begin_training. "
+            "Expected function that returns an iterable of Example objects but "
+            "got: {obj}")
+    E931 = ("Encountered Pipe subclass without Pipe.{method} method in component "
+            "'{name}'. If the component is trainable and you want to use this "
+            "method, make sure it's overwritten on the subclass. If your "
+            "component isn't trainable, add a method that does nothing or "
+            "don't use the Pipe base class.")
+    E940 = ("Found NaN values in scores.")
+    E941 = ("Can't find model '{name}'. It looks like you're trying to load a "
+            "model from a shortcut, which is deprecated as of spaCy v3.0. To "
+            "load the model, use its full name instead:\n\n"
+            "nlp = spacy.load(\"{full}\")\n\nFor more details on the available "
+            "models, see the models directory: https://spacy.io/models. If you "
+            "want to create a blank model, use spacy.blank: "
+            "nlp = spacy.blank(\"{name}\")")
+    E942 = ("Executing after_{name} callback failed. Expected the function to "
+            "return an initialized nlp object but got: {value}. Maybe "
+            "you forgot to return the modified object in your function?")
+    E943 = ("Executing before_creation callback failed. Expected the function to "
+            "return an uninitialized Language subclass but got: {value}. Maybe "
+            "you forgot to return the modified object in your function or "
+            "returned the initialized nlp object instead?")
     E944 = ("Can't copy pipeline component '{name}' from source model '{model}': "
             "not found in pipeline. Available components: {opts}")
     E945 = ("Can't copy pipeline component '{name}' from source. Expected loaded "
@@ -494,7 +511,7 @@ class Errors:
     E952 = ("The section '{name}' is not a valid section in the provided config.")
     E953 = ("Mismatched IDs received by the Tok2Vec listener: {id1} vs. {id2}")
     E954 = ("The Tok2Vec listener did not receive a valid input.")
-    E955 = ("Can't find table '{table}' for language '{lang}' in spacy-lookups-data.")
+    E955 = ("Can't find table(s) '{table}' for language '{lang}' in spacy-lookups-data.")
     E956 = ("Can't find component '{name}' in [components] block in the config. "
             "Available components: {opts}")
     E957 = ("Writing directly to Language.factories isn't needed anymore in "
@@ -562,8 +579,7 @@ class Errors:
             "but received None.")
     E977 = ("Can not compare a MorphAnalysis with a string object. "
             "This is likely a bug in spaCy, so feel free to open an issue.")
-    E978 = ("The '{method}' method of {name} takes a list of Example objects, "
-            "but found {types} instead.")
+    E978 = ("The {name} method takes a list of Example objects, but got: {types}")
     E979 = ("Cannot convert {type} to an Example object.")
     E980 = ("Each link annotation should refer to a dictionary with at most one "
             "identifier mapping to 1.0, and all others to 0.0.")
@@ -615,6 +631,11 @@ class Errors:
     E1001 = ("Target token outside of matched span for match with tokens "
              "'{span}' and offset '{index}' matched by patterns '{patterns}'.")
     E1002 = ("Span index out of range.")
+    E1003 = ("Unsupported lemmatizer mode '{mode}'.")
+    E1004 = ("Missing lemmatizer table(s) found for lemmatizer mode '{mode}'. "
+             "Required tables '{tables}', found '{found}'. If you are not "
+             "providing custom lookups, make sure you have the package "
+             "spacy-lookups-data installed.")
 
 
 @add_codes
@@ -622,6 +643,15 @@ class TempErrors:
     T003 = ("Resizing pretrained Tagger models is not currently supported.")
     T007 = ("Can't yet set {attr} from Span. Vote for this feature on the "
             "issue tracker: http://github.com/explosion/spaCy/issues")
+
+
+# Deprecated model shortcuts, only used in errors and warnings
+OLD_MODEL_SHORTCUTS = {
+    "en": "en_core_web_sm", "de": "de_core_news_sm", "es": "es_core_news_sm",
+    "pt": "pt_core_news_sm", "fr": "fr_core_news_sm", "it": "it_core_news_sm",
+    "nl": "nl_core_news_sm", "el": "el_core_news_sm", "nb": "nb_core_news_sm",
+    "lt": "lt_core_news_sm", "xx": "xx_ent_wiki_sm"
+}
 
 
 # fmt: on

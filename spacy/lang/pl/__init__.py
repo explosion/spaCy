@@ -1,5 +1,6 @@
-from typing import Callable
-from thinc.api import Config
+from typing import Optional
+
+from thinc.api import Model
 
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_INFIXES
 from .punctuation import TOKENIZER_SUFFIXES
@@ -7,42 +8,16 @@ from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .lemmatizer import PolishLemmatizer
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
-from ...lookups import load_lookups
+from ...lookups import Lookups
 from ...language import Language
-from ...util import registry
 
-
-DEFAULT_CONFIG = """
-[nlp]
-
-[nlp.lemmatizer]
-@lemmatizers = "spacy.pl.PolishLemmatizer"
-"""
 
 TOKENIZER_EXCEPTIONS = {
     exc: val for exc, val in BASE_EXCEPTIONS.items() if not exc.endswith(".")
 }
 
 
-@registry.lemmatizers("spacy.pl.PolishLemmatizer")
-def create_lemmatizer() -> Callable[[Language], PolishLemmatizer]:
-    # fmt: off
-    tables = [
-        "lemma_lookup_adj", "lemma_lookup_adp", "lemma_lookup_adv",
-        "lemma_lookup_aux", "lemma_lookup_noun", "lemma_lookup_num",
-        "lemma_lookup_part", "lemma_lookup_pron", "lemma_lookup_verb"
-    ]
-    # fmt: on
-
-    def lemmatizer_factory(nlp: Language) -> PolishLemmatizer:
-        lookups = load_lookups(lang=nlp.lang, tables=tables)
-        return PolishLemmatizer(lookups=lookups)
-
-    return lemmatizer_factory
-
-
 class PolishDefaults(Language.Defaults):
-    config = Config().from_str(DEFAULT_CONFIG)
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     prefixes = TOKENIZER_PREFIXES
     infixes = TOKENIZER_INFIXES
@@ -54,6 +29,24 @@ class PolishDefaults(Language.Defaults):
 class Polish(Language):
     lang = "pl"
     Defaults = PolishDefaults
+
+
+@Polish.factory(
+    "lemmatizer",
+    assigns=["token.lemma"],
+    default_config={"model": None, "mode": "lookup", "lookups": None},
+    scores=["lemma_acc"],
+    default_score_weights={"lemma_acc": 1.0},
+)
+def make_lemmatizer(
+    nlp: Language,
+    model: Optional[Model],
+    name: str,
+    mode: str,
+    lookups: Optional[Lookups],
+):
+    lookups = PolishLemmatizer.load_lookups(nlp.lang, mode, lookups)
+    return PolishLemmatizer(nlp.vocab, model, name, mode=mode, lookups=lookups)
 
 
 __all__ = ["Polish"]

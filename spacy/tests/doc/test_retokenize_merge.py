@@ -124,7 +124,6 @@ def test_doc_retokenize_spans_merge_tokens_default_attrs(en_tokenizer):
     assert doc[0].text == "The players"
     assert doc[0].tag_ == "NN"
     assert doc[0].pos_ == "NOUN"
-    assert doc[0].lemma_ == "The players"
     doc = get_doc(
         tokens.vocab,
         words=[t.text for t in tokens],
@@ -143,11 +142,9 @@ def test_doc_retokenize_spans_merge_tokens_default_attrs(en_tokenizer):
     assert doc[0].text == "The players"
     assert doc[0].tag_ == "NN"
     assert doc[0].pos_ == "NOUN"
-    assert doc[0].lemma_ == "The players"
     assert doc[1].text == "start ."
     assert doc[1].tag_ == "VBZ"
     assert doc[1].pos_ == "VERB"
-    assert doc[1].lemma_ == "start ."
 
 
 def test_doc_retokenize_spans_merge_heads(en_tokenizer):

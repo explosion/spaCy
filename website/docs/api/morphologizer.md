@@ -63,16 +63,14 @@ Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
 [`nlp.add_pipe`](/api/language#add_pipe).
 
-<!-- TODO: finish API docs -->
-
 | Name           | Type    | Description                                                                                 |
 | -------------- | ------- | ------------------------------------------------------------------------------------------- |
 | `vocab`        | `Vocab` | The shared vocabulary.                                                                      |
 | `model`        | `Model` | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component.             |
 | `name`         | str     | String name of the component instance. Used to add entries to the `losses` during training. |
 | _keyword-only_ |         |                                                                                             |
-| `labels_morph` | dict    |                                                                                             |
-| `labels_pos`   | dict    |                                                                                             |
+| `labels_morph` | dict    | Mapping of morph + POS tags to morph labels.                                                |
+| `labels_pos`   | dict    | Mapping of morph + POS tags to POS tags.                                                    |
 
 ## Morphologizer.\_\_call\_\_ {#call tag="method"}
 
@@ -123,15 +121,21 @@ applied to the `Doc` in order. Both [`__call__`](/api/morphologizer#call) and
 
 ## Morphologizer.begin_training {#begin_training tag="method"}
 
-Initialize the pipe for training, using data examples if available. Returns an
-[`Optimizer`](https://thinc.ai/docs/api-optimizers) object.
+Initialize the component for training and return an
+[`Optimizer`](https://thinc.ai/docs/api-optimizers). `get_examples` should be a
+function that returns an iterable of [`Example`](/api/example) objects. The data
+examples are used to **initialize the model** of the component and can either be
+the full training data or a representative sample. Initialization includes
+validating the network,
+[inferring missing shapes](https://thinc.ai/docs/usage-models#validation) and
+setting up the label scheme based on the data.
 
 > #### Example
 >
 > ```python
 > morphologizer = nlp.add_pipe("morphologizer")
 > nlp.pipeline.append(morphologizer)
-> optimizer = morphologizer.begin_training(pipeline=nlp.pipeline)
+> optimizer = morphologizer.begin_training(lambda: [], pipeline=nlp.pipeline)
 > ```
 
 | Name           | Type                                                | Description                                                                                                           |
@@ -144,7 +148,8 @@ Initialize the pipe for training, using data examples if available. Returns an
 
 ## Morphologizer.predict {#predict tag="method"}
 
-Apply the pipeline's model to a batch of docs, without modifying them.
+Apply the component's model to a batch of [`Doc`](/api/doc) objects, without
+modifying them.
 
 > #### Example
 >
@@ -160,7 +165,7 @@ Apply the pipeline's model to a batch of docs, without modifying them.
 
 ## Morphologizer.set_annotations {#set_annotations tag="method"}
 
-Modify a batch of documents, using pre-computed scores.
+Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 
 > #### Example
 >
@@ -177,8 +182,9 @@ Modify a batch of documents, using pre-computed scores.
 
 ## Morphologizer.update {#update tag="method"}
 
-Learn from a batch of documents and gold-standard information, updating the
-pipe's model. Delegates to [`predict`](/api/morphologizer#predict) and
+Learn from a batch of [`Example`](/api/example) objects containing the
+predictions and gold-standard annotations, and update the component's model.
+Delegates to [`predict`](/api/morphologizer#predict) and
 [`get_loss`](/api/morphologizer#get_loss).
 
 > #### Example

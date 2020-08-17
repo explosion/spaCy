@@ -5,8 +5,8 @@ menu:
   - ['Introduction', 'basics']
   - ['Quickstart', 'quickstart']
   - ['Config System', 'config']
-  - ['Transfer Learning', 'transfer-learning']
   - ['Custom Models', 'custom-models']
+  - ['Transfer Learning', 'transfer-learning']
   - ['Parallel Training', 'parallel-training']
   - ['Internal API', 'api']
 ---
@@ -30,24 +30,66 @@ ready-to-use spaCy models.
 
 </Infobox>
 
-### Training CLI & config {#cli-config}
-
-<!-- TODO: intro describing the new v3 training philosophy -->
+## Quickstart {#quickstart}
 
 The recommended way to train your spaCy models is via the
-[`spacy train`](/api/cli#train) command on the command line. You can pass in the
-following data and information:
+[`spacy train`](/api/cli#train) command on the command line. It only needs a
+single [`config.cfg`](#config) **configuration file** that includes all settings
+and hyperparameters. You can optionally [overwritten](#config-overrides)
+settings on the command line, and load in a Python file to register
+[custom functions](#custom-code) and architectures. This quickstart widget helps
+you generate a starter config with the **recommended settings** for your
+specific use case. It's also available in spaCy as the
+[`init config`](/api/cli#init-config) command.
 
-1. The **training and evaluation data** in spaCy's
-   [binary `.spacy` format](/api/data-formats#binary-training) created using
-   [`spacy convert`](/api/cli#convert).
-2. A [`config.cfg`](#config) **configuration file** with all settings and
-   hyperparameters.
-3. An optional **Python file** to register
-   [custom functions and architectures](#custom-code).
+> #### Instructions: widget
+>
+> 1. Select your requirements and settings.
+> 2. Use the buttons at the bottom to save the result to your clipboard or a
+>    file `base_config.cfg`.
+> 3. Run [`init fill-config`](/api/cli#init-fill-config) to create a full
+>    config.
+> 4. Run [`train`](/api/cli#train) with your config and data.
+>
+> #### Instructions: CLI
+>
+> 1. Run the [`init config`](/api/cli#init-config) command and specify your
+>    requirements and settings as CLI arguments.
+> 2. Run [`train`](/api/cli#train) with the exported config and data.
+
+import QuickstartTraining from 'widgets/quickstart-training.js'
+
+<QuickstartTraining download="base_config.cfg" />
+
+After you've saved the starter config to a file `base_config.cfg`, you can use
+the [`init fill-config`](/api/cli#init-fill-config) command to fill in the
+remaining defaults. Training configs should always be **complete and without
+hidden defaults**, to keep your experiments reproducible.
 
 ```bash
-$ python -m spacy train train.spacy dev.spacy config.cfg --output ./output
+$ python -m spacy init fill-config base_config.cfg config.cfg
+```
+
+> #### Tip: Debug your data
+>
+> The [`debug data` command](/api/cli#debug-data) lets you analyze and validate
+> your training and development data, get useful stats, and find problems like
+> invalid entity annotations, cyclic dependencies, low data labels and more.
+>
+> ```bash
+> $ python -m spacy debug data config.cfg --verbose
+> ```
+
+Instead of exporting your starter config from the quickstart widget and
+auto-filling it, you can also use the [`init config`](/api/cli#init-config)
+command and specify your requirement and settings and CLI arguments. You can now
+add your data and run [`train`](/api/cli#train) with your config. See the
+[`convert`](/api/cli#convert) command for details on how to convert your data to
+spaCy's binary `.spacy` format. You can either include the data paths in the
+`[paths]` section of your config, or pass them in via the command line.
+
+```bash
+$ python -m spacy train config.cfg --output ./output --paths.train ./train.spacy --paths.dev ./dev.spacy
 ```
 
 <Project id="some_example_project">
@@ -57,47 +99,6 @@ The easiest way to get started with an end-to-end training process is to clone a
 workflows, from data preprocessing to training and packaging your model.
 
 </Project>
-
-## Quickstart {#quickstart}
-
-> #### Instructions
->
-> 1. Select your requirements and settings.
-> 2. Use the buttons at the bottom to save the result to your clipboard or a
->    file `base_config.cfg`.
-> 3. Run [`init config`](/api/cli#init-config) to create a full training config.
-> 4. Run [`train`](/api/cli#train) with your config and data.
-
-import QuickstartTraining from 'widgets/quickstart-training.js'
-
-<QuickstartTraining download="base_config.cfg" />
-
-After you've saved the starter config to a file `base_config.cfg`, you can use
-the [`init config`](/api/cli#init-config) command to fill in the remaining
-defaults. Training configs should always be **complete and without hidden
-defaults**, to keep your experiments reproducible.
-
-```bash
-$ python -m spacy init config config.cfg --base base_config.cfg
-```
-
-> #### Tip: Debug your data
->
-> The [`debug-data` command](/api/cli#debug-data) lets you analyze and validate
-> your training and development data, get useful stats, and find problems like
-> invalid entity annotations, cyclic dependencies, low data labels and more.
->
-> ```bash
-> $ python -m spacy debug-data en train.spacy dev.spacy --verbose
-> ```
-
-You can now run [`train`](/api/cli#train) with your training and development
-data and the training config. See the [`convert`](/api/cli#convert) command for
-details on how to convert your data to spaCy's binary `.spacy` format.
-
-```bash
-$ python -m spacy train train.spacy dev.spacy config.cfg --output ./output
-```
 
 ## Training config {#config}
 
@@ -126,8 +127,9 @@ Some of the main advantages and features of spaCy's training config are:
   passed into them. You can also register your own functions to define
   [custom architectures](#custom-models), reference them in your config and
   tweak their parameters.
-- **Interpolation.** If you have hyperparameters used by multiple components,
-  define them once and reference them as variables.
+- **Interpolation.** If you have hyperparameters or other settings used by
+  multiple components, define them once and reference them as
+  [variables](#config-interpolation).
 - **Reproducibility with no hidden defaults.** The config file is the "single
   source of truth" and includes all settings. <!-- TODO: explain this better -->
 - **Automated checks and validation.** When you load a config, spaCy checks if
@@ -149,19 +151,19 @@ not just define static settings, but also construct objects like architectures,
 schedules, optimizers or any other custom components. The main top-level
 sections of a config file are:
 
-| Section       | Description                                                                                                                                            |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `nlp`         | Definition of the `nlp` object, its tokenizer and [processing pipeline](/usage/processing-pipelines) component names.                                  |
-| `components`  | Definitions of the [pipeline components](/usage/processing-pipelines) and their models.                                                                |
-| `paths`       | Paths to data and other assets. Can be re-used across the config as variables, e.g. `${paths:train}`, and [overwritten](#config-overrides) on the CLI. |
-| `system`      | Settings related to system and hardware.                                                                                                               |
-| `training`    | Settings and controls for the training and evaluation process.                                                                                         |
-| `pretraining` | Optional settings and controls for the [language model pretraining](#pretraining).                                                                     |
+| Section       | Description                                                                                                                                                     |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `nlp`         | Definition of the `nlp` object, its tokenizer and [processing pipeline](/usage/processing-pipelines) component names.                                           |
+| `components`  | Definitions of the [pipeline components](/usage/processing-pipelines) and their models.                                                                         |
+| `paths`       | Paths to data and other assets. Re-used across the config as variables, e.g. `${paths:train}`, and can be [overwritten](#config-overrides) on the CLI.          |
+| `system`      | Settings related to system and hardware. Re-used across the config as variables, e.g. `${system.seed}`, and can be [overwritten](#config-overrides) on the CLI. |
+| `training`    | Settings and controls for the training and evaluation process.                                                                                                  |
+| `pretraining` | Optional settings and controls for the [language model pretraining](#pretraining).                                                                              |
 
 <Infobox title="Config format and settings" emoji="📖">
 
 For a full overview of spaCy's config format and settings, see the
-[training format documentation](/api/data-formats#config) and
+[data format documentation](/api/data-formats#config) and
 [Thinc's config system docs](https://thinc.ai/usage/config). The settings
 available for the different architectures are documented with the
 [model architectures API](/api/architectures). See the Thinc documentation for
@@ -181,18 +183,20 @@ hard-code in a config file, or **system-dependent settings**.
 
 For cases like this, you can set additional command-line options starting with
 `--` that correspond to the config section and value to override. For example,
-`--training.batch_size 128` sets the `batch_size` value in the `[training]`
-block to `128`.
+`--paths.train ./corpus/train.spacy` sets the `train` value in the `[paths]`
+block.
 
 ```bash
-$ python -m spacy train train.spacy dev.spacy config.cfg
---training.batch_size 128 --nlp.vectors /path/to/vectors
+$ python -m spacy train config.cfg --paths.train ./corpus/train.spacy
+--paths.dev ./corpus/dev.spacy --training.batch_size 128
 ```
 
 Only existing sections and values in the config can be overwritten. At the end
 of the training, the final filled `config.cfg` is exported with your model, so
 you'll always have a record of the settings that were used, including your
-overrides.
+overrides. Overrides are added before [variables](#config-interpolation) are
+resolved, by the way – so if you need to use a value in multiple places,
+reference it across your config and override it on the CLI once.
 
 ### Defining pipeline components {#config-components}
 
@@ -315,9 +319,72 @@ stop = 1000
 compound = 1.001
 ```
 
+### Using variable interpolation {#config-interpolation}
+
+Another very useful feature of the config system is that it supports variable
+interpolation for both **values and sections**. This means that you only need to
+define a setting once and can reference it across your config using the
+`${section:value}` or `${section.block}` syntax. In this example, the value of
+`seed` is reused within the `[training]` block, and the whole block of
+`[training.optimizer]` is reused in `[pretraining]` and will become
+`pretraining.optimizer`.
+
+> #### Note on syntax
+>
+> There are two different ways to format your variables, depending on whether
+> you want to reference a single value or a block. Values are specified after a
+> `:`, while blocks are specified with a `.`:
+>
+> 1. `${section:value}`, `${section.subsection:value}`
+> 2. `${section.block}`, `${section.subsection.block}`
+
+```ini
+### config.cfg (excerpt) {highlight="5,18"}
+[system]
+seed = 0
+
+[training]
+seed = ${system:seed}
+
+[training.optimizer]
+@optimizers = "Adam.v1"
+beta1 = 0.9
+beta2 = 0.999
+L2_is_weight_decay = true
+L2 = 0.01
+grad_clip = 1.0
+use_averages = false
+eps = 1e-8
+
+[pretraining]
+optimizer = ${training.optimizer}
+```
+
+You can also use variables inside strings. In that case, it works just like
+f-strings in Python. If the value of a variable is not a string, it's converted
+to a string.
+
+```ini
+[paths]
+version = 5
+root = "/Users/you/data"
+train = "${paths:root}/train_${paths:version}.spacy"
+# Result: /Users/you/data/train_5.spacy
+```
+
+<Infobox title="Tip: Override variables on the CLI" emoji="💡">
+
+If you need to change certain values between training runs, you can define them
+once, reference them as variables and then [override](#config-overrides) them on
+the CLI. For example, `--paths.root /other/root` will change the value of `root`
+in the block `[paths]` and the change will be reflected across all other values
+that reference this variable.
+
+</Infobox>
+
 ### Model architectures {#model-architectures}
 
-<!-- TODO: refer to architectures API: /api/architectures. This should document the architectures in spacy/ml/models -->
+<!-- TODO: refer to architectures API: /api/architectures -->
 
 ### Metrics, training output and weighted scores {#metrics}
 
@@ -384,40 +451,16 @@ still look good.
 
 </Accordion>
 
-## Transfer learning {#transfer-learning}
-
-### Using transformer models like BERT {#transformers}
-
-spaCy v3.0 lets you use almost any statistical model to power your pipeline. You
-can use models implemented in a variety of frameworks. A transformer model is
-just a statistical model, so the
-[`spacy-transformers`](https://github.com/explosion/spacy-transformers) package
-actually has very little work to do: it just has to provide a few functions that
-do the required plumbing. It also provides a pipeline component,
-[`Transformer`](/api/transformer), that lets you do multi-task learning and lets
-you save the transformer outputs for later use.
-
-<Project id="en_core_bert">
-
-Try out a BERT-based model pipeline using this project template: swap in your
-data, edit the settings and hyperparameters and train, evaluate, package and
-visualize your model.
-
-</Project>
-
-For more details on how to integrate transformer models into your training
-config and customize the implementations, see the usage guide on
-[training transformers](/usage/transformers#training).
-
-### Pretraining with spaCy {#pretraining}
-
-<!-- TODO: document spacy pretrain -->
-
 ## Custom model implementations and architectures {#custom-models}
 
 <!-- TODO: intro, should summarise what spaCy v3 can do and that you can now use fully custom implementations, models defined in PyTorch and TF, etc. etc. -->
 
 ### Training with custom code {#custom-code}
+
+> ```bash
+> ### Example {wrap="true"}
+> $ python -m spacy train config.cfg --code functions.py
+> ```
 
 The [`spacy train`](/api/cli#train) recipe lets you specify an optional argument
 `--code` that points to a Python file. The file is imported before training and
@@ -425,6 +468,120 @@ allows you to add custom functions and architectures to the function registry
 that can then be referenced from your `config.cfg`. This lets you train spaCy
 models with custom components, without having to re-implement the whole training
 workflow.
+
+#### Example: Modifying the nlp object {#custom-code-nlp-callbacks}
+
+For many use cases, you don't necessarily want to implement the whole `Language`
+subclass and language data from scratch – it's often enough to make a few small
+modifications, like adjusting the
+[tokenization rules](/usage/linguistic-features#native-tokenizer-additions) or
+[language defaults](/api/language#defaults) like stop words. The config lets you
+provide three optional **callback functions** that give you access to the
+language class and `nlp` object at different points of the lifecycle:
+
+| Callback                  | Description                                                                                                                                                                              |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `before_creation`         | Called before the `nlp` object is created and receives the language subclass like `English` (not the instance). Useful for writing to the [`Language.Defaults`](/api/language#defaults). |
+| `after_creation`          | Called right after the `nlp` object is created, but before the pipeline components are added to the pipeline and receives the `nlp` object. Useful for modifying the tokenizer.          |
+| `after_pipeline_creation` | Called right after the pipeline components are created and added and receives the `nlp` object. Useful for modifying pipeline components.                                                |
+
+The `@spacy.registry.callbacks` decorator lets you register that function in the
+`callbacks` [registry](/api/top-level#registry) under a given name. You can then
+reference the function in a config block using the `@callbacks` key. If a block
+contains a key starting with an `@`, it's interpreted as a reference to a
+function. Because you've registered the function, spaCy knows how to create it
+when you reference `"customize_language_data"` in your config. Here's an example
+of a callback that runs before the `nlp` object is created and adds a few custom
+tokenization rules to the defaults:
+
+> #### config.cfg
+>
+> ```ini
+> [nlp.before_creation]
+> @callbacks = "customize_language_data"
+> ```
+
+```python
+### functions.py {highlight="3,6"}
+import spacy
+
+@spacy.registry.callbacks("customize_language_data")
+def create_callback():
+    def customize_language_data(lang_cls):
+        lang_cls.Defaults.suffixes = lang_cls.Defaults.suffixes + (r"-+$",)
+        return lang_cls
+
+    return customize_language_data
+```
+
+<Infobox variant="warning">
+
+Remember that a registered function should always be a function that spaCy
+**calls to create something**. In this case, it **creates a callback** – it's
+not the callback itself.
+
+</Infobox>
+
+Any registered function – in this case `create_callback` – can also take
+**arguments** that can be **set by the config**. This lets you implement and
+keep track of different configurations, without having to hack at your code. You
+can choose any arguments that make sense for your use case. In this example,
+we're adding the arguments `extra_stop_words` (a list of strings) and `debug`
+(boolean) for printing additional info when the function runs.
+
+> #### config.cfg
+>
+> ```ini
+> [nlp.before_creation]
+> @callbacks = "customize_language_data"
+> extra_stop_words = ["ooh", "aah"]
+> debug = true
+> ```
+
+```python
+### functions.py {highlight="5,8-10"}
+from typing import List
+import spacy
+
+@spacy.registry.callbacks("customize_language_data")
+def create_callback(extra_stop_words: List[str] = [], debug: bool = False):
+    def customize_language_data(lang_cls):
+        lang_cls.Defaults.suffixes = lang_cls.Defaults.suffixes + (r"-+$",)
+        lang_cls.Defaults.stop_words.add(extra_stop_words)
+        if debug:
+            print("Updated stop words and tokenizer suffixes")
+        return lang_cls
+
+    return customize_language_data
+```
+
+<Infobox title="Tip: Use Python type hints" emoji="💡">
+
+spaCy's configs are powered by our machine learning library Thinc's
+[configuration system](https://thinc.ai/docs/usage-config), which supports
+[type hints](https://docs.python.org/3/library/typing.html) and even
+[advanced type annotations](https://thinc.ai/docs/usage-config#advanced-types)
+using [`pydantic`](https://github.com/samuelcolvin/pydantic). If your registered
+function provides type hints, the values that are passed in will be checked
+against the expected types. For example, `debug: bool` in the example above will
+ensure that the value received as the argument `debug` is an boolean. If the
+value can't be coerced into a boolean, spaCy will raise an error.
+`start: pydantic.StrictBool` will force the value to be an boolean and raise an
+error if it's not – for instance, if your config defines `1` instead of `true`.
+
+</Infobox>
+
+With your `functions.py` defining additional code and the updated `config.cfg`,
+you can now run [`spacy train`](/api/cli#train) and point the argument `--code`
+to your Python file. Before loading the config, spaCy will import the
+`functions.py` module and your custom functions will be registered.
+
+```bash
+### Training with custom code {wrap="true"}
+python -m spacy train config.cfg --output ./output --code ./functions.py
+```
+
+#### Example: Custom batch size schedule {#custom-code-schedule}
 
 For example, let's say you've implemented your own batch size schedule to use
 during training. The `@spacy.registry.schedules` decorator lets you register
@@ -457,9 +614,7 @@ settings in the block will be passed to the function as keyword arguments. Keep
 in mind that the config shouldn't have any hidden defaults and all arguments on
 the functions need to be represented in the config. If your function defines
 **default argument values**, spaCy is able to auto-fill your config when you run
-[`init config`](/api/cli#init-config).
-
-<!-- TODO: this needs to be updated once we've decided on a workflow for "fill config" -->
+[`init fill-config`](/api/cli#init-fill-config).
 
 ```ini
 ### config.cfg (excerpt)
@@ -469,31 +624,9 @@ start = 2
 factor = 1.005
 ```
 
-You can now run [`spacy train`](/api/cli#train) with the `config.cfg` and your
-custom `functions.py` as the argument `--code`. Before loading the config, spaCy
-will import the `functions.py` module and your custom functions will be
-registered.
+#### Example: Custom data reading and batching {#custom-code-readers-batchers}
 
-```bash
-### Training with custom code {wrap="true"}
-python -m spacy train train.spacy dev.spacy config.cfg --output ./output --code ./functions.py
-```
-
-<Infobox title="Tip: Use Python type hints" emoji="💡">
-
-spaCy's configs are powered by our machine learning library Thinc's
-[configuration system](https://thinc.ai/docs/usage-config), which supports
-[type hints](https://docs.python.org/3/library/typing.html) and even
-[advanced type annotations](https://thinc.ai/docs/usage-config#advanced-types)
-using [`pydantic`](https://github.com/samuelcolvin/pydantic). If your registered
-function provides type hints, the values that are passed in will be checked
-against the expected types. For example, `start: int` in the example above will
-ensure that the value received as the argument `start` is an integer. If the
-value can't be coerced into an integer, spaCy will raise an error.
-`start: pydantic.StrictInt` will force the value to be an integer and raise an
-error if it's not – for instance, if your config defines a float.
-
-</Infobox>
+<!-- TODO: -->
 
 ### Wrapping PyTorch and TensorFlow {#custom-frameworks}
 
@@ -510,6 +643,35 @@ mattis pretium.
 ### Defining custom architectures {#custom-architectures}
 
 <!-- TODO: this could maybe be a more general example of using Thinc to compose some layers? We don't want to go too deep here and probably want to focus on a simple architecture example to show how it works -->
+
+## Transfer learning {#transfer-learning}
+
+### Using transformer models like BERT {#transformers}
+
+spaCy v3.0 lets you use almost any statistical model to power your pipeline. You
+can use models implemented in a variety of frameworks. A transformer model is
+just a statistical model, so the
+[`spacy-transformers`](https://github.com/explosion/spacy-transformers) package
+actually has very little work to do: it just has to provide a few functions that
+do the required plumbing. It also provides a pipeline component,
+[`Transformer`](/api/transformer), that lets you do multi-task learning and lets
+you save the transformer outputs for later use.
+
+<Project id="en_core_bert">
+
+Try out a BERT-based model pipeline using this project template: swap in your
+data, edit the settings and hyperparameters and train, evaluate, package and
+visualize your model.
+
+</Project>
+
+For more details on how to integrate transformer models into your training
+config and customize the implementations, see the usage guide on
+[training transformers](/usage/transformers#training).
+
+### Pretraining with spaCy {#pretraining}
+
+<!-- TODO: document spacy pretrain, objectives etc. -->
 
 ## Parallel Training with Ray {#parallel-training}
 
@@ -538,13 +700,13 @@ give you everything you need to train fully custom models with
 
 </Infobox>
 
-<!-- TODO: maybe add something about why the Example class is great and its benefits, and how it's passed around, holds the alignment etc -->
-
 The [`Example`](/api/example) object contains annotated training data, also
 called the **gold standard**. It's initialized with a [`Doc`](/api/doc) object
 that will hold the predictions, and another `Doc` object that holds the
-gold-standard annotations. Here's an example of a simple `Example` for
-part-of-speech tags:
+gold-standard annotations. It also includes the **alignment** between those two
+documents if they differ in tokenization. The `Example` class ensures that spaCy
+can rely on one **standardized format** that's passed through the pipeline.
+Here's an example of a simple `Example` for part-of-speech tags:
 
 ```python
 words = ["I", "like", "stuff"]
@@ -595,7 +757,8 @@ example = Example.from_dict(doc, {"entities": ["U-ORG", "O", "U-TECHNOLOGY", "O"
 
 As of v3.0, the [`Example`](/api/example) object replaces the `GoldParse` class.
 It can be constructed in a very similar way, from a `Doc` and a dictionary of
-annotations:
+annotations. For more details, see the
+[migration guide](/usage/v3#migrating-training).
 
 ```diff
 - gold = GoldParse(doc, entities=entities)

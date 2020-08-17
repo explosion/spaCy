@@ -9,6 +9,7 @@ from .tagger import Tagger
 from ..language import Language
 from ..errors import Errors
 from ..scorer import Scorer
+from ..gold import validate_examples
 from .. import util
 
 
@@ -25,7 +26,6 @@ embed_size = 2000
 window_size = 1
 maxout_pieces = 2
 subword_features = true
-dropout = null
 """
 DEFAULT_SENTER_MODEL = Config().from_str(default_model_config)["model"]
 
@@ -103,6 +103,7 @@ class SentenceRecognizer(Tagger):
 
         DOCS: https://spacy.io/api/sentencerecognizer#get_loss
         """
+        validate_examples(examples, "SentenceRecognizer.get_loss")
         labels = self.labels
         loss_func = SequenceCategoricalCrossentropy(names=labels, normalize=False)
         truths = []
@@ -122,7 +123,7 @@ class SentenceRecognizer(Tagger):
             raise ValueError("nan value when computing loss")
         return float(loss), d_scores
 
-    def begin_training(self, get_examples=lambda: [], *, pipeline=None, sgd=None):
+    def begin_training(self, get_examples, *, pipeline=None, sgd=None):
         """Initialize the pipe for training, using data examples if available.
 
         get_examples (Callable[[], Iterable[Example]]): Optional function that
@@ -152,6 +153,7 @@ class SentenceRecognizer(Tagger):
         RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_spans.
         DOCS: https://spacy.io/api/sentencerecognizer#score
         """
+        validate_examples(examples, "SentenceRecognizer.score")
         results = Scorer.score_spans(examples, "sents", **kwargs)
         del results["sents_per_type"]
         return results
@@ -183,7 +185,7 @@ class SentenceRecognizer(Tagger):
             try:
                 self.model.from_bytes(b)
             except AttributeError:
-                raise ValueError(Errors.E149)
+                raise ValueError(Errors.E149) from None
 
         deserialize = {
             "vocab": lambda b: self.vocab.from_bytes(b),
@@ -222,7 +224,7 @@ class SentenceRecognizer(Tagger):
                 try:
                     self.model.from_bytes(file_.read())
                 except AttributeError:
-                    raise ValueError(Errors.E149)
+                    raise ValueError(Errors.E149) from None
 
         deserialize = {
             "vocab": lambda p: self.vocab.from_disk(p),

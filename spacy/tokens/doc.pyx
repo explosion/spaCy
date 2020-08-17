@@ -699,7 +699,7 @@ cdef class Doc:
                        for id_ in py_attr_ids]
         except KeyError as msg:
             keys = [k for k in IDS.keys() if not k.startswith("FLAG")]
-            raise KeyError(Errors.E983.format(dict="IDS", key=msg, keys=keys))
+            raise KeyError(Errors.E983.format(dict="IDS", key=msg, keys=keys)) from None
         # Make an array from the attributes --- otherwise our inner loop is
         # Python dict iteration.
         cdef np.ndarray attr_ids = numpy.asarray(py_attr_ids, dtype="i")
@@ -832,13 +832,6 @@ cdef class Doc:
                             rel_head_index=abs_head_index-i
                         )
                     )
-        # Do TAG first. This lets subsequent loop override stuff like POS, LEMMA
-        if TAG in attrs:
-            col = attrs.index(TAG)
-            for i in range(length):
-                value = values[col * stride + i]
-                if value != 0:
-                    self.vocab.morphology.assign_tag(&tokens[i], value)
         # Verify ENT_IOB are proper integers
         if ENT_IOB in attrs:
             iob_strings = Token.iob_strings()
@@ -857,12 +850,11 @@ cdef class Doc:
         for i in range(length):
             token = &self.c[i]
             for j in range(n_attrs):
-                if attr_ids[j] != TAG:
-                    value = values[j * stride + i]
-                    if attr_ids[j] == MORPH:
-                        # add morph to morphology table
-                        self.vocab.morphology.add(self.vocab.strings[value])
-                    Token.set_struct_attr(token, attr_ids[j], value)
+                value = values[j * stride + i]
+                if attr_ids[j] == MORPH:
+                    # add morph to morphology table
+                    self.vocab.morphology.add(self.vocab.strings[value])
+                Token.set_struct_attr(token, attr_ids[j], value)
         # Set flags
         self.is_parsed = bool(self.is_parsed or HEAD in attrs)
         self.is_tagged = bool(self.is_tagged or TAG in attrs or POS in attrs)

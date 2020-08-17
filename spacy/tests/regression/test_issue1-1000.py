@@ -1,17 +1,13 @@
 import pytest
 import random
-
 from spacy import util
 from spacy.gold import Example
 from spacy.matcher import Matcher
 from spacy.attrs import IS_PUNCT, ORTH, LOWER
-from spacy.symbols import POS, VERB
 from spacy.vocab import Vocab
 from spacy.lang.en import English
-from spacy.lemmatizer import Lemmatizer
 from spacy.lookups import Lookups
 from spacy.tokens import Doc, Span
-from spacy.lang.en.lemmatizer import is_base_form
 
 from ..util import get_doc, make_tempdir
 
@@ -157,16 +153,15 @@ def test_issue590(en_vocab):
     assert len(matches) == 2
 
 
+@pytest.mark.skip(reason="Old vocab-based lemmatization")
 def test_issue595():
     """Test lemmatization of base forms"""
     words = ["Do", "n't", "feed", "the", "dog"]
-    tag_map = {"VB": {POS: VERB, "VerbForm": "inf"}}
     lookups = Lookups()
     lookups.add_table("lemma_rules", {"verb": [["ed", "e"]]})
     lookups.add_table("lemma_index", {"verb": {}})
     lookups.add_table("lemma_exc", {"verb": {}})
-    lemmatizer = Lemmatizer(lookups, is_base_form=is_base_form)
-    vocab = Vocab(lemmatizer=lemmatizer, tag_map=tag_map)
+    vocab = Vocab()
     doc = Doc(vocab, words=words)
     doc[2].tag_ = "VB"
     assert doc[2].text == "feed"
@@ -389,6 +384,7 @@ def test_issue891(en_tokenizer, text):
     assert tokens[1].text == "/"
 
 
+@pytest.mark.skip(reason="Old vocab-based lemmatization")
 @pytest.mark.parametrize(
     "text,tag,lemma",
     [("anus", "NN", "anus"), ("princess", "NN", "princess"), ("inner", "JJ", "inner")],

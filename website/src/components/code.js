@@ -11,6 +11,8 @@ import Link from './link'
 import GitHubCode from './github'
 import classes from '../styles/code.module.sass'
 
+const WRAP_THRESHOLD = 16
+
 export default props => (
     <Pre>
         <Code {...props} />
@@ -21,19 +23,15 @@ export const Pre = props => {
     return <pre className={classes.pre}>{props.children}</pre>
 }
 
-export const InlineCode = ({ wrap, className, children, ...props }) => {
+export const InlineCode = ({ wrap = false, className, children, ...props }) => {
     const codeClassNames = classNames(classes.inlineCode, className, {
-        [classes.wrap]: wrap || (isString(children) && children.length >= 20),
+        [classes.wrap]: wrap || (isString(children) && children.length >= WRAP_THRESHOLD),
     })
     return (
         <code className={codeClassNames} {...props}>
             {children}
         </code>
     )
-}
-
-InlineCode.defaultProps = {
-    wrap: false,
 }
 
 InlineCode.propTypes = {

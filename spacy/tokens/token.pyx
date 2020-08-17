@@ -227,6 +227,11 @@ cdef class Token:
             self.c.morph = key
 
     @property
+    def lex(self):
+        """RETURNS (Lexeme): The underlying lexeme."""
+        return self.vocab[self.c.lex.orth]
+
+    @property
     def lex_id(self):
         """RETURNS (int): Sequential ID of the token's lexical type."""
         return self.c.lex.id
@@ -332,11 +337,7 @@ cdef class Token:
             inflectional suffixes.
         """
         def __get__(self):
-            if self.c.lemma == 0:
-                lemma_ = self.vocab.morphology.lemmatizer.lookup(self.orth_, orth=self.orth)
-                return self.vocab.strings[lemma_]
-            else:
-                return self.c.lemma
+            return self.c.lemma
 
         def __set__(self, attr_t lemma):
             self.c.lemma = lemma
@@ -355,7 +356,7 @@ cdef class Token:
             return self.c.tag
 
         def __set__(self, attr_t tag):
-            self.vocab.morphology.assign_tag(self.c, tag)
+            self.c.tag = tag
 
     property dep:
         """RETURNS (uint64): ID of syntactic dependency label."""
@@ -888,10 +889,7 @@ cdef class Token:
             with no inflectional suffixes.
         """
         def __get__(self):
-            if self.c.lemma == 0:
-                return self.vocab.morphology.lemmatizer.lookup(self.orth_, orth=self.orth)
-            else:
-                return self.vocab.strings[self.c.lemma]
+            return self.vocab.strings[self.c.lemma]
 
         def __set__(self, unicode lemma_):
             self.c.lemma = self.vocab.strings.add(lemma_)

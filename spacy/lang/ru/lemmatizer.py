@@ -1,8 +1,12 @@
-from typing import Optional, Tuple, Dict, List
+from typing import Optional, List, Dict, Tuple
 
-from ...symbols import ADJ, DET, NOUN, NUM, PRON, PROPN, PUNCT, VERB, POS
-from ...lemmatizer import Lemmatizer
+from thinc.api import Model
+
 from ...lookups import Lookups
+from ...pipeline import Lemmatizer
+from ...symbols import POS
+from ...tokens import Token
+from ...vocab import Vocab
 
 
 PUNCT_RULES = {"«": '"', "»": '"'}
@@ -11,8 +15,17 @@ PUNCT_RULES = {"«": '"', "»": '"'}
 class RussianLemmatizer(Lemmatizer):
     _morph = None
 
-    def __init__(self, lookups: Optional[Lookups] = None) -> None:
-        super(RussianLemmatizer, self).__init__(lookups)
+    def __init__(
+        self,
+        vocab: Vocab,
+        model: Optional[Model],
+        name: str = "lemmatizer",
+        *,
+        mode: str = "pymorphy2",
+        lookups: Optional[Lookups] = None,
+    ) -> None:
+        super().__init__(vocab, model, name, mode=mode, lookups=lookups)
+
         try:
             from pymorphy2 import MorphAnalyzer
         except ImportError:
@@ -21,14 +34,14 @@ class RussianLemmatizer(Lemmatizer):
                 'try to fix it with "pip install pymorphy2==0.8" '
                 'or "pip install git+https://github.com/kmike/pymorphy2.git pymorphy2-dicts-uk"'
                 "if you need Ukrainian too"
-            )
+            ) from None
         if RussianLemmatizer._morph is None:
             RussianLemmatizer._morph = MorphAnalyzer()
 
-    def __call__(
-        self, string: str, univ_pos: str, morphology: Optional[dict] = None
-    ) -> List[str]:
-        univ_pos = self.normalize_univ_pos(univ_pos)
+    def pymorphy2_lemmatize(self, token: Token) -> List[str]:
+        string = token.text
+        univ_pos = token.pos_
+        morphology = token.morph.to_dict()
         if univ_pos == "PUNCT":
             return [PUNCT_RULES.get(string, string)]
         if univ_pos not in ("ADJ", "DET", "NOUN", "NUM", "PRON", "PROPN", "VERB"):
@@ -81,25 +94,8 @@ class RussianLemmatizer(Lemmatizer):
             return [string.lower()]
         return list(set([analysis.normal_form for analysis in filtered_analyses]))
 
-    @staticmethod
-    def normalize_univ_pos(univ_pos: str) -> Optional[str]:
-        if isinstance(univ_pos, str):
-            return univ_pos.upper()
-        symbols_to_str = {
-            ADJ: "ADJ",
-            DET: "DET",
-            NOUN: "NOUN",
-            NUM: "NUM",
-            PRON: "PRON",
-            PROPN: "PROPN",
-            PUNCT: "PUNCT",
-            VERB: "VERB",
-        }
-        if univ_pos in symbols_to_str:
-            return symbols_to_str[univ_pos]
-        return None
-
-    def lookup(self, string: str, orth: Optional[int] = None) -> str:
+    def lookup_lemmatize(self, token: Token) -> List[str]:
+        string = token.text
         analyses = self._morph.parse(string)
         if len(analyses) == 1:
             return analyses[0].normal_form

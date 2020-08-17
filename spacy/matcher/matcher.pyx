@@ -70,7 +70,7 @@ cdef class Matcher:
         key (str): The match ID.
         RETURNS (bool): Whether the matcher contains rules for this match ID.
         """
-        return self._normalize_key(key) in self._patterns
+        return self.has_key(key)
 
     def add(self, key, patterns, *, on_match=None, greedy: str=None):
         """Add a match-rule to the matcher. A match-rule consists of: an ID
@@ -131,7 +131,7 @@ cdef class Matcher:
                     for attr, _ in spec[1]:
                         self._seen_attrs.add(attr)
             except OverflowError, AttributeError:
-                raise ValueError(Errors.E154.format())
+                raise ValueError(Errors.E154.format()) from None
         self._patterns.setdefault(key, [])
         self._callbacks[key] = on_match
         self._filter[key] = greedy
@@ -162,8 +162,7 @@ cdef class Matcher:
         key (string or int): The key to check.
         RETURNS (bool): Whether the matcher has the rule.
         """
-        key = self._normalize_key(key)
-        return key in self._patterns
+        return self._normalize_key(key) in self._patterns
 
     def get(self, key, default=None):
         """Retrieve the pattern stored for a key.
@@ -179,7 +178,7 @@ cdef class Matcher:
     def pipe(self, docs, batch_size=1000, return_matches=False, as_tuples=False):
         """Match a stream of documents, yielding them in turn.
 
-        docs (iterable): A stream of documents.
+        docs (Iterable[Union[Doc, Span]]): A stream of documents or spans.
         batch_size (int): Number of documents to accumulate into a working set.
         return_matches (bool): Yield the match lists along with the docs, making
             results (doc, matches) tuples.

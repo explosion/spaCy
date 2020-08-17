@@ -259,7 +259,7 @@ def test_tag_score(tagged_doc):
     assert results["tag_acc"] == 1.0
     assert results["pos_acc"] == 1.0
     assert results["morph_acc"] == 1.0
-    assert results["morph_per_feat"]["NounType"].fscore == 1.0
+    assert results["morph_per_feat"]["NounType"]["f"] == 1.0
 
     # Gold annotation is modified
     scorer = Scorer()
@@ -282,9 +282,9 @@ def test_tag_score(tagged_doc):
     assert results["tag_acc"] == 0.9
     assert results["pos_acc"] == 0.9
     assert results["morph_acc"] == approx(0.8)
-    assert results["morph_per_feat"]["NounType"].fscore == 1.0
-    assert results["morph_per_feat"]["Poss"].fscore == 0.0
-    assert results["morph_per_feat"]["Number"].fscore == approx(0.72727272)
+    assert results["morph_per_feat"]["NounType"]["f"] == 1.0
+    assert results["morph_per_feat"]["Poss"]["f"] == 0.0
+    assert results["morph_per_feat"]["Number"]["f"] == approx(0.72727272)
 
 
 def test_roc_auc_score():

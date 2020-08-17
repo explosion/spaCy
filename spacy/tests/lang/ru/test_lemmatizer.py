@@ -3,15 +3,16 @@ import pytest
 from ...util import get_doc
 
 
-@pytest.mark.xfail(reason="TODO: investigate why lemmatizer fails here")
-def test_ru_doc_lemmatization(ru_tokenizer):
+def test_ru_doc_lemmatization(ru_lemmatizer):
     words = ["мама", "мыла", "раму"]
-    tags = [
-        "NOUN__Animacy=Anim|Case=Nom|Gender=Fem|Number=Sing",
-        "VERB__Aspect=Imp|Gender=Fem|Mood=Ind|Number=Sing|Tense=Past|VerbForm=Fin|Voice=Act",
-        "NOUN__Animacy=Anim|Case=Acc|Gender=Fem|Number=Sing",
+    pos = ["NOUN", "VERB", "NOUN"]
+    morphs = [
+        "Animacy=Anim|Case=Nom|Gender=Fem|Number=Sing",
+        "Aspect=Imp|Gender=Fem|Mood=Ind|Number=Sing|Tense=Past|VerbForm=Fin|Voice=Act",
+        "Animacy=Anim|Case=Acc|Gender=Fem|Number=Sing",
     ]
-    doc = get_doc(ru_tokenizer.vocab, words=words, tags=tags)
+    doc = get_doc(ru_lemmatizer.vocab, words=words, pos=pos, morphs=morphs)
+    doc = ru_lemmatizer(doc)
     lemmas = [token.lemma_ for token in doc]
     assert lemmas == ["мама", "мыть", "рама"]
 
@@ -27,43 +28,51 @@ def test_ru_doc_lemmatization(ru_tokenizer):
     ],
 )
 def test_ru_lemmatizer_noun_lemmas(ru_lemmatizer, text, lemmas):
-    assert sorted(ru_lemmatizer.noun(text)) == lemmas
+    doc = get_doc(ru_lemmatizer.vocab, words=[text], pos=["NOUN"])
+    result_lemmas = ru_lemmatizer.pymorphy2_lemmatize(doc[0])
+    assert sorted(result_lemmas) == lemmas
 
 
 @pytest.mark.parametrize(
-    "text,pos,morphology,lemma",
+    "text,pos,morph,lemma",
     [
-        ("рой", "NOUN", None, "рой"),
-        ("рой", "VERB", None, "рыть"),
-        ("клей", "NOUN", None, "клей"),
-        ("клей", "VERB", None, "клеить"),
-        ("три", "NUM", None, "три"),
-        ("кос", "NOUN", {"Number": "Sing"}, "кос"),
-        ("кос", "NOUN", {"Number": "Plur"}, "коса"),
-        ("кос", "ADJ", None, "косой"),
-        ("потом", "NOUN", None, "пот"),
-        ("потом", "ADV", None, "потом"),
+        ("рой", "NOUN", "", "рой"),
+        ("рой", "VERB", "", "рыть"),
+        ("клей", "NOUN", "", "клей"),
+        ("клей", "VERB", "", "клеить"),
+        ("три", "NUM", "", "три"),
+        ("кос", "NOUN", "Number=Sing", "кос"),
+        ("кос", "NOUN", "Number=Plur", "коса"),
+        ("кос", "ADJ", "", "косой"),
+        ("потом", "NOUN", "", "пот"),
+        ("потом", "ADV", "", "потом"),
     ],
 )
 def test_ru_lemmatizer_works_with_different_pos_homonyms(
-    ru_lemmatizer, text, pos, morphology, lemma
+    ru_lemmatizer, text, pos, morph, lemma
 ):
-    assert ru_lemmatizer(text, pos, morphology) == [lemma]
+    doc = get_doc(ru_lemmatizer.vocab, words=[text], pos=[pos], morphs=[morph])
+    result_lemmas = ru_lemmatizer.pymorphy2_lemmatize(doc[0])
+    assert result_lemmas == [lemma]
 
 
 @pytest.mark.parametrize(
-    "text,morphology,lemma",
+    "text,morph,lemma",
     [
-        ("гвоздики", {"Gender": "Fem"}, "гвоздика"),
-        ("гвоздики", {"Gender": "Masc"}, "гвоздик"),
-        ("вина", {"Gender": "Fem"}, "вина"),
-        ("вина", {"Gender": "Neut"}, "вино"),
+        ("гвоздики", "Gender=Fem", "гвоздика"),
+        ("гвоздики", "Gender=Masc", "гвоздик"),
+        ("вина", "Gender=Fem", "вина"),
+        ("вина", "Gender=Neut", "вино"),
     ],
 )
-def test_ru_lemmatizer_works_with_noun_homonyms(ru_lemmatizer, text, morphology, lemma):
-    assert ru_lemmatizer.noun(text, morphology) == [lemma]
+def test_ru_lemmatizer_works_with_noun_homonyms(ru_lemmatizer, text, morph, lemma):
+    doc = get_doc(ru_lemmatizer.vocab, words=[text], pos=["NOUN"], morphs=[morph])
+    result_lemmas = ru_lemmatizer.pymorphy2_lemmatize(doc[0])
+    assert result_lemmas == [lemma]
 
 
 def test_ru_lemmatizer_punct(ru_lemmatizer):
-    assert ru_lemmatizer.punct("«") == ['"']
-    assert ru_lemmatizer.punct("»") == ['"']
+    doc = get_doc(ru_lemmatizer.vocab, words=["«"], pos=["PUNCT"])
+    assert ru_lemmatizer.pymorphy2_lemmatize(doc[0]) == ['"']
+    doc = get_doc(ru_lemmatizer.vocab, words=["»"], pos=["PUNCT"])
+    assert ru_lemmatizer.pymorphy2_lemmatize(doc[0]) == ['"']

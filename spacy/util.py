@@ -24,6 +24,7 @@ import tempfile
 import shutil
 import shlex
 import inspect
+import logging
 
 try:
     import cupy.random
@@ -44,7 +45,7 @@ from thinc.api import fix_random_seed, compounding, decaying  # noqa: F401
 
 from .symbols import ORTH
 from .compat import cupy, CudaStream, is_windows
-from .errors import Errors, Warnings
+from .errors import Errors, Warnings, OLD_MODEL_SHORTCUTS
 from . import about
 
 if TYPE_CHECKING:
@@ -54,9 +55,18 @@ if TYPE_CHECKING:
     from .vocab import Vocab  # noqa: F401
 
 
-_PRINT_ENV = False
 OOV_RANK = numpy.iinfo(numpy.uint64).max
 LEXEME_NORM_LANGS = ["da", "de", "el", "en", "id", "lb", "pt", "ru", "sr", "ta", "th"]
+
+# Default order of sections in the config.cfg. Not all sections needs to exist,
+# and additional sections are added at the end, in alphabetical order.
+# fmt: off
+CONFIG_SECTION_ORDER = ["paths", "variables", "system", "nlp", "components", "training", "pretraining"]
+# fmt: on
+
+
+logging.basicConfig()
+logger = logging.getLogger("spacy")
 
 
 class registry(thinc.registry):
@@ -67,6 +77,8 @@ class registry(thinc.registry):
     lookups = catalogue.create("spacy", "lookups", entry_points=True)
     displacy_colors = catalogue.create("spacy", "displacy_colors", entry_points=True)
     assets = catalogue.create("spacy", "assets", entry_points=True)
+    # Callback functions used to manipulate nlp object etc.
+    callbacks = catalogue.create("spacy", "callbacks")
     batchers = catalogue.create("spacy", "batchers", entry_points=True)
     readers = catalogue.create("spacy", "readers", entry_points=True)
     # These are factories registered via third-party packages and the
@@ -107,11 +119,6 @@ class SimpleFrozenDict(dict):
         raise NotImplementedError(self.error)
 
 
-def set_env_log(value: bool) -> None:
-    global _PRINT_ENV
-    _PRINT_ENV = value
-
-
 def lang_class_is_loaded(lang: str) -> bool:
     """Check whether a Language class is already loaded. Language classes are
     loaded lazily, to avoid expensive setup code associated with the language
@@ -136,7 +143,7 @@ def get_lang_class(lang: str) -> "Language":
         try:
             module = importlib.import_module(f".lang.{lang}", "spacy")
         except ImportError as err:
-            raise ImportError(Errors.E048.format(lang=lang, err=err))
+            raise ImportError(Errors.E048.format(lang=lang, err=err)) from err
         set_lang_class(lang, getattr(module, module.__all__[0]))
     return registry.languages.get(lang)
 
@@ -208,7 +215,7 @@ def load_model(
     *,
     vocab: Union["Vocab", bool] = True,
     disable: Iterable[str] = tuple(),
-    component_cfg: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
+    config: Union[Dict[str, Any], Config] = SimpleFrozenDict(),
 ) -> "Language":
     """Load a model from a package or data path.
 
@@ -216,11 +223,11 @@ def load_model(
     vocab (Vocab / True): Optional vocab to pass in on initialization. If True,
         a new Vocab object will be created.
     disable (Iterable[str]): Names of pipeline components to disable.
-    component_cfg (Dict[str, dict]): Config overrides for pipeline components,
-        keyed by component names.
+    config (Dict[str, Any] / Config): Config overrides as nested dict or dict
+        keyed by section values in dot notation.
     RETURNS (Language): The loaded nlp object.
     """
-    kwargs = {"vocab": vocab, "disable": disable, "component_cfg": component_cfg}
+    kwargs = {"vocab": vocab, "disable": disable, "config": config}
     if isinstance(name, str):  # name or string path
         if name.startswith("blank:"):  # shortcut for blank model
             return get_lang_class(name.replace("blank:", ""))()
@@ -230,6 +237,8 @@ def load_model(
             return load_model_from_path(Path(name), **kwargs)
     elif hasattr(name, "exists"):  # Path or Path-like to model data
         return load_model_from_path(name, **kwargs)
+    if name in OLD_MODEL_SHORTCUTS:
+        raise IOError(Errors.E941.format(name=name, full=OLD_MODEL_SHORTCUTS[name]))
     raise IOError(Errors.E050.format(name=name))
 
 
@@ -238,11 +247,11 @@ def load_model_from_package(
     *,
     vocab: Union["Vocab", bool] = True,
     disable: Iterable[str] = tuple(),
-    component_cfg: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
+    config: Union[Dict[str, Any], Config] = SimpleFrozenDict(),
 ) -> "Language":
     """Load a model from an installed package."""
     cls = importlib.import_module(name)
-    return cls.load(vocab=vocab, disable=disable, component_cfg=component_cfg)
+    return cls.load(vocab=vocab, disable=disable, config=config)
 
 
 def load_model_from_path(
@@ -251,7 +260,7 @@ def load_model_from_path(
     meta: Optional[Dict[str, Any]] = None,
     vocab: Union["Vocab", bool] = True,
     disable: Iterable[str] = tuple(),
-    component_cfg: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
+    config: Union[Dict[str, Any], Config] = SimpleFrozenDict(),
 ) -> "Language":
     """Load a model from a data directory path. Creates Language class with
     pipeline from config.cfg and then calls from_disk() with path."""
@@ -260,14 +269,8 @@ def load_model_from_path(
     if not meta:
         meta = get_model_meta(model_path)
     config_path = model_path / "config.cfg"
-    if not config_path.exists() or not config_path.is_file():
-        raise IOError(Errors.E053.format(path=config_path, name="config.cfg"))
-    config = Config().from_disk(config_path)
-    override_cfg = {"components": {p: dict_to_dot(c) for p, c in component_cfg.items()}}
-    overrides = dict_to_dot(override_cfg)
-    nlp, _ = load_model_from_config(
-        config, vocab=vocab, disable=disable, overrides=overrides
-    )
+    config = load_config(config_path, overrides=dict_to_dot(config))
+    nlp, _ = load_model_from_config(config, vocab=vocab, disable=disable)
     return nlp.from_disk(model_path, exclude=disable)
 
 
@@ -276,7 +279,6 @@ def load_model_from_config(
     *,
     vocab: Union["Vocab", bool] = True,
     disable: Iterable[str] = tuple(),
-    overrides: Dict[str, Any] = {},
     auto_fill: bool = False,
     validate: bool = True,
 ) -> Tuple["Language", Config]:
@@ -292,12 +294,7 @@ def load_model_from_config(
     # registry, including custom subclasses provided via entry points
     lang_cls = get_lang_class(nlp_config["lang"])
     nlp = lang_cls.from_config(
-        config,
-        vocab=vocab,
-        disable=disable,
-        overrides=overrides,
-        auto_fill=auto_fill,
-        validate=validate,
+        config, vocab=vocab, disable=disable, auto_fill=auto_fill, validate=validate,
     )
     return nlp, nlp.resolved
 
@@ -307,14 +304,10 @@ def load_model_from_init_py(
     *,
     vocab: Union["Vocab", bool] = True,
     disable: Iterable[str] = tuple(),
-    component_cfg: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
+    config: Union[Dict[str, Any], Config] = SimpleFrozenDict(),
 ) -> "Language":
     """Helper function to use in the `load()` method of a model package's
     __init__.py.
-
-    init_file (str): Path to model's __init__.py, i.e. `__file__`.
-    **overrides: Specific overrides, like pipeline components to disable.
-    RETURNS (Language): `Language` class with loaded model.
     """
     model_path = Path(init_file).parent
     meta = get_model_meta(model_path)
@@ -323,7 +316,30 @@ def load_model_from_init_py(
     if not model_path.exists():
         raise IOError(Errors.E052.format(path=data_path))
     return load_model_from_path(
-        data_path, vocab=vocab, meta=meta, disable=disable, component_cfg=component_cfg
+        data_path, vocab=vocab, meta=meta, disable=disable, config=config
+    )
+
+
+def load_config(
+    path: Union[str, Path],
+    overrides: Dict[str, Any] = SimpleFrozenDict(),
+    interpolate: bool = False,
+) -> Config:
+    """Load a config file. Takes care of path validation and section order."""
+    config_path = ensure_path(path)
+    if not config_path.exists() or not config_path.is_file():
+        raise IOError(Errors.E053.format(path=config_path, name="config.cfg"))
+    return Config(section_order=CONFIG_SECTION_ORDER).from_disk(
+        config_path, overrides=overrides, interpolate=interpolate
+    )
+
+
+def load_config_from_str(
+    text: str, overrides: Dict[str, Any] = SimpleFrozenDict(), interpolate: bool = False
+):
+    """Load a full config from a string."""
+    return Config(section_order=CONFIG_SECTION_ORDER).from_str(
+        text, overrides=overrides, interpolate=interpolate,
     )
 
 
@@ -514,7 +530,7 @@ def run_command(command: Union[str, List[str]]) -> None:
     except FileNotFoundError:
         raise FileNotFoundError(
             Errors.E970.format(str_command=" ".join(command), tool=command[0])
-        )
+        ) from None
     if status != 0:
         sys.exit(status)
 
@@ -610,27 +626,6 @@ def get_async(stream, numpy_array):
         array = cupy.ndarray(numpy_array.shape, order="C", dtype=numpy_array.dtype)
         array.set(numpy_array, stream=stream)
         return array
-
-
-def env_opt(name: str, default: Optional[Any] = None) -> Optional[Any]:
-    if type(default) is float:
-        type_convert = float
-    else:
-        type_convert = int
-    if "SPACY_" + name.upper() in os.environ:
-        value = type_convert(os.environ["SPACY_" + name.upper()])
-        if _PRINT_ENV:
-            print(name, "=", repr(value), "via", "$SPACY_" + name.upper())
-        return value
-    elif name in os.environ:
-        value = type_convert(os.environ[name])
-        if _PRINT_ENV:
-            print(name, "=", repr(value), "via", "$" + name)
-        return value
-    else:
-        if _PRINT_ENV:
-            print(name, "=", repr(default), "by default")
-        return default
 
 
 def read_regex(path: Union[str, Path]) -> Pattern:
@@ -903,7 +898,7 @@ def get_words_and_spaces(
         try:
             word_start = text[text_pos:].index(word)
         except ValueError:
-            raise ValueError(Errors.E194.format(text=text, words=words))
+            raise ValueError(Errors.E194.format(text=text, words=words)) from None
         if word_start > 0:
             text_words.append(text[text_pos : text_pos + word_start])
             text_spaces.append(False)
@@ -930,46 +925,7 @@ def copy_config(config: Union[Dict[str, Any], Config]) -> Config:
     try:
         return Config(config).copy()
     except ValueError:
-        raise ValueError(Errors.E961.format(config=config))
-
-
-def deep_merge_configs(
-    config: Union[Dict[str, Any], Config], defaults: Union[Dict[str, Any], Config]
-) -> Config:
-    """Deep merge two configs, a base config and its defaults. Ignores
-    references to registered functions to avoid filling in
-
-    config (Dict[str, Any]): The config.
-    destination (Dict[str, Any]): The config defaults.
-    RETURNS (Dict[str, Any]): The merged config.
-    """
-    config = copy_config(config)
-    merged = _deep_merge_configs(config, defaults)
-    return Config(merged)
-
-
-def _deep_merge_configs(
-    config: Union[Dict[str, Any], Config], defaults: Union[Dict[str, Any], Config]
-) -> Union[Dict[str, Any], Config]:
-    for key, value in defaults.items():
-        if isinstance(value, dict):
-            node = config.setdefault(key, {})
-            if not isinstance(node, dict):
-                continue
-            promises = [key for key in value if key.startswith("@")]
-            promise = promises[0] if promises else None
-            # We only update the block from defaults if it refers to the same
-            # registered function
-            if (
-                promise
-                and any(k.startswith("@") for k in node)
-                and (promise in node and node[promise] != value[promise])
-            ):
-                continue
-            defaults = _deep_merge_configs(node, value)
-        elif key not in config:
-            config[key] = value
-    return config
+        raise ValueError(Errors.E961.format(config=config)) from None
 
 
 def dot_to_dict(values: Dict[str, Any]) -> Dict[str, dict]:
@@ -1014,7 +970,7 @@ def dot_to_object(config: Config, section: str):
         try:
             component = component[item]
         except (KeyError, TypeError):
-            raise KeyError(Errors.E952.format(name=section))
+            raise KeyError(Errors.E952.format(name=section)) from None
     return component
 
 
@@ -1077,24 +1033,7 @@ class DummyTokenizer:
 
 
 def create_default_optimizer() -> Optimizer:
-    # TODO: Do we still want to allow env_opt?
-    learn_rate = env_opt("learn_rate", 0.001)
-    beta1 = env_opt("optimizer_B1", 0.9)
-    beta2 = env_opt("optimizer_B2", 0.999)
-    eps = env_opt("optimizer_eps", 1e-8)
-    L2 = env_opt("L2_penalty", 1e-6)
-    grad_clip = env_opt("grad_norm_clip", 10.0)
-    L2_is_weight_decay = env_opt("L2_is_weight_decay", False)
-    optimizer = Adam(
-        learn_rate,
-        L2=L2,
-        beta1=beta1,
-        beta2=beta2,
-        eps=eps,
-        grad_clip=grad_clip,
-        L2_is_weight_decay=L2_is_weight_decay,
-    )
-    return optimizer
+    return Adam()
 
 
 def minibatch(items, size):

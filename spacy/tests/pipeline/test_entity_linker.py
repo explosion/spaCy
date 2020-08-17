@@ -132,7 +132,7 @@ def test_kb_undefined(nlp):
     """Test that the EL can't train without defining a KB"""
     entity_linker = nlp.add_pipe("entity_linker", config={})
     with pytest.raises(ValueError):
-        entity_linker.begin_training()
+        entity_linker.begin_training(lambda: [])
 
 
 def test_kb_empty(nlp):
@@ -141,7 +141,7 @@ def test_kb_empty(nlp):
     entity_linker = nlp.add_pipe("entity_linker", config=config)
     assert len(entity_linker.kb) == 0
     with pytest.raises(ValueError):
-        entity_linker.begin_training()
+        entity_linker.begin_training(lambda: [])
 
 
 def test_candidate_generation(nlp):
@@ -306,7 +306,7 @@ def test_preserving_links_asdoc(nlp):
     ruler.add_patterns(patterns)
     el_config = {"kb_loader": {"@assets": "myLocationsKB.v1"}, "incl_prior": False}
     el_pipe = nlp.add_pipe("entity_linker", config=el_config, last=True)
-    el_pipe.begin_training()
+    el_pipe.begin_training(lambda: [])
     el_pipe.incl_context = False
     el_pipe.incl_prior = True
 

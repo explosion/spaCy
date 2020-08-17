@@ -1,7 +1,7 @@
 import React, { Fragment, useState, useEffect, useRef } from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
-import { window } from 'browser-monads'
+import { window, document } from 'browser-monads'
 
 import Section from './section'
 import Icon from './icon'
@@ -15,24 +15,18 @@ function getNewChecked(optionId, checkedForId, multiple) {
     return [...checkedForId, optionId]
 }
 
-function getRawContent(ref) {
-    if (ref.current && ref.current.childNodes) {
-        // Select all currently visible nodes (spans and text nodes)
-        const result = [...ref.current.childNodes].filter(el => el.offsetParent !== null)
-        return result.map(el => el.textContent).join('\n')
-    }
-    return ''
-}
-
 const Quickstart = ({
-    data,
+    data = [],
     title,
     description,
-    copy,
+    copy = true,
     download,
-    id,
+    rawContent = null,
+    id = 'quickstart',
     setters = {},
     hidePrompts,
+    small,
+    codeLang,
     children,
 }) => {
     const contentRef = useRef()
@@ -46,6 +40,16 @@ const Quickstart = ({
     const [copySuccess, setCopySuccess] = useState(false)
     const [otherState, setOtherState] = useState({})
     const setOther = (id, value) => setOtherState({ ...otherState, [id]: value })
+    const getRawContent = ref => {
+        if (rawContent !== null) return rawContent
+        if (ref.current && ref.current.childNodes) {
+            // Select all currently visible nodes (spans and text nodes)
+            const result = [...ref.current.childNodes].filter(el => el.offsetParent !== null)
+            return result.map(el => el.textContent).join('\n')
+        }
+        return ''
+    }
+
     const onClickCopy = () => {
         copyAreaRef.current.value = getRawContent(contentRef)
         copyToClipboard(copyAreaRef, setCopySuccess)
@@ -210,7 +214,14 @@ const Quickstart = ({
                     }
                 )}
                 <pre className={classes.code}>
-                    <code className={classes.results} data-quickstart-results="" ref={contentRef}>
+                    <code
+                        className={classNames(classes.results, {
+                            [classes.small]: !!small,
+                            [`language-${codeLang}`]: !!codeLang,
+                        })}
+                        data-quickstart-results=""
+                        ref={contentRef}
+                    >
                         {children}
                     </code>
 
@@ -240,12 +251,6 @@ const Quickstart = ({
             </div>
         </Section>
     )
-}
-
-Quickstart.defaultProps = {
-    data: [],
-    id: 'quickstart',
-    copy: true,
 }
 
 Quickstart.propTypes = {

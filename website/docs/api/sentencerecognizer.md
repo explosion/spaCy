@@ -116,14 +116,20 @@ and [`pipe`](/api/sentencerecognizer#pipe) delegate to the
 
 ## SentenceRecognizer.begin_training {#begin_training tag="method"}
 
-Initialize the pipe for training, using data examples if available. Returns an
-[`Optimizer`](https://thinc.ai/docs/api-optimizers) object.
+Initialize the component for training and return an
+[`Optimizer`](https://thinc.ai/docs/api-optimizers). `get_examples` should be a
+function that returns an iterable of [`Example`](/api/example) objects. The data
+examples are used to **initialize the model** of the component and can either be
+the full training data or a representative sample. Initialization includes
+validating the network,
+[inferring missing shapes](https://thinc.ai/docs/usage-models#validation) and
+setting up the label scheme based on the data.
 
 > #### Example
 >
 > ```python
 > senter = nlp.add_pipe("senter")
-> optimizer = senter.begin_training(pipeline=nlp.pipeline)
+> optimizer = senter.begin_training(lambda: [], pipeline=nlp.pipeline)
 > ```
 
 | Name           | Type                                                | Description                                                                                                           |
@@ -136,7 +142,8 @@ Initialize the pipe for training, using data examples if available. Returns an
 
 ## SentenceRecognizer.predict {#predict tag="method"}
 
-Apply the pipeline's model to a batch of docs, without modifying them.
+Apply the component's model to a batch of [`Doc`](/api/doc) objects, without
+modifying them.
 
 > #### Example
 >
@@ -152,7 +159,7 @@ Apply the pipeline's model to a batch of docs, without modifying them.
 
 ## SentenceRecognizer.set_annotations {#set_annotations tag="method"}
 
-Modify a batch of documents, using pre-computed scores.
+Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 
 > #### Example
 >
@@ -169,8 +176,9 @@ Modify a batch of documents, using pre-computed scores.
 
 ## SentenceRecognizer.update {#update tag="method"}
 
-Learn from a batch of documents and gold-standard information, updating the
-pipe's model. Delegates to [`predict`](/api/sentencerecognizer#predict) and
+Learn from a batch of [`Example`](/api/example) objects containing the
+predictions and gold-standard annotations, and update the component's model.
+Delegates to [`predict`](/api/sentencerecognizer#predict) and
 [`get_loss`](/api/sentencerecognizer#get_loss).
 
 > #### Example
@@ -191,7 +199,7 @@ pipe's model. Delegates to [`predict`](/api/sentencerecognizer#predict) and
 | `losses`          | `Dict[str, float]`                                  | Optional record of the loss during training. The value keyed by the model's name is updated.                                                     |
 | **RETURNS**       | `Dict[str, float]`                                  | The updated `losses` dictionary.                                                                                                                 |
 
-## SentenceRecognizer.rehearse {#rehearse tag="method,experimental"}
+## SentenceRecognizer.rehearse {#rehearse tag="method,experimental" new="3"}
 
 Perform a "rehearsal" update from a batch of data. Rehearsal updates teach the
 current model to make predictions similar to an initial model, to try to address

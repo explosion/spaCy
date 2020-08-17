@@ -20,7 +20,7 @@ def create_docbin_reader(
 
 class Corpus:
     """Iterate Example objects from a file or directory of DocBin (.spacy)
-    formated data files.
+    formatted data files.
 
     path (Path): The directory or filename to read from.
     gold_preproc (bool): Whether to set up the Example object with gold-standard
@@ -39,7 +39,7 @@ class Corpus:
 
     def __init__(
         self,
-        path,
+        path: Union[str, Path],
         *,
         limit: int = 0,
         gold_preproc: bool = False,
@@ -62,7 +62,7 @@ class Corpus:
             if str(path) in seen:
                 continue
             seen.add(str(path))
-            if path.parts[-1].startswith("."):
+            if path.parts and path.parts[-1].startswith("."):
                 continue
             elif path.is_dir():
                 paths.extend(path.iterdir())
@@ -74,7 +74,6 @@ class Corpus:
         """Yield examples from the data.
 
         nlp (Language): The current nlp object.
-        loc (Path): The file or directory to read from.
         YIELDS (Example): The examples.
 
         DOCS: https://spacy.io/api/corpus#call
@@ -137,8 +136,7 @@ class Corpus:
         for loc in locs:
             loc = util.ensure_path(loc)
             if loc.parts[-1].endswith(".spacy"):
-                with loc.open("rb") as file_:
-                    doc_bin = DocBin().from_bytes(file_.read())
+                doc_bin = DocBin().from_disk(loc)
                 docs = doc_bin.get_docs(vocab)
                 for doc in docs:
                     if len(doc):

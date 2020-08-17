@@ -3,10 +3,11 @@ import pytest
 from spacy.language import Language
 from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
+from spacy.gold import Example
 from spacy.lang.en import English
+from spacy.util import registry
 
 from .util import add_vecs_to_vocab, assert_docs_equal
-from ..gold import Example
 
 
 @pytest.fixture
@@ -153,6 +154,115 @@ def test_language_pipe_stream(nlp2, n_process, texts):
         assert_docs_equal(doc, expected_doc)
 
 
-def test_language_from_config():
-    English.from_config()
-    # TODO: add more tests
+def test_language_from_config_before_after_init():
+    name = "test_language_from_config_before_after_init"
+    ran_before = False
+    ran_after = False
+    ran_after_pipeline = False
+
+    @registry.callbacks(f"{name}_before")
+    def make_before_creation():
+        def before_creation(lang_cls):
+            nonlocal ran_before
+            ran_before = True
+            assert lang_cls is English
+            lang_cls.Defaults.foo = "bar"
+            return lang_cls
+
+        return before_creation
+
+    @registry.callbacks(f"{name}_after")
+    def make_after_creation():
+        def after_creation(nlp):
+            nonlocal ran_after
+            ran_after = True
+            assert isinstance(nlp, English)
+            assert nlp.pipe_names == []
+            assert nlp.Defaults.foo == "bar"
+            nlp.meta["foo"] = "bar"
+            return nlp
+
+        return after_creation
+
+    @registry.callbacks(f"{name}_after_pipeline")
+    def make_after_pipeline_creation():
+        def after_pipeline_creation(nlp):
+            nonlocal ran_after_pipeline
+            ran_after_pipeline = True
+            assert isinstance(nlp, English)
+            assert nlp.pipe_names == ["sentencizer"]
+            assert nlp.Defaults.foo == "bar"
+            assert nlp.meta["foo"] == "bar"
+            nlp.meta["bar"] = "baz"
+            return nlp
+
+        return after_pipeline_creation
+
+    config = {
+        "nlp": {
+            "pipeline": ["sentencizer"],
+            "before_creation": {"@callbacks": f"{name}_before"},
+            "after_creation": {"@callbacks": f"{name}_after"},
+            "after_pipeline_creation": {"@callbacks": f"{name}_after_pipeline"},
+        },
+        "components": {"sentencizer": {"factory": "sentencizer"}},
+    }
+    nlp = English.from_config(config)
+    assert all([ran_before, ran_after, ran_after_pipeline])
+    assert nlp.Defaults.foo == "bar"
+    assert nlp.meta["foo"] == "bar"
+    assert nlp.meta["bar"] == "baz"
+    assert nlp.pipe_names == ["sentencizer"]
+    assert nlp("text")
+
+
+def test_language_from_config_before_after_init_invalid():
+    """Check that an error is raised if function doesn't return nlp."""
+    name = "test_language_from_config_before_after_init_invalid"
+    registry.callbacks(f"{name}_before1", func=lambda: lambda nlp: None)
+    registry.callbacks(f"{name}_before2", func=lambda: lambda nlp: nlp())
+    registry.callbacks(f"{name}_after1", func=lambda: lambda nlp: None)
+    registry.callbacks(f"{name}_after1", func=lambda: lambda nlp: English)
+
+    for callback_name in [f"{name}_before1", f"{name}_before2"]:
+        config = {"nlp": {"before_creation": {"@callbacks": callback_name}}}
+        with pytest.raises(ValueError):
+            English.from_config(config)
+    for callback_name in [f"{name}_after1", f"{name}_after2"]:
+        config = {"nlp": {"after_creation": {"@callbacks": callback_name}}}
+        with pytest.raises(ValueError):
+            English.from_config(config)
+    for callback_name in [f"{name}_after1", f"{name}_after2"]:
+        config = {"nlp": {"after_pipeline_creation": {"@callbacks": callback_name}}}
+        with pytest.raises(ValueError):
+            English.from_config(config)
+
+
+def test_language_custom_tokenizer():
+    """Test that a fully custom tokenizer can be plugged in via the registry."""
+    name = "test_language_custom_tokenizer"
+
+    class CustomTokenizer:
+        """Dummy "tokenizer" that splits on spaces and adds prefix to each word."""
+
+        def __init__(self, nlp, prefix):
+            self.vocab = nlp.vocab
+            self.prefix = prefix
+
+        def __call__(self, text):
+            words = [f"{self.prefix}{word}" for word in text.split(" ")]
+            return Doc(self.vocab, words=words)
+
+    @registry.tokenizers(name)
+    def custom_create_tokenizer(prefix: str = "_"):
+        def create_tokenizer(nlp):
+            return CustomTokenizer(nlp, prefix=prefix)
+
+        return create_tokenizer
+
+    config = {"nlp": {"tokenizer": {"@tokenizers": name}}}
+    nlp = English.from_config(config)
+    doc = nlp("hello world")
+    assert [t.text for t in doc] == ["_hello", "_world"]
+    doc = list(nlp.pipe(["hello world"]))[0]
+    assert [t.text for t in doc] == ["_hello", "_world"]

@@ -9,6 +9,7 @@ from ..util import ensure_path, to_disk, from_disk
 from ..tokens import Doc, Span
 from ..matcher import Matcher, PhraseMatcher
 from ..scorer import Scorer
+from ..gold import validate_examples
 
 
 DEFAULT_ENT_ID_SEP = "||"
@@ -20,7 +21,7 @@ PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
     assigns=["doc.ents", "token.ent_type", "token.ent_iob"],
     default_config={
         "phrase_matcher_attr": None,
-        "validation": False,
+        "validate": False,
         "overwrite_ents": False,
         "ent_id_sep": DEFAULT_ENT_ID_SEP,
     },
@@ -31,7 +32,7 @@ def make_entity_ruler(
     nlp: Language,
     name: str,
     phrase_matcher_attr: Optional[Union[int, str]],
-    validation: bool,
+    validate: bool,
     overwrite_ents: bool,
     ent_id_sep: str,
 ):
@@ -39,7 +40,7 @@ def make_entity_ruler(
         nlp,
         name,
         phrase_matcher_attr=phrase_matcher_attr,
-        validate=validation,
+        validate=validate,
         overwrite_ents=overwrite_ents,
         ent_id_sep=ent_id_sep,
     )
@@ -312,6 +313,7 @@ class EntityRuler:
         return label
 
     def score(self, examples, **kwargs):
+        validate_examples(examples, "EntityRuler.score")
         return Scorer.score_spans(examples, "ents", **kwargs)
 
     def from_bytes(

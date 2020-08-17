@@ -265,37 +265,6 @@ ancestor is found, e.g. if span excludes a necessary ancestor.
 | ----------- | -------------------------------------- | ----------------------------------------------- |
 | **RETURNS** | `numpy.ndarray[ndim=2, dtype="int32"]` | The lowest common ancestor matrix of the `Doc`. |
 
-## Doc.to_json {#to_json tag="method" new="2.1"}
-
-Convert a Doc to JSON. The format it produces will be the new format for the
-[`spacy train`](/api/cli#train) command (not implemented yet). If custom
-underscore attributes are specified, their values need to be JSON-serializable.
-They'll be added to an `"_"` key in the data, e.g. `"_": {"foo": "bar"}`.
-
-> #### Example
->
-> ```python
-> doc = nlp("Hello")
-> json_doc = doc.to_json()
-> ```
->
-> #### Result
->
-> ```python
-> {
->   "text": "Hello",
->   "ents": [],
->   "sents": [{"start": 0, "end": 5}],
->   "tokens": [{"id": 0, "start": 0, "end": 5, "pos": "INTJ", "tag": "UH", "dep": "ROOT", "head": 0}
->   ]
-> }
-> ```
-
-| Name         | Type | Description                                                                    |
-| ------------ | ---- | ------------------------------------------------------------------------------ |
-| `underscore` | list | Optional list of string names of custom JSON-serializable `doc._.` attributes. |
-| **RETURNS**  | dict | The JSON-formatted data.                                                       |
-
 ## Doc.to_array {#to_array tag="method"}
 
 Export given token attributes to a numpy `ndarray`. If `attr_ids` is a sequence

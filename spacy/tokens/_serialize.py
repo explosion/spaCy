@@ -1,4 +1,5 @@
-from typing import Iterable, Iterator
+from typing import Iterable, Iterator, Union
+from pathlib import Path
 import numpy
 import zlib
 import srsly
@@ -9,6 +10,7 @@ from ..vocab import Vocab
 from ..compat import copy_reg
 from ..attrs import SPACY, ORTH, intify_attr
 from ..errors import Errors
+from ..util import ensure_path
 
 # fmt: off
 ALL_ATTRS = ("ORTH", "TAG", "HEAD", "DEP", "ENT_IOB", "ENT_TYPE", "ENT_KB_ID", "LEMMA", "MORPH", "POS")
@@ -202,6 +204,30 @@ class DocBin:
             self.user_data = list(msg["user_data"])
         for tokens in self.tokens:
             assert len(tokens.shape) == 2, tokens.shape  # this should never happen
+        return self
+
+    def to_disk(self, path: Union[str, Path]) -> None:
+        """Save the DocBin to a file (typically called .spacy).
+
+        path (str / Path): The file path.
+
+        DOCS: https://spacy.io/api/docbin#to_disk
+        """
+        path = ensure_path(path)
+        with path.open("wb") as file_:
+            file_.write(self.to_bytes())
+
+    def from_disk(self, path: Union[str, Path]) -> "DocBin":
+        """Load the DocBin from a file (typically called .spacy).
+
+        path (str / Path): The file path.
+        RETURNS (DocBin): The loaded DocBin.
+
+        DOCS: https://spacy.io/api/docbin#to_disk
+        """
+        path = ensure_path(path)
+        with path.open("rb") as file_:
+            self.from_bytes(file_.read())
         return self
 
 

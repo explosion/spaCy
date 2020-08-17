@@ -4,7 +4,7 @@ menu:
   - ['spacy', 'spacy']
   - ['displacy', 'displacy']
   - ['registry', 'registry']
-  - ['Loaders & Batchers', 'loaders-batchers']
+  - ['Batchers', 'batchers']
   - ['Data & Alignment', 'gold']
   - ['Utility Functions', 'util']
 ---
@@ -32,13 +32,13 @@ loaded in via [`Language.from_disk`](/api/language#from_disk).
 > nlp = spacy.load("en_core_web_sm", disable=["parser", "tagger"])
 > ```
 
-| Name                                       | Type              | Description                                                                       |
-| ------------------------------------------ | ----------------- | --------------------------------------------------------------------------------- |
-| `name`                                     | str / `Path`      | Model to load, i.e. package name or path.                                         |
-| _keyword-only_                             |                   |                                                                                   |
-| `disable`                                  | `List[str]`       | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). |
-| `component_cfg` <Tag variant="new">3</Tag> | `Dict[str, dict]` | Optional config overrides for pipeline components, keyed by component names.      |
-| **RETURNS**                                | `Language`        | A `Language` object with the loaded model.                                        |
+| Name                                | Type                                                                   | Description                                                                                                                      |
+| ----------------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `name`                              | str / `Path`                                                           | Model to load, i.e. package name or path.                                                                                        |
+| _keyword-only_                      |                                                                        |                                                                                                                                  |
+| `disable`                           | `List[str]`                                                            | Names of pipeline components to [disable](/usage/processing-pipelines#disabling).                                                |
+| `config` <Tag variant="new">3</Tag> | `Dict[str, Any]` / [`Config`](https://thinc.ai/docs/api-config#config) | Optional config overrides, either as nested dict or dict keyed by section value in dot notation, e.g. `"components.name.value"`. |
+| **RETURNS**                         | `Language`                                                             | A `Language` object with the loaded model.                                                                                       |
 
 Essentially, `spacy.load()` is a convenience wrapper that reads the language ID
 and pipeline components from a model's `meta.json`, initializes the `Language`
@@ -293,16 +293,18 @@ factories.
 >     return Model("custom", forward, dims={"nO": nO})
 > ```
 
-<!-- TODO: finish table -->
-
 | Registry name     | Description                                                                                                                                                                                                                                       |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `architectures`   | Registry for functions that create [model architectures](/api/architectures). Can be used to register custom model architectures and reference them in the `config.cfg`.                                                                          |
 | `factories`       | Registry for functions that create [pipeline components](/usage/processing-pipelines#custom-components). Added automatically when you use the `@spacy.component` decorator and also reads from [entry points](/usage/saving-loading#entry-points) |
+| `tokenizers`      | Registry for tokenizer factories. Registered functions should return a callback that receives the `nlp` object and returns a [`Tokenizer`](/api/tokenizer) or a custom callable.                                                                  |
 | `languages`       | Registry for language-specific `Language` subclasses. Automatically reads from [entry points](/usage/saving-loading#entry-points).                                                                                                                |
 | `lookups`         | Registry for large lookup tables available via `vocab.lookups`.                                                                                                                                                                                   |
 | `displacy_colors` | Registry for custom color scheme for the [`displacy` NER visualizer](/usage/visualizers). Automatically reads from [entry points](/usage/saving-loading#entry-points).                                                                            |
-| `assets`          |                                                                                                                                                                                                                                                   |
+| `assets`          | Registry for data assets, knowledge bases etc.                                                                                                                                                                                                    |
+| `callbacks`       | Registry for custom callbacks to [modify the `nlp` object](/usage/training#custom-code-nlp-callbacks) before training.                                                                                                                            |
+| `readers`         | Registry for training and evaluation data readers like [`Corpus`](/api/corpus).                                                                                                                                                                   |
+| `batchers`        | Registry for training and evaluation [data batchers](#batchers).                                                                                                                                                                                  |
 | `optimizers`      | Registry for functions that create [optimizers](https://thinc.ai/docs/api-optimizers).                                                                                                                                                            |
 | `schedules`       | Registry for functions that create [schedules](https://thinc.ai/docs/api-schedules).                                                                                                                                                              |
 | `layers`          | Registry for functions that create [layers](https://thinc.ai/docs/api-layers).                                                                                                                                                                    |
@@ -334,86 +336,81 @@ See the [`Transformer`](/api/transformer) API reference and
 | [`span_getters`](/api/transformer#span_getters)             | Registry for functions that take a batch of `Doc` objects and return a list of `Span` objects to process by the transformer, e.g. sentences.                                                                                                      |
 | [`annotation_setters`](/api/transformer#annotation_setters) | Registry for functions that create annotation setters. Annotation setters are functions that take a batch of `Doc` objects and a [`FullTransformerBatch`](/api/transformer#fulltransformerbatch) and can set additional annotations on the `Doc`. |
 
-## Training data loaders and batchers {#loaders-batchers new="3"}
+## Batchers {#batchers source="spacy/gold/batchers.py" new="3"}
 
-<!-- TODO: -->
+<!-- TODO: intro -->
+
+#### batch_by_words.v1 {#batch_by_words tag="registered function"}
+
+Create minibatches of roughly a given number of words. If any examples are
+longer than the specified batch length, they will appear in a batch by
+themselves, or be discarded if `discard_oversize` is set to `True`. The argument
+`docs` can be a list of strings, [`Doc`](/api/doc) objects or
+[`Example`](/api/example) objects.
+
+> #### Example config
+>
+> ```ini
+> [training.batcher]
+> @batchers = "batch_by_words.v1"
+> size = 100
+> tolerance = 0.2
+> discard_oversize = false
+> get_length = null
+> ```
+
+| Name               | Type                   | Description                                                                                                                                               |
+| ------------------ | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `seqs`             | `Iterable[Any]`        | The sequences to minibatch.                                                                                                                               |
+| `size`             | `Iterable[int]` / int  | The target number of words per batch. Can also be a block referencing a schedule, e.g. [`compounding`](https://thinc.ai/docs/api-schedules/#compounding). |
+| `tolerance`        | float                  | What percentage of the size to allow batches to exceed.                                                                                                   |
+| `discard_oversize` | bool                   | Whether to discard sequences that by themselves exceed the tolerated size.                                                                                |
+| `get_length`       | `Callable[[Any], int]` | Optional function that receives a sequence item and returns its length. Defaults to the built-in `len()` if not set.                                      |
+
+#### batch_by_sequence.v1 {#batch_by_sequence tag="registered function"}
+
+> #### Example config
+>
+> ```ini
+> [training.batcher]
+> @batchers = "batch_by_sequence.v1"
+> size = 32
+> get_length = null
+> ```
+
+Create a batcher that creates batches of the specified size.
+
+| Name         | Type                   | Description                                                                                                                                               |
+| ------------ | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `size`       | `Iterable[int]` / int  | The target number of items per batch. Can also be a block referencing a schedule, e.g. [`compounding`](https://thinc.ai/docs/api-schedules/#compounding). |
+| `get_length` | `Callable[[Any], int]` | Optional function that receives a sequence item and returns its length. Defaults to the built-in `len()` if not set.                                      |
+
+#### batch_by_padded.v1 {#batch_by_padded tag="registered function"}
+
+> #### Example config
+>
+> ```ini
+> [training.batcher]
+> @batchers = "batch_by_padded.v1"
+> size = 100
+> buffer = 256
+> discard_oversize = false
+> get_length = null
+> ```
+
+Minibatch a sequence by the size of padded batches that would result, with
+sequences binned by length within a window. The padded size is defined as the
+maximum length of sequences within the batch multiplied by the number of
+sequences in the batch.
+
+| Name               | Type                   | Description                                                                                                                                                                                                                         |
+| ------------------ | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `size`             | `Iterable[int]` / int  | The largest padded size to batch sequences into. Can also be a block referencing a schedule, e.g. [`compounding`](https://thinc.ai/docs/api-schedules/#compounding).                                                                |
+| `buffer`           | int                    | The number of sequences to accumulate before sorting by length. A larger buffer will result in more even sizing, but if the buffer is very large, the iteration order will be less random, which can result in suboptimal training. |
+| `discard_oversize` | bool                   | Whether to discard sequences that are by themselves longer than the largest padded batch size.                                                                                                                                      |
+| `get_length`       | `Callable[[Any], int]` | Optional function that receives a sequence item and returns its length. Defaults to the built-in `len()` if not set.                                                                                                                |
 
 ## Training data and alignment {#gold source="spacy/gold"}
-
-### gold.docs_to_json {#docs_to_json tag="function"}
-
-Convert a list of Doc objects into the
-[JSON-serializable format](/api/data-formats#json-input) used by the
-[`spacy train`](/api/cli#train) command. Each input doc will be treated as a
-'paragraph' in the output doc.
-
-> #### Example
->
-> ```python
-> from spacy.gold import docs_to_json
->
-> doc = nlp("I like London")
-> json_data = docs_to_json([doc])
-> ```
-
-| Name        | Type             | Description                                |
-| ----------- | ---------------- | ------------------------------------------ |
-| `docs`      | iterable / `Doc` | The `Doc` object(s) to convert.            |
-| `id`        | int              | ID to assign to the JSON. Defaults to `0`. |
-| **RETURNS** | dict             | The data in spaCy's JSON format.           |
-
-### gold.align {#align tag="function"}
-
-Calculate alignment tables between two tokenizations, using the Levenshtein
-algorithm. The alignment is case-insensitive.
-
-<Infobox title="Important note" variant="warning">
-
-The current implementation of the alignment algorithm assumes that both
-tokenizations add up to the same string. For example, you'll be able to align
-`["I", "'", "m"]` and `["I", "'m"]`, which both add up to `"I'm"`, but not
-`["I", "'m"]` and `["I", "am"]`.
-
-</Infobox>
-
-> #### Example
->
-> ```python
-> from spacy.gold import align
->
-> bert_tokens = ["obama", "'", "s", "podcast"]
-> spacy_tokens = ["obama", "'s", "podcast"]
-> alignment = align(bert_tokens, spacy_tokens)
-> cost, a2b, b2a, a2b_multi, b2a_multi = alignment
-> ```
-
-| Name        | Type  | Description                                                                |
-| ----------- | ----- | -------------------------------------------------------------------------- |
-| `tokens_a`  | list  | String values of candidate tokens to align.                                |
-| `tokens_b`  | list  | String values of reference tokens to align.                                |
-| **RETURNS** | tuple | A `(cost, a2b, b2a, a2b_multi, b2a_multi)` tuple describing the alignment. |
-
-The returned tuple contains the following alignment information:
-
-> #### Example
->
-> ```python
-> a2b = array([0, -1, -1, 2])
-> b2a = array([0, 2, 3])
-> a2b_multi = {1: 1, 2: 1}
-> b2a_multi = {}
-> ```
->
-> If `a2b[3] == 2`, that means that `tokens_a[3]` aligns to `tokens_b[2]`. If
-> there's no one-to-one alignment for a token, it has the value `-1`.
-
-| Name        | Type                                   | Description                                                                                                                                     |
-| ----------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `cost`      | int                                    | The number of misaligned tokens.                                                                                                                |
-| `a2b`       | `numpy.ndarray[ndim=1, dtype='int32']` | One-to-one mappings of indices in `tokens_a` to indices in `tokens_b`.                                                                          |
-| `b2a`       | `numpy.ndarray[ndim=1, dtype='int32']` | One-to-one mappings of indices in `tokens_b` to indices in `tokens_a`.                                                                          |
-| `a2b_multi` | dict                                   | A dictionary mapping indices in `tokens_a` to indices in `tokens_b`, where multiple tokens of `tokens_a` align to the same token of `tokens_b`. |
-| `b2a_multi` | dict                                   | A dictionary mapping indices in `tokens_b` to indices in `tokens_a`, where multiple tokens of `tokens_b` align to the same token of `tokens_a`. |
 
 ### gold.biluo_tags_from_offsets {#biluo_tags_from_offsets tag="function"}
 
