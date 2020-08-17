@@ -62,12 +62,12 @@ function linkType(el, showLink = true) {
 
 export const TypeAnnotation = ({ lang = 'python', link = true, children }) => {
     // Hacky, but we're temporarily replacing a dot to prevent it from being split during highlighting
-    const TMP_DOT = '•'
+    const TMP_DOT = '۔'
     const code = Array.isArray(children) ? children.join('') : children || ''
     const [rawText, meta] = code.split(/(?= \(.+\)$)/)
-    const rawStr = rawText.replace('.', TMP_DOT)
+    const rawStr = rawText.replace(/\./g, TMP_DOT)
     const rawHtml = lang === 'none' || !code ? code : highlightCode(lang, rawStr)
-    const html = rawHtml.replace(TMP_DOT, '.').replace(/\n/g, ' ')
+    const html = rawHtml.replace(new RegExp(TMP_DOT, 'g'), '.').replace(/\n/g, ' ')
     const result = htmlToReact(html)
     const elements = Array.isArray(result) ? result : [result]
     const annotClassNames = classNames(

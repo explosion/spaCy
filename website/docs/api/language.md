@@ -40,7 +40,7 @@ Initialize a `Language` object.
 | `meta`             | Custom meta data for the `Language` class. Is written to by models to add model meta data. ~~dict~~                      |
 | `create_tokenizer` | Optional function that receives the `nlp` object and returns a tokenizer. ~~Callable[[Language], Callable[[str], Doc]]~~ |
 
-## Language.from_config {#from_config tag="classmethod"}
+## Language.from_config {#from_config tag="classmethod" new="3"}
 
 Create a `Language` object from a loaded config. Will set up the tokenizer and
 language data, add pipeline components based on the pipeline and components
