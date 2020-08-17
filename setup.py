@@ -13,7 +13,7 @@ from setuptools import Extension, setup, find_packages
 
 
 def is_new_osx():
-    """Check whether we're on OSX >= 10.10"""
+    """Check whether we're on OS X >= 10.7"""
     name = distutils.util.get_platform()
     if sys.platform != "darwin":
         return False
