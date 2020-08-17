@@ -886,6 +886,15 @@ def escape_html(text: str) -> str:
 def get_words_and_spaces(
     words: Iterable[str], text: str
 ) -> Tuple[List[str], List[bool]]:
+    """Given a list of words and a text, reconstruct the original tokens and
+    return a list of words and spaces that can be used to create a Doc. This
+    can help recover destructive tokenization that didn't preserve any
+    whitespace information.
+
+    words (Iterable[str]): The words.
+    text (str): The original text.
+    RETURNS (Tuple[List[str], List[bool]]): The words and spaces.
+    """
     if "".join("".join(words).split()) != "".join(text.split()):
         raise ValueError(Errors.E194.format(text=text, words=words))
     text_words = []

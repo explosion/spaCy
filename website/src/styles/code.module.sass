@@ -56,6 +56,38 @@
     --color-inline-code-text: var(--color-back)
     --color-inline-code-bg: var(--color-dark-secondary)
 
+.type-annotation,
+    white-space: pre-wrap
+    font-family: var(--font-code)
+
+    &.wrap
+        word-wrap: break-word
+
+    a
+        border: 0
+
+    // Special style for types in API tables
+    td > &:last-child
+        display: block
+        border-top: 1px dotted var(--color-subtle)
+        border-radius: 0
+        background: none
+        width: calc(100% + 2rem)
+        margin-left: -1rem
+        padding-left: 1rem
+        padding-top: 5px
+        margin-top: 5px
+        margin-bottom: -5px
+
+        &:before
+            content: "Type: "
+            opacity: 0.75
+            font-family: var(--font-primary)
+            color: var(--color-dark-secondary)
+            font-weight: bold
+            text-transform: uppercase
+            margin-right: 5px
+
 .wrap
     white-space: pre-wrap
     word-wrap: anywhere

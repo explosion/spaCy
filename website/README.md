@@ -75,7 +75,8 @@ import { H1, H2, H3, H4, H5, Label, InlineList, Comment } from
 Headlines are set in
 [HK Grotesk](http://cargocollective.com/hanken/HK-Grotesk-Open-Source-Font) by
 Hanken Design. All other body text and code uses the best-matching default
-system font to provide a "native" reading experience.
+system font to provide a "native" reading experience. All code uses the
+[JetBrains Mono](https://www.jetbrains.com/lp/mono/) typeface by JetBrains.
 
 <Infobox title="Important note" variant="warning">
 
@@ -106,7 +107,7 @@ Tags are also available as standalone `<Tag />` components.
 | Argument | Example                    | Result                                    |
 | -------- | -------------------------- | ----------------------------------------- |
 | `tag`    | `{tag="method"}`           | <Tag>method</Tag>                         |
-| `new`    | `{new="2"}`                | <Tag variant="new">2</Tag>                |
+| `new`    | `{new="3"}`                | <Tag variant="new">3</Tag>                |
 | `model`  | `{model="tagger, parser"}` | <Tag variant="model">tagger, parser</Tag> |
 | `hidden` | `{hidden="true"}`          |                                           |
 
@@ -130,6 +131,8 @@ Special link styles are used depending on the link URL.
 
 - [I am a regular external link](https://explosion.ai)
 - [I am a link to the documentation](/api/doc)
+- [I am a link to an architecture](/api/architectures#HashEmbedCNN)
+- [I am a link to a model](/models/en#en_core_web_sm)
 - [I am a link to GitHub](https://github.com/explosion/spaCy)
 
 ### Abbreviations {#abbr}
@@ -188,18 +191,20 @@ the buttons are implemented as styled links instead of native button elements.
 <InlineList><Button to="#" variant="primary">Primary small</Button>
 <Button to="#" variant="secondary">Secondary small</Button></InlineList>
 
+<br />
+
 <InlineList><Button to="#" variant="primary" large>Primary large</Button>
 <Button to="#" variant="secondary" large>Secondary large</Button></InlineList>
 
 ## Components
 
-### Table
+### Table {#table}
 
 > #### Markdown
 >
 > ```markdown_
 > | Header 1 | Header 2 |
-> | --- | --- |
+> | -------- | -------- |
 > | Column 1 | Column 2 |
 > ```
 >
@@ -213,7 +218,7 @@ the buttons are implemented as styled links instead of native button elements.
 > ```
 
 Tables are used to present data and API documentation. Certain keywords can be
-used to mark a footer row with a distinct style, for example to visualise the
+used to mark a footer row with a distinct style, for example to visualize the
 return values of a documented function.
 
 | Header 1    | Header 2 | Header 3 | Header 4 |
@@ -224,7 +229,73 @@ return values of a documented function.
 | Column 1    | Column 2 | Column 3 | Column 4 |
 | **RETURNS** | Column 2 | Column 3 | Column 4 |
 
-### List
+Tables also support optional "divider" rows that are typically used to denote
+keyword-only arguments in API documentation. To turn a row into a dividing
+headline, it should only include content in its first cell, and its value should
+be italicized:
+
+> #### Markdown
+>
+> ```markdown_
+> | Header 1 | Header 2 | Header 3 |
+> | -------- | -------- | -------- |
+> | Column 1 | Column 2 | Column 3 |
+> | _Hello_  |          |          |
+> | Column 1 | Column 2 | Column 3 |
+> ```
+
+| Header 1 | Header 2 | Header 3 |
+| -------- | -------- | -------- |
+| Column 1 | Column 2 | Column 3 |
+| _Hello_  |          |          |
+| Column 1 | Column 2 | Column 3 |
+
+### Type Annotations {#type-annotations}
+
+> #### Markdown
+>
+> ```markdown_
+> ~~Model[List[Doc], Floats2d]~~
+> ```
+>
+> #### JSX
+>
+> ```markup
+> <TypeAnnotation>Model[List[Doc], Floats2d]</Typeannotation>
+> ```
+
+Type annotations are special inline code blocks are used to describe Python
+types in the [type hints](https://docs.python.org/3/library/typing.html) format.
+The special component will split the type, apply syntax highlighting and link
+all types that specify links in `meta/type-annotations.json`. Types can link to
+internal or external documentation pages. To make it easy to represent the type
+annotations in Markdown, the rendering "hijacks" the `~~` tags that would
+typically be converted to a `<del>` element – but in this case, text surrounded
+by `~~` becomes a type annotation.
+
+- ~~Dict[str, List[Union[Doc, Span]]]~~
+- ~~Model[List[Doc], List[numpy.ndarray]]~~
+
+Type annotations support a special visual style in tables and will render as a
+separate row, under the cell text. This allows the API docs to display complex
+types without taking up too much space in the cell. The type annotation should
+always be the **last element** in the row.
+
+> #### Markdown
+>
+> ```markdown_
+> | Header 1 | Header 2                |
+> | -------- | ----------------------- |
+> | Column 1 | Column 2 ~~List[Doc]~~ |
+> ```
+
+| Name                | Description                                                                                                                                                             |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`             | The shared vocabulary. ~~Vocab~~                                                                                                                                        |
+| `model`             | The Thinc [`Model`](https://thinc.ai/docs/api-model) wrapping the transformer. ~~Model[List[Doc], FullTransformerBatch]~~                                               |
+| `annotation_setter` | Function that takes a batch of `Doc` objects and transformer outputs can set additional annotations on the `Doc`. ~~Callable[[List[Doc], FullTransformerBatch], None]~~ |
+
+### List {#list}
 
 > #### Markdown
 >
@@ -255,7 +326,7 @@ automatically.
 3. Lorem ipsum dolor
 4. consectetur adipiscing elit
 
-### Aside
+### Aside {#aside}
 
 > #### Markdown
 >
@@ -280,7 +351,7 @@ To make them easier to use in Markdown, paragraphs formatted as blockquotes will
 turn into asides by default. Level 4 headlines (with a leading `####`) will
 become aside titles.
 
-### Code Block
+### Code Block {#code-block}
 
 > #### Markdown
 >
@@ -387,7 +458,7 @@ original file is shown at the top of the widget.
 https://github.com/explosion/spaCy/tree/master/spacy/language.py
 ```
 
-### Infobox
+### Infobox {#infobox}
 
 import Infobox from 'components/infobox'
 
@@ -425,7 +496,7 @@ blocks.
 
 </Infobox>
 
-### Accordion
+### Accordion {#accordion}
 
 import Accordion from 'components/accordion'
 

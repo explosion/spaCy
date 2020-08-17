@@ -358,6 +358,15 @@ body [id]:target
     &.italic
         font-style: italic
 
+
+[class*="language-"].type-annotation .token
+    &.builtin, &.boolean, &.number
+        color: var(--color-inline-code-text)
+
+    &.operator
+        color: var(--syntax-comment)
+
+
 // Settings for ini syntax (config files)
 [class*="language-ini"]
     color: var(--syntax-comment)

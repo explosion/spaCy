@@ -10,45 +10,48 @@ next: /usage/training
 
 ## Installation {#install hidden="true"}
 
-Transformers are a family of neural network architectures that compute dense,
-context-sensitive representations for the tokens in your documents. Downstream
+Transformers are a family of neural network architectures that compute **dense,
+context-sensitive representations** for the tokens in your documents. Downstream
 models in your pipeline can then use these representations as input features to
-improve their predictions. You can connect multiple components to a single
+**improve their predictions**. You can connect multiple components to a single
 transformer model, with any or all of those components giving feedback to the
 transformer to fine-tune it to your tasks. spaCy's transformer support
-interoperates with PyTorch and the [Huggingface transformers](https://huggingface.co/transformers/)
-library, giving you access to thousands of pretrained models for your pipelines.
-There are many [great guides](http://jalammar.github.io/illustrated-transformer/)
-to transformer models, but for practical purposes, you can simply think of them
-as a drop-in replacement that let you achieve higher accuracy in exchange for
-higher training and runtime costs.
+interoperates with [PyTorch](https://pytorch.org) and the
+[HuggingFace `transformers`](https://huggingface.co/transformers/) library,
+giving you access to thousands of pretrained models for your pipelines. There
+are many [great guides](http://jalammar.github.io/illustrated-transformer/) to
+transformer models, but for practical purposes, you can simply think of them as
+a drop-in replacement that let you achieve **higher accuracy** in exchange for
+**higher training and runtime costs**.
 
-## System requirements
+### System requirements
 
 We recommend an NVIDIA GPU with at least 10GB of memory in order to work with
 transformer models. The exact requirements will depend on the transformer you
 model you choose and whether you're training the pipeline or simply running it.
 Training a transformer-based model without a GPU will be too slow for most
-practical purposes. You'll also need to make sure your GPU drivers are up-to-date
-and v9+ of the CUDA runtime is installed.
+practical purposes. You'll also need to make sure your GPU drivers are
+up-to-date and v9+ of the CUDA runtime is installed.
 
-Once you have CUDA installed, you'll need to install two pip packages, `cupy`
-and `spacy-transformers`. [CuPy](https://docs.cupy.dev/en/stable/install.html)
+Once you have CUDA installed, you'll need to install two pip packages,
+[`cupy`](https://docs.cupy.dev/en/stable/install.html) and
+[`spacy-transformers`](https://github.com/explosion/spacy-transformers). `cupy`
 is just like `numpy`, but for GPU. The best way to install it is to choose a
-wheel that matches the version of CUDA you're using. You may also need to set the
-`CUDA_PATH` environment variable if your CUDA runtime is installed in
-a non-standard location. Putting it all together, if you had installed CUDA 10.2
+wheel that matches the version of CUDA you're using. You may also need to set
+the `CUDA_PATH` environment variable if your CUDA runtime is installed in a
+non-standard location. Putting it all together, if you had installed CUDA 10.2
 in `/opt/nvidia/cuda`, you would run:
 
-```
+```bash
+### Installation with CUDA
 export CUDA_PATH="/opt/nvidia/cuda"
 pip install cupy-cuda102
 pip install spacy-transformers
 ```
 
-Provisioning a new machine will require about 5GB of data to be downloaded in total:
-3GB for the CUDA runtime, 800MB for PyTorch, 400MB for CuPy, 500MB for the transformer
-weights, and about 200MB for spaCy and its various requirements.
+Provisioning a new machine will require about 5GB of data to be downloaded in
+total: 3GB for the CUDA runtime, 800MB for PyTorch, 400MB for CuPy, 500MB for
+the transformer weights, and about 200MB for spaCy and its various requirements.
 
 ## Runtime usage {#runtime}
 
@@ -237,23 +240,22 @@ The [`Transformer`](/api/transformer) component expects a Thinc
 [`Model`](https://thinc.ai/docs/api-model) object to be passed in as its `model`
 argument. You're not limited to the implementation provided by
 `spacy-transformers` – the only requirement is that your registered function
-must return an object of type `Model[List[Doc], FullTransformerBatch]`: that is,
-a Thinc model that takes a list of [`Doc`](/api/doc) objects, and returns a
+must return an object of type ~~Model[List[Doc], FullTransformerBatch]~~: that
+is, a Thinc model that takes a list of [`Doc`](/api/doc) objects, and returns a
 [`FullTransformerBatch`](/api/transformer#fulltransformerbatch) object with the
 transformer data.
 
 > #### Model type annotations
 >
 > In the documentation and code base, you may come across type annotations and
-> descriptions of [Thinc](https://thinc.ai) model types, like
-> `Model[List[Doc], List[Floats2d]]`. This so-called generic type describes the
-> layer and its input and output type – in this case, it takes a list of `Doc`
-> objects as the input and list of 2-dimensional arrays of floats as the output.
-> You can read more about defining Thinc
-> models [here](https://thinc.ai/docs/usage-models). Also see the
-> [type checking](https://thinc.ai/docs/usage-type-checking) for how to enable
-> linting in your editor to see live feedback if your inputs and outputs don't
-> match.
+> descriptions of [Thinc](https://thinc.ai) model types, like ~~Model[List[Doc],
+> List[Floats2d]]~~. This so-called generic type describes the layer and its
+> input and output type – in this case, it takes a list of `Doc` objects as the
+> input and list of 2-dimensional arrays of floats as the output. You can read
+> more about defining Thinc models [here](https://thinc.ai/docs/usage-models).
+> Also see the [type checking](https://thinc.ai/docs/usage-type-checking) for
+> how to enable linting in your editor to see live feedback if your inputs and
+> outputs don't match.
 
 The same idea applies to task models that power the **downstream components**.
 Most of spaCy's built-in model creation functions support a `tok2vec` argument,
@@ -288,7 +290,7 @@ The [Tok2VecListener](/api/architectures#Tok2VecListener) layer expects a
 determines how the vector for each spaCy token will be computed from the zero or
 more source rows the token is aligned against. Here we use the
 [`reduce_mean`](https://thinc.ai/docs/api-layers#reduce_mean) layer, which
-averages the wordpiece rows. We could instead use `reduce_last`,
+averages the wordpiece rows. We could instead use
 [`reduce_max`](https://thinc.ai/docs/api-layers#reduce_max), or a custom
 function you write yourself.
 

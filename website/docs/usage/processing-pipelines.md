@@ -477,10 +477,10 @@ only being able to modify it afterwards.
 >    return doc
 > ```
 
-| Argument    | Type  | Description                                            |
-| ----------- | ----- | ------------------------------------------------------ |
-| `doc`       | `Doc` | The `Doc` object processed by the previous component.  |
-| **RETURNS** | `Doc` | The `Doc` object processed by this pipeline component. |
+| Argument    | Type              | Description                                            |
+| ----------- | ----------------- | ------------------------------------------------------ |
+| `doc`       | [`Doc`](/api/doc) | The `Doc` object processed by the previous component.  |
+| **RETURNS** | [`Doc`](/api/doc) | The `Doc` object processed by this pipeline component. |
 
 The [`@Language.component`](/api/language#component) decorator lets you turn a
 simple function into a pipeline component. It takes at least one argument, the
@@ -502,12 +502,12 @@ last** in the pipeline, or define a **custom name**. If no name is set and no
 > nlp.add_pipe("my_component", before="parser")
 > ```
 
-| Argument | Type      | Description                                                              |
-| -------- | --------- | ------------------------------------------------------------------------ |
-| `last`   | bool      | If set to `True`, component is added **last** in the pipeline (default). |
-| `first`  | bool      | If set to `True`, component is added **first** in the pipeline.          |
-| `before` | str / int | String name or index to add the new component **before**.                |
-| `after`  | str / int | String name or index to add the new component **after**.                 |
+| Argument | Description                                                                       |
+| -------- | --------------------------------------------------------------------------------- |
+| `last`   | If set to `True`, component is added **last** in the pipeline (default). ~~bool~~ |
+| `first`  | If set to `True`, component is added **first** in the pipeline. ~~bool~~          |
+| `before` | String name or index to add the new component **before**. ~~Union[str, int]~~     |
+| `after`  | String name or index to add the new component **after**. ~~Union[str, int]~~      |
 
 <Infobox title="Changed in v3.0" variant="warning">
 
@@ -626,10 +626,10 @@ added to the pipeline:
 >    return MyComponent()
 > ```
 
-| Argument | Type                        | Description                                                                                                               |
-| -------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `nlp`    | [`Language`](/api/language) | The current `nlp` object. Can be used to access the                                                                       |
-| `name`   | str                         | The **instance name** of the component in the pipeline. This lets you identify different instances of the same component. |
+| Argument | Description                                                                                                                       |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `nlp`    | The current `nlp` object. Can be used to access the shared vocab. ~~Language~~                                                    |
+| `name`   | The **instance name** of the component in the pipeline. This lets you identify different instances of the same component. ~~str~~ |
 
 All other settings can be passed in by the user via the `config` argument on
 [`nlp.add_pipe`](/api/language). The
@@ -1332,12 +1332,11 @@ function that takes a `Doc`, modifies it and returns it.
 - If you're looking to publish a model that depends on a custom pipeline
   component, you can either **require it** in the model package's dependencies,
   or – if the component is specific and lightweight – choose to **ship it with
-  your model package** and add it to the `Language` instance returned by the
-  model's `load()` method. For examples of this, check out the implementations
-  of spaCy's
-  [`load_model_from_init_py`](/api/top-level#util.load_model_from_init_py)
-  [`load_model_from_path`](/api/top-level#util.load_model_from_path) utility
-  functions.
+  your model package**. Just make sure the
+  [`@Language.component`](/api/language#component) or
+  [`@Language.factory`](/api/language#factory) decorator that registers the
+  custom component runs in your model's `__init__.py` or is exposed via an
+  [entry point](/usage/saving-loading#entry-points).
 
 - Once you're ready to share your extension with others, make sure to **add docs
   and installation instructions** (you can always link to this page for more

@@ -41,11 +41,11 @@ architectures and their arguments and hyperparameters.
 > nlp.add_pipe("ner", config=config)
 > ```
 
-| Setting                       | Type                                       | Description                                                                                                                                                                                                              | Default                                                           |
-| ----------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
-| `moves`                       | `List[str]`                                | A list of transition names. Inferred from the data if not provided.                                                                                                                                                      |
-| `update_with_oracle_cut_size` | int                                        | During training, cut long sequences into shorter segments by creating intermediate states based on the gold-standard history. The model is not very sensitive to this parameter, so you usually won't need to change it. | `100`                                                             |
-| `model`                       | [`Model`](https://thinc.ai/docs/api-model) | The model to use.                                                                                                                                                                                                        | [TransitionBasedParser](/api/architectures#TransitionBasedParser) |
+| Setting                       | Description                                                                                                                                                                                                                                         |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `moves`                       | A list of transition names. Inferred from the data if not provided. Defaults to `None`. ~~Optional[List[str]]                                                                                                                                       |
+| `update_with_oracle_cut_size` | During training, cut long sequences into shorter segments by creating intermediate states based on the gold-standard history. The model is not very sensitive to this parameter, so you usually won't need to change it. Defaults to `100`. ~~int~~ |
+| `model`                       | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. Defaults to [TransitionBasedParser](/api/architectures#TransitionBasedParser). ~~Model[List[Doc], List[Floats2d]]~~                                                 |
 
 ```python
 https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/ner.pyx
@@ -72,14 +72,14 @@ Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
 [`nlp.add_pipe`](/api/language#add_pipe).
 
-| Name                          | Type                                       | Description                                                                                                                                                                                                                                       |
-| ----------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`                       | `Vocab`                                    | The shared vocabulary.                                                                                                                                                                                                                            |
-| `model`                       | [`Model`](https://thinc.ai/docs/api-model) | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component.                                                                                                                                                                   |
-| `name`                        | str                                        | String name of the component instance. Used to add entries to the `losses` during training.                                                                                                                                                       |
-| `moves`                       | `List[str]`                                | A list of transition names. Inferred from the data if not provided.                                                                                                                                                                               |
-| _keyword-only_                |                                            |                                                                                                                                                                                                                                                   |
-| `update_with_oracle_cut_size` | int                                        | During training, cut long sequences into shorter segments by creating intermediate states based on the gold-standard history. The model is not very sensitive to this parameter, so you usually won't need to change it. `100` is a good default. |
+| Name                          | Description                                                                                                                                                                                                                                               |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`                       | The shared vocabulary. ~~Vocab~~                                                                                                                                                                                                                          |
+| `model`                       | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                      |
+| `name`                        | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                                                                                                                                                       |
+| `moves`                       | A list of transition names. Inferred from the data if not provided. ~~Optional[List[str]]~~                                                                                                                                                               |
+| _keyword-only_                |                                                                                                                                                                                                                                                           |
+| `update_with_oracle_cut_size` | During training, cut long sequences into shorter segments by creating intermediate states based on the gold-standard history. The model is not very sensitive to this parameter, so you usually won't need to change it. `100` is a good default. ~~int~~ |
 
 ## EntityRecognizer.\_\_call\_\_ {#call tag="method"}
 
@@ -100,10 +100,10 @@ and all pipeline components are applied to the `Doc` in order. Both
 > processed = ner(doc)
 > ```
 
-| Name        | Type  | Description              |
-| ----------- | ----- | ------------------------ |
-| `doc`       | `Doc` | The document to process. |
-| **RETURNS** | `Doc` | The processed document.  |
+| Name        | Description                      |
+| ----------- | -------------------------------- |
+| `doc`       | The document to process. ~~Doc~~ |
+| **RETURNS** | The processed document. ~~Doc~~  |
 
 ## EntityRecognizer.pipe {#pipe tag="method"}
 
@@ -122,12 +122,12 @@ applied to the `Doc` in order. Both [`__call__`](/api/entityrecognizer#call) and
 >     pass
 > ```
 
-| Name           | Type            | Description                                            |
-| -------------- | --------------- | ------------------------------------------------------ |
-| `docs`         | `Iterable[Doc]` | A stream of documents.                                 |
-| _keyword-only_ |                 |                                                        |
-| `batch_size`   | int             | The number of texts to buffer. Defaults to `128`.      |
-| **YIELDS**     | `Doc`           | Processed documents in the order of the original text. |
+| Name           | Description                                                   |
+| -------------- | ------------------------------------------------------------- |
+| `docs`         | A stream of documents. ~~Iterable[Doc]~~                      |
+| _keyword-only_ |                                                               |
+| `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
+| **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
 ## EntityRecognizer.begin_training {#begin_training tag="method"}
 
@@ -147,13 +147,13 @@ setting up the label scheme based on the data.
 > optimizer = ner.begin_training(lambda: [], pipeline=nlp.pipeline)
 > ```
 
-| Name           | Type                                                | Description                                                                                                         |
-| -------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `get_examples` | `Callable[[], Iterable[Example]]`                   | Optional function that returns gold-standard annotations in the form of [`Example`](/api/example) objects.          |
-| _keyword-only_ |                                                     |                                                                                                                     |
-| `pipeline`     | `List[Tuple[str, Callable]]`                        | Optional list of pipeline components that this component is part of.                                                |
-| `sgd`          | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | An optional optimizer. Will be created via [`create_optimizer`](/api/entityrecognizer#create_optimizer) if not set. |
-| **RETURNS**    | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | The optimizer.                                                                                                      |
+| Name           | Description                                                                                                                           |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. ~~Callable[[], Iterable[Example]]~~ |
+| _keyword-only_ |                                                                                                                                       |
+| `pipeline`     | Optional list of pipeline components that this component is part of. ~~Optional[List[Tuple[str, Callable[[Doc], Doc]]]]~~             |
+| `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                         |
+| **RETURNS**    | The optimizer. ~~Optimizer~~                                                                                                          |
 
 ## EntityRecognizer.predict {#predict tag="method"}
 
@@ -167,10 +167,10 @@ modifying them.
 > scores = ner.predict([doc1, doc2])
 > ```
 
-| Name        | Type               | Description                                                                                                |
-| ----------- | ------------------ | ---------------------------------------------------------------------------------------------------------- |
-| `docs`      | `Iterable[Doc]`    | The documents to predict.                                                                                  |
-| **RETURNS** | `List[StateClass]` | List of `syntax.StateClass` objects. `syntax.StateClass` is a helper class for the parse state (internal). |
+| Name        | Description                                                   |
+| ----------- | ------------------------------------------------------------- |
+| `docs`      | The documents to predict. ~~Iterable[Doc]~~                   |
+| **RETURNS** | A helper class for the parse state (internal). ~~StateClass~~ |
 
 ## EntityRecognizer.set_annotations {#set_annotations tag="method"}
 
@@ -184,10 +184,10 @@ Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 > ner.set_annotations([doc1, doc2], scores)
 > ```
 
-| Name     | Type               | Description                                                |
-| -------- | ------------------ | ---------------------------------------------------------- |
-| `docs`   | `Iterable[Doc]`    | The documents to modify.                                   |
-| `scores` | `List[StateClass]` | The scores to set, produced by `EntityRecognizer.predict`. |
+| Name     | Description                                                                                                                           |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `docs`   | The documents to modify. ~~Iterable[Doc]~~                                                                                            |
+| `scores` | The scores to set, produced by `EntityRecognizer.predict`. Returns an internal helper class for the parse state. ~~List[StateClass]~~ |
 
 ## EntityRecognizer.update {#update tag="method"}
 
@@ -203,15 +203,15 @@ model. Delegates to [`predict`](/api/entityrecognizer#predict) and
 > losses = ner.update(examples, sgd=optimizer)
 > ```
 
-| Name              | Type                                                | Description                                                                                                                                    |
-| ----------------- | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `examples`        | `Iterable[Example]`                                 | A batch of [`Example`](/api/example) objects to learn from.                                                                                    |
-| _keyword-only_    |                                                     |                                                                                                                                                |
-| `drop`            | float                                               | The dropout rate.                                                                                                                              |
-| `set_annotations` | bool                                                | Whether or not to update the `Example` objects with the predictions, delegating to [`set_annotations`](/api/entityrecognizer#set_annotations). |
-| `sgd`             | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | The optimizer.                                                                                                                                 |
-| `losses`          | `Dict[str, float]`                                  | Optional record of the loss during training. Updated using the component name as the key.                                                      |
-| **RETURNS**       | `Dict[str, float]`                                  | The updated `losses` dictionary.                                                                                                               |
+| Name              | Description                                                                                                                        |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `examples`        | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                                  |
+| _keyword-only_    |                                                                                                                                    |  |
+| `drop`            | The dropout rate. ~~float~~                                                                                                        |
+| `set_annotations` | Whether or not to update the `Example` objects with the predictions, delegating to [`set_annotations`](#set_annotations). ~~bool~~ |
+| `sgd`             | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                      |
+| `losses`          | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~           |
+| **RETURNS**       | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                              |
 
 ## EntityRecognizer.get_loss {#get_loss tag="method"}
 
@@ -226,11 +226,11 @@ predicted scores.
 > loss, d_loss = ner.get_loss(examples, scores)
 > ```
 
-| Name        | Type                  | Description                                         |
-| ----------- | --------------------- | --------------------------------------------------- |
-| `examples`  | `Iterable[Example]`   | The batch of examples.                              |
-| `scores`    | `List[StateClass]`    | Scores representing the model's predictions.        |
-| **RETURNS** | `Tuple[float, float]` | The loss and the gradient, i.e. `(loss, gradient)`. |
+| Name        | Description                                                                 |
+| ----------- | --------------------------------------------------------------------------- |
+| `examples`  | The batch of examples. ~~Iterable[Example]~~                                |
+| `scores`    | Scores representing the model's predictions. ~~StateClass~~                 |
+| **RETURNS** | The loss and the gradient, i.e. `(loss, gradient)`. ~~Tuple[float, float]~~ |
 
 ## EntityRecognizer.score {#score tag="method" new="3"}
 
@@ -242,10 +242,10 @@ Score a batch of examples.
 > scores = ner.score(examples)
 > ```
 
-| Name        | Type                | Description                                                              |
-| ----------- | ------------------- | ------------------------------------------------------------------------ |
-| `examples`  | `Iterable[Example]` | The examples to score.                                                   |
-| **RETURNS** | `Dict[str, Any]`    | The scores, produced by [`Scorer.score_spans`](/api/scorer#score_spans). |
+| Name        | Description                                                                                                            |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `examples`  | The examples to score. ~~Iterable[Example]~~                                                                           |
+| **RETURNS** | The scores, produced by [`Scorer.score_spans`](/api/scorer#score_spans). ~~Dict[str, Union[float, Dict[str, float]]]~~ |
 
 ## EntityRecognizer.create_optimizer {#create_optimizer tag="method"}
 
@@ -258,9 +258,9 @@ Create an optimizer for the pipeline component.
 > optimizer = ner.create_optimizer()
 > ```
 
-| Name        | Type                                                | Description    |
-| ----------- | --------------------------------------------------- | -------------- |
-| **RETURNS** | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | The optimizer. |
+| Name        | Description                  |
+| ----------- | ---------------------------- |
+| **RETURNS** | The optimizer. ~~Optimizer~~ |
 
 ## EntityRecognizer.use_params {#use_params tag="method, contextmanager"}
 
@@ -275,9 +275,9 @@ context, the original parameters are restored.
 >     ner.to_disk("/best_model")
 > ```
 
-| Name     | Type | Description                               |
-| -------- | ---- | ----------------------------------------- |
-| `params` | dict | The parameter values to use in the model. |
+| Name     | Description                                        |
+| -------- | -------------------------------------------------- |
+| `params` | The parameter values to use in the model. ~~dict~~ |
 
 ## EntityRecognizer.add_label {#add_label tag="method"}
 
@@ -290,10 +290,10 @@ Add a new label to the pipe.
 > ner.add_label("MY_LABEL")
 > ```
 
-| Name        | Type | Description                                         |
-| ----------- | ---- | --------------------------------------------------- |
-| `label`     | str  | The label to add.                                   |
-| **RETURNS** | int  | `0` if the label is already present, otherwise `1`. |
+| Name        | Description                                                 |
+| ----------- | ----------------------------------------------------------- |
+| `label`     | The label to add. ~~str~~                                   |
+| **RETURNS** | `0` if the label is already present, otherwise `1`. ~~int~~ |
 
 ## EntityRecognizer.to_disk {#to_disk tag="method"}
 
@@ -306,11 +306,11 @@ Serialize the pipe to disk.
 > ner.to_disk("/path/to/ner")
 > ```
 
-| Name           | Type            | Description                                                                                                           |
-| -------------- | --------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path`         | str / `Path`    | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
-| _keyword-only_ |                 |                                                                                                                       |
-| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.                                             |
+| Name           | Description                                                                                                                                |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `path`         | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+| _keyword-only_ |                                                                                                                                            |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~                                                |
 
 ## EntityRecognizer.from_disk {#from_disk tag="method"}
 
@@ -323,12 +323,12 @@ Load the pipe from disk. Modifies the object in place and returns it.
 > ner.from_disk("/path/to/ner")
 > ```
 
-| Name           | Type               | Description                                                                |
-| -------------- | ------------------ | -------------------------------------------------------------------------- |
-| `path`         | str / `Path`       | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| _keyword-only_ |                    |                                                                            |
-| `exclude`      | `Iterable[str]`    | String names of [serialization fields](#serialization-fields) to exclude.  |
-| **RETURNS**    | `EntityRecognizer` | The modified `EntityRecognizer` object.                                    |
+| Name           | Description                                                                                     |
+| -------------- | ----------------------------------------------------------------------------------------------- |
+| `path`         | A path to a directory. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+| _keyword-only_ |                                                                                                 |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~     |
+| **RETURNS**    | The modified `EntityRecognizer` object. ~~EntityRecognizer~~                                    |
 
 ## EntityRecognizer.to_bytes {#to_bytes tag="method"}
 
@@ -341,11 +341,11 @@ Load the pipe from disk. Modifies the object in place and returns it.
 
 Serialize the pipe to a bytestring.
 
-| Name           | Type            | Description                                                               |
-| -------------- | --------------- | ------------------------------------------------------------------------- |
-| _keyword-only_ |                 |                                                                           |
-| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS**    | bytes           | The serialized form of the `EntityRecognizer` object.                     |
+| Name           | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| _keyword-only_ |                                                                                             |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
+| **RETURNS**    | The serialized form of the `EntityRecognizer` object. ~~bytes~~                             |
 
 ## EntityRecognizer.from_bytes {#from_bytes tag="method"}
 
@@ -359,12 +359,12 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 > ner.from_bytes(ner_bytes)
 > ```
 
-| Name           | Type               | Description                                                               |
-| -------------- | ------------------ | ------------------------------------------------------------------------- |
-| `bytes_data`   | bytes              | The data to load from.                                                    |
-| _keyword-only_ |                    |                                                                           |
-| `exclude`      | `Iterable[str]`    | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS**    | `EntityRecognizer` | The `EntityRecognizer` object.                                            |
+| Name           | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| `bytes_data`   | The data to load from. ~~bytes~~                                                            |
+| _keyword-only_ |                                                                                             |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
+| **RETURNS**    | The `EntityRecognizer` object. ~~EntityRecognizer~~                                         |
 
 ## EntityRecognizer.labels {#labels tag="property"}
 
@@ -377,9 +377,9 @@ The labels currently added to the component.
 > assert "MY_LABEL" in ner.labels
 > ```
 
-| Name        | Type  | Description                        |
-| ----------- | ----- | ---------------------------------- |
-| **RETURNS** | tuple | The labels added to the component. |
+| Name        | Description                                            |
+| ----------- | ------------------------------------------------------ |
+| **RETURNS** | The labels added to the component. ~~Tuple[str, ...]~~ |
 
 ## Serialization fields {#serialization-fields}
 

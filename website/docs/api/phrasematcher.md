@@ -36,11 +36,11 @@ be shown.
 > matcher = PhraseMatcher(nlp.vocab)
 > ```
 
-| Name                                    | Type      | Description                                                                                 |
-| --------------------------------------- | --------- | ------------------------------------------------------------------------------------------- |
-| `vocab`                                 | `Vocab`   | The vocabulary object, which must be shared with the documents the matcher will operate on. |
-| `attr` <Tag variant="new">2.1</Tag>     | int / str | The token attribute to match on. Defaults to `ORTH`, i.e. the verbatim token text.          |
-| `validate` <Tag variant="new">2.1</Tag> | bool      | Validate patterns added to the matcher.                                                     |
+| Name                                    | Description                                                                                            |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `vocab`                                 | The vocabulary object, which must be shared with the documents the matcher will operate on. ~~Vocab~~  |
+| `attr` <Tag variant="new">2.1</Tag>     | The token attribute to match on. Defaults to `ORTH`, i.e. the verbatim token text. ~~Union[int, str]~~ |
+| `validate` <Tag variant="new">2.1</Tag> | Validate patterns added to the matcher. ~~bool~~                                                       |
 
 ## PhraseMatcher.\_\_call\_\_ {#call tag="method"}
 
@@ -57,10 +57,10 @@ Find all token sequences matching the supplied patterns on the `Doc`.
 > matches = matcher(doc)
 > ```
 
-| Name        | Type  | Description                                                                                                                                                              |
-| ----------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `doc`       | `Doc` | The document to match over.                                                                                                                                              |
-| **RETURNS** | list  | A list of `(match_id, start, end)` tuples, describing the matches. A match tuple describes a span `doc[start:end]`. The `match_id` is the ID of the added match pattern. |
+| Name        | Description                         |
+| ----------- | ----------------------------------- |
+| `doc`       | The document to match over. ~~Doc~~ |
+| **RETURNS** | list                                | A list of `(match_id, start, end)` tuples, describing the matches. A match tuple describes a span `doc[start:end]`. The `match_id` is the ID of the added match pattern. ~~List[Tuple[int, int, int]]~~ |
 
 <Infobox title="Note on retrieving the string representation of the match_id" variant="warning">
 
@@ -87,11 +87,13 @@ Match a stream of documents, yielding them in turn.
 >       pass
 > ```
 
-| Name         | Type     | Description                                               |
-| ------------ | -------- | --------------------------------------------------------- |
-| `docs`       | iterable | A stream of documents.                                    |
-| `batch_size` | int      | The number of documents to accumulate into a working set. |
-| **YIELDS**   | `Doc`    | Documents, in order.                                      |
+| Name                                          | Description                                                                                                                                                                                                                         |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `docs`                                        | A stream of documents. ~~Iterable[Doc]~~                                                                                                                                                                                            |
+| `batch_size`                                  | The number of documents to accumulate into a working set. ~~int~~                                                                                                                                                                   |
+| `return_matches` <Tag variant="new">2.1</Tag> | Yield the match lists along with the docs, making results `(doc, matches)` tuples. ~~bool~~                                                                                                                                         |
+| `as_tuples`                                   | Interpret the input stream as `(doc, context)` tuples, and yield `(result, context)` tuples out. If both `return_matches` and `as_tuples` are `True`, the output will be a sequence of `((doc, matches), context)` tuples. ~~bool~~ |
+| **YIELDS**                                    | Documents and optional matches or context in order. ~~Union[Doc, Tuple[Doc, Any], Tuple[Tuple[Doc, Any], Any]]~~                                                                                                                    |
 
 ## PhraseMatcher.\_\_len\_\_ {#len tag="method"}
 
@@ -108,9 +110,9 @@ patterns.
 >   assert len(matcher) == 1
 > ```
 
-| Name        | Type | Description          |
-| ----------- | ---- | -------------------- |
-| **RETURNS** | int  | The number of rules. |
+| Name        | Description                  |
+| ----------- | ---------------------------- |
+| **RETURNS** | The number of rules. ~~int~~ |
 
 ## PhraseMatcher.\_\_contains\_\_ {#contains tag="method"}
 
@@ -125,10 +127,10 @@ Check whether the matcher contains rules for a match ID.
 >   assert "OBAMA" in matcher
 > ```
 
-| Name        | Type | Description                                           |
-| ----------- | ---- | ----------------------------------------------------- |
-| `key`       | str  | The match ID.                                         |
-| **RETURNS** | bool | Whether the matcher contains rules for this match ID. |
+| Name        | Description                                                    |
+| ----------- | -------------------------------------------------------------- |
+| `key`       | The match ID. ~~str~~                                          |
+| **RETURNS** | Whether the matcher contains rules for this match ID. ~~bool~~ |
 
 ## PhraseMatcher.add {#add tag="method"}
 
@@ -165,12 +167,12 @@ patterns = [nlp("health care reform"), nlp("healthcare reform")]
 
 </Infobox>
 
-| Name           | Type               | Description                                                                                   |
-| -------------- | ------------------ | --------------------------------------------------------------------------------------------- |
-| `match_id`     | str                | An ID for the thing you're matching.                                                          |
-| `docs`         | list               | `Doc` objects of the phrases to match.                                                        |
-| _keyword-only_ |                    |                                                                                               |
-| `on_match`     | callable or `None` | Callback function to act on matches. Takes the arguments `matcher`, `doc`, `i` and `matches`. |
+| Name           | Description                                                                                                                                                |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `match_id`     | str                                                                                                                                                        | An ID for the thing you're matching. ~~str~~ |
+| `docs`         | `Doc` objects of the phrases to match. ~~List[Doc]~~                                                                                                       |
+| _keyword-only_ |                                                                                                                                                            |  |
+| `on_match`     | Callback function to act on matches. Takes the arguments `matcher`, `doc`, `i` and `matches`. ~~Optional[Callable[[Matcher, Doc, int, List[tuple], Any]]~~ |
 
 ## PhraseMatcher.remove {#remove tag="method" new="2.2"}
 
@@ -187,6 +189,6 @@ does not exist.
 > assert "OBAMA" not in matcher
 > ```
 
-| Name  | Type | Description               |
-| ----- | ---- | ------------------------- |
-| `key` | str  | The ID of the match rule. |
+| Name  | Description                       |
+| ----- | --------------------------------- |
+| `key` | The ID of the match rule. ~~str~~ |

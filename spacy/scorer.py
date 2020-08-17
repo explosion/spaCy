@@ -2,7 +2,7 @@ from typing import Optional, Iterable, Dict, Any, Callable, Tuple, TYPE_CHECKING
 import numpy as np
 
 from .gold import Example
-from .tokens import Token, Doc
+from .tokens import Token, Doc, Span
 from .errors import Errors
 from .util import get_lang_class
 from .morphology import Morphology
@@ -250,15 +250,16 @@ class Scorer:
         examples: Iterable[Example],
         attr: str,
         *,
-        getter: Callable[[Doc, str], Any] = getattr,
+        getter: Callable[[Doc, str], Iterable[Span]] = getattr,
         **cfg,
     ) -> Dict[str, Any]:
         """Returns PRF scores for labeled spans.
 
         examples (Iterable[Example]): Examples to score
         attr (str): The attribute to score.
-        getter (Callable[[Doc, str], Any]): Defaults to getattr. If provided,
-            getter(doc, attr) should return the spans for the individual doc.
+        getter (Callable[[Doc, str], Iterable[Span]]): Defaults to getattr. If
+            provided, getter(doc, attr) should return the spans for the
+            individual doc.
         RETURNS (Dict[str, Any]): A dictionary containing the PRF scores under
             the keys attr_p/r/f and the per-type PRF scores under attr_per_type.
 
@@ -444,7 +445,7 @@ class Scorer:
         *,
         getter: Callable[[Token, str], Any] = getattr,
         head_attr: str = "head",
-        head_getter: Callable[[Token, str], Any] = getattr,
+        head_getter: Callable[[Token, str], Token] = getattr,
         ignore_labels: Tuple[str] = tuple(),
         **cfg,
     ) -> Dict[str, Any]:
@@ -458,7 +459,7 @@ class Scorer:
             individual token.
         head_attr (str): The attribute containing the head token. Defaults to
             'head'.
-        head_getter (Callable[[Token, str], Any]): Defaults to getattr. If provided,
+        head_getter (Callable[[Token, str], Token]): Defaults to getattr. If provided,
             head_getter(token, attr) should return the value of the head for an
             individual token.
         ignore_labels (Tuple): Labels to ignore while scoring (e.g., punct).

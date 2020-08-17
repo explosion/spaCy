@@ -32,9 +32,9 @@ architectures and their arguments and hyperparameters.
 > nlp.add_pipe("morphologizer", config=config)
 > ```
 
-| Setting | Type                                       | Description       | Default                             |
-| ------- | ------------------------------------------ | ----------------- | ----------------------------------- |
-| `model` | [`Model`](https://thinc.ai/docs/api-model) | The model to use. | [Tagger](/api/architectures#Tagger) |
+| Setting | Description                                                                                             |
+| ------- | ------------------------------------------------------------------------------------------------------- |
+| `model` | The model to use. Defaults to [Tagger](/api/architectures#Tagger). ~~Model[List[Doc], List[Floats2d]]~~ |
 
 ```python
 https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/morphologizer.pyx
@@ -42,7 +42,9 @@ https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/morphologizer.pyx
 
 ## Morphologizer.\_\_init\_\_ {#init tag="method"}
 
-Initialize the morphologizer.
+Create a new pipeline instance. In your application, you would normally use a
+shortcut for this and instantiate the component using its string name and
+[`nlp.add_pipe`](/api/language#add_pipe).
 
 > #### Example
 >
@@ -59,18 +61,14 @@ Initialize the morphologizer.
 > morphologizer = Morphologizer(nlp.vocab, model)
 > ```
 
-Create a new pipeline instance. In your application, you would normally use a
-shortcut for this and instantiate the component using its string name and
-[`nlp.add_pipe`](/api/language#add_pipe).
-
-| Name           | Type    | Description                                                                                 |
-| -------------- | ------- | ------------------------------------------------------------------------------------------- |
-| `vocab`        | `Vocab` | The shared vocabulary.                                                                      |
-| `model`        | `Model` | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component.             |
-| `name`         | str     | String name of the component instance. Used to add entries to the `losses` during training. |
-| _keyword-only_ |         |                                                                                             |
-| `labels_morph` | dict    | Mapping of morph + POS tags to morph labels.                                                |
-| `labels_pos`   | dict    | Mapping of morph + POS tags to POS tags.                                                    |
+| Name           | Description                                                                                                          |
+| -------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `vocab`        | The shared vocabulary. ~~Vocab~~                                                                                     |
+| `model`        | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model[List[Doc], List[Floats2d]]~~ |
+| `name`         | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                  |
+| _keyword-only_ |                                                                                                                      |
+| `labels_morph` | Mapping of morph + POS tags to morph labels. ~~Dict[str, str]~~                                                      |
+| `labels_pos`   | Mapping of morph + POS tags to POS tags. ~~Dict[str, str]~~                                                          |
 
 ## Morphologizer.\_\_call\_\_ {#call tag="method"}
 
@@ -90,10 +88,10 @@ delegate to the [`predict`](/api/morphologizer#predict) and
 > processed = morphologizer(doc)
 > ```
 
-| Name        | Type  | Description              |
-| ----------- | ----- | ------------------------ |
-| `doc`       | `Doc` | The document to process. |
-| **RETURNS** | `Doc` | The processed document.  |
+| Name        | Description                      |
+| ----------- | -------------------------------- |
+| `doc`       | The document to process. ~~Doc~~ |
+| **RETURNS** | The processed document. ~~Doc~~  |
 
 ## Morphologizer.pipe {#pipe tag="method"}
 
@@ -112,12 +110,12 @@ applied to the `Doc` in order. Both [`__call__`](/api/morphologizer#call) and
 >     pass
 > ```
 
-| Name           | Type            | Description                                            |
-| -------------- | --------------- | ------------------------------------------------------ |
-| `stream`       | `Iterable[Doc]` | A stream of documents.                                 |
-| _keyword-only_ |                 |                                                        |
-| `batch_size`   | int             | The number of texts to buffer. Defaults to `128`.      |
-| **YIELDS**     | `Doc`           | Processed documents in the order of the original text. |
+| Name           | Description                                                   |
+| -------------- | ------------------------------------------------------------- |
+| `stream`       | A stream of documents. ~~Iterable[Doc]~~                      |
+| _keyword-only_ |                                                               |
+| `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
+| **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
 ## Morphologizer.begin_training {#begin_training tag="method"}
 
@@ -138,13 +136,13 @@ setting up the label scheme based on the data.
 > optimizer = morphologizer.begin_training(lambda: [], pipeline=nlp.pipeline)
 > ```
 
-| Name           | Type                                                | Description                                                                                                           |
-| -------------- | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `get_examples` | `Callable[[], Iterable[Example]]`                   | Optional function that returns gold-standard annotations in the form of [`Example`](/api/example) objects.            |
-| _keyword-only_ |                                                     |                                                                                                                       |
-| `pipeline`     | `List[Tuple[str, Callable]]`                        | Optional list of pipeline components that this component is part of.                                                  |
-| `sgd`          | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | An optional optimizer. Will be created via [`create_optimizer`](/api/sentencerecognizer#create_optimizer) if not set. |
-| **RETURNS**    | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | The optimizer.                                                                                                        |
+| Name           | Description                                                                                                                           |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. ~~Callable[[], Iterable[Example]]~~ |
+| _keyword-only_ |                                                                                                                                       |  |
+| `pipeline`     | Optional list of pipeline components that this component is part of. ~~Optional[List[Tuple[str, Callable[[Doc], Doc]]]]~~             |
+| `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                         |
+| **RETURNS**    | The optimizer. ~~Optimizer~~                                                                                                          |
 
 ## Morphologizer.predict {#predict tag="method"}
 
@@ -158,10 +156,10 @@ modifying them.
 > scores = morphologizer.predict([doc1, doc2])
 > ```
 
-| Name        | Type            | Description                               |
-| ----------- | --------------- | ----------------------------------------- |
-| `docs`      | `Iterable[Doc]` | The documents to predict.                 |
-| **RETURNS** | -               | The model's prediction for each document. |
+| Name        | Description                                 |
+| ----------- | ------------------------------------------- |
+| `docs`      | The documents to predict. ~~Iterable[Doc]~~ |
+| **RETURNS** | The model's prediction for each document.   |
 
 ## Morphologizer.set_annotations {#set_annotations tag="method"}
 
@@ -175,10 +173,10 @@ Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 > morphologizer.set_annotations([doc1, doc2], scores)
 > ```
 
-| Name     | Type            | Description                                             |
-| -------- | --------------- | ------------------------------------------------------- |
-| `docs`   | `Iterable[Doc]` | The documents to modify.                                |
-| `scores` | -               | The scores to set, produced by `Morphologizer.predict`. |
+| Name     | Description                                             |
+| -------- | ------------------------------------------------------- |
+| `docs`   | The documents to modify. ~~Iterable[Doc]~~              |
+| `scores` | The scores to set, produced by `Morphologizer.predict`. |
 
 ## Morphologizer.update {#update tag="method"}
 
@@ -195,15 +193,15 @@ Delegates to [`predict`](/api/morphologizer#predict) and
 > losses = morphologizer.update(examples, sgd=optimizer)
 > ```
 
-| Name              | Type                                                | Description                                                                                                                                      |
-| ----------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `examples`        | `Iterable[Example]`                                 | A batch of [`Example`](/api/example) objects to learn from.                                                                                      |
-| _keyword-only_    |                                                     |                                                                                                                                                  |
-| `drop`            | float                                               | The dropout rate.                                                                                                                                |
-| `set_annotations` | bool                                                | Whether or not to update the `Example` objects with the predictions, delegating to [`set_annotations`](/api/sentencerecognizer#set_annotations). |
-| `sgd`             | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | The optimizer.                                                                                                                                   |
-| `losses`          | `Dict[str, float]`                                  | Optional record of the loss during training. The value keyed by the model's name is updated.                                                     |
-| **RETURNS**       | `Dict[str, float]`                                  | The updated `losses` dictionary.                                                                                                                 |
+| Name              | Description                                                                                                                        |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `examples`        | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                                  |
+| _keyword-only_    |                                                                                                                                    |  |
+| `drop`            | The dropout rate. ~~float~~                                                                                                        |
+| `set_annotations` | Whether or not to update the `Example` objects with the predictions, delegating to [`set_annotations`](#set_annotations). ~~bool~~ |
+| `sgd`             | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                      |
+| `losses`          | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~           |
+| **RETURNS**       | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                              |
 
 ## Morphologizer.get_loss {#get_loss tag="method"}
 
@@ -218,11 +216,11 @@ predicted scores.
 > loss, d_loss = morphologizer.get_loss(examples, scores)
 > ```
 
-| Name        | Type                  | Description                                         |
-| ----------- | --------------------- | --------------------------------------------------- |
-| `examples`  | `Iterable[Example]`   | The batch of examples.                              |
-| `scores`    | -                     | Scores representing the model's predictions.        |
-| **RETURNS** | `Tuple[float, float]` | The loss and the gradient, i.e. `(loss, gradient)`. |
+| Name        | Description                                                                 |
+| ----------- | --------------------------------------------------------------------------- |
+| `examples`  | The batch of examples. ~~Iterable[Example]~~                                |
+| `scores`    | Scores representing the model's predictions.                                |
+| **RETURNS** | The loss and the gradient, i.e. `(loss, gradient)`. ~~Tuple[float, float]~~ |
 
 ## Morphologizer.create_optimizer {#create_optimizer tag="method"}
 
@@ -235,9 +233,9 @@ Create an optimizer for the pipeline component.
 > optimizer = morphologizer.create_optimizer()
 > ```
 
-| Name        | Type                                                | Description    |
-| ----------- | --------------------------------------------------- | -------------- |
-| **RETURNS** | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | The optimizer. |
+| Name        | Description                  |
+| ----------- | ---------------------------- |
+| **RETURNS** | The optimizer. ~~Optimizer~~ |
 
 ## Morphologizer.use_params {#use_params tag="method, contextmanager"}
 
@@ -252,9 +250,9 @@ context, the original parameters are restored.
 >     morphologizer.to_disk("/best_model")
 > ```
 
-| Name     | Type | Description                               |
-| -------- | ---- | ----------------------------------------- |
-| `params` | dict | The parameter values to use in the model. |
+| Name     | Description                                        |
+| -------- | -------------------------------------------------- |
+| `params` | The parameter values to use in the model. ~~dict~~ |
 
 ## Morphologizer.add_label {#add_label tag="method"}
 
@@ -268,10 +266,10 @@ both `pos` and `morph`, the label should include the UPOS as the feature `POS`.
 > morphologizer.add_label("Mood=Ind|POS=VERB|Tense=Past|VerbForm=Fin")
 > ```
 
-| Name        | Type | Description                                         |
-| ----------- | ---- | --------------------------------------------------- |
-| `label`     | str  | The label to add.                                   |
-| **RETURNS** | int  | `0` if the label is already present, otherwise `1`. |
+| Name        | Description                                                 |
+| ----------- | ----------------------------------------------------------- |
+| `label`     | The label to add. ~~str~~                                   |
+| **RETURNS** | `0` if the label is already present, otherwise `1`. ~~int~~ |
 
 ## Morphologizer.to_disk {#to_disk tag="method"}
 
@@ -284,11 +282,11 @@ Serialize the pipe to disk.
 > morphologizer.to_disk("/path/to/morphologizer")
 > ```
 
-| Name           | Type            | Description                                                                                                           |
-| -------------- | --------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path`         | str / `Path`    | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
-| _keyword-only_ |                 |                                                                                                                       |
-| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.                                             |
+| Name           | Description                                                                                                                                |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `path`         | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+| _keyword-only_ |                                                                                                                                            |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~                                                |
 
 ## Morphologizer.from_disk {#from_disk tag="method"}
 
@@ -301,12 +299,12 @@ Load the pipe from disk. Modifies the object in place and returns it.
 > morphologizer.from_disk("/path/to/morphologizer")
 > ```
 
-| Name           | Type            | Description                                                                |
-| -------------- | --------------- | -------------------------------------------------------------------------- |
-| `path`         | str / `Path`    | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| _keyword-only_ |                 |                                                                            |
-| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.  |
-| **RETURNS**    | `Morphologizer` | The modified `Morphologizer` object.                                       |
+| Name           | Description                                                                                     |
+| -------------- | ----------------------------------------------------------------------------------------------- |
+| `path`         | A path to a directory. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+| _keyword-only_ |                                                                                                 |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~     |
+| **RETURNS**    | The modified `Morphologizer` object. ~~Morphologizer~~                                          |
 
 ## Morphologizer.to_bytes {#to_bytes tag="method"}
 
@@ -319,11 +317,11 @@ Load the pipe from disk. Modifies the object in place and returns it.
 
 Serialize the pipe to a bytestring.
 
-| Name           | Type            | Description                                                               |
-| -------------- | --------------- | ------------------------------------------------------------------------- |
-| _keyword-only_ |                 |                                                                           |
-| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS**    | bytes           | The serialized form of the `Morphologizer` object.                        |
+| Name           | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| _keyword-only_ |                                                                                             |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
+| **RETURNS**    | The serialized form of the `Morphologizer` object. ~~bytes~~                                |
 
 ## Morphologizer.from_bytes {#from_bytes tag="method"}
 
@@ -337,19 +335,19 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 > morphologizer.from_bytes(morphologizer_bytes)
 > ```
 
-| Name           | Type            | Description                                                               |
-| -------------- | --------------- | ------------------------------------------------------------------------- |
-| `bytes_data`   | bytes           | The data to load from.                                                    |
-| _keyword-only_ |                 |                                                                           |
-| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS**    | `Morphologizer` | The `Morphologizer` object.                                               |
+| Name           | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| `bytes_data`   | The data to load from. ~~bytes~~                                                            |
+| _keyword-only_ |                                                                                             |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
+| **RETURNS**    | The `Morphologizer` object. ~~Morphologizer~~                                               |
 
 ## Morphologizer.labels {#labels tag="property"}
 
-The labels currently added to the component in Universal Dependencies
-[FEATS format](https://universaldependencies.org/format.html#morphological-annotation).
-Note that even for a blank component, this will always include the internal
-empty label `_`. If POS features are used, the labels will include the
+The labels currently added to the component in the Universal Dependencies
+[FEATS](https://universaldependencies.org/format.html#morphological-annotation)
+format. Note that even for a blank component, this will always include the
+internal empty label `_`. If POS features are used, the labels will include the
 coarse-grained POS as the feature `POS`.
 
 > #### Example
@@ -359,9 +357,9 @@ coarse-grained POS as the feature `POS`.
 > assert "Mood=Ind|POS=VERB|Tense=Past|VerbForm=Fin" in morphologizer.labels
 > ```
 
-| Name        | Type  | Description                        |
-| ----------- | ----- | ---------------------------------- |
-| **RETURNS** | tuple | The labels added to the component. |
+| Name        | Description                                            |
+| ----------- | ------------------------------------------------------ |
+| **RETURNS** | The labels added to the component. ~~Tuple[str, ...]~~ |
 
 ## Serialization fields {#serialization-fields}
 

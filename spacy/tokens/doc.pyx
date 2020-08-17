@@ -102,8 +102,7 @@ cdef class Doc:
 
         Construction 2
         >>> from spacy.tokens import Doc
-        >>> doc = Doc(nlp.vocab, words=[u'hello', u'world', u'!'],
-        >>>           spaces=[True, False, False])
+        >>> doc = Doc(nlp.vocab, words=["hello", "world", "!"], spaces=[True, False, False])
 
     DOCS: https://spacy.io/api/doc
     """

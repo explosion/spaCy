@@ -45,12 +45,12 @@ Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
 [`nlp.add_pipe`](/api/language#create_pipe).
 
-| Name    | Type                                       | Description                                                                                                                     |
-| ------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab` | `Vocab`                                    | The shared vocabulary.                                                                                                          |
-| `model` | [`Model`](https://thinc.ai/docs/api-model) | The Thinc [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component.                                           |
-| `name`  | str                                        | String name of the component instance. Used to add entries to the `losses` during training.                                     |
-| `**cfg` |                                            | Additional config parameters and settings. Will be available as the dictionary `Pipe.cfg` and is serialized with the component. |
+| Name    | Description                                                                                                                     |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab` | The shared vocabulary. ~~Vocab~~                                                                                                |
+| `model` | The Thinc [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model[List[Doc], Any]~~                 |
+| `name`  | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                             |
+| `**cfg` | Additional config parameters and settings. Will be available as the dictionary `Pipe.cfg` and is serialized with the component. |
 
 ## Pipe.\_\_call\_\_ {#call tag="method"}
 
@@ -70,10 +70,10 @@ and all pipeline components are applied to the `Doc` in order. Both
 > processed = pipe(doc)
 > ```
 
-| Name        | Type  | Description              |
-| ----------- | ----- | ------------------------ |
-| `doc`       | `Doc` | The document to process. |
-| **RETURNS** | `Doc` | The processed document.  |
+| Name        | Description                      |
+| ----------- | -------------------------------- |
+| `doc`       | The document to process. ~~Doc~~ |
+| **RETURNS** | The processed document. ~~Doc~~  |
 
 ## Pipe.pipe {#pipe tag="method"}
 
@@ -91,12 +91,12 @@ applied to the `Doc` in order. Both [`__call__`](/api/pipe#call) and
 >     pass
 > ```
 
-| Name           | Type            | Description                                           |
-| -------------- | --------------- | ----------------------------------------------------- |
-| `stream`       | `Iterable[Doc]` | A stream of documents.                                |
-| _keyword-only_ |                 |                                                       |
-| `batch_size`   | int             | The number of documents to buffer. Defaults to `128`. |
-| **YIELDS**     | `Doc`           | The processed documents in order.                     |
+| Name           | Description                                                   |
+| -------------- | ------------------------------------------------------------- |
+| `stream`       | A stream of documents. ~~Iterable[Doc]~~                      |
+| _keyword-only_ |                                                               |
+| `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
+| **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
 ## Pipe.begin_training {#begin_training tag="method"}
 
@@ -116,13 +116,13 @@ setting up the label scheme based on the data.
 > optimizer = pipe.begin_training(lambda: [], pipeline=nlp.pipeline)
 > ```
 
-| Name           | Type                                                | Description                                                                                                |
-| -------------- | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `get_examples` | `Callable[[], Iterable[Example]]`                   | Optional function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. |
-| _keyword-only_ |                                                     |                                                                                                            |
-| `pipeline`     | `List[Tuple[str, Callable]]`                        | Optional list of pipeline components that this component is part of.                                       |
-| `sgd`          | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | An optional optimizer. Will be created via [`create_optimizer`](/api/pipe#create_optimizer) if not set.    |
-| **RETURNS**    | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | The optimizer.                                                                                             |
+| Name           | Description                                                                                                                           |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. ~~Callable[[], Iterable[Example]]~~ |
+| _keyword-only_ |                                                                                                                                       |
+| `pipeline`     | Optional list of pipeline components that this component is part of. ~~Optional[List[Tuple[str, Callable[[Doc], Doc]]]]~~             |
+| `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                         |
+| **RETURNS**    | The optimizer. ~~Optimizer~~                                                                                                          |
 
 ## Pipe.predict {#predict tag="method"}
 
@@ -142,10 +142,10 @@ This method needs to be overwritten with your own custom `predict` method.
 > scores = pipe.predict([doc1, doc2])
 > ```
 
-| Name        | Type            | Description                               |
-| ----------- | --------------- | ----------------------------------------- |
-| `docs`      | `Iterable[Doc]` | The documents to predict.                 |
-| **RETURNS** | -               | The model's prediction for each document. |
+| Name        | Description                                 |
+| ----------- | ------------------------------------------- |
+| `docs`      | The documents to predict. ~~Iterable[Doc]~~ |
+| **RETURNS** | The model's prediction for each document.   |
 
 ## Pipe.set_annotations {#set_annotations tag="method"}
 
@@ -166,10 +166,10 @@ method.
 > pipe.set_annotations(docs, scores)
 > ```
 
-| Name     | Type            | Description                                    |
-| -------- | --------------- | ---------------------------------------------- |
-| `docs`   | `Iterable[Doc]` | The documents to modify.                       |
-| `scores` | -               | The scores to set, produced by `Pipe.predict`. |
+| Name     | Description                                      |
+| -------- | ------------------------------------------------ |
+| `docs`   | The documents to modify. ~~Iterable[Doc]~~       |
+| `scores` | The scores to set, produced by `Tagger.predict`. |
 
 ## Pipe.update {#update tag="method"}
 
@@ -184,15 +184,15 @@ predictions and gold-standard annotations, and update the component's model.
 > losses = pipe.update(examples, sgd=optimizer)
 > ```
 
-| Name              | Type                                                | Description                                                                                                                        |
-| ----------------- | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `examples`        | `Iterable[Example]`                                 | A batch of [`Example`](/api/example) objects to learn from.                                                                        |
-| _keyword-only_    |                                                     |                                                                                                                                    |
-| `drop`            | float                                               | The dropout rate.                                                                                                                  |
-| `set_annotations` | bool                                                | Whether or not to update the `Example` objects with the predictions, delegating to [`set_annotations`](/api/pipe#set_annotations). |
-| `sgd`             | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | The optimizer.                                                                                                                     |
-| `losses`          | `Dict[str, float]`                                  | Optional record of the loss during training. Updated using the component name as the key.                                          |
-| **RETURNS**       | `Dict[str, float]`                                  | The updated `losses` dictionary.                                                                                                   |
+| Name              | Description                                                                                                                        |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `examples`        | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                                  |
+| _keyword-only_    |                                                                                                                                    |  |
+| `drop`            | The dropout rate. ~~float~~                                                                                                        |
+| `set_annotations` | Whether or not to update the `Example` objects with the predictions, delegating to [`set_annotations`](#set_annotations). ~~bool~~ |
+| `sgd`             | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                      |
+| `losses`          | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~           |
+| **RETURNS**       | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                              |
 
 ## Pipe.rehearse {#rehearse tag="method,experimental" new="3"}
 
@@ -208,14 +208,14 @@ the "catastrophic forgetting" problem. This feature is experimental.
 > losses = pipe.rehearse(examples, sgd=optimizer)
 > ```
 
-| Name           | Type                                                | Description                                                                               |
-| -------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `examples`     | `Iterable[Example]`                                 | A batch of [`Example`](/api/example) objects to learn from.                               |
-| _keyword-only_ |                                                     |                                                                                           |
-| `drop`         | float                                               | The dropout rate.                                                                         |
-| `sgd`          | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | The optimizer.                                                                            |
-| `losses`       | `Dict[str, float]`                                  | Optional record of the loss during training. Updated using the component name as the key. |
-| **RETURNS**    | `Dict[str, float]`                                  | The updated `losses` dictionary.                                                          |
+| Name           | Description                                                                                                              |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `examples`     | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                        |
+| _keyword-only_ |                                                                                                                          |  |
+| `drop`         | The dropout rate. ~~float~~                                                                                              |
+| `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~            |
+| `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
+| **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
 
 ## Pipe.get_loss {#get_loss tag="method"}
 
@@ -230,11 +230,11 @@ predicted scores.
 > loss, d_loss = ner.get_loss(examples, scores)
 > ```
 
-| Name        | Type                  | Description                                         |
-| ----------- | --------------------- | --------------------------------------------------- |
-| `examples`  | `Iterable[Example]`   | The batch of examples.                              |
-| `scores`    |                       | Scores representing the model's predictions.        |
-| **RETURNS** | `Tuple[float, float]` | The loss and the gradient, i.e. `(loss, gradient)`. |
+| Name        | Description                                                                 |
+| ----------- | --------------------------------------------------------------------------- |
+| `examples`  | The batch of examples. ~~Iterable[Example]~~                                |
+| `scores`    | Scores representing the model's predictions.                                |
+| **RETURNS** | The loss and the gradient, i.e. `(loss, gradient)`. ~~Tuple[float, float]~~ |
 
 ## Pipe.score {#score tag="method" new="3"}
 
@@ -246,10 +246,10 @@ Score a batch of examples.
 > scores = pipe.score(examples)
 > ```
 
-| Name        | Type                | Description                                               |
-| ----------- | ------------------- | --------------------------------------------------------- |
-| `examples`  | `Iterable[Example]` | The examples to score.                                    |
-| **RETURNS** | `Dict[str, Any]`    | The scores, e.g. produced by the [`Scorer`](/api/scorer). |
+| Name        | Description                                                                                             |
+| ----------- | ------------------------------------------------------------------------------------------------------- |
+| `examples`  | The examples to score. ~~Iterable[Example]~~                                                            |
+| **RETURNS** | The scores, e.g. produced by the [`Scorer`](/api/scorer). ~~Dict[str, Union[float, Dict[str, float]]]~~ |
 
 ## Pipe.create_optimizer {#create_optimizer tag="method"}
 
@@ -263,26 +263,9 @@ Create an optimizer for the pipeline component. Defaults to
 > optimizer = pipe.create_optimizer()
 > ```
 
-| Name        | Type                                                | Description    |
-| ----------- | --------------------------------------------------- | -------------- |
-| **RETURNS** | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | The optimizer. |
-
-## Pipe.add_label {#add_label tag="method"}
-
-Add a new label to the pipe. It's possible to extend pretrained models with new
-labels, but care should be taken to avoid the "catastrophic forgetting" problem.
-
-> #### Example
->
-> ```python
-> pipe = nlp.add_pipe("your_custom_pipe")
-> pipe.add_label("MY_LABEL")
-> ```
-
-| Name        | Type | Description                                         |
-| ----------- | ---- | --------------------------------------------------- |
-| `label`     | str  | The label to add.                                   |
-| **RETURNS** | int  | `0` if the label is already present, otherwise `1`. |
+| Name        | Description                  |
+| ----------- | ---------------------------- |
+| **RETURNS** | The optimizer. ~~Optimizer~~ |
 
 ## Pipe.use_params {#use_params tag="method, contextmanager"}
 
@@ -297,9 +280,26 @@ context, the original parameters are restored.
 >     pipe.to_disk("/best_model")
 > ```
 
-| Name     | Type | Description                               |
-| -------- | ---- | ----------------------------------------- |
-| `params` | dict | The parameter values to use in the model. |
+| Name     | Description                                        |
+| -------- | -------------------------------------------------- |
+| `params` | The parameter values to use in the model. ~~dict~~ |
+
+## Pipe.add_label {#add_label tag="method"}
+
+Add a new label to the pipe. It's possible to extend pretrained models with new
+labels, but care should be taken to avoid the "catastrophic forgetting" problem.
+
+> #### Example
+>
+> ```python
+> pipe = nlp.add_pipe("your_custom_pipe")
+> pipe.add_label("MY_LABEL")
+> ```
+
+| Name        | Description                                                 |
+| ----------- | ----------------------------------------------------------- |
+| `label`     | The label to add. ~~str~~                                   |
+| **RETURNS** | `0` if the label is already present, otherwise `1`. ~~int~~ |
 
 ## Pipe.to_disk {#to_disk tag="method"}
 
@@ -312,11 +312,11 @@ Serialize the pipe to disk.
 > pipe.to_disk("/path/to/pipe")
 > ```
 
-| Name           | Type            | Description                                                                                                           |
-| -------------- | --------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path`         | str / `Path`    | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
-| _keyword-only_ |                 |                                                                                                                       |
-| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.                                             |
+| Name           | Description                                                                                                                                |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `path`         | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+| _keyword-only_ |                                                                                                                                            |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~                                                |
 
 ## Pipe.from_disk {#from_disk tag="method"}
 
@@ -329,12 +329,12 @@ Load the pipe from disk. Modifies the object in place and returns it.
 > pipe.from_disk("/path/to/pipe")
 > ```
 
-| Name           | Type            | Description                                                                |
-| -------------- | --------------- | -------------------------------------------------------------------------- |
-| `path`         | str / `Path`    | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| _keyword-only_ |                 |                                                                            |
-| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.  |
-| **RETURNS**    | `Pipe`          | The modified pipe.                                                         |
+| Name           | Description                                                                                     |
+| -------------- | ----------------------------------------------------------------------------------------------- |
+| `path`         | A path to a directory. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+| _keyword-only_ |                                                                                                 |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~     |
+| **RETURNS**    | The modified pipe. ~~Pipe~~                                                                     |
 
 ## Pipe.to_bytes {#to_bytes tag="method"}
 
@@ -347,11 +347,11 @@ Load the pipe from disk. Modifies the object in place and returns it.
 
 Serialize the pipe to a bytestring.
 
-| Name           | Type            | Description                                                               |
-| -------------- | --------------- | ------------------------------------------------------------------------- |
-| _keyword-only_ |                 |                                                                           |
-| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS**    | bytes           | The serialized form of the pipe.                                          |
+| Name           | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| _keyword-only_ |                                                                                             |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
+| **RETURNS**    | The serialized form of the pipe. ~~bytes~~                                                  |
 
 ## Pipe.from_bytes {#from_bytes tag="method"}
 
@@ -365,21 +365,21 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 > pipe.from_bytes(pipe_bytes)
 > ```
 
-| Name           | Type            | Description                                                               |
-| -------------- | --------------- | ------------------------------------------------------------------------- |
-| `bytes_data`   | bytes           | The data to load from.                                                    |
-| _keyword-only_ |                 |                                                                           |
-| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS**    | `Pipe`          | The pipe.                                                                 |
+| Name           | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| `bytes_data`   | The data to load from. ~~bytes~~                                                            |
+| _keyword-only_ |                                                                                             |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
+| **RETURNS**    | The pipe. ~~Pipe~~                                                                          |
 
 ## Attributes {#attributes}
 
-| Name    | Type                                       | Description                                                                                           |
-| ------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| `vocab` | [`Vocab`](/api/vocab)                      | The shared vocabulary that's passed in on initialization.                                             |
-| `model` | [`Model`](https://thinc.ai/docs/api-model) | The model powering the component.                                                                     |
-| `name`  | str                                        | The name of the component instance in the pipeline. Can be used in the losses.                        |
-| `cfg`   | dict                                       | Keyword arguments passed to [`Pipe.__init__`](/api/pipe#init). Will be serialized with the component. |
+| Name    | Description                                                                                                              |
+| ------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `vocab` | The shared vocabulary that's passed in on initialization. ~~Vocab~~                                                      |
+| `model` | The model powering the component. ~~Model[List[Doc], Any]~~                                                              |
+| `name`  | The name of the component instance in the pipeline. Can be used in the losses. ~~str~~                                   |
+| `cfg`   | Keyword arguments passed to [`Pipe.__init__`](/api/pipe#init). Will be serialized with the component. ~~Dict[str, Any]~~ |
 
 ## Serialization fields {#serialization-fields}
 

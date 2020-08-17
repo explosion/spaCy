@@ -27,9 +27,9 @@ Create a new `Scorer`.
 > scorer = Scorer(nlp)
 > ```
 
-| Name  | Type     | Description                                                                                                                                                                                                                                                            |
-| ----- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `nlp` | Language | The pipeline to use for scoring, where each pipeline component may provide a scoring method. If none is provided, then a default pipeline for the multi-language code `xx` is constructed containing: `senter`, `tagger`, `morphologizer`, `parser`, `ner`, `textcat`. |
+| Name  | Description                                                                                                                                                                                                                                                                         |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `nlp` | The pipeline to use for scoring, where each pipeline component may provide a scoring method. If none is provided, then a default pipeline for the multi-language code `xx` is constructed containing: `senter`, `tagger`, `morphologizer`, `parser`, `ner`, `textcat`. ~~Language~~ |
 
 ## Scorer.score {#score tag="method"}
 
@@ -55,10 +55,10 @@ attribute being scored:
 > scores = scorer.score(examples)
 > ```
 
-| Name        | Type                | Description                                                                                   |
-| ----------- | ------------------- | --------------------------------------------------------------------------------------------- |
-| `examples`  | `Iterable[Example]` | The `Example` objects holding both the predictions and the correct gold-standard annotations. |
-| **RETURNS** | `Dict`              | A dictionary of scores.                                                                       |
+| Name        | Description                                                                                                         |
+| ----------- | ------------------------------------------------------------------------------------------------------------------- |
+| `examples`  | The `Example` objects holding both the predictions and the correct gold-standard annotations. ~~Iterable[Example]~~ |
+| **RETURNS** | A dictionary of scores. ~~Dict[str, Union[float, Dict[str, float]]]~~                                               |
 
 ## Scorer.score_tokenization {#score_tokenization tag="staticmethod" new="3"}
 
@@ -74,10 +74,10 @@ Scores the tokenization:
 > scores = Scorer.score_tokenization(examples)
 > ```
 
-| Name        | Type                | Description                                                                                   |
-| ----------- | ------------------- | --------------------------------------------------------------------------------------------- |
-| `examples`  | `Iterable[Example]` | The `Example` objects holding both the predictions and the correct gold-standard annotations. |
-| **RETURNS** | `Dict`              | A dictionary containing the scores `token_acc`, `token_p`, `token_r`, `token_f`.              |
+| Name        | Description                                                                                                         |
+| ----------- | ------------------------------------------------------------------------------------------------------------------- |
+| `examples`  | The `Example` objects holding both the predictions and the correct gold-standard annotations. ~~Iterable[Example]~~ |
+| **RETURNS** | `Dict`                                                                                                              | A dictionary containing the scores `token_acc`, `token_p`, `token_r`, `token_f`. ~~Dict[str, float]]~~ |
 
 ## Scorer.score_token_attr {#score_token_attr tag="staticmethod" new="3"}
 
@@ -90,18 +90,19 @@ Scores a single token attribute.
 > print(scores["pos_acc"])
 > ```
 
-| Name           | Type                | Description                                                                                                                   |
-| -------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `examples`     | `Iterable[Example]` | The `Example` objects holding both the predictions and the correct gold-standard annotations.                                 |
-| `attr`         | `str`               | The attribute to score.                                                                                                       |
-| _keyword-only_ |                     |                                                                                                                               |
-| `getter`       | `Callable`          | Defaults to `getattr`. If provided, `getter(token, attr)` should return the value of the attribute for an individual `Token`. |
-| **RETURNS**    | `Dict[str, float]`  | A dictionary containing the score `{attr}_acc`.                                                                               |
+| Name           | Description                                                                                                                                                   |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `examples`     | The `Example` objects holding both the predictions and the correct gold-standard annotations. ~~Iterable[Example]~~                                           |
+| `attr`         | The attribute to score. ~~str~~                                                                                                                               |
+| _keyword-only_ |                                                                                                                                                               |
+| `getter`       | Defaults to `getattr`. If provided, `getter(token, attr)` should return the value of the attribute for an individual `Token`. ~~Callable[[Token, str], Any]~~ |
+| **RETURNS**    | A dictionary containing the score `{attr}_acc`. ~~Dict[str, float]~~                                                                                          |
 
 ## Scorer.score_token_attr_per_feat {#score_token_attr_per_feat tag="staticmethod" new="3"}
 
-Scores a single token attribute per feature for a token attribute in
-[UFEATS](https://universaldependencies.org/format.html#morphological-annotation)
+Scores a single token attribute per feature for a token attribute in the
+Universal Dependencies
+[FEATS](https://universaldependencies.org/format.html#morphological-annotation)
 format.
 
 > #### Example
@@ -111,13 +112,13 @@ format.
 > print(scores["morph_per_feat"])
 > ```
 
-| Name           | Type                | Description                                                                                                                   |
-| -------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `examples`     | `Iterable[Example]` | The `Example` objects holding both the predictions and the correct gold-standard annotations.                                 |
-| `attr`         | `str`               | The attribute to score.                                                                                                       |
-| _keyword-only_ |                     |                                                                                                                               |
-| `getter`       | `Callable`          | Defaults to `getattr`. If provided, `getter(token, attr)` should return the value of the attribute for an individual `Token`. |
-| **RETURNS**    | `Dict`              | A dictionary containing the per-feature PRF scores under the key `{attr}_per_feat`.                                           |
+| Name           | Description                                                                                                                                                   |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `examples`     | The `Example` objects holding both the predictions and the correct gold-standard annotations. ~~Iterable[Example]~~                                           |
+| `attr`         | The attribute to score. ~~str~~                                                                                                                               |
+| _keyword-only_ |                                                                                                                                                               |
+| `getter`       | Defaults to `getattr`. If provided, `getter(token, attr)` should return the value of the attribute for an individual `Token`. ~~Callable[[Token, str], Any]~~ |
+| **RETURNS**    | A dictionary containing the per-feature PRF scores under the key `{attr}_per_feat`. ~~Dict[str, Dict[str, float]]~~                                           |
 
 ## Scorer.score_spans {#score_spans tag="staticmethod" new="3"}
 
@@ -130,13 +131,13 @@ Returns PRF scores for labeled or unlabeled spans.
 > print(scores["ents_f"])
 > ```
 
-| Name           | Type                | Description                                                                                                                                   |
-| -------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `examples`     | `Iterable[Example]` | The `Example` objects holding both the predictions and the correct gold-standard annotations.                                                 |
-| `attr`         | `str`               | The attribute to score.                                                                                                                       |
-| _keyword-only_ |                     |                                                                                                                                               |
-| `getter`       | `Callable`          | Defaults to `getattr`. If provided, `getter(doc, attr)` should return the `Span` objects for an individual `Doc`.                             |
-| **RETURNS**    | `Dict`              | A dictionary containing the PRF scores under the keys `{attr}_p`, `{attr}_r`, `{attr}_f` and the per-type PRF scores under `{attr}_per_type`. |
+| Name           | Description                                                                                                                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `examples`     | The `Example` objects holding both the predictions and the correct gold-standard annotations. ~~Iterable[Example]~~                                                                         |
+| `attr`         | The attribute to score. ~~str~~                                                                                                                                                             |
+| _keyword-only_ |                                                                                                                                                                                             |
+| `getter`       | Defaults to `getattr`. If provided, `getter(doc, attr)` should return the `Span` objects for an individual `Doc`. ~~Callable[[Doc, str], Iterable[Span]]~~                                  |
+| **RETURNS**    | A dictionary containing the PRF scores under the keys `{attr}_p`, `{attr}_r`, `{attr}_f` and the per-type PRF scores under `{attr}_per_type`. ~~Dict[str, Union[float, Dict[str, float]]]~~ |
 
 ## Scorer.score_deps {#score_deps tag="staticmethod" new="3"}
 
@@ -159,16 +160,16 @@ Calculate the UAS, LAS, and LAS per type scores for dependency parses.
 > print(scores["dep_uas"], scores["dep_las"])
 > ```
 
-| Name            | Type                | Description                                                                                                                   |
-| --------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `examples`      | `Iterable[Example]` | The `Example` objects holding both the predictions and the correct gold-standard annotations.                                 |
-| `attr`          | `str`               | The attribute containing the dependency label.                                                                                |
-| _keyword-only_  |                     |                                                                                                                               |
-| `getter`        | `Callable`          | Defaults to `getattr`. If provided, `getter(token, attr)` should return the value of the attribute for an individual `Token`. |
-| `head_attr`     | `str`               | The attribute containing the head token.                                                                                      |
-| `head_getter`   | `callable`          | Defaults to `getattr`. If provided, `head_getter(token, attr)` should return the head for an individual `Token`.              |
-| `ignore_labels` | `Tuple`             | Labels to ignore while scoring (e.g., `punct`).                                                                               |
-| **RETURNS**     | `Dict`              | A dictionary containing the scores: `{attr}_uas`, `{attr}_las`, and `{attr}_las_per_type`.                                    |
+| Name            | Description                                                                                                                                                   |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `examples`      | The `Example` objects holding both the predictions and the correct gold-standard annotations. ~~Iterable[Example]~~                                           |
+| `attr`          | The attribute to score. ~~str~~                                                                                                                               |
+| _keyword-only_  |                                                                                                                                                               |
+| `getter`        | Defaults to `getattr`. If provided, `getter(token, attr)` should return the value of the attribute for an individual `Token`. ~~Callable[[Token, str], Any]~~ |
+| `head_attr`     | The attribute containing the head token. ~~str~~                                                                                                              |
+| `head_getter`   | Defaults to `getattr`. If provided, `head_getter(token, attr)` should return the head for an individual `Token`. ~~Callable[[Doc, str], Token]~~              |
+| `ignore_labels` | Labels to ignore while scoring (e.g. `"punct"`). ~~Iterable[str]~~                                                                                            |
+| **RETURNS**     | A dictionary containing the scores: `{attr}_uas`, `{attr}_las`, and `{attr}_las_per_type`. ~~Dict[str, Union[float, Dict[str, float]]]~~                      |
 
 ## Scorer.score_cats {#score_cats tag="staticmethod" new="3"}
 
@@ -195,13 +196,13 @@ depends on the scorer settings:
 > print(scores["cats_macro_auc"])
 > ```
 
-| Name             | Type                | Description                                                                                             |
-| ---------------- | ------------------- | ------------------------------------------------------------------------------------------------------- |
-| `examples`       | `Iterable[Example]` | The `Example` objects holding both the predictions and the correct gold-standard annotations.           |
-| `attr`           | `str`               | The attribute to score.                                                                                 |
-| _keyword-only_   |                     |                                                                                                         |
-| `getter`         | `Callable`          | Defaults to `getattr`. If provided, `getter(doc, attr)` should return the cats for an individual `Doc`. |
-| labels           | `Iterable[str]`     | The set of possible labels. Defaults to `[]`.                                                           |
-| `multi_label`    | `bool`              | Whether the attribute allows multiple labels. Defaults to `True`.                                       |
-| `positive_label` | `str`               | The positive label for a binary task with exclusive classes. Defaults to `None`.                        |
-| **RETURNS**      | `Dict`              | A dictionary containing the scores, with inapplicable scores as `None`.                                 |
+| Name             | Description                                                                                                                                        |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `examples`       | The `Example` objects holding both the predictions and the correct gold-standard annotations. ~~Iterable[Example]~~                                |
+| `attr`           | The attribute to score. ~~str~~                                                                                                                    |
+| _keyword-only_   |                                                                                                                                                    |
+| `getter`         | Defaults to `getattr`. If provided, `getter(doc, attr)` should return the cats for an individual `Doc`. ~~Callable[[Doc, str], Dict[str, float]]~~ |
+| labels           | The set of possible labels. Defaults to `[]`. ~~Iterable[str]~~                                                                                    |
+| `multi_label`    | Whether the attribute allows multiple labels. Defaults to `True`. ~~bool~~                                                                         |
+| `positive_label` | The positive label for a binary task with exclusive classes. Defaults to `None`. ~~Optional[str]~~                                                 |
+| **RETURNS**      | A dictionary containing the scores, with inapplicable scores as `None`. ~~Dict[str, Optional[float]]~~                                             |

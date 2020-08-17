@@ -44,11 +44,11 @@ Create a `DocBin` object to hold serialized annotations.
 > doc_bin = DocBin(attrs=["ENT_IOB", "ENT_TYPE"])
 > ```
 
-| Argument          | Type            | Description                                                                                                                                                                                                                                                                       |
-| ----------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `attrs`           | `Iterable[str]` | List of attributes to serialize. `ORTH` (hash of token text) and `SPACY` (whether the token is followed by whitespace) are always serialized, so they're not required. Defaults to `("ORTH", "TAG", "HEAD", "DEP", "ENT_IOB", "ENT_TYPE", "ENT_KB_ID", "LEMMA", "MORPH", "POS")`. |
-| `store_user_data` | bool            | Whether to include the `Doc.user_data` and the values of custom extension attributes. Defaults to `False`.                                                                                                                                                                        |
-| `docs`            | `Iterable[Doc]` | `Doc` objects to add on initialization.                                                                                                                                                                                                                                           |
+| Argument          | Description                                                                                                                                                                                                                                                                                         |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `attrs`           | List of attributes to serialize. `ORTH` (hash of token text) and `SPACY` (whether the token is followed by whitespace) are always serialized, so they're not required. Defaults to `("ORTH", "TAG", "HEAD", "DEP", "ENT_IOB", "ENT_TYPE", "ENT_KB_ID", "LEMMA", "MORPH", "POS")`. ~~Iterable[str]~~ |
+| `store_user_data` | Whether to include the `Doc.user_data` and the values of custom extension attributes. Defaults to `False`. ~~bool~~                                                                                                                                                                                 |
+| `docs`            | `Doc` objects to add on initialization. ~~Iterable[Doc]~~                                                                                                                                                                                                                                           |
 
 ## DocBin.\_\len\_\_ {#len tag="method"}
 
@@ -63,9 +63,9 @@ Get the number of `Doc` objects that were added to the `DocBin`.
 > assert len(doc_bin) == 1
 > ```
 
-| Argument    | Type | Description                                 |
-| ----------- | ---- | ------------------------------------------- |
-| **RETURNS** | int  | The number of `Doc`s added to the `DocBin`. |
+| Argument    | Description                                         |
+| ----------- | --------------------------------------------------- |
+| **RETURNS** | The number of `Doc`s added to the `DocBin`. ~~int~~ |
 
 ## DocBin.add {#add tag="method"}
 
@@ -79,9 +79,9 @@ Add a `Doc`'s annotations to the `DocBin` for serialization.
 > doc_bin.add(doc)
 > ```
 
-| Argument | Type  | Description              |
-| -------- | ----- | ------------------------ |
-| `doc`    | `Doc` | The `Doc` object to add. |
+| Argument | Description                      |
+| -------- | -------------------------------- |
+| `doc`    | The `Doc` object to add. ~~Doc~~ |
 
 ## DocBin.get_docs {#get_docs tag="method"}
 
@@ -93,15 +93,15 @@ Recover `Doc` objects from the annotations, using the given vocab.
 > docs = list(doc_bin.get_docs(nlp.vocab))
 > ```
 
-| Argument   | Type    | Description        |
-| ---------- | ------- | ------------------ |
-| `vocab`    | `Vocab` | The shared vocab.  |
-| **YIELDS** | `Doc`   | The `Doc` objects. |
+| Argument   | Description                 |
+| ---------- | --------------------------- |
+| `vocab`    | The shared vocab. ~~Vocab~~ |
+| **YIELDS** | The `Doc` objects. ~~Doc~~  |
 
 ## DocBin.merge {#merge tag="method"}
 
 Extend the annotations of this `DocBin` with the annotations from another. Will
-raise an error if the pre-defined attrs of the two `DocBin`s don't match.
+raise an error if the pre-defined `attrs` of the two `DocBin`s don't match.
 
 > #### Example
 >
@@ -114,9 +114,9 @@ raise an error if the pre-defined attrs of the two `DocBin`s don't match.
 > assert len(doc_bin1) == 2
 > ```
 
-| Argument | Type     | Description                                 |
-| -------- | -------- | ------------------------------------------- |
-| `other`  | `DocBin` | The `DocBin` to merge into the current bin. |
+| Argument | Description                                            |
+| -------- | ------------------------------------------------------ |
+| `other`  | The `DocBin` to merge into the current bin. ~~DocBin~~ |
 
 ## DocBin.to_bytes {#to_bytes tag="method"}
 
@@ -130,9 +130,9 @@ Serialize the `DocBin`'s annotations to a bytestring.
 > doc_bin_bytes = doc_bin.to_bytes()
 > ```
 
-| Argument    | Type  | Description              |
-| ----------- | ----- | ------------------------ |
-| **RETURNS** | bytes | The serialized `DocBin`. |
+| Argument    | Description                        |
+| ----------- | ---------------------------------- |
+| **RETURNS** | The serialized `DocBin`. ~~bytes~~ |
 
 ## DocBin.from_bytes {#from_bytes tag="method"}
 
@@ -145,10 +145,10 @@ Deserialize the `DocBin`'s annotations from a bytestring.
 > new_doc_bin = DocBin().from_bytes(doc_bin_bytes)
 > ```
 
-| Argument     | Type     | Description            |
-| ------------ | -------- | ---------------------- |
-| `bytes_data` | bytes    | The data to load from. |
-| **RETURNS**  | `DocBin` | The loaded `DocBin`.   |
+| Argument     | Description                      |
+| ------------ | -------------------------------- |
+| `bytes_data` | The data to load from. ~~bytes~~ |
+| **RETURNS**  | The loaded `DocBin`. ~~DocBin~~  |
 
 ## DocBin.to_disk {#to_disk tag="method" new="3"}
 
@@ -164,9 +164,9 @@ and the result can be used as the input data for
 > doc_bin.to_disk("./data.spacy")
 > ```
 
-| Argument | Type         | Description                                           |
-| -------- | ------------ | ----------------------------------------------------- |
-| `path`   | str / `Path` | The file path, typically with the `.spacy` extension. |
+| Argument | Description                                                                |
+| -------- | -------------------------------------------------------------------------- |
+| `path`   | The file path, typically with the `.spacy` extension. ~~Union[str, Path]~~ |
 
 ## DocBin.from_disk {#from_disk tag="method" new="3"}
 
@@ -178,7 +178,7 @@ Load a serialized `DocBin` from a file. Typically uses the `.spacy` extension.
 > doc_bin = DocBin().from_disk("./data.spacy")
 > ```
 
-| Argument    | Type         | Description                                           |
-| ----------- | ------------ | ----------------------------------------------------- |
-| `path`      | str / `Path` | The file path, typically with the `.spacy` extension. |
-| **RETURNS** | `DocBin`     | The loaded `DocBin`.                                  |
+| Argument    | Description                                                                |
+| ----------- | -------------------------------------------------------------------------- |
+| `path`      | The file path, typically with the `.spacy` extension. ~~Union[str, Path]~~ |
+| **RETURNS** | The loaded `DocBin`. ~~DocBin~~                                            |

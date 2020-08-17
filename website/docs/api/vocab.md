@@ -21,14 +21,15 @@ Create the vocabulary.
 > vocab = Vocab(strings=["hello", "world"])
 > ```
 
-| Name                                         | Type                 | Description                                                                                                                                                 |
-| -------------------------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `lex_attr_getters`                           | dict                 | A dictionary mapping attribute IDs to functions to compute them. Defaults to `None`.                                                                        |
-| `strings`                                    | `StringStore` / list | A [`StringStore`](/api/stringstore) that maps strings to hash values, and vice versa, or a list of strings.                                                 |
-| `lookups`                                    | `Lookups`            | A [`Lookups`](/api/lookups) that stores the `lemma_\*`, `lexeme_norm` and other large lookup tables. Defaults to `None`.                                    |
-| `lookups_extra` <Tag variant="new">2.3</Tag> | `Lookups`            | A [`Lookups`](/api/lookups) that stores the optional `lexeme_cluster`/`lexeme_prob`/`lexeme_sentiment`/`lexeme_settings` lookup tables. Defaults to `None`. |
-| `oov_prob`                                   | float                | The default OOV probability. Defaults to `-20.0`.                                                                                                           |
-| `vectors_name` <Tag variant="new">2.2</Tag>  | str                  | A name to identify the vectors table.                                                                                                                       |
+| Name                                        | Description                                                                                                                                             |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lex_attr_getters`                          | A dictionary mapping attribute IDs to functions to compute them. Defaults to `None`. ~~Optional[Dict[str, Callable[[str], Any]]]~~                      |
+| `strings`                                   | A [`StringStore`](/api/stringstore) that maps strings to hash values, and vice versa, or a list of strings. ~~Union[List[str], StringStore]~~           |
+| `lookups`                                   | A [`Lookups`](/api/lookups) that stores the `lexeme_norm` and other large lookup tables. Defaults to `None`. ~~Optional[Lookups]~~                      |
+| `oov_prob`                                  | The default OOV probability. Defaults to `-20.0`. ~~float~~                                                                                             |
+| `vectors_name` <Tag variant="new">2.2</Tag> | A name to identify the vectors table. ~~str~~                                                                                                           |
+| `writing_system`                            | A dictionary describing the language's writing system. Typically provided by [`Language.Defaults`](/api/language#defaults). ~~Dict[str, Any]~~          |
+| `get_noun_chunks`                           | A function that yields base noun phrases, used for [`Doc.noun_chunks`](/ap/doc#noun_chunks). ~~Optional[Callable[[Union[Doc, Span], Iterator[Span]]]]~~ |
 
 ## Vocab.\_\_len\_\_ {#len tag="method"}
 
@@ -41,9 +42,9 @@ Get the current number of lexemes in the vocabulary.
 > assert len(nlp.vocab) > 0
 > ```
 
-| Name        | Type | Description                              |
-| ----------- | ---- | ---------------------------------------- |
-| **RETURNS** | int  | The number of lexemes in the vocabulary. |
+| Name        | Description                                      |
+| ----------- | ------------------------------------------------ |
+| **RETURNS** | The number of lexemes in the vocabulary. ~~int~~ |
 
 ## Vocab.\_\_getitem\_\_ {#getitem tag="method"}
 
@@ -57,10 +58,10 @@ given, a new lexeme is created and stored.
 > assert nlp.vocab[apple] == nlp.vocab["apple"]
 > ```
 
-| Name           | Type      | Description                              |
-| -------------- | --------- | ---------------------------------------- |
-| `id_or_string` | int / str | The hash value of a word, or its string. |
-| **RETURNS**    | `Lexeme`  | The lexeme indicated by the given ID.    |
+| Name           | Description                                                  |
+| -------------- | ------------------------------------------------------------ |
+| `id_or_string` | The hash value of a word, or its string. ~~Union[int, str]~~ |
+| **RETURNS**    | The lexeme indicated by the given ID. ~~Lexeme~~             |
 
 ## Vocab.\_\_iter\_\_ {#iter tag="method"}
 
@@ -72,9 +73,9 @@ Iterate over the lexemes in the vocabulary.
 > stop_words = (lex for lex in nlp.vocab if lex.is_stop)
 > ```
 
-| Name       | Type     | Description                 |
-| ---------- | -------- | --------------------------- |
-| **YIELDS** | `Lexeme` | An entry in the vocabulary. |
+| Name       | Description                            |
+| ---------- | -------------------------------------- |
+| **YIELDS** | An entry in the vocabulary. ~~Lexeme~~ |
 
 ## Vocab.\_\_contains\_\_ {#contains tag="method"}
 
@@ -91,10 +92,10 @@ given string, you need to look it up in
 > assert oov not in nlp.vocab
 > ```
 
-| Name        | Type | Description                                        |
-| ----------- | ---- | -------------------------------------------------- |
-| `string`    | str  | The ID string.                                     |
-| **RETURNS** | bool | Whether the string has an entry in the vocabulary. |
+| Name        | Description                                                 |
+| ----------- | ----------------------------------------------------------- |
+| `string`    | The ID string. ~~str~~                                      |
+| **RETURNS** | Whether the string has an entry in the vocabulary. ~~bool~~ |
 
 ## Vocab.add_flag {#add_flag tag="method"}
 
@@ -115,11 +116,11 @@ using `token.check_flag(flag_id)`.
 > assert doc[2].check_flag(MY_PRODUCT) == True
 > ```
 
-| Name          | Type | Description                                                                                                                                     |
-| ------------- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `flag_getter` | dict | A function `f(str) -> bool`, to get the flag value.                                                                                             |
-| `flag_id`     | int  | An integer between 1 and 63 (inclusive), specifying the bit at which the flag will be stored. If `-1`, the lowest available bit will be chosen. |
-| **RETURNS**   | int  | The integer ID by which the flag value can be checked.                                                                                          |
+| Name          | Description                                                                                                                                                 |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `flag_getter` | A function that takes the lexeme text and returns the boolean flag value. ~~Callable[[str], bool]~~                                                         |
+| `flag_id`     | An integer between `1` and `63` (inclusive), specifying the bit at which the flag will be stored. If `-1`, the lowest available bit will be chosen. ~~int~~ |
+| **RETURNS**   | The integer ID by which the flag value can be checked. ~~int~~                                                                                              |
 
 ## Vocab.reset_vectors {#reset_vectors tag="method" new="2"}
 
@@ -133,11 +134,11 @@ have to call this to change the size of the vectors. Only one of the `width` and
 > nlp.vocab.reset_vectors(width=300)
 > ```
 
-| Name           | Type | Description                            |
-| -------------- | ---- | -------------------------------------- |
-| _keyword-only_ |      |                                        |
-| `width`        | int  | The new width (keyword argument only). |
-| `shape`        | int  | The new shape (keyword argument only). |
+| Name           | Description            |
+| -------------- | ---------------------- |
+| _keyword-only_ |                        |
+| `width`        | The new width. ~~int~~ |
+| `shape`        | The new shape. ~~int~~ |
 
 ## Vocab.prune_vectors {#prune_vectors tag="method" new="2"}
 
@@ -158,11 +159,11 @@ cosines are calculated in minibatches, to reduce memory usage.
 > assert len(nlp.vocab.vectors) <= 1000
 > ```
 
-| Name         | Type | Description                                                                                                                                                                                 |
-| ------------ | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `nr_row`     | int  | The number of rows to keep in the vector table.                                                                                                                                             |
-| `batch_size` | int  | Batch of vectors for calculating the similarities. Larger batch sizes might be faster, while temporarily requiring more memory.                                                             |
-| **RETURNS**  | dict | A dictionary keyed by removed words mapped to `(string, score)` tuples, where `string` is the entry the removed word was mapped to, and `score` the similarity score between the two words. |
+| Name         | Description                                                                                                                                                                                                                  |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `nr_row`     | The number of rows to keep in the vector table. ~~int~~                                                                                                                                                                      |
+| `batch_size` | Batch of vectors for calculating the similarities. Larger batch sizes might be faster, while temporarily requiring more memory. ~~int~~                                                                                      |
+| **RETURNS**  | A dictionary keyed by removed words mapped to `(string, score)` tuples, where `string` is the entry the removed word was mapped to, and `score` the similarity score between the two words. ~~Dict[str, Tuple[str, float]]~~ |
 
 ## Vocab.get_vector {#get_vector tag="method" new="2"}
 
@@ -178,12 +179,12 @@ subword features by average over ngrams of `orth` (introduced in spaCy `v2.1`).
 > nlp.vocab.get_vector("apple", minn=1, maxn=5)
 > ```
 
-| Name                                | Type                                     | Description                                                                                    |
-| ----------------------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `orth`                              | int / str                                | The hash value of a word, or its unicode string.                                               |
-| `minn` <Tag variant="new">2.1</Tag> | int                                      | Minimum n-gram length used for FastText's ngram computation. Defaults to the length of `orth`. |
-| `maxn` <Tag variant="new">2.1</Tag> | int                                      | Maximum n-gram length used for FastText's ngram computation. Defaults to the length of `orth`. |
-| **RETURNS**                         | `numpy.ndarray[ndim=1, dtype='float32']` | A word vector. Size and shape are determined by the `Vocab.vectors` instance.                  |
+| Name                                | Description                                                                                                            |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `orth`                              | The hash value of a word, or its unicode string. ~~Union[int, str]~~                                                   |
+| `minn` <Tag variant="new">2.1</Tag> | Minimum n-gram length used for FastText's ngram computation. Defaults to the length of `orth`. ~~int~~                 |
+| `maxn` <Tag variant="new">2.1</Tag> | Maximum n-gram length used for FastText's ngram computation. Defaults to the length of `orth`. ~~int~~                 |
+| **RETURNS**                         | A word vector. Size and shape are determined by the `Vocab.vectors` instance. ~~numpy.ndarray[ndim=1, dtype=float32]~~ |
 
 ## Vocab.set_vector {#set_vector tag="method" new="2"}
 
@@ -196,10 +197,10 @@ or hash value.
 > nlp.vocab.set_vector("apple", array([...]))
 > ```
 
-| Name     | Type                                     | Description                                      |
-| -------- | ---------------------------------------- | ------------------------------------------------ |
-| `orth`   | int / str                                | The hash value of a word, or its unicode string. |
-| `vector` | `numpy.ndarray[ndim=1, dtype='float32']` | The vector to set.                               |
+| Name     | Description                                                          |
+| -------- | -------------------------------------------------------------------- |
+| `orth`   | The hash value of a word, or its unicode string. ~~Union[int, str]~~ |
+| `vector` | The vector to set. ~~numpy.ndarray[ndim=1, dtype=float32]~~          |
 
 ## Vocab.has_vector {#has_vector tag="method" new="2"}
 
@@ -213,10 +214,10 @@ Words can be looked up by string or hash value.
 >     vector = nlp.vocab.get_vector("apple")
 > ```
 
-| Name        | Type      | Description                                      |
-| ----------- | --------- | ------------------------------------------------ |
-| `orth`      | int / str | The hash value of a word, or its unicode string. |
-| **RETURNS** | bool      | Whether the word has a vector.                   |
+| Name        | Description                                                          |
+| ----------- | -------------------------------------------------------------------- |
+| `orth`      | The hash value of a word, or its unicode string. ~~Union[int, str]~~ |
+| **RETURNS** | Whether the word has a vector. ~~bool~~                              |
 
 ## Vocab.to_disk {#to_disk tag="method" new="2"}
 
@@ -228,11 +229,11 @@ Save the current state to a directory.
 > nlp.vocab.to_disk("/path/to/vocab")
 > ```
 
-| Name           | Type            | Description                                                                                                           |
-| -------------- | --------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path`         | str / `Path`    | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
-| _keyword-only_ |                 |                                                                                                                       |
-| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.                                             |
+| Name           | Description                                                                                                                                |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `path`         | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+| _keyword-only_ |                                                                                                                                            |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~                                                |
 
 ## Vocab.from_disk {#from_disk tag="method" new="2"}
 
@@ -245,12 +246,12 @@ Loads state from a directory. Modifies the object in place and returns it.
 > vocab = Vocab().from_disk("/path/to/vocab")
 > ```
 
-| Name           | Type            | Description                                                                |
-| -------------- | --------------- | -------------------------------------------------------------------------- |
-| `path`         | str / `Path`    | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| _keyword-only_ |                 |                                                                            |
-| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.  |
-| **RETURNS**    | `Vocab`         | The modified `Vocab` object.                                               |
+| Name           | Description                                                                                     |
+| -------------- | ----------------------------------------------------------------------------------------------- |
+| `path`         | A path to a directory. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+| _keyword-only_ |                                                                                                 |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~     |
+| **RETURNS**    | The modified `Vocab` object. ~~Vocab~~                                                          |
 
 ## Vocab.to_bytes {#to_bytes tag="method"}
 
@@ -262,11 +263,11 @@ Serialize the current state to a binary string.
 > vocab_bytes = nlp.vocab.to_bytes()
 > ```
 
-| Name           | Type            | Description                                                               |
-| -------------- | --------------- | ------------------------------------------------------------------------- |
-| _keyword-only_ |                 |                                                                           |
-| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS**    | bytes           | The serialized form of the `Vocab` object.                                |
+| Name           | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| _keyword-only_ |                                                                                             |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
+| **RETURNS**    | The serialized form of the `Vocab` object. ~~Vocab~~                                        |
 
 ## Vocab.from_bytes {#from_bytes tag="method"}
 
@@ -281,12 +282,12 @@ Load state from a binary string.
 > vocab.from_bytes(vocab_bytes)
 > ```
 
-| Name           | Type            | Description                                                               |
-| -------------- | --------------- | ------------------------------------------------------------------------- |
-| `bytes_data`   | bytes           | The data to load from.                                                    |
-| _keyword-only_ |                 |                                                                           |
-| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS**    | `Vocab`         | The `Vocab` object.                                                       |
+| Name           | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| `bytes_data`   | The data to load from. ~~bytes~~                                                            |
+| _keyword-only_ |                                                                                             |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
+| **RETURNS**    | The `Vocab` object. ~~Vocab~~                                                               |
 
 ## Attributes {#attributes}
 
@@ -299,13 +300,13 @@ Load state from a binary string.
 > assert type(PERSON) == int
 > ```
 
-| Name                                          | Type          | Description                                                  |
-| --------------------------------------------- | ------------- | ------------------------------------------------------------ |
-| `strings`                                     | `StringStore` | A table managing the string-to-int mapping.                  |
-| `vectors` <Tag variant="new">2</Tag>          | `Vectors`     | A table associating word IDs to word vectors.                |
-| `vectors_length`                              | int           | Number of dimensions for each word vector.                   |
-| `lookups`                                     | `Lookups`     | The available lookup tables in this vocab.                   |
-| `writing_system` <Tag variant="new">2.1</Tag> | dict          | A dict with information about the language's writing system. |
+| Name                                          | Description                                                                     |
+| --------------------------------------------- | ------------------------------------------------------------------------------- |
+| `strings`                                     | A table managing the string-to-int mapping. ~~StringStore~~                     |
+| `vectors` <Tag variant="new">2</Tag>          | A table associating word IDs to word vectors. ~~Vectors~~                       |
+| `vectors_length`                              | Number of dimensions for each word vector. ~~int~~                              |
+| `lookups`                                     | The available lookup tables in this vocab. ~~Lookups~~                          |
+| `writing_system` <Tag variant="new">2.1</Tag> | A dict with information about the language's writing system. ~~Dict[str, Any]~~ |
 
 ## Serialization fields {#serialization-fields}
 

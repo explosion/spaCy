@@ -20,7 +20,7 @@ import SEO from '../components/seo'
 import Link from '../components/link'
 import Section, { Hr } from '../components/section'
 import { Table, Tr, Th, Td } from '../components/table'
-import { Pre, Code, InlineCode } from '../components/code'
+import { Pre, Code, InlineCode, TypeAnnotation } from '../components/code'
 import { Ol, Ul, Li } from '../components/list'
 import { H2, H3, H4, H5, P, Abbr, Help } from '../components/typography'
 import Accordion from '../components/accordion'
@@ -41,6 +41,7 @@ const mdxComponents = {
     pre: Pre,
     code: Code,
     inlineCode: InlineCode,
+    del: TypeAnnotation,
     table: Table,
     img: Image,
     tr: Tr,
