@@ -157,7 +157,7 @@ def test_issue4674():
         file_path = dir_path / "kb"
         kb.to_disk(str(file_path))
         kb2 = KnowledgeBase(nlp.vocab, entity_vector_length=3)
-        kb2.load_bulk(str(file_path))
+        kb2.from_disk(str(file_path))
     assert kb2.get_size_entities() == 1
 
 

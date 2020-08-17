@@ -28,7 +28,7 @@ def build_nel_encoder(tok2vec: Model, nO: Optional[int] = None) -> Model:
 def load_kb(kb_path: str) -> Callable[[Vocab], KnowledgeBase]:
     def kb_from_file(vocab):
         kb = KnowledgeBase(vocab, entity_vector_length=1)
-        kb.load_bulk(kb_path)
+        kb.from_disk(kb_path)
         return kb
     return kb_from_file
 

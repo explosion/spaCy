@@ -214,7 +214,7 @@ Save the current state of the knowledge base to a directory.
 | ----- | ------------ | --------------------------------------------------------------------------------------------------------------------- |
 | `loc` | str / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
 
-## KnowledgeBase.load_bulk {#load_bulk tag="method"}
+## KnowledgeBase.from_disk {#from_disk tag="method"}
 
 Restore the state of the knowledge base from a given directory. Note that the
 [`Vocab`](/api/vocab) should also be the same as the one used to create the KB.
@@ -226,7 +226,7 @@ Restore the state of the knowledge base from a given directory. Note that the
 > from spacy.vocab import Vocab
 > vocab = Vocab().from_disk("/path/to/vocab")
 > kb = KnowledgeBase(vocab=vocab, entity_vector_length=64)
-> kb.load_bulk("/path/to/kb")
+> kb.from_disk("/path/to/kb")
 > ```
 
 | Name        | Type            | Description                                                                |

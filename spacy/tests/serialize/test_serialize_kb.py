@@ -21,7 +21,7 @@ def test_serialize_kb_disk(en_vocab):
         file_path = dir_path / "kb"
         kb1.to_disk(str(file_path))
         kb2 = KnowledgeBase(vocab=en_vocab, entity_vector_length=3)
-        kb2.load_bulk(str(file_path))
+        kb2.from_disk(str(file_path))
 
     # final assertions
     _check_kb(kb2)

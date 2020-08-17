@@ -438,13 +438,10 @@ class EntityLinker(Pipe):
             except AttributeError:
                 raise ValueError(Errors.E149) from None
 
-        def load_kb(p):
-            self.kb.load_bulk(p)
-
         deserialize = {}
         deserialize["vocab"] = lambda p: self.vocab.from_disk(p)
         deserialize["cfg"] = lambda p: self.cfg.update(deserialize_config(p))
-        deserialize["kb"] = load_kb
+        deserialize["kb"] = lambda p: self.kb.from_disk(p)
         deserialize["model"] = load_model
         util.from_disk(path, deserialize, exclude)
         return self

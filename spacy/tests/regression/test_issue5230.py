@@ -133,7 +133,7 @@ def test_save_and_load_knowledge_base():
 
         try:
             kb_loaded = KnowledgeBase(nlp.vocab, entity_vector_length=1)
-            kb_loaded.load_bulk(path)
+            kb_loaded.from_disk(path)
         except Exception as e:
             pytest.fail(str(e))
 

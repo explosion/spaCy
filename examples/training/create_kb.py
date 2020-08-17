@@ -96,7 +96,7 @@ def main(model, output_dir=None):
         print("Loading KB from", kb_path)
         vocab2 = Vocab().from_disk(vocab_path)
         kb2 = KnowledgeBase(vocab2, entity_vector_length=1)
-        kb2.load_bulk(kb_path)
+        kb2.from_disk(kb_path)
         print()
         _print_kb(kb2)
 

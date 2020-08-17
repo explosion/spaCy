@@ -359,7 +359,7 @@ cdef class KnowledgeBase:
 
         writer.close()
 
-    cpdef load_bulk(self, loc):
+    cpdef from_disk(self, loc):
         cdef hash_t entity_hash
         cdef hash_t alias_hash
         cdef int64_t entry_index
