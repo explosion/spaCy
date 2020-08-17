@@ -144,7 +144,7 @@ https://github.com/explosion/spaCy/blob/develop/spacy/default_config.cfg
 
 Under the hood, the config is parsed into a dictionary. It's divided into
 sections and subsections, indicated by the square brackets and dot notation. For
-example, `[training]` is a section and `[training.batch_size]` a subsections.
+example, `[training]` is a section and `[training.batch_size]` a subsection.
 Subsections can define values, just like a dictionary, or use the `@` syntax to
 refer to [registered functions](#config-functions). This allows the config to
 not just define static settings, but also construct objects like architectures,
@@ -156,7 +156,7 @@ sections of a config file are:
 | `nlp`         | Definition of the `nlp` object, its tokenizer and [processing pipeline](/usage/processing-pipelines) component names.                                           |
 | `components`  | Definitions of the [pipeline components](/usage/processing-pipelines) and their models.                                                                         |
 | `paths`       | Paths to data and other assets. Re-used across the config as variables, e.g. `${paths:train}`, and can be [overwritten](#config-overrides) on the CLI.          |
-| `system`      | Settings related to system and hardware. Re-used across the config as variables, e.g. `${system.seed}`, and can be [overwritten](#config-overrides) on the CLI. |
+| `system`      | Settings related to system and hardware. Re-used across the config as variables, e.g. `${system:seed}`, and can be [overwritten](#config-overrides) on the CLI. |
 | `training`    | Settings and controls for the training and evaluation process.                                                                                                  |
 | `pretraining` | Optional settings and controls for the [language model pretraining](#pretraining).                                                                              |
 

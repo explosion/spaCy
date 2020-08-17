@@ -161,7 +161,7 @@ run [`spacy pretrain`](/api/cli#pretrain).
 | `dropout`                    | The dropout rate. ~~float~~                                                                                 | `0.2`                                               |
 | `n_save_every`               | Saving frequency. ~~int~~                                                                                   | `null`                                              |
 | `batch_size`                 | The batch size or batch size [schedule](https://thinc.ai/docs/api-schedules). ~~Union[int, Sequence[int]]~~ | `3000`                                              |
-| `seed`                       | The random seed. ~~int~~                                                                                    | `${system.seed}`                                    |
+| `seed`                       | The random seed. ~~int~~                                                                                    | `${system:seed}`                                    |
 | `use_pytorch_for_gpu_memory` | Allocate memory via PyTorch. ~~bool~~                                                                       | `${system:use_pytorch_for_gpu_memory}`              |
 | `tok2vec_model`              | tok2vec model section in the config. ~~str~~                                                                | `"components.tok2vec.model"`                        |
 | `objective`                  | The pretraining objective. ~~Dict[str, Any]~~                                                               | `{"type": "characters", "n_characters": 4}`         |
