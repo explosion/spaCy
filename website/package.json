@@ -60,7 +60,7 @@
         "clear": "rm -rf .cache",
         "test": "echo \"Write tests! -> https://gatsby.app/unit-testing\"",
         "python:install": "pip install setup/requirements.txt",
-        "python:setup": "cd setup && ./setup.sh"
+        "python:setup": "cd setup && sh setup.sh"
     },
     "devDependencies": {
         "@sindresorhus/slugify": "^0.8.0",
