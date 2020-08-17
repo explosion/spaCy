@@ -18,14 +18,14 @@ Create a Span object from the slice `doc[start : end]`.
 > assert [t.text for t in span] ==  ["it", "back", "!"]
 > ```
 
-| Name     | Type                                     | Description                                                                                               |
-| -------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `doc`    | `Doc`                                    | The parent document.                                                                                      |
-| `start`  | int                                      | The index of the first token of the span.                                                                 |
-| `end`    | int                                      | The index of the first token after the span.                                                              |
-| `label`  | int / str                                | A label to attach to the span, e.g. for named entities. As of v2.1, the label can also be a string.       |
-| `kb_id`  | int / str                                | A knowledge base ID to attach to the span, e.g. for named entities. The ID can be an integer or a string. |
-| `vector` | `numpy.ndarray[ndim=1, dtype="float32"]` | A meaning representation of the span.                                                                     |
+| Name     | Description                                                                             |
+| -------- | --------------------------------------------------------------------------------------- |
+| `doc`    | The parent document. ~~Doc~~                                                            |
+| `start`  | The index of the first token of the span. ~~int~~                                       |
+| `end`    | The index of the first token after the span. ~~int~~                                    |
+| `label`  | A label to attach to the span, e.g. for named entities. ~~Union[str, int]~~             |
+| `kb_id`  | A knowledge base ID to attach to the span, e.g. for named entities. ~~Union[str, int]~~ |
+| `vector` | A meaning representation of the span. ~~numpy.ndarray[ndim=1, dtype=float32]~~          |
 
 ## Span.\_\_getitem\_\_ {#getitem tag="method"}
 
@@ -39,10 +39,10 @@ Get a `Token` object.
 > assert span[1].text == "back"
 > ```
 
-| Name        | Type    | Description                             |
-| ----------- | ------- | --------------------------------------- |
-| `i`         | int     | The index of the token within the span. |
-| **RETURNS** | `Token` | The token at `span[i]`.                 |
+| Name        | Description                                     |
+| ----------- | ----------------------------------------------- |
+| `i`         | The index of the token within the span. ~~int~~ |
+| **RETURNS** | The token at `span[i]`. ~~Token~~               |
 
 Get a `Span` object.
 
@@ -54,10 +54,10 @@ Get a `Span` object.
 > assert span[1:3].text == "back!"
 > ```
 
-| Name        | Type   | Description                      |
-| ----------- | ------ | -------------------------------- |
-| `start_end` | tuple  | The slice of the span to get.    |
-| **RETURNS** | `Span` | The span at `span[start : end]`. |
+| Name        | Description                                       |
+| ----------- | ------------------------------------------------- |
+| `start_end` | The slice of the span to get. ~~Tuple[int, int]~~ |
+| **RETURNS** | The span at `span[start : end]`. ~~Span~~         |
 
 ## Span.\_\_iter\_\_ {#iter tag="method"}
 
@@ -71,9 +71,9 @@ Iterate over `Token` objects.
 > assert [t.text for t in span] == ["it", "back", "!"]
 > ```
 
-| Name       | Type    | Description       |
-| ---------- | ------- | ----------------- |
-| **YIELDS** | `Token` | A `Token` object. |
+| Name       | Description                 |
+| ---------- | --------------------------- |
+| **YIELDS** | A `Token` object. ~~Token~~ |
 
 ## Span.\_\_len\_\_ {#len tag="method"}
 
@@ -87,9 +87,9 @@ Get the number of tokens in the span.
 > assert len(span) == 3
 > ```
 
-| Name        | Type | Description                       |
-| ----------- | ---- | --------------------------------- |
-| **RETURNS** | int  | The number of tokens in the span. |
+| Name        | Description                               |
+| ----------- | ----------------------------------------- |
+| **RETURNS** | The number of tokens in the span. ~~int~~ |
 
 ## Span.set_extension {#set_extension tag="classmethod" new="2"}
 
@@ -107,14 +107,14 @@ For details, see the documentation on
 > assert doc[1:4]._.has_city
 > ```
 
-| Name      | Type     | Description                                                                                                                           |
-| --------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`    | str      | Name of the attribute to set by the extension. For example, `"my_attr"` will be available as `span._.my_attr`.                        |
-| `default` | -        | Optional default value of the attribute if no getter or method is defined.                                                            |
-| `method`  | callable | Set a custom method on the object, for example `span._.compare(other_span)`.                                                          |
-| `getter`  | callable | Getter function that takes the object and returns an attribute value. Is called when the user accesses the `._` attribute.            |
-| `setter`  | callable | Setter function that takes the `Span` and a value, and modifies the object. Is called when the user writes to the `Span._` attribute. |
-| `force`   | bool     | Force overwriting existing attribute.                                                                                                 |
+| Name      | Description                                                                                                                                                                     |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`    | Name of the attribute to set by the extension. For example, `"my_attr"` will be available as `span._.my_attr`. ~~str~~                                                          |
+| `default` | Optional default value of the attribute if no getter or method is defined. ~~Optional[Any]~~                                                                                    |
+| `method`  | Set a custom method on the object, for example `span._.compare(other_span)`. ~~Optional[Callable[[Span, ...], Any]]~~                                                           |
+| `getter`  | Getter function that takes the object and returns an attribute value. Is called when the user accesses the `._` attribute. ~~Optional[Callable[[Span], Any]]~~                  |
+| `setter`  | Setter function that takes the `Span` and a value, and modifies the object. Is called when the user writes to the `Span._` attribute. ~~Optional[Callable[[Span, Any], None]]~~ |
+| `force`   | Force overwriting existing attribute. ~~bool~~                                                                                                                                  |
 
 ## Span.get_extension {#get_extension tag="classmethod" new="2"}
 
@@ -131,10 +131,10 @@ Look up a previously registered extension by name. Returns a 4-tuple
 > assert extension == (False, None, None, None)
 > ```
 
-| Name        | Type  | Description                                                   |
-| ----------- | ----- | ------------------------------------------------------------- |
-| `name`      | str   | Name of the extension.                                        |
-| **RETURNS** | tuple | A `(default, method, getter, setter)` tuple of the extension. |
+| Name        | Description                                                                                                                                        |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`      | Name of the extension. ~~str~~                                                                                                                     |
+| **RETURNS** | A `(default, method, getter, setter)` tuple of the extension. ~~Tuple[Optional[Any], Optional[Callable], Optional[Callable], Optional[Callable]]~~ |
 
 ## Span.has_extension {#has_extension tag="classmethod" new="2"}
 
@@ -148,10 +148,10 @@ Check whether an extension has been registered on the `Span` class.
 > assert Span.has_extension("is_city")
 > ```
 
-| Name        | Type | Description                                |
-| ----------- | ---- | ------------------------------------------ |
-| `name`      | str  | Name of the extension to check.            |
-| **RETURNS** | bool | Whether the extension has been registered. |
+| Name        | Description                                         |
+| ----------- | --------------------------------------------------- |
+| `name`      | Name of the extension to check. ~~str~~             |
+| **RETURNS** | Whether the extension has been registered. ~~bool~~ |
 
 ## Span.remove_extension {#remove_extension tag="classmethod" new="2.0.12"}
 
@@ -166,10 +166,10 @@ Remove a previously registered extension.
 > assert not Span.has_extension("is_city")
 > ```
 
-| Name        | Type  | Description                                                           |
-| ----------- | ----- | --------------------------------------------------------------------- |
-| `name`      | str   | Name of the extension.                                                |
-| **RETURNS** | tuple | A `(default, method, getter, setter)` tuple of the removed extension. |
+| Name        | Description                                                                                                                                                |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`      | Name of the extension. ~~str~~                                                                                                                             |
+| **RETURNS** | A `(default, method, getter, setter)` tuple of the removed extension. ~~Tuple[Optional[Any], Optional[Callable], Optional[Callable], Optional[Callable]]~~ |
 
 ## Span.char_span {#char_span tag="method" new="2.2.4"}
 
@@ -184,14 +184,14 @@ the character indices don't map to a valid span.
 > assert span.text == "New York"
 > ```
 
-| Name        | Type                                     | Description                                                           |
-| ----------- | ---------------------------------------- | --------------------------------------------------------------------- |
-| `start`     | int                                      | The index of the first character of the span.                         |
-| `end`       | int                                      | The index of the last character after the span.                       |
-| `label`     | uint64 / str                             | A label to attach to the span, e.g. for named entities.               |
-| `kb_id`     | uint64 / str                             | An ID from a knowledge base to capture the meaning of a named entity. |
-| `vector`    | `numpy.ndarray[ndim=1, dtype="float32"]` | A meaning representation of the span.                                 |
-| **RETURNS** | `Span`                                   | The newly constructed object or `None`.                               |
+| Name                                 | Description                                                                               |
+| ------------------------------------ | ----------------------------------------------------------------------------------------- |
+| `start`                              | The index of the first character of the span. ~~int~~                                     |
+| `end`                                | The index of the last character after the span. ~int~~                                    |
+| `label`                              | A label to attach to the span, e.g. for named entities. ~~Union[int, str]~~               |
+| `kb_id` <Tag variant="new">2.2</Tag> | An ID from a knowledge base to capture the meaning of a named entity. ~~Union[int, str]~~ |
+| `vector`                             | A meaning representation of the span. ~~numpy.ndarray[ndim=1, dtype=float32]~~            |
+| **RETURNS**                          | The newly constructed object or `None`. ~~Optional[Span]~~                                |
 
 ## Span.similarity {#similarity tag="method" model="vectors"}
 
@@ -209,10 +209,10 @@ using an average of word vectors.
 > assert apples_oranges == oranges_apples
 > ```
 
-| Name        | Type  | Description                                                                                  |
-| ----------- | ----- | -------------------------------------------------------------------------------------------- |
-| `other`     | -     | The object to compare with. By default, accepts `Doc`, `Span`, `Token` and `Lexeme` objects. |
-| **RETURNS** | float | A scalar similarity score. Higher is more similar.                                           |
+| Name        | Description                                                                                                                      |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `other`     | The object to compare with. By default, accepts `Doc`, `Span`, `Token` and `Lexeme` objects. ~~Union[Doc, Span, Token, Lexeme]~~ |
+| **RETURNS** | A scalar similarity score. Higher is more similar. ~~float~~                                                                     |
 
 ## Span.get_lca_matrix {#get_lca_matrix tag="method"}
 
@@ -229,9 +229,9 @@ ancestor is found, e.g. if span excludes a necessary ancestor.
 > # array([[0, 0, 0], [0, 1, 2], [0, 2, 2]], dtype=int32)
 > ```
 
-| Name        | Type                                   | Description                                      |
-| ----------- | -------------------------------------- | ------------------------------------------------ |
-| **RETURNS** | `numpy.ndarray[ndim=2, dtype="int32"]` | The lowest common ancestor matrix of the `Span`. |
+| Name        | Description                                                                             |
+| ----------- | --------------------------------------------------------------------------------------- |
+| **RETURNS** | The lowest common ancestor matrix of the `Span`. ~~numpy.ndarray[ndim=2, dtype=int32]~~ |
 
 ## Span.to_array {#to_array tag="method" new="2"}
 
@@ -249,10 +249,10 @@ shape `(N, M)`, where `N` is the length of the document. The values will be
 > np_array = span.to_array([LOWER, POS, ENT_TYPE, IS_ALPHA])
 > ```
 
-| Name        | Type                          | Description                                                                                              |
-| ----------- | ----------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `attr_ids`  | list                          | A list of attribute ID ints.                                                                             |
-| **RETURNS** | `numpy.ndarray[long, ndim=2]` | A feature matrix, with one row per word, and one column per attribute indicated in the input `attr_ids`. |
+| Name        | Description                                                                                                                              |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `attr_ids`  | A list of attributes (int IDs or string names) or a single attribute (int ID or string name). ~~Union[int, str, List[Union[int, str]]]~~ |
+| **RETURNS** | The exported attributes as a numpy array. ~~Union[numpy.ndarray[ndim=2, dtype=uint64], numpy.ndarray[ndim=1, dtype=uint64]]~~            |
 
 ## Span.ents {#ents tag="property" new="2.0.13" model="ner"}
 
@@ -270,9 +270,9 @@ if the entity recognizer has been applied.
 > assert ents[0].text == "Mr. Best"
 > ```
 
-| Name        | Type  | Description                                  |
-| ----------- | ----- | -------------------------------------------- |
-| **RETURNS** | tuple | Entities in the span, one `Span` per entity. |
+| Name        | Description                                                       |
+| ----------- | ----------------------------------------------------------------- |
+| **RETURNS** | Entities in the span, one `Span` per entity. ~~Tuple[Span, ...]~~ |
 
 ## Span.as_doc {#as_doc tag="method"}
 
@@ -287,10 +287,10 @@ Create a new `Doc` object corresponding to the `Span`, with a copy of the data.
 > assert doc2.text == "New York"
 > ```
 
-| Name             | Type  | Description                                          |
-| ---------------- | ----- | ---------------------------------------------------- |
-| `copy_user_data` | bool  | Whether or not to copy the original doc's user data. |
-| **RETURNS**      | `Doc` | A `Doc` object of the `Span`'s content.              |
+| Name             | Description                                                   |
+| ---------------- | ------------------------------------------------------------- |
+| `copy_user_data` | Whether or not to copy the original doc's user data. ~~bool~~ |
+| **RETURNS**      | A `Doc` object of the `Span`'s content. ~~Doc~~               |
 
 ## Span.root {#root tag="property" model="parser"}
 
@@ -309,9 +309,9 @@ taken.
 > assert new_york.root.text == "York"
 > ```
 
-| Name        | Type    | Description     |
-| ----------- | ------- | --------------- |
-| **RETURNS** | `Token` | The root token. |
+| Name        | Description               |
+| ----------- | ------------------------- |
+| **RETURNS** | The root token. ~~Token~~ |
 
 ## Span.conjuncts {#conjuncts tag="property" model="parser"}
 
@@ -325,9 +325,9 @@ A tuple of tokens coordinated to `span.root`.
 > assert [t.text for t in apples_conjuncts] == ["oranges"]
 > ```
 
-| Name        | Type    | Description             |
-| ----------- | ------- | ----------------------- |
-| **RETURNS** | `tuple` | The coordinated tokens. |
+| Name        | Description                                   |
+| ----------- | --------------------------------------------- |
+| **RETURNS** | The coordinated tokens. ~~Tuple[Token, ...]~~ |
 
 ## Span.lefts {#lefts tag="property" model="parser"}
 
@@ -341,9 +341,9 @@ Tokens that are to the left of the span, whose heads are within the span.
 > assert lefts == ["New"]
 > ```
 
-| Name       | Type    | Description                          |
-| ---------- | ------- | ------------------------------------ |
-| **YIELDS** | `Token` | A left-child of a token of the span. |
+| Name       | Description                                    |
+| ---------- | ---------------------------------------------- |
+| **YIELDS** | A left-child of a token of the span. ~~Token~~ |
 
 ## Span.rights {#rights tag="property" model="parser"}
 
@@ -357,9 +357,9 @@ Tokens that are to the right of the span, whose heads are within the span.
 > assert rights == ["in"]
 > ```
 
-| Name       | Type    | Description                           |
-| ---------- | ------- | ------------------------------------- |
-| **YIELDS** | `Token` | A right-child of a token of the span. |
+| Name       | Description                                     |
+| ---------- | ----------------------------------------------- |
+| **YIELDS** | A right-child of a token of the span. ~~Token~~ |
 
 ## Span.n_lefts {#n_lefts tag="property" model="parser"}
 
@@ -373,9 +373,9 @@ the span.
 > assert doc[3:7].n_lefts == 1
 > ```
 
-| Name        | Type | Description                      |
-| ----------- | ---- | -------------------------------- |
-| **RETURNS** | int  | The number of left-child tokens. |
+| Name        | Description                              |
+| ----------- | ---------------------------------------- |
+| **RETURNS** | The number of left-child tokens. ~~int~~ |
 
 ## Span.n_rights {#n_rights tag="property" model="parser"}
 
@@ -389,9 +389,9 @@ the span.
 > assert doc[2:4].n_rights == 1
 > ```
 
-| Name        | Type | Description                       |
-| ----------- | ---- | --------------------------------- |
-| **RETURNS** | int  | The number of right-child tokens. |
+| Name        | Description                               |
+| ----------- | ----------------------------------------- |
+| **RETURNS** | The number of right-child tokens. ~~int~~ |
 
 ## Span.subtree {#subtree tag="property" model="parser"}
 
@@ -405,9 +405,9 @@ Tokens within the span and tokens which descend from them.
 > assert subtree == ["Give", "it", "back", "!"]
 > ```
 
-| Name       | Type    | Description                                       |
-| ---------- | ------- | ------------------------------------------------- |
-| **YIELDS** | `Token` | A token within the span, or a descendant from it. |
+| Name       | Description                                                 |
+| ---------- | ----------------------------------------------------------- |
+| **YIELDS** | A token within the span, or a descendant from it. ~~Token~~ |
 
 ## Span.has_vector {#has_vector tag="property" model="vectors"}
 
@@ -420,9 +420,9 @@ A boolean value indicating whether a word vector is associated with the object.
 > assert doc[1:].has_vector
 > ```
 
-| Name        | Type | Description                                  |
-| ----------- | ---- | -------------------------------------------- |
-| **RETURNS** | bool | Whether the span has a vector data attached. |
+| Name        | Description                                           |
+| ----------- | ----------------------------------------------------- |
+| **RETURNS** | Whether the span has a vector data attached. ~~bool~~ |
 
 ## Span.vector {#vector tag="property" model="vectors"}
 
@@ -437,9 +437,9 @@ vectors.
 > assert doc[1:].vector.shape == (300,)
 > ```
 
-| Name        | Type                                     | Description                                         |
-| ----------- | ---------------------------------------- | --------------------------------------------------- |
-| **RETURNS** | `numpy.ndarray[ndim=1, dtype="float32"]` | A 1D numpy array representing the span's semantics. |
+| Name        | Description                                                                                     |
+| ----------- | ----------------------------------------------------------------------------------------------- |
+| **RETURNS** | A 1-dimensional array representing the span's vector. ~~`numpy.ndarray[ndim=1, dtype=float32]~~ |
 
 ## Span.vector_norm {#vector_norm tag="property" model="vectors"}
 
@@ -454,31 +454,31 @@ The L2 norm of the span's vector representation.
 > assert doc[1:].vector_norm != doc[2:].vector_norm
 > ```
 
-| Name        | Type  | Description                               |
-| ----------- | ----- | ----------------------------------------- |
-| **RETURNS** | float | The L2 norm of the vector representation. |
+| Name        | Description                                         |
+| ----------- | --------------------------------------------------- |
+| **RETURNS** | The L2 norm of the vector representation. ~~float~~ |
 
 ## Attributes {#attributes}
 
-| Name                                    | Type         | Description                                                                                                    |
-| --------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------- |
-| `doc`                                   | `Doc`        | The parent document.                                                                                           |
-| `tensor` <Tag variant="new">2.1.7</Tag> | `ndarray`    | The span's slice of the parent `Doc`'s tensor.                                                                 |
-| `sent`                                  | `Span`       | The sentence span that this span is a part of.                                                                 |
-| `start`                                 | int          | The token offset for the start of the span.                                                                    |
-| `end`                                   | int          | The token offset for the end of the span.                                                                      |
-| `start_char`                            | int          | The character offset for the start of the span.                                                                |
-| `end_char`                              | int          | The character offset for the end of the span.                                                                  |
-| `text`                                  | str          | A string representation of the span text.                                                                      |
-| `text_with_ws`                          | str          | The text content of the span with a trailing whitespace character if the last token has one.                   |
-| `orth`                                  | int          | ID of the verbatim text content.                                                                               |
-| `orth_`                                 | str          | Verbatim text content (identical to `Span.text`). Exists mostly for consistency with the other attributes.     |
-| `label`                                 | int          | The hash value of the span's label.                                                                            |
-| `label_`                                | str          | The span's label.                                                                                              |
-| `lemma_`                                | str          | The span's lemma.                                                                                              |
-| `kb_id`                                 | int          | The hash value of the knowledge base ID referred to by the span.                                               |
-| `kb_id_`                                | str          | The knowledge base ID referred to by the span.                                                                 |
-| `ent_id`                                | int          | The hash value of the named entity the token is an instance of.                                                |
-| `ent_id_`                               | str          | The string ID of the named entity the token is an instance of.                                                 |
-| `sentiment`                             | float        | A scalar value indicating the positivity or negativity of the span.                                            |
-| `_`                                     | `Underscore` | User space for adding custom [attribute extensions](/usage/processing-pipelines#custom-components-attributes). |
+| Name                                    | Description                                                                                                                   |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `doc`                                   | The parent document. ~~Doc~~                                                                                                  |
+| `tensor` <Tag variant="new">2.1.7</Tag> | The span's slice of the parent `Doc`'s tensor. ~~numpy.ndarray~~                                                              |
+| `sent`                                  | The sentence span that this span is a part of. ~~Span~~                                                                       |
+| `start`                                 | The token offset for the start of the span. ~~int~~                                                                           |
+| `end`                                   | The token offset for the end of the span. ~~int~~                                                                             |
+| `start_char`                            | The character offset for the start of the span. ~~int~~                                                                       |
+| `end_char`                              | The character offset for the end of the span. ~~int~~                                                                         |
+| `text`                                  | A string representation of the span text. ~~str~~                                                                             |
+| `text_with_ws`                          | The text content of the span with a trailing whitespace character if the last token has one. ~~str~~                          |
+| `orth`                                  | ID of the verbatim text content. ~~int~~                                                                                      |
+| `orth_`                                 | Verbatim text content (identical to `Span.text`). Exists mostly for consistency with the other attributes. ~~str~~            |
+| `label`                                 | The hash value of the span's label. ~~int~~                                                                                   |
+| `label_`                                | The span's label. ~~str~~                                                                                                     |
+| `lemma_`                                | The span's lemma. Equivalent to `"".join(token.text_with_ws for token in span)`. ~~str~~                                      |
+| `kb_id`                                 | The hash value of the knowledge base ID referred to by the span. ~~int~~                                                      |
+| `kb_id_`                                | The knowledge base ID referred to by the span. ~~str~~                                                                        |
+| `ent_id`                                | The hash value of the named entity the token is an instance of. ~~int~~                                                       |
+| `ent_id_`                               | The string ID of the named entity the token is an instance of. ~~str~~                                                        |
+| `sentiment`                             | A scalar value indicating the positivity or negativity of the span. ~~float~~                                                 |
+| `_`                                     | User space for adding custom [attribute extensions](/usage/processing-pipelines#custom-components-attributes). ~~Underscore~~ |

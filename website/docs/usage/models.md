@@ -139,25 +139,25 @@ $ pip install https://github.com/honnibal/pkuseg-python/archive/master.zip
 The `meta` argument of the `Chinese` language class supports the following
 following tokenizer config settings:
 
-| Name               | Type | Description                                                                                             |
-| ------------------ | ---- | ------------------------------------------------------------------------------------------------------- |
-| `segmenter`        | str  | Word segmenter: `char`, `jieba` or `pkuseg`. Defaults to `char`.                                        |
-| `pkuseg_model`     | str  | **Required for `pkuseg`:** Name of a model provided by `pkuseg` or the path to a local model directory. |
-| `pkuseg_user_dict` | str  | Optional path to a file with one word per line which overrides the default `pkuseg` user dictionary.    |
+| Name               | Description                                                                                                     |
+| ------------------ | --------------------------------------------------------------------------------------------------------------- |
+| `segmenter`        | Word segmenter: `char`, `jieba` or `pkuseg`. Defaults to `char`. ~~str~~                                        |
+| `pkuseg_model`     | **Required for `pkuseg`:** Name of a model provided by `pkuseg` or the path to a local model directory. ~~str~~ |
+| `pkuseg_user_dict` | Optional path to a file with one word per line which overrides the default `pkuseg` user dictionary. ~~str~~    |
 
 ```python
 ### Examples
 # Load "default" model
 cfg = {"segmenter": "pkuseg", "pkuseg_model": "default"}
-nlp = Chinese(meta={"tokenizer": {"config": cfg}})
+nlp = Chinese(config={"tokenizer": {"config": cfg}})
 
 # Load local model
 cfg = {"segmenter": "pkuseg", "pkuseg_model": "/path/to/pkuseg_model"}
-nlp = Chinese(meta={"tokenizer": {"config": cfg}})
+nlp = Chinese(config={"tokenizer": {"config": cfg}})
 
 # Override the user directory
 cfg = {"segmenter": "pkuseg", "pkuseg_model": "default", "pkuseg_user_dict": "/path"}
-nlp = Chinese(meta={"tokenizer": {"config": cfg}})
+nlp = Chinese(config={"tokenizer": {"config": cfg}})
 ```
 
 You can also modify the user dictionary on-the-fly:

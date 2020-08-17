@@ -70,7 +70,7 @@ def evaluate(
     corpus = Corpus(data_path, gold_preproc=gold_preproc)
     nlp = util.load_model(model)
     dev_dataset = list(corpus(nlp))
-    scores = nlp.evaluate(dev_dataset, verbose=False)
+    scores = nlp.evaluate(dev_dataset)
     metrics = {
         "TOK": "token_acc",
         "TAG": "tag_acc",

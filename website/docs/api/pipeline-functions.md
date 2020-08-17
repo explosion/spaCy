@@ -33,10 +33,10 @@ all other components.
 
 </Infobox>
 
-| Name        | Type  | Description                                                  |
-| ----------- | ----- | ------------------------------------------------------------ |
-| `doc`       | `Doc` | The `Doc` object to process, e.g. the `Doc` in the pipeline. |
-| **RETURNS** | `Doc` | The modified `Doc` with merged noun chunks.                  |
+| Name        | Description                                                          |
+| ----------- | -------------------------------------------------------------------- |
+| `doc`       | The `Doc` object to process, e.g. the `Doc` in the pipeline. ~~Doc~~ |
+| **RETURNS** | The modified `Doc` with merged noun chunks. ~~Doc~~                  |
 
 ## merge_entities {#merge_entities tag="function"}
 
@@ -63,10 +63,10 @@ components to the end of the pipeline and after all other components.
 
 </Infobox>
 
-| Name        | Type  | Description                                                  |
-| ----------- | ----- | ------------------------------------------------------------ |
-| `doc`       | `Doc` | The `Doc` object to process, e.g. the `Doc` in the pipeline. |
-| **RETURNS** | `Doc` | The modified `Doc` with merged entities.                     |
+| Name        | Description                                                          |
+| ----------- | -------------------------------------------------------------------- |
+| `doc`       | The `Doc` object to process, e.g. the `Doc` in the pipeline. ~~Doc~~ |
+| **RETURNS** | The modified `Doc` with merged entities. ~~Doc~~                     |
 
 ## merge_subtokens {#merge_subtokens tag="function" new="2.1"}
 
@@ -102,8 +102,8 @@ end of the pipeline and after all other components.
 
 </Infobox>
 
-| Name        | Type  | Description                                                  |
-| ----------- | ----- | ------------------------------------------------------------ |
-| `doc`       | `Doc` | The `Doc` object to process, e.g. the `Doc` in the pipeline. |
-| `label`     | str   | The subtoken dependency label. Defaults to `"subtok"`.       |
-| **RETURNS** | `Doc` | The modified `Doc` with merged subtokens.                    |
+| Name        | Description                                                          |
+| ----------- | -------------------------------------------------------------------- |
+| `doc`       | The `Doc` object to process, e.g. the `Doc` in the pipeline. ~~Doc~~ |
+| `label`     | The subtoken dependency label. Defaults to `"subtok"`. ~~str~~       |
+| **RETURNS** | The modified `Doc` with merged subtokens. ~~Doc~~                    |

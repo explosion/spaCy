@@ -73,15 +73,15 @@ your config and check that it's valid, you can run the
 Defines the `nlp` object, its tokenizer and
 [processing pipeline](/usage/processing-pipelines) component names.
 
-| Name                      | Type        | Description                                                                                                                                                                                      | Default                       |
-| ------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------- |
-| `lang`                    | str         | The language code to use.                                                                                                                                                                        | `null`                        |
-| `pipeline`                | `List[str]` | Names of pipeline components in order. Should correspond to sections in the `[components]` block, e.g. `[components.ner]`. See docs on [defining components](/usage/training#config-components). | `[]`                          |
-| `load_vocab_data`         | bool        | Whether to load additional lexeme and vocab data from [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) if available.                                                      | `true`                        |
-| `before_creation`         | callable    | Optional [callback](/usage/training#custom-code-nlp-callbacks) to modify `Language` subclass before it's initialized.                                                                            | `null`                        |
-| `after_creation`          | callable    | Optional [callback](/usage/training#custom-code-nlp-callbacks) to modify `nlp` object right after it's initialized.                                                                              | `null`                        |
-| `after_pipeline_creation` | callable    | Optional [callback](/usage/training#custom-code-nlp-callbacks) to modify `nlp` object after the pipeline components have been added.                                                             | `null`                        |
-| `tokenizer`               | callable    | The tokenizer to use.                                                                                                                                                                            | [`Tokenizer`](/api/tokenizer) |
+| Name                      | Description                                                                                                                                                                                                    | Default                       |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| `lang`                    | The language code to use. ~~str~~                                                                                                                                                                              | `null`                        |
+| `pipeline`                | Names of pipeline components in order. Should correspond to sections in the `[components]` block, e.g. `[components.ner]`. See docs on [defining components](/usage/training#config-components). ~~List[str]~~ | `[]`                          |
+| `load_vocab_data`         | Whether to load additional lexeme and vocab data from [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) if available. ~~bool~~                                                           | `true`                        |
+| `before_creation`         | Optional [callback](/usage/training#custom-code-nlp-callbacks) to modify `Language` subclass before it's initialized. ~~Optional[Callable[[Type[Language]], Type[Language]]]~~                                 | `null`                        |
+| `after_creation`          | Optional [callback](/usage/training#custom-code-nlp-callbacks) to modify `nlp` object right after it's initialized. ~~Optional[Callable[[Language], Language]]~~                                               | `null`                        |
+| `after_pipeline_creation` | Optional [callback](/usage/training#custom-code-nlp-callbacks) to modify `nlp` object after the pipeline components have been added. ~~Optional[Callable[[Language], Language]]~~                              | `null`                        |
+| `tokenizer`               | The tokenizer to use. ~~Callable[[str], Doc]~~                                                                                                                                                                 | [`Tokenizer`](/api/tokenizer) |
 
 ### components {#config-components tag="section"}
 
@@ -128,24 +128,24 @@ process that are used when you run [`spacy train`](/api/cli#train).
 
 <!-- TODO: complete -->
 
-| Name                  | Type                                                | Description                                                                                                                                     | Default                                             |
-| --------------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| `seed`                | int                                                 | The random seed.                                                                                                                                | `${system:seed}`                                    |
-| `dropout`             | float                                               | The dropout rate.                                                                                                                               | `0.1`                                               |
-| `accumulate_gradient` | int                                                 | Whether to divide the batch up into substeps.                                                                                                   | `1`                                                 |
-| `init_tok2vec`        | str                                                 | Optional path to pretrained tok2vec weights created with [`spacy pretrain`](/api/cli#pretrain).                                                 | `${paths:init_tok2vec}`                             |
-| `raw_text`            | str                                                 |                                                                                                                                                 | `${paths:raw}`                                      |
-| `vectors`             | str                                                 |                                                                                                                                                 | `null`                                              |
-| `patience`            | int                                                 | How many steps to continue without improvement in evaluation score.                                                                             | `1600`                                              |
-| `max_epochs`          | int                                                 | Maximum number of epochs to train for.                                                                                                          | `0`                                                 |
-| `max_steps`           | int                                                 | Maximum number of update steps to train for.                                                                                                    | `20000`                                             |
-| `eval_frequency`      | int                                                 | How often to evaluate during training (steps).                                                                                                  | `200`                                               |
-| `score_weights`       | `Dict[str, float]`                                  | Score names shown in metrics mapped to their weight towards the final weighted score. See [here](/usage/training#metrics) for details.          | `{}`                                                |
-| `frozen_components`   | `List[str]`                                         | Pipeline component names that are "frozen" and shouldn't be updated during training. See [here](/usage/training#config-components) for details. | `[]`                                                |
-| `train_corpus`        | callable                                            | Callable that takes the current `nlp` object and yields [`Example`](/api/example) objects.                                                      | [`Corpus`](/api/corpus)                             |
-| `dev_corpus`          | callable                                            | Callable that takes the current `nlp` object and yields [`Example`](/api/example) objects.                                                      | [`Corpus`](/api/corpus)                             |
-| `batcher`             | callable                                            | Callable that takes an iterator of [`Doc`](/api/doc) objects and yields batches of `Doc`s.                                                      | [`batch_by_words`](/api/top-level#batch_by_words)   |
-| `optimizer`           | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | The optimizer. The learning rate schedule and other settings can be configured as part of the optimizer.                                        | [`Adam`](https://thinc.ai/docs/api-optimizers#adam) |
+| Name                  | Description                                                                                                                                                   | Default                                             |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| `seed`                | The random seed. ~~int~~                                                                                                                                      | `${system:seed}`                                    |
+| `dropout`             | The dropout rate. ~~float~~                                                                                                                                   | `0.1`                                               |
+| `accumulate_gradient` | Whether to divide the batch up into substeps. ~~int~~                                                                                                         | `1`                                                 |
+| `init_tok2vec`        | Optional path to pretrained tok2vec weights created with [`spacy pretrain`](/api/cli#pretrain). ~~Optional[str]~~                                             | `${paths:init_tok2vec}`                             |
+| `raw_text`            | ~~Optional[str]~~                                                                                                                                             | `${paths:raw}`                                      |
+| `vectors`             | ~~Optional[str]~~                                                                                                                                             | `null`                                              |
+| `patience`            | How many steps to continue without improvement in evaluation score. ~~int~~                                                                                   | `1600`                                              |
+| `max_epochs`          | Maximum number of epochs to train for. ~~int~~                                                                                                                | `0`                                                 |
+| `max_steps`           | Maximum number of update steps to train for. ~~int~~                                                                                                          | `20000`                                             |
+| `eval_frequency`      | How often to evaluate during training (steps). ~~int~~                                                                                                        | `200`                                               |
+| `score_weights`       | Score names shown in metrics mapped to their weight towards the final weighted score. See [here](/usage/training#metrics) for details. ~~Dict[str, float]~~   | `{}`                                                |
+| `frozen_components`   | Pipeline component names that are "frozen" and shouldn't be updated during training. See [here](/usage/training#config-components) for details. ~~List[str]~~ | `[]`                                                |
+| `train_corpus`        | Callable that takes the current `nlp` object and yields [`Example`](/api/example) objects. ~~Callable[[Language], Iterator[Example]]~~                        | [`Corpus`](/api/corpus)                             |
+| `dev_corpus`          | Callable that takes the current `nlp` object and yields [`Example`](/api/example) objects. ~~Callable[[Language], Iterator[Example]]~~                        | [`Corpus`](/api/corpus)                             |
+| `batcher`             | Callable that takes an iterator of [`Doc`](/api/doc) objects and yields batches of `Doc`s. ~~Callable[[Iterator[Doc], Iterator[List[Doc]]]]~~                 | [`batch_by_words`](/api/top-level#batch_by_words)   |
+| `optimizer`           | The optimizer. The learning rate schedule and other settings can be configured as part of the optimizer. ~~Optimizer~~                                        | [`Adam`](https://thinc.ai/docs/api-optimizers#adam) |
 
 ### pretraining {#config-pretraining tag="section,optional"}
 
@@ -153,19 +153,19 @@ This section is optional and defines settings and controls for
 [language model pretraining](/usage/training#pretraining). It's used when you
 run [`spacy pretrain`](/api/cli#pretrain).
 
-| Name                         | Type                                                | Description                                                                   | Default                                             |
-| ---------------------------- | --------------------------------------------------- | ----------------------------------------------------------------------------- | --------------------------------------------------- |
-| `max_epochs`                 | int                                                 | Maximum number of epochs.                                                     | `1000`                                              |
-| `min_length`                 | int                                                 | Minimum length of examples.                                                   | `5`                                                 |
-| `max_length`                 | int                                                 | Maximum length of examples.                                                   | `500`                                               |
-| `dropout`                    | float                                               | The dropout rate.                                                             | `0.2`                                               |
-| `n_save_every`               | int                                                 | Saving frequency.                                                             | `null`                                              |
-| `batch_size`                 | int / `Sequence[int]`                               | The batch size or batch size [schedule](https://thinc.ai/docs/api-schedules). | `3000`                                              |
-| `seed`                       | int                                                 | The random seed.                                                              | `${system.seed}`                                    |
-| `use_pytorch_for_gpu_memory` | bool                                                | Allocate memory via PyTorch.                                                  | `${system:use_pytorch_for_gpu_memory}`              |
-| `tok2vec_model`              | str                                                 | tok2vec model section in the config.                                          | `"components.tok2vec.model"`                        |
-| `objective`                  | dict                                                | The pretraining objective.                                                    | `{"type": "characters", "n_characters": 4}`         |
-| `optimizer`                  | [`Optimizer`](https://thinc.ai/docs/api-optimizers) | The optimizer.                                                                | [`Adam`](https://thinc.ai/docs/api-optimizers#adam) |
+| Name                         | Description                                                                                                 | Default                                             |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| `max_epochs`                 | Maximum number of epochs. ~~int~~                                                                           | `1000`                                              |
+| `min_length`                 | Minimum length of examples. ~~int~~                                                                         | `5`                                                 |
+| `max_length`                 | Maximum length of examples. ~~int~~                                                                         | `500`                                               |
+| `dropout`                    | The dropout rate. ~~float~~                                                                                 | `0.2`                                               |
+| `n_save_every`               | Saving frequency. ~~int~~                                                                                   | `null`                                              |
+| `batch_size`                 | The batch size or batch size [schedule](https://thinc.ai/docs/api-schedules). ~~Union[int, Sequence[int]]~~ | `3000`                                              |
+| `seed`                       | The random seed. ~~int~~                                                                                    | `${system.seed}`                                    |
+| `use_pytorch_for_gpu_memory` | Allocate memory via PyTorch. ~~bool~~                                                                       | `${system:use_pytorch_for_gpu_memory}`              |
+| `tok2vec_model`              | tok2vec model section in the config. ~~str~~                                                                | `"components.tok2vec.model"`                        |
+| `objective`                  | The pretraining objective. ~~Dict[str, Any]~~                                                               | `{"type": "characters", "n_characters": 4}`         |
+| `optimizer`                  | The optimizer. ~~Optimizer~~                                                                                | [`Adam`](https://thinc.ai/docs/api-optimizers#adam) |
 
 ## Training data {#training}
 
@@ -313,22 +313,22 @@ to keep track of your settings and hyperparameters and your own
 > }
 > ```
 
-| Name          | Type                         | Description                                                                                                                                                                                    |
-| ------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `text`        | str                          | Raw text.                                                                                                                                                                                      |
-| `words`       | `List[str]`                  | List of gold-standard tokens.                                                                                                                                                                  |
-| `lemmas`      | `List[str]`                  | List of lemmas.                                                                                                                                                                                |
-| `spaces`      | `List[bool]`                 | List of boolean values indicating whether the corresponding tokens is followed by a space or not.                                                                                              |
-| `tags`        | `List[str]`                  | List of fine-grained [POS tags](/usage/linguistic-features#pos-tagging).                                                                                                                       |
-| `pos`         | `List[str]`                  | List of coarse-grained [POS tags](/usage/linguistic-features#pos-tagging).                                                                                                                     |
-| `morphs`      | `List[str]`                  | List of [morphological features](/usage/linguistic-features#rule-based-morphology).                                                                                                            |
-| `sent_starts` | `List[bool]`                 | List of boolean values indicating whether each token is the first of a sentence or not.                                                                                                        |
-| `deps`        | `List[str]`                  | List of string values indicating the [dependency relation](/usage/linguistic-features#dependency-parse) of a token to its head.                                                                |
-| `heads`       | `List[int]`                  | List of integer values indicating the dependency head of each token, referring to the absolute index of each token in the text.                                                                |
-| `entities`    | `List[str]`                  | **Option 1:** List of [BILUO tags](/usage/linguistic-features#accessing-ner) per token of the format `"{action}-{label}"`, or `None` for unannotated tokens.                                   |
-| `entities`    | `List[Tuple[int, int, str]]` | **Option 2:** List of `"(start, end, label)"` tuples defining all entities in the text.                                                                                                        |
-| `cats`        | `Dict[str, float]`           | Dictionary of `label`/`value` pairs indicating how relevant a certain [text category](/api/textcategorizer) is for the text.                                                                   |
-| `links`       | `Dict[(int, int), Dict]`     | Dictionary of `offset`/`dict` pairs defining [named entity links](/usage/linguistic-features#entity-linking). The character offsets are linked to a dictionary of relevant knowledge base IDs. |
+| Name          | Description                                                                                                                                                                                                                    |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `text`        | Raw text. ~~str~~                                                                                                                                                                                                              |
+| `words`       | List of gold-standard tokens. ~~List[str]~~                                                                                                                                                                                    |
+| `lemmas`      | List of lemmas. ~~List[str]~~                                                                                                                                                                                                  |
+| `spaces`      | List of boolean values indicating whether the corresponding tokens is followed by a space or not. ~~List[bool]~~                                                                                                               |
+| `tags`        | List of fine-grained [POS tags](/usage/linguistic-features#pos-tagging). ~~List[str]~~                                                                                                                                         |
+| `pos`         | List of coarse-grained [POS tags](/usage/linguistic-features#pos-tagging). ~~List[str]~~                                                                                                                                       |
+| `morphs`      | List of [morphological features](/usage/linguistic-features#rule-based-morphology). ~~List[str]~~                                                                                                                              |
+| `sent_starts` | List of boolean values indicating whether each token is the first of a sentence or not. ~~List[bool]~~                                                                                                                         |
+| `deps`        | List of string values indicating the [dependency relation](/usage/linguistic-features#dependency-parse) of a token to its head. ~~List[str]~~                                                                                  |
+| `heads`       | List of integer values indicating the dependency head of each token, referring to the absolute index of each token in the text. ~~List[int]~~                                                                                  |
+| `entities`    | **Option 1:** List of [BILUO tags](/usage/linguistic-features#accessing-ner) per token of the format `"{action}-{label}"`, or `None` for unannotated tokens. ~~List[str]~~                                                     |
+| `entities`    | **Option 2:** List of `"(start, end, label)"` tuples defining all entities in the text. ~~List[Tuple[int, int, str]]~~                                                                                                         |
+| `cats`        | Dictionary of `label`/`value` pairs indicating how relevant a certain [text category](/api/textcategorizer) is for the text. ~~Dict[str, float]~~                                                                              |
+| `links`       | Dictionary of `offset`/`dict` pairs defining [named entity links](/usage/linguistic-features#entity-linking). The character offsets are linked to a dictionary of relevant knowledge base IDs. ~~Dict[Tuple[int, int], Dict]~~ |
 
 <Infobox title="Notes and caveats">
 
@@ -390,10 +390,10 @@ provided.
 > srsly.write_jsonl("/path/to/text.jsonl", data)
 > ```
 
-| Key      | Type | Description                                                |
-| -------- | ---- | ---------------------------------------------------------- |
-| `text`   | str  | The raw input text. Is not required if `tokens` available. |
-| `tokens` | list | Optional tokenization, one string per token.               |
+| Key      | Description                                                        |
+| -------- | ------------------------------------------------------------------ |
+| `text`   | The raw input text. Is not required if `tokens` available. ~~str~~ |
+| `tokens` | Optional tokenization, one string per token. ~~List[str]~~         |
 
 ```json
 ### Example

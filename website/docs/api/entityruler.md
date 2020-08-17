@@ -34,12 +34,12 @@ how the component should be configured. You can override its settings via the
 > nlp.add_pipe("entity_ruler", config=config)
 > ```
 
-| Setting               | Type | Description                                                                                                                                 | Default |
-| --------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| `phrase_matcher_attr` | str  | Optional attribute name match on for the internal [`PhraseMatcher`](/api/phrasematcher), e.g. `LOWER` to match on the lowercase token text. | `None`  |
-| `validate`            | bool | Whether patterns should be validated (passed to the `Matcher` and `PhraseMatcher`).                                                         | `False` |
-| `overwrite_ents`      | bool | If existing entities are present, e.g. entities added by the model, overwrite them by matches if necessary.                                 | `False` |
-| `ent_id_sep`          | str  | Separator used internally for entity IDs.                                                                                                   | `"||"`  |
+| Setting               | Description                                                                                                                                                                                   |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `phrase_matcher_attr` | Optional attribute name match on for the internal [`PhraseMatcher`](/api/phrasematcher), e.g. `LOWER` to match on the lowercase token text. Defaults to `None`. ~~Optional[Union[int, str]]~~ |
+| `validate`            | Whether patterns should be validated (passed to the `Matcher` and `PhraseMatcher`). Defaults to `False`. ~~bool~~                                                                             |
+| `overwrite_ents`      | If existing entities are present, e.g. entities added by the model, overwrite them by matches if necessary. Defaults to `False`. ~~bool~~                                                     |
+| `ent_id_sep`          | Separator used internally for entity IDs. Defaults to `"||"`. ~~str~~                                                                                                                         |
 
 ```python
 https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/entityruler.py
@@ -63,16 +63,16 @@ be a token pattern (list) or a phrase pattern (string). For example:
 > ruler = EntityRuler(nlp, overwrite_ents=True)
 > ```
 
-| Name                              | Type       | Description                                                                                                                                                                                                                   |
-| --------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `nlp`                             | `Language` | The shared nlp object to pass the vocab to the matchers and process phrase patterns.                                                                                                                                          |
-| `name` <Tag variant="new">3</Tag> | str        | Instance name of the current pipeline component. Typically passed in automatically from the factory when the component is added. Used to disable the current entity ruler while creating phrase patterns with the nlp object. |
-| _keyword-only_                    |            |                                                                                                                                                                                                                               |
-| `phrase_matcher_attr`             | int / str  | Optional attribute name match on for the internal [`PhraseMatcher`](/api/phrasematcher), e.g. `LOWER` to match on the lowercase token text. Defaults to `None`.                                                               |
-| `validate`                        | bool       | Whether patterns should be validated, passed to Matcher and PhraseMatcher as `validate`. Defaults to `False`.                                                                                                                 |
-| `overwrite_ents`                  | bool       | If existing entities are present, e.g. entities added by the model, overwrite them by matches if necessary. Defaults to `False`.                                                                                              |
-| `ent_id_sep`                      | str        | Separator used internally for entity IDs. Defaults to `"||"`.                                                                                                                                                                 |
-| `patterns`                        | iterable   | Optional patterns to load in on initialization.                                                                                                                                                                               |
+| Name                              | Description                                                                                                                                                                                                                           |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `nlp`                             | The shared nlp object to pass the vocab to the matchers and process phrase patterns. ~~Language~~                                                                                                                                     |
+| `name` <Tag variant="new">3</Tag> | Instance name of the current pipeline component. Typically passed in automatically from the factory when the component is added. Used to disable the current entity ruler while creating phrase patterns with the nlp object. ~~str~~ |
+| _keyword-only_                    |                                                                                                                                                                                                                                       |
+| `phrase_matcher_attr`             | Optional attribute name match on for the internal [`PhraseMatcher`](/api/phrasematcher), e.g. `LOWER` to match on the lowercase token text. Defaults to `None`. ~~Optional[Union[int, str]]~~                                         |
+| `validate`                        | Whether patterns should be validated, passed to Matcher and PhraseMatcher as `validate`. Defaults to `False`. ~~bool~~                                                                                                                |
+| `overwrite_ents`                  | If existing entities are present, e.g. entities added by the model, overwrite them by matches if necessary. Defaults to `False`. ~~bool~~                                                                                             |
+| `ent_id_sep`                      | Separator used internally for entity IDs. Defaults to `"||"`. ~~str~~                                                                                                                                                                 |
+| `patterns`                        | Optional patterns to load in on initialization. ~~Optional[List[Dict[str, Union[str, List[dict]]]]]~~                                                                                                                                 |
 
 ## EntityRuler.\_\len\_\_ {#len tag="method"}
 
@@ -87,9 +87,9 @@ The number of all patterns added to the entity ruler.
 > assert len(ruler) == 1
 > ```
 
-| Name        | Type | Description             |
-| ----------- | ---- | ----------------------- |
-| **RETURNS** | int  | The number of patterns. |
+| Name        | Description                     |
+| ----------- | ------------------------------- |
+| **RETURNS** | The number of patterns. ~~int~~ |
 
 ## EntityRuler.\_\_contains\_\_ {#contains tag="method"}
 
@@ -104,10 +104,10 @@ Whether a label is present in the patterns.
 > assert not "PERSON" in ruler
 > ```
 
-| Name        | Type | Description                                  |
-| ----------- | ---- | -------------------------------------------- |
-| `label`     | str  | The label to check.                          |
-| **RETURNS** | bool | Whether the entity ruler contains the label. |
+| Name        | Description                                           |
+| ----------- | ----------------------------------------------------- |
+| `label`     | The label to check. ~~str~~                           |
+| **RETURNS** | Whether the entity ruler contains the label. ~~bool~~ |
 
 ## EntityRuler.\_\_call\_\_ {#call tag="method"}
 
@@ -130,10 +130,10 @@ is chosen.
 > assert ents == [("Apple", "ORG")]
 > ```
 
-| Name        | Type  | Description                                                  |
-| ----------- | ----- | ------------------------------------------------------------ |
-| `doc`       | `Doc` | The `Doc` object to process, e.g. the `Doc` in the pipeline. |
-| **RETURNS** | `Doc` | The modified `Doc` with added entities, if available.        |
+| Name        | Description                                                          |
+| ----------- | -------------------------------------------------------------------- |
+| `doc`       | The `Doc` object to process, e.g. the `Doc` in the pipeline. ~~Doc~~ |
+| **RETURNS** | The modified `Doc` with added entities, if available. ~~Doc~~        |
 
 ## EntityRuler.add_patterns {#add_patterns tag="method"}
 
@@ -152,9 +152,9 @@ of dicts) or a phrase pattern (string). For more details, see the usage guide on
 > ruler.add_patterns(patterns)
 > ```
 
-| Name       | Type | Description          |
-| ---------- | ---- | -------------------- |
-| `patterns` | list | The patterns to add. |
+| Name       | Description                                                      |
+| ---------- | ---------------------------------------------------------------- |
+| `patterns` | The patterns to add. ~~List[Dict[str, Union[str, List[dict]]]]~~ |
 
 ## EntityRuler.to_disk {#to_disk tag="method"}
 
@@ -171,9 +171,9 @@ only the patterns are saved as JSONL. If a directory name is provided, a
 > ruler.to_disk("/path/to/entity_ruler")    # saves patterns and config
 > ```
 
-| Name   | Type         | Description                                                                                                                         |
-| ------ | ------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `path` | str / `Path` | A path to a JSONL file or directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| Name   | Description                                                                                                                                              |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `path` | A path to a JSONL file or directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
 
 ## EntityRuler.from_disk {#from_disk tag="method"}
 
@@ -190,10 +190,10 @@ configuration.
 > ruler.from_disk("/path/to/entity_ruler")    # loads patterns and config
 > ```
 
-| Name        | Type          | Description                                                                              |
-| ----------- | ------------- | ---------------------------------------------------------------------------------------- |
-| `path`      | str / `Path`  | A path to a JSONL file or directory. Paths may be either strings or `Path`-like objects. |
-| **RETURNS** | `EntityRuler` | The modified `EntityRuler` object.                                                       |
+| Name        | Description                                                                                                   |
+| ----------- | ------------------------------------------------------------------------------------------------------------- |
+| `path`      | A path to a JSONL file or directory. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+| **RETURNS** | The modified `EntityRuler` object. ~~EntityRuler~~                                                            |
 
 ## EntityRuler.to_bytes {#to_bytes tag="method"}
 
@@ -206,9 +206,9 @@ Serialize the entity ruler patterns to a bytestring.
 > ruler_bytes = ruler.to_bytes()
 > ```
 
-| Name        | Type  | Description              |
-| ----------- | ----- | ------------------------ |
-| **RETURNS** | bytes | The serialized patterns. |
+| Name        | Description                        |
+| ----------- | ---------------------------------- |
+| **RETURNS** | The serialized patterns. ~~bytes~~ |
 
 ## EntityRuler.from_bytes {#from_bytes tag="method"}
 
@@ -222,40 +222,40 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 > ruler.from_bytes(ruler_bytes)
 > ```
 
-| Name         | Type          | Description                        |
-| ------------ | ------------- | ---------------------------------- |
-| `bytes_data` | bytes         | The bytestring to load.            |
-| **RETURNS**  | `EntityRuler` | The modified `EntityRuler` object. |
+| Name         | Description                                        |
+| ------------ | -------------------------------------------------- |
+| `bytes_data` | The bytestring to load. ~~bytes~~                  |
+| **RETURNS**  | The modified `EntityRuler` object. ~~EntityRuler~~ |
 
 ## EntityRuler.labels {#labels tag="property"}
 
 All labels present in the match patterns.
 
-| Name        | Type  | Description        |
-| ----------- | ----- | ------------------ |
-| **RETURNS** | tuple | The string labels. |
+| Name        | Description                            |
+| ----------- | -------------------------------------- |
+| **RETURNS** | The string labels. ~~Tuple[str, ...]~~ |
 
 ## EntityRuler.ent_ids {#labels tag="property" new="2.2.2"}
 
-All entity ids present in the match patterns `id` properties.
+All entity IDs present in the `id` properties of the match patterns.
 
-| Name        | Type  | Description         |
-| ----------- | ----- | ------------------- |
-| **RETURNS** | tuple | The string ent_ids. |
+| Name        | Description                         |
+| ----------- | ----------------------------------- |
+| **RETURNS** | The string IDs. ~~Tuple[str, ...]~~ |
 
 ## EntityRuler.patterns {#patterns tag="property"}
 
 Get all patterns that were added to the entity ruler.
 
-| Name        | Type | Description                                        |
-| ----------- | ---- | -------------------------------------------------- |
-| **RETURNS** | list | The original patterns, one dictionary per pattern. |
+| Name        | Description                                                                              |
+| ----------- | ---------------------------------------------------------------------------------------- |
+| **RETURNS** | The original patterns, one dictionary per pattern. ~~List[Dict[str, Union[str, dict]]]~~ |
 
 ## Attributes {#attributes}
 
-| Name              | Type                                  | Description                                                      |
-| ----------------- | ------------------------------------- | ---------------------------------------------------------------- |
-| `matcher`         | [`Matcher`](/api/matcher)             | The underlying matcher used to process token patterns.           |
-| `phrase_matcher`  | [`PhraseMatcher`](/api/phrasematcher) | The underlying phrase matcher, used to process phrase patterns.  |
-| `token_patterns`  | dict                                  | The token patterns present in the entity ruler, keyed by label.  |
-| `phrase_patterns` | dict                                  | The phrase patterns present in the entity ruler, keyed by label. |
+| Name              | Description                                                                                                           |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `matcher`         | The underlying matcher used to process token patterns. ~~Matcher~~                                                    |  |
+| `phrase_matcher`  | The underlying phrase matcher, used to process phrase patterns. ~~PhraseMatcher~~                                     |
+| `token_patterns`  | The token patterns present in the entity ruler, keyed by label. ~~Dict[str, List[Dict[str, Union[str, List[dict]]]]~~ |
+| `phrase_patterns` | The phrase patterns present in the entity ruler, keyed by label. ~~Dict[str, List[Doc]]~~                             |

@@ -33,18 +33,18 @@ TODO: intro and how architectures work, link to
 > subword_features = true
 > ```
 
-Build spaCy's 'standard' tok2vec layer, which uses hash embedding with subword
+Build spaCy's "standard" tok2vec layer, which uses hash embedding with subword
 features and a CNN with layer-normalized maxout.
 
-| Name                 | Type | Description                                                                                                                                                                                                                                                           |
-| -------------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `width`              | int  | The width of the input and output. These are required to be the same, so that residual connections can be used. Recommended values are `96`, `128` or `300`.                                                                                                          |
-| `depth`              | int  | The number of convolutional layers to use. Recommended values are between `2` and `8`.                                                                                                                                                                                |
-| `embed_size`         | int  | The number of rows in the hash embedding tables. This can be surprisingly small, due to the use of the hash embeddings. Recommended values are between `2000` and `10000`.                                                                                            |
-| `window_size`        | int  | The number of tokens on either side to concatenate during the convolutions. The receptive field of the CNN will be `depth * (window_size * 2 + 1)`, so a 4-layer network with a window size of `2` will be sensitive to 17 words at a time. Recommended value is `1`. |
-| `maxout_pieces`      | int  | The number of pieces to use in the maxout non-linearity. If `1`, the [`Mish`](https://thinc.ai/docs/api-layers#mish) non-linearity is used instead. Recommended values are `1`-`3`.                                                                                   |
-| `subword_features`   | bool | Whether to also embed subword features, specifically the prefix, suffix and word shape. This is recommended for alphabetic languages like English, but not if single-character tokens are used for a language such as Chinese.                                        |
-| `pretrained_vectors` | bool | Whether to also use static vectors.                                                                                                                                                                                                                                   |
+| Name                 | Description                                                                                                                                                                                                                                                                   |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `width`              | The width of the input and output. These are required to be the same, so that residual connections can be used. Recommended values are `96`, `128` or `300`. ~~int~~                                                                                                          |
+| `depth`              | The number of convolutional layers to use. Recommended values are between `2` and `8`. ~~int~~                                                                                                                                                                                |
+| `embed_size`         | The number of rows in the hash embedding tables. This can be surprisingly small, due to the use of the hash embeddings. Recommended values are between `2000` and `10000`. ~~int~~                                                                                            |
+| `window_size`        | The number of tokens on either side to concatenate during the convolutions. The receptive field of the CNN will be `depth * (window_size * 2 + 1)`, so a 4-layer network with a window size of `2` will be sensitive to 17 words at a time. Recommended value is `1`. ~~int~~ |
+| `maxout_pieces`      | The number of pieces to use in the maxout non-linearity. If `1`, the [`Mish`](https://thinc.ai/docs/api-layers#mish) non-linearity is used instead. Recommended values are `1`-`3`. ~~int~~                                                                                   |
+| `subword_features`   | Whether to also embed subword features, specifically the prefix, suffix and word shape. This is recommended for alphabetic languages like English, but not if single-character tokens are used for a language such as Chinese. ~~bool~~                                       |
+| `pretrained_vectors` | Whether to also use static vectors. ~~bool~~                                                                                                                                                                                                                                  |
 
 ### spacy.Tok2Vec.v1 {#Tok2Vec}
 
@@ -67,10 +67,10 @@ Construct a tok2vec model out of embedding and encoding subnetworks. See the
 ["Embed, Encode, Attend, Predict"](https://explosion.ai/blog/deep-learning-formula-nlp)
 blog post for background.
 
-| Name     | Type                                       | Description                                                                                                                                                                                                                                      |
-| -------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `embed`  | [`Model`](https://thinc.ai/docs/api-model) | **Input:** `List[Doc]`. **Output:** `List[Floats2d]`. Embed tokens into context-independent word vector representations. For example, [CharacterEmbed](/api/architectures#CharacterEmbed) or [MultiHashEmbed](/api/architectures#MultiHashEmbed) |
-| `encode` | [`Model`](https://thinc.ai/docs/api-model) | **Input:** `List[Floats2d]`. **Output:** `List[Floats2d]`. Encode context into the embeddings, using an architecture such as a CNN, BiLSTM or transformer. For example, [MaxoutWindowEncoder](/api/architectures#MaxoutWindowEncoder).           |
+| Name     | Description                                                                                                                                                                                                                      |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `embed`  | Embed tokens into context-independent word vector representations. For example, [CharacterEmbed](/api/architectures#CharacterEmbed) or [MultiHashEmbed](/api/architectures#MultiHashEmbed). ~~Model[List[Doc], List[Floats2d]]~~ |
+| `encode` | Encode context into the embeddings, using an architecture such as a CNN, BiLSTM or transformer. For example, [MaxoutWindowEncoder](/api/architectures#MaxoutWindowEncoder). ~~Model[List[Floats2d], List[Floats2d]]~~            |
 
 ### spacy.Tok2VecListener.v1 {#Tok2VecListener}
 
@@ -108,10 +108,10 @@ Instead of defining its own `Tok2Vec` instance, a model architecture like
 [Tagger](/api/architectures#tagger) can define a listener as its `tok2vec`
 argument that connects to the shared `tok2vec` component in the pipeline.
 
-| Name       | Type | Description                                                                                                                                                                                                                                                                                            |
-| ---------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `width`    | int  | The width of the vectors produced by the "upstream" [`Tok2Vec`](/api/tok2vec) component.                                                                                                                                                                                                               |
-| `upstream` | str  | A string to identify the "upstream" `Tok2Vec` component to communicate with. The upstream name should either be the wildcard string `"*"`, or the name of the `Tok2Vec` component. You'll almost never have multiple upstream `Tok2Vec` components, so the wildcard string will almost always be fine. |
+| Name       | Description                                                                                                                                                                                                                                                                                                    |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `width`    | The width of the vectors produced by the "upstream" [`Tok2Vec`](/api/tok2vec) component. ~~int~~                                                                                                                                                                                                               |
+| `upstream` | A string to identify the "upstream" `Tok2Vec` component to communicate with. The upstream name should either be the wildcard string `"*"`, or the name of the `Tok2Vec` component. You'll almost never have multiple upstream `Tok2Vec` components, so the wildcard string will almost always be fine. ~~str~~ |
 
 ### spacy.MultiHashEmbed.v1 {#MultiHashEmbed}
 
@@ -134,12 +134,12 @@ definitions depending on the `Vocab` of the `Doc` object passed in. Vectors from
 pretrained static vectors can also be incorporated into the concatenated
 representation.
 
-| Name                      | Type | Description                                                                                                                                                                                               |
-| ------------------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `width`                   | int  | The output width. Also used as the width of the embedding tables. Recommended values are between `64` and `300`.                                                                                          |
-| `rows`                    | int  | The number of rows for the embedding tables. Can be low, due to the hashing trick. Embeddings for prefix, suffix and word shape use half as many rows. Recommended values are between `2000` and `10000`. |
-| `also_embed_subwords`     | bool | Whether to use the `PREFIX`, `SUFFIX` and `SHAPE` features in the embeddings. If not using these, you may need more rows in your hash embeddings, as there will be increased chance of collisions.        |
-| `also_use_static_vectors` | bool | Whether to also use static word vectors. Requires a vectors table to be loaded in the [Doc](/api/doc) objects' vocab.                                                                                     |
+| Name                      | Description                                                                                                                                                                                                       |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `width`                   | The output width. Also used as the width of the embedding tables. Recommended values are between `64` and `300`. ~~int~~                                                                                          |
+| `rows`                    | The number of rows for the embedding tables. Can be low, due to the hashing trick. Embeddings for prefix, suffix and word shape use half as many rows. Recommended values are between `2000` and `10000`. ~~int~~ |
+| `also_embed_subwords`     | Whether to use the `PREFIX`, `SUFFIX` and `SHAPE` features in the embeddings. If not using these, you may need more rows in your hash embeddings, as there will be increased chance of collisions. ~~bool~~       |
+| `also_use_static_vectors` | Whether to also use static word vectors. Requires a vectors table to be loaded in the [Doc](/api/doc) objects' vocab. ~~bool~~                                                                                    |
 
 ### spacy.CharacterEmbed.v1 {#CharacterEmbed}
 
@@ -170,12 +170,12 @@ concatenated. A hash-embedded vector of the `NORM` of the word is also
 concatenated on, and the result is then passed through a feed-forward network to
 construct a single vector to represent the information.
 
-| Name    | Type | Description                                                                                                                                             |
-| ------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `width` | int  | The width of the output vector and the `NORM` hash embedding.                                                                                           |
-| `rows`  | int  | The number of rows in the `NORM` hash embedding table.                                                                                                  |
-| `nM`    | int  | The dimensionality of the character embeddings. Recommended values are between `16` and `64`.                                                           |
-| `nC`    | int  | The number of UTF-8 bytes to embed per word. Recommended values are between `3` and `8`, although it may depend on the length of words in the language. |
+| Name    | Description                                                                                                                                                     |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `width` | The width of the output vector and the `NORM` hash embedding. ~~int~~                                                                                           |
+| `rows`  | The number of rows in the `NORM` hash embedding table. ~~int~~                                                                                                  |
+| `nM`    | The dimensionality of the character embeddings. Recommended values are between `16` and `64`. ~~int~~                                                           |
+| `nC`    | The number of UTF-8 bytes to embed per word. Recommended values are between `3` and `8`, although it may depend on the length of words in the language. ~~int~~ |
 
 ### spacy.MaxoutWindowEncoder.v1 {#MaxoutWindowEncoder}
 
@@ -193,12 +193,12 @@ construct a single vector to represent the information.
 Encode context using convolutions with maxout activation, layer normalization
 and residual connections.
 
-| Name            | Type | Description                                                                                                                                                                                            |
-| --------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `width`         | int  | The input and output width. These are required to be the same, to allow residual connections. This value will be determined by the width of the inputs. Recommended values are between `64` and `300`. |
-| `window_size`   | int  | The number of words to concatenate around each token to construct the convolution. Recommended value is `1`.                                                                                           |
-| `maxout_pieces` | int  | The number of maxout pieces to use. Recommended values are `2` or `3`.                                                                                                                                 |
-| `depth`         | int  | The number of convolutional layers. Recommended value is `4`.                                                                                                                                          |
+| Name            | Description                                                                                                                                                                                                    |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `width`         | The input and output width. These are required to be the same, to allow residual connections. This value will be determined by the width of the inputs. Recommended values are between `64` and `300`. ~~int~~ |
+| `window_size`   | The number of words to concatenate around each token to construct the convolution. Recommended value is `1`. ~~int~~                                                                                           |
+| `maxout_pieces` | The number of maxout pieces to use. Recommended values are `2` or `3`. ~~int~~                                                                                                                                 |
+| `depth`         | The number of convolutional layers. Recommended value is `4`. ~~int~~                                                                                                                                          |
 
 ### spacy.MishWindowEncoder.v1 {#MishWindowEncoder}
 
@@ -216,11 +216,11 @@ Encode context using convolutions with
 [`Mish`](https://thinc.ai/docs/api-layers#mish) activation, layer normalization
 and residual connections.
 
-| Name          | Type | Description                                                                                                                                                                                            |
-| ------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `width`       | int  | The input and output width. These are required to be the same, to allow residual connections. This value will be determined by the width of the inputs. Recommended values are between `64` and `300`. |
-| `window_size` | int  | The number of words to concatenate around each token to construct the convolution. Recommended value is `1`.                                                                                           |
-| `depth`       | int  | The number of convolutional layers. Recommended value is `4`.                                                                                                                                          |
+| Name          | Description                                                                                                                                                                                                    |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `width`       | The input and output width. These are required to be the same, to allow residual connections. This value will be determined by the width of the inputs. Recommended values are between `64` and `300`. ~~int~~ |
+| `window_size` | The number of words to concatenate around each token to construct the convolution. Recommended value is `1`. ~~int~~                                                                                           |
+| `depth`       | The number of convolutional layers. Recommended value is `4`. ~~int~~                                                                                                                                          |
 
 ### spacy.TorchBiLSTMEncoder.v1 {#TorchBiLSTMEncoder}
 
@@ -237,11 +237,11 @@ and residual connections.
 Encode context using bidirectional LSTM layers. Requires
 [PyTorch](https://pytorch.org).
 
-| Name          | Type | Description                                                                                                                                                                                            |
-| ------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `width`       | int  | The input and output width. These are required to be the same, to allow residual connections. This value will be determined by the width of the inputs. Recommended values are between `64` and `300`. |
-| `window_size` | int  | The number of words to concatenate around each token to construct the convolution. Recommended value is `1`.                                                                                           |
-| `depth`       | int  | The number of convolutional layers. Recommended value is `4`.                                                                                                                                          |
+| Name          | Description                                                                                                                                                                                                    |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `width`       | The input and output width. These are required to be the same, to allow residual connections. This value will be determined by the width of the inputs. Recommended values are between `64` and `300`. ~~int~~ |
+| `window_size` | The number of words to concatenate around each token to construct the convolution. Recommended value is `1`. ~~int~~                                                                                           |
+| `depth`       | The number of convolutional layers. Recommended value is `4`. ~~int~~                                                                                                                                          |
 
 ## Transformer architectures {#transformers source="github.com/explosion/spacy-transformers/blob/master/spacy_transformers/architectures.py"}
 
@@ -268,11 +268,11 @@ architectures into your training config.
 
 <!-- TODO: description -->
 
-| Name               | Type             | Description                                                                                                                                                                                                     |
-| ------------------ | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`             | str              | Any model name that can be loaded by [`transformers.AutoModel`](https://huggingface.co/transformers/model_doc/auto.html#transformers.AutoModel).                                                                |
-| `get_spans`        | `Callable`       | Function that takes a batch of [`Doc`](/api/doc) object and returns lists of [`Span`](/api) objects to process by the transformer. [See here](/api/transformer#span_getters) for built-in options and examples. |
-| `tokenizer_config` | `Dict[str, Any]` | Tokenizer settings passed to [`transformers.AutoTokenizer`](https://huggingface.co/transformers/model_doc/auto.html#transformers.AutoTokenizer).                                                                |
+| Name               | Description                                                                                                                                                                                                                                           |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`             | Any model name that can be loaded by [`transformers.AutoModel`](https://huggingface.co/transformers/model_doc/auto.html#transformers.AutoModel). ~~str~~                                                                                              |
+| `get_spans`        | Function that takes a batch of [`Doc`](/api/doc) object and returns lists of [`Span`](/api) objects to process by the transformer. [See here](/api/transformer#span_getters) for built-in options and examples. ~~Callable[[List[Doc]], List[Span]]~~ |
+| `tokenizer_config` | Tokenizer settings passed to [`transformers.AutoTokenizer`](https://huggingface.co/transformers/model_doc/auto.html#transformers.AutoTokenizer). ~~Dict[str, Any]~~                                                                                   |
 
 ### spacy-transformers.Tok2VecListener.v1 {#transformers-Tok2VecListener}
 
@@ -297,10 +297,10 @@ operate over wordpieces, which usually don't align one-to-one against spaCy
 tokens. The layer therefore requires a reduction operation in order to calculate
 a single token vector given zero or more wordpiece vectors.
 
-| Name          | Type                                       | Description                                                                                                                                                                                                                                                         |
-| ------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pooling`     | [`Model`](https://thinc.ai/docs/api-model) | **Input:** [`Ragged`](https://thinc.ai/docs/api-types#ragged). **Output:** [`Floats2d`](https://thinc.ai/docs/api-types#types)                                                                                                                                      | A reduction layer used to calculate the token vectors based on zero or more wordpiece vectors. If in doubt, mean pooling (see [`reduce_mean`](https://thinc.ai/docs/api-layers#reduce_mean)) is usually a good choice. |
-| `grad_factor` | float                                      | Reweight gradients from the component before passing them upstream. You can set this to `0` to "freeze" the transformer weights with respect to the component, or use it to make some components more significant than others. Leaving it at `1.0` is usually fine. |
+| Name          | Description                                                                                                                                                                                                                                                                   |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pooling`     | A reduction layer used to calculate the token vectors based on zero or more wordpiece vectors. If in doubt, mean pooling (see [`reduce_mean`](https://thinc.ai/docs/api-layers#reduce_mean)) is usually a good choice. ~~Model[Ragged, Floats2d]~~                            |
+| `grad_factor` | Reweight gradients from the component before passing them upstream. You can set this to `0` to "freeze" the transformer weights with respect to the component, or use it to make some components more significant than others. Leaving it at `1.0` is usually fine. ~~float~~ |
 
 ### spacy-transformers.Tok2VecTransformer.v1 {#Tok2VecTransformer}
 
@@ -320,12 +320,12 @@ Use a transformer as a [`Tok2Vec`](/api/tok2vec) layer directly. This does
 object, but it's a **simpler solution** if you only need the transformer within
 one component.
 
-| Name               | Type                                       | Description                                                                                                                                                                                                                                                         |
-| ------------------ | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `get_spans`        | callable                                   | Function that takes a batch of [`Doc`](/api/doc) object and returns lists of [`Span`](/api) objects to process by the transformer. [See here](/api/transformer#span_getters) for built-in options and examples.                                                     |
-| `tokenizer_config` | `Dict[str, Any]`                           | Tokenizer settings passed to [`transformers.AutoTokenizer`](https://huggingface.co/transformers/model_doc/auto.html#transformers.AutoTokenizer).                                                                                                                    |
-| `pooling`          | [`Model`](https://thinc.ai/docs/api-model) | **Input:** [`Ragged`](https://thinc.ai/docs/api-types#ragged). **Output:** [`Floats2d`](https://thinc.ai/docs/api-types#types)                                                                                                                                      | A reduction layer used to calculate the token vectors based on zero or more wordpiece vectors. If in doubt, mean pooling (see [`reduce_mean`](https://thinc.ai/docs/api-layers#reduce_mean)) is usually a good choice. |
-| `grad_factor`      | float                                      | Reweight gradients from the component before passing them upstream. You can set this to `0` to "freeze" the transformer weights with respect to the component, or use it to make some components more significant than others. Leaving it at `1.0` is usually fine. |
+| Name               | Description                                                                                                                                                                                                                                                                   |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `get_spans`        | Function that takes a batch of [`Doc`](/api/doc) object and returns lists of [`Span`](/api) objects to process by the transformer. [See here](/api/transformer#span_getters) for built-in options and examples. ~~Callable[[List[Doc]], List[Span]]~~                         |
+| `tokenizer_config` | Tokenizer settings passed to [`transformers.AutoTokenizer`](https://huggingface.co/transformers/model_doc/auto.html#transformers.AutoTokenizer). ~~Dict[str, Any]~~                                                                                                           |
+| `pooling`          | A reduction layer used to calculate the token vectors based on zero or more wordpiece vectors. If in doubt, mean pooling (see [`reduce_mean`](https://thinc.ai/docs/api-layers#reduce_mean)) is usually a good choice. ~~Model[Ragged, Floats2d]~~                            |
+| `grad_factor`      | Reweight gradients from the component before passing them upstream. You can set this to `0` to "freeze" the transformer weights with respect to the component, or use it to make some components more significant than others. Leaving it at `1.0` is usually fine. ~~float~~ |
 
 ## Parser & NER architectures {#parser}
 
@@ -368,14 +368,14 @@ consists of either two or three subnetworks:
   state representation. If not present, the output from the lower model is used
   as action scores directly.
 
-| Name                | Type                                       | Description                                                                                                                                                                                                                                                                                                                                                    |
-| ------------------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tok2vec`           | [`Model`](https://thinc.ai/docs/api-model) | **Input:** `List[Doc]`. **Output:** `List[Floats2d]`. Subnetwork to map tokens into vector representations.                                                                                                                                                                                                                                                    |
-| `nr_feature_tokens` | int                                        | The number of tokens in the context to use to construct the state vector. Valid choices are `1`, `2`, `3`, `6`, `8` and `13`. The `2`, `8` and `13` feature sets are designed for the parser, while the `3` and `6` feature sets are designed for the entity recognizer. The recommended feature sets are `3` for NER, and `8` for the dependency parser.      |
-| `hidden_width`      | int                                        | The width of the hidden layer.                                                                                                                                                                                                                                                                                                                                 |
-| `maxout_pieces`     | int                                        | How many pieces to use in the state prediction layer. Recommended values are `1`, `2` or `3`. If `1`, the maxout non-linearity is replaced with a [`Relu`](https://thinc.ai/docs/api-layers#relu) non-linearity if `use_upper` is `True`, and no non-linearity if `False`.                                                                                     |
-| `use_upper`         | bool                                       | Whether to use an additional hidden layer after the state vector in order to predict the action scores. It is recommended to set this to `False` for large pretrained models such as transformers, and `True` for smaller networks. The upper layer is computed on CPU, which becomes a bottleneck on larger GPU-based models, where it's also less necessary. |
-| `nO`                | int                                        | The number of actions the model will predict between. Usually inferred from data at the beginning of training, or loaded from disk.                                                                                                                                                                                                                            |
+| Name                | Description                                                                                                                                                                                                                                                                                                                                                             |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tok2vec`           | Subnetwork to map tokens into vector representations. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                                                                                              |
+| `nr_feature_tokens` | The number of tokens in the context to use to construct the state vector. Valid choices are `1`, `2`, `3`, `6`, `8` and `13`. The `2`, `8` and `13` feature sets are designed for the parser, while the `3` and `6` feature sets are designed for the entity recognizer. The recommended feature sets are `3` for NER, and `8` for the dependency parser. ~~int~~       |
+| `hidden_width`      | The width of the hidden layer. ~~int~~                                                                                                                                                                                                                                                                                                                                  |
+| `maxout_pieces`     | How many pieces to use in the state prediction layer. Recommended values are `1`, `2` or `3`. If `1`, the maxout non-linearity is replaced with a [`Relu`](https://thinc.ai/docs/api-layers#relu) non-linearity if `use_upper` is `True`, and no non-linearity if `False`. ~~int~~                                                                                      |
+| `use_upper`         | Whether to use an additional hidden layer after the state vector in order to predict the action scores. It is recommended to set this to `False` for large pretrained models such as transformers, and `True` for smaller networks. The upper layer is computed on CPU, which becomes a bottleneck on larger GPU-based models, where it's also less necessary. ~~bool~~ |
+| `nO`                | The number of actions the model will predict between. Usually inferred from data at the beginning of training, or loaded from disk. ~~int~~                                                                                                                                                                                                                             |
 
 ### spacy.BILUOTagger.v1 {#BILUOTagger source="spacy/ml/models/simple_ner.py"}
 
@@ -402,9 +402,9 @@ generally results in better linear separation between classes, especially for
 non-CRF models, because there are more distinct classes for the different
 situations ([Ratinov et al., 2009](https://www.aclweb.org/anthology/W09-1119/)).
 
-| Name      | Type                                       | Description                                                                                                 |
-| --------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
-| `tok2vec` | [`Model`](https://thinc.ai/docs/api-model) | **Input:** `List[Doc]`. **Output:** `List[Floats2d]`. Subnetwork to map tokens into vector representations. |
+| Name      | Description                                                                                |
+| --------- | ------------------------------------------------------------------------------------------ |
+| `tok2vec` | Subnetwork to map tokens into vector representations. ~~Model[List[Doc], List[Floats2d]]~~ |
 
 ### spacy.IOBTagger.v1 {#IOBTagger source="spacy/ml/models/simple_ner.py"}
 
@@ -427,9 +427,9 @@ spans into tags assigned to each token. The first token of a span is given the
 tag B-LABEL, and subsequent tokens are given the tag I-LABEL. All other tokens
 are assigned the tag O.
 
-| Name      | Type                                       | Description                                                                                                 |
-| --------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
-| `tok2vec` | [`Model`](https://thinc.ai/docs/api-model) | **Input:** `List[Doc]`. **Output:** `List[Floats2d]`. Subnetwork to map tokens into vector representations. |
+| Name      | Description                                                                                |
+| --------- | ------------------------------------------------------------------------------------------ |
+| `tok2vec` | Subnetwork to map tokens into vector representations. ~~Model[List[Doc], List[Floats2d]]~~ |
 
 ## Tagging architectures {#tagger source="spacy/ml/models/tagger.py"}
 
@@ -450,10 +450,10 @@ Build a tagger model, using a provided token-to-vector component. The tagger
 model simply adds a linear layer with softmax activation to predict scores given
 the token vectors.
 
-| Name      | Type                                       | Description                                                                                                 |
-| --------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
-| `tok2vec` | [`Model`](https://thinc.ai/docs/api-model) | **Input:** `List[Doc]`. **Output:** `List[Floats2d]`. Subnetwork to map tokens into vector representations. |
-| `nO`      | int                                        | The number of tags to output. Inferred from the data if `None`.                                             |
+| Name      | Description                                                                                |
+| --------- | ------------------------------------------------------------------------------------------ |
+| `tok2vec` | Subnetwork to map tokens into vector representations. ~~Model[List[Doc], List[Floats2d]]~~ |
+| `nO`      | The number of tags to output. Inferred from the data if `None`. ~~Optional[int]~~          |
 
 ## Text classification architectures {#textcat source="spacy/ml/models/textcat.py"}
 
@@ -489,17 +489,17 @@ network has an internal CNN Tok2Vec layer and uses attention.
 > nO = null
 > ```
 
-| Name                 | Type  | Description                                                                                                                                                                      |
-| -------------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `exclusive_classes`  | bool  | Whether or not categories are mutually exclusive.                                                                                                                                |
-| `pretrained_vectors` | bool  | Whether or not pretrained vectors will be used in addition to the feature vectors.                                                                                               |
-| `width`              | int   | Output dimension of the feature encoding step.                                                                                                                                   |
-| `embed_size`         | int   | Input dimension of the feature encoding step.                                                                                                                                    |
-| `conv_depth`         | int   | Depth of the Tok2Vec layer.                                                                                                                                                      |
-| `window_size`        | int   | The number of contextual vectors to [concatenate](https://thinc.ai/docs/api-layers#expand_window) from the left and from the right.                                              |
-| `ngram_size`         | int   | Determines the maximum length of the n-grams in the BOW model. For instance, `ngram_size=3`would give unigram, trigram and bigram features.                                      |
-| `dropout`            | float | The dropout rate.                                                                                                                                                                |
-| `nO`                 | int   | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `begin_training` is called. |
+| Name                 | Description                                                                                                                                                                                        |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `exclusive_classes`  | Whether or not categories are mutually exclusive. ~~bool~~                                                                                                                                         |
+| `pretrained_vectors` | Whether or not pretrained vectors will be used in addition to the feature vectors. ~~bool~~                                                                                                        |
+| `width`              | Output dimension of the feature encoding step. ~~int~~                                                                                                                                             |
+| `embed_size`         | Input dimension of the feature encoding step. ~~int~~                                                                                                                                              |
+| `conv_depth`         | Depth of the tok2vec layer. ~~int~~                                                                                                                                                                |
+| `window_size`        | The number of contextual vectors to [concatenate](https://thinc.ai/docs/api-layers#expand_window) from the left and from the right. ~~int~~                                                        |
+| `ngram_size`         | Determines the maximum length of the n-grams in the BOW model. For instance, `ngram_size=3`would give unigram, trigram and bigram features. ~~int~~                                                |
+| `dropout`            | The dropout rate. ~~float~~                                                                                                                                                                        |
+| `nO`                 | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `begin_training` is called. ~~Optional[int]~~ |
 
 ### spacy.TextCatCNN.v1 {#TextCatCNN}
 
@@ -526,11 +526,11 @@ A neural network model where token vectors are calculated using a CNN. The
 vectors are mean pooled and used as features in a feed-forward network. This
 architecture is usually less accurate than the ensemble, but runs faster.
 
-| Name                | Type                                       | Description                                                                                                                                                                      |
-| ------------------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `exclusive_classes` | bool                                       | Whether or not categories are mutually exclusive.                                                                                                                                |
-| `tok2vec`           | [`Model`](https://thinc.ai/docs/api-model) | The [`tok2vec`](#tok2vec) layer of the model.                                                                                                                                    |
-| `nO`                | int                                        | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `begin_training` is called. |
+| Name                | Description                                                                                                                                                                                        |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `exclusive_classes` | Whether or not categories are mutually exclusive. ~~bool~~                                                                                                                                         |
+| `tok2vec`           | The [`tok2vec`](#tok2vec) layer of the model. ~~Model~~                                                                                                                                            |
+| `nO`                | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `begin_training` is called. ~~Optional[int]~~ |
 
 ### spacy.TextCatBOW.v1 {#TextCatBOW}
 
@@ -548,18 +548,18 @@ architecture is usually less accurate than the ensemble, but runs faster.
 An ngram "bag-of-words" model. This architecture should run much faster than the
 others, but may not be as accurate, especially if texts are short.
 
-| Name                | Type  | Description                                                                                                                                                                      |
-| ------------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `exclusive_classes` | bool  | Whether or not categories are mutually exclusive.                                                                                                                                |
-| `ngram_size`        | int   | Determines the maximum length of the n-grams in the BOW model. For instance, `ngram_size=3`would give unigram, trigram and bigram features.                                      |
-| `no_output_layer`   | float | Whether or not to add an output layer to the model (`Softmax` activation if `exclusive_classes=True`, else `Logistic`.                                                           |
-| `nO`                | int   | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `begin_training` is called. |
+| Name                | Description                                                                                                                                                                                        |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `exclusive_classes` | Whether or not categories are mutually exclusive. ~~bool~~                                                                                                                                         |
+| `ngram_size`        | Determines the maximum length of the n-grams in the BOW model. For instance, `ngram_size=3`would give unigram, trigram and bigram features. ~~int~~                                                |
+| `no_output_layer`   | Whether or not to add an output layer to the model (`Softmax` activation if `exclusive_classes` is `True`, else `Logistic`. ~~bool~~                                                               |
+| `nO`                | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `begin_training` is called. ~~Optional[int]~~ |
 
 ## Entity linking architectures {#entitylinker source="spacy/ml/models/entity_linker.py"}
 
 An [`EntityLinker`](/api/entitylinker) component disambiguates textual mentions
 (tagged as named entities) to unique identifiers, grounding the named entities
-into the "real world". This requires 3 main components:
+into the "real world". This requires 3 main component
 
 - A [`KnowledgeBase`](/api/kb) (KB) holding the unique identifiers, potential
   synonyms and prior probabilities.
@@ -570,8 +570,8 @@ into the "real world". This requires 3 main components:
 
 ### spacy.EntityLinker.v1 {#EntityLinker}
 
-The `EntityLinker` model architecture is a `Thinc` `Model` with a Linear output
-layer.
+The `EntityLinker` model architecture is a Thinc `Model` with a
+[`Linear`](https://thinc.ai/api-layers#linear) output layer.
 
 > #### Example Config
 >
@@ -598,27 +598,24 @@ layer.
 > @assets = "spacy.CandidateGenerator.v1"
 > ```
 
-| Name      | Type                                       | Description                                                                              |
-| --------- | ------------------------------------------ | ---------------------------------------------------------------------------------------- |
-| `tok2vec` | [`Model`](https://thinc.ai/docs/api-model) | The [`tok2vec`](#tok2vec) layer of the model.                                            |
-| `nO`      | int                                        | Output dimension, determined by the length of the vectors encoding each entity in the KB |
-
-If the `nO` dimension is not set, the Entity Linking component will set it when
-`begin_training` is called.
+| Name      | Description                                                                                                                                                                                                             |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tok2vec` | The [`tok2vec`](#tok2vec) layer of the model. ~~Model~~                                                                                                                                                                 |
+| `nO`      | Output dimension, determined by the length of the vectors encoding each entity in the KB. If the `nO` dimension is not set, the entity linking component will set it when `begin_training` is called. ~~Optional[int]~~ |
 
 ### spacy.EmptyKB.v1 {#EmptyKB}
 
 A function that creates a default, empty `KnowledgeBase` from a
 [`Vocab`](/api/vocab) instance.
 
-| Name                   | Type | Description                                                               |
-| ---------------------- | ---- | ------------------------------------------------------------------------- |
-| `entity_vector_length` | int  | The length of the vectors encoding each entity in the KB - 64 by default. |
+| Name                   | Description                                                                         |
+| ---------------------- | ----------------------------------------------------------------------------------- |
+| `entity_vector_length` | The length of the vectors encoding each entity in the KB. Defaults to `64`. ~~int~~ |
 
 ### spacy.CandidateGenerator.v1 {#CandidateGenerator}
 
 A function that takes as input a [`KnowledgeBase`](/api/kb) and a
 [`Span`](/api/span) object denoting a named entity, and returns a list of
-plausible [`Candidate` objects](/api/kb/#candidate_init). The default
+plausible [`Candidate`](/api/kb/#candidate) objects. The default
 `CandidateGenerator` simply uses the text of a mention to find its potential
 aliases in the `KnowledgeBase`. Note that this function is case-dependent.

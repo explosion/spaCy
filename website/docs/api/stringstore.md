@@ -19,9 +19,9 @@ Create the `StringStore`.
 > stringstore = StringStore(["apple", "orange"])
 > ```
 
-| Name      | Type     | Description                                |
-| --------- | -------- | ------------------------------------------ |
-| `strings` | iterable | A sequence of strings to add to the store. |
+| Name      | Description                                                            |
+| --------- | ---------------------------------------------------------------------- |
+| `strings` | A sequence of strings to add to the store. ~~Optional[Iterable[str]]~~ |
 
 ## StringStore.\_\_len\_\_ {#len tag="method"}
 
@@ -34,9 +34,9 @@ Get the number of strings in the store.
 > assert len(stringstore) == 2
 > ```
 
-| Name        | Type | Description                         |
-| ----------- | ---- | ----------------------------------- |
-| **RETURNS** | int  | The number of strings in the store. |
+| Name        | Description                                 |
+| ----------- | ------------------------------------------- |
+| **RETURNS** | The number of strings in the store. ~~int~~ |
 
 ## StringStore.\_\_getitem\_\_ {#getitem tag="method"}
 
@@ -51,10 +51,10 @@ Retrieve a string from a given hash, or vice versa.
 > assert stringstore[apple_hash] == "apple"
 > ```
 
-| Name           | Type                 | Description                |
-| -------------- | -------------------- | -------------------------- |
-| `string_or_id` | bytes, str or uint64 | The value to encode.       |
-| **RETURNS**    | str or int           | The value to be retrieved. |
+| Name           | Description                                     |
+| -------------- | ----------------------------------------------- |
+| `string_or_id` | The value to encode. ~~Union[bytes, str, int]~~ |
+| **RETURNS**    | The value to be retrieved. ~~Union[str, int]~~  |
 
 ## StringStore.\_\_contains\_\_ {#contains tag="method"}
 
@@ -68,15 +68,15 @@ Check whether a string is in the store.
 > assert not "cherry" in stringstore
 > ```
 
-| Name        | Type | Description                            |
-| ----------- | ---- | -------------------------------------- |
-| `string`    | str  | The string to check.                   |
-| **RETURNS** | bool | Whether the store contains the string. |
+| Name        | Description                                     |
+| ----------- | ----------------------------------------------- |
+| `string`    | The string to check. ~~str~~                    |
+| **RETURNS** | Whether the store contains the string. ~~bool~~ |
 
 ## StringStore.\_\_iter\_\_ {#iter tag="method"}
 
 Iterate over the strings in the store, in order. Note that a newly initialized
-store will always include an empty string `''` at position `0`.
+store will always include an empty string `""` at position `0`.
 
 > #### Example
 >
@@ -86,9 +86,9 @@ store will always include an empty string `''` at position `0`.
 > assert all_strings == ["apple", "orange"]
 > ```
 
-| Name       | Type | Description            |
-| ---------- | ---- | ---------------------- |
-| **YIELDS** | str  | A string in the store. |
+| Name       | Description                    |
+| ---------- | ------------------------------ |
+| **YIELDS** | A string in the store. ~~str~~ |
 
 ## StringStore.add {#add tag="method" new="2"}
 
@@ -105,10 +105,10 @@ Add a string to the `StringStore`.
 > assert stringstore["banana"] == banana_hash
 > ```
 
-| Name        | Type   | Description              |
-| ----------- | ------ | ------------------------ |
-| `string`    | str    | The string to add.       |
-| **RETURNS** | uint64 | The string's hash value. |
+| Name        | Description                      |
+| ----------- | -------------------------------- |
+| `string`    | The string to add. ~~str~~       |
+| **RETURNS** | The string's hash value. ~~int~~ |
 
 ## StringStore.to_disk {#to_disk tag="method" new="2"}
 
@@ -120,9 +120,9 @@ Save the current state to a directory.
 > stringstore.to_disk("/path/to/strings")
 > ```
 
-| Name   | Type         | Description                                                                                                           |
-| ------ | ------------ | --------------------------------------------------------------------------------------------------------------------- |
-| `path` | str / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| Name   | Description                                                                                                                                |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
 
 ## StringStore.from_disk {#from_disk tag="method" new="2"}
 
@@ -135,10 +135,10 @@ Loads state from a directory. Modifies the object in place and returns it.
 > stringstore = StringStore().from_disk("/path/to/strings")
 > ```
 
-| Name        | Type          | Description                                                                |
-| ----------- | ------------- | -------------------------------------------------------------------------- |
-| `path`      | str / `Path`  | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| **RETURNS** | `StringStore` | The modified `StringStore` object.                                         |
+| Name        | Description                                                                                     |
+| ----------- | ----------------------------------------------------------------------------------------------- |
+| `path`      | A path to a directory. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+| **RETURNS** | The modified `StringStore` object. ~~StringStore~~                                              |
 
 ## StringStore.to_bytes {#to_bytes tag="method"}
 
@@ -150,9 +150,9 @@ Serialize the current state to a binary string.
 > store_bytes = stringstore.to_bytes()
 > ```
 
-| Name        | Type  | Description                                      |
-| ----------- | ----- | ------------------------------------------------ |
-| **RETURNS** | bytes | The serialized form of the `StringStore` object. |
+| Name        | Description                                                |
+| ----------- | ---------------------------------------------------------- |
+| **RETURNS** | The serialized form of the `StringStore` object. ~~bytes~~ |
 
 ## StringStore.from_bytes {#from_bytes tag="method"}
 
@@ -166,10 +166,10 @@ Load state from a binary string.
 > new_store = StringStore().from_bytes(store_bytes)
 > ```
 
-| Name         | Type          | Description               |
-| ------------ | ------------- | ------------------------- |
-| `bytes_data` | bytes         | The data to load from.    |
-| **RETURNS**  | `StringStore` | The `StringStore` object. |
+| Name         | Description                               |
+| ------------ | ----------------------------------------- |
+| `bytes_data` | The data to load from. ~~bytes~~          |
+| **RETURNS**  | The `StringStore` object. ~~StringStore~~ |
 
 ## Utilities {#util}
 
@@ -184,7 +184,7 @@ Get a 64-bit hash for a given string.
 > assert hash_string("apple") == 8566208034543834098
 > ```
 
-| Name        | Type   | Description         |
-| ----------- | ------ | ------------------- |
-| `string`    | str    | The string to hash. |
-| **RETURNS** | uint64 | The hash.           |
+| Name        | Description                 |
+| ----------- | --------------------------- |
+| `string`    | The string to hash. ~~str~~ |
+| **RETURNS** | The hash. ~~int~~           |

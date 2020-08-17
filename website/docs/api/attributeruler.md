@@ -31,10 +31,10 @@ how the component should be configured. You can override its settings via the
 > nlp.add_pipe("attribute_ruler", config=config)
 > ```
 
-| Setting         | Type             | Description                                                                                                                             | Default |
-| --------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| `pattern_dicts` | `Iterable[dict]` | A list of pattern dicts with the keys as the arguments to [`AttributeRuler.add`](#add) (`patterns`/`attrs`/`index`) to add as patterns. | `None`  |
-| `validate`      | bool             | Whether patterns should be validated (passed to the `Matcher`).                                                                         | `False` |
+| Setting         | Description                                                                                                                                                                                                                                    |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pattern_dicts` | A list of pattern dicts with the keys as the arguments to [`AttributeRuler.add`](/api/attributeruler#add) (`patterns`/`attrs`/`index`) to add as patterns. Defaults to `None`. ~~Optional[Iterable[Dict[str, Union[List[dict], dict, int]]]]~~ |
+| `validate`      | Whether patterns should be validated (passed to the `Matcher`). Defaults to `False`. ~~bool~~                                                                                                                                                  |
 
 ```python
 https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/attributeruler.py
@@ -47,10 +47,10 @@ be a list of dictionaries with `"patterns"`, `"attrs"`, and optional `"index"`
 keys, e.g.:
 
 ```python
-pattern_dicts = \[
-    {"patterns": \[\[{"TAG": "VB"}\]\], "attrs": {"POS": "VERB"}},
-    {"patterns": \[\[{"LOWER": "an"}\]\], "attrs": {"LEMMA": "a"}},
-\]
+pattern_dicts = [
+    {"patterns": [[{"TAG": "VB"}]], "attrs": {"POS": "VERB"}},
+    {"patterns": [[{"LOWER": "an"}]], "attrs": {"LEMMA": "a"}},
+]
 ```
 
 > #### Example
@@ -60,23 +60,23 @@ pattern_dicts = \[
 > attribute_ruler = nlp.add_pipe("attribute_ruler")
 > ```
 
-| Name            | Type              | Description                                                                                                                                                                                                                   |
-| --------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`         | `Vocab`           | The shared nlp object to pass the vocab to the matchers and process phrase patterns.                                                                                                                                          |
-| `name`          | str               | Instance name of the current pipeline component. Typically passed in automatically from the factory when the component is added. Used to disable the current entity ruler while creating phrase patterns with the nlp object. |
-| _keyword-only_  |                   |                                                                                                                                                                                                                               |
-| `pattern_dicts` | `Iterable[Dict]]` | Optional patterns to load in on initialization. Defaults to `None`.                                                                                                                                                           |
-| `validate`      | bool              | Whether patterns should be validated (passed to the `Matcher`). Defaults to `False`.                                                                                                                                          |
+| Name            | Description                                                                                                                              |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`         | The shared vocabulary to pass to the matcher. ~~Vocab~~                                                                                  |
+| `name`          | Instance name of the current pipeline component. Typically passed in automatically from the factory when the component is added. ~~str~~ |
+| _keyword-only_  |                                                                                                                                          |
+| `pattern_dicts` | Optional patterns to load in on initialization. Defaults to `None`. ~~Optional[Iterable[Dict[str, Union[List[dict], dict, int]]]]~~      |
+| `validate`      | Whether patterns should be validated (passed to the [`Matcher`](/api/matcher#init)). Defaults to `False`. ~~bool~~                       |
 
 ## AttributeRuler.\_\_call\_\_ {#call tag="method"}
 
 Apply the attribute ruler to a Doc, setting token attributes for tokens matched
 by the provided patterns.
 
-| Name        | Type  | Description                                                  |
-| ----------- | ----- | ------------------------------------------------------------ |
-| `doc`       | `Doc` | The `Doc` object to process, e.g. the `Doc` in the pipeline. |
-| **RETURNS** | `Doc` | The modified `Doc` with added entities, if available.        |
+| Name        | Description                      |
+| ----------- | -------------------------------- |
+| `doc`       | The document to process. ~~Doc~~ |
+| **RETURNS** | The processed document. ~~Doc~~  |
 
 ## AttributeRuler.add {#add tag="method"}
 
@@ -95,11 +95,11 @@ may be negative to index from the end of the span.
 > attribute_ruler.add(patterns=patterns, attrs=attrs)
 > ```
 
-| Name     | Type                   | Description                                                                                                             |
-| -------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| patterns | `Iterable[List[Dict]]` | A list of Matcher patterns.                                                                                             |
-| attrs    | dict                   | The attributes to assign to the target token in the matched span.                                                       |
-| index    | int                    | The index of the token in the matched span to modify. May be negative to index from the end of the span. Defaults to 0. |
+| Name       | Description                                                                                                                       |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `patterns` | The `Matcher` patterns to add. ~~Iterable[List[Dict[Union[int, str], Any]]]~~                                                     |
+| `attrs`    | The attributes to assign to the target token in the matched span. ~~Dict[str, Any]~~                                              |
+| `index`    | The index of the token in the matched span to modify. May be negative to index from the end of the span. Defaults to `0`. ~~int~~ |
 
 ## AttributeRuler.add_patterns {#add_patterns tag="method"}
 
@@ -107,52 +107,52 @@ may be negative to index from the end of the span.
 >
 > ```python
 > attribute_ruler = nlp.add_pipe("attribute_ruler")
-> pattern_dicts = \[
+> pattern_dicts = [
 >   {
->     "patterns": \[\[{"TAG": "VB"}\]\],
+>     "patterns": [[{"TAG": "VB"}]],
 >     "attrs": {"POS": "VERB"}
 >   },
 >   {
->     "patterns": \[\[{"LOWER": "two"}, {"LOWER": "apples"}\]\],
+>     "patterns": [[{"LOWER": "two"}, {"LOWER": "apples"}]],
 >     "attrs": {"LEMMA": "apple"},
 >     "index": -1
 >   },
-> \]
+> ]
 > attribute_ruler.add_patterns(pattern_dicts)
 > ```
 
 Add patterns from a list of pattern dicts with the keys as the arguments to
-[`AttributeRuler.add`](#add).
+[`AttributeRuler.add`](/api/attributeruler#add).
 
-| Name            | Type              | Description          |
-| --------------- | ----------------- | -------------------- |
-| `pattern_dicts` | `Iterable[Dict]]` | The patterns to add. |
+| Name            | Description                                                                |
+| --------------- | -------------------------------------------------------------------------- |
+| `pattern_dicts` | The patterns to add. ~~Iterable[Dict[str, Union[List[dict], dict, int]]]~~ |
 
 ## AttributeRuler.patterns {#patterns tag="property"}
 
 Get all patterns that have been added to the attribute ruler in the
 `patterns_dict` format accepted by
-[`AttributeRuler.add_patterns`](#add_patterns).
+[`AttributeRuler.add_patterns`](/api/attributeruler#add_patterns).
 
-| Name        | Type         | Description                                |
-| ----------- | ------------ | ------------------------------------------ |
-| **RETURNS** | `List[dict]` | The patterns added to the attribute ruler. |
+| Name        | Description                                                                                  |
+| ----------- | -------------------------------------------------------------------------------------------- |
+| **RETURNS** | The patterns added to the attribute ruler. ~~List[Dict[str, Union[List[dict], dict, int]]]~~ |
 
 ## AttributeRuler.load_from_tag_map {#load_from_tag_map tag="method"}
 
 Load attribute ruler patterns from a tag map.
 
-| Name      | Type | Description                                                                                |
-| --------- | ---- | ------------------------------------------------------------------------------------------ |
-| `tag_map` | dict | The tag map that maps fine-grained tags to coarse-grained tags and morphological features. |
+| Name      | Description                                                                                                                                      |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `tag_map` | The tag map that maps fine-grained tags to coarse-grained tags and morphological features. ~~Dict[str, Dict[Union[int, str], Union[int, str]]]~~ |
 
 ## AttributeRuler.load_from_morph_rules {#load_from_morph_rules tag="method"}
 
 Load attribute ruler patterns from morph rules.
 
-| Name          | Type | Description                                                                                                          |
-| ------------- | ---- | -------------------------------------------------------------------------------------------------------------------- |
-| `morph_rules` | dict | The morph rules that map token text and fine-grained tags to coarse-grained tags, lemmas and morphological features. |
+| Name          | Description                                                                                                                                                                           |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `morph_rules` | The morph rules that map token text and fine-grained tags to coarse-grained tags, lemmas and morphological features. ~~Dict[str, Dict[str, Dict[Union[int, str], Union[int, str]]]]~~ |
 
 ## AttributeRuler.to_disk {#to_disk tag="method"}
 
@@ -165,11 +165,11 @@ Serialize the pipe to disk.
 > attribute_ruler.to_disk("/path/to/attribute_ruler")
 > ```
 
-| Name           | Type            | Description                                                                                                           |
-| -------------- | --------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path`         | str / `Path`    | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
-| _keyword-only_ |                 |                                                                                                                       |
-| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.                                             |
+| Name           | Description                                                                                                                                |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `path`         | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+| _keyword-only_ |                                                                                                                                            |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~                                                |
 
 ## AttributeRuler.from_disk {#from_disk tag="method"}
 
@@ -182,12 +182,12 @@ Load the pipe from disk. Modifies the object in place and returns it.
 > attribute_ruler.from_disk("/path/to/attribute_ruler")
 > ```
 
-| Name           | Type             | Description                                                                |
-| -------------- | ---------------- | -------------------------------------------------------------------------- |
-| `path`         | str / `Path`     | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| _keyword-only_ |                  |                                                                            |
-| `exclude`      | `Iterable[str]`  | String names of [serialization fields](#serialization-fields) to exclude.  |
-| **RETURNS**    | `AttributeRuler` | The modified `AttributeRuler` object.                                      |
+| Name           | Description                                                                                     |
+| -------------- | ----------------------------------------------------------------------------------------------- |
+| `path`         | A path to a directory. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+| _keyword-only_ |                                                                                                 |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~     |
+| **RETURNS**    | The modified `AttributeRuler` object. ~~AttributeRuler~~                                        |
 
 ## AttributeRuler.to_bytes {#to_bytes tag="method"}
 
@@ -200,11 +200,11 @@ Load the pipe from disk. Modifies the object in place and returns it.
 
 Serialize the pipe to a bytestring.
 
-| Name           | Type            | Description                                                               |
-| -------------- | --------------- | ------------------------------------------------------------------------- |
-| _keyword-only_ |                 |                                                                           |
-| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS**    | bytes           | The serialized form of the `AttributeRuler` object.                       |
+| Name           | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| _keyword-only_ |                                                                                             |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
+| **RETURNS**    | The serialized form of the `AttributeRuler` object. ~~bytes~~                               |
 
 ## AttributeRuler.from_bytes {#from_bytes tag="method"}
 
@@ -218,12 +218,12 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 > attribute_ruler.from_bytes(attribute_ruler_bytes)
 > ```
 
-| Name           | Type             | Description                                                               |
-| -------------- | ---------------- | ------------------------------------------------------------------------- |
-| `bytes_data`   | bytes            | The data to load from.                                                    |
-| _keyword-only_ |                  |                                                                           |
-| `exclude`      | `Iterable[str]`  | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS**    | `AttributeRuler` | The `AttributeRuler` object.                                              |
+| Name           | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| `bytes_data`   | The data to load from. ~~bytes~~                                                            |
+| _keyword-only_ |                                                                                             |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
+| **RETURNS**    | The `AttributeRuler` object. ~~AttributeRuler~~                                             |
 
 ## Serialization fields {#serialization-fields}
 

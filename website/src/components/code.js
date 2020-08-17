@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { Fragment } from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
 import highlightCode from 'gatsby-remark-prismjs/highlight-code.js'
@@ -6,12 +6,13 @@ import rangeParser from 'parse-numeric-range'
 import { StaticQuery, graphql } from 'gatsby'
 import { window } from 'browser-monads'
 
+import CUSTOM_TYPES from '../../meta/type-annotations.json'
 import { isString, htmlToReact } from './util'
 import Link from './link'
 import GitHubCode from './github'
 import classes from '../styles/code.module.sass'
 
-const WRAP_THRESHOLD = 16
+const WRAP_THRESHOLD = 30
 
 export default props => (
     <Pre>
@@ -38,6 +39,52 @@ InlineCode.propTypes = {
     wrap: PropTypes.bool,
     className: PropTypes.string,
     children: PropTypes.node,
+}
+
+function linkType(el, showLink = true) {
+    if (!isString(el) || !el.length) return el
+    const elStr = el.trim()
+    if (!elStr) return el
+    const typeUrl = CUSTOM_TYPES[elStr]
+    const url = typeUrl == true ? DEFAULT_TYPE_URL : typeUrl
+    const ws = el[0] == ' '
+    return url && showLink ? (
+        <Fragment>
+            {ws && ' '}
+            <Link to={url} hideIcon>
+                {elStr}
+            </Link>
+        </Fragment>
+    ) : (
+        el
+    )
+}
+
+export const TypeAnnotation = ({ lang = 'python', link = true, children }) => {
+    // Hacky, but we're temporarily replacing a dot to prevent it from being split during highlighting
+    const TMP_DOT = '•'
+    const code = Array.isArray(children) ? children.join('') : children || ''
+    const rawStr = code.replace('.', TMP_DOT)
+    const rawHtml = lang === 'none' || !code ? code : highlightCode(lang, rawStr)
+    const html = rawHtml.replace(TMP_DOT, '.').replace(/\n/g, ' ')
+    const result = htmlToReact(html)
+    const elements = Array.isArray(result) ? result : [result]
+    const annotClassNames = classNames(
+        'type-annotation',
+        `language-${lang}`,
+        classes.inlineCode,
+        classes.typeAnnotation,
+        {
+            [classes.wrap]: code.length >= WRAP_THRESHOLD,
+        }
+    )
+    return (
+        <code className={annotClassNames} aria-label="Type annotation">
+            {elements.map((el, i) => (
+                <Fragment key={i}>{linkType(el, !!link)}</Fragment>
+            ))}
+        </code>
+    )
 }
 
 export class Code extends React.Component {

@@ -28,9 +28,9 @@ how the component should be configured. You can override its settings via the
 > nlp.add_pipe("entity_ruler", config=config)
 > ```
 
-| Setting       | Type        | Description                                                                                                | Default |
-| ------------- | ----------- | ---------------------------------------------------------------------------------------------------------- | ------- |
-| `punct_chars` | `List[str]` | Optional custom list of punctuation characters that mark sentence ends. See below for defaults if not set. | `None`  |
+| Setting       | Description                                                                                                                                            |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `punct_chars` | Optional custom list of punctuation characters that mark sentence ends. See below for defaults if not set. Defaults to `None`. ~~Optional[List[str]]~~ | `None` |
 
 ```python
 https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/sentencizer.pyx
@@ -51,10 +51,10 @@ Initialize the sentencizer.
 > sentencizer = Sentencizer()
 > ```
 
-| Name           | Type        | Description                                                                                     |
-| -------------- | ----------- | ----------------------------------------------------------------------------------------------- |
-| _keyword-only_ |             |                                                                                                 |
-| `punct_chars`  | `List[str]` | Optional custom list of punctuation characters that mark sentence ends. See below for defaults. |
+| Name           | Description                                                                                                             |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| _keyword-only_ |                                                                                                                         |  |
+| `punct_chars`  | Optional custom list of punctuation characters that mark sentence ends. See below for defaults. ~~Optional[List[str]]~~ |
 
 ```python
 ### punct_chars defaults
@@ -87,10 +87,10 @@ the component has been added to the pipeline using
 > assert len(list(doc.sents)) == 2
 > ```
 
-| Name        | Type  | Description                                                  |
-| ----------- | ----- | ------------------------------------------------------------ |
-| `doc`       | `Doc` | The `Doc` object to process, e.g. the `Doc` in the pipeline. |
-| **RETURNS** | `Doc` | The modified `Doc` with added sentence boundaries.           |
+| Name        | Description                                                          |
+| ----------- | -------------------------------------------------------------------- |
+| `doc`       | The `Doc` object to process, e.g. the `Doc` in the pipeline. ~~Doc~~ |
+| **RETURNS** | The modified `Doc` with added sentence boundaries. ~~Doc~~           |
 
 ## Sentencizer.pipe {#pipe tag="method"}
 
@@ -106,12 +106,12 @@ applied to the `Doc` in order.
 >     pass
 > ```
 
-| Name           | Type            | Description                                           |
-| -------------- | --------------- | ----------------------------------------------------- |
-| `stream`       | `Iterable[Doc]` | A stream of documents.                                |
-| _keyword-only_ |                 |                                                       |
-| `batch_size`   | int             | The number of documents to buffer. Defaults to `128`. |
-| **YIELDS**     | `Doc`           | The processed documents in order.                     |
+| Name           | Description                                                   |
+| -------------- | ------------------------------------------------------------- |
+| `stream`       | A stream of documents. ~~Iterable[Doc]~~                      |
+| _keyword-only_ |                                                               |
+| `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
+| **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
 ## Sentencizer.score {#score tag="method" new="3"}
 
@@ -123,10 +123,10 @@ Score a batch of examples.
 > scores = sentencizer.score(examples)
 > ```
 
-| Name        | Type                | Description                                                              |
-| ----------- | ------------------- | ------------------------------------------------------------------------ |
-| `examples`  | `Iterable[Example]` | The examples to score.                                                   |
-| **RETURNS** | `Dict[str, Any]`    | The scores, produced by [`Scorer.score_spans`](/api/scorer#score_spans). |
+| Name        | Description                                                                                                           |
+| ----------- | --------------------------------------------------------------------------------------------------------------------- |
+| `examples`  | The examples to score. ~~Iterable[Example]~~                                                                          |
+| **RETURNS** | The scores, produced by [`Scorer.score_spans`](/api/scorer#score_spans). ~~Dict[str, Union[float, Dict[str, float]]~~ |
 
 ## Sentencizer.to_disk {#to_disk tag="method"}
 
@@ -142,9 +142,9 @@ a file `sentencizer.json`. This also happens automatically when you save an
 > sentencizer.to_disk("/path/to/sentencizer.json")
 > ```
 
-| Name   | Type         | Description                                                                                                           |
-| ------ | ------------ | --------------------------------------------------------------------------------------------------------------------- |
-| `path` | str / `Path` | A path to a JSON file, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| Name   | Description                                                                                                                                |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `path` | A path to a JSON file, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
 
 ## Sentencizer.from_disk {#from_disk tag="method"}
 
@@ -159,10 +159,10 @@ added to its pipeline.
 > sentencizer.from_disk("/path/to/sentencizer.json")
 > ```
 
-| Name        | Type          | Description                                                                |
-| ----------- | ------------- | -------------------------------------------------------------------------- |
-| `path`      | str / `Path`  | A path to a JSON file. Paths may be either strings or `Path`-like objects. |
-| **RETURNS** | `Sentencizer` | The modified `Sentencizer` object.                                         |
+| Name        | Description                                                                                     |
+| ----------- | ----------------------------------------------------------------------------------------------- |
+| `path`      | A path to a JSON file. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+| **RETURNS** | The modified `Sentencizer` object. ~~Sentencizer~~                                              |
 
 ## Sentencizer.to_bytes {#to_bytes tag="method"}
 
@@ -176,9 +176,9 @@ Serialize the sentencizer settings to a bytestring.
 > sentencizer_bytes = sentencizer.to_bytes()
 > ```
 
-| Name        | Type  | Description          |
-| ----------- | ----- | -------------------- |
-| **RETURNS** | bytes | The serialized data. |
+| Name        | Description                    |
+| ----------- | ------------------------------ |
+| **RETURNS** | The serialized data. ~~bytes~~ |
 
 ## Sentencizer.from_bytes {#from_bytes tag="method"}
 
@@ -192,7 +192,7 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 > sentencizer.from_bytes(sentencizer_bytes)
 > ```
 
-| Name         | Type          | Description                        |
-| ------------ | ------------- | ---------------------------------- |
-| `bytes_data` | bytes         | The bytestring to load.            |
-| **RETURNS**  | `Sentencizer` | The modified `Sentencizer` object. |
+| Name         | Description                                        |
+| ------------ | -------------------------------------------------- |
+| `bytes_data` | The bytestring to load. ~~bytes~~                  |
+| **RETURNS**  | The modified `Sentencizer` object. ~~Sentencizer~~ |

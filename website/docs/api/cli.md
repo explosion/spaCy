@@ -598,9 +598,9 @@ $ python -m spacy debug model ./config.cfg tagger -l "5,15" -DIM -PAR -P0 -P1 -P
 
 | Argument                | Type       | Description                                                                                           |
 | ----------------------- | ---------- | ----------------------------------------------------------------------------------------------------- |
-| `config_path`           | positional | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. |  |
-| `component`             | positional | Name of the pipeline component of which the model should be analyzed.                                 |   |
-| `--layers`, `-l`        | option     | Comma-separated names of layer IDs to print.                                                          |  |
+| `config_path`           | positional | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. |
+| `component`             | positional | Name of the pipeline component of which the model should be analyzed.                                 |
+| `--layers`, `-l`        | option     | Comma-separated names of layer IDs to print.                                                          |
 | `--dimensions`, `-DIM`  | option     | Show dimensions of each layer.                                                                        |
 | `--parameters`, `-PAR`  | option     | Show parameters of each layer.                                                                        |
 | `--gradients`, `-GRAD`  | option     | Show gradients of each layer.                                                                         |

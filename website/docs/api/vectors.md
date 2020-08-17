@@ -30,13 +30,13 @@ you can add vectors to later.
 > vectors = Vectors(data=data, keys=keys)
 > ```
 
-| Name           | Type                               | Description                                                                                                                                                        |
-| -------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| _keyword-only_ |                                    |                                                                                                                                                                    |
-| `shape`        | tuple                              | Size of the table as `(n_entries, n_columns)`, the number of entries and number of columns. Not required if you're initializing the object with `data` and `keys`. |
-| `data`         | `ndarray[ndim=1, dtype='float32']` | The vector data.                                                                                                                                                   |
-| `keys`         | iterable                           | A sequence of keys aligned with the data.                                                                                                                          |
-| `name`         | str                                | A name to identify the vectors table.                                                                                                                              |
+| Name           | Description                                                                                                                                                                            |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| _keyword-only_ |                                                                                                                                                                                        |
+| `shape`        | Size of the table as `(n_entries, n_columns)`, the number of entries and number of columns. Not required if you're initializing the object with `data` and `keys`. ~~Tuple[int, int]~~ |
+| `data`         | The vector data. ~~numpy.ndarray[ndim=1, dtype=float32]~~                                                                                                                              |
+| `keys`         | A sequence of keys aligned with the data. ~~Iterable[Union[str, int]]~~                                                                                                                |
+| `name`         | A name to identify the vectors table. ~~str~~                                                                                                                                          |
 
 ## Vectors.\_\_getitem\_\_ {#getitem tag="method"}
 
@@ -51,10 +51,10 @@ raised.
 > assert cat_vector == nlp.vocab["cat"].vector
 > ```
 
-| Name    | Type                               | Description                    |
-| ------- | ---------------------------------- | ------------------------------ |
-| `key`   | int                                | The key to get the vector for. |
-| returns | `ndarray[ndim=1, dtype='float32']` | The vector for the key.        |
+| Name        | Description                                                      |
+| ----------- | ---------------------------------------------------------------- |
+| `key`       | The key to get the vector for. ~~int~~                           |
+| **RETURNS** | The vector for the key. ~~numpy.ndarray[ndim=1, dtype=float32]~~ |
 
 ## Vectors.\_\_setitem\_\_ {#setitem tag="method"}
 
@@ -68,10 +68,10 @@ Set a vector for the given key.
 > nlp.vocab.vectors[cat_id] = vector
 > ```
 
-| Name     | Type                               | Description                    |
-| -------- | ---------------------------------- | ------------------------------ |
-| `key`    | int                                | The key to set the vector for. |
-| `vector` | `ndarray[ndim=1, dtype='float32']` | The vector to set.             |
+| Name     | Description                                                 |
+| -------- | ----------------------------------------------------------- |
+| `key`    | The key to set the vector for. ~~int~~                      |
+| `vector` | The vector to set. ~~numpy.ndarray[ndim=1, dtype=float32]~~ |
 
 ## Vectors.\_\_iter\_\_ {#iter tag="method"}
 
@@ -84,9 +84,9 @@ Iterate over the keys in the table.
 >    print(key, nlp.vocab.strings[key])
 > ```
 
-| Name       | Type | Description         |
-| ---------- | ---- | ------------------- |
-| **YIELDS** | int  | A key in the table. |
+| Name       | Description                 |
+| ---------- | --------------------------- |
+| **YIELDS** | A key in the table. ~~int~~ |
 
 ## Vectors.\_\_len\_\_ {#len tag="method"}
 
@@ -99,9 +99,9 @@ Return the number of vectors in the table.
 > assert len(vectors) == 3
 > ```
 
-| Name        | Type | Description                         |
-| ----------- | ---- | ----------------------------------- |
-| **RETURNS** | int  | The number of vectors in the table. |
+| Name        | Description                                 |
+| ----------- | ------------------------------------------- |
+| **RETURNS** | The number of vectors in the table. ~~int~~ |
 
 ## Vectors.\_\_contains\_\_ {#contains tag="method"}
 
@@ -115,10 +115,10 @@ Check whether a key has been mapped to a vector entry in the table.
 > assert cat_id in vectors
 > ```
 
-| Name        | Type | Description                         |
-| ----------- | ---- | ----------------------------------- |
-| `key`       | int  | The key to check.                   |
-| **RETURNS** | bool | Whether the key has a vector entry. |
+| Name        | Description                                  |
+| ----------- | -------------------------------------------- |
+| `key`       | The key to check. ~~int~~                    |
+| **RETURNS** | Whether the key has a vector entry. ~~bool~~ |
 
 ## Vectors.add {#add tag="method"}
 
@@ -138,13 +138,13 @@ mapping separately. If you need to manage the strings, you should use the
 > nlp.vocab.vectors.add("dog", row=0)
 > ```
 
-| Name           | Type                               | Description                                           |
-| -------------- | ---------------------------------- | ----------------------------------------------------- |
-| `key`          | str / int                          | The key to add.                                       |
-| _keyword-only_ |                                    |                                                       |
-| `vector`       | `ndarray[ndim=1, dtype='float32']` | An optional vector to add for the key.                |
-| `row`          | int                                | An optional row number of a vector to map the key to. |
-| **RETURNS**    | int                                | The row the vector was added to.                      |
+| Name           | Description                                                                     |
+| -------------- | ------------------------------------------------------------------------------- |
+| `key`          | The key to add. ~~Union[str, int]~~                                             |
+| _keyword-only_ |                                                                                 |
+| `vector`       | An optional vector to add for the key. ~~numpy.ndarray[ndim=1, dtype=float32]~~ |
+| `row`          | An optional row number of a vector to map the key to. ~~int~~                   |
+| **RETURNS**    | The row the vector was added to. ~~int~~                                        |
 
 ## Vectors.resize {#resize tag="method"}
 
@@ -160,11 +160,11 @@ These removed items are returned as a list of `(key, row)` tuples.
 > removed = nlp.vocab.vectors.resize((10000, 300))
 > ```
 
-| Name        | Type  | Description                                                          |
-| ----------- | ----- | -------------------------------------------------------------------- |
-| `shape`     | tuple | A `(rows, dims)` tuple describing the number of rows and dimensions. |
-| `inplace`   | bool  | Reallocate the memory.                                               |
-| **RETURNS** | list  | The removed items as a list of `(key, row)` tuples.                  |
+| Name        | Description                                                                              |
+| ----------- | ---------------------------------------------------------------------------------------- |
+| `shape`     | A `(rows, dims)` tuple describing the number of rows and dimensions. ~~Tuple[int, int]~~ |
+| `inplace`   | Reallocate the memory. ~~bool~~                                                          |
+| **RETURNS** | The removed items as a list of `(key, row)` tuples. ~~List[Tuple[int, int]]~~            |
 
 ## Vectors.keys {#keys tag="method"}
 
@@ -177,9 +177,9 @@ A sequence of the keys in the table.
 >     print(key, nlp.vocab.strings[key])
 > ```
 
-| Name        | Type     | Description |
-| ----------- | -------- | ----------- |
-| **RETURNS** | iterable | The keys.   |
+| Name        | Description                 |
+| ----------- | --------------------------- |
+| **RETURNS** | The keys. ~~Iterable[int]~~ |
 
 ## Vectors.values {#values tag="method"}
 
@@ -194,9 +194,9 @@ the length of the vectors table.
 >     print(vector)
 > ```
 
-| Name       | Type                               | Description            |
-| ---------- | ---------------------------------- | ---------------------- |
-| **YIELDS** | `ndarray[ndim=1, dtype='float32']` | A vector in the table. |
+| Name       | Description                                                     |
+| ---------- | --------------------------------------------------------------- |
+| **YIELDS** | A vector in the table. ~~numpy.ndarray[ndim=1, dtype=float32]~~ |
 
 ## Vectors.items {#items tag="method"}
 
@@ -209,9 +209,9 @@ Iterate over `(key, vector)` pairs, in order.
 >    print(key, nlp.vocab.strings[key], vector)
 > ```
 
-| Name       | Type  | Description                      |
-| ---------- | ----- | -------------------------------- |
-| **YIELDS** | tuple | `(key, vector)` pairs, in order. |
+| Name       | Description                                                                           |
+| ---------- | ------------------------------------------------------------------------------------- |
+| **YIELDS** | `(key, vector)` pairs, in order. ~~Tuple[int, numpy.ndarray[ndim=1, dtype=float32]]~~ |
 
 ## Vectors.find {#find tag="method"}
 
@@ -226,14 +226,14 @@ Look up one or more keys by row, or vice versa.
 > keys = nlp.vocab.vectors.find(rows=[18, 256, 985])
 > ```
 
-| Name           | Type                                  | Description                                                              |
-| -------------- | ------------------------------------- | ------------------------------------------------------------------------ |
-| _keyword-only_ |                                       |                                                                          |
-| `key`          | str / int                             | Find the row that the given key points to. Returns int, `-1` if missing. |
-| `keys`         | iterable                              | Find rows that the keys point to. Returns `ndarray`.                     |
-| `row`          | int                                   | Find the first key that points to the row. Returns int.                  |
-| `rows`         | iterable                              | Find the keys that point to the rows. Returns ndarray.                   |
-| **RETURNS**    | The requested key, keys, row or rows. |
+| Name           | Description                                                                                  |
+| -------------- | -------------------------------------------------------------------------------------------- |
+| _keyword-only_ |                                                                                              |
+| `key`          | Find the row that the given key points to. Returns int, `-1` if missing. ~~Union[str, int]~~ |
+| `keys`         | Find rows that the keys point to. Returns `numpy.ndarray`. ~~Iterable[Union[str, int]]~~     |
+| `row`          | Find the first key that points to the row. Returns integer. ~~int~~                          |
+| `rows`         | Find the keys that point to the rows. Returns `numpy.ndarray`. ~~Iterable[int]~~             |
+| **RETURNS**    | The requested key, keys, row or rows. ~~Union[int, numpy.ndarray[ndim=1, dtype=float32]]~~   |
 
 ## Vectors.shape {#shape tag="property"}
 
@@ -250,9 +250,9 @@ vector table.
 > assert dims == 300
 > ```
 
-| Name        | Type  | Description            |
-| ----------- | ----- | ---------------------- |
-| **RETURNS** | tuple | A `(rows, dims)` pair. |
+| Name        | Description                                |
+| ----------- | ------------------------------------------ |
+| **RETURNS** | A `(rows, dims)` pair. ~~Tuple[int, int]~~ |
 
 ## Vectors.size {#size tag="property"}
 
@@ -265,9 +265,9 @@ The vector size, i.e. `rows * dims`.
 > assert vectors.size == 150000
 > ```
 
-| Name        | Type | Description      |
-| ----------- | ---- | ---------------- |
-| **RETURNS** | int  | The vector size. |
+| Name        | Description              |
+| ----------- | ------------------------ |
+| **RETURNS** | The vector size. ~~int~~ |
 
 ## Vectors.is_full {#is_full tag="property"}
 
@@ -283,9 +283,9 @@ If a table is full, it can be resized using
 > assert vectors.is_full
 > ```
 
-| Name        | Type | Description                        |
-| ----------- | ---- | ---------------------------------- |
-| **RETURNS** | bool | Whether the vectors table is full. |
+| Name        | Description                                 |
+| ----------- | ------------------------------------------- |
+| **RETURNS** | Whether the vectors table is full. ~~bool~~ |
 
 ## Vectors.n_keys {#n_keys tag="property"}
 
@@ -301,9 +301,9 @@ vectors, they will be counted individually.
 > assert vectors.n_keys == 0
 > ```
 
-| Name        | Type | Description                          |
-| ----------- | ---- | ------------------------------------ |
-| **RETURNS** | int  | The number of all keys in the table. |
+| Name        | Description                                  |
+| ----------- | -------------------------------------------- |
+| **RETURNS** | The number of all keys in the table. ~~int~~ |
 
 ## Vectors.most_similar {#most_similar tag="method"}
 
@@ -320,14 +320,14 @@ performed in chunks, to avoid consuming too much memory. You can set the
 > most_similar = nlp.vocab.vectors.most_similar(queries, n=10)
 > ```
 
-| Name           | Type      | Description                                                        |
-| -------------- | --------- | ------------------------------------------------------------------ |
-| `queries`      | `ndarray` | An array with one or more vectors.                                 |
-| _keyword-only_ |           |                                                                    |
-| `batch_size`   | int       | The batch size to use. Default to `1024`.                          |
-| `n`            | int       | The number of entries to return for each query. Defaults to `1`.   |
-| `sort`         | bool      | Whether to sort the entries returned by score. Defaults to `True`. |
-| **RETURNS**    | tuple     | The most similar entries as a `(keys, best_rows, scores)` tuple.   |
+| Name           | Description                                                                 |
+| -------------- | --------------------------------------------------------------------------- |
+| `queries`      | An array with one or more vectors. ~~numpy.ndarray~~                        |
+| _keyword-only_ |                                                                             |
+| `batch_size`   | The batch size to use. Default to `1024`. ~~int~~                           |
+| `n`            | The number of entries to return for each query. Defaults to `1`. ~~int~~    |
+| `sort`         | Whether to sort the entries returned by score. Defaults to `True`. ~~bool~~ |
+| **RETURNS**    | tuple                                                                       | The most similar entries as a `(keys, best_rows, scores)` tuple. ~~Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]~~ |
 
 ## Vectors.to_disk {#to_disk tag="method"}
 
@@ -340,9 +340,9 @@ Save the current state to a directory.
 >
 > ```
 
-| Name   | Type         | Description                                                                                                           |
-| ------ | ------------ | --------------------------------------------------------------------------------------------------------------------- |
-| `path` | str / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| Name   | Description                                                                                                                                |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
 
 ## Vectors.from_disk {#from_disk tag="method"}
 
@@ -355,10 +355,10 @@ Loads state from a directory. Modifies the object in place and returns it.
 > vectors.from_disk("/path/to/vectors")
 > ```
 
-| Name        | Type         | Description                                                                |
-| ----------- | ------------ | -------------------------------------------------------------------------- |
-| `path`      | str / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| **RETURNS** | `Vectors`    | The modified `Vectors` object.                                             |
+| Name        | Description                                                                                     |
+| ----------- | ----------------------------------------------------------------------------------------------- |
+| `path`      | A path to a directory. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+| **RETURNS** | The modified `Vectors` object. ~~Vectors~~                                                      |
 
 ## Vectors.to_bytes {#to_bytes tag="method"}
 
@@ -370,9 +370,9 @@ Serialize the current state to a binary string.
 > vectors_bytes = vectors.to_bytes()
 > ```
 
-| Name        | Type  | Description                                  |
-| ----------- | ----- | -------------------------------------------- |
-| **RETURNS** | bytes | The serialized form of the `Vectors` object. |
+| Name        | Description                                            |
+| ----------- | ------------------------------------------------------ |
+| **RETURNS** | The serialized form of the `Vectors` object. ~~bytes~~ |
 
 ## Vectors.from_bytes {#from_bytes tag="method"}
 
@@ -387,15 +387,15 @@ Load state from a binary string.
 > new_vectors.from_bytes(vectors_bytes)
 > ```
 
-| Name        | Type      | Description            |
-| ----------- | --------- | ---------------------- |
-| `data`      | bytes     | The data to load from. |
-| **RETURNS** | `Vectors` | The `Vectors` object.  |
+| Name        | Description                       |
+| ----------- | --------------------------------- |
+| `data`      | The data to load from. ~~bytes~~  |
+| **RETURNS** | The `Vectors` object. ~~Vectors~~ |
 
 ## Attributes {#attributes}
 
-| Name      | Type                               | Description                                                                     |
-| --------- | ---------------------------------- | ------------------------------------------------------------------------------- |
-| `data`    | `ndarray[ndim=1, dtype='float32']` | Stored vectors data. `numpy` is used for CPU vectors, `cupy` for GPU vectors.   |
-| `key2row` | dict                               | Dictionary mapping word hashes to rows in the `Vectors.data` table.             |
-| `keys`    | `ndarray[ndim=1, dtype='float32']` | Array keeping the keys in order, such that `keys[vectors.key2row[key]] == key`. |
+| Name      | Description                                                                                                                                                          |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data`    | Stored vectors data. `numpy` is used for CPU vectors, `cupy` for GPU vectors. ~~Union[numpy.ndarray[ndim=1, dtype=float32], cupy.ndarray[ndim=1, dtype=float32]]~~   |
+| `key2row` | Dictionary mapping word hashes to rows in the `Vectors.data` table. ~~Dict[int, int]~~                                                                               |
+| `keys`    | Array keeping the keys in order, such that `keys[vectors.key2row[key]] == key`. ~~Union[numpy.ndarray[ndim=1, dtype=float32], cupy.ndarray[ndim=1, dtype=float32]]~~ |

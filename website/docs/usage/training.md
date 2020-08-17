@@ -483,7 +483,7 @@ language class and `nlp` object at different points of the lifecycle:
 | `after_creation`          | Called right after the `nlp` object is created, but before the pipeline components are added to the pipeline and receives the `nlp` object. Useful for modifying the tokenizer.          |
 | `after_pipeline_creation` | Called right after the pipeline components are created and added and receives the `nlp` object. Useful for modifying pipeline components.                                                |
 
-The `@spacy.registry.callbacks` decorator lets you register that function in the
+The `@spacy.registry.callbacks` decorator lets you register your custom function in the
 `callbacks` [registry](/api/top-level#registry) under a given name. You can then
 reference the function in a config block using the `@callbacks` key. If a block
 contains a key starting with an `@`, it's interpreted as a reference to a

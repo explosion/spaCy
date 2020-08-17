@@ -980,7 +980,7 @@ nlp.tokenizer = my_tokenizer
 
 | Argument    | Type              | Description               |
 | ----------- | ----------------- | ------------------------- |
-| `text`      | str               | The raw text to tokenize. |
+| `text`      | `str`             | The raw text to tokenize. |
 | **RETURNS** | [`Doc`](/api/doc) | The tokenized document.   |
 
 #### Example 1: Basic whitespace tokenizer {#custom-tokenizer-example}

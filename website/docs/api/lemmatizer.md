@@ -36,11 +36,9 @@ tags is available in the pipeline and runs _before_ the lemmatizer.
 The default config is defined by the pipeline component factory and describes
 how the component should be configured. You can override its settings via the
 `config` argument on [`nlp.add_pipe`](/api/language#add_pipe) or in your
-[`config.cfg` for training](/usage/training#config).
-
-For examples of the lookups data formats used by the lookup and rule-based
-lemmatizers, see the
-[`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) repo.
+[`config.cfg` for training](/usage/training#config). For examples of the lookups
+data formats used by the lookup and rule-based lemmatizers, see
+[`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data).
 
 > #### Example
 >
@@ -49,12 +47,12 @@ lemmatizers, see the
 > nlp.add_pipe("lemmatizer", config=config)
 > ```
 
-| Setting     | Type                                       | Description                                                                                                                                                                            | Default    |
-| ----------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
-| `mode`      | str                                        | The lemmatizer mode, e.g. `"lookup"` or `"rule"`.                                                                                                                                      | `"lookup"` |
-| `lookups`   | [`Lookups`](/api/lookups)                  | The lookups object containing the tables such as `"lemma_rules"`, `"lemma_index"`, `"lemma_exc"` and `"lemma_lookup"`. If `None`, default tables are loaded from `spacy-lookups-data`. | `None`     |
-| `overwrite` | bool                                       | Whether to overwrite existing lemmas.                                                                                                                                                  | `False`    |
-| `model`     | [`Model`](https://thinc.ai/docs/api-model) | **Not yet implemented:** the model to use.                                                                                                                                             | `None`     |
+| Setting     | Description                                                                                                                                                                                                                                                                         |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mode`      | The lemmatizer mode, e.g. `"lookup"` or `"rule"`. Defaults to `"lookup"`. ~~str~~                                                                                                                                                                                                   |
+| `lookups`   | The lookups object containing the tables such as `"lemma_rules"`, `"lemma_index"`, `"lemma_exc"` and `"lemma_lookup"`. If `None`, default tables are loaded from [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data). Defaults to `None`. ~~Optional[Lookups]~~ |
+| `overwrite` | Whether to overwrite existing lemmas. Defaults to `False`. ~~bool~~                                                                                                                                                                                                                 |
+| `model`     | **Not yet implemented:** the model to use. ~~Model~~                                                                                                                                                                                                                                |
 
 ```python
 https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/lemmatizer.py
@@ -77,15 +75,15 @@ Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
 [`nlp.add_pipe`](/api/language#add_pipe).
 
-| Name           | Type                                       | Description                                                                                                                              |
-| -------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`        | [`Vocab`](/api/vocab)                      | The vocab.                                                                                                                               |
-| `model`        | [`Model`](https://thinc.ai/docs/api-model) | A model (not yet implemented).                                                                                                           |
-| `name`         | str                                        | String name of the component instance. Used to add entries to the `losses` during training.                                              |
-| _keyword-only_ |                                            |                                                                                                                                          |
-| mode           | str                                        | The lemmatizer mode, e.g. `"lookup"` or `"rule"`. Defaults to `"lookup"`.                                                                |
-| lookups        | [`Lookups`](/api/lookups)                  | A lookups object containing the tables such as `"lemma_rules"`, `"lemma_index"`, `"lemma_exc"` and `"lemma_lookup"`. Defaults to `None`. |
-| overwrite      | bool                                       | Whether to overwrite existing lemmas.                                                                                                    |
+| Name           | Description                                                                                                                                                    |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`        | The shared vocabulary. ~~Vocab~~                                                                                                                               |
+| `model`        | **Not yet implemented:** The model to use. ~~Model~~                                                                                                           |
+| `name`         | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                                                            |
+| _keyword-only_ |                                                                                                                                                                |  |
+| mode           | The lemmatizer mode, e.g. `"lookup"` or `"rule"`. Defaults to `"lookup"`. ~~str~~                                                                              |
+| lookups        | A lookups object containing the tables such as `"lemma_rules"`, `"lemma_index"`, `"lemma_exc"` and `"lemma_lookup"`. Defaults to `None`. ~~Optional[Lookups]~~ |
+| overwrite      | Whether to overwrite existing lemmas. ~~bool~                                                                                                                  |
 
 ## Lemmatizer.\_\_call\_\_ {#call tag="method"}
 
@@ -102,10 +100,10 @@ and all pipeline components are applied to the `Doc` in order.
 > processed = lemmatizer(doc)
 > ```
 
-| Name        | Type  | Description              |
-| ----------- | ----- | ------------------------ |
-| `doc`       | `Doc` | The document to process. |
-| **RETURNS** | `Doc` | The processed document.  |
+| Name        | Description                      |
+| ----------- | -------------------------------- |
+| `doc`       | The document to process. ~~Doc~~ |
+| **RETURNS** | The processed document. ~~Doc~~  |
 
 ## Lemmatizer.pipe {#pipe tag="method"}
 
@@ -121,12 +119,12 @@ applied to the `Doc` in order.
 >     pass
 > ```
 
-| Name           | Type            | Description                                            |
-| -------------- | --------------- | ------------------------------------------------------ |
-| `stream`       | `Iterable[Doc]` | A stream of documents.                                 |
-| _keyword-only_ |                 |                                                        |
-| `batch_size`   | int             | The number of texts to buffer. Defaults to `128`.      |
-| **YIELDS**     | `Doc`           | Processed documents in the order of the original text. |
+| Name           | Description                                                   |
+| -------------- | ------------------------------------------------------------- |
+| `stream`       | A stream of documents. ~~Iterable[Doc]~~                      |
+| _keyword-only_ |                                                               |
+| `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
+| **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
 ## Lemmatizer.lookup_lemmatize {#lookup_lemmatize tag="method"}
 
@@ -134,39 +132,39 @@ Lemmatize a token using a lookup-based approach. If no lemma is found, the
 original string is returned. Languages can provide a
 [lookup table](/usage/adding-languages#lemmatizer) via the `Lookups`.
 
-| Name        | Type                  | Description                           |
-| ----------- | --------------------- | ------------------------------------- |
-| `token`     | [`Token`](/api/token) | The token to lemmatize.               |
-| **RETURNS** | `List[str]`           | A list containing one or more lemmas. |
+| Name        | Description                                         |
+| ----------- | --------------------------------------------------- |
+| `token`     | The token to lemmatize. ~~Token~~                   |
+| **RETURNS** | A list containing one or more lemmas. ~~List[str]~~ |
 
 ## Lemmatizer.rule_lemmatize {#rule_lemmatize tag="method"}
 
 Lemmatize a token using a rule-based approach. Typically relies on POS tags.
 
-| Name        | Type                  | Description                           |
-| ----------- | --------------------- | ------------------------------------- |
-| `token`     | [`Token`](/api/token) | The token to lemmatize.               |
-| **RETURNS** | `List[str]`           | A list containing one or more lemmas. |
+| Name        | Description                                         |
+| ----------- | --------------------------------------------------- |
+| `token`     | The token to lemmatize. ~~Token~~                   |
+| **RETURNS** | A list containing one or more lemmas. ~~List[str]~~ |
 
 ## Lemmatizer.is_base_form {#is_base_form tag="method"}
 
 Check whether we're dealing with an uninflected paradigm, so we can avoid
 lemmatization entirely.
 
-| Name        | Type                  | Description                                                                                             |
-| ----------- | --------------------- | ------------------------------------------------------------------------------------------------------- |
-| `token`     | [`Token`](/api/token) | The token to analyze.                                                                                   |
-| **RETURNS** | bool                  | Whether the token's attributes (e.g., part-of-speech tag, morphological features) describe a base form. |
+| Name        | Description                                                                                                      |
+| ----------- | ---------------------------------------------------------------------------------------------------------------- |
+| `token`     | The token to analyze. ~~Token~~                                                                                  |
+| **RETURNS** | Whether the token's attributes (e.g., part-of-speech tag, morphological features) describe a base form. ~~bool~~ |
 
 ## Lemmatizer.get_lookups_config {#get_lookups_config tag="classmethod"}
 
 Returns the lookups configuration settings for a given mode for use in
-[`Lemmatizer.load_lookups`](#load_lookups).
+[`Lemmatizer.load_lookups`](/api/lemmatizer#load_lookups).
 
-| Name        | Type | Description                                       |
-| ----------- | ---- | ------------------------------------------------- |
-| `mode`      | str  | The lemmatizer mode.                              |
-| **RETURNS** | dict | The lookups configuration settings for this mode. |
+| Name        | Description                                                                                                                                                                       |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mode`      | The lemmatizer mode. ~~str~~                                                                                                                                                      |
+| **RETURNS** | The lookups configuration settings for this mode. Includes the keys `"required_tables"` and `"optional_tables"`, mapped to a list of table string names. ~~Dict[str, List[str]]~~ |
 
 ## Lemmatizer.load_lookups {#load_lookups tag="classmethod"}
 
@@ -174,12 +172,12 @@ Load and validate lookups tables. If the provided lookups is `None`, load the
 default lookups tables according to the language and mode settings. Confirm that
 all required tables for the language and mode are present.
 
-| Name        | Type                      | Description                                                                  |
-| ----------- | ------------------------- | ---------------------------------------------------------------------------- |
-| `lang`      | str                       | The language.                                                                |
-| `mode`      | str                       | The lemmatizer mode.                                                         |
-| `lookups`   | [`Lookups`](/api/lookups) | The provided lookups, may be `None` if the default lookups should be loaded. |
-| **RETURNS** | [`Lookups`](/api/lookups) | The lookups object.                                                          |
+| Name        | Description                                                                                        |
+| ----------- | -------------------------------------------------------------------------------------------------- |
+| `lang`      | The language. ~~str~~                                                                              |
+| `mode`      | The lemmatizer mode. ~~str~~                                                                       |
+| `lookups`   | The provided lookups, may be `None` if the default lookups should be loaded. ~~Optional[Lookups]~~ |
+| **RETURNS** | The lookups. ~~Lookups~~                                                                           |
 
 ## Lemmatizer.to_disk {#to_disk tag="method"}
 
@@ -192,11 +190,11 @@ Serialize the pipe to disk.
 > lemmatizer.to_disk("/path/to/lemmatizer")
 > ```
 
-| Name           | Type            | Description                                                                                                           |
-| -------------- | --------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path`         | str / `Path`    | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
-| _keyword-only_ |                 |                                                                                                                       |
-| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.                                             |
+| Name           | Description                                                                                                                                |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `path`         | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+| _keyword-only_ |                                                                                                                                            |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~                                                |
 
 ## Lemmatizer.from_disk {#from_disk tag="method"}
 
@@ -209,12 +207,12 @@ Load the pipe from disk. Modifies the object in place and returns it.
 > lemmatizer.from_disk("/path/to/lemmatizer")
 > ```
 
-| Name           | Type            | Description                                                                |
-| -------------- | --------------- | -------------------------------------------------------------------------- |
-| `path`         | str / `Path`    | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| _keyword-only_ |                 |                                                                            |
-| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude.  |
-| **RETURNS**    | `Lemmatizer`    | The modified `Lemmatizer` object.                                          |
+| Name           | Description                                                                                     |
+| -------------- | ----------------------------------------------------------------------------------------------- |
+| `path`         | A path to a directory. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+| _keyword-only_ |                                                                                                 |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~     |
+| **RETURNS**    | The modified `Lemmatizer` object. ~~Lemmatizer~~                                                |
 
 ## Lemmatizer.to_bytes {#to_bytes tag="method"}
 
@@ -227,11 +225,11 @@ Load the pipe from disk. Modifies the object in place and returns it.
 
 Serialize the pipe to a bytestring.
 
-| Name           | Type            | Description                                                               |
-| -------------- | --------------- | ------------------------------------------------------------------------- |
-| _keyword-only_ |                 |                                                                           |
-| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS**    | bytes           | The serialized form of the `Lemmatizer` object.                           |
+| Name           | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| _keyword-only_ |                                                                                             |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
+| **RETURNS**    | The serialized form of the `Lemmatizer` object. ~~bytes~~                                   |
 
 ## Lemmatizer.from_bytes {#from_bytes tag="method"}
 
@@ -245,27 +243,20 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 > lemmatizer.from_bytes(lemmatizer_bytes)
 > ```
 
-| Name           | Type            | Description                                                               |
-| -------------- | --------------- | ------------------------------------------------------------------------- |
-| `bytes_data`   | bytes           | The data to load from.                                                    |
-| _keyword-only_ |                 |                                                                           |
-| `exclude`      | `Iterable[str]` | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS**    | `Lemmatizer`    | The `Lemmatizer` object.                                                  |
-
-## Lemmatizer.mode {#mode tag="property"}
-
-The lemmatizer mode.
-
-| Name        | Type  | Description          |
-| ----------- | ----- | -------------------- |
-| **RETURNS** | `str` | The lemmatizer mode. |
+| Name           | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| `bytes_data`   | The data to load from. ~~bytes~~                                                            |
+| _keyword-only_ |                                                                                             |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
+| **RETURNS**    | The `Lemmatizer` object. ~~Lemmatizer~~                                                     |
 
 ## Attributes {#attributes}
 
-| Name      | Type                              | Description         |
-| --------- | --------------------------------- | ------------------- |
-| `vocab`   | The shared [`Vocab`](/api/vocab). |
-| `lookups` | [`Lookups`](/api/lookups)         | The lookups object. |
+| Name      | Description                                 |
+| --------- | ------------------------------------------- |
+| `vocab`   | The shared [`Vocab`](/api/vocab). ~~Vocab~~ |
+| `lookups` | The lookups object. ~~Lookups~~             |
+| `mode`    | The lemmatizer mode. ~~str~~                |
 
 ## Serialization fields {#serialization-fields}
 
