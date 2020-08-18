@@ -30,7 +30,7 @@ ready-to-use spaCy models.
 
 </Infobox>
 
-## Quickstart {#quickstart}
+## Quickstart {#quickstart tag="new"}
 
 The recommended way to train your spaCy models is via the
 [`spacy train`](/api/cli#train) command on the command line. It only needs a
@@ -131,7 +131,7 @@ Some of the main advantages and features of spaCy's training config are:
   multiple components, define them once and reference them as
   [variables](#config-interpolation).
 - **Reproducibility with no hidden defaults.** The config file is the "single
-  source of truth" and includes all settings. <!-- TODO: explain this better -->
+  source of truth" and includes all settings.
 - **Automated checks and validation.** When you load a config, spaCy checks if
   the settings are complete and if all values have the correct types. This lets
   you catch potential mistakes early. In your custom architectures, you can use
@@ -667,7 +667,7 @@ visualize your model.
 
 For more details on how to integrate transformer models into your training
 config and customize the implementations, see the usage guide on
-[training transformers](/usage/transformers#training).
+[training transformers](/usage/embeddings-transformers#transformers-training).
 
 ### Pretraining with spaCy {#pretraining}
 

@@ -70,7 +70,7 @@ Create a blank model of a given language class. This function is the twin of
 | `name`      | [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) of the language class to load. ~~str~~ |
 | **RETURNS** | An empty `Language` object of the appropriate subclass. ~~Language~~                                     |
 
-#### spacy.info {#spacy.info tag="function"}
+### spacy.info {#spacy.info tag="function"}
 
 The same as the [`info` command](/api/cli#info). Pretty-print information about
 your installation, models and local setup from within spaCy. To get the model
@@ -316,7 +316,7 @@ factories.
 The following registries are added by the
 [`spacy-transformers`](https://github.com/explosion/spacy-transformers) package.
 See the [`Transformer`](/api/transformer) API reference and
-[usage docs](/usage/transformers) for details.
+[usage docs](/usage/embeddings-transformers) for details.
 
 > #### Example
 >
@@ -585,20 +585,40 @@ A helper function to use in the `load()` method of a model package's
 | `config` <Tag variant="new">3</Tag> | Config overrides as nested dict or flat dict keyed by section values in dot notation, e.g. `"nlp.pipeline"`. ~~Union[Dict[str, Any], Config]~~ |
 | **RETURNS**                         | `Language` class with the loaded model. ~~Language~~                                                                                           |
 
-### util.get_model_meta {#util.get_model_meta tag="function" new="2"}
+### util.load_config {#util.load_config tag="function" new="3"}
 
-Get a model's meta.json from a directory path and validate its contents.
+Load a model's [`config.cfg`](/api/data-formats#config) from a file path. The
+config typically includes details about the model pipeline and how its
+components are created, as well as all training settings and hyperparameters.
 
 > #### Example
 >
 > ```python
-> meta = util.get_model_meta("/path/to/model")
+> config = util.load_config("/path/to/model/config.cfg")
+> print(config.to_str())
 > ```
 
-| Name        | Description                                   |
-| ----------- | --------------------------------------------- |
-| `path`      | Path to model directory. ~~Union[str, Path]~~ |
-| **RETURNS** | The model's meta data. ~~Dict[str, Any]~~     |
+| Name          | Description                                                                                                                                                                 |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `path`        | Path to the model's `config.cfg`. ~~Union[str, Path]~~                                                                                                                      |
+| `overrides`   | Optional config overrides to replace in loaded config. Can be provided as nested dict, or as flat dict with keys in dot notation, e.g. `"nlp.pipeline"`. ~~Dict[str, Any]~~ |
+| `interpolate` | Whether to interpolate the config and replace variables like `${paths:train}` with their values. Defaults to `False`. ~~bool~~                                              |
+| **RETURNS**   | The model's config. ~~Config~~                                                                                                                                              |
+
+### util.load_meta {#util.load_meta tag="function" new="3"}
+
+Get a model's `meta.json` from a file path and validate its contents.
+
+> #### Example
+>
+> ```python
+> meta = util.load_meta("/path/to/model/meta.json")
+> ```
+
+| Name        | Description                                           |
+| ----------- | ----------------------------------------------------- |
+| `path`      | Path to the model's `meta.json`. ~~Union[str, Path]~~ |
+| **RETURNS** | The model's meta data. ~~Dict[str, Any]~~             |
 
 ### util.is_package {#util.is_package tag="function"}
 

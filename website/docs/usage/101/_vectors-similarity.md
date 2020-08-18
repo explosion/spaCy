@@ -77,12 +77,14 @@ or flagging duplicates. For example, you can suggest a user content that's
 similar to what they're currently looking at, or label a support ticket as a
 duplicate if it's very similar to an already existing one.
 
-Each `Doc`, `Span` and `Token` comes with a
-[`.similarity()`](/api/token#similarity) method that lets you compare it with
-another object, and determine the similarity. Of course similarity is always
-subjective – whether "dog" and "cat" are similar really depends on how you're
-looking at it. spaCy's similarity model usually assumes a pretty general-purpose
-definition of similarity.
+Each [`Doc`](/api/doc), [`Span`](/api/span), [`Token`](/api/token) and
+[`Lexeme`](/api/lexeme) comes with a [`.similarity`](/api/token#similarity)
+method that lets you compare it with another object, and determine the
+similarity. Of course similarity is always subjective – whether "dog" and "cat"
+are similar really depends on how you're looking at it. spaCy's similarity model
+usually assumes a pretty general-purpose definition of similarity.
+
+<!-- TODO: use better example here -->
 
 ```python
 ### {executable="true"}

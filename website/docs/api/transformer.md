@@ -41,7 +41,8 @@ token, the spaCy token receives the sum of their values. To access the values,
 you can use the custom [`Doc._.trf_data`](#custom-attributes) attribute. The
 package also adds the function registries [`@span_getters`](#span_getters) and
 [`@annotation_setters`](#annotation_setters) with several built-in registered
-functions. For more details, see the [usage documentation](/usage/transformers).
+functions. For more details, see the
+[usage documentation](/usage/embeddings-transformers).
 
 ## Config and implementation {#config}
 

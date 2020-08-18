@@ -247,7 +247,7 @@ import Vectors101 from 'usage/101/\_vectors-similarity.md'
 
 To learn more about word vectors, how to **customize them** and how to load
 **your own vectors** into spaCy, see the usage guide on
-[using word vectors and semantic similarities](/usage/vectors-embeddings).
+[using word vectors and semantic similarities](/usage/linguistic-features#vectors-similarity).
 
 </Infobox>
 

@@ -37,7 +37,7 @@ function isDividerRow(children) {
 }
 
 function isFootRow(children) {
-    const rowRegex = /^(RETURNS|YIELDS|CREATES|PRINTS)/
+    const rowRegex = /^(RETURNS|YIELDS|CREATES|PRINTS|EXECUTES)/
     if (children.length && children[0].props.name === 'td') {
         const cellChildren = children[0].props.children
         if (
