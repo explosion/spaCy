@@ -200,21 +200,21 @@ probability of the fact that the mention links to the entity ID.
 | `alias`     | The textual mention or alias. ~~str~~                                     |
 | **RETURNS** | The prior probability of the `alias` referring to the `entity`. ~~float~~ |
 
-## KnowledgeBase.dump {#dump tag="method"}
+## KnowledgeBase.to_disk {#to_disk tag="method"}
 
 Save the current state of the knowledge base to a directory.
 
 > #### Example
 >
 > ```python
-> kb.dump(loc)
+> kb.to_disk(loc)
 > ```
 
 | Name  | Description                                                                                                                                |
 | ----- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | `loc` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
 
-## KnowledgeBase.load_bulk {#load_bulk tag="method"}
+## KnowledgeBase.from_disk {#from_disk tag="method"}
 
 Restore the state of the knowledge base from a given directory. Note that the
 [`Vocab`](/api/vocab) should also be the same as the one used to create the KB.
@@ -226,7 +226,7 @@ Restore the state of the knowledge base from a given directory. Note that the
 > from spacy.vocab import Vocab
 > vocab = Vocab().from_disk("/path/to/vocab")
 > kb = KnowledgeBase(vocab=vocab, entity_vector_length=64)
-> kb.load_bulk("/path/to/kb")
+> kb.from_disk("/path/to/kb")
 > ```
 
 | Name        | Description                                                                                     |

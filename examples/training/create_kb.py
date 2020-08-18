@@ -48,8 +48,7 @@ def main(model, output_dir=None):
     # You can change the dimension of vectors in your KB by using an encoder that changes the dimensionality.
     # For simplicity, we'll just use the original vector dimension here instead.
     vectors_dim = nlp.vocab.vectors.shape[1]
-    kb = KnowledgeBase(entity_vector_length=vectors_dim)
-    kb.initialize(nlp.vocab)
+    kb = KnowledgeBase(nlp.vocab, entity_vector_length=vectors_dim)
 
     # set up the data
     entity_ids = []
@@ -81,7 +80,7 @@ def main(model, output_dir=None):
         if not output_dir.exists():
             output_dir.mkdir()
         kb_path = str(output_dir / "kb")
-        kb.dump(kb_path)
+        kb.to_disk(kb_path)
         print()
         print("Saved KB to", kb_path)
 
@@ -96,9 +95,8 @@ def main(model, output_dir=None):
         print("Loading vocab from", vocab_path)
         print("Loading KB from", kb_path)
         vocab2 = Vocab().from_disk(vocab_path)
-        kb2 = KnowledgeBase(entity_vector_length=1)
-        kb.initialize(vocab2)
-        kb2.load_bulk(kb_path)
+        kb2 = KnowledgeBase(vocab2, entity_vector_length=1)
+        kb2.from_disk(kb_path)
         print()
         _print_kb(kb2)
 

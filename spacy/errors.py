@@ -477,6 +477,10 @@ class Errors:
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
+    E928 = ("A 'KnowledgeBase' should be written to / read from a file, but the "
+            "provided argument {loc} is an existing directory.")
+    E929 = ("A 'KnowledgeBase' could not be read from {loc} - the path does "
+            "not seem to exist.")
     E930 = ("Received invalid get_examples callback in {name}.begin_training. "
             "Expected function that returns an iterable of Example objects but "
             "got: {obj}")
@@ -504,8 +508,6 @@ class Errors:
             "not found in pipeline. Available components: {opts}")
     E945 = ("Can't copy pipeline component '{name}' from source. Expected loaded "
             "nlp object, but got: {source}")
-    E946 = ("The Vocab for the knowledge base is not initialized. Did you forget to "
-            "call kb.initialize()?")
     E947 = ("Matcher.add received invalid 'greedy' argument: expected "
             "a string value from {expected} but got: '{arg}'")
     E948 = ("Matcher.add received invalid 'patterns' argument: expected "
@@ -612,8 +614,6 @@ class Errors:
             "of the training data in spaCy 3.0 onwards. The 'update' "
             "function should now be called with a batch of 'Example' "
             "objects, instead of (text, annotation) tuples. ")
-    E990 = ("An entity linking component needs to be initialized with a "
-            "KnowledgeBase object, but found {type} instead.")
     E991 = ("The function 'select_pipes' should be called with either a "
             "'disable' argument to list the names of the pipe components "
             "that should be disabled, or with an 'enable' argument that "
