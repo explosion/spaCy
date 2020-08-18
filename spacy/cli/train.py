@@ -235,7 +235,7 @@ def train_while_improving(
     with each iteration yielding a tuple `(batch, info, is_best_checkpoint)`,
     where info is a dict, and is_best_checkpoint is in [True, False, None] --
     None indicating that the iteration was not evaluated as a checkpoint.
-    The evaluation is conducted by calling the evaluate callback, which should
+    The evaluation is conducted by calling the evaluate callback.
 
     Positional arguments:
         nlp: The spaCy pipeline to evaluate.

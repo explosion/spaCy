@@ -657,7 +657,65 @@ factor = 1.005
 
 #### Example: Custom data reading and batching {#custom-code-readers-batchers}
 
-<!-- TODO: -->
+Some use-cases require streaming in data or manipulating datasets on the fly,
+rather than generating all data beforehand and storing it to file. Instead of
+using the built-in reader `"spacy.Corpus.v1"`, which uses static file paths, you
+can create and register a custom function that generates
+[`Example`](/api/example) objects. The resulting generator can be infinite. When
+using this dataset for training, other stopping criteria can be used such as
+maximum number of steps, or stopping when the loss does not decrease further.
+
+For instance, in this example we assume a custom function `read_custom_data()`
+which loads or generates texts with relevant textcat annotations. Then, small lexical
+variations of the input text are created before generating the final `Example`
+objects.
+
+```python
+### functions.py
+from typing import Callable, Iterable
+import spacy
+from spacy.gold import Example
+import random
+
+@spacy.registry.readers("corpus_variants.v1")
+def stream_data() -> Callable[["Language"], Iterable[Example]]:
+    def generate_stream(nlp):
+        for text, cats in read_custom_data():
+            random_index = random.randint(0, len(text) - 1)
+            output_list = list(text)
+            output_list[random_index] = output_list[random_index].upper()
+            doc = nlp.make_doc("".join(output_list))
+            example = Example.from_dict(doc, {"cats": cats})
+            yield example
+    return generate_stream
+```
+
+We can also customize the batching strategy by registering a new "batcher" which
+turns a stream of items into a stream of batches. spaCy has several useful builtin
+batching strategies with customizable sizes <!-- TODO: link  -->, but it's also
+easy to implement your own. For instance, the following function takes the stream 
+of generated Example objects, and removes those which have the exact same underlying 
+raw text, to avoid duplicates in the final training data. Note that in a more realistic 
+implementation, you'd also want to check whether the annotations are exactly the same.
+
+```python
+### functions.py
+from typing import Callable, Iterable, List
+import spacy
+from spacy.gold import Example
+
+@spacy.registry.batchers("filtering_batch.v1")
+def filter_batch(size: int) -> Callable[[Iterable[Example]], Iterable[List[Example]]]:
+    def create_filtered_batches(examples: Iterable[Example]) -> Iterable[List[Example]]:
+        batch = []
+        for eg in examples:
+            if eg.text not in [x.text for x in batch]:
+                batch.append(eg)
+            if len(batch) == size:
+                yield batch
+                batch = []
+    return create_filtered_batches
+```
 
 ### Wrapping PyTorch and TensorFlow {#custom-frameworks}
 
