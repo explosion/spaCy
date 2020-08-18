@@ -9,11 +9,7 @@ menu:
 next: /usage/training
 ---
 
-<!-- TODO: intro, short explanation of embeddings/transformers, point user to processing pipelines docs for intro -->
-
-## Shared embedding layers {#embedding-layers}
-
-<!-- TODO: write: `Tok2Vec` and `Transformer` components -->
+<!-- TODO: intro, short explanation of embeddings/transformers, Tok2Vec and Transformer components, point user to processing pipelines docs for more general info that user should know first -->
 
 <Accordion title="What’s the difference between word vectors and language models?" id="vectors-vs-language-models">
 
@@ -54,6 +50,22 @@ replace one word vectors table with another without causing a significant loss
 of performance.
 
 </Accordion>
+
+## Shared embedding layers {#embedding-layers}
+
+<!-- TODO: write -->
+
+![Pipeline components using a shared embedding component vs. independent embedding layers](../images/tok2vec.svg)
+
+| Shared                                                                                      | Independent                                                             |
+| ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| ✅ **smaller:** models only need to include a single copy of the embeddings                 | ❌ **larger:** models need to include the embeddings for each component |
+| ✅ **faster:**                                                                              | ❌ **slower:**                                                          |
+| ❌ **less composable:** all components require the same embedding component in the pipeline | ✅ **modular:** components can be moved and swapped freely              |
+
+![Pipeline components listening to shared embedding component](../images/tok2vec-listener.svg)
+
+<!-- TODO: explain the listener concept, how it works etc. -->
 
 ## Using transformer models {#transformers}
 
@@ -294,18 +306,6 @@ must return an object of type ~~Model[List[Doc], FullTransformerBatch]~~: that
 is, a Thinc model that takes a list of [`Doc`](/api/doc) objects, and returns a
 [`FullTransformerBatch`](/api/transformer#fulltransformerbatch) object with the
 transformer data.
-
-> #### Model type annotations
->
-> In the documentation and code base, you may come across type annotations and
-> descriptions of [Thinc](https://thinc.ai) model types, like ~~Model[List[Doc],
-> List[Floats2d]]~~. This so-called generic type describes the layer and its
-> input and output type – in this case, it takes a list of `Doc` objects as the
-> input and list of 2-dimensional arrays of floats as the output. You can read
-> more about defining Thinc models [here](https://thinc.ai/docs/usage-models).
-> Also see the [type checking](https://thinc.ai/docs/usage-type-checking) for
-> how to enable linting in your editor to see live feedback if your inputs and
-> outputs don't match.
 
 The same idea applies to task models that power the **downstream components**.
 Most of spaCy's built-in model creation functions support a `tok2vec` argument,

@@ -70,8 +70,7 @@ import Languages from 'widgets/languages.js'
 > nlp = MultiLanguage()
 >
 > # With lazy-loading
-> from spacy.util import get_lang_class
-> nlp = get_lang_class('xx')
+> nlp = spacy.blank("xx")
 > ```
 
 spaCy also supports models trained on more than one language. This is especially
@@ -80,10 +79,10 @@ language-neutral models is `xx`. The language class, a generic subclass
 containing only the base language data, can be found in
 [`lang/xx`](https://github.com/explosion/spaCy/tree/master/spacy/lang/xx).
 
-To load your model with the neutral, multi-language class, simply set
-`"language": "xx"` in your [model package](/usage/training#models-generating)'s
-`meta.json`. You can also import the class directly, or call
-[`util.get_lang_class()`](/api/top-level#util.get_lang_class) for lazy-loading.
+To train a model using the neutral multi-language class, you can set
+`lang = "xx"` in your [training config](/usage/training#config). You can also
+import the `MultiLanguage` class directly, or call
+[`spacy.blank("xx")`](/api/top-level#spacy.blank) for lazy-loading.
 
 ### Chinese language support {#chinese new=2.3}
 
@@ -308,12 +307,14 @@ model data.
 ```yaml
 ### Directory structure {highlight="7"}
 └── en_core_web_md-3.0.0.tar.gz       # downloaded archive
-    ├── meta.json                     # model meta data
     ├── setup.py                      # setup file for pip installation
+    ├── meta.json                     # copy of model meta
     └── en_core_web_md                # 📦 model package
         ├── __init__.py               # init for pip installation
-        ├── meta.json                 # model meta data
         └── en_core_web_md-3.0.0      # model data
+            ├── config.cfg            # model config
+            ├── meta.json             # model meta
+            └── ...                   # directories with component data
 ```
 
 You can place the **model package directory** anywhere on your local file

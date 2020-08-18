@@ -18,9 +18,10 @@ Load a model using the name of an installed
 `Path`-like object. spaCy will try resolving the load argument in this order. If
 a model is loaded from a model name, spaCy will assume it's a Python package and
 import it and call the model's own `load()` method. If a model is loaded from a
-path, spaCy will assume it's a data directory, read the language and pipeline
-settings off the meta.json and initialize the `Language` class. The data will be
-loaded in via [`Language.from_disk`](/api/language#from_disk).
+path, spaCy will assume it's a data directory, load its
+[`config.cfg`](/api/data-formats#config) and use the language and pipeline
+information to construct the `Language` class. The data will be loaded in via
+[`Language.from_disk`](/api/language#from_disk).
 
 > #### Example
 >
@@ -40,9 +41,10 @@ loaded in via [`Language.from_disk`](/api/language#from_disk).
 | `config` <Tag variant="new">3</Tag> | Optional config overrides, either as nested dict or dict keyed by section value in dot notation, e.g. `"components.name.value"`. ~~Union[Dict[str, Any], Config]~~ |
 | **RETURNS**                         | A `Language` object with the loaded model. ~~Language~~                                                                                                            |
 
-Essentially, `spacy.load()` is a convenience wrapper that reads the language ID
-and pipeline components from a model's `meta.json`, initializes the `Language`
-class, loads in the model data and returns it.
+Essentially, `spacy.load()` is a convenience wrapper that reads the model's
+[`config.cfg`](/api/data-formats#config), uses the language and pipeline
+information to construct a `Language` object, loads in the model data and
+returns it.
 
 ```python
 ### Abstract example
@@ -543,8 +545,8 @@ loaded lazily, to avoid expensive setup code associated with the language data.
 Load a model from a package or data path. If called with a package name, spaCy
 will assume the model is a Python package and import and call its `load()`
 method. If called with a path, spaCy will assume it's a data directory, read the
-language and pipeline settings from the meta.json and initialize a `Language`
-class. The model data will then be loaded in via
+language and pipeline settings from the [`config.cfg`](/api/data-formats#config)
+and create a `Language` object. The model data will then be loaded in via
 [`Language.from_disk`](/api/language#from_disk).
 
 > #### Example
@@ -607,7 +609,8 @@ components are created, as well as all training settings and hyperparameters.
 
 ### util.load_meta {#util.load_meta tag="function" new="3"}
 
-Get a model's `meta.json` from a file path and validate its contents.
+Get a model's [`meta.json`](/api/data-formats#meta) from a file path and
+validate its contents.
 
 > #### Example
 >

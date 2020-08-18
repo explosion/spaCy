@@ -742,7 +742,7 @@ token.ent_iob, token.ent_type
 
 Custom meta data for the Language class. If a model is loaded, contains meta
 data of the model. The `Language.meta` is also what's serialized as the
-`meta.json` when you save an `nlp` object to disk.
+[`meta.json`](/api/data-formats#meta) when you save an `nlp` object to disk.
 
 > #### Example
 >
@@ -954,12 +954,12 @@ serialization by passing in the string names via the `exclude` argument.
 > nlp.from_disk("./model-data", exclude=["ner"])
 > ```
 
-| Name        | Description                                        |
-| ----------- | -------------------------------------------------- |
-| `vocab`     | The shared [`Vocab`](/api/vocab).                  |
-| `tokenizer` | Tokenization rules and exceptions.                 |
-| `meta`      | The meta data, available as `Language.meta`.       |
-| ...         | String names of pipeline components, e.g. `"ner"`. |
+| Name        | Description                                                        |
+| ----------- | ------------------------------------------------------------------ |
+| `vocab`     | The shared [`Vocab`](/api/vocab).                                  |
+| `tokenizer` | Tokenization rules and exceptions.                                 |
+| `meta`      | The meta data, available as [`Language.meta`](/api/language#meta). |
+| ...         | String names of pipeline components, e.g. `"ner"`.                 |
 
 ## FactoryMeta {#factorymeta new="3" tag="dataclass"}
 

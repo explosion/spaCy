@@ -32,6 +32,7 @@
     "Floats2d": "https://thinc.ai/docs/api-types#types",
     "Floats3d": "https://thinc.ai/docs/api-types#types",
     "FloatsXd": "https://thinc.ai/docs/api-types#types",
+    "Ops": "https://thinc.ai/docs/api-backends#ops",
     "cymem.Pool": "https://github.com/explosion/cymem",
     "preshed.BloomFilter": "https://github.com/explosion/preshed",
     "transformers.BatchEncoding": "https://huggingface.co/transformers/main_classes/tokenizer.html#transformers.BatchEncoding",
