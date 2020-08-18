@@ -385,6 +385,19 @@ that reference this variable.
 ### Model architectures {#model-architectures}
 
 <!-- TODO: refer to architectures API: /api/architectures -->
+A **model architecture** is a function that wires up a Thinc `Model` instance,
+which you can then use in a component or as a layer of a larger network. You
+can use Thinc as a thin wrapper around frameworks such as PyTorch, Tensorflow
+or MXNet, or you can implement your logic in Thinc directly.
+
+spaCy's built-in components will never construct their `Model` instances
+themselves, so you won't have to subclass the component to change its model
+architecture. You can just update the config so that it refers
+to a different registered function. Once the component has been created, its
+model instance has already been assigned, so you cannot change its model
+architecture. The architecture is like a recipe for the network, and you can't
+change the recipe once the dish has already been prepared. You have to make
+a new one.
 
 ### Metrics, training output and weighted scores {#metrics}
 
