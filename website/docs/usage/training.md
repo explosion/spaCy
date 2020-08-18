@@ -662,17 +662,35 @@ rather than generating all data beforehand and storing it to file. Instead of
 using the built-in reader `"spacy.Corpus.v1"`, which uses static file paths, you
 can create and register a custom function that generates
 [`Example`](/api/example) objects. The resulting generator can be infinite. When
-using this dataset for training, other stopping criteria can be used such as
-maximum number of steps, or stopping when the loss does not decrease further.
+using this dataset for training, stopping criteria such as maximum number of
+steps, or stopping when the loss does not decrease further, can be used.
 
-For instance, in this example we assume a custom function `read_custom_data()`
-which loads or generates texts with relevant textcat annotations. Then, small lexical
-variations of the input text are created before generating the final `Example`
-objects.
+In this example we assume a custom function `read_custom_data()`
+which loads or generates texts with relevant textcat annotations. Then, small
+lexical variations of the input text are created before generating the final
+`Example` objects.
+
+We can also customize the batching strategy by registering a new "batcher" which
+turns a stream of items into a stream of batches. spaCy has several useful
+built-in batching strategies with customizable sizes<!-- TODO: link  -->, but
+it's also easy to implement your own. For instance, the following function takes
+the stream of generated `Example` objects, and removes those which have the exact
+same underlying raw text, to avoid duplicates in the final training data. Note
+that in a more realistic implementation, you'd also want to check whether the
+annotations are exactly the same.
+
+> ```ini
+> [training.train_corpus]
+> @readers = "corpus_variants.v1"
+>
+> [training.batcher]
+> @batchers = "filtering_batch.v1"
+> size = 150
+> ```
 
 ```python
 ### functions.py
-from typing import Callable, Iterable
+from typing import Callable, Iterable, List
 import spacy
 from spacy.gold import Example
 import random
@@ -682,27 +700,12 @@ def stream_data() -> Callable[["Language"], Iterable[Example]]:
     def generate_stream(nlp):
         for text, cats in read_custom_data():
             random_index = random.randint(0, len(text) - 1)
-            output_list = list(text)
-            output_list[random_index] = output_list[random_index].upper()
-            doc = nlp.make_doc("".join(output_list))
+            variant = text[:random_index] + text[random_index].upper() + text[random_index + 1:]
+            doc = nlp.make_doc(variant)
             example = Example.from_dict(doc, {"cats": cats})
             yield example
     return generate_stream
-```
 
-We can also customize the batching strategy by registering a new "batcher" which
-turns a stream of items into a stream of batches. spaCy has several useful builtin
-batching strategies with customizable sizes <!-- TODO: link  -->, but it's also
-easy to implement your own. For instance, the following function takes the stream 
-of generated Example objects, and removes those which have the exact same underlying 
-raw text, to avoid duplicates in the final training data. Note that in a more realistic 
-implementation, you'd also want to check whether the annotations are exactly the same.
-
-```python
-### functions.py
-from typing import Callable, Iterable, List
-import spacy
-from spacy.gold import Example
 
 @spacy.registry.batchers("filtering_batch.v1")
 def filter_batch(size: int) -> Callable[[Iterable[Example]], Iterable[List[Example]]]:
