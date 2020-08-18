@@ -15,7 +15,7 @@ multiple components, e.g. to have one embedding and CNN network shared between a
 [`EntityRecognizer`](/api/entityrecognizer).
 
 In order to use the `Tok2Vec` predictions, subsequent components should use the
-[Tok2VecListener](/api/architectures#Tok2VecListener) layer as the tok2vec
+[Tok2VecListener](/api/architectures#Tok2VecListener) layer as the `tok2vec`
 subnetwork of their model. This layer will read data from the `doc.tensor`
 attribute during prediction. During training, the `Tok2Vec` component will save
 its prediction and backprop callback for each batch, so that the subsequent

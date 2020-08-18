@@ -140,7 +140,7 @@ cdef class KnowledgeBase:
         self._entries.push_back(entry)
         self._aliases_table.push_back(alias)
 
-    cpdef load_bulk(self, loc)
+    cpdef from_disk(self, loc)
     cpdef set_entities(self, entity_list, freq_list, vector_list)
 
 

@@ -1096,11 +1096,12 @@ ruler.add_patterns([{"label": "ORG", "pattern": "Apple"}])
 nlp.to_disk("/path/to/model")
 ```
 
-The saved model now includes the `"entity_ruler"` in its `"pipeline"` setting in
-the `meta.json`, and the model directory contains a file `entityruler.jsonl`
-with the patterns. When you load the model back in, all pipeline components will
-be restored and deserialized – including the entity ruler. This lets you ship
-powerful model packages with binary weights _and_ rules included!
+The saved model now includes the `"entity_ruler"` in its
+[`config.cfg`](/api/data-formats#config) and the model directory contains a file
+`entityruler.jsonl` with the patterns. When you load the model back in, all
+pipeline components will be restored and deserialized – including the entity
+ruler. This lets you ship powerful model packages with binary weights _and_
+rules included!
 
 ### Using a large number of phrase patterns {#entityruler-large-phrase-patterns new="2.2.4"}
 

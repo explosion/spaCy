@@ -68,7 +68,6 @@ class Tagger(Pipe):
         name (str): The component instance name, used to add entries to the
             losses during training.
         labels (List): The set of labels. Defaults to None.
-        set_morphology (bool): Whether to set morphological features.
 
         DOCS: https://spacy.io/api/tagger#init
         """

@@ -9,19 +9,25 @@ function isNum(children) {
     return isString(children) && /^\d+[.,]?[\dx]+?(|x|ms|mb|gb|k|m)?$/i.test(children)
 }
 
-function getCellContent(children) {
+function getCellContent(cellChildren) {
     const icons = {
-        '✅': { name: 'yes', variant: 'success' },
-        '❌': { name: 'no', variant: 'error' },
+        '✅': { name: 'yes', variant: 'success', 'aria-label': 'positive' },
+        '❌': { name: 'no', variant: 'error', 'aria-label': 'negative' },
     }
-
-    if (isString(children) && icons[children.trim()]) {
-        const iconProps = icons[children.trim()]
-        return <Icon {...iconProps} />
-    }
-    // Work around prettier auto-escape
-    if (isString(children) && children.startsWith('\\')) {
-        return children.slice(1)
+    let children = isString(cellChildren) ? [cellChildren] : cellChildren
+    if (Array.isArray(children)) {
+        return children.map((child, i) => {
+            if (isString(child)) {
+                const icon = icons[child.trim()]
+                if (icon) {
+                    const props = { ...icon, inline: i < children.length, 'aria-hidden': undefined }
+                    return <Icon {...props} key={i} />
+                }
+                // Work around prettier auto-escape
+                if (child.startsWith('\\')) return child.slice(1)
+            }
+            return child
+        })
     }
     return children
 }

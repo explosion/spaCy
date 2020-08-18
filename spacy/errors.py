@@ -78,10 +78,11 @@ class Warnings:
             "are currently: {langs}")
 
     # TODO: fix numbering after merging develop into master
+    W090 = ("Could not locate any binary .spacy files in path '{path}'.")
     W091 = ("Could not clean/remove the temp directory at {dir}: {msg}.")
     W092 = ("Ignoring annotations for sentence starts, as dependency heads are set.")
     W093 = ("Could not find any data to train the {name} on. Is your "
-            "input data correctly formatted ?")
+            "input data correctly formatted?")
     W094 = ("Model '{model}' ({model_version}) specifies an under-constrained "
             "spaCy version requirement: {version}. This can lead to compatibility "
             "problems with older versions, or as new spaCy versions are "
@@ -476,6 +477,10 @@ class Errors:
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
+    E928 = ("A 'KnowledgeBase' should be written to / read from a file, but the "
+            "provided argument {loc} is an existing directory.")
+    E929 = ("A 'KnowledgeBase' could not be read from {loc} - the path does "
+            "not seem to exist.")
     E930 = ("Received invalid get_examples callback in {name}.begin_training. "
             "Expected function that returns an iterable of Example objects but "
             "got: {obj}")
@@ -503,8 +508,6 @@ class Errors:
             "not found in pipeline. Available components: {opts}")
     E945 = ("Can't copy pipeline component '{name}' from source. Expected loaded "
             "nlp object, but got: {source}")
-    E946 = ("The Vocab for the knowledge base is not initialized. Did you forget to "
-            "call kb.initialize()?")
     E947 = ("Matcher.add received invalid 'greedy' argument: expected "
             "a string value from {expected} but got: '{arg}'")
     E948 = ("Matcher.add received invalid 'patterns' argument: expected "
@@ -600,7 +603,8 @@ class Errors:
             "\"en_core_web_sm\" will copy the component from that model.\n\n{config}")
     E985 = ("Can't load model from config file: no 'nlp' section found.\n\n{config}")
     E986 = ("Could not create any training batches: check your input. "
-            "Perhaps discard_oversize should be set to False ?")
+            "Are the train and dev paths defined? "
+            "Is 'discard_oversize' set appropriately? ")
     E987 = ("The text of an example training instance is either a Doc or "
             "a string, but found {type} instead.")
     E988 = ("Could not parse any training examples. Ensure the data is "
@@ -610,8 +614,6 @@ class Errors:
             "of the training data in spaCy 3.0 onwards. The 'update' "
             "function should now be called with a batch of 'Example' "
             "objects, instead of (text, annotation) tuples. ")
-    E990 = ("An entity linking component needs to be initialized with a "
-            "KnowledgeBase object, but found {type} instead.")
     E991 = ("The function 'select_pipes' should be called with either a "
             "'disable' argument to list the names of the pipe components "
             "that should be disabled, or with an 'enable' argument that "

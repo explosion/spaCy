@@ -1,4 +1,8 @@
-from spacy.util import ensure_path
+from typing import Callable
+
+from spacy import util
+from spacy.lang.en import English
+from spacy.util import ensure_path, registry
 from spacy.kb import KnowledgeBase
 
 from ..util import make_tempdir
@@ -15,20 +19,16 @@ def test_serialize_kb_disk(en_vocab):
         if not dir_path.exists():
             dir_path.mkdir()
         file_path = dir_path / "kb"
-        kb1.dump(str(file_path))
-
-        kb2 = KnowledgeBase(entity_vector_length=3)
-        kb2.initialize(en_vocab)
-        kb2.load_bulk(str(file_path))
+        kb1.to_disk(str(file_path))
+        kb2 = KnowledgeBase(vocab=en_vocab, entity_vector_length=3)
+        kb2.from_disk(str(file_path))
 
     # final assertions
     _check_kb(kb2)
 
 
 def _get_dummy_kb(vocab):
-    kb = KnowledgeBase(entity_vector_length=3)
-    kb.initialize(vocab)
-
+    kb = KnowledgeBase(vocab, entity_vector_length=3)
     kb.add_entity(entity="Q53", freq=33, entity_vector=[0, 5, 3])
     kb.add_entity(entity="Q17", freq=2, entity_vector=[7, 1, 0])
     kb.add_entity(entity="Q007", freq=7, entity_vector=[0, 0, 7])
@@ -61,7 +61,7 @@ def _check_kb(kb):
         assert alias_string not in kb.get_alias_strings()
 
     # check candidates & probabilities
-    candidates = sorted(kb.get_candidates("double07"), key=lambda x: x.entity_)
+    candidates = sorted(kb.get_alias_candidates("double07"), key=lambda x: x.entity_)
     assert len(candidates) == 2
 
     assert candidates[0].entity_ == "Q007"
@@ -75,3 +75,47 @@ def _check_kb(kb):
     assert candidates[1].entity_vector == [7, 1, 0]
     assert candidates[1].alias_ == "double07"
     assert 0.099 < candidates[1].prior_prob < 0.101
+
+
+def test_serialize_subclassed_kb():
+    """Check that IO of a custom KB works fine as part of an EL pipe."""
+
+    class SubKnowledgeBase(KnowledgeBase):
+        def __init__(self, vocab, entity_vector_length, custom_field):
+            super().__init__(vocab, entity_vector_length)
+            self.custom_field = custom_field
+
+    @registry.assets.register("spacy.CustomKB.v1")
+    def custom_kb(
+        entity_vector_length: int, custom_field: int
+    ) -> Callable[["Vocab"], KnowledgeBase]:
+        def custom_kb_factory(vocab):
+            return SubKnowledgeBase(
+                vocab=vocab,
+                entity_vector_length=entity_vector_length,
+                custom_field=custom_field,
+            )
+
+        return custom_kb_factory
+
+    nlp = English()
+    config = {
+        "kb_loader": {
+            "@assets": "spacy.CustomKB.v1",
+            "entity_vector_length": 342,
+            "custom_field": 666,
+        }
+    }
+    entity_linker = nlp.add_pipe("entity_linker", config=config)
+    assert type(entity_linker.kb) == SubKnowledgeBase
+    assert entity_linker.kb.entity_vector_length == 342
+    assert entity_linker.kb.custom_field == 666
+
+    # Make sure the custom KB is serialized correctly
+    with make_tempdir() as tmp_dir:
+        nlp.to_disk(tmp_dir)
+        nlp2 = util.load_model_from_path(tmp_dir)
+        entity_linker2 = nlp2.get_pipe("entity_linker")
+        assert type(entity_linker2.kb) == SubKnowledgeBase
+        assert entity_linker2.kb.entity_vector_length == 342
+        assert entity_linker2.kb.custom_field == 666

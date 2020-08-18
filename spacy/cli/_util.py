@@ -68,11 +68,12 @@ def parse_config_overrides(args: List[str]) -> Dict[str, Any]:
         opt = args.pop(0)
         err = f"Invalid CLI argument '{opt}'"
         if opt.startswith("--"):  # new argument
-            opt = opt.replace("--", "").replace("-", "_")
+            opt = opt.replace("--", "")
             if "." not in opt:
                 msg.fail(f"{err}: can't override top-level section", exits=1)
             if "=" in opt:  # we have --opt=value
                 opt, value = opt.split("=", 1)
+                opt = opt.replace("-", "_")
             else:
                 if not args or args[0].startswith("--"):  # flag with no value
                     value = "true"

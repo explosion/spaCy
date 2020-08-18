@@ -33,7 +33,7 @@ TODO: intro and how architectures work, link to
 > subword_features = true
 > ```
 
-Build spaCy's "standard" tok2vec layer, which uses hash embedding with subword
+Build spaCy's "standard" embedding layer, which uses hash embedding with subword
 features and a CNN with layer-normalized maxout.
 
 | Name                 | Description                                                                                                                                                                                                                                                                   |
@@ -45,6 +45,7 @@ features and a CNN with layer-normalized maxout.
 | `maxout_pieces`      | The number of pieces to use in the maxout non-linearity. If `1`, the [`Mish`](https://thinc.ai/docs/api-layers#mish) non-linearity is used instead. Recommended values are `1`-`3`. ~~int~~                                                                                   |
 | `subword_features`   | Whether to also embed subword features, specifically the prefix, suffix and word shape. This is recommended for alphabetic languages like English, but not if single-character tokens are used for a language such as Chinese. ~~bool~~                                       |
 | `pretrained_vectors` | Whether to also use static vectors. ~~bool~~                                                                                                                                                                                                                                  |
+| **CREATES**          | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                        |
 
 ### spacy.Tok2Vec.v1 {#Tok2Vec}
 
@@ -67,10 +68,11 @@ Construct a tok2vec model out of embedding and encoding subnetworks. See the
 ["Embed, Encode, Attend, Predict"](https://explosion.ai/blog/deep-learning-formula-nlp)
 blog post for background.
 
-| Name     | Description                                                                                                                                                                                                                      |
-| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `embed`  | Embed tokens into context-independent word vector representations. For example, [CharacterEmbed](/api/architectures#CharacterEmbed) or [MultiHashEmbed](/api/architectures#MultiHashEmbed). ~~Model[List[Doc], List[Floats2d]]~~ |
-| `encode` | Encode context into the embeddings, using an architecture such as a CNN, BiLSTM or transformer. For example, [MaxoutWindowEncoder](/api/architectures#MaxoutWindowEncoder). ~~Model[List[Floats2d], List[Floats2d]]~~            |
+| Name        | Description                                                                                                                                                                                                                      |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `embed`     | Embed tokens into context-independent word vector representations. For example, [CharacterEmbed](/api/architectures#CharacterEmbed) or [MultiHashEmbed](/api/architectures#MultiHashEmbed). ~~Model[List[Doc], List[Floats2d]]~~ |
+| `encode`    | Encode context into the embeddings, using an architecture such as a CNN, BiLSTM or transformer. For example, [MaxoutWindowEncoder](/api/architectures#MaxoutWindowEncoder). ~~Model[List[Floats2d], List[Floats2d]]~~            |
+| **CREATES** | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                           |
 
 ### spacy.Tok2VecListener.v1 {#Tok2VecListener}
 
@@ -108,10 +110,13 @@ Instead of defining its own `Tok2Vec` instance, a model architecture like
 [Tagger](/api/architectures#tagger) can define a listener as its `tok2vec`
 argument that connects to the shared `tok2vec` component in the pipeline.
 
-| Name       | Description                                                                                                                                                                                                                                                                                                    |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `width`    | The width of the vectors produced by the "upstream" [`Tok2Vec`](/api/tok2vec) component. ~~int~~                                                                                                                                                                                                               |
-| `upstream` | A string to identify the "upstream" `Tok2Vec` component to communicate with. The upstream name should either be the wildcard string `"*"`, or the name of the `Tok2Vec` component. You'll almost never have multiple upstream `Tok2Vec` components, so the wildcard string will almost always be fine. ~~str~~ |
+<!-- TODO: return type -->
+
+| Name        | Description                                                                                                                                                                                                                                                                                                    |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `width`     | The width of the vectors produced by the "upstream" [`Tok2Vec`](/api/tok2vec) component. ~~int~~                                                                                                                                                                                                               |
+| `upstream`  | A string to identify the "upstream" `Tok2Vec` component to communicate with. The upstream name should either be the wildcard string `"*"`, or the name of the `Tok2Vec` component. You'll almost never have multiple upstream `Tok2Vec` components, so the wildcard string will almost always be fine. ~~str~~ |
+| **CREATES** | The model using the architecture. ~~Model~~                                                                                                                                                                                                                                                                    |
 
 ### spacy.MultiHashEmbed.v1 {#MultiHashEmbed}
 
@@ -134,12 +139,15 @@ definitions depending on the `Vocab` of the `Doc` object passed in. Vectors from
 pretrained static vectors can also be incorporated into the concatenated
 representation.
 
+<!-- TODO: model return type -->
+
 | Name                      | Description                                                                                                                                                                                                       |
 | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `width`                   | The output width. Also used as the width of the embedding tables. Recommended values are between `64` and `300`. ~~int~~                                                                                          |
 | `rows`                    | The number of rows for the embedding tables. Can be low, due to the hashing trick. Embeddings for prefix, suffix and word shape use half as many rows. Recommended values are between `2000` and `10000`. ~~int~~ |
 | `also_embed_subwords`     | Whether to use the `PREFIX`, `SUFFIX` and `SHAPE` features in the embeddings. If not using these, you may need more rows in your hash embeddings, as there will be increased chance of collisions. ~~bool~~       |
 | `also_use_static_vectors` | Whether to also use static word vectors. Requires a vectors table to be loaded in the [Doc](/api/doc) objects' vocab. ~~bool~~                                                                                    |
+| **CREATES**               | The model using the architecture. ~~Model~~                                                                                                                                                                       |
 
 ### spacy.CharacterEmbed.v1 {#CharacterEmbed}
 
@@ -170,12 +178,15 @@ concatenated. A hash-embedded vector of the `NORM` of the word is also
 concatenated on, and the result is then passed through a feed-forward network to
 construct a single vector to represent the information.
 
-| Name    | Description                                                                                                                                                     |
-| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `width` | The width of the output vector and the `NORM` hash embedding. ~~int~~                                                                                           |
-| `rows`  | The number of rows in the `NORM` hash embedding table. ~~int~~                                                                                                  |
-| `nM`    | The dimensionality of the character embeddings. Recommended values are between `16` and `64`. ~~int~~                                                           |
-| `nC`    | The number of UTF-8 bytes to embed per word. Recommended values are between `3` and `8`, although it may depend on the length of words in the language. ~~int~~ |
+<!-- TODO: model return type -->
+
+| Name        | Description                                                                                                                                                     |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `width`     | The width of the output vector and the `NORM` hash embedding. ~~int~~                                                                                           |
+| `rows`      | The number of rows in the `NORM` hash embedding table. ~~int~~                                                                                                  |
+| `nM`        | The dimensionality of the character embeddings. Recommended values are between `16` and `64`. ~~int~~                                                           |
+| `nC`        | The number of UTF-8 bytes to embed per word. Recommended values are between `3` and `8`, although it may depend on the length of words in the language. ~~int~~ |
+| **CREATES** | The model using the architecture. ~~Model~~                                                                                                                     |
 
 ### spacy.MaxoutWindowEncoder.v1 {#MaxoutWindowEncoder}
 
@@ -199,6 +210,7 @@ and residual connections.
 | `window_size`   | The number of words to concatenate around each token to construct the convolution. Recommended value is `1`. ~~int~~                                                                                           |
 | `maxout_pieces` | The number of maxout pieces to use. Recommended values are `2` or `3`. ~~int~~                                                                                                                                 |
 | `depth`         | The number of convolutional layers. Recommended value is `4`. ~~int~~                                                                                                                                          |
+| **CREATES**     | The model using the architecture. ~~Model[List[Floats2d], List[Floats2d]]~~                                                                                                                                    |
 
 ### spacy.MishWindowEncoder.v1 {#MishWindowEncoder}
 
@@ -221,6 +233,7 @@ and residual connections.
 | `width`       | The input and output width. These are required to be the same, to allow residual connections. This value will be determined by the width of the inputs. Recommended values are between `64` and `300`. ~~int~~ |
 | `window_size` | The number of words to concatenate around each token to construct the convolution. Recommended value is `1`. ~~int~~                                                                                           |
 | `depth`       | The number of convolutional layers. Recommended value is `4`. ~~int~~                                                                                                                                          |
+| **CREATES**   | The model using the architecture. ~~Model[List[Floats2d], List[Floats2d]]~~                                                                                                                                    |
 
 ### spacy.TorchBiLSTMEncoder.v1 {#TorchBiLSTMEncoder}
 
@@ -242,10 +255,38 @@ Encode context using bidirectional LSTM layers. Requires
 | `width`       | The input and output width. These are required to be the same, to allow residual connections. This value will be determined by the width of the inputs. Recommended values are between `64` and `300`. ~~int~~ |
 | `window_size` | The number of words to concatenate around each token to construct the convolution. Recommended value is `1`. ~~int~~                                                                                           |
 | `depth`       | The number of convolutional layers. Recommended value is `4`. ~~int~~                                                                                                                                          |
+| **CREATES**   | The model using the architecture. ~~Model[List[Floats2d], List[Floats2d]]~~                                                                                                                                    |
 
 ### spacy.StaticVectors.v1 {#StaticVectors}
 
-<!-- TODO: -->
+> #### Example config
+>
+> ```ini
+> [model]
+> @architectures = "spacy.StaticVectors.v1"
+> nO = null
+> nM = null
+> dropout = 0.2
+> key_attr = "ORTH"
+>
+> [model.init_W]
+> @initializers = "glorot_uniform_init.v1"
+> ```
+
+Embed [`Doc`](/api/doc) objects with their vocab's vectors table, applying a
+learned linear projection to control the dimensionality. See the documentation
+on [static vectors](/usage/embeddings-transformers#static-vectors) for details.
+
+<!-- TODO: document argument descriptions -->
+
+| Name        |  Description                                                                                                                                                                                                            |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `nO`        | Defaults to `None`. ~~Optional[int]~~                                                                                                                                                                                   |
+| `nM`        | Defaults to `None`. ~~Optional[int]~~                                                                                                                                                                                   |
+| `dropout`   | Optional dropout rate. If set, it's applied per dimension over the whole batch. Defaults to `None`. ~~Optional[float]~~                                                                                                 |
+| `init_W`    | The [initialization function](https://thinc.ai/docs/api-initializers). Defaults to [`glorot_uniform_init`](https://thinc.ai/docs/api-initializers#glorot_uniform_init). ~~Callable[[Ops, Tuple[int, ...]]], FloatsXd]~~ |
+| `key_attr`  | Defaults to `"ORTH"`. ~~str~~                                                                                                                                                                                           |
+| **CREATES** | The model using the architecture. ~~Model[List[Doc], Ragged]~~                                                                                                                                                          |
 
 ## Transformer architectures {#transformers source="github.com/explosion/spacy-transformers/blob/master/spacy_transformers/architectures.py"}
 
@@ -277,6 +318,7 @@ architectures into your training config.
 | `name`             | Any model name that can be loaded by [`transformers.AutoModel`](https://huggingface.co/transformers/model_doc/auto.html#transformers.AutoModel). ~~str~~                                                                                              |
 | `get_spans`        | Function that takes a batch of [`Doc`](/api/doc) object and returns lists of [`Span`](/api) objects to process by the transformer. [See here](/api/transformer#span_getters) for built-in options and examples. ~~Callable[[List[Doc]], List[Span]]~~ |
 | `tokenizer_config` | Tokenizer settings passed to [`transformers.AutoTokenizer`](https://huggingface.co/transformers/model_doc/auto.html#transformers.AutoTokenizer). ~~Dict[str, Any]~~                                                                                   |
+| **CREATES**        | The model using the architecture. ~~Model[List[Doc], FullTransformerBatch]~~                                                                                                                                                                          |
 
 ### spacy-transformers.Tok2VecListener.v1 {#transformers-Tok2VecListener}
 
@@ -305,6 +347,7 @@ a single token vector given zero or more wordpiece vectors.
 | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `pooling`     | A reduction layer used to calculate the token vectors based on zero or more wordpiece vectors. If in doubt, mean pooling (see [`reduce_mean`](https://thinc.ai/docs/api-layers#reduce_mean)) is usually a good choice. ~~Model[Ragged, Floats2d]~~                            |
 | `grad_factor` | Reweight gradients from the component before passing them upstream. You can set this to `0` to "freeze" the transformer weights with respect to the component, or use it to make some components more significant than others. Leaving it at `1.0` is usually fine. ~~float~~ |
+| **CREATES**   | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                        |
 
 ### spacy-transformers.Tok2VecTransformer.v1 {#Tok2VecTransformer}
 
@@ -330,6 +373,7 @@ one component.
 | `tokenizer_config` | Tokenizer settings passed to [`transformers.AutoTokenizer`](https://huggingface.co/transformers/model_doc/auto.html#transformers.AutoTokenizer). ~~Dict[str, Any]~~                                                                                                           |
 | `pooling`          | A reduction layer used to calculate the token vectors based on zero or more wordpiece vectors. If in doubt, mean pooling (see [`reduce_mean`](https://thinc.ai/docs/api-layers#reduce_mean)) is usually a good choice. ~~Model[Ragged, Floats2d]~~                            |
 | `grad_factor`      | Reweight gradients from the component before passing them upstream. You can set this to `0` to "freeze" the transformer weights with respect to the component, or use it to make some components more significant than others. Leaving it at `1.0` is usually fine. ~~float~~ |
+| **CREATES**        | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                        |
 
 ## Parser & NER architectures {#parser}
 
@@ -372,6 +416,8 @@ consists of either two or three subnetworks:
   state representation. If not present, the output from the lower model is used
   as action scores directly.
 
+<!-- TODO: model return type -->
+
 | Name                | Description                                                                                                                                                                                                                                                                                                                                                             |
 | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `tok2vec`           | Subnetwork to map tokens into vector representations. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                                                                                              |
@@ -380,6 +426,7 @@ consists of either two or three subnetworks:
 | `maxout_pieces`     | How many pieces to use in the state prediction layer. Recommended values are `1`, `2` or `3`. If `1`, the maxout non-linearity is replaced with a [`Relu`](https://thinc.ai/docs/api-layers#relu) non-linearity if `use_upper` is `True`, and no non-linearity if `False`. ~~int~~                                                                                      |
 | `use_upper`         | Whether to use an additional hidden layer after the state vector in order to predict the action scores. It is recommended to set this to `False` for large pretrained models such as transformers, and `True` for smaller networks. The upper layer is computed on CPU, which becomes a bottleneck on larger GPU-based models, where it's also less necessary. ~~bool~~ |
 | `nO`                | The number of actions the model will predict between. Usually inferred from data at the beginning of training, or loaded from disk. ~~int~~                                                                                                                                                                                                                             |
+| **CREATES**         | The model using the architecture. ~~Model~~                                                                                                                                                                                                                                                                                                                             |
 
 ### spacy.BILUOTagger.v1 {#BILUOTagger source="spacy/ml/models/simple_ner.py"}
 
@@ -406,9 +453,10 @@ generally results in better linear separation between classes, especially for
 non-CRF models, because there are more distinct classes for the different
 situations ([Ratinov et al., 2009](https://www.aclweb.org/anthology/W09-1119/)).
 
-| Name      | Description                                                                                |
-| --------- | ------------------------------------------------------------------------------------------ |
-| `tok2vec` | Subnetwork to map tokens into vector representations. ~~Model[List[Doc], List[Floats2d]]~~ |
+| Name        | Description                                                                                |
+| ----------- | ------------------------------------------------------------------------------------------ |
+| `tok2vec`   | Subnetwork to map tokens into vector representations. ~~Model[List[Doc], List[Floats2d]]~~ |
+| **CREATES** | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                     |
 
 ### spacy.IOBTagger.v1 {#IOBTagger source="spacy/ml/models/simple_ner.py"}
 
@@ -431,9 +479,10 @@ spans into tags assigned to each token. The first token of a span is given the
 tag B-LABEL, and subsequent tokens are given the tag I-LABEL. All other tokens
 are assigned the tag O.
 
-| Name      | Description                                                                                |
-| --------- | ------------------------------------------------------------------------------------------ |
-| `tok2vec` | Subnetwork to map tokens into vector representations. ~~Model[List[Doc], List[Floats2d]]~~ |
+| Name        | Description                                                                                |
+| ----------- | ------------------------------------------------------------------------------------------ |
+| `tok2vec`   | Subnetwork to map tokens into vector representations. ~~Model[List[Doc], List[Floats2d]]~~ |
+| **CREATES** | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                     |
 
 ## Tagging architectures {#tagger source="spacy/ml/models/tagger.py"}
 
@@ -454,10 +503,11 @@ Build a tagger model, using a provided token-to-vector component. The tagger
 model simply adds a linear layer with softmax activation to predict scores given
 the token vectors.
 
-| Name      | Description                                                                                |
-| --------- | ------------------------------------------------------------------------------------------ |
-| `tok2vec` | Subnetwork to map tokens into vector representations. ~~Model[List[Doc], List[Floats2d]]~~ |
-| `nO`      | The number of tags to output. Inferred from the data if `None`. ~~Optional[int]~~          |
+| Name        | Description                                                                                |
+| ----------- | ------------------------------------------------------------------------------------------ |
+| `tok2vec`   | Subnetwork to map tokens into vector representations. ~~Model[List[Doc], List[Floats2d]]~~ |
+| `nO`        | The number of tags to output. Inferred from the data if `None`. ~~Optional[int]~~          |
+| **CREATES** | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                     |
 
 ## Text classification architectures {#textcat source="spacy/ml/models/textcat.py"}
 
@@ -473,9 +523,6 @@ different architectures and settings to determine what works best on your
 specific data and challenge.
 
 ### spacy.TextCatEnsemble.v1 {#TextCatEnsemble}
-
-Stacked ensemble of a bag-of-words model and a neural network model. The neural
-network has an internal CNN Tok2Vec layer and uses attention.
 
 > #### Example Config
 >
@@ -493,17 +540,23 @@ network has an internal CNN Tok2Vec layer and uses attention.
 > nO = null
 > ```
 
-| Name                 | Description                                                                                                                                                                                        |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `exclusive_classes`  | Whether or not categories are mutually exclusive. ~~bool~~                                                                                                                                         |
-| `pretrained_vectors` | Whether or not pretrained vectors will be used in addition to the feature vectors. ~~bool~~                                                                                                        |
-| `width`              | Output dimension of the feature encoding step. ~~int~~                                                                                                                                             |
-| `embed_size`         | Input dimension of the feature encoding step. ~~int~~                                                                                                                                              |
-| `conv_depth`         | Depth of the tok2vec layer. ~~int~~                                                                                                                                                                |
-| `window_size`        | The number of contextual vectors to [concatenate](https://thinc.ai/docs/api-layers#expand_window) from the left and from the right. ~~int~~                                                        |
-| `ngram_size`         | Determines the maximum length of the n-grams in the BOW model. For instance, `ngram_size=3`would give unigram, trigram and bigram features. ~~int~~                                                |
-| `dropout`            | The dropout rate. ~~float~~                                                                                                                                                                        |
+Stacked ensemble of a bag-of-words model and a neural network model. The neural
+network has an internal CNN Tok2Vec layer and uses attention.
+
+<!-- TODO: model return type -->
+
+| Name                 | Description                                                                                                                                                                                            |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `exclusive_classes`  | Whether or not categories are mutually exclusive. ~~bool~~                                                                                                                                             |
+| `pretrained_vectors` | Whether or not pretrained vectors will be used in addition to the feature vectors. ~~bool~~                                                                                                            |
+| `width`              | Output dimension of the feature encoding step. ~~int~~                                                                                                                                                 |
+| `embed_size`         | Input dimension of the feature encoding step. ~~int~~                                                                                                                                                  |
+| `conv_depth`         | Depth of the tok2vec layer. ~~int~~                                                                                                                                                                    |
+| `window_size`        | The number of contextual vectors to [concatenate](https://thinc.ai/docs/api-layers#expand_window) from the left and from the right. ~~int~~                                                            |
+| `ngram_size`         | Determines the maximum length of the n-grams in the BOW model. For instance, `ngram_size=3`would give unigram, trigram and bigram features. ~~int~~                                                    |
+| `dropout`            | The dropout rate. ~~float~~                                                                                                                                                                            |
 | `nO`                 | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `begin_training` is called. ~~Optional[int]~~ |
+| **CREATES**          | The model using the architecture. ~~Model~~                                                                                                                                                            |
 
 ### spacy.TextCatCNN.v1 {#TextCatCNN}
 
@@ -530,11 +583,14 @@ A neural network model where token vectors are calculated using a CNN. The
 vectors are mean pooled and used as features in a feed-forward network. This
 architecture is usually less accurate than the ensemble, but runs faster.
 
-| Name                | Description                                                                                                                                                                                        |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `exclusive_classes` | Whether or not categories are mutually exclusive. ~~bool~~                                                                                                                                         |
-| `tok2vec`           | The [`tok2vec`](#tok2vec) layer of the model. ~~Model~~                                                                                                                                            |
+<!-- TODO: model return type -->
+
+| Name                | Description                                                                                                                                                                                            |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `exclusive_classes` | Whether or not categories are mutually exclusive. ~~bool~~                                                                                                                                             |
+| `tok2vec`           | The [`tok2vec`](#tok2vec) layer of the model. ~~Model~~                                                                                                                                                |
 | `nO`                | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `begin_training` is called. ~~Optional[int]~~ |
+| **CREATES**         | The model using the architecture. ~~Model~~                                                                                                                                                            |
 
 ### spacy.TextCatBOW.v1 {#TextCatBOW}
 
@@ -552,12 +608,15 @@ architecture is usually less accurate than the ensemble, but runs faster.
 An ngram "bag-of-words" model. This architecture should run much faster than the
 others, but may not be as accurate, especially if texts are short.
 
-| Name                | Description                                                                                                                                                                                        |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `exclusive_classes` | Whether or not categories are mutually exclusive. ~~bool~~                                                                                                                                         |
-| `ngram_size`        | Determines the maximum length of the n-grams in the BOW model. For instance, `ngram_size=3`would give unigram, trigram and bigram features. ~~int~~                                                |
-| `no_output_layer`   | Whether or not to add an output layer to the model (`Softmax` activation if `exclusive_classes` is `True`, else `Logistic`. ~~bool~~                                                               |
+<!-- TODO: model return type -->
+
+| Name                | Description                                                                                                                                                                                            |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `exclusive_classes` | Whether or not categories are mutually exclusive. ~~bool~~                                                                                                                                             |
+| `ngram_size`        | Determines the maximum length of the n-grams in the BOW model. For instance, `ngram_size=3`would give unigram, trigram and bigram features. ~~int~~                                                    |
+| `no_output_layer`   | Whether or not to add an output layer to the model (`Softmax` activation if `exclusive_classes` is `True`, else `Logistic`. ~~bool~~                                                                   |
 | `nO`                | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `begin_training` is called. ~~Optional[int]~~ |
+| **CREATES**         | The model using the architecture. ~~Model~~                                                                                                                                                            |
 
 ## Entity linking architectures {#entitylinker source="spacy/ml/models/entity_linker.py"}
 
@@ -573,9 +632,6 @@ into the "real world". This requires 3 main component
   most plausible ID from the set of candidates.
 
 ### spacy.EntityLinker.v1 {#EntityLinker}
-
-The `EntityLinker` model architecture is a Thinc `Model` with a
-[`Linear`](https://thinc.ai/api-layers#linear) output layer.
 
 > #### Example Config
 >
@@ -602,10 +658,16 @@ The `EntityLinker` model architecture is a Thinc `Model` with a
 > @assets = "spacy.CandidateGenerator.v1"
 > ```
 
-| Name      | Description                                                                                                                                                                                                             |
-| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tok2vec` | The [`tok2vec`](#tok2vec) layer of the model. ~~Model~~                                                                                                                                                                 |
-| `nO`      | Output dimension, determined by the length of the vectors encoding each entity in the KB. If the `nO` dimension is not set, the entity linking component will set it when `begin_training` is called. ~~Optional[int]~~ |
+The `EntityLinker` model architecture is a Thinc `Model` with a
+[`Linear`](https://thinc.ai/api-layers#linear) output layer.
+
+<!-- TODO: model return type -->
+
+| Name        | Description                                                                                                                                                                                                             |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tok2vec`   | The [`tok2vec`](#tok2vec) layer of the model. ~~Model~~                                                                                                                                                                 |
+| `nO`        | Output dimension, determined by the length of the vectors encoding each entity in the KB. If the `nO` dimension is not set, the entity linking component will set it when `begin_training` is called. ~~Optional[int]~~ |
+| **CREATES** | The model using the architecture. ~~Model~~                                                                                                                                                                             |
 
 ### spacy.EmptyKB.v1 {#EmptyKB}
 

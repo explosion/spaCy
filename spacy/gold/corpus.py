@@ -1,14 +1,18 @@
+import warnings
 from typing import Union, List, Iterable, Iterator, TYPE_CHECKING, Callable
 from pathlib import Path
 
 from .. import util
 from .example import Example
+from ..errors import Warnings
 from ..tokens import DocBin, Doc
 from ..vocab import Vocab
 
 if TYPE_CHECKING:
     # This lets us add type hints for mypy etc. without causing circular imports
     from ..language import Language  # noqa: F401
+
+FILE_TYPE = ".spacy"
 
 
 @util.registry.readers("spacy.Corpus.v1")
@@ -53,8 +57,9 @@ class Corpus:
     @staticmethod
     def walk_corpus(path: Union[str, Path]) -> List[Path]:
         path = util.ensure_path(path)
-        if not path.is_dir():
+        if not path.is_dir() and path.parts[-1].endswith(FILE_TYPE):
             return [path]
+        orig_path = path
         paths = [path]
         locs = []
         seen = set()
@@ -66,8 +71,10 @@ class Corpus:
                 continue
             elif path.is_dir():
                 paths.extend(path.iterdir())
-            elif path.parts[-1].endswith(".spacy"):
+            elif path.parts[-1].endswith(FILE_TYPE):
                 locs.append(path)
+        if len(locs) == 0:
+            warnings.warn(Warnings.W090.format(path=orig_path))
         return locs
 
     def __call__(self, nlp: "Language") -> Iterator[Example]:
@@ -135,7 +142,7 @@ class Corpus:
         i = 0
         for loc in locs:
             loc = util.ensure_path(loc)
-            if loc.parts[-1].endswith(".spacy"):
+            if loc.parts[-1].endswith(FILE_TYPE):
                 doc_bin = DocBin().from_disk(loc)
                 docs = doc_bin.get_docs(vocab)
                 for doc in docs:

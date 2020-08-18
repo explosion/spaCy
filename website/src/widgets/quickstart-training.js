@@ -38,7 +38,8 @@ const DATA = [
     {
         id: 'optimize',
         title: 'Optimize for',
-        help: '...',
+        help:
+            'Optimize for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger & slower model). Will impact the choice of architecture, pretrained weights and hyperparameters.',
         options: [
             { id: 'efficiency', title: 'efficiency', checked: DEFAULT_OPT === 'efficiency' },
             { id: 'accuracy', title: 'accuracy', checked: DEFAULT_OPT === 'accuracy' },
@@ -84,10 +85,12 @@ export default function QuickstartTraining({ id, title, download = 'config.cfg' 
             query={query}
             render={({ site }) => {
                 const langs = site.siteMetadata.languages
-                DATA[0].dropdown = langs.map(({ name, code }) => ({
-                    id: code,
-                    title: name,
-                }))
+                DATA[0].dropdown = langs
+                    .map(({ name, code }) => ({
+                        id: code,
+                        title: name,
+                    }))
+                    .sort((a, b) => a.id.localeCompare(b.id))
                 return (
                     <Quickstart
                         download={download}

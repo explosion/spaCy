@@ -78,6 +78,14 @@ def test_replace_last_pipe(nlp):
     assert nlp.pipe_names == ["sentencizer", "ner"]
 
 
+def test_replace_pipe_config(nlp):
+    nlp.add_pipe("entity_linker")
+    nlp.add_pipe("sentencizer")
+    assert nlp.get_pipe("entity_linker").cfg["incl_prior"] == True
+    nlp.replace_pipe("entity_linker", "entity_linker", config={"incl_prior": False})
+    assert nlp.get_pipe("entity_linker").cfg["incl_prior"] == False
+
+
 @pytest.mark.parametrize("old_name,new_name", [("old_pipe", "new_pipe")])
 def test_rename_pipe(nlp, old_name, new_name):
     with pytest.raises(ValueError):

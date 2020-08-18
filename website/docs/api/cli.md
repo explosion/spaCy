@@ -719,11 +719,11 @@ $ python -m spacy evaluate [model] [data_path] [--output] [--gold-preproc]
 
 Generate an installable
 [model Python package](/usage/training#models-generating) from an existing model
-data directory. All data files are copied over. If the path to a `meta.json` is
-supplied, or a `meta.json` is found in the input directory, this file is used.
-Otherwise, the data can be entered directly from the command line. spaCy will
-then create a `.tar.gz` archive file that you can distribute and install with
-`pip install`.
+data directory. All data files are copied over. If the path to a
+[`meta.json`](/api/data-formats#meta) is supplied, or a `meta.json` is found in
+the input directory, this file is used. Otherwise, the data can be entered
+directly from the command line. spaCy will then create a `.tar.gz` archive file
+that you can distribute and install with `pip install`.
 
 <Infobox title="New in v3.0" variant="warning">
 
@@ -750,7 +750,7 @@ $ python -m spacy package [input_dir] [output_dir] [--meta-path] [--create-meta]
 | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `input_dir`                                      | Path to directory containing model data. ~~Path (positional)~~                                                                                                                                                  |
 | `output_dir`                                     | Directory to create package folder in. ~~Path (positional)~~                                                                                                                                                    |
-| `--meta-path`, `-m` <Tag variant="new">2</Tag>   | Path to `meta.json` file (optional). ~~Optional[Path] \(option)~~                                                                                                                                               |
+| `--meta-path`, `-m` <Tag variant="new">2</Tag>   | Path to [`meta.json`](/api/data-formats#meta) file (optional). ~~Optional[Path] \(option)~~                                                                                                                     |
 | `--create-meta`, `-C` <Tag variant="new">2</Tag> | Create a `meta.json` file on the command line, even if one already exists in the directory. If an existing file is found, its entries will be shown as the defaults in the command line prompt. ~~bool (flag)~~ |
 | `--no-sdist`, `-NS`,                             | Don't build the `.tar.gz` sdist automatically. Can be set if you want to run this step manually. ~~bool (flag)~~                                                                                                |
 | `--version`, `-v` <Tag variant="new">3</Tag>     | Package version to override in meta. Useful when training new versions, as it doesn't require editing the meta template. ~~Optional[str] \(option)~~                                                            |

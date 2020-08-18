@@ -83,7 +83,7 @@ def main(kb_path, vocab_path, output_dir=None, n_iter=50):
     if "entity_linker" not in nlp.pipe_names:
         print("Loading Knowledge Base from '%s'" % kb_path)
         cfg = {
-            "kb": {
+            "kb_loader": {
                 "@assets": "spacy.KBFromFile.v1",
                 "vocab_path": vocab_path,
                 "kb_path": kb_path,
