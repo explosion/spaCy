@@ -8,19 +8,35 @@ _num_words = [
     "sero",
     "un",
     "dau",
+    "dwy",
     "tri",
+    "tair",
     "pedwar",
+    "pedair",
     "pump",
     "chwech",
     "saith",
     "wyth",
     "naw",
     "deg",
+    "un ar ddeg",
+    "deuddeg",
+    "tri ar ddeg",
+    "tair ar ddeg",
+    "pedwar ar ddeg",
+    "pedair ar ddeg",
     "pymtheg",
+    "un ar bymtheg",
+    "dau ar bymtheg",
+    "dwy ar bymtheg",
     "deunaw",
+    "pedwar ar bymtheg"
     "ugain",
+    "deg ar hugain"
     "deugain",
+    "deg a deugain",
     "trigain",
+    "pedwar ugain"
     "cant",
     "mil",
     "miliwn",
@@ -42,6 +58,18 @@ _ordinal_words = [
     "wythfed",
     "nawfed",
     "degfed",
+    "unfed ar ddeg",
+    "deuddegfed",
+    "trydydd ar ddeg",
+    "trydedd ar ddeg",
+    "pedwerydd ar ddeg",
+    "pedwaredd ar ddeg",
+    "pymthegfed",
+    "unfed ar bymtheg",
+    "ail ar bymtheg",
+    "deunawfed",
+    "pedwerydd ar bymtheg",
+    "ugeinfed",
 ]
 
 
@@ -66,7 +94,7 @@ def like_num(text):
     if text_lower.endswith('eg'):
         if text_lower[:-2].isdigit():
             return True
-    if text_lower.endswith('fed'):
+    if text_lower.endswith('fed') or text_lower.endswith('ain'):
         if text_lower[:-3].isdigit():
             return True
 
