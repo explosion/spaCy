@@ -78,10 +78,11 @@ class Warnings:
             "are currently: {langs}")
 
     # TODO: fix numbering after merging develop into master
+    W090 = ("Could not locate any binary .spacy files in path '{path}'.")
     W091 = ("Could not clean/remove the temp directory at {dir}: {msg}.")
     W092 = ("Ignoring annotations for sentence starts, as dependency heads are set.")
     W093 = ("Could not find any data to train the {name} on. Is your "
-            "input data correctly formatted ?")
+            "input data correctly formatted?")
     W094 = ("Model '{model}' ({model_version}) specifies an under-constrained "
             "spaCy version requirement: {version}. This can lead to compatibility "
             "problems with older versions, or as new spaCy versions are "
@@ -600,7 +601,8 @@ class Errors:
             "\"en_core_web_sm\" will copy the component from that model.\n\n{config}")
     E985 = ("Can't load model from config file: no 'nlp' section found.\n\n{config}")
     E986 = ("Could not create any training batches: check your input. "
-            "Perhaps discard_oversize should be set to False ?")
+            "Are the train and dev paths defined? "
+            "Is 'discard_oversize' set appropriately? ")
     E987 = ("The text of an example training instance is either a Doc or "
             "a string, but found {type} instead.")
     E988 = ("Could not parse any training examples. Ensure the data is "
