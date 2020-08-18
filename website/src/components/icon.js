@@ -53,7 +53,15 @@ const icons = {
     package: PackageIcon,
 }
 
-export default function Icon({ name, width = 20, height, inline = false, variant, className }) {
+export default function Icon({
+    name,
+    width = 20,
+    height,
+    inline = false,
+    variant,
+    className,
+    ...props
+}) {
     const IconComponent = icons[name]
     const iconClassNames = classNames(classes.root, className, {
         [classes.inline]: inline,
@@ -67,6 +75,7 @@ export default function Icon({ name, width = 20, height, inline = false, variant
             aria-hidden="true"
             width={width}
             height={height || width}
+            {...props}
         />
     )
 }

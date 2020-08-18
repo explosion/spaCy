@@ -384,7 +384,40 @@ that reference this variable.
 
 ### Model architectures {#model-architectures}
 
-<!-- TODO: refer to architectures API: /api/architectures -->
+> #### 💡 Model type annotations
+>
+> In the documentation and code base, you may come across type annotations and
+> descriptions of [Thinc](https://thinc.ai) model types, like ~~Model[List[Doc],
+> List[Floats2d]]~~. This so-called generic type describes the layer and its
+> input and output type – in this case, it takes a list of `Doc` objects as the
+> input and list of 2-dimensional arrays of floats as the output. You can read
+> more about defining Thinc models [here](https://thinc.ai/docs/usage-models).
+> Also see the [type checking](https://thinc.ai/docs/usage-type-checking) for
+> how to enable linting in your editor to see live feedback if your inputs and
+> outputs don't match.
+
+A **model architecture** is a function that wires up a Thinc
+[`Model`](https://thinc.ai/docs/api-model) instance, which you can then use in a
+component or as a layer of a larger network. You can use Thinc as a thin
+[wrapper around frameworks](https://thinc.ai/docs/usage-frameworks) such as
+PyTorch, TensorFlow or MXNet, or you can implement your logic in Thinc
+[directly](https://thinc.ai/docs/usage-models).
+
+spaCy's built-in components will never construct their `Model` instances
+themselves, so you won't have to subclass the component to change its model
+architecture. You can just **update the config** so that it refers to a
+different registered function. Once the component has been created, its `Model`
+instance has already been assigned, so you cannot change its model architecture.
+The architecture is like a recipe for the network, and you can't change the
+recipe once the dish has already been prepared. You have to make a new one.
+spaCy includes a variety of built-in [architectures](/api/architectures) for
+different tasks. For example:
+
+<!-- TODO: -->
+
+| Architecture                                    | Description                                                                                                                                                            |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [HashEmbedCNN](/api/architectures#HashEmbedCNN) | Build spaCy’s “standard” embedding layer, which uses hash embedding with subword features and a CNN with layer-normalized maxout. ~~Model[List[Doc], List[Floats2d]]~~ |
 
 ### Metrics, training output and weighted scores {#metrics}
 
@@ -430,18 +463,14 @@ components are weighted equally.
 
 <Accordion title="Understanding the training output and score types" spaced>
 
-<!-- TODO: come up with good short explanation of precision and recall -->
-
 | Name                       | Description                                                                                                             |
 | -------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | **Loss**                   | The training loss representing the amount of work left for the optimizer. Should decrease, but usually not to `0`.      |
-| **Precision** (P)          | Should increase.                                                                                                        |
-| **Recall** (R)             | Should increase.                                                                                                        |
-| **F-Score** (F)            | The weighted average of precision and recall. Should increase.                                                          |
+| **Precision** (P)          | Percentage of predicted annotations that were correct. Should increase.                                                 |
+| **Recall** (R)             | Percentage of reference annotations recovered. Should increase.                                                         |
+| **F-Score** (F)            | Harmonic mean of precision and recall. Should increase.                                                                 |
 | **UAS** / **LAS**          | Unlabeled and labeled attachment score for the dependency parser, i.e. the percentage of correct arcs. Should increase. |
 | **Words per second** (WPS) | Prediction speed in words per second. Should stay stable.                                                               |
-
-<!-- TODO: is this still relevant? -->
 
 Note that if the development data has raw text, some of the gold-standard
 entities might not align to the predicted tokenization. These tokenization

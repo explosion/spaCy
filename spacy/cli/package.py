@@ -229,6 +229,7 @@ if __name__ == '__main__':
 
 TEMPLATE_MANIFEST = """
 include meta.json
+include config.cfg
 """.strip()
 
 

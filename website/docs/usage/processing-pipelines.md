@@ -232,7 +232,7 @@ available pipeline components and component functions.
 | `morphologizer` | [`Morphologizer`](/api/morphologizer)           | Assign morphological features and coarse-grained POS tags.                                |
 | `senter`        | [`SentenceRecognizer`](/api/sentencerecognizer) | Assign sentence boundaries.                                                               |
 | `sentencizer`   | [`Sentencizer`](/api/sentencizer)               | Add rule-based sentence segmentation without the dependency parse.                        |
-| `tok2vec`       | [`Tok2Vec`](/api/tok2vec)                       |                                                                                           |
+| `tok2vec`       | [`Tok2Vec`](/api/tok2vec)                       | Assign token-to-vector embeddings.                                                        |
 | `transformer`   | [`Transformer`](/api/transformer)               | Assign the tokens and outputs of a transformer model.                                     |
 
 ### Disabling and modifying pipeline components {#disabling}
