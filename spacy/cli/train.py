@@ -75,7 +75,7 @@ def train(
         msg.info("Using CPU")
     msg.info(f"Loading config and nlp from: {config_path}")
     with show_validation_error(config_path):
-        config = util.load_config(config_path, overrides=config_overrides)
+        config = util.load_config(config_path, overrides=config_overrides, interpolate=True)
     if config.get("training", {}).get("seed") is not None:
         fix_random_seed(config["training"]["seed"])
     # Use original config here before it's resolved to functions
