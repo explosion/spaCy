@@ -454,7 +454,22 @@ components are weighted equally.
 | **UAS** / **LAS**          | Unlabeled and labeled attachment score for the dependency parser, i.e. the percentage of correct arcs. Should increase. |
 | **Words per second** (WPS) | Prediction speed in words per second. Should stay stable.                                                               |
 
+Precision and recall are two common measurements of a model's accuracy. You
+need precision and recall statistics whenever your model can return a variable
+number of predictions, as in this situation there are two different ways your
+model can be "accurate".
+
+Precision refers to the percentage of predicted annotations that were correct,
+while recall refers to the percentage of reference annotations recovered.
+A model that only returns one entity for a document will have precision 1.0 if
+that entity is correct, but might have low recall if it has missed lots of
+other correct entities. F-score is the harmonic mean of precision and recall.
+The harmonic mean is used instead of the arithmetic mean so that systems with
+very low precision or very low recall will score lower than systems that
+achieve a balance of the two.
+
 <!-- TODO: is this still relevant? -->
+<!-- Yes (MH) -->
 
 Note that if the development data has raw text, some of the gold-standard
 entities might not align to the predicted tokenization. These tokenization
