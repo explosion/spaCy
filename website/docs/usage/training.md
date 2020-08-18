@@ -433,8 +433,8 @@ components are weighted equally.
 | Name                       | Description                                                                                                             |
 | -------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | **Loss**                   | The training loss representing the amount of work left for the optimizer. Should decrease, but usually not to `0`.      |
-| **Precision** (P)          | The percentage of generated predictions that are correct. Should increase.                                                                                                        |
-| **Recall** (R)             | The percentage of gold-standard annotations that are in fact predicted. Should increase.                                                                                                        |
+| **Precision** (P)          | The percentage of generated predictions that are correct. Should increase.                                              |
+| **Recall** (R)             | The percentage of gold-standard annotations that are in fact predicted. Should increase.                                |
 | **F-Score** (F)            | The weighted average of precision and recall. Should increase.                                                          |
 | **UAS** / **LAS**          | Unlabeled and labeled attachment score for the dependency parser, i.e. the percentage of correct arcs. Should increase. |
 | **Words per second** (WPS) | Prediction speed in words per second. Should stay stable.                                                               |
@@ -483,11 +483,11 @@ language class and `nlp` object at different points of the lifecycle:
 | `after_creation`          | Called right after the `nlp` object is created, but before the pipeline components are added to the pipeline and receives the `nlp` object. Useful for modifying the tokenizer.          |
 | `after_pipeline_creation` | Called right after the pipeline components are created and added and receives the `nlp` object. Useful for modifying pipeline components.                                                |
 
-The `@spacy.registry.callbacks` decorator lets you register your custom function in the
-`callbacks` [registry](/api/top-level#registry) under a given name. You can then
-reference the function in a config block using the `@callbacks` key. If a block
-contains a key starting with an `@`, it's interpreted as a reference to a
-function. Because you've registered the function, spaCy knows how to create it
+The `@spacy.registry.callbacks` decorator lets you register your custom function
+in the `callbacks` [registry](/api/top-level#registry) under a given name. You
+can then reference the function in a config block using the `@callbacks` key. If
+a block contains a key starting with an `@`, it's interpreted as a reference to
+a function. Because you've registered the function, spaCy knows how to create it
 when you reference `"customize_language_data"` in your config. Here's an example
 of a callback that runs before the `nlp` object is created and adds a few custom
 tokenization rules to the defaults:
@@ -562,9 +562,9 @@ spaCy's configs are powered by our machine learning library Thinc's
 using [`pydantic`](https://github.com/samuelcolvin/pydantic). If your registered
 function provides type hints, the values that are passed in will be checked
 against the expected types. For example, `debug: bool` in the example above will
-ensure that the value received as the argument `debug` is an boolean. If the
+ensure that the value received as the argument `debug` is a boolean. If the
 value can't be coerced into a boolean, spaCy will raise an error.
-`start: pydantic.StrictBool` will force the value to be an boolean and raise an
+`debug: pydantic.StrictBool` will force the value to be a boolean and raise an
 error if it's not – for instance, if your config defines `1` instead of `true`.
 
 </Infobox>
@@ -612,7 +612,9 @@ settings in the block will be passed to the function as keyword arguments. Keep
 in mind that the config shouldn't have any hidden defaults and all arguments on
 the functions need to be represented in the config. If your function defines
 **default argument values**, spaCy is able to auto-fill your config when you run
-[`init fill-config`](/api/cli#init-fill-config).
+[`init fill-config`](/api/cli#init-fill-config). If you want to make sure that a
+given parameter is always explicitely set in the config, avoid setting a default
+value for it.
 
 ```ini
 ### config.cfg (excerpt)
