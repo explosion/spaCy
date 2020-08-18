@@ -665,18 +665,18 @@ can create and register a custom function that generates
 using this dataset for training, stopping criteria such as maximum number of
 steps, or stopping when the loss does not decrease further, can be used.
 
-In this example we assume a custom function `read_custom_data()`
-which loads or generates texts with relevant textcat annotations. Then, small
-lexical variations of the input text are created before generating the final
-`Example` objects.
+In this example we assume a custom function `read_custom_data()` which loads or
+generates texts with relevant textcat annotations. Then, small lexical
+variations of the input text are created before generating the final `Example`
+objects.
 
 We can also customize the batching strategy by registering a new "batcher" which
 turns a stream of items into a stream of batches. spaCy has several useful
 built-in batching strategies with customizable sizes<!-- TODO: link  -->, but
 it's also easy to implement your own. For instance, the following function takes
-the stream of generated `Example` objects, and removes those which have the exact
-same underlying raw text, to avoid duplicates in the final training data. Note
-that in a more realistic implementation, you'd also want to check whether the
+the stream of generated `Example` objects, and removes those which have the
+exact same underlying raw text, to avoid duplicates within each batch. Note that
+in a more realistic implementation, you'd also want to check whether the
 annotations are exactly the same.
 
 > ```ini
