@@ -17,7 +17,7 @@ customize the data loading during training, you can register your own
 or evaluation data. It takes the same arguments as the `Corpus` class and
 returns a callable that yields [`Example`](/api/example) objects. You can
 replace it with your own registered function in the
-[`@readers` registry](/api/top-level#regsitry) to customize the data loading and
+[`@readers` registry](/api/top-level#registry) to customize the data loading and
 streaming.
 
 > #### Example config
