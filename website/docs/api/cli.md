@@ -39,8 +39,8 @@ the model name to be specified with its version (e.g. `en_core_web_sm-2.2.0`).
 > to a local PyPi installation and fetching it straight from there. This will
 > also allow you to add it as a versioned package dependency to your project.
 
-```bash
-$ python -m spacy download [model] [--direct] [pip args]
+```cli
+$ python -m spacy download [model] [--direct] [pip_args]
 ```
 
 | Name                                  | Description                                                                                                                                                                                                                          |
@@ -57,11 +57,11 @@ Print information about your spaCy installation, models and local setup, and
 generate [Markdown](https://en.wikipedia.org/wiki/Markdown)-formatted markup to
 copy-paste into [GitHub issues](https://github.com/explosion/spaCy/issues).
 
-```bash
+```cli
 $ python -m spacy info [--markdown] [--silent]
 ```
 
-```bash
+```cli
 $ python -m spacy info [model] [--markdown] [--silent]
 ```
 
@@ -88,7 +88,7 @@ and command for updating are shown.
 > suite, to ensure all models are up to date before proceeding. If incompatible
 > models are found, it will return `1`.
 
-```bash
+```cli
 $ python -m spacy validate
 ```
 
@@ -111,14 +111,14 @@ config. The settings you specify will impact the suggested model architectures
 and pipeline setup, as well as the hyperparameters. You can also adjust and
 customize those settings in your config file later.
 
-> ```bash
-> ### Example {wrap="true"}
+> #### Example
+>
+> ```cli
 > $ python -m spacy init config config.cfg --lang en --pipeline ner,textcat --optimize accuracy
 > ```
 
-```bash
-$ python -m spacy init config [output_file] [--lang] [--pipeline]
-[--optimize] [--cpu]
+```cli
+$ python -m spacy init config [output_file] [--lang] [--pipeline] [--optimize] [--cpu]
 ```
 
 | Name               | Description                                                                                                                                                                                                                                                                                                                        |
@@ -143,12 +143,13 @@ be created, and their signatures are used to find the defaults. If your config
 contains a problem that can't be resolved automatically, spaCy will show you a
 validation error with more details.
 
-> ```bash
-> ### Example {wrap="true"}
+> #### Example
+>
+> ```cli
 > $ python -m spacy init fill-config base.cfg config.cfg
 > ```
 
-```bash
+```cli
 $ python -m spacy init fill-config [base_path] [output_file] [--diff]
 ```
 
@@ -175,9 +176,8 @@ The `init-model` command is now available as a subcommand of `spacy init`.
 
 </Infobox>
 
-```bash
-$ python -m spacy init model [lang] [output_dir] [--jsonl-loc] [--vectors-loc]
-[--prune-vectors]
+```cli
+$ python -m spacy init model [lang] [output_dir] [--jsonl-loc] [--vectors-loc] [--prune-vectors]
 ```
 
 | Name                                                    | Description                                                                                                                                                                                                                                                                         |
@@ -200,10 +200,8 @@ Convert files into spaCy's
 management functions. The converter can be specified on the command line, or
 chosen based on the file extension of the input file.
 
-```bash
-$ python -m spacy convert [input_file] [output_dir] [--converter]
-[--file-type] [--n-sents] [--seg-sents] [--model] [--morphology]
-[--merge-subtokens] [--ner-map] [--lang]
+```cli
+$ python -m spacy convert [input_file] [output_dir] [--converter] [--file-type] [--n-sents] [--seg-sents] [--model] [--morphology] [--merge-subtokens] [--ner-map] [--lang]
 ```
 
 | Name                                             | Description                                                                                                                               |
@@ -246,13 +244,13 @@ errors at once and some issues are only shown once previous errors have been
 fixed. To auto-fill a partial config and save the result, you can use the
 [`init fillconfig`](/api/cli#init-fill-config) command.
 
-```bash
+```cli
 $ python -m spacy debug config [config_path] [--code_path] [overrides]
 ```
 
 > #### Example
 >
-> ```bash
+> ```cli
 > $ python -m spacy debug config ./config.cfg
 > ```
 
@@ -298,14 +296,13 @@ takes the same arguments as `train` and reads settings off the
 
 </Infobox>
 
-```bash
-$ python -m spacy debug data [config_path] [--code] [--ignore-warnings]
-[--verbose] [--no-format] [overrides]
+```cli
+$ python -m spacy debug data [config_path] [--code] [--ignore-warnings] [--verbose] [--no-format] [overrides]
 ```
 
 > #### Example
 >
-> ```bash
+> ```cli
 > $ python -m spacy debug data ./config.cfg
 > ```
 
@@ -473,7 +470,7 @@ The `profile` command is now available as a subcommand of `spacy debug`.
 
 </Infobox>
 
-```bash
+```cli
 $ python -m spacy debug profile [model] [inputs] [--n-texts]
 ```
 
@@ -490,9 +487,8 @@ $ python -m spacy debug profile [model] [inputs] [--n-texts]
 Debug a Thinc [`Model`](https://thinc.ai/docs/api-model) by running it on a
 sample text and checking how it updates its internal weights and parameters.
 
-```bash
-$ python -m spacy debug model [config_path] [component] [--layers] [-DIM]
-[-PAR] [-GRAD] [-ATTR] [-P0] [-P1] [-P2] [P3] [--gpu-id]
+```cli
+$ python -m spacy debug model [config_path] [component] [--layers] [-DIM] [-PAR] [-GRAD] [-ATTR] [-P0] [-P1] [-P2] [P3] [--gpu-id]
 ```
 
 <Accordion title="Example outputs" spaced>
@@ -502,7 +498,7 @@ model ("Step 0"), which helps us to understand the internal structure of the
 Neural Network, and to focus on specific layers that we want to inspect further
 (see next example).
 
-```bash
+```cli
 $ python -m spacy debug model ./config.cfg tagger -P0
 ```
 
@@ -548,7 +544,7 @@ an all-zero matrix determined by the `nO` and `nI` dimensions. After a first
 training step (Step 2), this matrix has clearly updated its values through the
 training feedback loop.
 
-```bash
+```cli
 $ python -m spacy debug model ./config.cfg tagger -l "5,15" -DIM -PAR -P0 -P1 -P2
 ```
 
@@ -632,7 +628,7 @@ in the section `[paths]`.
 
 </Infobox>
 
-```bash
+```cli
 $ python -m spacy train [config_path] [--output] [--code] [--verbose] [overrides]
 ```
 
@@ -669,9 +665,8 @@ the [data format](/api/data-formats#config) for details.
 
 </Infobox>
 
-```bash
-$ python -m spacy pretrain [texts_loc] [output_dir] [config_path]
-[--code] [--resume-path] [--epoch-resume] [overrides]
+```cli
+$ python -m spacy pretrain [texts_loc] [output_dir] [config_path] [--code] [--resume-path] [--epoch-resume] [overrides]
 ```
 
 | Name                    | Description                                                                                                                                                                                        |
@@ -698,9 +693,8 @@ skew. To render a sample of dependency parses in a HTML file using the
 [displaCy visualizations](/usage/visualizers), set as output directory as the
 `--displacy-path` argument.
 
-```bash
-$ python -m spacy evaluate [model] [data_path] [--output] [--gold-preproc]
-[--gpu-id] [--displacy-path] [--displacy-limit]
+```cli
+$ python -m spacy evaluate [model] [data_path] [--output] [--gold-preproc] [--gpu-id] [--displacy-path] [--displacy-limit]
 ```
 
 | Name                      | Description                                                                                                                                                               |
@@ -733,17 +727,16 @@ this, you can set the `--no-sdist` flag.
 
 </Infobox>
 
-```bash
-$ python -m spacy package [input_dir] [output_dir] [--meta-path] [--create-meta]
-[--no-sdist] [--version] [--force]
+```cli
+$ python -m spacy package [input_dir] [output_dir] [--meta-path] [--create-meta] [--no-sdist] [--version] [--force]
 ```
 
 > #### Example
 >
-> ```bash
-> python -m spacy package /input /output
-> cd /output/en_model-0.0.0
-> pip install dist/en_model-0.0.0.tar.gz
+> ```cli
+> $ python -m spacy package /input /output
+> $ cd /output/en_model-0.0.0
+> $ pip install dist/en_model-0.0.0.tar.gz
 > ```
 
 | Name                                             | Description                                                                                                                                                                                                     |
@@ -775,19 +768,19 @@ can provide any other repo (public or private) that you have access to using the
 
 <!-- TODO: update example once we've decided on repo structure -->
 
-```bash
+```cli
 $ python -m spacy project clone [name] [dest] [--repo]
 ```
 
 > #### Example
 >
-> ```bash
+> ```cli
 > $ python -m spacy project clone some_example
 > ```
 >
 > Clone from custom repo:
 >
-> ```bash
+> ```cli
 > $ python -m spacy project clone template --repo https://github.com/your_org/your_repo
 > ```
 
@@ -810,13 +803,13 @@ considered "private" and you have to take care of putting them into the
 destination directory yourself. If a local path is provided, the asset is copied
 into the current project.
 
-```bash
+```cli
 $ python -m spacy project assets [project_dir]
 ```
 
 > #### Example
 >
-> ```bash
+> ```cli
 > $ python -m spacy project assets
 > ```
 
@@ -835,13 +828,13 @@ all commands in the workflow are run, in order. If commands define
 re-run if state has changed. For example, if the input dataset changes, a
 preprocessing command that depends on those files will be re-run.
 
-```bash
+```cli
 $ python -m spacy project run [subcommand] [project_dir] [--force] [--dry]
 ```
 
 > #### Example
 >
-> ```bash
+> ```cli
 > $ python -m spacy project run train
 > ```
 
@@ -874,16 +867,16 @@ You'll also need to add the assets you want to track with
 
 </Infobox>
 
-```bash
+```cli
 $ python -m spacy project dvc [project_dir] [workflow] [--force] [--verbose]
 ```
 
 > #### Example
 >
-> ```bash
-> git init
-> dvc init
-> python -m spacy project dvc all
+> ```cli
+> $ git init
+> $ dvc init
+> $ python -m spacy project dvc all
 > ```
 
 | Name              | Description                                                                                                       |

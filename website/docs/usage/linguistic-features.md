@@ -1588,9 +1588,9 @@ some nice Latin vectors. You can then pass the directory path to
 > doc1.similarity(doc2)
 > ```
 
-```bash
-wget https://s3-us-west-1.amazonaws.com/fasttext-vectors/word-vectors-v2/cc.la.300.vec.gz
-python -m spacy init model en /tmp/la_vectors_wiki_lg --vectors-loc cc.la.300.vec.gz
+```cli
+$ wget https://s3-us-west-1.amazonaws.com/fasttext-vectors/word-vectors-v2/cc.la.300.vec.gz
+$ python -m spacy init model en /tmp/la_vectors_wiki_lg --vectors-loc cc.la.300.vec.gz
 ```
 
 <Accordion title="How to optimize vector coverage" id="custom-vectors-coverage" spaced>
@@ -1649,8 +1649,8 @@ the vector of "leaving", which is identical. If you're using the
 option to easily reduce the size of the vectors as you add them to a spaCy
 model:
 
-```bash
-$ python -m spacy init model /tmp/la_vectors_web_md --vectors-loc la.300d.vec.tgz --prune-vectors 10000
+```cli
+$ python -m spacy init model en /tmp/la_vectors_web_md --vectors-loc la.300d.vec.tgz --prune-vectors 10000
 ```
 
 This will create a spaCy model with vectors for the first 10,000 words in the
@@ -1741,9 +1741,8 @@ language name, and even train models with it and refer to it in your
 > needs to be available during training. You can load a Python file containing
 > the code using the `--code` argument:
 >
-> ```bash
-> ### {wrap="true"}
-> $ python -m spacy train config.cfg --code code.py
+> ```cli
+> python -m spacy train config.cfg --code code.py
 > ```
 
 ```python

@@ -66,7 +66,7 @@ the [`init fill-config`](/api/cli#init-fill-config) command to fill in the
 remaining defaults. Training configs should always be **complete and without
 hidden defaults**, to keep your experiments reproducible.
 
-```bash
+```cli
 $ python -m spacy init fill-config base_config.cfg config.cfg
 ```
 
@@ -76,8 +76,8 @@ $ python -m spacy init fill-config base_config.cfg config.cfg
 > your training and development data, get useful stats, and find problems like
 > invalid entity annotations, cyclic dependencies, low data labels and more.
 >
-> ```bash
-> $ python -m spacy debug data config.cfg --verbose
+> ```cli
+> $ python -m spacy debug data config.cfg
 > ```
 
 Instead of exporting your starter config from the quickstart widget and
@@ -88,7 +88,7 @@ add your data and run [`train`](/api/cli#train) with your config. See the
 spaCy's binary `.spacy` format. You can either include the data paths in the
 `[paths]` section of your config, or pass them in via the command line.
 
-```bash
+```cli
 $ python -m spacy train config.cfg --output ./output --paths.train ./train.spacy --paths.dev ./dev.spacy
 ```
 
@@ -186,9 +186,8 @@ For cases like this, you can set additional command-line options starting with
 `--paths.train ./corpus/train.spacy` sets the `train` value in the `[paths]`
 block.
 
-```bash
-$ python -m spacy train config.cfg --paths.train ./corpus/train.spacy
---paths.dev ./corpus/dev.spacy --training.batch_size 128
+```cli
+$ python -m spacy train config.cfg --paths.train ./corpus/train.spacy --paths.dev ./corpus/dev.spacy --training.batch_size 128
 ```
 
 Only existing sections and values in the config can be overwritten. At the end
@@ -486,8 +485,9 @@ still look good.
 
 ### Training with custom code {#custom-code}
 
-> ```bash
-> ### Example {wrap="true"}
+> #### Example
+>
+> ```cli
 > $ python -m spacy train config.cfg --code functions.py
 > ```
 
@@ -605,9 +605,8 @@ you can now run [`spacy train`](/api/cli#train) and point the argument `--code`
 to your Python file. Before loading the config, spaCy will import the
 `functions.py` module and your custom functions will be registered.
 
-```bash
-### Training with custom code {wrap="true"}
-python -m spacy train config.cfg --output ./output --code ./functions.py
+```cli
+$ python -m spacy train config.cfg --output ./output --code ./functions.py
 ```
 
 #### Example: Custom batch size schedule {#custom-code-schedule}

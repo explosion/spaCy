@@ -27,7 +27,7 @@
     padding: 1.75em 1.5em
 
 .code
-    &[data-prompt]:before,
+    &[data-prompt]:before, span[data-prompt]:before
         content: attr(data-prompt)
         margin-right: 0.65em
         display: inline-block
@@ -163,3 +163,31 @@
     font-weight: normal
     padding-top: 0.1rem
     color: var(--color-subtle-dark)
+
+.cli
+    padding-top: calc(var(--spacing-sm) - 6px)
+    padding-bottom: calc(var(--spacing-sm) - 12px)
+
+    [data-prompt]:before
+        color: var(--color-subtle)
+
+.cli-arg
+    border: 1px solid var(--color-dark)
+    padding: 1px 6px
+    margin-bottom: 5px
+    border-radius: 0.5em
+    display: inline-block
+
+    a
+        color: inherit !important
+
+.cli-arg-highlight
+    background: var(--color-theme)
+    border-color: var(--color-theme)
+    color: var(--color-back) !important
+
+.cli-arg-subtle
+    color: var(--syntax-comment)
+
+.cli-arg-emphasis
+    font-style: italic

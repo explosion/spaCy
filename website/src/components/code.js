@@ -8,7 +8,7 @@ import { window } from 'browser-monads'
 
 import CUSTOM_TYPES from '../../meta/type-annotations.json'
 import { isString, htmlToReact } from './util'
-import Link from './link'
+import Link, { OptionalLink } from './link'
 import GitHubCode from './github'
 import classes from '../styles/code.module.sass'
 
@@ -89,6 +89,91 @@ export const TypeAnnotation = ({ lang = 'python', link = true, children }) => {
     )
 }
 
+function replacePrompt(line, prompt, isFirst = false) {
+    let result = line
+    const hasPrompt = result.startsWith(`${prompt} `)
+    const showPrompt = hasPrompt || isFirst
+    if (hasPrompt) result = result.slice(2)
+    return result && showPrompt ? `<span data-prompt="${prompt}">${result}</span>` : result
+}
+
+function parseArgs(raw) {
+    const commandGroups = ['init', 'debug', 'project']
+    let args = raw.split(' ').filter(arg => arg)
+    const result = {}
+    while (args.length) {
+        let opt = args.shift()
+        if (opt.length > 1 && opt.startsWith('-')) {
+            const isFlag = !args.length || (args[0].length > 1 && args[0].startsWith('-'))
+            result[opt] = isFlag ? true : args.shift()
+        } else {
+            const key = commandGroups.includes(opt) ? `${opt} ${args.shift()}` : opt
+            result[key] = null
+        }
+    }
+    return result
+}
+
+function formatCode(html, lang, prompt) {
+    if (lang === 'cli') {
+        const cliRegex = /^(\$ )?python -m spacy/
+        const lines = html
+            .trim()
+            .split('\n')
+            .map((line, i) => {
+                if (cliRegex.test(line)) {
+                    const text = line.replace(cliRegex, '')
+                    const args = parseArgs(text)
+                    const cmd = Object.keys(args).map((key, i) => {
+                        const value = args[key]
+                        return value === null || value === true || i === 0 ? key : `${key} ${value}`
+                    })
+                    return (
+                        <Fragment key={i}>
+                            <span data-prompt="$" className={classes.cliArgSubtle}>
+                                python -m
+                            </span>{' '}
+                            <span>spacy</span>{' '}
+                            {cmd.map((item, j) => {
+                                const isCmd = j === 0
+                                const url = isCmd ? `/api/cli#${item.replace(' ', '-')}` : null
+                                const isAbstract = isString(item) && /^\[(.+)\]$/.test(item)
+                                const itemClassNames = classNames(classes.cliArg, {
+                                    [classes.cliArgHighlight]: isCmd,
+                                    [classes.cliArgEmphasis]: isAbstract,
+                                })
+                                const text = isAbstract ? item.slice(1, -1) : item
+                                return (
+                                    <Fragment key={j}>
+                                        {j !== 0 && ' '}
+                                        <span className={itemClassNames}>
+                                            <OptionalLink hidden hideIcon to={url}>
+                                                {text}
+                                            </OptionalLink>
+                                        </span>
+                                    </Fragment>
+                                )
+                            })}
+                        </Fragment>
+                    )
+                }
+                const htmlLine = replacePrompt(highlightCode('bash', line), '$')
+                return htmlToReact(htmlLine)
+            })
+        return lines.map((line, i) => (
+            <Fragment key={i}>
+                {i !== 0 && <br />}
+                {line}
+            </Fragment>
+        ))
+    }
+    const result = html
+        .split('\n')
+        .map((line, i) => (prompt ? replacePrompt(line, prompt, i === 0) : line))
+        .join('\n')
+    return htmlToReact(result)
+}
+
 export class Code extends React.Component {
     state = { Juniper: null }
 
@@ -136,7 +221,8 @@ export class Code extends React.Component {
             children,
         } = this.props
         const codeClassNames = classNames(classes.code, className, `language-${lang}`, {
-            [classes.wrap]: !!highlight || !!wrap,
+            [classes.wrap]: !!highlight || !!wrap || lang === 'cli',
+            [classes.cli]: lang === 'cli',
         })
         const ghClassNames = classNames(codeClassNames, classes.maxHeight)
         const { Juniper } = this.state
@@ -154,14 +240,14 @@ export class Code extends React.Component {
 
         const codeText = Array.isArray(children) ? children.join('') : children || ''
         const highlightRange = highlight ? rangeParser.parse(highlight).filter(n => n > 0) : []
-        const html = lang === 'none' ? codeText : highlightCode(lang, codeText, highlightRange)
-
+        const rawHtml = ['none', 'cli'].includes(lang)
+            ? codeText
+            : highlightCode(lang, codeText, highlightRange)
+        const html = formatCode(rawHtml, lang, prompt)
         return (
             <>
                 {title && <h4 className={classes.title}>{title}</h4>}
-                <code className={codeClassNames} data-prompt={prompt}>
-                    {htmlToReact(html)}
-                </code>
+                <code className={codeClassNames}>{html}</code>
             </>
         )
     }

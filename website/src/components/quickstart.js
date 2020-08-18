@@ -117,7 +117,7 @@ const Quickstart = ({
                                     {help && (
                                         <span data-tooltip={help} className={classes.help}>
                                             {' '}
-                                            <Icon name="help" width={16} spaced />
+                                            <Icon name="help" width={16} />
                                         </span>
                                     )}
                                 </div>
@@ -201,7 +201,7 @@ const Quickstart = ({
                                                             className={classes.help}
                                                         >
                                                             {' '}
-                                                            <Icon name="help" width={16} spaced />
+                                                            <Icon name="help" width={16} />
                                                         </span>
                                                     )}
                                                 </label>

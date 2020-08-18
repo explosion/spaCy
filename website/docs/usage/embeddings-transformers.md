@@ -110,9 +110,9 @@ in `/opt/nvidia/cuda`, you would run:
 
 ```bash
 ### Installation with CUDA
-export CUDA_PATH="/opt/nvidia/cuda"
-pip install cupy-cuda102
-pip install spacy-transformers
+$ export CUDA_PATH="/opt/nvidia/cuda"
+$ pip install cupy-cuda102
+$ pip install spacy-transformers
 ```
 
 ### Runtime usage {#transformers-runtime}
@@ -130,7 +130,7 @@ The `Transformer` component sets the
 [`Doc._.trf_data`](/api/transformer#custom_attributes) extension attribute,
 which lets you access the transformers outputs at runtime.
 
-```bash
+```cli
 $ python -m spacy download en_core_trf_lg
 ```
 
@@ -292,8 +292,8 @@ function. You can make it available via the `--code` argument that can point to
 a Python file. For more details on training with custom code, see the
 [training documentation](/usage/training#custom-code).
 
-```bash
-$ python -m spacy train ./config.cfg --code ./code.py
+```cli
+python -m spacy train ./config.cfg --code ./code.py
 ```
 
 ### Customizing the model implementations {#training-custom-model}

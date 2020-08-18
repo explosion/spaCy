@@ -160,7 +160,7 @@ the website or company in a specific context.
 
 > #### Loading models
 >
-> ```bash
+> ```cli
 > $ python -m spacy download en_core_web_sm
 >
 > >>> import spacy

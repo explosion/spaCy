@@ -116,15 +116,10 @@ The Chinese language class supports three word segmentation options:
 
 <Infobox variant="warning">
 
-In spaCy v3, the default Chinese word segmenter has switched from Jieba to
-character segmentation.
-
-</Infobox>
-
-<Infobox variant="warning">
-
-Note that [`pkuseg`](https://github.com/lancopku/pkuseg-python) doesn't yet ship
-with pre-compiled wheels for Python 3.8. If you're running Python 3.8, you can
+In spaCy v3.0, the default Chinese word segmenter has switched from Jieba to
+character segmentation. Also note that
+[`pkuseg`](https://github.com/lancopku/pkuseg-python) doesn't yet ship with
+pre-compiled wheels for Python 3.8. If you're running Python 3.8, you can
 install it from our fork and compile it locally:
 
 ```bash
@@ -174,7 +169,7 @@ nlp.tokenizer.pkuseg_update_user_dict([], reset=True)
 
 </Accordion>
 
-<Accordion title="Details on pretrained and custom Chinese models">
+<Accordion title="Details on pretrained and custom Chinese models" spaced>
 
 The [Chinese models](/models/zh) provided by spaCy include a custom `pkuseg`
 model trained only on
@@ -247,20 +242,20 @@ best-matching model compatible with your spaCy installation.
 > + nlp = spacy.load("en_core_web_sm")
 > ```
 
-```bash
-# Download best-matching version of specific model for your spaCy installation
-python -m spacy download en_core_web_sm
+```cli
+# Download best-matching version of a model for your spaCy installation
+$ python -m spacy download en_core_web_sm
 
 # Download exact model version
-python -m spacy download en_core_web_sm-2.2.0 --direct
+$ python -m spacy download en_core_web_sm-3.0.0 --direct
 ```
 
 The download command will [install the model](/usage/models#download-pip) via
 pip and place the package in your `site-packages` directory.
 
-```bash
-pip install spacy
-python -m spacy download en_core_web_sm
+```cli
+$ pip install -U spacy
+$ python -m spacy download en_core_web_sm
 ```
 
 ```python
@@ -279,10 +274,10 @@ click on the archive link and copy it to your clipboard.
 
 ```bash
 # With external URL
-pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0.tar.gz
+$ pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0.tar.gz
 
 # With local file
-pip install /Users/you/en_core_web_sm-3.0.0.tar.gz
+$ pip install /Users/you/en_core_web_sm-3.0.0.tar.gz
 ```
 
 By default, this will install the model into your `site-packages` directory. You
@@ -305,7 +300,7 @@ archive consists of a model directory that contains another directory with the
 model data.
 
 ```yaml
-### Directory structure {highlight="7"}
+### Directory structure {highlight="6"}
 └── en_core_web_md-3.0.0.tar.gz       # downloaded archive
     ├── setup.py                      # setup file for pip installation
     ├── meta.json                     # copy of model meta

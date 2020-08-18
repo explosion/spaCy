@@ -67,8 +67,8 @@ project template and copies the files to a local directory. You can then run the
 project, e.g. to train a model and edit the commands and scripts to build fully
 custom workflows.
 
-```bash
-$ python -m spacy clone some_example_project
+```cli
+python -m spacy project clone some_example_project
 ```
 
 By default, the project will be cloned into the current working directory. You
@@ -95,9 +95,9 @@ to download and where to put them. The
 [`spacy project assets`](/api/cli#project-assets) will fetch the project assets
 for you:
 
-```bash
-cd some_example_project
-python -m spacy project assets
+```
+$ cd some_example_project
+$ python -m spacy project assets
 ```
 
 ### 3. Run a command {#run}
@@ -123,7 +123,7 @@ Commands consist of one or more steps and can be run with
 [`spacy project run`](/api/cli#project-run). The following will run the command
 `preprocess` defined in the `project.yml`:
 
-```bash
+```cli
 $ python -m spacy project run preprocess
 ```
 
@@ -156,7 +156,7 @@ to turn the best model artifact into an installable Python package. The
 following command run the workflow named `all` defined in the `project.yml`, and
 execute the commands it specifies, in order:
 
-```bash
+```cli
 $ python -m spacy project run all
 ```
 
@@ -379,8 +379,8 @@ The [`spacy project clone`](/api/cli#project-clone) command lets you customize
 the repo to clone from using the `--repo` option. It calls into `git`, so you'll
 be able to clone from any repo that you have access to, including private repos.
 
-```bash
-$ python -m spacy project your_project --repo https://github.com/you/repo
+```cli
+python -m spacy project clone your_project --repo https://github.com/you/repo
 ```
 
 At a minimum, a valid project template needs to contain a
@@ -445,9 +445,9 @@ to include support for remote storage like Google Cloud Storage, S3, Azure, SSH
 and more.
 
 ```bash
-pip install dvc   # Install DVC
-git init          # Initialize a Git repo
-dvc init          # Initialize a DVC project
+$ pip install dvc   # Install DVC
+$ git init          # Initialize a Git repo
+$ dvc init          # Initialize a DVC project
 ```
 
 <Infobox title="Important note on privacy" variant="warning">
@@ -466,8 +466,8 @@ can then manage your spaCy project like any other DVC project, run
 and [`dvc repro`](https://dvc.org/doc/command-reference/repro) to reproduce the
 workflow or individual commands.
 
-```bash
-$ python -m spacy project dvc [workflow name]
+```cli
+$ python -m spacy project dvc [workflow_name]
 ```
 
 <Infobox title="Important note for multiple workflows" variant="warning">
@@ -508,7 +508,7 @@ and evaluation set.
 
 > #### Example usage
 >
-> ```bash
+> ```cli
 > $ python -m spacy project run annotate
 > ```
 
@@ -595,7 +595,7 @@ spacy_streamlit.visualize(MODELS, DEFAULT_TEXT, visualizers=["ner"])
 
 > #### Example usage
 >
-> ```bash
+> ```cli
 > $ python -m spacy project run visualize
 > ```
 
@@ -636,8 +636,8 @@ API.
 
 > #### Example usage
 >
-> ```bash
-> $ python -m spacy project run visualize
+> ```cli
+> $ python -m spacy project run serve
 > ```
 
 <!-- prettier-ignore -->

@@ -157,6 +157,14 @@
     font-display: fallback
     src: url("../fonts/jetbrainsmono-regular.woff") format("woff"), url("../fonts/jetbrainsmono-regular.woff2") format("woff2")
 
+@font-face
+    font-family: "JetBrains Mono"
+    font-style: italic
+    font-weight: 500
+    font-display: fallback
+    src: url("../fonts/jetbrainsmono-italic.woff") format("woff"), url("../fonts/jetbrainsmono-italic.woff2") format("woff2")
+
+
 /* Reset */
 
 *, *:before, *:after
@@ -366,6 +374,12 @@ body [id]:target
     &.operator
         color: var(--syntax-comment)
 
+[class*="language-bash"] .token
+    &.function
+        color: var(--color-subtle)
+
+    &.operator, &.variable
+        color: var(--syntax-comment)
 
 // Settings for ini syntax (config files)
 [class*="language-ini"]

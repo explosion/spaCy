@@ -562,11 +562,11 @@ import DisplaCyEntSnekHtml from 'images/displacy-ent-snek.html'
 ## Saving, loading and distributing models {#models}
 
 After training your model, you'll usually want to save its state, and load it
-back later. You can do this with the
-[`Language.to_disk()`](/api/language#to_disk) method:
+back later. You can do this with the [`Language.to_disk`](/api/language#to_disk)
+method:
 
 ```python
-nlp.to_disk('/home/me/data/en_example_model')
+nlp.to_disk("./en_example_model")
 ```
 
 The directory will be created if it doesn't exist, and the whole pipeline data,
@@ -629,8 +629,8 @@ docs.
 > }
 > ```
 
-```bash
-$ python -m spacy package /home/me/data/en_example_model /home/me/my_models
+```cli
+$ python -m spacy package ./en_example_model ./my_models
 ```
 
 This command will create a model package directory and will run

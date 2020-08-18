@@ -118,8 +118,8 @@ need paths, you can define them here. All config values can also be
 [`spacy train`](/api/cli#train), which is especially relevant for data paths
 that you don't want to hard-code in your config file.
 
-```bash
-$ python -m spacy train ./config.cfg --paths.train ./corpus/train.spacy
+```cli
+$ python -m spacy train config.cfg --paths.train ./corpus/train.spacy
 ```
 
 ### training {#config-training tag="section"}
@@ -209,8 +209,8 @@ objects to JSON, you can now serialize them directly using the
 [`spacy convert`](/api/cli) lets you convert your JSON data to the new `.spacy`
 format:
 
-```bash
-$ python -m spacy convert ./data.json ./output
+```cli
+$ python -m spacy convert ./data.json ./output.spacy
 ```
 
 </Infobox>
