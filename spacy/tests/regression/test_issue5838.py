@@ -1,3 +1,6 @@
+# coding: utf-8
+from __future__ import unicode_literals
+
 from spacy.lang.en import English
 from spacy.tokens import Span
 from spacy import displacy
