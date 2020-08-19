@@ -5,7 +5,7 @@ menu:
   - ['Introduction', 'basics']
   - ['Quickstart', 'quickstart']
   - ['Config System', 'config']
-  - ['Custom Models', 'custom-models']
+  - ['Custom Functions', 'custom-functions']
   - ['Transfer Learning', 'transfer-learning']
   - ['Parallel Training', 'parallel-training']
   - ['Internal API', 'api']
@@ -127,7 +127,7 @@ Some of the main advantages and features of spaCy's training config are:
   [optimizers](https://thinc.ai/docs/api-optimizers) or
   [schedules](https://thinc.ai/docs/api-schedules) and define arguments that are
   passed into them. You can also register your own functions to define
-  [custom architectures](#custom-models), reference them in your config and
+  [custom architectures](#custom-functions), reference them in your config and
   tweak their parameters.
 - **Interpolation.** If you have hyperparameters or other settings used by
   multiple components, define them once and reference them as
@@ -299,7 +299,7 @@ case [`compounding.v1`](https://thinc.ai/docs/api-schedules#compounding) defined
 in the [function registry](/api/top-level#registry). All other values defined in
 the block are passed to the function as keyword arguments when it's initialized.
 You can also use this mechanism to register
-[custom implementations and architectures](#custom-models) and reference them
+[custom implementations and architectures](#custom-functions) and reference them
 from your configs.
 
 > #### How the config is resolved
@@ -481,9 +481,25 @@ still look good.
 
 </Accordion>
 
-## Custom model implementations and architectures {#custom-models}
+## Custom Functions {#custom-functions}
 
-<!-- TODO: intro, should summarise what spaCy v3 can do and that you can now use fully custom implementations, models defined in PyTorch and TF, etc. etc. possibly link to new (not yet created) page on creating models -->
+Registered functions in the training config files can refer to built-in
+implementations, but you can also plug in fully custom implementations. To do
+so, you first write your own implementation of a custom architectures, data
+reader or any other functionality, and then register this function with the
+correct [registry](/api/top-level#registry). This allows you to plug in models
+defined in PyTorch or Tensorflow, make custom modifications to the `nlp` object,
+create custom optimizers or schedules, or write a function that streams in data
+and preprocesses it on the fly while training.
+
+Each custom function can have any numbers of arguments that should be passed
+into them through the config similar as with the built-in functions. If your
+function defines **default argument values**, spaCy is able to auto-fill your
+config when you run [`init fill-config`](/api/cli#init-fill-config). If you want
+to make sure that a given parameter is always explicitely set in the config,
+avoid setting a default value for it.
+
+<!-- TODO: possibly link to new (not yet created) page on creating models ? -->
 
 ### Training with custom code {#custom-code}
 
@@ -642,11 +658,7 @@ In your config, you can now reference the schedule in the
 starting with an `@`, it's interpreted as a reference to a function. All other
 settings in the block will be passed to the function as keyword arguments. Keep
 in mind that the config shouldn't have any hidden defaults and all arguments on
-the functions need to be represented in the config. If your function defines
-**default argument values**, spaCy is able to auto-fill your config when you run
-[`init fill-config`](/api/cli#init-fill-config). If you want to make sure that a
-given parameter is always explicitely set in the config, avoid setting a default
-value for it.
+the functions need to be represented in the config.
 
 ```ini
 ### config.cfg (excerpt)
@@ -733,7 +745,7 @@ the annotations are exactly the same.
 
 ```python
 ### functions.py
-from typing import Callable, Iterable, Iterator
+from typing import Callable, Iterable, Iterator, List
 import spacy
 from spacy.gold import Example
 

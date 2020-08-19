@@ -295,23 +295,23 @@ factories.
 >     return Model("custom", forward, dims={"nO": nO})
 > ```
 
-| Registry name     | Description                                                                                                                                                                                                                                       |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `architectures`   | Registry for functions that create [model architectures](/api/architectures). Can be used to register custom model architectures and reference them in the `config.cfg`.                                                                          |
-| `factories`       | Registry for functions that create [pipeline components](/usage/processing-pipelines#custom-components). Added automatically when you use the `@spacy.component` decorator and also reads from [entry points](/usage/saving-loading#entry-points) |
-| `tokenizers`      | Registry for tokenizer factories. Registered functions should return a callback that receives the `nlp` object and returns a [`Tokenizer`](/api/tokenizer) or a custom callable.                                                                  |
-| `languages`       | Registry for language-specific `Language` subclasses. Automatically reads from [entry points](/usage/saving-loading#entry-points).                                                                                                                |
-| `lookups`         | Registry for large lookup tables available via `vocab.lookups`.                                                                                                                                                                                   |
-| `displacy_colors` | Registry for custom color scheme for the [`displacy` NER visualizer](/usage/visualizers). Automatically reads from [entry points](/usage/saving-loading#entry-points).                                                                            |
-| `assets`          | Registry for data assets, knowledge bases etc.                                                                                                                                                                                                    |
-| `callbacks`       | Registry for custom callbacks to [modify the `nlp` object](/usage/training#custom-code-nlp-callbacks) before training.                                                                                                                            |
-| `readers`         | Registry for training and evaluation data readers like [`Corpus`](/api/corpus).                                                                                                                                                                   |
-| `batchers`        | Registry for training and evaluation [data batchers](#batchers).                                                                                                                                                                                  |
-| `optimizers`      | Registry for functions that create [optimizers](https://thinc.ai/docs/api-optimizers).                                                                                                                                                            |
-| `schedules`       | Registry for functions that create [schedules](https://thinc.ai/docs/api-schedules).                                                                                                                                                              |
-| `layers`          | Registry for functions that create [layers](https://thinc.ai/docs/api-layers).                                                                                                                                                                    |
-| `losses`          | Registry for functions that create [losses](https://thinc.ai/docs/api-loss).                                                                                                                                                                      |
-| `initializers`    | Registry for functions that create [initializers](https://thinc.ai/docs/api-initializers).                                                                                                                                                        |
+| Registry name     | Description                                                                                                                                                                                                                                        |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `architectures`   | Registry for functions that create [model architectures](/api/architectures). Can be used to register custom model architectures and reference them in the `config.cfg`.                                                                           |
+| `factories`       | Registry for functions that create [pipeline components](/usage/processing-pipelines#custom-components). Added automatically when you use the `@spacy.component` decorator and also reads from [entry points](/usage/saving-loading#entry-points). |
+| `tokenizers`      | Registry for tokenizer factories. Registered functions should return a callback that receives the `nlp` object and returns a [`Tokenizer`](/api/tokenizer) or a custom callable.                                                                   |
+| `languages`       | Registry for language-specific `Language` subclasses. Automatically reads from [entry points](/usage/saving-loading#entry-points).                                                                                                                 |
+| `lookups`         | Registry for large lookup tables available via `vocab.lookups`.                                                                                                                                                                                    |
+| `displacy_colors` | Registry for custom color scheme for the [`displacy` NER visualizer](/usage/visualizers). Automatically reads from [entry points](/usage/saving-loading#entry-points).                                                                             |
+| `assets`          | Registry for data assets, knowledge bases etc.                                                                                                                                                                                                     |
+| `callbacks`       | Registry for custom callbacks to [modify the `nlp` object](/usage/training#custom-code-nlp-callbacks) before training.                                                                                                                             |
+| `readers`         | Registry for training and evaluation data readers like [`Corpus`](/api/corpus).                                                                                                                                                                    |
+| `batchers`        | Registry for training and evaluation [data batchers](#batchers).                                                                                                                                                                                   |
+| `optimizers`      | Registry for functions that create [optimizers](https://thinc.ai/docs/api-optimizers).                                                                                                                                                             |
+| `schedules`       | Registry for functions that create [schedules](https://thinc.ai/docs/api-schedules).                                                                                                                                                               |
+| `layers`          | Registry for functions that create [layers](https://thinc.ai/docs/api-layers).                                                                                                                                                                     |
+| `losses`          | Registry for functions that create [losses](https://thinc.ai/docs/api-loss).                                                                                                                                                                       |
+| `initializers`    | Registry for functions that create [initializers](https://thinc.ai/docs/api-initializers).                                                                                                                                                         |
 
 ### spacy-transformers registry {#registry-transformers}
 
@@ -340,7 +340,17 @@ See the [`Transformer`](/api/transformer) API reference and
 
 ## Batchers {#batchers source="spacy/gold/batchers.py" new="3"}
 
-<!-- TODO: intro -->
+A data batcher implements a batching strategy that essentially turns a stream of
+items into a stream of batches, with each batch consisting of one item or a list
+of items. During training, the models update their weights after processing one
+batch at a time. Typical batching strategies include presenting the training
+data as a stream of batches with similar sizes, or with increasing batch sizes.
+See the Thinc documentation on
+[`schedules`](https://thinc.ai/docs/api-schedules) for a few standard examples.
+
+Instead of using one of the built-in batchers listed here, you can also
+[implement your own](/usage/training#custom-code-readers-batchers), which may or
+may not use a custom schedule.
 
 #### batch_by_words.v1 {#batch_by_words tag="registered function"}
 
