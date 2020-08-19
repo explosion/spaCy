@@ -80,16 +80,17 @@ shortcut for this and instantiate the component using its string name and
 `KnowledgeBase` as well as the Candidate generator can be customized by
 providing custom registered functions.
 
-| Name             | Description                                                                                         |
-| ---------------- | --------------------------------------------------------------------------------------------------- |
-| `vocab`          | The shared vocabulary. ~~Vocab~~                                                                    |
-| `model`          | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model~~           |
-| `name`           | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~ |
-| _keyword-only_   |                                                                                                     |  |
-| `kb`             | The [`KnowledgeBase`](/api/kb). ~~KnowledgeBase~~                                                   |
-| `labels_discard` | NER labels that will automatically get a `"NIL"` prediction. ~~Iterable[str]~~                      |
-| `incl_prior`     | Whether or not to include prior probabilities from the KB in the model. ~~bool~~                    |
-| `incl_context`   | Whether or not to include the local context in the model. ~~bool~~                                  |
+| Name             | Description                                                                                                                      |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`          | The shared vocabulary. ~~Vocab~~                                                                                                 |
+| `model`          | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model~~                                        |
+| `name`           | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                              |
+| _keyword-only_   |                                                                                                                                  |  |
+| `kb_loader`      | Function that creates a [`KnowledgeBase`](/api/kb) from a `Vocab` instance. ~~Callable[[Vocab], KnowledgeBase]~~                 |
+| `get_candidates` | Function that generates plausible candidates for a given `Span` object. ~~Callable[[KnowledgeBase, Span], Iterable[Candidate]]~~ |
+| `labels_discard` | NER labels that will automatically get a `"NIL"` prediction. ~~Iterable[str]~~                                                   |
+| `incl_prior`     | Whether or not to include prior probabilities from the KB in the model. ~~bool~~                                                 |
+| `incl_context`   | Whether or not to include the local context in the model. ~~bool~~                                                               |
 
 ## EntityLinker.\_\_call\_\_ {#call tag="method"}
 
