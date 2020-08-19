@@ -340,7 +340,17 @@ See the [`Transformer`](/api/transformer) API reference and
 
 ## Batchers {#batchers source="spacy/gold/batchers.py" new="3"}
 
-<!-- TODO: intro -->
+A batcher implements a batching strategy that essentially turns a stream of
+items into a stream of batches, with each batch consisting of one item or a list
+of items. During training, the models update their weights after processing one
+batch at a time. Typical batching strategies include presenting the training
+data as a stream of batches with similar sizes, or with increasing batch sizes.
+See the Thinc documentation on
+[`schedules`](https://thinc.ai/docs/api-schedules) for a few standard examples.
+
+Instead of using one of the built-in batchers listed here, you can also
+[implement your own](/usage/training#custom-code-readers-batchers), which may or
+may not use a custom schedule.
 
 #### batch_by_words.v1 {#batch_by_words tag="registered function"}
 

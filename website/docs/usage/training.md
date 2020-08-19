@@ -743,7 +743,7 @@ the annotations are exactly the same.
 
 ```python
 ### functions.py
-from typing import Callable, Iterable, Iterator
+from typing import Callable, Iterable, Iterator, List
 import spacy
 from spacy.gold import Example
 
