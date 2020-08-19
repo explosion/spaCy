@@ -53,7 +53,7 @@
         "remark-react": "^5.0.1"
     },
     "scripts": {
-        "build": "npm run python:setup && gatsby build",
+        "build": "npm run python:install && npm run python:setup && gatsby build",
         "dev": "npm run python:setup && gatsby develop",
         "dev:nightly": "BRANCH=nightly.spacy.io npm run dev",
         "lint": "eslint **",

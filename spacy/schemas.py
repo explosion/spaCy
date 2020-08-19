@@ -311,3 +311,22 @@ class ProjectConfigSchema(BaseModel):
 
     class Config:
         title = "Schema for project configuration file"
+
+
+# Recommendations for init config workflows
+
+
+class RecommendationTrfItem(BaseModel):
+    name: str
+    size_factor: int
+
+
+class RecommendationTrf(BaseModel):
+    efficiency: RecommendationTrfItem
+    accuracy: RecommendationTrfItem
+
+
+class RecommendationSchema(BaseModel):
+    word_vectors: Optional[str] = None
+    transformer: Optional[RecommendationTrf] = None
+    has_letters: bool = True

@@ -2,10 +2,9 @@ import pytest
 from spacy.gold import docs_to_json, biluo_tags_from_offsets
 from spacy.gold.converters import iob2docs, conll_ner2docs, conllu2docs
 from spacy.lang.en import English
-from spacy.schemas import ProjectConfigSchema, validate
+from spacy.schemas import ProjectConfigSchema, RecommendationSchema, validate
 from spacy.cli.pretrain import make_docs
-from spacy.cli.init_config import init_config, RECOMMENDATIONS_PATH
-from spacy.cli.init_config import RecommendationSchema
+from spacy.cli.init_config import init_config, RECOMMENDATIONS
 from spacy.cli._util import validate_project_commands, parse_config_overrides
 from spacy.util import get_lang_class
 import srsly
@@ -335,7 +334,5 @@ def test_init_config(lang, pipeline, optimize):
 
 
 def test_model_recommendations():
-    recommendations = srsly.read_json(RECOMMENDATIONS_PATH)
-    for lang, data in recommendations.items():
-        assert get_lang_class(lang)
+    for lang, data in RECOMMENDATIONS.items():
         assert RecommendationSchema(**data)

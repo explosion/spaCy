@@ -3,37 +3,22 @@ from enum import Enum
 from pathlib import Path
 from wasabi import Printer, diff_strings
 from thinc.api import Config
-from pydantic import BaseModel
 import srsly
 import re
 
 from .. import util
+from ..schemas import RecommendationSchema
 from ._util import init_cli, Arg, Opt, show_validation_error, COMMAND
 
 
-TEMPLATE_ROOT = Path(__file__).parent / "templates"
-TEMPLATE_PATH = TEMPLATE_ROOT / "quickstart_training.jinja"
-RECOMMENDATIONS_PATH = TEMPLATE_ROOT / "quickstart_training_recommendations.json"
+ROOT = Path(__file__).parent / "templates"
+TEMPLATE_PATH = ROOT / "quickstart_training.jinja"
+RECOMMENDATIONS = srsly.read_yaml(ROOT / "quickstart_training_recommendations.yml")
 
 
 class Optimizations(str, Enum):
     efficiency = "efficiency"
     accuracy = "accuracy"
-
-
-class RecommendationsTrfItem(BaseModel):
-    name: str
-    size_factor: int
-
-
-class RecommendationsTrf(BaseModel):
-    efficiency: RecommendationsTrfItem
-    accuracy: RecommendationsTrfItem
-
-
-class RecommendationSchema(BaseModel):
-    word_vectors: Optional[str] = None
-    transformer: Optional[RecommendationsTrf] = None
 
 
 @init_cli.command("config")
@@ -111,14 +96,11 @@ def init_config(
         from jinja2 import Template
     except ImportError:
         msg.fail("This command requires jinja2", "pip install jinja2", exits=1)
-    recommendations = srsly.read_json(RECOMMENDATIONS_PATH)
-    lang_defaults = util.get_lang_class(lang).Defaults
-    has_letters = lang_defaults.writing_system.get("has_letters", True)
-    # Filter out duplicates since tok2vec and transformer are added by template
-    pipeline = [pipe for pipe in pipeline if pipe not in ("tok2vec", "transformer")]
-    reco = RecommendationSchema(**recommendations.get(lang, {})).dict()
     with TEMPLATE_PATH.open("r") as f:
         template = Template(f.read())
+    # Filter out duplicates since tok2vec and transformer are added by template
+    pipeline = [pipe for pipe in pipeline if pipe not in ("tok2vec", "transformer")]
+    reco = RecommendationSchema(**RECOMMENDATIONS.get(lang, {})).dict()
     variables = {
         "lang": lang,
         "components": pipeline,
@@ -126,7 +108,7 @@ def init_config(
         "hardware": "cpu" if cpu else "gpu",
         "transformer_data": reco["transformer"],
         "word_vectors": reco["word_vectors"],
-        "has_letters": has_letters,
+        "has_letters": reco["has_letters"],
     }
     base_template = template.render(variables).strip()
     # Giving up on getting the newlines right in jinja for now
