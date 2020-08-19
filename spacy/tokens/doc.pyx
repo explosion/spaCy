@@ -920,7 +920,9 @@ cdef class Doc:
                         warnings.warn(Warnings.W101.format(name=name))
                 else:
                     warnings.warn(Warnings.W102.format(key=key, value=value))
-            char_offset += len(doc.text) if not ensure_whitespace or doc[-1].is_space else len(doc.text) + 1
+            char_offset += len(doc.text)
+            if ensure_whitespace and not (len(doc) > 0 and doc[-1].is_space):
+                char_offset += 1
 
         arrays = [doc.to_array(attrs) for doc in docs]
 
@@ -932,7 +934,7 @@ cdef class Doc:
             token_offset = -1
             for doc in docs[:-1]:
                 token_offset += len(doc)
-                if not doc[-1].is_space:
+                if not (len(doc) > 0 and doc[-1].is_space):
                     concat_spaces[token_offset] = True
 
         concat_array = numpy.concatenate(arrays)
