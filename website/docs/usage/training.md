@@ -157,8 +157,8 @@ sections of a config file are:
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `nlp`         | Definition of the `nlp` object, its tokenizer and [processing pipeline](/usage/processing-pipelines) component names.                                           |
 | `components`  | Definitions of the [pipeline components](/usage/processing-pipelines) and their models.                                                                         |
-| `paths`       | Paths to data and other assets. Re-used across the config as variables, e.g. `${paths:train}`, and can be [overwritten](#config-overrides) on the CLI.          |
-| `system`      | Settings related to system and hardware. Re-used across the config as variables, e.g. `${system:seed}`, and can be [overwritten](#config-overrides) on the CLI. |
+| `paths`       | Paths to data and other assets. Re-used across the config as variables, e.g. `${paths.train}`, and can be [overwritten](#config-overrides) on the CLI.          |
+| `system`      | Settings related to system and hardware. Re-used across the config as variables, e.g. `${system.seed}`, and can be [overwritten](#config-overrides) on the CLI. |
 | `training`    | Settings and controls for the training and evaluation process.                                                                                                  |
 | `pretraining` | Optional settings and controls for the [language model pretraining](#pretraining).                                                                              |
 
@@ -325,19 +325,9 @@ compound = 1.001
 Another very useful feature of the config system is that it supports variable
 interpolation for both **values and sections**. This means that you only need to
 define a setting once and can reference it across your config using the
-`${section:value}` or `${section.block}` syntax. In this example, the value of
-`seed` is reused within the `[training]` block, and the whole block of
-`[training.optimizer]` is reused in `[pretraining]` and will become
-`pretraining.optimizer`.
-
-> #### Note on syntax
->
-> There are two different ways to format your variables, depending on whether
-> you want to reference a single value or a block. Values are specified after a
-> `:`, while blocks are specified with a `.`:
->
-> 1. `${section:value}`, `${section.subsection:value}`
-> 2. `${section.block}`, `${section.subsection.block}`
+`${section.value}` syntax. In this example, the value of `seed` is reused within
+the `[training]` block, and the whole block of `[training.optimizer]` is reused
+in `[pretraining]` and will become `pretraining.optimizer`.
 
 ```ini
 ### config.cfg (excerpt) {highlight="5,18"}
@@ -345,7 +335,7 @@ define a setting once and can reference it across your config using the
 seed = 0
 
 [training]
-seed = ${system:seed}
+seed = ${system.seed}
 
 [training.optimizer]
 @optimizers = "Adam.v1"
@@ -369,7 +359,7 @@ to a string.
 [paths]
 version = 5
 root = "/Users/you/data"
-train = "${paths:root}/train_${paths:version}.spacy"
+train = "${paths.root}/train_${paths.version}.spacy"
 # Result: /Users/you/data/train_5.spacy
 ```
 

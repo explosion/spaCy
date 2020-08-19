@@ -602,7 +602,7 @@ components are created, as well as all training settings and hyperparameters.
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `path`        | Path to the model's `config.cfg`. ~~Union[str, Path]~~                                                                                                                      |
 | `overrides`   | Optional config overrides to replace in loaded config. Can be provided as nested dict, or as flat dict with keys in dot notation, e.g. `"nlp.pipeline"`. ~~Dict[str, Any]~~ |
-| `interpolate` | Whether to interpolate the config and replace variables like `${paths:train}` with their values. Defaults to `False`. ~~bool~~                                              |
+| `interpolate` | Whether to interpolate the config and replace variables like `${paths.train}` with their values. Defaults to `False`. ~~bool~~                                              |
 | **RETURNS**   | The model's config. ~~Config~~                                                                                                                                              |
 
 ### util.load_meta {#util.load_meta tag="function" new="3"}
