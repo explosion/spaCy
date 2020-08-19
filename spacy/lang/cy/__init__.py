@@ -16,6 +16,8 @@ class WelshDefaults(Language.Defaults):
     lex_attr_getters.update(LEX_ATTRS)
     lex_attr_getters[LANG] = lambda text: "cy"
 
+    tag_map = TAG_MAP
+
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
 
