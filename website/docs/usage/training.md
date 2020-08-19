@@ -414,7 +414,7 @@ recipe once the dish has already been prepared. You have to make a new one.
 spaCy includes a variety of built-in [architectures](/api/architectures) for
 different tasks. For example:
 
-<!-- TODO: -->
+<!-- TODO: select example architectures to showcase -->
 
 | Architecture                                    | Description                                                                                                                                                            |
 | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -776,12 +776,11 @@ mattis pretium.
 
 ### Defining custom architectures {#custom-architectures}
 
-<!-- TODO: this could maybe be a more general example of using Thinc to compose some layers? We don't want to go too deep here and probably want to focus on a simple architecture example to show how it works -->
-<!-- TODO: Wrapping PyTorch and TensorFlow -->
+<!-- TODO: this should probably move to new section on models -->
 
 ## Transfer learning {#transfer-learning}
 
-<!-- TODO: link to embeddings and transformers page -->
+<!-- TODO: write something, link to embeddings and transformers page – should probably wait until transformers/embeddings/transfer learning docs are done -->
 
 ### Using transformer models like BERT {#transformers}
 
@@ -811,7 +810,7 @@ config and customize the implementations, see the usage guide on
 
 ### Pretraining with spaCy {#pretraining}
 
-<!-- TODO: document spacy pretrain, objectives etc. -->
+<!-- TODO: document spacy pretrain, objectives etc. – should probably wait until transformers/embeddings/transfer learning docs are done -->
 
 ## Parallel Training with Ray {#parallel-training}
 
@@ -836,9 +835,8 @@ spaCy gives you full control over the training loop. However, for most use
 cases, it's recommended to train your models via the
 [`spacy train`](/api/cli#train) command with a [`config.cfg`](#config) to keep
 track of your settings and hyperparameters, instead of writing your own training
-scripts from scratch.
-[Custom registered functions](/usage/training/#custom-code) should typically
-give you everything you need to train fully custom models with
+scripts from scratch. [Custom registered functions](#custom-code) should
+typically give you everything you need to train fully custom models with
 [`spacy train`](/api/cli#train).
 
 </Infobox>

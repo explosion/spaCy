@@ -509,8 +509,6 @@ page should be safe to use and we'll try to ensure backwards compatibility.
 However, we recommend having additional tests in place if your application
 depends on any of spaCy's utilities.
 
-<!-- TODO: document new config-related util functions? -->
-
 ### util.get_lang_class {#util.get_lang_class tag="function"}
 
 Import and load a `Language` class. Allows lazy-loading

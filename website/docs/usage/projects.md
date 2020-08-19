@@ -97,7 +97,7 @@ to download and where to put them. The
 [`spacy project assets`](/api/cli#project-assets) will fetch the project assets
 for you:
 
-```
+```cli
 $ cd some_example_project
 $ python -m spacy project assets
 ```
