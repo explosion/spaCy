@@ -622,7 +622,7 @@ others, but may not be as accurate, especially if texts are short.
 
 An [`EntityLinker`](/api/entitylinker) component disambiguates textual mentions
 (tagged as named entities) to unique identifiers, grounding the named entities
-into the "real world". This requires 3 main component
+into the "real world". This requires 3 main components:
 
 - A [`KnowledgeBase`](/api/kb) (KB) holding the unique identifiers, potential
   synonyms and prior probabilities.

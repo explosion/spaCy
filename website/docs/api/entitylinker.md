@@ -40,13 +40,14 @@ architectures and their arguments and hyperparameters.
 > nlp.add_pipe("entity_linker", config=config)
 > ```
 
-| Setting          | Description                                                                                                                                                                                |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `labels_discard` | NER labels that will automatically get a "NIL" prediction. Defaults to `[]`. ~~Iterable[str]~~                                                                                             |
-| `incl_prior`     | Whether or not to include prior probabilities from the KB in the model. Defaults to `True`. ~~bool~~                                                                                       |
-| `incl_context`   | Whether or not to include the local context in the model. Defaults to `True`. ~~bool~~                                                                                                     |
-| `model`          | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. Defaults to [EntityLinker](/api/architectures#EntityLinker). ~~Model~~                                     |
-| `kb`             | The [`KnowledgeBase`](/api/kb). Defaults to [EmptyKB](/api/architectures#EmptyKB), a function returning an empty `KnowledgeBase` with an `entity_vector_length` of `64`. ~~KnowledgeBase~~ |
+| Setting          | Description                                                                                                                                                                                                                                                              |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `labels_discard` | NER labels that will automatically get a "NIL" prediction. Defaults to `[]`. ~~Iterable[str]~~                                                                                                                                                                           |
+| `incl_prior`     | Whether or not to include prior probabilities from the KB in the model. Defaults to `True`. ~~bool~~                                                                                                                                                                     |
+| `incl_context`   | Whether or not to include the local context in the model. Defaults to `True`. ~~bool~~                                                                                                                                                                                   |
+| `model`          | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. Defaults to [EntityLinker](/api/architectures#EntityLinker). ~~Model~~                                                                                                                   |
+| `kb_loader`      | Function that creates a [`KnowledgeBase`](/api/kb) from a `Vocab` instance. Defaults to [EmptyKB](/api/architectures#EmptyKB), a function returning an empty `KnowledgeBase` with an `entity_vector_length` of `64`. ~~Callable[[Vocab], KnowledgeBase]~~                |
+| `get_candidates` | Function that generates plausible candidates for a given `Span` object. Defaults to [CandidateGenerator](/api/architectures#CandidateGenerator), a function looking up exact, case-dependent aliases in the KB. ~~Callable[[KnowledgeBase, Span], Iterable[Candidate]]~~ |
 
 ```python
 https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/entity_linker.py
