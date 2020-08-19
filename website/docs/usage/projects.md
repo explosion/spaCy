@@ -33,6 +33,7 @@ and prototypes and ship your models into production.
 
 <!-- TODO: decide how to introduce concept -->
 
+<!-- TODO:
 <Project id="some_example_project">
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus interdum
@@ -40,6 +41,7 @@ sodales lectus, ut sodales orci ullamcorper id. Sed condimentum neque ut erat
 mattis pretium.
 
 </Project>
+-->
 
 spaCy projects make it easy to integrate with many other **awesome tools** in
 the data science and machine learning ecosystem to track and manage your data

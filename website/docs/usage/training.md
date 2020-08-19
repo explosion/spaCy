@@ -92,6 +92,7 @@ spaCy's binary `.spacy` format. You can either include the data paths in the
 $ python -m spacy train config.cfg --output ./output --paths.train ./train.spacy --paths.dev ./dev.spacy
 ```
 
+<!-- TODO:
 <Project id="some_example_project">
 
 The easiest way to get started with an end-to-end training process is to clone a
@@ -99,6 +100,7 @@ The easiest way to get started with an end-to-end training process is to clone a
 workflows, from data preprocessing to training and packaging your model.
 
 </Project>
+-->
 
 ## Training config {#config}
 
@@ -656,32 +658,74 @@ factor = 1.005
 
 #### Example: Custom data reading and batching {#custom-code-readers-batchers}
 
-Some use-cases require streaming in data or manipulating datasets on the fly,
-rather than generating all data beforehand and storing it to file. Instead of
-using the built-in reader `"spacy.Corpus.v1"`, which uses static file paths, you
-can create and register a custom function that generates
+Some use-cases require **streaming in data** or manipulating datasets on the
+fly, rather than generating all data beforehand and storing it to file. Instead
+of using the built-in [`Corpus`](/api/corpus) reader, which uses static file
+paths, you can create and register a custom function that generates
 [`Example`](/api/example) objects. The resulting generator can be infinite. When
 using this dataset for training, stopping criteria such as maximum number of
 steps, or stopping when the loss does not decrease further, can be used.
 
-In this example we assume a custom function `read_custom_data()` which loads or
-generates texts with relevant textcat annotations. Then, small lexical
-variations of the input text are created before generating the final `Example`
-objects.
+In this example we assume a custom function `read_custom_data` which loads or
+generates texts with relevant text classification annotations. Then, small
+lexical variations of the input text are created before generating the final
+[`Example`](/api/example) objects. The `@spacy.registry.readers` decorator lets
+you register the function creating the custom reader in the `readers`
+[registry](/api/top-level#registry) and assign it a string name, so it can be
+used in your config. All arguments on the registered function become available
+as **config settings** – in this case, `source`.
 
-We can also customize the batching strategy by registering a new "batcher" which
-turns a stream of items into a stream of batches. spaCy has several useful
-built-in batching strategies with customizable sizes<!-- TODO: link  -->, but
-it's also easy to implement your own. For instance, the following function takes
-the stream of generated `Example` objects, and removes those which have the
-exact same underlying raw text, to avoid duplicates within each batch. Note that
-in a more realistic implementation, you'd also want to check whether the
-annotations are exactly the same.
-
+> #### config.cfg
+>
 > ```ini
 > [training.train_corpus]
 > @readers = "corpus_variants.v1"
+> source = "s3://your_bucket/path/data.csv"
+> ```
+
+```python
+### functions.py {highlight="7-8"}
+from typing import Callable, Iterator, List
+import spacy
+from spacy.gold import Example
+from spacy.language import Language
+import random
+
+@spacy.registry.readers("corpus_variants.v1")
+def stream_data(source: str) -> Callable[[Language], Iterator[Example]]:
+    def generate_stream(nlp):
+        for text, cats in read_custom_data(source):
+            # Create a random variant of the example text
+            i = random.randint(0, len(text) - 1)
+            variant = text[:i] + text[i].upper() + text[i + 1:]
+            doc = nlp.make_doc(variant)
+            example = Example.from_dict(doc, {"cats": cats})
+            yield example
+
+    return generate_stream
+```
+
+<Infobox variant="warning">
+
+Remember that a registered function should always be a function that spaCy
+**calls to create something**. In this case, it **creates the reader function**
+– it's not the reader itself.
+
+</Infobox>
+
+We can also customize the **batching strategy** by registering a new batcher
+function in the `batchers` [registry](/api/top-level#registry). A batcher turns
+a stream of items into a stream of batches. spaCy has several useful built-in
+[batching strategies](/api/top-level#batchers) with customizable sizes, but it's
+also easy to implement your own. For instance, the following function takes the
+stream of generated [`Example`](/api/example) objects, and removes those which
+have the exact same underlying raw text, to avoid duplicates within each batch.
+Note that in a more realistic implementation, you'd also want to check whether
+the annotations are exactly the same.
+
+> #### config.cfg
 >
+> ```ini
 > [training.batcher]
 > @batchers = "filtering_batch.v1"
 > size = 150
@@ -689,39 +733,26 @@ annotations are exactly the same.
 
 ```python
 ### functions.py
-from typing import Callable, Iterable, List
+from typing import Callable, Iterable, Iterator
 import spacy
 from spacy.gold import Example
-import random
-
-@spacy.registry.readers("corpus_variants.v1")
-def stream_data() -> Callable[["Language"], Iterable[Example]]:
-    def generate_stream(nlp):
-        for text, cats in read_custom_data():
-            random_index = random.randint(0, len(text) - 1)
-            variant = text[:random_index] + text[random_index].upper() + text[random_index + 1:]
-            doc = nlp.make_doc(variant)
-            example = Example.from_dict(doc, {"cats": cats})
-            yield example
-    return generate_stream
-
 
 @spacy.registry.batchers("filtering_batch.v1")
-def filter_batch(size: int) -> Callable[[Iterable[Example]], Iterable[List[Example]]]:
-    def create_filtered_batches(examples: Iterable[Example]) -> Iterable[List[Example]]:
+def filter_batch(size: int) -> Callable[[Iterable[Example]], Iterator[List[Example]]]:
+    def create_filtered_batches(examples):
         batch = []
         for eg in examples:
+            # Remove duplicate examples with the same text from batch
             if eg.text not in [x.text for x in batch]:
                 batch.append(eg)
             if len(batch) == size:
                 yield batch
                 batch = []
+
     return create_filtered_batches
 ```
 
-### Wrapping PyTorch and TensorFlow {#custom-frameworks}
-
-<!-- TODO:  -->
+<!-- TODO:
 
 <Project id="example_pytorch_model">
 
@@ -731,11 +762,16 @@ mattis pretium.
 
 </Project>
 
+ -->
+
 ### Defining custom architectures {#custom-architectures}
 
 <!-- TODO: this could maybe be a more general example of using Thinc to compose some layers? We don't want to go too deep here and probably want to focus on a simple architecture example to show how it works -->
+<!-- TODO: Wrapping PyTorch and TensorFlow -->
 
 ## Transfer learning {#transfer-learning}
+
+<!-- TODO: link to embeddings and transformers page -->
 
 ### Using transformer models like BERT {#transformers}
 
@@ -748,6 +784,8 @@ do the required plumbing. It also provides a pipeline component,
 [`Transformer`](/api/transformer), that lets you do multi-task learning and lets
 you save the transformer outputs for later use.
 
+<!-- TODO:
+
 <Project id="en_core_bert">
 
 Try out a BERT-based model pipeline using this project template: swap in your
@@ -755,6 +793,7 @@ data, edit the settings and hyperparameters and train, evaluate, package and
 visualize your model.
 
 </Project>
+-->
 
 For more details on how to integrate transformer models into your training
 config and customize the implementations, see the usage guide on
@@ -766,7 +805,8 @@ config and customize the implementations, see the usage guide on
 
 ## Parallel Training with Ray {#parallel-training}
 
-<!-- TODO: document Ray integration -->
+<!-- TODO:
+
 
 <Project id="some_example_project">
 
@@ -775,6 +815,8 @@ sodales lectus, ut sodales orci ullamcorper id. Sed condimentum neque ut erat
 mattis pretium.
 
 </Project>
+
+-->
 
 ## Internal training API {#api}
 

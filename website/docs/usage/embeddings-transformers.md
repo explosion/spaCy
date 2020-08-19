@@ -179,6 +179,7 @@ of objects by referring to creation functions, including functions you register
 yourself. For details on how to get started with training your own model, check
 out the [training quickstart](/usage/training#quickstart).
 
+<!-- TODO:
 <Project id="en_core_bert">
 
 The easiest way to get started is to clone a transformers-based project
@@ -186,6 +187,7 @@ template. Swap in your data, edit the settings and hyperparameters and train,
 evaluate, package and visualize your model.
 
 </Project>
+-->
 
 The `[components]` section in the [`config.cfg`](/api/data-formats#config)
 describes the pipeline components and the settings used to construct them,
