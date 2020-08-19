@@ -155,8 +155,8 @@ other. For instance, to generate a packaged model, you might start by converting
 your data, then run [`spacy train`](/api/cli#train) to train your model on the
 converted data and if that's successful, run [`spacy package`](/api/cli#package)
 to turn the best model artifact into an installable Python package. The
-following command run the workflow named `all` defined in the `project.yml`, and
-execute the commands it specifies, in order:
+following command runs the workflow named `all` defined in the `project.yml`, and
+executes the commands it specifies, in order:
 
 ```cli
 $ python -m spacy project run all
@@ -199,7 +199,7 @@ https://github.com/explosion/spacy-boilerplates/blob/master/ner_fashion/project.
 ### Dependencies and outputs {#deps-outputs}
 
 Each command defined in the `project.yml` can optionally define a list of
-dependencies and outputs. These are the files the commands requires and creates.
+dependencies and outputs. These are the files the command requires and creates.
 For example, a command for training a model may depend on a
 [`config.cfg`](/usage/training#config) and the training and evaluation data, and
 it will export a directory `model-best`, containing the best model, which you
