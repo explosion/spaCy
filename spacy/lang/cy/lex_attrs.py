@@ -93,7 +93,7 @@ def like_num(text):
     if text_lower.endswith('eg'):
         if text_lower[:-2].isdigit():
             return True
-    if text_lower.endswith('fed') or text_lower.endswith('ain'):
+    if text_lower.endswith('fed'):
         if text_lower[:-3].isdigit():
             return True
 
