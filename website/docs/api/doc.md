@@ -317,9 +317,7 @@ array of attributes.
 | `exclude`   | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
 | **RETURNS** | The `Doc` itself. ~~Doc~~                                                                   |
 
-## Doc.from_docs {#from_docs tag="staticmethod"}
-
-<!-- TODO: When was this added? -->
+## Doc.from_docs {#from_docs tag="staticmethod" new="3"}
 
 Concatenate multiple `Doc` objects to form a new one. Raises an error if the
 `Doc` objects do not all share the same `Vocab`.
