@@ -13,7 +13,7 @@ menu:
 
 TODO: intro and how architectures work, link to
 [`registry`](/api/top-level#registry),
-[custom models](/usage/training#custom-models) usage etc.
+[custom functions](/usage/training#custom-functions) usage etc.
 
 ## Tok2Vec architectures {#tok2vec-arch source="spacy/ml/models/tok2vec.py"}
 

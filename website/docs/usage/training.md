@@ -5,7 +5,7 @@ menu:
   - ['Introduction', 'basics']
   - ['Quickstart', 'quickstart']
   - ['Config System', 'config']
-  - ['Custom Models', 'custom-models']
+  - ['Custom Functions', 'custom-functions']
   - ['Transfer Learning', 'transfer-learning']
   - ['Parallel Training', 'parallel-training']
   - ['Internal API', 'api']
@@ -127,7 +127,7 @@ Some of the main advantages and features of spaCy's training config are:
   [optimizers](https://thinc.ai/docs/api-optimizers) or
   [schedules](https://thinc.ai/docs/api-schedules) and define arguments that are
   passed into them. You can also register your own functions to define
-  [custom architectures](#custom-models), reference them in your config and
+  [custom architectures](#custom-functions), reference them in your config and
   tweak their parameters.
 - **Interpolation.** If you have hyperparameters or other settings used by
   multiple components, define them once and reference them as
@@ -299,7 +299,7 @@ case [`compounding.v1`](https://thinc.ai/docs/api-schedules#compounding) defined
 in the [function registry](/api/top-level#registry). All other values defined in
 the block are passed to the function as keyword arguments when it's initialized.
 You can also use this mechanism to register
-[custom implementations and architectures](#custom-models) and reference them
+[custom implementations and architectures](#custom-functions) and reference them
 from your configs.
 
 > #### How the config is resolved
@@ -481,7 +481,7 @@ still look good.
 
 </Accordion>
 
-## Custom model implementations and architectures {#custom-models}
+## Custom model implementations and architectures {#custom-functions}
 
 <!-- TODO: intro, should summarise what spaCy v3 can do and that you can now use fully custom implementations, models defined in PyTorch and TF, etc. etc. -->
 

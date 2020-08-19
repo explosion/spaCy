@@ -276,7 +276,7 @@ python -m spacy init fill-config tmp/starter-config_invalid.cfg --base tmp/start
 | Name                | Description                                                                                                                                                                                |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `config_path`       | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. ~~Path (positional)~~                                                                |
-| `--code_path`, `-c` | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-models) for new architectures. ~~Optional[Path] \(option)~~          |
+| `--code_path`, `-c` | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~       |
 | `--help`, `-h`      | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                 |
 | overrides           | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~ |
 | **PRINTS**          | Config validation errors, if available.                                                                                                                                                    |
@@ -448,7 +448,7 @@ will not be available.
 | Name                       | Description                                                                                                                                                                                |
 | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `config_path`              | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. ~~Path (positional)~~                                                                |
-| `--code`, `-c`             | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-models) for new architectures. ~~Optional[Path] \(option)~~          |
+| `--code`, `-c`             | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~       |
 | `--ignore-warnings`, `-IW` | Ignore warnings, only show stats and errors. ~~bool (flag)~~                                                                                                                               |
 | `--verbose`, `-V`          | Print additional information and explanations. ~~bool (flag)~~                                                                                                                             |
 | `--no-format`, `-NF`       | Don't pretty-print the results. Use this if you want to write to a file. ~~bool (flag)~~                                                                                                   |
@@ -612,9 +612,9 @@ Train a model. Expects data in spaCy's
 Will save out the best model from all epochs, as well as the final model. The
 `--code` argument can be used to provide a Python file that's imported before
 the training process starts. This lets you register
-[custom functions](/usage/training#custom-models) and architectures and refer to
-them in your config, all while still using spaCy's built-in `train` workflow. If
-you need to manage complex multi-step training workflows, check out the new
+[custom functions](/usage/training#custom-functions) and architectures and refer
+to them in your config, all while still using spaCy's built-in `train` workflow.
+If you need to manage complex multi-step training workflows, check out the new
 [spaCy projects](/usage/projects).
 
 <Infobox title="New in v3.0" variant="warning">
@@ -636,7 +636,7 @@ $ python -m spacy train [config_path] [--output] [--code] [--verbose] [overrides
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `config_path`     | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. ~~Path (positional)~~                                                                |
 | `--output`, `-o`  | Directory to store model in. Will be created if it doesn't exist. ~~Optional[Path] \(positional)~~                                                                                         |
-| `--code`, `-c`    | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-models) for new architectures. ~~Optional[Path] \(option)~~          |
+| `--code`, `-c`    | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~       |
 | `--verbose`, `-V` | Show more detailed messages during training. ~~bool (flag)~~                                                                                                                               |
 | `--help`, `-h`    | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                 |
 | overrides         | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~ |
@@ -674,7 +674,7 @@ $ python -m spacy pretrain [texts_loc] [output_dir] [config_path] [--code] [--re
 | `texts_loc`             | Path to JSONL file with raw texts to learn from, with text provided as the key `"text"` or tokens as the key `"tokens"`. [See here](/api/data-formats#pretrain) for details. ~~Path (positional)~~ |
 | `output_dir`            | Directory to write models to on each epoch. ~~Path (positional)~~                                                                                                                                  |
 | `config_path`           | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. ~~Path (positional)~~                                                                        |
-| `--code`, `-c`          | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-models) for new architectures. ~~Optional[Path] \(option)~~                  |
+| `--code`, `-c`          | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~               |
 | `--resume-path`, `-r`   | Path to pretrained weights from which to resume pretraining. ~~Optional[Path] \(option)~~                                                                                                          |
 | `--epoch-resume`, `-er` | The epoch to resume counting from when using `--resume-path`. Prevents unintended overwriting of existing weight files. ~~Optional[int] \(option)~~                                                |
 | `--help`, `-h`          | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                         |
