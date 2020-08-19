@@ -551,9 +551,9 @@ setup(
 )
 ```
 
-After installing the package, the the custom colors will be used when
-visualizing text with `displacy`. Whenever the label `SNEK` is assigned, it will
-be displayed in `#3dff74`.
+After installing the package, the custom colors will be used when visualizing
+text with `displacy`. Whenever the label `SNEK` is assigned, it will be
+displayed in `#3dff74`.
 
 import DisplaCyEntSnekHtml from 'images/displacy-ent-snek.html'
 

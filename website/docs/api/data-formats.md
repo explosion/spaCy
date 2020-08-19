@@ -162,7 +162,7 @@ run [`spacy pretrain`](/api/cli#pretrain).
 | `dropout`                    | The dropout rate. Defaults to `0.2`. ~~float~~                                                                                  |
 | `n_save_every`               | Saving frequency. Defaults to `null`. ~~Optional[int]~~                                                                         |
 | `batch_size`                 | The batch size or batch size [schedule](https://thinc.ai/docs/api-schedules). Defaults to `3000`. ~~Union[int, Sequence[int]]~~ |
-| `seed`                       | The random seed. Defaults to variable `${system.seed}`. ~~int~~                                                                 |
+| `seed`                       | The random seed. Defaults to variable `${system:seed}`. ~~int~~                                                                 |
 | `use_pytorch_for_gpu_memory` | Allocate memory via PyTorch. Defaults to variable `${system:use_pytorch_for_gpu_memory}`. ~~bool~~                              |
 | `tok2vec_model`              | The model section of the embedding component in the config. Defaults to `"components.tok2vec.model"`. ~~str~~                   |
 | `objective`                  | The pretraining objective. Defaults to `{"type": "characters", "n_characters": 4}`. ~~Dict[str, Any]~~                          |

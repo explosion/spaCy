@@ -2,7 +2,7 @@
 # With additional functionality: in/not in, replace, pprint, round, + for lists,
 # rendering empty dicts
 # This script is mostly used to generate the JavaScript function for the
-# training quicktart widget.
+# training quickstart widget.
 import contextlib
 import json
 import re

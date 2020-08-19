@@ -144,7 +144,7 @@ https://github.com/explosion/spaCy/blob/develop/spacy/default_config.cfg
 
 Under the hood, the config is parsed into a dictionary. It's divided into
 sections and subsections, indicated by the square brackets and dot notation. For
-example, `[training]` is a section and `[training.batch_size]` a subsections.
+example, `[training]` is a section and `[training.batch_size]` a subsection.
 Subsections can define values, just like a dictionary, or use the `@` syntax to
 refer to [registered functions](#config-functions). This allows the config to
 not just define static settings, but also construct objects like architectures,
@@ -156,7 +156,7 @@ sections of a config file are:
 | `nlp`         | Definition of the `nlp` object, its tokenizer and [processing pipeline](/usage/processing-pipelines) component names.                                           |
 | `components`  | Definitions of the [pipeline components](/usage/processing-pipelines) and their models.                                                                         |
 | `paths`       | Paths to data and other assets. Re-used across the config as variables, e.g. `${paths:train}`, and can be [overwritten](#config-overrides) on the CLI.          |
-| `system`      | Settings related to system and hardware. Re-used across the config as variables, e.g. `${system.seed}`, and can be [overwritten](#config-overrides) on the CLI. |
+| `system`      | Settings related to system and hardware. Re-used across the config as variables, e.g. `${system:seed}`, and can be [overwritten](#config-overrides) on the CLI. |
 | `training`    | Settings and controls for the training and evaluation process.                                                                                                  |
 | `pretraining` | Optional settings and controls for the [language model pretraining](#pretraining).                                                                              |
 
@@ -514,11 +514,11 @@ language class and `nlp` object at different points of the lifecycle:
 | `after_creation`          | Called right after the `nlp` object is created, but before the pipeline components are added to the pipeline and receives the `nlp` object. Useful for modifying the tokenizer.          |
 | `after_pipeline_creation` | Called right after the pipeline components are created and added and receives the `nlp` object. Useful for modifying pipeline components.                                                |
 
-The `@spacy.registry.callbacks` decorator lets you register that function in the
-`callbacks` [registry](/api/top-level#registry) under a given name. You can then
-reference the function in a config block using the `@callbacks` key. If a block
-contains a key starting with an `@`, it's interpreted as a reference to a
-function. Because you've registered the function, spaCy knows how to create it
+The `@spacy.registry.callbacks` decorator lets you register your custom function
+in the `callbacks` [registry](/api/top-level#registry) under a given name. You
+can then reference the function in a config block using the `@callbacks` key. If
+a block contains a key starting with an `@`, it's interpreted as a reference to
+a function. Because you've registered the function, spaCy knows how to create it
 when you reference `"customize_language_data"` in your config. Here's an example
 of a callback that runs before the `nlp` object is created and adds a few custom
 tokenization rules to the defaults:
@@ -593,9 +593,9 @@ spaCy's configs are powered by our machine learning library Thinc's
 using [`pydantic`](https://github.com/samuelcolvin/pydantic). If your registered
 function provides type hints, the values that are passed in will be checked
 against the expected types. For example, `debug: bool` in the example above will
-ensure that the value received as the argument `debug` is an boolean. If the
+ensure that the value received as the argument `debug` is a boolean. If the
 value can't be coerced into a boolean, spaCy will raise an error.
-`start: pydantic.StrictBool` will force the value to be an boolean and raise an
+`debug: pydantic.StrictBool` will force the value to be a boolean and raise an
 error if it's not – for instance, if your config defines `1` instead of `true`.
 
 </Infobox>
@@ -642,7 +642,9 @@ settings in the block will be passed to the function as keyword arguments. Keep
 in mind that the config shouldn't have any hidden defaults and all arguments on
 the functions need to be represented in the config. If your function defines
 **default argument values**, spaCy is able to auto-fill your config when you run
-[`init fill-config`](/api/cli#init-fill-config).
+[`init fill-config`](/api/cli#init-fill-config). If you want to make sure that a
+given parameter is always explicitely set in the config, avoid setting a default
+value for it.
 
 ```ini
 ### config.cfg (excerpt)
@@ -654,7 +656,68 @@ factor = 1.005
 
 #### Example: Custom data reading and batching {#custom-code-readers-batchers}
 
-<!-- TODO: -->
+Some use-cases require streaming in data or manipulating datasets on the fly,
+rather than generating all data beforehand and storing it to file. Instead of
+using the built-in reader `"spacy.Corpus.v1"`, which uses static file paths, you
+can create and register a custom function that generates
+[`Example`](/api/example) objects. The resulting generator can be infinite. When
+using this dataset for training, stopping criteria such as maximum number of
+steps, or stopping when the loss does not decrease further, can be used.
+
+In this example we assume a custom function `read_custom_data()` which loads or
+generates texts with relevant textcat annotations. Then, small lexical
+variations of the input text are created before generating the final `Example`
+objects.
+
+We can also customize the batching strategy by registering a new "batcher" which
+turns a stream of items into a stream of batches. spaCy has several useful
+built-in batching strategies with customizable sizes<!-- TODO: link  -->, but
+it's also easy to implement your own. For instance, the following function takes
+the stream of generated `Example` objects, and removes those which have the
+exact same underlying raw text, to avoid duplicates within each batch. Note that
+in a more realistic implementation, you'd also want to check whether the
+annotations are exactly the same.
+
+> ```ini
+> [training.train_corpus]
+> @readers = "corpus_variants.v1"
+>
+> [training.batcher]
+> @batchers = "filtering_batch.v1"
+> size = 150
+> ```
+
+```python
+### functions.py
+from typing import Callable, Iterable, List
+import spacy
+from spacy.gold import Example
+import random
+
+@spacy.registry.readers("corpus_variants.v1")
+def stream_data() -> Callable[["Language"], Iterable[Example]]:
+    def generate_stream(nlp):
+        for text, cats in read_custom_data():
+            random_index = random.randint(0, len(text) - 1)
+            variant = text[:random_index] + text[random_index].upper() + text[random_index + 1:]
+            doc = nlp.make_doc(variant)
+            example = Example.from_dict(doc, {"cats": cats})
+            yield example
+    return generate_stream
+
+
+@spacy.registry.batchers("filtering_batch.v1")
+def filter_batch(size: int) -> Callable[[Iterable[Example]], Iterable[List[Example]]]:
+    def create_filtered_batches(examples: Iterable[Example]) -> Iterable[List[Example]]:
+        batch = []
+        for eg in examples:
+            if eg.text not in [x.text for x in batch]:
+                batch.append(eg)
+            if len(batch) == size:
+                yield batch
+                batch = []
+    return create_filtered_batches
+```
 
 ### Wrapping PyTorch and TensorFlow {#custom-frameworks}
 
