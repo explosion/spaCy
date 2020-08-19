@@ -527,7 +527,7 @@ You can register custom annotation setters using the
 > #### Example
 >
 > ```python
-> @registry.annotation_setters("spacy-transformer.null_annotation_setter.v1")
+> @registry.annotation_setters("spacy-transformers.null_annotation_setter.v1")
 > def configure_null_annotation_setter() -> Callable:
 >     def setter(docs: List[Doc], trf_data: FullTransformerBatch) -> None:
 >         pass
@@ -542,9 +542,9 @@ You can register custom annotation setters using the
 
 The following built-in functions are available:
 
-| Name                                          | Description                           |
-| --------------------------------------------- | ------------------------------------- |
-| `spacy-transformer.null_annotation_setter.v1` | Don't set any additional annotations. |
+| Name                                           | Description                           |
+| ---------------------------------------------- | ------------------------------------- |
+| `spacy-transformers.null_annotation_setter.v1` | Don't set any additional annotations. |
 
 ## Custom attributes {#custom-attributes}
 

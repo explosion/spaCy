@@ -230,7 +230,7 @@ tokenizer_config = {"use_fast": true}
 @span_getters = "doc_spans.v1"
 
 [components.transformer.annotation_setter]
-@annotation_setters = "spacy-transformer.null_annotation_setter.v1"
+@annotation_setters = "spacy-transformers.null_annotation_setter.v1"
 
 ```
 
