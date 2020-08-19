@@ -499,6 +499,8 @@ config when you run [`init fill-config`](/api/cli#init-fill-config). If you want
 to make sure that a given parameter is always explicitely set in the config,
 avoid setting a default value for it.
 
+<!-- TODO: possibly link to new (not yet created) page on creating models ? -->
+
 ### Training with custom code {#custom-code}
 
 > #### Example
