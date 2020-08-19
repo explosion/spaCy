@@ -623,7 +623,7 @@ added to the pipeline:
 >
 > @Language.factory("my_component")
 > def my_component(nlp, name):
->    return MyComponent()
+>     return MyComponent()
 > ```
 
 | Argument | Description                                                                                                                       |
@@ -635,8 +635,6 @@ All other settings can be passed in by the user via the `config` argument on
 [`nlp.add_pipe`](/api/language). The
 [`@Language.factory`](/api/language#factory) decorator also lets you define a
 `default_config` that's used as a fallback.
-
-<!-- TODO: add example of passing in a custom Python object via the config based on a registered function -->
 
 ```python
 ### With config {highlight="4,9"}
@@ -688,7 +686,7 @@ make your factory a separate function. That's also how spaCy does it internally.
 
 </Accordion>
 
-### Example: Stateful component with settings
+### Example: Stateful component with settings {#example-stateful-components}
 
 This example shows a **stateful** pipeline component for handling acronyms:
 based on a dictionary, it will detect acronyms and their expanded forms in both
@@ -756,6 +754,85 @@ nlp.add_pipe("acronyms", config={"case_sensitive": False})
 doc = nlp("LOL, be right back")
 print(doc._.acronyms)
 ```
+
+Many stateful components depend on **data resources** like dictionaries and
+lookup tables that should ideally be **configurable**. For example, it makes
+sense to make the `DICTIONARY` and argument of the registered function, so the
+`AcronymComponent` can be re-used with different data. One logical solution
+would be to make it an argument of the component factory, and allow it to be
+initialized with different dictionaries.
+
+> #### Example
+>
+> Making the data an argument of the registered function would result in output
+> like this in your `config.cfg`, which is typically not what you want (and only
+> works for JSON-serializable data).
+>
+> ```ini
+> [components.acronyms.dictionary]
+> lol = "laugh out loud"
+> brb = "be right back"
+> ```
+
+However, passing in the dictionary directly is problematic, because it means
+that if a component saves out its config and settings, the
+[`config.cfg`](/usage/training#config) will include a dump of the entire data,
+since that's the config the component was created with.
+
+```diff
+DICTIONARY = {"lol": "laughing out loud", "brb": "be right back"}
+- default_config = {"dictionary:" DICTIONARY}
+```
+
+If what you're passing in isn't JSON-serializable – e.g. a custom object like a
+[model](#trainable-components) – saving out the component config becomes
+impossible because there's no way for spaCy to know _how_ that object was
+created, and what to do to create it again. This makes it much harder to save,
+load and train custom models with custom components. A simple solution is to
+**register a function** that returns your resources. The
+[registry](/api/top-level#registry) lets you **map string names to functions**
+that create objects, so given a name and optional arguments, spaCy will know how
+to recreate the object. To register a function that returns a custom asset, you
+can use the `@spacy.registry.assets` decorator with a single argument, the name:
+
+```python
+### Registered function for assets {highlight="1"}
+@spacy.registry.assets("acronyms.slang_dict.v1")
+def create_acronyms_slang_dict():
+    dictionary = {"lol": "laughing out loud", "brb": "be right back"}
+    dictionary.update({value: key for key, value in dictionary.items()})
+    return dictionary
+```
+
+In your `default_config` (and later in your
+[training config](/usage/training#config)), you can now refer to the function
+registered under the name `"acronyms.slang_dict.v1"` using the `@assets` key.
+This tells spaCy how to create the value, and when your component is created,
+the result of the registered function is passed in as the key `"dictionary"`.
+
+> #### config.cfg
+>
+> ```ini
+> [components.acronyms]
+> factory = "acronyms"
+>
+> [components.acronyms.dictionary]
+> @assets = "acronyms.slang_dict.v1"
+> ```
+
+```diff
+- default_config = {"dictionary:" DICTIONARY}
++ default_config = {"dictionary": {"@assets": "acronyms.slang_dict.v1"}}
+```
+
+Using a registered function also means that you can easily include your custom
+components in models that you [train](/usage/training). To make sure spaCy knows
+where to find your custom `@assets` function, you can pass in a Python file via
+the argument `--code`. If someone else is using your component, all they have to
+do to customize the data is to register their own function and swap out the
+name. Registered functions can also take **arguments** by the way that can be
+defined in the config as well – you can read more about this in the docs on
+[training with custom code](/usage/training#custom-code).
 
 ### Python type hints and pydantic validation {#type-hints new="3"}
 
@@ -994,7 +1071,7 @@ loss is calculated and to add evaluation scores to the training output.
 | [`get_loss`](/api/pipe#get_loss)             | Return a tuple of the loss and the gradient for a batch of [`Example`](/api/example) objects.                                                                                                                                                                                                                      |
 | [`score`](/api/pipe#score)                   | Score a batch of [`Example`](/api/example) objects and return a dictionary of scores. The [`@Language.factory`](/api/language#factory) decorator can define the `default_socre_weights` of the component to decide which keys of the scores to display during training and how they count towards the final score. |
 
-<!-- TODO: add more details, examples and maybe an example project -->
+<!-- TODO: link to (not yet created) page for defining models for trainable components -->
 
 ## Extension attributes {#custom-components-attributes new="2"}
 
