@@ -484,20 +484,21 @@ still look good.
 ## Custom Functions {#custom-functions}
 
 Registered functions in the training config files can refer to built-in
-implementations, but you can also plug in fully custom implementations. To do
-so, you first write your own implementation of a custom architectures, data
-reader or any other functionality, and then register this function with the
-correct [registry](/api/top-level#registry). This allows you to plug in models
-defined in PyTorch or Tensorflow, make custom modifications to the `nlp` object,
-create custom optimizers or schedules, or write a function that streams in data
-and preprocesses it on the fly while training.
+implementations, but you can also plug in fully **custom implementations**. All
+you need to do is register your function using the `@spacy.registry` decorator
+with the name of the respective [registry](/api/top-level#registry), e.g.
+`@spacy.registry.architectures`, and a string name to assign to your function.
+Registering custom functions allows you to **plug in models** defined in PyTorch
+or TensorFlow, make **custom modifications** to the `nlp` object, create custom
+optimizers or schedules, or **stream in data** and preprocesses it on the fly
+while training.
 
-Each custom function can have any numbers of arguments that should be passed
-into them through the config similar as with the built-in functions. If your
-function defines **default argument values**, spaCy is able to auto-fill your
-config when you run [`init fill-config`](/api/cli#init-fill-config). If you want
-to make sure that a given parameter is always explicitely set in the config,
-avoid setting a default value for it.
+Each custom function can have any numbers of arguments that are passed in via
+the [config](#config), just the built-in functions. If your function defines
+**default argument values**, spaCy is able to auto-fill your config when you run
+[`init fill-config`](/api/cli#init-fill-config). If you want to make sure that a
+given parameter is always explicitely set in the config, avoid setting a default
+value for it.
 
 <!-- TODO: possibly link to new (not yet created) page on creating models ? -->
 
