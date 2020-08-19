@@ -340,7 +340,7 @@ See the [`Transformer`](/api/transformer) API reference and
 
 ## Batchers {#batchers source="spacy/gold/batchers.py" new="3"}
 
-A batcher implements a batching strategy that essentially turns a stream of
+A data batcher implements a batching strategy that essentially turns a stream of
 items into a stream of batches, with each batch consisting of one item or a list
 of items. During training, the models update their weights after processing one
 batch at a time. Typical batching strategies include presenting the training
