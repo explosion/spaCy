@@ -1547,23 +1547,6 @@ import Vectors101 from 'usage/101/\_vectors-similarity.md'
 
 <Vectors101 />
 
-<Infobox title="What to expect from similarity results" variant="warning">
-
-Computing similarity scores can be helpful in many situations, but it's also
-important to maintain **realistic expectations** about what information it can
-provide. Words can be related to each over in many ways, so a single
-"similarity" score will always be a **mix of different signals**, and vectors
-trained on different data can produce very different results that may not be
-useful for your purpose.
-
-Also note that the similarity of `Doc` or `Span` objects defaults to the
-**average** of the token vectors. This means it's insensitive to the order of
-the words. Two documents expressing the same meaning with dissimilar wording
-will return a lower similarity score than two documents that happen to contain
-the same words while expressing different meanings.
-
-</Infobox>
-
 ### Adding word vectors {#adding-vectors}
 
 Custom word vectors can be trained using a number of open-source libraries, such

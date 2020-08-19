@@ -48,6 +48,17 @@ export function isString(obj) {
 
 /**
  * @param obj - The object to check.
+ * @returns {boolean} – Whether the object is an image
+ */
+export function isImage(obj) {
+    if (!obj || !React.isValidElement(obj)) {
+        return false
+    }
+    return obj.props.name == 'img' || obj.props.className == 'gatsby-resp-image-wrapper'
+}
+
+/**
+ * @param obj - The object to check.
  * @returns {boolean} - Whether the object is empty.
  */
 export function isEmptyObj(obj) {
