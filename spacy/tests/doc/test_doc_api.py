@@ -316,6 +316,15 @@ def test_doc_from_array_morph(en_vocab):
     assert [t.morph_ for t in doc] == [t.morph_ for t in new_doc]
 
 
+def test_doc_api_from_docs_ents(en_tokenizer):
+    texts = ["Merging the docs is fun.", "They don't think alike."]
+    docs = [en_tokenizer(t) for t in texts]
+    docs[0].ents = ()
+    docs[1].ents = (Span(docs[1], 0, 1, label="foo"),)
+    doc = Doc.from_docs(docs)
+    assert len(doc.ents) == 1
+
+
 def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
     en_texts = ["Merging the docs is fun.", "They don't think alike."]
     de_text = "Wie war die Frage?"
