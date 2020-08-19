@@ -282,17 +282,18 @@ concept of function registries. spaCy also uses the function registry for
 language subclasses, model architecture, lookups and pipeline component
 factories.
 
-<!-- TODO: improve example? -->
-
 > #### Example
 >
 > ```python
+> from typing import Iterator
 > import spacy
-> from thinc.api import Model
 >
-> @spacy.registry.architectures("CustomNER.v1")
-> def custom_ner(n0: int) -> Model:
->     return Model("custom", forward, dims={"nO": nO})
+> @spacy.registry.schedules("waltzing.v1")
+> def waltzing() -> Iterator[float]:
+>     i = 0
+>     while True:
+>         yield i % 3 + 1
+>         i += 1
 > ```
 
 | Registry name     | Description                                                                                                                                                                                                                                        |
