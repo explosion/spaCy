@@ -884,7 +884,7 @@ cdef class Doc:
 
         if attrs is None:
             attrs = [LEMMA, NORM]
-            if all(doc.is_nered for doc in docs):
+            if any(doc.is_nered for doc in docs):
                 attrs.extend([ENT_IOB, ENT_KB_ID, ENT_TYPE])
             # TODO: separate for is_morphed?
             if all(doc.is_tagged for doc in docs):
