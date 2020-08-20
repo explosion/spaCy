@@ -104,10 +104,10 @@ workflows, from data preprocessing to training and packaging your model.
 
 ## Training config {#config}
 
-> #### Migration from spaCy v2.x
+<!-- > #### Migration from spaCy v2.x
 >
 > TODO: once we have an answer for how to update the training command
-> (`spacy migrate`?), add details here
+> (`spacy migrate`?), add details here -->
 
 Training config files include all **settings and hyperparameters** for training
 your model. Instead of providing lots of arguments on the command line, you only
