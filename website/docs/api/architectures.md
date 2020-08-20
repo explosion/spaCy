@@ -94,7 +94,7 @@ blog post for background.
 >
 > [components.tagger.model.tok2vec]
 > @architectures = "spacy.Tok2VecListener.v1"
-> width = ${components.tok2vec.model:width}
+> width = ${components.tok2vec.model.width}
 > ```
 
 A listener is used as a sublayer within a component such as a

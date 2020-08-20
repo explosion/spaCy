@@ -28,7 +28,7 @@ streaming.
 >
 > [training.train_corpus]
 > @readers = "spacy.Corpus.v1"
-> path = ${paths:train}
+> path = ${paths.train}
 > gold_preproc = false
 > max_length = 0
 > limit = 0
