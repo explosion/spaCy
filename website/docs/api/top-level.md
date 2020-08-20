@@ -341,7 +341,7 @@ See the [`Transformer`](/api/transformer) API reference and
 
 ## Batchers {#batchers source="spacy/gold/batchers.py" new="3"}
 
-A batcher implements a batching strategy that essentially turns a stream of
+A data batcher implements a batching strategy that essentially turns a stream of
 items into a stream of batches, with each batch consisting of one item or a list
 of items. During training, the models update their weights after processing one
 batch at a time. Typical batching strategies include presenting the training
@@ -613,7 +613,7 @@ components are created, as well as all training settings and hyperparameters.
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `path`        | Path to the model's `config.cfg`. ~~Union[str, Path]~~                                                                                                                      |
 | `overrides`   | Optional config overrides to replace in loaded config. Can be provided as nested dict, or as flat dict with keys in dot notation, e.g. `"nlp.pipeline"`. ~~Dict[str, Any]~~ |
-| `interpolate` | Whether to interpolate the config and replace variables like `${paths:train}` with their values. Defaults to `False`. ~~bool~~                                              |
+| `interpolate` | Whether to interpolate the config and replace variables like `${paths.train}` with their values. Defaults to `False`. ~~bool~~                                              |
 | **RETURNS**   | The model's config. ~~Config~~                                                                                                                                              |
 
 ### util.load_meta {#util.load_meta tag="function" new="3"}

@@ -157,8 +157,8 @@ sections of a config file are:
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `nlp`         | Definition of the `nlp` object, its tokenizer and [processing pipeline](/usage/processing-pipelines) component names.                                           |
 | `components`  | Definitions of the [pipeline components](/usage/processing-pipelines) and their models.                                                                         |
-| `paths`       | Paths to data and other assets. Re-used across the config as variables, e.g. `${paths:train}`, and can be [overwritten](#config-overrides) on the CLI.          |
-| `system`      | Settings related to system and hardware. Re-used across the config as variables, e.g. `${system:seed}`, and can be [overwritten](#config-overrides) on the CLI. |
+| `paths`       | Paths to data and other assets. Re-used across the config as variables, e.g. `${paths.train}`, and can be [overwritten](#config-overrides) on the CLI.          |
+| `system`      | Settings related to system and hardware. Re-used across the config as variables, e.g. `${system.seed}`, and can be [overwritten](#config-overrides) on the CLI. |
 | `training`    | Settings and controls for the training and evaluation process.                                                                                                  |
 | `pretraining` | Optional settings and controls for the [language model pretraining](#pretraining).                                                                              |
 
@@ -325,19 +325,9 @@ compound = 1.001
 Another very useful feature of the config system is that it supports variable
 interpolation for both **values and sections**. This means that you only need to
 define a setting once and can reference it across your config using the
-`${section:value}` or `${section.block}` syntax. In this example, the value of
-`seed` is reused within the `[training]` block, and the whole block of
-`[training.optimizer]` is reused in `[pretraining]` and will become
-`pretraining.optimizer`.
-
-> #### Note on syntax
->
-> There are two different ways to format your variables, depending on whether
-> you want to reference a single value or a block. Values are specified after a
-> `:`, while blocks are specified with a `.`:
->
-> 1. `${section:value}`, `${section.subsection:value}`
-> 2. `${section.block}`, `${section.subsection.block}`
+`${section.value}` syntax. In this example, the value of `seed` is reused within
+the `[training]` block, and the whole block of `[training.optimizer]` is reused
+in `[pretraining]` and will become `pretraining.optimizer`.
 
 ```ini
 ### config.cfg (excerpt) {highlight="5,18"}
@@ -345,7 +335,7 @@ define a setting once and can reference it across your config using the
 seed = 0
 
 [training]
-seed = ${system:seed}
+seed = ${system.seed}
 
 [training.optimizer]
 @optimizers = "Adam.v1"
@@ -369,7 +359,7 @@ to a string.
 [paths]
 version = 5
 root = "/Users/you/data"
-train = "${paths:root}/train_${paths:version}.spacy"
+train = "${paths.root}/train_${paths.version}.spacy"
 # Result: /Users/you/data/train_5.spacy
 ```
 
@@ -484,20 +474,21 @@ still look good.
 ## Custom Functions {#custom-functions}
 
 Registered functions in the training config files can refer to built-in
-implementations, but you can also plug in fully custom implementations. To do
-so, you first write your own implementation of a custom architectures, data
-reader or any other functionality, and then register this function with the
-correct [registry](/api/top-level#registry). This allows you to plug in models
-defined in PyTorch or Tensorflow, make custom modifications to the `nlp` object,
-create custom optimizers or schedules, or write a function that streams in data
-and preprocesses it on the fly while training.
+implementations, but you can also plug in fully **custom implementations**. All
+you need to do is register your function using the `@spacy.registry` decorator
+with the name of the respective [registry](/api/top-level#registry), e.g.
+`@spacy.registry.architectures`, and a string name to assign to your function.
+Registering custom functions allows you to **plug in models** defined in PyTorch
+or TensorFlow, make **custom modifications** to the `nlp` object, create custom
+optimizers or schedules, or **stream in data** and preprocesses it on the fly
+while training.
 
-Each custom function can have any numbers of arguments that should be passed
-into them through the config similar as with the built-in functions. If your
-function defines **default argument values**, spaCy is able to auto-fill your
-config when you run [`init fill-config`](/api/cli#init-fill-config). If you want
-to make sure that a given parameter is always explicitely set in the config,
-avoid setting a default value for it.
+Each custom function can have any numbers of arguments that are passed in via
+the [config](#config), just the built-in functions. If your function defines
+**default argument values**, spaCy is able to auto-fill your config when you run
+[`init fill-config`](/api/cli#init-fill-config). If you want to make sure that a
+given parameter is always explicitely set in the config, avoid setting a default
+value for it.
 
 <!-- TODO: possibly link to new (not yet created) page on creating models ? -->
 

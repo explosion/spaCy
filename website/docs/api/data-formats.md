@@ -111,7 +111,7 @@ model to copy components from). See the docs on
 ### paths, system {#config-variables tag="variables"}
 
 These sections define variables that can be referenced across the other sections
-as variables. For example `${paths:train}` uses the value of `train` defined in
+as variables. For example `${paths.train}` uses the value of `train` defined in
 the block `[paths]`. If your config includes custom registered functions that
 need paths, you can define them here. All config values can also be
 [overwritten](/usage/training#config-overrides) on the CLI when you run
@@ -131,11 +131,11 @@ process that are used when you run [`spacy train`](/api/cli#train).
 
 | Name                  | Description                                                                                                                                                                                                  |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `seed`                | The random seed. Defaults to variable `${system:seed}`. ~~int~~                                                                                                                                              |
+| `seed`                | The random seed. Defaults to variable `${system.seed}`. ~~int~~                                                                                                                                              |
 | `dropout`             | The dropout rate. Defaults to `0.1`. ~~float~~                                                                                                                                                               |
 | `accumulate_gradient` | Whether to divide the batch up into substeps. Defaults to `1`. ~~int~~                                                                                                                                       |
-| `init_tok2vec`        | Optional path to pretrained tok2vec weights created with [`spacy pretrain`](/api/cli#pretrain). Defaults to variable `${paths:init_tok2vec}`. ~~Optional[str]~~                                              |
-| `raw_text`            | Optional path to a jsonl file with unlabelled text documents for a [rehearsel](/api/language#rehearse) step. Defaults to variable `${paths:raw}`. ~~Optional[str]~~                                            |
+| `init_tok2vec`        | Optional path to pretrained tok2vec weights created with [`spacy pretrain`](/api/cli#pretrain). Defaults to variable `${paths.init_tok2vec}`. ~~Optional[str]~~                                              |
+| `raw_text`            | Optional path to a jsonl file with unlabelled text documents for a [rehearsel](/api/language#rehearse) step. Defaults to variable `${paths.raw}`. ~~Optional[str]~~                                          |
 | `vectors`             | Model name or path to model containing pretrained word vectors to use, e.g. created with [`init model`](/api/cli#init-model). Defaults to `null`. ~~Optional[str]~~                                          |
 | `patience`            | How many steps to continue without improvement in evaluation score. Defaults to `1600`. ~~int~~                                                                                                              |
 | `max_epochs`          | Maximum number of epochs to train for. Defaults to `0`. ~~int~~                                                                                                                                              |
@@ -162,8 +162,8 @@ run [`spacy pretrain`](/api/cli#pretrain).
 | `dropout`                    | The dropout rate. Defaults to `0.2`. ~~float~~                                                                                  |
 | `n_save_every`               | Saving frequency. Defaults to `null`. ~~Optional[int]~~                                                                         |
 | `batch_size`                 | The batch size or batch size [schedule](https://thinc.ai/docs/api-schedules). Defaults to `3000`. ~~Union[int, Sequence[int]]~~ |
-| `seed`                       | The random seed. Defaults to variable `${system:seed}`. ~~int~~                                                                 |
-| `use_pytorch_for_gpu_memory` | Allocate memory via PyTorch. Defaults to variable `${system:use_pytorch_for_gpu_memory}`. ~~bool~~                              |
+| `seed`                       | The random seed. Defaults to variable `${system.seed}`. ~~int~~                                                                 |
+| `use_pytorch_for_gpu_memory` | Allocate memory via PyTorch. Defaults to variable `${system.use_pytorch_for_gpu_memory}`. ~~bool~~                              |
 | `tok2vec_model`              | The model section of the embedding component in the config. Defaults to `"components.tok2vec.model"`. ~~str~~                   |
 | `objective`                  | The pretraining objective. Defaults to `{"type": "characters", "n_characters": 4}`. ~~Dict[str, Any]~~                          |
 | `optimizer`                  | The optimizer. Defaults to [`Adam`](https://thinc.ai/docs/api-optimizers#adam). ~~Optimizer~~                                   |
