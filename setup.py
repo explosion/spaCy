@@ -193,7 +193,7 @@ def setup_package():
 
     root = os.path.abspath(os.path.dirname(__file__))
 
-    if len(sys.argv) > 1 and sys.argv[1] == "clean":
+    if hasattr(sys, "argv") and len(sys.argv) > 1 and sys.argv[1] == "clean":
         return clean(root)
 
     with chdir(root):
