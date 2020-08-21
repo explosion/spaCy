@@ -48,6 +48,11 @@ def ca_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def cs_tokenizer():
+    return get_lang_class("cs").Defaults.create_tokenizer()
+
+
+@pytest.fixture(scope="session")
 def da_tokenizer():
     return get_lang_class("da").Defaults.create_tokenizer()
 
