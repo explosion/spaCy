@@ -6,6 +6,7 @@ menu:
   - ['Defining Sublayers', 'sublayers']
   - ['PyTorch & TensorFlow', 'frameworks']
   - ['Trainable Components', 'components']
+next: /usage/projects
 ---
 
 ​ A **model architecture** is a function that wires up a
@@ -44,7 +45,7 @@ are: ​
 
 The model type-signatures help you figure out which model architectures and
 components can fit together. For instance, the
-[`TextCategorizer`](/api/textcaregorizer) class expects a model typed
+[`TextCategorizer`](/api/textcategorizer) class expects a model typed
 ~~Model[List[Doc], Floats2d]~~, because the model will predict one row of
 category probabilities per `Doc`. In contrast, the `Tagger` class expects a
 model typed ~~Model[List[Doc], List[Floats2d]]~~, because it needs to predict
