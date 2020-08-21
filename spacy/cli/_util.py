@@ -1,9 +1,11 @@
 from typing import Dict, Any, Union, List, Optional
 from pathlib import Path
+from pathy import Pathy
 from wasabi import msg
 import srsly
 import hashlib
 import typer
+import smart_open
 from typer.main import get_command
 from contextlib import contextmanager
 from thinc.config import Config, ConfigValidationError
@@ -230,3 +232,56 @@ def get_sourced_components(config: Union[Dict[str, Any], Config]) -> List[str]:
         for name, cfg in config.get("components", {}).items()
         if "factory" not in cfg and "source" in cfg
     ]
+
+
+def url_exists(url: str):
+    return Pathy(url).exists()
+
+def list_url_files(url: str):
+    queue = [Pathy(url)]
+    output = []
+    seen = {}
+    for item in queue:
+        if str(item) in seen:
+            continue
+        seen.add(str(item))
+        if item.is_dir():
+            queue.extend(item.iter_dir())
+        else:
+            output.append(item)
+    return output
+        
+
+def url_exists(url: str):
+    """Check whether a URL exists in a remote."""
+    try:
+        smart_open.open(url)
+        return True
+    except ValueError:
+        return False
+
+
+def upload_file(src: Path, url: str, dest: Path) -> None:
+    """Upload a file using smart_open.
+
+    src (Path): The source path.
+    url (str): The destination URL to upload to.
+    """
+    with smart_open.open(url, mode="wb") as output_file:
+        with src.open(mode="rb") as input_file:
+            output_file.write(input_file.read())
+
+
+def download_file(url: str, dest: Path, *, force: bool=False) -> None:
+    """Download a file using smart_open.
+
+    url (str): The URL of the file.
+    dest (Path): The destination path.
+    force (bool): Whether to force download even if file exists.
+        If False, the download will be skipped.
+    """
+    if dest.exists() and not force:
+        return None
+    with smart_open.open(url, mode="rb") as input_file:
+        with dest.open(mode="wb") as output_file:
+            output_file.write(input_file.read())
