@@ -252,8 +252,10 @@ class EntityRenderer:
             colors.update(user_color)
         colors.update(options.get("colors", {}))
         self.default_color = DEFAULT_ENTITY_COLOR
-        self.colors = colors
+        self.colors = {label.upper(): color for label, color in colors.items()}
         self.ents = options.get("ents", None)
+        if self.ents is not None:
+            self.ents = [ent.upper() for ent in self.ents]
         self.direction = DEFAULT_DIR
         self.lang = DEFAULT_LANG
         template = options.get("template")
