@@ -1,5 +1,5 @@
 from ..remote_cache import RemoteStorage
-from ..remote_cache import get_site_hash, get_env_hash, get_creation_hash
+from ..remote_cache import get_site_hash, get_env_hash, get_command_hash
 
 
 @project_cli.command("pull")
@@ -26,8 +26,8 @@ def project_pull(project_dir: Path, remote: str):
     env_hash = get_env_hash(config.get("env", {}))
     for cmd in config.get("commands", []):
         deps = [project_dir / dep for dep in cmd.get("deps", [])]
-        creation_hash = get_creation_hash(site_hash, env_hash, deps)
+        cmd_hash = get_command_hash(site_hash, env_hash, deps, cmd["script"])
         for output_path in cmd.get("outputs", []):
-            url = storage.pull(output_path, creation_hash=creation_hash)
+            url = storage.pull(output_path, command_hash=command_hash)
             if url is not None:
                 print(f"Pulled {output_path} from {url}")

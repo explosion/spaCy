@@ -1,5 +1,6 @@
 from .remote_cache import RemoteStorage
-from .._util import get_checksum, combine_hashes, get_env_hash, get_command_hash
+from .remote_storage import get_site_hash, get_env_hash
+from .remote_storage import get_content_hash, get_command_hash
 
 
 @project_cli.command("push")
@@ -25,11 +26,20 @@ def project_push(project_dir: Path, remote: str):
     if remote in config.get("remotes", {}):
         remote = config["remotes"][remote]
     storage = RemoteStorage(project_dir, remote)
-    site_hash = hash_site_packages()
-    env_hash = hash_env_vars(config.get("env", {}))
+    site_hash = get_site_hash()
+    env_hash = get_env_hash(config.get("env", {}))
     for cmd in config.get("commands", []):
-        cmd_hash = combine_hashes(env_sig, get_cmd_hash(project_dir, cmd))
+        cmd_hash = get_command_hash(
+            site_hash,
+            env_hash,
+            [project_dir / dep for dep in cmd.get("deps", [])],
+            cmd["script"]
+        )
         for output_path in cmd.get("outputs", []):
             output_loc = project_dir / output_path
             if output_loc.exists():
-                storage.push(output_path, cmd_hash, get_content_hash(output_loc))
+                storage.push(
+                    output_path,
+                    command_hash=cmd_hash,
+                    content_hash=get_content_hash(output_loc)
+                )

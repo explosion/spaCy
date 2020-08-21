@@ -22,7 +22,7 @@ class RemoteStorage:
         self.url = Pathy(url)
         self.compression = compression
 
-    def push(self, path: Path, creation_hash: str, content_hash: str) -> Pathy:
+    def push(self, path: Path, command_hash: str, content_hash: str) -> Pathy:
         """Compress a file or directory within a project and upload it to a remote
         storage. If an object exists at the full URL, nothing is done.  
         
@@ -34,7 +34,7 @@ class RemoteStorage:
         loc = self.root / path
         if not loc.exists():
             raise IOError(f"Cannot push {loc}: does not exist.")
-        url = self.make_url(path, creation_hash, content_hash)
+        url = self.make_url(path, command_hash, content_hash)
         if url.exists():
             return url
         tmp: Path
@@ -52,19 +52,19 @@ class RemoteStorage:
     def pull(
         self, path: Path,
         *,
-        creation_hash: Optional[str],
+        command_hash: Optional[str],
         content_hash: Optional[str]
     ) -> Optional[Pathy]:
         """Retrieve a file from the remote cache. If the file already exists,
         nothing is done.
 
-        If the creation_hash and/or content_hash are specified, only matching
+        If the command_hash and/or content_hash are specified, only matching
         results are returned. If no results are available, an error is raised.
         """
         dest = self.root / path
         if dest.exists():
             return None
-        url = self.find(path, creation_hash=creation_hash, content_hash=content_hash)
+        url = self.find(path, command_hash=command_hash, content_hash=content_hash)
         if url is not None:
             download_file(url, dest)
         return url
@@ -73,7 +73,7 @@ class RemoteStorage:
         self,
         path: Path,
         *,
-        creation_hash: Optional[str]=None,
+        command_hash: Optional[str]=None,
         content_hash: Optional[str]=None
     ) -> Optional[Pathy]:
         """Find the best matching version of a file within the storage,
@@ -82,30 +82,37 @@ class RemoteStorage:
         recent matching file is preferred.
         """
         name = self.encode_name(str(path))
-        if creation_hash is not None and content_hash is not None:
-            url = self.make_url(path, creation_hash, content_hash)
+        if command_hash is not None and content_hash is not None:
+            url = self.make_url(path, command_hash, content_hash)
             urls = [url] if url.exists() else []
-        elif creation_hash is not None:
-            urls = list((self.url / name / creation_hash).iterdir())
+        elif command_hash is not None:
+            urls = list((self.url / name / command_hash).iterdir())
         else:
             urls = list((self.url / name).iterdir())
             if content_hash is not None:
                 urls = [url for url in urls if url.parts[-1] == content_hash]
         return urls[-1] if urls else None
 
-    def make_url(self, path: Path, creation_hash: str, content_hash: str) -> Pathy:
-        return self.url / self.encode_name(str(path)) / creation_hash / content_hash
+    def make_url(self, path: Path, command_hash: str, content_hash: str) -> Pathy:
+        """Construct a URL from a subpath, a creation hash and a content hash."""
+        return self.url / self.encode_name(str(path)) / command_hash / content_hash
 
     def encode_name(self, name: str) -> str:
+        """Encode a subpath into a URL-safe name."""
         return urllib.parse.quote_plus(name)
 
 
-def get_command_hash(site_hash: str, env_hash: str, deps: List[Path], cmd: str) -> str:
+def get_content_hash(loc: Path) -> str:
+    return get_checksum(loc)
+
+
+def get_command_hash(site_hash: str, env_hash: str, deps: List[Path], cmd: List[str]) -> str:
     """Create a hash representing the execution of a command. This includes the
     currently installed packages, whatever environment variables have been marked
     as relevant, and the command.
     """
     hashes = [site_hash, env_hash] + [get_checksum(dep) for dep in sorted(deps)]
+    hashes.extend(cmd)
     creation_bytes = "".join(hashes).encode("utf8")
     return hashlib.md5(creation_bytes).hexdigest()
 
