@@ -1,6 +1,6 @@
 ---
 title: Training Models
-next: /usage/projects
+next: /usage/layers-architectures
 menu:
   - ['Introduction', 'basics']
   - ['Quickstart', 'quickstart']

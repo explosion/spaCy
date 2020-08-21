@@ -24,6 +24,11 @@
                         "tag": "new"
                     },
                     { "text": "Training Models", "url": "/usage/training", "tag": "new" },
+                    {
+                        "text": "Layers & Model Architectures",
+                        "url": "/usage/layers-architectures",
+                        "tag": "new"
+                    },
                     { "text": "spaCy Projects", "url": "/usage/projects", "tag": "new" },
                     { "text": "Saving & Loading", "url": "/usage/saving-loading" },
                     { "text": "Visualizers", "url": "/usage/visualizers" }
