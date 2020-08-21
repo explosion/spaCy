@@ -81,6 +81,17 @@ bit of validation goes a long way, especially if you
 tools to highlight these errors early. Thinc will also verify that your types
 match correctly when your config file is processed at the beginning of training.
 
+<Infobox title="Tip: Static type checking in your editor" emoji="💡">
+
+If you're using a modern editor like Visual Studio Code, you can
+[set up `mypy`](https://thinc.ai/docs/usage-type-checking#install) with the
+custom Thinc plugin and get live feedback about mismatched types as you write
+code.
+
+[![](../images/thinc_mypy.jpg)](https://thinc.ai/docs/usage-type-checking#linting)
+
+</Infobox>
+
 ## Defining sublayers {#sublayers}
 
 ​ Model architecture functions often accept **sublayers as arguments**, so that
@@ -111,8 +122,48 @@ you'll be able to try it out in any of spaCy components. ​
 
 ## Wrapping PyTorch, TensorFlow and other frameworks {#frameworks}
 
+<!-- TODO: this is copied over from the Thinc docs and we probably want to shorten it and make it more spaCy-specific -->
+
+Thinc allows you to wrap models written in other machine learning frameworks
+like PyTorch, TensorFlow and MXNet using a unified
+[`Model`](https://thinc.ai/docs/api-model) API. As well as **wrapping whole
+models**, Thinc lets you call into an external framework for just **part of your
+model**: you can have a model where you use PyTorch just for the transformer
+layers, using "native" Thinc layers to do fiddly input and output
+transformations and add on task-specific "heads", as efficiency is less of a
+consideration for those parts of the network.
+
+Thinc uses a special class, [`Shim`](https://thinc.ai/docs/api-model#shim), to
+hold references to external objects. This allows each wrapper space to define a
+custom type, with whatever attributes and methods are helpful, to assist in
+managing the communication between Thinc and the external library. The
+[`Model`](/docs/api-model#model) class holds `shim` instances in a separate
+list, and communicates with the shims about updates, serialization, changes of
+device, etc.
+
+The wrapper will receive each batch of inputs, convert them into a suitable form
+for the underlying model instance, and pass them over to the shim, which will
+**manage the actual communication** with the model. The output is then passed
+back into the wrapper, and converted for use in the rest of the network. The
+equivalent procedure happens during backpropagation. Array conversion is handled
+via the [DLPack](https://github.com/dmlc/dlpack) standard wherever possible, so
+that data can be passed between the frameworks **without copying the data back**
+to the host device unnecessarily.
+
+| Framework      | Wrapper layer                                                             | Shim                                                      | DLPack          |
+| -------------- | ------------------------------------------------------------------------- | --------------------------------------------------------- | --------------- |
+| **PyTorch**    | [`PyTorchWrapper`](https://thinc.ai/docs/api-layers#pytorchwrapper)       | [`PyTorchShim`](https://thinc.ai/docs/api-model#shims)    | ✅              |
+| **TensorFlow** | [`TensorFlowWrapper`](https://thinc.ai/docs/api-layers#tensorflowwrapper) | [`TensorFlowShim`](https://thinc.ai/docs/api-model#shims) | ❌ <sup>1</sup> |
+| **MXNet**      | [`MXNetWrapper`](https://thinc.ai/docs/api-layers#mxnetwrapper)           | [`MXNetShim`](https://thinc.ai/docs/api-model#shims)      | ✅              |
+
+1. DLPack support in TensorFlow is now
+   [available](<(https://github.com/tensorflow/tensorflow/issues/24453)>) but
+   still experimental.
+
+<!-- TODO:
 - Explain concept
 - Link off to notebook ​
+-->
 
 ## Models for trainable components {#components}
 
