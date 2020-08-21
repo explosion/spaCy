@@ -127,8 +127,6 @@ $ python -m spacy train config.cfg --paths.train ./corpus/train.spacy
 This section defines settings and controls for the training and evaluation
 process that are used when you run [`spacy train`](/api/cli#train).
 
-<!-- TODO: complete -->
-
 | Name                  | Description                                                                                                                                                                                                  |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `accumulate_gradient` | Whether to divide the batch up into substeps. Defaults to `1`. ~~int~~                                                                                                                                       |
