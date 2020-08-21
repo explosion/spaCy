@@ -35,8 +35,8 @@ ready-to-use spaCy models.
 The recommended way to train your spaCy models is via the
 [`spacy train`](/api/cli#train) command on the command line. It only needs a
 single [`config.cfg`](#config) **configuration file** that includes all settings
-and hyperparameters. You can optionally [overwritten](#config-overrides)
-settings on the command line, and load in a Python file to register
+and hyperparameters. You can optionally [overwrite](#config-overrides) settings
+on the command line, and load in a Python file to register
 [custom functions](#custom-code) and architectures. This quickstart widget helps
 you generate a starter config with the **recommended settings** for your
 specific use case. It's also available in spaCy as the
@@ -82,7 +82,7 @@ $ python -m spacy init fill-config base_config.cfg config.cfg
 
 Instead of exporting your starter config from the quickstart widget and
 auto-filling it, you can also use the [`init config`](/api/cli#init-config)
-command and specify your requirement and settings and CLI arguments. You can now
+command and specify your requirement and settings as CLI arguments. You can now
 add your data and run [`train`](/api/cli#train) with your config. See the
 [`convert`](/api/cli#convert) command for details on how to convert your data to
 spaCy's binary `.spacy` format. You can either include the data paths in the
@@ -121,9 +121,10 @@ Some of the main advantages and features of spaCy's training config are:
   functions like [model architectures](/api/architectures),
   [optimizers](https://thinc.ai/docs/api-optimizers) or
   [schedules](https://thinc.ai/docs/api-schedules) and define arguments that are
-  passed into them. You can also register your own functions to define
-  [custom architectures](#custom-functions), reference them in your config and
-  tweak their parameters.
+  passed into them. You can also
+  [register your own functions](#custom-functions) to define custom
+  architectures or methods, reference them in your config and tweak their
+  parameters.
 - **Interpolation.** If you have hyperparameters or other settings used by
   multiple components, define them once and reference them as
   [variables](#config-interpolation).
