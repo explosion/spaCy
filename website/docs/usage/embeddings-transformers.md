@@ -11,6 +11,10 @@ next: /usage/training
 
 <!-- TODO: intro, short explanation of embeddings/transformers, Tok2Vec and Transformer components, point user to processing pipelines docs for more general info that user should know first -->
 
+If you're looking for details on using word vectors and semantic similarity,
+check out the
+[linguistic features docs](/usage/linguistic-features#vectors-similarity).
+
 <Accordion title="What’s the difference between word vectors and language models?" id="vectors-vs-language-models">
 
 The key difference between [word vectors](#word-vectors) and contextual language

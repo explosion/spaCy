@@ -632,6 +632,23 @@ validate its contents.
 | `path`      | Path to the model's `meta.json`. ~~Union[str, Path]~~ |
 | **RETURNS** | The model's meta data. ~~Dict[str, Any]~~             |
 
+### util.get_installed_models {#util.get_installed_models tag="function" new="3"}
+
+List all model packages installed in the current environment. This will include
+any spaCy model that was packaged with [`spacy package`](/api/cli#package).
+Under the hood, model packages expose a Python entry point that spaCy can check,
+without having to load the model.
+
+> #### Example
+>
+> ```python
+> model_names = util.get_installed_models()
+> ```
+
+| Name        | Description                                                                        |
+| ----------- | ---------------------------------------------------------------------------------- |
+| **RETURNS** | The string names of the models installed in the current environment. ~~List[str]~~ |
+
 ### util.is_package {#util.is_package tag="function"}
 
 Check if string maps to a package installed via pip. Mainly used to validate
