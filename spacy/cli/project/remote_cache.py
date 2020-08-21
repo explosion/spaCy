@@ -5,9 +5,10 @@ import hashlib
 import urllib.parse
 from urllib.parse import urljoin
 from pathlib import Path
+from pathy import Pathy
 from tarfile import TarFile
 from .._util import get_hash
-from .._util import upload_file, list_url_files, url_exists
+from .._util import upload_file
 from ...util import make_tempdir
 
 
@@ -19,10 +20,10 @@ class RemoteStorage:
     """
     def __init__(self, project_root: Path, url: str, *, compression="gz"):
         self.root = project_root
-        self.url = url
+        self.url = Pathy(url)
         self.compression = compression
 
-    def push(self, path: Path, creation_hash: str, content_hash: str) -> str:
+    def push(self, path: Path, creation_hash: str, content_hash: str) -> Pathy:
         """Compress a file or directory within a project and upload it to a remote
         storage. If an object exists at the full URL, nothing is done.  
         
@@ -35,15 +36,18 @@ class RemoteStorage:
         if not loc.exists():
             raise IOError(f"Cannot push {loc}: does not exist.")
         url = self.make_url(path, creation_hash, content_hash)
-        if self.has_file(path, creation_hash, content_hash):
+        if url.exists():
             return url
+        tmp: Path
         with make_tempdir() as tmp:
             tar_loc = tmp / self.encode_name(str(path))
             mode_string = f"w:{self.compression}" if self.compression else "w"
             tar_file = TarFile(tar_loc, mode=mode_string)
-            tar_file.add(loc)
+            tar_file.add(str(loc))
             tar_file.close()
-            upload_file(tar_loc, url)
+            with tar_loc.open(mode="rb") as input_file:
+                with url.open(mode="wb") as output_file:
+                    output_file.write(input_file.read())
         return url
 
     def pull(self, path: Path, creation_hash: Optional[str], content_hash: Optional[str]) -> Path:
@@ -56,6 +60,7 @@ class RemoteStorage:
         loc = self.root / path
         if loc.exists():
             return loc
+        return loc
 
     def find(
         self,
@@ -63,47 +68,26 @@ class RemoteStorage:
         *,
         creation_hash: Optional[str]=None,
         content_hash: Optional[str]=None
-    ) -> Optional[str]:
+    ) -> Optional[Pathy]:
         """Find the best matching version of a file within the storage,
         or `None` if no match can be found. If both the creation and content hash
         are specified, only exact matches will be returned. Otherwise, the most
         recent matching file is preferred.
         """
-        name = self.encode_name(path)
+        name = self.encode_name(str(path))
         if creation_hash is not None and content_hash is not None:
             url = self.make_url(path, creation_hash, content_hash)
-            urls = [url] if url_exists(url) else []
+            urls = [url] if url.exists() else []
         elif creation_hash is not None:
-            urls = list_url_files(urljoin(self.remote, name, creation_hash))
-        elif content_hash is not None:
-            urls = list_url_files(urljoin(self.remote, name))
-            urls = [url for url in urls if url.endswith(content_hash)]
+            urls = list((self.url / name / creation_hash).iterdir())
         else:
-            urls = list_url_files(urljoin(self.remote, name))
+            urls = list((self.url / name).iterdir())
+            if content_hash is not None:
+                urls = [url for url in urls if url.parts[-1] == content_hash]
         return urls[-1] if urls else None
 
-    def make_url(self, name: str, hashes: List[str]) -> str:
-        encoded_name = self.encode_name(name)
-        return urllib.parse.urljoin(self.base, encoded_name, *hashes)
+    def make_url(self, path: Path, creation_hash: str, content_hash: str) -> Pathy:
+        return self.url / self.encode_name(str(path)) / creation_hash / content_hash
 
     def encode_name(self, name: str) -> str:
         return urllib.parse.quote_plus(name)
-
-
-def hash_site_packages():
-    site_dirs = site.getsitepackages()
-    if site.ENABLE_USER_SITE:
-        site_dirs.extend(site.getusersitepackages())
-    packages = set()
-    for site_dir in site_dirs:
-        site_dir = Path(site_dir)
-        for subpath in site_dir.iterdir():
-            if subpath.parts[-1].endswith("dist-info"):
-                packages.add(subpath.parts[-1].replace(".dist-info", ""))
-    package_bytes = "".join(sorted(packages)).encode("utf8")
-    return hashlib.md5sum(package_bytes).hexdigest()
-
-
-def hash_env_vars(keys: List[str]) -> str:
-    env_vars = {key: os.environ.get(key, None) for key in keys}
-    return get_hash(env_vars)
