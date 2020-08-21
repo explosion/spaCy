@@ -1,3 +1,5 @@
+import sys
+import site
 from typing import Dict, Any, Union, List, Optional
 from pathlib import Path
 from pathy import Pathy
@@ -10,8 +12,6 @@ from typer.main import get_command
 from contextlib import contextmanager
 from thinc.config import Config, ConfigValidationError
 from configparser import InterpolationError
-import sys
-
 from ..schemas import ProjectConfigSchema, validate
 from ..util import import_file
 
@@ -176,6 +176,36 @@ def get_checksum(path: Union[Path, str]) -> str:
         return dir_checksum.hexdigest()
     raise ValueError(f"Can't get checksum for {path}: not a file or directory")
 
+
+def get_command_hash(command, site_hash, env_hash):
+    return ""
+
+
+def hash_site_packages():
+    site_dirs = site.getsitepackages()
+    if site.ENABLE_USER_SITE:
+        site_dirs.extend(site.getusersitepackages())
+    packages = set()
+    for site_dir in site_dirs:
+        site_dir = Path(site_dir)
+        for subpath in site_dir.iterdir():
+            if subpath.parts[-1].endswith("dist-info"):
+                packages.add(subpath.parts[-1].replace(".dist-info", ""))
+    package_bytes = "".join(sorted(packages)).encode("utf8")
+    return hashlib.md5sum(package_bytes).hexdigest()
+
+
+def hash_env_vars(env) -> str:
+    """Construct a hash of the environment variables that will be passed into
+    the commands.
+    """
+    env_vars = {}
+    for key, value in env.items():
+        if value.startswith("$"):
+            env_vars[key] = os.environ.get(value[1:], "")
+        else:
+            env_vars[key] = value
+    return get_hash(env_vars)
 
 @contextmanager
 def show_validation_error(
