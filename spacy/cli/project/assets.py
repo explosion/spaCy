@@ -4,8 +4,8 @@ from wasabi import msg
 import re
 import shutil
 import requests
-import smart_open
 
+from .utils import download_file
 from ...util import ensure_path, working_dir
 from .._util import project_cli, Arg, PROJECT_FILE, load_project_config, get_checksum
 
@@ -132,15 +132,3 @@ def convert_asset_url(url: str) -> str:
         )
         return converted
     return url
-
-
-def download_file(url: str, dest: Path, chunk_size: int = 1024) -> None:
-    """Download a file using smart_open.
-
-    url (str): The URL of the file.
-    dest (Path): The destination path.
-    chunk_size (int): The size of chunks to read/write.
-    """
-    with smart_open.open(url, mode="rb") as input_file:
-        with dest.open(mode="wb") as output_file:
-            output_file.write(input_file.read())
