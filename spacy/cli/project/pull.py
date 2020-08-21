@@ -1,4 +1,5 @@
-from .utils import url_exists, url_join, download_file
+from ..remote_cache import RemoteStorage
+from ..remote_cache import get_site_hash, get_env_hash, get_creation_hash
 
 
 @project_cli.command("pull")
@@ -20,11 +21,13 @@ def project_pull(project_dir: Path, remote: str):
     config = load_project_config(project_dir)
     if remote in config.get("remotes", {}):
         remote = config["remotes"][remote]
-    env_sig = get_env_signature(project_dir)
+    storage = RemoteStorage(project_dir, remote)
+    site_hash = get_site_hash()
+    env_hash = get_env_hash(config.get("env", {}))
     for cmd in config.get("commands", []):
+        deps = [project_dir / dep for dep in cmd.get("deps", [])]
+        creation_hash = get_creation_hash(site_hash, env_hash, deps)
         for output_path in cmd.get("outputs", []):
-            output_loc = project_dir / output_path
-            if not output_loc.exists():
-                url = url_join(get_url_parts(remote, output_path, cmd_sig))
-                if url_exists(url):
-                    download_file(url_join(url_parts), output_loc)
+            url = storage.pull(output_path, creation_hash=creation_hash)
+            if url is not None:
+                print(f"Pulled {output_path} from {url}")
