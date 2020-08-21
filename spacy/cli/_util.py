@@ -177,36 +177,6 @@ def get_checksum(path: Union[Path, str]) -> str:
     raise ValueError(f"Can't get checksum for {path}: not a file or directory")
 
 
-def get_command_hash(command, site_hash, env_hash):
-    return ""
-
-
-def hash_site_packages():
-    site_dirs = site.getsitepackages()
-    if site.ENABLE_USER_SITE:
-        site_dirs.extend(site.getusersitepackages())
-    packages = set()
-    for site_dir in site_dirs:
-        site_dir = Path(site_dir)
-        for subpath in site_dir.iterdir():
-            if subpath.parts[-1].endswith("dist-info"):
-                packages.add(subpath.parts[-1].replace(".dist-info", ""))
-    package_bytes = "".join(sorted(packages)).encode("utf8")
-    return hashlib.md5sum(package_bytes).hexdigest()
-
-
-def hash_env_vars(env) -> str:
-    """Construct a hash of the environment variables that will be passed into
-    the commands.
-    """
-    env_vars = {}
-    for key, value in env.items():
-        if value.startswith("$"):
-            env_vars[key] = os.environ.get(value[1:], "")
-        else:
-            env_vars[key] = value
-    return get_hash(env_vars)
-
 @contextmanager
 def show_validation_error(
     file_path: Optional[Union[str, Path]] = None,
@@ -264,45 +234,19 @@ def get_sourced_components(config: Union[Dict[str, Any], Config]) -> List[str]:
     ]
 
 
-def url_exists(url: str):
-    return Pathy(url).exists()
-
-def list_url_files(url: str):
-    queue = [Pathy(url)]
-    output = []
-    seen = {}
-    for item in queue:
-        if str(item) in seen:
-            continue
-        seen.add(str(item))
-        if item.is_dir():
-            queue.extend(item.iter_dir())
-        else:
-            output.append(item)
-    return output
-        
-
-def url_exists(url: str):
-    """Check whether a URL exists in a remote."""
-    try:
-        smart_open.open(url)
-        return True
-    except ValueError:
-        return False
-
-
-def upload_file(src: Path, url: str, dest: Path) -> None:
-    """Upload a file using smart_open.
+def upload_file(src: Path, dest: Union[str, Pathy]) -> None:
+    """Upload a file.
 
     src (Path): The source path.
     url (str): The destination URL to upload to.
     """
-    with smart_open.open(url, mode="wb") as output_file:
+    dest = Pathy(dest)
+    with dest.open(mode="wb") as output_file:
         with src.open(mode="rb") as input_file:
             output_file.write(input_file.read())
 
 
-def download_file(url: str, dest: Path, *, force: bool=False) -> None:
+def download_file(src: Union[str, Pathy], dest: Path, *, force: bool=False) -> None:
     """Download a file using smart_open.
 
     url (str): The URL of the file.
@@ -312,6 +256,7 @@ def download_file(url: str, dest: Path, *, force: bool=False) -> None:
     """
     if dest.exists() and not force:
         return None
-    with smart_open.open(url, mode="rb") as input_file:
+    src = Pathy(src)
+    with src.open(mode="rb") as input_file:
         with dest.open(mode="wb") as output_file:
             output_file.write(input_file.read())
