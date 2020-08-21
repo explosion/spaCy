@@ -222,8 +222,8 @@ passed to the component factory as arguments. This lets you configure the model
 settings and hyperparameters. If a component block defines a `source`, the
 component will be copied over from an existing pretrained model, with its
 existing weights. This lets you include an already trained component in your
-model pipeline, or update a pretrained component with more data specific to
-your use case.
+model pipeline, or update a pretrained component with more data specific to your
+use case.
 
 ```ini
 ### config.cfg (excerpt)
@@ -290,11 +290,11 @@ batch_size = 128
 ```
 
 To refer to a function instead, you can make `[training.batch_size]` its own
-section and use the `@` syntax to specify the function and its arguments – in this
-case [`compounding.v1`](https://thinc.ai/docs/api-schedules#compounding) defined
-in the [function registry](/api/top-level#registry). All other values defined in
-the block are passed to the function as keyword arguments when it's initialized.
-You can also use this mechanism to register
+section and use the `@` syntax to specify the function and its arguments – in
+this case [`compounding.v1`](https://thinc.ai/docs/api-schedules#compounding)
+defined in the [function registry](/api/top-level#registry). All other values
+defined in the block are passed to the function as keyword arguments when it's
+initialized. You can also use this mechanism to register
 [custom implementations and architectures](#custom-functions) and reference them
 from your configs.
 
@@ -722,9 +722,9 @@ a stream of items into a stream of batches. spaCy has several useful built-in
 [batching strategies](/api/top-level#batchers) with customizable sizes, but it's
 also easy to implement your own. For instance, the following function takes the
 stream of generated [`Example`](/api/example) objects, and removes those which
-have the exact same underlying raw text, to avoid duplicates within each batch.
-Note that in a more realistic implementation, you'd also want to check whether
-the annotations are exactly the same.
+have the same underlying raw text, to avoid duplicates within each batch. Note
+that in a more realistic implementation, you'd also want to check whether the
+annotations are the same.
 
 > #### config.cfg
 >
@@ -839,8 +839,8 @@ called the **gold standard**. It's initialized with a [`Doc`](/api/doc) object
 that will hold the predictions, and another `Doc` object that holds the
 gold-standard annotations. It also includes the **alignment** between those two
 documents if they differ in tokenization. The `Example` class ensures that spaCy
-can rely on one **standardized format** that's passed through the pipeline.
-Here's an example of a simple `Example` for part-of-speech tags:
+can rely on one **standardized format** that's passed through the pipeline. For
+instance, let's say we want to define gold-standard part-of-speech tags:
 
 ```python
 words = ["I", "like", "stuff"]
@@ -852,9 +852,10 @@ reference = Doc(vocab, words=words).from_array("TAG", numpy.array(tag_ids, dtype
 example = Example(predicted, reference)
 ```
 
-Alternatively, the `reference` `Doc` with the gold-standard annotations can be
-created from a dictionary with keyword arguments specifying the annotations,
-like `tags` or `entities`. Using the `Example` object and its gold-standard
+As this is quite verbose, there's an alternative way to create the reference
+`Doc` with the gold-standard annotations. The function `Example.from_dict` takes
+a dictionary with keyword arguments specifying the annotations, like `tags` or
+`entities`. Using the resulting `Example` object and its gold-standard
 annotations, the model can be updated to learn a sentence of three words with
 their assigned part-of-speech tags.
 
@@ -879,7 +880,7 @@ example = Example.from_dict(predicted, {"tags": tags})
 Here's another example that shows how to define gold-standard named entities.
 The letters added before the labels refer to the tags of the
 [BILUO scheme](/usage/linguistic-features#updating-biluo) – `O` is a token
-outside an entity, `U` an single entity unit, `B` the beginning of an entity,
+outside an entity, `U` a single entity unit, `B` the beginning of an entity,
 `I` a token inside an entity and `L` the last token of an entity.
 
 ```python
@@ -954,7 +955,7 @@ dictionary of annotations:
 ```diff
 text = "Facebook released React in 2014"
 annotations = {"entities": ["U-ORG", "O", "U-TECHNOLOGY", "O", "U-DATE"]}
-+ example = Example.from_dict(nlp.make_doc(text), {"entities": entities})
++ example = Example.from_dict(nlp.make_doc(text), annotations)
 - nlp.update([text], [annotations])
 + nlp.update([example])
 ```
