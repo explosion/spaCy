@@ -104,10 +104,10 @@ workflows, from data preprocessing to training and packaging your model.
 
 ## Training config {#config}
 
-> #### Migration from spaCy v2.x
+<!-- > #### Migration from spaCy v2.x
 >
 > TODO: once we have an answer for how to update the training command
-> (`spacy migrate`?), add details here
+> (`spacy migrate`?), add details here -->
 
 Training config files include all **settings and hyperparameters** for training
 your model. Instead of providing lots of arguments on the command line, you only
@@ -404,11 +404,15 @@ recipe once the dish has already been prepared. You have to make a new one.
 spaCy includes a variety of built-in [architectures](/api/architectures) for
 different tasks. For example:
 
-<!-- TODO: select example architectures to showcase -->
+<!-- TODO: model return types -->
 
-| Architecture                                    | Description                                                                                                                                                            |
-| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [HashEmbedCNN](/api/architectures#HashEmbedCNN) | Build spaCy’s “standard” embedding layer, which uses hash embedding with subword features and a CNN with layer-normalized maxout. ~~Model[List[Doc], List[Floats2d]]~~ |
+| Architecture                                                      | Description                                                                                                                                                                                                                                               |
+| ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [HashEmbedCNN](/api/architectures#HashEmbedCNN)                   | Build spaCy’s "standard" embedding layer, which uses hash embedding with subword features and a CNN with layer-normalized maxout. ~~Model[List[Doc], List[Floats2d]]~~                                                                                    |
+| [TransitionBasedParser](/api/architectures#TransitionBasedParser) | Build a [transition-based parser](https://explosion.ai/blog/parsing-english-in-python) model used in the default [`EntityRecognizer`](/api/entityrecognizer) and [`DependencyParser`](/api/dependencyparser). ~~Model[List[Docs], List[List[Floats2d]]]~~ |
+| [TextCatEnsemble](/api/architectures#TextCatEnsemble)             | Stacked ensemble of a bag-of-words model and a neural network model with an internal CNN embedding layer. Used in the default [`TextCategorizer`](/api/textcategorizer). ~~Model~~                                                                        |
+
+<!-- TODO: link to not yet existing usage page on custom architectures etc. -->
 
 ### Metrics, training output and weighted scores {#metrics}
 
@@ -788,7 +792,7 @@ you save the transformer outputs for later use.
 
 <!-- TODO:
 
-<Project id="en_core_bert">
+<Project id="en_core_trf_lg">
 
 Try out a BERT-based model pipeline using this project template: swap in your
 data, edit the settings and hyperparameters and train, evaluate, package and

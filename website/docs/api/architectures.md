@@ -399,7 +399,7 @@ one component.
 > subword_features = true
 > ```
 
-Build a transition-based parser model. Can apply to NER or dependency-parsing.
+Build a transition-based parser model. Can apply to NER or dependency parsing.
 Transition-based parsing is an approach to structured prediction where the task
 of predicting the structure is mapped to a series of state transitions. You
 might find [this tutorial](https://explosion.ai/blog/parsing-english-in-python)
@@ -416,8 +416,6 @@ consists of either two or three subnetworks:
   state representation. If not present, the output from the lower model is used
   as action scores directly.
 
-<!-- TODO: model return type -->
-
 | Name                | Description                                                                                                                                                                                                                                                                                                                                                             |
 | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `tok2vec`           | Subnetwork to map tokens into vector representations. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                                                                                              |
@@ -426,7 +424,7 @@ consists of either two or three subnetworks:
 | `maxout_pieces`     | How many pieces to use in the state prediction layer. Recommended values are `1`, `2` or `3`. If `1`, the maxout non-linearity is replaced with a [`Relu`](https://thinc.ai/docs/api-layers#relu) non-linearity if `use_upper` is `True`, and no non-linearity if `False`. ~~int~~                                                                                      |
 | `use_upper`         | Whether to use an additional hidden layer after the state vector in order to predict the action scores. It is recommended to set this to `False` for large pretrained models such as transformers, and `True` for smaller networks. The upper layer is computed on CPU, which becomes a bottleneck on larger GPU-based models, where it's also less necessary. ~~bool~~ |
 | `nO`                | The number of actions the model will predict between. Usually inferred from data at the beginning of training, or loaded from disk. ~~int~~                                                                                                                                                                                                                             |
-| **CREATES**         | The model using the architecture. ~~Model~~                                                                                                                                                                                                                                                                                                                             |
+| **CREATES**         | The model using the architecture. ~~Model[List[Docs], List[List[Floats2d]]]~~                                                                                                                                                                                                                                                                                           |
 
 ### spacy.BILUOTagger.v1 {#BILUOTagger source="spacy/ml/models/simple_ner.py"}
 

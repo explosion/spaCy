@@ -6,7 +6,7 @@ import classNames from 'classnames'
 
 import Icon from './icon'
 import classes from '../styles/link.module.sass'
-import { isString } from './util'
+import { isString, isImage } from './util'
 
 const internalRegex = /(http(s?)):\/\/(prodi.gy|spacy.io|irl.spacy.io|explosion.ai|course.spacy.io)/gi
 
@@ -39,7 +39,7 @@ export default function Link({
     const dest = to || href
     const external = forceExternal || /(http(s?)):\/\//gi.test(dest)
     const icon = getIcon(dest)
-    const withIcon = !hidden && !hideIcon && !!icon
+    const withIcon = !hidden && !hideIcon && !!icon && !isImage(children)
     const sourceWithText = withIcon && isString(children)
     const linkClassNames = classNames(classes.root, className, {
         [classes.hidden]: hidden,

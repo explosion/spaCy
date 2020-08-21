@@ -169,7 +169,7 @@ $ python setup.py build_ext --inplace           # compile spaCy
 
 Compared to regular install via pip, the
 [`requirements.txt`](https://github.com/explosion/spaCy/tree/master/requirements.txt)
-additionally installs developer dependencies such as Cython. See the 
+additionally installs developer dependencies such as Cython. See the
 [quickstart widget](#quickstart) to get the right commands for your platform and
 Python version.
 
@@ -368,7 +368,7 @@ from is called `spacy`. So, when using spaCy, never call anything else `spacy`.
 
 </Accordion>
 
-<Accordion title="NER model doesn't recognise other entities anymore after training" id="catastrophic-forgetting">
+<Accordion title="NER model doesn't recognize other entities anymore after training" id="catastrophic-forgetting">
 
 If your training data only contained new entities and you didn't mix in any
 examples the model previously recognized, it can cause the model to "forget"

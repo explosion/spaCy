@@ -429,7 +429,7 @@ nlp = spacy.load("en_core_web_sm")
 doc = nlp("fb is hiring a new vice president of global policy")
 ents = [(e.text, e.start_char, e.end_char, e.label_) for e in doc.ents]
 print('Before', ents)
-# the model didn't recognise "fb" as an entity :(
+# The model didn't recognize "fb" as an entity :(
 
 fb_ent = Span(doc, 0, 1, label="ORG") # create a Span for the new entity
 doc.ents = list(doc.ents) + [fb_ent]
@@ -558,11 +558,11 @@ import spacy
 nlp = spacy.load("my_custom_el_model")
 doc = nlp("Ada Lovelace was born in London")
 
-# document level
+# Document level
 ents = [(e.text, e.label_, e.kb_id_) for e in doc.ents]
 print(ents)  # [('Ada Lovelace', 'PERSON', 'Q7259'), ('London', 'GPE', 'Q84')]
 
-# token level
+# Token level
 ent_ada_0 = [doc[0].text, doc[0].ent_type_, doc[0].ent_kb_id_]
 ent_ada_1 = [doc[1].text, doc[1].ent_type_, doc[1].ent_kb_id_]
 ent_london_5 = [doc[5].text, doc[5].ent_type_, doc[5].ent_kb_id_]
@@ -914,12 +914,12 @@ from spacy.lang.char_classes import ALPHA, ALPHA_LOWER, ALPHA_UPPER
 from spacy.lang.char_classes import CONCAT_QUOTES, LIST_ELLIPSES, LIST_ICONS
 from spacy.util import compile_infix_regex
 
-# default tokenizer
+# Default tokenizer
 nlp = spacy.load("en_core_web_sm")
 doc = nlp("mother-in-law")
 print([t.text for t in doc]) # ['mother', '-', 'in', '-', 'law']
 
-# modify tokenizer infix patterns
+# Modify tokenizer infix patterns
 infixes = (
     LIST_ELLIPSES
     + LIST_ICONS
@@ -929,8 +929,8 @@ infixes = (
             al=ALPHA_LOWER, au=ALPHA_UPPER, q=CONCAT_QUOTES
         ),
         r"(?<=[{a}]),(?=[{a}])".format(a=ALPHA),
-        # EDIT: commented out regex that splits on hyphens between letters:
-        #r"(?<=[{a}])(?:{h})(?=[{a}])".format(a=ALPHA, h=HYPHENS),
+        # ✅ Commented out regex that splits on hyphens between letters:
+        # r"(?<=[{a}])(?:{h})(?=[{a}])".format(a=ALPHA, h=HYPHENS),
         r"(?<=[{a}0-9])[:<>=/](?=[{a}])".format(a=ALPHA),
     ]
 )
@@ -1546,23 +1546,6 @@ print("After:", [sent.text for sent in doc.sents])
 import Vectors101 from 'usage/101/\_vectors-similarity.md'
 
 <Vectors101 />
-
-<Infobox title="What to expect from similarity results" variant="warning">
-
-Computing similarity scores can be helpful in many situations, but it's also
-important to maintain **realistic expectations** about what information it can
-provide. Words can be related to each over in many ways, so a single
-"similarity" score will always be a **mix of different signals**, and vectors
-trained on different data can produce very different results that may not be
-useful for your purpose.
-
-Also note that the similarity of `Doc` or `Span` objects defaults to the
-**average** of the token vectors. This means it's insensitive to the order of
-the words. Two documents expressing the same meaning with dissimilar wording
-will return a lower similarity score than two documents that happen to contain
-the same words while expressing different meanings.
-
-</Infobox>
 
 ### Adding word vectors {#adding-vectors}
 

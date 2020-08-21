@@ -257,7 +257,7 @@ If a setting is not present in the options, the default value will be used.
 | Name                                    | Description                                                                                                                                                                                                                                                                 |
 | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ents`                                  | Entity types to highlight or `None` for all types (default). ~~Optional[List[str]]~~                                                                                                                                                                                        |
-| `colors`                                | Color overrides. Entity types in uppercase should be mapped to color names or values. ~~Dict[str, str]~~                                                                                                                                                                    |
+| `colors`                                | Color overrides. Entity types should be mapped to color names or values. ~~Dict[str, str]~~                                                                                                                                                                                 |
 | `template` <Tag variant="new">2.2</Tag> | Optional template to overwrite the HTML used to render entity spans. Should be a format string and can use `{bg}`, `{text}` and `{label}`. See [`templates.py`](https://github.com/explosion/spaCy/blob/master/spacy/displacy/templates.py) for examples. ~~Optional[str]~~ |
 
 By default, displaCy comes with colors for all entity types used by
@@ -631,6 +631,23 @@ validate its contents.
 | ----------- | ----------------------------------------------------- |
 | `path`      | Path to the model's `meta.json`. ~~Union[str, Path]~~ |
 | **RETURNS** | The model's meta data. ~~Dict[str, Any]~~             |
+
+### util.get_installed_models {#util.get_installed_models tag="function" new="3"}
+
+List all model packages installed in the current environment. This will include
+any spaCy model that was packaged with [`spacy package`](/api/cli#package).
+Under the hood, model packages expose a Python entry point that spaCy can check,
+without having to load the model.
+
+> #### Example
+>
+> ```python
+> model_names = util.get_installed_models()
+> ```
+
+| Name        | Description                                                                        |
+| ----------- | ---------------------------------------------------------------------------------- |
+| **RETURNS** | The string names of the models installed in the current environment. ~~List[str]~~ |
 
 ### util.is_package {#util.is_package tag="function"}
 

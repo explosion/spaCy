@@ -363,7 +363,7 @@ body [id]:target
         color: var(--color-red-medium)
         background: var(--color-red-transparent)
 
-    &.italic
+    &.italic, &.comment
         font-style: italic
 
 
@@ -384,9 +384,11 @@ body [id]:target
 // Settings for ini syntax (config files)
 [class*="language-ini"]
     color: var(--syntax-comment)
+    font-style: italic !important
 
     .token
         color: var(--color-subtle)
+        font-style: normal !important
 
 
 .gatsby-highlight-code-line
@@ -424,6 +426,7 @@ body [id]:target
 
     .cm-comment
         color: var(--syntax-comment)
+        font-style: italic
 
     .cm-keyword
         color: var(--syntax-keyword)
