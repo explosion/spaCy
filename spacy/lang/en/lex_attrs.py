@@ -44,6 +44,44 @@ _num_words = [
 ]
 
 
+_ordinal_words = [
+    "first",
+    "second",
+    "third",
+    "fourth",
+    "fifth",
+    "sixth",
+    "seventh",
+    "eighth",
+    "ninth",
+    "tenth",
+    "eleventh",
+    "twelfth",
+    "thirteenth",
+    "fourteenth",
+    "fifteenth",
+    "sixteenth",
+    "seventeenth",
+    "eighteenth",
+    "nineteenth",
+    "twentieth",
+    "thirtieth",
+    "fortieth",
+    "fiftieth",
+    "sixtieth",
+    "seventieth",
+    "eightieth",
+    "ninetieth",
+    "hundredth",
+    "thousandth",
+    "millionth",
+    "billionth",
+    "trillionth",
+    "quadrillionth",
+    "gajillionth",
+    "bazillionth",
+]
+
 def like_num(text):
     if text.startswith(("+", "-", "±", "~")):
         text = text[1:]
@@ -54,8 +92,18 @@ def like_num(text):
         num, denom = text.split("/")
         if num.isdigit() and denom.isdigit():
             return True
-    if text.lower() in _num_words:
+    
+    text_lower = text.lower()
+    if text_lower in _num_words:
         return True
+
+    # CHeck ordinal number
+    if text_lower in _ordinal_words:
+        return True
+    if text_lower.endswith("th"):
+        if text_lower[:-2].isdigit():
+            return True 
+
     return False
 
 

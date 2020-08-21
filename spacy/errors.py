@@ -133,6 +133,8 @@ class Warnings(object):
             "normalization table, please ignore this warning.")
     W034 = ("Please install the package spacy-lookups-data in order to include "
             "the default lexeme normalization table for the language '{lang}'.")
+    W035 = ('Discarding subpattern "{pattern}" due to an unrecognized '
+            "attribute or operator.")
 
 
 @add_codes
@@ -588,6 +590,7 @@ class Errors(object):
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
     E200 = ("Specifying a base model with a pretrained component '{component}' "
             "can not be combined with adding a pretrained Tok2Vec layer.")
+    E201 = ("Span index out of range.")
 
 
 @add_codes
