@@ -315,9 +315,9 @@ to pass in a `get_spans` function that will divide up the `Doc` objects before
 passing them through the transformer. Your spans are allowed to overlap or
 exclude tokens.
 
-This layer outputs a `FullTransformerBatch` dataclass. In order to plug the
-layer into most architectures, you'll probably need to map the raw transformer
-output to token-aligned vectors using a layer such as `trfs2arrays`.
+This layer is usually used directly by the `Transformer` component, which
+allows you to share the transformer weights across your pipeline. For a layer
+that's configured for use in other components, see `Tok2VecTransformer`.
 
 
 | Name               | Description                                                                                                                                                                                                                                           |
