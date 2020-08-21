@@ -184,7 +184,7 @@ yourself. For details on how to get started with training your own model, check
 out the [training quickstart](/usage/training#quickstart).
 
 <!-- TODO:
-<Project id="en_core_bert">
+<Project id="en_core_trf_lg">
 
 The easiest way to get started is to clone a transformers-based project
 template. Swap in your data, edit the settings and hyperparameters and train,

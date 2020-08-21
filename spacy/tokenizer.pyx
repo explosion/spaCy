@@ -47,9 +47,9 @@ cdef class Tokenizer:
         `infix_finditer` (callable): A function matching the signature of
             `re.compile(string).finditer` to find infixes.
         token_match (callable): A boolean function matching strings to be
-            recognised as tokens.
+            recognized as tokens.
         url_match (callable): A boolean function matching strings to be
-            recognised as tokens after considering prefixes and suffixes.
+            recognized as tokens after considering prefixes and suffixes.
 
         EXAMPLE:
             >>> tokenizer = Tokenizer(nlp.vocab)

@@ -792,7 +792,7 @@ you save the transformer outputs for later use.
 
 <!-- TODO:
 
-<Project id="en_core_bert">
+<Project id="en_core_trf_lg">
 
 Try out a BERT-based model pipeline using this project template: swap in your
 data, edit the settings and hyperparameters and train, evaluate, package and

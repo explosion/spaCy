@@ -108,11 +108,11 @@ class, or defined within a [model package](/usage/saving-loading#models).
 >
 > [components.tagger]
 > factory = "tagger"
-> # settings for the tagger component
+> # Settings for the tagger component
 >
 > [components.parser]
 > factory = "parser"
-> # settings for the parser component
+> # Settings for the parser component
 > ```
 
 When you load a model, spaCy first consults the model's
@@ -171,11 +171,11 @@ lang = "en"
 pipeline = ["tagger", "parser", "ner"]
 data_path = "path/to/en_core_web_sm/en_core_web_sm-2.0.0"
 
-cls = spacy.util.get_lang_class(lang)   # 1. Get Language instance, e.g. English()
-nlp = cls()                             # 2. Initialize it
+cls = spacy.util.get_lang_class(lang)  # 1. Get Language class, e.g. English
+nlp = cls()                            # 2. Initialize it
 for name in pipeline:
-    nlp.add_pipe(name)                  # 3. Add the component to the pipeline
-nlp.from_disk(model_data_path)          # 4. Load in the binary data
+    nlp.add_pipe(name)                 # 3. Add the component to the pipeline
+nlp.from_disk(model_data_path)         # 4. Load in the binary data
 ```
 
 When you call `nlp` on a text, spaCy will **tokenize** it and then **call each
@@ -187,9 +187,9 @@ which is then processed by the component next in the pipeline.
 
 ```python
 ### The pipeline under the hood
-doc = nlp.make_doc("This is a sentence")   # create a Doc from raw text
-for name, proc in nlp.pipeline:             # iterate over components in order
-    doc = proc(doc)                         # apply each component
+doc = nlp.make_doc("This is a sentence")  # Create a Doc from raw text
+for name, proc in nlp.pipeline:           # Iterate over components in order
+    doc = proc(doc)                       # Apply each component
 ```
 
 The current processing pipeline is available as `nlp.pipeline`, which returns a
@@ -473,7 +473,7 @@ only being able to modify it afterwards.
 >
 > @Language.component("my_component")
 > def my_component(doc):
->    # do something to the doc here
+>    # Do something to the doc here
 >    return doc
 > ```
 
