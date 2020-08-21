@@ -222,21 +222,21 @@ passed to the component factory as arguments. This lets you configure the model
 settings and hyperparameters. If a component block defines a `source`, the
 component will be copied over from an existing pretrained model, with its
 existing weights. This lets you include an already trained component in your
-model pipeline, or update a pretrained components with more data specific to
+model pipeline, or update a pretrained component with more data specific to
 your use case.
 
 ```ini
 ### config.cfg (excerpt)
 [components]
 
-# "parser" and "ner" are sourced from pretrained model
+# "parser" and "ner" are sourced from a pretrained model
 [components.parser]
 source = "en_core_web_sm"
 
 [components.ner]
 source = "en_core_web_sm"
 
-# "textcat" and "custom" are created blank from built-in / custom factory
+# "textcat" and "custom" are created blank from a built-in / custom factory
 [components.textcat]
 factory = "textcat"
 
@@ -290,7 +290,7 @@ batch_size = 128
 ```
 
 To refer to a function instead, you can make `[training.batch_size]` its own
-section and use the `@` syntax specify the function and its arguments – in this
+section and use the `@` syntax to specify the function and its arguments – in this
 case [`compounding.v1`](https://thinc.ai/docs/api-schedules#compounding) defined
 in the [function registry](/api/top-level#registry). All other values defined in
 the block are passed to the function as keyword arguments when it's initialized.
