@@ -39,7 +39,7 @@ class RecommendationSchema(BaseModel):
 @init_cli.command("config")
 def init_config_cli(
     # fmt: off
-    output_file: Path = Arg(..., help="File to save config.cfg to (or - for stdout, disabling logging)", allow_dash=True),
+    output_file: Path = Arg(..., help="File to save config.cfg to or - for stdout (will only output config and no additional logging info)", allow_dash=True),
     lang: Optional[str] = Opt("en", "--lang", "-l", help="Two-letter code of the language to use"),
     pipeline: Optional[str] = Opt("tagger,parser,ner", "--pipeline", "-p", help="Comma-separated names of trainable pipeline components to include in the model (without 'tok2vec' or 'transformer')"),
     optimize: Optimizations = Opt(Optimizations.efficiency.value, "--optimize", "-o", help="Whether to optimize for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger and slower model). This will impact the choice of architecture, pretrained weights and related hyperparameters."),
@@ -128,8 +128,13 @@ def init_config(
         "word_vectors": reco["word_vectors"],
         "has_letters": has_letters,
     }
-    if variables["transformer_data"] and not cpu:
-        variables["transformer_data"] = prefer_spacy_transformers(msg)
+    if variables["transformer_data"] and not has_spacy_transformers():
+        msg.warn(
+            "To generate a more effective transformer-based config (GPU-only), "
+            "install the spacy-transformers package and re-run this command. "
+            "The config generated now does not use transformers."
+        )
+        variables["transformer_data"] = None
     base_template = template.render(variables).strip()
     # Giving up on getting the newlines right in jinja for now
     base_template = re.sub(r"\n\n\n+", "\n\n", base_template)
@@ -167,13 +172,10 @@ def save_config(config: Config, output_file: Path, is_stdout: bool = False) -> N
         print(f"{COMMAND} train {output_file.parts[-1]} {' '.join(variables)}")
 
 
-def prefer_spacy_transformers(msg: Printer) -> bool:
+def has_spacy_transformers() -> bool:
     try:
         import spacy_transformers  # noqa: F401
+
+        return True
     except ImportError:
-        msg.info(
-            "Recommend to install 'spacy-transformers' to create a more efficient "
-            "transformer-based pipeline."
-        )
         return False
-    return True
