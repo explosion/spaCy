@@ -114,7 +114,7 @@ argument that connects to the shared `tok2vec` component in the pipeline.
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `width`     | The width of the vectors produced by the "upstream" [`Tok2Vec`](/api/tok2vec) component. ~~int~~                                                                                                                                                                                                               |
 | `upstream`  | A string to identify the "upstream" `Tok2Vec` component to communicate with. The upstream name should either be the wildcard string `"*"`, or the name of the `Tok2Vec` component. You'll almost never have multiple upstream `Tok2Vec` components, so the wildcard string will almost always be fine. ~~str~~ |
-| **CREATES** | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                                                                                    |
+| **CREATES** | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                                                         |
 
 ### spacy.MultiHashEmbed.v1 {#MultiHashEmbed}
 
@@ -143,7 +143,7 @@ representation.
 | `rows`                    | The number of rows for the embedding tables. Can be low, due to the hashing trick. Embeddings for prefix, suffix and word shape use half as many rows. Recommended values are between `2000` and `10000`. ~~int~~ |
 | `also_embed_subwords`     | Whether to use the `PREFIX`, `SUFFIX` and `SHAPE` features in the embeddings. If not using these, you may need more rows in your hash embeddings, as there will be increased chance of collisions. ~~bool~~       |
 | `also_use_static_vectors` | Whether to also use static word vectors. Requires a vectors table to be loaded in the [Doc](/api/doc) objects' vocab. ~~bool~~                                                                                    |
-| **CREATES**               | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                       |
+| **CREATES**               | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                            |
 
 ### spacy.CharacterEmbed.v1 {#CharacterEmbed}
 
@@ -180,7 +180,7 @@ construct a single vector to represent the information.
 | `rows`      | The number of rows in the `NORM` hash embedding table. ~~int~~                                                                                                  |
 | `nM`        | The dimensionality of the character embeddings. Recommended values are between `16` and `64`. ~~int~~                                                           |
 | `nC`        | The number of UTF-8 bytes to embed per word. Recommended values are between `3` and `8`, although it may depend on the length of words in the language. ~~int~~ |
-| **CREATES** | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                     |
+| **CREATES** | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                          |
 
 ### spacy.MaxoutWindowEncoder.v1 {#MaxoutWindowEncoder}
 
@@ -273,8 +273,8 @@ on [static vectors](/usage/embeddings-transformers#static-vectors) for details.
 
 | Name        |  Description                                                                                                                                                                                                            |
 | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `nO`        | The output width of the layer, after the linear projection. ~~Optional[int]~~                                                                                                                                                                                   |
-| `nM`        | The width of the static vectors. ~~Optional[int]~~                                                                                                                                                                                   |
+| `nO`        | The output width of the layer, after the linear projection. ~~Optional[int]~~                                                                                                                                           |
+| `nM`        | The width of the static vectors. ~~Optional[int]~~                                                                                                                                                                      |
 | `dropout`   | Optional dropout rate. If set, it's applied per dimension over the whole batch. Defaults to `None`. ~~Optional[float]~~                                                                                                 |
 | `init_W`    | The [initialization function](https://thinc.ai/docs/api-initializers). Defaults to [`glorot_uniform_init`](https://thinc.ai/docs/api-initializers#glorot_uniform_init). ~~Callable[[Ops, Tuple[int, ...]]], FloatsXd]~~ |
 | `key_attr`  | Defaults to `"ORTH"`. ~~str~~                                                                                                                                                                                           |
@@ -303,22 +303,23 @@ architectures into your training config.
 > stride = 96
 > ```
 
-Load and wrap a transformer model from the Huggingface transformers library.
-You can any transformer that has pretrained weights and a PyTorch
-implementation. The `name` variable is passed through to the underlying
-library, so it can be either a string or a path. If it's a string, the
-pretrained weights will be downloaded via the transformers library if they are
-not already available locally.
+Load and wrap a transformer model from the
+[HuggingFace `transformers`](https://huggingface.co/transformers) library. You
+can any transformer that has pretrained weights and a PyTorch implementation.
+The `name` variable is passed through to the underlying library, so it can be
+either a string or a path. If it's a string, the pretrained weights will be
+downloaded via the transformers library if they are not already available
+locally.
 
-In order to support longer documents, the `TransformerModel` layer allows you
-to pass in a `get_spans` function that will divide up the `Doc` objects before
-passing them through the transformer. Your spans are allowed to overlap or
-exclude tokens.
-
-This layer is usually used directly by the `Transformer` component, which
-allows you to share the transformer weights across your pipeline. For a layer
-that's configured for use in other components, see `Tok2VecTransformer`.
-
+In order to support longer documents, the
+[TransformerModel](/api/architectures#TransformerModel) layer allows you to pass
+in a `get_spans` function that will divide up the [`Doc`](/api/doc) objects
+before passing them through the transformer. Your spans are allowed to overlap
+or exclude tokens. This layer is usually used directly by the
+[`Transformer`](/api/transformer) component, which allows you to share the
+transformer weights across your pipeline. For a layer that's configured for use
+in other components, see
+[Tok2VecTransformer](/api/architectures#Tok2VecTransformer).
 
 | Name               | Description                                                                                                                                                                                                                                           |
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -559,7 +560,7 @@ network has an internal CNN Tok2Vec layer and uses attention.
 | `ngram_size`         | Determines the maximum length of the n-grams in the BOW model. For instance, `ngram_size=3`would give unigram, trigram and bigram features. ~~int~~                                                |
 | `dropout`            | The dropout rate. ~~float~~                                                                                                                                                                        |
 | `nO`                 | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `begin_training` is called. ~~Optional[int]~~ |
-| **CREATES**          | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                                                        |
+| **CREATES**          | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                                   |
 
 ### spacy.TextCatCNN.v1 {#TextCatCNN}
 
@@ -591,7 +592,7 @@ architecture is usually less accurate than the ensemble, but runs faster.
 | `exclusive_classes` | Whether or not categories are mutually exclusive. ~~bool~~                                                                                                                                         |
 | `tok2vec`           | The [`tok2vec`](#tok2vec) layer of the model. ~~Model~~                                                                                                                                            |
 | `nO`                | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `begin_training` is called. ~~Optional[int]~~ |
-| **CREATES**         | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                                                        |
+| **CREATES**         | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                                   |
 
 ### spacy.TextCatBOW.v1 {#TextCatBOW}
 
@@ -615,7 +616,7 @@ others, but may not be as accurate, especially if texts are short.
 | `ngram_size`        | Determines the maximum length of the n-grams in the BOW model. For instance, `ngram_size=3`would give unigram, trigram and bigram features. ~~int~~                                                |
 | `no_output_layer`   | Whether or not to add an output layer to the model (`Softmax` activation if `exclusive_classes` is `True`, else `Logistic`. ~~bool~~                                                               |
 | `nO`                | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `begin_training` is called. ~~Optional[int]~~ |
-| **CREATES**         | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                                                        |
+| **CREATES**         | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                                   |
 
 ## Entity linking architectures {#entitylinker source="spacy/ml/models/entity_linker.py"}
 
@@ -664,7 +665,7 @@ The `EntityLinker` model architecture is a Thinc `Model` with a
 | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `tok2vec`   | The [`tok2vec`](#tok2vec) layer of the model. ~~Model~~                                                                                                                                                                 |
 | `nO`        | Output dimension, determined by the length of the vectors encoding each entity in the KB. If the `nO` dimension is not set, the entity linking component will set it when `begin_training` is called. ~~Optional[int]~~ |
-| **CREATES** | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                                                                             |
+| **CREATES** | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                                                        |
 
 ### spacy.EmptyKB.v1 {#EmptyKB}
 
