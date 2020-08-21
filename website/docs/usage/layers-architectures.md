@@ -22,7 +22,28 @@ its model architecture. The architecture is like a recipe for the network, and
 you can't change the recipe once the dish has already been prepared. You have to
 make a new one. ​
 
+<!-- TODO: maybe we can come up with an illustration here that shows how the pieces fit together? -->
+
 ## Type signatures {#type-sigs}
+
+<!-- TODO: update example, maybe simplify definition? -->
+
+> #### Example
+>
+> ```python
+> @spacy.registry.architectures.register("spacy.Tagger.v1")
+> def build_tagger_model(
+>     tok2vec: Model[List[Doc], List[Floats2d]], nO: Optional[int] = None
+> ) -> Model[List[Doc], List[Floats2d]]:
+>     t2v_width = tok2vec.get_dim("nO") if tok2vec.has_dim("nO") else None
+>     output_layer = Softmax(nO, t2v_width, init_W=zero_init)
+>     softmax = with_array(output_layer)
+>     model = chain(tok2vec, softmax)
+>     model.set_ref("tok2vec", tok2vec)
+>     model.set_ref("softmax", output_layer)
+>     model.set_ref("output_layer", output_layer)
+>     return model
+> ```
 
 ​ The Thinc `Model` class is a **generic type** that can specify its input and
 output types. Python uses a square-bracket notation for this, so the type
@@ -43,39 +64,46 @@ are: ​
 | ~~Ragged~~         | A container to handle variable-length sequence data in an unpadded contiguous array.                 |
 | ~~Padded~~         | A container to handle variable-length sequence data in a passed contiguous array.                    |
 
-The model type-signatures help you figure out which model architectures and
-components can fit together. For instance, the
+The model type signatures help you figure out which model architectures and
+components can **fit together**. For instance, the
 [`TextCategorizer`](/api/textcategorizer) class expects a model typed
 ~~Model[List[Doc], Floats2d]~~, because the model will predict one row of
-category probabilities per `Doc`. In contrast, the `Tagger` class expects a
-model typed ~~Model[List[Doc], List[Floats2d]]~~, because it needs to predict
-one row of probabilities per token. ​ There's no guarantee that two models with
-the same type-signature can be used interchangeably. There are many other ways
-they could be incompatible. However, if the types don't match, they almost
-surely _won't_ be compatible. This little bit of validation goes a long way,
-especially if you configure your editor or other tools to highlight these errors
-early. Thinc will also verify that your types match correctly when your config
-file is processed at the beginning of training. ​
+category probabilities per [`Doc`](/api/doc). In contrast, the
+[`Tagger`](/api/tagger) class expects a model typed ~~Model[List[Doc],
+List[Floats2d]]~~, because it needs to predict one row of probabilities per
+token.
+
+There's no guarantee that two models with the same type signature can be used
+interchangeably. There are many other ways they could be incompatible. However,
+if the types don't match, they almost surely _won't_ be compatible. This little
+bit of validation goes a long way, especially if you
+[configure your editor](https://thinc.ai/docs/usage-type-checking) or other
+tools to highlight these errors early. Thinc will also verify that your types
+match correctly when your config file is processed at the beginning of training.
 
 ## Defining sublayers {#sublayers}
 
-​ Model architecture functions often accept sublayers as arguments, so that you
-can try substituting a different layer into the network. Depending on how the
-architecture function is structured, you might be able to define your network
-structure entirely through the [config system](/usage/training#config), using
-layers that have already been defined. ​The
+​ Model architecture functions often accept **sublayers as arguments**, so that
+you can try **substituting a different layer** into the network. Depending on
+how the architecture function is structured, you might be able to define your
+network structure entirely through the [config system](/usage/training#config),
+using layers that have already been defined. ​The
 [transformers documentation](/usage/embeddings-transformers#transformers)
-section shows a common example of swapping in a different sublayer. In most NLP
-neural network models, the most important parts of the network are what we refer
-to as the
+section shows a common example of swapping in a different sublayer.
+
+In most neural network models for NLP, the most important parts of the network
+are what we refer to as the
 [embed and encode](https://explosion.ai/blog/embed-encode-attend-predict) steps.
 These steps together compute dense, context-sensitive representations of the
-tokens. Most of spaCy's default architectures accept a `tok2vec` layer as an
-argument, so you can control this important part of the network separately. This
-makes it easy to switch between transformer, CNN, BiLSTM or other feature
-extraction approaches. And if you want to define your own solution, all you need
-to do is register a ~~Model[List[Doc], List[Floats2d]]~~ architecture function,
-and you'll be able to try it out in any of spaCy components. ​
+tokens. Most of spaCy's default architectures accept a
+[`tok2vec` embedding layer](/api/architectures#tok2vec-arch) as an argument, so
+you can control this important part of the network separately. This makes it
+easy to **switch between** transformer, CNN, BiLSTM or other feature extraction
+approaches. And if you want to define your own solution, all you need to do is
+register a ~~Model[List[Doc], List[Floats2d]]~~ architecture function, and
+you'll be able to try it out in any of spaCy components. ​
+
+<!-- TODO: example of switching sublayers -->
 
 ### Registering new architectures
 
