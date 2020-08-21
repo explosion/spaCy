@@ -1,14 +1,13 @@
-from typing import Optional, List
+from typing import Optional, List, Dict
 import os
 import site
 import hashlib
 import urllib.parse
-from urllib.parse import urljoin
 from pathlib import Path
 from pathy import Pathy
 from tarfile import TarFile
-from .._util import get_hash
-from .._util import upload_file
+from .._util import get_hash, get_checksum
+from .._util import upload_file, download_file
 from ...util import make_tempdir
 
 
@@ -50,17 +49,25 @@ class RemoteStorage:
                     output_file.write(input_file.read())
         return url
 
-    def pull(self, path: Path, creation_hash: Optional[str], content_hash: Optional[str]) -> Path:
+    def pull(
+        self, path: Path,
+        *,
+        creation_hash: Optional[str],
+        content_hash: Optional[str]
+    ) -> Optional[Pathy]:
         """Retrieve a file from the remote cache. If the file already exists,
         nothing is done.
 
         If the creation_hash and/or content_hash are specified, only matching
         results are returned. If no results are available, an error is raised.
         """
-        loc = self.root / path
-        if loc.exists():
-            return loc
-        return loc
+        dest = self.root / path
+        if dest.exists():
+            return None
+        url = self.find(path, creation_hash=creation_hash, content_hash=content_hash)
+        if url is not None:
+            download_file(url, dest)
+        return url
 
     def find(
         self,
@@ -91,3 +98,47 @@ class RemoteStorage:
 
     def encode_name(self, name: str) -> str:
         return urllib.parse.quote_plus(name)
+
+
+def get_command_hash(site_hash: str, env_hash: str, deps: List[Path], cmd: str) -> str:
+    """Create a hash representing the execution of a command. This includes the
+    currently installed packages, whatever environment variables have been marked
+    as relevant, and the command.
+    """
+    hashes = [site_hash, env_hash] + [get_checksum(dep) for dep in sorted(deps)]
+    creation_bytes = "".join(hashes).encode("utf8")
+    return hashlib.md5(creation_bytes).hexdigest()
+
+
+def get_site_hash():
+    """Hash the current Python environment's site-packages contents, including
+    the name and version of the libraries. The list we're hashing is what
+    `pip freeze` would output.
+    """
+    site_dirs = site.getsitepackages()
+    if site.ENABLE_USER_SITE:
+        site_dirs.extend(site.getusersitepackages())
+    packages = set()
+    for site_dir in site_dirs:
+        site_dir = Path(site_dir)
+        for subpath in site_dir.iterdir():
+            if subpath.parts[-1].endswith("dist-info"):
+                packages.add(subpath.parts[-1].replace(".dist-info", ""))
+    package_bytes = "".join(sorted(packages)).encode("utf8")
+    return hashlib.md5sum(package_bytes).hexdigest()
+
+
+def get_env_hash(env: Dict[str, str]) -> str:
+    """Construct a hash of the environment variables that will be passed into
+    the commands.
+
+    Values in the env dict may be references to the current os.environ, using
+    the syntax $ENV_VAR to mean os.environ[ENV_VAR]
+    """
+    env_vars = {}
+    for key, value in env.items():
+        if value.startswith("$"):
+            env_vars[key] = os.environ.get(value[1:], "")
+        else:
+            env_vars[key] = value
+    return get_hash(env_vars)
