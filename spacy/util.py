@@ -610,7 +610,7 @@ def working_dir(path: Union[str, Path]) -> None:
 
 
 @contextmanager
-def make_tempdir() -> Generator[Path]:
+def make_tempdir() -> Generator[Path, None, None]:
     """Execute a block in a temporary directory and remove the directory and
     its contents at the end of the with block.
 
