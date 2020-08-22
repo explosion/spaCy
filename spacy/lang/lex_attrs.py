@@ -23,7 +23,7 @@ _tlds = set(
     "ug|uk|us|uy|uz|va|vc|ve|vg|vi|vn|vu|wf|ws|ye|yt|za|zm|zw".split("|")
 )
 
-_short_human_number = re.compile(r'([1-9]|[1-9][0-9]|[1-9][1-9][0-9])(K|M|G)$')
+_short_human_number = re.compile(r'([1-9]|[1-9][0-9]|[1-9][1-9][0-9])(K|M|G)$')  # 1K - 999K / 1M - 999M / 1G - 999G
 
 def is_punct(text):
     for char in text:
@@ -46,7 +46,7 @@ def like_num(text):
     text = text.replace(",", "").replace(".", "")
     if text.isdigit():
         return True
-    if _short_human_number.match(text):  # 1K - 999K / 1M - 999M / 1G - 999G
+    if _short_human_number.match(text):
         return True
     if text.count("/") == 1:
         num, denom = text.split("/")

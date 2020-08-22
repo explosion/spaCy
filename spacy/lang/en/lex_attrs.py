@@ -1,7 +1,10 @@
 # coding: utf8
 from __future__ import unicode_literals
+import re
 
 from ...attrs import LIKE_NUM
+
+_short_human_number = re.compile(r'([1-9]|[1-9][0-9]|[1-9][1-9][0-9])(K|M|G)$')  # 1K - 999K / 1M - 999M / 1G - 999G
 
 
 _num_words = [
@@ -92,7 +95,9 @@ def like_num(text):
         num, denom = text.split("/")
         if num.isdigit() and denom.isdigit():
             return True
-    
+    if _short_human_number.match(text):
+        return True
+
     text_lower = text.lower()
     if text_lower in _num_words:
         return True
