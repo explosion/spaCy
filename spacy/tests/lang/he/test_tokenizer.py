@@ -60,14 +60,6 @@ def test_he_tokenizer_handles_punct(he_tokenizer, text, expected_tokens):
         ("כלב", False),
         (",", False),
         ("1/2", True),
-        # ("1M", True),
-        # ("1K", True),
-        # ("989K", True),
-        # ("1000K", False),
-        # ("1090M", False),
-        # ("M", False),
-        # ("1.4M", True),
-        # ("10.5K", True),
     ],
 )
 def test_lex_attrs_like_number(he_tokenizer, text, match):
@@ -85,7 +77,6 @@ def test_lex_attrs_like_number(he_tokenizer, text, match):
         "מאה",
         "עשר",
         "אחד עשר",
-        "10.5K",
     ]
 )
 def test_he_lex_attrs_like_number_for_ordinal(word):

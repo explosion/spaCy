@@ -2,8 +2,6 @@
 from __future__ import unicode_literals
 
 from ...attrs import LIKE_NUM
-import re
-_short_human_number = re.compile(r'([1-9]|[1-9][0-9]|[1-9][1-9][0-9])(K|M|G)$')  # 1K - 999K / 1M - 999M / 1G - 999G
 
 _num_words = [
     "אפס",
@@ -80,8 +78,6 @@ def like_num(text):
         text = text[1:]
     text = text.replace(",", "").replace(".", "")
     if text.isdigit():
-        return True
-    if _short_human_number.match(text):
         return True
 
     if text.count("/") == 1:

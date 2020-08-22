@@ -53,14 +53,6 @@ def test_en_tokenizer_handles_cnts(en_tokenizer, text, length):
         ("dog", False),
         (",", False),
         ("1/2", True),
-        ("1M", True),
-        ("1K", True),
-        ("989K", True),
-        ("1000K", False),
-        ("1090M", False),
-        ("M", False),
-        # ("1.4M", True),
-        # ("10.5K", True),
     ],
 )
 def test_lex_attrs_like_number(en_tokenizer, text, match):
@@ -76,8 +68,6 @@ def test_lex_attrs_like_number(en_tokenizer, text, match):
         "Millionth",
         "100th",
         "Hundredth",
-        "10.5K",
-        "10.5M",
     ]
 )
 def test_en_lex_attrs_like_number_for_ordinal(word):
