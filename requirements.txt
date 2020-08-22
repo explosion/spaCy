@@ -9,6 +9,7 @@ wasabi>=0.7.1,<1.1.0
 srsly>=2.1.0,<3.0.0
 catalogue>=0.0.7,<1.1.0
 typer>=0.3.0,<0.4.0
+pathy
 # Third party dependencies
 numpy>=1.15.0
 requests>=2.13.0,<3.0.0
