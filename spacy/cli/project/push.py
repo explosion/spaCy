@@ -1,7 +1,8 @@
 from pathlib import Path
-from .remote_cache import RemoteStorage
+from .remote_storage import RemoteStorage
 from .remote_storage import get_content_hash, get_command_hash
-from .._util import project_cli, load_project_config, Arg
+from .._util import load_project_config, substitute_project_variables
+from .._util import project_cli, Arg
 
 
 @project_cli.command("push")
@@ -23,18 +24,21 @@ def project_push(project_dir: Path, remote: str):
     by mapping them to storage paths. A storage can be anything that the smart-open
     library can upload to, e.g. gcs, aws, ssh, local directories etc
     """
-    config = load_project_config(project_dir)
+    config = substitute_project_variables(load_project_config(project_dir))
     if remote in config.get("remotes", {}):
         remote = config["remotes"][remote]
     storage = RemoteStorage(project_dir, remote)
     for cmd in config.get("commands", []):
         cmd_hash = get_command_hash(
+            "",
+            "",
             [project_dir / dep for dep in cmd.get("deps", [])],
             cmd["script"]
         )
         for output_path in cmd.get("outputs", []):
             output_loc = project_dir / output_path
             if output_loc.exists():
+                print("Pushing", output_loc)
                 storage.push(
                     output_path,
                     command_hash=cmd_hash,
