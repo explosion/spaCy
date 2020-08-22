@@ -9,11 +9,24 @@ menu:
 next: /usage/training
 ---
 
-<!-- TODO: intro, short explanation of embeddings/transformers, Tok2Vec and Transformer components, point user to processing pipelines docs for more general info that user should know first -->
+spaCy supports a number of transfer and multi-task learning workflows that can
+often help improve your pipeline's efficiency or accuracy. Transfer learning 
+refers to techniques such as word vector tables and language model pretraining.
+These techniques can be used to import knowledge from raw text into your
+pipeline, so that your models are able to generalize better from your
+annotated examples.
 
-If you're looking for details on using word vectors and semantic similarity,
-check out the
-[linguistic features docs](/usage/linguistic-features#vectors-similarity).
+You can convert word vectors from popular tools like FastText and Gensim, or
+you can load in any pretrained transformer model if you install our
+`spacy-transformers` integration. You can also do your own language model pretraining
+via the `spacy pretrain` command. You can even share your transformer or other
+contextual embedding model across multiple components, which can make long
+pipelines several times more efficient.
+
+In order to use transfer learning, you'll need to have at least a few annotated
+examples for all of the classes you're trying to predict. If you don't, you
+could try using a "one-shot learning" approach using 
+[vectors and similarity](/usage/linguistic-features#vectors-similarity).
 
 <Accordion title="What’s the difference between word vectors and language models?" id="vectors-vs-language-models">
 
@@ -57,19 +70,47 @@ of performance.
 
 ## Shared embedding layers {#embedding-layers}
 
-<!-- TODO: write -->
+You can share a single token-to-vector embedding model between multiple
+components using the `Tok2Vec` component. Other components in
+your pipeline can "connect" to the `Tok2Vec` component by including a _listener layer_
+within their model. At the beginning of training, the `Tok2Vec` component will
+grab a reference to the relevant listener layers in the rest of your pipeline.
+Then, when the `Tok2Vec` component processes a batch of documents, it will pass
+forward its predictions to the listeners, allowing the listeners to reuse the
+predictions when they are eventually called. A similar mechanism is used to
+pass gradients from the listeners back to the `Tok2Vec` model. The
+`Transformer` component and `TransformerListener` layer do the same thing for
+transformer models, making it easy to share a single transformer model across
+your whole pipeline.
+
+Training a single transformer or other embedding layer for use with multiple
+components is termed _multi-task learning_. Multi-task learning is sometimes
+less consistent, and the results are generally harder to reason about (as there's
+more going on). You'll usually want to compare your accuracy against a single-task
+approach to understand whether the weight-sharing is impacting your accuracy,
+and whether you can address the problem by adjusting the hyper-parameters. We
+are not currently aware of any foolproof recipe.
+
+The main disadvantage of sharing weights between components is flexibility.
+If your components are independent, you can train pipelines separately and
+merge them together much more easily. Shared weights also make it more
+difficult to resume training of only part of your pipeline. If you train only
+part of your pipeline, you risk hurting the accuracy of the other components,
+as you'll be changing the shared embedding layer those components are relying
+on. <!-- TODO: Once rehearsal is tested, mention it here. -->
+
 
 ![Pipeline components using a shared embedding component vs. independent embedding layers](../images/tok2vec.svg)
 
 | Shared                                                                                      | Independent                                                             |
 | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
 | ✅ **smaller:** models only need to include a single copy of the embeddings                 | ❌ **larger:** models need to include the embeddings for each component |
-| ✅ **faster:**                                                                              | ❌ **slower:**                                                          |
+| ✅ **faster:** embed the documents once for your whole pipeline                             | ❌ **slower:** rerun the embedding for each component                   |
 | ❌ **less composable:** all components require the same embedding component in the pipeline | ✅ **modular:** components can be moved and swapped freely              |
+| ?? **accuracy:** weight sharing may increase or decrease accuracy, depending on your task and data, but usually the impact is small                                   |
 
 ![Pipeline components listening to shared embedding component](../images/tok2vec-listener.svg)
 
-<!-- TODO: explain the listener concept, how it works etc. -->
 
 ## Using transformer models {#transformers}
 
