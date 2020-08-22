@@ -71,10 +71,10 @@ of performance.
 ## Shared embedding layers {#embedding-layers}
 
 spaCy lets you share a single transformer or other token-to-vector ("tok2vec")
-embedding layer  between multiple components. You can even update the shared layer,
-performing **multi-task learning**. Reusing the tok2vec layer between components
-can make your pipeline run a lot faster and result in much
-smaller models. However, it can make the pipeline less modular and make it more
+embedding layer between multiple components. You can even update the shared
+layer, performing **multi-task learning**. Reusing the tok2vec layer between
+components can make your pipeline run a lot faster and result in much smaller
+models. However, it can make the pipeline less modular and make it more
 difficult to swap components or retrain parts of the pipeline. Multi-task
 learning can affect your accuracy (either positively or negatively), and may
 require some retuning of your hyper-parameters.
@@ -87,11 +87,11 @@ require some retuning of your hyper-parameters.
 | ✅ **faster:** embed the documents once for your whole pipeline                             | ❌ **slower:** rerun the embedding for each component                   |
 | ❌ **less composable:** all components require the same embedding component in the pipeline | ✅ **modular:** components can be moved and swapped freely              |
 
-You can share a single transformer or other tok2vec model between multiple components
-by adding a [`Transformer`](/api/transformer) or [`Tok2Vec`](/api/tok2vec) component
-near the start of your pipeline. Components later in the pipeline can "connect"
-to it by including a **listener layer** like [Tok2VecListener](/api/architectures#Tok2VecListener)
-within their model. 
+You can share a single transformer or other tok2vec model between multiple
+components by adding a [`Transformer`](/api/transformer) or
+[`Tok2Vec`](/api/tok2vec) component near the start of your pipeline. Components
+later in the pipeline can "connect" to it by including a **listener layer** like
+[Tok2VecListener](/api/architectures#Tok2VecListener) within their model.
 
 ![Pipeline components listening to shared embedding component](../images/tok2vec-listener.svg)
 
@@ -102,9 +102,10 @@ listeners, allowing the listeners to **reuse the predictions** when they are
 eventually called. A similar mechanism is used to pass gradients from the
 listeners back to the model. The [`Transformer`](/api/transformer) component and
 [TransformerListener](/api/architectures#TransformerListener) layer do the same
-thing for transformer models, but the `Transformer` component will also save the 
-transformer outputs to the `doc._.trf_data` extension attribute, giving you
-access to them after the pipeline has finished running.
+thing for transformer models, but the `Transformer` component will also save the
+transformer outputs to the
+[`Doc._.trf_data`](/api/transformer#custom_attributes) extension attribute,
+giving you access to them after the pipeline has finished running.
 
 <!-- TODO: show example of implementation via config, side by side -->
 

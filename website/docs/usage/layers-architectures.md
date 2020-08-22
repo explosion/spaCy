@@ -170,3 +170,16 @@ to the host device unnecessarily.
 - Interaction with `predict`, `get_loss` and `set_annotations`
 - Initialization life-cycle with `begin_training`.
 - Link to relation extraction notebook.
+
+```python
+def update(self, examples):
+    docs = [ex.predicted for ex in examples]
+    refs = [ex.reference for ex in examples]
+    predictions, backprop = self.model.begin_update(docs)
+    gradient = self.get_loss(predictions, refs)
+    backprop(gradient)
+
+def __call__(self, doc):
+    predictions = self.model([doc])
+    self.set_annotations(predictions)
+```
