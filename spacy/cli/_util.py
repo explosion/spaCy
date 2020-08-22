@@ -122,6 +122,20 @@ def load_project_config(path: Path) -> Dict[str, Any]:
     return config
 
 
+def substitute_project_variables(config: Dict[str, Any], overrides: Dict={}):
+    config.setdefault("variables", {})
+    config["variables"].update(overrides)
+    variables = config["variables"]
+    for asset in config.get("assets", []):
+        asset["dest"] = asset["dest"].format(**variables)
+        asset["url"] = asset["url"].format(**variables)
+    for command in config.get("commands", []):
+        for field in ["script", "deps", "outputs_no_cache", "outputs"]:
+            for i, line in enumerate(command.get(field, [])):
+                command[field][i] = line.format(**variables)
+    return config
+
+
 def validate_project_commands(config: Dict[str, Any]) -> None:
     """Check that project commands and workflows are valid, don't contain
     duplicates, don't clash  and only refer to commands that exist.
