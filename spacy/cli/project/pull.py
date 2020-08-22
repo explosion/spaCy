@@ -1,5 +1,7 @@
+from pathlib import Path
 from ..remote_cache import RemoteStorage
-from ..remote_cache import get_site_hash, get_env_hash, get_command_hash
+from ..remote_cache import get_command_hash
+from .._util import project_cli, load_project_config, Arg
 
 
 @project_cli.command("pull")
@@ -22,12 +24,10 @@ def project_pull(project_dir: Path, remote: str):
     if remote in config.get("remotes", {}):
         remote = config["remotes"][remote]
     storage = RemoteStorage(project_dir, remote)
-    site_hash = get_site_hash()
-    env_hash = get_env_hash(config.get("env", {}))
     for cmd in config.get("commands", []):
         deps = [project_dir / dep for dep in cmd.get("deps", [])]
-        cmd_hash = get_command_hash(site_hash, env_hash, deps, cmd["script"])
+        cmd_hash = get_command_hash(deps, cmd["script"])
         for output_path in cmd.get("outputs", []):
-            url = storage.pull(output_path, command_hash=command_hash)
+            url = storage.pull(output_path, command_hash=cmd_hash)
             if url is not None:
                 print(f"Pulled {output_path} from {url}")
