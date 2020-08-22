@@ -60,18 +60,18 @@ def test_he_tokenizer_handles_punct(he_tokenizer, text, expected_tokens):
         ("כלב", False),
         (",", False),
         ("1/2", True),
-        ("1M", True),
-        ("1K", True),
-        ("989K", True),
-        ("1000K", False),
-        ("1090M", False),
-        ("M", False),
+        # ("1M", True),
+        # ("1K", True),
+        # ("989K", True),
+        # ("1000K", False),
+        # ("1090M", False),
+        # ("M", False),
         # ("1.4M", True),
         # ("10.5K", True),
     ],
 )
-def test_lex_attrs_like_number(en_tokenizer, text, match):
-    tokens = en_tokenizer(text)
+def test_lex_attrs_like_number(he_tokenizer, text, match):
+    tokens = he_tokenizer(text)
     assert len(tokens) == 1
     assert tokens[0].like_num == match
 
