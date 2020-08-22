@@ -11,9 +11,17 @@ menu:
   - ['Entity Linking', 'entitylinker']
 ---
 
-TODO: intro and how architectures work, link to
-[`registry`](/api/top-level#registry),
-[custom functions](/usage/training#custom-functions) usage etc.
+A **model architecture** is a function that wires up a
+[`Model`](https://thinc.ai/docs/api-model) instance, which you can then use in a
+pipeline component or as a layer of a larger network. This page documents
+spaCy's built-in architectures that are used for different NLP tasks. All
+trainable [built-in components](/api#architecture-pipeline) expect a `model`
+argument defined in the config and document their the default architecture.
+Custom architectures can be registered using the
+[`@spacy.registry.architectures`](/api/top-level#regsitry) decorator and used as
+part of the [training config](/usage/training#custom-functions). Also see the
+usage documentation on
+[layers and model architectures](/usage/layers-architectures).
 
 ## Tok2Vec architectures {#tok2vec-arch source="spacy/ml/models/tok2vec.py"}
 
@@ -284,8 +292,18 @@ on [static vectors](/usage/embeddings-transformers#static-vectors) for details.
 
 The following architectures are provided by the package
 [`spacy-transformers`](https://github.com/explosion/spacy-transformers). See the
-[usage documentation](/usage/embeddings-transformers) for how to integrate the
-architectures into your training config.
+[usage documentation](/usage/embeddings-transformers#transformers) for how to
+integrate the architectures into your training config.
+
+<Infobox variant="warning">
+
+Note that in order to use these architectures in your config, you need to
+install the
+[`spacy-transformers`](https://github.com/explosion/spacy-transformers). See the
+[installation docs](/usage/embeddings-transformers#transformers-installation)
+for details and system requirements.
+
+</Infobox>
 
 ### spacy-transformers.TransformerModel.v1 {#TransformerModel}
 

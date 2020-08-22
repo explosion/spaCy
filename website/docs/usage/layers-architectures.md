@@ -9,7 +9,7 @@ menu:
 next: /usage/projects
 ---
 
-​ A **model architecture** is a function that wires up a
+​A **model architecture** is a function that wires up a
 [Thinc `Model`](https://thinc.ai/docs/api-model) instance, which you can then
 use in a component or as a layer of a larger network. You can use Thinc as a
 thin wrapper around frameworks such as PyTorch, TensorFlow or MXNet, or you can

@@ -6,8 +6,7 @@ menu:
   - ['Quickstart', 'quickstart']
   - ['Config System', 'config']
   - ['Custom Functions', 'custom-functions']
-  - ['Transfer Learning', 'transfer-learning']
-  - ['Parallel Training', 'parallel-training']
+  #   - ['Parallel Training', 'parallel-training']
   - ['Internal API', 'api']
 ---
 
@@ -91,16 +90,6 @@ spaCy's binary `.spacy` format. You can either include the data paths in the
 ```cli
 $ python -m spacy train config.cfg --output ./output --paths.train ./train.spacy --paths.dev ./dev.spacy
 ```
-
-<!-- TODO:
-<Project id="some_example_project">
-
-The easiest way to get started with an end-to-end training process is to clone a
-[project](/usage/projects) template. Projects let you manage multi-step
-workflows, from data preprocessing to training and packaging your model.
-
-</Project>
--->
 
 ## Training config {#config}
 
@@ -400,13 +389,11 @@ recipe once the dish has already been prepared. You have to make a new one.
 spaCy includes a variety of built-in [architectures](/api/architectures) for
 different tasks. For example:
 
-<!-- TODO: model return types -->
-
 | Architecture                                                      | Description                                                                                                                                                                                                                                               |
 | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [HashEmbedCNN](/api/architectures#HashEmbedCNN)                   | Build spaCy’s "standard" embedding layer, which uses hash embedding with subword features and a CNN with layer-normalized maxout. ~~Model[List[Doc], List[Floats2d]]~~                                                                                    |
 | [TransitionBasedParser](/api/architectures#TransitionBasedParser) | Build a [transition-based parser](https://explosion.ai/blog/parsing-english-in-python) model used in the default [`EntityRecognizer`](/api/entityrecognizer) and [`DependencyParser`](/api/dependencyparser). ~~Model[List[Docs], List[List[Floats2d]]]~~ |
-| [TextCatEnsemble](/api/architectures#TextCatEnsemble)             | Stacked ensemble of a bag-of-words model and a neural network model with an internal CNN embedding layer. Used in the default [`TextCategorizer`](/api/textcategorizer). ~~Model~~                                                                        |
+| [TextCatEnsemble](/api/architectures#TextCatEnsemble)             | Stacked ensemble of a bag-of-words model and a neural network model with an internal CNN embedding layer. Used in the default [`TextCategorizer`](/api/textcategorizer). ~~Model[List[Doc], Floats2d]~~                                                   |
 
 <!-- TODO: link to not yet existing usage page on custom architectures etc. -->
 
@@ -755,70 +742,9 @@ def filter_batch(size: int) -> Callable[[Iterable[Example]], Iterator[List[Examp
     return create_filtered_batches
 ```
 
-<!-- TODO:
-
-<Project id="example_pytorch_model">
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus interdum
-sodales lectus, ut sodales orci ullamcorper id. Sed condimentum neque ut erat
-mattis pretium.
-
-</Project>
-
- -->
-
 ### Defining custom architectures {#custom-architectures}
 
 <!-- TODO: this should probably move to new section on models -->
-
-## Transfer learning {#transfer-learning}
-
-<!-- TODO: write something, link to embeddings and transformers page – should probably wait until transformers/embeddings/transfer learning docs are done -->
-
-### Using transformer models like BERT {#transformers}
-
-spaCy v3.0 lets you use almost any statistical model to power your pipeline. You
-can use models implemented in a variety of frameworks. A transformer model is
-just a statistical model, so the
-[`spacy-transformers`](https://github.com/explosion/spacy-transformers) package
-actually has very little work to do: it just has to provide a few functions that
-do the required plumbing. It also provides a pipeline component,
-[`Transformer`](/api/transformer), that lets you do multi-task learning and lets
-you save the transformer outputs for later use.
-
-<!-- TODO:
-
-<Project id="en_core_trf_lg">
-
-Try out a BERT-based model pipeline using this project template: swap in your
-data, edit the settings and hyperparameters and train, evaluate, package and
-visualize your model.
-
-</Project>
--->
-
-For more details on how to integrate transformer models into your training
-config and customize the implementations, see the usage guide on
-[training transformers](/usage/embeddings-transformers#transformers-training).
-
-### Pretraining with spaCy {#pretraining}
-
-<!-- TODO: document spacy pretrain, objectives etc. – should probably wait until transformers/embeddings/transfer learning docs are done -->
-
-## Parallel Training with Ray {#parallel-training}
-
-<!-- TODO:
-
-
-<Project id="some_example_project">
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus interdum
-sodales lectus, ut sodales orci ullamcorper id. Sed condimentum neque ut erat
-mattis pretium.
-
-</Project>
-
--->
 
 ## Internal training API {#api}
 
@@ -880,8 +806,8 @@ example = Example.from_dict(predicted, {"tags": tags})
 Here's another example that shows how to define gold-standard named entities.
 The letters added before the labels refer to the tags of the
 [BILUO scheme](/usage/linguistic-features#updating-biluo) – `O` is a token
-outside an entity, `U` a single entity unit, `B` the beginning of an entity,
-`I` a token inside an entity and `L` the last token of an entity.
+outside an entity, `U` a single entity unit, `B` the beginning of an entity, `I`
+a token inside an entity and `L` the last token of an entity.
 
 ```python
 doc = Doc(nlp.vocab, words=["Facebook", "released", "React", "in", "2014"])
