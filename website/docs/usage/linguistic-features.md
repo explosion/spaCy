@@ -1550,7 +1550,7 @@ import Vectors101 from 'usage/101/\_vectors-similarity.md'
 ### Adding word vectors {#adding-vectors}
 
 Custom word vectors can be trained using a number of open-source libraries, such
-as [Gensim](https://radimrehurek.com/gensim), [Fast Text](https://fasttext.cc),
+as [Gensim](https://radimrehurek.com/gensim), [FastText](https://fasttext.cc),
 or Tomas Mikolov's original
 [Word2vec implementation](https://code.google.com/archive/p/word2vec/). Most
 word vector libraries output an easy-to-read text-based format, where each line
