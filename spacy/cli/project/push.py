@@ -1,4 +1,5 @@
 from pathlib import Path
+from wasabi import msg
 from .remote_storage import RemoteStorage
 from .remote_storage import get_content_hash, get_command_hash
 from .._util import load_project_config, substitute_project_variables
@@ -16,7 +17,11 @@ def project_push_cli(
     by mapping them to storage paths. A storage can be anything that the smart-open
     library can upload to, e.g. gcs, aws, ssh, local directories etc
     """
-    project_push(project_dir, remote)
+    for output_path, url in project_push(project_dir, remote):
+        if url is None:
+            msg.info(f"Skipping {output_path}")
+        else:
+            msg.good(f"Pushed {output_path} to {url}")
 
 
 def project_push(project_dir: Path, remote: str):
@@ -38,9 +43,9 @@ def project_push(project_dir: Path, remote: str):
         for output_path in cmd.get("outputs", []):
             output_loc = project_dir / output_path
             if output_loc.exists():
-                print("Pushing", output_loc)
-                storage.push(
+                url = storage.push(
                     output_path,
                     command_hash=cmd_hash,
                     content_hash=get_content_hash(output_loc)
                 )
+                yield output_path, url

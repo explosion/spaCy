@@ -19,7 +19,8 @@ def project_pull_cli(
     gcs, aws, ssh, local directories etc
     """
     for url, output_path in project_pull(project_dir, remote):
-        msg.good(f"Pulled {output_path} from {url}")
+        if url is not None:
+            msg.good(f"Pulled {output_path} from {url}")
 
 
 def project_pull(project_dir: Path, remote: str, *, verbose: bool=False):
@@ -32,5 +33,4 @@ def project_pull(project_dir: Path, remote: str, *, verbose: bool=False):
         cmd_hash = get_command_hash("", "", deps, cmd["script"])
         for output_path in cmd.get("outputs", []):
             url = storage.pull(output_path, command_hash=cmd_hash)
-            if url is not None:
-                yield url, output_path
+            yield url, output_path

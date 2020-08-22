@@ -36,7 +36,7 @@ class RemoteStorage:
             raise IOError(f"Cannot push {loc}: does not exist.")
         url = self.make_url(path, command_hash, content_hash)
         if url.exists():
-            return url
+            return None
         tmp: Path
         with make_tempdir() as tmp:
             tar_loc = tmp / self.encode_name(str(path))
