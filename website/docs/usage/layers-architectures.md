@@ -20,9 +20,9 @@ so that it refers to a different registered function. Once the component has
 been created, its model instance has already been assigned, so you cannot change
 its model architecture. The architecture is like a recipe for the network, and
 you can't change the recipe once the dish has already been prepared. You have to
-make a new one. ​
+make a new one.
 
-<!-- TODO: maybe we can come up with an illustration here that shows how the pieces fit together? -->
+![Diagram of a pipeline component with its model](../images/layers-architectures.svg)
 
 ## Type signatures {#type-sigs}
 
@@ -137,9 +137,9 @@ Thinc uses a special class, [`Shim`](https://thinc.ai/docs/api-model#shim), to
 hold references to external objects. This allows each wrapper space to define a
 custom type, with whatever attributes and methods are helpful, to assist in
 managing the communication between Thinc and the external library. The
-[`Model`](/docs/api-model#model) class holds `shim` instances in a separate
-list, and communicates with the shims about updates, serialization, changes of
-device, etc.
+[`Model`](https://thinc.ai/docs/api-model#model) class holds `shim` instances in
+a separate list, and communicates with the shims about updates, serialization,
+changes of device, etc.
 
 The wrapper will receive each batch of inputs, convert them into a suitable form
 for the underlying model instance, and pass them over to the shim, which will
