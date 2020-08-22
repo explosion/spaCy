@@ -7,7 +7,7 @@ from pathlib import Path
 from pathy import Pathy
 from tarfile import TarFile
 from .._util import get_hash, get_checksum
-from .._util import upload_file, download_file
+from .._util import download_file
 from ...util import make_tempdir
 
 

@@ -1,7 +1,7 @@
 from pathlib import Path
 from .remote_cache import RemoteStorage
 from .remote_storage import get_content_hash, get_command_hash
-from .._util import project_cli, Arg
+from .._util import project_cli, load_project_config, Arg
 
 
 @project_cli.command("push")
