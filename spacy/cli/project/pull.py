@@ -1,7 +1,8 @@
 from pathlib import Path
-from ..remote_cache import RemoteStorage
-from ..remote_cache import get_command_hash
-from .._util import project_cli, load_project_config, Arg
+from .remote_storage import RemoteStorage
+from .remote_storage import get_command_hash
+from .._util import project_cli, Arg
+from .._util import load_project_config, substitute_project_variables
 
 
 @project_cli.command("pull")
@@ -20,13 +21,13 @@ def project_pull_cli(
 
 
 def project_pull(project_dir: Path, remote: str):
-    config = load_project_config(project_dir)
+    config = substitute_project_variables(load_project_config(project_dir))
     if remote in config.get("remotes", {}):
         remote = config["remotes"][remote]
     storage = RemoteStorage(project_dir, remote)
     for cmd in config.get("commands", []):
         deps = [project_dir / dep for dep in cmd.get("deps", [])]
-        cmd_hash = get_command_hash(deps, cmd["script"])
+        cmd_hash = get_command_hash("", "", deps, cmd["script"])
         for output_path in cmd.get("outputs", []):
             url = storage.pull(output_path, command_hash=cmd_hash)
             if url is not None:
