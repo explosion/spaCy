@@ -5,9 +5,9 @@ import re
 import shutil
 import requests
 
-from .utils import download_file
 from ...util import ensure_path, working_dir
 from .._util import project_cli, Arg, PROJECT_FILE, load_project_config, get_checksum
+from .._util import download_file
 
 
 # TODO: find a solution for caches
