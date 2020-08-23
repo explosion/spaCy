@@ -29,6 +29,8 @@
     "Optimizer": "https://thinc.ai/docs/api-optimizers",
     "Model": "https://thinc.ai/docs/api-model",
     "Ragged": "https://thinc.ai/docs/api-types#ragged",
+    "Padded": "https://thinc.ai/docs/api-types#padded",
+    "Ints2d": "https://thinc.ai/docs/api-types#types",
     "Floats2d": "https://thinc.ai/docs/api-types#types",
     "Floats3d": "https://thinc.ai/docs/api-types#types",
     "FloatsXd": "https://thinc.ai/docs/api-types#types",

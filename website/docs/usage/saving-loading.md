@@ -243,7 +243,7 @@ file `data.json` in its subdirectory:
 ### Directory structure {highlight="2-3"}
 └── /path/to/model
     ├── my_component     # data serialized by "my_component"
-    |   └── data.json
+    │   └── data.json
     ├── ner              # data for "ner" component
     ├── parser           # data for "parser" component
     ├── tagger           # data for "tagger" component

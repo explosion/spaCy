@@ -123,7 +123,7 @@ $ python -m spacy init config [output_file] [--lang] [--pipeline] [--optimize] [
 
 | Name               | Description                                                                                                                                                                                                                                                                                                                        |
 | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `output_file`      | Path to output `.cfg` file. If not set, the config is written to stdout so you can pipe it forward to a file. ~~Path (positional)~~                                                                                                                                                                                                |
+| `output_file`      | Path to output `.cfg` file or `-` to write the config to stdout (so you can pipe it forward to a file). Note that if you're writing to stdout, no additional logging info is printed. ~~Path (positional)~~                                                                                                                        |
 | `--lang`, `-l`     | Optional code of the [language](/usage/models#languages) to use. Defaults to `"en"`. ~~str (option)~~                                                                                                                                                                                                                              |
 | `--pipeline`, `-p` | Comma-separated list of trainable [pipeline components](/usage/processing-pipelines#built-in) to include in the model. Defaults to `"tagger,parser,ner"`. ~~str (option)~~                                                                                                                                                         |
 | `--optimize`, `-o` | `"efficiency"` or `"accuracy"`. Whether to optimize for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger and slower model). This will impact the choice of architecture, pretrained weights and related hyperparameters. Defaults to `"efficiency"`. ~~str (option)~~ |
@@ -846,6 +846,92 @@ $ python -m spacy project run [subcommand] [project_dir] [--force] [--dry]
 | `--dry`, `-D`   |  Perform a dry run and don't execute scripts. ~~bool (flag)~~                           |
 | `--help`, `-h`  | Show help message and available arguments. ~~bool (flag)~~                              |
 | **EXECUTES**    | The command defined in the `project.yml`.                                               |
+
+### project push {#project-push tag="command"}
+
+Upload all available files or directories listed as in the `outputs` section of
+commands to a remote storage. Outputs are archived and compressed prior to
+upload, and addressed in the remote storage using the output's relative path
+(URL encoded), a hash of its command string and dependencies, and a hash of its
+file contents. This means `push` should **never overwrite** a file in your
+remote. If all the hashes match, the contents are the same and nothing happens.
+If the contents are different, the new version of the file is uploaded. Deleting
+obsolete files is left up to you.
+
+Remotes can be defined in the `remotes` section of the
+[`project.yml`](/usage/projects#project-yml). Under the hood, spaCy uses the
+[`smart-open`](https://github.com/RaRe-Technologies/smart_open) library to
+communicate with the remote storages, so you can use any protocol that
+`smart-open` supports, including [S3](https://aws.amazon.com/s3/),
+[Google Cloud Storage](https://cloud.google.com/storage), SSH and more, although
+you may need to install extra dependencies to use certain protocols.
+
+```cli
+$ python -m spacy project push [remote] [project_dir]
+```
+
+> #### Example
+>
+> ```cli
+> $ python -m spacy project push my_bucket
+> ```
+>
+> ```yaml
+> ### project.yml
+> remotes:
+>   my_bucket: 's3://my-spacy-bucket'
+> ```
+
+| Name           | Description                                                                             |
+| -------------- | --------------------------------------------------------------------------------------- |
+| `remote`       | The name of the remote to upload to. Defaults to `"default"`. ~~str (positional)~~      |
+| `project_dir`  | Path to project directory. Defaults to current working directory. ~~Path (positional)~~ |
+| `--help`, `-h` | Show help message and available arguments. ~~bool (flag)~~                              |
+| **UPLOADS**    | All project outputs that exist and are not already stored in the remote.                |
+
+### project pull {#project-pull tag="command"}
+
+Download all files or directories listed as `outputs` for commands, unless they
+are not already present locally. When searching for files in the remote, `pull`
+won't just look at the output path, but will also consider the **command
+string** and the **hashes of the dependencies**. For instance, let's say you've
+previously pushed a model checkpoint to the remote, but now you've changed some
+hyper-parameters. Because you've changed the inputs to the command, if you run
+`pull`, you won't retrieve the stale result. If you train your model and push
+the outputs to the remote, the outputs will be saved alongside the prior
+outputs, so if you change the config back, you'll be able to fetch back the
+result.
+
+Remotes can be defined in the `remotes` section of the
+[`project.yml`](/usage/projects#project-yml). Under the hood, spaCy uses the
+[`smart-open`](https://github.com/RaRe-Technologies/smart_open) library to
+communicate with the remote storages, so you can use any protocol that
+`smart-open` supports, including [S3](https://aws.amazon.com/s3/),
+[Google Cloud Storage](https://cloud.google.com/storage), SSH and more, although
+you may need to install extra dependencies to use certain protocols.
+
+```cli
+$ python -m spacy project pull [remote] [project_dir]
+```
+
+> #### Example
+>
+> ```cli
+> $ python -m spacy project pull my_bucket
+> ```
+>
+> ```yaml
+> ### project.yml
+> remotes:
+>   my_bucket: 's3://my-spacy-bucket'
+> ```
+
+| Name           | Description                                                                             |
+| -------------- | --------------------------------------------------------------------------------------- |
+| `remote`       | The name of the remote to download from. Defaults to `"default"`. ~~str (positional)~~  |
+| `project_dir`  | Path to project directory. Defaults to current working directory. ~~Path (positional)~~ |
+| `--help`, `-h` | Show help message and available arguments. ~~bool (flag)~~                              |
+| **DOWNLOADS**  | All project outputs that do not exist locally and can be found in the remote.           |
 
 ### project dvc {#project-dvc tag="command"}
 

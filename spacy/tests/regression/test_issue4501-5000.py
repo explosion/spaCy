@@ -65,7 +65,7 @@ def test_issue4590(en_vocab):
 
 
 def test_issue4651_with_phrase_matcher_attr():
-    """Test that the EntityRuler PhraseMatcher is deserialize correctly using
+    """Test that the EntityRuler PhraseMatcher is deserialized correctly using
     the method from_disk when the EntityRuler argument phrase_matcher_attr is
     specified.
     """
@@ -87,7 +87,7 @@ def test_issue4651_with_phrase_matcher_attr():
 
 
 def test_issue4651_without_phrase_matcher_attr():
-    """Test that the EntityRuler PhraseMatcher is deserialize correctly using
+    """Test that the EntityRuler PhraseMatcher is deserialized correctly using
     the method from_disk when the EntityRuler argument phrase_matcher_attr is
     not specified.
     """

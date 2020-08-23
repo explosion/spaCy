@@ -4,10 +4,10 @@ from wasabi import msg
 import re
 import shutil
 import requests
-import smart_open
 
 from ...util import ensure_path, working_dir
 from .._util import project_cli, Arg, PROJECT_FILE, load_project_config, get_checksum
+from .._util import download_file
 
 
 # TODO: find a solution for caches
@@ -44,16 +44,14 @@ def project_assets(project_dir: Path) -> None:
     if not assets:
         msg.warn(f"No assets specified in {PROJECT_FILE}", exits=0)
     msg.info(f"Fetching {len(assets)} asset(s)")
-    variables = config.get("variables", {})
     for asset in assets:
-        dest = asset["dest"].format(**variables)
+        dest = asset["dest"]
         url = asset.get("url")
         checksum = asset.get("checksum")
         if not url:
             # project.yml defines asset without URL that the user has to place
             check_private_asset(dest, checksum)
             continue
-        url = url.format(**variables)
         fetch_asset(project_path, url, dest, checksum)
 
 
@@ -132,15 +130,3 @@ def convert_asset_url(url: str) -> str:
         )
         return converted
     return url
-
-
-def download_file(url: str, dest: Path, chunk_size: int = 1024) -> None:
-    """Download a file using smart_open.
-
-    url (str): The URL of the file.
-    dest (Path): The destination path.
-    chunk_size (int): The size of chunks to read/write.
-    """
-    with smart_open.open(url, mode="rb") as input_file:
-        with dest.open(mode="wb") as output_file:
-            output_file.write(input_file.read())

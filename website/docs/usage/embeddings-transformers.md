@@ -9,7 +9,24 @@ menu:
 next: /usage/training
 ---
 
-<!-- TODO: intro, short explanation of embeddings/transformers, Tok2Vec and Transformer components, point user to processing pipelines docs for more general info that user should know first -->
+spaCy supports a number of **transfer and multi-task learning** workflows that
+can often help improve your pipeline's efficiency or accuracy. Transfer learning
+refers to techniques such as word vector tables and language model pretraining.
+These techniques can be used to import knowledge from raw text into your
+pipeline, so that your models are able to generalize better from your annotated
+examples.
+
+You can convert **word vectors** from popular tools like
+[FastText](https://fasttext.cc) and [Gensim](https://radimrehurek.com/gensim),
+or you can load in any pretrained **transformer model** if you install
+[`spacy-transformers`](https://github.com/explosion/spacy-transformers). You can
+also do your own language model pretraining via the
+[`spacy pretrain`](/api/cli#pretrain) command. You can even **share** your
+transformer or other contextual embedding model across multiple components,
+which can make long pipelines several times more efficient. To use transfer
+learning, you'll need at least a few annotated examples for what you're trying
+to predict. Otherwise, you could try using a "one-shot learning" approach using
+[vectors and similarity](/usage/linguistic-features#vectors-similarity).
 
 <Accordion title="What’s the difference between word vectors and language models?" id="vectors-vs-language-models">
 
@@ -53,19 +70,46 @@ of performance.
 
 ## Shared embedding layers {#embedding-layers}
 
-<!-- TODO: write -->
+spaCy lets you share a single transformer or other token-to-vector ("tok2vec")
+embedding layer between multiple components. You can even update the shared
+layer, performing **multi-task learning**. Reusing the tok2vec layer between
+components can make your pipeline run a lot faster and result in much smaller
+models. However, it can make the pipeline less modular and make it more
+difficult to swap components or retrain parts of the pipeline. Multi-task
+learning can affect your accuracy (either positively or negatively), and may
+require some retuning of your hyper-parameters.
 
 ![Pipeline components using a shared embedding component vs. independent embedding layers](../images/tok2vec.svg)
 
 | Shared                                                                                      | Independent                                                             |
 | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
 | ✅ **smaller:** models only need to include a single copy of the embeddings                 | ❌ **larger:** models need to include the embeddings for each component |
-| ✅ **faster:**                                                                              | ❌ **slower:**                                                          |
+| ✅ **faster:** embed the documents once for your whole pipeline                             | ❌ **slower:** rerun the embedding for each component                   |
 | ❌ **less composable:** all components require the same embedding component in the pipeline | ✅ **modular:** components can be moved and swapped freely              |
+
+You can share a single transformer or other tok2vec model between multiple
+components by adding a [`Transformer`](/api/transformer) or
+[`Tok2Vec`](/api/tok2vec) component near the start of your pipeline. Components
+later in the pipeline can "connect" to it by including a **listener layer** like
+[Tok2VecListener](/api/architectures#Tok2VecListener) within their model.
 
 ![Pipeline components listening to shared embedding component](../images/tok2vec-listener.svg)
 
-<!-- TODO: explain the listener concept, how it works etc. -->
+At the beginning of training, the [`Tok2Vec`](/api/tok2vec) component will grab
+a reference to the relevant listener layers in the rest of your pipeline. When
+it processes a batch of documents, it will pass forward its predictions to the
+listeners, allowing the listeners to **reuse the predictions** when they are
+eventually called. A similar mechanism is used to pass gradients from the
+listeners back to the model. The [`Transformer`](/api/transformer) component and
+[TransformerListener](/api/architectures#TransformerListener) layer do the same
+thing for transformer models, but the `Transformer` component will also save the
+transformer outputs to the
+[`Doc._.trf_data`](/api/transformer#custom_attributes) extension attribute,
+giving you access to them after the pipeline has finished running.
+
+<!-- TODO: show example of implementation via config, side by side -->
+
+<!-- TODO: Once rehearsal is tested, mention it here. -->
 
 ## Using transformer models {#transformers}
 
@@ -180,7 +224,7 @@ yourself. For details on how to get started with training your own model, check
 out the [training quickstart](/usage/training#quickstart).
 
 <!-- TODO:
-<Project id="en_core_bert">
+<Project id="en_core_trf_lg">
 
 The easiest way to get started is to clone a transformers-based project
 template. Swap in your data, edit the settings and hyperparameters and train,

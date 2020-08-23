@@ -511,21 +511,21 @@ from spacy.language import Language
 from spacy.matcher import Matcher
 from spacy.tokens import Token
 
-# We're using a component factory because the component needs to be initialized
-# with the shared vocab via the nlp object
+# We're using a component factory because the component needs to be
+# initialized with the shared vocab via the nlp object
 @Language.factory("html_merger")
 def create_bad_html_merger(nlp, name):
-    return BadHTMLMerger(nlp)
+    return BadHTMLMerger(nlp.vocab)
 
 class BadHTMLMerger:
-    def __init__(self, nlp):
+    def __init__(self, vocab):
         patterns = [
             [{"ORTH": "<"}, {"LOWER": "br"}, {"ORTH": ">"}],
             [{"ORTH": "<"}, {"LOWER": "br/"}, {"ORTH": ">"}],
         ]
         # Register a new token extension to flag bad HTML
         Token.set_extension("bad_html", default=False)
-        self.matcher = Matcher(nlp.vocab)
+        self.matcher = Matcher(vocab)
         self.matcher.add("BAD_HTML", patterns)
 
     def __call__(self, doc):

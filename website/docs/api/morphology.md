@@ -7,7 +7,7 @@ source: spacy/morphology.pyx
 Store the possible morphological analyses for a language, and index them by
 hash. To save space on each token, tokens only know the hash of their
 morphological analysis, so queries of morphological attributes are delegated to
-this class. See [`MorphAnalysis`](/api/morphology#morphansalysis) for the
+this class. See [`MorphAnalysis`](/api/morphology#morphanalysis) for the
 container storing a single morphological analysis.
 
 ## Morphology.\_\_init\_\_ {#init tag="method"}
