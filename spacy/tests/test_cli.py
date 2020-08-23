@@ -6,7 +6,8 @@ from spacy.schemas import ProjectConfigSchema, RecommendationSchema, validate
 from spacy.cli.pretrain import make_docs
 from spacy.cli.init_config import init_config, RECOMMENDATIONS
 from spacy.cli._util import validate_project_commands, parse_config_overrides
-from spacy.cli._util import load_project_config
+from spacy.cli._util import load_project_config, substitute_project_variables
+from thinc.config import ConfigValidationError
 import srsly
 
 from .util import make_tempdir
@@ -309,6 +310,10 @@ def test_project_config_interpolation():
         cfg = load_project_config(d)
     assert cfg["commands"][0]["script"][0] == "hello 10 foo"
     assert cfg["commands"][1]["script"][0] == "foo true"
+    commands = [{"name": "x", "script": ["hello ${variables.a} ${variables.b.e}"]}]
+    project = {"commands": commands, "variables": variables}
+    with pytest.raises(ConfigValidationError):
+        substitute_project_variables(project)
 
 
 @pytest.mark.parametrize(

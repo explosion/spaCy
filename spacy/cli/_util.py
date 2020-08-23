@@ -122,7 +122,9 @@ def load_project_config(path: Path, interpolate: bool = True) -> Dict[str, Any]:
         if not dir_path.exists():
             dir_path.mkdir(parents=True)
     if interpolate:
-        config = substitute_project_variables(config)
+        err = "project.yml validation error"
+        with show_validation_error(title=err, hint_fill=False):
+            config = substitute_project_variables(config)
     return config
 
 
@@ -134,7 +136,6 @@ def substitute_project_variables(config: Dict[str, Any], overrides: Dict = {}):
     # be allowed by Thinc's config system
     cfg = Config({"project": config, "variables": config["variables"]})
     interpolated = cfg.interpolate()
-    print(interpolated)
     return dict(interpolated["project"])
 
 
