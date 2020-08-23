@@ -3,7 +3,7 @@ from wasabi import msg
 from .remote_storage import RemoteStorage
 from .remote_storage import get_command_hash
 from .._util import project_cli, Arg
-from .._util import load_project_config, substitute_project_variables
+from .._util import load_project_config
 
 
 @project_cli.command("pull")
@@ -24,7 +24,7 @@ def project_pull_cli(
 
 
 def project_pull(project_dir: Path, remote: str, *, verbose: bool = False):
-    config = substitute_project_variables(load_project_config(project_dir))
+    config = load_project_config(project_dir)
     if remote in config.get("remotes", {}):
         remote = config["remotes"][remote]
     storage = RemoteStorage(project_dir, remote)

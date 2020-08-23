@@ -215,7 +215,7 @@ https://github.com/explosion/spacy-boilerplates/blob/master/ner_fashion/project.
 
 | Section       | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `variables`   | A dictionary of variables that can be referenced in paths, URLs and scripts. For example, `{NAME}` will use the value of the variable `NAME`.                                                                                                                                                                                                                                                                                                                                                                |
+| `vars`        | A dictionary of variables that can be referenced in paths, URLs and scripts, just like [`config.cfg` variables](/usage/training#config-interpolation). For example, `${vars.name}` will use the value of the variable `name`. Variables need to be defined in the section `vars`, but can be a nested dict, so you're able to reference `${vars.model.name}`.                                                                                                                                                |
 | `directories` | An optional list of [directories](#project-files) that should be created in the project for assets, training outputs, metrics etc. spaCy will make sure that these directories always exist.                                                                                                                                                                                                                                                                                                                 |
 | `assets`      | A list of assets that can be fetched with the [`project assets`](/api/cli#project-assets) command. `url` defines a URL or local path, `dest` is the destination file relative to the project directory, and an optional `checksum` ensures that an error is raised if the file's checksum doesn't match.                                                                                                                                                                                                     |
 | `workflows`   | A dictionary of workflow names, mapped to a list of command names, to execute in order. Workflows can be run with the [`project run`](/api/cli#project-run) command.                                                                                                                                                                                                                                                                                                                                         |
@@ -374,9 +374,9 @@ if __name__ == "__main__":
 
 In your `project.yml`, you can then run the script by calling
 `python scripts/custom_evaluation.py` with the function arguments. You can also
-use the `variables` section to define reusable variables that will be
-substituted in commands, paths and URLs. In this example, the `BATCH_SIZE` is
-defined as a variable will be added in place of `{BATCH_SIZE}` in the script.
+use the `vars` section to define reusable variables that will be substituted in
+commands, paths and URLs. In this example, the batch size is defined as a
+variable will be added in place of `${vars.batch_size}` in the script.
 
 > #### Calling into Python
 >
@@ -388,13 +388,13 @@ defined as a variable will be added in place of `{BATCH_SIZE}` in the script.
 <!-- prettier-ignore -->
 ```yaml
 ### project.yml
-variables:
-  BATCH_SIZE: 128
+vars:
+  batch_size: 128
 
 commands:
   - name: evaluate
     script:
-      - 'python scripts/custom_evaluation.py {BATCH_SIZE} ./training/model-best ./corpus/eval.json'
+      - 'python scripts/custom_evaluation.py ${batch_size} ./training/model-best ./corpus/eval.json'
     deps:
       - 'training/model-best'
       - 'corpus/eval.json'
@@ -650,16 +650,17 @@ and evaluation set.
 <!-- prettier-ignore -->
 ```yaml
 ### project.yml
-variables:
-  PRODIGY_DATASET: 'ner_articles'
-  PRODIGY_LABELS: 'PERSON,ORG,PRODUCT'
-  PRODIGY_MODEL: 'en_core_web_md'
+vars:
+  prodigy:
+    dataset: 'ner_articles'
+    labels: 'PERSON,ORG,PRODUCT'
+    model: 'en_core_web_md'
 
 commands:
   - name: annotate
   - script:
-      - 'python -m prodigy ner.correct {PRODIGY_DATASET} ./assets/raw_data.jsonl {PRODIGY_MODEL} --labels {PRODIGY_LABELS}'
-      - 'python -m prodigy data-to-spacy ./corpus/train.json ./corpus/eval.json --ner {PRODIGY_DATASET}'
+      - 'python -m prodigy ner.correct ${vars.prodigy.dataset} ./assets/raw_data.jsonl ${vars.prodigy.model} --labels ${vars.prodigy.labels}'
+      - 'python -m prodigy data-to-spacy ./corpus/train.json ./corpus/eval.json --ner ${vars.prodigy.dataset}'
       - 'python -m spacy convert ./corpus/train.json ./corpus/train.spacy'
       - 'python -m spacy convert ./corpus/eval.json ./corpus/eval.spacy'
   - deps:

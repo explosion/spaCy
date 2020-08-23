@@ -96,11 +96,12 @@ def parse_config_overrides(args: List[str]) -> Dict[str, Any]:
     return result
 
 
-def load_project_config(path: Path) -> Dict[str, Any]:
+def load_project_config(path: Path, interpolate: bool = True) -> Dict[str, Any]:
     """Load the project.yml file from a directory and validate it. Also make
     sure that all directories defined in the config exist.
 
     path (Path): The path to the project directory.
+    interpolate (bool): Whether to substitute project variables.
     RETURNS (Dict[str, Any]): The loaded project.yml.
     """
     config_path = path / PROJECT_FILE
@@ -120,21 +121,23 @@ def load_project_config(path: Path) -> Dict[str, Any]:
         dir_path = path / subdir
         if not dir_path.exists():
             dir_path.mkdir(parents=True)
+    if interpolate:
+        err = "project.yml validation error"
+        with show_validation_error(title=err, hint_fill=False):
+            config = substitute_project_variables(config)
     return config
 
 
 def substitute_project_variables(config: Dict[str, Any], overrides: Dict = {}):
-    config.setdefault("variables", {})
-    config["variables"].update(overrides)
-    variables = config["variables"]
-    for asset in config.get("assets", []):
-        asset["dest"] = asset["dest"].format(**variables)
-        asset["url"] = asset["url"].format(**variables)
-    for command in config.get("commands", []):
-        for field in ["script", "deps", "outputs_no_cache", "outputs"]:
-            for i, line in enumerate(command.get(field, [])):
-                command[field][i] = line.format(**variables)
-    return config
+    key = "vars"
+    config.setdefault(key, {})
+    config[key].update(overrides)
+    # Need to put variables in the top scope again so we can have a top-level
+    # section "project" (otherwise, a list of commands in the top scope wouldn't)
+    # be allowed by Thinc's config system
+    cfg = Config({"project": config, key: config[key]})
+    interpolated = cfg.interpolate()
+    return dict(interpolated["project"])
 
 
 def validate_project_commands(config: Dict[str, Any]) -> None:
