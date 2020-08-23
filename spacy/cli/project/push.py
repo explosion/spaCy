@@ -34,6 +34,9 @@ def project_push(project_dir: Path, remote: str):
         remote = config["remotes"][remote]
     storage = RemoteStorage(project_dir, remote)
     for cmd in config.get("commands", []):
+        deps = [project_dir / dep for dep in cmd.get("deps", [])]
+        if any(not dep.exists() for dep in deps):
+            continue
         cmd_hash = get_command_hash(
             "", "", [project_dir / dep for dep in cmd.get("deps", [])], cmd["script"]
         )
