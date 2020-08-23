@@ -172,6 +172,31 @@ advanced data pipelines and track your changes in Git, check out the
 from a workflow defined in your `project.yml` so you can manage your spaCy
 project as a DVC repo.
 
+### 5. Optional: Push to remote storage {#push}
+
+> ```yaml
+> ### project.yml
+> remotes:
+>   default: 's3://my-spacy-bucket'
+>   local: '/mnt/scratch/cache'
+> ```
+
+After training a model, you can optionally use the
+[`spacy project push`](/api/cli#project-push) command to upload your outputs to
+a remote storage, using protocols like [S3](https://aws.amazon.com/s3/),
+[Google Cloud Storage](https://cloud.google.com/storage) or SSH. This can help
+you **export** your model packages, **share** work with your team, or **cache
+results** to avoid repeating work.
+
+```cli
+$ python -m spacy project push
+```
+
+The `remotes` section in your `project.yml` lets you assign names to the
+different storages. To download state from a remote storage, you can use the
+[`spacy project pull`](/api/cli#project-pull) command. For more details, see the
+docs on [remote storage](#remote).
+
 ## Project directory and assets {#directory}
 
 ### project.yml {#project-yml}
