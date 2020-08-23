@@ -2,7 +2,7 @@ from pathlib import Path
 from wasabi import msg
 from .remote_storage import RemoteStorage
 from .remote_storage import get_content_hash, get_command_hash
-from .._util import load_project_config, substitute_project_variables
+from .._util import load_project_config
 from .._util import project_cli, Arg
 
 
@@ -29,7 +29,7 @@ def project_push(project_dir: Path, remote: str):
     by mapping them to storage paths. A storage can be anything that the smart-open
     library can upload to, e.g. gcs, aws, ssh, local directories etc
     """
-    config = substitute_project_variables(load_project_config(project_dir))
+    config = load_project_config(project_dir)
     if remote in config.get("remotes", {}):
         remote = config["remotes"][remote]
     storage = RemoteStorage(project_dir, remote)

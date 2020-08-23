@@ -44,16 +44,14 @@ def project_assets(project_dir: Path) -> None:
     if not assets:
         msg.warn(f"No assets specified in {PROJECT_FILE}", exits=0)
     msg.info(f"Fetching {len(assets)} asset(s)")
-    variables = config.get("variables", {})
     for asset in assets:
-        dest = asset["dest"].format(**variables)
+        dest = asset["dest"]
         url = asset.get("url")
         checksum = asset.get("checksum")
         if not url:
             # project.yml defines asset without URL that the user has to place
             check_private_asset(dest, checksum)
             continue
-        url = url.format(**variables)
         fetch_asset(project_path, url, dest, checksum)
 
 
