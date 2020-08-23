@@ -1,5 +1,5 @@
 from typing import List, Union, Dict, Any, Optional, Iterable, Callable, Tuple
-from typing import Iterator, Type, Pattern, TYPE_CHECKING
+from typing import Iterator, Type, Pattern, Generator, TYPE_CHECKING
 from types import ModuleType
 import os
 import importlib
@@ -610,7 +610,7 @@ def working_dir(path: Union[str, Path]) -> None:
 
 
 @contextmanager
-def make_tempdir() -> None:
+def make_tempdir() -> Generator[Path, None, None]:
     """Execute a block in a temporary directory and remove the directory and
     its contents at the end of the with block.
 

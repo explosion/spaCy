@@ -1,4 +1,5 @@
-from typing import Dict, Any, Union, List, Optional
+from typing import Dict, Any, Union, List, Optional, TYPE_CHECKING
+import sys
 from pathlib import Path
 from wasabi import msg
 import srsly
@@ -8,10 +9,12 @@ from typer.main import get_command
 from contextlib import contextmanager
 from thinc.config import Config, ConfigValidationError
 from configparser import InterpolationError
-import sys
 
 from ..schemas import ProjectConfigSchema, validate
 from ..util import import_file
+
+if TYPE_CHECKING:
+    from pathy import Pathy  # noqa: F401
 
 
 PROJECT_FILE = "project.yml"
@@ -93,11 +96,12 @@ def parse_config_overrides(args: List[str]) -> Dict[str, Any]:
     return result
 
 
-def load_project_config(path: Path) -> Dict[str, Any]:
+def load_project_config(path: Path, interpolate: bool = True) -> Dict[str, Any]:
     """Load the project.yml file from a directory and validate it. Also make
     sure that all directories defined in the config exist.
 
     path (Path): The path to the project directory.
+    interpolate (bool): Whether to substitute project variables.
     RETURNS (Dict[str, Any]): The loaded project.yml.
     """
     config_path = path / PROJECT_FILE
@@ -119,7 +123,23 @@ def load_project_config(path: Path) -> Dict[str, Any]:
         dir_path = path / subdir
         if not dir_path.exists():
             dir_path.mkdir(parents=True)
+    if interpolate:
+        err = "project.yml validation error"
+        with show_validation_error(title=err, hint_fill=False):
+            config = substitute_project_variables(config)
     return config
+
+
+def substitute_project_variables(config: Dict[str, Any], overrides: Dict = {}):
+    key = "vars"
+    config.setdefault(key, {})
+    config[key].update(overrides)
+    # Need to put variables in the top scope again so we can have a top-level
+    # section "project" (otherwise, a list of commands in the top scope wouldn't)
+    # be allowed by Thinc's config system
+    cfg = Config({"project": config, key: config[key]})
+    interpolated = cfg.interpolate()
+    return dict(interpolated["project"])
 
 
 def validate_project_commands(config: Dict[str, Any]) -> None:
@@ -232,3 +252,39 @@ def get_sourced_components(config: Union[Dict[str, Any], Config]) -> List[str]:
         for name, cfg in config.get("components", {}).items()
         if "factory" not in cfg and "source" in cfg
     ]
+
+
+def upload_file(src: Path, dest: Union[str, "Pathy"]) -> None:
+    """Upload a file.
+
+    src (Path): The source path.
+    url (str): The destination URL to upload to.
+    """
+    dest = ensure_pathy(dest)
+    with dest.open(mode="wb") as output_file:
+        with src.open(mode="rb") as input_file:
+            output_file.write(input_file.read())
+
+
+def download_file(src: Union[str, "Pathy"], dest: Path, *, force: bool = False) -> None:
+    """Download a file using smart_open.
+
+    url (str): The URL of the file.
+    dest (Path): The destination path.
+    force (bool): Whether to force download even if file exists.
+        If False, the download will be skipped.
+    """
+    if dest.exists() and not force:
+        return None
+    src = ensure_pathy(src)
+    with src.open(mode="rb") as input_file:
+        with dest.open(mode="wb") as output_file:
+            output_file.write(input_file.read())
+
+
+def ensure_pathy(path):
+    """Temporary helper to prevent importing Pathy globally (which can cause
+    slow and annoying Google Cloud warning)."""
+    from pathy import Pathy  # noqa: F811
+
+    return Pathy(path)

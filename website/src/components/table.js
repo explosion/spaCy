@@ -5,6 +5,8 @@ import Icon from './icon'
 import { isString } from './util'
 import classes from '../styles/table.module.sass'
 
+const FOOT_ROW_REGEX = /^(RETURNS|YIELDS|CREATES|PRINTS|EXECUTES|UPLOADS|DOWNLOADS)/
+
 function isNum(children) {
     return isString(children) && /^\d+[.,]?[\dx]+?(|x|ms|mb|gb|k|m)?$/i.test(children)
 }
@@ -43,7 +45,6 @@ function isDividerRow(children) {
 }
 
 function isFootRow(children) {
-    const rowRegex = /^(RETURNS|YIELDS|CREATES|PRINTS|EXECUTES)/
     if (children.length && children[0].props.name === 'td') {
         const cellChildren = children[0].props.children
         if (
@@ -52,7 +53,7 @@ function isFootRow(children) {
             cellChildren.props.children &&
             isString(cellChildren.props.children)
         ) {
-            return rowRegex.test(cellChildren.props.children)
+            return FOOT_ROW_REGEX.test(cellChildren.props.children)
         }
     }
     return false
