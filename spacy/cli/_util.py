@@ -110,7 +110,9 @@ def load_project_config(path: Path) -> Dict[str, Any]:
         msg.fail(invalid_err, e, exits=1)
     errors = validate(ProjectConfigSchema, config)
     if errors:
-        msg.fail(invalid_err, "\n".join(errors), exits=1)
+        msg.fail(invalid_err)
+        print("\n".join(errors))
+        sys.exit(1)
     validate_project_commands(config)
     # Make sure directories defined in config exist
     for subdir in config.get("directories", []):
