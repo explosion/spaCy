@@ -257,7 +257,7 @@ If a setting is not present in the options, the default value will be used.
 | Name                                    | Description                                                                                                                                                                                                                                                                 |
 | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ents`                                  | Entity types to highlight or `None` for all types (default). ~~Optional[List[str]]~~                                                                                                                                                                                        |
-| `colors`                                | Color overrides. Entity types in uppercase should be mapped to color names or values. ~~Dict[str, str]~~                                                                                                                                                                    |
+| `colors`                                | Color overrides. Entity types should be mapped to color names or values. ~~Dict[str, str]~~                                                                                                                                                                                 |
 | `template` <Tag variant="new">2.2</Tag> | Optional template to overwrite the HTML used to render entity spans. Should be a format string and can use `{bg}`, `{text}` and `{label}`. See [`templates.py`](https://github.com/explosion/spaCy/blob/master/spacy/displacy/templates.py) for examples. ~~Optional[str]~~ |
 
 By default, displaCy comes with colors for all entity types used by
@@ -299,20 +299,20 @@ factories.
 | Registry name     | Description                                                                                                                                                                                                                                        |
 | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `architectures`   | Registry for functions that create [model architectures](/api/architectures). Can be used to register custom model architectures and reference them in the `config.cfg`.                                                                           |
-| `factories`       | Registry for functions that create [pipeline components](/usage/processing-pipelines#custom-components). Added automatically when you use the `@spacy.component` decorator and also reads from [entry points](/usage/saving-loading#entry-points). |
-| `tokenizers`      | Registry for tokenizer factories. Registered functions should return a callback that receives the `nlp` object and returns a [`Tokenizer`](/api/tokenizer) or a custom callable.                                                                   |
-| `languages`       | Registry for language-specific `Language` subclasses. Automatically reads from [entry points](/usage/saving-loading#entry-points).                                                                                                                 |
-| `lookups`         | Registry for large lookup tables available via `vocab.lookups`.                                                                                                                                                                                    |
-| `displacy_colors` | Registry for custom color scheme for the [`displacy` NER visualizer](/usage/visualizers). Automatically reads from [entry points](/usage/saving-loading#entry-points).                                                                             |
 | `assets`          | Registry for data assets, knowledge bases etc.                                                                                                                                                                                                     |
-| `callbacks`       | Registry for custom callbacks to [modify the `nlp` object](/usage/training#custom-code-nlp-callbacks) before training.                                                                                                                             |
-| `readers`         | Registry for training and evaluation data readers like [`Corpus`](/api/corpus).                                                                                                                                                                    |
 | `batchers`        | Registry for training and evaluation [data batchers](#batchers).                                                                                                                                                                                   |
-| `optimizers`      | Registry for functions that create [optimizers](https://thinc.ai/docs/api-optimizers).                                                                                                                                                             |
-| `schedules`       | Registry for functions that create [schedules](https://thinc.ai/docs/api-schedules).                                                                                                                                                               |
-| `layers`          | Registry for functions that create [layers](https://thinc.ai/docs/api-layers).                                                                                                                                                                     |
-| `losses`          | Registry for functions that create [losses](https://thinc.ai/docs/api-loss).                                                                                                                                                                       |
+| `callbacks`       | Registry for custom callbacks to [modify the `nlp` object](/usage/training#custom-code-nlp-callbacks) before training.                                                                                                                             |
+| `displacy_colors` | Registry for custom color scheme for the [`displacy` NER visualizer](/usage/visualizers). Automatically reads from [entry points](/usage/saving-loading#entry-points).                                                                             |
+| `factories`       | Registry for functions that create [pipeline components](/usage/processing-pipelines#custom-components). Added automatically when you use the `@spacy.component` decorator and also reads from [entry points](/usage/saving-loading#entry-points). |
 | `initializers`    | Registry for functions that create [initializers](https://thinc.ai/docs/api-initializers).                                                                                                                                                         |
+| `languages`       | Registry for language-specific `Language` subclasses. Automatically reads from [entry points](/usage/saving-loading#entry-points).                                                                                                                 |
+| `layers`          | Registry for functions that create [layers](https://thinc.ai/docs/api-layers).                                                                                                                                                                     |
+| `lookups`         | Registry for large lookup tables available via `vocab.lookups`.                                                                                                                                                                                    |
+| `losses`          | Registry for functions that create [losses](https://thinc.ai/docs/api-loss).                                                                                                                                                                       |
+| `optimizers`      | Registry for functions that create [optimizers](https://thinc.ai/docs/api-optimizers).                                                                                                                                                             |
+| `readers`         | Registry for training and evaluation data readers like [`Corpus`](/api/corpus).                                                                                                                                                                    |
+| `schedules`       | Registry for functions that create [schedules](https://thinc.ai/docs/api-schedules).                                                                                                                                                               |
+| `tokenizers`      | Registry for tokenizer factories. Registered functions should return a callback that receives the `nlp` object and returns a [`Tokenizer`](/api/tokenizer) or a custom callable.                                                                   |
 
 ### spacy-transformers registry {#registry-transformers}
 
@@ -631,6 +631,23 @@ validate its contents.
 | ----------- | ----------------------------------------------------- |
 | `path`      | Path to the model's `meta.json`. ~~Union[str, Path]~~ |
 | **RETURNS** | The model's meta data. ~~Dict[str, Any]~~             |
+
+### util.get_installed_models {#util.get_installed_models tag="function" new="3"}
+
+List all model packages installed in the current environment. This will include
+any spaCy model that was packaged with [`spacy package`](/api/cli#package).
+Under the hood, model packages expose a Python entry point that spaCy can check,
+without having to load the model.
+
+> #### Example
+>
+> ```python
+> model_names = util.get_installed_models()
+> ```
+
+| Name        | Description                                                                        |
+| ----------- | ---------------------------------------------------------------------------------- |
+| **RETURNS** | The string names of the models installed in the current environment. ~~List[str]~~ |
 
 ### util.is_package {#util.is_package tag="function"}
 

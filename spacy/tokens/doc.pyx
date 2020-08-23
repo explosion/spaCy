@@ -1193,8 +1193,7 @@ cdef class Doc:
                 retokenizer.merge(span, attributes[i])
 
     def to_json(self, underscore=None):
-        """Convert a Doc to JSON. The format it produces will be the new format
-        for the `spacy train` command (not implemented yet).
+        """Convert a Doc to JSON.
 
         underscore (list): Optional list of string names of custom doc._.
         attributes. Attribute values need to be JSON-serializable. Values will

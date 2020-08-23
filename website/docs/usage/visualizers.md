@@ -121,10 +121,10 @@ import DisplacyEntHtml from 'images/displacy-ent2.html'
 
 The entity visualizer lets you customize the following `options`:
 
-| Argument | Description                                                                                                                |
-| -------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `ents`   | Entity types to highlight (`None` for all types). Defaults to `None`. ~~Optional[List[str]]~~                              | `None` |
-| `colors` | Color overrides. Entity types in uppercase should be mapped to color names or values. Defaults to `{}`. ~~Dict[str, str]~~ |
+| Argument | Description                                                                                                   |
+| -------- | ------------------------------------------------------------------------------------------------------------- |
+| `ents`   | Entity types to highlight (`None` for all types). Defaults to `None`. ~~Optional[List[str]]~~                 | `None` |
+| `colors` | Color overrides. Entity types should be mapped to color names or values. Defaults to `{}`. ~~Dict[str, str]~~ |
 
 If you specify a list of `ents`, only those entity types will be rendered – for
 example, you can choose to display `PERSON` entities. Internally, the visualizer

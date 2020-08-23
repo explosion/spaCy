@@ -5,7 +5,7 @@
 Thanks for your interest in contributing to spaCy 🎉 The project is maintained
 by [@honnibal](https://github.com/honnibal) and [@ines](https://github.com/ines),
 and we'll do our best to help you get started. This page will give you a quick
-overview of how things are organised and most importantly, how to get involved.
+overview of how things are organized and most importantly, how to get involved.
 
 ## Table of contents
 
@@ -195,7 +195,7 @@ modules in `.py` files, not Cython modules in `.pyx` and `.pxd` files.**
 ### Code formatting
 
 [`black`](https://github.com/ambv/black) is an opinionated Python code
-formatter, optimised to produce readable code and small diffs. You can run
+formatter, optimized to produce readable code and small diffs. You can run
 `black` from the command-line, or via your code editor. For example, if you're
 using [Visual Studio Code](https://code.visualstudio.com/), you can add the
 following to your `settings.json` to use `black` for formatting and auto-format
@@ -286,7 +286,7 @@ Code that interacts with the file-system should accept objects that follow the
 If the function is user-facing and takes a path as an argument, it should check
 whether the path is provided as a string. Strings should be converted to
 `pathlib.Path` objects. Serialization and deserialization functions should always
-accept **file-like objects**, as it makes the library io-agnostic. Working on
+accept **file-like objects**, as it makes the library IO-agnostic. Working on
 buffers makes the code more general, easier to test, and compatible with Python
 3's asynchronous IO.
 
@@ -384,7 +384,7 @@ of Python and C++, with additional complexity and syntax from numpy. The
 many "traps for new players". Working in Cython is very rewarding once you're
 over the initial learning curve. As with C and C++, the first way you write
 something in Cython will often be the performance-optimal approach. In contrast,
-Python optimisation generally requires a lot of experimentation. Is it faster to
+Python optimization generally requires a lot of experimentation. Is it faster to
 have an `if item in my_dict` check, or to use `.get()`? What about `try`/`except`?
 Does this numpy operation create a copy? There's no way to guess the answers to
 these questions, and you'll usually be dissatisfied with your results — so
@@ -400,7 +400,7 @@ Python. If it's not fast enough the first time, just switch to Cython.
 - [PEP 8 Style Guide for Python Code](https://www.python.org/dev/peps/pep-0008/) (python.org)
 - [Official Cython documentation](http://docs.cython.org/en/latest/) (cython.org)
 - [Writing C in Cython](https://explosion.ai/blog/writing-c-in-cython) (explosion.ai)
-- [Multi-threading spaCy’s parser and named entity recogniser](https://explosion.ai/blog/multithreading-with-cython) (explosion.ai)
+- [Multi-threading spaCy’s parser and named entity recognizer](https://explosion.ai/blog/multithreading-with-cython) (explosion.ai)
 
 ## Adding tests
 
@@ -412,7 +412,7 @@ name. For example, tests for the `Tokenizer` can be found in
 all test files and test functions need to be prefixed with `test_`.
 
 When adding tests, make sure to use descriptive names, keep the code short and
-concise and only test for one behaviour at a time. Try to `parametrize` test
+concise and only test for one behavior at a time. Try to `parametrize` test
 cases wherever possible, use our pre-defined fixtures for spaCy components and
 avoid unnecessary imports.
 
