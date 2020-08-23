@@ -156,8 +156,8 @@ other. For instance, to generate a packaged model, you might start by converting
 your data, then run [`spacy train`](/api/cli#train) to train your model on the
 converted data and if that's successful, run [`spacy package`](/api/cli#package)
 to turn the best model artifact into an installable Python package. The
-following command runs the workflow named `all` defined in the `project.yml`, and
-executes the commands it specifies, in order:
+following command runs the workflow named `all` defined in the `project.yml`,
+and executes the commands it specifies, in order:
 
 ```cli
 $ python -m spacy project run all
@@ -422,75 +422,113 @@ assets:
     checksum: '5113dc04e03f079525edd8df3f4f39e3'
 ```
 
-## Remote Storage {#remotes}
+## Remote Storage {#remote}
 
-You can persist your project outputs to a remote storage using the `spacy
-project push` command. This can help you export your model packages, share work
-with your team, or cache results to avoid repeating work. The `spacy project
-pull` command will download any outputs that are in the remote storage and
-aren't available locally.
+You can persist your project outputs to a remote storage using the
+[`project push`](/api/cli#project-push) command. This can help you **export**
+your model packages, **share** work with your team, or **cache results** to
+avoid repeating work. The [`project pull`](/api/cli#project-pull) command will
+download any outputs that are in the remote storage and aren't available
+locally.
 
 You can list one or more remotes in the `remotes` section of your
-`project.yml`. Simply map identifier strings to the URL of the storage. Under
-the hood, `spacy project` uses the `smart-open` library to communicate with the
-remote storages, so you can use any protocol that `smart-open` supports, including
-S3, GCS, SSH and more, although you may need to install extra dependencies
-to use certain protocols.
+[`project.yml`](#project-yml) by mapping a string name to the URL of the
+storage. Under the hood, spaCy uses the
+[`smart-open`](https://github.com/RaRe-Technologies/smart_open) library to
+communicate with the remote storages, so you can use any protocol that
+`smart-open` supports, including [S3](https://aws.amazon.com/s3/),
+[Google Cloud Storage](https://cloud.google.com/storage), SSH and more, although
+you may need to install extra dependencies to use certain protocols.
+
+> #### Example
+>
+> ```cli
+> $ python -m spacy project pull local
+> ```
 
 ```yaml
 ### project.yml
 remotes:
-  default: "s3://my-spacy-bucket"
-  local: "/mnt/scratch/cache"
-  stuff: "ssh://myserver.example.com/whatever"
+  default: 's3://my-spacy-bucket'
+  local: '/mnt/scratch/cache'
+  stuff: 'ssh://myserver.example.com/whatever'
 ```
 
-Inside the remote storage, spaCy uses a clever directory structure to avoid
+<Infobox title="How it works" emoji="💡">
+
+Inside the remote storage, spaCy uses a clever **directory structure** to avoid
 overwriting files. The top level of the directory structure is a URL-encoded
 version of the output's path. Within this directory are subdirectories named
 according to a hash of the command string and the command's dependencies.
-Finally, within those directories are files, named according to an
-MD5 hash of their contents.
+Finally, within those directories are files, named according to an MD5 hash of
+their contents.
+
+<!-- TODO: update with actual real example? -->
+
+<!-- prettier-ignore -->
+```yaml
+└── urlencoded_file_path            # Path of original file
+    ├── some_command_hash           # Hash of command you ran
+    │   ├── some_content_hash       # Hash of file content
+    │   └── another_content_hash
+    └── another_command_hash
+        └── third_content_hash
+```
+
+</Infobox>
 
 For instance, let's say you had the following command in your `project.yml`:
 
 ```yaml
 ### project.yml
-  -
-    name: train
-    help: "Train a spaCy model using the specified corpus and config"
-    script:
-      - "spacy train ./config.cfg -o training/"
-    deps:
-      - "corpus/train"
-      - "corpus/dev"
-      - "config.cfg"
-    outputs:
-      - "training/model-best"
+- name: train
+  help: 'Train a spaCy model using the specified corpus and config'
+  script:
+    - 'spacy train ./config.cfg --output training/'
+  deps:
+    - 'corpus/train'
+    - 'corpus/dev'
+    - 'config.cfg'
+  outputs:
+    - 'training/model-best'
 ```
 
-After you finish training, you run `spacy project push` to make sure the
-`training/model-best` output is saved to remote storage. spaCy will then
-construct a hash from your command script and the listed dependencies
-(`corpus/train`, `corpus/dev` and `config.cfg`) in order to identify the
+> #### Example
+>
+> ```
+> └── s3://my-spacy-bucket/training%2Fmodel-best
+>     └── 1d8cb33a06cc345ad3761c6050934a1b
+>         └── d8e20c3537a084c5c10d95899fe0b1ff
+> ```
+
+After you finish training, you run [`project push`](/api/cli#project-push) to
+make sure the `training/model-best` output is saved to remote storage. spaCy
+will then construct a hash from your command script and the listed dependencies,
+`corpus/train`, `corpus/dev` and `config.cfg`, in order to identify the
 execution context of your output. It would then compute an MD5 hash of the
 `training/model-best` directory, and use those three pieces of information to
-construct the storage URL, which might be something like
-`s3://my-spacy-bucket/training%2Fmodel-best/1d8cb33a06cc345ad3761c6050934a1b/d8e20c3537a084c5c10d95899fe0b1ff`.
-If you change the command or one of its dependencies (for instance, by editing
-the `config.cfg` file to tune the hyper-parameters, a different creation hash
-will be calculated, so when you use `spacy project push` you won't be
-overwriting your previous file. The system even supports multiple outputs for
-the same file and the same context, which can happen if your training process
-is not deterministic, or if you have dependencies that aren't represented in
-the command.
+construct the storage URL.
 
-In summary, the `spacy project` remote storages are designed to make
-a particular set of trade-offs. Priority is placed on convenience, correctness,
-and avoiding data loss. You can use `spacy project push` freely, as you'll
-never overwrite remote state, and you don't have to come up with names or
-version numbers. However, it's up to you to manage the size of your remote
-storage, and to remove files that are no longer relevant to you.
+```cli
+$ python -m spacy project run train
+$ python -m spacy project push
+```
+
+If you change the command or one of its dependencies (for instance, by editing
+the [`config.cfg`](/usage/training#config) file to tune the hyperparameters, a
+different creation hash will be calculated, so when you use
+[`project push`](/api/cli#project-push) you won't be overwriting your previous
+file. The system even supports multiple outputs for the same file and the same
+context, which can happen if your training process is not deterministic, or if
+you have dependencies that aren't represented in the command.
+
+In summary, the [`spacy project`](/api/cli#project) remote storages are designed
+to make a particular set of trade-offs. Priority is placed on **convenience**,
+**correctness** and **avoiding data loss**. You can use
+[`project push`](/api/cli#project-push) freely, as you'll never overwrite remote
+state, and you don't have to come up with names or version numbers. However,
+it's up to you to manage the size of your remote storage, and to remove files
+that are no longer relevant to you.
 
 ## Integrations {#integrations}
 
