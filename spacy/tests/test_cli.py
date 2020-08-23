@@ -7,7 +7,6 @@ from spacy.cli.pretrain import make_docs
 from spacy.cli.init_config import init_config, RECOMMENDATIONS
 from spacy.cli._util import validate_project_commands, parse_config_overrides
 from spacy.cli._util import load_project_config
-from spacy.util import get_lang_class
 import srsly
 
 from .util import make_tempdir
