@@ -99,7 +99,6 @@ def update_dvc_config(
         if ref_hash == config_hash and not force:
             return False  # Nothing has changed in project.yml, don't need to update
         dvc_config_path.unlink()
-    variables = config.get("variables", {})
     dvc_commands = []
     config_commands = {cmd["name"]: cmd for cmd in config.get("commands", [])}
     for name in workflows[workflow]:
@@ -122,7 +121,7 @@ def update_dvc_config(
         dvc_commands.append(join_command(full_cmd))
     with working_dir(path):
         dvc_flags = {"--verbose": verbose, "--quiet": silent}
-        run_dvc_commands(dvc_commands, variables, flags=dvc_flags)
+        run_dvc_commands(dvc_commands, flags=dvc_flags)
     with dvc_config_path.open("r+", encoding="utf8") as f:
         content = f.read()
         f.seek(0, 0)
@@ -131,23 +130,16 @@ def update_dvc_config(
 
 
 def run_dvc_commands(
-    commands: List[str] = tuple(),
-    variables: Dict[str, str] = {},
-    flags: Dict[str, bool] = {},
+    commands: List[str] = tuple(), flags: Dict[str, bool] = {},
 ) -> None:
     """Run a sequence of DVC commands in a subprocess, in order.
 
     commands (List[str]): The string commands without the leading "dvc".
-    variables (Dict[str, str]): Dictionary of variable names, mapped to their
-        values. Will be used to substitute format string variables in the
-        commands.
     flags (Dict[str, bool]): Conditional flags to be added to command. Makes it
         easier to pass flags like --quiet that depend on a variable or
         command-line setting while avoiding lots of nested conditionals.
     """
     for command in commands:
-        # Substitute variables, e.g. "./{NAME}.json"
-        command = command.format(**variables)
         command = split_command(command)
         dvc_command = ["dvc", *command]
         # Add the flags if they are set to True
