@@ -30,6 +30,8 @@ def project_pull(project_dir: Path, remote: str, *, verbose: bool = False):
     storage = RemoteStorage(project_dir, remote)
     for cmd in config.get("commands", []):
         deps = [project_dir / dep for dep in cmd.get("deps", [])]
+        if any(not dep.exists() for dep in deps):
+            continue
         cmd_hash = get_command_hash("", "", deps, cmd["script"])
         for output_path in cmd.get("outputs", []):
             url = storage.pull(output_path, command_hash=cmd_hash)
