@@ -76,6 +76,7 @@ def entity_linker():
             kb = KnowledgeBase(vocab, entity_vector_length=1)
             kb.add_entity("test", 0.0, zeros((1, 1), dtype="f"))
             return kb
+
         return create_kb
 
     config = {"kb_loader": {"@assets": "TestIssue5230KB.v1"}}

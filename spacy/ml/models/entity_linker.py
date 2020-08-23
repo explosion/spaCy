@@ -30,6 +30,7 @@ def load_kb(kb_path: str) -> Callable[[Vocab], KnowledgeBase]:
         kb = KnowledgeBase(vocab, entity_vector_length=1)
         kb.from_disk(kb_path)
         return kb
+
     return kb_from_file
 
 
@@ -37,6 +38,7 @@ def load_kb(kb_path: str) -> Callable[[Vocab], KnowledgeBase]:
 def empty_kb(entity_vector_length: int) -> Callable[[Vocab], KnowledgeBase]:
     def empty_kb_factory(vocab):
         return KnowledgeBase(vocab=vocab, entity_vector_length=entity_vector_length)
+
     return empty_kb_factory
 
 

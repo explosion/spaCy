@@ -75,7 +75,9 @@ def train(
         msg.info("Using CPU")
     msg.info(f"Loading config and nlp from: {config_path}")
     with show_validation_error(config_path):
-        config = util.load_config(config_path, overrides=config_overrides, interpolate=True)
+        config = util.load_config(
+            config_path, overrides=config_overrides, interpolate=True
+        )
     if config.get("training", {}).get("seed") is not None:
         fix_random_seed(config["training"]["seed"])
     # Use original config here before it's resolved to functions
@@ -208,7 +210,9 @@ def create_evaluation_callback(
         scores = nlp.evaluate(dev_examples)
         # Calculate a weighted sum based on score_weights for the main score
         try:
-            weighted_score = sum(scores.get(s, 0.0) * weights.get(s, 0.0) for s in weights)
+            weighted_score = sum(
+                scores.get(s, 0.0) * weights.get(s, 0.0) for s in weights
+            )
         except KeyError as e:
             keys = list(scores.keys())
             err = Errors.E983.format(dict="score_weights", key=str(e), keys=keys)
@@ -378,7 +382,8 @@ def setup_printer(
 
         try:
             scores = [
-                "{0:.2f}".format(float(info["other_scores"].get(col, 0.0))) for col in score_cols
+                "{0:.2f}".format(float(info["other_scores"].get(col, 0.0)))
+                for col in score_cols
             ]
         except KeyError as e:
             raise KeyError(
