@@ -6,6 +6,7 @@ import urllib.parse
 import tarfile
 from pathlib import Path
 from pathy import Pathy
+
 from .._util import get_hash, get_checksum
 from .._util import download_file
 from ...util import make_tempdir
@@ -13,10 +14,11 @@ from ...util import make_tempdir
 
 class RemoteStorage:
     """Push and pull outputs to and from a remote file storage.
-   
+
     Remotes can be anything that `smart-open` can support: AWS, GCS, file system,
     ssh, etc.
     """
+
     def __init__(self, project_root: Path, url: str, *, compression="gz"):
         self.root = project_root
         self.url = Pathy(url)
@@ -24,8 +26,8 @@ class RemoteStorage:
 
     def push(self, path: Path, command_hash: str, content_hash: str) -> Pathy:
         """Compress a file or directory within a project and upload it to a remote
-        storage. If an object exists at the full URL, nothing is done.  
-        
+        storage. If an object exists at the full URL, nothing is done.
+
         Within the remote storage, files are addressed by their project path
         (url encoded) and two user-supplied hashes, representing their creation
         context and their file contents. If the URL already exists, the data is
@@ -49,10 +51,11 @@ class RemoteStorage:
         return url
 
     def pull(
-        self, path: Path,
+        self,
+        path: Path,
         *,
-        command_hash: Optional[str]=None,
-        content_hash: Optional[str]=None
+        command_hash: Optional[str] = None,
+        content_hash: Optional[str] = None,
     ) -> Optional[Pathy]:
         """Retrieve a file from the remote cache. If the file already exists,
         nothing is done.
@@ -85,8 +88,8 @@ class RemoteStorage:
         self,
         path: Path,
         *,
-        command_hash: Optional[str]=None,
-        content_hash: Optional[str]=None
+        command_hash: Optional[str] = None,
+        content_hash: Optional[str] = None,
     ) -> Optional[Pathy]:
         """Find the best matching version of a file within the storage,
         or `None` if no match can be found. If both the creation and content hash
@@ -118,7 +121,9 @@ def get_content_hash(loc: Path) -> str:
     return get_checksum(loc)
 
 
-def get_command_hash(site_hash: str, env_hash: str, deps: List[Path], cmd: List[str]) -> str:
+def get_command_hash(
+    site_hash: str, env_hash: str, deps: List[Path], cmd: List[str]
+) -> str:
     """Create a hash representing the execution of a command. This includes the
     currently installed packages, whatever environment variables have been marked
     as relevant, and the command.

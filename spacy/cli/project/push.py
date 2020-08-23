@@ -35,10 +35,7 @@ def project_push(project_dir: Path, remote: str):
     storage = RemoteStorage(project_dir, remote)
     for cmd in config.get("commands", []):
         cmd_hash = get_command_hash(
-            "",
-            "",
-            [project_dir / dep for dep in cmd.get("deps", [])],
-            cmd["script"]
+            "", "", [project_dir / dep for dep in cmd.get("deps", [])], cmd["script"]
         )
         for output_path in cmd.get("outputs", []):
             output_loc = project_dir / output_path
@@ -46,6 +43,6 @@ def project_push(project_dir: Path, remote: str):
                 url = storage.push(
                     output_path,
                     command_hash=cmd_hash,
-                    content_hash=get_content_hash(output_loc)
+                    content_hash=get_content_hash(output_loc),
                 )
                 yield output_path, url

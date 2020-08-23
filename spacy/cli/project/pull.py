@@ -23,7 +23,7 @@ def project_pull_cli(
             msg.good(f"Pulled {output_path} from {url}")
 
 
-def project_pull(project_dir: Path, remote: str, *, verbose: bool=False):
+def project_pull(project_dir: Path, remote: str, *, verbose: bool = False):
     config = substitute_project_variables(load_project_config(project_dir))
     if remote in config.get("remotes", {}):
         remote = config["remotes"][remote]
