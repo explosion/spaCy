@@ -9,6 +9,8 @@ menu:
   - ['Integrations', 'integrations']
 ---
 
+## Introduction and workflow {#intro hidden="true"}
+
 > #### 🪐 Project templates
 >
 > Our [`projects`](https://github.com/explosion/projects) repo includes various
@@ -20,19 +22,16 @@ spaCy projects let you manage and share **end-to-end spaCy workflows** for
 different **use cases and domains**, and orchestrate training, packaging and
 serving your custom models. You can start off by cloning a pre-defined project
 template, adjust it to fit your needs, load in your data, train a model, export
-it as a Python package and share the project templates with your team. spaCy
-projects can be used via the new [`spacy project`](/api/cli#project) command.
-For an overview of the available project templates, check out the
-[`projects`](https://github.com/explosion/projects) repo. spaCy projects also
-[integrate](#integrations) with many other cool machine learning and data
-science tools to track and manage your data and experiments, iterate on demos
-and prototypes and ship your models into production.
+it as a Python package, upload your outputs to a remote storage and share your
+results with your team. spaCy projects can be used via the new
+[`spacy project`](/api/cli#project) command and we provide templates in our
+[`projects`](https://github.com/explosion/projects) repo.
 
 <!-- TODO: mention integrations -->
 
-## Introduction and workflow {#intro}
-
 <!-- TODO: decide how to introduce concept -->
+
+![Illustration of project workflow and commands](../images/projects.svg)
 
 <!-- TODO:
 <Project id="some_example_project">
