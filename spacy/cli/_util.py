@@ -129,12 +129,13 @@ def load_project_config(path: Path, interpolate: bool = True) -> Dict[str, Any]:
 
 
 def substitute_project_variables(config: Dict[str, Any], overrides: Dict = {}):
-    config.setdefault("variables", {})
-    config["variables"].update(overrides)
+    key = "vars"
+    config.setdefault(key, {})
+    config[key].update(overrides)
     # Need to put variables in the top scope again so we can have a top-level
     # section "project" (otherwise, a list of commands in the top scope wouldn't)
     # be allowed by Thinc's config system
-    cfg = Config({"project": config, "variables": config["variables"]})
+    cfg = Config({"project": config, key: config[key]})
     interpolated = cfg.interpolate()
     return dict(interpolated["project"])
 
