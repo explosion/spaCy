@@ -3,10 +3,11 @@ from thinc.config import Config, ConfigValidationError
 import spacy
 from spacy.lang.en import English
 from spacy.lang.de import German
-from spacy.language import Language
+from spacy.language import Language, DEFAULT_CONFIG
 from spacy.util import registry, load_model_from_config
 from spacy.ml.models import build_Tok2Vec_model, build_tb_parser_model
 from spacy.ml.models import MultiHashEmbed, MaxoutWindowEncoder
+from spacy.schemas import ConfigSchema
 
 from ..util import make_tempdir
 
@@ -299,3 +300,16 @@ def test_config_interpolation():
     nlp2 = English.from_config(interpolated)
     assert nlp2.config["training"]["train_corpus"]["path"] == ""
     assert nlp2.config["components"]["tagger"]["model"]["tok2vec"]["width"] == 342
+
+
+def test_config_optional_sections():
+    config = Config().from_str(nlp_config_string)
+    config = DEFAULT_CONFIG.merge(config)
+    del config["pretraining"]
+    filled = registry.fill_config(config, schema=ConfigSchema, validate=False)
+    # Make sure that optional "pretraining" block doesn't default to None,
+    # which would (rightly) cause error because it'd result in a top-level
+    # key that's not a section (dict). Note that the following roundtrip is
+    # also how Config.interpolate works under the hood.
+    new_config = Config().from_str(filled.to_str())
+    assert new_config["pretraining"] == {}

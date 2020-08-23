@@ -257,7 +257,7 @@ class ConfigSchemaPretrain(BaseModel):
 class ConfigSchema(BaseModel):
     training: ConfigSchemaTraining
     nlp: ConfigSchemaNlp
-    pretraining: Optional[ConfigSchemaPretrain]
+    pretraining: ConfigSchemaPretrain = {}
     components: Dict[str, Dict[str, Any]]
 
     @root_validator

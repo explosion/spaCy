@@ -75,7 +75,9 @@ def train(
         msg.info("Using CPU")
     msg.info(f"Loading config and nlp from: {config_path}")
     with show_validation_error(config_path):
-        config = util.load_config(config_path, overrides=config_overrides, interpolate=True)
+        config = util.load_config(
+            config_path, overrides=config_overrides, interpolate=True
+        )
     if config.get("training", {}).get("seed") is not None:
         fix_random_seed(config["training"]["seed"])
     # Use original config here before it's resolved to functions
@@ -115,7 +117,7 @@ def train(
 
     # Load a pretrained tok2vec model - cf. CLI command 'pretrain'
     if weights_data is not None:
-        tok2vec_path = config.get("pretraining", {}).get("tok2vec_model", None)
+        tok2vec_path = config["pretraining"].get("tok2vec_model", None)
         if tok2vec_path is None:
             msg.fail(
                 f"To use a pretrained tok2vec model, the config needs to specify which "

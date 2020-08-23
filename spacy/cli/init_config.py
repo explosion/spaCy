@@ -137,7 +137,7 @@ def init_config(
         config = util.load_config_from_str(base_template)
         nlp, _ = util.load_model_from_config(config, auto_fill=True)
     if use_transformer:
-        nlp.config.pop("pretraining", {})  # TODO: solve this better
+        nlp.config["pretraining"] = {}  # TODO: solve this better?
     msg.good("Auto-filled config with all values")
     save_config(nlp.config, output_file, is_stdout=is_stdout)
 
