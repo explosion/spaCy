@@ -1,19 +1,20 @@
+from typing import Dict, Any, Union, List, Optional, TYPE_CHECKING
 import sys
-import site
-from typing import Dict, Any, Union, List, Optional
 from pathlib import Path
-from pathy import Pathy
 from wasabi import msg
 import srsly
 import hashlib
 import typer
-import smart_open
 from typer.main import get_command
 from contextlib import contextmanager
 from thinc.config import Config, ConfigValidationError
 from configparser import InterpolationError
+
 from ..schemas import ProjectConfigSchema, validate
 from ..util import import_file
+
+if TYPE_CHECKING:
+    from pathy import Pathy  # noqa: F401
 
 
 PROJECT_FILE = "project.yml"
@@ -249,19 +250,19 @@ def get_sourced_components(config: Union[Dict[str, Any], Config]) -> List[str]:
     ]
 
 
-def upload_file(src: Path, dest: Union[str, Pathy]) -> None:
+def upload_file(src: Path, dest: Union[str, "Pathy"]) -> None:
     """Upload a file.
 
     src (Path): The source path.
     url (str): The destination URL to upload to.
     """
-    dest = Pathy(dest)
+    dest = ensure_pathy(dest)
     with dest.open(mode="wb") as output_file:
         with src.open(mode="rb") as input_file:
             output_file.write(input_file.read())
 
 
-def download_file(src: Union[str, Pathy], dest: Path, *, force: bool=False) -> None:
+def download_file(src: Union[str, "Pathy"], dest: Path, *, force: bool = False) -> None:
     """Download a file using smart_open.
 
     url (str): The URL of the file.
@@ -271,7 +272,15 @@ def download_file(src: Union[str, Pathy], dest: Path, *, force: bool=False) -> N
     """
     if dest.exists() and not force:
         return None
-    src = Pathy(src)
+    src = ensure_pathy(src)
     with src.open(mode="rb") as input_file:
         with dest.open(mode="wb") as output_file:
             output_file.write(input_file.read())
+
+
+def ensure_pathy(path):
+    """Temporary helper to prevent importing Pathy globally (which can cause
+    slow and annoying Google Cloud warning)."""
+    from pathy import Pathy  # noqa: F811
+
+    return Pathy(path)
