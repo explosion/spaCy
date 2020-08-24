@@ -59,7 +59,7 @@
         "lint": "eslint **",
         "clear": "rm -rf .cache",
         "test": "echo \"Write tests! -> https://gatsby.app/unit-testing\"",
-        "python:install": "pip install setup/requirements.txt",
+        "python:install": "pip install -r setup/requirements.txt",
         "python:setup": "cd setup && sh setup.sh"
     },
     "devDependencies": {
