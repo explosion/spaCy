@@ -7,7 +7,7 @@ import requests
 
 from ...util import ensure_path, working_dir
 from .._util import project_cli, Arg, PROJECT_FILE, load_project_config, get_checksum
-from .._util import download_file
+from .._util import download_file, git_sparse_checkout
 
 
 # TODO: find a solution for caches
@@ -45,14 +45,18 @@ def project_assets(project_dir: Path) -> None:
         msg.warn(f"No assets specified in {PROJECT_FILE}", exits=0)
     msg.info(f"Fetching {len(assets)} asset(s)")
     for asset in assets:
-        dest = asset["dest"]
-        url = asset.get("url")
+        dest = Path(asset["dest"])
         checksum = asset.get("checksum")
-        if not url:
-            # project.yml defines asset without URL that the user has to place
-            check_private_asset(dest, checksum)
-            continue
-        fetch_asset(project_path, url, dest, checksum)
+        if "git" in asset:
+            print(dest)
+            git_sparse_checkout(asset["git"]["repo"], asset["git"]["path"], dest)
+        else:
+            url = asset.get("url")
+            if not url:
+                # project.yml defines asset without URL that the user has to place
+                check_private_asset(dest, checksum)
+                continue
+            fetch_asset(project_path, url, dest, checksum)
 
 
 def check_private_asset(dest: Path, checksum: Optional[str] = None) -> None:

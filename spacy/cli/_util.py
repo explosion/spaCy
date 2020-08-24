@@ -1,5 +1,6 @@
 from typing import Dict, Any, Union, List, Optional, TYPE_CHECKING
 import sys
+import shutil
 from pathlib import Path
 from wasabi import msg
 import srsly
@@ -11,7 +12,7 @@ from thinc.config import Config, ConfigValidationError
 from configparser import InterpolationError
 
 from ..schemas import ProjectConfigSchema, validate
-from ..util import import_file
+from ..util import import_file, run_command, make_tempdir
 
 if TYPE_CHECKING:
     from pathy import Pathy  # noqa: F401
@@ -311,3 +312,24 @@ def ensure_pathy(path):
     from pathy import Pathy  # noqa: F811
 
     return Pathy(path)
+
+
+def git_sparse_checkout(repo: str, subpath: str, dest: Path):
+    if dest.exists():
+        raise IOError("Destination of checkout must not exist")
+    if not dest.parent.exists():
+        raise IOError("Parent of destination of checkout must exist")
+    # We're using Git and sparse checkout to only clone the files we need
+    with make_tempdir() as tmp_dir:
+        cmd = f"git clone {repo} {tmp_dir} --no-checkout --depth 1 --config core.sparseCheckout=true"
+        run_command(cmd)
+        with (tmp_dir / ".git" / "info" / "sparse-checkout").open("w") as f:
+            f.write(subpath)
+        run_command(["git", "-C", str(tmp_dir), "fetch"])
+        run_command(["git", "-C", str(tmp_dir), "checkout"])
+        # We need Path(name) to make sure we also support subdirectories
+        shutil.move(str(tmp_dir / Path(subpath)), str(dest))
+        print(dest)
+        print(list(dest.iterdir()))
+
+
