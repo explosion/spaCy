@@ -305,7 +305,7 @@ def test_config_interpolation():
 def test_config_optional_sections():
     config = Config().from_str(nlp_config_string)
     config = DEFAULT_CONFIG.merge(config)
-    del config["pretraining"]
+    assert "pretraining" not in config
     filled = registry.fill_config(config, schema=ConfigSchema, validate=False)
     # Make sure that optional "pretraining" block doesn't default to None,
     # which would (rightly) cause error because it'd result in a top-level
