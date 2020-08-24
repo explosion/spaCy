@@ -50,12 +50,17 @@ def project_assets(project_dir: Path) -> None:
         if "git" in asset:
             if dest.exists():
                 # If there's already a file, check for checksum
-                if checksum and checksum == get_checksum(dest_path):
+                if checksum and checksum == get_checksum(dest):
                     msg.good(f"Skipping download with matching checksum: {dest}")
                     continue
                 else:
                     shutil.rmtree(dest)
-            git_sparse_checkout(asset["git"]["repo"], asset["git"]["path"], dest)
+            git_sparse_checkout(
+                asset["git"]["repo"],
+                asset["git"]["path"],
+                dest,
+                branch=asset["git"].get("branch", "HEAD"),
+            )
         else:
             url = asset.get("url")
             if not url:
