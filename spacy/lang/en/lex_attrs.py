@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 from ...attrs import LIKE_NUM
 
-
 _num_words = [
     "zero",
     "one",
@@ -92,7 +91,7 @@ def like_num(text):
         num, denom = text.split("/")
         if num.isdigit() and denom.isdigit():
             return True
-    
+
     text_lower = text.lower()
     if text_lower in _num_words:
         return True
