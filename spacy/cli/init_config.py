@@ -7,6 +7,7 @@ import srsly
 import re
 
 from .. import util
+from ..language import DEFAULT_CONFIG_PRETRAIN_PATH
 from ..schemas import RecommendationSchema
 from ._util import init_cli, Arg, Opt, show_validation_error, COMMAND
 
@@ -48,6 +49,7 @@ def init_fill_config_cli(
     # fmt: off
     base_path: Path = Arg(..., help="Base config to fill", exists=True, dir_okay=False),
     output_file: Path = Arg("-", help="File to save config.cfg to (or - for stdout)", allow_dash=True),
+    pretraining: bool = Opt(False, "--pretraining", "-p", help="Include config for pretraining (with 'spacy pretrain')"),
     diff: bool = Opt(False, "--diff", "-D", help="Print a visual diff highlighting the changes")
     # fmt: on
 ):
@@ -58,19 +60,24 @@ def init_fill_config_cli(
     can be used with a config generated via the training quickstart widget:
     https://nightly.spacy.io/usage/training#quickstart
     """
-    fill_config(output_file, base_path, diff=diff)
+    fill_config(output_file, base_path, pretraining=pretraining, diff=diff)
 
 
 def fill_config(
-    output_file: Path, base_path: Path, *, diff: bool = False
+    output_file: Path, base_path: Path, *, pretraining: bool = False, diff: bool = False
 ) -> Tuple[Config, Config]:
     is_stdout = str(output_file) == "-"
     msg = Printer(no_print=is_stdout)
     with show_validation_error(hint_fill=False):
         config = util.load_config(base_path)
         nlp, _ = util.load_model_from_config(config, auto_fill=True)
+    filled = nlp.config
+    if pretraining:
+        validate_config_for_pretrain(filled, msg)
+        pretrain_config = util.load_config(DEFAULT_CONFIG_PRETRAIN_PATH)
+        filled = pretrain_config.merge(filled)
     before = config.to_str()
-    after = nlp.config.to_str()
+    after = filled.to_str()
     if before == after:
         msg.warn("Nothing to auto-fill: base config is already complete")
     else:
@@ -84,7 +91,7 @@ def fill_config(
             print(diff_strings(before, after))
             msg.divider("END CONFIG DIFF")
             print("")
-    save_config(nlp.config, output_file, is_stdout=is_stdout)
+    save_config(filled, output_file, is_stdout=is_stdout)
 
 
 def init_config(
@@ -132,12 +139,9 @@ def init_config(
     msg.info("Generated template specific for your use case")
     for label, value in use_case.items():
         msg.text(f"- {label}: {value}")
-    use_transformer = bool(template_vars.use_transformer)
     with show_validation_error(hint_fill=False):
         config = util.load_config_from_str(base_template)
         nlp, _ = util.load_model_from_config(config, auto_fill=True)
-    if use_transformer:
-        nlp.config["pretraining"] = {}  # TODO: solve this better?
     msg.good("Auto-filled config with all values")
     save_config(nlp.config, output_file, is_stdout=is_stdout)
 
@@ -161,3 +165,15 @@ def has_spacy_transformers() -> bool:
         return True
     except ImportError:
         return False
+
+
+def validate_config_for_pretrain(config: Config, msg: Printer) -> None:
+    if "tok2vec" not in config["nlp"]["pipeline"]:
+        msg.warn(
+            "No tok2vec component found in the pipeline. If your tok2vec "
+            "component has a different name, you may need to adjust the "
+            "tok2vec_model reference in the [pretraining] block. If you don't "
+            "have a tok2vec component, make sure to add it to your [components] "
+            "and the pipeline specified in the [nlp] block, so you can pretrain "
+            "weights for it."
+        )
