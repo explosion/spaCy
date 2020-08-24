@@ -313,3 +313,11 @@ def test_config_optional_sections():
     # also how Config.interpolate works under the hood.
     new_config = Config().from_str(filled.to_str())
     assert new_config["pretraining"] == {}
+
+
+def test_config_auto_fill_extra_fields():
+    config = Config({"nlp": {"lang": "en"}, "training": {}})
+    assert load_model_from_config(config, auto_fill=True)
+    config = Config({"nlp": {"lang": "en"}, "training": {"extra": "hello"}})
+    nlp, _ = load_model_from_config(config, auto_fill=True)
+    assert "extra" not in nlp.config["training"]
