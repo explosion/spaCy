@@ -59,7 +59,7 @@ def project_assets(project_dir: Path) -> None:
                 asset["git"]["repo"],
                 asset["git"]["path"],
                 dest,
-                branch=asset["git"].get("branch", "HEAD"),
+                branch=asset["git"].get("branch"),
             )
         else:
             url = asset.get("url")
