@@ -30,11 +30,11 @@ class PRFScore:
 
     @property
     def precision(self) -> float:
-        return (self.tp / (self.tp + self.fp + 1e-100)) * 100
+        return (self.tp / (self.tp + self.fp + 1e-100))
 
     @property
     def recall(self) -> float:
-        return (self.tp / (self.tp + self.fn + 1e-100)) * 100
+        return (self.tp / (self.tp + self.fn + 1e-100))
 
     @property
     def fscore(self) -> float:
