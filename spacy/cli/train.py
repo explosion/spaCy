@@ -382,7 +382,7 @@ def setup_printer(
 
         try:
             scores = [
-                "{0:.2f}".format(float(info["other_scores"].get(col, 0.0)))
+                "{0:.2f}".format(float(info["other_scores"].get(col, 0.0)) * 100)
                 for col in score_cols
             ]
         except KeyError as e:
