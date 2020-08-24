@@ -102,7 +102,7 @@ def test_tokenization(sented_doc):
     gold = {"sent_starts": [t.sent_start for t in sented_doc]}
     example = Example.from_dict(sented_doc, gold)
     scores = scorer.score([example])
-    assert scores["token_acc"] == 1.0
+    assert scores["token_acc"] == 100.0
 
     nlp = English()
     example.predicted = Doc(
@@ -123,7 +123,7 @@ def test_sents(sented_doc):
     gold = {"sent_starts": [t.sent_start for t in sented_doc]}
     example = Example.from_dict(sented_doc, gold)
     scores = scorer.score([example])
-    assert scores["sents_f"] == 1.0
+    assert scores["sents_f"] == 100.0
 
     # One sentence start is moved
     gold["sent_starts"][3] = 0
@@ -149,14 +149,14 @@ def test_las_per_type(en_vocab):
         examples.append(example)
     results = scorer.score(examples)
 
-    assert results["dep_uas"] == 1.0
-    assert results["dep_las"] == 1.0
-    assert results["dep_las_per_type"]["nsubj"]["p"] == 1.0
-    assert results["dep_las_per_type"]["nsubj"]["r"] == 1.0
-    assert results["dep_las_per_type"]["nsubj"]["f"] == 1.0
-    assert results["dep_las_per_type"]["compound"]["p"] == 1.0
-    assert results["dep_las_per_type"]["compound"]["r"] == 1.0
-    assert results["dep_las_per_type"]["compound"]["f"] == 1.0
+    assert results["dep_uas"] == 100.0
+    assert results["dep_las"] == 100.0
+    assert results["dep_las_per_type"]["nsubj"]["p"] == 100.0
+    assert results["dep_las_per_type"]["nsubj"]["r"] == 100.0
+    assert results["dep_las_per_type"]["nsubj"]["f"] == 100.0
+    assert results["dep_las_per_type"]["compound"]["p"] == 100.0
+    assert results["dep_las_per_type"]["compound"]["r"] == 100.0
+    assert results["dep_las_per_type"]["compound"]["f"] == 100.0
 
     # One dep is incorrect in Doc
     scorer = Scorer()
@@ -174,13 +174,13 @@ def test_las_per_type(en_vocab):
         examples.append(example)
     results = scorer.score(examples)
 
-    assert results["dep_uas"] == 1.0
+    assert results["dep_uas"] == 100.0
     assert_almost_equal(results["dep_las"], 0.9090909)
     assert results["dep_las_per_type"]["nsubj"]["p"] == 0
     assert results["dep_las_per_type"]["nsubj"]["r"] == 0
     assert results["dep_las_per_type"]["nsubj"]["f"] == 0
     assert_almost_equal(results["dep_las_per_type"]["compound"]["p"], 0.666666666)
-    assert results["dep_las_per_type"]["compound"]["r"] == 1.0
+    assert results["dep_las_per_type"]["compound"]["r"] == 100.0
     assert results["dep_las_per_type"]["compound"]["f"] == 0.8
 
 
@@ -202,12 +202,12 @@ def test_ner_per_type(en_vocab):
         examples.append(example)
     results = scorer.score(examples)
 
-    assert results["ents_p"] == 1.0
-    assert results["ents_r"] == 1.0
-    assert results["ents_f"] == 1.0
-    assert results["ents_per_type"]["CARDINAL"]["p"] == 1.0
-    assert results["ents_per_type"]["CARDINAL"]["r"] == 1.0
-    assert results["ents_per_type"]["CARDINAL"]["f"] == 1.0
+    assert results["ents_p"] == 100.0
+    assert results["ents_r"] == 100.0
+    assert results["ents_f"] == 100.0
+    assert results["ents_per_type"]["CARDINAL"]["p"] == 100.0
+    assert results["ents_per_type"]["CARDINAL"]["r"] == 100.0
+    assert results["ents_per_type"]["CARDINAL"]["f"] == 100.0
 
     # Doc has one missing and one extra entity
     # Entity type MONEY is not present in Doc
@@ -233,15 +233,15 @@ def test_ner_per_type(en_vocab):
     assert "GPE" in results["ents_per_type"]
     assert "MONEY" in results["ents_per_type"]
     assert "ORG" in results["ents_per_type"]
-    assert results["ents_per_type"]["GPE"]["p"] == 1.0
-    assert results["ents_per_type"]["GPE"]["r"] == 1.0
-    assert results["ents_per_type"]["GPE"]["f"] == 1.0
+    assert results["ents_per_type"]["GPE"]["p"] == 100.0
+    assert results["ents_per_type"]["GPE"]["r"] == 100.0
+    assert results["ents_per_type"]["GPE"]["f"] == 100.0
     assert results["ents_per_type"]["MONEY"]["p"] == 0
     assert results["ents_per_type"]["MONEY"]["r"] == 0
     assert results["ents_per_type"]["MONEY"]["f"] == 0
-    assert results["ents_per_type"]["ORG"]["p"] == 0.5
-    assert results["ents_per_type"]["ORG"]["r"] == 1.0
-    assert results["ents_per_type"]["ORG"]["f"] == approx(0.6666666)
+    assert results["ents_per_type"]["ORG"]["p"] == 50.0
+    assert results["ents_per_type"]["ORG"]["r"] == 100.0
+    assert results["ents_per_type"]["ORG"]["f"] == approx(66.66666)
 
 
 def test_tag_score(tagged_doc):
@@ -256,10 +256,10 @@ def test_tag_score(tagged_doc):
     example = Example.from_dict(tagged_doc, gold)
     results = scorer.score([example])
 
-    assert results["tag_acc"] == 1.0
-    assert results["pos_acc"] == 1.0
-    assert results["morph_acc"] == 1.0
-    assert results["morph_per_feat"]["NounType"]["f"] == 1.0
+    assert results["tag_acc"] == 100.0
+    assert results["pos_acc"] == 100.0
+    assert results["morph_acc"] == 100.0
+    assert results["morph_per_feat"]["NounType"]["f"] == 100.0
 
     # Gold annotation is modified
     scorer = Scorer()
@@ -282,9 +282,9 @@ def test_tag_score(tagged_doc):
     assert results["tag_acc"] == 0.9
     assert results["pos_acc"] == 0.9
     assert results["morph_acc"] == approx(0.8)
-    assert results["morph_per_feat"]["NounType"]["f"] == 1.0
+    assert results["morph_per_feat"]["NounType"]["f"] == 100.0
     assert results["morph_per_feat"]["Poss"]["f"] == 0.0
-    assert results["morph_per_feat"]["Number"]["f"] == approx(0.72727272)
+    assert results["morph_per_feat"]["Number"]["f"] == approx(72.727272)
 
 
 def test_roc_auc_score():
