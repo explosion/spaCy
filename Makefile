@@ -6,7 +6,9 @@ SPACY_EXTRAS := spacy-lookups-data jieba pkuseg==0.0.25 sudachipy sudachidict_co
 version := $(shell "bin/get-version.sh")
 package := $(shell "bin/get-package.sh")
 
-dist/$(package)-$(version).pex : wheelhouse/spacy-$(version).stamp
+SPACY_BIN := $(package)-$(version).pex
+
+dist/$(package)-$(SPACY_BIN) : wheelhouse/spacy-$(version).stamp
 	$(VENV)/bin/pex \
 		-f ./wheelhouse \
 		--no-index \
