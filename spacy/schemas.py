@@ -233,6 +233,11 @@ class ConfigSchemaNlp(BaseModel):
         arbitrary_types_allowed = True
 
 
+class ConfigSchemaPretrainEmpty(BaseModel):
+    class Config:
+        extra = "forbid"
+
+
 class ConfigSchemaPretrain(BaseModel):
     # fmt: off
     max_epochs: StrictInt = Field(..., title="Maximum number of epochs to train for")
@@ -257,16 +262,17 @@ class ConfigSchemaPretrain(BaseModel):
 class ConfigSchema(BaseModel):
     training: ConfigSchemaTraining
     nlp: ConfigSchemaNlp
-    pretraining: ConfigSchemaPretrain = {}
+    pretraining: Union[ConfigSchemaPretrain, ConfigSchemaPretrainEmpty] = {}
     components: Dict[str, Dict[str, Any]]
 
     @root_validator
     def validate_config(cls, values):
         """Perform additional validation for settings with dependencies."""
         pt = values.get("pretraining")
-        if pt and pt.objective.get("type") == "vectors" and not values["nlp"].vectors:
-            err = "Need nlp.vectors if pretraining.objective.type is vectors"
-            raise ValueError(err)
+        if pt and not isinstance(pt, ConfigSchemaPretrainEmpty):
+            if pt.objective.get("type") == "vectors" and not values["nlp"].vectors:
+                err = "Need nlp.vectors if pretraining.objective.type is vectors"
+                raise ValueError(err)
         return values
 
     class Config:
