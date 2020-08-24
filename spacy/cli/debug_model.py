@@ -51,7 +51,7 @@ def debug_model_cli(
     with show_validation_error(config_path):
         config = util.load_config(config_path, overrides=config_overrides)
         nlp, config = util.load_model_from_config(config_path)
-    seed = config["pretraining"]["seed"]
+    seed = config["training"]["seed"]
     if seed is not None:
         msg.info(f"Fixing random seed: {seed}")
         fix_random_seed(seed)
