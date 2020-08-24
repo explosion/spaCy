@@ -397,8 +397,8 @@ class Errors:
     E154 = ("One of the attributes or values is not supported for token "
             "patterns. Please use the option validate=True with Matcher, "
             "PhraseMatcher, or EntityRuler for more details.")
-    E155 = ("The pipeline needs to include a tagger in order to use "
-            "Matcher or PhraseMatcher with the attributes POS, TAG, or LEMMA. "
+    E155 = ("The pipeline needs to include a {pipe} in order to use "
+            "Matcher or PhraseMatcher with the attribute {attr}. "
             "Try using nlp() instead of nlp.make_doc() or list(nlp.pipe()) "
             "instead of list(nlp.tokenizer.pipe()).")
     E156 = ("The pipeline needs to include a parser in order to use "

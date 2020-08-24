@@ -6,7 +6,7 @@ from .pipe import Pipe
 from ..errors import Errors
 from ..language import Language
 from ..matcher import Matcher
-from ..symbols import IDS
+from ..symbols import IDS, TAG, POS, MORPH, LEMMA
 from ..tokens import Doc, Span
 from ..tokens._retokenize import normalize_token_attrs, set_token_attrs
 from ..vocab import Vocab
@@ -93,6 +93,13 @@ class AttributeRuler(Pipe):
                     )
                 ) from None
             set_token_attrs(token, attrs)
+            for attr in attrs:
+                if attr == TAG:
+                    doc.is_tagged = True
+                elif attr == POS or attr == MORPH:
+                    doc.is_morphed = True
+                elif attr == LEMMA:
+                    doc.is_lemmatized = True
         return doc
 
     def pipe(self, stream, *, batch_size=128):

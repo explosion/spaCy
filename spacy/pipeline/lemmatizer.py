@@ -157,6 +157,7 @@ class Lemmatizer(Pipe):
         for token in doc:
             if self.overwrite or token.lemma == 0:
                 token.lemma_ = self.lemmatize(token)[0]
+        doc.is_lemmatized = True
         return doc
 
     def pipe(self, stream, *, batch_size=128):

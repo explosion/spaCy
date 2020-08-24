@@ -52,6 +52,7 @@ cdef class Doc:
     cdef public bint is_tagged
     cdef public bint is_parsed
     cdef public bint is_morphed
+    cdef public bint is_lemmatized
 
     cdef public float sentiment
 

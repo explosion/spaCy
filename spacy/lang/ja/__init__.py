@@ -70,6 +70,9 @@ class JapaneseTokenizer(DummyTokenizer):
         doc.user_data["inflections"] = inflections
         doc.user_data["reading_forms"] = readings
         doc.user_data["sub_tokens"] = sub_tokens_list
+        doc.is_tagged = True
+        doc.is_morphed = True
+        doc.is_lemmatized = True
         return doc
 
     def _get_dtokens(self, sudachipy_tokens, need_sub_tokens: bool = True):

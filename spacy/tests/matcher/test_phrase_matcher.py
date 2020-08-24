@@ -190,6 +190,7 @@ def test_phrase_matcher_validation(en_vocab):
     doc1.is_parsed = True
     doc2 = Doc(en_vocab, words=["Test"])
     doc2.is_tagged = True
+    doc2.is_morphed = True
     doc3 = Doc(en_vocab, words=["Test"])
     matcher = PhraseMatcher(en_vocab, validate=True)
     with pytest.warns(UserWarning):
@@ -215,6 +216,8 @@ def test_attr_pipeline_checks(en_vocab):
     doc1.is_parsed = True
     doc2 = Doc(en_vocab, words=["Test"])
     doc2.is_tagged = True
+    doc2.is_morphed = True
+    doc2.is_lemmatized = True
     doc3 = Doc(en_vocab, words=["Test"])
     # DEP requires is_parsed
     matcher = PhraseMatcher(en_vocab, attr="DEP")
@@ -223,7 +226,7 @@ def test_attr_pipeline_checks(en_vocab):
         matcher.add("TEST2", [doc2])
     with pytest.raises(ValueError):
         matcher.add("TEST3", [doc3])
-    # TAG, POS, LEMMA require is_tagged
+    # TAG, POS, LEMMA require is_tagged / is_morphed / is_lemmatized
     for attr in ("TAG", "POS", "LEMMA"):
         matcher = PhraseMatcher(en_vocab, attr=attr)
         matcher.add("TEST2", [doc2])

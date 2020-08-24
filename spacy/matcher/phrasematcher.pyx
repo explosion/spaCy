@@ -4,7 +4,7 @@ from preshed.maps cimport map_init, map_set, map_get, map_clear, map_iter
 
 import warnings
 
-from ..attrs cimport ORTH, POS, TAG, DEP, LEMMA
+from ..attrs cimport ORTH, POS, TAG, DEP, LEMMA, MORPH
 from ..structs cimport TokenC
 from ..tokens.token cimport Token
 from ..typedefs cimport attr_t
@@ -183,8 +183,14 @@ cdef class PhraseMatcher:
             if len(doc) == 0:
                 continue
             if isinstance(doc, Doc):
-                if self.attr in (POS, TAG, LEMMA) and not doc.is_tagged:
-                    raise ValueError(Errors.E155.format())
+                if self.attr == TAG and not doc.is_tagged:
+                    raise ValueError(Errors.E155.format(pipe="tagger", attr="TAG"))
+                if self.attr == POS and not doc.is_morphed:
+                    raise ValueError(Errors.E155.format(pipe="morphologizer", attr="POS"))
+                if self.attr == MORPH and not doc.is_morphed:
+                    raise ValueError(Errors.E155.format(pipe="morphologizer", attr="MORPH"))
+                if self.attr == LEMMA and not doc.is_lemmatized:
+                    raise ValueError(Errors.E155.format(pipe="lemmatizer", attr="LEMMA"))
                 if self.attr == DEP and not doc.is_parsed:
                     raise ValueError(Errors.E156.format())
                 if self._validate and (doc.is_tagged or doc.is_parsed) \

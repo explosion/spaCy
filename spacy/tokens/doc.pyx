@@ -191,6 +191,8 @@ cdef class Doc:
         self.max_length = size
         self.length = 0
         self.is_tagged = False
+        self.is_morphed = False
+        self.is_lemmatized = False
         self.is_parsed = False
         self.sentiment = 0.0
         self.cats = {}
@@ -225,6 +227,8 @@ cdef class Doc:
         # There's no information we'd like to add to it, so I guess so?
         if self.length == 0:
             self.is_tagged = True
+            self.is_morphed = True
+            self.is_lemmatized = True
             self.is_parsed = True
 
     @property
@@ -638,6 +642,8 @@ cdef class Doc:
         if self.length == 0:
             # Flip these to false when we see the first token.
             self.is_tagged = False
+            self.is_morphed = False
+            self.is_lemmatized = False
             self.is_parsed = False
         if self.length == self.max_length:
             self._realloc(self.length * 2)
@@ -856,7 +862,9 @@ cdef class Doc:
                 Token.set_struct_attr(token, attr_ids[j], value)
         # Set flags
         self.is_parsed = bool(self.is_parsed or HEAD in attrs)
-        self.is_tagged = bool(self.is_tagged or TAG in attrs or POS in attrs)
+        self.is_tagged = bool(self.is_tagged or TAG in attrs)
+        self.is_morphed = bool(self.is_morphed or MORPH in attrs or POS in attrs)
+        self.is_lemmatized = bool(self.is_lemmatized or LEMMA in attrs)
         # If document is parsed, set children
         if self.is_parsed:
             set_children_from_heads(self.c, length)
@@ -864,8 +872,8 @@ cdef class Doc:
 
     @staticmethod
     def from_docs(docs, ensure_whitespace=True, attrs=None):
-        """Concatenate multiple Doc objects to form a new one. Raises an error if the `Doc` objects do not all share
-        the same `Vocab`.
+        """Concatenate multiple Doc objects to form a new one. Raises an error
+        if the `Doc` objects do not all share the same `Vocab`.
 
         docs (list): A list of Doc objects.
         ensure_whitespace (bool): Insert a space between two adjacent docs whenever the first doc does not end in whitespace.
@@ -883,16 +891,10 @@ cdef class Doc:
         (vocab,) = vocab
 
         if attrs is None:
-            attrs = [LEMMA, NORM]
-            if all(doc.is_nered for doc in docs):
-                attrs.extend([ENT_IOB, ENT_KB_ID, ENT_TYPE])
-            # TODO: separate for is_morphed?
-            if all(doc.is_tagged for doc in docs):
-                attrs.extend([TAG, POS, MORPH])
-            if all(doc.is_parsed for doc in docs):
-                attrs.extend([HEAD, DEP])
-            else:
-                attrs.append(SENT_START)
+            attrs = set()
+            for doc in docs:
+                attrs.update(doc._get_array_attrs())
+            attrs = list(attrs)
         else:
             if any(isinstance(attr, str) for attr in attrs):     # resolve attribute names
                 attrs = [intify_attr(attr) for attr in attrs]    # intify_attr returns None for invalid attrs
@@ -963,8 +965,9 @@ cdef class Doc:
         other.cats = copy.deepcopy(self.cats)
         other.user_data = copy.deepcopy(self.user_data)
         other.is_tagged = self.is_tagged
-        other.is_parsed = self.is_parsed
         other.is_morphed = self.is_morphed
+        other.is_lemmatized = self.is_lemmatized
+        other.is_parsed = self.is_parsed
         other.sentiment = self.sentiment
         other.has_unknown_spaces = self.has_unknown_spaces
         other.user_hooks = dict(self.user_hooks)
@@ -1038,15 +1041,7 @@ cdef class Doc:
 
         DOCS: https://spacy.io/api/doc#to_bytes
         """
-        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE, ENT_ID, NORM, ENT_KB_ID]
-        if self.is_tagged:
-            array_head.extend([TAG, POS])
-        # If doc parsed add head and dep attribute
-        if self.is_parsed:
-            array_head.extend([HEAD, DEP])
-        # Otherwise add sent_start
-        else:
-            array_head.append(SENT_START)
+        array_head = self._get_array_attrs()
         strings = set()
         for token in self:
             strings.add(token.tag_)
@@ -1216,8 +1211,12 @@ cdef class Doc:
         for token in self:
             token_data = {"id": token.i, "start": token.idx, "end": token.idx + len(token)}
             if self.is_tagged:
-                token_data["pos"] = token.pos_
                 token_data["tag"] = token.tag_
+            if self.is_morphed:
+                token_data["pos"] = token.pos_
+                token_data["morph"] = token.morph_
+            if self.is_lemmatized:
+                token_data["lemma"] = token.lemma_
             if self.is_parsed:
                 token_data["dep"] = token.dep_
                 token_data["head"] = token.head.i
@@ -1263,6 +1262,24 @@ cdef class Doc:
                     end_idx -= 1
                     j += 1
         return output
+
+    def _get_array_attrs(self):
+        array_head = [LENGTH, SPACY, NORM]
+        if self.is_tagged:
+            array_head.append(TAG)
+        if self.is_morphed:
+            array_head.extend([POS, MORPH])
+        if self.is_lemmatized:
+            array_head.append(LEMMA)
+        # If self parsed add head and dep attribute
+        if self.is_parsed:
+            array_head.extend([HEAD, DEP])
+        # Otherwise add sent_start
+        else:
+            array_head.append(SENT_START)
+        if self.is_nered:
+            array_head.extend([ENT_IOB, ENT_TYPE, ENT_ID, ENT_KB_ID])
+        return array_head
 
 
 cdef int token_by_start(const TokenC* tokens, int length, int start_char) except -2:

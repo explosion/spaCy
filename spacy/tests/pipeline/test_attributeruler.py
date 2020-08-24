@@ -71,6 +71,8 @@ def test_attributeruler_init(nlp, pattern_dicts):
     assert doc[2].morph_ == "Case=Nom|Number=Plur"
     assert doc[3].lemma_ == "cat"
     assert doc[3].morph_ == "Case=Nom|Number=Sing"
+    assert doc.is_lemmatized
+    assert doc.is_morphed
 
 
 def test_attributeruler_init_patterns(nlp, pattern_dicts):
@@ -81,6 +83,8 @@ def test_attributeruler_init_patterns(nlp, pattern_dicts):
     assert doc[2].morph_ == "Case=Nom|Number=Plur"
     assert doc[3].lemma_ == "cat"
     assert doc[3].morph_ == "Case=Nom|Number=Sing"
+    assert doc.is_lemmatized
+    assert doc.is_morphed
     nlp.remove_pipe("attribute_ruler")
     # initialize with patterns from asset
     nlp.add_pipe(
@@ -92,6 +96,8 @@ def test_attributeruler_init_patterns(nlp, pattern_dicts):
     assert doc[2].morph_ == "Case=Nom|Number=Plur"
     assert doc[3].lemma_ == "cat"
     assert doc[3].morph_ == "Case=Nom|Number=Sing"
+    assert doc.is_lemmatized
+    assert doc.is_morphed
 
 
 def test_attributeruler_tag_map(nlp, tag_map):

@@ -380,7 +380,7 @@ def test_issue3959():
     doc[0].pos_ = "NOUN"
     assert doc[0].pos_ == "NOUN"
     # usually this is already True when starting from proper models instead of blank English
-    doc.is_tagged = True
+    doc.is_morphed = True
     with make_tempdir() as tmp_dir:
         file_path = tmp_dir / "my_doc"
         doc.to_disk(file_path)
