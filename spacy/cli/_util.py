@@ -1,5 +1,6 @@
 from typing import Dict, Any, Union, List, Optional, TYPE_CHECKING
 import sys
+import shutil
 from pathlib import Path
 from wasabi import msg
 import srsly
@@ -11,7 +12,7 @@ from thinc.config import Config, ConfigValidationError
 from configparser import InterpolationError
 
 from ..schemas import ProjectConfigSchema, validate
-from ..util import import_file
+from ..util import import_file, run_command, make_tempdir
 
 if TYPE_CHECKING:
     from pathy import Pathy  # noqa: F401
@@ -260,10 +261,23 @@ def upload_file(src: Path, dest: Union[str, "Pathy"]) -> None:
     src (Path): The source path.
     url (str): The destination URL to upload to.
     """
-    dest = ensure_pathy(dest)
-    with dest.open(mode="wb") as output_file:
-        with src.open(mode="rb") as input_file:
-            output_file.write(input_file.read())
+    import smart_open
+
+    # This logic is pretty hacky. We'd like pathy to do this probably?
+    if ":/" not in str(dest):
+        # Local path
+        with Path(dest).open(mode="wb") as output_file:
+            with src.open(mode="rb") as input_file:
+                output_file.write(input_file.read())
+    elif str(dest).startswith("http") or str(dest).startswith("https"):
+        with smart_open.open(str(dest), mode="wb") as output_file:
+            with src.open(mode="rb") as input_file:
+                output_file.write(input_file.read())
+    else:
+        dest = ensure_pathy(dest)
+        with dest.open(mode="wb") as output_file:
+            with src.open(mode="rb") as input_file:
+                output_file.write(input_file.read())
 
 
 def download_file(src: Union[str, "Pathy"], dest: Path, *, force: bool = False) -> None:
@@ -274,12 +288,24 @@ def download_file(src: Union[str, "Pathy"], dest: Path, *, force: bool = False) 
     force (bool): Whether to force download even if file exists.
         If False, the download will be skipped.
     """
+    import smart_open
+
+    # This logic is pretty hacky. We'd like pathy to do this probably?
     if dest.exists() and not force:
         return None
-    src = ensure_pathy(src)
-    with src.open(mode="rb") as input_file:
-        with dest.open(mode="wb") as output_file:
-            output_file.write(input_file.read())
+    if src.startswith("http"):
+        with smart_open.open(src, mode="rb") as input_file:
+            with dest.open(mode="wb") as output_file:
+                output_file.write(input_file.read())
+    elif ":/" not in src:
+        with open(src, mode="rb") as input_file:
+            with dest.open(mode="wb") as output_file:
+                output_file.write(input_file.read())
+    else:
+        src = ensure_pathy(src)
+        with src.open(mode="rb") as input_file:
+            with dest.open(mode="wb") as output_file:
+                output_file.write(input_file.read())
 
 
 def ensure_pathy(path):
@@ -288,3 +314,29 @@ def ensure_pathy(path):
     from pathy import Pathy  # noqa: F811
 
     return Pathy(path)
+
+
+def git_sparse_checkout(
+    repo: str, subpath: str, dest: Path, *, branch: Optional[str] = None
+):
+    if dest.exists():
+        raise IOError("Destination of checkout must not exist")
+    if not dest.parent.exists():
+        raise IOError("Parent of destination of checkout must exist")
+    # We're using Git and sparse checkout to only clone the files we need
+    with make_tempdir() as tmp_dir:
+        cmd = (
+            f"git clone {repo} {tmp_dir} --no-checkout "
+            "--depth 1 --config core.sparseCheckout=true"
+        )
+        if branch is not None:
+            cmd = f"{cmd} -b {branch}"
+        run_command(cmd)
+        with (tmp_dir / ".git" / "info" / "sparse-checkout").open("w") as f:
+            f.write(subpath)
+        run_command(["git", "-C", str(tmp_dir), "fetch"])
+        run_command(["git", "-C", str(tmp_dir), "checkout"])
+        # We need Path(name) to make sure we also support subdirectories
+        shutil.move(str(tmp_dir / Path(subpath)), str(dest))
+        print(dest)
+        print(list(dest.iterdir()))

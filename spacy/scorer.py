@@ -30,17 +30,17 @@ class PRFScore:
 
     @property
     def precision(self) -> float:
-        return (self.tp / (self.tp + self.fp + 1e-100)) * 100
+        return (self.tp / (self.tp + self.fp + 1e-100))
 
     @property
     def recall(self) -> float:
-        return (self.tp / (self.tp + self.fn + 1e-100)) * 100
+        return (self.tp / (self.tp + self.fn + 1e-100))
 
     @property
     def fscore(self) -> float:
         p = self.precision
         r = self.recall
-        return (2 * ((p * r) / (p + r + 1e-100))) * 100
+        return 2 * ((p * r) / (p + r + 1e-100))
 
     def to_dict(self) -> Dict[str, float]:
         return {"p": self.precision, "r": self.recall, "f": self.fscore}

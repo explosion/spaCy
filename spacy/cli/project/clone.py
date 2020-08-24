@@ -6,8 +6,9 @@ import shutil
 import re
 
 from ... import about
-from ...util import ensure_path, run_command, make_tempdir
+from ...util import ensure_path
 from .._util import project_cli, Arg, Opt, COMMAND, PROJECT_FILE
+from .._util import git_sparse_checkout
 
 
 @project_cli.command("clone")
@@ -39,24 +40,11 @@ def project_clone(name: str, dest: Path, *, repo: str = about.__projects__) -> N
     check_clone(name, dest, repo)
     project_dir = dest.resolve()
     repo_name = re.sub(r"(http(s?)):\/\/github.com/", "", repo)
-    # We're using Git and sparse checkout to only clone the files we need
-    with make_tempdir() as tmp_dir:
-        cmd = f"git clone {repo} {tmp_dir} --no-checkout --depth 1 --config core.sparseCheckout=true"
-        try:
-            run_command(cmd)
-        except subprocess.CalledProcessError:
-            err = f"Could not clone the repo '{repo}' into the temp dir '{tmp_dir}'."
-            msg.fail(err)
-        with (tmp_dir / ".git" / "info" / "sparse-checkout").open("w") as f:
-            f.write(name)
-        try:
-            run_command(["git", "-C", str(tmp_dir), "fetch"])
-            run_command(["git", "-C", str(tmp_dir), "checkout"])
-        except subprocess.CalledProcessError:
-            err = f"Could not clone '{name}' from repo '{repo_name}'"
-            msg.fail(err)
-        # We need Path(name) to make sure we also support subdirectories
-        shutil.move(str(tmp_dir / Path(name)), str(project_dir))
+    try:
+        git_sparse_checkout(repo, name, dest)
+    except subprocess.CalledProcessError:
+        err = f"Could not clone '{name}' from repo '{repo_name}'"
+        msg.fail(err)
     msg.good(f"Cloned '{name}' from {repo_name}", project_dir)
     if not (project_dir / PROJECT_FILE).exists():
         msg.warn(f"No {PROJECT_FILE} found in directory")

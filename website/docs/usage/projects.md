@@ -102,6 +102,25 @@ $ cd some_example_project
 $ python -m spacy project assets
 ```
 
+Asset URLs can be a number of different protocols: HTTP, HTTPS, FTP, SSH, and
+even cloud storage such as GCS and S3. You can also fetch assets using git, by
+replacing the `url` string with a `git` block, like this:
+
+> #### project.yml
+>
+> ```yaml
+> assets:
+>   - dest: 'assets/training.spacy'
+>     git: 
+>       repo: "https://github.com/example/repo"
+>       branch: "master"
+>       path: "some/path"
+>     checksum: '63373dd656daa1fd3043ce166a59474c'
+> ```
+
+spaCy will use Git's "sparse checkout" feature, to avoid download the whole
+repository.
+
 ### 3. Run a command {#run}
 
 > #### project.yml
