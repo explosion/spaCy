@@ -9,7 +9,9 @@ endif
 version := $(shell "bin/get-version.sh")
 package := $(shell "bin/get-package.sh")
 
-SPACY_BIN := $(package)-$(version).pex
+ifndef SPACY_BIN
+override SPACY_BIN = $(package)-$(version).pex
+endif
 
 dist/$(SPACY_BIN) : wheelhouse/spacy-$(version).stamp
 	$(VENV)/bin/pex \
