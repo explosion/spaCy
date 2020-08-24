@@ -1,3 +1,4 @@
+from typing import Callable
 import warnings
 from unittest import TestCase
 import pytest
@@ -70,13 +71,15 @@ def entity_linker():
     nlp = Language()
 
     @registry.assets.register("TestIssue5230KB.v1")
-    def dummy_kb() -> KnowledgeBase:
-        kb = KnowledgeBase(entity_vector_length=1)
-        kb.initialize(nlp.vocab)
-        kb.add_entity("test", 0.0, zeros((1, 1), dtype="f"))
-        return kb
+    def dummy_kb() -> Callable[["Vocab"], KnowledgeBase]:
+        def create_kb(vocab):
+            kb = KnowledgeBase(vocab, entity_vector_length=1)
+            kb.add_entity("test", 0.0, zeros((1, 1), dtype="f"))
+            return kb
 
-    config = {"kb": {"@assets": "TestIssue5230KB.v1"}}
+        return create_kb
+
+    config = {"kb_loader": {"@assets": "TestIssue5230KB.v1"}}
     entity_linker = nlp.add_pipe("entity_linker", config=config)
     # need to add model for two reasons:
     # 1. no model leads to error in serialization,
@@ -121,19 +124,17 @@ def test_writer_with_path_py35():
 
 def test_save_and_load_knowledge_base():
     nlp = Language()
-    kb = KnowledgeBase(entity_vector_length=1)
-    kb.initialize(nlp.vocab)
+    kb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
     with make_tempdir() as d:
         path = d / "kb"
         try:
-            kb.dump(path)
+            kb.to_disk(path)
         except Exception as e:
             pytest.fail(str(e))
 
         try:
-            kb_loaded = KnowledgeBase(entity_vector_length=1)
-            kb_loaded.initialize(nlp.vocab)
-            kb_loaded.load_bulk(path)
+            kb_loaded = KnowledgeBase(nlp.vocab, entity_vector_length=1)
+            kb_loaded.from_disk(path)
         except Exception as e:
             pytest.fail(str(e))
 

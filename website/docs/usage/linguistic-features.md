@@ -9,6 +9,7 @@ menu:
   - ['Tokenization', 'tokenization']
   - ['Merging & Splitting', 'retokenization']
   - ['Sentence Segmentation', 'sbd']
+  - ['Vectors & Similarity', 'vectors-similarity']
   - ['Language data', 'language-data']
 ---
 
@@ -428,7 +429,7 @@ nlp = spacy.load("en_core_web_sm")
 doc = nlp("fb is hiring a new vice president of global policy")
 ents = [(e.text, e.start_char, e.end_char, e.label_) for e in doc.ents]
 print('Before', ents)
-# the model didn't recognise "fb" as an entity :(
+# The model didn't recognize "fb" as an entity :(
 
 fb_ent = Span(doc, 0, 1, label="ORG") # create a Span for the new entity
 doc.ents = list(doc.ents) + [fb_ent]
@@ -557,11 +558,11 @@ import spacy
 nlp = spacy.load("my_custom_el_model")
 doc = nlp("Ada Lovelace was born in London")
 
-# document level
+# Document level
 ents = [(e.text, e.label_, e.kb_id_) for e in doc.ents]
 print(ents)  # [('Ada Lovelace', 'PERSON', 'Q7259'), ('London', 'GPE', 'Q84')]
 
-# token level
+# Token level
 ent_ada_0 = [doc[0].text, doc[0].ent_type_, doc[0].ent_kb_id_]
 ent_ada_1 = [doc[1].text, doc[1].ent_type_, doc[1].ent_kb_id_]
 ent_london_5 = [doc[5].text, doc[5].ent_type_, doc[5].ent_kb_id_]
@@ -913,12 +914,12 @@ from spacy.lang.char_classes import ALPHA, ALPHA_LOWER, ALPHA_UPPER
 from spacy.lang.char_classes import CONCAT_QUOTES, LIST_ELLIPSES, LIST_ICONS
 from spacy.util import compile_infix_regex
 
-# default tokenizer
+# Default tokenizer
 nlp = spacy.load("en_core_web_sm")
 doc = nlp("mother-in-law")
 print([t.text for t in doc]) # ['mother', '-', 'in', '-', 'law']
 
-# modify tokenizer infix patterns
+# Modify tokenizer infix patterns
 infixes = (
     LIST_ELLIPSES
     + LIST_ICONS
@@ -928,8 +929,8 @@ infixes = (
             al=ALPHA_LOWER, au=ALPHA_UPPER, q=CONCAT_QUOTES
         ),
         r"(?<=[{a}]),(?=[{a}])".format(a=ALPHA),
-        # EDIT: commented out regex that splits on hyphens between letters:
-        #r"(?<=[{a}])(?:{h})(?=[{a}])".format(a=ALPHA, h=HYPHENS),
+        # ✅ Commented out regex that splits on hyphens between letters:
+        # r"(?<=[{a}])(?:{h})(?=[{a}])".format(a=ALPHA, h=HYPHENS),
         r"(?<=[{a}0-9])[:<>=/](?=[{a}])".format(a=ALPHA),
     ]
 )
@@ -980,7 +981,7 @@ nlp.tokenizer = my_tokenizer
 
 | Argument    | Type              | Description               |
 | ----------- | ----------------- | ------------------------- |
-| `text`      | str               | The raw text to tokenize. |
+| `text`      | `str`             | The raw text to tokenize. |
 | **RETURNS** | [`Doc`](/api/doc) | The tokenized document.   |
 
 #### Example 1: Basic whitespace tokenizer {#custom-tokenizer-example}
@@ -1024,10 +1025,10 @@ produced by the tokenizer.
 >
 > If you're working with transformer models like BERT, check out the
 > [`spacy-transformers`](https://github.com/explosion/spacy-transformers)
-> extension package and [documentation](/usage/transformers). It includes a
-> pipeline component for using pretrained transformer weights and **training
-> transformer models** in spaCy, as well as helpful utilities for aligning word
-> pieces to linguistic tokenization.
+> extension package and [documentation](/usage/embeddings-transformers). It
+> includes a pipeline component for using pretrained transformer weights and
+> **training transformer models** in spaCy, as well as helpful utilities for
+> aligning word pieces to linguistic tokenization.
 
 ```python
 ### Custom BERT word piece tokenizer
@@ -1510,7 +1511,7 @@ adding it to the pipeline using [`nlp.add_pipe`](/api/language#add_pipe).
 </Infobox>
 
 Here's an example of a component that implements a pre-processing rule for
-splitting on `'...'` tokens. The component is added before the parser, which is
+splitting on `"..."` tokens. The component is added before the parser, which is
 then used to further segment the text. That's possible, because `is_sent_start`
 is only set to `True` for some of the tokens – all others still specify `None`
 for unset sentence boundaries. This approach can be useful if you want to
@@ -1538,6 +1539,135 @@ def set_custom_boundaries(doc):
 nlp.add_pipe("set_custom_boundaries", before="parser")
 doc = nlp(text)
 print("After:", [sent.text for sent in doc.sents])
+```
+
+## Word vectors and semantic similarity {#vectors-similarity}
+
+import Vectors101 from 'usage/101/\_vectors-similarity.md'
+
+<Vectors101 />
+
+### Adding word vectors {#adding-vectors}
+
+Custom word vectors can be trained using a number of open-source libraries, such
+as [Gensim](https://radimrehurek.com/gensim), [FastText](https://fasttext.cc),
+or Tomas Mikolov's original
+[Word2vec implementation](https://code.google.com/archive/p/word2vec/). Most
+word vector libraries output an easy-to-read text-based format, where each line
+consists of the word followed by its vector. For everyday use, we want to
+convert the vectors model into a binary format that loads faster and takes up
+less space on disk. The easiest way to do this is the
+[`init model`](/api/cli#init-model) command-line utility. This will output a
+spaCy model in the directory `/tmp/la_vectors_wiki_lg`, giving you access to
+some nice Latin vectors. You can then pass the directory path to
+[`spacy.load`](/api/top-level#spacy.load).
+
+> #### Usage example
+>
+> ```python
+> nlp_latin = spacy.load("/tmp/la_vectors_wiki_lg")
+> doc1 = nlp_latin("Caecilius est in horto")
+> doc2 = nlp_latin("servus est in atrio")
+> doc1.similarity(doc2)
+> ```
+
+```cli
+$ wget https://s3-us-west-1.amazonaws.com/fasttext-vectors/word-vectors-v2/cc.la.300.vec.gz
+$ python -m spacy init model en /tmp/la_vectors_wiki_lg --vectors-loc cc.la.300.vec.gz
+```
+
+<Accordion title="How to optimize vector coverage" id="custom-vectors-coverage" spaced>
+
+To help you strike a good balance between coverage and memory usage, spaCy's
+[`Vectors`](/api/vectors) class lets you map **multiple keys** to the **same
+row** of the table. If you're using the
+[`spacy init model`](/api/cli#init-model) command to create a vocabulary,
+pruning the vectors will be taken care of automatically if you set the
+`--prune-vectors` flag. You can also do it manually in the following steps:
+
+1. Start with a **word vectors model** that covers a huge vocabulary. For
+   instance, the [`en_vectors_web_lg`](/models/en-starters#en_vectors_web_lg)
+   model provides 300-dimensional GloVe vectors for over 1 million terms of
+   English.
+2. If your vocabulary has values set for the `Lexeme.prob` attribute, the
+   lexemes will be sorted by descending probability to determine which vectors
+   to prune. Otherwise, lexemes will be sorted by their order in the `Vocab`.
+3. Call [`Vocab.prune_vectors`](/api/vocab#prune_vectors) with the number of
+   vectors you want to keep.
+
+```python
+nlp = spacy.load('en_vectors_web_lg')
+n_vectors = 105000  # number of vectors to keep
+removed_words = nlp.vocab.prune_vectors(n_vectors)
+
+assert len(nlp.vocab.vectors) <= n_vectors  # unique vectors have been pruned
+assert nlp.vocab.vectors.n_keys > n_vectors  # but not the total entries
+```
+
+[`Vocab.prune_vectors`](/api/vocab#prune_vectors) reduces the current vector
+table to a given number of unique entries, and returns a dictionary containing
+the removed words, mapped to `(string, score)` tuples, where `string` is the
+entry the removed word was mapped to, and `score` the similarity score between
+the two words.
+
+```python
+### Removed words
+{
+    "Shore": ("coast", 0.732257),
+    "Precautionary": ("caution", 0.490973),
+    "hopelessness": ("sadness", 0.742366),
+    "Continous": ("continuous", 0.732549),
+    "Disemboweled": ("corpse", 0.499432),
+    "biostatistician": ("scientist", 0.339724),
+    "somewheres": ("somewheres", 0.402736),
+    "observing": ("observe", 0.823096),
+    "Leaving": ("leaving", 1.0),
+}
+```
+
+In the example above, the vector for "Shore" was removed and remapped to the
+vector of "coast", which is deemed about 73% similar. "Leaving" was remapped to
+the vector of "leaving", which is identical. If you're using the
+[`init model`](/api/cli#init-model) command, you can set the `--prune-vectors`
+option to easily reduce the size of the vectors as you add them to a spaCy
+model:
+
+```cli
+$ python -m spacy init model en /tmp/la_vectors_web_md --vectors-loc la.300d.vec.tgz --prune-vectors 10000
+```
+
+This will create a spaCy model with vectors for the first 10,000 words in the
+vectors model. All other words in the vectors model are mapped to the closest
+vector among those retained.
+
+</Accordion>
+
+### Adding vectors individually {#adding-individual-vectors}
+
+The `vector` attribute is a **read-only** numpy or cupy array (depending on
+whether you've configured spaCy to use GPU memory), with dtype `float32`. The
+array is read-only so that spaCy can avoid unnecessary copy operations where
+possible. You can modify the vectors via the [`Vocab`](/api/vocab) or
+[`Vectors`](/api/vectors) table. Using the
+[`Vocab.set_vector`](/api/vocab#set_vector) method is often the easiest approach
+if you have vectors in an arbitrary format, as you can read in the vectors with
+your own logic, and just set them with a simple loop. This method is likely to
+be slower than approaches that work with the whole vectors table at once, but
+it's a great approach for once-off conversions before you save out your model to
+disk.
+
+```python
+### Adding vectors
+from spacy.vocab import Vocab
+
+vector_data = {
+    "dog": numpy.random.uniform(-1, 1, (300,)),
+    "cat": numpy.random.uniform(-1, 1, (300,)),
+    "orange": numpy.random.uniform(-1, 1, (300,))
+}
+vocab = Vocab()
+for word, vector in vector_data.items():
+    vocab.set_vector(word, vector)
 ```
 
 ## Language data {#language-data}
@@ -1594,9 +1724,8 @@ language name, and even train models with it and refer to it in your
 > needs to be available during training. You can load a Python file containing
 > the code using the `--code` argument:
 >
-> ```bash
-> ### {wrap="true"}
-> $ python -m spacy train config.cfg --code code.py
+> ```cli
+> python -m spacy train config.cfg --code code.py
 > ```
 
 ```python

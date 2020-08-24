@@ -7,7 +7,8 @@ source: spacy/morphology.pyx
 Store the possible morphological analyses for a language, and index them by
 hash. To save space on each token, tokens only know the hash of their
 morphological analysis, so queries of morphological attributes are delegated to
-this class.
+this class. See [`MorphAnalysis`](/api/morphology#morphanalysis) for the
+container storing a single morphological analysis.
 
 ## Morphology.\_\_init\_\_ {#init tag="method"}
 
@@ -21,15 +22,17 @@ Create a Morphology object.
 > morphology = Morphology(strings)
 > ```
 
-| Name      | Type          | Description       |
-| --------- | ------------- | ----------------- |
-| `strings` | `StringStore` | The string store. |
+| Name      | Description                       |
+| --------- | --------------------------------- |
+| `strings` | The string store. ~~StringStore~~ |
 
 ## Morphology.add {#add tag="method"}
 
 Insert a morphological analysis in the morphology table, if not already present.
-The morphological analysis may be provided in the UD FEATS format as a string or
-in the tag map dictionary format. Returns the hash of the new analysis.
+The morphological analysis may be provided in the Universal Dependencies
+[FEATS](https://universaldependencies.org/format.html#morphological-annotation)
+format as a string or in the tag map dictionary format. Returns the hash of the
+new analysis.
 
 > #### Example
 >
@@ -39,9 +42,9 @@ in the tag map dictionary format. Returns the hash of the new analysis.
 > assert hash == nlp.vocab.strings[feats]
 > ```
 
-| Name       | Type               | Description                 |
-| ---------- | ------------------ | --------------------------- |
-| `features` | `Union[Dict, str]` | The morphological features. |
+| Name       | Description                                      |
+| ---------- | ------------------------------------------------ |
+| `features` | The morphological features. ~~Union[Dict, str]~~ |
 
 ## Morphology.get {#get tag="method"}
 
@@ -53,16 +56,20 @@ in the tag map dictionary format. Returns the hash of the new analysis.
 > assert nlp.vocab.morphology.get(hash) == feats
 > ```
 
-Get the FEATS string for the hash of the morphological analysis.
+Get the
+[FEATS](https://universaldependencies.org/format.html#morphological-annotation)
+string for the hash of the morphological analysis.
 
-| Name    | Type | Description                             |
-| ------- | ---- | --------------------------------------- |
-| `morph` | int  | The hash of the morphological analysis. |
+| Name    | Description                                     |
+| ------- | ----------------------------------------------- |
+| `morph` | The hash of the morphological analysis. ~~int~~ |
 
 ## Morphology.feats_to_dict {#feats_to_dict tag="staticmethod"}
 
-Convert a string FEATS representation to a dictionary of features and values in
-the same format as the tag map.
+Convert a string
+[FEATS](https://universaldependencies.org/format.html#morphological-annotation)
+representation to a dictionary of features and values in the same format as the
+tag map.
 
 > #### Example
 >
@@ -72,14 +79,16 @@ the same format as the tag map.
 > assert d == {"Feat1": "Val1", "Feat2": "Val2"}
 > ```
 
-| Name        | Type | Description                                                        |
-| ----------- | ---- | ------------------------------------------------------------------ |
-| `feats`     | str  | The morphological features in Universal Dependencies FEATS format. |
-| **RETURNS** | dict | The morphological features as a dictionary.                        |
+| Name        | Description                                                                                                                                          |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `feats`     | The morphological features in Universal Dependencies [FEATS](https://universaldependencies.org/format.html#morphological-annotation) format. ~~str~~ |
+| **RETURNS** | The morphological features as a dictionary. ~~Dict[str, str]~~                                                                                       |
 
 ## Morphology.dict_to_feats {#dict_to_feats tag="staticmethod"}
 
-Convert a dictionary of features and values to a string FEATS representation.
+Convert a dictionary of features and values to a string
+[FEATS](https://universaldependencies.org/format.html#morphological-annotation)
+representation.
 
 > #### Example
 >
@@ -89,15 +98,157 @@ Convert a dictionary of features and values to a string FEATS representation.
 > assert f == "Feat1=Val1|Feat2=Val2"
 > ```
 
-| Name         | Type              | Description                                                           |
-| ------------ | ----------------- | --------------------------------------------------------------------- |
-| `feats_dict` | `Dict[str, Dict]` | The morphological features as a dictionary.                           |
-| **RETURNS**  | str               | The morphological features as in Universal Dependencies FEATS format. |
+| Name         | Description                                                                                                                                             |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `feats_dict` | The morphological features as a dictionary. ~~Dict[str, str]~~                                                                                          |
+| **RETURNS**  | The morphological features as in Universal Dependencies [FEATS](https://universaldependencies.org/format.html#morphological-annotation) format. ~~str~~ |
 
 ## Attributes {#attributes}
 
-| Name          | Type  | Description                                  |
-| ------------- | ----- | -------------------------------------------- |
-| `FEATURE_SEP` | `str` | The FEATS feature separator. Default is `|`. |
-| `FIELD_SEP`   | `str` | The FEATS field separator. Default is `=`.   |
-| `VALUE_SEP`   | `str` | The FEATS value separator. Default is `,`.   |
+| Name          | Description                                                                                                                    |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `FEATURE_SEP` | The [FEATS](https://universaldependencies.org/format.html#morphological-annotation) feature separator. Default is `|`. ~~str~~ |
+| `FIELD_SEP`   | The [FEATS](https://universaldependencies.org/format.html#morphological-annotation) field separator. Default is `=`. ~~str~~   |
+| `VALUE_SEP`   | The [FEATS](https://universaldependencies.org/format.html#morphological-annotation) value separator. Default is `,`. ~~str~~   |
+
+## MorphAnalysis {#morphanalysis tag="class" source="spacy/tokens/morphanalysis.pyx"}
+
+Stores a single morphological analysis.
+
+### MorphAnalysis.\_\_init\_\_ {#morphanalysis-init tag="method"}
+
+Initialize a MorphAnalysis object from a Universal Dependencies
+[FEATS](https://universaldependencies.org/format.html#morphological-annotation)
+string or a dictionary of morphological features.
+
+> #### Example
+>
+> ```python
+> from spacy.tokens import MorphAnalysis
+>
+> feats = "Feat1=Val1|Feat2=Val2"
+> m = MorphAnalysis(nlp.vocab, feats)
+> ```
+
+| Name       | Description                                                |
+| ---------- | ---------------------------------------------------------- |
+| `vocab`    | The vocab. ~~Vocab~~                                       |
+| `features` | The morphological features. ~~Union[Dict[str, str], str]~~ |
+
+### MorphAnalysis.\_\_contains\_\_ {#morphanalysis-contains tag="method"}
+
+Whether a feature/value pair is in the analysis.
+
+> #### Example
+>
+> ```python
+> feats = "Feat1=Val1,Val2|Feat2=Val2"
+> morph = MorphAnalysis(nlp.vocab, feats)
+> assert "Feat1=Val1" in morph
+> ```
+
+| Name        | Description                                   |
+| ----------- | --------------------------------------------- |
+| **RETURNS** | A feature/value pair in the analysis. ~~str~~ |
+
+### MorphAnalysis.\_\_iter\_\_ {#morphanalysis-iter tag="method"}
+
+Iterate over the feature/value pairs in the analysis.
+
+> #### Example
+>
+> ```python
+> feats = "Feat1=Val1,Val3|Feat2=Val2"
+> morph = MorphAnalysis(nlp.vocab, feats)
+> assert list(morph) == ["Feat1=Va1", "Feat1=Val3", "Feat2=Val2"]
+> ```
+
+| Name       | Description                                   |
+| ---------- | --------------------------------------------- |
+| **YIELDS** | A feature/value pair in the analysis. ~~str~~ |
+
+### MorphAnalysis.\_\_len\_\_ {#morphanalysis-len tag="method"}
+
+Returns the number of features in the analysis.
+
+> #### Example
+>
+> ```python
+> feats = "Feat1=Val1,Val2|Feat2=Val2"
+> morph = MorphAnalysis(nlp.vocab, feats)
+> assert len(morph) == 3
+> ```
+
+| Name        | Description                                     |
+| ----------- | ----------------------------------------------- |
+| **RETURNS** | The number of features in the analysis. ~~int~~ |
+
+### MorphAnalysis.\_\_str\_\_ {#morphanalysis-str tag="method"}
+
+Returns the morphological analysis in the Universal Dependencies
+[FEATS](https://universaldependencies.org/format.html#morphological-annotation)
+string format.
+
+> #### Example
+>
+> ```python
+> feats = "Feat1=Val1,Val2|Feat2=Val2"
+> morph = MorphAnalysis(nlp.vocab, feats)
+> assert str(morph) == feats
+> ```
+
+| Name        | Description                                                                                                                                |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| **RETURNS** | The analysis in the Universal Dependencies [FEATS](https://universaldependencies.org/format.html#morphological-annotation) format. ~~str~~ |
+
+### MorphAnalysis.get {#morphanalysis-get tag="method"}
+
+Retrieve values for a feature by field.
+
+> #### Example
+>
+> ```python
+> feats = "Feat1=Val1,Val2"
+> morph = MorphAnalysis(nlp.vocab, feats)
+> assert morph.get("Feat1") == ["Val1", "Val2"]
+> ```
+
+| Name        | Description                                      |
+| ----------- | ------------------------------------------------ |
+| `field`     | The field to retrieve. ~~str~~                   |
+| **RETURNS** | A list of the individual features. ~~List[str]~~ |
+
+### MorphAnalysis.to_dict {#morphanalysis-to_dict tag="method"}
+
+Produce a dict representation of the analysis, in the same format as the tag
+map.
+
+> #### Example
+>
+> ```python
+> feats = "Feat1=Val1,Val2|Feat2=Val2"
+> morph = MorphAnalysis(nlp.vocab, feats)
+> assert morph.to_dict() == {"Feat1": "Val1,Val2", "Feat2": "Val2"}
+> ```
+
+| Name        | Description                                                 |
+| ----------- | ----------------------------------------------------------- |
+| **RETURNS** | The dict representation of the analysis. ~~Dict[str, str]~~ |
+
+### MorphAnalysis.from_id {#morphanalysis-from_id tag="classmethod"}
+
+Create a morphological analysis from a given hash ID.
+
+> #### Example
+>
+> ```python
+> feats = "Feat1=Val1|Feat2=Val2"
+> hash = nlp.vocab.strings[feats]
+> morph = MorphAnalysis.from_id(nlp.vocab, hash)
+> assert str(morph) == feats
+> ```
+
+| Name    | Description                              |
+| ------- | ---------------------------------------- |
+| `vocab` | The vocab. ~~Vocab~~                     |
+| `key`   | The hash of the features string. ~~int~~ |

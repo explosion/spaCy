@@ -105,10 +105,10 @@ factory = "tok2vec"
 
 [components.tok2vec.model.embed]
 @architectures = "spacy.MultiHashEmbed.v1"
-width = ${components.tok2vec.model.encode:width}
+width = ${components.tok2vec.model.encode.width}
 rows = {{ 2000 if optimize == "efficiency" else 7000 }}
-also_embed_subwords = {{ true if has_letters else false }}
-also_use_static_vectors = {{ true if optimize == "accuracy" else false }}
+also_embed_subwords = {{ "true" if has_letters else "false" }}
+also_use_static_vectors = {{ "true" if optimize == "accuracy" else "false" }}
 
 [components.tok2vec.model.encode]
 @architectures = "spacy.MaxoutWindowEncoder.v1"
@@ -127,7 +127,7 @@ nO = null
 
 [components.tagger.model.tok2vec]
 @architectures = "spacy.Tok2VecListener.v1"
-width = ${components.tok2vec.model.encode:width}
+width = ${components.tok2vec.model.encode.width}
 {%- endif %}
 
 {% if "parser" in components -%}
@@ -144,7 +144,7 @@ nO = null
 
 [components.parser.model.tok2vec]
 @architectures = "spacy.Tok2VecListener.v1"
-width = ${components.tok2vec.model.encode:width}
+width = ${components.tok2vec.model.encode.width}
 {%- endif %}
 
 {% if "ner" in components %}
@@ -161,7 +161,7 @@ nO = null
 
 [components.ner.model.tok2vec]
 @architectures = "spacy.Tok2VecListener.v1"
-width = ${components.tok2vec.model.encode:width}
+width = ${components.tok2vec.model.encode.width}
 {% endif %}
 {% endif %}
 
@@ -194,12 +194,12 @@ initial_rate = 5e-5
 
 [training.train_corpus]
 @readers = "spacy.Corpus.v1"
-path = ${paths:train}
-max_length = {{ 500 if hardware == "gpu" else 0 }}
+path = ${paths.train}
+max_length = {{ 500 if hardware == "gpu" else 2000 }}
 
 [training.dev_corpus]
 @readers = "spacy.Corpus.v1"
-path = ${paths:dev}
+path = ${paths.dev}
 max_length = 0
 
 {% if use_transformer %}

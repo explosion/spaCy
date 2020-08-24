@@ -9,7 +9,7 @@ new: 2.2
 ---
 
 The `KnowledgeBase` object provides a method to generate
-[`Candidate`](/api/kb/#candidate_init) objects, which are plausible external
+[`Candidate`](/api/kb/#candidate) objects, which are plausible external
 identifiers given a certain textual mention. Each such `Candidate` holds
 information from the relevant KB entities, such as its frequency in text and
 possible aliases. Each entity in the knowledge base also has a pretrained entity
@@ -27,18 +27,18 @@ Create the knowledge base.
 > kb = KnowledgeBase(vocab=vocab, entity_vector_length=64)
 > ```
 
-| Name                   | Type    | Description                              |
-| ---------------------- | ------- | ---------------------------------------- |
-| `vocab`                | `Vocab` | A `Vocab` object.                        |
-| `entity_vector_length` | int     | Length of the fixed-size entity vectors. |
+| Name                   | Description                                      |
+| ---------------------- | ------------------------------------------------ |
+| `vocab`                | The shared vocabulary. ~~Vocab~~                 |
+| `entity_vector_length` | Length of the fixed-size entity vectors. ~~int~~ |
 
 ## KnowledgeBase.entity_vector_length {#entity_vector_length tag="property"}
 
 The length of the fixed-size entity vectors in the knowledge base.
 
-| Name        | Type | Description                              |
-| ----------- | ---- | ---------------------------------------- |
-| **RETURNS** | int  | Length of the fixed-size entity vectors. |
+| Name        | Description                                      |
+| ----------- | ------------------------------------------------ |
+| **RETURNS** | Length of the fixed-size entity vectors. ~~int~~ |
 
 ## KnowledgeBase.add_entity {#add_entity tag="method"}
 
@@ -53,11 +53,11 @@ vector, which should be of length
 > kb.add_entity(entity="Q463035", freq=111, entity_vector=vector2)
 > ```
 
-| Name            | Type   | Description                                     |
-| --------------- | ------ | ----------------------------------------------- |
-| `entity`        | str    | The unique entity identifier                    |
-| `freq`          | float  | The frequency of the entity in a typical corpus |
-| `entity_vector` | vector | The pretrained vector of the entity             |
+| Name            | Description                                                |
+| --------------- | ---------------------------------------------------------- |
+| `entity`        | The unique entity identifier. ~~str~~                      |
+| `freq`          | The frequency of the entity in a typical corpus. ~~float~~ |
+| `entity_vector` | The pretrained vector of the entity. ~~numpy.ndarray~~     |
 
 ## KnowledgeBase.set_entities {#set_entities tag="method"}
 
@@ -70,11 +70,11 @@ frequency and entity vector for each entity.
 > kb.set_entities(entity_list=["Q42", "Q463035"], freq_list=[32, 111], vector_list=[vector1, vector2])
 > ```
 
-| Name          | Type     | Description                       |
-| ------------- | -------- | --------------------------------- |
-| `entity_list` | iterable | List of unique entity identifiers |
-| `freq_list`   | iterable | List of entity frequencies        |
-| `vector_list` | iterable | List of entity vectors            |
+| Name          | Description                                                      |
+| ------------- | ---------------------------------------------------------------- |
+| `entity_list` | List of unique entity identifiers. ~~Iterable[Union[str, int]]~~ |
+| `freq_list`   | List of entity frequencies. ~~Iterable[int]~~                    |
+| `vector_list` | List of entity vectors. ~~Iterable[numpy.ndarray]~~              |
 
 ## KnowledgeBase.add_alias {#add_alias tag="method"}
 
@@ -90,11 +90,11 @@ should not exceed 1.
 > kb.add_alias(alias="Douglas", entities=["Q42", "Q463035"], probabilities=[0.6, 0.3])
 > ```
 
-| Name            | Type     | Description                                        |
-| --------------- | -------- | -------------------------------------------------- |
-| `alias`         | str      | The textual mention or alias                       |
-| `entities`      | iterable | The potential entities that the alias may refer to |
-| `probabilities` | iterable | The prior probabilities of each entity             |
+| Name            | Description                                                                       |
+| --------------- | --------------------------------------------------------------------------------- |
+| `alias`         | The textual mention or alias. ~~str~~                                             |
+| `entities`      | The potential entities that the alias may refer to. ~~Iterable[Union[str, int]]~~ |
+| `probabilities` | The prior probabilities of each entity. ~~Iterable[float]~~                       |
 
 ## KnowledgeBase.\_\_len\_\_ {#len tag="method"}
 
@@ -106,9 +106,9 @@ Get the total number of entities in the knowledge base.
 > total_entities = len(kb)
 > ```
 
-| Name        | Type | Description                                   |
-| ----------- | ---- | --------------------------------------------- |
-| **RETURNS** | int  | The number of entities in the knowledge base. |
+| Name        | Description                                           |
+| ----------- | ----------------------------------------------------- |
+| **RETURNS** | The number of entities in the knowledge base. ~~int~~ |
 
 ## KnowledgeBase.get_entity_strings {#get_entity_strings tag="method"}
 
@@ -120,9 +120,9 @@ Get a list of all entity IDs in the knowledge base.
 > all_entities = kb.get_entity_strings()
 > ```
 
-| Name        | Type | Description                                 |
-| ----------- | ---- | ------------------------------------------- |
-| **RETURNS** | list | The list of entities in the knowledge base. |
+| Name        | Description                                               |
+| ----------- | --------------------------------------------------------- |
+| **RETURNS** | The list of entities in the knowledge base. ~~List[str]~~ |
 
 ## KnowledgeBase.get_size_aliases {#get_size_aliases tag="method"}
 
@@ -134,9 +134,9 @@ Get the total number of aliases in the knowledge base.
 > total_aliases = kb.get_size_aliases()
 > ```
 
-| Name        | Type | Description                                  |
-| ----------- | ---- | -------------------------------------------- |
-| **RETURNS** | int  | The number of aliases in the knowledge base. |
+| Name        | Description                                          |
+| ----------- | ---------------------------------------------------- |
+| **RETURNS** | The number of aliases in the knowledge base. ~~int~~ |
 
 ## KnowledgeBase.get_alias_strings {#get_alias_strings tag="method"}
 
@@ -148,14 +148,14 @@ Get a list of all aliases in the knowledge base.
 > all_aliases = kb.get_alias_strings()
 > ```
 
-| Name        | Type | Description                                |
-| ----------- | ---- | ------------------------------------------ |
-| **RETURNS** | list | The list of aliases in the knowledge base. |
+| Name        | Description                                              |
+| ----------- | -------------------------------------------------------- |
+| **RETURNS** | The list of aliases in the knowledge base. ~~List[str]~~ |
 
 ## KnowledgeBase.get_candidates {#get_candidates tag="method"}
 
 Given a certain textual mention as input, retrieve a list of candidate entities
-of type [`Candidate`](/api/kb/#candidate_init).
+of type [`Candidate`](/api/kb/#candidate).
 
 > #### Example
 >
@@ -163,10 +163,10 @@ of type [`Candidate`](/api/kb/#candidate_init).
 > candidates = kb.get_candidates("Douglas")
 > ```
 
-| Name        | Type     | Description                              |
-| ----------- | -------- | ---------------------------------------- |
-| `alias`     | str      | The textual mention or alias             |
-| **RETURNS** | iterable | The list of relevant `Candidate` objects |
+| Name        | Description                           |
+| ----------- | ------------------------------------- |
+| `alias`     | The textual mention or alias. ~~str~~ |
+| **RETURNS** | iterable                              | The list of relevant `Candidate` objects. ~~List[Candidate]~~ |
 
 ## KnowledgeBase.get_vector {#get_vector tag="method"}
 
@@ -178,10 +178,10 @@ Given a certain entity ID, retrieve its pretrained entity vector.
 > vector = kb.get_vector("Q42")
 > ```
 
-| Name        | Type   | Description       |
-| ----------- | ------ | ----------------- |
-| `entity`    | str    | The entity ID     |
-| **RETURNS** | vector | The entity vector |
+| Name        | Description                          |
+| ----------- | ------------------------------------ |
+| `entity`    | The entity ID. ~~str~~               |
+| **RETURNS** | The entity vector. ~~numpy.ndarray~~ |
 
 ## KnowledgeBase.get_prior_prob {#get_prior_prob tag="method"}
 
@@ -194,27 +194,27 @@ probability of the fact that the mention links to the entity ID.
 > probability = kb.get_prior_prob("Q42", "Douglas")
 > ```
 
-| Name        | Type  | Description                                                    |
-| ----------- | ----- | -------------------------------------------------------------- |
-| `entity`    | str   | The entity ID                                                  |
-| `alias`     | str   | The textual mention or alias                                   |
-| **RETURNS** | float | The prior probability of the `alias` referring to the `entity` |
+| Name        | Description                                                               |
+| ----------- | ------------------------------------------------------------------------- |
+| `entity`    | The entity ID. ~~str~~                                                    |
+| `alias`     | The textual mention or alias. ~~str~~                                     |
+| **RETURNS** | The prior probability of the `alias` referring to the `entity`. ~~float~~ |
 
-## KnowledgeBase.dump {#dump tag="method"}
+## KnowledgeBase.to_disk {#to_disk tag="method"}
 
 Save the current state of the knowledge base to a directory.
 
 > #### Example
 >
 > ```python
-> kb.dump(loc)
+> kb.to_disk(loc)
 > ```
 
-| Name  | Type         | Description                                                                                                           |
-| ----- | ------------ | --------------------------------------------------------------------------------------------------------------------- |
-| `loc` | str / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| Name  | Description                                                                                                                                |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `loc` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
 
-## KnowledgeBase.load_bulk {#load_bulk tag="method"}
+## KnowledgeBase.from_disk {#from_disk tag="method"}
 
 Restore the state of the knowledge base from a given directory. Note that the
 [`Vocab`](/api/vocab) should also be the same as the one used to create the KB.
@@ -226,15 +226,23 @@ Restore the state of the knowledge base from a given directory. Note that the
 > from spacy.vocab import Vocab
 > vocab = Vocab().from_disk("/path/to/vocab")
 > kb = KnowledgeBase(vocab=vocab, entity_vector_length=64)
-> kb.load_bulk("/path/to/kb")
+> kb.from_disk("/path/to/kb")
 > ```
 
-| Name        | Type            | Description                                                                |
-| ----------- | --------------- | -------------------------------------------------------------------------- |
-| `loc`       | str / `Path`    | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| **RETURNS** | `KnowledgeBase` | The modified `KnowledgeBase` object.                                       |
+| Name        | Description                                                                                     |
+| ----------- | ----------------------------------------------------------------------------------------------- |
+| `loc`       | A path to a directory. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+| **RETURNS** | The modified `KnowledgeBase` object. ~~KnowledgeBase~~                                          |
 
-## Candidate.\_\_init\_\_ {#candidate_init tag="method"}
+## Candidate {#candidate tag="class"}
+
+A `Candidate` object refers to a textual mention (alias) that may or may not be
+resolved to a specific entity from a `KnowledgeBase`. This will be used as input
+for the entity linking algorithm which will disambiguate the various candidates
+to the correct one. Each candidate `(alias, entity)` pair is assigned to a
+certain prior probability.
+
+### Candidate.\_\_init\_\_ {#candidate-init tag="method"}
 
 Construct a `Candidate` object. Usually this constructor is not called directly,
 but instead these objects are returned by the
@@ -247,22 +255,22 @@ but instead these objects are returned by the
 > candidate = Candidate(kb, entity_hash, entity_freq, entity_vector, alias_hash, prior_prob)
 > ```
 
-| Name          | Type            | Description                                                    |
-| ------------- | --------------- | -------------------------------------------------------------- |
-| `kb`          | `KnowledgeBase` | The knowledge base that defined this candidate.                |
-| `entity_hash` | int             | The hash of the entity's KB ID.                                |
-| `entity_freq` | float           | The entity frequency as recorded in the KB.                    |
-| `alias_hash`  | int             | The hash of the textual mention or alias.                      |
-| `prior_prob`  | float           | The prior probability of the `alias` referring to the `entity` |
+| Name          | Description                                                               |
+| ------------- | ------------------------------------------------------------------------- |
+| `kb`          | The knowledge base that defined this candidate. ~~KnowledgeBase~~         |
+| `entity_hash` | The hash of the entity's KB ID. ~~int~~                                   |
+| `entity_freq` | The entity frequency as recorded in the KB. ~~float~~                     |
+| `alias_hash`  | The hash of the textual mention or alias. ~~int~~                         |
+| `prior_prob`  | The prior probability of the `alias` referring to the `entity`. ~~float~~ |
 
-## Candidate attributes {#candidate_attributes}
+## Candidate attributes {#candidate-attributes}
 
-| Name            | Type   | Description                                                    |
-| --------------- | ------ | -------------------------------------------------------------- |
-| `entity`        | int    | The entity's unique KB identifier                              |
-| `entity_`       | str    | The entity's unique KB identifier                              |
-| `alias`         | int    | The alias or textual mention                                   |
-| `alias_`        | str    | The alias or textual mention                                   |
-| `prior_prob`    | long   | The prior probability of the `alias` referring to the `entity` |
-| `entity_freq`   | long   | The frequency of the entity in a typical corpus                |
-| `entity_vector` | vector | The pretrained vector of the entity                            |
+| Name            | Description                                                              |
+| --------------- | ------------------------------------------------------------------------ |
+| `entity`        | The entity's unique KB identifier. ~~int~~                               |
+| `entity_`       | The entity's unique KB identifier. ~~str~~                               |
+| `alias`         | The alias or textual mention. ~~int~~                                    |
+| `alias_`        | The alias or textual mention. ~~str~~                                    |
+| `prior_prob`    | The prior probability of the `alias` referring to the `entity`. ~~long~~ |
+| `entity_freq`   | The frequency of the entity in a typical corpus. ~~long~~                |
+| `entity_vector` | The pretrained vector of the entity. ~~numpy.ndarray~~                   |

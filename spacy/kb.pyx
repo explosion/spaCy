@@ -1,4 +1,5 @@
 # cython: infer_types=True, profile=True
+from typing import Iterator
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 from cpython.exc cimport PyErr_SetFromErrno
@@ -64,6 +65,16 @@ cdef class Candidate:
         return self.prior_prob
 
 
+def get_candidates(KnowledgeBase kb, span) -> Iterator[Candidate]:
+    """
+    Return candidate entities for a given span by using the text of the span as the alias
+    and fetching appropriate entries from the index.
+    This particular function is optimized to work with the built-in KB functionality,
+    but any other custom candidate generation method can be used in combination with the KB as well.
+    """
+    return kb.get_alias_candidates(span.text)
+
+
 cdef class KnowledgeBase:
     """A `KnowledgeBase` instance stores unique identifiers for entities and their textual aliases,
     to support entity linking of named entities to real-world concepts.
@@ -71,24 +82,15 @@ cdef class KnowledgeBase:
     DOCS: https://spacy.io/api/kb
     """
 
-    def __init__(self, entity_vector_length):
-        """Create a KnowledgeBase. Make sure to call kb.initialize() before using it."""
+    def __init__(self, Vocab vocab, entity_vector_length):
+        """Create a KnowledgeBase."""
         self.mem = Pool()
         self.entity_vector_length = entity_vector_length
-
         self._entry_index = PreshMap()
         self._alias_index = PreshMap()
-        self.vocab = None
-
-
-    def initialize(self, Vocab vocab):
         self.vocab = vocab
         self.vocab.strings.add("")
         self._create_empty_vectors(dummy_hash=self.vocab.strings[""])
-
-    def require_vocab(self):
-        if self.vocab is None:
-            raise ValueError(Errors.E946)
 
     @property
     def entity_vector_length(self):
@@ -102,14 +104,12 @@ cdef class KnowledgeBase:
         return len(self._entry_index)
 
     def get_entity_strings(self):
-        self.require_vocab()
         return [self.vocab.strings[x] for x in self._entry_index]
 
     def get_size_aliases(self):
         return len(self._alias_index)
 
     def get_alias_strings(self):
-        self.require_vocab()
         return [self.vocab.strings[x] for x in self._alias_index]
 
     def add_entity(self, unicode entity, float freq, vector[float] entity_vector):
@@ -117,7 +117,6 @@ cdef class KnowledgeBase:
         Add an entity to the KB, optionally specifying its log probability based on corpus frequency
         Return the hash of the entity ID/name at the end.
         """
-        self.require_vocab()
         cdef hash_t entity_hash = self.vocab.strings.add(entity)
 
         # Return if this entity was added before
@@ -140,7 +139,6 @@ cdef class KnowledgeBase:
         return entity_hash
 
     cpdef set_entities(self, entity_list, freq_list, vector_list):
-        self.require_vocab()
         if len(entity_list) != len(freq_list) or len(entity_list) != len(vector_list):
             raise ValueError(Errors.E140)
 
@@ -176,12 +174,10 @@ cdef class KnowledgeBase:
             i += 1
 
     def contains_entity(self, unicode entity):
-        self.require_vocab()
         cdef hash_t entity_hash = self.vocab.strings.add(entity)
         return entity_hash in self._entry_index
 
     def contains_alias(self, unicode alias):
-        self.require_vocab()
         cdef hash_t alias_hash = self.vocab.strings.add(alias)
         return alias_hash in self._alias_index
 
@@ -190,7 +186,6 @@ cdef class KnowledgeBase:
         For a given alias, add its potential entities and prior probabilies to the KB.
         Return the alias_hash at the end
         """
-        self.require_vocab()
         # Throw an error if the length of entities and probabilities are not the same
         if not len(entities) == len(probabilities):
             raise ValueError(Errors.E132.format(alias=alias,
@@ -234,7 +229,6 @@ cdef class KnowledgeBase:
         Throw an error if this entity+prior prob would exceed the sum of 1.
         For efficiency, it's best to use the method `add_alias` as much as possible instead of this one.
         """
-        self.require_vocab()
         # Check if the alias exists in the KB
         cdef hash_t alias_hash = self.vocab.strings[alias]
         if not alias_hash in self._alias_index:
@@ -274,14 +268,12 @@ cdef class KnowledgeBase:
             alias_entry.probs = probs
             self._aliases_table[alias_index] = alias_entry
 
-
-    def get_candidates(self, unicode alias):
+    def get_alias_candidates(self, unicode alias) -> Iterator[Candidate]:
         """
         Return candidate entities for an alias. Each candidate defines the entity, the original alias,
         and the prior probability of that alias resolving to that entity.
         If the alias is not known in the KB, and empty list is returned.
         """
-        self.require_vocab()
         cdef hash_t alias_hash = self.vocab.strings[alias]
         if not alias_hash in self._alias_index:
             return []
@@ -298,7 +290,6 @@ cdef class KnowledgeBase:
                 if entry_index != 0]
 
     def get_vector(self, unicode entity):
-        self.require_vocab()
         cdef hash_t entity_hash = self.vocab.strings[entity]
 
         # Return an empty list if this entity is unknown in this KB
@@ -311,7 +302,6 @@ cdef class KnowledgeBase:
     def get_prior_prob(self, unicode entity, unicode alias):
         """ Return the prior probability of a given alias being linked to a given entity,
         or return 0.0 when this combination is not known in the knowledge base"""
-        self.require_vocab()
         cdef hash_t alias_hash = self.vocab.strings[alias]
         cdef hash_t entity_hash = self.vocab.strings[entity]
 
@@ -329,8 +319,7 @@ cdef class KnowledgeBase:
         return 0.0
 
 
-    def dump(self, loc):
-        self.require_vocab()
+    def to_disk(self, loc):
         cdef Writer writer = Writer(loc)
         writer.write_header(self.get_size_entities(), self.entity_vector_length)
 
@@ -370,7 +359,7 @@ cdef class KnowledgeBase:
 
         writer.close()
 
-    cpdef load_bulk(self, loc):
+    cpdef from_disk(self, loc):
         cdef hash_t entity_hash
         cdef hash_t alias_hash
         cdef int64_t entry_index
@@ -462,12 +451,11 @@ cdef class KnowledgeBase:
 
 cdef class Writer:
     def __init__(self, object loc):
-        if path.exists(loc):
-            assert not path.isdir(loc), f"{loc} is directory"
         if isinstance(loc, Path):
             loc = bytes(loc)
         if path.exists(loc):
-            assert not path.isdir(loc), "%s is directory." % loc
+            if path.isdir(loc):
+                raise ValueError(Errors.E928.format(loc=loc))
         cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
         self._fp = fopen(<char*>bytes_loc, 'wb')
         if not self._fp:
@@ -511,8 +499,10 @@ cdef class Reader:
     def __init__(self, object loc):
         if isinstance(loc, Path):
             loc = bytes(loc)
-        assert path.exists(loc)
-        assert not path.isdir(loc)
+        if not path.exists(loc):
+            raise ValueError(Errors.E929.format(loc=loc))
+        if path.isdir(loc):
+            raise ValueError(Errors.E928.format(loc=loc))
         cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
         self._fp = fopen(<char*>bytes_loc, 'rb')
         if not self._fp:

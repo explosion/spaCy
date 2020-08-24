@@ -167,18 +167,20 @@ class ModelMetaSchema(BaseModel):
     lang: StrictStr = Field(..., title="Two-letter language code, e.g. 'en'")
     name: StrictStr = Field(..., title="Model name")
     version: StrictStr = Field(..., title="Model version")
-    spacy_version: Optional[StrictStr] = Field(None, title="Compatible spaCy version identifier")
-    parent_package: Optional[StrictStr] = Field("spacy", title="Name of parent spaCy package, e.g. spacy or spacy-nightly")
-    pipeline: Optional[List[StrictStr]] = Field([], title="Names of pipeline components")
-    description: Optional[StrictStr] = Field(None, title="Model description")
-    license: Optional[StrictStr] = Field(None, title="Model license")
-    author: Optional[StrictStr] = Field(None, title="Model author name")
-    email: Optional[StrictStr] = Field(None, title="Model author email")
-    url: Optional[StrictStr] = Field(None, title="Model author URL")
-    sources: Optional[Union[List[StrictStr], Dict[str, str]]] = Field(None, title="Training data sources")
-    vectors: Optional[Dict[str, Any]] = Field(None, title="Included word vectors")
-    accuracy: Optional[Dict[str, Union[float, int]]] = Field(None, title="Accuracy numbers")
-    speed: Optional[Dict[str, Union[float, int]]] = Field(None, title="Speed evaluation numbers")
+    spacy_version: StrictStr = Field("", title="Compatible spaCy version identifier")
+    parent_package: StrictStr = Field("spacy", title="Name of parent spaCy package, e.g. spacy or spacy-nightly")
+    pipeline: List[StrictStr] = Field([], title="Names of pipeline components")
+    description: StrictStr = Field("", title="Model description")
+    license: StrictStr = Field("", title="Model license")
+    author: StrictStr = Field("", title="Model author name")
+    email: StrictStr = Field("", title="Model author email")
+    url: StrictStr = Field("", title="Model author URL")
+    sources: Optional[Union[List[StrictStr], List[Dict[str, str]]]] = Field(None, title="Training data sources")
+    vectors: Dict[str, Any] = Field({}, title="Included word vectors")
+    labels: Dict[str, Dict[str, List[str]]] = Field({}, title="Component labels, keyed by component name")
+    accuracy: Dict[str, Union[float, Dict[str, float]]] = Field({}, title="Accuracy numbers")
+    speed: Dict[str, Union[float, int]] = Field({}, title="Speed evaluation numbers")
+    spacy_git_version: StrictStr = Field("", title="Commit of spaCy version used")
     # fmt: on
 
 
@@ -301,7 +303,7 @@ class ProjectConfigCommand(BaseModel):
 
 class ProjectConfigSchema(BaseModel):
     # fmt: off
-    variables: Dict[StrictStr, Union[str, int, float, bool]] = Field({}, title="Optional variables to substitute in commands")
+    vars: Dict[StrictStr, Any] = Field({}, title="Optional variables to substitute in commands")
     assets: List[ProjectConfigAsset] = Field([], title="Data assets")
     workflows: Dict[StrictStr, List[StrictStr]] = Field({}, title="Named workflows, mapped to list of project commands to run in order")
     commands: List[ProjectConfigCommand] = Field([], title="Project command shortucts")
@@ -309,3 +311,22 @@ class ProjectConfigSchema(BaseModel):
 
     class Config:
         title = "Schema for project configuration file"
+
+
+# Recommendations for init config workflows
+
+
+class RecommendationTrfItem(BaseModel):
+    name: str
+    size_factor: int
+
+
+class RecommendationTrf(BaseModel):
+    efficiency: RecommendationTrfItem
+    accuracy: RecommendationTrfItem
+
+
+class RecommendationSchema(BaseModel):
+    word_vectors: Optional[str] = None
+    transformer: Optional[RecommendationTrf] = None
+    has_letters: bool = True

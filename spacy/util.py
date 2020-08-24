@@ -1,5 +1,5 @@
 from typing import List, Union, Dict, Any, Optional, Iterable, Callable, Tuple
-from typing import Iterator, Type, Pattern, TYPE_CHECKING
+from typing import Iterator, Type, Pattern, Generator, TYPE_CHECKING
 from types import ModuleType
 import os
 import importlib
@@ -249,7 +249,16 @@ def load_model_from_package(
     disable: Iterable[str] = tuple(),
     config: Union[Dict[str, Any], Config] = SimpleFrozenDict(),
 ) -> "Language":
-    """Load a model from an installed package."""
+    """Load a model from an installed package.
+
+    name (str): The package name.
+    vocab (Vocab / True): Optional vocab to pass in on initialization. If True,
+        a new Vocab object will be created.
+    disable (Iterable[str]): Names of pipeline components to disable.
+    config (Dict[str, Any] / Config): Config overrides as nested dict or dict
+        keyed by section values in dot notation.
+    RETURNS (Language): The loaded nlp object.
+    """
     cls = importlib.import_module(name)
     return cls.load(vocab=vocab, disable=disable, config=config)
 
@@ -263,7 +272,17 @@ def load_model_from_path(
     config: Union[Dict[str, Any], Config] = SimpleFrozenDict(),
 ) -> "Language":
     """Load a model from a data directory path. Creates Language class with
-    pipeline from config.cfg and then calls from_disk() with path."""
+    pipeline from config.cfg and then calls from_disk() with path.
+
+    name (str): Package name or model path.
+    meta (Dict[str, Any]): Optional model meta.
+    vocab (Vocab / True): Optional vocab to pass in on initialization. If True,
+        a new Vocab object will be created.
+    disable (Iterable[str]): Names of pipeline components to disable.
+    config (Dict[str, Any] / Config): Config overrides as nested dict or dict
+        keyed by section values in dot notation.
+    RETURNS (Language): The loaded nlp object.
+    """
     if not model_path.exists():
         raise IOError(Errors.E052.format(path=model_path))
     if not meta:
@@ -284,6 +303,15 @@ def load_model_from_config(
 ) -> Tuple["Language", Config]:
     """Create an nlp object from a config. Expects the full config file including
     a section "nlp" containing the settings for the nlp object.
+
+    name (str): Package name or model path.
+    meta (Dict[str, Any]): Optional model meta.
+    vocab (Vocab / True): Optional vocab to pass in on initialization. If True,
+        a new Vocab object will be created.
+    disable (Iterable[str]): Names of pipeline components to disable.
+    auto_fill (bool): Whether to auto-fill config with missing defaults.
+    validate (bool): Whether to show config validation errors.
+    RETURNS (Language): The loaded nlp object.
     """
     if "nlp" not in config:
         raise ValueError(Errors.E985.format(config=config))
@@ -308,6 +336,13 @@ def load_model_from_init_py(
 ) -> "Language":
     """Helper function to use in the `load()` method of a model package's
     __init__.py.
+
+    vocab (Vocab / True): Optional vocab to pass in on initialization. If True,
+        a new Vocab object will be created.
+    disable (Iterable[str]): Names of pipeline components to disable.
+    config (Dict[str, Any] / Config): Config overrides as nested dict or dict
+        keyed by section values in dot notation.
+    RETURNS (Language): The loaded nlp object.
     """
     model_path = Path(init_file).parent
     meta = get_model_meta(model_path)
@@ -325,7 +360,14 @@ def load_config(
     overrides: Dict[str, Any] = SimpleFrozenDict(),
     interpolate: bool = False,
 ) -> Config:
-    """Load a config file. Takes care of path validation and section order."""
+    """Load a config file. Takes care of path validation and section order.
+
+    path (Union[str, Path]): Path to the config file.
+    overrides: (Dict[str, Any]): Config overrides as nested dict or
+        dict keyed by section values in dot notation.
+    interpolate (bool): Whether to interpolate and resolve variables.
+    RETURNS (Config): The loaded config.
+    """
     config_path = ensure_path(path)
     if not config_path.exists() or not config_path.is_file():
         raise IOError(Errors.E053.format(path=config_path, name="config.cfg"))
@@ -337,7 +379,12 @@ def load_config(
 def load_config_from_str(
     text: str, overrides: Dict[str, Any] = SimpleFrozenDict(), interpolate: bool = False
 ):
-    """Load a full config from a string."""
+    """Load a full config from a string. Wrapper around Thinc's Config.from_str.
+
+    text (str): The string config to load.
+    interpolate (bool): Whether to interpolate and resolve variables.
+    RETURNS (Config): The loaded config.
+    """
     return Config(section_order=CONFIG_SECTION_ORDER).from_str(
         text, overrides=overrides, interpolate=interpolate,
     )
@@ -435,19 +482,18 @@ def get_base_version(version: str) -> str:
     return Version(version).base_version
 
 
-def get_model_meta(path: Union[str, Path]) -> Dict[str, Any]:
-    """Get model meta.json from a directory path and validate its contents.
+def load_meta(path: Union[str, Path]) -> Dict[str, Any]:
+    """Load a model meta.json from a path and validate its contents.
 
-    path (str / Path): Path to model directory.
-    RETURNS (Dict[str, Any]): The model's meta data.
+    path (Union[str, Path]): Path to meta.json.
+    RETURNS (Dict[str, Any]): The loaded meta.
     """
-    model_path = ensure_path(path)
-    if not model_path.exists():
-        raise IOError(Errors.E052.format(path=model_path))
-    meta_path = model_path / "meta.json"
-    if not meta_path.is_file():
-        raise IOError(Errors.E053.format(path=meta_path, name="meta.json"))
-    meta = srsly.read_json(meta_path)
+    path = ensure_path(path)
+    if not path.parent.exists():
+        raise IOError(Errors.E052.format(path=path.parent))
+    if not path.exists() or not path.is_file():
+        raise IOError(Errors.E053.format(path=path, name="meta.json"))
+    meta = srsly.read_json(path)
     for setting in ["lang", "name", "version"]:
         if setting not in meta or not meta[setting]:
             raise ValueError(Errors.E054.format(setting=setting))
@@ -469,6 +515,16 @@ def get_model_meta(path: Union[str, Path]) -> Dict[str, Any]:
             )
             warnings.warn(warn_msg)
     return meta
+
+
+def get_model_meta(path: Union[str, Path]) -> Dict[str, Any]:
+    """Get model meta.json from a directory path and validate its contents.
+
+    path (str / Path): Path to model directory.
+    RETURNS (Dict[str, Any]): The model's meta data.
+    """
+    model_path = ensure_path(path)
+    return load_meta(model_path / "meta.json")
 
 
 def is_package(name: str) -> bool:
@@ -554,7 +610,7 @@ def working_dir(path: Union[str, Path]) -> None:
 
 
 @contextmanager
-def make_tempdir() -> None:
+def make_tempdir() -> Generator[Path, None, None]:
     """Execute a block in a temporary directory and remove the directory and
     its contents at the end of the with block.
 
@@ -886,6 +942,15 @@ def escape_html(text: str) -> str:
 def get_words_and_spaces(
     words: Iterable[str], text: str
 ) -> Tuple[List[str], List[bool]]:
+    """Given a list of words and a text, reconstruct the original tokens and
+    return a list of words and spaces that can be used to create a Doc. This
+    can help recover destructive tokenization that didn't preserve any
+    whitespace information.
+
+    words (Iterable[str]): The words.
+    text (str): The original text.
+    RETURNS (Tuple[List[str], List[bool]]): The words and spaces.
+    """
     if "".join("".join(words).split()) != "".join(text.split()):
         raise ValueError(Errors.E194.format(text=text, words=words))
     text_words = []

@@ -157,19 +157,20 @@ The available token pattern keys correspond to a number of
 [`Token` attributes](/api/token#attributes). The supported attributes for
 rule-based matching are:
 
-| Attribute                              | Type |  Description                                                                                           |
-| -------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------ |
-| `ORTH`                                 | str  | The exact verbatim text of a token.                                                                    |
-| `TEXT` <Tag variant="new">2.1</Tag>    | str  | The exact verbatim text of a token.                                                                    |
-| `LOWER`                                | str  | The lowercase form of the token text.                                                                  |
-|  `LENGTH`                              | int  | The length of the token text.                                                                          |
-|  `IS_ALPHA`, `IS_ASCII`, `IS_DIGIT`    | bool | Token text consists of alphabetic characters, ASCII characters, digits.                                |
-|  `IS_LOWER`, `IS_UPPER`, `IS_TITLE`    | bool | Token text is in lowercase, uppercase, titlecase.                                                      |
-|  `IS_PUNCT`, `IS_SPACE`, `IS_STOP`     | bool | Token is punctuation, whitespace, stop word.                                                           |
-|  `LIKE_NUM`, `LIKE_URL`, `LIKE_EMAIL`  | bool | Token text resembles a number, URL, email.                                                             |
-|  `POS`, `TAG`, `DEP`, `LEMMA`, `SHAPE` | str  | The token's simple and extended part-of-speech tag, dependency label, lemma, shape.                    |
-| `ENT_TYPE`                             | str  | The token's entity label.                                                                              |
-| `_` <Tag variant="new">2.1</Tag>       | dict | Properties in [custom extension attributes](/usage/processing-pipelines#custom-components-attributes). |
+| Attribute                              |  Description                                                                                                              |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `ORTH`                                 | The exact verbatim text of a token. ~~str~~                                                                               |
+| `TEXT` <Tag variant="new">2.1</Tag>    | The exact verbatim text of a token. ~~str~~                                                                               |
+| `LOWER`                                | The lowercase form of the token text. ~~str~~                                                                             |
+|  `LENGTH`                              | The length of the token text. ~~int~~                                                                                     |
+|  `IS_ALPHA`, `IS_ASCII`, `IS_DIGIT`    | Token text consists of alphabetic characters, ASCII characters, digits. ~~bool~~                                          |
+|  `IS_LOWER`, `IS_UPPER`, `IS_TITLE`    | Token text is in lowercase, uppercase, titlecase. ~~bool~~                                                                |
+|  `IS_PUNCT`, `IS_SPACE`, `IS_STOP`     | Token is punctuation, whitespace, stop word. ~~bool~~                                                                     |
+|  `LIKE_NUM`, `LIKE_URL`, `LIKE_EMAIL`  | Token text resembles a number, URL, email. ~~bool~~                                                                       |
+|  `POS`, `TAG`, `DEP`, `LEMMA`, `SHAPE` | The token's simple and extended part-of-speech tag, dependency label, lemma, shape. ~~str~~                               |
+| `ENT_TYPE`                             | The token's entity label. ~~str~~                                                                                         |
+| `_` <Tag variant="new">2.1</Tag>       | Properties in [custom extension attributes](/usage/processing-pipelines#custom-components-attributes). ~~Dict[str, Any]~~ |
+| `OP`                                   | [Operator or quantifier](#quantifiers) to determine how often to match a token pattern. ~~str~~                           |
 
 <Accordion title="Does it matter if the attribute names are uppercase or lowercase?">
 
@@ -231,11 +232,11 @@ following rich comparison attributes are available:
 > pattern2 = [{"LENGTH": {">=": 10}}]
 > ```
 
-| Attribute                  | Value Type | Description                                                                       |
-| -------------------------- | ---------- | --------------------------------------------------------------------------------- |
-| `IN`                       | any        | Attribute value is member of a list.                                              |
-| `NOT_IN`                   | any        | Attribute value is _not_ member of a list.                                        |
-| `==`, `>=`, `<=`, `>`, `<` | int, float | Attribute value is equal, greater or equal, smaller or equal, greater or smaller. |
+| Attribute                  | Description                                                                                             |
+| -------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `IN`                       | Attribute value is member of a list. ~~Any~~                                                            |
+| `NOT_IN`                   | Attribute value is _not_ member of a list. ~~Any~~                                                      |
+| `==`, `>=`, `<=`, `>`, `<` | Attribute value is equal, greater or equal, smaller or equal, greater or smaller. ~~Union[int, float]~~ |
 
 #### Regular expressions {#regex new="2.1"}
 
@@ -485,12 +486,12 @@ This allows you to write callbacks that consider the entire set of matched
 phrases, so that you can resolve overlaps and other conflicts in whatever way
 you prefer.
 
-| Argument  | Type      | Description                                                                                                          |
-| --------- | --------- | -------------------------------------------------------------------------------------------------------------------- |
-| `matcher` | `Matcher` | The matcher instance.                                                                                                |
-| `doc`     | `Doc`     | The document the matcher was used on.                                                                                |
-| `i`       | int       | Index of the current match (`matches[i`]).                                                                           |
-| `matches` | list      |  A list of `(match_id, start, end)` tuples, describing the matches. A match tuple describes a span `doc[start:end`]. |
+| Argument  | Description                                                                                                                                        |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `matcher` | The matcher instance. ~~Matcher~~                                                                                                                  |
+| `doc`     | The document the matcher was used on. ~~Doc~~                                                                                                      |
+| `i`       | Index of the current match (`matches[i`]). ~~int~~                                                                                                 |
+| `matches` | A list of `(match_id, start, end)` tuples, describing the matches. A match tuple describes a span `doc[start:end`]. ~~ List[Tuple[int, int int]]~~ |
 
 ### Using custom pipeline components {#matcher-pipeline}
 
@@ -510,21 +511,21 @@ from spacy.language import Language
 from spacy.matcher import Matcher
 from spacy.tokens import Token
 
-# We're using a component factory because the component needs to be initialized
-# with the shared vocab via the nlp object
+# We're using a component factory because the component needs to be
+# initialized with the shared vocab via the nlp object
 @Language.factory("html_merger")
 def create_bad_html_merger(nlp, name):
-    return BadHTMLMerger(nlp)
+    return BadHTMLMerger(nlp.vocab)
 
 class BadHTMLMerger:
-    def __init__(self, nlp):
+    def __init__(self, vocab):
         patterns = [
             [{"ORTH": "<"}, {"LOWER": "br"}, {"ORTH": ">"}],
             [{"ORTH": "<"}, {"LOWER": "br/"}, {"ORTH": ">"}],
         ]
         # Register a new token extension to flag bad HTML
         Token.set_extension("bad_html", default=False)
-        self.matcher = Matcher(nlp.vocab)
+        self.matcher = Matcher(vocab)
         self.matcher.add("BAD_HTML", patterns)
 
     def __call__(self, doc):
@@ -1095,11 +1096,12 @@ ruler.add_patterns([{"label": "ORG", "pattern": "Apple"}])
 nlp.to_disk("/path/to/model")
 ```
 
-The saved model now includes the `"entity_ruler"` in its `"pipeline"` setting in
-the `meta.json`, and the model directory contains a file `entityruler.jsonl`
-with the patterns. When you load the model back in, all pipeline components will
-be restored and deserialized – including the entity ruler. This lets you ship
-powerful model packages with binary weights _and_ rules included!
+The saved model now includes the `"entity_ruler"` in its
+[`config.cfg`](/api/data-formats#config) and the model directory contains a file
+`entityruler.jsonl` with the patterns. When you load the model back in, all
+pipeline components will be restored and deserialized – including the entity
+ruler. This lets you ship powerful model packages with binary weights _and_
+rules included!
 
 ### Using a large number of phrase patterns {#entityruler-large-phrase-patterns new="2.2.4"}
 

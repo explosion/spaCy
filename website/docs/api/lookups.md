@@ -24,10 +24,6 @@ Create a `Lookups` object.
 > lookups = Lookups()
 > ```
 
-| Name        | Type      | Description                   |
-| ----------- | --------- | ----------------------------- |
-| **RETURNS** | `Lookups` | The newly constructed object. |
-
 ## Lookups.\_\_len\_\_ {#len tag="method"}
 
 Get the current number of tables in the lookups.
@@ -39,9 +35,9 @@ Get the current number of tables in the lookups.
 > assert len(lookups) == 0
 > ```
 
-| Name        | Type | Description                          |
-| ----------- | ---- | ------------------------------------ |
-| **RETURNS** | int  | The number of tables in the lookups. |
+| Name        | Description                                  |
+| ----------- | -------------------------------------------- |
+| **RETURNS** | The number of tables in the lookups. ~~int~~ |
 
 ## Lookups.\_\contains\_\_ {#contains tag="method"}
 
@@ -56,10 +52,10 @@ Check if the lookups contain a table of a given name. Delegates to
 > assert "some_table" in lookups
 > ```
 
-| Name        | Type | Description                                     |
-| ----------- | ---- | ----------------------------------------------- |
-| `name`      | str  | Name of the table.                              |
-| **RETURNS** | bool | Whether a table of that name is in the lookups. |
+| Name        | Description                                              |
+| ----------- | -------------------------------------------------------- |
+| `name`      | Name of the table. ~~str~~                               |
+| **RETURNS** | Whether a table of that name is in the lookups. ~~bool~~ |
 
 ## Lookups.tables {#tables tag="property"}
 
@@ -73,9 +69,9 @@ Get the names of all tables in the lookups.
 > assert lookups.tables == ["some_table"]
 > ```
 
-| Name        | Type | Description                         |
-| ----------- | ---- | ----------------------------------- |
-| **RETURNS** | list | Names of the tables in the lookups. |
+| Name        | Description                                       |
+| ----------- | ------------------------------------------------- |
+| **RETURNS** | Names of the tables in the lookups. ~~List[str]~~ |
 
 ## Lookups.add_table {#add_table tag="method"}
 
@@ -89,11 +85,11 @@ exists.
 > lookups.add_table("some_table", {"foo": "bar"})
 > ```
 
-| Name        | Type                          | Description                        |
-| ----------- | ----------------------------- | ---------------------------------- |
-| `name`      | str                           | Unique name of the table.          |
-| `data`      | dict                          | Optional data to add to the table. |
-| **RETURNS** | [`Table`](/api/lookups#table) | The newly added table.             |
+| Name        | Description                                 |
+| ----------- | ------------------------------------------- |
+| `name`      | Unique name of the table. ~~str~~           |
+| `data`      | Optional data to add to the table. ~~dict~~ |
+| **RETURNS** | The newly added table. ~~Table~~            |
 
 ## Lookups.get_table {#get_table tag="method"}
 
@@ -108,10 +104,10 @@ Get a table from the lookups. Raises an error if the table doesn't exist.
 > assert table["foo"] == "bar"
 > ```
 
-| Name        | Type                          | Description        |
-| ----------- | ----------------------------- | ------------------ |
-| `name`      | str                           | Name of the table. |
-| **RETURNS** | [`Table`](/api/lookups#table) | The table.         |
+| Name        | Description                |
+| ----------- | -------------------------- |
+| `name`      | Name of the table. ~~str~~ |
+| **RETURNS** | The table. ~~Table~~       |
 
 ## Lookups.remove_table {#remove_table tag="method"}
 
@@ -126,10 +122,10 @@ Remove a table from the lookups. Raises an error if the table doesn't exist.
 > assert "some_table" not in lookups
 > ```
 
-| Name        | Type                          | Description                  |
-| ----------- | ----------------------------- | ---------------------------- |
-| `name`      | str                           | Name of the table to remove. |
-| **RETURNS** | [`Table`](/api/lookups#table) | The removed table.           |
+| Name        | Description                          |
+| ----------- | ------------------------------------ |
+| `name`      | Name of the table to remove. ~~str~~ |
+| **RETURNS** | The removed table. ~~Table~~         |
 
 ## Lookups.has_table {#has_table tag="method"}
 
@@ -144,10 +140,10 @@ Check if the lookups contain a table of a given name. Equivalent to
 > assert lookups.has_table("some_table")
 > ```
 
-| Name        | Type | Description                                     |
-| ----------- | ---- | ----------------------------------------------- |
-| `name`      | str  | Name of the table.                              |
-| **RETURNS** | bool | Whether a table of that name is in the lookups. |
+| Name        | Description                                              |
+| ----------- | -------------------------------------------------------- |
+| `name`      | Name of the table. ~~str~~                               |
+| **RETURNS** | Whether a table of that name is in the lookups. ~~bool~~ |
 
 ## Lookups.to_bytes {#to_bytes tag="method"}
 
@@ -159,9 +155,9 @@ Serialize the lookups to a bytestring.
 > lookup_bytes = lookups.to_bytes()
 > ```
 
-| Name        | Type  | Description             |
-| ----------- | ----- | ----------------------- |
-| **RETURNS** | bytes | The serialized lookups. |
+| Name        | Description                       |
+| ----------- | --------------------------------- |
+| **RETURNS** | The serialized lookups. ~~bytes~~ |
 
 ## Lookups.from_bytes {#from_bytes tag="method"}
 
@@ -175,10 +171,10 @@ Load the lookups from a bytestring.
 > lookups.from_bytes(lookup_bytes)
 > ```
 
-| Name         | Type      | Description            |
-| ------------ | --------- | ---------------------- |
-| `bytes_data` | bytes     | The data to load from. |
-| **RETURNS**  | `Lookups` | The loaded lookups.    |
+| Name         | Description                      |
+| ------------ | -------------------------------- |
+| `bytes_data` | The data to load from. ~~bytes~~ |
+| **RETURNS**  | The loaded lookups. ~~Lookups~~  |
 
 ## Lookups.to_disk {#to_disk tag="method"}
 
@@ -191,9 +187,9 @@ which will be created if it doesn't exist.
 > lookups.to_disk("/path/to/lookups")
 > ```
 
-| Name   | Type         | Description                                                                                                           |
-| ------ | ------------ | --------------------------------------------------------------------------------------------------------------------- |
-| `path` | str / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| Name   | Description                                                                                                                                |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
 
 ## Lookups.from_disk {#from_disk tag="method"}
 
@@ -208,10 +204,10 @@ the file doesn't exist.
 > lookups.from_disk("/path/to/lookups")
 > ```
 
-| Name        | Type         | Description                                                                |
-| ----------- | ------------ | -------------------------------------------------------------------------- |
-| `path`      | str / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| **RETURNS** | `Lookups`    | The loaded lookups.                                                        |
+| Name        | Description                                                                                     |
+| ----------- | ----------------------------------------------------------------------------------------------- |
+| `path`      | A path to a directory. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+| **RETURNS** | The loaded lookups. ~~Lookups~~                                                                 |
 
 ## Table {#table tag="class, ordererddict"}
 
@@ -236,9 +232,9 @@ Initialize a new table.
 > assert table["foo"] == "bar"
 > ```
 
-| Name   | Type | Description                        |
-| ------ | ---- | ---------------------------------- |
-| `name` | str  | Optional table name for reference. |
+| Name   | Description                                |
+| ------ | ------------------------------------------ |
+| `name` | Optional table name for reference. ~~str~~ |
 
 ### Table.from_dict {#table.from_dict tag="classmethod"}
 
@@ -252,11 +248,11 @@ Initialize a new table from a dict.
 > table = Table.from_dict(data, name="some_table")
 > ```
 
-| Name        | Type    | Description                        |
-| ----------- | ------- | ---------------------------------- |
-| `data`      | dict    | The dictionary.                    |
-| `name`      | str     | Optional table name for reference. |
-| **RETURNS** | `Table` | The newly constructed object.      |
+| Name        | Description                                |
+| ----------- | ------------------------------------------ |
+| `data`      | The dictionary. ~~dict~~                   |
+| `name`      | Optional table name for reference. ~~str~~ |
+| **RETURNS** | The newly constructed object. ~~Table~~    |
 
 ### Table.set {#table.set tag="method"}
 
@@ -272,10 +268,10 @@ Set a new key / value pair. String keys will be hashed. Same as
 > assert table["foo"] == "bar"
 > ```
 
-| Name    | Type      | Description |
-| ------- | --------- | ----------- |
-| `key`   | str / int | The key.    |
-| `value` | -         | The value.  |
+| Name    | Description                  |
+| ------- | ---------------------------- |
+| `key`   | The key. ~~Union[str, int]~~ |
+| `value` | The value.                   |
 
 ### Table.to_bytes {#table.to_bytes tag="method"}
 
@@ -287,9 +283,9 @@ Serialize the table to a bytestring.
 > table_bytes = table.to_bytes()
 > ```
 
-| Name        | Type  | Description           |
-| ----------- | ----- | --------------------- |
-| **RETURNS** | bytes | The serialized table. |
+| Name        | Description                     |
+| ----------- | ------------------------------- |
+| **RETURNS** | The serialized table. ~~bytes~~ |
 
 ### Table.from_bytes {#table.from_bytes tag="method"}
 
@@ -303,15 +299,15 @@ Load a table from a bytestring.
 > table.from_bytes(table_bytes)
 > ```
 
-| Name         | Type    | Description       |
-| ------------ | ------- | ----------------- |
-| `bytes_data` | bytes   | The data to load. |
-| **RETURNS**  | `Table` | The loaded table. |
+| Name         | Description                 |
+| ------------ | --------------------------- |
+| `bytes_data` | The data to load. ~~bytes~~ |
+| **RETURNS**  | The loaded table. ~~Table~~ |
 
 ### Attributes {#table-attributes}
 
-| Name           | Type                        | Description                                           |
-| -------------- | --------------------------- | ----------------------------------------------------- |
-| `name`         | str                         | Table name.                                           |
-| `default_size` | int                         | Default size of bloom filters if no data is provided. |
-| `bloom`        | `preshed.bloom.BloomFilter` | The bloom filters.                                    |
+| Name           | Description                                                   |
+| -------------- | ------------------------------------------------------------- |
+| `name`         | Table name. ~~str~~                                           |
+| `default_size` | Default size of bloom filters if no data is provided. ~~int~~ |
+| `bloom`        | The bloom filters. ~~preshed.BloomFilter~~                    |

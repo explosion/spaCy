@@ -2,13 +2,15 @@ import pytest
 from spacy.gold import docs_to_json, biluo_tags_from_offsets
 from spacy.gold.converters import iob2docs, conll_ner2docs, conllu2docs
 from spacy.lang.en import English
-from spacy.schemas import ProjectConfigSchema, validate
+from spacy.schemas import ProjectConfigSchema, RecommendationSchema, validate
 from spacy.cli.pretrain import make_docs
-from spacy.cli.init_config import init_config, RECOMMENDATIONS_PATH
-from spacy.cli.init_config import RecommendationSchema
+from spacy.cli.init_config import init_config, RECOMMENDATIONS
 from spacy.cli._util import validate_project_commands, parse_config_overrides
-from spacy.util import get_lang_class
+from spacy.cli._util import load_project_config, substitute_project_variables
+from thinc.config import ConfigValidationError
 import srsly
+
+from .util import make_tempdir
 
 
 def test_cli_converters_conllu2json():
@@ -296,6 +298,24 @@ def test_project_config_validation2(config, n_errors):
     assert len(errors) == n_errors
 
 
+def test_project_config_interpolation():
+    variables = {"a": 10, "b": {"c": "foo", "d": True}}
+    commands = [
+        {"name": "x", "script": ["hello ${vars.a} ${vars.b.c}"]},
+        {"name": "y", "script": ["${vars.b.c} ${vars.b.d}"]},
+    ]
+    project = {"commands": commands, "vars": variables}
+    with make_tempdir() as d:
+        srsly.write_yaml(d / "project.yml", project)
+        cfg = load_project_config(d)
+    assert cfg["commands"][0]["script"][0] == "hello 10 foo"
+    assert cfg["commands"][1]["script"][0] == "foo true"
+    commands = [{"name": "x", "script": ["hello ${vars.a} ${vars.b.e}"]}]
+    project = {"commands": commands, "vars": variables}
+    with pytest.raises(ConfigValidationError):
+        substitute_project_variables(project)
+
+
 @pytest.mark.parametrize(
     "args,expected",
     [
@@ -335,7 +355,5 @@ def test_init_config(lang, pipeline, optimize):
 
 
 def test_model_recommendations():
-    recommendations = srsly.read_json(RECOMMENDATIONS_PATH)
-    for lang, data in recommendations.items():
-        assert get_lang_class(lang)
+    for lang, data in RECOMMENDATIONS.items():
         assert RecommendationSchema(**data)

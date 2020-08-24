@@ -439,8 +439,6 @@ class Language:
         assigns: Iterable[str] = tuple(),
         requires: Iterable[str] = tuple(),
         retokenizes: bool = False,
-        scores: Iterable[str] = tuple(),
-        default_score_weights: Dict[str, float] = SimpleFrozenDict(),
         func: Optional[Callable[[Doc], Doc]] = None,
     ) -> Callable:
         """Register a new pipeline component. Can be used for stateless function
@@ -456,12 +454,6 @@ class Language:
             e.g. "token.ent_id". Used for pipeline analyis.
         retokenizes (bool): Whether the component changes the tokenization.
             Used for pipeline analysis.
-        scores (Iterable[str]): All scores set by the component if it's trainable,
-            e.g. ["ents_f", "ents_r", "ents_p"].
-        default_score_weights (Dict[str, float]): The scores to report during
-            training, and their default weight towards the final score used to
-            select the best model. Weights should sum to 1.0 per component and
-            will be combined and normalized for the whole pipeline.
         func (Optional[Callable]): Factory function if not used as a decorator.
 
         DOCS: https://spacy.io/api/language#component
@@ -482,8 +474,6 @@ class Language:
                 assigns=assigns,
                 requires=requires,
                 retokenizes=retokenizes,
-                scores=scores,
-                default_score_weights=default_score_weights,
                 func=factory_func,
             )
             return component_func
@@ -782,9 +772,15 @@ class Language:
         self.remove_pipe(name)
         if not len(self.pipeline) or pipe_index == len(self.pipeline):
             # we have no components to insert before/after, or we're replacing the last component
-            self.add_pipe(factory_name, name=name)
+            self.add_pipe(factory_name, name=name, config=config, validate=validate)
         else:
-            self.add_pipe(factory_name, name=name, before=pipe_index)
+            self.add_pipe(
+                factory_name,
+                name=name,
+                before=pipe_index,
+                config=config,
+                validate=validate,
+            )
 
     def rename_pipe(self, old_name: str, new_name: str) -> None:
         """Rename a pipeline component.
@@ -1112,7 +1108,6 @@ class Language:
         self,
         examples: Iterable[Example],
         *,
-        verbose: bool = False,
         batch_size: int = 256,
         scorer: Optional[Scorer] = None,
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
@@ -1121,7 +1116,6 @@ class Language:
         """Evaluate a model's pipeline components.
 
         examples (Iterable[Example]): `Example` objects.
-        verbose (bool): Print debugging information.
         batch_size (int): Batch size to use.
         scorer (Optional[Scorer]): Scorer to use. If not passed in, a new one
             will be created.
@@ -1140,7 +1134,6 @@ class Language:
             scorer_cfg = {}
         if scorer is None:
             kwargs = dict(scorer_cfg)
-            kwargs.setdefault("verbose", verbose)
             kwargs.setdefault("nlp", self)
             scorer = Scorer(**kwargs)
         texts = [eg.reference.text for eg in examples]
@@ -1163,8 +1156,7 @@ class Language:
             docs = list(docs)
         end_time = timer()
         for i, (doc, eg) in enumerate(zip(docs, examples)):
-            if verbose:
-                print(doc)
+            util.logger.debug(doc)
             eg.predicted = doc
         results = scorer.score(examples)
         n_words = sum(len(eg.predicted) for eg in examples)

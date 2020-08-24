@@ -17,7 +17,7 @@ customize the data loading during training, you can register your own
 or evaluation data. It takes the same arguments as the `Corpus` class and
 returns a callable that yields [`Example`](/api/example) objects. You can
 replace it with your own registered function in the
-[`@readers` registry](/api/top-level#regsitry) to customize the data loading and
+[`@readers` registry](/api/top-level#registry) to customize the data loading and
 streaming.
 
 > #### Example config
@@ -28,18 +28,18 @@ streaming.
 >
 > [training.train_corpus]
 > @readers = "spacy.Corpus.v1"
-> path = ${paths:train}
+> path = ${paths.train}
 > gold_preproc = false
 > max_length = 0
 > limit = 0
 > ```
 
-| Name            | Type   | Description                                                                                                                                     |
-| --------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `path`          | `Path` | The directory or filename to read from. Expects data in spaCy's binary [`.spacy` format](/api/data-formats#binary-training).                    |
-|  `gold_preproc` | bool   | Whether to set up the Example object with gold-standard sentences and tokens for the predictions. See [`Corpus`](/api/corpus#init) for details. |
-| `max_length`    | int    | Maximum document length. Longer documents will be split into sentences, if sentence boundaries are available. Defaults to `0` for no limit.     |
-| `limit`         | int    | Limit corpus to a subset of examples, e.g. for debugging. Defaults to `0` for no limit.                                                         |
+| Name            | Description                                                                                                                                              |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `path`          | The directory or filename to read from. Expects data in spaCy's binary [`.spacy` format](/api/data-formats#binary-training). ~~Path~~                    |
+|  `gold_preproc` | Whether to set up the Example object with gold-standard sentences and tokens for the predictions. See [`Corpus`](/api/corpus#init) for details. ~~bool~~ |
+| `max_length`    | Maximum document length. Longer documents will be split into sentences, if sentence boundaries are available. Defaults to `0` for no limit. ~~int~~      |
+| `limit`         | Limit corpus to a subset of examples, e.g. for debugging. Defaults to `0` for no limit. ~~int~~                                                          |
 
 ```python
 https://github.com/explosion/spaCy/blob/develop/spacy/gold/corpus.py
@@ -67,13 +67,13 @@ train/test skew.
 > corpus = Corpus("./data", limit=10)
 > ```
 
-| Name            | Type         | Description                                                                                                                                 |
-| --------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `path`          | str / `Path` | The directory or filename to read from.                                                                                                     |
-| _keyword-only_  |              |                                                                                                                                             |
-|  `gold_preproc` | bool         | Whether to set up the Example object with gold-standard sentences and tokens for the predictions. Defaults to `False`.                      |
-| `max_length`    | int          | Maximum document length. Longer documents will be split into sentences, if sentence boundaries are available. Defaults to `0` for no limit. |
-| `limit`         | int          | Limit corpus to a subset of examples, e.g. for debugging. Defaults to `0` for no limit.                                                     |
+| Name            | Description                                                                                                                                         |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `path`          | The directory or filename to read from. ~~Union[str, Path]~~                                                                                        |
+| _keyword-only_  |                                                                                                                                                     |
+|  `gold_preproc` | Whether to set up the Example object with gold-standard sentences and tokens for the predictions. Defaults to `False`. ~~bool~~                     |
+| `max_length`    | Maximum document length. Longer documents will be split into sentences, if sentence boundaries are available. Defaults to `0` for no limit. ~~int~~ |
+| `limit`         | Limit corpus to a subset of examples, e.g. for debugging. Defaults to `0` for no limit. ~~int~~                                                     |
 
 ## Corpus.\_\_call\_\_ {#call tag="method"}
 
@@ -90,7 +90,7 @@ Yield examples from the data.
 > train_data = corpus(nlp)
 > ```
 
-| Name       | Type       | Description               |
-| ---------- | ---------- | ------------------------- |
-| `nlp`      | `Language` | The current `nlp` object. |
-| **YIELDS** | `Example`  | The examples.             |
+| Name       | Description                            |
+| ---------- | -------------------------------------- |
+| `nlp`      | The current `nlp` object. ~~Language~~ |
+| **YIELDS** | The examples. ~~Example~~              |

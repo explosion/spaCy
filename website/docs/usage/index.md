@@ -40,7 +40,7 @@ $ pip install -U spacy
 > After installation you need to download a language model. For more info and
 > available models, see the [docs on models](/models).
 >
-> ```bash
+> ```cli
 > $ python -m spacy download en_core_web_sm
 >
 > >>> import spacy
@@ -62,9 +62,9 @@ When using pip it is generally recommended to install packages in a virtual
 environment to avoid modifying system state:
 
 ```bash
-python -m venv .env
-source .env/bin/activate
-pip install spacy
+$ python -m venv .env
+$ source .env/bin/activate
+$ pip install spacy
 ```
 
 ### conda {#conda}
@@ -106,9 +106,9 @@ links created in different virtual environments. It's recommended to run the
 command with `python -m` to make sure you're executing the correct version of
 spaCy.
 
-```bash
-pip install -U spacy
-python -m spacy validate
+```cli
+$ pip install -U spacy
+$ python -m spacy validate
 ```
 
 ### Run spaCy with GPU {#gpu new="2.0.14"}
@@ -156,20 +156,20 @@ system. See notes on [Ubuntu](#source-ubuntu), [macOS / OS X](#source-osx) and
 [Windows](#source-windows) for details.
 
 ```bash
-python -m pip install -U pip                   # update pip
-git clone https://github.com/explosion/spaCy   # clone spaCy
-cd spaCy                                       # navigate into directory
+$ python -m pip install -U pip                  # update pip
+$ git clone https://github.com/explosion/spaCy  # clone spaCy
+$ cd spaCy                                      # navigate into dir
 
-python -m venv .env                            # create environment in .env
-source .env/bin/activate                       # activate virtual environment
-\export PYTHONPATH=`pwd`                        # set Python path to spaCy directory
-pip install -r requirements.txt                # install all requirements
-python setup.py build_ext --inplace            # compile spaCy
+$ python -m venv .env                           # create environment in .env
+$ source .env/bin/activate                      # activate virtual env
+$ export PYTHONPATH=`pwd`                       # set Python path to spaCy dir
+$ pip install -r requirements.txt               # install all requirements
+$ python setup.py build_ext --inplace           # compile spaCy
 ```
 
 Compared to regular install via pip, the
 [`requirements.txt`](https://github.com/explosion/spaCy/tree/master/requirements.txt)
-additionally installs developer dependencies such as Cython. See the the
+additionally installs developer dependencies such as Cython. See the
 [quickstart widget](#quickstart) to get the right commands for your platform and
 Python version.
 
@@ -209,20 +209,18 @@ that directory. Don't forget to also install the test utilities via spaCy's
 [`requirements.txt`](https://github.com/explosion/spaCy/tree/master/requirements.txt):
 
 ```bash
-python -c "import os; import spacy; print(os.path.dirname(spacy.__file__))"
-pip install -r path/to/requirements.txt
-python -m pytest [spacy directory]
+$ python -c "import os; import spacy; print(os.path.dirname(spacy.__file__))"
+$ pip install -r path/to/requirements.txt
+$ python -m pytest [spacy directory]
 ```
 
 Calling `pytest` on the spaCy directory will run only the basic tests. The flag
 `--slow` is optional and enables additional tests that take longer.
 
 ```bash
-# make sure you are using recent pytest version
-python -m pip install -U pytest
-
-python -m pytest [spacy directory]                 # basic tests
-python -m pytest [spacy directory] --slow          # basic and slow tests
+$ python -m pip install -U pytest               # update pytest
+$ python -m pytest [spacy directory]            # basic tests
+$ python -m pytest [spacy directory] --slow     # basic and slow tests
 ```
 
 ## Troubleshooting guide {#troubleshooting}
@@ -283,7 +281,7 @@ only 65535 in a narrow unicode build. You can check this by running the
 following command:
 
 ```bash
-python -c "import sys; print(sys.maxunicode)"
+$ python -c "import sys; print(sys.maxunicode)"
 ```
 
 If you're running a narrow unicode build, reinstall Python and use a wide
@@ -305,8 +303,8 @@ run `source ~/.bash_profile` or `source ~/.zshrc`. Make sure to add **both
 lines** for `LC_ALL` and `LANG`.
 
 ```bash
-\export LC_ALL=en_US.UTF-8
-\export LANG=en_US.UTF-8
+$ export LC_ALL=en_US.UTF-8
+$ export LANG=en_US.UTF-8
 ```
 
 </Accordion>
@@ -370,7 +368,7 @@ from is called `spacy`. So, when using spaCy, never call anything else `spacy`.
 
 </Accordion>
 
-<Accordion title="NER model doesn't recognise other entities anymore after training" id="catastrophic-forgetting">
+<Accordion title="NER model doesn't recognize other entities anymore after training" id="catastrophic-forgetting">
 
 If your training data only contained new entities and you didn't mix in any
 examples the model previously recognized, it can cause the model to "forget"

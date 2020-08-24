@@ -53,14 +53,14 @@
         "remark-react": "^5.0.1"
     },
     "scripts": {
-        "build": "npm run python:setup && gatsby build",
+        "build": "npm run python:install && npm run python:setup && gatsby build",
         "dev": "npm run python:setup && gatsby develop",
         "dev:nightly": "BRANCH=nightly.spacy.io npm run dev",
         "lint": "eslint **",
         "clear": "rm -rf .cache",
         "test": "echo \"Write tests! -> https://gatsby.app/unit-testing\"",
         "python:install": "pip install setup/requirements.txt",
-        "python:setup": "cd setup && ./setup.sh"
+        "python:setup": "cd setup && sh setup.sh"
     },
     "devDependencies": {
         "@sindresorhus/slugify": "^0.8.0",

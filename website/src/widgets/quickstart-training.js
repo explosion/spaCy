@@ -4,7 +4,7 @@ import highlightCode from 'gatsby-remark-prismjs/highlight-code.js'
 
 import { Quickstart } from '../components/quickstart'
 import generator, { DATA as GENERATOR_DATA } from './quickstart-training-generator'
-import { isString, htmlToReact } from '../components/util'
+import { htmlToReact } from '../components/util'
 
 const DEFAULT_LANG = 'en'
 const DEFAULT_HARDWARE = 'gpu'
@@ -38,20 +38,14 @@ const DATA = [
     {
         id: 'optimize',
         title: 'Optimize for',
-        help: '...',
+        help:
+            'Optimize for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger & slower model). Will impact the choice of architecture, pretrained weights and hyperparameters.',
         options: [
             { id: 'efficiency', title: 'efficiency', checked: DEFAULT_OPT === 'efficiency' },
             { id: 'accuracy', title: 'accuracy', checked: DEFAULT_OPT === 'accuracy' },
         ],
     },
 ]
-
-function stringify(value) {
-    if (isString(value) && value.startsWith('${')) return value
-    const string = JSON.stringify(value)
-    if (Array.isArray(value)) return string.replace(/,/g, ', ')
-    return string
-}
 
 export default function QuickstartTraining({ id, title, download = 'config.cfg' }) {
     const [lang, setLang] = useState(DEFAULT_LANG)
@@ -72,6 +66,7 @@ export default function QuickstartTraining({ id, title, download = 'config.cfg' 
         hardware,
         transformer_data: reco.transformer,
         word_vectors: reco.word_vectors,
+        has_letters: reco.has_letters,
     })
     const rawStr = content.trim().replace(/\n\n\n+/g, '\n\n')
     const rawContent = `${COMMENT}\n${rawStr}`
@@ -84,10 +79,12 @@ export default function QuickstartTraining({ id, title, download = 'config.cfg' 
             query={query}
             render={({ site }) => {
                 const langs = site.siteMetadata.languages
-                DATA[0].dropdown = langs.map(({ name, code }) => ({
-                    id: code,
-                    title: name,
-                }))
+                DATA[0].dropdown = langs
+                    .map(({ name, code }) => ({
+                        id: code,
+                        title: name,
+                    }))
+                    .sort((a, b) => a.title.localeCompare(b.title))
                 return (
                     <Quickstart
                         download={download}

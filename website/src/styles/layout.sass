@@ -157,6 +157,14 @@
     font-display: fallback
     src: url("../fonts/jetbrainsmono-regular.woff") format("woff"), url("../fonts/jetbrainsmono-regular.woff2") format("woff2")
 
+@font-face
+    font-family: "JetBrains Mono"
+    font-style: italic
+    font-weight: 500
+    font-display: fallback
+    src: url("../fonts/jetbrainsmono-italic.woff") format("woff"), url("../fonts/jetbrainsmono-italic.woff2") format("woff2")
+
+
 /* Reset */
 
 *, *:before, *:after
@@ -358,6 +366,21 @@ body [id]:target
     &.italic
         font-style: italic
 
+
+[class*="language-"].type-annotation .token
+    &.builtin, &.boolean, &.number
+        color: var(--color-inline-code-text)
+
+    &.operator
+        color: var(--syntax-comment)
+
+[class*="language-bash"] .token
+    &.function
+        color: var(--color-subtle)
+
+    &.operator, &.variable
+        color: var(--syntax-comment)
+
 // Settings for ini syntax (config files)
 [class*="language-ini"]
     color: var(--syntax-comment)
@@ -373,7 +396,7 @@ body [id]:target
     margin-right: -1.5em
     margin-left: -1.5em
     padding-right: 1.5em
-    padding-left: 1.25em
+    padding-left: 1.2em
 
     &:empty:before
         // Fix issue where empty lines would disappear

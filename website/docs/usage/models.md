@@ -70,8 +70,7 @@ import Languages from 'widgets/languages.js'
 > nlp = MultiLanguage()
 >
 > # With lazy-loading
-> from spacy.util import get_lang_class
-> nlp = get_lang_class('xx')
+> nlp = spacy.blank("xx")
 > ```
 
 spaCy also supports models trained on more than one language. This is especially
@@ -80,10 +79,10 @@ language-neutral models is `xx`. The language class, a generic subclass
 containing only the base language data, can be found in
 [`lang/xx`](https://github.com/explosion/spaCy/tree/master/spacy/lang/xx).
 
-To load your model with the neutral, multi-language class, simply set
-`"language": "xx"` in your [model package](/usage/training#models-generating)'s
-`meta.json`. You can also import the class directly, or call
-[`util.get_lang_class()`](/api/top-level#util.get_lang_class) for lazy-loading.
+To train a model using the neutral multi-language class, you can set
+`lang = "xx"` in your [training config](/usage/training#config). You can also
+import the `MultiLanguage` class directly, or call
+[`spacy.blank("xx")`](/api/top-level#spacy.blank) for lazy-loading.
 
 ### Chinese language support {#chinese new=2.3}
 
@@ -117,15 +116,10 @@ The Chinese language class supports three word segmentation options:
 
 <Infobox variant="warning">
 
-In spaCy v3, the default Chinese word segmenter has switched from Jieba to
-character segmentation.
-
-</Infobox>
-
-<Infobox variant="warning">
-
-Note that [`pkuseg`](https://github.com/lancopku/pkuseg-python) doesn't yet ship
-with pre-compiled wheels for Python 3.8. If you're running Python 3.8, you can
+In spaCy v3.0, the default Chinese word segmenter has switched from Jieba to
+character segmentation. Also note that
+[`pkuseg`](https://github.com/lancopku/pkuseg-python) doesn't yet ship with
+pre-compiled wheels for Python 3.8. If you're running Python 3.8, you can
 install it from our fork and compile it locally:
 
 ```bash
@@ -139,25 +133,25 @@ $ pip install https://github.com/honnibal/pkuseg-python/archive/master.zip
 The `meta` argument of the `Chinese` language class supports the following
 following tokenizer config settings:
 
-| Name               | Type | Description                                                                                             |
-| ------------------ | ---- | ------------------------------------------------------------------------------------------------------- |
-| `segmenter`        | str  | Word segmenter: `char`, `jieba` or `pkuseg`. Defaults to `char`.                                        |
-| `pkuseg_model`     | str  | **Required for `pkuseg`:** Name of a model provided by `pkuseg` or the path to a local model directory. |
-| `pkuseg_user_dict` | str  | Optional path to a file with one word per line which overrides the default `pkuseg` user dictionary.    |
+| Name               | Description                                                                                                     |
+| ------------------ | --------------------------------------------------------------------------------------------------------------- |
+| `segmenter`        | Word segmenter: `char`, `jieba` or `pkuseg`. Defaults to `char`. ~~str~~                                        |
+| `pkuseg_model`     | **Required for `pkuseg`:** Name of a model provided by `pkuseg` or the path to a local model directory. ~~str~~ |
+| `pkuseg_user_dict` | Optional path to a file with one word per line which overrides the default `pkuseg` user dictionary. ~~str~~    |
 
 ```python
 ### Examples
 # Load "default" model
 cfg = {"segmenter": "pkuseg", "pkuseg_model": "default"}
-nlp = Chinese(meta={"tokenizer": {"config": cfg}})
+nlp = Chinese(config={"tokenizer": {"config": cfg}})
 
 # Load local model
 cfg = {"segmenter": "pkuseg", "pkuseg_model": "/path/to/pkuseg_model"}
-nlp = Chinese(meta={"tokenizer": {"config": cfg}})
+nlp = Chinese(config={"tokenizer": {"config": cfg}})
 
 # Override the user directory
 cfg = {"segmenter": "pkuseg", "pkuseg_model": "default", "pkuseg_user_dict": "/path"}
-nlp = Chinese(meta={"tokenizer": {"config": cfg}})
+nlp = Chinese(config={"tokenizer": {"config": cfg}})
 ```
 
 You can also modify the user dictionary on-the-fly:
@@ -175,7 +169,7 @@ nlp.tokenizer.pkuseg_update_user_dict([], reset=True)
 
 </Accordion>
 
-<Accordion title="Details on pretrained and custom Chinese models">
+<Accordion title="Details on pretrained and custom Chinese models" spaced>
 
 The [Chinese models](/models/zh) provided by spaCy include a custom `pkuseg`
 model trained only on
@@ -248,20 +242,20 @@ best-matching model compatible with your spaCy installation.
 > + nlp = spacy.load("en_core_web_sm")
 > ```
 
-```bash
-# Download best-matching version of specific model for your spaCy installation
-python -m spacy download en_core_web_sm
+```cli
+# Download best-matching version of a model for your spaCy installation
+$ python -m spacy download en_core_web_sm
 
 # Download exact model version
-python -m spacy download en_core_web_sm-2.2.0 --direct
+$ python -m spacy download en_core_web_sm-3.0.0 --direct
 ```
 
 The download command will [install the model](/usage/models#download-pip) via
 pip and place the package in your `site-packages` directory.
 
-```bash
-pip install spacy
-python -m spacy download en_core_web_sm
+```cli
+$ pip install -U spacy
+$ python -m spacy download en_core_web_sm
 ```
 
 ```python
@@ -280,10 +274,10 @@ click on the archive link and copy it to your clipboard.
 
 ```bash
 # With external URL
-pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0.tar.gz
+$ pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0.tar.gz
 
 # With local file
-pip install /Users/you/en_core_web_sm-3.0.0.tar.gz
+$ pip install /Users/you/en_core_web_sm-3.0.0.tar.gz
 ```
 
 By default, this will install the model into your `site-packages` directory. You
@@ -306,14 +300,16 @@ archive consists of a model directory that contains another directory with the
 model data.
 
 ```yaml
-### Directory structure {highlight="7"}
+### Directory structure {highlight="6"}
 └── en_core_web_md-3.0.0.tar.gz       # downloaded archive
-    ├── meta.json                     # model meta data
     ├── setup.py                      # setup file for pip installation
+    ├── meta.json                     # copy of model meta
     └── en_core_web_md                # 📦 model package
         ├── __init__.py               # init for pip installation
-        ├── meta.json                 # model meta data
         └── en_core_web_md-3.0.0      # model data
+            ├── config.cfg            # model config
+            ├── meta.json             # model meta
+            └── ...                   # directories with component data
 ```
 
 You can place the **model package directory** anywhere on your local file

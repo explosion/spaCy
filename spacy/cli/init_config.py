@@ -3,17 +3,17 @@ from enum import Enum
 from pathlib import Path
 from wasabi import Printer, diff_strings
 from thinc.api import Config
-from pydantic import BaseModel
 import srsly
 import re
 
 from .. import util
+from ..schemas import RecommendationSchema
 from ._util import init_cli, Arg, Opt, show_validation_error, COMMAND
 
 
-TEMPLATE_ROOT = Path(__file__).parent / "templates"
-TEMPLATE_PATH = TEMPLATE_ROOT / "quickstart_training.jinja"
-RECOMMENDATIONS_PATH = TEMPLATE_ROOT / "quickstart_training_recommendations.json"
+ROOT = Path(__file__).parent / "templates"
+TEMPLATE_PATH = ROOT / "quickstart_training.jinja"
+RECOMMENDATIONS = srsly.read_yaml(ROOT / "quickstart_training_recommendations.yml")
 
 
 class Optimizations(str, Enum):
@@ -21,25 +21,10 @@ class Optimizations(str, Enum):
     accuracy = "accuracy"
 
 
-class RecommendationsTrfItem(BaseModel):
-    name: str
-    size_factor: int
-
-
-class RecommendationsTrf(BaseModel):
-    efficiency: RecommendationsTrfItem
-    accuracy: RecommendationsTrfItem
-
-
-class RecommendationSchema(BaseModel):
-    word_vectors: Optional[str] = None
-    transformer: Optional[RecommendationsTrf] = None
-
-
 @init_cli.command("config")
 def init_config_cli(
     # fmt: off
-    output_file: Path = Arg("-", help="File to save config.cfg to (or - for stdout)", allow_dash=True),
+    output_file: Path = Arg(..., help="File to save config.cfg to or - for stdout (will only output config and no additional logging info)", allow_dash=True),
     lang: Optional[str] = Opt("en", "--lang", "-l", help="Two-letter code of the language to use"),
     pipeline: Optional[str] = Opt("tagger,parser,ner", "--pipeline", "-p", help="Comma-separated names of trainable pipeline components to include in the model (without 'tok2vec' or 'transformer')"),
     optimize: Optimizations = Opt(Optimizations.efficiency.value, "--optimize", "-o", help="Whether to optimize for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger and slower model). This will impact the choice of architecture, pretrained weights and related hyperparameters."),
@@ -111,14 +96,11 @@ def init_config(
         from jinja2 import Template
     except ImportError:
         msg.fail("This command requires jinja2", "pip install jinja2", exits=1)
-    recommendations = srsly.read_json(RECOMMENDATIONS_PATH)
-    lang_defaults = util.get_lang_class(lang).Defaults
-    has_letters = lang_defaults.writing_system.get("has_letters", True)
-    # Filter out duplicates since tok2vec and transformer are added by template
-    pipeline = [pipe for pipe in pipeline if pipe not in ("tok2vec", "transformer")]
-    reco = RecommendationSchema(**recommendations.get(lang, {})).dict()
     with TEMPLATE_PATH.open("r") as f:
         template = Template(f.read())
+    # Filter out duplicates since tok2vec and transformer are added by template
+    pipeline = [pipe for pipe in pipeline if pipe not in ("tok2vec", "transformer")]
+    reco = RecommendationSchema(**RECOMMENDATIONS.get(lang, {})).dict()
     variables = {
         "lang": lang,
         "components": pipeline,
@@ -126,8 +108,15 @@ def init_config(
         "hardware": "cpu" if cpu else "gpu",
         "transformer_data": reco["transformer"],
         "word_vectors": reco["word_vectors"],
-        "has_letters": has_letters,
+        "has_letters": reco["has_letters"],
     }
+    if variables["transformer_data"] and not has_spacy_transformers():
+        msg.warn(
+            "To generate a more effective transformer-based config (GPU-only), "
+            "install the spacy-transformers package and re-run this command. "
+            "The config generated now does not use transformers."
+        )
+        variables["transformer_data"] = None
     base_template = template.render(variables).strip()
     # Giving up on getting the newlines right in jinja for now
     base_template = re.sub(r"\n\n\n+", "\n\n", base_template)
@@ -144,8 +133,6 @@ def init_config(
     for label, value in use_case.items():
         msg.text(f"- {label}: {value}")
     use_transformer = bool(template_vars.use_transformer)
-    if use_transformer:
-        require_spacy_transformers(msg)
     with show_validation_error(hint_fill=False):
         config = util.load_config_from_str(base_template)
         nlp, _ = util.load_model_from_config(config, auto_fill=True)
@@ -167,12 +154,10 @@ def save_config(config: Config, output_file: Path, is_stdout: bool = False) -> N
         print(f"{COMMAND} train {output_file.parts[-1]} {' '.join(variables)}")
 
 
-def require_spacy_transformers(msg: Printer) -> None:
+def has_spacy_transformers() -> bool:
     try:
         import spacy_transformers  # noqa: F401
+
+        return True
     except ImportError:
-        msg.fail(
-            "Using a transformer-based pipeline requires spacy-transformers "
-            "to be installed.",
-            exits=1,
-        )
+        return False

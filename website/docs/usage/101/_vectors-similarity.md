@@ -77,26 +77,76 @@ or flagging duplicates. For example, you can suggest a user content that's
 similar to what they're currently looking at, or label a support ticket as a
 duplicate if it's very similar to an already existing one.
 
-Each `Doc`, `Span` and `Token` comes with a
-[`.similarity()`](/api/token#similarity) method that lets you compare it with
-another object, and determine the similarity. Of course similarity is always
-subjective – whether "dog" and "cat" are similar really depends on how you're
-looking at it. spaCy's similarity model usually assumes a pretty general-purpose
-definition of similarity.
+Each [`Doc`](/api/doc), [`Span`](/api/span), [`Token`](/api/token) and
+[`Lexeme`](/api/lexeme) comes with a [`.similarity`](/api/token#similarity)
+method that lets you compare it with another object, and determine the
+similarity. Of course similarity is always subjective – whether two words, spans
+or documents are similar really depends on how you're looking at it. spaCy's
+similarity model usually assumes a pretty general-purpose definition of
+similarity.
+
+> #### 📝 Things to try
+>
+> 1. Compare two different tokens and try to find the two most _dissimilar_
+>    tokens in the texts with the lowest similarity score (according to the
+>    vectors).
+> 2. Compare the similarity of two [`Lexeme`](/api/lexeme) objects, entries in
+>    the vocabulary. You can get a lexeme via the `.lex` attribute of a token.
+>    You should see that the similarity results are identical to the token
+>    similarity.
 
 ```python
 ### {executable="true"}
 import spacy
 
 nlp = spacy.load("en_core_web_md")  # make sure to use larger model!
-tokens = nlp("dog cat banana")
+doc1 = nlp("I like salty fries and hamburgers.")
+doc2 = nlp("Fast food tastes very good.")
 
-for token1 in tokens:
-    for token2 in tokens:
-        print(token1.text, token2.text, token1.similarity(token2))
+# Similarity of two documents
+print(doc1, "<->", doc2, doc1.similarity(doc2))
+# Similarity of tokens and spans
+french_fries = doc1[2:4]
+burgers = doc1[5]
+print(french_fries, "<->", burgers, french_fries.similarity(burgers))
 ```
 
-In this case, the model's predictions are pretty on point. A dog is very similar
-to a cat, whereas a banana is not very similar to either of them. Identical
-tokens are obviously 100% similar to each other (just not always exactly `1.0`,
-because of vector math and floating point imprecisions).
+### What to expect from similarity results {#similarity-expectations}
+
+Computing similarity scores can be helpful in many situations, but it's also
+important to maintain **realistic expectations** about what information it can
+provide. Words can be related to each over in many ways, so a single
+"similarity" score will always be a **mix of different signals**, and vectors
+trained on different data can produce very different results that may not be
+useful for your purpose. Here are some important considerations to keep in mind:
+
+- There's no objective definition of similarity. Whether "I like burgers" and "I
+  like pasta" is similar **depends on your application**. Both talk about food
+  preferences, which makes them very similar – but if you're analyzing mentions
+  of food, those sentences are pretty dissimilar, because they talk about very
+  different foods.
+- The similarity of [`Doc`](/api/doc) and [`Span`](/api/span) objects defaults
+  to the **average** of the token vectors. This means that the vector for "fast
+  food" is the average of the vectors for "fast" and "food", which isn't
+  necessarily representative of the phrase "fast food".
+- Vector averaging means that the vector of multiple tokens is **insensitive to
+  the order** of the words. Two documents expressing the same meaning with
+  dissimilar wording will return a lower similarity score than two documents
+  that happen to contain the same words while expressing different meanings.
+
+<Infobox title="Tip: Check out sense2vec" emoji="💡">
+
+[![](../../images/sense2vec.jpg)](https://github.com/explosion/sense2vec)
+
+[`sense2vec`](https://github.com/explosion/sense2vec) is a library developed by
+us that builds on top of spaCy and lets you train and query more interesting and
+detailed word vectors. It combines noun phrases like "fast food" or "fair game"
+and includes the part-of-speech tags and entity labels. The library also
+includes annotation recipes for our annotation tool [Prodigy](https://prodi.gy)
+that let you evaluate vector models and create terminology lists. For more
+details, check out
+[our blog post](https://explosion.ai/blog/sense2vec-reloaded). To explore the
+semantic similarities across all Reddit comments of 2015 and 2019, see the
+[interactive demo](https://explosion.ai/demos/sense2vec).
+
+</Infobox>

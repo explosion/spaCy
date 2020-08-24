@@ -102,8 +102,7 @@ cdef class Doc:
 
         Construction 2
         >>> from spacy.tokens import Doc
-        >>> doc = Doc(nlp.vocab, words=[u'hello', u'world', u'!'],
-        >>>           spaces=[True, False, False])
+        >>> doc = Doc(nlp.vocab, words=["hello", "world", "!"], spaces=[True, False, False])
 
     DOCS: https://spacy.io/api/doc
     """
@@ -1194,8 +1193,7 @@ cdef class Doc:
                 retokenizer.merge(span, attributes[i])
 
     def to_json(self, underscore=None):
-        """Convert a Doc to JSON. The format it produces will be the new format
-        for the `spacy train` command (not implemented yet).
+        """Convert a Doc to JSON.
 
         underscore (list): Optional list of string names of custom doc._.
         attributes. Attribute values need to be JSON-serializable. Values will

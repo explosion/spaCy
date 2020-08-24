@@ -58,12 +58,12 @@ arcs.
 
 </Infobox>
 
-| Argument  | Type | Description                                                 | Default     |
-| --------- | ---- | ----------------------------------------------------------- | ----------- |
-| `compact` | bool | "Compact mode" with square arrows that takes up less space. | `False`     |
-| `color`   | str  | Text color (HEX, RGB or color names).                       | `"#000000"` |
-| `bg`      | str  | Background color (HEX, RGB or color names).                 | `"#ffffff"` |
-| `font`    | str  | Font name or font family for all text.                      | `"Arial"`   |
+| Argument  | Description                                                                               |
+| --------- | ----------------------------------------------------------------------------------------- |
+| `compact` | "Compact mode" with square arrows that takes up less space. Defaults to `False`. ~~bool~~ |
+| `color`   | Text color (HEX, RGB or color names). Defaults to `"#000000"`. ~~str~~                    |
+| `bg`      | Background color (HEX, RGB or color names). Defaults to `"#ffffff"`. ~~str~~              |
+| `font`    | Font name or font family for all text. Defaults to `"Arial"`. ~~str~~                     |
 
 For a list of all available options, see the
 [`displacy` API documentation](/api/top-level#displacy_options).
@@ -121,10 +121,10 @@ import DisplacyEntHtml from 'images/displacy-ent2.html'
 
 The entity visualizer lets you customize the following `options`:
 
-| Argument | Type | Description                                                                           | Default |
-| -------- | ---- | ------------------------------------------------------------------------------------- | ------- |
-| `ents`   | list |  Entity types to highlight (`None` for all types).                                    | `None`  |
-| `colors` | dict | Color overrides. Entity types in uppercase should be mapped to color names or values. | `{}`    |
+| Argument | Description                                                                                                   |
+| -------- | ------------------------------------------------------------------------------------------------------------- |
+| `ents`   | Entity types to highlight (`None` for all types). Defaults to `None`. ~~Optional[List[str]]~~                 | `None` |
+| `colors` | Color overrides. Entity types should be mapped to color names or values. Defaults to `{}`. ~~Dict[str, str]~~ |
 
 If you specify a list of `ents`, only those entity types will be rendered – for
 example, you can choose to display `PERSON` entities. Internally, the visualizer

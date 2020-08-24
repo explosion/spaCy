@@ -5,8 +5,11 @@ menu:
   - ['Intro & Workflow', 'intro']
   - ['Directory & Assets', 'directory']
   - ['Custom Projects', 'custom']
+  - ['Remote Storage', 'remote']
   - ['Integrations', 'integrations']
 ---
+
+## Introduction and workflow {#intro hidden="true"}
 
 > #### 🪐 Project templates
 >
@@ -19,20 +22,18 @@ spaCy projects let you manage and share **end-to-end spaCy workflows** for
 different **use cases and domains**, and orchestrate training, packaging and
 serving your custom models. You can start off by cloning a pre-defined project
 template, adjust it to fit your needs, load in your data, train a model, export
-it as a Python package and share the project templates with your team. spaCy
-projects can be used via the new [`spacy project`](/api/cli#project) command.
-For an overview of the available project templates, check out the
-[`projects`](https://github.com/explosion/projects) repo. spaCy projects also
-[integrate](#integrations) with many other cool machine learning and data
-science tools to track and manage your data and experiments, iterate on demos
-and prototypes and ship your models into production.
+it as a Python package, upload your outputs to a remote storage and share your
+results with your team. spaCy projects can be used via the new
+[`spacy project`](/api/cli#project) command and we provide templates in our
+[`projects`](https://github.com/explosion/projects) repo.
 
 <!-- TODO: mention integrations -->
 
-## Introduction and workflow {#intro}
-
 <!-- TODO: decide how to introduce concept -->
 
+![Illustration of project workflow and commands](../images/projects.svg)
+
+<!-- TODO:
 <Project id="some_example_project">
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus interdum
@@ -40,6 +41,7 @@ sodales lectus, ut sodales orci ullamcorper id. Sed condimentum neque ut erat
 mattis pretium.
 
 </Project>
+-->
 
 spaCy projects make it easy to integrate with many other **awesome tools** in
 the data science and machine learning ecosystem to track and manage your data
@@ -67,8 +69,8 @@ project template and copies the files to a local directory. You can then run the
 project, e.g. to train a model and edit the commands and scripts to build fully
 custom workflows.
 
-```bash
-$ python -m spacy clone some_example_project
+```cli
+python -m spacy project clone some_example_project
 ```
 
 By default, the project will be cloned into the current working directory. You
@@ -95,9 +97,9 @@ to download and where to put them. The
 [`spacy project assets`](/api/cli#project-assets) will fetch the project assets
 for you:
 
-```bash
-cd some_example_project
-python -m spacy project assets
+```cli
+$ cd some_example_project
+$ python -m spacy project assets
 ```
 
 ### 3. Run a command {#run}
@@ -123,7 +125,7 @@ Commands consist of one or more steps and can be run with
 [`spacy project run`](/api/cli#project-run). The following will run the command
 `preprocess` defined in the `project.yml`:
 
-```bash
+```cli
 $ python -m spacy project run preprocess
 ```
 
@@ -153,10 +155,10 @@ other. For instance, to generate a packaged model, you might start by converting
 your data, then run [`spacy train`](/api/cli#train) to train your model on the
 converted data and if that's successful, run [`spacy package`](/api/cli#package)
 to turn the best model artifact into an installable Python package. The
-following command run the workflow named `all` defined in the `project.yml`, and
-execute the commands it specifies, in order:
+following command runs the workflow named `all` defined in the `project.yml`,
+and executes the commands it specifies, in order:
 
-```bash
+```cli
 $ python -m spacy project run all
 ```
 
@@ -168,6 +170,31 @@ advanced data pipelines and track your changes in Git, check out the
 [`spacy project dvc`](/api/cli#project-dvc) command generates a DVC config file
 from a workflow defined in your `project.yml` so you can manage your spaCy
 project as a DVC repo.
+
+### 5. Optional: Push to remote storage {#push}
+
+> ```yaml
+> ### project.yml
+> remotes:
+>   default: 's3://my-spacy-bucket'
+>   local: '/mnt/scratch/cache'
+> ```
+
+After training a model, you can optionally use the
+[`spacy project push`](/api/cli#project-push) command to upload your outputs to
+a remote storage, using protocols like [S3](https://aws.amazon.com/s3/),
+[Google Cloud Storage](https://cloud.google.com/storage) or SSH. This can help
+you **export** your model packages, **share** work with your team, or **cache
+results** to avoid repeating work.
+
+```cli
+$ python -m spacy project push
+```
+
+The `remotes` section in your `project.yml` lets you assign names to the
+different storages. To download state from a remote storage, you can use the
+[`spacy project pull`](/api/cli#project-pull) command. For more details, see the
+docs on [remote storage](#remote).
 
 ## Project directory and assets {#directory}
 
@@ -188,7 +215,7 @@ https://github.com/explosion/spacy-boilerplates/blob/master/ner_fashion/project.
 
 | Section       | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `variables`   | A dictionary of variables that can be referenced in paths, URLs and scripts. For example, `{NAME}` will use the value of the variable `NAME`.                                                                                                                                                                                                                                                                                                                                                                |
+| `vars`        | A dictionary of variables that can be referenced in paths, URLs and scripts, just like [`config.cfg` variables](/usage/training#config-interpolation). For example, `${vars.name}` will use the value of the variable `name`. Variables need to be defined in the section `vars`, but can be a nested dict, so you're able to reference `${vars.model.name}`.                                                                                                                                                |
 | `directories` | An optional list of [directories](#project-files) that should be created in the project for assets, training outputs, metrics etc. spaCy will make sure that these directories always exist.                                                                                                                                                                                                                                                                                                                 |
 | `assets`      | A list of assets that can be fetched with the [`project assets`](/api/cli#project-assets) command. `url` defines a URL or local path, `dest` is the destination file relative to the project directory, and an optional `checksum` ensures that an error is raised if the file's checksum doesn't match.                                                                                                                                                                                                     |
 | `workflows`   | A dictionary of workflow names, mapped to a list of command names, to execute in order. Workflows can be run with the [`project run`](/api/cli#project-run) command.                                                                                                                                                                                                                                                                                                                                         |
@@ -197,7 +224,7 @@ https://github.com/explosion/spacy-boilerplates/blob/master/ner_fashion/project.
 ### Dependencies and outputs {#deps-outputs}
 
 Each command defined in the `project.yml` can optionally define a list of
-dependencies and outputs. These are the files the commands requires and creates.
+dependencies and outputs. These are the files the command requires and creates.
 For example, a command for training a model may depend on a
 [`config.cfg`](/usage/training#config) and the training and evaluation data, and
 it will export a directory `model-best`, containing the best model, which you
@@ -347,9 +374,9 @@ if __name__ == "__main__":
 
 In your `project.yml`, you can then run the script by calling
 `python scripts/custom_evaluation.py` with the function arguments. You can also
-use the `variables` section to define reusable variables that will be
-substituted in commands, paths and URLs. In this example, the `BATCH_SIZE` is
-defined as a variable will be added in place of `{BATCH_SIZE}` in the script.
+use the `vars` section to define reusable variables that will be substituted in
+commands, paths and URLs. In this example, the batch size is defined as a
+variable will be added in place of `${vars.batch_size}` in the script.
 
 > #### Calling into Python
 >
@@ -361,13 +388,13 @@ defined as a variable will be added in place of `{BATCH_SIZE}` in the script.
 <!-- prettier-ignore -->
 ```yaml
 ### project.yml
-variables:
-  BATCH_SIZE: 128
+vars:
+  batch_size: 128
 
 commands:
   - name: evaluate
     script:
-      - 'python scripts/custom_evaluation.py {BATCH_SIZE} ./training/model-best ./corpus/eval.json'
+      - 'python scripts/custom_evaluation.py ${batch_size} ./training/model-best ./corpus/eval.json'
     deps:
       - 'training/model-best'
       - 'corpus/eval.json'
@@ -379,8 +406,8 @@ The [`spacy project clone`](/api/cli#project-clone) command lets you customize
 the repo to clone from using the `--repo` option. It calls into `git`, so you'll
 be able to clone from any repo that you have access to, including private repos.
 
-```bash
-$ python -m spacy project your_project --repo https://github.com/you/repo
+```cli
+python -m spacy project clone your_project --repo https://github.com/you/repo
 ```
 
 At a minimum, a valid project template needs to contain a
@@ -419,6 +446,114 @@ assets:
     checksum: '5113dc04e03f079525edd8df3f4f39e3'
 ```
 
+## Remote Storage {#remote}
+
+You can persist your project outputs to a remote storage using the
+[`project push`](/api/cli#project-push) command. This can help you **export**
+your model packages, **share** work with your team, or **cache results** to
+avoid repeating work. The [`project pull`](/api/cli#project-pull) command will
+download any outputs that are in the remote storage and aren't available
+locally.
+
+You can list one or more remotes in the `remotes` section of your
+[`project.yml`](#project-yml) by mapping a string name to the URL of the
+storage. Under the hood, spaCy uses the
+[`smart-open`](https://github.com/RaRe-Technologies/smart_open) library to
+communicate with the remote storages, so you can use any protocol that
+`smart-open` supports, including [S3](https://aws.amazon.com/s3/),
+[Google Cloud Storage](https://cloud.google.com/storage), SSH and more, although
+you may need to install extra dependencies to use certain protocols.
+
+> #### Example
+>
+> ```cli
+> $ python -m spacy project pull local
+> ```
+
+```yaml
+### project.yml
+remotes:
+  default: 's3://my-spacy-bucket'
+  local: '/mnt/scratch/cache'
+  stuff: 'ssh://myserver.example.com/whatever'
+```
+
+<Infobox title="How it works" emoji="💡">
+
+Inside the remote storage, spaCy uses a clever **directory structure** to avoid
+overwriting files. The top level of the directory structure is a URL-encoded
+version of the output's path. Within this directory are subdirectories named
+according to a hash of the command string and the command's dependencies.
+Finally, within those directories are files, named according to an MD5 hash of
+their contents.
+
+<!-- TODO: update with actual real example? -->
+
+<!-- prettier-ignore -->
+```yaml
+└── urlencoded_file_path            # Path of original file
+    ├── some_command_hash           # Hash of command you ran
+    │   ├── some_content_hash       # Hash of file content
+    │   └── another_content_hash
+    └── another_command_hash
+        └── third_content_hash
+```
+
+</Infobox>
+
+For instance, let's say you had the following command in your `project.yml`:
+
+```yaml
+### project.yml
+- name: train
+  help: 'Train a spaCy model using the specified corpus and config'
+  script:
+    - 'spacy train ./config.cfg --output training/'
+  deps:
+    - 'corpus/train'
+    - 'corpus/dev'
+    - 'config.cfg'
+  outputs:
+    - 'training/model-best'
+```
+
+> #### Example
+>
+> ```
+> └── s3://my-spacy-bucket/training%2Fmodel-best
+>     └── 1d8cb33a06cc345ad3761c6050934a1b
+>         └── d8e20c3537a084c5c10d95899fe0b1ff
+> ```
+
+After you finish training, you run [`project push`](/api/cli#project-push) to
+make sure the `training/model-best` output is saved to remote storage. spaCy
+will then construct a hash from your command script and the listed dependencies,
+`corpus/train`, `corpus/dev` and `config.cfg`, in order to identify the
+execution context of your output. It would then compute an MD5 hash of the
+`training/model-best` directory, and use those three pieces of information to
+construct the storage URL.
+
+```cli
+$ python -m spacy project run train
+$ python -m spacy project push
+```
+
+If you change the command or one of its dependencies (for instance, by editing
+the [`config.cfg`](/usage/training#config) file to tune the hyperparameters, a
+different creation hash will be calculated, so when you use
+[`project push`](/api/cli#project-push) you won't be overwriting your previous
+file. The system even supports multiple outputs for the same file and the same
+context, which can happen if your training process is not deterministic, or if
+you have dependencies that aren't represented in the command.
+
+In summary, the [`spacy project`](/api/cli#project) remote storages are designed
+to make a particular set of trade-offs. Priority is placed on **convenience**,
+**correctness** and **avoiding data loss**. You can use
+[`project push`](/api/cli#project-push) freely, as you'll never overwrite remote
+state, and you don't have to come up with names or version numbers. However,
+it's up to you to manage the size of your remote storage, and to remove files
+that are no longer relevant to you.
+
 ## Integrations {#integrations}
 
 ### Data Version Control (DVC) {#dvc} <IntegrationLogo name="dvc" title="DVC" width={70} height="auto" align="right" />
@@ -445,9 +580,9 @@ to include support for remote storage like Google Cloud Storage, S3, Azure, SSH
 and more.
 
 ```bash
-pip install dvc   # Install DVC
-git init          # Initialize a Git repo
-dvc init          # Initialize a DVC project
+$ pip install dvc   # Install DVC
+$ git init          # Initialize a Git repo
+$ dvc init          # Initialize a DVC project
 ```
 
 <Infobox title="Important note on privacy" variant="warning">
@@ -466,8 +601,8 @@ can then manage your spaCy project like any other DVC project, run
 and [`dvc repro`](https://dvc.org/doc/command-reference/repro) to reproduce the
 workflow or individual commands.
 
-```bash
-$ python -m spacy project dvc [workflow name]
+```cli
+$ python -m spacy project dvc [workflow_name]
 ```
 
 <Infobox title="Important note for multiple workflows" variant="warning">
@@ -508,23 +643,24 @@ and evaluation set.
 
 > #### Example usage
 >
-> ```bash
+> ```cli
 > $ python -m spacy project run annotate
 > ```
 
 <!-- prettier-ignore -->
 ```yaml
 ### project.yml
-variables:
-  PRODIGY_DATASET: 'ner_articles'
-  PRODIGY_LABELS: 'PERSON,ORG,PRODUCT'
-  PRODIGY_MODEL: 'en_core_web_md'
+vars:
+  prodigy:
+    dataset: 'ner_articles'
+    labels: 'PERSON,ORG,PRODUCT'
+    model: 'en_core_web_md'
 
 commands:
   - name: annotate
   - script:
-      - 'python -m prodigy ner.correct {PRODIGY_DATASET} ./assets/raw_data.jsonl {PRODIGY_MODEL} --labels {PRODIGY_LABELS}'
-      - 'python -m prodigy data-to-spacy ./corpus/train.json ./corpus/eval.json --ner {PRODIGY_DATASET}'
+      - 'python -m prodigy ner.correct ${vars.prodigy.dataset} ./assets/raw_data.jsonl ${vars.prodigy.model} --labels ${vars.prodigy.labels}'
+      - 'python -m prodigy data-to-spacy ./corpus/train.json ./corpus/eval.json --ner ${vars.prodigy.dataset}'
       - 'python -m spacy convert ./corpus/train.json ./corpus/train.spacy'
       - 'python -m spacy convert ./corpus/eval.json ./corpus/eval.spacy'
   - deps:
@@ -595,7 +731,7 @@ spacy_streamlit.visualize(MODELS, DEFAULT_TEXT, visualizers=["ner"])
 
 > #### Example usage
 >
-> ```bash
+> ```cli
 > $ python -m spacy project run visualize
 > ```
 
@@ -636,8 +772,8 @@ API.
 
 > #### Example usage
 >
-> ```bash
-> $ python -m spacy project run visualize
+> ```cli
+> $ python -m spacy project run serve
 > ```
 
 <!-- prettier-ignore -->

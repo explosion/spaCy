@@ -8,9 +8,9 @@ new: 3.0
 
 An `Example` holds the information for one training instance. It stores two
 `Doc` objects: one for holding the gold-standard reference data, and one for
-holding the predictions of the pipeline. An [`Alignment`](#alignment-object)
-object stores the alignment between these two documents, as they can differ in
-tokenization.
+holding the predictions of the pipeline. An
+[`Alignment`](/api/example#alignment-object) object stores the alignment between
+these two documents, as they can differ in tokenization.
 
 ## Example.\_\_init\_\_ {#init tag="method"}
 
@@ -31,12 +31,12 @@ both documents.
 > example = Example(predicted, reference)
 > ```
 
-| Name           | Type        | Description                                                                                      |
-| -------------- | ----------- | ------------------------------------------------------------------------------------------------ |
-| `predicted`    | `Doc`       | The document containing (partial) predictions. Can not be `None`.                                |
-| `reference`    | `Doc`       | The document containing gold-standard annotations. Can not be `None`.                            |
-| _keyword-only_ |             |                                                                                                  |
-| `alignment`    | `Alignment` | An object holding the alignment between the tokens of the `predicted` and `reference` documents. |
+| Name           | Description                                                                                                              |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `predicted`    | The document containing (partial) predictions. Can not be `None`. ~~Doc~~                                                |
+| `reference`    | The document containing gold-standard annotations. Can not be `None`. ~~Doc~~                                            |
+| _keyword-only_ |                                                                                                                          |
+| `alignment`    | An object holding the alignment between the tokens of the `predicted` and `reference` documents. ~~Optional[Alignment]~~ |
 
 ## Example.from_dict {#from_dict tag="classmethod"}
 
@@ -56,11 +56,11 @@ see the [training format documentation](/api/data-formats#dict-input).
 > example = Example.from_dict(predicted, {"words": token_ref, "tags": tags_ref})
 > ```
 
-| Name           | Type             | Description                                                       |
-| -------------- | ---------------- | ----------------------------------------------------------------- |
-| `predicted`    | `Doc`            | The document containing (partial) predictions. Can not be `None`. |
-| `example_dict` | `Dict[str, obj]` | The gold-standard annotations as a dictionary. Can not be `None`. |
-| **RETURNS**    | `Example`        | The newly constructed object.                                     |
+| Name           | Description                                                               |
+| -------------- | ------------------------------------------------------------------------- |
+| `predicted`    | The document containing (partial) predictions. Can not be `None`. ~~Doc~~ |
+| `example_dict` | `Dict[str, obj]`                                                          | The gold-standard annotations as a dictionary. Can not be `None`. ~~Dict[str, Any]~~ |
+| **RETURNS**    | The newly constructed object. ~~Example~~                                 |
 
 ## Example.text {#text tag="property"}
 
@@ -72,11 +72,13 @@ The text of the `predicted` document in this `Example`.
 > raw_text = example.text
 > ```
 
-| Name        | Type | Description                           |
-| ----------- | ---- | ------------------------------------- |
-| **RETURNS** | str  | The text of the `predicted` document. |
+| Name        | Description                                   |
+| ----------- | --------------------------------------------- |
+| **RETURNS** | The text of the `predicted` document. ~~str~~ |
 
 ## Example.predicted {#predicted tag="property"}
+
+The `Doc` holding the predictions. Occasionally also referred to as `example.x`.
 
 > #### Example
 >
@@ -86,13 +88,14 @@ The text of the `predicted` document in this `Example`.
 > set_annotations(docs, predictions)
 > ```
 
-The `Doc` holding the predictions. Occassionally also refered to as `example.x`.
-
-| Name        | Type  | Description                                    |
-| ----------- | ----- | ---------------------------------------------- |
-| **RETURNS** | `Doc` | The document containing (partial) predictions. |
+| Name        | Description                                            |
+| ----------- | ------------------------------------------------------ |
+| **RETURNS** | The document containing (partial) predictions. ~~Doc~~ |
 
 ## Example.reference {#reference tag="property"}
+
+The `Doc` holding the gold-standard annotations. Occasionally also referred to
+as `example.y`.
 
 > #### Example
 >
@@ -102,14 +105,14 @@ The `Doc` holding the predictions. Occassionally also refered to as `example.x`.
 >         gold_labels[i][j] = eg.reference.cats.get(label, 0.0)
 > ```
 
-The `Doc` holding the gold-standard annotations. Occassionally also refered to
-as `example.y`.
-
-| Name        | Type  | Description                                        |
-| ----------- | ----- | -------------------------------------------------- |
-| **RETURNS** | `Doc` | The document containing gold-standard annotations. |
+| Name        | Description                                                |
+| ----------- | ---------------------------------------------------------- |
+| **RETURNS** | The document containing gold-standard annotations. ~~Doc~~ |
 
 ## Example.alignment {#alignment tag="property"}
+
+The [`Alignment`](/api/example#alignment-object) object mapping the tokens of
+the `predicted` document to those of the `reference` document.
 
 > #### Example
 >
@@ -122,14 +125,14 @@ as `example.y`.
 > assert list(alignment.y2x.data) == [[0], [1], [2], [2]]
 > ```
 
-The `Alignment` object mapping the tokens of the `predicted` document to those
-of the `reference` document.
-
-| Name        | Type        | Description                                        |
-| ----------- | ----------- | -------------------------------------------------- |
-| **RETURNS** | `Alignment` | The document containing gold-standard annotations. |
+| Name        | Description                                                      |
+| ----------- | ---------------------------------------------------------------- |
+| **RETURNS** | The document containing gold-standard annotations. ~~Alignment~~ |
 
 ## Example.get_aligned {#get_aligned tag="method"}
+
+Get the aligned view of a certain token attribute, denoted by its int ID or
+string name.
 
 > #### Example
 >
@@ -141,16 +144,17 @@ of the `reference` document.
 > assert example.get_aligned("TAG", as_string=True) == ["VERB", "DET", "NOUN"]
 > ```
 
-Get the aligned view of a certain token attribute, denoted by its int ID or
-string name.
-
-| Name        | Type                       | Description                                                        | Default |
-| ----------- | -------------------------- | ------------------------------------------------------------------ | ------- |
-| `field`     | int or str                 | Attribute ID or string name                                        |         |
-| `as_string` | bool                       | Whether or not to return the list of values as strings.            | `False` |
-| **RETURNS** | `List[int]` or `List[str]` | List of integer values, or string values if `as_string` is `True`. |         |
+| Name        | Description                                                                                        |
+| ----------- | -------------------------------------------------------------------------------------------------- |
+| `field`     | Attribute ID or string name. ~~Union[int, str]~~                                                   |
+| `as_string` | Whether or not to return the list of values as strings. Defaults to `False`. ~~bool~~              |
+| **RETURNS** | List of integer values, or string values if `as_string` is `True`. ~~Union[List[int], List[str]]~~ |
 
 ## Example.get_aligned_parse {#get_aligned_parse tag="method"}
+
+Get the aligned view of the dependency parse. If `projectivize` is set to
+`True`, non-projective dependency trees are made projective through the
+Pseudo-Projective Dependency Parsing algorithm by Nivre and Nilsson (2005).
 
 > #### Example
 >
@@ -161,16 +165,15 @@ string name.
 > assert proj_heads == [3, 2, 3, 0, 3]
 > ```
 
-Get the aligned view of the dependency parse. If `projectivize` is set to
-`True`, non-projective dependency trees are made projective through the
-Pseudo-Projective Dependency Parsing algorithm by Nivre and Nilsson (2005).
-
-| Name           | Type                       | Description                                                        | Default |
-| -------------- | -------------------------- | ------------------------------------------------------------------ | ------- |
-| `projectivize` | bool                       | Whether or not to projectivize the dependency trees                | `True`  |
-| **RETURNS**    | `List[int]` or `List[str]` | List of integer values, or string values if `as_string` is `True`. |         |
+| Name           | Description                                                                                        |
+| -------------- | -------------------------------------------------------------------------------------------------- |
+| `projectivize` | Whether or not to projectivize the dependency trees. Defaults to `True`. ~~bool~~                  |
+| **RETURNS**    | List of integer values, or string values if `as_string` is `True`. ~~Union[List[int], List[str]]~~ |
 
 ## Example.get_aligned_ner {#get_aligned_ner tag="method"}
+
+Get the aligned view of the NER
+[BILUO](/usage/linguistic-features#accessing-ner) tags.
 
 > #### Example
 >
@@ -184,14 +187,15 @@ Pseudo-Projective Dependency Parsing algorithm by Nivre and Nilsson (2005).
 > assert ner_tags == ["B-PERSON", "L-PERSON", "O", "O", "U-LOC"]
 > ```
 
-Get the aligned view of the NER
-[BILUO](/usage/linguistic-features#accessing-ner) tags.
-
-| Name        | Type        | Description                                                                         |
-| ----------- | ----------- | ----------------------------------------------------------------------------------- |
-| **RETURNS** | `List[str]` | List of BILUO values, denoting whether tokens are part of an NER annotation or not. |
+| Name        | Description                                                                                       |
+| ----------- | ------------------------------------------------------------------------------------------------- |
+| **RETURNS** | List of BILUO values, denoting whether tokens are part of an NER annotation or not. ~~List[str]~~ |
 
 ## Example.get_aligned_spans_y2x {#get_aligned_spans_y2x tag="method"}
+
+Get the aligned view of any set of [`Span`](/api/span) objects defined over
+[`Example.reference`](/api/example#reference). The resulting span indices will
+align to the tokenization in [`Example.predicted`](/api/example#predicted).
 
 > #### Example
 >
@@ -207,16 +211,18 @@ Get the aligned view of the NER
 > assert [(ent.start, ent.end) for ent in ents_y2x] == [(0, 1)]
 > ```
 
-Get the aligned view of any set of [`Span`](/api/span) objects defined over
-`example.reference`. The resulting span indices will align to the tokenization
-in `example.predicted`.
-
-| Name        | Type             | Description                                                     |
-| ----------- | ---------------- | --------------------------------------------------------------- |
-| `y_spans`   | `Iterable[Span]` | `Span` objects aligned to the tokenization of `self.reference`. |
-| **RETURNS** | `Iterable[Span]` | `Span` objects aligned to the tokenization of `self.predicted`. |
+| Name        | Description                                                                   |
+| ----------- | ----------------------------------------------------------------------------- |
+| `y_spans`   | `Span` objects aligned to the tokenization of `reference`. ~~Iterable[Span]~~ |
+| **RETURNS** | `Span` objects aligned to the tokenization of `predicted`. ~~List[Span]~~     |
 
 ## Example.get_aligned_spans_x2y {#get_aligned_spans_x2y tag="method"}
+
+Get the aligned view of any set of [`Span`](/api/span) objects defined over
+[`Example.predicted`](/api/example#predicted). The resulting span indices will
+align to the tokenization in [`Example.reference`](/api/example#reference). This
+method is particularly useful to assess the accuracy of predicted entities
+against the original gold-standard annotation.
 
 > #### Example
 >
@@ -232,15 +238,10 @@ in `example.predicted`.
 > assert [(ent.start, ent.end) for ent in ents_x2y] == [(0, 2)]
 > ```
 
-Get the aligned view of any set of [`Span`](/api/span) objects defined over
-`example.predicted`. The resulting span indices will align to the tokenization
-in `example.reference`. This method is particularly useful to assess the
-accuracy of predicted entities against the original gold-standard annotation.
-
-| Name        | Type             | Description                                                     |
-| ----------- | ---------------- | --------------------------------------------------------------- |
-| `x_spans`   | `Iterable[Span]` | `Span` objects aligned to the tokenization of `self.predicted`. |
-| **RETURNS** | `Iterable[Span]` | `Span` objects aligned to the tokenization of `self.reference`. |
+| Name        | Description                                                                   |
+| ----------- | ----------------------------------------------------------------------------- |
+| `x_spans`   | `Span` objects aligned to the tokenization of `predicted`. ~~Iterable[Span]~~ |
+| **RETURNS** | `Span` objects aligned to the tokenization of `reference`. ~~List[Span]~~     |
 
 ## Example.to_dict {#to_dict tag="method"}
 
@@ -253,11 +254,13 @@ reference annotation contained in this `Example`.
 > eg_dict = example.to_dict()
 > ```
 
-| Name        | Type             | Description                                            |
-| ----------- | ---------------- | ------------------------------------------------------ |
-| **RETURNS** | `Dict[str, Any]` | Dictionary representation of the reference annotation. |
+| Name        | Description                                                               |
+| ----------- | ------------------------------------------------------------------------- |
+| **RETURNS** | Dictionary representation of the reference annotation. ~~Dict[str, Any]~~ |
 
 ## Example.split_sents {#split_sents tag="method"}
+
+Split one `Example` into multiple `Example` objects, one for each sentence.
 
 > #### Example
 >
@@ -271,11 +274,9 @@ reference annotation contained in this `Example`.
 > assert split_examples[1].text == "had lots of fun"
 > ```
 
-Split one `Example` into multiple `Example` objects, one for each sentence.
-
-| Name        | Type            | Description                                                |
-| ----------- | --------------- | ---------------------------------------------------------- |
-| **RETURNS** | `List[Example]` | List of `Example` objects, one for each original sentence. |
+| Name        | Description                                                                  |
+| ----------- | ---------------------------------------------------------------------------- |
+| **RETURNS** | List of `Example` objects, one for each original sentence. ~~List[Example]~~ |
 
 ## Alignment {#alignment-object new="3"}
 
@@ -283,10 +284,10 @@ Calculate alignment tables between two tokenizations.
 
 ### Alignment attributes {#alignment-attributes"}
 
-| Name  | Type                                               | Description                                                |
-| ----- | -------------------------------------------------- | ---------------------------------------------------------- |
-| `x2y` | [`Ragged`](https://thinc.ai/docs/api-types#ragged) | The `Ragged` object holding the alignment from `x` to `y`. |
-| `y2x` | [`Ragged`](https://thinc.ai/docs/api-types#ragged) | The `Ragged` object holding the alignment from `y` to `x`. |
+| Name  | Description                                                           |
+| ----- | --------------------------------------------------------------------- |
+| `x2y` | The `Ragged` object holding the alignment from `x` to `y`. ~~Ragged~~ |
+| `y2x` | The `Ragged` object holding the alignment from `y` to `x`. ~~Ragged~~ |
 
 <Infobox title="Important note" variant="warning">
 
@@ -314,8 +315,8 @@ tokenizations add up to the same string. For example, you'll be able to align
 
 ### Alignment.from_strings {#classmethod tag="function"}
 
-| Name        | Type        | Description                                     |
-| ----------- | ----------- | ----------------------------------------------- |
-| `A`         | list        | String values of candidate tokens to align.     |
-| `B`         | list        | String values of reference tokens to align.     |
-| **RETURNS** | `Alignment` | An `Alignment` object describing the alignment. |
+| Name        | Description                                                   |
+| ----------- | ------------------------------------------------------------- |
+| `A`         | String values of candidate tokens to align. ~~List[str]~~     |
+| `B`         | String values of reference tokens to align. ~~List[str]~~     |
+| **RETURNS** | An `Alignment` object describing the alignment. ~~Alignment~~ |

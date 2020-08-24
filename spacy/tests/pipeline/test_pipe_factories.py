@@ -356,13 +356,13 @@ def test_language_factories_combine_score_weights(weights, expected):
 
 def test_language_factories_scores():
     name = "test_language_factories_scores"
-    func = lambda doc: doc
+    func = lambda nlp, name: lambda doc: doc
     weights1 = {"a1": 0.5, "a2": 0.5}
     weights2 = {"b1": 0.2, "b2": 0.7, "b3": 0.1}
-    Language.component(
+    Language.factory(
         f"{name}1", scores=list(weights1), default_score_weights=weights1, func=func,
     )
-    Language.component(
+    Language.factory(
         f"{name}2", scores=list(weights2), default_score_weights=weights2, func=func,
     )
     meta1 = Language.get_factory_meta(f"{name}1")

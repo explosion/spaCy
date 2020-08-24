@@ -6,9 +6,10 @@ requires = [
     "cymem>=2.0.2,<2.1.0",
     "preshed>=3.0.2,<3.1.0",
     "murmurhash>=0.28.0,<1.1.0",
-    "thinc>=8.0.0a27,<8.0.0a30",
+    "thinc>=8.0.0a29,<8.0.0a40",
     "blis>=0.4.0,<0.5.0",
     "pytokenizations",
-    "smart_open>=2.0.0,<3.0.0"
+    "smart_open>=2.0.0,<3.0.0",
+    "pathy"
 ]
 build-backend = "setuptools.build_meta"

@@ -1,6 +1,6 @@
 ---
 title: Language Processing Pipelines
-next: /usage/vectors-embeddings
+next: /usage/embeddings-transformers
 menu:
   - ['Processing Text', 'processing']
   - ['How Pipelines Work', 'pipelines']
@@ -108,11 +108,11 @@ class, or defined within a [model package](/usage/saving-loading#models).
 >
 > [components.tagger]
 > factory = "tagger"
-> # settings for the tagger component
+> # Settings for the tagger component
 >
 > [components.parser]
 > factory = "parser"
-> # settings for the parser component
+> # Settings for the parser component
 > ```
 
 When you load a model, spaCy first consults the model's
@@ -171,11 +171,11 @@ lang = "en"
 pipeline = ["tagger", "parser", "ner"]
 data_path = "path/to/en_core_web_sm/en_core_web_sm-2.0.0"
 
-cls = spacy.util.get_lang_class(lang)   # 1. Get Language instance, e.g. English()
-nlp = cls()                             # 2. Initialize it
+cls = spacy.util.get_lang_class(lang)  # 1. Get Language class, e.g. English
+nlp = cls()                            # 2. Initialize it
 for name in pipeline:
-    nlp.add_pipe(name)                  # 3. Add the component to the pipeline
-nlp.from_disk(model_data_path)          # 4. Load in the binary data
+    nlp.add_pipe(name)                 # 3. Add the component to the pipeline
+nlp.from_disk(model_data_path)         # 4. Load in the binary data
 ```
 
 When you call `nlp` on a text, spaCy will **tokenize** it and then **call each
@@ -187,9 +187,9 @@ which is then processed by the component next in the pipeline.
 
 ```python
 ### The pipeline under the hood
-doc = nlp.make_doc("This is a sentence")   # create a Doc from raw text
-for name, proc in nlp.pipeline:             # iterate over components in order
-    doc = proc(doc)                         # apply each component
+doc = nlp.make_doc("This is a sentence")  # Create a Doc from raw text
+for name, proc in nlp.pipeline:           # Iterate over components in order
+    doc = proc(doc)                       # Apply each component
 ```
 
 The current processing pipeline is available as `nlp.pipeline`, which returns a
@@ -232,7 +232,7 @@ available pipeline components and component functions.
 | `morphologizer` | [`Morphologizer`](/api/morphologizer)           | Assign morphological features and coarse-grained POS tags.                                |
 | `senter`        | [`SentenceRecognizer`](/api/sentencerecognizer) | Assign sentence boundaries.                                                               |
 | `sentencizer`   | [`Sentencizer`](/api/sentencizer)               | Add rule-based sentence segmentation without the dependency parse.                        |
-| `tok2vec`       | [`Tok2Vec`](/api/tok2vec)                       |                                                                                           |
+| `tok2vec`       | [`Tok2Vec`](/api/tok2vec)                       | Assign token-to-vector embeddings.                                                        |
 | `transformer`   | [`Transformer`](/api/transformer)               | Assign the tokens and outputs of a transformer model.                                     |
 
 ### Disabling and modifying pipeline components {#disabling}
@@ -265,7 +265,7 @@ for doc in nlp.pipe(texts, disable=["tagger", "parser"]):
 
 If you need to **execute more code** with components disabled – e.g. to reset
 the weights or update only some components during training – you can use the
-[`nlp.select_pipes`](/api/language#select_pipes) contextmanager. At the end of
+[`nlp.select_pipes`](/api/language#select_pipes) context manager. At the end of
 the `with` block, the disabled pipeline components will be restored
 automatically. Alternatively, `select_pipes` returns an object that lets you
 call its `restore()` method to restore the disabled components when needed. This
@@ -274,7 +274,7 @@ blocks.
 
 ```python
 ### Disable for block
-# 1. Use as a contextmanager
+# 1. Use as a context manager
 with nlp.select_pipes(disable=["tagger", "parser"]):
     doc = nlp("I won't be tagged and parsed")
 doc = nlp("I will be tagged and parsed")
@@ -324,9 +324,9 @@ pretrained components and new components trained on your data.
 
 When reusing components across models, keep in mind that the **vocabulary**,
 **vectors** and model settings **must match**. If a pretrained model includes
-[word vectors](/usage/vectors-embeddings) and the component uses them as
-features, the model you copy it to needs to have the _same_ vectors available –
-otherwise, it won't be able to make the same predictions.
+[word vectors](/usage/linguistic-features#vectors-similarity) and the component
+uses them as features, the model you copy it to needs to have the _same_ vectors
+available – otherwise, it won't be able to make the same predictions.
 
 </Infobox>
 
@@ -473,14 +473,14 @@ only being able to modify it afterwards.
 >
 > @Language.component("my_component")
 > def my_component(doc):
->    # do something to the doc here
+>    # Do something to the doc here
 >    return doc
 > ```
 
-| Argument    | Type  | Description                                            |
-| ----------- | ----- | ------------------------------------------------------ |
-| `doc`       | `Doc` | The `Doc` object processed by the previous component.  |
-| **RETURNS** | `Doc` | The `Doc` object processed by this pipeline component. |
+| Argument    | Type              | Description                                            |
+| ----------- | ----------------- | ------------------------------------------------------ |
+| `doc`       | [`Doc`](/api/doc) | The `Doc` object processed by the previous component.  |
+| **RETURNS** | [`Doc`](/api/doc) | The `Doc` object processed by this pipeline component. |
 
 The [`@Language.component`](/api/language#component) decorator lets you turn a
 simple function into a pipeline component. It takes at least one argument, the
@@ -502,12 +502,12 @@ last** in the pipeline, or define a **custom name**. If no name is set and no
 > nlp.add_pipe("my_component", before="parser")
 > ```
 
-| Argument | Type      | Description                                                              |
-| -------- | --------- | ------------------------------------------------------------------------ |
-| `last`   | bool      | If set to `True`, component is added **last** in the pipeline (default). |
-| `first`  | bool      | If set to `True`, component is added **first** in the pipeline.          |
-| `before` | str / int | String name or index to add the new component **before**.                |
-| `after`  | str / int | String name or index to add the new component **after**.                 |
+| Argument | Description                                                                       |
+| -------- | --------------------------------------------------------------------------------- |
+| `last`   | If set to `True`, component is added **last** in the pipeline (default). ~~bool~~ |
+| `first`  | If set to `True`, component is added **first** in the pipeline. ~~bool~~          |
+| `before` | String name or index to add the new component **before**. ~~Union[str, int]~~     |
+| `after`  | String name or index to add the new component **after**. ~~Union[str, int]~~      |
 
 <Infobox title="Changed in v3.0" variant="warning">
 
@@ -623,20 +623,18 @@ added to the pipeline:
 >
 > @Language.factory("my_component")
 > def my_component(nlp, name):
->    return MyComponent()
+>     return MyComponent()
 > ```
 
-| Argument | Type                        | Description                                                                                                               |
-| -------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `nlp`    | [`Language`](/api/language) | The current `nlp` object. Can be used to access the                                                                       |
-| `name`   | str                         | The **instance name** of the component in the pipeline. This lets you identify different instances of the same component. |
+| Argument | Description                                                                                                                       |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `nlp`    | The current `nlp` object. Can be used to access the shared vocab. ~~Language~~                                                    |
+| `name`   | The **instance name** of the component in the pipeline. This lets you identify different instances of the same component. ~~str~~ |
 
 All other settings can be passed in by the user via the `config` argument on
 [`nlp.add_pipe`](/api/language). The
 [`@Language.factory`](/api/language#factory) decorator also lets you define a
 `default_config` that's used as a fallback.
-
-<!-- TODO: add example of passing in a custom Python object via the config based on a registered function -->
 
 ```python
 ### With config {highlight="4,9"}
@@ -688,7 +686,7 @@ make your factory a separate function. That's also how spaCy does it internally.
 
 </Accordion>
 
-### Example: Stateful component with settings
+### Example: Stateful component with settings {#example-stateful-components}
 
 This example shows a **stateful** pipeline component for handling acronyms:
 based on a dictionary, it will detect acronyms and their expanded forms in both
@@ -756,6 +754,85 @@ nlp.add_pipe("acronyms", config={"case_sensitive": False})
 doc = nlp("LOL, be right back")
 print(doc._.acronyms)
 ```
+
+Many stateful components depend on **data resources** like dictionaries and
+lookup tables that should ideally be **configurable**. For example, it makes
+sense to make the `DICTIONARY` and argument of the registered function, so the
+`AcronymComponent` can be re-used with different data. One logical solution
+would be to make it an argument of the component factory, and allow it to be
+initialized with different dictionaries.
+
+> #### Example
+>
+> Making the data an argument of the registered function would result in output
+> like this in your `config.cfg`, which is typically not what you want (and only
+> works for JSON-serializable data).
+>
+> ```ini
+> [components.acronyms.dictionary]
+> lol = "laugh out loud"
+> brb = "be right back"
+> ```
+
+However, passing in the dictionary directly is problematic, because it means
+that if a component saves out its config and settings, the
+[`config.cfg`](/usage/training#config) will include a dump of the entire data,
+since that's the config the component was created with.
+
+```diff
+DICTIONARY = {"lol": "laughing out loud", "brb": "be right back"}
+- default_config = {"dictionary:" DICTIONARY}
+```
+
+If what you're passing in isn't JSON-serializable – e.g. a custom object like a
+[model](#trainable-components) – saving out the component config becomes
+impossible because there's no way for spaCy to know _how_ that object was
+created, and what to do to create it again. This makes it much harder to save,
+load and train custom models with custom components. A simple solution is to
+**register a function** that returns your resources. The
+[registry](/api/top-level#registry) lets you **map string names to functions**
+that create objects, so given a name and optional arguments, spaCy will know how
+to recreate the object. To register a function that returns a custom asset, you
+can use the `@spacy.registry.assets` decorator with a single argument, the name:
+
+```python
+### Registered function for assets {highlight="1"}
+@spacy.registry.assets("acronyms.slang_dict.v1")
+def create_acronyms_slang_dict():
+    dictionary = {"lol": "laughing out loud", "brb": "be right back"}
+    dictionary.update({value: key for key, value in dictionary.items()})
+    return dictionary
+```
+
+In your `default_config` (and later in your
+[training config](/usage/training#config)), you can now refer to the function
+registered under the name `"acronyms.slang_dict.v1"` using the `@assets` key.
+This tells spaCy how to create the value, and when your component is created,
+the result of the registered function is passed in as the key `"dictionary"`.
+
+> #### config.cfg
+>
+> ```ini
+> [components.acronyms]
+> factory = "acronyms"
+>
+> [components.acronyms.dictionary]
+> @assets = "acronyms.slang_dict.v1"
+> ```
+
+```diff
+- default_config = {"dictionary:" DICTIONARY}
++ default_config = {"dictionary": {"@assets": "acronyms.slang_dict.v1"}}
+```
+
+Using a registered function also means that you can easily include your custom
+components in models that you [train](/usage/training). To make sure spaCy knows
+where to find your custom `@assets` function, you can pass in a Python file via
+the argument `--code`. If someone else is using your component, all they have to
+do to customize the data is to register their own function and swap out the
+name. Registered functions can also take **arguments** by the way that can be
+defined in the config as well – you can read more about this in the docs on
+[training with custom code](/usage/training#custom-code).
 
 ### Python type hints and pydantic validation {#type-hints new="3"}
 
@@ -994,7 +1071,7 @@ loss is calculated and to add evaluation scores to the training output.
 | [`get_loss`](/api/pipe#get_loss)             | Return a tuple of the loss and the gradient for a batch of [`Example`](/api/example) objects.                                                                                                                                                                                                                      |
 | [`score`](/api/pipe#score)                   | Score a batch of [`Example`](/api/example) objects and return a dictionary of scores. The [`@Language.factory`](/api/language#factory) decorator can define the `default_socre_weights` of the component to decide which keys of the scores to display during training and how they count towards the final score. |
 
-<!-- TODO: add more details, examples and maybe an example project -->
+<!-- TODO: link to (not yet created) page for defining models for trainable components -->
 
 ## Extension attributes {#custom-components-attributes new="2"}
 
@@ -1202,7 +1279,7 @@ document similarity method.
 Hooks let you customize some of the behaviors of the `Doc`, `Span` or `Token`
 objects by adding a component to the pipeline. For instance, to customize the
 [`Doc.similarity`](/api/doc#similarity) method, you can add a component that
-sets a custom function to `doc.user_hooks['similarity']`. The built-in
+sets a custom function to `doc.user_hooks["similarity"]`. The built-in
 `Doc.similarity` method will check the `user_hooks` dict, and delegate to your
 function if you've set one. Similar results can be achieved by setting functions
 to `Doc.user_span_hooks` and `Doc.user_token_hooks`.
@@ -1332,12 +1409,11 @@ function that takes a `Doc`, modifies it and returns it.
 - If you're looking to publish a model that depends on a custom pipeline
   component, you can either **require it** in the model package's dependencies,
   or – if the component is specific and lightweight – choose to **ship it with
-  your model package** and add it to the `Language` instance returned by the
-  model's `load()` method. For examples of this, check out the implementations
-  of spaCy's
-  [`load_model_from_init_py`](/api/top-level#util.load_model_from_init_py)
-  [`load_model_from_path`](/api/top-level#util.load_model_from_path) utility
-  functions.
+  your model package**. Just make sure the
+  [`@Language.component`](/api/language#component) or
+  [`@Language.factory`](/api/language#factory) decorator that registers the
+  custom component runs in your model's `__init__.py` or is exposed via an
+  [entry point](/usage/saving-loading#entry-points).
 
 - Once you're ready to share your extension with others, make sure to **add docs
   and installation instructions** (you can always link to this page for more

@@ -73,14 +73,14 @@ operates on a `Doc` and gives you access to the matched tokens **in context**.
 
 ### Other classes {#architecture-other}
 
-| Name                                  | Description                                                                                                      |
-| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| [`Vocab`](/api/vocab)                 | The shared vocabulary that stores strings and gives you access to [`Lexeme`](/api/lexeme) objects.               |
-| [`StringStore`](/api/stringstore)     | Map strings to and from hash values.                                                                             |
-| [`Vectors`](/api/vectors)             | Container class for vector data keyed by string.                                                                 |
-| [`Lookups`](/api/lookups)             | Container for convenient access to large lookup tables and dictionaries.                                         |
-| [`Morphology`](/api/morphology)       | Assign linguistic features like lemmas, noun case, verb tense etc. based on the word and its part-of-speech tag. |
-| [`MorphAnalysis`](/api/morphanalysis) | A morphological analysis.                                                                                        |
-| [`KnowledgeBase`](/api/kb)            | Storage for entities and aliases of a knowledge base for entity linking.                                         |
-| [`Scorer`](/api/scorer)               | Compute evaluation scores.                                                                                       |
-| [`Corpus`](/api/corpus)               | Class for managing annotated corpora for training and evaluation data.                                           |
+| Name                                             | Description                                                                                                      |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| [`Vocab`](/api/vocab)                            | The shared vocabulary that stores strings and gives you access to [`Lexeme`](/api/lexeme) objects.               |
+| [`StringStore`](/api/stringstore)                | Map strings to and from hash values.                                                                             |
+| [`Vectors`](/api/vectors)                        | Container class for vector data keyed by string.                                                                 |
+| [`Lookups`](/api/lookups)                        | Container for convenient access to large lookup tables and dictionaries.                                         |
+| [`Morphology`](/api/morphology)                  | Assign linguistic features like lemmas, noun case, verb tense etc. based on the word and its part-of-speech tag. |
+| [`MorphAnalysis`](/api/morphology#morphanalysis) | A morphological analysis.                                                                                        |
+| [`KnowledgeBase`](/api/kb)                       | Storage for entities and aliases of a knowledge base for entity linking.                                         |
+| [`Scorer`](/api/scorer)                          | Compute evaluation scores.                                                                                       |
+| [`Corpus`](/api/corpus)                          | Class for managing annotated corpora for training and evaluation data.                                           |

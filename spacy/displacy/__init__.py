@@ -18,7 +18,7 @@ RENDER_WRAPPER = None
 
 
 def render(
-    docs: Union[Iterable[Doc], Doc],
+    docs: Union[Iterable[Union[Doc, Span]], Doc, Span],
     style: str = "dep",
     page: bool = False,
     minify: bool = False,

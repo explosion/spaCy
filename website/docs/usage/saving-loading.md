@@ -243,7 +243,7 @@ file `data.json` in its subdirectory:
 ### Directory structure {highlight="2-3"}
 └── /path/to/model
     ├── my_component     # data serialized by "my_component"
-    |   └── data.json
+    │   └── data.json
     ├── ner              # data for "ner" component
     ├── parser           # data for "parser" component
     ├── tagger           # data for "tagger" component
@@ -551,9 +551,9 @@ setup(
 )
 ```
 
-After installing the package, the the custom colors will be used when
-visualizing text with `displacy`. Whenever the label `SNEK` is assigned, it will
-be displayed in `#3dff74`.
+After installing the package, the custom colors will be used when visualizing
+text with `displacy`. Whenever the label `SNEK` is assigned, it will be
+displayed in `#3dff74`.
 
 import DisplaCyEntSnekHtml from 'images/displacy-ent-snek.html'
 
@@ -562,16 +562,39 @@ import DisplaCyEntSnekHtml from 'images/displacy-ent-snek.html'
 ## Saving, loading and distributing models {#models}
 
 After training your model, you'll usually want to save its state, and load it
-back later. You can do this with the
-[`Language.to_disk()`](/api/language#to_disk) method:
+back later. You can do this with the [`Language.to_disk`](/api/language#to_disk)
+method:
 
 ```python
-nlp.to_disk('/home/me/data/en_example_model')
+nlp.to_disk("./en_example_model")
 ```
 
-The directory will be created if it doesn't exist, and the whole pipeline will
-be written out. To make the model more convenient to deploy, we recommend
-wrapping it as a Python package.
+The directory will be created if it doesn't exist, and the whole pipeline data,
+model meta and model configuration will be written out. To make the model more
+convenient to deploy, we recommend wrapping it as a
+[Python package](/api/cli#package).
+
+<Accordion title="What’s the difference between the config.cfg and meta.json?" spaced id="models-meta-vs-config">
+
+When you save a model in spaCy v3.0+, two files will be exported: a
+[`config.cfg`](/api/data-formats#config) based on
+[`nlp.config`](/api/language#config) and a [`meta.json`](/api/data-formats#meta)
+based on [`nlp.meta`](/api/language#meta).
+
+- **config**: Configuration used to create the current `nlp` object, its
+  pipeline components and models, as well as training settings and
+  hyperparameters. Can include references to registered functions like
+  [pipeline components](/usage/processing-pipelines#custom-components) or
+  [model architectures](/api/architectures). Given a config, spaCy is able
+  reconstruct the whole tree of objects and the `nlp` object. An exported config
+  can also be used to [train a model](/usage/training#conig) with the same
+  settings.
+- **meta**: Meta information about the model and the Python package, such as the
+  author information, license, version, data sources and label scheme. This is
+  mostly used for documentation purposes and for packaging models. It has no
+  impact on the functionality of the `nlp` object.
+
+</Accordion>
 
 ### Generating a model package {#models-generating}
 
@@ -606,8 +629,8 @@ docs.
 > }
 > ```
 
-```bash
-$ python -m spacy package /home/me/data/en_example_model /home/me/my_models
+```cli
+$ python -m spacy package ./en_example_model ./my_models
 ```
 
 This command will create a model package directory and will run
@@ -623,6 +646,9 @@ model package that can be installed using `pip install`.
     ├── en_example_model                   # model directory
     │    ├── __init__.py                   # init for pip installation
     │    └── en_example_model-1.0.0        # model data
+    │        ├── config.cfg                # model config
+    │        ├── meta.json                 # model meta
+    │        └── ...                       # directories with component data
     └── dist
         └── en_example_model-1.0.0.tar.gz  # installable package
 ```
@@ -644,13 +670,25 @@ you can also **ship the code with your model** and include it in the
 [pipeline components](/usage/processing-pipelines#custom-components) before the
 `nlp` object is created.
 
+<Infobox variant="warning" title="Important note on making manual edits">
+
+While it's no problem to edit the package code or meta information, avoid making
+edits to the `config.cfg` **after** training, as this can easily lead to data
+incompatibility. For instance, changing an architecture or hyperparameter can
+mean that the trained weights are now incompatible. If you want to make
+adjustments, you can do so before training. Otherwise, you should always trust
+spaCy to export the current state of its `nlp` objects via
+[`nlp.config`](/api/language#config).
+
+</Infobox>
+
 ### Loading a custom model package {#loading}
 
 To load a model from a data directory, you can use
 [`spacy.load()`](/api/top-level#spacy.load) with the local path. This will look
-for a meta.json in the directory and use the `lang` and `pipeline` settings to
-initialize a `Language` class with a processing pipeline and load in the model
-data.
+for a `config.cfg` in the directory and use the `lang` and `pipeline` settings
+to initialize a `Language` class with a processing pipeline and load in the
+model data.
 
 ```python
 nlp = spacy.load("/path/to/model")
