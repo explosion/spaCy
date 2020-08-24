@@ -70,7 +70,10 @@ def fill_config(
     msg = Printer(no_print=is_stdout)
     with show_validation_error(hint_fill=False):
         config = util.load_config(base_path)
-        nlp, _ = util.load_model_from_config(config, auto_fill=True)
+        nlp, _ = util.load_model_from_config(config, auto_fill=True, validate=False)
+    # Load a second time with validation to be extra sure that the produced
+    # config result is a valid config
+    nlp, _ = util.load_model_from_config(nlp.config)
     filled = nlp.config
     if pretraining:
         validate_config_for_pretrain(filled, msg)
