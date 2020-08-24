@@ -102,7 +102,7 @@ def convert(
     converter: str = "auto",
     ner_map: Optional[Path] = None,
     lang: Optional[str] = None,
-    concatenate: bool=False,
+    concatenate: bool = False,
     silent: bool = True,
     msg: Optional[Printer],
 ) -> None:

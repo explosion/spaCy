@@ -40,7 +40,7 @@ class PRFScore:
     def fscore(self) -> float:
         p = self.precision
         r = self.recall
-        return (2 * ((p * r) / (p + r + 1e-100)))
+        return 2 * ((p * r) / (p + r + 1e-100))
 
     def to_dict(self) -> Dict[str, float]:
         return {"p": self.precision, "r": self.recall, "f": self.fscore}
