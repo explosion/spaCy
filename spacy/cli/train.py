@@ -117,7 +117,7 @@ def train(
 
     # Load a pretrained tok2vec model - cf. CLI command 'pretrain'
     if weights_data is not None:
-        tok2vec_path = config.get("pretraining", {}).get("tok2vec_model", None)
+        tok2vec_path = config["pretraining"].get("tok2vec_model", None)
         if tok2vec_path is None:
             msg.fail(
                 f"To use a pretrained tok2vec model, the config needs to specify which "
