@@ -314,14 +314,17 @@ def ensure_pathy(path):
     return Pathy(path)
 
 
-def git_sparse_checkout(repo: str, subpath: str, dest: Path):
+def git_sparse_checkout(repo: str, subpath: str, dest: Path, *, branch: Optional[str]=None):
     if dest.exists():
         raise IOError("Destination of checkout must not exist")
     if not dest.parent.exists():
         raise IOError("Parent of destination of checkout must exist")
     # We're using Git and sparse checkout to only clone the files we need
     with make_tempdir() as tmp_dir:
-        cmd = f"git clone {repo} {tmp_dir} --no-checkout --depth 1 --config core.sparseCheckout=true"
+        cmd = (f"git clone {repo} {tmp_dir} --no-checkout "
+               "--depth 1 --config core.sparseCheckout=true")
+        if branch is not None:
+            cmd = f"{cmd} -b {branch}"
         run_command(cmd)
         with (tmp_dir / ".git" / "info" / "sparse-checkout").open("w") as f:
             f.write(subpath)
