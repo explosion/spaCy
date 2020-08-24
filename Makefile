@@ -11,7 +11,7 @@ package := $(shell "bin/get-package.sh")
 
 SPACY_BIN := $(package)-$(version).pex
 
-dist/$(package)-$(SPACY_BIN) : wheelhouse/spacy-$(version).stamp
+dist/$(SPACY_BIN) : wheelhouse/spacy-$(version).stamp
 	$(VENV)/bin/pex \
 		-f ./wheelhouse \
 		--no-index \
