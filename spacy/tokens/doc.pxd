@@ -49,10 +49,6 @@ cdef class Doc:
 
     cdef TokenC* c
 
-    cdef public bint is_tagged
-    cdef public bint is_parsed
-    cdef public bint is_morphed
-
     cdef public float sentiment
 
     cdef public dict user_hooks

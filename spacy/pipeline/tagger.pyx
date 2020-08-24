@@ -167,7 +167,6 @@ class Tagger(Pipe):
                 # Don't clobber preset POS tags
                 if doc.c[j].tag == 0:
                     doc.c[j].tag = self.vocab.strings[self.labels[tag_id]]
-            doc.is_tagged = True
 
     def update(self, examples, *, drop=0., sgd=None, losses=None, set_annotations=False):
         """Learn from a batch of documents and gold-standard information,

@@ -63,7 +63,7 @@ def test_parser_parse_navigate_consistency(en_tokenizer, text, heads):
 
 def test_parser_parse_navigate_child_consistency(en_tokenizer, text, heads):
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=["dep"] * len(heads))
 
     lefts = {}
     rights = {}

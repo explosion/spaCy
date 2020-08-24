@@ -267,6 +267,17 @@ ancestor is found, e.g. if span excludes a necessary ancestor.
 | ----------- | -------------------------------------------------------------------------------------- |
 | **RETURNS** | The lowest common ancestor matrix of the `Doc`. ~~numpy.ndarray[ndim=2, dtype=int32]~~ |
 
+## Doc.has_annotation {#has_annotation tag="method"}
+
+Check whether the doc contains annotation on a token attribute.
+
+| Name               | Description                                                                                         |
+| ------------------ | --------------------------------------------------------------------------------------------------- |
+| `attr`             | The attribute string name or int ID. ~~Union[int, str]~~                                            |
+| _keyword-only_     |                                                                                                     |
+| `require_complete` | Whether to check that the attribute is set on every token in the doc. Defaults to `False`. ~~bool~~ |
+| **RETURNS**        | Whether specified annotation is present in the doc. ~~bool~~                                        |
+
 ## Doc.to_array {#to_array tag="method"}
 
 Export given token attributes to a numpy `ndarray`. If `attr_ids` is a sequence
@@ -609,26 +620,22 @@ The L2 norm of the document's vector representation.
 
 ## Attributes {#attributes}
 
-| Name                                    | Description                                                                                                                                                                              |
-| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `text`                                  | A string representation of the document text. ~~str~~                                                                                                                                    |
-| `text_with_ws`                          | An alias of `Doc.text`, provided for duck-type compatibility with `Span` and `Token`. ~~str~~                                                                                            |
-| `mem`                                   | The document's local memory heap, for all C data it owns. ~~cymem.Pool~~                                                                                                                 |
-| `vocab`                                 | The store of lexical types. ~~Vocab~~                                                                                                                                                    |
-| `tensor` <Tag variant="new">2</Tag>     | Container for dense vector representations. ~~numpy.ndarray~~                                                                                                                            |
-| `cats` <Tag variant="new">2</Tag>       | Maps a label to a score for categories applied to the document. The label is a string and the score should be a float. ~~Dict[str, float]~~                                              |
-| `user_data`                             | A generic storage area, for user custom data. ~~Dict[str, Any]~~                                                                                                                         |
-| `lang` <Tag variant="new">2.1</Tag>     | Language of the document's vocabulary. ~~int~~                                                                                                                                           |
-| `lang_` <Tag variant="new">2.1</Tag>    | Language of the document's vocabulary. ~~str~~                                                                                                                                           |
-| `is_tagged`                             | A flag indicating that the document has been part-of-speech tagged. Returns `True` if the `Doc` is empty. ~~bool~~                                                                       |
-| `is_parsed`                             | A flag indicating that the document has been syntactically parsed. Returns `True` if the `Doc` is empty. ~~bool~~                                                                        |
-| `is_sentenced`                          | A flag indicating that sentence boundaries have been applied to the document. Returns `True` if the `Doc` is empty. ~~bool~~                                                             |
-| `is_nered` <Tag variant="new">2.1</Tag> | A flag indicating that named entities have been set. Will return `True` if the `Doc` is empty, or if _any_ of the tokens has an entity tag set, even if the others are unknown. ~~bool~~ |
-| `sentiment`                             | The document's positivity/negativity score, if available. ~~float~~                                                                                                                      |
-| `user_hooks`                            | A dictionary that allows customization of the `Doc`'s properties. ~~Dict[str, Callable]~~                                                                                                |
-| `user_token_hooks`                      | A dictionary that allows customization of properties of `Token` children. ~~Dict[str, Callable]~~                                                                                        |
-| `user_span_hooks`                       | A dictionary that allows customization of properties of `Span` children. ~~Dict[str, Callable]~~                                                                                         |
-| `_`                                     | User space for adding custom [attribute extensions](/usage/processing-pipelines#custom-components-attributes). ~~Underscore~~                                                            |
+| Name                                 | Description                                                                                                                                 |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `text`                               | A string representation of the document text. ~~str~~                                                                                       |
+| `text_with_ws`                       | An alias of `Doc.text`, provided for duck-type compatibility with `Span` and `Token`. ~~str~~                                               |
+| `mem`                                | The document's local memory heap, for all C data it owns. ~~cymem.Pool~~                                                                    |
+| `vocab`                              | The store of lexical types. ~~Vocab~~                                                                                                       |
+| `tensor` <Tag variant="new">2</Tag>  | Container for dense vector representations. ~~numpy.ndarray~~                                                                               |
+| `cats` <Tag variant="new">2</Tag>    | Maps a label to a score for categories applied to the document. The label is a string and the score should be a float. ~~Dict[str, float]~~ |
+| `user_data`                          | A generic storage area, for user custom data. ~~Dict[str, Any]~~                                                                            |
+| `lang` <Tag variant="new">2.1</Tag>  | Language of the document's vocabulary. ~~int~~                                                                                              |
+| `lang_` <Tag variant="new">2.1</Tag> | Language of the document's vocabulary. ~~str~~                                                                                              |
+| `sentiment`                          | The document's positivity/negativity score, if available. ~~float~~                                                                         |
+| `user_hooks`                         | A dictionary that allows customization of the `Doc`'s properties. ~~Dict[str, Callable]~~                                                   |
+| `user_token_hooks`                   | A dictionary that allows customization of properties of `Token` children. ~~Dict[str, Callable]~~                                           |
+| `user_span_hooks`                    | A dictionary that allows customization of properties of `Span` children. ~~Dict[str, Callable]~~                                            |
+| `_`                                  | User space for adding custom [attribute extensions](/usage/processing-pipelines#custom-components-attributes). ~~Underscore~~               |
 
 ## Serialization fields {#serialization-fields}
 

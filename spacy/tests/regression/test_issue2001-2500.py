@@ -72,8 +72,6 @@ def test_issue2219(en_vocab):
 def test_issue2361(de_tokenizer):
     chars = ("&lt;", "&gt;", "&amp;", "&quot;")
     doc = de_tokenizer('< > & " ')
-    doc.is_parsed = True
-    doc.is_tagged = True
     html = render(doc)
     for char in chars:
         assert char in html
@@ -108,6 +106,7 @@ def test_issue2385_biluo(tags):
 def test_issue2396(en_vocab):
     words = ["She", "created", "a", "test", "for", "spacy"]
     heads = [1, 0, 1, -2, -1, -1]
+    deps = ["dep"] * len(heads)
     matrix = numpy.array(
         [
             [0, 1, 1, 1, 1, 1],
@@ -119,7 +118,7 @@ def test_issue2396(en_vocab):
         ],
         dtype=numpy.int32,
     )
-    doc = get_doc(en_vocab, words=words, heads=heads)
+    doc = get_doc(en_vocab, words=words, heads=heads, deps=deps)
     span = doc[:]
     assert (doc.get_lca_matrix() == matrix).all()
     assert (span.get_lca_matrix() == matrix).all()

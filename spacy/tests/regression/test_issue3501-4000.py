@@ -350,7 +350,6 @@ def test_issue3882(en_vocab):
     copy of the Doc.
     """
     doc = Doc(en_vocab, words=["Hello", "world"])
-    doc.is_parsed = True
     doc.user_data["test"] = set()
     parse_deps(doc)
 
@@ -380,7 +379,6 @@ def test_issue3959():
     doc[0].pos_ = "NOUN"
     assert doc[0].pos_ == "NOUN"
     # usually this is already True when starting from proper models instead of blank English
-    doc.is_tagged = True
     with make_tempdir() as tmp_dir:
         file_path = tmp_dir / "my_doc"
         doc.to_disk(file_path)

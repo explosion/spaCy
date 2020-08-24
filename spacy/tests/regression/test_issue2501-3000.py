@@ -16,16 +16,16 @@ from ..util import get_doc
 
 
 def test_issue2564():
-    """Test the tagger sets is_tagged correctly when used via Language.pipe."""
+    """Test the tagger sets has_annotation("TAG") correctly when used via Language.pipe."""
     nlp = Language()
     tagger = nlp.add_pipe("tagger")
     tagger.add_label("A")
     tagger.begin_training(lambda: [])
     doc = nlp("hello world")
-    assert doc.is_tagged
+    assert doc.has_annotation("TAG")
     docs = nlp.pipe(["hello", "world"])
     piped_doc = next(docs)
-    assert piped_doc.is_tagged
+    assert piped_doc.has_annotation("TAG")
 
 
 def test_issue2569(en_tokenizer):
@@ -123,7 +123,7 @@ def test_issue2772(en_vocab):
     heads = [4, 1, 7, -1, -2, -1, 3, 2, 1, 0, 2, 1, -3, -4]
     deps = ["dep"] * len(heads)
     doc = get_doc(en_vocab, words=words, heads=heads, deps=deps)
-    assert doc[1].is_sent_start is None
+    assert doc[1].is_sent_start is False
 
 
 @pytest.mark.parametrize("text", ["-0.23", "+123,456", "±1"])

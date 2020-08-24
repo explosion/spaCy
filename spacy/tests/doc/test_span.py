@@ -24,7 +24,6 @@ def doc_not_parsed(en_tokenizer):
     text = "This is a sentence. This is another sentence. And a third."
     tokens = en_tokenizer(text)
     doc = Doc(tokens.vocab, words=[t.text for t in tokens])
-    doc.is_parsed = False
     return doc
 
 
@@ -71,8 +70,9 @@ def test_spans_string_fn(doc):
 def test_spans_root2(en_tokenizer):
     text = "through North and South Carolina"
     heads = [0, 3, -1, -2, -4]
+    deps = ["dep"] * len(heads)
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
     assert doc[-2:].root.text == "Carolina"
 
 
@@ -92,7 +92,7 @@ def test_spans_span_sent(doc, doc_not_parsed):
 def test_spans_lca_matrix(en_tokenizer):
     """Test span's lca matrix generation"""
     tokens = en_tokenizer("the lazy dog slept")
-    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=[2, 1, 1, 0])
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=[2, 1, 1, 0], deps=["dep"] * 4)
     lca = doc[:2].get_lca_matrix()
     assert lca.shape == (2, 2)
     assert lca[0, 0] == 0  # the & the -> the

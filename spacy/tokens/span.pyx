@@ -204,7 +204,7 @@ cdef class Span:
         return Underscore(Underscore.span_extensions, self,
                           start=self.start_char, end=self.end_char)
 
-    def as_doc(self, bint copy_user_data=False):
+    def as_doc(self, *, bint copy_user_data=False):
         """Create a `Doc` object with a copy of the `Span`'s data.
 
         copy_user_data (bool): Whether or not to copy the original doc's user data.
@@ -212,19 +212,10 @@ cdef class Span:
 
         DOCS: https://nightly.spacy.io/api/span#as_doc
         """
-        # TODO: make copy_user_data a keyword-only argument (Python 3 only)
         words = [t.text for t in self]
         spaces = [bool(t.whitespace_) for t in self]
         cdef Doc doc = Doc(self.doc.vocab, words=words, spaces=spaces)
-        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE, ENT_ID, ENT_KB_ID]
-        if self.doc.is_tagged:
-            array_head.append(TAG)
-        # If doc parsed add head and dep attribute
-        if self.doc.is_parsed:
-            array_head.extend([HEAD, DEP])
-        # Otherwise add sent_start
-        else:
-            array_head.append(SENT_START)
+        array_head = self.doc._get_array_attrs()
         array = self.doc.to_array(array_head)
         array = array[self.start : self.end]
         self._fix_dep_copy(array_head, array)
@@ -378,7 +369,7 @@ cdef class Span:
         self.doc.sents
         # Use `sent_start` token attribute to find sentence boundaries
         cdef int n = 0
-        if self.doc.is_sentenced:
+        if self.doc.has_annotation("SENT_START"):
             # Find start of the sentence
             start = self.start
             while self.doc.c[start].sent_start != 1 and start > 0:
@@ -510,8 +501,6 @@ cdef class Span:
 
         DOCS: https://nightly.spacy.io/api/span#noun_chunks
         """
-        if not self.doc.is_parsed:
-            raise ValueError(Errors.E029)
         # Accumulate the result before beginning to iterate over it. This
         # prevents the tokenisation from being changed out from under us
         # during the iteration. The tricky thing here is that Span accepts

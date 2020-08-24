@@ -29,9 +29,11 @@ from ..attrs import intify_attr, intify_attrs, IDS
 from ..util import normalize_slice
 from ..compat import copy_reg, pickle
 from ..errors import Errors, Warnings
+from ..morphology import Morphology
 from .. import util
 from .underscore import Underscore, get_ext_args
 from ._retokenize import Retokenizer
+from ._serialize import ALL_ATTRS as DOCBIN_ALL_ATTRS
 
 
 DEF PADDING = 5
@@ -190,8 +192,6 @@ cdef class Doc:
         self.c = data_start + PADDING
         self.max_length = size
         self.length = 0
-        self.is_tagged = False
-        self.is_parsed = False
         self.sentiment = 0.0
         self.cats = {}
         self.user_hooks = {}
@@ -221,11 +221,6 @@ cdef class Doc:
             else:
                 lexeme = self.vocab.get_by_orth(self.mem, word)
             self.push_back(lexeme, has_space)
-        # Tough to decide on policy for this. Is an empty doc tagged and parsed?
-        # There's no information we'd like to add to it, so I guess so?
-        if self.length == 0:
-            self.is_tagged = True
-            self.is_parsed = True
 
     @property
     def _(self):
@@ -233,37 +228,61 @@ cdef class Doc:
         return Underscore(Underscore.doc_extensions, self)
 
     @property
-    def is_sentenced(self):
-        """Check if the document has sentence boundaries assigned. This is
-        defined as having at least one of the following:
+    def is_tagged(self):
+        warnings.warn(Warnings.W107.format(prop="is_tagged", attr="TAG"), DeprecationWarning)
+        return self.has_annotation("TAG")
 
-        a) An entry "sents" in doc.user_hooks";
-        b) Doc.is_parsed is set to True;
-        c) At least one token other than the first where sent_start is not None.
-        """
-        if "sents" in self.user_hooks:
-            return True
-        if self.is_parsed:
-            return True
-        if len(self) < 2:
-            return True
-        for i in range(1, self.length):
-            if self.c[i].sent_start == -1 or self.c[i].sent_start == 1:
-                return True
-        return False
+    @property
+    def is_parsed(self):
+        warnings.warn(Warnings.W107.format(prop="is_parsed", attr="DEP"), DeprecationWarning)
+        return self.has_annotation("DEP")
 
     @property
     def is_nered(self):
-        """Check if the document has named entities set. Will return True if
-        *any* of the tokens has a named entity tag set (even if the others are
-        unknown values), or if the document is empty.
+        warnings.warn(Warnings.W107.format(prop="is_nered", attr="ENT_IOB"), DeprecationWarning)
+        return self.has_annotation("ENT_IOB")
+
+    @property
+    def is_sentenced(self):
+        warnings.warn(Warnings.W107.format(prop="is_sentenced", attr="SENT_START"), DeprecationWarning)
+        return self.has_annotation("SENT_START")
+
+    def has_annotation(self, attr, *, require_complete=False):
+        """Check whether the doc contains annotation on a token attribute.
+
+        attr (Union[int, str]): The attribute string name or int ID.
+        require_complete (bool): Whether to check that the attribute is set on
+            every token in the doc.
+        RETURNS (bool): Whether annotation is present.
+
+        DOCS: https://nightly.spacy.io/api/doc#has_annotation
         """
-        if len(self) == 0:
+
+        # empty docs are always annotated
+        if self.length == 0:
             return True
-        for i in range(self.length):
-            if self.c[i].ent_iob != 0:
+        cdef int i
+        cdef int range_start = 0
+        attr = intify_attr(attr)
+        # adjust attributes
+        if attr == HEAD:
+            # HEAD does not have an unset state, so rely on DEP
+            attr = DEP
+        elif attr == self.vocab.strings["IS_SENT_START"]:
+            # as in Matcher, allow IS_SENT_START as an alias of SENT_START
+            attr = SENT_START
+        # special cases for sentence boundaries
+        if attr == SENT_START:
+            if "sents" in self.user_hooks:
                 return True
-        return False
+            # docs of length 1 always have sentence boundaries
+            if self.length == 1:
+                return True
+            range_start = 1
+        if require_complete:
+            return all(Token.get_struct_attr(&self.c[i], attr) for i in range(range_start, self.length))
+        else:
+            return any(Token.get_struct_attr(&self.c[i], attr) for i in range(range_start, self.length))
 
     def __getitem__(self, object i):
         """Get a `Token` or `Span` object.
@@ -636,7 +655,7 @@ cdef class Doc:
 
         DOCS: https://nightly.spacy.io/api/doc#sents
         """
-        if not self.is_sentenced:
+        if not self.has_annotation("SENT_START"):
             raise ValueError(Errors.E030)
         if "sents" in self.user_hooks:
             yield from self.user_hooks["sents"](self)
@@ -660,10 +679,6 @@ cdef class Doc:
         return self.vocab.lang
 
     cdef int push_back(self, LexemeOrToken lex_or_tok, bint has_space) except -1:
-        if self.length == 0:
-            # Flip these to false when we see the first token.
-            self.is_tagged = False
-            self.is_parsed = False
         if self.length == self.max_length:
             self._realloc(self.length * 2)
         cdef TokenC* t = &self.c[self.length]
@@ -790,7 +805,6 @@ cdef class Doc:
         # TODO: This method is fairly misleading atm. It's used by Parser
         # to actually apply the parse calculated. Need to rethink this.
         # Probably we should use from_array?
-        self.is_parsed = True
         for i in range(self.length):
             self.c[i] = parsed[i]
 
@@ -818,8 +832,8 @@ cdef class Doc:
         if array.dtype != numpy.uint64:
             warnings.warn(Warnings.W028.format(type=array.dtype))
 
-        if SENT_START in attrs and HEAD in attrs:
-            raise ValueError(Errors.E032)
+        if set(attrs) != set(Doc._get_array_attrs()) and SENT_START in attrs and HEAD in attrs:
+            warnings.warn(Warnings.W106)
         cdef int i, col
         cdef int32_t abs_head_index
         cdef attr_id_t attr_id
@@ -879,18 +893,17 @@ cdef class Doc:
                     # add morph to morphology table
                     self.vocab.morphology.add(self.vocab.strings[value])
                 Token.set_struct_attr(token, attr_ids[j], value)
-        # Set flags
-        self.is_parsed = bool(self.is_parsed or HEAD in attrs)
-        self.is_tagged = bool(self.is_tagged or TAG in attrs or POS in attrs)
-        # If document is parsed, set children
-        if self.is_parsed:
-            set_children_from_heads(self.c, length)
+        # If document is parsed, set children and sentence boundaries
+        if HEAD in attrs and DEP in attrs:
+            col = attrs.index(DEP)
+            if any(array[i, col] for i in range(length)):
+                set_children_from_heads(self.c, length)
         return self
 
     @staticmethod
     def from_docs(docs, ensure_whitespace=True, attrs=None):
-        """Concatenate multiple Doc objects to form a new one. Raises an error if the `Doc` objects do not all share
-        the same `Vocab`.
+        """Concatenate multiple Doc objects to form a new one. Raises an error
+        if the `Doc` objects do not all share the same `Vocab`.
 
         docs (list): A list of Doc objects.
         ensure_whitespace (bool): Insert a space between two adjacent docs whenever the first doc does not end in whitespace.
@@ -908,16 +921,7 @@ cdef class Doc:
         (vocab,) = vocab
 
         if attrs is None:
-            attrs = [LEMMA, NORM]
-            if all(doc.is_nered for doc in docs):
-                attrs.extend([ENT_IOB, ENT_KB_ID, ENT_TYPE])
-            # TODO: separate for is_morphed?
-            if all(doc.is_tagged for doc in docs):
-                attrs.extend([TAG, POS, MORPH])
-            if all(doc.is_parsed for doc in docs):
-                attrs.extend([HEAD, DEP])
-            else:
-                attrs.append(SENT_START)
+            attrs = Doc._get_array_attrs()
         else:
             if any(isinstance(attr, str) for attr in attrs):     # resolve attribute names
                 attrs = [intify_attr(attr) for attr in attrs]    # intify_attr returns None for invalid attrs
@@ -989,9 +993,6 @@ cdef class Doc:
         other.tensor = copy.deepcopy(self.tensor)
         other.cats = copy.deepcopy(self.cats)
         other.user_data = copy.deepcopy(self.user_data)
-        other.is_tagged = self.is_tagged
-        other.is_parsed = self.is_parsed
-        other.is_morphed = self.is_morphed
         other.sentiment = self.sentiment
         other.has_unknown_spaces = self.has_unknown_spaces
         other.user_hooks = dict(self.user_hooks)
@@ -1065,22 +1066,16 @@ cdef class Doc:
 
         DOCS: https://nightly.spacy.io/api/doc#to_bytes
         """
-        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE, ENT_ID, NORM, ENT_KB_ID]
-        if self.is_tagged:
-            array_head.extend([TAG, POS])
-        # If doc parsed add head and dep attribute
-        if self.is_parsed:
-            array_head.extend([HEAD, DEP])
-        # Otherwise add sent_start
-        else:
-            array_head.append(SENT_START)
+        array_head = Doc._get_array_attrs()
         strings = set()
         for token in self:
             strings.add(token.tag_)
             strings.add(token.lemma_)
+            strings.add(token.morph_)
             strings.add(token.dep_)
             strings.add(token.ent_type_)
             strings.add(token.ent_kb_id_)
+            strings.add(token.ent_id_)
             strings.add(token.norm_)
         # Msgpack doesn't distinguish between lists and tuples, which is
         # vexing for user data. As a best guess, we *know* that within
@@ -1230,22 +1225,29 @@ cdef class Doc:
         DOCS: https://nightly.spacy.io/api/doc#to_json
         """
         data = {"text": self.text}
-        if self.is_nered:
+        if self.has_annotation("ENT_IOB"):
             data["ents"] = [{"start": ent.start_char, "end": ent.end_char,
                             "label": ent.label_} for ent in self.ents]
-        if self.is_sentenced:
+        if self.has_annotation("SENT_START"):
             sents = list(self.sents)
             data["sents"] = [{"start": sent.start_char, "end": sent.end_char}
                              for sent in sents]
         if self.cats:
             data["cats"] = self.cats
         data["tokens"] = []
+        attrs = ["TAG", "MORPH", "POS", "LEMMA", "DEP"]
+        include_annotation = {attr: self.has_annotation(attr) for attr in attrs}
         for token in self:
             token_data = {"id": token.i, "start": token.idx, "end": token.idx + len(token)}
-            if self.is_tagged:
-                token_data["pos"] = token.pos_
+            if include_annotation["TAG"]:
                 token_data["tag"] = token.tag_
-            if self.is_parsed:
+            if include_annotation["POS"]:
+                token_data["pos"] = token.pos_
+            if include_annotation["MORPH"]:
+                token_data["morph"] = token.morph_
+            if include_annotation["LEMMA"]:
+                token_data["lemma"] = token.lemma_
+            if include_annotation["DEP"]:
                 token_data["dep"] = token.dep_
                 token_data["head"] = token.head.i
             data["tokens"].append(token_data)
@@ -1290,6 +1292,12 @@ cdef class Doc:
                     end_idx -= 1
                     j += 1
         return output
+
+    @staticmethod
+    def _get_array_attrs():
+        attrs = [LENGTH, SPACY]
+        attrs.extend(intify_attr(x) for x in DOCBIN_ALL_ATTRS)
+        return tuple(attrs)
 
 
 cdef int token_by_start(const TokenC* tokens, int length, int start_char) except -2:
@@ -1348,8 +1356,10 @@ cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
         loop_count += 1
     # Set sentence starts
     for i in range(length):
-        if tokens[i].head == 0 and tokens[i].dep != 0:
-            tokens[tokens[i].l_edge].sent_start = True
+        tokens[i].sent_start = -1
+    for i in range(length):
+        if tokens[i].head == 0:
+            tokens[tokens[i].l_edge].sent_start = 1
 
 
 cdef int _set_lr_kids_and_edges(TokenC* tokens, int length, int loop_count) except -1:
