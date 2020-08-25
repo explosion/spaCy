@@ -43,6 +43,8 @@ recognizer doesn't use any features set by the tagger and parser, and so on.
 This means that you can swap them, or remove single components from the pipeline
 without affecting the others. However, components may share a "token-to-vector"
 component like [`Tok2Vec`](/api/tok2vec) or [`Transformer`](/api/transformer).
+You can read more about this in the docs on
+[embedding layers](/usage/embeddings-transformers#embedding-layers).
 
 Custom components may also depend on annotations set by other components. For
 example, a custom lemmatizer may need the part-of-speech tags assigned, so it'll

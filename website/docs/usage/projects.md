@@ -88,6 +88,12 @@ can also use any private repo you have access to with Git.
 >   - dest: 'assets/training.spacy'
 >     url: 'https://example.com/data.spacy'
 >     checksum: '63373dd656daa1fd3043ce166a59474c'
+>   - dest: 'assets/development.spacy'
+>     git:
+>       repo: 'https://github.com/example/repo'
+>       branch: 'master'
+>       path: 'path/developments.spacy'
+>     checksum: '5113dc04e03f079525edd8df3f4f39e3'
 > ```
 
 Assets are data files your project needs – for example, the training and
@@ -104,22 +110,8 @@ $ python -m spacy project assets
 
 Asset URLs can be a number of different protocols: HTTP, HTTPS, FTP, SSH, and
 even cloud storage such as GCS and S3. You can also fetch assets using git, by
-replacing the `url` string with a `git` block, like this:
-
-> #### project.yml
->
-> ```yaml
-> assets:
->   - dest: 'assets/training.spacy'
->     git: 
->       repo: "https://github.com/example/repo"
->       branch: "master"
->       path: "some/path"
->     checksum: '63373dd656daa1fd3043ce166a59474c'
-> ```
-
-spaCy will use Git's "sparse checkout" feature, to avoid download the whole
-repository.
+replacing the `url` string with a `git` block. spaCy will use Git's "sparse
+checkout" feature, to avoid download the whole repository.
 
 ### 3. Run a command {#run}
 
@@ -236,9 +228,92 @@ https://github.com/explosion/spacy-boilerplates/blob/master/ner_fashion/project.
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `vars`        | A dictionary of variables that can be referenced in paths, URLs and scripts, just like [`config.cfg` variables](/usage/training#config-interpolation). For example, `${vars.name}` will use the value of the variable `name`. Variables need to be defined in the section `vars`, but can be a nested dict, so you're able to reference `${vars.model.name}`.                                                                                                                                                |
 | `directories` | An optional list of [directories](#project-files) that should be created in the project for assets, training outputs, metrics etc. spaCy will make sure that these directories always exist.                                                                                                                                                                                                                                                                                                                 |
-| `assets`      | A list of assets that can be fetched with the [`project assets`](/api/cli#project-assets) command. `url` defines a URL or local path, `dest` is the destination file relative to the project directory, and an optional `checksum` ensures that an error is raised if the file's checksum doesn't match.                                                                                                                                                                                                     |
+| `assets`      | A list of assets that can be fetched with the [`project assets`](/api/cli#project-assets) command. `url` defines a URL or local path, `dest` is the destination file relative to the project directory, and an optional `checksum` ensures that an error is raised if the file's checksum doesn't match. Instead of `url`, you can also provide a `git` block with the keys `repo`, `branch` and `path`, to download from a Git repo.                                                                        |
 | `workflows`   | A dictionary of workflow names, mapped to a list of command names, to execute in order. Workflows can be run with the [`project run`](/api/cli#project-run) command.                                                                                                                                                                                                                                                                                                                                         |
 | `commands`    | A list of named commands. A command can define an optional help message (shown in the CLI when the user adds `--help`) and the `script`, a list of commands to run. The `deps` and `outputs` let you define the created file the command depends on and produces, respectively. This lets spaCy determine whether a command needs to be re-run because its dependencies or outputs changed. Commands can be run as part of a workflow, or separately with the [`project run`](/api/cli#project-run) command. |
+
+### Data assets {#data-assets}
+
+Assets are any files that your project might need, like training and development
+corpora or pretrained weights for initializing your model. Assets are defined in
+the `assets` block of your `project.yml` and can be downloaded using the
+[`project assets`](/api/cli#project-assets) command. Defining checksums lets you
+verify that someone else running your project will use the same files you used.
+Asset URLs can be a number of different **protocols**: HTTP, HTTPS, FTP, SSH,
+and even **cloud storage** such as GCS and S3. You can also download assets from
+a **Git repo** instead.
+
+#### Downloading from a URL or cloud storage {#data-assets-url}
+
+Under the hood, spaCy uses the
+[`smart-open`](https://github.com/RaRe-Technologies/smart_open) library so you
+can use any protocol it supports. Note that you may need to install extra
+dependencies to use certain protocols.
+
+> #### project.yml
+>
+> ```yaml
+> assets:
+>   # Download from public HTTPS URL
+>   - dest: 'assets/training.spacy'
+>     url: 'https://example.com/data.spacy'
+>     checksum: '63373dd656daa1fd3043ce166a59474c'
+>   # Download from Google Cloud Storage bucket
+>   - dest: 'assets/development.spacy'
+>     url: 'gs://your-bucket/corpora'
+>     checksum: '5113dc04e03f079525edd8df3f4f39e3'
+> ```
+
+| Name       | Description                                                                                                                                                                      |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dest`     | The destination path to save the downloaded asset to (relative to the project directory), including the file name.                                                               |
+| `url`      | The URL to download from, using the respective protocol.                                                                                                                         |
+| `checksum` | Optional checksum of the file. If provided, it will be used to verify that the file matches and downloads will be skipped if a local file with the same checksum already exists. |
+
+#### Downloading from a Git repo {#data-assets-git}
+
+If a `git` block is provided, the asset is downloaded from the given Git
+repository. You can download from any repo that you have access to. Under the
+hood, this uses Git's "sparse checkout" feature, so you're only downloading the
+files you need and not the whole repo.
+
+> #### project.yml
+>
+> ```yaml
+> assets:
+>   - dest: 'assets/training.spacy'
+>     git:
+>       repo: 'https://github.com/example/repo'
+>       branch: 'master'
+>       path: 'path/training.spacy'
+>     checksum: '63373dd656daa1fd3043ce166a59474c'
+> ```
+
+| Name       | Description                                                                                                                                                                                          |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dest`     | The destination path to save the downloaded asset to (relative to the project directory), including the file name.                                                                                   |
+| `git`      | `repo`: The URL of the repo to download from.<br />`path`: Path of the file or directory to download, relative to the repo root.<br />`branch`: The branch to download from. Defaults to `"master"`. |
+| `checksum` | Optional checksum of the file. If provided, it will be used to verify that the file matches and downloads will be skipped if a local file with the same checksum already exists.                     |
+
+#### Working with private assets {#data-asets-private}
+
+> #### project.yml
+>
+> ```yaml
+> assets:
+>   - dest: 'assets/private_training_data.json'
+>     checksum: '63373dd656daa1fd3043ce166a59474c'
+>   - dest: 'assets/private_vectors.bin'
+>     checksum: '5113dc04e03f079525edd8df3f4f39e3'
+> ```
+
+For many projects, the datasets and weights you're working with might be
+company-internal and not available over the internet. In that case, you can
+specify the destination paths and a checksum, and leave out the URL. When your
+teammates clone and run your project, they can place the files in the respective
+directory themselves. The [`project assets`](/api/cli#project-assets) command
+will alert about missing files and mismatched checksums, so you can ensure that
+others are running your project with the same data.
 
 ### Dependencies and outputs {#deps-outputs}
 
@@ -445,25 +520,6 @@ check out [Data Version Control](#dvc) (DVC), which integrates with spaCy
 projects.
 
 </Infobox>
-
-### Working with private assets {#private-assets}
-
-For many projects, the datasets and weights you're working with might be
-company-internal and not available via a public URL. In that case, you can
-specify the destination paths and a checksum, and leave out the URL. When your
-teammates clone and run your project, they can place the files in the respective
-directory themselves. The [`spacy project assets`](/api/cli#project-assets)
-command will alert about missing files and mismatched checksums, so you can
-ensure that others are running your project with the same data.
-
-```yaml
-### project.yml
-assets:
-  - dest: 'assets/private_training_data.json'
-    checksum: '63373dd656daa1fd3043ce166a59474c'
-  - dest: 'assets/private_vectors.bin'
-    checksum: '5113dc04e03f079525edd8df3f4f39e3'
-```
 
 ## Remote Storage {#remote}
 
