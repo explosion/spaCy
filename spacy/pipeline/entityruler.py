@@ -68,7 +68,7 @@ class EntityRuler:
         ent_id_sep: str = DEFAULT_ENT_ID_SEP,
         patterns: Optional[List[PatternType]] = None,
     ) -> None:
-        """Initialize the entitiy ruler. If patterns are supplied here, they
+        """Initialize the entity ruler. If patterns are supplied here, they
         need to be a list of dictionaries with a `"label"` and `"pattern"`
         key. A pattern can either be a token pattern (list) or a phrase pattern
         (string). For example: `{'label': 'ORG', 'pattern': 'Apple'}`.
@@ -223,7 +223,7 @@ class EntityRuler:
         return all_patterns
 
     def add_patterns(self, patterns: List[PatternType]) -> None:
-        """Add patterns to the entitiy ruler. A pattern can either be a token
+        """Add patterns to the entity ruler. A pattern can either be a token
         pattern (list of dicts) or a phrase pattern (string). For example:
         {'label': 'ORG', 'pattern': 'Apple'}
         {'label': 'GPE', 'pattern': [{'lower': 'san'}, {'lower': 'francisco'}]}
