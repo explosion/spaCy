@@ -296,6 +296,7 @@ class ProjectConfigAssetURL(BaseModel):
     dest: StrictStr = Field(..., title="Destination of downloaded asset")
     url: Optional[StrictStr] = Field(None, title="URL of asset")
     checksum: str = Field(None, title="MD5 hash of file", regex=r"([a-fA-F\d]{32})")
+    description: StrictStr = Field("", title="Description of asset")
     # fmt: on
 
 
@@ -303,6 +304,7 @@ class ProjectConfigAssetGit(BaseModel):
     # fmt: off
     git: ProjectConfigAssetGitItem = Field(..., title="Git repo information")
     checksum: str = Field(None, title="MD5 hash of file", regex=r"([a-fA-F\d]{32})")
+    description: Optional[StrictStr] = Field(None, title="Description of asset")
     # fmt: on
 
 
@@ -328,6 +330,7 @@ class ProjectConfigSchema(BaseModel):
     assets: List[Union[ProjectConfigAssetURL, ProjectConfigAssetGit]] = Field([], title="Data assets")
     workflows: Dict[StrictStr, List[StrictStr]] = Field({}, title="Named workflows, mapped to list of project commands to run in order")
     commands: List[ProjectConfigCommand] = Field([], title="Project command shortucts")
+    title: Optional[str] = Field(None, title="Project title")
     # fmt: on
 
     class Config:
