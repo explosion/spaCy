@@ -152,8 +152,7 @@ def train(
     try:
         progress = tqdm.tqdm(total=T_cfg["eval_frequency"], leave=False)
         progress.set_description(f"Epoch 1")
-        for batch_nr, batch_info in enumerate(training_step_iterator):
-            batch, info, is_best_checkpoint = batch_info
+        for batch, info, is_best_checkpoint in training_step_iterator:
             progress.update(1)
             if is_best_checkpoint is not None:
                 progress.close()
