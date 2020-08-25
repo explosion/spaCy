@@ -107,7 +107,62 @@ transformer outputs to the
 [`Doc._.trf_data`](/api/transformer#custom_attributes) extension attribute,
 giving you access to them after the pipeline has finished running.
 
-<!-- TODO: show example of implementation via config, side by side -->
+### Example: Shared vs. independent config {#embedding-layers-config}
+
+The [config system](/usage/training#config) lets you express model configuration
+for both shared and independent embedding layers. The shared setup uses a single
+[`Tok2Vec`](/api/tok2vec) component with the
+[Tok2Vec](/api/architectures#Tok2Vec) architecture. All other components, like
+the entity recognizer, use a
+[Tok2VecListener](/api/architectures#Tok2VecListener) layer as their model's
+`tok2vec` argument, which connects to the `tok2vec` component model.
+
+```ini
+### Shared {highlight="1-2,4-5,19-20"}
+[components.tok2vec]
+factory = "tok2vec"
+
+[components.tok2vec.model]
+@architectures = "spacy.Tok2Vec.v1"
+
+[components.tok2vec.model.embed]
+@architectures = "spacy.MultiHashEmbed.v1"
+
+[components.tok2vec.model.encode]
+@architectures = "spacy.MaxoutWindowEncoder.v1"
+
+[components.ner]
+factory = "ner"
+
+[components.ner.model]
+@architectures = "spacy.TransitionBasedParser.v1"
+
+[components.ner.model.tok2vec]
+@architectures = "spacy.Tok2VecListener.v1"
+```
+
+In the independent setup, the entity recognizer component defines its own
+[Tok2Vec](/api/architectures#Tok2Vec) instance. Other components will do the
+same. This makes them fully independent and doesn't require an upstream
+[`Tok2Vec`](/api/tok2vec) component to be present in the pipeline.
+
+```ini
+### Independent {highlight="7-8"}
+[components.ner]
+factory = "ner"
+
+[components.ner.model]
+@architectures = "spacy.TransitionBasedParser.v1"
+
+[components.ner.model.tok2vec]
+@architectures = "spacy.Tok2Vec.v1"
+
+[components.ner.model.tok2vec.embed]
+@architectures = "spacy.MultiHashEmbed.v1"
+
+[components.ner.model.tok2vec.encode]
+@architectures = "spacy.MaxoutWindowEncoder.v1"
+```
 
 <!-- TODO: Once rehearsal is tested, mention it here. -->
 
@@ -503,3 +558,22 @@ def MyCustomVectors(
 ## Pretraining {#pretraining}
 
 <!-- TODO: write -->
+
+> #### Raw text format
+>
+> The raw text can be provided as JSONL (newline-delimited JSON) with a key
+> `"text"` per entry. This allows the data to be read in line by line, while
+> also allowing you to include newlines in the texts.
+>
+> ```json
+> {"text": "Can I ask where you work now and what you do, and if you enjoy it?"}
+> {"text": "They may just pull out of the Seattle market completely, at least until they have autonomous vehicles."}
+> ```
+
+```cli
+$ python -m spacy init fill-config config.cfg config_pretrain.cfg --pretraining
+```
+
+```cli
+$ python -m spacy pretrain raw_text.jsonl /output config_pretrain.cfg
+```
