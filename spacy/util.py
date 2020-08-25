@@ -588,7 +588,7 @@ def run_command(command: Union[str, List[str]], *, capture=False, stdin=None) ->
             capture_output=capture,
             input=stdin,
             text=True,
-            check=True
+            check=True,
         )
     except FileNotFoundError:
         raise FileNotFoundError(

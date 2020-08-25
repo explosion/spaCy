@@ -325,7 +325,7 @@ def git_sparse_checkout(
         raise IOError("Parent of destination of checkout must exist")
     # We're using Git, partial clone and sparse checkout to
     # only clone the files we need
-    # This ends up being RIDICULOUS. omg. 
+    # This ends up being RIDICULOUS. omg.
     # So, every tutorial and SO post talks about 'sparse checkout'...But they
     # go and *clone* the whole repo. Worthless. And cloning part of a repo
     # turns out to be completely broken. The only way to specify a "path" is..
@@ -341,18 +341,20 @@ def git_sparse_checkout(
         # This is the "clone, but don't download anything" part.
         cmd = (
             f"git clone {repo} {tmp_dir} --no-checkout --depth 1 "
-            "--filter=blob:none" # <-- The key bit
+            "--filter=blob:none"  # <-- The key bit
         )
         if branch is not None:
             cmd = f"{cmd} -b {branch}"
         run_command(cmd, capture=True)
         # Now we need to find the missing filenames for the subpath we want.
-        # Looking for this 'rev-list' command in the git --help? Hah. 
+        # Looking for this 'rev-list' command in the git --help? Hah.
         cmd = f"git -C {tmp_dir} rev-list --objects --all --missing=print -- {subpath}"
         ret = run_command(cmd, capture=True)
         missings = "\n".join([x[1:] for x in ret.stdout.split() if x.startswith("?")])
         # Now pass those missings into another bit of git internals
-        run_command(f"git -C {tmp_dir} fetch-pack --stdin {repo}", capture=True, stdin=missings)
+        run_command(
+            f"git -C {tmp_dir} fetch-pack --stdin {repo}", capture=True, stdin=missings
+        )
         # And finally, we can checkout our subpath
         run_command(f"git -C {tmp_dir} checkout {branch} {subpath}")
         # We need Path(name) to make sure we also support subdirectories
