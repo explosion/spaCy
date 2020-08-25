@@ -20,7 +20,7 @@ from ..errors import Errors
 
 # Don't remove - required to load the built-in architectures
 from ..ml import models  # noqa: F401
-
+from .train_logger import console_logger
 
 @app.command(
     "train", context_settings={"allow_extra_args": True, "ignore_unknown_options": True}
@@ -86,8 +86,6 @@ def train(
         nlp, config = util.load_model_from_config(config)
     if config["training"]["vectors"] is not None:
         util.load_vectors_into_model(nlp, config["training"]["vectors"])
-    import wandb
-    wandb.init(project="train-spacy-test", config=nlp.config)
     verify_config(nlp)
     raw_text, tag_map, morph_rules, weights_data = load_from_paths(config)
     if config.get("system", {}).get("use_pytorch_for_gpu_memory"):
@@ -98,6 +96,7 @@ def train(
     train_corpus = T_cfg["train_corpus"]
     dev_corpus = T_cfg["dev_corpus"]
     batcher = T_cfg["batcher"]
+    train_logger = T_cfg["logger"]
     # Components that shouldn't be updated during training
     frozen_components = T_cfg["frozen_components"]
     # Sourced components that require resume_training
@@ -151,11 +150,13 @@ def train(
         exclude=frozen_components,
     )
     msg.info(f"Training. Initial learn rate: {optimizer.learn_rate}")
-    print_row = setup_printer(T_cfg, nlp)
+    print_row, finalize_logger = train_logger(nlp)
 
     try:
         progress = tqdm.tqdm(total=T_cfg["eval_frequency"], leave=False)
-        for batch, info, is_best_checkpoint in training_step_iterator:
+        progress.set_description(f"Epoch 1")
+        for batch_nr, batch_info in enumerate(training_step_iterator):
+            batch, info, is_best_checkpoint = batch_info
             progress.update(1)
             if is_best_checkpoint is not None:
                 progress.close()
@@ -164,7 +165,9 @@ def train(
                     update_meta(T_cfg, nlp, info)
                     nlp.to_disk(output_path / "model-best")
                 progress = tqdm.tqdm(total=T_cfg["eval_frequency"], leave=False)
+                progress.set_description(f"Epoch {info['epoch']}")
     except Exception as e:
+        finalize_logger()
         if output_path is not None:
             # We don't want to swallow the traceback if we don't have a
             # specific error.
@@ -175,6 +178,7 @@ def train(
             nlp.to_disk(output_path / "model-final")
         raise e
     finally:
+        finalize_logger()
         if output_path is not None:
             final_model_path = output_path / "model-final"
             if optimizer.averages:
@@ -328,12 +332,6 @@ def train_while_improving(
             "losses": losses,
             "checkpoints": results,
         }
-        import wandb
-        wandb.log({'score': score, 'epoch': epoch})
-        if losses:
-            wandb.log({f"loss_{k}":v for k,v in losses.items()})
-        if isinstance(other_scores, dict):
-            wandb.log(other_scores)
         yield batch, info, is_best_checkpoint
         if is_best_checkpoint is not None:
             losses = {}
@@ -359,57 +357,6 @@ def subdivide_batch(batch, accumulate_gradient):
     subbatch = batch[start:]
     if subbatch:
         yield subbatch
-
-
-def setup_printer(
-    training: Union[Dict[str, Any], Config], nlp: Language
-) -> Callable[[Dict[str, Any]], None]:
-    score_cols = list(training["score_weights"])
-    score_widths = [max(len(col), 6) for col in score_cols]
-    loss_cols = [f"Loss {pipe}" for pipe in nlp.pipe_names]
-    loss_widths = [max(len(col), 8) for col in loss_cols]
-    table_header = ["E", "#"] + loss_cols + score_cols + ["Score"]
-    table_header = [col.upper() for col in table_header]
-    table_widths = [3, 6] + loss_widths + score_widths + [6]
-    table_aligns = ["r" for _ in table_widths]
-    msg.row(table_header, widths=table_widths)
-    msg.row(["-" * width for width in table_widths])
-
-    def print_row(info: Dict[str, Any]) -> None:
-        try:
-            losses = [
-                "{0:.2f}".format(float(info["losses"][pipe_name]))
-                for pipe_name in nlp.pipe_names
-            ]
-        except KeyError as e:
-            raise KeyError(
-                Errors.E983.format(
-                    dict="scores (losses)", key=str(e), keys=list(info["losses"].keys())
-                )
-            ) from None
-
-        try:
-            scores = [
-                "{0:.2f}".format(float(info["other_scores"].get(col, 0.0)) * 100)
-                for col in score_cols
-            ]
-        except KeyError as e:
-            raise KeyError(
-                Errors.E983.format(
-                    dict="scores (other)",
-                    key=str(e),
-                    keys=list(info["other_scores"].keys()),
-                )
-            ) from None
-        data = (
-            [info["epoch"], info["step"]]
-            + losses
-            + scores
-            + ["{0:.2f}".format(float(info["score"]))]
-        )
-        msg.row(data, widths=table_widths, aligns=table_aligns)
-
-    return print_row
 
 
 def update_meta(
