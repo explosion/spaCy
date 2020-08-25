@@ -283,10 +283,25 @@ class ConfigSchema(BaseModel):
 # Project config Schema
 
 
-class ProjectConfigAsset(BaseModel):
+class ProjectConfigAssetGitItem(BaseModel):
+    # fmt: off
+    repo: StrictStr = Field(..., title="URL of Git repo to download from")
+    path: StrictStr = Field(..., title="File path or sub-directory to download (used for sparse checkout)")
+    branch: StrictStr = Field("master", title="Branch to clone from")
+    # fmt: on
+
+
+class ProjectConfigAssetURL(BaseModel):
     # fmt: off
     dest: StrictStr = Field(..., title="Destination of downloaded asset")
     url: Optional[StrictStr] = Field(None, title="URL of asset")
+    checksum: str = Field(None, title="MD5 hash of file", regex=r"([a-fA-F\d]{32})")
+    # fmt: on
+
+
+class ProjectConfigAssetGit(BaseModel):
+    # fmt: off
+    git: ProjectConfigAssetGitItem = Field(..., title="Git repo information")
     checksum: str = Field(None, title="MD5 hash of file", regex=r"([a-fA-F\d]{32})")
     # fmt: on
 
@@ -310,7 +325,7 @@ class ProjectConfigCommand(BaseModel):
 class ProjectConfigSchema(BaseModel):
     # fmt: off
     vars: Dict[StrictStr, Any] = Field({}, title="Optional variables to substitute in commands")
-    assets: List[ProjectConfigAsset] = Field([], title="Data assets")
+    assets: List[Union[ProjectConfigAssetURL, ProjectConfigAssetGit]] = Field([], title="Data assets")
     workflows: Dict[StrictStr, List[StrictStr]] = Field({}, title="Named workflows, mapped to list of project commands to run in order")
     commands: List[ProjectConfigCommand] = Field([], title="Project command shortucts")
     # fmt: on

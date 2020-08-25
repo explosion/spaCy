@@ -195,7 +195,7 @@ def get_checksum(path: Union[Path, str]) -> str:
         for sub_file in sorted(fp for fp in path.rglob("*") if fp.is_file()):
             dir_checksum.update(sub_file.read_bytes())
         return dir_checksum.hexdigest()
-    raise ValueError(f"Can't get checksum for {path}: not a file or directory")
+    msg.fail(f"Can't get checksum for {path}: not a file or directory", exits=1)
 
 
 @contextmanager
@@ -320,9 +320,9 @@ def git_sparse_checkout(
     repo: str, subpath: str, dest: Path, *, branch: Optional[str] = None
 ):
     if dest.exists():
-        raise IOError("Destination of checkout must not exist")
+        msg.fail("Destination of checkout must not exist", exits=1)
     if not dest.parent.exists():
-        raise IOError("Parent of destination of checkout must exist")
+        msg.fail("Parent of destination of checkout must exist", exits=1)
     # We're using Git and sparse checkout to only clone the files we need
     with make_tempdir() as tmp_dir:
         cmd = (
