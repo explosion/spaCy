@@ -19,6 +19,10 @@ inputs have changed."""
 INTRO_ASSETS = f"""The following assets are defined by the project. They can
 be fetched by running [`spacy project assets`]({DOCS_URL}/api/cli#project-assets)
 in the project directory."""
+# These markers are added to the Markdown and can be used to update the file in
+# place if it already exists. Only the auto-generated part will be replaced.
+MARKER_START = "<!-- AUTO-GENERATED DOCS START (do not remove) -->"
+MARKER_END = "<!-- AUTO-GENERATED DOCS END (do not remove) -->"
 
 
 @project_cli.command("document")
@@ -29,7 +33,12 @@ def project_document_cli(
     no_emoji: bool = Opt(False, "--no-emoji", "-NE", help="Don't use emoji")
     # fmt: on
 ):
-    """Auto-generate a README.md for a project."""
+    """
+    Auto-generate a README.md for a project. If the content is saved to a file,
+    hidden markers are added so you can add custom content before or after the
+    auto-generated section and only the auto-generated docs will be replaced
+    when you re-run the command.
+    """
     project_document(project_dir, output_file, no_emoji=no_emoji)
 
 
@@ -39,6 +48,8 @@ def project_document(
     is_stdout = str(output_file) == "-"
     config = load_project_config(project_dir)
     md = MarkdownRenderer(no_emoji=no_emoji)
+    if not is_stdout:
+        md.add(MARKER_START)
     title = config.get("title")
     description = config.get("description")
     md.add(md.title(1, f"spaCy Project{f': {title}' if title else ''}", "🪐"))
@@ -70,12 +81,25 @@ def project_document(
         md.add(md.title(3, "Assets", "🗂"))
         md.add(INTRO_ASSETS)
         md.add(md.table(data, ["File", "Source", "Description"]))
+    if not is_stdout:
+        md.add(MARKER_END)
     # Output result
     if is_stdout:
         print(md.text)
     else:
+        content = md.text
+        if output_file.exists():
+            with output_file.open("r", encoding="utf8") as f:
+                existing = f.read()
+            if MARKER_START in existing and MARKER_END in existing:
+                msg.info("Found existing file: only replacing auto-generated docs")
+                before = existing.split(MARKER_START)[0]
+                after = existing.split(MARKER_END)[1]
+                content = f"{before}{content}{after}"
+            else:
+                msg.info("Replacing existing file")
         with output_file.open("w") as f:
-            f.write(md.text)
+            f.write(content)
         msg.good("Saved project documentation", output_file)
 
 
