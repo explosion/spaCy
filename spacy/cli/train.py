@@ -18,9 +18,6 @@ from .. import util
 from ..gold.example import Example
 from ..errors import Errors
 
-# Don't remove - required to load the built-in architectures
-from ..ml import models  # noqa: F401
-from .train_logger import console_logger
 
 @app.command(
     "train", context_settings={"allow_extra_args": True, "ignore_unknown_options": True}
@@ -209,7 +206,7 @@ def create_train_batches(iterator, batcher, max_epochs: int):
 
 
 def create_evaluation_callback(
-    nlp: Language, dev_corpus: Callable, weights: Dict[str, float],
+    nlp: Language, dev_corpus: Callable, weights: Dict[str, float]
 ) -> Callable[[], Tuple[float, Dict[str, float]]]:
     def evaluate() -> Tuple[float, Dict[str, float]]:
         dev_examples = list(dev_corpus(nlp))
@@ -390,7 +387,7 @@ def load_from_paths(
     return raw_text, tag_map, morph_rules, weights_data
 
 
-def verify_cli_args(config_path: Path, output_path: Optional[Path] = None,) -> None:
+def verify_cli_args(config_path: Path, output_path: Optional[Path] = None) -> None:
     # Make sure all files and paths exists if they are needed
     if not config_path or not config_path.exists():
         msg.fail("Config file not found", config_path, exits=1)
