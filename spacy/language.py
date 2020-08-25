@@ -1538,7 +1538,6 @@ class Language:
         def deserialize_vocab(path: Path) -> None:
             if path.exists():
                 self.vocab.from_disk(path)
-            _fix_pretrained_vectors_name(self)
 
         path = util.ensure_path(path)
         deserializers = {}
@@ -1605,14 +1604,10 @@ class Language:
             # from self.vocab.vectors, so set the name directly
             self.vocab.vectors.name = data.get("vectors", {}).get("name")
 
-        def deserialize_vocab(b):
-            self.vocab.from_bytes(b)
-            _fix_pretrained_vectors_name(self)
-
         deserializers = {}
         deserializers["config.cfg"] = lambda b: self.config.from_bytes(b)
         deserializers["meta.json"] = deserialize_meta
-        deserializers["vocab"] = deserialize_vocab
+        deserializers["vocab"] = self.vocab.from_bytes
         deserializers["tokenizer"] = lambda b: self.tokenizer.from_bytes(
             b, exclude=["vocab"]
         )
@@ -1644,25 +1639,6 @@ class FactoryMeta:
     retokenizes: bool = False
     scores: Iterable[str] = tuple()
     default_score_weights: Optional[Dict[str, float]] = None  # noqa: E704
-
-
-def _fix_pretrained_vectors_name(nlp: Language) -> None:
-    # TODO: Replace this once we handle vectors consistently as static
-    # data
-    if "vectors" in nlp.meta and "name" in nlp.meta["vectors"]:
-        nlp.vocab.vectors.name = nlp.meta["vectors"]["name"]
-    elif not nlp.vocab.vectors.size:
-        nlp.vocab.vectors.name = None
-    elif "name" in nlp.meta and "lang" in nlp.meta:
-        vectors_name = f"{nlp.meta['lang']}_{nlp.meta['name']}.vectors"
-        nlp.vocab.vectors.name = vectors_name
-    else:
-        raise ValueError(Errors.E092)
-    for name, proc in nlp.pipeline:
-        if not hasattr(proc, "cfg") or not isinstance(proc.cfg, dict):
-            continue
-        proc.cfg.setdefault("deprecation_fixes", {})
-        proc.cfg["deprecation_fixes"]["vectors_name"] = nlp.vocab.vectors.name
 
 
 class DisabledPipes(list):
