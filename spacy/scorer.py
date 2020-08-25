@@ -145,10 +145,10 @@ class Scorer:
                     acc_score.tp += 1
             prf_score.score_set(pred_spans, gold_spans)
         return {
-            "token_acc": acc_score.fscore * 100,
-            "token_p": prf_score.precision * 100,
-            "token_r": prf_score.recall * 100,
-            "token_f": prf_score.fscore * 100,
+            "token_acc": acc_score.fscore,
+            "token_p": prf_score.precision,
+            "token_r": prf_score.recall,
+            "token_f": prf_score.fscore,
         }
 
     @staticmethod
