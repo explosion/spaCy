@@ -86,6 +86,8 @@ def train(
         nlp, config = util.load_model_from_config(config)
     if config["training"]["vectors"] is not None:
         util.load_vectors_into_model(nlp, config["training"]["vectors"])
+    import wandb
+    wandb.init(project="train-spacy-test", config=nlp.config)
     verify_config(nlp)
     raw_text, tag_map, morph_rules, weights_data = load_from_paths(config)
     if config.get("system", {}).get("use_pytorch_for_gpu_memory"):
@@ -326,6 +328,12 @@ def train_while_improving(
             "losses": losses,
             "checkpoints": results,
         }
+        import wandb
+        wandb.log({'score': score, 'epoch': epoch})
+        if losses:
+            wandb.log({f"loss_{k}":v for k,v in losses.items()})
+        if isinstance(other_scores, dict):
+            wandb.log(other_scores)
         yield batch, info, is_best_checkpoint
         if is_best_checkpoint is not None:
             losses = {}
