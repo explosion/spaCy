@@ -380,6 +380,15 @@ def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
     assert m_doc[9].idx == think_idx
 
 
+def test_doc_api_from_docs_ents(en_tokenizer):
+    texts = ["Merging the docs is fun.", "They don't think alike."]
+    docs = [en_tokenizer(t) for t in texts]
+    docs[0].ents = ()
+    docs[1].ents = (Span(docs[1], 0, 1, label="foo"),)
+    doc = Doc.from_docs(docs)
+    assert len(doc.ents) == 1
+
+
 def test_doc_lang(en_vocab):
     doc = Doc(en_vocab, words=["Hello", "world"])
     assert doc.lang_ == "en"
