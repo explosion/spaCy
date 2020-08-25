@@ -63,7 +63,7 @@ class TokenPatternString(BaseModel):
     class Config:
         extra = "forbid"
 
-    @validator("*", pre=True, each_item=True)
+    @validator("*", pre=True, each_item=True, allow_reuse=True)
     def raise_for_none(cls, v):
         if v is None:
             raise ValueError("None / null is not allowed")
@@ -84,7 +84,7 @@ class TokenPatternNumber(BaseModel):
     class Config:
         extra = "forbid"
 
-    @validator("*", pre=True, each_item=True)
+    @validator("*", pre=True, each_item=True, allow_reuse=True)
     def raise_for_none(cls, v):
         if v is None:
             raise ValueError("None / null is not allowed")
@@ -145,7 +145,7 @@ class TokenPattern(BaseModel):
         allow_population_by_field_name = True
         alias_generator = lambda value: value.upper()
 
-    @validator("*", pre=True)
+    @validator("*", pre=True, allow_reuse=True)
     def raise_for_none(cls, v):
         if v is None:
             raise ValueError("None / null is not allowed")
@@ -265,7 +265,7 @@ class ConfigSchema(BaseModel):
     pretraining: Union[ConfigSchemaPretrain, ConfigSchemaPretrainEmpty] = {}
     components: Dict[str, Dict[str, Any]]
 
-    @root_validator
+    @root_validator(allow_reuse=True)
     def validate_config(cls, values):
         """Perform additional validation for settings with dependencies."""
         pt = values.get("pretraining")
