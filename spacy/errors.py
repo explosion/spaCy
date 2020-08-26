@@ -273,10 +273,6 @@ class Errors:
             "existing extension, set `force=True` on `{obj}.set_extension`.")
     E091 = ("Invalid extension attribute {name}: expected callable or None, "
             "but got: {value}")
-    E092 = ("Could not find or assign name for word vectors. Ususally, the "
-            "name is read from the model's meta.json in vector.name. "
-            "Alternatively, it is built from the 'lang' and 'name' keys in "
-            "the meta.json. Vector names are required to avoid issue #1660.")
     E093 = ("token.ent_iob values make invalid sequence: I without B\n{seq}")
     E094 = ("Error reading line {line_num} in vectors file {loc}.")
     E095 = ("Can't write to frozen dictionary. This is likely an internal "
