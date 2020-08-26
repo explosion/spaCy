@@ -86,7 +86,7 @@ def test_tok2vec_configs(width, embed_arch, embed_config, encode_arch, encode_co
 
 
 def test_init_tok2vec():
-    # Simple test to train the default tok2vec
+    # Simple test to initialize the default tok2vec
     nlp = English()
     tok2vec = nlp.add_pipe("tok2vec")
     assert tok2vec.annotation_setter is not None
