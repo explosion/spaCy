@@ -586,7 +586,7 @@ def run_command(command: Union[str, List[str]], *, capture=False, stdin=None) ->
             command,
             env=os.environ.copy(),
             input=stdin,
-            text=True,
+            encoding="utf8",
             check=True,
             stdout=subprocess.PIPE if capture else None,
             stderr=subprocess.PIPE if capture else None,
