@@ -49,8 +49,7 @@ def project_document(
     is_stdout = str(output_file) == "-"
     config = load_project_config(project_dir)
     md = MarkdownRenderer(no_emoji=no_emoji)
-    if not is_stdout:
-        md.add(MARKER_START)
+    md.add(MARKER_START)
     title = config.get("title")
     description = config.get("description")
     md.add(md.title(1, f"spaCy Project{f': {title}' if title else ''}", "🪐"))
@@ -89,8 +88,7 @@ def project_document(
         md.add(md.title(3, "Assets", "🗂"))
         md.add(INTRO_ASSETS)
         md.add(md.table(data, ["File", "Source", "Description"]))
-    if not is_stdout:
-        md.add(MARKER_END)
+    md.add(MARKER_END)
     # Output result
     if is_stdout:
         print(md.text)
