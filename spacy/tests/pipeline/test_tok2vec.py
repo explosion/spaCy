@@ -9,14 +9,12 @@ from spacy.tokens import Doc
 from spacy.gold import Example
 from spacy import util
 from spacy import registry
-
+from spacy.lang.en import English
 from ..util import get_batch
 
 from thinc.api import Config
 
 from numpy.testing import assert_equal
-
-from ...lang.en import English
 
 
 def test_empty_doc():
