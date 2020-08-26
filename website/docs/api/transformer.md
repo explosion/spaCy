@@ -29,7 +29,7 @@ This pipeline component lets you use transformer models in your pipeline.
 Supports all models that are available via the
 [HuggingFace `transformers`](https://huggingface.co/transformers) library.
 Usually you will connect subsequent components to the shared transformer using
-the [TransformerListener](/api/architectures##transformers-Tok2VecListener) layer. This
+the [TransformerListener](/api/architectures#TransformerListener) layer. This
 works similarly to spaCy's [Tok2Vec](/api/tok2vec) component and
 [Tok2VecListener](/api/architectures/Tok2VecListener) sublayer.
 
@@ -233,7 +233,7 @@ The `Transformer` component therefore does **not** perform a weight update
 during its own `update` method. Instead, it runs its transformer model and
 communicates the output and the backpropagation callback to any **downstream
 components** that have been connected to it via the
-[TransformerListener](/api/architectures##transformers-Tok2VecListener) sublayer. If there
+[TransformerListener](/api/architectures#TransformerListener) sublayer. If there
 are multiple listeners, the last layer will actually backprop to the transformer
 and call the optimizer, while the others simply increment the gradients.
 

@@ -101,7 +101,7 @@ it processes a batch of documents, it will pass forward its predictions to the
 listeners, allowing the listeners to **reuse the predictions** when they are
 eventually called. A similar mechanism is used to pass gradients from the
 listeners back to the model. The [`Transformer`](/api/transformer) component and
-[TransformerListener](/api/architectures#transformers-Tok2VecListener) layer do the same
+[TransformerListener](/api/architectures#TransformerListener) layer do the same
 thing for transformer models, but the `Transformer` component will also save the
 transformer outputs to the
 [`Doc._.trf_data`](/api/transformer#custom_attributes) extension attribute,
