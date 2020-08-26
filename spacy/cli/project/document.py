@@ -2,6 +2,7 @@ from typing import Iterable, Optional
 from pathlib import Path
 from wasabi import msg
 
+from ...util import working_dir
 from .._util import project_cli, Arg, Opt, PROJECT_FILE, load_project_config
 
 
@@ -76,7 +77,14 @@ def project_document(
     data = []
     for a in assets:
         source = "Git" if a.get("git") else "URL" if a.get("url") else "Local"
-        data.append((md.code(a["dest"]), source, a.get("description", "")))
+        dest_path = a["dest"]
+        dest = md.code(dest_path)
+        if source == "Local":
+            # Only link assets if they're in the repo
+            with working_dir(project_dir) as p:
+                if (p / dest_path).exists():
+                    dest = md.link(dest, dest_path)
+        data.append((dest, source, a.get("description", "")))
     if data:
         md.add(md.title(3, "Assets", "🗂"))
         md.add(INTRO_ASSETS)
@@ -129,3 +137,6 @@ class MarkdownRenderer:
 
     def code(self, text: str) -> str:
         return f"`{text}`"
+
+    def link(self, text: str, url: str) -> str:
+        return f"[{text}]({url})"
