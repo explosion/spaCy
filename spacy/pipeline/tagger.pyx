@@ -307,7 +307,7 @@ class Tagger(Pipe):
 
         examples (Iterable[Example]): The examples to score.
         RETURNS (Dict[str, Any]): The scores, produced by
-            Scorer.score_token_attr for the attributes "tag", "pos" and "lemma".
+            Scorer.score_token_attr for the attributes "tag".
 
         DOCS: https://spacy.io/api/tagger#score
         """
