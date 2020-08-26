@@ -1,6 +1,5 @@
-from typing import Iterable, Optional
 from pathlib import Path
-from wasabi import msg
+from wasabi import msg, MarkdownRenderer
 
 from ...util import working_dir
 from .._util import project_cli, Arg, Opt, PROJECT_FILE, load_project_config
@@ -107,34 +106,3 @@ def project_document(
         with output_file.open("w") as f:
             f.write(content)
         msg.good("Saved project documentation", output_file)
-
-
-class MarkdownRenderer:
-    """Simple helper for generating raw Markdown."""
-
-    def __init__(self, no_emoji: bool = False):
-        self.data = []
-        self.no_emoji = no_emoji
-
-    @property
-    def text(self):
-        return "\n\n".join(self.data)
-
-    def add(self, content: str) -> None:
-        self.data.append(content)
-
-    def table(self, data: Iterable[Iterable[str]], header: Iterable[str]) -> str:
-        head = f"| {' | '.join(header)} |"
-        divider = f"| {' | '.join('---' for _ in header)} |"
-        body = "\n".join(f"| {' | '.join(row)} |" for row in data)
-        return f"{head}\n{divider}\n{body}"
-
-    def title(self, level: int, text: str, emoji: Optional[str] = None) -> str:
-        prefix = f"{emoji} " if emoji and not self.no_emoji else ""
-        return f"{'#' * level} {prefix}{text}"
-
-    def code(self, text: str) -> str:
-        return f"`{text}`"
-
-    def link(self, text: str, url: str) -> str:
-        return f"[{text}]({url})"
