@@ -310,5 +310,8 @@ class Tok2VecListener(Model):
 
 def forward(model: Tok2VecListener, inputs, is_train: bool):
     """Supply the outputs from the upstream Tok2Vec component."""
+    bp = model._backprop
+    if not is_train:
+        bp = lambda dX: []
     model.verify_inputs(inputs)
-    return model._outputs, model._backprop
+    return model._outputs, bp
