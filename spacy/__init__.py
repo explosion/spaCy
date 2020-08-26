@@ -20,9 +20,6 @@ from .errors import Errors
 from .language import Language
 from . import util
 
-# Load built-in architectures
-from .ml import models  # noqa: F401
-from .cli.train_logger import console_logger, wandb_logger
 
 if sys.maxunicode == 65535:
     raise SystemError(Errors.E130)
