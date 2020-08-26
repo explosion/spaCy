@@ -394,14 +394,6 @@ def verify_cli_args(config_path: Path, output_path: Optional[Path] = None) -> No
         if not output_path.exists():
             output_path.mkdir()
             msg.good(f"Created output directory: {output_path}")
-        elif output_path.exists() and [p for p in output_path.iterdir() if p.is_dir()]:
-            msg.warn(
-                "Output directory is not empty.",
-                "This can lead to unintended side effects when saving the model. "
-                "Please use an empty directory or a different path instead. If "
-                "the specified output path doesn't exist, the directory will be "
-                "created for you.",
-            )
 
 
 def verify_config(nlp: Language) -> None:
