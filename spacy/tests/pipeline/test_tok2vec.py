@@ -8,6 +8,7 @@ from spacy.vocab import Vocab
 from spacy.tokens import Doc
 from spacy.gold import Example
 from spacy import util
+from spacy import registry
 
 from ..util import get_batch
 
@@ -93,17 +94,16 @@ def test_init_tok2vec():
     nlp.begin_training()
 
 
-def test_tok2vec_listener():
-    cfg_string = """
+cfg_string = """
     [nlp]
     lang = "en"
     pipeline = ["tok2vec","tagger"]
 
     [components]
-    
+
     [components.tagger]
     factory = "tagger"
-    
+
     [components.tagger.model]
     @architectures = "spacy.Tagger.v1"
     nO = null
@@ -114,7 +114,7 @@ def test_tok2vec_listener():
 
     [components.tok2vec]
     factory = "tok2vec"
-    
+
     [components.tok2vec.annotation_setter]
     @annotation_setters = spacy.tensor_setter.v1
 
@@ -136,11 +136,12 @@ def test_tok2vec_listener():
     maxout_pieces = 3
     """
 
-    TRAIN_DATA = [
-        ("I like green eggs", {"tags": ["N", "V", "J", "N"]}),
-        ("Eat blue ham", {"tags": ["V", "J", "N"]}),
-    ]
+TRAIN_DATA = [
+    ("I like green eggs", {"tags": ["N", "V", "J", "N"]}),
+    ("Eat blue ham", {"tags": ["V", "J", "N"]}),
+]
 
+def test_tok2vec_listener():
     orig_config = Config().from_str(cfg_string)
     nlp, config = util.load_model_from_config(orig_config, auto_fill=True, validate=True)
     tagger = nlp.get_pipe("tagger")
@@ -166,3 +167,32 @@ def test_tok2vec_listener():
     doc = nlp("Testing this document")
     doc_tensor = tok2vec_listener.predict([doc])[0]
     assert_equal(doc.tensor, doc_tensor)
+
+
+def test_tok2vec_custom_setter():
+    @registry.annotation_setters("custom_setter")
+    def configure_custom_setter():
+        Doc.set_extension("custom_data", default="Nothing to see here")
+        def custom_setter(docs, tokvecses):
+            for doc, tokvecs in zip(docs, tokvecses):
+                doc._.custom_data = tokvecs
+        return custom_setter
+
+    orig_config = Config().from_str(cfg_string)
+    orig_config["components"]["tok2vec"]["annotation_setter"] = {"@annotation_setters": "custom_setter"}
+    nlp, config = util.load_model_from_config(orig_config, auto_fill=True, validate=True)
+    tagger = nlp.get_pipe("tagger")
+    tok2vec_listener = tagger.model.get_ref("tok2vec")
+    train_examples = []
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+        for tag in t[1]["tags"]:
+            tagger.add_label(tag)
+    optimizer = nlp.begin_training()
+    for i in range(5):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+    doc = nlp("Testing this document")
+    doc_tensor = tok2vec_listener.predict([doc])[0]
+    assert_equal(doc._.custom_data, doc_tensor)
+    assert doc.tensor.tolist() == []
