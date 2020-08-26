@@ -585,10 +585,11 @@ def run_command(command: Union[str, List[str]], *, capture=False, stdin=None) ->
         ret = subprocess.run(
             command,
             env=os.environ.copy(),
-            capture_output=capture,
             input=stdin,
             text=True,
             check=True,
+            stdout=subprocess.PIPE if capture else None,
+            stderr=subprocess.PIPE if capture else None,
         )
     except FileNotFoundError:
         raise FileNotFoundError(
