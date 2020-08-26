@@ -4,9 +4,11 @@ from pathlib import Path
 
 from .pipe import Pipe
 from ..errors import Errors
+from ..gold import validate_examples
 from ..language import Language
 from ..matcher import Matcher
-from ..symbols import IDS
+from ..scorer import Scorer
+from ..symbols import IDS, TAG, POS, MORPH, LEMMA
 from ..tokens import Doc, Span
 from ..tokens._retokenize import normalize_token_attrs, set_token_attrs
 from ..vocab import Vocab
@@ -191,6 +193,32 @@ class AttributeRuler(Pipe):
             p["index"] = self.indices[i]
             all_patterns.append(p)
         return all_patterns
+
+    def score(self, examples, **kwargs):
+        """Score a batch of examples.
+
+        examples (Iterable[Example]): The examples to score.
+        RETURNS (Dict[str, Any]): The scores, produced by
+            Scorer.score_token_attr for the attributes "tag", "pos", "morph"
+            and "lemma" for the target token attributes.
+
+        DOCS: https://spacy.io/api/tagger#score
+        """
+        validate_examples(examples, "AttributeRuler.score")
+        results = {}
+        attrs = set()
+        for token_attrs in self.attrs:
+            attrs.update(token_attrs)
+        for attr in attrs:
+            if attr == TAG:
+                results.update(Scorer.score_token_attr(examples, "tag", **kwargs))
+            elif attr == POS:
+                results.update(Scorer.score_token_attr(examples, "pos", **kwargs))
+            elif attr == MORPH:
+                results.update(Scorer.score_token_attr(examples, "morph", **kwargs))
+            elif attr == LEMMA:
+                results.update(Scorer.score_token_attr(examples, "lemma", **kwargs))
+        return results
 
     def to_bytes(self, exclude: Iterable[str] = tuple()) -> bytes:
         """Serialize the AttributeRuler to a bytestring.
