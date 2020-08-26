@@ -20,6 +20,7 @@ from .errors import Errors
 from .language import Language
 from . import util
 
+
 if sys.maxunicode == 65535:
     raise SystemError(Errors.E130)
 

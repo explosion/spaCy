@@ -1,4 +1,4 @@
-from typing import Dict, List, Union, Optional, Sequence, Any, Callable, Type
+from typing import Dict, List, Union, Optional, Sequence, Any, Callable, Type, Tuple
 from typing import Iterable, TypeVar, TYPE_CHECKING
 from enum import Enum
 from pydantic import BaseModel, Field, ValidationError, validator
@@ -18,6 +18,7 @@ if TYPE_CHECKING:
 ItemT = TypeVar("ItemT")
 Batcher = Callable[[Iterable[ItemT]], Iterable[List[ItemT]]]
 Reader = Callable[["Language", str], Iterable["Example"]]
+Logger = Callable[["Language"], Tuple[Callable[[Dict[str, Any]], None], Callable]]
 
 
 def validate(schema: Type[BaseModel], obj: Dict[str, Any]) -> List[str]:
@@ -209,6 +210,7 @@ class ConfigSchemaTraining(BaseModel):
     init_tok2vec: Optional[StrictStr] = Field(..., title="Path to pretrained tok2vec weights")
     raw_text: Optional[StrictStr] = Field(default=None, title="Raw text")
     optimizer: Optimizer = Field(..., title="The optimizer to use")
+    logger: Logger = Field(..., title="The logger to track training progress")
     frozen_components: List[str] = Field(..., title="Pipeline components that shouldn't be updated during training")
     # fmt: on
 
