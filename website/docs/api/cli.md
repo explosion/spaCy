@@ -935,6 +935,41 @@ $ python -m spacy project pull [remote] [project_dir]
 | `--help`, `-h` | Show help message and available arguments. ~~bool (flag)~~                              |
 | **DOWNLOADS**  | All project outputs that do not exist locally and can be found in the remote.           |
 
+### project document {#project-document tag="command"}
+
+Auto-generate a pretty Markdown-formatted `README` for your project, based on
+its [`project.yml`](/usage/projects#project-yml). Will create sections that
+document the available commands, workflows and assets. The auto-generated
+content will be placed between two hidden markers, so you can add your own
+custom content before or after the auto-generated documentation. When you re-run
+the `project document` command, only the auto-generated part is replaced.
+
+```cli
+$ python -m spacy project document [project_dir] [--output] [--no-emoji]
+```
+
+> #### Example
+>
+> ```cli
+> $ python -m spacy project document --output README.md
+> ```
+
+<Accordion title="Example output" spaced>
+
+For more examples, see the templates in our
+[`projects`](https://github.com/explosion/projects) repo.
+
+![Screenshot of auto-generated Markdown Readme](../images/project_document.jpg)
+
+</Accordion>
+
+| Name                 | Description                                                                                                                                                                                             |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `project_dir`        | Path to project directory. Defaults to current working directory. ~~Path (positional)~~                                                                                                                 |
+| `--output`, `-o`     | Path to output file or `-` for stdout (default). If a file is specified and it already exists and contains auto-generated docs, only the auto-generated docs section is replaced. ~~Path (positional)~~ |
+|  `--no-emoji`, `-NE` | Don't use emoji in the titles. ~~bool (flag)~~                                                                                                                                                          |
+| **CREATES**          | The Markdown-formatted project documentation.                                                                                                                                                           |
+
 ### project dvc {#project-dvc tag="command"}
 
 Auto-generate [Data Version Control](https://dvc.org) (DVC) config file. Calls
