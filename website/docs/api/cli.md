@@ -146,8 +146,12 @@ validation error with more details.
 > #### Example
 >
 > ```cli
-> $ python -m spacy init fill-config base.cfg config.cfg
+> $ python -m spacy init fill-config base.cfg config.cfg --diff
 > ```
+>
+> #### Example diff
+>
+> ![Screenshot of visual diff in terminal](../images/cli_init_fill-config_diff.jpg)
 
 ```cli
 $ python -m spacy init fill-config [base_path] [output_file] [--diff]
