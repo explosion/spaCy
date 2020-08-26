@@ -1,5 +1,6 @@
 import pytest
 import numpy
+from spacy.gold import Example
 from spacy.lang.en import English
 from spacy.pipeline import AttributeRuler
 from spacy import util, registry
@@ -92,6 +93,23 @@ def test_attributeruler_init_patterns(nlp, pattern_dicts):
     assert doc[2].morph_ == "Case=Nom|Number=Plur"
     assert doc[3].lemma_ == "cat"
     assert doc[3].morph_ == "Case=Nom|Number=Sing"
+
+
+def test_attributeruler_score(nlp, pattern_dicts):
+    # initialize with patterns
+    nlp.add_pipe("attribute_ruler", config={"pattern_dicts": pattern_dicts})
+    doc = nlp("This is a test.")
+    assert doc[2].lemma_ == "the"
+    assert doc[2].morph_ == "Case=Nom|Number=Plur"
+    assert doc[3].lemma_ == "cat"
+    assert doc[3].morph_ == "Case=Nom|Number=Sing"
+
+    dev_examples = [Example.from_dict(nlp.make_doc("This is a test."), {"lemmas": ["this", "is", "a", "cat", "."]})]
+    scores = nlp.evaluate(dev_examples)
+    # "cat" is the only correct lemma
+    assert scores["lemma_acc"] == pytest.approx(0.2)
+    # the empty morphs are correct
+    assert scores["morph_acc"] == pytest.approx(0.6)
 
 
 def test_attributeruler_tag_map(nlp, tag_map):

@@ -413,6 +413,7 @@ class Scorer:
         macro_p = sum(prf.precision for prf in f_per_type.values()) / n_cats
         macro_r = sum(prf.recall for prf in f_per_type.values()) / n_cats
         macro_f = sum(prf.fscore for prf in f_per_type.values()) / n_cats
+        macro_auc = sum(auc.score for auc in auc_per_type.values()) / n_cats
         results = {
             f"{attr}_score": None,
             f"{attr}_score_desc": None,
@@ -422,7 +423,7 @@ class Scorer:
             f"{attr}_macro_p": macro_p,
             f"{attr}_macro_r": macro_r,
             f"{attr}_macro_f": macro_f,
-            f"{attr}_macro_auc": None,
+            f"{attr}_macro_auc": macro_auc,
             f"{attr}_f_per_type": {k: v.to_dict() for k, v in f_per_type.items()},
             f"{attr}_auc_per_type": {k: v.score for k, v in auc_per_type.items()},
         }

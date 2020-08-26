@@ -252,7 +252,7 @@ Score a batch of examples.
 | Name        | Description                                                                                                                                               |
 | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `examples`  | The examples to score. ~~Iterable[Example]~~                                                                                                              |
-| **RETURNS** | The scores, produced by [`Scorer.score_token_attr`](/api/scorer#score_token_attr) for the attributes `"pos"`, `"tag"` and `"lemma"`. ~~Dict[str, float]~~ |
+| **RETURNS** | The scores, produced by [`Scorer.score_token_attr`](/api/scorer#score_token_attr) for the attribute `"tag"`. ~~Dict[str, float]~~ |
 
 ## Tagger.create_optimizer {#create_optimizer tag="method"}
 
