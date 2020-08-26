@@ -10,15 +10,6 @@ from .._util import project_cli, Arg, PROJECT_FILE, load_project_config, get_che
 from .._util import download_file, git_sparse_checkout
 
 
-# TODO: find a solution for caches
-# CACHES = [
-#     Path.home() / ".torch",
-#     Path.home() / ".caches" / "torch",
-#     os.environ.get("TORCH_HOME"),
-#     Path.home() / ".keras",
-# ]
-
-
 @project_cli.command("assets")
 def project_assets_cli(
     # fmt: off
@@ -99,7 +90,6 @@ def fetch_asset(
     RETURNS (Optional[Path]): The path to the fetched asset or None if fetching
         the asset failed.
     """
-    # TODO: add support for caches
     dest_path = (project_path / dest).resolve()
     if dest_path.exists() and checksum:
         # If there's already a file, check for checksum
@@ -134,7 +124,7 @@ def convert_asset_url(url: str) -> str:
     RETURNS (str): The converted URL.
     """
     # If the asset URL is a regular GitHub URL it's likely a mistake
-    if re.match(r"(http(s?)):\/\/github.com", url):
+    if re.match(r"(http(s?)):\/\/github.com", url) and "releases/download" not in url:
         converted = url.replace("github.com", "raw.githubusercontent.com")
         converted = re.sub(r"/(tree|blob)/", "/", converted)
         msg.warn(
