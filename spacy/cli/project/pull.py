@@ -14,7 +14,7 @@ def project_pull_cli(
     project_dir: Path = Arg(Path.cwd(), help="Location of project directory. Defaults to current working directory.", exists=True, file_okay=False),
     # fmt: on
 ):
-    """Retrieve any precomputed outputs from a remote storage that are available.
+    """Retrieve available precomputed outputs from a remote storage.
     You can alias remotes in your project.yml by mapping them to storage paths.
     A storage can be anything that the smart-open library can upload to, e.g.
     gcs, aws, ssh, local directories etc

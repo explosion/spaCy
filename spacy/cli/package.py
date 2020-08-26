@@ -77,7 +77,9 @@ def package(
         meta = generate_meta(meta, msg)
     errors = validate(ModelMetaSchema, meta)
     if errors:
-        msg.fail("Invalid model meta.json", "\n".join(errors), exits=1)
+        msg.fail("Invalid model meta.json")
+        print("\n".join(errors))
+        sys.exit(1)
     model_name = meta["lang"] + "_" + meta["name"]
     model_name_v = model_name + "-" + meta["version"]
     main_path = output_dir / model_name_v
@@ -118,10 +120,10 @@ def get_meta(
         "lang": "en",
         "name": "model",
         "version": "0.0.0",
-        "description": None,
-        "author": None,
-        "email": None,
-        "url": None,
+        "description": "",
+        "author": "",
+        "email": "",
+        "url": "",
         "license": "MIT",
     }
     meta.update(existing_meta)

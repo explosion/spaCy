@@ -572,7 +572,7 @@ def join_command(command: List[str]) -> str:
     return " ".join(shlex.quote(cmd) for cmd in command)
 
 
-def run_command(command: Union[str, List[str]]) -> None:
+def run_command(command: Union[str, List[str]], *, capture=False, stdin=None) -> None:
     """Run a command on the command line as a subprocess. If the subprocess
     returns a non-zero exit code, a system exit is performed.
 
@@ -582,13 +582,22 @@ def run_command(command: Union[str, List[str]]) -> None:
     if isinstance(command, str):
         command = split_command(command)
     try:
-        status = subprocess.call(command, env=os.environ.copy())
+        ret = subprocess.run(
+            command,
+            env=os.environ.copy(),
+            input=stdin,
+            encoding="utf8",
+            check=True,
+            stdout=subprocess.PIPE if capture else None,
+            stderr=subprocess.PIPE if capture else None,
+        )
     except FileNotFoundError:
         raise FileNotFoundError(
             Errors.E970.format(str_command=" ".join(command), tool=command[0])
         ) from None
-    if status != 0:
-        sys.exit(status)
+    if ret.returncode != 0:
+        sys.exit(ret.returncode)
+    return ret
 
 
 @contextmanager
