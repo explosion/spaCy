@@ -108,7 +108,6 @@ def test_doc_api_serialize(en_tokenizer, text):
     tokens[0].norm_ = "norm"
     tokens.ents = [(tokens.vocab.strings["PRODUCT"], 0, 1)]
     tokens[0].ent_kb_id_ = "ent_kb_id"
-    tokens.is_lemmatized = True
     new_tokens = Doc(tokens.vocab).from_bytes(tokens.to_bytes())
     assert tokens.text == new_tokens.text
     assert [t.text for t in tokens] == [t.text for t in new_tokens]
@@ -146,7 +145,6 @@ def test_doc_api_set_ents(en_tokenizer):
 
 def test_doc_api_sents_empty_string(en_tokenizer):
     doc = en_tokenizer("")
-    doc.is_parsed = True
     sents = list(doc.sents)
     assert len(sents) == 0
 
@@ -267,17 +265,11 @@ def test_doc_is_nered(en_vocab):
 
 def test_doc_from_array_sent_starts(en_vocab):
     words = ["I", "live", "in", "New", "York", ".", "I", "like", "cats", "."]
-    heads = [0, 0, 0, 0, 0, 0, 6, 6, 6, 6]
+    heads = [0, -1, -2, -3, -4, -5, 0, -1, -2, -3]
     # fmt: off
-    deps = ["ROOT", "dep", "dep", "dep", "dep", "dep", "ROOT", "dep", "dep", "dep", "dep"]
+    deps = ["ROOT", "dep", "dep", "dep", "dep", "dep", "ROOT", "dep", "dep", "dep"]
     # fmt: on
-    doc = Doc(en_vocab, words=words)
-    for i, (dep, head) in enumerate(zip(deps, heads)):
-        doc[i].dep_ = dep
-        doc[i].head = doc[head]
-        if head == i:
-            doc[i].is_sent_start = True
-    doc.is_parsed
+    doc = get_doc(en_vocab, words=words, heads=heads, deps=deps)
 
     attrs = [SENT_START, HEAD]
     arr = doc.to_array(attrs)
@@ -285,7 +277,7 @@ def test_doc_from_array_sent_starts(en_vocab):
     with pytest.raises(ValueError):
         new_doc.from_array(attrs, arr)
 
-    attrs = [SENT_START, DEP]
+    attrs = [SENT_START]
     arr = doc.to_array(attrs)
     new_doc = Doc(en_vocab, words=words)
     new_doc.from_array(attrs, arr)

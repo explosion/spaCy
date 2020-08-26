@@ -175,7 +175,6 @@ def test_is_sent_start(en_tokenizer):
     assert doc[5].is_sent_start is None
     doc[5].is_sent_start = True
     assert doc[5].is_sent_start is True
-    doc.is_parsed = True
     assert len(list(doc.sents)) == 2
 
 
@@ -184,7 +183,6 @@ def test_is_sent_end(en_tokenizer):
     assert doc[4].is_sent_end is None
     doc[5].is_sent_start = True
     assert doc[4].is_sent_end is True
-    doc.is_parsed = True
     assert len(list(doc.sents)) == 2
 
 

@@ -212,10 +212,6 @@ def doc_from_conllu_sentence(
         doc[i]._.merged_spaceafter = spaces[i]
     ents = get_entities(lines, ner_tag_pattern, ner_map)
     doc.ents = spans_from_biluo_tags(doc, ents)
-    doc.is_tagged = True
-    doc.is_morphed = True
-    doc.is_lemmatized = True
-    doc.is_parsed = True
 
     if merge_subtokens:
         doc = merge_conllu_subtokens(lines, doc)
@@ -245,10 +241,6 @@ def doc_from_conllu_sentence(
         doc_x[i].dep_ = deps[i]
         doc_x[i].head = doc_x[heads[i]]
     doc_x.ents = [Span(doc_x, ent.start, ent.end, label=ent.label) for ent in doc.ents]
-    doc_x.is_tagged = True
-    doc_x.is_morphed = True
-    doc_x.is_lemmatized = True
-    doc_x.is_parsed = True
 
     return doc_x
 

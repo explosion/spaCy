@@ -24,7 +24,6 @@ def doc_not_parsed(en_tokenizer):
     text = "This is a sentence. This is another sentence. And a third."
     tokens = en_tokenizer(text)
     doc = Doc(tokens.vocab, words=[t.text for t in tokens])
-    doc.is_parsed = False
     return doc
 
 
