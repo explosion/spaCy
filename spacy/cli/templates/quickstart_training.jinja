@@ -42,7 +42,7 @@ factory = "tagger"
 nO = null
 
 [components.tagger.model.tok2vec]
-@architectures = "spacy-transformers.Tok2VecListener.v1"
+@architectures = "spacy-transformers.TransformerListener.v1"
 grad_factor = 1.0
 
 [components.tagger.model.tok2vec.pooling]
@@ -62,7 +62,7 @@ use_upper = false
 nO = null
 
 [components.parser.model.tok2vec]
-@architectures = "spacy-transformers.Tok2VecListener.v1"
+@architectures = "spacy-transformers.TransformerListener.v1"
 grad_factor = 1.0
 
 [components.parser.model.tok2vec.pooling]
@@ -82,7 +82,7 @@ use_upper = false
 nO = null
 
 [components.ner.model.tok2vec]
-@architectures = "spacy-transformers.Tok2VecListener.v1"
+@architectures = "spacy-transformers.TransformerListener.v1"
 grad_factor = 1.0
 
 [components.ner.model.tok2vec.pooling]

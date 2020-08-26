@@ -3,7 +3,7 @@ from thinc.api import chain, clone, concatenate, with_array, with_padded
 from thinc.api import Model, noop, list2ragged, ragged2list
 from thinc.api import FeatureExtractor, HashEmbed
 from thinc.api import expand_window, residual, Maxout, Mish, PyTorchLSTM
-from thinc.types import Floats2d, FloatsXd
+from thinc.types import Floats2d
 
 from ...tokens import Doc
 from ...util import registry
@@ -279,13 +279,13 @@ def BiLSTMEncoder(
 
 @registry.annotation_setters("spacy.tensor_setter.v1")
 def configure_tensor_setter() -> Callable[
-    [List[Doc], List[FloatsXd]], None
+    [List[Doc], List[Floats2d]], None
 ]:
-    def tensor_setter(docs: List[Doc], tokvecses: List[FloatsXd]) -> None:
-        """Set tok2vec annotations on the Doc objects.
+    def tensor_setter(docs: List[Doc], tokvecses: List[Floats2d]) -> None:
+        """Set tok2vec annotations on the Doc objects by writing to the doc.tensor attribute.
 
         docs (Iterable[Doc]): The documents to modify.
-        tokvecses (List[FloatsXd]): The tensors to set, produced by Tok2Vec.predict.
+        tokvecses (List[Floats2d]): The tensors to set, produced by Tok2Vec.predict.
         """
         for doc, tokvecs in zip(docs, tokvecses):
             assert tokvecs.shape[0] == len(doc)
