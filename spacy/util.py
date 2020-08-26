@@ -92,6 +92,7 @@ class registry(thinc.registry):
     # environment. spaCy models packaged with `spacy package` will "advertise"
     # themselves via entry points.
     models = catalogue.create("spacy", "models", entry_points=True)
+    annotation_setters = catalogue.create("spacy", "annotation_setters", entry_points=True)
 
 
 class SimpleFrozenDict(dict):

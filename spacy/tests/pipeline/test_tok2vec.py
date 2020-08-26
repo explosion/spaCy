@@ -15,6 +15,8 @@ from thinc.api import Config
 
 from numpy.testing import assert_equal
 
+from ...lang.en import English
+
 
 def test_empty_doc():
     width = 128
@@ -83,6 +85,14 @@ def test_tok2vec_configs(width, embed_arch, embed_config, encode_arch, encode_co
     backprop(vectors)
 
 
+def test_init_tok2vec():
+    # Simple test to train the default tok2vec
+    nlp = English()
+    tok2vec = nlp.add_pipe("tok2vec")
+    assert tok2vec.annotation_setter is not None
+    nlp.begin_training()
+
+
 def test_tok2vec_listener():
     cfg_string = """
     [nlp]
@@ -104,6 +114,9 @@ def test_tok2vec_listener():
 
     [components.tok2vec]
     factory = "tok2vec"
+    
+    [components.tok2vec.annotation_setter]
+    @annotation_setters = spacy.tensor_setter.v1
 
     [components.tok2vec.model]
     @architectures = "spacy.Tok2Vec.v1"

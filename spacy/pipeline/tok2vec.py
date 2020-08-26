@@ -1,5 +1,6 @@
 from typing import Iterator, Sequence, Iterable, Optional, Dict, Callable, List, Tuple
 from thinc.api import Model, set_dropout_rate, Optimizer, Config
+from thinc.types import FloatsXd
 
 from .pipe import Pipe
 from ..gold import Example, validate_examples
@@ -25,10 +26,20 @@ DEFAULT_TOK2VEC_MODEL = Config().from_str(default_model_config)["model"]
 
 
 @Language.factory(
-    "tok2vec", assigns=["doc.tensor"], default_config={"model": DEFAULT_TOK2VEC_MODEL}
+    "tok2vec",
+    assigns=["doc.tensor"],
+    default_config={
+        "model": DEFAULT_TOK2VEC_MODEL,
+        "annotation_setter": {"@annotation_setters": "spacy.tensor_setter.v1"},
+    },
 )
-def make_tok2vec(nlp: Language, name: str, model: Model) -> "Tok2Vec":
-    return Tok2Vec(nlp.vocab, model, name)
+def make_tok2vec(
+    nlp: Language,
+    model: Model,
+    annotation_setter: Callable[[List[Doc], List[FloatsXd]], None],
+    name: str,
+) -> "Tok2Vec":
+    return Tok2Vec(nlp.vocab, model, annotation_setter, name=name)
 
 
 class Tok2Vec(Pipe):
@@ -47,13 +58,22 @@ class Tok2Vec(Pipe):
     sharing.
     """
 
-    def __init__(self, vocab: Vocab, model: Model, name: str = "tok2vec") -> None:
+    def __init__(
+        self,
+        vocab: Vocab,
+        model: Model,
+        annotation_setter: Callable[[List[Doc], List[FloatsXd]], None],
+        *,
+        name: str = "tok2vec",
+    ) -> None:
         """Initialize a tok2vec component.
 
         vocab (Vocab): The shared vocabulary.
         model (thinc.api.Model[List[Doc], List[Floats2d]]):
             The Thinc Model powering the pipeline component. It should take
             a list of Doc objects as input, and output a list of 2d float arrays.
+        annotation_setter (Callable[[List[Doc], List[FloatsXd]], None]): A callback
+            to set the tok2vec information onto the batch of `Doc` objects.
         name (str): The component instance name.
 
         DOCS: https://spacy.io/api/tok2vec#init
@@ -63,6 +83,7 @@ class Tok2Vec(Pipe):
         self.name = name
         self.listeners = []
         self.cfg = {}
+        self.annotation_setter = annotation_setter
 
     def add_listener(self, listener: "Tok2VecListener") -> None:
         """Add a listener for a downstream component. Usually internals."""
@@ -85,10 +106,10 @@ class Tok2Vec(Pipe):
                 self.add_listener(node)
 
     def __call__(self, doc: Doc) -> Doc:
-        """Add context-sensitive embeddings to the Doc.tensor attribute, allowing
-        them to be used as features by downstream components.
+        """Produce context-sensitive embeddings and store the annotations with the
+        annotation_setter.
 
-        docs (Doc): The Doc to preocess.
+        docs (Doc): The Doc to process.
         RETURNS (Doc): The processed Doc.
 
         DOCS: https://spacy.io/api/tok2vec#call
@@ -137,9 +158,7 @@ class Tok2Vec(Pipe):
 
         DOCS: https://spacy.io/api/tok2vec#set_annotations
         """
-        for doc, tokvecs in zip(docs, tokvecses):
-            assert tokvecs.shape[0] == len(doc)
-            doc.tensor = tokvecs
+        self.annotation_setter(docs, tokvecses)
 
     def update(
         self,
@@ -291,8 +310,5 @@ class Tok2VecListener(Model):
 
 def forward(model: Tok2VecListener, inputs, is_train: bool):
     """Supply the outputs from the upstream Tok2Vec component."""
-    if is_train:
-        model.verify_inputs(inputs)
-        return model._outputs, model._backprop
-    else:
-        return [doc.tensor for doc in inputs], lambda dX: []
+    model.verify_inputs(inputs)
+    return model._outputs, model._backprop
