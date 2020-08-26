@@ -101,7 +101,7 @@ it processes a batch of documents, it will pass forward its predictions to the
 listeners, allowing the listeners to **reuse the predictions** when they are
 eventually called. A similar mechanism is used to pass gradients from the
 listeners back to the model. The [`Transformer`](/api/transformer) component and
-[TransformerListener](/api/architectures#TransformerListener) layer do the same
+[TransformerListener](/api/architectures#transformers-Tok2VecListener) layer do the same
 thing for transformer models, but the `Transformer` component will also save the
 transformer outputs to the
 [`Doc._.trf_data`](/api/transformer#custom_attributes) extension attribute,
@@ -179,7 +179,7 @@ interoperates with [PyTorch](https://pytorch.org) and the
 giving you access to thousands of pretrained models for your pipelines. There
 are many [great guides](http://jalammar.github.io/illustrated-transformer/) to
 transformer models, but for practical purposes, you can simply think of them as
-a drop-in replacement that let you achieve **higher accuracy** in exchange for
+drop-in replacements that let you achieve **higher accuracy** in exchange for
 **higher training and runtime costs**.
 
 ### Setup and installation {#transformers-installation}
