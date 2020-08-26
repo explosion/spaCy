@@ -74,7 +74,7 @@ def wandb_logger(project_name: str):
     def setup_logger(
         nlp: "Language"
     ) -> Tuple[Callable[[Dict[str, Any]], None], Callable]:
-        config = nlp.config
+        config = nlp.config.interpolate()
         wandb.init(project=project_name, config=config)
         console_log_step, console_finalize = console(nlp)
 
