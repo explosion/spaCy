@@ -262,22 +262,10 @@ def upload_file(src: Path, dest: Union[str, "Pathy"]) -> None:
     url (str): The destination URL to upload to.
     """
     import smart_open
-
-    # This logic is pretty hacky. We'd like pathy to do this probably?
-    if ":/" not in str(dest):
-        # Local path
-        with Path(dest).open(mode="wb") as output_file:
-            with src.open(mode="rb") as input_file:
-                output_file.write(input_file.read())
-    elif str(dest).startswith("http") or str(dest).startswith("https"):
-        with smart_open.open(str(dest), mode="wb") as output_file:
-            with src.open(mode="rb") as input_file:
-                output_file.write(input_file.read())
-    else:
-        dest = ensure_pathy(dest)
-        with dest.open(mode="wb") as output_file:
-            with src.open(mode="rb") as input_file:
-                output_file.write(input_file.read())
+    dest = str(dest)
+    with smart_open.open(dest, mode="wb") as output_file:
+        with src.open(mode="rb") as input_file:
+            output_file.write(input_file.read())
 
 
 def download_file(src: Union[str, "Pathy"], dest: Path, *, force: bool = False) -> None:
@@ -289,23 +277,12 @@ def download_file(src: Union[str, "Pathy"], dest: Path, *, force: bool = False) 
         If False, the download will be skipped.
     """
     import smart_open
-
-    # This logic is pretty hacky. We'd like pathy to do this probably?
     if dest.exists() and not force:
         return None
-    if src.startswith("http"):
-        with smart_open.open(src, mode="rb") as input_file:
-            with dest.open(mode="wb") as output_file:
-                output_file.write(input_file.read())
-    elif ":/" not in src:
-        with open(src, mode="rb") as input_file:
-            with dest.open(mode="wb") as output_file:
-                output_file.write(input_file.read())
-    else:
-        src = ensure_pathy(src)
-        with src.open(mode="rb") as input_file:
-            with dest.open(mode="wb") as output_file:
-                output_file.write(input_file.read())
+    src = str(src)
+    with smart_open.open(src, mode="rb") as input_file:
+        with dest.open(mode="wb") as output_file:
+            output_file.write(input_file.read())
 
 
 def ensure_pathy(path):
