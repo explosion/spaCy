@@ -6,6 +6,7 @@ from wasabi import msg
 import srsly
 import hashlib
 import typer
+from click import NoSuchOption
 from typer.main import get_command
 from contextlib import contextmanager
 from thinc.config import Config, ConfigValidationError
@@ -72,9 +73,10 @@ def parse_config_overrides(args: List[str]) -> Dict[str, Any]:
         opt = args.pop(0)
         err = f"Invalid CLI argument '{opt}'"
         if opt.startswith("--"):  # new argument
+            orig_opt = opt
             opt = opt.replace("--", "")
             if "." not in opt:
-                msg.fail(f"{err}: can't override top-level section", exits=1)
+                raise NoSuchOption(orig_opt)
             if "=" in opt:  # we have --opt=value
                 opt, value = opt.split("=", 1)
                 opt = opt.replace("-", "_")
@@ -262,6 +264,7 @@ def upload_file(src: Path, dest: Union[str, "Pathy"]) -> None:
     url (str): The destination URL to upload to.
     """
     import smart_open
+
     dest = str(dest)
     with smart_open.open(dest, mode="wb") as output_file:
         with src.open(mode="rb") as input_file:
@@ -277,6 +280,7 @@ def download_file(src: Union[str, "Pathy"], dest: Path, *, force: bool = False) 
         If False, the download will be skipped.
     """
     import smart_open
+
     if dest.exists() and not force:
         return None
     src = str(src)
