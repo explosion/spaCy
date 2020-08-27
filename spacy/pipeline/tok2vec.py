@@ -38,7 +38,7 @@ def make_tok2vec(
     annotation_setter: Callable[[List[Doc], List[Floats2d]], None],
     name: str,
 ) -> "Tok2Vec":
-    return Tok2Vec(nlp.vocab, model, annotation_setter, name=name)
+    return Tok2Vec(nlp.vocab, model, name, annotation_setter=annotation_setter)
 
 
 class Tok2Vec(Pipe):
@@ -62,9 +62,9 @@ class Tok2Vec(Pipe):
         self,
         vocab: Vocab,
         model: Model[List[Doc], List[Floats2d]],
-        annotation_setter: Callable[[List[Doc], List[Floats2d]], None],
-        *,
         name: str = "tok2vec",
+        *,
+        annotation_setter: Callable[[List[Doc], List[Floats2d]], None],
     ) -> None:
         """Initialize a tok2vec component.
 
