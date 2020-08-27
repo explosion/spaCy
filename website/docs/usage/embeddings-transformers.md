@@ -345,9 +345,9 @@ in a block starts with `@`, it's **resolved to a function** and all other
 settings are passed to the function as arguments. In this case, `name`,
 `tokenizer_config` and `get_spans`.
 
-`get_spans` is a function that takes a batch of `Doc` object and returns lists
+`get_spans` is a function that takes a batch of `Doc` objects and returns lists
 of potentially overlapping `Span` objects to process by the transformer. Several
-[built-in functions](/api/transformer#span-getters) are available – for example,
+[built-in functions](/api/transformer#span_getters) are available – for example,
 to process the whole document or individual sentences. When the config is
 resolved, the function is created and passed into the model as an argument.
 
