@@ -101,6 +101,9 @@ def print_run_help(project_dir: Path, subcommand: Optional[str] = None) -> None:
             print(f"For command details, run: {help_cmd}")
     else:
         print("")
+        title = config.get("title")
+        if title:
+            print(f"{title}\n")
         if config_commands:
             print(f"Available commands in {PROJECT_FILE}")
             print(f"Usage: {COMMAND} project run [COMMAND] {project_loc}")

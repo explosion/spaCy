@@ -138,6 +138,21 @@ Get all patterns that have been added to the attribute ruler in the
 | ----------- | -------------------------------------------------------------------------------------------- |
 | **RETURNS** | The patterns added to the attribute ruler. ~~List[Dict[str, Union[List[dict], dict, int]]]~~ |
 
+## AttributeRuler.score {#score tag="method" new="3"}
+
+Score a batch of examples.
+
+> #### Example
+>
+> ```python
+> scores = attribute_ruler.score(examples)
+> ```
+
+| Name        | Description                                                                                                                                                                                                           |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `examples`  | The examples to score. ~~Iterable[Example]~~                                                                                                                                                                          |
+| **RETURNS** | The scores, produced by [`Scorer.score_token_attr`](/api/scorer#score_token_attr) for the attributes `"tag"`, `"pos"`, `"morph"` and `"lemma"` if present in any of the target token attributes. ~~Dict[str, float]~~ |
+
 ## AttributeRuler.load_from_tag_map {#load_from_tag_map tag="method"}
 
 Load attribute ruler patterns from a tag map.

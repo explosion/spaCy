@@ -1,7 +1,7 @@
 from typing import Optional, Dict, Any, Union
 import platform
 from pathlib import Path
-from wasabi import Printer
+from wasabi import Printer, MarkdownRenderer
 import srsly
 
 from ._util import app, Arg, Opt
@@ -97,12 +97,13 @@ def get_markdown(data: Dict[str, Any], title: Optional[str] = None) -> str:
     title (str / None): Title, will be rendered as headline 2.
     RETURNS (str): The Markdown string.
     """
-    markdown = []
+    md = MarkdownRenderer()
+    if title:
+        md.add(md.title(2, title))
+    items = []
     for key, value in data.items():
         if isinstance(value, str) and Path(value).exists():
             continue
-        markdown.append(f"* **{key}:** {value}")
-    result = "\n{}\n".format("\n".join(markdown))
-    if title:
-        result = f"\n## {title}\n{result}"
-    return result
+        items.append(f"{md.bold(f'{key}:')} {value}")
+    md.add(md.list(items))
+    return f"\n{md.text}\n"

@@ -4,6 +4,7 @@ from .remote_storage import RemoteStorage
 from .remote_storage import get_command_hash
 from .._util import project_cli, Arg
 from .._util import load_project_config
+from .run import update_lockfile
 
 
 @project_cli.command("pull")
@@ -13,7 +14,7 @@ def project_pull_cli(
     project_dir: Path = Arg(Path.cwd(), help="Location of project directory. Defaults to current working directory.", exists=True, file_okay=False),
     # fmt: on
 ):
-    """Retrieve any precomputed outputs from a remote storage that are available.
+    """Retrieve available precomputed outputs from a remote storage.
     You can alias remotes in your project.yml by mapping them to storage paths.
     A storage can be anything that the smart-open library can upload to, e.g.
     gcs, aws, ssh, local directories etc
@@ -36,3 +37,6 @@ def project_pull(project_dir: Path, remote: str, *, verbose: bool = False):
         for output_path in cmd.get("outputs", []):
             url = storage.pull(output_path, command_hash=cmd_hash)
             yield url, output_path
+
+        if cmd.get("outptus") and all(loc.exists() for loc in cmd["outputs"]):
+            update_lockfile(project_dir, cmd)

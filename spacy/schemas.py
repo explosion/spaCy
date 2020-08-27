@@ -1,4 +1,4 @@
-from typing import Dict, List, Union, Optional, Sequence, Any, Callable, Type
+from typing import Dict, List, Union, Optional, Sequence, Any, Callable, Type, Tuple
 from typing import Iterable, TypeVar, TYPE_CHECKING
 from enum import Enum
 from pydantic import BaseModel, Field, ValidationError, validator
@@ -18,6 +18,7 @@ if TYPE_CHECKING:
 ItemT = TypeVar("ItemT")
 Batcher = Callable[[Iterable[ItemT]], Iterable[List[ItemT]]]
 Reader = Callable[["Language", str], Iterable["Example"]]
+Logger = Callable[["Language"], Tuple[Callable[[Dict[str, Any]], None], Callable]]
 
 
 def validate(schema: Type[BaseModel], obj: Dict[str, Any]) -> List[str]:
@@ -63,7 +64,7 @@ class TokenPatternString(BaseModel):
     class Config:
         extra = "forbid"
 
-    @validator("*", pre=True, each_item=True)
+    @validator("*", pre=True, each_item=True, allow_reuse=True)
     def raise_for_none(cls, v):
         if v is None:
             raise ValueError("None / null is not allowed")
@@ -84,7 +85,7 @@ class TokenPatternNumber(BaseModel):
     class Config:
         extra = "forbid"
 
-    @validator("*", pre=True, each_item=True)
+    @validator("*", pre=True, each_item=True, allow_reuse=True)
     def raise_for_none(cls, v):
         if v is None:
             raise ValueError("None / null is not allowed")
@@ -145,7 +146,7 @@ class TokenPattern(BaseModel):
         allow_population_by_field_name = True
         alias_generator = lambda value: value.upper()
 
-    @validator("*", pre=True)
+    @validator("*", pre=True, allow_reuse=True)
     def raise_for_none(cls, v):
         if v is None:
             raise ValueError("None / null is not allowed")
@@ -209,6 +210,7 @@ class ConfigSchemaTraining(BaseModel):
     init_tok2vec: Optional[StrictStr] = Field(..., title="Path to pretrained tok2vec weights")
     raw_text: Optional[StrictStr] = Field(default=None, title="Raw text")
     optimizer: Optimizer = Field(..., title="The optimizer to use")
+    logger: Logger = Field(..., title="The logger to track training progress")
     frozen_components: List[str] = Field(..., title="Pipeline components that shouldn't be updated during training")
     # fmt: on
 
@@ -231,6 +233,11 @@ class ConfigSchemaNlp(BaseModel):
     class Config:
         extra = "forbid"
         arbitrary_types_allowed = True
+
+
+class ConfigSchemaPretrainEmpty(BaseModel):
+    class Config:
+        extra = "forbid"
 
 
 class ConfigSchemaPretrain(BaseModel):
@@ -257,16 +264,17 @@ class ConfigSchemaPretrain(BaseModel):
 class ConfigSchema(BaseModel):
     training: ConfigSchemaTraining
     nlp: ConfigSchemaNlp
-    pretraining: Optional[ConfigSchemaPretrain]
+    pretraining: Union[ConfigSchemaPretrain, ConfigSchemaPretrainEmpty] = {}
     components: Dict[str, Dict[str, Any]]
 
-    @root_validator
+    @root_validator(allow_reuse=True)
     def validate_config(cls, values):
         """Perform additional validation for settings with dependencies."""
         pt = values.get("pretraining")
-        if pt and pt.objective.get("type") == "vectors" and not values["nlp"].vectors:
-            err = "Need nlp.vectors if pretraining.objective.type is vectors"
-            raise ValueError(err)
+        if pt and not isinstance(pt, ConfigSchemaPretrainEmpty):
+            if pt.objective.get("type") == "vectors" and not values["nlp"].vectors:
+                err = "Need nlp.vectors if pretraining.objective.type is vectors"
+                raise ValueError(err)
         return values
 
     class Config:
@@ -277,11 +285,28 @@ class ConfigSchema(BaseModel):
 # Project config Schema
 
 
-class ProjectConfigAsset(BaseModel):
+class ProjectConfigAssetGitItem(BaseModel):
+    # fmt: off
+    repo: StrictStr = Field(..., title="URL of Git repo to download from")
+    path: StrictStr = Field(..., title="File path or sub-directory to download (used for sparse checkout)")
+    branch: StrictStr = Field("master", title="Branch to clone from")
+    # fmt: on
+
+
+class ProjectConfigAssetURL(BaseModel):
     # fmt: off
     dest: StrictStr = Field(..., title="Destination of downloaded asset")
     url: Optional[StrictStr] = Field(None, title="URL of asset")
     checksum: str = Field(None, title="MD5 hash of file", regex=r"([a-fA-F\d]{32})")
+    description: StrictStr = Field("", title="Description of asset")
+    # fmt: on
+
+
+class ProjectConfigAssetGit(BaseModel):
+    # fmt: off
+    git: ProjectConfigAssetGitItem = Field(..., title="Git repo information")
+    checksum: str = Field(None, title="MD5 hash of file", regex=r"([a-fA-F\d]{32})")
+    description: Optional[StrictStr] = Field(None, title="Description of asset")
     # fmt: on
 
 
@@ -304,9 +329,10 @@ class ProjectConfigCommand(BaseModel):
 class ProjectConfigSchema(BaseModel):
     # fmt: off
     vars: Dict[StrictStr, Any] = Field({}, title="Optional variables to substitute in commands")
-    assets: List[ProjectConfigAsset] = Field([], title="Data assets")
+    assets: List[Union[ProjectConfigAssetURL, ProjectConfigAssetGit]] = Field([], title="Data assets")
     workflows: Dict[StrictStr, List[StrictStr]] = Field({}, title="Named workflows, mapped to list of project commands to run in order")
     commands: List[ProjectConfigCommand] = Field([], title="Project command shortucts")
+    title: Optional[str] = Field(None, title="Project title")
     # fmt: on
 
     class Config:

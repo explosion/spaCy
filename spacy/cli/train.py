@@ -18,9 +18,6 @@ from .. import util
 from ..gold.example import Example
 from ..errors import Errors
 
-# Don't remove - required to load the built-in architectures
-from ..ml import models  # noqa: F401
-
 
 @app.command(
     "train", context_settings={"allow_extra_args": True, "ignore_unknown_options": True}
@@ -96,6 +93,7 @@ def train(
     train_corpus = T_cfg["train_corpus"]
     dev_corpus = T_cfg["dev_corpus"]
     batcher = T_cfg["batcher"]
+    train_logger = T_cfg["logger"]
     # Components that shouldn't be updated during training
     frozen_components = T_cfg["frozen_components"]
     # Sourced components that require resume_training
@@ -117,7 +115,7 @@ def train(
 
     # Load a pretrained tok2vec model - cf. CLI command 'pretrain'
     if weights_data is not None:
-        tok2vec_path = config.get("pretraining", {}).get("tok2vec_model", None)
+        tok2vec_path = config["pretraining"].get("tok2vec_model", None)
         if tok2vec_path is None:
             msg.fail(
                 f"To use a pretrained tok2vec model, the config needs to specify which "
@@ -149,10 +147,11 @@ def train(
         exclude=frozen_components,
     )
     msg.info(f"Training. Initial learn rate: {optimizer.learn_rate}")
-    print_row = setup_printer(T_cfg, nlp)
+    print_row, finalize_logger = train_logger(nlp)
 
     try:
         progress = tqdm.tqdm(total=T_cfg["eval_frequency"], leave=False)
+        progress.set_description(f"Epoch 1")
         for batch, info, is_best_checkpoint in training_step_iterator:
             progress.update(1)
             if is_best_checkpoint is not None:
@@ -162,7 +161,9 @@ def train(
                     update_meta(T_cfg, nlp, info)
                     nlp.to_disk(output_path / "model-best")
                 progress = tqdm.tqdm(total=T_cfg["eval_frequency"], leave=False)
+                progress.set_description(f"Epoch {info['epoch']}")
     except Exception as e:
+        finalize_logger()
         if output_path is not None:
             # We don't want to swallow the traceback if we don't have a
             # specific error.
@@ -173,6 +174,7 @@ def train(
             nlp.to_disk(output_path / "model-final")
         raise e
     finally:
+        finalize_logger()
         if output_path is not None:
             final_model_path = output_path / "model-final"
             if optimizer.averages:
@@ -203,7 +205,7 @@ def create_train_batches(iterator, batcher, max_epochs: int):
 
 
 def create_evaluation_callback(
-    nlp: Language, dev_corpus: Callable, weights: Dict[str, float],
+    nlp: Language, dev_corpus: Callable, weights: Dict[str, float]
 ) -> Callable[[], Tuple[float, Dict[str, float]]]:
     def evaluate() -> Tuple[float, Dict[str, float]]:
         dev_examples = list(dev_corpus(nlp))
@@ -353,57 +355,6 @@ def subdivide_batch(batch, accumulate_gradient):
         yield subbatch
 
 
-def setup_printer(
-    training: Union[Dict[str, Any], Config], nlp: Language
-) -> Callable[[Dict[str, Any]], None]:
-    score_cols = list(training["score_weights"])
-    score_widths = [max(len(col), 6) for col in score_cols]
-    loss_cols = [f"Loss {pipe}" for pipe in nlp.pipe_names]
-    loss_widths = [max(len(col), 8) for col in loss_cols]
-    table_header = ["E", "#"] + loss_cols + score_cols + ["Score"]
-    table_header = [col.upper() for col in table_header]
-    table_widths = [3, 6] + loss_widths + score_widths + [6]
-    table_aligns = ["r" for _ in table_widths]
-    msg.row(table_header, widths=table_widths)
-    msg.row(["-" * width for width in table_widths])
-
-    def print_row(info: Dict[str, Any]) -> None:
-        try:
-            losses = [
-                "{0:.2f}".format(float(info["losses"][pipe_name]))
-                for pipe_name in nlp.pipe_names
-            ]
-        except KeyError as e:
-            raise KeyError(
-                Errors.E983.format(
-                    dict="scores (losses)", key=str(e), keys=list(info["losses"].keys())
-                )
-            ) from None
-
-        try:
-            scores = [
-                "{0:.2f}".format(float(info["other_scores"].get(col, 0.0)))
-                for col in score_cols
-            ]
-        except KeyError as e:
-            raise KeyError(
-                Errors.E983.format(
-                    dict="scores (other)",
-                    key=str(e),
-                    keys=list(info["other_scores"].keys()),
-                )
-            ) from None
-        data = (
-            [info["epoch"], info["step"]]
-            + losses
-            + scores
-            + ["{0:.2f}".format(float(info["score"]))]
-        )
-        msg.row(data, widths=table_widths, aligns=table_aligns)
-
-    return print_row
-
-
 def update_meta(
     training: Union[Dict[str, Any], Config], nlp: Language, info: Dict[str, Any]
 ) -> None:
@@ -435,7 +386,7 @@ def load_from_paths(
     return raw_text, tag_map, morph_rules, weights_data
 
 
-def verify_cli_args(config_path: Path, output_path: Optional[Path] = None,) -> None:
+def verify_cli_args(config_path: Path, output_path: Optional[Path] = None) -> None:
     # Make sure all files and paths exists if they are needed
     if not config_path or not config_path.exists():
         msg.fail("Config file not found", config_path, exits=1)
@@ -443,14 +394,6 @@ def verify_cli_args(config_path: Path, output_path: Optional[Path] = None,) -> N
         if not output_path.exists():
             output_path.mkdir()
             msg.good(f"Created output directory: {output_path}")
-        elif output_path.exists() and [p for p in output_path.iterdir() if p.is_dir()]:
-            msg.warn(
-                "Output directory is not empty.",
-                "This can lead to unintended side effects when saving the model. "
-                "Please use an empty directory or a different path instead. If "
-                "the specified output path doesn't exist, the directory will be "
-                "created for you.",
-            )
 
 
 def verify_config(nlp: Language) -> None:

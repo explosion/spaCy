@@ -2,10 +2,26 @@ SHELL := /bin/bash
 PYVER := 3.6
 VENV := ./env$(PYVER)
 
-version := $(shell "bin/get-version.sh")
+ifndef SPACY_EXTRAS
+override SPACY_EXTRAS = spacy-lookups-data jieba pkuseg==0.0.25 sudachipy sudachidict_core
+endif
 
-dist/spacy-$(version).pex : wheelhouse/spacy-$(version).stamp
-	$(VENV)/bin/pex -f ./wheelhouse --no-index --disable-cache -m spacy -o $@ spacy==$(version) spacy-lookups-data jieba pkuseg==0.0.25 sudachipy sudachidict_core
+version := $(shell "bin/get-version.sh")
+package := $(shell "bin/get-package.sh")
+
+ifndef SPACY_BIN
+override SPACY_BIN = $(package)-$(version).pex
+endif
+
+dist/$(SPACY_BIN) : wheelhouse/spacy-$(version).stamp
+	$(VENV)/bin/pex \
+		-f ./wheelhouse \
+		--no-index \
+		--disable-cache \
+		-m spacy \
+		-o $@ \
+		$(package)==$(version) \
+		$(SPACY_EXTRAS)
 	chmod a+rx $@
 	cp $@ dist/spacy.pex
 
@@ -15,7 +31,8 @@ dist/pytest.pex : wheelhouse/pytest-*.whl
 
 wheelhouse/spacy-$(version).stamp : $(VENV)/bin/pex setup.py spacy/*.py* spacy/*/*.py*
 	$(VENV)/bin/pip wheel . -w ./wheelhouse
-	$(VENV)/bin/pip wheel spacy-lookups-data jieba pkuseg==0.0.25 sudachipy sudachidict_core -w ./wheelhouse
+	$(VENV)/bin/pip wheel $(SPACY_EXTRAS) -w ./wheelhouse
+
 	touch $@
 
 wheelhouse/pytest-%.whl : $(VENV)/bin/pex

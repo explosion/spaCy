@@ -375,7 +375,8 @@ The [`spacy pretrain`](/api/cli#pretrain) command lets you pretrain the
 "token-to-vector" embedding layer of pipeline components from raw text. Raw text
 can be provided as a `.jsonl` (newline-delimited JSON) file containing one input
 text per line (roughly paragraph length is good). Optionally, custom
-tokenization can be provided.
+tokenization can be provided. The JSONL format means that the texts can be read
+in line-by-line, while still making it easy to represent newlines in the data.
 
 > #### Tip: Writing JSONL
 >

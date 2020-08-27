@@ -82,6 +82,14 @@ check whether a [`Doc`](/api/doc) object has been parsed with the
 `doc.is_parsed` attribute, which returns a boolean value. If this attribute is
 `False`, the default sentence iterator will raise an exception.
 
+<Infobox title="Dependency label scheme" emoji="📖">
+
+For a list of the syntactic dependency labels assigned by spaCy's models across
+different languages, see the label schemes documented in the
+[models directory](/models).
+
+</Infobox>
+
 ### Noun chunks {#noun-chunks}
 
 Noun chunks are "base noun phrases" – flat phrases that have a noun as their
@@ -288,11 +296,45 @@ for token in doc:
 | their                               | `ADJ`  | `poss`  | requests  |
 | requests                            | `NOUN` | `dobj`  | submit    |
 
-<Infobox title="Dependency label scheme" emoji="📖">
+The dependency parse can be a useful tool for **information extraction**,
+especially when combined with other predictions like
+[named entities](#named-entities). The following example extracts money and
+currency values, i.e. entities labeled as `MONEY`, and then uses the dependency
+parse to find the noun phrase they are referring to – for example `"Net income"`
+&rarr; `"$9.4 million"`.
 
-For a list of the syntactic dependency labels assigned by spaCy's models across
-different languages, see the label schemes documented in the
-[models directory](/models).
+```python
+### {executable="true"}
+import spacy
+
+nlp = spacy.load("en_core_web_sm")
+# Merge noun phrases and entities for easier analysis
+nlp.add_pipe("merge_entities")
+nlp.add_pipe("merge_noun_chunks")
+
+TEXTS = [
+    "Net income was $9.4 million compared to the prior year of $2.7 million.",
+    "Revenue exceeded twelve billion dollars, with a loss of $1b.",
+]
+for doc in nlp.pipe(TEXTS):
+    for token in doc:
+        if token.ent_type_ == "MONEY":
+            # We have an attribute and direct object, so check for subject
+            if token.dep_ in ("attr", "dobj"):
+                subj = [w for w in token.head.lefts if w.dep_ == "nsubj"]
+                if subj:
+                    print(subj[0], "-->", token)
+            # We have a prepositional object with a preposition
+            elif token.dep_ == "pobj" and token.head.dep_ == "prep":
+                print(token.head.head, "-->", token)
+```
+
+<Infobox title="Combining models and rules" emoji="📖">
+
+For more examples of how to write rule-based information extraction logic that
+takes advantage of the model's predictions produced by the different components,
+see the usage guide on
+[combining models and rules](/usage/rule-based-matching#models-rules).
 
 </Infobox>
 
@@ -545,7 +587,7 @@ identifier from a knowledge base (KB). You can create your own
 [train a new Entity Linking model](/usage/training#entity-linker) using that
 custom-made KB.
 
-### Accessing entity identifiers {#entity-linking-accessing}
+### Accessing entity identifiers {#entity-linking-accessing model="entity linking"}
 
 The annotated KB identifier is accessible as either a hash value or as a string,
 using the attributes `ent.kb_id` and `ent.kb_id_` of a [`Span`](/api/span)
@@ -570,15 +612,6 @@ print(ent_ada_0)  # ['Ada', 'PERSON', 'Q7259']
 print(ent_ada_1)  # ['Lovelace', 'PERSON', 'Q7259']
 print(ent_london_5)  # ['London', 'GPE', 'Q84']
 ```
-
-| Text     | ent_type\_ | ent_kb_id\_ |
-| -------- | ---------- | ----------- |
-| Ada      | `"PERSON"` | `"Q7259"`   |
-| Lovelace | `"PERSON"` | `"Q7259"`   |
-| was      | -          | -           |
-| born     | -          | -           |
-| in       | -          | -           |
-| London   | `"GPE"`    | `"Q84"`     |
 
 ## Tokenization {#tokenization}
 
