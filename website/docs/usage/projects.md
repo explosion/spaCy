@@ -226,6 +226,8 @@ https://github.com/explosion/spacy-boilerplates/blob/master/ner_fashion/project.
 
 | Section       | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `title`       | An optional project title used in `--help` message and [auto-generated docs](#custom-docs).                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `description` | An optional project description used in [auto-generated docs](#custom-docs).                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `vars`        | A dictionary of variables that can be referenced in paths, URLs and scripts, just like [`config.cfg` variables](/usage/training#config-interpolation). For example, `${vars.name}` will use the value of the variable `name`. Variables need to be defined in the section `vars`, but can be a nested dict, so you're able to reference `${vars.model.name}`.                                                                                                                                                |
 | `directories` | An optional list of [directories](#project-files) that should be created in the project for assets, training outputs, metrics etc. spaCy will make sure that these directories always exist.                                                                                                                                                                                                                                                                                                                 |
 | `assets`      | A list of assets that can be fetched with the [`project assets`](/api/cli#project-assets) command. `url` defines a URL or local path, `dest` is the destination file relative to the project directory, and an optional `checksum` ensures that an error is raised if the file's checksum doesn't match. Instead of `url`, you can also provide a `git` block with the keys `repo`, `branch` and `path`, to download from a Git repo.                                                                        |
@@ -264,11 +266,12 @@ dependencies to use certain protocols.
 >     checksum: '5113dc04e03f079525edd8df3f4f39e3'
 > ```
 
-| Name       | Description                                                                                                                                                                      |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `dest`     | The destination path to save the downloaded asset to (relative to the project directory), including the file name.                                                               |
-| `url`      | The URL to download from, using the respective protocol.                                                                                                                         |
-| `checksum` | Optional checksum of the file. If provided, it will be used to verify that the file matches and downloads will be skipped if a local file with the same checksum already exists. |
+| Name          | Description                                                                                                                                                                      |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dest`        | The destination path to save the downloaded asset to (relative to the project directory), including the file name.                                                               |
+| `url`         | The URL to download from, using the respective protocol.                                                                                                                         |
+| `checksum`    | Optional checksum of the file. If provided, it will be used to verify that the file matches and downloads will be skipped if a local file with the same checksum already exists. |
+| `description` | Optional asset description, used in [auto-generated docs](#custom-docs).                                                                                                         |
 
 #### Downloading from a Git repo {#data-assets-git}
 
@@ -287,13 +290,15 @@ files you need and not the whole repo.
 >       branch: 'master'
 >       path: 'path/training.spacy'
 >     checksum: '63373dd656daa1fd3043ce166a59474c'
+>     description: 'The training data (5000 examples)'
 > ```
 
-| Name       | Description                                                                                                                                                                                          |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `dest`     | The destination path to save the downloaded asset to (relative to the project directory), including the file name.                                                                                   |
-| `git`      | `repo`: The URL of the repo to download from.<br />`path`: Path of the file or directory to download, relative to the repo root.<br />`branch`: The branch to download from. Defaults to `"master"`. |
-| `checksum` | Optional checksum of the file. If provided, it will be used to verify that the file matches and downloads will be skipped if a local file with the same checksum already exists.                     |
+| Name          | Description                                                                                                                                                                                          |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dest`        | The destination path to save the downloaded asset to (relative to the project directory), including the file name.                                                                                   |
+| `git`         | `repo`: The URL of the repo to download from.<br />`path`: Path of the file or directory to download, relative to the repo root.<br />`branch`: The branch to download from. Defaults to `"master"`. |
+| `checksum`    | Optional checksum of the file. If provided, it will be used to verify that the file matches and downloads will be skipped if a local file with the same checksum already exists.                     |
+| `description` | Optional asset description, used in [auto-generated docs](#custom-docs).                                                                                                                             |
 
 #### Working with private assets {#data-asets-private}
 
@@ -488,11 +493,38 @@ vars:
 commands:
   - name: evaluate
     script:
-      - 'python scripts/custom_evaluation.py ${batch_size} ./training/model-best ./corpus/eval.json'
+      - 'python scripts/custom_evaluation.py ${vars.batch_size} ./training/model-best ./corpus/eval.json'
     deps:
       - 'training/model-best'
       - 'corpus/eval.json'
 ```
+
+### Documenting your project {#custom-docs}
+
+> #### Readme Example
+>
+> For more examples, see the [`projects`](https://github.com/explosion/projects)
+> repo.
+>
+> ![Screenshot of auto-generated Markdown Readme](../images/project_document.jpg)
+
+When your custom project is ready and you want to share it with others, you can
+use the [`spacy project document`](/api/cli#project-document) command to
+**auto-generate** a pretty, Markdown-formatted `README` file based on your
+project's `project.yml`. It will list all commands, workflows and assets defined
+in the project and include details on how to run the project, as well as links
+to the relevant spaCy documentation to make it easy for others to get started
+using your project.
+
+```cli
+$ python -m spacy project document --output README.md
+```
+
+Under the hood, hidden markers are added to identify where the auto-generated
+content starts and ends. This means that you can add your own custom content
+before or after it and re-running the `project document` command will **only
+update the auto-generated part**. This makes it easy to keep your documentation
+up to date.
 
 ### Cloning from your own repo {#custom-repo}
 

@@ -6,6 +6,7 @@ from wasabi import msg
 import srsly
 import hashlib
 import typer
+from click import NoSuchOption
 from typer.main import get_command
 from contextlib import contextmanager
 from thinc.config import Config, ConfigValidationError
@@ -72,9 +73,10 @@ def parse_config_overrides(args: List[str]) -> Dict[str, Any]:
         opt = args.pop(0)
         err = f"Invalid CLI argument '{opt}'"
         if opt.startswith("--"):  # new argument
+            orig_opt = opt
             opt = opt.replace("--", "")
             if "." not in opt:
-                msg.fail(f"{err}: can't override top-level section", exits=1)
+                raise NoSuchOption(orig_opt)
             if "=" in opt:  # we have --opt=value
                 opt, value = opt.split("=", 1)
                 opt = opt.replace("-", "_")
@@ -263,21 +265,10 @@ def upload_file(src: Path, dest: Union[str, "Pathy"]) -> None:
     """
     import smart_open
 
-    # This logic is pretty hacky. We'd like pathy to do this probably?
-    if ":/" not in str(dest):
-        # Local path
-        with Path(dest).open(mode="wb") as output_file:
-            with src.open(mode="rb") as input_file:
-                output_file.write(input_file.read())
-    elif str(dest).startswith("http") or str(dest).startswith("https"):
-        with smart_open.open(str(dest), mode="wb") as output_file:
-            with src.open(mode="rb") as input_file:
-                output_file.write(input_file.read())
-    else:
-        dest = ensure_pathy(dest)
-        with dest.open(mode="wb") as output_file:
-            with src.open(mode="rb") as input_file:
-                output_file.write(input_file.read())
+    dest = str(dest)
+    with smart_open.open(dest, mode="wb") as output_file:
+        with src.open(mode="rb") as input_file:
+            output_file.write(input_file.read())
 
 
 def download_file(src: Union[str, "Pathy"], dest: Path, *, force: bool = False) -> None:
@@ -290,22 +281,12 @@ def download_file(src: Union[str, "Pathy"], dest: Path, *, force: bool = False) 
     """
     import smart_open
 
-    # This logic is pretty hacky. We'd like pathy to do this probably?
     if dest.exists() and not force:
         return None
-    if src.startswith("http"):
-        with smart_open.open(src, mode="rb") as input_file:
-            with dest.open(mode="wb") as output_file:
-                output_file.write(input_file.read())
-    elif ":/" not in src:
-        with open(src, mode="rb") as input_file:
-            with dest.open(mode="wb") as output_file:
-                output_file.write(input_file.read())
-    else:
-        src = ensure_pathy(src)
-        with src.open(mode="rb") as input_file:
-            with dest.open(mode="wb") as output_file:
-                output_file.write(input_file.read())
+    src = str(src)
+    with smart_open.open(src, mode="rb") as input_file:
+        with dest.open(mode="wb") as output_file:
+            output_file.write(input_file.read())
 
 
 def ensure_pathy(path):
