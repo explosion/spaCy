@@ -299,7 +299,7 @@ component:
 >
 > ```python
 > from spacy_transformers import Transformer, TransformerModel
-> from spacy_transformers.annotation_setters import null_annotation_setter
+> from spacy_transformers.annotation_setters import configure_trfdata_setter
 > from spacy_transformers.span_getters import get_doc_spans
 >
 > trf = Transformer(
@@ -309,7 +309,7 @@ component:
 >         get_spans=get_doc_spans,
 >         tokenizer_config={"use_fast": True},
 >     ),
->     annotation_setter=null_annotation_setter,
+>     annotation_setter=configure_trfdata_setter(),
 >     max_batch_items=4096,
 > )
 > ```
@@ -329,7 +329,7 @@ tokenizer_config = {"use_fast": true}
 @span_getters = "doc_spans.v1"
 
 [components.transformer.annotation_setter]
-@annotation_setters = "spacy-transformers.null_annotation_setter.v1"
+@annotation_setters = "spacy-transformers.trfdata_setter.v1"
 
 ```
 
