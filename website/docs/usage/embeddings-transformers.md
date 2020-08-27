@@ -399,7 +399,7 @@ def configure_custom_sent_spans(max_length: int):
                     start += max_length
                     end += max_length
                 if start < len(sent):
-                    spans[-1].append(sent[start : len(sent)])
+                    spans[-1].append(sent[start:len(sent)])
         return spans
 
     return get_custom_sent_spans
@@ -429,7 +429,7 @@ The same idea applies to task models that power the **downstream components**.
 Most of spaCy's built-in model creation functions support a `tok2vec` argument,
 which should be a Thinc layer of type ~~Model[List[Doc], List[Floats2d]]~~. This
 is where we'll plug in our transformer model, using the
-[Tok2VecListener](/api/architectures#Tok2VecListener) layer, which sneakily
+[TransformerListener](/api/architectures#TransformerListener) layer, which sneakily
 delegates to the `Transformer` pipeline component.
 
 ```ini
@@ -445,14 +445,14 @@ maxout_pieces = 3
 use_upper = false
 
 [nlp.pipeline.ner.model.tok2vec]
-@architectures = "spacy-transformers.Tok2VecListener.v1"
+@architectures = "spacy-transformers.TransformerListener.v1"
 grad_factor = 1.0
 
 [nlp.pipeline.ner.model.tok2vec.pooling]
 @layers = "reduce_mean.v1"
 ```
 
-The [Tok2VecListener](/api/architectures#Tok2VecListener) layer expects a
+The [TransformerListener](/api/architectures#TransformerListener) layer expects a
 [pooling layer](https://thinc.ai/docs/api-layers#reduction-ops) as the argument
 `pooling`, which needs to be of type ~~Model[Ragged, Floats2d]~~. This layer
 determines how the vector for each spaCy token will be computed from the zero or
