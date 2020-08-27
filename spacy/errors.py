@@ -638,6 +638,7 @@ class Errors:
              "Required tables '{tables}', found '{found}'. If you are not "
              "providing custom lookups, make sure you have the package "
              "spacy-lookups-data installed.")
+    E1005 = ("Unable to initialize {name} model with 0 labels.")
 
 
 @add_codes

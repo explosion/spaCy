@@ -286,6 +286,9 @@ class Tagger(Pipe):
         for tag in sorted(tags):
             self.add_label(tag)
         self.set_output(len(self.labels))
+        if len(self.labels) == 0:
+            err = Errors.E1005.format(name="Tagger")
+            raise ValueError(err)
         self.model.initialize(X=doc_sample)
         if sgd is None:
             sgd = self.create_optimizer()
