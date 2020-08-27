@@ -323,11 +323,11 @@ for details and system requirements.
 
 Load and wrap a transformer model from the
 [HuggingFace `transformers`](https://huggingface.co/transformers) library. You
-can any transformer that has pretrained weights and a PyTorch implementation.
-The `name` variable is passed through to the underlying library, so it can be
-either a string or a path. If it's a string, the pretrained weights will be
-downloaded via the transformers library if they are not already available
-locally.
+can use any transformer that has pretrained weights and a PyTorch
+implementation. The `name` variable is passed through to the underlying library,
+so it can be either a string or a path. If it's a string, the pretrained weights
+will be downloaded via the transformers library if they are not already
+available locally.
 
 In order to support longer documents, the
 [TransformerModel](/api/architectures#TransformerModel) layer allows you to pass
