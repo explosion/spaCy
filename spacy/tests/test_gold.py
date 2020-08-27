@@ -42,6 +42,8 @@ def doc():
         doc[i].head = doc[heads[i]]
     doc.ents = spans_from_biluo_tags(doc, biluo_tags)
     doc.cats = cats
+    doc.is_tagged = True
+    doc.is_parsed = True
     return doc
 
 

@@ -379,12 +379,11 @@ def test_matcher_basic_check(en_vocab):
 
 def test_attr_pipeline_checks(en_vocab):
     doc1 = Doc(en_vocab, words=["Test"])
-    doc1[0].dep_ = "ROOT"
+    doc1.is_parsed = True
     doc2 = Doc(en_vocab, words=["Test"])
-    doc2[0].tag_ = "TAG"
-    doc2[0].pos_ = "X"
-    doc2[0].morph_ = "Feat=Val"
-    doc2[0].lemma_ = "LEMMA"
+    doc2.is_tagged = True
+    doc2.is_morphed = True
+    doc2.is_lemmatized = True
     doc3 = Doc(en_vocab, words=["Test"])
     # DEP requires is_parsed
     matcher = Matcher(en_vocab)

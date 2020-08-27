@@ -189,6 +189,7 @@ def test_issue4133(en_vocab):
     for i, token in enumerate(doc):
         token.pos_ = pos[i]
     # usually this is already True when starting from proper models instead of blank English
+    doc.is_morphed = True
     doc_bytes = doc.to_bytes()
     vocab = Vocab()
     vocab = vocab.from_bytes(vocab_bytes)

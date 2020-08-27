@@ -93,6 +93,13 @@ class AttributeRuler(Pipe):
                     )
                 ) from None
             set_token_attrs(token, attrs)
+            for attr in attrs:
+                if attr == TAG:
+                    doc.is_tagged = True
+                elif attr == POS or attr == MORPH:
+                    doc.is_morphed = True
+                elif attr == LEMMA:
+                    doc.is_lemmatized = True
         return doc
 
     def pipe(self, stream, *, batch_size=128):

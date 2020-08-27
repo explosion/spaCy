@@ -80,6 +80,7 @@ def tagged_doc():
         doc[i].morph_ = morphs[i]
         if i > 0:
             doc[i].is_sent_start = False
+    doc.is_tagged = True
     return doc
 
 

@@ -29,7 +29,6 @@ from ..attrs import intify_attr, intify_attrs, IDS
 from ..util import normalize_slice
 from ..compat import copy_reg, pickle
 from ..errors import Errors, Warnings
-from ..morphology import Morphology
 from .. import util
 from .underscore import Underscore, get_ext_args
 from ._retokenize import Retokenizer
@@ -191,6 +190,10 @@ cdef class Doc:
         self.c = data_start + PADDING
         self.max_length = size
         self.length = 0
+        self.is_tagged = False
+        self.is_morphed = False
+        self.is_lemmatized = False
+        self.is_parsed = False
         self.sentiment = 0.0
         self.cats = {}
         self.user_hooks = {}
@@ -220,58 +223,18 @@ cdef class Doc:
             else:
                 lexeme = self.vocab.get_by_orth(self.mem, word)
             self.push_back(lexeme, has_space)
+        # Tough to decide on policy for this. Is an empty doc tagged and parsed?
+        # There's no information we'd like to add to it, so I guess so?
+        if self.length == 0:
+            self.is_tagged = True
+            self.is_morphed = True
+            self.is_lemmatized = True
+            self.is_parsed = True
 
     @property
     def _(self):
         """Custom extension attributes registered via `set_extension`."""
         return Underscore(Underscore.doc_extensions, self)
-
-    @property
-    def is_tagged(self):
-        """Check if the document has at least one tag assigned.
-        """
-        if self.length == 0:
-            return True
-        for i in range(0, self.length):
-            if self.c[i].tag > 0:
-                return True
-        return False
-
-    @property
-    def is_morphed(self):
-        """Check if the document has at least one morph assigned.
-        """
-        if self.length == 0:
-            return True
-        for i in range(0, self.length):
-            if self.c[i].pos > 0 or (self.c[i].morph > 0 and self.c[i].morph != Morphology.EMPTY_MORPH):
-                return True
-        return False
-
-    @property
-    def is_lemmatized(self):
-        """Check if the document has at least one lemma assigned.
-        """
-        if self.length == 0:
-            return True
-        for i in range(0, self.length):
-            if self.c[i].lemma > 0:
-                return True
-        return False
-
-    @property
-    def is_parsed(self):
-        """Check if the document has any part of a parse assigned.
-        """
-        if self.length == 0:
-            return True
-        for i in range(0, self.length):
-            if self.c[i].head != 0:
-                return True
-        for i in range(0, self.length):
-            if self.c[i].dep > 0:
-                return True
-        return False
 
     @property
     def is_sentenced(self):
@@ -676,6 +639,12 @@ cdef class Doc:
         return self.vocab.lang
 
     cdef int push_back(self, LexemeOrToken lex_or_tok, bint has_space) except -1:
+        if self.length == 0:
+            # Flip these to false when we see the first token.
+            self.is_tagged = False
+            self.is_morphed = False
+            self.is_lemmatized = False
+            self.is_parsed = False
         if self.length == self.max_length:
             self._realloc(self.length * 2)
         cdef TokenC* t = &self.c[self.length]
@@ -802,6 +771,7 @@ cdef class Doc:
         # TODO: This method is fairly misleading atm. It's used by Parser
         # to actually apply the parse calculated. Need to rethink this.
         # Probably we should use from_array?
+        self.is_parsed = True
         for i in range(self.length):
             self.c[i] = parsed[i]
 
@@ -890,8 +860,13 @@ cdef class Doc:
                     # add morph to morphology table
                     self.vocab.morphology.add(self.vocab.strings[value])
                 Token.set_struct_attr(token, attr_ids[j], value)
+        # Set flags
+        self.is_parsed = bool(self.is_parsed or HEAD in attrs)
+        self.is_tagged = bool(self.is_tagged or TAG in attrs)
+        self.is_morphed = bool(self.is_morphed or MORPH in attrs or POS in attrs)
+        self.is_lemmatized = bool(self.is_lemmatized or LEMMA in attrs)
         # If document is parsed, set children
-        if HEAD in attrs:
+        if self.is_parsed:
             set_children_from_heads(self.c, length)
         return self
 
@@ -989,6 +964,10 @@ cdef class Doc:
         other.tensor = copy.deepcopy(self.tensor)
         other.cats = copy.deepcopy(self.cats)
         other.user_data = copy.deepcopy(self.user_data)
+        other.is_tagged = self.is_tagged
+        other.is_morphed = self.is_morphed
+        other.is_lemmatized = self.is_lemmatized
+        other.is_parsed = self.is_parsed
         other.sentiment = self.sentiment
         other.has_unknown_spaces = self.has_unknown_spaces
         other.user_hooks = dict(self.user_hooks)
@@ -1067,11 +1046,9 @@ cdef class Doc:
         for token in self:
             strings.add(token.tag_)
             strings.add(token.lemma_)
-            strings.add(token.morph_)
             strings.add(token.dep_)
             strings.add(token.ent_type_)
             strings.add(token.ent_kb_id_)
-            strings.add(token.ent_id_)
             strings.add(token.norm_)
         # Msgpack doesn't distinguish between lists and tuples, which is
         # vexing for user data. As a best guess, we *know* that within
@@ -1291,8 +1268,7 @@ cdef class Doc:
         if self.is_tagged:
             array_head.append(TAG)
         if self.is_morphed:
-            array_head.append(POS)
-            array_head.append(MORPH)
+            array_head.extend([POS, MORPH])
         if self.is_lemmatized:
             array_head.append(LEMMA)
         # If self parsed add head and dep attribute
@@ -1350,7 +1326,7 @@ cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
         loop_count += 1
     # Set sentence starts
     for i in range(length):
-        if tokens[i].head == 0:
+        if tokens[i].head == 0 and tokens[i].dep != 0:
             tokens[tokens[i].l_edge].sent_start = True
 
 

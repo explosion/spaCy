@@ -14,7 +14,7 @@ from spacy.tokens import Doc, Span, Token
 from spacy.attrs import HEAD, DEP
 from spacy.matcher import Matcher
 
-from ..util import make_tempdir, get_doc
+from ..util import make_tempdir
 
 
 def test_issue1506():
@@ -198,23 +198,15 @@ def test_issue1834():
     """Test that sentence boundaries & parse/tag flags are not lost
     during serialization."""
     string = "This is a first sentence . And another one"
-    words = string.split()
-    doc = get_doc(Vocab(), words=words)
-    doc[6].is_sent_start = True
+    doc = Doc(Vocab(), words=string.split())
+    doc[6].sent_start = True
     new_doc = Doc(doc.vocab).from_bytes(doc.to_bytes())
     assert new_doc[6].sent_start
     assert not new_doc.is_parsed
     assert not new_doc.is_tagged
-    doc = get_doc(
-        Vocab(),
-        words=words,
-        tags=["TAG"] * len(words),
-        heads=[0, -1, -2, -3, -4, -5, 0, -1, -2],
-    )
-    print(doc.is_parsed, [t.head.i for t in doc], [t.is_sent_start for t in doc])
+    doc.is_parsed = True
+    doc.is_tagged = True
     new_doc = Doc(doc.vocab).from_bytes(doc.to_bytes())
-    print(new_doc.is_parsed, [t.head.i for t in new_doc], [t.is_sent_start for t in new_doc])
-    assert new_doc[6].sent_start
     assert new_doc.is_parsed
     assert new_doc.is_tagged
 

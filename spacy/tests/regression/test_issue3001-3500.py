@@ -85,7 +85,8 @@ def test_issue3199():
     is available. To make this test future-proof, we're constructing a Doc
     with a new Vocab here and setting is_parsed to make sure the noun chunks run.
     """
-    doc = get_doc(Vocab(), words=["This", "is", "a", "sentence"], heads=[0, -1, -2, -3])
+    doc = Doc(Vocab(), words=["This", "is", "a", "sentence"])
+    doc.is_parsed = True
     assert list(doc[0:3].noun_chunks) == []
 
 

@@ -94,6 +94,7 @@ def test_issue309(en_tokenizer):
     doc = get_doc(
         tokens.vocab, words=[t.text for t in tokens], heads=[0], deps=["ROOT"]
     )
+    doc.is_parsed = True
     assert len(doc) == 1
     sents = list(doc.sents)
     assert len(sents) == 1
@@ -169,6 +170,8 @@ def test_issue595():
 
 def test_issue599(en_vocab):
     doc = Doc(en_vocab)
+    doc.is_tagged = True
+    doc.is_parsed = True
     doc2 = Doc(doc.vocab)
     doc2.from_bytes(doc.to_bytes())
     assert doc2.is_parsed
