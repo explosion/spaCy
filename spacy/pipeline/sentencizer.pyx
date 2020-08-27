@@ -62,29 +62,6 @@ class Sentencizer(Pipe):
     def begin_training(self, get_examples, pipeline=None, sgd=None):
         pass
 
-    def __call__(self, doc):
-        """Apply the sentencizer to a Doc and set Token.is_sent_start.
-
-        doc (Doc): The document to process.
-        RETURNS (Doc): The processed Doc.
-
-        DOCS: https://spacy.io/api/sentencizer#call
-        """
-        start = 0
-        seen_period = False
-        for i, token in enumerate(doc):
-            is_in_punct_chars = token.text in self.punct_chars
-            token.is_sent_start = i == 0
-            if seen_period and not token.is_punct and not is_in_punct_chars:
-                doc[start].is_sent_start = True
-                start = token.i
-                seen_period = False
-            elif is_in_punct_chars:
-                seen_period = True
-        if start < len(doc):
-            doc[start].is_sent_start = True
-        return doc
-
     def pipe(self, stream, batch_size=128):
         """Apply the pipe to a stream of documents. This usually happens under
         the hood when the nlp object is called on a text and all components are
@@ -150,6 +127,7 @@ class Sentencizer(Pipe):
                         doc.c[j].sent_start = 1
                     else:
                         doc.c[j].sent_start = -1
+            doc.is_sentenced = True
 
     def score(self, examples, **kwargs):
         """Score a batch of examples.

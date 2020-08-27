@@ -21,6 +21,45 @@ def test_serialize_doc_roundtrip_bytes(en_vocab):
     doc_b = doc.to_bytes()
     new_doc = Doc(en_vocab).from_bytes(doc_b)
     assert new_doc.to_bytes() == doc_b
+    assert new_doc.is_tagged is False
+    assert new_doc.is_parsed is False
+    assert new_doc.is_nered is False
+
+    # serializing an empty doc preserves the default True flags
+    doc = Doc(en_vocab)
+    doc_b = doc.to_bytes()
+    new_doc = Doc(en_vocab).from_bytes(doc_b)
+    assert new_doc.to_bytes() == doc_b
+    assert new_doc.is_tagged is True
+    assert new_doc.is_parsed is True
+    assert new_doc.is_nered is True
+
+    # annotation set manually is preserved
+    doc = Doc(en_vocab, words=["hello", "world"])
+    doc[0].tag_ = "A"
+    doc[0].morph_ = "Feat=Val"
+    doc[0].dep_ = "DEP"
+    doc[0].lemma_ = "B"
+    doc.ents = ()
+    doc_b = doc.to_bytes()
+    new_doc = Doc(en_vocab).from_bytes(doc_b)
+    assert new_doc.to_bytes() == doc_b
+    assert new_doc.is_tagged is True
+    assert new_doc.is_morphed is True
+    assert new_doc.is_lemmatized is True
+    assert new_doc.is_parsed is True
+    assert new_doc.is_nered is True
+
+    # Doc flags can be used to exclude existing annotation
+    doc = Doc(en_vocab, words=["hello", "world"])
+    doc[0].tag_ = "A"
+    doc.is_tagged = False
+    doc[0].lemma_ = "B"
+    doc_b = doc.to_bytes()
+    new_doc = Doc(en_vocab).from_bytes(doc_b)
+    assert new_doc.to_bytes() == doc_b
+    assert new_doc.is_tagged is False
+    assert new_doc.is_lemmatized is True
 
 
 def test_serialize_doc_roundtrip_disk(en_vocab):

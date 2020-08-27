@@ -680,6 +680,7 @@ cdef class ArcEager(TransitionSystem):
 
     def finalize_doc(self, Doc doc):
         doc.is_parsed = True
+        doc.is_sentenced = True
         set_children_from_heads(doc.c, doc.length)
 
     def has_gold(self, Example eg, start=0, end=None):

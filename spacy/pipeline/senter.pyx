@@ -92,6 +92,7 @@ class SentenceRecognizer(Tagger):
                         doc.c[j].sent_start = 1
                     else:
                         doc.c[j].sent_start = -1
+            doc.is_sentenced = True
 
     def get_loss(self, examples, scores):
         """Find the loss and gradient of loss for the batch of documents and

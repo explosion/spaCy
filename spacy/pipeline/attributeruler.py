@@ -96,10 +96,17 @@ class AttributeRuler(Pipe):
             for attr in attrs:
                 if attr == TAG:
                     doc.is_tagged = True
-                elif attr == POS or attr == MORPH:
+                elif attr in (POS, MORPH):
                     doc.is_morphed = True
                 elif attr == LEMMA:
                     doc.is_lemmatized = True
+                elif attr in (HEAD, DEP):
+                    doc.is_parsed = True
+                    doc.is_sentenced = True
+                elif attr == SENT_START:
+                    doc.is_sentenced = True
+                elif attr == ENT_TYPE:
+                    doc.is_nered = True
         return doc
 
     def pipe(self, stream, *, batch_size=128):

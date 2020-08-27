@@ -194,6 +194,8 @@ cdef class Doc:
         self.is_morphed = False
         self.is_lemmatized = False
         self.is_parsed = False
+        self.is_sentenced = False
+        self.is_nered = False
         self.sentiment = 0.0
         self.cats = {}
         self.user_hooks = {}
@@ -230,44 +232,13 @@ cdef class Doc:
             self.is_morphed = True
             self.is_lemmatized = True
             self.is_parsed = True
+            self.is_sentenced = True
+            self.is_nered = True
 
     @property
     def _(self):
         """Custom extension attributes registered via `set_extension`."""
         return Underscore(Underscore.doc_extensions, self)
-
-    @property
-    def is_sentenced(self):
-        """Check if the document has sentence boundaries assigned. This is
-        defined as having at least one of the following:
-
-        a) An entry "sents" in doc.user_hooks";
-        b) Doc.is_parsed is set to True;
-        c) At least one token other than the first where sent_start is not None.
-        """
-        if "sents" in self.user_hooks:
-            return True
-        if self.is_parsed:
-            return True
-        if len(self) < 2:
-            return True
-        for i in range(1, self.length):
-            if self.c[i].sent_start == -1 or self.c[i].sent_start == 1:
-                return True
-        return False
-
-    @property
-    def is_nered(self):
-        """Check if the document has named entities set. Will return True if
-        *any* of the tokens has a named entity tag set (even if the others are
-        unknown values), or if the document is empty.
-        """
-        if len(self) == 0:
-            return True
-        for i in range(self.length):
-            if self.c[i].ent_iob != 0:
-                return True
-        return False
 
     def __getitem__(self, object i):
         """Get a `Token` or `Span` object.
@@ -576,6 +547,7 @@ cdef class Doc:
                 self.c[i].ent_type = entity_type
                 self.c[i].ent_kb_id = kb_id
                 self.c[i].ent_iob = ent_iob
+            self.is_nered = True
 
     @property
     def noun_chunks(self):
@@ -862,9 +834,11 @@ cdef class Doc:
                 Token.set_struct_attr(token, attr_ids[j], value)
         # Set flags
         self.is_parsed = bool(self.is_parsed or HEAD in attrs)
+        self.is_sentenced = bool(self.is_sentenced or HEAD in attrs or SENT_START in attrs)
         self.is_tagged = bool(self.is_tagged or TAG in attrs)
         self.is_morphed = bool(self.is_morphed or MORPH in attrs or POS in attrs)
         self.is_lemmatized = bool(self.is_lemmatized or LEMMA in attrs)
+        self.is_nered = bool(self.is_nered or ENT_IOB in attrs)
         # If document is parsed, set children
         if self.is_parsed:
             set_children_from_heads(self.c, length)
@@ -1044,12 +1018,19 @@ cdef class Doc:
         array_head = self._get_array_attrs()
         strings = set()
         for token in self:
-            strings.add(token.tag_)
-            strings.add(token.lemma_)
-            strings.add(token.dep_)
-            strings.add(token.ent_type_)
-            strings.add(token.ent_kb_id_)
             strings.add(token.norm_)
+            if self.is_tagged:
+                strings.add(token.tag_)
+            if self.is_lemmatized:
+                strings.add(token.lemma_)
+            if self.is_morphed:
+                strings.add(token.morph_)
+            if self.is_parsed:
+                strings.add(token.dep_)
+            if self.is_nered:
+                strings.add(token.ent_type_)
+                strings.add(token.ent_kb_id_)
+                strings.add(token.ent_id_)
         # Msgpack doesn't distinguish between lists and tuples, which is
         # vexing for user data. As a best guess, we *know* that within
         # keys, we must have tuples. In values we just have to hope
@@ -1121,6 +1102,15 @@ cdef class Doc:
         cdef unicode orth_
         text = msg["text"]
         attrs = msg["array_body"]
+        # The flags default to True for an empty doc, so reset all to False
+        # before loading if the new doc is not empty.
+        if len(attrs) > 0:
+            self.is_tagged = False
+            self.is_morphed = False
+            self.is_lemmatized = False
+            self.is_parsed = False
+            self.is_sentenced = False
+            self.is_nered = False
         for i in range(attrs.shape[0]):
             end = start + attrs[i, 0]
             has_space = attrs[i, 1]
@@ -1271,11 +1261,10 @@ cdef class Doc:
             array_head.extend([POS, MORPH])
         if self.is_lemmatized:
             array_head.append(LEMMA)
-        # If self parsed add head and dep attribute
+        # Only one of HEAD and SENT_START are allowed
         if self.is_parsed:
             array_head.extend([HEAD, DEP])
-        # Otherwise add sent_start
-        else:
+        elif self.is_sentenced:
             array_head.append(SENT_START)
         if self.is_nered:
             array_head.extend([ENT_IOB, ENT_TYPE, ENT_ID, ENT_KB_ID])

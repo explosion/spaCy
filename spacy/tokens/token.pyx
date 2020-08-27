@@ -225,6 +225,7 @@ cdef class Token:
         def __set__(self, features):
             cdef hash_t key = self.vocab.morphology.add(features)
             self.c.morph = key
+            self.doc.is_morphed = True
 
     @property
     def lex(self):
@@ -341,6 +342,7 @@ cdef class Token:
 
         def __set__(self, attr_t lemma):
             self.c.lemma = lemma
+            self.is_lemmatized = True
 
     property pos:
         """RETURNS (uint64): ID of coarse-grained part-of-speech tag."""
@@ -349,6 +351,7 @@ cdef class Token:
 
         def __set__(self, pos):
             self.c.pos = pos
+            self.doc.is_morphed = True
 
     property tag:
         """RETURNS (uint64): ID of fine-grained part-of-speech tag."""
@@ -357,6 +360,7 @@ cdef class Token:
 
         def __set__(self, attr_t tag):
             self.c.tag = tag
+            self.doc.is_tagged = True
 
     property dep:
         """RETURNS (uint64): ID of syntactic dependency label."""
@@ -365,6 +369,7 @@ cdef class Token:
 
         def __set__(self, attr_t label):
             self.c.dep = label
+            self.doc.is_parsed = True
 
     @property
     def has_vector(self):
@@ -462,6 +467,7 @@ cdef class Token:
 
         def __set__(self, value):
             self.is_sent_start = value
+            self.doc.is_sentenced = True
 
     property is_sent_start:
         """A boolean value indicating whether the token starts a sentence.
@@ -487,8 +493,10 @@ cdef class Token:
                 self.c.sent_start = 0
             elif value is True:
                 self.c.sent_start = 1
+                self.doc.is_sentenced = True
             elif value is False:
                 self.c.sent_start = -1
+                self.doc.is_sentenced = True
             else:
                 raise ValueError(Errors.E044.format(value=value))
 
@@ -722,6 +730,8 @@ cdef class Token:
                         anc.c.r_edge = self.c.r_edge
             # Set new head
             self.c.head = rel_newhead_i
+            self.doc.is_parsed = True
+            self.doc.is_sentenced = True
 
     @property
     def conjuncts(self):
@@ -756,6 +766,7 @@ cdef class Token:
 
         def __set__(self, ent_type):
             self.c.ent_type = ent_type
+            self.doc.is_nered = True
 
     property ent_type_:
         """RETURNS (str): Named entity type."""
@@ -764,6 +775,7 @@ cdef class Token:
 
         def __set__(self, ent_type):
             self.c.ent_type = self.vocab.strings.add(ent_type)
+            self.doc.is_nered = True
 
     @property
     def ent_iob(self):
@@ -893,6 +905,7 @@ cdef class Token:
 
         def __set__(self, unicode lemma_):
             self.c.lemma = self.vocab.strings.add(lemma_)
+            self.doc.is_lemmatized = True
 
     property pos_:
         """RETURNS (str): Coarse-grained part-of-speech tag."""
@@ -901,6 +914,7 @@ cdef class Token:
 
         def __set__(self, pos_name):
             self.c.pos = parts_of_speech.IDS[pos_name]
+            self.doc.is_morphed = True
 
     property tag_:
         """RETURNS (str): Fine-grained part-of-speech tag."""
@@ -908,7 +922,8 @@ cdef class Token:
             return self.vocab.strings[self.c.tag]
 
         def __set__(self, tag):
-            self.tag = self.vocab.strings.add(tag)
+            self.c.tag = self.vocab.strings.add(tag)
+            self.doc.is_tagged = True
 
     property dep_:
         """RETURNS (str): The syntactic dependency label."""
@@ -917,6 +932,7 @@ cdef class Token:
 
         def __set__(self, unicode label):
             self.c.dep = self.vocab.strings.add(label)
+            self.doc.is_parsed = True
 
     @property
     def is_oov(self):

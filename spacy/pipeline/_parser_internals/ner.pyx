@@ -7,6 +7,7 @@ from ...lexeme cimport Lexeme
 from ...attrs cimport IS_SPACE
 from ...gold.example cimport Example
 from ...errors import Errors
+from ...tokens.doc cimport Doc
 from .stateclass cimport StateClass
 from ._state cimport StateC
 from .transition_system cimport Transition, do_func_t
@@ -235,6 +236,9 @@ cdef class BiluoPushDown(TransitionSystem):
                     self.add_action(IN, st._sent[i].ent_type)
                     self.add_action(UNIT, st._sent[i].ent_type)
                     self.add_action(LAST, st._sent[i].ent_type)
+
+    def finalize_doc(self, Doc doc):
+        doc.is_nered = True
 
     def init_gold(self, StateClass state, Example example):
         return BiluoGold(self, state, example)

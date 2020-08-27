@@ -144,6 +144,8 @@ def json_to_annotations(doc):
         cats = {}
         for cat in paragraph.get("cats", {}):
             cats[cat["label"]] = cat["value"]
+        if not any(ner_tags):
+            ner_tags = None
         example["doc_annotation"] = dict(
             cats=cats,
             entities=ner_tags,
