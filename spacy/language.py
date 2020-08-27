@@ -1542,7 +1542,9 @@ class Language:
         path = util.ensure_path(path)
         deserializers = {}
         if Path(path / "config.cfg").exists():
-            deserializers["config.cfg"] = lambda p: self.config.from_disk(p)
+            deserializers["config.cfg"] = lambda p: self.config.from_disk(
+                p, interpolate=False
+            )
         deserializers["meta.json"] = deserialize_meta
         deserializers["vocab"] = deserialize_vocab
         deserializers["tokenizer"] = lambda p: self.tokenizer.from_disk(
@@ -1605,7 +1607,9 @@ class Language:
             self.vocab.vectors.name = data.get("vectors", {}).get("name")
 
         deserializers = {}
-        deserializers["config.cfg"] = lambda b: self.config.from_bytes(b)
+        deserializers["config.cfg"] = lambda b: self.config.from_bytes(
+            b, interpolate=False
+        )
         deserializers["meta.json"] = deserialize_meta
         deserializers["vocab"] = self.vocab.from_bytes
         deserializers["tokenizer"] = lambda b: self.tokenizer.from_bytes(
