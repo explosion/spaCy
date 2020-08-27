@@ -8,7 +8,8 @@ from ..gold import validate_examples
 from ..language import Language
 from ..matcher import Matcher
 from ..scorer import Scorer
-from ..symbols import IDS, TAG, POS, MORPH, LEMMA
+from ..symbols import IDS, TAG, POS, MORPH, LEMMA, HEAD, DEP, SENT_START
+from ..symbols import ENT_TYPE
 from ..tokens import Doc, Span
 from ..tokens._retokenize import normalize_token_attrs, set_token_attrs
 from ..vocab import Vocab
