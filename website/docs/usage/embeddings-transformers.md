@@ -368,13 +368,17 @@ To change any of the settings, you can edit the `config.cfg` and re-run the
 training. To change any of the functions, like the span getter, you can replace
 the name of the referenced function – e.g. `@span_getters = "sent_spans.v1"` to
 process sentences. You can also register your own functions using the
-`span_getters` registry:
+`span_getters` registry. For instance, the following custom function returns
+`Span` objects following sentence boundaries, unless a sentence succeeds a
+certain amount of tokens, in which case subsentences of at most `max_length`
+tokens are returned.
 
 > #### config.cfg
 >
 > ```ini
 > [components.transformer.model.get_spans]
 > @span_getters = "custom_sent_spans"
+> max_length = 25
 > ```
 
 ```python
@@ -382,12 +386,23 @@ process sentences. You can also register your own functions using the
 import spacy_transformers
 
 @spacy_transformers.registry.span_getters("custom_sent_spans")
-def configure_custom_sent_spans():
-    # TODO: write custom example
-    def get_sent_spans(docs):
-        return [list(doc.sents) for doc in docs]
+def configure_custom_sent_spans(max_length: int):
+    def get_custom_sent_spans(docs):
+        spans = []
+        for doc in docs:
+            spans.append([])
+            for sent in doc.sents:
+                start = 0
+                end = max_length
+                while end <= len(sent):
+                    spans[-1].append(sent[start:end])
+                    start += max_length
+                    end += max_length
+                if start < len(sent):
+                    spans[-1].append(sent[start : len(sent)])
+        return spans
 
-    return get_sent_spans
+    return get_custom_sent_spans
 ```
 
 To resolve the config during training, spaCy needs to know about your custom
