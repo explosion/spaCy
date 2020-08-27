@@ -225,7 +225,7 @@ transformers as subnetworks directly, you can also use them via the
 
 ![The processing pipeline with the transformer component](../images/pipeline_transformer.svg)
 
-The `Transformer` component sets the
+By default, the `Transformer` component sets the
 [`Doc._.trf_data`](/api/transformer#custom_attributes) extension attribute,
 which lets you access the transformers outputs at runtime.
 
@@ -249,8 +249,8 @@ for doc in nlp.pipe(["some text", "some other text"]):
     tokvecs = doc._.trf_data.tensors[-1]
 ```
 
-You can also customize how the [`Transformer`](/api/transformer) component sets
-annotations onto the [`Doc`](/api/doc), by customizing the `annotation_setter`.
+You can customize how the [`Transformer`](/api/transformer) component sets
+annotations onto the [`Doc`](/api/doc), by changing the `annotation_setter`.
 This callback will be called with the raw input and output data for the whole
 batch, along with the batch of `Doc` objects, allowing you to implement whatever
 you need. The annotation setter is called with a batch of [`Doc`](/api/doc)
@@ -259,13 +259,15 @@ containing the transformers data for the batch.
 
 ```python
 def custom_annotation_setter(docs, trf_data):
-    # TODO:
-    ...
+    doc_data = list(trf_data.doc_data)
+    for doc, data in zip(docs, doc_data):
+        doc._.custom_attr = data
 
 nlp = spacy.load("en_core_trf_lg")
 nlp.get_pipe("transformer").annotation_setter = custom_annotation_setter
 doc = nlp("This is a text")
-print()  # TODO:
+assert isinstance(doc._.custom_attr, TransformerData)
+print(doc._.custom_attr.tensors)
 ```
 
 ### Training usage {#transformers-training}
