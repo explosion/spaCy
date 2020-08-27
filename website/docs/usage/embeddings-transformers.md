@@ -429,8 +429,8 @@ The same idea applies to task models that power the **downstream components**.
 Most of spaCy's built-in model creation functions support a `tok2vec` argument,
 which should be a Thinc layer of type ~~Model[List[Doc], List[Floats2d]]~~. This
 is where we'll plug in our transformer model, using the
-[TransformerListener](/api/architectures#TransformerListener) layer, which sneakily
-delegates to the `Transformer` pipeline component.
+[TransformerListener](/api/architectures#TransformerListener) layer, which
+sneakily delegates to the `Transformer` pipeline component.
 
 ```ini
 ### config.cfg (excerpt) {highlight="12"}
@@ -452,11 +452,11 @@ grad_factor = 1.0
 @layers = "reduce_mean.v1"
 ```
 
-The [TransformerListener](/api/architectures#TransformerListener) layer expects a
-[pooling layer](https://thinc.ai/docs/api-layers#reduction-ops) as the argument
-`pooling`, which needs to be of type ~~Model[Ragged, Floats2d]~~. This layer
-determines how the vector for each spaCy token will be computed from the zero or
-more source rows the token is aligned against. Here we use the
+The [TransformerListener](/api/architectures#TransformerListener) layer expects
+a [pooling layer](https://thinc.ai/docs/api-layers#reduction-ops) as the
+argument `pooling`, which needs to be of type ~~Model[Ragged, Floats2d]~~. This
+layer determines how the vector for each spaCy token will be computed from the
+zero or more source rows the token is aligned against. Here we use the
 [`reduce_mean`](https://thinc.ai/docs/api-layers#reduce_mean) layer, which
 averages the wordpiece rows. We could instead use
 [`reduce_max`](https://thinc.ai/docs/api-layers#reduce_max), or a custom
