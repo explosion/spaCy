@@ -285,11 +285,15 @@ class Tagger(Pipe):
             doc_sample.append(Doc(self.vocab, words=["hello"]))
         for tag in sorted(tags):
             self.add_label(tag)
-        self.set_output(len(self.labels))
         if len(self.labels) == 0:
             err = Errors.E1005.format(name="Tagger")
             raise ValueError(err)
+        self.set_output(len(self.labels))
         self.model.initialize(X=doc_sample)
+        if self.labels:
+            self.model.initialize(X=doc_sample)
+        else:
+            self.model.initialize()
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
