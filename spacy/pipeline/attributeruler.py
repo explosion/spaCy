@@ -78,7 +78,7 @@ class AttributeRuler(Pipe):
 
         DOCS: https://spacy.io/api/attributeruler#call
         """
-        matches = self.matcher(doc)
+        matches = sorted(self.matcher(doc))
 
         for match_id, start, end in matches:
             span = Span(doc, start, end, label=match_id)

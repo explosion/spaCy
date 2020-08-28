@@ -112,6 +112,28 @@ def test_attributeruler_score(nlp, pattern_dicts):
     assert scores["morph_acc"] == pytest.approx(0.6)
 
 
+def test_attributeruler_rule_order(nlp):
+    a = AttributeRuler(nlp.vocab)
+    patterns = [
+        {
+            "patterns": [[{"TAG": "VBZ"}]],
+            "attrs": {"POS": "VERB"},
+        },
+        {
+            "patterns": [[{"TAG": "VBZ"}]],
+            "attrs": {"POS": "NOUN"},
+        },
+    ]
+    a.add_patterns(patterns)
+    doc = get_doc(
+        nlp.vocab,
+        words=["This", "is", "a", "test", "."],
+        tags=["DT", "VBZ", "DT", "NN", "."]
+    )
+    doc = a(doc)
+    assert doc[1].pos_ == "NOUN"
+
+
 def test_attributeruler_tag_map(nlp, tag_map):
     a = AttributeRuler(nlp.vocab)
     a.load_from_tag_map(tag_map)
