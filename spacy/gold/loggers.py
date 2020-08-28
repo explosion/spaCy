@@ -1,4 +1,4 @@
-from typing import Dict, Any, Tuple, Callable
+from typing import Dict, Any, Tuple, Callable, List
 
 from ..util import registry
 from .. import util
@@ -67,7 +67,7 @@ def console_logger():
 
 
 @registry.loggers("spacy.WandbLogger.v1")
-def wandb_logger(project_name: str, remove_config_values: list = []):
+def wandb_logger(project_name: str, remove_config_values: List[str] = []):
     import wandb
 
     console = console_logger()
