@@ -296,24 +296,25 @@ factories.
 >         i += 1
 > ```
 
-| Registry name     | Description                                                                                                                                                                                                                                        |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `architectures`   | Registry for functions that create [model architectures](/api/architectures). Can be used to register custom model architectures and reference them in the `config.cfg`.                                                                           |
-| `assets`          | Registry for data assets, knowledge bases etc.                                                                                                                                                                                                     |
-| `batchers`        | Registry for training and evaluation [data batchers](#batchers).                                                                                                                                                                                   |
-| `callbacks`       | Registry for custom callbacks to [modify the `nlp` object](/usage/training#custom-code-nlp-callbacks) before training.                                                                                                                             |
-| `displacy_colors` | Registry for custom color scheme for the [`displacy` NER visualizer](/usage/visualizers). Automatically reads from [entry points](/usage/saving-loading#entry-points).                                                                             |
-| `factories`       | Registry for functions that create [pipeline components](/usage/processing-pipelines#custom-components). Added automatically when you use the `@spacy.component` decorator and also reads from [entry points](/usage/saving-loading#entry-points). |
-| `initializers`    | Registry for functions that create [initializers](https://thinc.ai/docs/api-initializers).                                                                                                                                                         |
-| `languages`       | Registry for language-specific `Language` subclasses. Automatically reads from [entry points](/usage/saving-loading#entry-points).                                                                                                                 |
-| `layers`          | Registry for functions that create [layers](https://thinc.ai/docs/api-layers).                                                                                                                                                                     |
-| `loggers`         | Registry for functions that log [training results](/usage/training).                                                                                                                                                                               |
-| `lookups`         | Registry for large lookup tables available via `vocab.lookups`.                                                                                                                                                                                    |
-| `losses`          | Registry for functions that create [losses](https://thinc.ai/docs/api-loss).                                                                                                                                                                       |
-| `optimizers`      | Registry for functions that create [optimizers](https://thinc.ai/docs/api-optimizers).                                                                                                                                                             |
-| `readers`         | Registry for training and evaluation data readers like [`Corpus`](/api/corpus).                                                                                                                                                                    |
-| `schedules`       | Registry for functions that create [schedules](https://thinc.ai/docs/api-schedules).                                                                                                                                                               |
-| `tokenizers`      | Registry for tokenizer factories. Registered functions should return a callback that receives the `nlp` object and returns a [`Tokenizer`](/api/tokenizer) or a custom callable.                                                                   |
+| Registry name        | Description                                                                                                                                                                                                                                        |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `annotation_setters` | Registry for functions that store Tok2Vec annotations on `Doc` objects.                                                                                                                                                                            |
+| `architectures`      | Registry for functions that create [model architectures](/api/architectures). Can be used to register custom model architectures and reference them in the `config.cfg`.                                                                           |
+| `assets`             | Registry for data assets, knowledge bases etc.                                                                                                                                                                                                     |
+| `batchers`           | Registry for training and evaluation [data batchers](#batchers).                                                                                                                                                                                   |
+| `callbacks`          | Registry for custom callbacks to [modify the `nlp` object](/usage/training#custom-code-nlp-callbacks) before training.                                                                                                                             |
+| `displacy_colors`    | Registry for custom color scheme for the [`displacy` NER visualizer](/usage/visualizers). Automatically reads from [entry points](/usage/saving-loading#entry-points).                                                                             |
+| `factories`          | Registry for functions that create [pipeline components](/usage/processing-pipelines#custom-components). Added automatically when you use the `@spacy.component` decorator and also reads from [entry points](/usage/saving-loading#entry-points). |
+| `initializers`       | Registry for functions that create [initializers](https://thinc.ai/docs/api-initializers).                                                                                                                                                         |
+| `languages`          | Registry for language-specific `Language` subclasses. Automatically reads from [entry points](/usage/saving-loading#entry-points).                                                                                                                 |
+| `layers`             | Registry for functions that create [layers](https://thinc.ai/docs/api-layers).                                                                                                                                                                     |
+| `loggers`            | Registry for functions that log [training results](/usage/training).                                                                                                                                                                               |
+| `lookups`            | Registry for large lookup tables available via `vocab.lookups`.                                                                                                                                                                                    |
+| `losses`             | Registry for functions that create [losses](https://thinc.ai/docs/api-loss).                                                                                                                                                                       |
+| `optimizers`         | Registry for functions that create [optimizers](https://thinc.ai/docs/api-optimizers).                                                                                                                                                             |
+| `readers`            | Registry for training and evaluation data readers like [`Corpus`](/api/corpus).                                                                                                                                                                    |
+| `schedules`          | Registry for functions that create [schedules](https://thinc.ai/docs/api-schedules).                                                                                                                                                               |
+| `tokenizers`         | Registry for tokenizer factories. Registered functions should return a callback that receives the `nlp` object and returns a [`Tokenizer`](/api/tokenizer) or a custom callable.                                                                   |
 
 ### spacy-transformers registry {#registry-transformers}
 
@@ -327,18 +328,69 @@ See the [`Transformer`](/api/transformer) API reference and
 > ```python
 > import spacy_transformers
 >
-> @spacy_transformers.registry.annotation_setters("my_annotation_setter.v1")
-> def configure_custom_annotation_setter():
->     def annotation_setter(docs, trf_data) -> None:
->        # Set annotations on the docs
+> @spacy_transformers.registry.span_getters("my_span_getter.v1")
+> def configure_custom_span_getter() -> Callable:
+>     def span_getter(docs: List[Doc]) -> List[List[Span]]:
+>        # Transform each Doc into a List of Span objects
 >
->     return annotation_sette
+>     return span_getter
 > ```
 
-| Registry name                                               | Description                                                                                                                                                                                                                                       |
-| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`span_getters`](/api/transformer#span_getters)             | Registry for functions that take a batch of `Doc` objects and return a list of `Span` objects to process by the transformer, e.g. sentences.                                                                                                      |
-| [`annotation_setters`](/api/transformer#annotation_setters) | Registry for functions that create annotation setters. Annotation setters are functions that take a batch of `Doc` objects and a [`FullTransformerBatch`](/api/transformer#fulltransformerbatch) and can set additional annotations on the `Doc`. |
+
+| Registry name                                   | Description                                                                                                                                  |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`span_getters`](/api/transformer#span_getters) | Registry for functions that take a batch of `Doc` objects and return a list of `Span` objects to process by the transformer, e.g. sentences. |
+
+## Loggers {#loggers source="spacy/gold/loggers.py" new="3"}
+
+A logger records the training results for each step. When a logger is created,
+it returns a `log_step` function and a `finalize` function. The `log_step`
+function is called by the [training script](/api/cli#train) and receives a
+dictionary of information, including
+
+# TODO
+
+> #### Example config
+>
+> ```ini
+> [training.logger]
+> @loggers = "spacy.ConsoleLogger.v1"
+> ```
+
+Instead of using one of the built-in batchers listed here, you can also
+[implement your own](/usage/training#custom-code-readers-batchers), which may or
+may not use a custom schedule.
+
+#### spacy.ConsoleLogger.v1 {#ConsoleLogger tag="registered function"}
+
+Writes the results of a training step to the console in a tabular format.
+
+#### spacy.WandbLogger.v1 {#WandbLogger tag="registered function"}
+
+> #### Installation
+>
+> ```bash
+> $ pip install wandb
+> $ wandb login
+> ```
+
+Built-in logger that sends the results of each training step to the dashboard of
+the [Weights & Biases`](https://www.wandb.com/) dashboard. To use this logger,
+Weights & Biases should be installed, and you should be logged in. The logger 
+will send the full config file to W&B, as well as various system information 
+such as GPU 
+
+| Name           | Description                                                                                                                           |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `project_name` | The name of the project in the Weights & Biases interface. The project will be created automatically if it doesn't exist yet. ~~str~~ |
+
+> #### Example config
+>
+> ```ini
+> [training.logger]
+> @loggers = "spacy.WandbLogger.v1"
+> project_name = "monitor_spacy_training"
+> ```
 
 ## Batchers {#batchers source="spacy/gold/batchers.py" new="3"}
 

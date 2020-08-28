@@ -272,7 +272,7 @@ def train_while_improving(
         step (int): How many steps have been completed.
         score (float): The main score form the last evaluation.
         other_scores: : The other scores from the last evaluation.
-        loss: The accumulated losses throughout training.
+        losses: The accumulated losses throughout training.
         checkpoints: A list of previous results, where each result is a
             (score, step, epoch) tuple.
     """

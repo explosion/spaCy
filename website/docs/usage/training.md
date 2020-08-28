@@ -605,6 +605,24 @@ to your Python file. Before loading the config, spaCy will import the
 $ python -m spacy train config.cfg --output ./output --code ./functions.py
 ```
 
+#### Example: Custom logging function {#custom-logging}
+
+During training, the results of each step are passed to a logger function in a
+dictionary providing the following information:
+
+| Key            | Value                                                                                          |
+| -------------- | ---------------------------------------------------------------------------------------------- |
+| `epoch`        | How many passes over the data have been completed. ~~int~~                                     |
+| `step`         | How many steps have been completed. ~~int~~                                                    |
+| `score`        | The main score form the last evaluation, measured on the dev set. ~~float~~                    |
+| `other_scores` | The other scores from the last evaluation, measured on the dev set. ~~Dict[str, Any]~~         |
+| `losses`       | The accumulated training losses. ~~Dict[str, float]~~                                          |
+| `checkpoints`  | A list of previous results, where each result is a (score, step, epoch) tuple. ~~List[Tuple]~~ |
+
+By default, these results are written to the console with the [`ConsoleLogger`](/api/top-level#ConsoleLogger)
+
+# TODO
+
 #### Example: Custom batch size schedule {#custom-code-schedule}
 
 For example, let's say you've implemented your own batch size schedule to use
