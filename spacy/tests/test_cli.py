@@ -374,10 +374,19 @@ def test_parse_config_overrides(args, expected):
 
 @pytest.mark.parametrize(
     "args",
-    [["--foo"], ["--x.foo", "bar", "--baz"], ["--x.foo", "bar", "baz"], ["x.foo"]],
+    [["--foo"], ["--x.foo", "bar", "--baz"]],
 )
 def test_parse_config_overrides_invalid(args):
     with pytest.raises(NoSuchOption):
+        parse_config_overrides(args)
+
+
+@pytest.mark.parametrize(
+    "args",
+    [["--x.foo", "bar", "baz"], ["x.foo"]],
+)
+def test_parse_config_overrides_invalid_2(args):
+    with pytest.raises(SystemExit):
         parse_config_overrides(args)
 
 
