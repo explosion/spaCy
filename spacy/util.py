@@ -673,6 +673,25 @@ def get_object_name(obj: Any) -> str:
     return repr(obj)
 
 
+def is_same_func(func1: Callable, func2: Callable) -> bool:
+    """Approximately decide whether two functions are the same, even if their
+    identity is different (e.g. after they have been live reloaded). Mostly
+    used in the @Language.component and @Language.factory decorators to decide
+    whether to raise if a factory already exists. Allows decorator to run
+    multiple times with the same function.
+
+    func1 (Callable): The first function.
+    func2 (Callable): The second function.
+    RETURNS (bool): Whether it's the same function (most likely).
+    """
+    if not callable(func1) or not callable(func2):
+        return False
+    same_name = func1.__qualname__ == func2.__qualname__
+    same_file = inspect.getfile(func1) == inspect.getfile(func2)
+    same_code = inspect.getsourcelines(func1) == inspect.getsourcelines(func2)
+    return all([same_name, same_file, same_code])
+
+
 def get_cuda_stream(
     require: bool = False, non_blocking: bool = True
 ) -> Optional[CudaStream]:
