@@ -286,7 +286,10 @@ class Tagger(Pipe):
         for tag in sorted(tags):
             self.add_label(tag)
         self.set_output(len(self.labels))
-        self.model.initialize(X=doc_sample)
+        if self.labels:
+            self.model.initialize(X=doc_sample)
+        else:
+            self.model.initialize()
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
