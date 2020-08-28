@@ -293,9 +293,18 @@ class Tagger(Pipe):
             ]
             for y in label_sample:
                 y[:, 0] = 1.0
-            self.model.initialize(X=doc_sample, Y=label_sample)
         else:
-            self.model.initialize()
+            label_sample = None
+        if pipeline is not None:
+            for name, component in pipeline:
+                if component is self:
+                    break
+                if hasattr(component, "pipe"):
+                    doc_sample = list(component.pipe(doc_sample, batch_size=8))
+                else:
+                    doc_sample = [component(doc) for doc in doc_sample]
+ 
+        self.model.initialize(X=doc_sample, Y=label_sample)
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
