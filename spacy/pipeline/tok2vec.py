@@ -272,7 +272,7 @@ class Tok2VecListener(Model):
         width (int):
             The width of the vectors produced by the upstream tok2vec component.
         """
-        Model.__init__(self, name=self.name, forward=forward, dims={"nO": width}, attrs={"is_listener": True})
+        Model.__init__(self, name=self.name, forward=forward, dims={"nO": width})
         self.upstream_name = upstream_name
         self._batch_id = None
         self._outputs = None
@@ -310,8 +310,11 @@ class Tok2VecListener(Model):
 
 def forward(model: Tok2VecListener, inputs, is_train: bool):
     """Supply the outputs from the upstream Tok2Vec component."""
-    bp = model._backprop
-    if not is_train:
-        bp = lambda dX: []
-    model.verify_inputs(inputs)
-    return model._outputs, bp
+    if is_train:
+        model.verify_inputs(inputs)
+        return model._outputs, model._backprop
+    else:
+        outputs = model._outputs
+        if outputs is None:
+            outputs = [model.ops.alloc2f(len(doc), model.get_dim("nO")) for doc in inputs]
+        return outputs, lambda dX: []
