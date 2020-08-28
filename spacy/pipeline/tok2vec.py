@@ -314,7 +314,8 @@ def forward(model: Tok2VecListener, inputs, is_train: bool):
         model.verify_inputs(inputs)
         return model._outputs, model._backprop
     else:
-        outputs = model._outputs
-        if outputs is None:
+        if model._batch_id is None:
             outputs = [model.ops.alloc2f(len(doc), model.get_dim("nO")) for doc in inputs]
+        else:
+            outputs = model._outputs
         return outputs, lambda dX: []
