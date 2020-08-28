@@ -67,7 +67,7 @@ def console_logger():
 
 
 @registry.loggers("spacy.WandbLogger.v1")
-def wandb_logger(project_name: str, disable_fields: list = []):
+def wandb_logger(project_name: str, remove_config_values: list = []):
     import wandb
 
     console = console_logger()
@@ -77,7 +77,7 @@ def wandb_logger(project_name: str, disable_fields: list = []):
     ) -> Tuple[Callable[[Dict[str, Any]], None], Callable]:
         config = nlp.config.interpolate()
         config_dot = util.dict_to_dot(config)
-        for field in disable_fields:
+        for field in remove_config_values:
             del config_dot[field]
         config = util.dot_to_dict(config_dot)
         wandb.init(project=project_name, config=config)
