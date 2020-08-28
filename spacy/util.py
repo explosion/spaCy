@@ -216,6 +216,7 @@ def load_model(
     *,
     vocab: Union["Vocab", bool] = True,
     disable: Iterable[str] = tuple(),
+    exclude: Iterable[str] = tuple(),
     config: Union[Dict[str, Any], Config] = SimpleFrozenDict(),
 ) -> "Language":
     """Load a model from a package or data path.
@@ -228,7 +229,7 @@ def load_model(
         keyed by section values in dot notation.
     RETURNS (Language): The loaded nlp object.
     """
-    kwargs = {"vocab": vocab, "disable": disable, "config": config}
+    kwargs = {"vocab": vocab, "disable": disable, "exclude": exclude, "config": config}
     if isinstance(name, str):  # name or string path
         if name.startswith("blank:"):  # shortcut for blank model
             return get_lang_class(name.replace("blank:", ""))()
@@ -248,6 +249,7 @@ def load_model_from_package(
     *,
     vocab: Union["Vocab", bool] = True,
     disable: Iterable[str] = tuple(),
+    exclude: Iterable[str] = tuple(),
     config: Union[Dict[str, Any], Config] = SimpleFrozenDict(),
 ) -> "Language":
     """Load a model from an installed package.
@@ -255,13 +257,17 @@ def load_model_from_package(
     name (str): The package name.
     vocab (Vocab / True): Optional vocab to pass in on initialization. If True,
         a new Vocab object will be created.
-    disable (Iterable[str]): Names of pipeline components to disable.
+    disable (Iterable[str]): Names of pipeline components to disable. Disabled
+        pipes will be loaded but they won't be run unless you explicitly
+        enable them by calling nlp.enable_pipe.
+    exclude (Iterable[str]): Names of pipeline components to exclude. Excluded
+        components won't be loaded.
     config (Dict[str, Any] / Config): Config overrides as nested dict or dict
         keyed by section values in dot notation.
     RETURNS (Language): The loaded nlp object.
     """
     cls = importlib.import_module(name)
-    return cls.load(vocab=vocab, disable=disable, config=config)
+    return cls.load(vocab=vocab, disable=disable, exclude=exclude, config=config)
 
 
 def load_model_from_path(
@@ -270,6 +276,7 @@ def load_model_from_path(
     meta: Optional[Dict[str, Any]] = None,
     vocab: Union["Vocab", bool] = True,
     disable: Iterable[str] = tuple(),
+    exclude: Iterable[str] = tuple(),
     config: Union[Dict[str, Any], Config] = SimpleFrozenDict(),
 ) -> "Language":
     """Load a model from a data directory path. Creates Language class with
@@ -279,7 +286,11 @@ def load_model_from_path(
     meta (Dict[str, Any]): Optional model meta.
     vocab (Vocab / True): Optional vocab to pass in on initialization. If True,
         a new Vocab object will be created.
-    disable (Iterable[str]): Names of pipeline components to disable.
+    disable (Iterable[str]): Names of pipeline components to disable. Disabled
+        pipes will be loaded but they won't be run unless you explicitly
+        enable them by calling nlp.enable_pipe.
+    exclude (Iterable[str]): Names of pipeline components to exclude. Excluded
+        components won't be loaded.
     config (Dict[str, Any] / Config): Config overrides as nested dict or dict
         keyed by section values in dot notation.
     RETURNS (Language): The loaded nlp object.
@@ -290,8 +301,10 @@ def load_model_from_path(
         meta = get_model_meta(model_path)
     config_path = model_path / "config.cfg"
     config = load_config(config_path, overrides=dict_to_dot(config))
-    nlp, _ = load_model_from_config(config, vocab=vocab, disable=disable)
-    return nlp.from_disk(model_path, exclude=disable)
+    nlp, _ = load_model_from_config(
+        config, vocab=vocab, disable=disable, exclude=exclude
+    )
+    return nlp.from_disk(model_path, exclude=exclude)
 
 
 def load_model_from_config(
@@ -299,6 +312,7 @@ def load_model_from_config(
     *,
     vocab: Union["Vocab", bool] = True,
     disable: Iterable[str] = tuple(),
+    exclude: Iterable[str] = tuple(),
     auto_fill: bool = False,
     validate: bool = True,
 ) -> Tuple["Language", Config]:
@@ -309,7 +323,11 @@ def load_model_from_config(
     meta (Dict[str, Any]): Optional model meta.
     vocab (Vocab / True): Optional vocab to pass in on initialization. If True,
         a new Vocab object will be created.
-    disable (Iterable[str]): Names of pipeline components to disable.
+    disable (Iterable[str]): Names of pipeline components to disable. Disabled
+        pipes will be loaded but they won't be run unless you explicitly
+        enable them by calling nlp.enable_pipe.
+    exclude (Iterable[str]): Names of pipeline components to exclude. Excluded
+        components won't be loaded.
     auto_fill (bool): Whether to auto-fill config with missing defaults.
     validate (bool): Whether to show config validation errors.
     RETURNS (Language): The loaded nlp object.
@@ -323,7 +341,12 @@ def load_model_from_config(
     # registry, including custom subclasses provided via entry points
     lang_cls = get_lang_class(nlp_config["lang"])
     nlp = lang_cls.from_config(
-        config, vocab=vocab, disable=disable, auto_fill=auto_fill, validate=validate,
+        config,
+        vocab=vocab,
+        disable=disable,
+        exclude=exclude,
+        auto_fill=auto_fill,
+        validate=validate,
     )
     return nlp, nlp.resolved
 
@@ -333,6 +356,7 @@ def load_model_from_init_py(
     *,
     vocab: Union["Vocab", bool] = True,
     disable: Iterable[str] = tuple(),
+    exclude: Iterable[str] = tuple(),
     config: Union[Dict[str, Any], Config] = SimpleFrozenDict(),
 ) -> "Language":
     """Helper function to use in the `load()` method of a model package's
@@ -340,7 +364,11 @@ def load_model_from_init_py(
 
     vocab (Vocab / True): Optional vocab to pass in on initialization. If True,
         a new Vocab object will be created.
-    disable (Iterable[str]): Names of pipeline components to disable.
+    disable (Iterable[str]): Names of pipeline components to disable. Disabled
+        pipes will be loaded but they won't be run unless you explicitly
+        enable them by calling nlp.enable_pipe.
+    exclude (Iterable[str]): Names of pipeline components to exclude. Excluded
+        components won't be loaded.
     config (Dict[str, Any] / Config): Config overrides as nested dict or dict
         keyed by section values in dot notation.
     RETURNS (Language): The loaded nlp object.
@@ -352,7 +380,12 @@ def load_model_from_init_py(
     if not model_path.exists():
         raise IOError(Errors.E052.format(path=data_path))
     return load_model_from_path(
-        data_path, vocab=vocab, meta=meta, disable=disable, config=config
+        data_path,
+        vocab=vocab,
+        meta=meta,
+        disable=disable,
+        exclude=exclude,
+        config=config,
     )
 
 

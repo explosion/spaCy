@@ -249,3 +249,66 @@ def test_add_pipe_before_after():
         nlp.add_pipe("entity_ruler", before=True)
     with pytest.raises(ValueError):
         nlp.add_pipe("entity_ruler", first=False)
+
+
+def test_disable_enable_pipes():
+    name = "test_disable_enable_pipes"
+    results = {}
+
+    def make_component(name):
+        results[name] = ""
+
+        def component(doc):
+            nonlocal results
+            results[name] = doc.text
+            return doc
+
+        return component
+
+    c1 = Language.component(f"{name}1", func=make_component(f"{name}1"))
+    c2 = Language.component(f"{name}2", func=make_component(f"{name}2"))
+
+    nlp = Language()
+    nlp.add_pipe(f"{name}1")
+    nlp.add_pipe(f"{name}2")
+    assert results[f"{name}1"] == ""
+    assert results[f"{name}2"] == ""
+    assert nlp.pipeline == [(f"{name}1", c1), (f"{name}2", c2)]
+    assert nlp.pipe_names == [f"{name}1", f"{name}2"]
+    nlp.disable_pipe(f"{name}1")
+    assert nlp._disabled == set([f"{name}1"])
+    assert nlp._pipe_names == [f"{name}1", f"{name}2"]
+    assert nlp.pipe_names == [f"{name}2"]
+    assert nlp.config["nlp"]["disabled"] == [f"{name}1"]
+    nlp("hello")
+    assert results[f"{name}1"] == ""  # didn't run
+    assert results[f"{name}2"] == "hello"  # ran
+    nlp.enable_pipe(f"{name}1")
+    assert nlp._disabled == set()
+    assert nlp.pipe_names == [f"{name}1", f"{name}2"]
+    assert nlp.config["nlp"]["disabled"] == []
+    nlp("world")
+    assert results[f"{name}1"] == "world"
+    assert results[f"{name}2"] == "world"
+    nlp.disable_pipe(f"{name}2")
+    nlp.remove_pipe(f"{name}2")
+    assert nlp._pipeline == [(f"{name}1", c1)]
+    assert nlp.pipeline == [(f"{name}1", c1)]
+    assert nlp._pipe_names == [f"{name}1"]
+    assert nlp.pipe_names == [f"{name}1"]
+    assert nlp._disabled == set()
+    assert nlp.config["nlp"]["disabled"] == []
+    nlp.rename_pipe(f"{name}1", name)
+    assert nlp._pipeline == [(name, c1)]
+    assert nlp._pipe_names == [name]
+    nlp("!")
+    assert results[f"{name}1"] == "!"
+    assert results[f"{name}2"] == "world"
+    with pytest.raises(ValueError):
+        nlp.disable_pipe(f"{name}2")
+    nlp.disable_pipe(name)
+    assert nlp._pipe_names == [name]
+    assert nlp.pipe_names == []
+    assert nlp.config["nlp"]["disabled"] == [name]
+    nlp("?")
+    assert results[f"{name}1"] == "!"
