@@ -234,6 +234,9 @@ cdef class Doc:
             self.is_parsed = True
             self.is_sentenced = True
             self.is_nered = True
+        # A doc of length 1 has is_sentenced as True by default
+        if self.length == 1:
+            self.is_sentenced = True
 
     @property
     def _(self):
@@ -1111,6 +1114,9 @@ cdef class Doc:
             self.is_parsed = False
             self.is_sentenced = False
             self.is_nered = False
+        # A doc of length 1 has is_sentenced as True by default
+        if len(attrs) == 1:
+            self.is_sentenced = True
         for i in range(attrs.shape[0]):
             end = start + attrs[i, 0]
             has_space = attrs[i, 1]
