@@ -289,7 +289,7 @@ class Tagger(Pipe):
         if self.labels:
             label_sample = [
                 self.model.ops.alloc2f(len(doc), len(self.labels))
-                for doc in docs
+                for doc in doc_sample
             ]
             for y in label_sample:
                 y[:, 0] = 1.0
