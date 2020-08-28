@@ -272,7 +272,7 @@ class Tok2VecListener(Model):
         width (int):
             The width of the vectors produced by the upstream tok2vec component.
         """
-        Model.__init__(self, name=self.name, forward=forward, dims={"nO": width})
+        Model.__init__(self, name=self.name, forward=forward, dims={"nO": width}, attrs={"is_listener": True})
         self.upstream_name = upstream_name
         self._batch_id = None
         self._outputs = None
