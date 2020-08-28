@@ -1560,10 +1560,6 @@ class Language:
         )
         serializers["meta.json"] = lambda p: srsly.write_json(p, self.meta)
         serializers["config.cfg"] = lambda p: self.config.to_disk(p)
-        for name, proc in self._pipeline:
-            # TODO: why did we add this?
-            # if not hasattr(proc, "name"):
-            #     continue
             if name in exclude:
                 continue
             if not hasattr(proc, "to_disk"):
