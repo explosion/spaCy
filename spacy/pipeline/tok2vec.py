@@ -296,6 +296,7 @@ def forward(model: Tok2VecListener, inputs, is_train: bool):
         model.verify_inputs(inputs)
         return model._outputs, model._backprop
     else:
+        width = model.get_dim("nO")
         if model._outputs is None:
             outputs = [model.ops.alloc2f(len(doc), width) for doc in inputs]
         else:
