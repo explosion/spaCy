@@ -281,15 +281,15 @@ def test_disable_enable_pipes():
     assert nlp.pipeline == [(f"{name}1", c1), (f"{name}2", c2)]
     assert nlp.pipe_names == [f"{name}1", f"{name}2"]
     nlp.disable_pipe(f"{name}1")
-    assert nlp._disabled == set([f"{name}1"])
-    assert nlp._pipe_names == [f"{name}1", f"{name}2"]
+    assert nlp.disabled == set([f"{name}1"])
+    assert nlp.component_names == [f"{name}1", f"{name}2"]
     assert nlp.pipe_names == [f"{name}2"]
     assert nlp.config["nlp"]["disabled"] == [f"{name}1"]
     nlp("hello")
     assert results[f"{name}1"] == ""  # didn't run
     assert results[f"{name}2"] == "hello"  # ran
     nlp.enable_pipe(f"{name}1")
-    assert nlp._disabled == set()
+    assert nlp.disabled == set()
     assert nlp.pipe_names == [f"{name}1", f"{name}2"]
     assert nlp.config["nlp"]["disabled"] == []
     nlp("world")
@@ -297,22 +297,22 @@ def test_disable_enable_pipes():
     assert results[f"{name}2"] == "world"
     nlp.disable_pipe(f"{name}2")
     nlp.remove_pipe(f"{name}2")
-    assert nlp._pipeline == [(f"{name}1", c1)]
+    assert nlp.components == [(f"{name}1", c1)]
     assert nlp.pipeline == [(f"{name}1", c1)]
-    assert nlp._pipe_names == [f"{name}1"]
+    assert nlp.component_names == [f"{name}1"]
     assert nlp.pipe_names == [f"{name}1"]
-    assert nlp._disabled == set()
+    assert nlp.disabled == set()
     assert nlp.config["nlp"]["disabled"] == []
     nlp.rename_pipe(f"{name}1", name)
-    assert nlp._pipeline == [(name, c1)]
-    assert nlp._pipe_names == [name]
+    assert nlp.components == [(name, c1)]
+    assert nlp.component_names == [name]
     nlp("!")
     assert results[f"{name}1"] == "!"
     assert results[f"{name}2"] == "world"
     with pytest.raises(ValueError):
         nlp.disable_pipe(f"{name}2")
     nlp.disable_pipe(name)
-    assert nlp._pipe_names == [name]
+    assert nlp.component_names == [name]
     assert nlp.pipe_names == []
     assert nlp.config["nlp"]["disabled"] == [name]
     nlp("?")

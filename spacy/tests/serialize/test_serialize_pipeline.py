@@ -186,23 +186,23 @@ def test_serialize_pipeline_disable_enable():
     config = nlp.config.copy()
     nlp2 = English.from_config(config)
     assert nlp2.pipe_names == ["ner"]
-    assert nlp2._pipe_names == ["ner", "tagger"]
-    assert nlp2._disabled == set(["tagger"])
+    assert nlp2.component_names == ["ner", "tagger"]
+    assert nlp2.disabled == set(["tagger"])
     assert nlp2.config["nlp"]["disabled"] == ["tagger"]
     with make_tempdir() as d:
         nlp2.to_disk(d)
         nlp3 = spacy.load(d)
     assert nlp3.pipe_names == ["ner"]
-    assert nlp3._pipe_names == ["ner", "tagger"]
+    assert nlp3.component_names == ["ner", "tagger"]
     with make_tempdir() as d:
         nlp3.to_disk(d)
         nlp4 = spacy.load(d, disable=["ner"])
     assert nlp4.pipe_names == []
-    assert nlp4._pipe_names == ["ner", "tagger"]
-    assert nlp4._disabled == set(["ner", "tagger"])
+    assert nlp4.component_names == ["ner", "tagger"]
+    assert nlp4.disabled == set(["ner", "tagger"])
     with make_tempdir() as d:
         nlp.to_disk(d)
         nlp5 = spacy.load(d, exclude=["tagger"])
     assert nlp5.pipe_names == ["ner"]
-    assert nlp5._pipe_names == ["ner"]
-    assert nlp5._disabled == set()
+    assert nlp5.component_names == ["ner"]
+    assert nlp5.disabled == set()
