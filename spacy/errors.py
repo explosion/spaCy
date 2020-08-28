@@ -136,11 +136,10 @@ class Errors:
             "after (component name or index), first (True) or last (True). "
             "Invalid configuration: {args}. Existing components: {opts}")
     E007 = ("'{name}' already exists in pipeline. Existing names: {opts}")
-    E008 = ("Some current components would be lost when restoring previous "
-            "pipeline state. If you added components after calling "
-            "`nlp.select_pipes()`, you should remove them explicitly with "
-            "`nlp.remove_pipe()` before the pipeline is restored. Names of "
-            "the new components: {names}")
+    E008 = ("Can't restore disabled pipeline component '{name}' because it "
+            "doesn't exist in the pipeline anymore. If you want to remove "
+            "components from the pipeline, you should do it before calling "
+            "`nlp.select_pipes()` or after restoring the disabled components.")
     E010 = ("Word vectors set to length 0. This may be because you don't have "
             "a model installed or loaded, or because your model doesn't "
             "include word vectors. For more info, see the docs:\n"

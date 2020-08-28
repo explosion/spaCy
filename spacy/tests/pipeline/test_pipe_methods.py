@@ -181,6 +181,11 @@ def test_select_pipes_errors(nlp):
     with pytest.raises(ValueError):
         nlp.select_pipes(enable=[], disable=["c3"])
 
+    disabled = nlp.select_pipes(disable=["c2"])
+    nlp.remove_pipe("c2")
+    with pytest.raises(ValueError):
+        disabled.restore()
+
 
 @pytest.mark.parametrize("n_pipes", [100])
 def test_add_lots_of_pipes(nlp, n_pipes):

@@ -1720,9 +1720,9 @@ class DisabledPipes(list):
     def restore(self) -> None:
         """Restore the pipeline to its state when DisabledPipes was created."""
         for name in self.names:
+            if name not in self.nlp._pipe_names:
+                raise ValueError(Errors.E008.format(name=name))
             self.nlp.enable_pipe(name)
-        # TODO: maybe add some more checks / catch errors that may occur if
-        # user removes a disabled pipe in the with block
         self[:] = []
 
 
