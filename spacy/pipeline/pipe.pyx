@@ -188,6 +188,12 @@ cdef class Pipe:
             sgd = self.create_optimizer()
         return sgd
 
+    def finish_initialization(self):
+        """Called on each pipe when the full pipeline is done initializing.
+        # DOCS: TODO
+        """
+        pass
+
     def set_output(self, nO):
         if self.model.has_dim("nO") is not False:
             self.model.set_dim("nO", nO)

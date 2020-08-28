@@ -1070,12 +1070,15 @@ class Language:
         if sgd is None:
             sgd = create_default_optimizer()
         self._optimizer = sgd
+        self._link_components()
         for name, proc in self.pipeline:
             if hasattr(proc, "begin_training"):
                 proc.begin_training(
                     get_examples, pipeline=self.pipeline, sgd=self._optimizer
                 )
-        self._link_components()
+        for name, proc in self.pipeline:
+            if hasattr(proc, "finish_initialization"):
+                proc.finish_initialization()
         return self._optimizer
 
     def resume_training(

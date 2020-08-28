@@ -243,6 +243,17 @@ class Tok2Vec(Pipe):
         """
         docs = [Doc(self.vocab, words=["hello"])]
         self.model.initialize(X=docs)
+        for listener in self.listeners:
+            # during initialization and shape inference, we need to be less strict
+            listener._strict_mode = False
+
+    def finish_initialization(self):
+        """Called on each pipe when the full pipeline is done initializing.
+        # DOCS: TODO
+        """
+        for listener in self.listeners:
+            # during initialization and shape inference, we need to be less strict
+            listener._strict_mode = True
 
     def add_label(self, label):
         raise NotImplementedError
@@ -277,6 +288,7 @@ class Tok2VecListener(Model):
         self._batch_id = None
         self._outputs = None
         self._backprop = None
+        self._strict_mode = True
 
     @classmethod
     def get_batch_id(cls, inputs: List[Doc]) -> int:
@@ -314,6 +326,8 @@ def forward(model: Tok2VecListener, inputs, is_train: bool):
         model.verify_inputs(inputs)
         return model._outputs, model._backprop
     else:
+        if model._strict_mode:
+            model.verify_inputs(inputs)
         if model._batch_id is None:
             outputs = [model.ops.alloc2f(len(doc), model.get_dim("nO")) for doc in inputs]
         else:

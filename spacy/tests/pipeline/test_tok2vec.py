@@ -144,9 +144,9 @@ def test_tok2vec_listener():
     nlp, config = util.load_model_from_config(orig_config, auto_fill=True, validate=True)
     tagger = nlp.get_pipe("tagger")
     tok2vec = nlp.get_pipe("tok2vec")
-    tok2vec_listener = tagger.model.get_ref("tok2vec")
+    tagger_tok2vec = tagger.model.get_ref("tok2vec")
     assert isinstance(tok2vec, Tok2Vec)
-    assert isinstance(tok2vec_listener, Tok2VecListener)
+    assert isinstance(tagger_tok2vec, Tok2VecListener)
     train_examples = []
     for t in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
@@ -155,16 +155,20 @@ def test_tok2vec_listener():
 
     # Check that the Tok2Vec component finds it listeners
     assert tok2vec.listeners == []
-    optimizer = nlp.begin_training()
-    assert tok2vec.listeners == [tok2vec_listener]
+    optimizer = nlp.begin_training(lambda: train_examples)
+    assert tok2vec.listeners == [tagger_tok2vec]
 
     for i in range(5):
         losses = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)
 
-    doc = nlp("Testing this document")
-    doc_tensor = tok2vec_listener.predict([doc])[0]
+    doc = nlp("This should go just fine")
+    doc_tensor = tagger_tok2vec.predict([doc])[0]
     assert_equal(doc.tensor, doc_tensor)
+
+    nlp.disable_pipes("tok2vec")
+    with pytest.raises(ValueError):
+        nlp("This is bound to go wrong")
 
 
 def test_tok2vec_custom_setter():
