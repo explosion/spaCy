@@ -246,19 +246,19 @@ some config validation errors are blocking and will prevent the rest of the
 config from being resolved. This means that you may not see all validation
 errors at once and some issues are only shown once previous errors have been
 fixed. To auto-fill a partial config and save the result, you can use the
-[`init fillconfig`](/api/cli#init-fill-config) command.
+[`init fill-config`](/api/cli#init-fill-config) command.
 
 ```cli
-$ python -m spacy debug config [config_path] [--code_path] [overrides]
+$ python -m spacy debug config [config_path] [--code-path] [--show-functions] [--show-variables] [overrides]
 ```
 
 > #### Example
 >
 > ```cli
-> $ python -m spacy debug config ./config.cfg
+> $ python -m spacy debug config config.cfg
 > ```
 
-<Accordion title="Example output" spaced>
+<Accordion title="Example output (validation error)">
 
 ```
 ✘ Config validation error
@@ -277,13 +277,127 @@ python -m spacy init fill-config tmp/starter-config_invalid.cfg --base tmp/start
 
 </Accordion>
 
-| Name                | Description                                                                                                                                                                                |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `config_path`       | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. ~~Path (positional)~~                                                                |
-| `--code_path`, `-c` | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~       |
-| `--help`, `-h`      | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                 |
-| overrides           | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~ |
-| **PRINTS**          | Config validation errors, if available.                                                                                                                                                    |
+<Accordion title="Example output (valid config and all options)" spaced>
+
+```cli
+$ python -m spacy debug config ./config.cfg --show-functions --show-variables
+```
+
+```
+============================= Config validation =============================
+✔ Config is valid
+
+=============================== Variables (6) ===============================
+
+Variable                                   Value
+-----------------------------------------  ----------------------------------
+${components.tok2vec.model.encode.width}   96
+${paths.dev}                               'hello'
+${paths.init_tok2vec}                      None
+${paths.raw}                               None
+${paths.train}                             ''
+${system.seed}                             0
+
+
+========================= Registered functions (17) =========================
+ℹ [nlp.tokenizer]
+Registry   @tokenizers
+Name       spacy.Tokenizer.v1
+Module     spacy.language
+File       /path/to/spacy/language.py (line 64)
+ℹ [components.ner.model]
+Registry   @architectures
+Name       spacy.TransitionBasedParser.v1
+Module     spacy.ml.models.parser
+File       /path/to/spacy/ml/models/parser.py (line 11)
+ℹ [components.ner.model.tok2vec]
+Registry   @architectures
+Name       spacy.Tok2VecListener.v1
+Module     spacy.ml.models.tok2vec
+File       /path/to/spacy/ml/models/tok2vec.py (line 16)
+ℹ [components.parser.model]
+Registry   @architectures
+Name       spacy.TransitionBasedParser.v1
+Module     spacy.ml.models.parser
+File       /path/to/spacy/ml/models/parser.py (line 11)
+ℹ [components.parser.model.tok2vec]
+Registry   @architectures
+Name       spacy.Tok2VecListener.v1
+Module     spacy.ml.models.tok2vec
+File       /path/to/spacy/ml/models/tok2vec.py (line 16)
+ℹ [components.tagger.model]
+Registry   @architectures
+Name       spacy.Tagger.v1
+Module     spacy.ml.models.tagger
+File       /path/to/spacy/ml/models/tagger.py (line 9)
+ℹ [components.tagger.model.tok2vec]
+Registry   @architectures
+Name       spacy.Tok2VecListener.v1
+Module     spacy.ml.models.tok2vec
+File       /path/to/spacy/ml/models/tok2vec.py (line 16)
+ℹ [components.tok2vec.model]
+Registry   @architectures
+Name       spacy.Tok2Vec.v1
+Module     spacy.ml.models.tok2vec
+File       /path/to/spacy/ml/models/tok2vec.py (line 72)
+ℹ [components.tok2vec.model.embed]
+Registry   @architectures
+Name       spacy.MultiHashEmbed.v1
+Module     spacy.ml.models.tok2vec
+File       /path/to/spacy/ml/models/tok2vec.py (line 93)
+ℹ [components.tok2vec.model.encode]
+Registry   @architectures
+Name       spacy.MaxoutWindowEncoder.v1
+Module     spacy.ml.models.tok2vec
+File       /path/to/spacy/ml/models/tok2vec.py (line 207)
+ℹ [training.logger]
+Registry   @loggers
+Name       spacy.ConsoleLogger.v1
+Module     spacy.gold.loggers
+File       /path/to/spacy/gold/loggers.py (line 8)
+ℹ [training.batcher]
+Registry   @batchers
+Name       batch_by_words.v1
+Module     spacy.gold.batchers
+File       /path/to/spacy/gold/batchers.py (line 49)
+ℹ [training.batcher.size]
+Registry   @schedules
+Name       compounding.v1
+Module     thinc.schedules
+File       /Users/ines/Repos/explosion/thinc/thinc/schedules.py (line 43)
+ℹ [training.dev_corpus]
+Registry   @readers
+Name       spacy.Corpus.v1
+Module     spacy.gold.corpus
+File       /path/to/spacy/gold/corpus.py (line 18)
+ℹ [training.optimizer]
+Registry   @optimizers
+Name       Adam.v1
+Module     thinc.optimizers
+File       /Users/ines/Repos/explosion/thinc/thinc/optimizers.py (line 58)
+ℹ [training.optimizer.learn_rate]
+Registry   @schedules
+Name       warmup_linear.v1
+Module     thinc.schedules
+File       /Users/ines/Repos/explosion/thinc/thinc/schedules.py (line 91)
+ℹ [training.train_corpus]
+Registry   @readers
+Name       spacy.Corpus.v1
+Module     spacy.gold.corpus
+File       /path/to/spacy/gold/corpus.py (line 18)
+```
+
+</Accordion>
+
+| Name                     | Description                                                                                                                                                                                                                    |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `config_path`            | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. ~~Path (positional)~~                                                                                                    |
+| `--code-path`, `-c`      | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~                                           |
+| `--show-functions`, `-F` | Show an overview of all registered function blocks used in the config and where those functions come from, including the module name, Python file and line number. ~~bool (flag)~~                                             |
+| `--show-variables`, `-V` | Show an overview of all variables referenced in the config, e.g. `${paths.train}` and their values that will be used. This also reflects any config overrides provided on the CLI, e.g. `--paths.train /path`. ~~bool (flag)~~ |
+| `--help`, `-h`           | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                                     |
+| overrides                | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~                                     |
+| **PRINTS**               | Config validation errors, if available.                                                                                                                                                                                        |
 
 ### debug data {#debug-data tag="command"}
 
