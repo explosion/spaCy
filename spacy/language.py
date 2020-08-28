@@ -850,24 +850,23 @@ class Language:
 
     def disable_pipe(self, name: str) -> None:
         """Disable a pipeline component. The component will still exist on
-        the nlp object, but it won't be run as part of the pipeline.
+        the nlp object, but it won't be run as part of the pipeline. Does
+        nothing if the component is already disabled.
 
         name (str): The name of the component to disable.
         """
         if name not in self._pipe_names:
             raise ValueError(Errors.E001.format(name=name, opts=self._pipe_names))
-        # TODO: should we raise if pipe is already disabled?
         self._disabled.add(name)
 
     def enable_pipe(self, name: str) -> None:
         """Enable a previously disabled pipeline component so it's run as part
-        of the pipeline.
+        of the pipeline. Does nothing if the component is already enabled.
 
         name (str): The name of the component to enable.
         """
         if name not in self._pipe_names:
             raise ValueError(Errors.E001.format(name=name, opts=self._pipe_names))
-        # TODO: should we raise if pipe is already enabled?
         if name in self._disabled:
             self._disabled.remove(name)
 
