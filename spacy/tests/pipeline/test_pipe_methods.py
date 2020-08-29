@@ -1,5 +1,6 @@
 import pytest
 from spacy.language import Language
+from spacy.util import SimpleFrozenList
 
 
 @pytest.fixture
@@ -317,3 +318,31 @@ def test_disable_enable_pipes():
     assert nlp.config["nlp"]["disabled"] == [name]
     nlp("?")
     assert results[f"{name}1"] == "!"
+
+
+def test_pipe_methods_frozen():
+    """Test that spaCy raises custom error messages if "frozen" properties are
+    accessed. We still want to use a list here to not break backwards
+    compatibility, but users should see an error if they're trying to append
+    to nlp.pipeline etc."""
+    nlp = Language()
+    ner = nlp.add_pipe("ner")
+    assert nlp.pipe_names == ["ner"]
+    for prop in [
+        nlp.pipeline,
+        nlp.pipe_names,
+        nlp.components,
+        nlp.component_names,
+        nlp.disabled,
+        nlp.factory_names,
+    ]:
+        assert isinstance(prop, list)
+        assert isinstance(prop, SimpleFrozenList)
+    with pytest.raises(NotImplementedError):
+        nlp.pipeline.append(("ner2", ner))
+    with pytest.raises(NotImplementedError):
+        nlp.pipe_names.pop()
+    with pytest.raises(NotImplementedError):
+        nlp.components.sort()
+    with pytest.raises(NotImplementedError):
+        nlp.component_names.clear()

@@ -10,7 +10,7 @@ from ..vocab import Vocab
 from ..compat import copy_reg
 from ..attrs import SPACY, ORTH, intify_attr
 from ..errors import Errors
-from ..util import ensure_path
+from ..util import ensure_path, SimpleFrozenList
 
 # fmt: off
 ALL_ATTRS = ("ORTH", "TAG", "HEAD", "DEP", "ENT_IOB", "ENT_TYPE", "ENT_KB_ID", "LEMMA", "MORPH", "POS")
@@ -52,7 +52,7 @@ class DocBin:
         self,
         attrs: Iterable[str] = ALL_ATTRS,
         store_user_data: bool = False,
-        docs: Iterable[Doc] = tuple(),
+        docs: Iterable[Doc] = SimpleFrozenList(),
     ) -> None:
         """Create a DocBin object to hold serialized annotations.
 

@@ -20,7 +20,7 @@ from .vocab import Vocab, create_vocab
 from .pipe_analysis import validate_attrs, analyze_pipes, print_pipe_analysis
 from .gold import Example, validate_examples
 from .scorer import Scorer
-from .util import create_default_optimizer, registry
+from .util import create_default_optimizer, registry, SimpleFrozenList
 from .util import SimpleFrozenDict, combine_score_weights, CONFIG_SECTION_ORDER
 from .lang.tokenizer_exceptions import URL_MATCH, BASE_EXCEPTIONS
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
@@ -159,7 +159,7 @@ class Language:
         self.vocab: Vocab = vocab
         if self.lang is None:
             self.lang = self.vocab.lang
-        self.components = []
+        self._components = []
         self._disabled = set()
         self.max_length = max_length
         self.resolved = {}
@@ -207,11 +207,11 @@ class Language:
             "keys": self.vocab.vectors.n_keys,
             "name": self.vocab.vectors.name,
         }
-        self._meta["labels"] = self.pipe_labels
+        self._meta["labels"] = dict(self.pipe_labels)
         # TODO: Adding this back to prevent breaking people's code etc., but
         # we should consider removing it
-        self._meta["pipeline"] = self.pipe_names
-        self._meta["disabled"] = self.disabled
+        self._meta["pipeline"] = list(self.pipe_names)
+        self._meta["disabled"] = list(self.disabled)
         return self._meta
 
     @meta.setter
@@ -240,8 +240,8 @@ class Language:
             pipeline[pipe_name] = {"factory": pipe_meta.factory, **pipe_config}
             if pipe_meta.default_score_weights:
                 score_weights.append(pipe_meta.default_score_weights)
-        self._config["nlp"]["pipeline"] = self.component_names
-        self._config["nlp"]["disabled"] = self.disabled
+        self._config["nlp"]["pipeline"] = list(self.component_names)
+        self._config["nlp"]["disabled"] = list(self.disabled)
         self._config["components"] = pipeline
         self._config["training"]["score_weights"] = combine_score_weights(score_weights)
         if not srsly.is_json_serializable(self._config):
@@ -260,7 +260,8 @@ class Language:
         """
         # Make sure the disabled components are returned in the order they
         # appear in the pipeline (which isn't guaranteed by the set)
-        return [name for name, _ in self.components if name in self._disabled]
+        names = [name for name, _ in self._components if name in self._disabled]
+        return SimpleFrozenList(names, error=Errors.E926.format(attr="disabled"))
 
     @property
     def factory_names(self) -> List[str]:
@@ -268,7 +269,17 @@ class Language:
 
         RETURNS (List[str]): The factory names.
         """
-        return list(self.factories.keys())
+        names = list(self.factories.keys())
+        return SimpleFrozenList(names)
+
+    @property
+    def components(self) -> List[Tuple[str, Callable[[Doc], Doc]]]:
+        """Get all (name, component) tuples in the pipeline, including the
+        currently disabled components.
+        """
+        return SimpleFrozenList(
+            self._components, error=Errors.E926.format(attr="components")
+        )
 
     @property
     def component_names(self) -> List[str]:
@@ -277,7 +288,8 @@ class Language:
 
         RETURNS (List[str]): List of component name strings, in order.
         """
-        return [pipe_name for pipe_name, _ in self.components]
+        names = [pipe_name for pipe_name, _ in self._components]
+        return SimpleFrozenList(names, error=Errors.E926.format(attr="component_names"))
 
     @property
     def pipeline(self) -> List[Tuple[str, Callable[[Doc], Doc]]]:
@@ -287,7 +299,8 @@ class Language:
 
         RETURNS (List[Tuple[str, Callable[[Doc], Doc]]]): The pipeline.
         """
-        return [(name, p) for name, p in self.components if name not in self._disabled]
+        pipes = [(n, p) for n, p in self._components if n not in self._disabled]
+        return SimpleFrozenList(pipes, error=Errors.E926.format(attr="pipeline"))
 
     @property
     def pipe_names(self) -> List[str]:
@@ -295,7 +308,8 @@ class Language:
 
         RETURNS (List[str]): List of component name strings, in order.
         """
-        return [pipe_name for pipe_name, _ in self.pipeline]
+        names = [pipe_name for pipe_name, _ in self.pipeline]
+        return SimpleFrozenList(names, error=Errors.E926.format(attr="pipe_names"))
 
     @property
     def pipe_factories(self) -> Dict[str, str]:
@@ -304,9 +318,9 @@ class Language:
         RETURNS (Dict[str, str]): Factory names, keyed by component names.
         """
         factories = {}
-        for pipe_name, pipe in self.components:
+        for pipe_name, pipe in self._components:
             factories[pipe_name] = self.get_pipe_meta(pipe_name).factory
-        return factories
+        return SimpleFrozenDict(factories)
 
     @property
     def pipe_labels(self) -> Dict[str, List[str]]:
@@ -316,10 +330,10 @@ class Language:
         RETURNS (Dict[str, List[str]]): Labels keyed by component name.
         """
         labels = {}
-        for name, pipe in self.components:
+        for name, pipe in self._components:
             if hasattr(pipe, "labels"):
                 labels[name] = list(pipe.labels)
-        return labels
+        return SimpleFrozenDict(labels)
 
     @classmethod
     def has_factory(cls, name: str) -> bool:
@@ -390,10 +404,10 @@ class Language:
         name: str,
         *,
         default_config: Dict[str, Any] = SimpleFrozenDict(),
-        assigns: Iterable[str] = tuple(),
-        requires: Iterable[str] = tuple(),
+        assigns: Iterable[str] = SimpleFrozenList(),
+        requires: Iterable[str] = SimpleFrozenList(),
         retokenizes: bool = False,
-        scores: Iterable[str] = tuple(),
+        scores: Iterable[str] = SimpleFrozenList(),
         default_score_weights: Dict[str, float] = SimpleFrozenDict(),
         func: Optional[Callable] = None,
     ) -> Callable:
@@ -471,8 +485,8 @@ class Language:
         cls,
         name: Optional[str] = None,
         *,
-        assigns: Iterable[str] = tuple(),
-        requires: Iterable[str] = tuple(),
+        assigns: Iterable[str] = SimpleFrozenList(),
+        requires: Iterable[str] = SimpleFrozenList(),
         retokenizes: bool = False,
         func: Optional[Callable[[Doc], Doc]] = None,
     ) -> Callable:
@@ -544,7 +558,7 @@ class Language:
 
         DOCS: https://spacy.io/api/language#get_pipe
         """
-        for pipe_name, component in self.components:
+        for pipe_name, component in self._components:
             if pipe_name == name:
                 return component
         raise KeyError(Errors.E001.format(name=name, opts=self.component_names))
@@ -718,7 +732,7 @@ class Language:
             )
         pipe_index = self._get_pipe_index(before, after, first, last)
         self._pipe_meta[name] = self.get_factory_meta(factory_name)
-        self.components.insert(pipe_index, (name, pipe_component))
+        self._components.insert(pipe_index, (name, pipe_component))
         return pipe_component
 
     def _get_pipe_index(
@@ -743,7 +757,7 @@ class Language:
                 Errors.E006.format(args=all_args, opts=self.component_names)
             )
         if last or not any(value is not None for value in [first, before, after]):
-            return len(self.components)
+            return len(self._components)
         elif first:
             return 0
         elif isinstance(before, str):
@@ -761,14 +775,14 @@ class Language:
         # We're only accepting indices referring to components that exist
         # (can't just do isinstance here because bools are instance of int, too)
         elif type(before) == int:
-            if before >= len(self.components) or before < 0:
+            if before >= len(self._components) or before < 0:
                 err = Errors.E959.format(
                     dir="before", idx=before, opts=self.component_names
                 )
                 raise ValueError(err)
             return before
         elif type(after) == int:
-            if after >= len(self.components) or after < 0:
+            if after >= len(self._components) or after < 0:
                 err = Errors.E959.format(
                     dir="after", idx=after, opts=self.component_names
                 )
@@ -815,7 +829,7 @@ class Language:
         # to Language.pipeline to make sure the configs are handled correctly
         pipe_index = self.pipe_names.index(name)
         self.remove_pipe(name)
-        if not len(self.components) or pipe_index == len(self.components):
+        if not len(self._components) or pipe_index == len(self._components):
             # we have no components to insert before/after, or we're replacing the last component
             self.add_pipe(factory_name, name=name, config=config, validate=validate)
         else:
@@ -844,7 +858,7 @@ class Language:
                 Errors.E007.format(name=new_name, opts=self.component_names)
             )
         i = self.component_names.index(old_name)
-        self.components[i] = (new_name, self.components[i][1])
+        self._components[i] = (new_name, self._components[i][1])
         self._pipe_meta[new_name] = self._pipe_meta.pop(old_name)
         self._pipe_configs[new_name] = self._pipe_configs.pop(old_name)
 
@@ -858,7 +872,7 @@ class Language:
         """
         if name not in self.component_names:
             raise ValueError(Errors.E001.format(name=name, opts=self.component_names))
-        removed = self.components.pop(self.component_names.index(name))
+        removed = self._components.pop(self.component_names.index(name))
         # We're only removing the component itself from the metas/configs here
         # because factory may be used for something else
         self._pipe_meta.pop(name)
@@ -894,7 +908,7 @@ class Language:
         self,
         text: str,
         *,
-        disable: Iterable[str] = tuple(),
+        disable: Iterable[str] = SimpleFrozenList(),
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
     ) -> Doc:
         """Apply the pipeline to some text. The text can span multiple sentences,
@@ -993,7 +1007,7 @@ class Language:
         sgd: Optional[Optimizer] = None,
         losses: Optional[Dict[str, float]] = None,
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
-        exclude: Iterable[str] = tuple(),
+        exclude: Iterable[str] = SimpleFrozenList(),
     ):
         """Update the models in the pipeline.
 
@@ -1047,7 +1061,7 @@ class Language:
         sgd: Optional[Optimizer] = None,
         losses: Optional[Dict[str, float]] = None,
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
-        exclude: Iterable[str] = tuple(),
+        exclude: Iterable[str] = SimpleFrozenList(),
     ) -> Dict[str, float]:
         """Make a "rehearsal" update to the models in the pipeline, to prevent
         forgetting. Rehearsal updates run an initial copy of the model over some
@@ -1276,7 +1290,7 @@ class Language:
         *,
         as_tuples: bool = False,
         batch_size: int = 1000,
-        disable: Iterable[str] = tuple(),
+        disable: Iterable[str] = SimpleFrozenList(),
         cleanup: bool = False,
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
         n_process: int = 1,
@@ -1436,8 +1450,8 @@ class Language:
         config: Union[Dict[str, Any], Config] = {},
         *,
         vocab: Union[Vocab, bool] = True,
-        disable: Iterable[str] = tuple(),
-        exclude: Iterable[str] = tuple(),
+        disable: Iterable[str] = SimpleFrozenList(),
+        exclude: Iterable[str] = SimpleFrozenList(),
         auto_fill: bool = True,
         validate: bool = True,
     ) -> "Language":
@@ -1562,7 +1576,7 @@ class Language:
         return nlp
 
     def to_disk(
-        self, path: Union[str, Path], *, exclude: Iterable[str] = tuple()
+        self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList()
     ) -> None:
         """Save the current state to a directory.  If a model is loaded, this
         will include the model.
@@ -1580,7 +1594,7 @@ class Language:
         )
         serializers["meta.json"] = lambda p: srsly.write_json(p, self.meta)
         serializers["config.cfg"] = lambda p: self.config.to_disk(p)
-        for name, proc in self.components:
+        for name, proc in self._components:
             if name in exclude:
                 continue
             if not hasattr(proc, "to_disk"):
@@ -1590,7 +1604,7 @@ class Language:
         util.to_disk(path, serializers, exclude)
 
     def from_disk(
-        self, path: Union[str, Path], *, exclude: Iterable[str] = tuple()
+        self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList()
     ) -> "Language":
         """Loads state from a directory. Modifies the object in place and
         returns it. If the saved `Language` object contains a model, the
@@ -1624,7 +1638,7 @@ class Language:
         deserializers["tokenizer"] = lambda p: self.tokenizer.from_disk(
             p, exclude=["vocab"]
         )
-        for name, proc in self.components:
+        for name, proc in self._components:
             if name in exclude:
                 continue
             if not hasattr(proc, "from_disk"):
@@ -1640,7 +1654,7 @@ class Language:
         self._link_components()
         return self
 
-    def to_bytes(self, *, exclude: Iterable[str] = tuple()) -> bytes:
+    def to_bytes(self, *, exclude: Iterable[str] = SimpleFrozenList()) -> bytes:
         """Serialize the current state to a binary string.
 
         exclude (list): Names of components or serialization fields to exclude.
@@ -1653,7 +1667,7 @@ class Language:
         serializers["tokenizer"] = lambda: self.tokenizer.to_bytes(exclude=["vocab"])
         serializers["meta.json"] = lambda: srsly.json_dumps(self.meta)
         serializers["config.cfg"] = lambda: self.config.to_bytes()
-        for name, proc in self.components:
+        for name, proc in self._components:
             if name in exclude:
                 continue
             if not hasattr(proc, "to_bytes"):
@@ -1662,7 +1676,7 @@ class Language:
         return util.to_bytes(serializers, exclude)
 
     def from_bytes(
-        self, bytes_data: bytes, *, exclude: Iterable[str] = tuple()
+        self, bytes_data: bytes, *, exclude: Iterable[str] = SimpleFrozenList()
     ) -> "Language":
         """Load state from a binary string.
 
@@ -1687,7 +1701,7 @@ class Language:
         deserializers["tokenizer"] = lambda b: self.tokenizer.from_bytes(
             b, exclude=["vocab"]
         )
-        for name, proc in self.components:
+        for name, proc in self._components:
             if name in exclude:
                 continue
             if not hasattr(proc, "from_bytes"):

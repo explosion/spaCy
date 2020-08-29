@@ -120,6 +120,47 @@ class SimpleFrozenDict(dict):
         raise NotImplementedError(self.error)
 
 
+class SimpleFrozenList(list):
+    """Wrapper class around a list that lets us raise custom errors if certain
+    attributes/methods are accessed. Mostly used for properties like
+    Language.pipeline that return an immutable list (and that we don't want to
+    convert to a tuple to not break too much backwards compatibility). If a user
+    accidentally calls nlp.pipeline.append(), we can raise a more helpful error.
+    """
+
+    def __init__(self, *args, error: str = Errors.E927) -> None:
+        """Initialize the frozen list.
+
+        error (str): The error message when user tries to mutate the list.
+        """
+        self.error = error
+        super().__init__(*args)
+
+    def append(self, *args, **kwargs):
+        raise NotImplementedError(self.error)
+
+    def clear(self, *args, **kwargs):
+        raise NotImplementedError(self.error)
+
+    def extend(self, *args, **kwargs):
+        raise NotImplementedError(self.error)
+
+    def insert(self, *args, **kwargs):
+        raise NotImplementedError(self.error)
+
+    def pop(self, *args, **kwargs):
+        raise NotImplementedError(self.error)
+
+    def remove(self, *args, **kwargs):
+        raise NotImplementedError(self.error)
+
+    def reverse(self, *args, **kwargs):
+        raise NotImplementedError(self.error)
+
+    def sort(self, *args, **kwargs):
+        raise NotImplementedError(self.error)
+
+
 def lang_class_is_loaded(lang: str) -> bool:
     """Check whether a Language class is already loaded. Language classes are
     loaded lazily, to avoid expensive setup code associated with the language
@@ -215,8 +256,8 @@ def load_model(
     name: Union[str, Path],
     *,
     vocab: Union["Vocab", bool] = True,
-    disable: Iterable[str] = tuple(),
-    exclude: Iterable[str] = tuple(),
+    disable: Iterable[str] = SimpleFrozenList(),
+    exclude: Iterable[str] = SimpleFrozenList(),
     config: Union[Dict[str, Any], Config] = SimpleFrozenDict(),
 ) -> "Language":
     """Load a model from a package or data path.
@@ -248,8 +289,8 @@ def load_model_from_package(
     name: str,
     *,
     vocab: Union["Vocab", bool] = True,
-    disable: Iterable[str] = tuple(),
-    exclude: Iterable[str] = tuple(),
+    disable: Iterable[str] = SimpleFrozenList(),
+    exclude: Iterable[str] = SimpleFrozenList(),
     config: Union[Dict[str, Any], Config] = SimpleFrozenDict(),
 ) -> "Language":
     """Load a model from an installed package.
@@ -275,8 +316,8 @@ def load_model_from_path(
     *,
     meta: Optional[Dict[str, Any]] = None,
     vocab: Union["Vocab", bool] = True,
-    disable: Iterable[str] = tuple(),
-    exclude: Iterable[str] = tuple(),
+    disable: Iterable[str] = SimpleFrozenList(),
+    exclude: Iterable[str] = SimpleFrozenList(),
     config: Union[Dict[str, Any], Config] = SimpleFrozenDict(),
 ) -> "Language":
     """Load a model from a data directory path. Creates Language class with
@@ -311,8 +352,8 @@ def load_model_from_config(
     config: Union[Dict[str, Any], Config],
     *,
     vocab: Union["Vocab", bool] = True,
-    disable: Iterable[str] = tuple(),
-    exclude: Iterable[str] = tuple(),
+    disable: Iterable[str] = SimpleFrozenList(),
+    exclude: Iterable[str] = SimpleFrozenList(),
     auto_fill: bool = False,
     validate: bool = True,
 ) -> Tuple["Language", Config]:
@@ -355,8 +396,8 @@ def load_model_from_init_py(
     init_file: Union[Path, str],
     *,
     vocab: Union["Vocab", bool] = True,
-    disable: Iterable[str] = tuple(),
-    exclude: Iterable[str] = tuple(),
+    disable: Iterable[str] = SimpleFrozenList(),
+    exclude: Iterable[str] = SimpleFrozenList(),
     config: Union[Dict[str, Any], Config] = SimpleFrozenDict(),
 ) -> "Language":
     """Helper function to use in the `load()` method of a model package's

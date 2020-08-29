@@ -27,8 +27,8 @@ if sys.maxunicode == 65535:
 
 def load(
     name: Union[str, Path],
-    disable: Iterable[str] = tuple(),
-    exclude: Iterable[str] = tuple(),
+    disable: Iterable[str] = util.SimpleFrozenList(),
+    exclude: Iterable[str] = util.SimpleFrozenList(),
     config: Union[Dict[str, Any], Config] = util.SimpleFrozenDict(),
 ) -> Language:
     """Load a spaCy model from an installed package or a local path.

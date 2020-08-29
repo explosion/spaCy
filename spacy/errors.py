@@ -472,6 +472,13 @@ class Errors:
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
+    E926 = ("It looks like you're trying to modify nlp.{attr} directly. This "
+            "doesn't work because it's an immutable computed property. If you "
+            "need to modify the pipeline, use the built-in methods like "
+            "nlp.add_pipe, nlp.remove_pipe, nlp.disable_pipe or nlp.enable_pipe "
+            "instead.")
+    E927 = ("Can't write to frozen list Maybe you're trying to modify a computed "
+            "property or default function argument?")
     E928 = ("A 'KnowledgeBase' should be written to / read from a file, but the "
             "provided argument {loc} is an existing directory.")
     E929 = ("A 'KnowledgeBase' could not be read from {loc} - the path does "
