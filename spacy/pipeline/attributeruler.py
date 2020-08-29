@@ -78,7 +78,7 @@ class AttributeRuler(Pipe):
 
         DOCS: https://spacy.io/api/attributeruler#call
         """
-        matches = self.matcher(doc)
+        matches = sorted(self.matcher(doc))
 
         for match_id, start, end in matches:
             span = Span(doc, start, end, label=match_id)
@@ -230,10 +230,7 @@ class AttributeRuler(Pipe):
         """
         serialize = {}
         serialize["vocab"] = self.vocab.to_bytes
-        patterns = {k: self.matcher.get(k)[1] for k in range(len(self.attrs))}
-        serialize["patterns"] = lambda: srsly.msgpack_dumps(patterns)
-        serialize["attrs"] = lambda: srsly.msgpack_dumps(self.attrs)
-        serialize["indices"] = lambda: srsly.msgpack_dumps(self.indices)
+        serialize["patterns"] = lambda: srsly.msgpack_dumps(self.patterns)
         return util.to_bytes(serialize, exclude)
 
     def from_bytes(self, bytes_data: bytes, exclude: Iterable[str] = tuple()):
@@ -245,30 +242,14 @@ class AttributeRuler(Pipe):
 
         DOCS: https://spacy.io/api/attributeruler#from_bytes
         """
-        data = {"patterns": b""}
-
         def load_patterns(b):
-            data["patterns"] = srsly.msgpack_loads(b)
-
-        def load_attrs(b):
-            self.attrs = srsly.msgpack_loads(b)
-
-        def load_indices(b):
-            self.indices = srsly.msgpack_loads(b)
+            self.add_patterns(srsly.msgpack_loads(b))
 
         deserialize = {
             "vocab": lambda b: self.vocab.from_bytes(b),
             "patterns": load_patterns,
-            "attrs": load_attrs,
-            "indices": load_indices,
         }
         util.from_bytes(bytes_data, deserialize, exclude)
-
-        if data["patterns"]:
-            for key, pattern in data["patterns"].items():
-                self.matcher.add(key, pattern)
-            assert len(self.attrs) == len(data["patterns"])
-            assert len(self.indices) == len(data["patterns"])
 
         return self
 
@@ -279,12 +260,9 @@ class AttributeRuler(Pipe):
         exclude (Iterable[str]): String names of serialization fields to exclude.
         DOCS: https://spacy.io/api/attributeruler#to_disk
         """
-        patterns = {k: self.matcher.get(k)[1] for k in range(len(self.attrs))}
         serialize = {
             "vocab": lambda p: self.vocab.to_disk(p),
-            "patterns": lambda p: srsly.write_msgpack(p, patterns),
-            "attrs": lambda p: srsly.write_msgpack(p, self.attrs),
-            "indices": lambda p: srsly.write_msgpack(p, self.indices),
+            "patterns": lambda p: srsly.write_msgpack(p, self.patterns),
         }
         util.to_disk(path, serialize, exclude)
 
@@ -297,30 +275,14 @@ class AttributeRuler(Pipe):
         exclude (Iterable[str]): String names of serialization fields to exclude.
         DOCS: https://spacy.io/api/attributeruler#from_disk
         """
-        data = {"patterns": b""}
-
         def load_patterns(p):
-            data["patterns"] = srsly.read_msgpack(p)
-
-        def load_attrs(p):
-            self.attrs = srsly.read_msgpack(p)
-
-        def load_indices(p):
-            self.indices = srsly.read_msgpack(p)
+            self.add_patterns(srsly.read_msgpack(p))
 
         deserialize = {
             "vocab": lambda p: self.vocab.from_disk(p),
             "patterns": load_patterns,
-            "attrs": load_attrs,
-            "indices": load_indices,
         }
         util.from_disk(path, deserialize, exclude)
-
-        if data["patterns"]:
-            for key, pattern in data["patterns"].items():
-                self.matcher.add(key, pattern)
-            assert len(self.attrs) == len(data["patterns"])
-            assert len(self.indices) == len(data["patterns"])
 
         return self
 

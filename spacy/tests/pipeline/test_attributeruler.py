@@ -112,6 +112,28 @@ def test_attributeruler_score(nlp, pattern_dicts):
     assert scores["morph_acc"] == pytest.approx(0.6)
 
 
+def test_attributeruler_rule_order(nlp):
+    a = AttributeRuler(nlp.vocab)
+    patterns = [
+        {
+            "patterns": [[{"TAG": "VBZ"}]],
+            "attrs": {"POS": "VERB"},
+        },
+        {
+            "patterns": [[{"TAG": "VBZ"}]],
+            "attrs": {"POS": "NOUN"},
+        },
+    ]
+    a.add_patterns(patterns)
+    doc = get_doc(
+        nlp.vocab,
+        words=["This", "is", "a", "test", "."],
+        tags=["DT", "VBZ", "DT", "NN", "."]
+    )
+    doc = a(doc)
+    assert doc[1].pos_ == "NOUN"
+
+
 def test_attributeruler_tag_map(nlp, tag_map):
     a = AttributeRuler(nlp.vocab)
     a.load_from_tag_map(tag_map)
@@ -215,6 +237,7 @@ def test_attributeruler_serialize(nlp, pattern_dicts):
     assert a.to_bytes() == a_reloaded.to_bytes()
     doc1 = a_reloaded(nlp.make_doc(text))
     numpy.array_equal(doc.to_array(attrs), doc1.to_array(attrs))
+    assert a.patterns == a_reloaded.patterns
 
     # disk roundtrip
     with make_tempdir() as tmp_dir:
@@ -223,3 +246,4 @@ def test_attributeruler_serialize(nlp, pattern_dicts):
         doc2 = nlp2(text)
         assert nlp2.get_pipe("attribute_ruler").to_bytes() == a.to_bytes()
         assert numpy.array_equal(doc.to_array(attrs), doc2.to_array(attrs))
+        assert a.patterns == nlp2.get_pipe("attribute_ruler").patterns
