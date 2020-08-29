@@ -258,7 +258,9 @@ class Language:
 
         RETURNS (List[str]): The disabled components.
         """
-        return list(self._disabled)
+        # Make sure the disabled components are returned in the order they
+        # appear in the pipeline (which isn't guaranteed by the set)
+        return [name for name, _ in self.components if name in self._disabled]
 
     @property
     def factory_names(self) -> List[str]:
