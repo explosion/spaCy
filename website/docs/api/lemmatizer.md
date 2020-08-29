@@ -25,9 +25,10 @@ added to your pipeline, and not a hidden part of the vocab that runs behind the
 scenes. This makes it easier to customize how lemmas should be assigned in your
 pipeline.
 
-If the lemmatization mode is set to `"rule"` and requires part-of-speech tags to
-be assigned, make sure a [`Tagger`](/api/tagger) or another component assigning
-tags is available in the pipeline and runs _before_ the lemmatizer.
+If the lemmatization mode is set to `"rule"`, which requires coarse-grained POS
+(`Token.pos`) to be assigned, make sure a [`Tagger`](/api/tagger),
+[`Morphologizer`](/api/morphologizer) or another component assigning POS is
+available in the pipeline and runs _before_ the lemmatizer.
 
 </Infobox>
 
