@@ -2,7 +2,7 @@ from typing import Optional, Iterable, Callable, Dict, Iterator, Union, List, Tu
 from pathlib import Path
 import srsly
 import random
-from thinc.api import CosineDistance, get_array_module, Model, Optimizer, Config
+from thinc.api import CosineDistance, Model, Optimizer, Config
 from thinc.api import set_dropout_rate
 import warnings
 

@@ -242,6 +242,7 @@ class AttributeRuler(Pipe):
 
         DOCS: https://spacy.io/api/attributeruler#from_bytes
         """
+
         def load_patterns(b):
             self.add_patterns(srsly.msgpack_loads(b))
 
@@ -275,6 +276,7 @@ class AttributeRuler(Pipe):
         exclude (Iterable[str]): String names of serialization fields to exclude.
         DOCS: https://spacy.io/api/attributeruler#from_disk
         """
+
         def load_patterns(p):
             self.add_patterns(srsly.read_msgpack(p))
 

@@ -104,7 +104,11 @@ def test_attributeruler_score(nlp, pattern_dicts):
     assert doc[3].lemma_ == "cat"
     assert doc[3].morph_ == "Case=Nom|Number=Sing"
 
-    dev_examples = [Example.from_dict(nlp.make_doc("This is a test."), {"lemmas": ["this", "is", "a", "cat", "."]})]
+    dev_examples = [
+        Example.from_dict(
+            nlp.make_doc("This is a test."), {"lemmas": ["this", "is", "a", "cat", "."]}
+        )
+    ]
     scores = nlp.evaluate(dev_examples)
     # "cat" is the only correct lemma
     assert scores["lemma_acc"] == pytest.approx(0.2)
@@ -115,20 +119,14 @@ def test_attributeruler_score(nlp, pattern_dicts):
 def test_attributeruler_rule_order(nlp):
     a = AttributeRuler(nlp.vocab)
     patterns = [
-        {
-            "patterns": [[{"TAG": "VBZ"}]],
-            "attrs": {"POS": "VERB"},
-        },
-        {
-            "patterns": [[{"TAG": "VBZ"}]],
-            "attrs": {"POS": "NOUN"},
-        },
+        {"patterns": [[{"TAG": "VBZ"}]], "attrs": {"POS": "VERB"}},
+        {"patterns": [[{"TAG": "VBZ"}]], "attrs": {"POS": "NOUN"}},
     ]
     a.add_patterns(patterns)
     doc = get_doc(
         nlp.vocab,
         words=["This", "is", "a", "test", "."],
-        tags=["DT", "VBZ", "DT", "NN", "."]
+        tags=["DT", "VBZ", "DT", "NN", "."],
     )
     doc = a(doc)
     assert doc[1].pos_ == "NOUN"
