@@ -750,14 +750,6 @@ subclass.
 
 ---
 
-<!--
-
-### Customizing the tokenizer {#tokenizer-custom}
-
-TODO: rewrite the docs on custom tokenization in a more user-friendly order, including details on how to integrate a fully custom tokenizer, representing a tokenizer in the config etc.
-
--->
-
 ### Adding special case tokenization rules {#special-cases}
 
 Most domains have at least some idiosyncrasies that require custom tokenization
@@ -1488,19 +1480,20 @@ for sent in doc.sents:
     print(sent.text)
 ```
 
-spaCy provides three alternatives for sentence segmentation:
+spaCy provides four alternatives for sentence segmentation:
 
-1. [Dependency parser](#sbd-parser): the statistical `parser` provides the most
-   accurate sentence boundaries based on full dependency parses.
-2. [Statistical sentence segmenter](#sbd-senter): the statistical `senter` is a
-   simpler and faster alternative to the parser that only sets sentence
-   boundaries.
-3. [Rule-based pipeline component](#sbd-component): the rule-based `sentencizer`
-   sets sentence boundaries using a customizable list of sentence-final
-   punctuation.
-
-You can also plug an entirely custom [rule-based function](#sbd-custom) into
-your [processing pipeline](/usage/processing-pipelines).
+1. [Dependency parser](#sbd-parser): the statistical
+   [`DependencyParser`](/api/dependencyparser) provides the most accurate
+   sentence boundaries based on full dependency parses.
+2. [Statistical sentence segmenter](#sbd-senter): the statistical
+   [`SentenceRecognizer`](/api/sentencerecognizer) is a simpler and faster
+   alternative to the parser that only sets sentence boundaries.
+3. [Rule-based pipeline component](#sbd-component): the rule-based
+   [`Sentencizer`](/api/sentencizer) sets sentence boundaries using a
+   customizable list of sentence-final punctuation.
+4. [Custom function](#sbd-custom): your own custom function added to the
+   processing pipeline can set sentence boundaries by writing to
+   `Token.is_sent_start`.
 
 ### Default: Using the dependency parse {#sbd-parser model="parser"}
 
@@ -1535,7 +1528,13 @@ smaller than the parser, its primary advantage is that it's easier to train
 custom models because it only requires annotated sentence boundaries rather than
 full dependency parses.
 
-<!-- TODO: correct senter loading -->
+<!-- TODO: update/confirm usage once we have final models trained -->
+
+> #### senter vs. parser
+>
+> The recall for the `senter` is typically slightly lower than for the parser,
+> which is better at predicting sentence boundaries when punctuation is not
+> present.
 
 ```python
 ### {executable="true"}
@@ -1546,10 +1545,6 @@ doc = nlp("This is a sentence. This is another sentence.")
 for sent in doc.sents:
     print(sent.text)
 ```
-
-The recall for the `senter` is typically slightly lower than for the parser,
-which is better at predicting sentence boundaries when punctuation is not
-present.
 
 ### Rule-based pipeline component {#sbd-component}
 

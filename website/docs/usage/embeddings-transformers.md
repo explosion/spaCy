@@ -229,6 +229,8 @@ By default, the `Transformer` component sets the
 [`Doc._.trf_data`](/api/transformer#custom_attributes) extension attribute,
 which lets you access the transformers outputs at runtime.
 
+<!-- TODO: update/confirm once we have final models trained -->
+
 ```cli
 $ python -m spacy download en_core_trf_lg
 ```
@@ -368,10 +370,10 @@ To change any of the settings, you can edit the `config.cfg` and re-run the
 training. To change any of the functions, like the span getter, you can replace
 the name of the referenced function – e.g. `@span_getters = "sent_spans.v1"` to
 process sentences. You can also register your own functions using the
-`span_getters` registry. For instance, the following custom function returns
-`Span` objects following sentence boundaries, unless a sentence succeeds a
-certain amount of tokens, in which case subsentences of at most `max_length`
-tokens are returned.
+[`span_getters` registry](/api/top-level#registry). For instance, the following
+custom function returns [`Span`](/api/span) objects following sentence
+boundaries, unless a sentence succeeds a certain amount of tokens, in which case
+subsentences of at most `max_length` tokens are returned.
 
 > #### config.cfg
 >
@@ -408,7 +410,7 @@ def configure_custom_sent_spans(max_length: int):
 To resolve the config during training, spaCy needs to know about your custom
 function. You can make it available via the `--code` argument that can point to
 a Python file. For more details on training with custom code, see the
-[training documentation](/usage/training#custom-code).
+[training documentation](/usage/training#custom-functions).
 
 ```cli
 python -m spacy train ./config.cfg --code ./code.py
