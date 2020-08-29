@@ -689,7 +689,7 @@ def is_same_func(func1: Callable, func2: Callable) -> bool:
     same_name = func1.__qualname__ == func2.__qualname__
     same_file = inspect.getfile(func1) == inspect.getfile(func2)
     same_code = inspect.getsourcelines(func1) == inspect.getsourcelines(func2)
-    return all([same_name, same_file, same_code])
+    return same_name and same_file and same_code
 
 
 def get_cuda_stream(
