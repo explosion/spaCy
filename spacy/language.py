@@ -160,7 +160,7 @@ class Language:
         if self.lang is None:
             self.lang = self.vocab.lang
         self.components = []
-        self.disabled = set()
+        self._disabled = set()
         self.max_length = max_length
         self.resolved = {}
         # Create the default tokenizer from the default config
@@ -211,7 +211,7 @@ class Language:
         # TODO: Adding this back to prevent breaking people's code etc., but
         # we should consider removing it
         self._meta["pipeline"] = self.pipe_names
-        self._meta["disabled"] = list(self.disabled)
+        self._meta["disabled"] = self.disabled
         return self._meta
 
     @meta.setter
@@ -241,7 +241,7 @@ class Language:
             if pipe_meta.default_score_weights:
                 score_weights.append(pipe_meta.default_score_weights)
         self._config["nlp"]["pipeline"] = self.component_names
-        self._config["nlp"]["disabled"] = list(self.disabled)
+        self._config["nlp"]["disabled"] = self.disabled
         self._config["components"] = pipeline
         self._config["training"]["score_weights"] = combine_score_weights(score_weights)
         if not srsly.is_json_serializable(self._config):
@@ -251,6 +251,14 @@ class Language:
     @config.setter
     def config(self, value: Config) -> None:
         self._config = value
+
+    @property
+    def disabled(self) -> List[str]:
+        """Get the names of all disabled components.
+
+        RETURNS (List[str]): The disabled components.
+        """
+        return list(self._disabled)
 
     @property
     def factory_names(self) -> List[str]:
@@ -277,7 +285,7 @@ class Language:
 
         RETURNS (List[Tuple[str, Callable[[Doc], Doc]]]): The pipeline.
         """
-        return [(name, p) for name, p in self.components if name not in self.disabled]
+        return [(name, p) for name, p in self.components if name not in self._disabled]
 
     @property
     def pipe_names(self) -> List[str]:
@@ -855,7 +863,7 @@ class Language:
         self._pipe_configs.pop(name)
         # Make sure the name is also removed from the set of disabled components
         if name in self.disabled:
-            self.disabled.remove(name)
+            self._disabled.remove(name)
         return removed
 
     def disable_pipe(self, name: str) -> None:
@@ -867,7 +875,7 @@ class Language:
         """
         if name not in self.component_names:
             raise ValueError(Errors.E001.format(name=name, opts=self.component_names))
-        self.disabled.add(name)
+        self._disabled.add(name)
 
     def enable_pipe(self, name: str) -> None:
         """Enable a previously disabled pipeline component so it's run as part
@@ -878,7 +886,7 @@ class Language:
         if name not in self.component_names:
             raise ValueError(Errors.E001.format(name=name, opts=self.component_names))
         if name in self.disabled:
-            self.disabled.remove(name)
+            self._disabled.remove(name)
 
     def __call__(
         self,
@@ -1540,7 +1548,7 @@ class Language:
                     source_name = pipe_cfg.get("component", pipe_name)
                     nlp.add_pipe(source_name, source=source_nlps[model], name=pipe_name)
         disabled_pipes = [*config["nlp"]["disabled"], *disable]
-        nlp.disabled = set(p for p in disabled_pipes if p not in exclude)
+        nlp._disabled = set(p for p in disabled_pipes if p not in exclude)
         nlp.config = filled if auto_fill else config
         nlp.resolved = resolved
         if after_pipeline_creation is not None:

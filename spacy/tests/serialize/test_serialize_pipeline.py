@@ -187,7 +187,7 @@ def test_serialize_pipeline_disable_enable():
     nlp2 = English.from_config(config)
     assert nlp2.pipe_names == ["ner"]
     assert nlp2.component_names == ["ner", "tagger"]
-    assert nlp2.disabled == set(["tagger"])
+    assert nlp2.disabled == ["tagger"]
     assert nlp2.config["nlp"]["disabled"] == ["tagger"]
     with make_tempdir() as d:
         nlp2.to_disk(d)
@@ -199,10 +199,10 @@ def test_serialize_pipeline_disable_enable():
         nlp4 = spacy.load(d, disable=["ner"])
     assert nlp4.pipe_names == []
     assert nlp4.component_names == ["ner", "tagger"]
-    assert nlp4.disabled == set(["ner", "tagger"])
+    assert nlp4.disabled == ["ner", "tagger"]
     with make_tempdir() as d:
         nlp.to_disk(d)
         nlp5 = spacy.load(d, exclude=["tagger"])
     assert nlp5.pipe_names == ["ner"]
     assert nlp5.component_names == ["ner"]
-    assert nlp5.disabled == set()
+    assert nlp5.disabled == []
