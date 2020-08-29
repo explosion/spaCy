@@ -3,10 +3,9 @@ import pytest
 from .util import get_random_doc
 
 from spacy import util
-from spacy.util import dot_to_object
+from spacy.util import dot_to_object, SimpleFrozenList
 from thinc.api import Config, Optimizer
 from spacy.gold.batchers import minibatch_by_words
-
 from ..lang.en import English
 from ..lang.nl import Dutch
 from ..language import DEFAULT_CONFIG_PATH
@@ -106,3 +105,20 @@ def test_util_dot_section():
     assert not dot_to_object(en_config, "nlp.load_vocab_data")
     assert dot_to_object(nl_config, "nlp.load_vocab_data")
     assert isinstance(dot_to_object(nl_config, "training.optimizer"), Optimizer)
+
+
+def test_simple_frozen_list():
+    t = SimpleFrozenList(["foo", "bar"])
+    assert t == ["foo", "bar"]
+    assert t.index("bar") == 1  # okay method
+    with pytest.raises(NotImplementedError):
+        t.append("baz")
+    with pytest.raises(NotImplementedError):
+        t.sort()
+    with pytest.raises(NotImplementedError):
+        t.extend(["baz"])
+    with pytest.raises(NotImplementedError):
+        t.pop()
+    t = SimpleFrozenList(["foo", "bar"], error="Error!")
+    with pytest.raises(NotImplementedError):
+        t.append("baz")

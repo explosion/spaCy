@@ -209,6 +209,20 @@ def test_config_nlp_roundtrip():
     assert new_nlp._factory_meta == nlp._factory_meta
 
 
+def test_config_nlp_roundtrip_bytes_disk():
+    """Test that the config is serialized correctly and not interpolated
+    by mistake."""
+    nlp = English()
+    nlp_bytes = nlp.to_bytes()
+    new_nlp = English().from_bytes(nlp_bytes)
+    assert new_nlp.config == nlp.config
+    nlp = English()
+    with make_tempdir() as d:
+        nlp.to_disk(d)
+        new_nlp = spacy.load(d)
+    assert new_nlp.config == nlp.config
+
+
 def test_serialize_config_language_specific():
     """Test that config serialization works as expected with language-specific
     factories."""

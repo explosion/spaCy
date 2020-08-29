@@ -1,4 +1,6 @@
 import pytest
+from click import NoSuchOption
+
 from spacy.gold import docs_to_json, biluo_tags_from_offsets
 from spacy.gold.converters import iob2docs, conll_ner2docs, conllu2docs
 from spacy.lang.en import English
@@ -371,10 +373,17 @@ def test_parse_config_overrides(args, expected):
 
 
 @pytest.mark.parametrize(
-    "args",
-    [["--foo"], ["--x.foo", "bar", "--baz"], ["--x.foo", "bar", "baz"], ["x.foo"]],
+    "args", [["--foo"], ["--x.foo", "bar", "--baz"]],
 )
 def test_parse_config_overrides_invalid(args):
+    with pytest.raises(NoSuchOption):
+        parse_config_overrides(args)
+
+
+@pytest.mark.parametrize(
+    "args", [["--x.foo", "bar", "baz"], ["x.foo"]],
+)
+def test_parse_config_overrides_invalid_2(args):
     with pytest.raises(SystemExit):
         parse_config_overrides(args)
 

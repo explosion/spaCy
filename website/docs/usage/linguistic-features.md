@@ -867,14 +867,6 @@ subclass.
 
 ---
 
-<!--
-
-### Customizing the tokenizer {#tokenizer-custom}
-
-TODO: rewrite the docs on custom tokenization in a more user-friendly order, including details on how to integrate a fully custom tokenizer, representing a tokenizer in the config etc.
-
--->
-
 ### Adding special case tokenization rules {#special-cases}
 
 Most domains have at least some idiosyncrasies that require custom tokenization
@@ -1589,28 +1581,46 @@ print("After:", [(token.text, token._.is_musician) for token in doc])
 
 ## Sentence Segmentation {#sbd}
 
-<!-- TODO: include senter -->
-
 A [`Doc`](/api/doc) object's sentences are available via the `Doc.sents`
-property. Unlike other libraries, spaCy uses the dependency parse to determine
-sentence boundaries. This is usually more accurate than a rule-based approach,
-but it also means you'll need a **statistical model** and accurate predictions.
-If your texts are closer to general-purpose news or web text, this should work
-well out-of-the-box. For social media or conversational text that doesn't follow
-the same rules, your application may benefit from a custom rule-based
-implementation. You can either use the built-in
-[`Sentencizer`](/api/sentencizer) or plug an entirely custom rule-based function
-into your [processing pipeline](/usage/processing-pipelines).
+property. To view a `Doc`'s sentences, you can iterate over the `Doc.sents`, a
+generator that yields [`Span`](/api/span) objects. You can check whether a `Doc`
+has sentence boundaries with the `doc.is_sentenced` attribute.
 
-spaCy's dependency parser respects already set boundaries, so you can preprocess
-your `Doc` using custom rules _before_ it's parsed. Depending on your text, this
-may also improve accuracy, since the parser is constrained to predict parses
-consistent with the sentence boundaries.
+```python
+### {executable="true"}
+import spacy
+
+nlp = spacy.load("en_core_web_sm")
+doc = nlp("This is a sentence. This is another sentence.")
+assert doc.is_sentenced
+for sent in doc.sents:
+    print(sent.text)
+```
+
+spaCy provides four alternatives for sentence segmentation:
+
+1. [Dependency parser](#sbd-parser): the statistical
+   [`DependencyParser`](/api/dependencyparser) provides the most accurate
+   sentence boundaries based on full dependency parses.
+2. [Statistical sentence segmenter](#sbd-senter): the statistical
+   [`SentenceRecognizer`](/api/sentencerecognizer) is a simpler and faster
+   alternative to the parser that only sets sentence boundaries.
+3. [Rule-based pipeline component](#sbd-component): the rule-based
+   [`Sentencizer`](/api/sentencizer) sets sentence boundaries using a
+   customizable list of sentence-final punctuation.
+4. [Custom function](#sbd-custom): your own custom function added to the
+   processing pipeline can set sentence boundaries by writing to
+   `Token.is_sent_start`.
 
 ### Default: Using the dependency parse {#sbd-parser model="parser"}
 
-To view a `Doc`'s sentences, you can iterate over the `Doc.sents`, a generator
-that yields [`Span`](/api/span) objects.
+Unlike other libraries, spaCy uses the dependency parse to determine sentence
+boundaries. This is usually the most accurate approach, but it requires a
+**statistical model** that provides accurate predictions. If your texts are
+closer to general-purpose news or web text, this should work well out-of-the-box
+with spaCy's provided models. For social media or conversational text that
+doesn't follow the same rules, your application may benefit from a custom model
+or rule-based component.
 
 ```python
 ### {executable="true"}
@@ -1622,12 +1632,43 @@ for sent in doc.sents:
     print(sent.text)
 ```
 
+spaCy's dependency parser respects already set boundaries, so you can preprocess
+your `Doc` using custom components _before_ it's parsed. Depending on your text,
+this may also improve parse accuracy, since the parser is constrained to predict
+parses consistent with the sentence boundaries.
+
+### Statistical sentence segmenter {#sbd-senter model="senter" new="3"}
+
+The [`SentenceRecognizer`](/api/sentencerecognizer) is a simple statistical
+component that only provides sentence boundaries. Along with being faster and
+smaller than the parser, its primary advantage is that it's easier to train
+custom models because it only requires annotated sentence boundaries rather than
+full dependency parses.
+
+<!-- TODO: update/confirm usage once we have final models trained -->
+
+> #### senter vs. parser
+>
+> The recall for the `senter` is typically slightly lower than for the parser,
+> which is better at predicting sentence boundaries when punctuation is not
+> present.
+
+```python
+### {executable="true"}
+import spacy
+
+nlp = spacy.load("en_core_web_sm", enable=["senter"], disable=["parser"])
+doc = nlp("This is a sentence. This is another sentence.")
+for sent in doc.sents:
+    print(sent.text)
+```
+
 ### Rule-based pipeline component {#sbd-component}
 
 The [`Sentencizer`](/api/sentencizer) component is a
 [pipeline component](/usage/processing-pipelines) that splits sentences on
 punctuation like `.`, `!` or `?`. You can plug it into your pipeline if you only
-need sentence boundaries without the dependency parse.
+need sentence boundaries without dependency parses.
 
 ```python
 ### {executable="true"}
@@ -1654,7 +1695,7 @@ and can still be overwritten by the parser.
 <Infobox title="Important note" variant="warning">
 
 To prevent inconsistent state, you can only set boundaries **before** a document
-is parsed (and `Doc.is_parsed` is `False`). To ensure that your component is
+is parsed (and `doc.is_parsed` is `False`). To ensure that your component is
 added in the right place, you can set `before='parser'` or `first=True` when
 adding it to the pipeline using [`nlp.add_pipe`](/api/language#add_pipe).
 

@@ -4,7 +4,6 @@ import sys
 import platform
 from distutils.command.build_ext import build_ext
 from distutils.sysconfig import get_python_inc
-from distutils import ccompiler, msvccompiler
 import numpy
 from pathlib import Path
 import shutil
@@ -195,13 +194,7 @@ def setup_package():
     include_dirs = [
         get_python_inc(plat_specific=True),
         numpy.get_include(),
-        str(ROOT / "include"),
     ]
-    if (
-        ccompiler.new_compiler().compiler_type == "msvc"
-        and msvccompiler.get_build_version() == 9
-    ):
-        include_dirs.append(str(ROOT / "include" / "msvc9"))
     ext_modules = []
     for name in MOD_NAMES:
         mod_path = name.replace(".", "/") + ".pyx"

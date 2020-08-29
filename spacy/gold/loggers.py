@@ -1,6 +1,7 @@
-from typing import Dict, Any, Tuple, Callable
+from typing import Dict, Any, Tuple, Callable, List
 
 from ..util import registry
+from .. import util
 from ..errors import Errors
 from wasabi import msg
 
@@ -8,7 +9,7 @@ from wasabi import msg
 @registry.loggers("spacy.ConsoleLogger.v1")
 def console_logger():
     def setup_printer(
-        nlp: "Language"
+        nlp: "Language",
     ) -> Tuple[Callable[[Dict[str, Any]], None], Callable]:
         score_cols = list(nlp.config["training"]["score_weights"])
         score_widths = [max(len(col), 6) for col in score_cols]
@@ -66,25 +67,28 @@ def console_logger():
 
 
 @registry.loggers("spacy.WandbLogger.v1")
-def wandb_logger(project_name: str):
+def wandb_logger(project_name: str, remove_config_values: List[str] = []):
     import wandb
 
     console = console_logger()
 
     def setup_logger(
-        nlp: "Language"
+        nlp: "Language",
     ) -> Tuple[Callable[[Dict[str, Any]], None], Callable]:
         config = nlp.config.interpolate()
+        config_dot = util.dict_to_dot(config)
+        for field in remove_config_values:
+            del config_dot[field]
+        config = util.dot_to_dict(config_dot)
         wandb.init(project=project_name, config=config)
         console_log_step, console_finalize = console(nlp)
 
         def log_step(info: Dict[str, Any]):
             console_log_step(info)
-            epoch = info["epoch"]
             score = info["score"]
             other_scores = info["other_scores"]
             losses = info["losses"]
-            wandb.log({"score": score, "epoch": epoch})
+            wandb.log({"score": score})
             if losses:
                 wandb.log({f"loss_{k}": v for k, v in losses.items()})
             if isinstance(other_scores, dict):

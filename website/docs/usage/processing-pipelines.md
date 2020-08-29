@@ -236,38 +236,54 @@ available pipeline components and component functions.
 | `tok2vec`         | [`Tok2Vec`](/api/tok2vec)                       | Assign token-to-vector embeddings.                                                        |
 | `transformer`     | [`Transformer`](/api/transformer)               | Assign the tokens and outputs of a transformer model.                                     |
 
-### Disabling and modifying pipeline components {#disabling}
+### Disabling, excluding and modifying components {#disabling}
 
 If you don't need a particular component of the pipeline – for example, the
-tagger or the parser, you can **disable loading** it. This can sometimes make a
-big difference and improve loading speed. Disabled component names can be
-provided to [`spacy.load`](/api/top-level#spacy.load),
-[`Language.from_disk`](/api/language#from_disk) or the `nlp` object itself as a
-list:
+tagger or the parser, you can **disable or exclude** it. This can sometimes make
+a big difference and improve loading and inference speed. There are two
+different mechanisms you can use:
+
+1. **Disable:** The component and its data will be loaded with the model, but it
+   will be disabled by default and not run as part of the processing pipeline.
+   To run it, you can explicitly enable it by calling
+   [`nlp.enable_pipe`](/api/language#enable_pipe). When you save out the `nlp`
+   object, the disabled component will be included but disabled by default.
+2. **Exclude:** Don't load the component and its data with the model. Once the
+   model is loaded, there will be no reference to the excluded component.
+
+Disabled and excluded component names can be provided to
+[`spacy.load`](/api/top-level#spacy.load) as a list.
+
+<!-- TODO: update with info on our models shipped with optional components -->
+
+> #### 💡 Models with optional components
+>
+> The `disable` mechanism makes it easy to distribute models with optional
+> components that you can enable or disable at runtime. For instance, your model
+> may include a statistical _and_ a rule-based component for sentence
+> segmentation, and you can choose which one to run depending on your use case.
 
 ```python
-### Disable loading
+# Load the model without the entity recognizer
+nlp = spacy.load("en_core_web_sm", exclude=["ner"])
+
+# Load the tagger and parser but don't enable them
 nlp = spacy.load("en_core_web_sm", disable=["tagger", "parser"])
+# Explicitly enable the tagger later on
+nlp.enable_pipe("tagger")
 ```
 
-In some cases, you do want to load all pipeline components and their weights,
-because you need them at different points in your application. However, if you
-only need a `Doc` object with named entities, there's no need to run all
-pipeline components on it – that can potentially make processing much slower.
-Instead, you can use the `disable` keyword argument on
-[`nlp.pipe`](/api/language#pipe) to temporarily disable the components **during
-processing**:
+<Infobox variant="warning" title="Changed in v3.0">
 
-```python
-### Disable for processing
-for doc in nlp.pipe(texts, disable=["tagger", "parser"]):
-    # Do something with the doc here
-```
+As of v3.0, the `disable` keyword argument specifies components to load but
+disable, instead of components to not load at all. Those components can now be
+specified separately using the new `exclude` keyword argument.
 
-If you need to **execute more code** with components disabled – e.g. to reset
-the weights or update only some components during training – you can use the
-[`nlp.select_pipes`](/api/language#select_pipes) context manager. At the end of
-the `with` block, the disabled pipeline components will be restored
+</Infobox>
+
+As a shortcut, you can use the [`nlp.select_pipes`](/api/language#select_pipes)
+context manager to temporarily disable certain components for a given block. At
+the end of the `with` block, the disabled pipeline components will be restored
 automatically. Alternatively, `select_pipes` returns an object that lets you
 call its `restore()` method to restore the disabled components when needed. This
 can be useful if you want to prevent unnecessary code indentation of large
@@ -296,6 +312,14 @@ with nlp.select_pipes(enable="parser"):
     doc = nlp("I will only be parsed")
 ```
 
+The [`nlp.pipe`](/api/language#pipe) method also supports a `disable` keyword
+argument if you only want to disable components during processing:
+
+```python
+for doc in nlp.pipe(texts, disable=["tagger", "parser"]):
+    # Do something with the doc here
+```
+
 Finally, you can also use the [`remove_pipe`](/api/language#remove_pipe) method
 to remove pipeline components from an existing pipeline, the
 [`rename_pipe`](/api/language#rename_pipe) method to rename them, or the
@@ -308,6 +332,31 @@ nlp.remove_pipe("parser")
 nlp.rename_pipe("ner", "entityrecognizer")
 nlp.replace_pipe("tagger", my_custom_tagger)
 ```
+
+The `Language` object exposes different [attributes](/api/language#attributes)
+that let you inspect all available components and the components that currently
+run as part of the pipeline.
+
+> #### Example
+>
+> ```python
+> nlp = spacy.blank("en")
+> nlp.add_pipe("ner")
+> nlp.add_pipe("textcat")
+> assert nlp.pipe_names == ["ner", "textcat"]
+> nlp.disable_pipe("ner")
+> assert nlp.pipe_names == ["textcat"]
+> assert nlp.component_names == ["ner", "textcat"]
+> assert nlp.disabled == ["ner"]
+> ```
+
+| Name                  | Description                                                      |
+| --------------------- | ---------------------------------------------------------------- |
+| `nlp.pipeline`        | `(name, component)` tuples of the processing pipeline, in order. |
+| `nlp.pipe_names`      | Pipeline component names, in order.                              |
+| `nlp.components`      | All `(name, component)` tuples, including disabled components.   |
+| `nlp.component_names` | All component names, including disabled components.              |
+| `nlp.disabled`        | Names of components that are currently disabled.                 |
 
 ### Sourcing pipeline components from existing models {#sourced-components new="3"}
 

@@ -295,4 +295,19 @@ def forward(model: Tok2VecListener, inputs, is_train: bool):
         model.verify_inputs(inputs)
         return model._outputs, model._backprop
     else:
-        return [doc.tensor for doc in inputs], lambda dX: []
+        # This is pretty grim, but it's hard to do better :(.
+        # It's hard to avoid relying on the doc.tensor attribute, because the
+        # pipeline components can batch the data differently during prediction.
+        # That doesn't happen in update, where the nlp object works on batches
+        # of data.
+        # When the components batch differently, we don't receive a matching
+        # prediction from the upstream, so we can't predict.
+        if not all(doc.tensor.size for doc in inputs):
+            # But we do need to do *something* if the tensor hasn't been set.
+            # The compromise is to at least return data of the right shape,
+            # so the output is valid.
+            width = model.get_dim("nO")
+            outputs = [model.ops.alloc2f(len(doc), width) for doc in inputs]
+        else:
+            outputs = [doc.tensor for doc in inputs]
+        return outputs, lambda dX: []
