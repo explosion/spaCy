@@ -65,12 +65,12 @@
     --color-subtle-dark: hsl(162, 5%, 60%)
 
     --color-green-medium: hsl(108, 66%, 63%)
-    --color-green-transparent: hsla(108, 66%, 63%, 0.11)
+    --color-green-transparent: hsla(108, 66%, 63%, 0.12)
     --color-red-light: hsl(355, 100%, 96%)
     --color-red-medium: hsl(346, 84%, 61%)
     --color-red-dark: hsl(332, 64%, 34%)
     --color-red-opaque: hsl(346, 96%, 89%)
-    --color-red-transparent: hsla(346, 84%, 61%, 0.11)
+    --color-red-transparent: hsla(346, 84%, 61%, 0.12)
     --color-yellow-light: hsl(46, 100%, 95%)
     --color-yellow-medium: hsl(45, 90%, 55%)
     --color-yellow-dark: hsl(44, 94%, 27%)
@@ -79,11 +79,11 @@
     // Syntax Highlighting
     --syntax-comment: hsl(162, 5%, 60%)
     --syntax-tag: hsl(266, 72%, 72%)
-    --syntax-number: hsl(266, 72%, 72%)
+    --syntax-number: var(--syntax-tag)
     --syntax-selector: hsl(31, 100%, 71%)
-    --syntax-operator: hsl(342, 100%, 59%)
     --syntax-function: hsl(195, 70%, 54%)
-    --syntax-keyword: hsl(342, 100%, 59%)
+    --syntax-keyword: hsl(343, 100%, 68%)
+    --syntax-operator: var(--syntax-keyword)
     --syntax-regex: hsl(45, 90%, 55%)
 
     // Other
@@ -354,6 +354,7 @@ body [id]:target
     &.inserted, &.deleted
         padding: 2px 0
         border-radius: 2px
+        opacity: 0.9
 
     &.inserted
         color: var(--color-green-medium)
@@ -388,7 +389,6 @@ body [id]:target
     .token
         color: var(--color-subtle)
 
-
 .gatsby-highlight-code-line
     background-color: var(--color-dark-secondary)
     border-left: 0.35em solid var(--color-theme)
@@ -409,6 +409,7 @@ body [id]:target
     color: var(--color-subtle)
 
     .CodeMirror-line
+        color: var(--syntax-comment)
         padding: 0
 
     .CodeMirror-selected
@@ -418,26 +419,25 @@ body [id]:target
     .CodeMirror-cursor
         border-left-color: currentColor
 
-    .cm-variable-2
-        color: inherit
-        font-style: italic
+    .cm-property, .cm-variable, .cm-variable-2, .cm-meta // decorators
+        color: var(--color-subtle)
 
     .cm-comment
         color: var(--syntax-comment)
 
-    .cm-keyword
+    .cm-keyword, .cm-builtin
         color: var(--syntax-keyword)
 
     .cm-operator
         color: var(--syntax-operator)
 
-    .cm-string, .cm-builtin
+    .cm-string
         color: var(--syntax-selector)
 
     .cm-number
         color: var(--syntax-number)
 
-    .cm-def, .cm-meta
+    .cm-def
         color: var(--syntax-function)
 
 // Jupyter

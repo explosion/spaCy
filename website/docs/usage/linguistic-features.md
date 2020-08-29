@@ -57,41 +57,50 @@ create a surface form. Here are some examples:
 Morphological features are stored in the [`MorphAnalysis`](/api/morphanalysis)
 under `Token.morph`, which allows you to access individual morphological
 features. The attribute `Token.morph_` provides the morphological analysis in
-the Universal Dependencies FEATS format.
+the Universal Dependencies
+[FEATS](https://universaldependencies.org/format.html#morphological-annotation)
+format.
+
+> #### 📝 Things to try
+>
+> 1. Change "I" to "She". You should see that the morphological features change
+>    and express that it's a pronoun in the third person.
+> 2. Inspect `token.morph_` for the other tokens.
 
 ```python
 ### {executable="true"}
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
+print("Pipeline:", nlp.pipe_names)
 doc = nlp("I was reading the paper.")
-
-token = doc[0] # "I"
-assert token.morph_ == "Case=Nom|Number=Sing|Person=1|PronType=Prs"
-assert token.morph.get("PronType") == ["Prs"]
+token = doc[0]  # 'I'
+print(token.morph_)  # 'Case=Nom|Number=Sing|Person=1|PronType=Prs'
+print(token.morph.get("PronType"))  # ['Prs']
 ```
 
 ### Statistical morphology {#morphologizer new="3" model="morphologizer"}
 
-spaCy v3 includes a statistical morphologizer component that assigns the
-morphological features and POS as `Token.morph` and `Token.pos`.
+spaCy's statistical [`Morphologizer`](/api/morphologizer) component assigns the
+morphological features and coarse-grained part-of-speech tags as `Token.morph`
+and `Token.pos`.
 
 ```python
 ### {executable="true"}
 import spacy
 
 nlp = spacy.load("de_core_news_sm")
-doc = nlp("Wo bist du?") # 'Where are you?'
-assert doc[2].morph_ == "Case=Nom|Number=Sing|Person=2|PronType=Prs"
-assert doc[2].pos_ == "PRON"
+doc = nlp("Wo bist du?") # English: 'Where are you?'
+print(doc[2].morph_)  # 'Case=Nom|Number=Sing|Person=2|PronType=Prs'
+print(doc[2].pos_) # 'PRON'
 ```
 
 ### Rule-based morphology {#rule-based-morphology}
 
 For languages with relatively simple morphological systems like English, spaCy
 can assign morphological features through a rule-based approach, which uses the
-token text and fine-grained part-of-speech tags to produce coarse-grained
-part-of-speech tags and morphological features.
+**token text** and **fine-grained part-of-speech tags** to produce
+coarse-grained part-of-speech tags and morphological features.
 
 1. The part-of-speech tagger assigns each token a **fine-grained part-of-speech
    tag**. In the API, these tags are known as `Token.tag`. They express the
@@ -108,16 +117,16 @@ import spacy
 
 nlp = spacy.load("en_core_web_sm")
 doc = nlp("Where are you?")
-assert doc[2].morph_ == "Case=Nom|Person=2|PronType=Prs"
-assert doc[2].pos_ == "PRON"
+print(doc[2].morph_)  # 'Case=Nom|Person=2|PronType=Prs'
+print(doc[2].pos_)  # 'PRON'
 ```
 
 ## Lemmatization {#lemmatization model="lemmatizer" new="3"}
 
 The [`Lemmatizer`](/api/lemmatizer) is a pipeline component that provides lookup
 and rule-based lemmatization methods in a configurable component. An individual
-language can extend the `Lemmatizer` as part of its [language
-data](#language-data).
+language can extend the `Lemmatizer` as part of its
+[language data](#language-data).
 
 ```python
 ### {executable="true"}
@@ -126,36 +135,38 @@ import spacy
 # English models include a rule-based lemmatizer
 nlp = spacy.load("en_core_web_sm")
 lemmatizer = nlp.get_pipe("lemmatizer")
-assert lemmatizer.mode == "rule"
+print(lemmatizer.mode)  # 'rule'
 
 doc = nlp("I was reading the paper.")
-assert doc[1].lemma_ == "be"
-assert doc[2].lemma_ == "read"
+print([token.lemma_ for token in doc])
+# ['I', 'be', 'read', 'the', 'paper', '.']
 ```
 
-<Infobox title="Important note" variant="warning">
+<Infobox title="Changed in v3.0" variant="warning">
 
-Unlike spaCy v2, spaCy v3 models do not provide lemmas by default or switch
-automatically between lookup and rule-based lemmas depending on whether a
-tagger is in the pipeline. To have lemmas in a `Doc`, the pipeline needs to
-include a `lemmatizer` component. A `lemmatizer` is configured to use a single
-mode such as `"lookup"` or `"rule"` on initialization. The `"rule"` mode
-requires `Token.pos` to be set by a previous component.
+Unlike spaCy v2, spaCy v3 models do _not_ provide lemmas by default or switch
+automatically between lookup and rule-based lemmas depending on whether a tagger
+is in the pipeline. To have lemmas in a `Doc`, the pipeline needs to include a
+[`Lemmatizer`](/api/lemmatizer) component. The lemmatizer component is
+configured to use a single mode such as `"lookup"` or `"rule"` on
+initialization. The `"rule"` mode requires `Token.pos` to be set by a previous
+component.
 
 </Infobox>
 
 The data for spaCy's lemmatizers is distributed in the package
 [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data). The
-provided models already include all the required tables, but if you are
-creating new models, you'll probably want to install `spacy-lookups-data` to
-provide the data when the lemmatizer is initialized.
+provided models already include all the required tables, but if you are creating
+new models, you'll probably want to install `spacy-lookups-data` to provide the
+data when the lemmatizer is initialized.
 
 ### Lookup lemmatizer {#lemmatizer-lookup}
 
 For models without a tagger or morphologizer, a lookup lemmatizer can be added
 to the pipeline as long as a lookup table is provided, typically through
-`spacy-lookups-data`. The lookup lemmatizer looks up the token surface form in
-the lookup table without reference to the token's part-of-speech or context.
+[`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data). The
+lookup lemmatizer looks up the token surface form in the lookup table without
+reference to the token's part-of-speech or context.
 
 ```python
 # pip install spacy-lookups-data
@@ -168,19 +179,18 @@ nlp.add_pipe("lemmatizer", config={"mode": "lookup"})
 ### Rule-based lemmatizer {#lemmatizer-rule}
 
 When training models that include a component that assigns POS (a morphologizer
-or a tagger with a [POS mapping](#mappings-exceptions)), a rule-based
-lemmatizer can be added using rule tables from `spacy-lookups-data`:
+or a tagger with a [POS mapping](#mappings-exceptions)), a rule-based lemmatizer
+can be added using rule tables from
+[`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data):
 
 ```python
 # pip install spacy-lookups-data
 import spacy
 
 nlp = spacy.blank("de")
-
-# morphologizer (note: model is not yet trained!)
+# Morphologizer (note: model is not yet trained!)
 nlp.add_pipe("morphologizer")
-
-# rule-based lemmatizer
+# Rule-based lemmatizer
 nlp.add_pipe("lemmatizer", config={"mode": "rule"})
 ```
 
@@ -1734,25 +1744,26 @@ print("After:", [sent.text for sent in doc.sents])
 
 ## Mappings & Exceptions {#mappings-exceptions new="3"}
 
-The [`AttributeRuler`](/api/attributeruler) manages rule-based mappings and
-exceptions for all token-level attributes. As the number of pipeline components
-has grown from spaCy v2 to v3, handling rules and exceptions in each component
-individually has become impractical, so the `AttributeRuler` provides a single
-component with a unified pattern format for all token attribute mappings and
-exceptions.
+The [`AttributeRuler`](/api/attributeruler) manages **rule-based mappings and
+exceptions** for all token-level attributes. As the number of
+[pipeline components](/api/#architecture-pipeline) has grown from spaCy v2 to
+v3, handling rules and exceptions in each component individually has become
+impractical, so the `AttributeRuler` provides a single component with a unified
+pattern format for all token attribute mappings and exceptions.
 
-The `AttributeRuler` uses [`Matcher`
-patterns](/usage/rule-based-matching#adding-patterns) to identify tokens and
-then assigns them the provided attributes. If needed, the `Matcher` patterns
-can include context around the target token. For example, the `AttributeRuler`
-can:
+The `AttributeRuler` uses
+[`Matcher` patterns](/usage/rule-based-matching#adding-patterns) to identify
+tokens and then assigns them the provided attributes. If needed, the
+[`Matcher`](/api/matcher) patterns can include context around the target token.
+For example, the attribute ruler can:
 
-- provide exceptions for any token attributes
-- map fine-grained tags to coarse-grained tags for languages without statistical
-  morphologizers (replacing the v2 tag map in the language data)
-- map token surface form + fine-grained tags to morphological features
-  (replacing the v2 morph rules in the language data)
-- specify the tags for space tokens (replacing hard-coded behavior in the
+- provide exceptions for any **token attributes**
+- map **fine-grained tags** to **coarse-grained tags** for languages without
+  statistical morphologizers (replacing the v2.x `tag_map` in the
+  [language data](#language-data))
+- map token **surface form + fine-grained tags** to **morphological features**
+  (replacing the v2.x `morph_rules` in the [language data](#language-data))
+- specify the **tags for space tokens** (replacing hard-coded behavior in the
   tagger)
 
 The following example shows how the tag and POS `NNP`/`PROPN` can be specified
@@ -1765,41 +1776,42 @@ import spacy
 
 nlp = spacy.load("en_core_web_sm")
 text = "I saw The Who perform. Who did you see?"
-
 doc1 = nlp(text)
-assert doc1[2].tag_ == "DT"
-assert doc1[2].pos_ == "DET"
-assert doc1[3].tag_ == "WP"
-assert doc1[3].pos_ == "PRON"
+print(doc1[2].tag_, doc1[2].pos_)  # DT DET
+print(doc1[3].tag_, doc1[3].pos_)  # WP PRON
 
-# add a new exception for "The Who" as NNP/PROPN NNP/PROPN
+# Add attribute ruler with exception for "The Who" as NNP/PROPN NNP/PROPN
 ruler = nlp.get_pipe("attribute_ruler")
-
-# pattern to match "The Who"
+# Pattern to match "The Who"
 patterns = [[{"LOWER": "the"}, {"TEXT": "Who"}]]
-# the attributes to assign to the matched token
+# The attributes to assign to the matched token
 attrs = {"TAG": "NNP", "POS": "PROPN"}
-
-# add rule for "The" in "The Who"
-ruler.add(patterns=patterns, attrs=attrs, index=0)
-# add rule for "Who" in "The Who"
-ruler.add(patterns=patterns, attrs=attrs, index=1)
+# Add rules to the attribute ruler
+ruler.add(patterns=patterns, attrs=attrs, index=0)  # "The" in "The Who"
+ruler.add(patterns=patterns, attrs=attrs, index=1)  # "Who" in "The Who"
 
 doc2 = nlp(text)
-assert doc2[2].tag_ == "NNP"
-assert doc2[3].tag_ == "NNP"
-assert doc2[2].pos_ == "PROPN"
-assert doc2[3].pos_ == "PROPN"
-
-# the second "Who" remains unmodified
-assert doc2[5].tag_ == "WP"
-assert doc2[5].pos_ == "PRON"
+print(doc2[2].tag_, doc2[2].pos_)  # NNP PROPN
+print(doc2[3].tag_, doc2[3].pos_)  # NNP PROPN
+# The second "Who" remains unmodified
+print(doc2[5].tag_, doc2[5].pos_)  # WP PRON
 ```
 
-For easy migration from from spaCy v2 to v3, the `AttributeRuler` can import v2
-`TAG_MAP` and `MORPH_RULES` data with the methods
-[`AttributerRuler.load_from_tag_map`](/api/attributeruler#load_from_tag_map) and
-[`AttributeRuler.load_from_morph_rules`](/api/attributeruler#load_from_morph_rules).
+<Infobox variant="warning" title="Migrating from spaCy v2.x">
+
+For easy migration from from spaCy v2 to v3, the
+[`AttributeRuler`](/api/attributeruler) can import a **tag map and morph rules**
+in the v2 format with the methods
+[`load_from_tag_map`](/api/attributeruler#load_from_tag_map) and
+[`load_from_morph_rules`](/api/attributeruler#load_from_morph_rules).
+
+```diff
+nlp = spacy.blank("en")
++ ruler = nlp.add_pipe("attribute_ruler")
++ ruler.load_from_tag_map(YOUR_TAG_MAP)
+```
+
+</Infobox>
 
 ## Word vectors and semantic similarity {#vectors-similarity}
 

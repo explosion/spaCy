@@ -28,7 +28,6 @@ export default class Juniper extends React.Component {
             mode: this.props.lang,
             theme: this.props.theme,
         })
-
         const runCode = () => this.execute(outputArea, cm.getValue())
         cm.setOption('extraKeys', { 'Shift-Enter': runCode })
         Widget.attach(outputArea, this.outputRef)
