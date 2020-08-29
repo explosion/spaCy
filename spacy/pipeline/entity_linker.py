@@ -13,6 +13,7 @@ from ..language import Language
 from ..vocab import Vocab
 from ..gold import Example, validate_examples
 from ..errors import Errors, Warnings
+from ..util import SimpleFrozenList
 from .. import util
 
 
@@ -404,7 +405,7 @@ class EntityLinker(Pipe):
                     token.ent_kb_id_ = kb_id
 
     def to_disk(
-        self, path: Union[str, Path], *, exclude: Iterable[str] = tuple()
+        self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList(),
     ) -> None:
         """Serialize the pipe to disk.
 
@@ -421,7 +422,7 @@ class EntityLinker(Pipe):
         util.to_disk(path, serialize, exclude)
 
     def from_disk(
-        self, path: Union[str, Path], *, exclude: Iterable[str] = tuple()
+        self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList(),
     ) -> "EntityLinker":
         """Load the pipe from disk. Modifies the object in place and returns it.
 

@@ -12,6 +12,7 @@ from ..symbols import IDS, TAG, POS, MORPH, LEMMA
 from ..tokens import Doc, Span
 from ..tokens._retokenize import normalize_token_attrs, set_token_attrs
 from ..vocab import Vocab
+from ..util import SimpleFrozenList
 from .. import util
 
 
@@ -220,7 +221,7 @@ class AttributeRuler(Pipe):
                 results.update(Scorer.score_token_attr(examples, "lemma", **kwargs))
         return results
 
-    def to_bytes(self, exclude: Iterable[str] = tuple()) -> bytes:
+    def to_bytes(self, exclude: Iterable[str] = SimpleFrozenList()) -> bytes:
         """Serialize the AttributeRuler to a bytestring.
 
         exclude (Iterable[str]): String names of serialization fields to exclude.
@@ -233,7 +234,9 @@ class AttributeRuler(Pipe):
         serialize["patterns"] = lambda: srsly.msgpack_dumps(self.patterns)
         return util.to_bytes(serialize, exclude)
 
-    def from_bytes(self, bytes_data: bytes, exclude: Iterable[str] = tuple()):
+    def from_bytes(
+        self, bytes_data: bytes, exclude: Iterable[str] = SimpleFrozenList()
+    ):
         """Load the AttributeRuler from a bytestring.
 
         bytes_data (bytes): The data to load.
@@ -254,7 +257,9 @@ class AttributeRuler(Pipe):
 
         return self
 
-    def to_disk(self, path: Union[Path, str], exclude: Iterable[str] = tuple()) -> None:
+    def to_disk(
+        self, path: Union[Path, str], exclude: Iterable[str] = SimpleFrozenList()
+    ) -> None:
         """Serialize the AttributeRuler to disk.
 
         path (Union[Path, str]): A path to a directory.
@@ -268,7 +273,7 @@ class AttributeRuler(Pipe):
         util.to_disk(path, serialize, exclude)
 
     def from_disk(
-        self, path: Union[Path, str], exclude: Iterable[str] = tuple()
+        self, path: Union[Path, str], exclude: Iterable[str] = SimpleFrozenList()
     ) -> None:
         """Load the AttributeRuler from disk.
 
