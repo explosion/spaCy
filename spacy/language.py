@@ -938,7 +938,7 @@ class Language:
         warnings.warn(Warnings.W096, DeprecationWarning)
         if len(names) == 1 and isinstance(names[0], (list, tuple)):
             names = names[0]  # support list of names instead of spread
-        return DisabledPipes(self, names)
+        return self.select_pipes(disable=names)
 
     def select_pipes(
         self,
