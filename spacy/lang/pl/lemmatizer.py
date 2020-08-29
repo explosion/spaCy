@@ -12,7 +12,7 @@ class PolishLemmatizer(Lemmatizer):
 
     @classmethod
     def get_lookups_config(cls, mode: str) -> Dict:
-        if mode == "lookup":
+        if mode == "pos_lookup":
             return {
                 "required_tables": [
                     "lemma_lookup_adj",
@@ -29,7 +29,7 @@ class PolishLemmatizer(Lemmatizer):
         else:
             return super().get_lookups_config(mode)
 
-    def lookup_lemmatize(self, token: Token) -> List[str]:
+    def pos_lookup_lemmatize(self, token: Token) -> List[str]:
         string = token.text
         univ_pos = token.pos_
         morphology = token.morph.to_dict()

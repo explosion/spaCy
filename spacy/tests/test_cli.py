@@ -1,4 +1,6 @@
 import pytest
+from click import NoSuchOption
+
 from spacy.gold import docs_to_json, biluo_tags_from_offsets
 from spacy.gold.converters import iob2docs, conll_ner2docs, conllu2docs
 from spacy.lang.en import English
@@ -270,6 +272,41 @@ def test_pretrain_make_docs():
     assert skip_count == 0
 
 
+def test_project_config_validation_full():
+    config = {
+        "vars": {"some_var": 20},
+        "directories": ["assets", "configs", "corpus", "scripts", "training"],
+        "assets": [
+            {
+                "dest": "x",
+                "url": "https://example.com",
+                "checksum": "63373dd656daa1fd3043ce166a59474c",
+            },
+            {
+                "dest": "y",
+                "git": {
+                    "repo": "https://github.com/example/repo",
+                    "branch": "develop",
+                    "path": "y",
+                },
+            },
+        ],
+        "commands": [
+            {
+                "name": "train",
+                "help": "Train a model",
+                "script": ["python -m spacy train config.cfg -o training"],
+                "deps": ["config.cfg", "corpus/training.spcy"],
+                "outputs": ["training/model-best"],
+            },
+            {"name": "test", "script": ["pytest", "custom.py"], "no_skip": True},
+        ],
+        "workflows": {"all": ["train", "test"], "train": ["train"]},
+    }
+    errors = validate(ProjectConfigSchema, config)
+    assert not errors
+
+
 @pytest.mark.parametrize(
     "config",
     [
@@ -336,10 +373,17 @@ def test_parse_config_overrides(args, expected):
 
 
 @pytest.mark.parametrize(
-    "args",
-    [["--foo"], ["--x.foo", "bar", "--baz"], ["--x.foo", "bar", "baz"], ["x.foo"]],
+    "args", [["--foo"], ["--x.foo", "bar", "--baz"]],
 )
 def test_parse_config_overrides_invalid(args):
+    with pytest.raises(NoSuchOption):
+        parse_config_overrides(args)
+
+
+@pytest.mark.parametrize(
+    "args", [["--x.foo", "bar", "baz"], ["x.foo"]],
+)
+def test_parse_config_overrides_invalid_2(args):
     with pytest.raises(SystemExit):
         parse_config_overrides(args)
 

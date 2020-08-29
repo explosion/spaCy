@@ -12,7 +12,8 @@ The attribute ruler lets you set token attributes for tokens identified by
 [`Matcher` patterns](/usage/rule-based-matching#matcher). The attribute ruler is
 typically used to handle exceptions for token attributes and to map values
 between attributes such as mapping fine-grained POS tags to coarse-grained POS
-tags.
+tags. See the [usage guide](/usage/linguistic-features/#mappings-exceptions) for
+examples.
 
 ## Config and implementation {#config}
 
@@ -137,6 +138,21 @@ Get all patterns that have been added to the attribute ruler in the
 | Name        | Description                                                                                  |
 | ----------- | -------------------------------------------------------------------------------------------- |
 | **RETURNS** | The patterns added to the attribute ruler. ~~List[Dict[str, Union[List[dict], dict, int]]]~~ |
+
+## AttributeRuler.score {#score tag="method" new="3"}
+
+Score a batch of examples.
+
+> #### Example
+>
+> ```python
+> scores = attribute_ruler.score(examples)
+> ```
+
+| Name        | Description                                                                                                                                                                                                           |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `examples`  | The examples to score. ~~Iterable[Example]~~                                                                                                                                                                          |
+| **RETURNS** | The scores, produced by [`Scorer.score_token_attr`](/api/scorer#score_token_attr) for the attributes `"tag"`, `"pos"`, `"morph"` and `"lemma"` if present in any of the target token attributes. ~~Dict[str, float]~~ |
 
 ## AttributeRuler.load_from_tag_map {#load_from_tag_map tag="method"}
 

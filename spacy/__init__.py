@@ -20,24 +20,30 @@ from .errors import Errors
 from .language import Language
 from . import util
 
+
 if sys.maxunicode == 65535:
     raise SystemError(Errors.E130)
 
 
 def load(
     name: Union[str, Path],
-    disable: Iterable[str] = tuple(),
+    disable: Iterable[str] = util.SimpleFrozenList(),
+    exclude: Iterable[str] = util.SimpleFrozenList(),
     config: Union[Dict[str, Any], Config] = util.SimpleFrozenDict(),
 ) -> Language:
     """Load a spaCy model from an installed package or a local path.
 
     name (str): Package name or model path.
-    disable (Iterable[str]): Names of pipeline components to disable.
+    disable (Iterable[str]): Names of pipeline components to disable. Disabled
+        pipes will be loaded but they won't be run unless you explicitly
+        enable them by calling nlp.enable_pipe.
+    exclude (Iterable[str]): Names of pipeline components to exclude. Excluded
+        components won't be loaded.
     config (Dict[str, Any] / Config): Config overrides as nested dict or dict
         keyed by section values in dot notation.
     RETURNS (Language): The loaded nlp object.
     """
-    return util.load_model(name, disable=disable, config=config)
+    return util.load_model(name, disable=disable, exclude=exclude, config=config)
 
 
 def blank(name: str, **overrides) -> Language:

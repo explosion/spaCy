@@ -81,6 +81,7 @@ class registry(thinc.registry):
     callbacks = catalogue.create("spacy", "callbacks")
     batchers = catalogue.create("spacy", "batchers", entry_points=True)
     readers = catalogue.create("spacy", "readers", entry_points=True)
+    loggers = catalogue.create("spacy", "loggers", entry_points=True)
     # These are factories registered via third-party packages and the
     # spacy_factories entry point. This registry only exists so we can easily
     # load them via the entry points. The "true" factories are added via the
@@ -116,6 +117,47 @@ class SimpleFrozenDict(dict):
         raise NotImplementedError(self.error)
 
     def update(self, other):
+        raise NotImplementedError(self.error)
+
+
+class SimpleFrozenList(list):
+    """Wrapper class around a list that lets us raise custom errors if certain
+    attributes/methods are accessed. Mostly used for properties like
+    Language.pipeline that return an immutable list (and that we don't want to
+    convert to a tuple to not break too much backwards compatibility). If a user
+    accidentally calls nlp.pipeline.append(), we can raise a more helpful error.
+    """
+
+    def __init__(self, *args, error: str = Errors.E927) -> None:
+        """Initialize the frozen list.
+
+        error (str): The error message when user tries to mutate the list.
+        """
+        self.error = error
+        super().__init__(*args)
+
+    def append(self, *args, **kwargs):
+        raise NotImplementedError(self.error)
+
+    def clear(self, *args, **kwargs):
+        raise NotImplementedError(self.error)
+
+    def extend(self, *args, **kwargs):
+        raise NotImplementedError(self.error)
+
+    def insert(self, *args, **kwargs):
+        raise NotImplementedError(self.error)
+
+    def pop(self, *args, **kwargs):
+        raise NotImplementedError(self.error)
+
+    def remove(self, *args, **kwargs):
+        raise NotImplementedError(self.error)
+
+    def reverse(self, *args, **kwargs):
+        raise NotImplementedError(self.error)
+
+    def sort(self, *args, **kwargs):
         raise NotImplementedError(self.error)
 
 
@@ -214,7 +256,8 @@ def load_model(
     name: Union[str, Path],
     *,
     vocab: Union["Vocab", bool] = True,
-    disable: Iterable[str] = tuple(),
+    disable: Iterable[str] = SimpleFrozenList(),
+    exclude: Iterable[str] = SimpleFrozenList(),
     config: Union[Dict[str, Any], Config] = SimpleFrozenDict(),
 ) -> "Language":
     """Load a model from a package or data path.
@@ -227,7 +270,7 @@ def load_model(
         keyed by section values in dot notation.
     RETURNS (Language): The loaded nlp object.
     """
-    kwargs = {"vocab": vocab, "disable": disable, "config": config}
+    kwargs = {"vocab": vocab, "disable": disable, "exclude": exclude, "config": config}
     if isinstance(name, str):  # name or string path
         if name.startswith("blank:"):  # shortcut for blank model
             return get_lang_class(name.replace("blank:", ""))()
@@ -246,7 +289,8 @@ def load_model_from_package(
     name: str,
     *,
     vocab: Union["Vocab", bool] = True,
-    disable: Iterable[str] = tuple(),
+    disable: Iterable[str] = SimpleFrozenList(),
+    exclude: Iterable[str] = SimpleFrozenList(),
     config: Union[Dict[str, Any], Config] = SimpleFrozenDict(),
 ) -> "Language":
     """Load a model from an installed package.
@@ -254,13 +298,17 @@ def load_model_from_package(
     name (str): The package name.
     vocab (Vocab / True): Optional vocab to pass in on initialization. If True,
         a new Vocab object will be created.
-    disable (Iterable[str]): Names of pipeline components to disable.
+    disable (Iterable[str]): Names of pipeline components to disable. Disabled
+        pipes will be loaded but they won't be run unless you explicitly
+        enable them by calling nlp.enable_pipe.
+    exclude (Iterable[str]): Names of pipeline components to exclude. Excluded
+        components won't be loaded.
     config (Dict[str, Any] / Config): Config overrides as nested dict or dict
         keyed by section values in dot notation.
     RETURNS (Language): The loaded nlp object.
     """
     cls = importlib.import_module(name)
-    return cls.load(vocab=vocab, disable=disable, config=config)
+    return cls.load(vocab=vocab, disable=disable, exclude=exclude, config=config)
 
 
 def load_model_from_path(
@@ -268,7 +316,8 @@ def load_model_from_path(
     *,
     meta: Optional[Dict[str, Any]] = None,
     vocab: Union["Vocab", bool] = True,
-    disable: Iterable[str] = tuple(),
+    disable: Iterable[str] = SimpleFrozenList(),
+    exclude: Iterable[str] = SimpleFrozenList(),
     config: Union[Dict[str, Any], Config] = SimpleFrozenDict(),
 ) -> "Language":
     """Load a model from a data directory path. Creates Language class with
@@ -278,7 +327,11 @@ def load_model_from_path(
     meta (Dict[str, Any]): Optional model meta.
     vocab (Vocab / True): Optional vocab to pass in on initialization. If True,
         a new Vocab object will be created.
-    disable (Iterable[str]): Names of pipeline components to disable.
+    disable (Iterable[str]): Names of pipeline components to disable. Disabled
+        pipes will be loaded but they won't be run unless you explicitly
+        enable them by calling nlp.enable_pipe.
+    exclude (Iterable[str]): Names of pipeline components to exclude. Excluded
+        components won't be loaded.
     config (Dict[str, Any] / Config): Config overrides as nested dict or dict
         keyed by section values in dot notation.
     RETURNS (Language): The loaded nlp object.
@@ -289,15 +342,18 @@ def load_model_from_path(
         meta = get_model_meta(model_path)
     config_path = model_path / "config.cfg"
     config = load_config(config_path, overrides=dict_to_dot(config))
-    nlp, _ = load_model_from_config(config, vocab=vocab, disable=disable)
-    return nlp.from_disk(model_path, exclude=disable)
+    nlp, _ = load_model_from_config(
+        config, vocab=vocab, disable=disable, exclude=exclude
+    )
+    return nlp.from_disk(model_path, exclude=exclude)
 
 
 def load_model_from_config(
     config: Union[Dict[str, Any], Config],
     *,
     vocab: Union["Vocab", bool] = True,
-    disable: Iterable[str] = tuple(),
+    disable: Iterable[str] = SimpleFrozenList(),
+    exclude: Iterable[str] = SimpleFrozenList(),
     auto_fill: bool = False,
     validate: bool = True,
 ) -> Tuple["Language", Config]:
@@ -308,7 +364,11 @@ def load_model_from_config(
     meta (Dict[str, Any]): Optional model meta.
     vocab (Vocab / True): Optional vocab to pass in on initialization. If True,
         a new Vocab object will be created.
-    disable (Iterable[str]): Names of pipeline components to disable.
+    disable (Iterable[str]): Names of pipeline components to disable. Disabled
+        pipes will be loaded but they won't be run unless you explicitly
+        enable them by calling nlp.enable_pipe.
+    exclude (Iterable[str]): Names of pipeline components to exclude. Excluded
+        components won't be loaded.
     auto_fill (bool): Whether to auto-fill config with missing defaults.
     validate (bool): Whether to show config validation errors.
     RETURNS (Language): The loaded nlp object.
@@ -322,7 +382,12 @@ def load_model_from_config(
     # registry, including custom subclasses provided via entry points
     lang_cls = get_lang_class(nlp_config["lang"])
     nlp = lang_cls.from_config(
-        config, vocab=vocab, disable=disable, auto_fill=auto_fill, validate=validate,
+        config,
+        vocab=vocab,
+        disable=disable,
+        exclude=exclude,
+        auto_fill=auto_fill,
+        validate=validate,
     )
     return nlp, nlp.resolved
 
@@ -331,7 +396,8 @@ def load_model_from_init_py(
     init_file: Union[Path, str],
     *,
     vocab: Union["Vocab", bool] = True,
-    disable: Iterable[str] = tuple(),
+    disable: Iterable[str] = SimpleFrozenList(),
+    exclude: Iterable[str] = SimpleFrozenList(),
     config: Union[Dict[str, Any], Config] = SimpleFrozenDict(),
 ) -> "Language":
     """Helper function to use in the `load()` method of a model package's
@@ -339,7 +405,11 @@ def load_model_from_init_py(
 
     vocab (Vocab / True): Optional vocab to pass in on initialization. If True,
         a new Vocab object will be created.
-    disable (Iterable[str]): Names of pipeline components to disable.
+    disable (Iterable[str]): Names of pipeline components to disable. Disabled
+        pipes will be loaded but they won't be run unless you explicitly
+        enable them by calling nlp.enable_pipe.
+    exclude (Iterable[str]): Names of pipeline components to exclude. Excluded
+        components won't be loaded.
     config (Dict[str, Any] / Config): Config overrides as nested dict or dict
         keyed by section values in dot notation.
     RETURNS (Language): The loaded nlp object.
@@ -351,7 +421,12 @@ def load_model_from_init_py(
     if not model_path.exists():
         raise IOError(Errors.E052.format(path=data_path))
     return load_model_from_path(
-        data_path, vocab=vocab, meta=meta, disable=disable, config=config
+        data_path,
+        vocab=vocab,
+        meta=meta,
+        disable=disable,
+        exclude=exclude,
+        config=config,
     )
 
 
@@ -572,7 +647,7 @@ def join_command(command: List[str]) -> str:
     return " ".join(shlex.quote(cmd) for cmd in command)
 
 
-def run_command(command: Union[str, List[str]]) -> None:
+def run_command(command: Union[str, List[str]], *, capture=False, stdin=None) -> None:
     """Run a command on the command line as a subprocess. If the subprocess
     returns a non-zero exit code, a system exit is performed.
 
@@ -582,13 +657,22 @@ def run_command(command: Union[str, List[str]]) -> None:
     if isinstance(command, str):
         command = split_command(command)
     try:
-        status = subprocess.call(command, env=os.environ.copy())
+        ret = subprocess.run(
+            command,
+            env=os.environ.copy(),
+            input=stdin,
+            encoding="utf8",
+            check=True,
+            stdout=subprocess.PIPE if capture else None,
+            stderr=subprocess.PIPE if capture else None,
+        )
     except FileNotFoundError:
         raise FileNotFoundError(
             Errors.E970.format(str_command=" ".join(command), tool=command[0])
         ) from None
-    if status != 0:
-        sys.exit(status)
+    if ret.returncode != 0:
+        sys.exit(ret.returncode)
+    return ret
 
 
 @contextmanager
@@ -661,6 +745,25 @@ def get_object_name(obj: Any) -> str:
     if hasattr(obj, "__class__") and hasattr(obj.__class__, "__name__"):
         return obj.__class__.__name__
     return repr(obj)
+
+
+def is_same_func(func1: Callable, func2: Callable) -> bool:
+    """Approximately decide whether two functions are the same, even if their
+    identity is different (e.g. after they have been live reloaded). Mostly
+    used in the @Language.component and @Language.factory decorators to decide
+    whether to raise if a factory already exists. Allows decorator to run
+    multiple times with the same function.
+
+    func1 (Callable): The first function.
+    func2 (Callable): The second function.
+    RETURNS (bool): Whether it's the same function (most likely).
+    """
+    if not callable(func1) or not callable(func2):
+        return False
+    same_name = func1.__qualname__ == func2.__qualname__
+    same_file = inspect.getfile(func1) == inspect.getfile(func2)
+    same_code = inspect.getsourcelines(func1) == inspect.getsourcelines(func2)
+    return same_name and same_file and same_code
 
 
 def get_cuda_stream(

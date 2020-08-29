@@ -7,16 +7,7 @@ import requests
 
 from ...util import ensure_path, working_dir
 from .._util import project_cli, Arg, PROJECT_FILE, load_project_config, get_checksum
-from .._util import download_file
-
-
-# TODO: find a solution for caches
-# CACHES = [
-#     Path.home() / ".torch",
-#     Path.home() / ".caches" / "torch",
-#     os.environ.get("TORCH_HOME"),
-#     Path.home() / ".keras",
-# ]
+from .._util import download_file, git_sparse_checkout
 
 
 @project_cli.command("assets")
@@ -45,14 +36,29 @@ def project_assets(project_dir: Path) -> None:
         msg.warn(f"No assets specified in {PROJECT_FILE}", exits=0)
     msg.info(f"Fetching {len(assets)} asset(s)")
     for asset in assets:
-        dest = asset["dest"]
-        url = asset.get("url")
+        dest = Path(asset["dest"])
         checksum = asset.get("checksum")
-        if not url:
-            # project.yml defines asset without URL that the user has to place
-            check_private_asset(dest, checksum)
-            continue
-        fetch_asset(project_path, url, dest, checksum)
+        if "git" in asset:
+            if dest.exists():
+                # If there's already a file, check for checksum
+                if checksum and checksum == get_checksum(dest):
+                    msg.good(f"Skipping download with matching checksum: {dest}")
+                    continue
+                else:
+                    shutil.rmtree(dest)
+            git_sparse_checkout(
+                asset["git"]["repo"],
+                asset["git"]["path"],
+                dest,
+                branch=asset["git"].get("branch"),
+            )
+        else:
+            url = asset.get("url")
+            if not url:
+                # project.yml defines asset without URL that the user has to place
+                check_private_asset(dest, checksum)
+                continue
+            fetch_asset(project_path, url, dest, checksum)
 
 
 def check_private_asset(dest: Path, checksum: Optional[str] = None) -> None:
@@ -84,7 +90,6 @@ def fetch_asset(
     RETURNS (Optional[Path]): The path to the fetched asset or None if fetching
         the asset failed.
     """
-    # TODO: add support for caches
     dest_path = (project_path / dest).resolve()
     if dest_path.exists() and checksum:
         # If there's already a file, check for checksum
@@ -119,7 +124,7 @@ def convert_asset_url(url: str) -> str:
     RETURNS (str): The converted URL.
     """
     # If the asset URL is a regular GitHub URL it's likely a mistake
-    if re.match(r"(http(s?)):\/\/github.com", url):
+    if re.match(r"(http(s?)):\/\/github.com", url) and "releases/download" not in url:
         converted = url.replace("github.com", "raw.githubusercontent.com")
         converted = re.sub(r"/(tree|blob)/", "/", converted)
         msg.warn(

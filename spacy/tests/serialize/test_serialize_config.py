@@ -3,10 +3,11 @@ from thinc.config import Config, ConfigValidationError
 import spacy
 from spacy.lang.en import English
 from spacy.lang.de import German
-from spacy.language import Language
+from spacy.language import Language, DEFAULT_CONFIG
 from spacy.util import registry, load_model_from_config
 from spacy.ml.models import build_Tok2Vec_model, build_tb_parser_model
 from spacy.ml.models import MultiHashEmbed, MaxoutWindowEncoder
+from spacy.schemas import ConfigSchema
 
 from ..util import make_tempdir
 
@@ -208,6 +209,20 @@ def test_config_nlp_roundtrip():
     assert new_nlp._factory_meta == nlp._factory_meta
 
 
+def test_config_nlp_roundtrip_bytes_disk():
+    """Test that the config is serialized correctly and not interpolated
+    by mistake."""
+    nlp = English()
+    nlp_bytes = nlp.to_bytes()
+    new_nlp = English().from_bytes(nlp_bytes)
+    assert new_nlp.config == nlp.config
+    nlp = English()
+    with make_tempdir() as d:
+        nlp.to_disk(d)
+        new_nlp = spacy.load(d)
+    assert new_nlp.config == nlp.config
+
+
 def test_serialize_config_language_specific():
     """Test that config serialization works as expected with language-specific
     factories."""
@@ -299,3 +314,26 @@ def test_config_interpolation():
     nlp2 = English.from_config(interpolated)
     assert nlp2.config["training"]["train_corpus"]["path"] == ""
     assert nlp2.config["components"]["tagger"]["model"]["tok2vec"]["width"] == 342
+
+
+def test_config_optional_sections():
+    config = Config().from_str(nlp_config_string)
+    config = DEFAULT_CONFIG.merge(config)
+    assert "pretraining" not in config
+    filled = registry.fill_config(config, schema=ConfigSchema, validate=False)
+    # Make sure that optional "pretraining" block doesn't default to None,
+    # which would (rightly) cause error because it'd result in a top-level
+    # key that's not a section (dict). Note that the following roundtrip is
+    # also how Config.interpolate works under the hood.
+    new_config = Config().from_str(filled.to_str())
+    assert new_config["pretraining"] == {}
+
+
+def test_config_auto_fill_extra_fields():
+    config = Config({"nlp": {"lang": "en"}, "training": {}})
+    assert load_model_from_config(config, auto_fill=True)
+    config = Config({"nlp": {"lang": "en"}, "training": {"extra": "hello"}})
+    nlp, _ = load_model_from_config(config, auto_fill=True, validate=False)
+    assert "extra" not in nlp.config["training"]
+    # Make sure the config generated is valid
+    load_model_from_config(nlp.config)

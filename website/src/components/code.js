@@ -169,7 +169,13 @@ function formatCode(html, lang, prompt) {
     }
     const result = html
         .split('\n')
-        .map((line, i) => (prompt ? replacePrompt(line, prompt, i === 0) : line))
+        .map((line, i) => {
+            let newLine = prompt ? replacePrompt(line, prompt, i === 0) : line
+            if (lang === 'diff' && !line.startsWith('<')) {
+                newLine = highlightCode('python', line)
+            }
+            return newLine
+        })
         .join('\n')
     return htmlToReact(result)
 }

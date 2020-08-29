@@ -1,9 +1,9 @@
 When you call `nlp` on a text, spaCy first tokenizes the text to produce a `Doc`
 object. The `Doc` is then processed in several different steps – this is also
 referred to as the **processing pipeline**. The pipeline used by the
-[default models](/models) consists of a tagger, a parser and an entity
-recognizer. Each pipeline component returns the processed `Doc`, which is then
-passed on to the next component.
+[default models](/models) typically include a tagger, a lemmatizer, a parser and
+an entity recognizer. Each pipeline component returns the processed `Doc`, which
+is then passed on to the next component.
 
 ![The processing pipeline](../../images/pipeline.svg)
 
@@ -12,15 +12,16 @@ passed on to the next component.
 > - **Creates:** Objects, attributes and properties modified and set by the
 >   component.
 
-| Name           | Component                                                          | Creates                                                   | Description                                      |
-| -------------- | ------------------------------------------------------------------ | --------------------------------------------------------- | ------------------------------------------------ |
-| **tokenizer**  | [`Tokenizer`](/api/tokenizer)                                      | `Doc`                                                     | Segment text into tokens.                        |
-| **tagger**     | [`Tagger`](/api/tagger)                                            | `Token.tag`                                               | Assign part-of-speech tags.                      |
-| **parser**     | [`DependencyParser`](/api/dependencyparser)                        | `Token.head`, `Token.dep`, `Doc.sents`, `Doc.noun_chunks` | Assign dependency labels.                        |
-| **ner**        | [`EntityRecognizer`](/api/entityrecognizer)                        | `Doc.ents`, `Token.ent_iob`, `Token.ent_type`             | Detect and label named entities.                 |
-| **lemmatizer** | [`Lemmatizer`](/api/lemmatizer)                                    | `Token.lemma`                                             | Assign base forms.                               |
-| **textcat**    | [`TextCategorizer`](/api/textcategorizer)                          | `Doc.cats`                                                | Assign document labels.                          |
-| **custom**     | [custom components](/usage/processing-pipelines#custom-components) | `Doc._.xxx`, `Token._.xxx`, `Span._.xxx`                  | Assign custom attributes, methods or properties. |
+| Name                  | Component                                                          | Creates                                                   | Description                                      |
+| --------------------- | ------------------------------------------------------------------ | --------------------------------------------------------- | ------------------------------------------------ |
+| **tokenizer**         | [`Tokenizer`](/api/tokenizer)                                      | `Doc`                                                     | Segment text into tokens.                        |
+| _processing pipeline_ |                                                                    |                                                           |
+| **tagger**            | [`Tagger`](/api/tagger)                                            | `Token.tag`                                               | Assign part-of-speech tags.                      |
+| **parser**            | [`DependencyParser`](/api/dependencyparser)                        | `Token.head`, `Token.dep`, `Doc.sents`, `Doc.noun_chunks` | Assign dependency labels.                        |
+| **ner**               | [`EntityRecognizer`](/api/entityrecognizer)                        | `Doc.ents`, `Token.ent_iob`, `Token.ent_type`             | Detect and label named entities.                 |
+| **lemmatizer**        | [`Lemmatizer`](/api/lemmatizer)                                    | `Token.lemma`                                             | Assign base forms.                               |
+| **textcat**           | [`TextCategorizer`](/api/textcategorizer)                          | `Doc.cats`                                                | Assign document labels.                          |
+| **custom**            | [custom components](/usage/processing-pipelines#custom-components) | `Doc._.xxx`, `Token._.xxx`, `Span._.xxx`                  | Assign custom attributes, methods or properties. |
 
 The processing pipeline always **depends on the statistical model** and its
 capabilities. For example, a pipeline can only include an entity recognizer
@@ -43,6 +44,8 @@ recognizer doesn't use any features set by the tagger and parser, and so on.
 This means that you can swap them, or remove single components from the pipeline
 without affecting the others. However, components may share a "token-to-vector"
 component like [`Tok2Vec`](/api/tok2vec) or [`Transformer`](/api/transformer).
+You can read more about this in the docs on
+[embedding layers](/usage/embeddings-transformers#embedding-layers).
 
 Custom components may also depend on annotations set by other components. For
 example, a custom lemmatizer may need the part-of-speech tags assigned, so it'll

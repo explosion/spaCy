@@ -1,17 +1,19 @@
 from typing import Dict, Any, Union, List, Optional, TYPE_CHECKING
 import sys
+import shutil
 from pathlib import Path
 from wasabi import msg
 import srsly
 import hashlib
 import typer
+from click import NoSuchOption
 from typer.main import get_command
 from contextlib import contextmanager
 from thinc.config import Config, ConfigValidationError
 from configparser import InterpolationError
 
 from ..schemas import ProjectConfigSchema, validate
-from ..util import import_file
+from ..util import import_file, run_command, make_tempdir
 
 if TYPE_CHECKING:
     from pathy import Pathy  # noqa: F401
@@ -71,9 +73,10 @@ def parse_config_overrides(args: List[str]) -> Dict[str, Any]:
         opt = args.pop(0)
         err = f"Invalid CLI argument '{opt}'"
         if opt.startswith("--"):  # new argument
+            orig_opt = opt
             opt = opt.replace("--", "")
             if "." not in opt:
-                msg.fail(f"{err}: can't override top-level section", exits=1)
+                raise NoSuchOption(orig_opt)
             if "=" in opt:  # we have --opt=value
                 opt, value = opt.split("=", 1)
                 opt = opt.replace("-", "_")
@@ -194,7 +197,7 @@ def get_checksum(path: Union[Path, str]) -> str:
         for sub_file in sorted(fp for fp in path.rglob("*") if fp.is_file()):
             dir_checksum.update(sub_file.read_bytes())
         return dir_checksum.hexdigest()
-    raise ValueError(f"Can't get checksum for {path}: not a file or directory")
+    msg.fail(f"Can't get checksum for {path}: not a file or directory", exits=1)
 
 
 @contextmanager
@@ -260,8 +263,10 @@ def upload_file(src: Path, dest: Union[str, "Pathy"]) -> None:
     src (Path): The source path.
     url (str): The destination URL to upload to.
     """
-    dest = ensure_pathy(dest)
-    with dest.open(mode="wb") as output_file:
+    import smart_open
+
+    dest = str(dest)
+    with smart_open.open(dest, mode="wb") as output_file:
         with src.open(mode="rb") as input_file:
             output_file.write(input_file.read())
 
@@ -274,10 +279,12 @@ def download_file(src: Union[str, "Pathy"], dest: Path, *, force: bool = False) 
     force (bool): Whether to force download even if file exists.
         If False, the download will be skipped.
     """
+    import smart_open
+
     if dest.exists() and not force:
         return None
-    src = ensure_pathy(src)
-    with src.open(mode="rb") as input_file:
+    src = str(src)
+    with smart_open.open(src, mode="rb") as input_file:
         with dest.open(mode="wb") as output_file:
             output_file.write(input_file.read())
 
@@ -288,3 +295,49 @@ def ensure_pathy(path):
     from pathy import Pathy  # noqa: F811
 
     return Pathy(path)
+
+
+def git_sparse_checkout(
+    repo: str, subpath: str, dest: Path, *, branch: Optional[str] = None
+):
+    if dest.exists():
+        msg.fail("Destination of checkout must not exist", exits=1)
+    if not dest.parent.exists():
+        raise IOError("Parent of destination of checkout must exist")
+    # We're using Git, partial clone and sparse checkout to
+    # only clone the files we need
+    # This ends up being RIDICULOUS. omg.
+    # So, every tutorial and SO post talks about 'sparse checkout'...But they
+    # go and *clone* the whole repo. Worthless. And cloning part of a repo
+    # turns out to be completely broken. The only way to specify a "path" is..
+    # a path *on the server*? The contents of which, specifies the paths. Wat.
+    # Obviously this is hopelessly broken and insecure, because you can query
+    # arbitrary paths on the server! So nobody enables this.
+    # What we have to do is disable *all* files. We could then just checkout
+    # the path, and it'd "work", but be hopelessly slow...Because it goes and
+    # transfers every missing object one-by-one. So the final piece is that we
+    # need to use some weird git internals to fetch the missings in bulk, and
+    # *that* we can do by path.
+    # We're using Git and sparse checkout to only clone the files we need
+    with make_tempdir() as tmp_dir:
+        # This is the "clone, but don't download anything" part.
+        cmd = (
+            f"git clone {repo} {tmp_dir} --no-checkout --depth 1 "
+            "--filter=blob:none"  # <-- The key bit
+        )
+        if branch is not None:
+            cmd = f"{cmd} -b {branch}"
+        run_command(cmd, capture=True)
+        # Now we need to find the missing filenames for the subpath we want.
+        # Looking for this 'rev-list' command in the git --help? Hah.
+        cmd = f"git -C {tmp_dir} rev-list --objects --all --missing=print -- {subpath}"
+        ret = run_command(cmd, capture=True)
+        missings = "\n".join([x[1:] for x in ret.stdout.split() if x.startswith("?")])
+        # Now pass those missings into another bit of git internals
+        run_command(
+            f"git -C {tmp_dir} fetch-pack --stdin {repo}", capture=True, stdin=missings
+        )
+        # And finally, we can checkout our subpath
+        run_command(f"git -C {tmp_dir} checkout {branch} {subpath}")
+        # We need Path(name) to make sure we also support subdirectories
+        shutil.move(str(tmp_dir / Path(subpath)), str(dest))

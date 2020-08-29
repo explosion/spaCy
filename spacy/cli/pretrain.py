@@ -90,19 +90,20 @@ def pretrain(
     with show_validation_error(config_path):
         config = util.load_config(config_path, overrides=config_overrides)
         nlp, config = util.load_model_from_config(config)
-    # TODO: validate that [pretraining] block exists
+    pretrain_config = config["pretraining"]
+    if not pretrain_config:
+        # TODO: What's the solution here? How do we handle optional blocks?
+        msg.fail("The [pretraining] block in your config is empty", exits=1)
     if not output_dir.exists():
         output_dir.mkdir()
         msg.good(f"Created output directory: {output_dir}")
-    seed = config["pretraining"]["seed"]
+    seed = pretrain_config["seed"]
     if seed is not None:
         fix_random_seed(seed)
-    if use_gpu >= 0 and config["pretraining"]["use_pytorch_for_gpu_memory"]:
+    if use_gpu >= 0 and pretrain_config["use_pytorch_for_gpu_memory"]:
         use_pytorch_for_gpu_memory()
     config.to_disk(output_dir / "config.cfg")
     msg.good("Saved config file in the output directory")
-    pretrain_config = config["pretraining"]
-
     if texts_loc != "-":  # reading from a file
         with msg.loading("Loading input texts..."):
             texts = list(srsly.read_jsonl(texts_loc))

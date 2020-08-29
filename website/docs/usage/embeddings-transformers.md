@@ -107,7 +107,62 @@ transformer outputs to the
 [`Doc._.trf_data`](/api/transformer#custom_attributes) extension attribute,
 giving you access to them after the pipeline has finished running.
 
-<!-- TODO: show example of implementation via config, side by side -->
+### Example: Shared vs. independent config {#embedding-layers-config}
+
+The [config system](/usage/training#config) lets you express model configuration
+for both shared and independent embedding layers. The shared setup uses a single
+[`Tok2Vec`](/api/tok2vec) component with the
+[Tok2Vec](/api/architectures#Tok2Vec) architecture. All other components, like
+the entity recognizer, use a
+[Tok2VecListener](/api/architectures#Tok2VecListener) layer as their model's
+`tok2vec` argument, which connects to the `tok2vec` component model.
+
+```ini
+### Shared {highlight="1-2,4-5,19-20"}
+[components.tok2vec]
+factory = "tok2vec"
+
+[components.tok2vec.model]
+@architectures = "spacy.Tok2Vec.v1"
+
+[components.tok2vec.model.embed]
+@architectures = "spacy.MultiHashEmbed.v1"
+
+[components.tok2vec.model.encode]
+@architectures = "spacy.MaxoutWindowEncoder.v1"
+
+[components.ner]
+factory = "ner"
+
+[components.ner.model]
+@architectures = "spacy.TransitionBasedParser.v1"
+
+[components.ner.model.tok2vec]
+@architectures = "spacy.Tok2VecListener.v1"
+```
+
+In the independent setup, the entity recognizer component defines its own
+[Tok2Vec](/api/architectures#Tok2Vec) instance. Other components will do the
+same. This makes them fully independent and doesn't require an upstream
+[`Tok2Vec`](/api/tok2vec) component to be present in the pipeline.
+
+```ini
+### Independent {highlight="7-8"}
+[components.ner]
+factory = "ner"
+
+[components.ner.model]
+@architectures = "spacy.TransitionBasedParser.v1"
+
+[components.ner.model.tok2vec]
+@architectures = "spacy.Tok2Vec.v1"
+
+[components.ner.model.tok2vec.embed]
+@architectures = "spacy.MultiHashEmbed.v1"
+
+[components.ner.model.tok2vec.encode]
+@architectures = "spacy.MaxoutWindowEncoder.v1"
+```
 
 <!-- TODO: Once rehearsal is tested, mention it here. -->
 
@@ -124,7 +179,7 @@ interoperates with [PyTorch](https://pytorch.org) and the
 giving you access to thousands of pretrained models for your pipelines. There
 are many [great guides](http://jalammar.github.io/illustrated-transformer/) to
 transformer models, but for practical purposes, you can simply think of them as
-a drop-in replacement that let you achieve **higher accuracy** in exchange for
+drop-in replacements that let you achieve **higher accuracy** in exchange for
 **higher training and runtime costs**.
 
 ### Setup and installation {#transformers-installation}
@@ -170,9 +225,11 @@ transformers as subnetworks directly, you can also use them via the
 
 ![The processing pipeline with the transformer component](../images/pipeline_transformer.svg)
 
-The `Transformer` component sets the
+By default, the `Transformer` component sets the
 [`Doc._.trf_data`](/api/transformer#custom_attributes) extension attribute,
 which lets you access the transformers outputs at runtime.
+
+<!-- TODO: update/confirm once we have final models trained -->
 
 ```cli
 $ python -m spacy download en_core_trf_lg
@@ -194,8 +251,8 @@ for doc in nlp.pipe(["some text", "some other text"]):
     tokvecs = doc._.trf_data.tensors[-1]
 ```
 
-You can also customize how the [`Transformer`](/api/transformer) component sets
-annotations onto the [`Doc`](/api/doc), by customizing the `annotation_setter`.
+You can customize how the [`Transformer`](/api/transformer) component sets
+annotations onto the [`Doc`](/api/doc), by changing the `annotation_setter`.
 This callback will be called with the raw input and output data for the whole
 batch, along with the batch of `Doc` objects, allowing you to implement whatever
 you need. The annotation setter is called with a batch of [`Doc`](/api/doc)
@@ -204,13 +261,15 @@ containing the transformers data for the batch.
 
 ```python
 def custom_annotation_setter(docs, trf_data):
-    # TODO:
-    ...
+    doc_data = list(trf_data.doc_data)
+    for doc, data in zip(docs, doc_data):
+        doc._.custom_attr = data
 
 nlp = spacy.load("en_core_trf_lg")
 nlp.get_pipe("transformer").annotation_setter = custom_annotation_setter
 doc = nlp("This is a text")
-print()  # TODO:
+assert isinstance(doc._.custom_attr, TransformerData)
+print(doc._.custom_attr.tensors)
 ```
 
 ### Training usage {#transformers-training}
@@ -244,7 +303,7 @@ component:
 >
 > ```python
 > from spacy_transformers import Transformer, TransformerModel
-> from spacy_transformers.annotation_setters import null_annotation_setter
+> from spacy_transformers.annotation_setters import configure_trfdata_setter
 > from spacy_transformers.span_getters import get_doc_spans
 >
 > trf = Transformer(
@@ -254,7 +313,7 @@ component:
 >         get_spans=get_doc_spans,
 >         tokenizer_config={"use_fast": True},
 >     ),
->     annotation_setter=null_annotation_setter,
+>     annotation_setter=configure_trfdata_setter(),
 >     max_batch_items=4096,
 > )
 > ```
@@ -274,7 +333,7 @@ tokenizer_config = {"use_fast": true}
 @span_getters = "doc_spans.v1"
 
 [components.transformer.annotation_setter]
-@annotation_setters = "spacy-transformers.null_annotation_setter.v1"
+@annotation_setters = "spacy-transformers.trfdata_setter.v1"
 
 ```
 
@@ -288,9 +347,9 @@ in a block starts with `@`, it's **resolved to a function** and all other
 settings are passed to the function as arguments. In this case, `name`,
 `tokenizer_config` and `get_spans`.
 
-`get_spans` is a function that takes a batch of `Doc` object and returns lists
+`get_spans` is a function that takes a batch of `Doc` objects and returns lists
 of potentially overlapping `Span` objects to process by the transformer. Several
-[built-in functions](/api/transformer#span-getters) are available – for example,
+[built-in functions](/api/transformer#span_getters) are available – for example,
 to process the whole document or individual sentences. When the config is
 resolved, the function is created and passed into the model as an argument.
 
@@ -311,13 +370,17 @@ To change any of the settings, you can edit the `config.cfg` and re-run the
 training. To change any of the functions, like the span getter, you can replace
 the name of the referenced function – e.g. `@span_getters = "sent_spans.v1"` to
 process sentences. You can also register your own functions using the
-`span_getters` registry:
+[`span_getters` registry](/api/top-level#registry). For instance, the following
+custom function returns [`Span`](/api/span) objects following sentence
+boundaries, unless a sentence succeeds a certain amount of tokens, in which case
+subsentences of at most `max_length` tokens are returned.
 
 > #### config.cfg
 >
 > ```ini
 > [components.transformer.model.get_spans]
 > @span_getters = "custom_sent_spans"
+> max_length = 25
 > ```
 
 ```python
@@ -325,18 +388,29 @@ process sentences. You can also register your own functions using the
 import spacy_transformers
 
 @spacy_transformers.registry.span_getters("custom_sent_spans")
-def configure_custom_sent_spans():
-    # TODO: write custom example
-    def get_sent_spans(docs):
-        return [list(doc.sents) for doc in docs]
+def configure_custom_sent_spans(max_length: int):
+    def get_custom_sent_spans(docs):
+        spans = []
+        for doc in docs:
+            spans.append([])
+            for sent in doc.sents:
+                start = 0
+                end = max_length
+                while end <= len(sent):
+                    spans[-1].append(sent[start:end])
+                    start += max_length
+                    end += max_length
+                if start < len(sent):
+                    spans[-1].append(sent[start:len(sent)])
+        return spans
 
-    return get_sent_spans
+    return get_custom_sent_spans
 ```
 
 To resolve the config during training, spaCy needs to know about your custom
 function. You can make it available via the `--code` argument that can point to
 a Python file. For more details on training with custom code, see the
-[training documentation](/usage/training#custom-code).
+[training documentation](/usage/training#custom-functions).
 
 ```cli
 python -m spacy train ./config.cfg --code ./code.py
@@ -357,8 +431,8 @@ The same idea applies to task models that power the **downstream components**.
 Most of spaCy's built-in model creation functions support a `tok2vec` argument,
 which should be a Thinc layer of type ~~Model[List[Doc], List[Floats2d]]~~. This
 is where we'll plug in our transformer model, using the
-[Tok2VecListener](/api/architectures#Tok2VecListener) layer, which sneakily
-delegates to the `Transformer` pipeline component.
+[TransformerListener](/api/architectures#TransformerListener) layer, which
+sneakily delegates to the `Transformer` pipeline component.
 
 ```ini
 ### config.cfg (excerpt) {highlight="12"}
@@ -373,18 +447,18 @@ maxout_pieces = 3
 use_upper = false
 
 [nlp.pipeline.ner.model.tok2vec]
-@architectures = "spacy-transformers.Tok2VecListener.v1"
+@architectures = "spacy-transformers.TransformerListener.v1"
 grad_factor = 1.0
 
 [nlp.pipeline.ner.model.tok2vec.pooling]
 @layers = "reduce_mean.v1"
 ```
 
-The [Tok2VecListener](/api/architectures#Tok2VecListener) layer expects a
-[pooling layer](https://thinc.ai/docs/api-layers#reduction-ops) as the argument
-`pooling`, which needs to be of type ~~Model[Ragged, Floats2d]~~. This layer
-determines how the vector for each spaCy token will be computed from the zero or
-more source rows the token is aligned against. Here we use the
+The [TransformerListener](/api/architectures#TransformerListener) layer expects
+a [pooling layer](https://thinc.ai/docs/api-layers#reduction-ops) as the
+argument `pooling`, which needs to be of type ~~Model[Ragged, Floats2d]~~. This
+layer determines how the vector for each spaCy token will be computed from the
+zero or more source rows the token is aligned against. Here we use the
 [`reduce_mean`](https://thinc.ai/docs/api-layers#reduce_mean) layer, which
 averages the wordpiece rows. We could instead use
 [`reduce_max`](https://thinc.ai/docs/api-layers#reduce_max), or a custom
@@ -480,8 +554,9 @@ vectors, but combines them via summation with a smaller table of learned
 embeddings.
 
 ```python
-from thinc.api import add, chain, remap_ids, Embed
+from thinc.api import add, chain, remap_ids, Embed, FeatureExtractor
 from spacy.ml.staticvectors import StaticVectors
+from spacy.util import registry
 
 @registry.architectures("my_example.MyEmbedding.v1")
 def MyCustomVectors(
@@ -503,3 +578,22 @@ def MyCustomVectors(
 ## Pretraining {#pretraining}
 
 <!-- TODO: write -->
+
+> #### Raw text format
+>
+> The raw text can be provided as JSONL (newline-delimited JSON) with a key
+> `"text"` per entry. This allows the data to be read in line by line, while
+> also allowing you to include newlines in the texts.
+>
+> ```json
+> {"text": "Can I ask where you work now and what you do, and if you enjoy it?"}
+> {"text": "They may just pull out of the Seattle market completely, at least until they have autonomous vehicles."}
+> ```
+
+```cli
+$ python -m spacy init fill-config config.cfg config_pretrain.cfg --pretraining
+```
+
+```cli
+$ python -m spacy pretrain raw_text.jsonl /output config_pretrain.cfg
+```

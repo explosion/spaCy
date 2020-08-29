@@ -5,7 +5,7 @@ import srsly
 
 from ..language import Language
 from ..errors import Errors
-from ..util import ensure_path, to_disk, from_disk
+from ..util import ensure_path, to_disk, from_disk, SimpleFrozenList
 from ..tokens import Doc, Span
 from ..matcher import Matcher, PhraseMatcher
 from ..scorer import Scorer
@@ -68,7 +68,7 @@ class EntityRuler:
         ent_id_sep: str = DEFAULT_ENT_ID_SEP,
         patterns: Optional[List[PatternType]] = None,
     ) -> None:
-        """Initialize the entitiy ruler. If patterns are supplied here, they
+        """Initialize the entity ruler. If patterns are supplied here, they
         need to be a list of dictionaries with a `"label"` and `"pattern"`
         key. A pattern can either be a token pattern (list) or a phrase pattern
         (string). For example: `{'label': 'ORG', 'pattern': 'Apple'}`.
@@ -223,7 +223,7 @@ class EntityRuler:
         return all_patterns
 
     def add_patterns(self, patterns: List[PatternType]) -> None:
-        """Add patterns to the entitiy ruler. A pattern can either be a token
+        """Add patterns to the entity ruler. A pattern can either be a token
         pattern (list of dicts) or a phrase pattern (string). For example:
         {'label': 'ORG', 'pattern': 'Apple'}
         {'label': 'GPE', 'pattern': [{'lower': 'san'}, {'lower': 'francisco'}]}
@@ -317,7 +317,7 @@ class EntityRuler:
         return Scorer.score_spans(examples, "ents", **kwargs)
 
     def from_bytes(
-        self, patterns_bytes: bytes, *, exclude: Iterable[str] = tuple()
+        self, patterns_bytes: bytes, *, exclude: Iterable[str] = SimpleFrozenList()
     ) -> "EntityRuler":
         """Load the entity ruler from a bytestring.
 
@@ -341,7 +341,7 @@ class EntityRuler:
             self.add_patterns(cfg)
         return self
 
-    def to_bytes(self, *, exclude: Iterable[str] = tuple()) -> bytes:
+    def to_bytes(self, *, exclude: Iterable[str] = SimpleFrozenList()) -> bytes:
         """Serialize the entity ruler patterns to a bytestring.
 
         RETURNS (bytes): The serialized patterns.
@@ -357,7 +357,7 @@ class EntityRuler:
         return srsly.msgpack_dumps(serial)
 
     def from_disk(
-        self, path: Union[str, Path], *, exclude: Iterable[str] = tuple()
+        self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList()
     ) -> "EntityRuler":
         """Load the entity ruler from a file. Expects a file containing
         newline-delimited JSON (JSONL) with one entry per line.
@@ -394,7 +394,7 @@ class EntityRuler:
         return self
 
     def to_disk(
-        self, path: Union[str, Path], *, exclude: Iterable[str] = tuple()
+        self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList()
     ) -> None:
         """Save the entity ruler patterns to a directory. The patterns will be
         saved as newline-delimited JSON (JSONL).
