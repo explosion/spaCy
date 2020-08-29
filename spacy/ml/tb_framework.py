@@ -47,7 +47,6 @@ def init(model, X=None, Y=None):
 
 
 def resize_output(model, new_nO):
-    tok2vec = model.get_ref("tok2vec")
     lower = model.get_ref("lower")
     upper = model.get_ref("upper")
     if not model.attrs["has_upper"]:
