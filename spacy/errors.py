@@ -128,7 +128,8 @@ class Errors:
             "got {component} (name: '{name}'). If you're using a custom "
             "component factory, double-check that it correctly returns your "
             "initialized component.")
-    E004 = ("Can't set up pipeline component: a factory for '{name}' already exists.")
+    E004 = ("Can't set up pipeline component: a factory for '{name}' already "
+            "exists. Existing factory: {func}. New factory: {new_func}")
     E005 = ("Pipeline component '{name}' returned None. If you're using a "
             "custom component, maybe you forgot to return the processed Doc?")
     E006 = ("Invalid constraints for adding pipeline component. You can only "
