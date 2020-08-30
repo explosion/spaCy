@@ -17,9 +17,15 @@ ifndef SPACY_BIN
 override SPACY_BIN = $(package)-$(version).pex
 endif
 
-dist/$(SPACY_BIN) : wheelhouse/spacy-$(PYVER)-$(version).stamp
+ifndef WHEELHOUSE
+override WHEELHOUSE = "./wheelhouse"
+endif
+
+
+
+dist/$(SPACY_BIN) : $(WHEELHOUSE)/spacy-$(PYVER)-$(version).stamp
 	$(VENV)/bin/pex \
-		-f ./wheelhouse \
+		-f $(WHEELHOUSE) \
 		--no-index \
 		--disable-cache \
 		-m spacy \
@@ -29,18 +35,19 @@ dist/$(SPACY_BIN) : wheelhouse/spacy-$(PYVER)-$(version).stamp
 	chmod a+rx $@
 	cp $@ dist/spacy.pex
 
-dist/pytest.pex : wheelhouse/pytest-*.whl
-	$(VENV)/bin/pex -f ./wheelhouse --no-index --disable-cache -m pytest -o $@ pytest pytest-timeout mock
+dist/pytest.pex $(WHEELHOUSE)/pytest-*.whl
+	$(VENV)/bin/pex -f $(WHEELHOUSE) --no-index --disable-cache -m pytest -o $@ pytest pytest-timeout mock
 	chmod a+rx $@
 
-wheelhouse/spacy-$(PYVER)-$(version).stamp : $(VENV)/bin/pex setup.py spacy/*.py* spacy/*/*.py*
-	$(VENV)/bin/pip wheel . -w ./wheelhouse
-	$(VENV)/bin/pip wheel $(SPACY_EXTRAS) -w ./wheelhouse
+$(WHEELHOUSE)/spacy-$(PYVER)-$(version).stamp : $(VENV)/bin/pex setup.py spacy/*.py* spacy/*/*.py*
+	mkdir -p $(WHEELHOUSE)
+	$(VENV)/bin/pip wheel . -w $(WHEELHOUSE)
+	$(VENV)/bin/pip wheel $(SPACY_EXTRAS) -w $(WHEELHOUSE)
 
 	touch $@
 
-wheelhouse/pytest-%.whl : $(VENV)/bin/pex
-	$(VENV)/bin/pip wheel pytest pytest-timeout mock -w ./wheelhouse
+$(WHEELHOUSE)/pytest-%.whl : $(VENV)/bin/pex
+	$(VENV)/bin/pip wheel pytest pytest-timeout mock -w $(WHEELHOUSE)
 
 $(VENV)/bin/pex :
 	python$(PYVER) -m venv $(VENV)
@@ -55,6 +62,6 @@ test : dist/spacy-$(version).pex dist/pytest.pex
 
 clean : setup.py
 	rm -rf dist/*
-	rm -rf ./wheelhouse
+	rm -rf $(WHEELHOUSE)/*
 	rm -rf $(VENV)
 	python setup.py clean --all
