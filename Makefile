@@ -1,10 +1,14 @@
 SHELL := /bin/bash
-PYVER := 3.6
-VENV := ./env$(PYVER)
 
 ifndef SPACY_EXTRAS
 override SPACY_EXTRAS = spacy-lookups-data jieba pkuseg==0.0.25 sudachipy sudachidict_core
 endif
+
+ifndef PYVER
+override PYVER = 3.6
+endif
+
+VENV := ./env$(PYVER)
 
 version := $(shell "bin/get-version.sh")
 package := $(shell "bin/get-package.sh")
