@@ -17,7 +17,7 @@ ifndef SPACY_BIN
 override SPACY_BIN = $(package)-$(version).pex
 endif
 
-dist/$(SPACY_BIN) : wheelhouse/spacy-$(version).stamp
+dist/$(SPACY_BIN) : wheelhouse/spacy-$(PYVER)-$(version).stamp
 	$(VENV)/bin/pex \
 		-f ./wheelhouse \
 		--no-index \
