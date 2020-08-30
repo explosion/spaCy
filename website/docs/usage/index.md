@@ -52,9 +52,9 @@ $ pip install -U spacy
 To install additional data tables for lemmatization you can run
 `pip install spacy[lookups]` or install
 [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data)
-separately. The lookups package is needed to create blank models with
-lemmatization data, and to lemmatize in languages that don't yet come with
-pretrained models and aren't powered by third-party libraries.
+separately. The lookups package is needed to provide normalization and
+lemmatization data for new models and to lemmatize in languages that don't yet
+come with pretrained models and aren't powered by third-party libraries.
 
 </Infobox>
 

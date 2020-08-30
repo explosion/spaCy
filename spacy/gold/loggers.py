@@ -9,7 +9,7 @@ from wasabi import msg
 @registry.loggers("spacy.ConsoleLogger.v1")
 def console_logger():
     def setup_printer(
-        nlp: "Language"
+        nlp: "Language",
     ) -> Tuple[Callable[[Dict[str, Any]], None], Callable]:
         score_cols = list(nlp.config["training"]["score_weights"])
         score_widths = [max(len(col), 6) for col in score_cols]
@@ -73,7 +73,7 @@ def wandb_logger(project_name: str, remove_config_values: List[str] = []):
     console = console_logger()
 
     def setup_logger(
-        nlp: "Language"
+        nlp: "Language",
     ) -> Tuple[Callable[[Dict[str, Any]], None], Callable]:
         config = nlp.config.interpolate()
         config_dot = util.dict_to_dot(config)

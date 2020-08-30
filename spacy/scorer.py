@@ -1,10 +1,10 @@
-from typing import Optional, Iterable, Dict, Any, Callable, Tuple, TYPE_CHECKING
+from typing import Optional, Iterable, Dict, Any, Callable, TYPE_CHECKING
 import numpy as np
 
 from .gold import Example
 from .tokens import Token, Doc, Span
 from .errors import Errors
-from .util import get_lang_class
+from .util import get_lang_class, SimpleFrozenList
 from .morphology import Morphology
 
 if TYPE_CHECKING:
@@ -317,7 +317,7 @@ class Scorer:
         attr: str,
         *,
         getter: Callable[[Doc, str], Any] = getattr,
-        labels: Iterable[str] = tuple(),
+        labels: Iterable[str] = SimpleFrozenList(),
         multi_label: bool = True,
         positive_label: Optional[str] = None,
         threshold: Optional[float] = None,
@@ -447,7 +447,7 @@ class Scorer:
         getter: Callable[[Token, str], Any] = getattr,
         head_attr: str = "head",
         head_getter: Callable[[Token, str], Token] = getattr,
-        ignore_labels: Tuple[str] = tuple(),
+        ignore_labels: Iterable[str] = SimpleFrozenList(),
         **cfg,
     ) -> Dict[str, Any]:
         """Returns the UAS, LAS, and LAS per type scores for dependency

@@ -22,15 +22,15 @@ values are defined in the [`Language.Defaults`](/api/language#defaults).
 > nlp_de = German()  # Includes German data
 > ```
 
-| Name                                                                               | Description                                                                                                                                              |
-| ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Stop words**<br />[`stop_words.py`][stop_words.py]                               | List of most common words of a language that are often useful to filter out, for example "and" or "I". Matching tokens will return `True` for `is_stop`. |
-| **Tokenizer exceptions**<br />[`tokenizer_exceptions.py`][tokenizer_exceptions.py] | Special-case rules for the tokenizer, for example, contractions like "can't" and abbreviations with punctuation, like "U.K.".                            |
-| **Punctuation rules**<br />[`punctuation.py`][punctuation.py]                      | Regular expressions for splitting tokens, e.g. on punctuation or special characters like emoji. Includes rules for prefixes, suffixes and infixes.       |
-| **Character classes**<br />[`char_classes.py`][char_classes.py]                    | Character classes to be used in regular expressions, for example, latin characters, quotes, hyphens or icons.                                            |
-| **Lexical attributes**<br />[`lex_attrs.py`][lex_attrs.py]                         | Custom functions for setting lexical attributes on tokens, e.g. `like_num`, which includes language-specific words like "ten" or "hundred".              |
-| **Syntax iterators**<br />[`syntax_iterators.py`][syntax_iterators.py]             | Functions that compute views of a `Doc` object based on its syntax. At the moment, only used for [noun chunks](/usage/linguistic-features#noun-chunks).  |
-| **Lemmatizer**<br />[`spacy-lookups-data`][spacy-lookups-data]                     | Lemmatization rules or a lookup-based lemmatization table to assign base forms, for example "be" for "was".                                              |
+| Name                                                                                            | Description                                                                                                                                              |
+| ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Stop words**<br />[`stop_words.py`][stop_words.py]                                            | List of most common words of a language that are often useful to filter out, for example "and" or "I". Matching tokens will return `True` for `is_stop`. |
+| **Tokenizer exceptions**<br />[`tokenizer_exceptions.py`][tokenizer_exceptions.py]              | Special-case rules for the tokenizer, for example, contractions like "can't" and abbreviations with punctuation, like "U.K.".                            |
+| **Punctuation rules**<br />[`punctuation.py`][punctuation.py]                                   | Regular expressions for splitting tokens, e.g. on punctuation or special characters like emoji. Includes rules for prefixes, suffixes and infixes.       |
+| **Character classes**<br />[`char_classes.py`][char_classes.py]                                 | Character classes to be used in regular expressions, for example, Latin characters, quotes, hyphens or icons.                                            |
+| **Lexical attributes**<br />[`lex_attrs.py`][lex_attrs.py]                                      | Custom functions for setting lexical attributes on tokens, e.g. `like_num`, which includes language-specific words like "ten" or "hundred".              |
+| **Syntax iterators**<br />[`syntax_iterators.py`][syntax_iterators.py]                          | Functions that compute views of a `Doc` object based on its syntax. At the moment, only used for [noun chunks](/usage/linguistic-features#noun-chunks).  |
+| **Lemmatizer**<br />[`lemmatizer.py`][lemmatizer.py] [`spacy-lookups-data`][spacy-lookups-data] | Custom lemmatizer implementation and lemmatization tables.                                                                                               |
 
 [stop_words.py]:
   https://github.com/explosion/spaCy/tree/master/spacy/lang/en/stop_words.py
@@ -44,4 +44,6 @@ values are defined in the [`Language.Defaults`](/api/language#defaults).
   https://github.com/explosion/spaCy/tree/master/spacy/lang/en/lex_attrs.py
 [syntax_iterators.py]:
   https://github.com/explosion/spaCy/tree/master/spacy/lang/en/syntax_iterators.py
+[lemmatizer.py]:
+  https://github.com/explosion/spaCy/tree/master/spacy/lang/fr/lemmatizer.py
 [spacy-lookups-data]: https://github.com/explosion/spacy-lookups-data

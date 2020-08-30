@@ -438,3 +438,26 @@ def test_pipe_factories_from_source_config():
     config = nlp.config["components"]["custom"]
     assert config["factory"] == name
     assert config["arg"] == "world"
+
+
+def test_pipe_factories_decorator_idempotent():
+    """Check that decorator can be run multiple times if the function is the
+    same. This is especially relevant for live reloading because we don't
+    want spaCy to raise an error if a module registering components is reloaded.
+    """
+    name = "test_pipe_factories_decorator_idempotent"
+    func = lambda nlp, name: lambda doc: doc
+    for i in range(5):
+        Language.factory(name, func=func)
+    nlp = Language()
+    nlp.add_pipe(name)
+    Language.factory(name, func=func)
+    # Make sure it also works for component decorator, which creates the
+    # factory function
+    name2 = f"{name}2"
+    func2 = lambda doc: doc
+    for i in range(5):
+        Language.component(name2, func=func2)
+    nlp = Language()
+    nlp.add_pipe(name)
+    Language.component(name2, func=func2)
