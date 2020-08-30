@@ -33,7 +33,7 @@ dist/pytest.pex : wheelhouse/pytest-*.whl
 	$(VENV)/bin/pex -f ./wheelhouse --no-index --disable-cache -m pytest -o $@ pytest pytest-timeout mock
 	chmod a+rx $@
 
-wheelhouse/spacy-$(version).stamp : $(VENV)/bin/pex setup.py spacy/*.py* spacy/*/*.py*
+wheelhouse/spacy-$(PYVER)-$(version).stamp : $(VENV)/bin/pex setup.py spacy/*.py* spacy/*/*.py*
 	$(VENV)/bin/pip wheel . -w ./wheelhouse
 	$(VENV)/bin/pip wheel $(SPACY_EXTRAS) -w ./wheelhouse
 
