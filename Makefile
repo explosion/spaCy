@@ -35,7 +35,7 @@ dist/$(SPACY_BIN) : $(WHEELHOUSE)/spacy-$(PYVER)-$(version).stamp
 	chmod a+rx $@
 	cp $@ dist/spacy.pex
 
-dist/pytest.pex $(WHEELHOUSE)/pytest-*.whl
+dist/pytest.pex : $(WHEELHOUSE)/pytest-*.whl
 	$(VENV)/bin/pex -f $(WHEELHOUSE) --no-index --disable-cache -m pytest -o $@ pytest pytest-timeout mock
 	chmod a+rx $@
 
