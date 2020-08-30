@@ -45,6 +45,7 @@ wheelhouse/pytest-%.whl : $(VENV)/bin/pex
 $(VENV)/bin/pex :
 	python$(PYVER) -m venv $(VENV)
 	$(VENV)/bin/pip install -U pip setuptools pex wheel
+	$(VENV)/bin/pip install numpy
 
 .PHONY : clean test
 
