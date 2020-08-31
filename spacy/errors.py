@@ -650,7 +650,7 @@ class Errors:
              "`ORTH` and `NORM`.")
     E1006 = ("Unable to initialize {name} model with 0 labels.")
 
-    
+
 @add_codes
 class TempErrors:
     T003 = ("Resizing pretrained Tagger models is not currently supported.")
