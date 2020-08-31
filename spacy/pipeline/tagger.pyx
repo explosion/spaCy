@@ -290,10 +290,6 @@ class Tagger(Pipe):
             raise ValueError(err)
         self.set_output(len(self.labels))
         self.model.initialize(X=doc_sample)
-        if self.labels:
-            self.model.initialize(X=doc_sample)
-        else:
-            self.model.initialize()
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
