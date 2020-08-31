@@ -4,6 +4,7 @@ menu:
   - ['spacy', 'spacy']
   - ['displacy', 'displacy']
   - ['registry', 'registry']
+  - ['Loggers', 'loggers']
   - ['Batchers', 'batchers']
   - ['Data & Alignment', 'gold']
   - ['Utility Functions', 'util']
@@ -316,6 +317,7 @@ factories.
 | `initializers`    | Registry for functions that create [initializers](https://thinc.ai/docs/api-initializers).                                                                                                                                                         |
 | `languages`       | Registry for language-specific `Language` subclasses. Automatically reads from [entry points](/usage/saving-loading#entry-points).                                                                                                                 |
 | `layers`          | Registry for functions that create [layers](https://thinc.ai/docs/api-layers).                                                                                                                                                                     |
+| `loggers`         | Registry for functions that log [training results](/usage/training).                                                                                                                                                                               |
 | `lookups`         | Registry for large lookup tables available via `vocab.lookups`.                                                                                                                                                                                    |
 | `losses`          | Registry for functions that create [losses](https://thinc.ai/docs/api-loss).                                                                                                                                                                       |
 | `optimizers`      | Registry for functions that create [optimizers](https://thinc.ai/docs/api-optimizers).                                                                                                                                                             |
@@ -340,13 +342,117 @@ See the [`Transformer`](/api/transformer) API reference and
 >     def annotation_setter(docs, trf_data) -> None:
 >        # Set annotations on the docs
 >
->     return annotation_sette
+>     return annotation_setter
 > ```
 
 | Registry name                                               | Description                                                                                                                                                                                                                                       |
 | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`span_getters`](/api/transformer#span_getters)             | Registry for functions that take a batch of `Doc` objects and return a list of `Span` objects to process by the transformer, e.g. sentences.                                                                                                      |
 | [`annotation_setters`](/api/transformer#annotation_setters) | Registry for functions that create annotation setters. Annotation setters are functions that take a batch of `Doc` objects and a [`FullTransformerBatch`](/api/transformer#fulltransformerbatch) and can set additional annotations on the `Doc`. |
+
+## Loggers {#loggers source="spacy/gold/loggers.py" new="3"}
+
+A logger records the training results. When a logger is created, two functions
+are returned: one for logging the information for each training step, and a
+second function that is called to finalize the logging when the training is
+finished. To log each training step, a
+[dictionary](/usage/training#custom-logging) is passed on from the
+[`spacy train`](/api/cli#train), including information such as the training loss
+and the accuracy scores on the development set.
+
+There are two built-in logging functions: a logger printing results to the
+console in tabular format (which is the default), and one that also sends the
+results to a [Weights & Biases](https://www.wandb.com/) dashboard. Instead of
+using one of the built-in loggers listed here, you can also
+[implement your own](/usage/training#custom-logging).
+
+#### spacy.ConsoleLogger.v1 {#ConsoleLogger tag="registered function"}
+
+> #### Example config
+>
+> ```ini
+> [training.logger]
+> @loggers = "spacy.ConsoleLogger.v1"
+> ```
+
+Writes the results of a training step to the console in a tabular format.
+
+<Accordion title="Example console output" spaced>
+
+```cli
+$ python -m spacy train config.cfg
+```
+
+```
+ℹ Using CPU
+ℹ Loading config and nlp from: config.cfg
+ℹ Pipeline: ['tok2vec', 'tagger']
+ℹ Start training
+ℹ Training. Initial learn rate: 0.0
+
+E     #        LOSS TOK2VEC   LOSS TAGGER   TAG_ACC   SCORE
+---   ------   ------------   -----------   -------   ------
+  1        0           0.00         86.20      0.22     0.00
+  1      200           3.08      18968.78     34.00     0.34
+  1      400          31.81      22539.06     33.64     0.34
+  1      600          92.13      22794.91     43.80     0.44
+  1      800         183.62      21541.39     56.05     0.56
+  1     1000         352.49      25461.82     65.15     0.65
+  1     1200         422.87      23708.82     71.84     0.72
+  1     1400         601.92      24994.79     76.57     0.77
+  1     1600         662.57      22268.02     80.20     0.80
+  1     1800        1101.50      28413.77     82.56     0.83
+  1     2000        1253.43      28736.36     85.00     0.85
+  1     2200        1411.02      28237.53     87.42     0.87
+  1     2400        1605.35      28439.95     88.70     0.89
+```
+
+Note that the cumulative loss keeps increasing within one epoch, but should
+start decreasing across epochs.
+
+ </Accordion>
+
+#### spacy.WandbLogger.v1 {#WandbLogger tag="registered function"}
+
+> #### Installation
+>
+> ```bash
+> $ pip install wandb
+> $ wandb login
+> ```
+
+Built-in logger that sends the results of each training step to the dashboard of
+the [Weights & Biases](https://www.wandb.com/) tool. To use this logger, Weights
+& Biases should be installed, and you should be logged in. The logger will send
+the full config file to W&B, as well as various system information such as
+memory utilization, network traffic, disk IO, GPU statistics, etc. This will
+also include information such as your hostname and operating system, as well as
+the location of your Python executable.
+
+<Infobox variant="warning">
+
+Note that by default, the full (interpolated)
+[training config](/usage/training#config) is sent over to the W&B dashboard. If
+you prefer to **exclude certain information** such as path names, you can list
+those fields in "dot notation" in the `remove_config_values` parameter. These
+fields will then be removed from the config before uploading, but will otherwise
+remain in the config file stored on your local system.
+
+</Infobox>
+
+> #### Example config
+>
+> ```ini
+> [training.logger]
+> @loggers = "spacy.WandbLogger.v1"
+> project_name = "monitor_spacy_training"
+> remove_config_values = ["paths.train", "paths.dev", "training.dev_corpus.path", "training.train_corpus.path"]
+> ```
+
+| Name                   | Description                                                                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `project_name`         | The name of the project in the Weights & Biases interface. The project will be created automatically if it doesn't exist yet. ~~str~~ |
+| `remove_config_values` | A list of values to include from the config before it is uploaded to W&B (default: empty). ~~List[str]~~                              |
 
 ## Batchers {#batchers source="spacy/gold/batchers.py" new="3"}
 

@@ -118,11 +118,11 @@ Instead of defining its own `Tok2Vec` instance, a model architecture like
 [Tagger](/api/architectures#tagger) can define a listener as its `tok2vec`
 argument that connects to the shared `tok2vec` component in the pipeline.
 
-| Name        | Description                                                                                                                                                                                                                                                                                                    |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `width`     | The width of the vectors produced by the "upstream" [`Tok2Vec`](/api/tok2vec) component. ~~int~~                                                                                                                                                                                                               |
-| `upstream`  | A string to identify the "upstream" `Tok2Vec` component to communicate with. The upstream name should either be the wildcard string `"*"`, or the name of the `Tok2Vec` component. You'll almost never have multiple upstream `Tok2Vec` components, so the wildcard string will almost always be fine. ~~str~~ |
-| **CREATES** | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                                                         |
+| Name        | Description                                                                                                                                                                                                                                                                                                                          |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `width`     | The width of the vectors produced by the "upstream" [`Tok2Vec`](/api/tok2vec) component. ~~int~~                                                                                                                                                                                                                                     |
+| `upstream`  | A string to identify the "upstream" `Tok2Vec` component to communicate with. By default, the upstream name is the wildcard string `"*"`, but you could also specify the name of the `Tok2Vec` component. You'll almost never have multiple upstream `Tok2Vec` components, so the wildcard string will almost always be fine. ~~str~~ |
+| **CREATES** | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                                                                               |
 
 ### spacy.MultiHashEmbed.v1 {#MultiHashEmbed}
 
@@ -323,11 +323,11 @@ for details and system requirements.
 
 Load and wrap a transformer model from the
 [HuggingFace `transformers`](https://huggingface.co/transformers) library. You
-can any transformer that has pretrained weights and a PyTorch implementation.
-The `name` variable is passed through to the underlying library, so it can be
-either a string or a path. If it's a string, the pretrained weights will be
-downloaded via the transformers library if they are not already available
-locally.
+can use any transformer that has pretrained weights and a PyTorch
+implementation. The `name` variable is passed through to the underlying library,
+so it can be either a string or a path. If it's a string, the pretrained weights
+will be downloaded via the transformers library if they are not already
+available locally.
 
 In order to support longer documents, the
 [TransformerModel](/api/architectures#TransformerModel) layer allows you to pass

@@ -116,31 +116,12 @@ Find all token sequences matching the supplied patterns on the `Doc` or `Span`.
 > matches = matcher(doc)
 > ```
 
-| Name        | Description                                                                                                                                                                                             |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `doclike`   | The `Doc` or `Span` to match over. ~~Union[Doc, Span]~~                                                                                                                                                 |
-| **RETURNS** | A list of `(match_id, start, end)` tuples, describing the matches. A match tuple describes a span `doc[start:end`]. The `match_id` is the ID of the added match pattern. ~~List[Tuple[int, int, int]]~~ |
-
-## Matcher.pipe {#pipe tag="method"}
-
-Match a stream of documents, yielding them in turn.
-
-> #### Example
->
-> ```python
-> from spacy.matcher import Matcher
-> matcher = Matcher(nlp.vocab)
-> for doc in matcher.pipe(docs, batch_size=50):
->     pass
-> ```
-
-| Name                                          | Description                                                                                                                                                                                                                         |
-| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docs`                                        | A stream of documents or spans. ~~Iterable[Union[Doc, Span]]~~                                                                                                                                                                      |
-| `batch_size`                                  | The number of documents to accumulate into a working set. ~~int~~                                                                                                                                                                   |
-| `return_matches` <Tag variant="new">2.1</Tag> | Yield the match lists along with the docs, making results `(doc, matches)` tuples. ~~bool~~                                                                                                                                         |
-| `as_tuples`                                   | Interpret the input stream as `(doc, context)` tuples, and yield `(result, context)` tuples out. If both `return_matches` and `as_tuples` are `True`, the output will be a sequence of `((doc, matches), context)` tuples. ~~bool~~ |
-| **YIELDS**                                    | Documents, in order. ~~Union[Doc, Tuple[Doc, Any], Tuple[Tuple[Doc, Any], Any]]~~                                                                                                                                                   |
+| Name                                  | Description                                                                                                                                                                                                                                                                                              |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `doclike`                             | The `Doc` or `Span` to match over. ~~Union[Doc, Span]~~                                                                                                                                                                                                                                                  |
+| _keyword-only_                        |                                                                                                                                                                                                                                                                                                          |
+| `as_spans` <Tag variant="new">3</Tag> | Instead of tuples, return a list of [`Span`](/api/span) objects of the matches, with the `match_id` assigned as the span label. Defaults to `False`. ~~bool~~                                                                                                                                            |
+| **RETURNS**                           | A list of `(match_id, start, end)` tuples, describing the matches. A match tuple describes a span `doc[start:end`]. The `match_id` is the ID of the added match pattern. If `as_spans` is set to `True`, a list of `Span` objects is returned instead. ~~Union[List[Tuple[int, int, int]], List[Span]]~~ |
 
 ## Matcher.\_\_len\_\_ {#len tag="method" new="2"}
 

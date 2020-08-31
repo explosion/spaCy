@@ -914,4 +914,4 @@ mattis pretium.
 
 ### Weights & Biases {#wandb} <IntegrationLogo name="wandb" width={175} height="auto" align="right" />
 
-<!-- TODO: decide how we want this to work? Just send results plus config from spacy evaluate in a separate command/script? -->
+<!-- TODO: link to WandB logger, explain that it's built-in but that you can also do other cool stuff with WandB? And then include example project (still need to decide what we want to do here)  -->

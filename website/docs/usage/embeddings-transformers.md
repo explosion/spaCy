@@ -251,13 +251,14 @@ for doc in nlp.pipe(["some text", "some other text"]):
     tokvecs = doc._.trf_data.tensors[-1]
 ```
 
-You can customize how the [`Transformer`](/api/transformer) component sets
-annotations onto the [`Doc`](/api/doc), by changing the `annotation_setter`.
-This callback will be called with the raw input and output data for the whole
-batch, along with the batch of `Doc` objects, allowing you to implement whatever
-you need. The annotation setter is called with a batch of [`Doc`](/api/doc)
-objects and a [`FullTransformerBatch`](/api/transformer#fulltransformerbatch)
-containing the transformers data for the batch.
+You can also customize how the [`Transformer`](/api/transformer) component sets
+annotations onto the [`Doc`](/api/doc), by specifying a custom
+`annotation_setter`. This callback will be called with the raw input and output
+data for the whole batch, along with the batch of `Doc` objects, allowing you to
+implement whatever you need. The annotation setter is called with a batch of
+[`Doc`](/api/doc) objects and a
+[`FullTransformerBatch`](/api/transformer#fulltransformerbatch) containing the
+transformers data for the batch.
 
 ```python
 def custom_annotation_setter(docs, trf_data):
