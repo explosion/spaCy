@@ -286,7 +286,7 @@ class Tagger(Pipe):
         for tag in sorted(tags):
             self.add_label(tag)
         if len(self.labels) == 0:
-            err = Errors.E1005.format(name="Tagger")
+            err = Errors.E1006.format(name="Tagger")
             raise ValueError(err)
         self.set_output(len(self.labels))
         self.model.initialize(X=doc_sample)
