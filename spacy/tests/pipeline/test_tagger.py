@@ -69,3 +69,10 @@ def test_overfitting_IO():
         assert doc2[1].tag_ is "V"
         assert doc2[2].tag_ is "J"
         assert doc2[3].tag_ is "N"
+
+
+def test_tagger_requires_labels():
+    nlp = English()
+    tagger = nlp.add_pipe("tagger")
+    with pytest.raises(ValueError):
+        optimizer = nlp.begin_training()

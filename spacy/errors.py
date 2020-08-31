@@ -651,6 +651,7 @@ class Errors:
     E1005 = ("Unable to set attribute '{attr}' in tokenizer exception for "
              "'{chunk}'. Tokenizer exceptions are only allowed to specify "
              "`ORTH` and `NORM`.")
+    E1006 = ("Unable to initialize {name} model with 0 labels.")
 
 
 @add_codes
