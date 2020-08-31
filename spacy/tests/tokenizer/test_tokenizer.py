@@ -105,7 +105,13 @@ def test_tokenizer_add_special_case(tokenizer, text, tokens):
     assert doc[1].text == tokens[1]["orth"]
 
 
-@pytest.mark.parametrize("text,tokens", [("lorem", [{"orth": "lo"}, {"orth": "re"}])])
+@pytest.mark.parametrize(
+    "text,tokens",
+    [
+        ("lorem", [{"orth": "lo"}, {"orth": "re"}]),
+        ("lorem", [{"orth": "lo", "tag": "A"}, {"orth": "rem"}]),
+    ],
+)
 def test_tokenizer_validate_special_case(tokenizer, text, tokens):
     with pytest.raises(ValueError):
         tokenizer.add_special_case(text, tokens)
