@@ -88,7 +88,7 @@ class Tok2Vec(Pipe):
         """Add context-sensitive embeddings to the Doc.tensor attribute, allowing
         them to be used as features by downstream components.
 
-        docs (Doc): The Doc to preocess.
+        docs (Doc): The Doc to process.
         RETURNS (Doc): The processed Doc.
 
         DOCS: https://spacy.io/api/tok2vec#call
