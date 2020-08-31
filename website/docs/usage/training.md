@@ -607,8 +607,12 @@ $ python -m spacy train config.cfg --output ./output --code ./functions.py
 
 #### Example: Custom logging function {#custom-logging}
 
-During training, the results of each step are passed to a logger function in a
-dictionary providing the following information:
+During training, the results of each step are passed to a logger function. By
+default, these results are written to the console with the
+[`ConsoleLogger`](/api/top-level#ConsoleLogger). There is also built-in support
+for writing the log files to [Weights & Biases](https://www.wandb.com/) with the
+[`WandbLogger`](/api/top-level#WandbLogger). The logger function receives a
+**dictionary** with the following keys:
 
 | Key            | Value                                                                                          |
 | -------------- | ---------------------------------------------------------------------------------------------- |
@@ -619,11 +623,17 @@ dictionary providing the following information:
 | `losses`       | The accumulated training losses, keyed by component name. ~~Dict[str, float]~~                 |
 | `checkpoints`  | A list of previous results, where each result is a (score, step, epoch) tuple. ~~List[Tuple]~~ |
 
-By default, these results are written to the console with the
-[`ConsoleLogger`](/api/top-level#ConsoleLogger). There is also built-in support
-for writing the log files to [Weights & Biases](https://www.wandb.com/) with
-the [`WandbLogger`](/api/top-level#WandbLogger). But you can easily implement
-your own logger as well, for instance to write the tabular results to file:
+You can easily implement and plug in your own logger that records the training
+results in a custom way, or sends them to an experiment management tracker of
+your choice. In this example, the function `my_custom_logger.v1` writes the
+tabular results to a file:
+
+> ```ini
+> ### config.cfg (excerpt)
+> [training.logger]
+> @loggers = "my_custom_logger.v1"
+> file_path = "my_file.tab"
+> ```
 
 ```python
 ### functions.py
@@ -635,19 +645,19 @@ from pathlib import Path
 def custom_logger(log_path):
     def setup_logger(nlp: "Language") -> Tuple[Callable, Callable]:
         with Path(log_path).open("w") as file_:
-            file_.write("step\t")
-            file_.write("score\t")
+            file_.write("step\\t")
+            file_.write("score\\t")
             for pipe in nlp.pipe_names:
-                file_.write(f"loss_{pipe}\t")
-            file_.write("\n")
+                file_.write(f"loss_{pipe}\\t")
+            file_.write("\\n")
 
         def log_step(info: Dict[str, Any]):
             with Path(log_path).open("a") as file_:
-                file_.write(f"{info['step']}\t")
-                file_.write(f"{info['score']}\t")
+                file_.write(f"{info['step']}\\t")
+                file_.write(f"{info['score']}\\t")
                 for pipe in nlp.pipe_names:
-                    file_.write(f"{info['losses'][pipe]}\t")
-                file_.write("\n")
+                    file_.write(f"{info['losses'][pipe]}\\t")
+                file_.write("\\n")
 
         def finalize():
             pass
@@ -655,13 +665,6 @@ def custom_logger(log_path):
         return log_step, finalize
 
     return setup_logger
-```
-
-```ini
-### config.cfg (excerpt)
-[training.logger]
-@loggers = "my_custom_logger.v1"
-file_path = "my_file.tab"
 ```
 
 #### Example: Custom batch size schedule {#custom-code-schedule}

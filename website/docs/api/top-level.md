@@ -362,8 +362,8 @@ loss and the accuracy scores on the development set.
 
 There are two built-in logging functions: a logger printing results to the
 console in tabular format (which is the default), and one that also sends the
-results to a [Weights & Biases](https://www.wandb.com/) dashboard.
-Instead of using one of the built-in loggers listed here, you can also
+results to a [Weights & Biases](https://www.wandb.com/) dashboard. Instead of
+using one of the built-in loggers listed here, you can also
 [implement your own](/usage/training#custom-logging).
 
 > #### Example config
@@ -394,11 +394,16 @@ memory utilization, network traffic, disk IO, GPU statistics, etc. This will
 also include information such as your hostname and operating system, as well as
 the location of your Python executable.
 
-Note that by default, the full (interpolated) training config file is sent over
-to the W&B dashboard. If you prefer to exclude certain information such as path
-names, you can list those fields in "dot notation" in the `remove_config_values`
-parameter. These fields will then be removed from the config before uploading,
-but will otherwise remain in the config file stored on your local system.
+<Infobox variant="warning">
+
+Note that by default, the full (interpolated)
+[training config](/usage/training#config) is sent over to the W&B dashboard. If
+you prefer to **exclude certain information** such as path names, you can list
+those fields in "dot notation" in the `remove_config_values` parameter. These
+fields will then be removed from the config before uploading, but will otherwise
+remain in the config file stored on your local system.
+
+</Infobox>
 
 > #### Example config
 >
