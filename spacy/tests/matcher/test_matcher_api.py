@@ -1,7 +1,6 @@
 import pytest
-import re
 from mock import Mock
-from spacy.matcher import Matcher, DependencyMatcher
+from spacy.matcher import Matcher
 from spacy.tokens import Doc, Token, Span
 
 from ..doc.test_underscore import clean_underscore  # noqa: F401
@@ -290,84 +289,6 @@ def test_matcher_extension_set_membership(en_vocab):
     doc = Doc(en_vocab, words=["aardvark"])
     matches = matcher(doc)
     assert len(matches) == 0
-
-
-@pytest.fixture
-def text():
-    return "The quick brown fox jumped over the lazy fox"
-
-
-@pytest.fixture
-def heads():
-    return [3, 2, 1, 1, 0, -1, 2, 1, -3]
-
-
-@pytest.fixture
-def deps():
-    return ["det", "amod", "amod", "nsubj", "prep", "pobj", "det", "amod"]
-
-
-@pytest.fixture
-def dependency_matcher(en_vocab):
-    def is_brown_yellow(text):
-        return bool(re.compile(r"brown|yellow|over").match(text))
-
-    IS_BROWN_YELLOW = en_vocab.add_flag(is_brown_yellow)
-
-    pattern1 = [
-        {"SPEC": {"NODE_NAME": "fox"}, "PATTERN": {"ORTH": "fox"}},
-        {
-            "SPEC": {"NODE_NAME": "q", "NBOR_RELOP": ">", "NBOR_NAME": "fox"},
-            "PATTERN": {"ORTH": "quick", "DEP": "amod"},
-        },
-        {
-            "SPEC": {"NODE_NAME": "r", "NBOR_RELOP": ">", "NBOR_NAME": "fox"},
-            "PATTERN": {IS_BROWN_YELLOW: True},
-        },
-    ]
-
-    pattern2 = [
-        {"SPEC": {"NODE_NAME": "jumped"}, "PATTERN": {"ORTH": "jumped"}},
-        {
-            "SPEC": {"NODE_NAME": "fox", "NBOR_RELOP": ">", "NBOR_NAME": "jumped"},
-            "PATTERN": {"ORTH": "fox"},
-        },
-        {
-            "SPEC": {"NODE_NAME": "quick", "NBOR_RELOP": ".", "NBOR_NAME": "jumped"},
-            "PATTERN": {"ORTH": "fox"},
-        },
-    ]
-
-    pattern3 = [
-        {"SPEC": {"NODE_NAME": "jumped"}, "PATTERN": {"ORTH": "jumped"}},
-        {
-            "SPEC": {"NODE_NAME": "fox", "NBOR_RELOP": ">", "NBOR_NAME": "jumped"},
-            "PATTERN": {"ORTH": "fox"},
-        },
-        {
-            "SPEC": {"NODE_NAME": "r", "NBOR_RELOP": ">>", "NBOR_NAME": "fox"},
-            "PATTERN": {"ORTH": "brown"},
-        },
-    ]
-
-    matcher = DependencyMatcher(en_vocab)
-    matcher.add("pattern1", [pattern1])
-    matcher.add("pattern2", [pattern2])
-    matcher.add("pattern3", [pattern3])
-
-    return matcher
-
-
-def test_dependency_matcher_compile(dependency_matcher):
-    assert len(dependency_matcher) == 3
-
-
-# def test_dependency_matcher(dependency_matcher, text, heads, deps):
-#     doc = get_doc(dependency_matcher.vocab, text.split(), heads=heads, deps=deps)
-#     matches = dependency_matcher(doc)
-#     assert matches[0][1] == [[3, 1, 2]]
-#     assert matches[1][1] == [[4, 3, 3]]
-#     assert matches[2][1] == [[4, 3, 2]]
 
 
 def test_matcher_basic_check(en_vocab):

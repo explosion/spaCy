@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/PR-SVG-20010719/DTD/svg10.dtd">
+<svg width="40cm" height="9cm" viewBox="78 215 793 171" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <g id="Background">
+    <g>
+      <rect style="fill: #ffffff; fill-opacity: 1; stroke-opacity: 1; stroke-width: 2; stroke: #000000" x="79.225" y="263.65" width="169.55" height="54" rx="0" ry="0"/>
+      <text font-size="12.7998" style="fill: #000000; fill-opacity: 1; stroke: none;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="164" y="286.55">
+        <tspan x="164" y="286.55">ID: founded</tspan>
+        <tspan x="164" y="302.55">ORTH: founded</tspan>
+      </text>
+    </g>
+    <g>
+      <rect style="fill: #ffffff; fill-opacity: 1; stroke-opacity: 1; stroke-width: 2; stroke: #000000" x="426.238" y="216" width="139.1" height="54" rx="0" ry="0"/>
+      <text font-size="12.7998" style="fill: #000000; fill-opacity: 1; stroke: none;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="495.788" y="238.9">
+        <tspan x="495.788" y="238.9">ID: subject</tspan>
+        <tspan x="495.788" y="254.9">DEP: nsubj</tspan>
+      </text>
+    </g>
+    <g>
+      <rect style="fill: #ffffff; fill-opacity: 1; stroke-opacity: 1; stroke-width: 2; stroke: #000000" x="429.662" y="330.65" width="132.25" height="54" rx="0" ry="0"/>
+      <text font-size="12.7998" style="fill: #000000; fill-opacity: 1; stroke: none;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="495.787" y="353.55">
+        <tspan x="495.787" y="353.55">ID: object</tspan>
+        <tspan x="495.787" y="369.55">DEP: dobj</tspan>
+      </text>
+    </g>
+    <g>
+      <line style="fill: none; stroke-opacity: 1; stroke-width: 2; stroke: #000000" x1="248.775" y1="290.65" x2="416.834" y2="245.525"/>
+      <polygon style="fill: #000000; fill-opacity: 1; stroke-opacity: 1; stroke-width: 2; stroke: #000000" fill-rule="evenodd" points="424.078,243.58 415.717,251.002 416.834,245.525 413.123,241.344 "/>
+    </g>
+    <g>
+      <line style="fill: none; stroke-opacity: 1; stroke-width: 2; stroke: #000000" x1="248.775" y1="290.65" x2="420.533" y2="354.268"/>
+      <polygon style="fill: #000000; fill-opacity: 1; stroke-opacity: 1; stroke-width: 2; stroke: #000000" fill-rule="evenodd" points="427.566,356.873 416.452,358.089 420.533,354.268 419.925,348.711 "/>
+    </g>
+    <g>
+      <ellipse style="fill: #f3e815; fill-opacity: 1; stroke-opacity: 1; stroke-width: 2; stroke: #000000" cx="342.393" cy="265.102" rx="20.1432" ry="22.8019"/>
+      <text font-size="12.8" style="fill: #000000; fill-opacity: 1; stroke: none;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:700" x="342.393" y="269.002">
+        <tspan x="342.393" y="269.002">&gt;</tspan>
+      </text>
+    </g>
+    <g>
+      <ellipse style="fill: #f3e815; fill-opacity: 1; stroke-opacity: 1; stroke-width: 2; stroke: #000000" cx="342.393" cy="326.65" rx="20.1432" ry="22.8019"/>
+      <text font-size="12.8" style="fill: #000000; fill-opacity: 1; stroke: none;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:700" x="342.393" y="330.55">
+        <tspan x="342.393" y="330.55">&gt;</tspan>
+      </text>
+    </g>
+    <g>
+      <rect style="fill: #ffffff; fill-opacity: 1; stroke-opacity: 1; stroke-width: 2; stroke: #000000" x="697.337" y="330.65" width="172.4" height="54" rx="0" ry="0"/>
+      <text font-size="12.7998" style="fill: #000000; fill-opacity: 1; stroke: none;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="783.537" y="353.55">
+        <tspan x="783.537" y="353.55">ID: modifier</tspan>
+        <tspan x="783.537" y="369.55">DEP: amod | compound</tspan>
+      </text>
+    </g>
+    <g>
+      <line style="fill: none; stroke-opacity: 1; stroke-width: 2; stroke: #000000" x1="561.912" y1="357.65" x2="687.601" y2="357.65"/>
+      <polygon style="fill: #000000; fill-opacity: 1; stroke-opacity: 1; stroke-width: 2; stroke: #000000" fill-rule="evenodd" points="695.101,357.65 685.101,362.65 687.601,357.65 685.101,352.65 "/>
+    </g>
+    <g>
+      <ellipse style="fill: #f3e815; fill-opacity: 1; stroke-opacity: 1; stroke-width: 2; stroke: #000000" cx="629.625" cy="357.65" rx="20.1432" ry="22.8019"/>
+      <text font-size="12.8" style="fill: #000000; fill-opacity: 1; stroke: none;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:700" x="629.625" y="361.55">
+        <tspan x="629.625" y="361.55">&gt;</tspan>
+      </text>
+    </g>
+  </g>
+</svg>
