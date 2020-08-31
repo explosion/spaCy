@@ -346,13 +346,13 @@ in other components, see
 | `tokenizer_config` | Tokenizer settings passed to [`transformers.AutoTokenizer`](https://huggingface.co/transformers/model_doc/auto.html#transformers.AutoTokenizer). ~~Dict[str, Any]~~                                                                                   |
 | **CREATES**        | The model using the architecture. ~~Model[List[Doc], FullTransformerBatch]~~                                                                                                                                                                          |
 
-### spacy-transformers.Tok2VecListener.v1 {#transformers-Tok2VecListener}
+### spacy-transformers.TransformerListener.v1 {#TransformerListener}
 
 > #### Example Config
 >
 > ```ini
 > [model]
-> @architectures = "spacy-transformers.Tok2VecListener.v1"
+> @architectures = "spacy-transformers.TransformerListener.v1"
 > grad_factor = 1.0
 >
 > [model.pooling]

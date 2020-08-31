@@ -645,9 +645,12 @@ class Errors:
              "Required tables '{tables}', found '{found}'. If you are not "
              "providing custom lookups, make sure you have the package "
              "spacy-lookups-data installed.")
-    E1005 = ("Unable to initialize {name} model with 0 labels.")
+    E1005 = ("Unable to set attribute '{attr}' in tokenizer exception for "
+             "'{chunk}'. Tokenizer exceptions are only allowed to specify "
+             "`ORTH` and `NORM`.")
+    E1006 = ("Unable to initialize {name} model with 0 labels.")
 
-
+    
 @add_codes
 class TempErrors:
     T003 = ("Resizing pretrained Tagger models is not currently supported.")
