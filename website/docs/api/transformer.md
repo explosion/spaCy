@@ -33,15 +33,16 @@ the [TransformerListener](/api/architectures#TransformerListener) layer. This
 works similarly to spaCy's [Tok2Vec](/api/tok2vec) component and
 [Tok2VecListener](/api/architectures/Tok2VecListener) sublayer.
 
-We calculate an alignment between the word-piece tokens and the spaCy
-tokenization, so that we can use the last hidden states to store the information
-on the `Doc`. When multiple word-piece tokens align to the same spaCy token, the
-spaCy token receives the sum of their values. By default, the information is
-written to the [`Doc._.trf_data`](#custom-attributes) extension attribute, but
-you can implement a custom [`@annotation_setter`](#annotation_setters) to change
-this behaviour. The package also adds the function registry
-[`@span_getters`](#span_getters) with several built-in registered functions. For
-more details, see the [usage documentation](/usage/embeddings-transformers).
+The component assigns the output of the transformer to the `Doc`'s extension
+attributes. We also calculate an alignment between the word-piece tokens and the
+spaCy tokenization, so that we can use the last hidden states to set the
+`Doc.tensor` attribute. When multiple word-piece tokens align to the same spaCy
+token, the spaCy token receives the sum of their values. To access the values,
+you can use the custom [`Doc._.trf_data`](#custom-attributes) attribute. The
+package also adds the function registries [`@span_getters`](#span_getters) and
+[`@annotation_setters`](#annotation_setters) with several built-in registered
+functions. For more details, see the
+[usage documentation](/usage/embeddings-transformers).
 
 ## Config and implementation {#config}
 
@@ -60,11 +61,11 @@ on the transformer architectures and their arguments and hyperparameters.
 > nlp.add_pipe("transformer", config=DEFAULT_CONFIG)
 > ```
 
-| Setting             | Description                                                                                                                                                                                                                               |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `max_batch_items`   | Maximum size of a padded batch. Defaults to `4096`. ~~int~~                                                                                                                                                                               |
-| `annotation_setter` | Function that takes a batch of `Doc` objects and transformer outputs to store the annotations on the `Doc`. Defaults to `trfdata_setter` which sets the `Doc._.trf_data` attribute. ~~Callable[[List[Doc], FullTransformerBatch], None]~~ |
-| `model`             | The Thinc [`Model`](https://thinc.ai/docs/api-model) wrapping the transformer. Defaults to [TransformerModel](/api/architectures#TransformerModel). ~~Model[List[Doc], FullTransformerBatch]~~                                            |
+| Setting             | Description                                                                                                                                                                                                                                                                                                           |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `max_batch_items`   | Maximum size of a padded batch. Defaults to `4096`. ~~int~~                                                                                                                                                                                                                                                           |
+| `annotation_setter` | Function that takes a batch of `Doc` objects and transformer outputs to set additional annotations on the `Doc`. The `Doc._.transformer_data` attribute is set prior to calling the callback. Defaults to `null_annotation_setter` (no additional annotations). ~~Callable[[List[Doc], FullTransformerBatch], None]~~ |
+| `model`             | The Thinc [`Model`](https://thinc.ai/docs/api-model) wrapping the transformer. Defaults to [TransformerModel](/api/architectures#TransformerModel). ~~Model[List[Doc], FullTransformerBatch]~~                                                                                                                        |
 
 ```python
 https://github.com/explosion/spacy-transformers/blob/master/spacy_transformers/pipeline_component.py
@@ -97,10 +98,9 @@ Construct a `Transformer` component. One or more subsequent spaCy components can
 use the transformer outputs as features in its model, with gradients
 backpropagated to the single shared weights. The activations from the
 transformer are saved in the [`Doc._.trf_data`](#custom-attributes) extension
-attribute by default, but you can provide a different `annotation_setter` to
-customize this behaviour. In your application, you would normally use a shortcut
-and instantiate the component using its string name and
-[`nlp.add_pipe`](/api/language#create_pipe).
+attribute. You can also provide a callback to set additional annotations. In
+your application, you would normally use a shortcut for this and instantiate the
+component using its string name and [`nlp.add_pipe`](/api/language#create_pipe).
 
 | Name                | Description                                                                                                                                                                                                                                        |
 | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -205,9 +205,8 @@ modifying them.
 
 Assign the extracted features to the Doc objects. By default, the
 [`TransformerData`](/api/transformer#transformerdata) object is written to the
-[`Doc._.trf_data`](#custom-attributes) attribute. This behaviour can be
-customized by providing a different `annotation_setter` argument upon
-construction.
+[`Doc._.trf_data`](#custom-attributes) attribute. Your annotation_setter
+callback is then called, if provided.
 
 > #### Example
 >
@@ -520,23 +519,20 @@ right context.
 ## Annotation setters {#annotation_setters tag="registered functions" source="github.com/explosion/spacy-transformers/blob/master/spacy_transformers/annotation_setters.py"}
 
 Annotation setters are functions that take a batch of `Doc` objects and a
-[`FullTransformerBatch`](/api/transformer#fulltransformerbatch) and store the
-annotations on the `Doc`, e.g. to set custom or built-in attributes. You can
-register custom annotation setters using the `@registry.annotation_setters`
-decorator. The default annotation setter used by the `Transformer` pipeline
-component is `trfdata_setter`, which sets the custom `Doc._.trf_data` attribute.
+[`FullTransformerBatch`](/api/transformer#fulltransformerbatch) and can set
+additional annotations on the `Doc`, e.g. to set custom or built-in attributes.
+You can register custom annotation setters using the
+`@registry.annotation_setters` decorator.
 
 > #### Example
 >
 > ```python
-> @registry.annotation_setters("spacy-transformers.trfdata_setter.v1")
-> def configure_trfdata_setter() -> Callable:
+> @registry.annotation_setters("spacy-transformers.null_annotation_setter.v1")
+> def configure_null_annotation_setter() -> Callable:
 >     def setter(docs: List[Doc], trf_data: FullTransformerBatch) -> None:
->         doc_data = list(trf_data.doc_data)
->         for doc, data in zip(docs, doc_data):
->             doc._.trf_data = data
+>         pass
 >
->     return setter
+>         return setter
 > ```
 
 | Name       | Description                                                   |
@@ -546,9 +542,9 @@ component is `trfdata_setter`, which sets the custom `Doc._.trf_data` attribute.
 
 The following built-in functions are available:
 
-| Name                                   | Description                                                   |
-| -------------------------------------- | ------------------------------------------------------------- |
-| `spacy-transformers.trfdata_setter.v1` | Set the annotations to the custom attribute `doc._.trf_data`. |
+| Name                                           | Description                           |
+| ---------------------------------------------- | ------------------------------------- |
+| `spacy-transformers.null_annotation_setter.v1` | Don't set any additional annotations. |
 
 ## Custom attributes {#custom-attributes}
 

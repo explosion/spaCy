@@ -252,12 +252,13 @@ for doc in nlp.pipe(["some text", "some other text"]):
 ```
 
 You can also customize how the [`Transformer`](/api/transformer) component sets
-annotations onto the [`Doc`](/api/doc), by customizing the `annotation_setter`.
-This callback will be called with the raw input and output data for the whole
-batch, along with the batch of `Doc` objects, allowing you to implement whatever
-you need. The annotation setter is called with a batch of [`Doc`](/api/doc)
-objects and a [`FullTransformerBatch`](/api/transformer#fulltransformerbatch)
-containing the transformers data for the batch.
+annotations onto the [`Doc`](/api/doc), by specifying a custom
+`annotation_setter`. This callback will be called with the raw input and output
+data for the whole batch, along with the batch of `Doc` objects, allowing you to
+implement whatever you need. The annotation setter is called with a batch of
+[`Doc`](/api/doc) objects and a
+[`FullTransformerBatch`](/api/transformer#fulltransformerbatch) containing the
+transformers data for the batch.
 
 ```python
 def custom_annotation_setter(docs, trf_data):
@@ -370,9 +371,9 @@ To change any of the settings, you can edit the `config.cfg` and re-run the
 training. To change any of the functions, like the span getter, you can replace
 the name of the referenced function – e.g. `@span_getters = "sent_spans.v1"` to
 process sentences. You can also register your own functions using the
-[`span_getters` registry](/api/top-level#registry). For instance, the following 
-custom function returns [`Span`](/api/span) objects following sentence 
-boundaries, unless a sentence succeeds a certain amount of tokens, in which case 
+[`span_getters` registry](/api/top-level#registry). For instance, the following
+custom function returns [`Span`](/api/span) objects following sentence
+boundaries, unless a sentence succeeds a certain amount of tokens, in which case
 subsentences of at most `max_length` tokens are returned.
 
 > #### config.cfg
