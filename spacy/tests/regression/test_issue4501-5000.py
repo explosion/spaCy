@@ -161,6 +161,7 @@ def test_issue4674():
     assert kb2.get_size_entities() == 1
 
 
+@pytest.mark.skip(reason="API change: disable just disables, new exclude arg")
 def test_issue4707():
     """Tests that disabled component names are also excluded from nlp.from_disk
     by default when loading a model.

@@ -37,7 +37,7 @@ cdef class Pipe:
         and returned. This usually happens under the hood when the nlp object
         is called on a text and all components are applied to the Doc.
 
-        docs (Doc): The Doc to preocess.
+        docs (Doc): The Doc to process.
         RETURNS (Doc): The processed Doc.
 
         DOCS: https://spacy.io/api/pipe#call

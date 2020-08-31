@@ -128,7 +128,8 @@ class Errors:
             "got {component} (name: '{name}'). If you're using a custom "
             "component factory, double-check that it correctly returns your "
             "initialized component.")
-    E004 = ("Can't set up pipeline component: a factory for '{name}' already exists.")
+    E004 = ("Can't set up pipeline component: a factory for '{name}' already "
+            "exists. Existing factory: {func}. New factory: {new_func}")
     E005 = ("Pipeline component '{name}' returned None. If you're using a "
             "custom component, maybe you forgot to return the processed Doc?")
     E006 = ("Invalid constraints for adding pipeline component. You can only "
@@ -136,11 +137,10 @@ class Errors:
             "after (component name or index), first (True) or last (True). "
             "Invalid configuration: {args}. Existing components: {opts}")
     E007 = ("'{name}' already exists in pipeline. Existing names: {opts}")
-    E008 = ("Some current components would be lost when restoring previous "
-            "pipeline state. If you added components after calling "
-            "`nlp.select_pipes()`, you should remove them explicitly with "
-            "`nlp.remove_pipe()` before the pipeline is restored. Names of "
-            "the new components: {names}")
+    E008 = ("Can't restore disabled pipeline component '{name}' because it "
+            "doesn't exist in the pipeline anymore. If you want to remove "
+            "components from the pipeline, you should do it before calling "
+            "`nlp.select_pipes()` or after restoring the disabled components.")
     E010 = ("Word vectors set to length 0. This may be because you don't have "
             "a model installed or loaded, or because your model doesn't "
             "include word vectors. For more info, see the docs:\n"
@@ -473,6 +473,13 @@ class Errors:
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
+    E926 = ("It looks like you're trying to modify nlp.{attr} directly. This "
+            "doesn't work because it's an immutable computed property. If you "
+            "need to modify the pipeline, use the built-in methods like "
+            "nlp.add_pipe, nlp.remove_pipe, nlp.disable_pipe or nlp.enable_pipe "
+            "instead.")
+    E927 = ("Can't write to frozen list Maybe you're trying to modify a computed "
+            "property or default function argument?")
     E928 = ("A 'KnowledgeBase' should be written to / read from a file, but the "
             "provided argument {loc} is an existing directory.")
     E929 = ("A 'KnowledgeBase' could not be read from {loc} - the path does "
@@ -638,6 +645,9 @@ class Errors:
              "Required tables '{tables}', found '{found}'. If you are not "
              "providing custom lookups, make sure you have the package "
              "spacy-lookups-data installed.")
+    E1005 = ("Unable to set attribute '{attr}' in tokenizer exception for "
+             "'{chunk}'. Tokenizer exceptions are only allowed to specify "
+             "`ORTH` and `NORM`.")
 
 
 @add_codes

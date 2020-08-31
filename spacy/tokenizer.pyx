@@ -17,7 +17,7 @@ from .strings cimport hash_string
 from .lexeme cimport EMPTY_LEXEME
 
 from .attrs import intify_attrs
-from .symbols import ORTH
+from .symbols import ORTH, NORM
 from .errors import Errors, Warnings
 from . import util
 from .util import registry
@@ -584,9 +584,11 @@ cdef class Tokenizer:
                 self.add_special_case(chunk, substrings)
 
     def _validate_special_case(self, chunk, substrings):
-        """Check whether the `ORTH` fields match the string.
+        """Check whether the `ORTH` fields match the string. Check that
+        additional features beyond `ORTH` and `NORM` are not set by the
+        exception.
 
-        string (str): The string to specially tokenize.
+        chunk (str): The string to specially tokenize.
         substrings (iterable): A sequence of dicts, where each dict describes
             a token and its attributes.
         """
@@ -594,6 +596,10 @@ cdef class Tokenizer:
         orth = "".join([spec[ORTH] for spec in attrs])
         if chunk != orth:
             raise ValueError(Errors.E997.format(chunk=chunk, orth=orth, token_attrs=substrings))
+        for substring in attrs:
+            for attr in substring:
+                if attr not in (ORTH, NORM):
+                    raise ValueError(Errors.E1005.format(attr=self.vocab.strings[attr], chunk=chunk))
 
     def add_special_case(self, unicode string, substrings):
         """Add a special-case tokenization rule.

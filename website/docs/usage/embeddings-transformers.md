@@ -225,9 +225,11 @@ transformers as subnetworks directly, you can also use them via the
 
 ![The processing pipeline with the transformer component](../images/pipeline_transformer.svg)
 
-By default, the `Transformer` component sets the
+The `Transformer` component sets the
 [`Doc._.trf_data`](/api/transformer#custom_attributes) extension attribute,
 which lets you access the transformers outputs at runtime.
+
+<!-- TODO: update/confirm once we have final models trained -->
 
 ```cli
 $ python -m spacy download en_core_trf_lg
@@ -249,8 +251,8 @@ for doc in nlp.pipe(["some text", "some other text"]):
     tokvecs = doc._.trf_data.tensors[-1]
 ```
 
-You can customize how the [`Transformer`](/api/transformer) component sets
-annotations onto the [`Doc`](/api/doc), by changing the `annotation_setter`.
+You can also customize how the [`Transformer`](/api/transformer) component sets
+annotations onto the [`Doc`](/api/doc), by customizing the `annotation_setter`.
 This callback will be called with the raw input and output data for the whole
 batch, along with the batch of `Doc` objects, allowing you to implement whatever
 you need. The annotation setter is called with a batch of [`Doc`](/api/doc)
@@ -301,7 +303,7 @@ component:
 >
 > ```python
 > from spacy_transformers import Transformer, TransformerModel
-> from spacy_transformers.annotation_setters import configure_trfdata_setter
+> from spacy_transformers.annotation_setters import null_annotation_setter
 > from spacy_transformers.span_getters import get_doc_spans
 >
 > trf = Transformer(
@@ -311,7 +313,7 @@ component:
 >         get_spans=get_doc_spans,
 >         tokenizer_config={"use_fast": True},
 >     ),
->     annotation_setter=configure_trfdata_setter(),
+>     annotation_setter=null_annotation_setter,
 >     max_batch_items=4096,
 > )
 > ```
@@ -331,7 +333,7 @@ tokenizer_config = {"use_fast": true}
 @span_getters = "doc_spans.v1"
 
 [components.transformer.annotation_setter]
-@annotation_setters = "spacy-transformers.trfdata_setter.v1"
+@annotation_setters = "spacy-transformers.null_annotation_setter.v1"
 
 ```
 
@@ -368,10 +370,10 @@ To change any of the settings, you can edit the `config.cfg` and re-run the
 training. To change any of the functions, like the span getter, you can replace
 the name of the referenced function – e.g. `@span_getters = "sent_spans.v1"` to
 process sentences. You can also register your own functions using the
-`span_getters` registry. For instance, the following custom function returns
-`Span` objects following sentence boundaries, unless a sentence succeeds a
-certain amount of tokens, in which case subsentences of at most `max_length`
-tokens are returned.
+[`span_getters` registry](/api/top-level#registry). For instance, the following 
+custom function returns [`Span`](/api/span) objects following sentence 
+boundaries, unless a sentence succeeds a certain amount of tokens, in which case 
+subsentences of at most `max_length` tokens are returned.
 
 > #### config.cfg
 >
@@ -408,7 +410,7 @@ def configure_custom_sent_spans(max_length: int):
 To resolve the config during training, spaCy needs to know about your custom
 function. You can make it available via the `--code` argument that can point to
 a Python file. For more details on training with custom code, see the
-[training documentation](/usage/training#custom-code).
+[training documentation](/usage/training#custom-functions).
 
 ```cli
 python -m spacy train ./config.cfg --code ./code.py

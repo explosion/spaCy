@@ -2,7 +2,6 @@ from typing import Optional
 from pathlib import Path
 from wasabi import msg
 import subprocess
-import shutil
 import re
 
 from ... import about

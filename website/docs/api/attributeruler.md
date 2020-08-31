@@ -12,7 +12,8 @@ The attribute ruler lets you set token attributes for tokens identified by
 [`Matcher` patterns](/usage/rule-based-matching#matcher). The attribute ruler is
 typically used to handle exceptions for token attributes and to map values
 between attributes such as mapping fine-grained POS tags to coarse-grained POS
-tags.
+tags. See the [usage guide](/usage/linguistic-features/#mappings-exceptions) for
+examples.
 
 ## Config and implementation {#config}
 
