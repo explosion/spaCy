@@ -4,6 +4,7 @@ menu:
   - ['spacy', 'spacy']
   - ['displacy', 'displacy']
   - ['registry', 'registry']
+  - ['Loggers', 'loggers']
   - ['Batchers', 'batchers']
   - ['Data & Alignment', 'gold']
   - ['Utility Functions', 'util']
@@ -345,19 +346,26 @@ See the [`Transformer`](/api/transformer) API reference and
 >     return span_getter
 > ```
 
-
 | Registry name                                   | Description                                                                                                                                  |
 | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`span_getters`](/api/transformer#span_getters) | Registry for functions that take a batch of `Doc` objects and return a list of `Span` objects to process by the transformer, e.g. sentences. |
 
 ## Loggers {#loggers source="spacy/gold/loggers.py" new="3"}
 
-A logger records the training results for each step. When a logger is created,
-it returns a `log_step` function and a `finalize` function. The `log_step`
-function is called by the [training script](/api/cli#train) and receives a
-dictionary of information, including
+A logger records the training results. When a logger is created, two functions
+are returned: one for logging the information for each training step, and a
+second function that is called to finalize the logging when the training is
+finished. To log each training step, a
+[dictionary](/usage/training#custom-logging) is passed on from the
+[training script](/api/cli#train), including information such as the training
+loss and the accuracy scores on the development set.
 
-# TODO
+There are two built-in logging functions: a logger printing results to the
+console in tabular format (which is the default), and one that also sends the
+results to a [Weights & Biases`](https://www.wandb.com/) dashboard dashboard.
+Instead of using one of the built-in batchers listed here, you can also
+[implement your own](/usage/training#custom-code-readers-batchers), which may or
+may not use a custom schedule.
 
 > #### Example config
 >
@@ -365,10 +373,6 @@ dictionary of information, including
 > [training.logger]
 > @loggers = "spacy.ConsoleLogger.v1"
 > ```
-
-Instead of using one of the built-in batchers listed here, you can also
-[implement your own](/usage/training#custom-code-readers-batchers), which may or
-may not use a custom schedule.
 
 #### spacy.ConsoleLogger.v1 {#ConsoleLogger tag="registered function"}
 
@@ -384,14 +388,18 @@ Writes the results of a training step to the console in a tabular format.
 > ```
 
 Built-in logger that sends the results of each training step to the dashboard of
-the [Weights & Biases`](https://www.wandb.com/) dashboard. To use this logger,
-Weights & Biases should be installed, and you should be logged in. The logger 
-will send the full config file to W&B, as well as various system information 
-such as GPU 
+the [Weights & Biases](https://www.wandb.com/) tool. To use this logger, Weights
+& Biases should be installed, and you should be logged in. The logger will send
+the full config file to W&B, as well as various system information such as
+memory utilization, network traffic, disk IO, GPU statistics, etc. This will
+also include information such as your hostname and operating system, as well as
+the location of your Python executable.
 
-| Name           | Description                                                                                                                           |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `project_name` | The name of the project in the Weights & Biases interface. The project will be created automatically if it doesn't exist yet. ~~str~~ |
+Note that by default, the full (interpolated) training config file is sent over
+to the W&B dashboard. If you prefer to exclude certain information such as path
+names, you can list those fields in "dot notation" in the `remove_config_values`
+parameter. These fields will then be removed from the config before uploading,
+but will otherwise remain in the config file stored on your local system.
 
 > #### Example config
 >
@@ -399,7 +407,13 @@ such as GPU
 > [training.logger]
 > @loggers = "spacy.WandbLogger.v1"
 > project_name = "monitor_spacy_training"
+> remove_config_values = ["paths.train", "paths.dev", "training.dev_corpus.path", "training.train_corpus.path"]
 > ```
+
+| Name                   | Description                                                                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `project_name`         | The name of the project in the Weights & Biases interface. The project will be created automatically if it doesn't exist yet. ~~str~~ |
+| `remove_config_values` | A list of values to include from the config before it is uploaded to W&B (default: empty). ~~List[str]~~                              |
 
 ## Batchers {#batchers source="spacy/gold/batchers.py" new="3"}
 
