@@ -102,14 +102,14 @@ attribute. You can also provide a callback to set additional annotations. In
 your application, you would normally use a shortcut for this and instantiate the
 component using its string name and [`nlp.add_pipe`](/api/language#create_pipe).
 
-| Name                | Description                                                                                                                                                                                                                                        |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`             | The shared vocabulary. ~~Vocab~~                                                                                                                                                                                                                   |
-| `model`             | The Thinc [`Model`](https://thinc.ai/docs/api-model) wrapping the transformer. Usually you will want to use the [TransformerModel](/api/architectures#TransformerModel) layer for this. ~~Model[List[Doc], FullTransformerBatch]~~                 |
-| `annotation_setter` | Function that takes a batch of `Doc` objects and transformer outputs and stores the annotations on the `Doc`. By default, the function `trfdata_setter` sets the `Doc._.trf_data` attribute. ~~Callable[[List[Doc], FullTransformerBatch], None]~~ |
-| _keyword-only_      |                                                                                                                                                                                                                                                    |
-| `name`              | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                                                                                                                                                |
-| `max_batch_items`   | Maximum size of a padded batch. Defaults to `128*32`. ~~int~~                                                                                                                                                                                      |
+| Name                | Description                                                                                                                                                                                                                                                                             |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`             | The shared vocabulary. ~~Vocab~~                                                                                                                                                                                                                                                        |
+| `model`             | The Thinc [`Model`](https://thinc.ai/docs/api-model) wrapping the transformer. Usually you will want to use the [TransformerModel](/api/architectures#TransformerModel) layer for this. ~~Model[List[Doc], FullTransformerBatch]~~                                                      |
+| `annotation_setter` | Function that takes a batch of `Doc` objects and transformer outputs and stores the annotations on the `Doc`. The `Doc._.trf_data` attribute is set prior to calling the callback. By default, no additional annotations are set. ~~Callable[[List[Doc], FullTransformerBatch], None]~~ |
+| _keyword-only_      |                                                                                                                                                                                                                                                                                         |
+| `name`              | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                                                                                                                                                                                     |
+| `max_batch_items`   | Maximum size of a padded batch. Defaults to `128*32`. ~~int~~                                                                                                                                                                                                                           |
 
 ## Transformer.\_\_call\_\_ {#call tag="method"}
 
@@ -532,7 +532,7 @@ You can register custom annotation setters using the
 >     def setter(docs: List[Doc], trf_data: FullTransformerBatch) -> None:
 >         pass
 >
->         return setter
+>     return setter
 > ```
 
 | Name       | Description                                                   |
