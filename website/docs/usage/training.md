@@ -614,14 +614,55 @@ dictionary providing the following information:
 | -------------- | ---------------------------------------------------------------------------------------------- |
 | `epoch`        | How many passes over the data have been completed. ~~int~~                                     |
 | `step`         | How many steps have been completed. ~~int~~                                                    |
-| `score`        | The main score form the last evaluation, measured on the dev set. ~~float~~                    |
+| `score`        | The main score from the last evaluation, measured on the dev set. ~~float~~                    |
 | `other_scores` | The other scores from the last evaluation, measured on the dev set. ~~Dict[str, Any]~~         |
-| `losses`       | The accumulated training losses. ~~Dict[str, float]~~                                          |
+| `losses`       | The accumulated training losses, keyed by component name. ~~Dict[str, float]~~                 |
 | `checkpoints`  | A list of previous results, where each result is a (score, step, epoch) tuple. ~~List[Tuple]~~ |
 
-By default, these results are written to the console with the [`ConsoleLogger`](/api/top-level#ConsoleLogger)
+By default, these results are written to the console with the
+[`ConsoleLogger`](/api/top-level#ConsoleLogger). There is also built-in support
+for writing the log files to [Weights & Biases](https://www.wandb.com/) with
+the [`WandbLogger`](/api/top-level#WandbLogger). But you can easily implement
+your own logger as well, for instance to write the tabular results to file:
 
-# TODO
+```python
+### functions.py
+from typing import Tuple, Callable, Dict, Any
+import spacy
+from pathlib import Path
+
+@spacy.registry.loggers("my_custom_logger.v1")
+def custom_logger(log_path):
+    def setup_logger(nlp: "Language") -> Tuple[Callable, Callable]:
+        with Path(log_path).open("w") as file_:
+            file_.write("step\t")
+            file_.write("score\t")
+            for pipe in nlp.pipe_names:
+                file_.write(f"loss_{pipe}\t")
+            file_.write("\n")
+
+        def log_step(info: Dict[str, Any]):
+            with Path(log_path).open("a") as file_:
+                file_.write(f"{info['step']}\t")
+                file_.write(f"{info['score']}\t")
+                for pipe in nlp.pipe_names:
+                    file_.write(f"{info['losses'][pipe]}\t")
+                file_.write("\n")
+
+        def finalize():
+            pass
+
+        return log_step, finalize
+
+    return setup_logger
+```
+
+```ini
+### config.cfg (excerpt)
+[training.logger]
+@loggers = "my_custom_logger.v1"
+file_path = "my_file.tab"
+```
 
 #### Example: Custom batch size schedule {#custom-code-schedule}
 
