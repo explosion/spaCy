@@ -493,6 +493,39 @@ you prefer.
 | `i`       | Index of the current match (`matches[i`]). ~~int~~                                                                                                 |
 | `matches` | A list of `(match_id, start, end)` tuples, describing the matches. A match tuple describes a span `doc[start:end`]. ~~ List[Tuple[int, int int]]~~ |
 
+### Creating spans from matches {#matcher-spans}
+
+Creating [`Span`](/api/span) objects from the returned matches is a very common
+use case. spaCy makes this easy by giving you access to the `start` and `end`
+token of each match, which you can use to construct a new span with an optional
+label. As of spaCy v3.0, you can also set `as_spans=True` when calling the
+matcher on a `Doc`, which will return a list of [`Span`](/api/span) objects
+using the `match_id` as the span label.
+
+```python
+### {executable="true"}
+import spacy
+from spacy.matcher import Matcher
+from spacy.tokens import Span
+
+nlp = spacy.blank("en")
+matcher = Matcher(nlp.vocab)
+matcher.add("PERSON", [[{"lower": "barack"}, {"lower": "obama"}]])
+doc = nlp("Barack Obama was the 44th president of the United States")
+
+# 1. Return (match_id, start, end) tuples
+matches = matcher(doc)
+for match_id, start, end in matches:
+    # Create the matched span and assign the match_id as a label
+    span = Span(doc, start, end, label=match_id)
+    print(span.text, span.label_)
+
+# 2. Return Span objects directly
+matches = matcher(doc, as_spans=True)
+for span in matches:
+    print(span.text, span.label_)
+```
+
 ### Using custom pipeline components {#matcher-pipeline}
 
 Let's say your data also contains some annoying pre-processing artifacts, like
