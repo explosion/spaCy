@@ -176,18 +176,10 @@ cdef class Matcher:
         return (self._callbacks[key], self._patterns[key])
 
     def pipe(self, docs, batch_size=1000, return_matches=False, as_tuples=False):
-        """Match a stream of documents, yielding them in turn.
-
-        docs (Iterable[Union[Doc, Span]]): A stream of documents or spans.
-        batch_size (int): Number of documents to accumulate into a working set.
-        return_matches (bool): Yield the match lists along with the docs, making
-            results (doc, matches) tuples.
-        as_tuples (bool): Interpret the input stream as (doc, context) tuples,
-            and yield (result, context) tuples out.
-            If both return_matches and as_tuples are True, the output will
-            be a sequence of ((doc, matches), context) tuples.
-        YIELDS (Doc): Documents, in order.
+        """Match a stream of documents, yielding them in turn. Deprecated as of
+        spaCy v3.0.
         """
+        warnings.warn(Warnings.W105.format(matcher="Matcher"), DeprecationWarning)
         if as_tuples:
             for doc, context in docs:
                 matches = self(doc)
@@ -203,13 +195,16 @@ cdef class Matcher:
                 else:
                     yield doc
 
-    def __call__(self, object doclike):
+    def __call__(self, object doclike, *, as_spans=False):
         """Find all token sequences matching the supplied pattern.
 
         doclike (Doc or Span): The document to match over.
-        RETURNS (list): A list of `(key, start, end)` tuples,
+        as_spans (bool): Return Span objects with labels instead of (match_id,
+            start, end) tuples.
+        RETURNS (list): A list of `(match_id, start, end)` tuples,
             describing the matches. A match tuple describes a span
-            `doc[start:end]`. The `label_id` and `key` are both integers.
+            `doc[start:end]`. The `match_id` is an integer. If as_spans is set
+            to True, a list of Span objects is returned.
         """
         if isinstance(doclike, Doc):
             doc = doclike
@@ -262,7 +257,10 @@ cdef class Matcher:
             on_match = self._callbacks.get(key, None)
             if on_match is not None:
                 on_match(self, doc, i, final_matches)
-        return final_matches
+        if as_spans:
+            return [Span(doc, start, end, label=key) for key, start, end in final_matches]
+        else:
+            return final_matches
 
     def _normalize_key(self, key):
         if isinstance(key, basestring):

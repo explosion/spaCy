@@ -2,7 +2,8 @@ import pytest
 import re
 from mock import Mock
 from spacy.matcher import Matcher, DependencyMatcher
-from spacy.tokens import Doc, Token
+from spacy.tokens import Doc, Token, Span
+
 from ..doc.test_underscore import clean_underscore  # noqa: F401
 
 
@@ -469,3 +470,26 @@ def test_matcher_span(matcher):
     assert len(matcher(doc)) == 2
     assert len(matcher(span_js)) == 1
     assert len(matcher(span_java)) == 1
+
+
+def test_matcher_as_spans(matcher):
+    """Test the new as_spans=True API."""
+    text = "JavaScript is good but Java is better"
+    doc = Doc(matcher.vocab, words=text.split())
+    matches = matcher(doc, as_spans=True)
+    assert len(matches) == 2
+    assert isinstance(matches[0], Span)
+    assert matches[0].text == "JavaScript"
+    assert matches[0].label_ == "JS"
+    assert isinstance(matches[1], Span)
+    assert matches[1].text == "Java"
+    assert matches[1].label_ == "Java"
+
+
+def test_matcher_deprecated(matcher):
+    doc = Doc(matcher.vocab, words=["hello", "world"])
+    with pytest.warns(DeprecationWarning) as record:
+        for _ in matcher.pipe([doc]):
+            pass
+        assert record.list
+        assert "spaCy v3.0" in str(record.list[0].message)
