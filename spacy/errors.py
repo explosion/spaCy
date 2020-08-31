@@ -645,6 +645,9 @@ class Errors:
              "Required tables '{tables}', found '{found}'. If you are not "
              "providing custom lookups, make sure you have the package "
              "spacy-lookups-data installed.")
+    E1005 = ("Unable to set attribute '{attr}' in tokenizer exception for "
+             "'{chunk}'. Tokenizer exceptions are only allowed to specify "
+             "`ORTH` and `NORM`.")
 
 
 @add_codes
