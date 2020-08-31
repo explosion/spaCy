@@ -1,10 +1,11 @@
-from typing import Optional, List, Dict, Sequence, Any
+from typing import Optional, List, Dict, Sequence, Any, Iterable
 from pathlib import Path
 from wasabi import msg
 import sys
 import srsly
 
 from ...util import working_dir, run_command, split_command, is_cwd, join_command
+from ...util import SimpleFrozenList
 from .._util import PROJECT_FILE, PROJECT_LOCK, load_project_config, get_hash
 from .._util import get_checksum, project_cli, Arg, Opt, COMMAND
 
@@ -115,7 +116,9 @@ def print_run_help(project_dir: Path, subcommand: Optional[str] = None) -> None:
 
 
 def run_commands(
-    commands: List[str] = tuple(), silent: bool = False, dry: bool = False,
+    commands: Iterable[str] = SimpleFrozenList(),
+    silent: bool = False,
+    dry: bool = False,
 ) -> None:
     """Run a sequence of commands in a subprocess, in order.
 

@@ -10,7 +10,7 @@ api_trainable: true
 ---
 
 A trainable pipeline component for sentence segmentation. For a simpler,
-ruse-based strategy, see the [`Sentencizer`](/api/sentencizer).
+rule-based strategy, see the [`Sentencizer`](/api/sentencizer).
 
 ## Config and implementation {#config}
 

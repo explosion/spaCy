@@ -357,35 +357,6 @@ their original weights after the block.
 | -------- | ------------------------------------------------------ |
 | `params` | A dictionary of parameters keyed by model ID. ~~dict~~ |
 
-## Language.create_pipe {#create_pipe tag="method" new="2"}
-
-Create a pipeline component from a factory.
-
-<Infobox title="Changed in v3.0" variant="warning">
-
-As of v3.0, the [`Language.add_pipe`](/api/language#add_pipe) method also takes
-the string name of the factory, creates the component, adds it to the pipeline
-and returns it. The `Language.create_pipe` method is now mostly used internally.
-To create a component and add it to the pipeline, you should always use
-`Language.add_pipe`.
-
-</Infobox>
-
-> #### Example
->
-> ```python
-> parser = nlp.create_pipe("parser")
-> ```
-
-| Name                                  | Description                                                                                                                                                                 |
-| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `factory_name`                        | Name of the registered component factory. ~~str~~                                                                                                                           |
-| `name`                                | Optional unique name of pipeline component instance. If not set, the factory name is used. An error is raised if the name already exists in the pipeline. ~~Optional[str]~~ |
-| _keyword-only_                        |                                                                                                                                                                             |
-| `config` <Tag variant="new">3</Tag>   | Optional config parameters to use for this component. Will be merged with the `default_config` specified by the component factory. ~~Optional[Dict[str, Any]]~~             |
-| `validate` <Tag variant="new">3</Tag> | Whether to validate the component config and arguments against the types expected by the factory. Defaults to `True`. ~~bool~~                                              |
-| **RETURNS**                           | The pipeline component. ~~Callable[[Doc], Doc]~~                                                                                                                            |
-
 ## Language.add_pipe {#add_pipe tag="method" new="2"}
 
 Add a component to the processing pipeline. Expects a name that maps to a
@@ -433,6 +404,35 @@ component, adds it to the pipeline and returns it.
 | `source` <Tag variant="new">3</Tag>   | Optional source model to copy component from. If a source is provided, the `factory_name` is interpreted as the name of the component in the source pipeline. Make sure that the vocab, vectors and settings of the source model match the target model. ~~Optional[Language]~~ |
 | `validate` <Tag variant="new">3</Tag> | Whether to validate the component config and arguments against the types expected by the factory. Defaults to `True`. ~~bool~~                                                                                                                                                  |
 | **RETURNS**                           | The pipeline component. ~~Callable[[Doc], Doc]~~                                                                                                                                                                                                                                |
+
+## Language.create_pipe {#create_pipe tag="method" new="2"}
+
+Create a pipeline component from a factory.
+
+<Infobox title="Changed in v3.0" variant="warning">
+
+As of v3.0, the [`Language.add_pipe`](/api/language#add_pipe) method also takes
+the string name of the factory, creates the component, adds it to the pipeline
+and returns it. The `Language.create_pipe` method is now mostly used internally.
+To create a component and add it to the pipeline, you should always use
+`Language.add_pipe`.
+
+</Infobox>
+
+> #### Example
+>
+> ```python
+> parser = nlp.create_pipe("parser")
+> ```
+
+| Name                                  | Description                                                                                                                                                                 |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `factory_name`                        | Name of the registered component factory. ~~str~~                                                                                                                           |
+| `name`                                | Optional unique name of pipeline component instance. If not set, the factory name is used. An error is raised if the name already exists in the pipeline. ~~Optional[str]~~ |
+| _keyword-only_                        |                                                                                                                                                                             |
+| `config` <Tag variant="new">3</Tag>   | Optional config parameters to use for this component. Will be merged with the `default_config` specified by the component factory. ~~Optional[Dict[str, Any]]~~             |
+| `validate` <Tag variant="new">3</Tag> | Whether to validate the component config and arguments against the types expected by the factory. Defaults to `True`. ~~bool~~                                              |
+| **RETURNS**                           | The pipeline component. ~~Callable[[Doc], Doc]~~                                                                                                                            |
 
 ## Language.has_factory {#has_factory tag="classmethod" new="3"}
 
@@ -561,6 +561,54 @@ component function.
 | `name`      | Name of the component to remove. ~~str~~                                                   |
 | **RETURNS** | A `(name, component)` tuple of the removed component. ~~Tuple[str, Callable[[Doc], Doc]]~~ |
 
+## Language.disable_pipe {#disable_pipe tag="method" new="3"}
+
+Temporarily disable a pipeline component so it's not run as part of the
+pipeline. Disabled components are listed in
+[`nlp.disabled`](/api/language#attributes) and included in
+[`nlp.components`](/api/language#attributes), but not in
+[`nlp.pipeline`](/api/language#pipeline), so they're not run when you process a
+`Doc` with the `nlp` object. If the component is already disabled, this method
+does nothing.
+
+> #### Example
+>
+> ```python
+> nlp.add_pipe("ner")
+> nlp.add_pipe("textcat")
+> assert nlp.pipe_names == ["ner", "textcat"]
+> nlp.disable_pipe("ner")
+> assert nlp.pipe_names == ["textcat"]
+> assert nlp.component_names == ["ner", "textcat"]
+> assert nlp.disabled == ["ner"]
+> ```
+
+| Name   | Description                               |
+| ------ | ----------------------------------------- |
+| `name` | Name of the component to disable. ~~str~~ |
+
+## Language.enable_pipe {#enable_pipe tag="method" new="3"}
+
+Enable a previously disable component (e.g. via
+[`Language.disable_pipes`](/api/language#disable_pipes)) so it's run as part of
+the pipeline, [`nlp.pipeline`](/api/language#pipeline). If the component is
+already enabled, this method does nothing.
+
+> #### Example
+>
+> ```python
+> nlp.disable_pipe("ner")
+> assert "ner" in nlp.disabled
+> assert not "ner" in nlp.pipe_names
+> nlp.enable_pipe("ner")
+> assert not "ner" in nlp.disabled
+> assert "ner" in nlp.pipe_names
+> ```
+
+| Name   | Description                              |
+| ------ | ---------------------------------------- |
+| `name` | Name of the component to enable. ~~str~~ |
+
 ## Language.select_pipes {#select_pipes tag="contextmanager, method" new="3"}
 
 Disable one or more pipeline components. If used as a context manager, the
@@ -568,7 +616,9 @@ pipeline will be restored to the initial state at the end of the block.
 Otherwise, a `DisabledPipes` object is returned, that has a `.restore()` method
 you can use to undo your changes. You can specify either `disable` (as a list or
 string), or `enable`. In the latter case, all components not in the `enable`
-list, will be disabled.
+list, will be disabled. Under the hood, this method calls into
+[`disable_pipe`](/api/language#disable_pipe) and
+[`enable_pipe`](/api/language#enable_pipe).
 
 > #### Example
 >
@@ -860,18 +910,21 @@ available to the loaded object.
 
 ## Attributes {#attributes}
 
-| Name                                          | Description                                                                                                                  |
-| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`                                       | A container for the lexical types. ~~Vocab~~                                                                                 |
-| `tokenizer`                                   | The tokenizer. ~~Tokenizer~~                                                                                                 |
-| `make_doc`                                    | Callable that takes a string and returns a `Doc`. ~~Callable[[str], Doc]~~                                                   |
-| `pipeline`                                    | List of `(name, component)` tuples describing the current processing pipeline, in order. ~~List[str, Callable[[Doc], Doc]]~~ |
-| `pipe_names` <Tag variant="new">2</Tag>       | List of pipeline component names, in order. ~~List[str]~~                                                                    |
-| `pipe_labels` <Tag variant="new">2.2</Tag>    | List of labels set by the pipeline components, if available, keyed by component name. ~~Dict[str, List[str]]~~               |
-| `pipe_factories` <Tag variant="new">2.2</Tag> | Dictionary of pipeline component names, mapped to their factory names. ~~Dict[str, str]~~                                    |
-| `factories`                                   | All available factory functions, keyed by name. ~~Dict[str, Callable[[...], Callable[[Doc], Doc]]]~~                         |
-| `factory_names` <Tag variant="new">3</Tag>    | List of all available factory names. ~~List[str]~~                                                                           |
-| `path` <Tag variant="new">2</Tag>             | Path to the model data directory, if a model is loaded. Otherwise `None`. ~~Optional[Path]~~                                 |
+| Name                                          | Description                                                                                                                                    |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`                                       | A container for the lexical types. ~~Vocab~~                                                                                                   |
+| `tokenizer`                                   | The tokenizer. ~~Tokenizer~~                                                                                                                   |
+| `make_doc`                                    | Callable that takes a string and returns a `Doc`. ~~Callable[[str], Doc]~~                                                                     |
+| `pipeline`                                    | List of `(name, component)` tuples describing the current processing pipeline, in order. ~~List[Tuple[str, Callable[[Doc], Doc]]]~~            |
+| `pipe_names` <Tag variant="new">2</Tag>       | List of pipeline component names, in order. ~~List[str]~~                                                                                      |
+| `pipe_labels` <Tag variant="new">2.2</Tag>    | List of labels set by the pipeline components, if available, keyed by component name. ~~Dict[str, List[str]]~~                                 |
+| `pipe_factories` <Tag variant="new">2.2</Tag> | Dictionary of pipeline component names, mapped to their factory names. ~~Dict[str, str]~~                                                      |
+| `factories`                                   | All available factory functions, keyed by name. ~~Dict[str, Callable[[...], Callable[[Doc], Doc]]]~~                                           |
+| `factory_names` <Tag variant="new">3</Tag>    | List of all available factory names. ~~List[str]~~                                                                                             |
+| `components` <Tag variant="new">3</Tag>       | List of all available `(name, component)` tuples, including components that are currently disabled. ~~List[Tuple[str, Callable[[Doc], Doc]]]~~ |
+| `component_names` <Tag variant="new">3</Tag>  | List of all available component names, including components that are currently disabled. ~~List[str]~~                                         |
+| `disabled` <Tag variant="new">3</Tag>         | Names of components that are currently disabled and don't run as part of the pipeline. ~~List[str]~~                                           |
+| `path` <Tag variant="new">2</Tag>             | Path to the model data directory, if a model is loaded. Otherwise `None`. ~~Optional[Path]~~                                                   |
 
 ## Class attributes {#class-attributes}
 
