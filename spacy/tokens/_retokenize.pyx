@@ -175,6 +175,8 @@ def _merge(Doc doc, merges):
         spans.append(span)
         # House the new merged token where it starts
         token = &doc.c[start]
+        start_ent_iob = doc.c[start].ent_iob
+        start_ent_type = doc.c[start].ent_type
         # Initially set attributes to attributes of span root
         token.tag = doc.c[span.root.i].tag
         token.pos = doc.c[span.root.i].pos
@@ -187,8 +189,8 @@ def _merge(Doc doc, merges):
             merged_iob = 3
             # If start token is I-ENT and previous token is of the same
             # type, then I-ENT (could check I-ENT from start to span root)
-            if doc.c[start].ent_iob == 1 and start > 0 \
-                    and doc.c[start].ent_type == token.ent_type \
+            if start_ent_iob == 1 and start > 0 \
+                    and start_ent_type == token.ent_type \
                     and doc.c[start - 1].ent_type == token.ent_type:
                 merged_iob = 1
         token.ent_iob = merged_iob
