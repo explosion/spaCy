@@ -138,6 +138,7 @@ TRAIN_DATA = [
 def test_tok2vec_listener():
     orig_config = Config().from_str(cfg_string)
     nlp, config = util.load_model_from_config(orig_config, auto_fill=True, validate=True)
+    assert nlp.pipe_names == ["tok2vec", "tagger"]
     tagger = nlp.get_pipe("tagger")
     tok2vec = nlp.get_pipe("tok2vec")
     tagger_tok2vec = tagger.model.get_ref("tok2vec")
@@ -158,10 +159,11 @@ def test_tok2vec_listener():
         losses = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)
 
-    doc = nlp("Running the pipeline as a whole")
+    doc = nlp("Running the pipeline as a whole.")
     doc_tensor = tagger_tok2vec.predict([doc])[0]
     assert_equal(doc.tensor, doc_tensor)
 
     # TODO: should this warn or error?
-    nlp.disable_pipes("tok2vec")
-    nlp("Running the pipeline with the Tok2Vec component disabled")
+    nlp.select_pipes(disable="tok2vec")
+    assert nlp.pipe_names == ["tagger"]
+    nlp("Running the pipeline with the Tok2Vec component disabled.")
