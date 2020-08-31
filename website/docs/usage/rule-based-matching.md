@@ -856,15 +856,6 @@ for token in doc:
     print(token.text, token._.is_hashtag)
 ```
 
-To process a stream of social media posts, we can use
-[`Language.pipe`](/api/language#pipe), which will return a stream of `Doc`
-objects that we can pass to [`Matcher.pipe`](/api/matcher#pipe).
-
-```python
-docs = nlp.pipe(LOTS_OF_TWEETS)
-matches = matcher.pipe(docs)
-```
-
 ## Efficient phrase matching {#phrasematcher}
 
 If you need to match large terminology lists, you can also use the

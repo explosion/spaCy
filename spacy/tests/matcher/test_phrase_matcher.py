@@ -303,3 +303,14 @@ def test_phrase_matcher_as_spans(en_vocab):
     assert isinstance(matches[1], Span)
     assert matches[1].text == "test"
     assert matches[1].label_ == "B"
+
+
+def test_phrase_matcher_deprecated(en_vocab):
+    matcher = PhraseMatcher(en_vocab)
+    matcher.add("TEST", [Doc(en_vocab, words=["helllo"])])
+    doc = Doc(en_vocab, words=["hello", "world"])
+    with pytest.warns(DeprecationWarning) as record:
+        for _ in matcher.pipe([doc]):
+            pass
+        assert record.list
+        assert "spaCy v3.0" in str(record.list[0].message)

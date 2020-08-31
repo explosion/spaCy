@@ -76,27 +76,6 @@ match_id_string = nlp.vocab.strings[match_id]
 
 </Infobox>
 
-## PhraseMatcher.pipe {#pipe tag="method"}
-
-Match a stream of documents, yielding them in turn.
-
-> #### Example
->
-> ```python
->   from spacy.matcher import PhraseMatcher
->   matcher = PhraseMatcher(nlp.vocab)
->   for doc in matcher.pipe(docs, batch_size=50):
->       pass
-> ```
-
-| Name                                          | Description                                                                                                                                                                                                                         |
-| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docs`                                        | A stream of documents. ~~Iterable[Doc]~~                                                                                                                                                                                            |
-| `batch_size`                                  | The number of documents to accumulate into a working set. ~~int~~                                                                                                                                                                   |
-| `return_matches` <Tag variant="new">2.1</Tag> | Yield the match lists along with the docs, making results `(doc, matches)` tuples. ~~bool~~                                                                                                                                         |
-| `as_tuples`                                   | Interpret the input stream as `(doc, context)` tuples, and yield `(result, context)` tuples out. If both `return_matches` and `as_tuples` are `True`, the output will be a sequence of `((doc, matches), context)` tuples. ~~bool~~ |
-| **YIELDS**                                    | Documents and optional matches or context in order. ~~Union[Doc, Tuple[Doc, Any], Tuple[Tuple[Doc, Any], Any]]~~                                                                                                                    |
-
 ## PhraseMatcher.\_\_len\_\_ {#len tag="method"}
 
 Get the number of rules added to the matcher. Note that this only returns the

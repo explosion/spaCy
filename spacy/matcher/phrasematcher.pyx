@@ -292,20 +292,10 @@ cdef class PhraseMatcher:
             idx += 1
 
     def pipe(self, stream, batch_size=1000, return_matches=False, as_tuples=False):
-        """Match a stream of documents, yielding them in turn.
-
-        docs (iterable): A stream of documents.
-        batch_size (int): Number of documents to accumulate into a working set.
-        return_matches (bool): Yield the match lists along with the docs, making
-            results (doc, matches) tuples.
-        as_tuples (bool): Interpret the input stream as (doc, context) tuples,
-            and yield (result, context) tuples out.
-            If both return_matches and as_tuples are True, the output will
-            be a sequence of ((doc, matches), context) tuples.
-        YIELDS (Doc): Documents, in order.
-
-        DOCS: https://spacy.io/api/phrasematcher#pipe
+        """Match a stream of documents, yielding them in turn. Deprecated as of
+        spaCy v3.0.
         """
+        warnings.warn(Warnings.W105.format(matcher="PhraseMatcher"), DeprecationWarning)
         if as_tuples:
             for doc, context in stream:
                 matches = self(doc)

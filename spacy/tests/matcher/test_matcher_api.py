@@ -484,3 +484,12 @@ def test_matcher_as_spans(matcher):
     assert isinstance(matches[1], Span)
     assert matches[1].text == "Java"
     assert matches[1].label_ == "Java"
+
+
+def test_matcher_deprecated(matcher):
+    doc = Doc(matcher.vocab, words=["hello", "world"])
+    with pytest.warns(DeprecationWarning) as record:
+        for _ in matcher.pipe([doc]):
+            pass
+        assert record.list
+        assert "spaCy v3.0" in str(record.list[0].message)
