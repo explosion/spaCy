@@ -357,14 +357,16 @@ are returned: one for logging the information for each training step, and a
 second function that is called to finalize the logging when the training is
 finished. To log each training step, a
 [dictionary](/usage/training#custom-logging) is passed on from the
-[training script](/api/cli#train), including information such as the training
-loss and the accuracy scores on the development set.
+[`spacy train`](/api/cli#train), including information such as the training loss
+and the accuracy scores on the development set.
 
 There are two built-in logging functions: a logger printing results to the
 console in tabular format (which is the default), and one that also sends the
 results to a [Weights & Biases](https://www.wandb.com/) dashboard. Instead of
 using one of the built-in loggers listed here, you can also
 [implement your own](/usage/training#custom-logging).
+
+#### spacy.ConsoleLogger.v1 {#ConsoleLogger tag="registered function"}
 
 > #### Example config
 >
@@ -373,19 +375,21 @@ using one of the built-in loggers listed here, you can also
 > @loggers = "spacy.ConsoleLogger.v1"
 > ```
 
-#### spacy.ConsoleLogger.v1 {#ConsoleLogger tag="registered function"}
-
 Writes the results of a training step to the console in a tabular format.
 
-<Accordion title="Example console output">
+<Accordion title="Example console output" spaced>
+
+```cli
+$ python -m spacy train config.cfg
+```
 
 ```
-$ python -m spacy train config.cfg
 ℹ Using CPU
 ℹ Loading config and nlp from: config.cfg
 ℹ Pipeline: ['tok2vec', 'tagger']
 ℹ Start training
 ℹ Training. Initial learn rate: 0.0
+
 E     #        LOSS TOK2VEC   LOSS TAGGER   TAG_ACC   SCORE
 ---   ------   ------------   -----------   -------   ------
   1        0           0.00         86.20      0.22     0.00
