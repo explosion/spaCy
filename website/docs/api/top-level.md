@@ -362,7 +362,7 @@ loss and the accuracy scores on the development set.
 
 There are two built-in logging functions: a logger printing results to the
 console in tabular format (which is the default), and one that also sends the
-results to a [Weights & Biases`](https://www.wandb.com/) dashboard dashboard.
+results to a [Weights & Biases](https://www.wandb.com/) dashboard dashboard.
 Instead of using one of the built-in batchers listed here, you can also
 [implement your own](/usage/training#custom-code-readers-batchers), which may or
 may not use a custom schedule.
