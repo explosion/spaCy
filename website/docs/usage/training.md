@@ -632,7 +632,7 @@ tabular results to a file:
 > ### config.cfg (excerpt)
 > [training.logger]
 > @loggers = "my_custom_logger.v1"
-> file_path = "my_file.tab"
+> log_path = "my_file.tab"
 > ```
 
 ```python
