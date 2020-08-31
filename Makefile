@@ -24,7 +24,11 @@ endif
 
 
 dist/$(SPACY_BIN) : $(WHEELHOUSE)/spacy-$(PYVER)-$(version).stamp
-	$(VENV)/bin/pex \
+	tmp_dir = $(TMPDIR)
+	echo $(tmp_dir)
+	source $(VENV)/bin/activate
+	export TMPDIR=$(tmp_dir)
+	pex \
 		-f $(WHEELHOUSE) \
 		--no-index \
 		--disable-cache \
