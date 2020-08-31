@@ -203,7 +203,7 @@ cdef class Matcher:
                 else:
                     yield doc
 
-    def __call__(self, object doclike, as_spans=False):
+    def __call__(self, object doclike, *, as_spans=False):
         """Find all token sequences matching the supplied pattern.
 
         doclike (Doc or Span): The document to match over.

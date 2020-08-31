@@ -217,7 +217,7 @@ cdef class PhraseMatcher:
                 result = internal_node
             map_set(self.mem, <MapStruct*>result, self.vocab.strings[key], NULL)
 
-    def __call__(self, doc, as_spans=False):
+    def __call__(self, doc, *, as_spans=False):
         """Find all sequences matching the supplied patterns on the `Doc`.
 
         doc (Doc): The document to match over.
