@@ -915,7 +915,7 @@ expressions – for example,
 [`compile_suffix_regex`](/api/top-level#util.compile_suffix_regex):
 
 ```python
-suffixes = nlp.Defaults.suffixes + (r'''-+$''',)
+suffixes = nlp.Defaults.suffixes + [r'''-+$''',]
 suffix_regex = spacy.util.compile_suffix_regex(suffixes)
 nlp.tokenizer.suffix_search = suffix_regex.search
 ```
