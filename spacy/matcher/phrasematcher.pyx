@@ -7,6 +7,7 @@ import warnings
 from ..attrs cimport ORTH, POS, TAG, DEP, LEMMA
 from ..structs cimport TokenC
 from ..tokens.token cimport Token
+from ..tokens.span cimport Span
 from ..typedefs cimport attr_t
 
 from ..schemas import TokenPattern
@@ -216,13 +217,16 @@ cdef class PhraseMatcher:
                 result = internal_node
             map_set(self.mem, <MapStruct*>result, self.vocab.strings[key], NULL)
 
-    def __call__(self, doc):
+    def __call__(self, doc, as_spans=False):
         """Find all sequences matching the supplied patterns on the `Doc`.
 
         doc (Doc): The document to match over.
-        RETURNS (list): A list of `(key, start, end)` tuples,
+        as_spans (bool): Return Span objects with labels instead of (match_id,
+            start, end) tuples.
+        RETURNS (list): A list of `(match_id, start, end)` tuples,
             describing the matches. A match tuple describes a span
-            `doc[start:end]`. The `label_id` and `key` are both integers.
+            `doc[start:end]`. The `match_id` is an integer. If as_spans is set
+            to True, a list of Span objects is returned.
 
         DOCS: https://spacy.io/api/phrasematcher#call
         """
@@ -239,7 +243,10 @@ cdef class PhraseMatcher:
             on_match = self._callbacks.get(self.vocab.strings[ent_id])
             if on_match is not None:
                 on_match(self, doc, i, matches)
-        return matches
+        if as_spans:
+            return [Span(doc, start, end, label=key) for key, start, end in matches]
+        else:
+            return matches
 
     cdef void find_matches(self, Doc doc, vector[SpanC] *matches) nogil:
         cdef MapStruct* current_node = self.c_map

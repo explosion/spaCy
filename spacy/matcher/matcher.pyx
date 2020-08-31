@@ -203,13 +203,16 @@ cdef class Matcher:
                 else:
                     yield doc
 
-    def __call__(self, object doclike):
+    def __call__(self, object doclike, as_spans=False):
         """Find all token sequences matching the supplied pattern.
 
         doclike (Doc or Span): The document to match over.
-        RETURNS (list): A list of `(key, start, end)` tuples,
+        as_spans (bool): Return Span objects with labels instead of (match_id,
+            start, end) tuples.
+        RETURNS (list): A list of `(match_id, start, end)` tuples,
             describing the matches. A match tuple describes a span
-            `doc[start:end]`. The `label_id` and `key` are both integers.
+            `doc[start:end]`. The `match_id` is an integer. If as_spans is set
+            to True, a list of Span objects is returned.
         """
         if isinstance(doclike, Doc):
             doc = doclike
@@ -262,7 +265,10 @@ cdef class Matcher:
             on_match = self._callbacks.get(key, None)
             if on_match is not None:
                 on_match(self, doc, i, final_matches)
-        return final_matches
+        if as_spans:
+            return [Span(doc, start, end, label=key) for key, start, end in final_matches]
+        else:
+            return final_matches
 
     def _normalize_key(self, key):
         if isinstance(key, basestring):
