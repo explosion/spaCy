@@ -45,8 +45,13 @@ dist/pytest.pex : $(WHEELHOUSE)/pytest-*.whl
 
 $(WHEELHOUSE)/spacy-$(PYVER)-$(version).stamp : $(VENV)/bin/pex setup.py spacy/*.py* spacy/*/*.py*
 	mkdir -p $(WHEELHOUSE)
-	$(VENV)/bin/pip wheel . -w $(WHEELHOUSE)
-	$(VENV)/bin/pip wheel $(SPACY_EXTRAS) -w $(WHEELHOUSE)
+	tmp_dir = $(TMPDIR)
+	echo $(tmp_dir)
+	source $(VENV)/bin/activate
+	export TMPDIR=$(tmp_dir)
+	
+	pip wheel . -w $(WHEELHOUSE)
+	pip wheel $(SPACY_EXTRAS) -w $(WHEELHOUSE)
 
 	touch $@
 
