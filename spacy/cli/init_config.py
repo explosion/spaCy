@@ -64,10 +64,16 @@ def init_fill_config_cli(
 
 
 def fill_config(
-    output_file: Path, base_path: Path, *, pretraining: bool = False, diff: bool = False
+    output_file: Path,
+    base_path: Path,
+    *,
+    pretraining: bool = False,
+    diff: bool = False,
+    silent: bool = False,
 ) -> Tuple[Config, Config]:
     is_stdout = str(output_file) == "-"
-    msg = Printer(no_print=is_stdout)
+    no_print = is_stdout or silent
+    msg = Printer(no_print=no_print)
     with show_validation_error(hint_fill=False):
         config = util.load_config(base_path)
         nlp, _ = util.load_model_from_config(config, auto_fill=True, validate=False)
@@ -85,7 +91,7 @@ def fill_config(
         msg.warn("Nothing to auto-fill: base config is already complete")
     else:
         msg.good("Auto-filled config with all values")
-    if diff and not is_stdout:
+    if diff and not no_print:
         if before == after:
             msg.warn("No diff to show: nothing was auto-filled")
         else:
@@ -94,7 +100,8 @@ def fill_config(
             print(diff_strings(before, after))
             msg.divider("END CONFIG DIFF")
             print("")
-    save_config(filled, output_file, is_stdout=is_stdout)
+    save_config(filled, output_file, is_stdout=is_stdout, silent=silent)
+    return config, filled
 
 
 def init_config(
@@ -149,8 +156,11 @@ def init_config(
     save_config(nlp.config, output_file, is_stdout=is_stdout)
 
 
-def save_config(config: Config, output_file: Path, is_stdout: bool = False) -> None:
-    msg = Printer(no_print=is_stdout)
+def save_config(
+    config: Config, output_file: Path, is_stdout: bool = False, silent: bool = False
+) -> None:
+    no_print = is_stdout or silent
+    msg = Printer(no_print=no_print)
     if is_stdout:
         print(config.to_str())
     else:
@@ -160,7 +170,8 @@ def save_config(config: Config, output_file: Path, is_stdout: bool = False) -> N
         msg.good("Saved config", output_file)
         msg.text("You can now add your data and train your model:")
         variables = ["--paths.train ./train.spacy", "--paths.dev ./dev.spacy"]
-        print(f"{COMMAND} train {output_file.parts[-1]} {' '.join(variables)}")
+        if not no_print:
+            print(f"{COMMAND} train {output_file.parts[-1]} {' '.join(variables)}")
 
 
 def has_spacy_transformers() -> bool:
