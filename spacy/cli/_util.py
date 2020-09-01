@@ -297,9 +297,7 @@ def ensure_pathy(path):
     return Pathy(path)
 
 
-def git_sparse_checkout(
-    repo: str, subpath: str, dest: Path, *, branch: str = "master"
-):
+def git_sparse_checkout(repo: str, subpath: str, dest: Path, *, branch: str = "master"):
     if dest.exists():
         msg.fail("Destination of checkout must not exist", exits=1)
     if not dest.parent.exists():
@@ -341,6 +339,7 @@ def git_sparse_checkout(
         run_command(cmd)
         # We need Path(name) to make sure we also support subdirectories
         shutil.move(str(tmp_dir / Path(subpath)), str(dest))
+
 
 def _from_http_to_git(repo):
     if repo.startswith("http://"):
