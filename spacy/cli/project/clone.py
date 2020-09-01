@@ -78,6 +78,7 @@ def check_clone(name: str, dest: Path, repo: str) -> None:
     if not dest.parent.exists():
         # We're not creating parents, parent dir should exist
         msg.fail(
-            f"Can't clone project, parent directory doesn't exist: {dest.parent}",
+            f"Can't clone project, parent directory doesn't exist: {dest.parent}. "
+            f"Create the necessary folder(s) first before continuing.",
             exits=1,
         )
