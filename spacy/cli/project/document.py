@@ -24,8 +24,10 @@ be fetched by running [`spacy project assets`]({DOCS_URL}/api/cli#project-assets
 in the project directory."""
 # These markers are added to the Markdown and can be used to update the file in
 # place if it already exists. Only the auto-generated part will be replaced.
-MARKER_START = "<!-- AUTO-GENERATED DOCS START (do not remove) -->"
-MARKER_END = "<!-- AUTO-GENERATED DOCS END (do not remove) -->"
+MARKER_START = "<!-- SPACY PROJECT: AUTO-GENERATED DOCS START (do not remove) -->"
+MARKER_END = "<!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->"
+# If this marker is used in an existing README, it's ignored and not replaced
+MARKER_IGNORE = "<!-- SPACY PROJECT: IGNORE -->"
 
 
 @project_cli.command("document")
@@ -100,13 +102,16 @@ def project_document(
         if output_file.exists():
             with output_file.open("r", encoding="utf8") as f:
                 existing = f.read()
+            if MARKER_IGNORE in existing:
+                msg.warn("Found ignore marker in existing file: skipping", output_file)
+                return
             if MARKER_START in existing and MARKER_END in existing:
                 msg.info("Found existing file: only replacing auto-generated docs")
                 before = existing.split(MARKER_START)[0]
                 after = existing.split(MARKER_END)[1]
                 content = f"{before}{content}{after}"
             else:
-                msg.info("Replacing existing file")
+                msg.warn("Replacing existing file")
         with output_file.open("w") as f:
             f.write(content)
         msg.good("Saved project documentation", output_file)

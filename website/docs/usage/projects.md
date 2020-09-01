@@ -526,6 +526,15 @@ before or after it and re-running the `project document` command will **only
 update the auto-generated part**. This makes it easy to keep your documentation
 up to date.
 
+<Infobox variant="warning">
+
+Note that the contents of an existing file will be **replaced** if no existing
+auto-generated docs are found. If you want spaCy to ignore a file and not update
+it, you can add the comment marker `<!-- SPACY PROJECT: IGNORE -->` anywhere in
+your markup.
+
+</Infobox>
+
 ### Cloning from your own repo {#custom-repo}
 
 The [`spacy project clone`](/api/cli#project-clone) command lets you customize
