@@ -43,7 +43,7 @@ def project_clone(name: str, dest: Path, *, repo: str = about.__projects__) -> N
         git_sparse_checkout(repo, name, dest)
     except subprocess.CalledProcessError:
         err = f"Could not clone '{name}' from repo '{repo_name}'"
-        msg.fail(err)
+        msg.fail(err, exits=1)
     msg.good(f"Cloned '{name}' from {repo_name}", project_dir)
     if not (project_dir / PROJECT_FILE).exists():
         msg.warn(f"No {PROJECT_FILE} found in directory")
