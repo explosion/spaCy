@@ -1314,7 +1314,6 @@ class Language:
         as_tuples: bool = False,
         batch_size: int = 1000,
         disable: Iterable[str] = SimpleFrozenList(),
-        cleanup: bool = False,
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
         n_process: int = 1,
     ):
@@ -1326,8 +1325,6 @@ class Language:
             (doc, context) tuples. Defaults to False.
         batch_size (int): The number of texts to buffer.
         disable (List[str]): Names of the pipeline components to disable.
-        cleanup (bool): If True, unneeded strings are freed to control memory
-            use. Experimental.
         component_cfg (Dict[str, Dict]): An optional dictionary with extra keyword
             arguments for specific components.
         n_process (int): Number of processors to process texts. If -1, set `multiprocessing.cpu_count()`.
@@ -1378,35 +1375,9 @@ class Language:
             for pipe in pipes:
                 docs = pipe(docs)
 
-        # Track weakrefs of "recent" documents, so that we can see when they
-        # expire from memory. When they do, we know we don't need old strings.
-        # This way, we avoid maintaining an unbounded growth in string entries
-        # in the string store.
-        recent_refs = weakref.WeakSet()
-        old_refs = weakref.WeakSet()
-        # Keep track of the original string data, so that if we flush old strings,
-        # we can recover the original ones. However, we only want to do this if we're
-        # really adding strings, to save up-front costs.
-        original_strings_data = None
         nr_seen = 0
         for doc in docs:
             yield doc
-            if cleanup:
-                recent_refs.add(doc)
-                if nr_seen < 10000:
-                    old_refs.add(doc)
-                    nr_seen += 1
-                elif len(old_refs) == 0:
-                    old_refs, recent_refs = recent_refs, old_refs
-                    if original_strings_data is None:
-                        original_strings_data = list(self.vocab.strings)
-                    else:
-                        keys, strings = self.vocab.strings._cleanup_stale_strings(
-                            original_strings_data
-                        )
-                        self.vocab._reset_cache(keys, strings)
-                        self.tokenizer._reset_cache(keys)
-                    nr_seen = 0
 
     def _multiprocessing_pipe(
         self,
