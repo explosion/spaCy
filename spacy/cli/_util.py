@@ -332,11 +332,17 @@ def git_sparse_checkout(
         # Looking for this 'rev-list' command in the git --help? Hah.
         cmd = f"git -C {tmp_dir} rev-list --objects --all --missing=print -- {subpath}"
         ret = run_command(cmd, capture=True)
-        missings = "\n".join([x[1:] for x in ret.stdout.split() if x.startswith("?")])
+        missings = " ".join([x[1:] for x in ret.stdout.split() if x.startswith("?")])
         # Now pass those missings into another bit of git internals
-        run_command(
-            f"git -C {tmp_dir} fetch-pack --stdin {repo}", capture=True, stdin=missings
-        )
+
+        if repo.startswith("http://"):
+            repo = repo.replace(r"http://", r"https://")
+        if repo.startswith(r"https://"):
+            repo = repo.replace("https://", "git@").replace("/", ":", 1)
+            repo = f"{repo}.git"
+
+        cmd = f"git -C {tmp_dir} fetch-pack {repo} {missings}"
+        run_command(cmd, capture=True)
         # And finally, we can checkout our subpath
         run_command(f"git -C {tmp_dir} checkout {branch} {subpath}")
         # We need Path(name) to make sure we also support subdirectories
