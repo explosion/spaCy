@@ -42,6 +42,7 @@ cdef cppclass StateC:
     RingBufferC _hist
     int length
     int offset
+    int n_pushes
     int _s_i
     int _b_i
     int _e_i
@@ -49,6 +50,7 @@ cdef cppclass StateC:
 
     __init__(const TokenC* sent, int length) nogil:
         cdef int PADDING = 5
+        this.n_pushes = 0
         this._buffer = <int*>calloc(length + (PADDING * 2), sizeof(int))
         this._stack = <int*>calloc(length + (PADDING * 2), sizeof(int))
         this.shifted = <bint*>calloc(length + (PADDING * 2), sizeof(bint))
@@ -335,6 +337,7 @@ cdef cppclass StateC:
             this.set_break(this.B_(0).l_edge)
         if this._b_i > this._break:
             this._break = -1
+        this.n_pushes += 1
 
     void pop() nogil:
         if this._s_i >= 1:
@@ -351,6 +354,7 @@ cdef cppclass StateC:
         this._buffer[this._b_i] = this.S(0)
         this._s_i -= 1
         this.shifted[this.B(0)] = True
+        this.n_pushes -= 1
 
     void add_arc(int head, int child, attr_t label) nogil:
         if this.has_head(child):
@@ -431,6 +435,7 @@ cdef cppclass StateC:
         this._break = src._break
         this.offset = src.offset
         this._empty_token = src._empty_token
+        this.n_pushes = src.n_pushes
 
     void fast_forward() nogil:
         # space token attachement policy:
