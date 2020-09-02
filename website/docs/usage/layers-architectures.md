@@ -165,27 +165,60 @@ on the [API page for model architectures](/api/architectures).
 
 ### Defining sublayers {#sublayers}
 
-​Model architecture functions often accept **sublayers as arguments**, so that
+Model architecture functions often accept **sublayers as arguments**, so that
 you can try **substituting a different layer** into the network. Depending on
 how the architecture function is structured, you might be able to define your
 network structure entirely through the [config system](/usage/training#config),
-using layers that have already been defined. ​The
-[transformers documentation](/usage/embeddings-transformers#transformers)
-section shows a common example of swapping in a different sublayer.
+using layers that have already been defined. ​
 
 In most neural network models for NLP, the most important parts of the network
 are what we refer to as the
-[embed and encode](https://explosion.ai/blog/embed-encode-attend-predict) steps.
+[embed and encode](https://explosion.ai/blog/deep-learning-formula-nlp) steps.
 These steps together compute dense, context-sensitive representations of the
-tokens. Most of spaCy's default architectures accept a
-[`tok2vec` embedding layer](/api/architectures#tok2vec-arch) as an argument, so
-you can control this important part of the network separately. This makes it
-easy to **switch between** transformer, CNN, BiLSTM or other feature extraction
-approaches. And if you want to define your own solution, all you need to do is
-register a ~~Model[List[Doc], List[Floats2d]]~~ architecture function, and
-you'll be able to try it out in any of the spaCy components. ​
+tokens, and their combination forms a typical
+[`Tok2Vec`](/api/architectures#Tok2Vec) layer:
 
-<!-- TODO: example of swapping sublayers -->
+```ini
+### config.cfg (excerpt)
+[components.tok2vec]
+factory = "tok2vec"
+
+[components.tok2vec.model]
+@architectures = "spacy.Tok2Vec.v1"
+
+[components.tok2vec.model.embed]
+@architectures = "spacy.MultiHashEmbed.v1"
+# ...
+
+[components.tok2vec.model.encode]
+@architectures = "spacy.MaxoutWindowEncoder.v1"
+# ...
+```
+
+By defining these sublayers specifically, it becomes straightforward to swap out
+a sublayer for another one, for instance changing the first sublayer to a
+character embedding with the [CharacterEmbed](/api/architectures#CharacterEmbed)
+architecture:
+
+```ini
+### config.cfg (excerpt)
+[components.tok2vec.model.embed]
+@architectures = "spacy.CharacterEmbed.v1"
+# ...
+
+[components.tok2vec.model.encode]
+@architectures = "spacy.MaxoutWindowEncoder.v1"
+# ...
+```
+
+Most of spaCy's default architectures accept a `tok2vec` layer as a sublayer
+within the larger task-specific neural network. This makes it easy to **switch
+between** transformer, CNN, BiLSTM or other feature extraction approaches. The
+[transformers documentation](/usage/embeddings-transformers#training-custom-model)
+section shows an example of swapping out a model's standard `tok2vec` layer with
+a transformer. And if you want to define your own solution, all you need to do
+is register a ~~Model[List[Doc], List[Floats2d]]~~ architecture function, and
+you'll be able to try it out in any of the spaCy components. ​
 
 ## Wrapping PyTorch, TensorFlow and other frameworks {#frameworks}
 
