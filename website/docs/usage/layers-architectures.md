@@ -105,7 +105,7 @@ bit of validation goes a long way, especially if you
 tools to highlight these errors early. The config file is also validated 
 at the beginning of training, to verify that all the types match correctly.
 
-<Infobox title="Tip: Static type checking in your editor" emoji="💡">
+<Accordion title="Tip: Static type checking in your editor" emoji="💡">
 
 If you're using a modern editor like Visual Studio Code, you can
 [set up `mypy`](https://thinc.ai/docs/usage-type-checking#install) with the
@@ -114,7 +114,7 @@ code.
 
 [![](../images/thinc_mypy.jpg)](https://thinc.ai/docs/usage-type-checking#linting)
 
-</Infobox>
+</Accordion>
 
 ## Swapping model architectures {#swap-architectures}
 
