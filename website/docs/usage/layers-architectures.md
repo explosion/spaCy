@@ -62,7 +62,7 @@ are: ​
 | ~~Ints2d~~         | A two-dimensional `numpy` or `cupy` array of integers. Common dtypes include uint64, int32 and int8. |
 | ~~List[Floats2d]~~ | A list of two-dimensional arrays, generally with one array per `Doc` and one row per token.          |
 | ~~Ragged~~         | A container to handle variable-length sequence data in an unpadded contiguous array.                 |
-| ~~Padded~~         | A container to handle variable-length sequence data in a passed contiguous array.                    |
+| ~~Padded~~         | A container to handle variable-length sequence data in a padded contiguous array.                    |
 
 The model type signatures help you figure out which model architectures and
 components can **fit together**. For instance, the
@@ -94,7 +94,7 @@ code.
 
 ## Defining sublayers {#sublayers}
 
-​ Model architecture functions often accept **sublayers as arguments**, so that
+Model architecture functions often accept **sublayers as arguments**, so that
 you can try **substituting a different layer** into the network. Depending on
 how the architecture function is structured, you might be able to define your
 network structure entirely through the [config system](/usage/training#config),
@@ -112,7 +112,7 @@ you can control this important part of the network separately. This makes it
 easy to **switch between** transformer, CNN, BiLSTM or other feature extraction
 approaches. And if you want to define your own solution, all you need to do is
 register a ~~Model[List[Doc], List[Floats2d]]~~ architecture function, and
-you'll be able to try it out in any of spaCy components. ​
+you'll be able to try it out in any of the spaCy components. ​
 
 <!-- TODO: example of switching sublayers -->
 
