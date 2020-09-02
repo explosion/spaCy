@@ -14,7 +14,8 @@ next: /usage/projects
 >
 > ````python
 > from thinc.api import Model, chain
->
+> 
+> @spacy.registry.architectures.register("model.v1")
 > def build_model(width: int, classes: int) -> Model:
 >     tok2vec = build_tok2vec(width)
 >     output_layer = build_output_layer(width, classes)
@@ -24,10 +25,12 @@ next: /usage/projects
 
 A **model architecture** is a function that wires up a
 [Thinc `Model`](https://thinc.ai/docs/api-model) instance. It describes the
-neural network that is run internally as part of a component in a spaCy
-pipeline. To define the actual architecture, you can implement your logic in
-Thinc directly, but you can also use Thinc as a thin wrapper around frameworks
-such as PyTorch, TensorFlow or MXNet.
+neural network that is run internally as part of a component in a spaCy pipeline.
+To define the actual architecture, you can implement your logic in
+Thinc directly, or you can use Thinc as a thin wrapper around frameworks
+such as PyTorch, TensorFlow and MXNet. Each Model can also be used as a sublayer 
+of a larger network, allowing you to freely combine implementations from different 
+frameworks into one `Thinc` Model.
 
 spaCy's built-in components require a `Model` instance to be passed to them via
 the config system. To change the model architecture of an existing component,
@@ -37,6 +40,17 @@ won't be able to change it anymore. The architecture is like a recipe for the
 network, and you can't change the recipe once the dish has already been
 prepared. You have to make a new one.
 
+```ini
+### config.cfg (excerpt)
+[components.tagger]
+factory = "tagger"
+
+[components.tagger.model]
+@architectures = "model.v1"
+width = 512
+classes = 16
+```
+
 ## Type signatures {#type-sigs}
 
 <!-- TODO: update example, maybe simplify definition? -->
@@ -44,17 +58,15 @@ prepared. You have to make a new one.
 > #### Example
 >
 > ```python
-> @spacy.registry.architectures.register("spacy.Tagger.v1")
-> def build_tagger_model(
->     tok2vec: Model[List[Doc], List[Floats2d]], nO: Optional[int] = None
-> ) -> Model[List[Doc], List[Floats2d]]:
->     t2v_width = tok2vec.get_dim("nO") if tok2vec.has_dim("nO") else None
->     output_layer = Softmax(nO, t2v_width, init_W=zero_init)
->     softmax = with_array(output_layer)
->     model = chain(tok2vec, softmax)
->     model.set_ref("tok2vec", tok2vec)
->     model.set_ref("softmax", output_layer)
->     model.set_ref("output_layer", output_layer)
+> from typing import List
+> from thinc.api import Model, chain
+> from thinc.types import Floats2d
+> def chain_model(
+>     tok2vec: Model[List[Doc], List[Floats2d]], 
+>     layer1: Model[List[Floats2d], Floats2d], 
+>     layer2: Model[Floats2d, Floats2d]
+> ) -> Model[List[Doc], Floats2d]:
+>     model = chain(tok2vec, layer1, layer2)
 >     return model
 > ```
 
@@ -65,7 +77,7 @@ list, and the outputs will be a dictionary. Both `typing.List` and `typing.Dict`
 are also generics, allowing you to be more specific about the data. For
 instance, you can write ~~Model[List[Doc], Dict[str, float]]~~ to specify that
 the model expects a list of [`Doc`](/api/doc) objects as input, and returns a
-dictionary mapping strings to floats. Some of the most common types you'll see
+dictionary mapping of strings to floats. Some of the most common types you'll see
 are: ​
 
 | Type               | Description                                                                                          |
