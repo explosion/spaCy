@@ -70,12 +70,11 @@ classes = 16
 >     return model
 > ```
 
-​ The Thinc `Model` class is a **generic type** that can specify its input and
+The Thinc `Model` class is a **generic type** that can specify its input and
 output types. Python uses a square-bracket notation for this, so the type
 ~~Model[List, Dict]~~ says that each batch of inputs to the model will be a
-list, and the outputs will be a dictionary. Both `typing.List` and `typing.Dict`
-are also generics, allowing you to be more specific about the data. For
-instance, you can write ~~Model[List[Doc], Dict[str, float]]~~ to specify that
+list, and the outputs will be a dictionary. You can be even more specific and 
+write for instance~~Model[List[Doc], Dict[str, float]]~~ to specify that
 the model expects a list of [`Doc`](/api/doc) objects as input, and returns a
 dictionary mapping of strings to floats. Some of the most common types you'll see
 are: ​
@@ -103,8 +102,8 @@ interchangeably. There are many other ways they could be incompatible. However,
 if the types don't match, they almost surely _won't_ be compatible. This little
 bit of validation goes a long way, especially if you
 [configure your editor](https://thinc.ai/docs/usage-type-checking) or other
-tools to highlight these errors early. Thinc will also verify that your types
-match correctly when your config file is processed at the beginning of training.
+tools to highlight these errors early. The config file is also validated 
+at the beginning of training, to verify that all the types match correctly.
 
 <Infobox title="Tip: Static type checking in your editor" emoji="💡">
 
