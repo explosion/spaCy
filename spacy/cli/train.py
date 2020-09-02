@@ -159,7 +159,8 @@ def train(
                 print_row(info)
                 if is_best_checkpoint and output_path is not None:
                     update_meta(T_cfg, nlp, info)
-                    nlp.to_disk(output_path / "model-best")
+                    with nlp.use_params(optimizer.averages):
+                        nlp.to_disk(output_path / "model-best")
                 progress = tqdm.tqdm(total=T_cfg["eval_frequency"], leave=False)
                 progress.set_description(f"Epoch {info['epoch']}")
     except Exception as e:
