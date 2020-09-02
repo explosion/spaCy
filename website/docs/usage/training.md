@@ -825,7 +825,7 @@ from spacy.tokens import Doc
 
 @spacy.registry.architectures("custom_neural_network.v1")
 def MyModel(output_width: int) -> Model[List[Doc], List[Floats2d]]:
-    # ...
+    return create_model(output_width)
 ```
 
 ```ini
