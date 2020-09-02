@@ -279,14 +279,14 @@ cdef class Parser(Pipe):
             # Chop sequences into lengths of this many transitions, to make the
             # batch uniform length.
             # We used to randomize this, but it's not clear that actually helps?
-            cut_size = self.cfg["update_with_oracle_cut_size"]
-            states, golds, max_steps = self._init_gold_batch(
+            max_pushes = self.cfg["update_with_oracle_cut_size"]
+            states, golds, _ = self._init_gold_batch(
                 examples,
-                max_length=cut_size
+                max_length=max_pushes
             )
         else:
             states, golds, _ = self.moves.init_gold_batch(examples)
-            max_steps = max([len(eg.x) for eg in examples])
+            max_pushes = max([len(eg.x) for eg in examples])
         if not states:
             return losses
         all_states = list(states)
@@ -302,7 +302,8 @@ cdef class Parser(Pipe):
             backprop(d_scores)
             # Follow the predicted action
             self.transition_states(states, scores)
-            states_golds = [(s, g) for (s, g) in zip(states, golds) if not s.is_final()]
+            states_golds = [(s, g) for (s, g) in zip(states, golds)
+                            if s.n_pushes < max_pushes and not s.is_final()]
 
         backprop_tok2vec(golds)
         if sgd not in (None, False):

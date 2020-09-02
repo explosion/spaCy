@@ -36,6 +36,10 @@ cdef class StateClass:
             hist[i] = self.c.get_hist(i+1)
         return hist
 
+    @property
+    def n_pushes(self):
+        return self.c.n_pushes
+
     def is_final(self):
         return self.c.is_final()
 
