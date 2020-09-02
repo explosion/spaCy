@@ -10,18 +10,32 @@ menu:
 next: /usage/projects
 ---
 
-​A **model architecture** is a function that wires up a
-[Thinc `Model`](https://thinc.ai/docs/api-model) instance, which you can then
-use in a component or as a layer of a larger network. You can use Thinc as a
-thin wrapper around frameworks such as PyTorch, TensorFlow or MXNet, or you can
-implement your logic in Thinc directly. ​ spaCy's built-in components will never
-construct their `Model` instances themselves, so you won't have to subclass the
-component to change its model architecture. You can just **update the config**
-so that it refers to a different registered function. Once the component has
-been created, its model instance has already been assigned, so you cannot change
-its model architecture. The architecture is like a recipe for the network, and
-you can't change the recipe once the dish has already been prepared. You have to
-make a new one.
+> #### Example
+>
+> ````python
+> from thinc.api import Model, chain
+>
+> def build_model(width: int, classes: int) -> Model:
+>     tok2vec = build_tok2vec(width)
+>     output_layer = build_output_layer(width, classes)
+>     model = chain(tok2vec, output_layer)
+>     return model
+> ````
+
+A **model architecture** is a function that wires up a
+[Thinc `Model`](https://thinc.ai/docs/api-model) instance. It describes the
+neural network that is run internally as part of a component in a spaCy
+pipeline. To define the actual architecture, you can implement your logic in
+Thinc directly, but you can also use Thinc as a thin wrapper around frameworks
+such as PyTorch, TensorFlow or MXNet.
+
+spaCy's built-in components require a `Model` instance to be passed to them via
+the config system. To change the model architecture of an existing component,
+you just need to **update the config** so that it refers to a different
+registered function. Once the component has been created from this config, you
+won't be able to change it anymore. The architecture is like a recipe for the
+network, and you can't change the recipe once the dish has already been
+prepared. You have to make a new one.
 
 ## Type signatures {#type-sigs}
 
