@@ -3,8 +3,9 @@ title: Layers and Model Architectures
 teaser: Power spaCy components with custom neural networks
 menu:
   - ['Type Signatures', 'type-sigs']
-  - ['Defining Sublayers', 'sublayers']
+  - ['Swapping Architectures', 'swap-architectures']
   - ['PyTorch & TensorFlow', 'frameworks']
+  - ['Thinc Models', 'thinc']
   - ['Trainable Components', 'components']
 next: /usage/projects
 ---
@@ -21,8 +22,6 @@ been created, its model instance has already been assigned, so you cannot change
 its model architecture. The architecture is like a recipe for the network, and
 you can't change the recipe once the dish has already been prepared. You have to
 make a new one.
-
-![Diagram of a pipeline component with its model](../images/layers-architectures.svg)
 
 ## Type signatures {#type-sigs}
 
@@ -92,9 +91,13 @@ code.
 
 </Infobox>
 
-## Defining sublayers {#sublayers}
+## Swapping model architectures {#swap-architectures}
 
-​ Model architecture functions often accept **sublayers as arguments**, so that
+<!-- TODO: textcat example, using different architecture in the config -->
+
+### Defining sublayers {#sublayers}
+
+​Model architecture functions often accept **sublayers as arguments**, so that
 you can try **substituting a different layer** into the network. Depending on
 how the architecture function is structured, you might be able to define your
 network structure entirely through the [config system](/usage/training#config),
@@ -114,62 +117,37 @@ approaches. And if you want to define your own solution, all you need to do is
 register a ~~Model[List[Doc], List[Floats2d]]~~ architecture function, and
 you'll be able to try it out in any of spaCy components. ​
 
-<!-- TODO: example of switching sublayers -->
-
-### Registering new architectures
-
-- Recap concept, link to config docs. ​
+<!-- TODO: example of swapping sublayers -->
 
 ## Wrapping PyTorch, TensorFlow and other frameworks {#frameworks}
 
-<!-- TODO: this is copied over from the Thinc docs and we probably want to shorten it and make it more spaCy-specific -->
+Thinc allows you to [wrap models](https://thinc.ai/docs/usage-frameworks)
+written in other machine learning frameworks like PyTorch, TensorFlow and MXNet
+using a unified [`Model`](https://thinc.ai/docs/api-model) API. As well as
+**wrapping whole models**, Thinc lets you call into an external framework for
+just **part of your model**: you can have a model where you use PyTorch just for
+the transformer layers, using "native" Thinc layers to do fiddly input and
+output transformations and add on task-specific "heads", as efficiency is less
+of a consideration for those parts of the network.
 
-Thinc allows you to wrap models written in other machine learning frameworks
-like PyTorch, TensorFlow and MXNet using a unified
-[`Model`](https://thinc.ai/docs/api-model) API. As well as **wrapping whole
-models**, Thinc lets you call into an external framework for just **part of your
-model**: you can have a model where you use PyTorch just for the transformer
-layers, using "native" Thinc layers to do fiddly input and output
-transformations and add on task-specific "heads", as efficiency is less of a
-consideration for those parts of the network.
+<!-- TODO: custom tagger implemented in PyTorch, wrapped as Thinc model, link off to project (with notebook?) -->
 
-Thinc uses a special class, [`Shim`](https://thinc.ai/docs/api-model#shim), to
-hold references to external objects. This allows each wrapper space to define a
-custom type, with whatever attributes and methods are helpful, to assist in
-managing the communication between Thinc and the external library. The
-[`Model`](https://thinc.ai/docs/api-model#model) class holds `shim` instances in
-a separate list, and communicates with the shims about updates, serialization,
-changes of device, etc.
+## Implementing models in Thinc {#thinc}
 
-The wrapper will receive each batch of inputs, convert them into a suitable form
-for the underlying model instance, and pass them over to the shim, which will
-**manage the actual communication** with the model. The output is then passed
-back into the wrapper, and converted for use in the rest of the network. The
-equivalent procedure happens during backpropagation. Array conversion is handled
-via the [DLPack](https://github.com/dmlc/dlpack) standard wherever possible, so
-that data can be passed between the frameworks **without copying the data back**
-to the host device unnecessarily.
-
-| Framework      | Wrapper layer                                                             | Shim                                                      | DLPack          |
-| -------------- | ------------------------------------------------------------------------- | --------------------------------------------------------- | --------------- |
-| **PyTorch**    | [`PyTorchWrapper`](https://thinc.ai/docs/api-layers#pytorchwrapper)       | [`PyTorchShim`](https://thinc.ai/docs/api-model#shims)    | ✅              |
-| **TensorFlow** | [`TensorFlowWrapper`](https://thinc.ai/docs/api-layers#tensorflowwrapper) | [`TensorFlowShim`](https://thinc.ai/docs/api-model#shims) | ❌ <sup>1</sup> |
-| **MXNet**      | [`MXNetWrapper`](https://thinc.ai/docs/api-layers#mxnetwrapper)           | [`MXNetShim`](https://thinc.ai/docs/api-model#shims)      | ✅              |
-
-1. DLPack support in TensorFlow is now
-   [available](<(https://github.com/tensorflow/tensorflow/issues/24453)>) but
-   still experimental.
-
-<!-- TODO:
-- Explain concept
-- Link off to notebook ​
--->
+<!-- TODO: use same example as above, custom tagger, but implemented in Thinc, link off to Thinc docs where appropriate -->
 
 ## Models for trainable components {#components}
 
+<!-- TODO:
+
 - Interaction with `predict`, `get_loss` and `set_annotations`
 - Initialization life-cycle with `begin_training`.
-- Link to relation extraction notebook.
+
+Example: relation extraction component (implemented as project template)
+
+-->
+
+![Diagram of a pipeline component with its model](../images/layers-architectures.svg)
 
 ```python
 def update(self, examples):
