@@ -28,8 +28,6 @@ def test_tagger_begin_training_tag_map():
 
 TAGS = ("N", "V", "J")
 
-MORPH_RULES = {"V": {"like": {"lemma": "luck"}}}
-
 TRAIN_DATA = [
     ("I like green eggs", {"tags": ["N", "V", "J", "N"]}),
     ("Eat blue ham", {"tags": ["V", "J", "N"]}),
