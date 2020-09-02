@@ -12,33 +12,33 @@ next: /usage/projects
 
 > #### Example
 >
-> ````python
+> ```python
 > from thinc.api import Model, chain
-> 
+>
 > @spacy.registry.architectures.register("model.v1")
 > def build_model(width: int, classes: int) -> Model:
 >     tok2vec = build_tok2vec(width)
 >     output_layer = build_output_layer(width, classes)
 >     model = chain(tok2vec, output_layer)
 >     return model
-> ````
+> ```
 
 A **model architecture** is a function that wires up a
 [Thinc `Model`](https://thinc.ai/docs/api-model) instance. It describes the
-neural network that is run internally as part of a component in a spaCy pipeline.
-To define the actual architecture, you can implement your logic in
-Thinc directly, or you can use Thinc as a thin wrapper around frameworks
-such as PyTorch, TensorFlow and MXNet. Each Model can also be used as a sublayer 
-of a larger network, allowing you to freely combine implementations from different 
+neural network that is run internally as part of a component in a spaCy
+pipeline. To define the actual architecture, you can implement your logic in
+Thinc directly, or you can use Thinc as a thin wrapper around frameworks such as
+PyTorch, TensorFlow and MXNet. Each Model can also be used as a sublayer of a
+larger network, allowing you to freely combine implementations from different
 frameworks into one `Thinc` Model.
 
 spaCy's built-in components require a `Model` instance to be passed to them via
 the config system. To change the model architecture of an existing component,
-you just need to **update the config** so that it refers to a different
-registered function. Once the component has been created from this config, you
-won't be able to change it anymore. The architecture is like a recipe for the
-network, and you can't change the recipe once the dish has already been
-prepared. You have to make a new one.
+you just need to [**update the config**](#swap-architectures) so that it refers
+to a different registered function. Once the component has been created from
+this config, you won't be able to change it anymore. The architecture is like a
+recipe for the network, and you can't change the recipe once the dish has
+already been prepared. You have to make a new one.
 
 ```ini
 ### config.cfg (excerpt)
@@ -53,8 +53,6 @@ classes = 16
 
 ## Type signatures {#type-sigs}
 
-<!-- TODO: update example, maybe simplify definition? -->
-
 > #### Example
 >
 > ```python
@@ -62,8 +60,8 @@ classes = 16
 > from thinc.api import Model, chain
 > from thinc.types import Floats2d
 > def chain_model(
->     tok2vec: Model[List[Doc], List[Floats2d]], 
->     layer1: Model[List[Floats2d], Floats2d], 
+>     tok2vec: Model[List[Doc], List[Floats2d]],
+>     layer1: Model[List[Floats2d], Floats2d],
 >     layer2: Model[Floats2d, Floats2d]
 > ) -> Model[List[Doc], Floats2d]:
 >     model = chain(tok2vec, layer1, layer2)
@@ -73,11 +71,11 @@ classes = 16
 The Thinc `Model` class is a **generic type** that can specify its input and
 output types. Python uses a square-bracket notation for this, so the type
 ~~Model[List, Dict]~~ says that each batch of inputs to the model will be a
-list, and the outputs will be a dictionary. You can be even more specific and 
-write for instance~~Model[List[Doc], Dict[str, float]]~~ to specify that
-the model expects a list of [`Doc`](/api/doc) objects as input, and returns a
-dictionary mapping of strings to floats. Some of the most common types you'll see
-are: ​
+list, and the outputs will be a dictionary. You can be even more specific and
+write for instance~~Model[List[Doc], Dict[str, float]]~~ to specify that the
+model expects a list of [`Doc`](/api/doc) objects as input, and returns a
+dictionary mapping of strings to floats. Some of the most common types you'll
+see are: ​
 
 | Type               | Description                                                                                          |
 | ------------------ | ---------------------------------------------------------------------------------------------------- |
@@ -102,8 +100,8 @@ interchangeably. There are many other ways they could be incompatible. However,
 if the types don't match, they almost surely _won't_ be compatible. This little
 bit of validation goes a long way, especially if you
 [configure your editor](https://thinc.ai/docs/usage-type-checking) or other
-tools to highlight these errors early. The config file is also validated 
-at the beginning of training, to verify that all the types match correctly.
+tools to highlight these errors early. The config file is also validated at the
+beginning of training, to verify that all the types match correctly.
 
 <Accordion title="Tip: Static type checking in your editor" emoji="💡">
 
@@ -118,7 +116,52 @@ code.
 
 ## Swapping model architectures {#swap-architectures}
 
-<!-- TODO: textcat example, using different architecture in the config -->
+If no model is specified for the [`TextCategorizer`](/api/textcategorizer), the
+[TextCatEnsemble](/api/architectures#TextCatEnsemble) architecture is used by
+default. This architecture combines a simpel bag-of-words model with a neural
+network, usually resulting in the most accurate results, but at the cost of
+speed. The config file for this model would look something like this:
+
+```ini
+### config.cfg (excerpt)
+[components.textcat]
+factory = "textcat"
+labels = []
+
+[components.textcat.model]
+@architectures = "spacy.TextCatEnsemble.v1"
+exclusive_classes = false
+pretrained_vectors = null
+width = 64
+conv_depth = 2
+embed_size = 2000
+window_size = 1
+ngram_size = 1
+dropout = 0
+nO = null
+```
+
+spaCy has two additional built-in `textcat` architectures, and you can easily
+use those by swapping out the definition of the textcat's model. For instance,
+to use the simpel and fast [bag-of-words model](/api/architectures#TextCatBOW),
+you can change the config to:
+
+```ini
+### config.cfg (excerpt)
+[components.textcat]
+factory = "textcat"
+labels = []
+
+[components.textcat.model]
+@architectures = "spacy.TextCatBOW.v1"
+exclusive_classes = false
+ngram_size = 1
+no_output_layer = false
+nO = null
+```
+
+The details of all prebuilt architectures and their parameters, can be consulted
+on the [API page for model architectures](/api/architectures).
 
 ### Defining sublayers {#sublayers}
 
