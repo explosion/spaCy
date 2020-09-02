@@ -554,9 +554,10 @@ def train(
                         iter_since_best = 0
                         best_score = current_score
                     if iter_since_best >= n_early_stopping:
+                        iter_current = i + 1
                         msg.text(
                             "Early stopping, best iteration "
-                            "is: {}".format(i - iter_since_best)
+                            "is: {}".format(iter_current - iter_since_best)
                         )
                         msg.text(
                             "Best score = {}; Final iteration "
