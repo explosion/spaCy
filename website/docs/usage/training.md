@@ -377,7 +377,8 @@ A **model architecture** is a function that wires up a Thinc
 component or as a layer of a larger network. You can use Thinc as a thin
 [wrapper around frameworks](https://thinc.ai/docs/usage-frameworks) such as
 PyTorch, TensorFlow or MXNet, or you can implement your logic in Thinc
-[directly](https://thinc.ai/docs/usage-models).
+[directly](https://thinc.ai/docs/usage-models). For more details and examples,
+see the usage guide on [layers and architectures](/usage/layers-architectures).
 
 spaCy's built-in components will never construct their `Model` instances
 themselves, so you won't have to subclass the component to change its model
@@ -394,8 +395,6 @@ different tasks. For example:
 | [HashEmbedCNN](/api/architectures#HashEmbedCNN)                   | Build spaCy’s "standard" embedding layer, which uses hash embedding with subword features and a CNN with layer-normalized maxout. ~~Model[List[Doc], List[Floats2d]]~~                                                                                    |
 | [TransitionBasedParser](/api/architectures#TransitionBasedParser) | Build a [transition-based parser](https://explosion.ai/blog/parsing-english-in-python) model used in the default [`EntityRecognizer`](/api/entityrecognizer) and [`DependencyParser`](/api/dependencyparser). ~~Model[List[Docs], List[List[Floats2d]]]~~ |
 | [TextCatEnsemble](/api/architectures#TextCatEnsemble)             | Stacked ensemble of a bag-of-words model and a neural network model with an internal CNN embedding layer. Used in the default [`TextCategorizer`](/api/textcategorizer). ~~Model[List[Doc], Floats2d]~~                                                   |
-
-<!-- TODO: link to not yet existing usage page on custom architectures etc. -->
 
 ### Metrics, training output and weighted scores {#metrics}
 
@@ -474,10 +473,8 @@ Each custom function can have any numbers of arguments that are passed in via
 the [config](#config), just the built-in functions. If your function defines
 **default argument values**, spaCy is able to auto-fill your config when you run
 [`init fill-config`](/api/cli#init-fill-config). If you want to make sure that a
-given parameter is always explicitely set in the config, avoid setting a default
+given parameter is always explicitly set in the config, avoid setting a default
 value for it.
-
-<!-- TODO: possibly link to new (not yet created) page on creating models ? -->
 
 ### Training with custom code {#custom-code}
 
@@ -669,10 +666,9 @@ def custom_logger(log_path):
 
 #### Example: Custom batch size schedule {#custom-code-schedule}
 
-For example, let's say you've implemented your own batch size schedule to use
-during training. The `@spacy.registry.schedules` decorator lets you register
-that function in the `schedules` [registry](/api/top-level#registry) and assign
-it a string name:
+You can also implement your own batch size schedule to use during training. The
+`@spacy.registry.schedules` decorator lets you register that function in the
+`schedules` [registry](/api/top-level#registry) and assign it a string name:
 
 > #### Why the version in the name?
 >
@@ -806,7 +802,35 @@ def filter_batch(size: int) -> Callable[[Iterable[Example]], Iterator[List[Examp
 
 ### Defining custom architectures {#custom-architectures}
 
-<!-- TODO: this should probably move to new section on models -->
+Built-in pipeline components such as the tagger or named entity recognizer are
+constructed with default neural network [models](/api/architectures). You can
+change the model architecture entirely by implementing your own custom models
+and providing those in the config when creating the pipeline component. See the
+documentation on [layers and model architectures](/usage/layers-architectures)
+for more details.
+
+> ```ini
+> ### config.cfg
+> [components.tagger]
+> factory = "tagger"
+>
+> [components.tagger.model]
+> @architectures = "custom_neural_network.v1"
+> output_width = 512
+> ```
+
+```python
+### functions.py
+from typing import List
+from thinc.types import Floats2d
+from thinc.api import Model
+import spacy
+from spacy.tokens import Doc
+
+@spacy.registry.architectures("custom_neural_network.v1")
+def MyModel(output_width: int) -> Model[List[Doc], List[Floats2d]]:
+    return create_model(output_width)
+```
 
 ## Internal training API {#api}
 
