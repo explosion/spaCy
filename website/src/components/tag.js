@@ -23,7 +23,7 @@ export default function Tag({ spaced = false, variant, tooltip, children }) {
         )
     }
     if (variant === 'model') {
-        const tooltipText = `To use this functionality, spaCy needs a model to be installed that supports the following capabilities: ${children}`
+        const tooltipText = `To use this functionality, spaCy needs a trained pipeline that supports the following capabilities: ${children}`
         return (
             <TagTemplate spaced={spaced} tooltip={tooltipText}>
                 Needs model

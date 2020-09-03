@@ -26,8 +26,8 @@ def evaluate_cli(
     # fmt: on
 ):
     """
-    Evaluate a model. Expects a loadable spaCy model and evaluation data in the
-    binary .spacy format. The --gold-preproc option sets up the evaluation
+    Evaluate a trained pipeline. Expects a loadable spaCy pipeline and evaluation
+    data in the binary .spacy format. The --gold-preproc option sets up the evaluation
     examples with gold-standard sentences and tokens for the predictions. Gold
     preprocessing helps the annotations align to the tokenization, and may
     result in sequences of more consistent length. However, it may reduce

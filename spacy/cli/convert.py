@@ -44,7 +44,7 @@ def convert_cli(
     file_type: FileTypes = Opt("spacy", "--file-type", "-t", help="Type of data to produce"),
     n_sents: int = Opt(1, "--n-sents", "-n", help="Number of sentences per doc (0 to disable)"),
     seg_sents: bool = Opt(False, "--seg-sents", "-s", help="Segment sentences (for -c ner)"),
-    model: Optional[str] = Opt(None, "--model", "-b", help="Model for sentence segmentation (for -s)"),
+    model: Optional[str] = Opt(None, "--model", "-b", help="Trained spaCy pipeline for sentence segmentation (for -s)"),
     morphology: bool = Opt(False, "--morphology", "-m", help="Enable appending morphology to tags"),
     merge_subtokens: bool = Opt(False, "--merge-subtokens", "-T", help="Merge CoNLL-U subtokens"),
     converter: str = Opt("auto", "--converter", "-c", help=f"Converter: {tuple(CONVERTERS.keys())}"),

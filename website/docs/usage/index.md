@@ -35,10 +35,10 @@ Using pip, spaCy releases are available as source packages and binary wheels.
 $ pip install -U spacy
 ```
 
-> #### Download models
+> #### Download pipelines
 >
-> After installation you need to download a language model. For more info and
-> available models, see the [docs on models](/models).
+> After installation you typically want to download a trained pipeline. For more
+> info and available packages, see the [models directory](/models).
 >
 > ```cli
 > $ python -m spacy download en_core_web_sm
@@ -54,7 +54,7 @@ To install additional data tables for lemmatization you can run
 [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data)
 separately. The lookups package is needed to provide normalization and
 lemmatization data for new models and to lemmatize in languages that don't yet
-come with pretrained models and aren't powered by third-party libraries.
+come with trained pipelines and aren't powered by third-party libraries.
 
 </Infobox>
 
@@ -88,23 +88,21 @@ and pull requests to the recipe and setup are always appreciated.
 > spaCy v2.x to v3.x may still require some changes to your code base. For
 > details see the sections on [backwards incompatibilities](/usage/v3#incompat)
 > and [migrating](/usage/v3#migrating). Also remember to download the new
-> models, and retrain your own models.
+> trained pipelines, and retrain your own pipelines.
 
 When updating to a newer version of spaCy, it's generally recommended to start
 with a clean virtual environment. If you're upgrading to a new major version,
-make sure you have the latest **compatible models** installed, and that there
-are no old and incompatible model packages left over in your environment, as
-this can often lead to unexpected results and errors. If you've trained your own
-models, keep in mind that your train and runtime inputs must match. This means
-you'll have to **retrain your models** with the new version.
+make sure you have the latest **compatible trained pipelines** installed, and
+that there are no old and incompatible packages left over in your environment,
+as this can often lead to unexpected results and errors. If you've trained your
+own models, keep in mind that your train and runtime inputs must match. This
+means you'll have to **retrain your pipelines** with the new version.
 
 spaCy also provides a [`validate`](/api/cli#validate) command, which lets you
-verify that all installed models are compatible with your spaCy version. If
-incompatible models are found, tips and installation instructions are printed.
-The command is also useful to detect out-of-sync model links resulting from
-links created in different virtual environments. It's recommended to run the
-command with `python -m` to make sure you're executing the correct version of
-spaCy.
+verify that all installed pipeline packages are compatible with your spaCy
+version. If incompatible packages are found, tips and installation instructions
+are printed. It's recommended to run the command with `python -m` to make sure
+you're executing the correct version of spaCy.
 
 ```cli
 $ pip install -U spacy
@@ -132,8 +130,8 @@ $ pip install -U spacy[cuda92]
 Once you have a GPU-enabled installation, the best way to activate it is to call
 [`spacy.prefer_gpu`](/api/top-level#spacy.prefer_gpu) or
 [`spacy.require_gpu()`](/api/top-level#spacy.require_gpu) somewhere in your
-script before any models have been loaded. `require_gpu` will raise an error if
-no GPU is available.
+script before any pipelines have been loaded. `require_gpu` will raise an error
+if no GPU is available.
 
 ```python
 import spacy
@@ -238,16 +236,16 @@ installing, loading and using spaCy, as well as their solutions.
 <Accordion title="No compatible model found" id="compatible-model">
 
 ```
-No compatible model found for [lang] (spaCy vX.X.X).
+No compatible package found for [lang] (spaCy vX.X.X).
 ```
 
-This usually means that the model you're trying to download does not exist, or
-isn't available for your version of spaCy. Check the
+This usually means that the trained pipeline you're trying to download does not
+exist, or isn't available for your version of spaCy. Check the
 [compatibility table](https://github.com/explosion/spacy-models/tree/master/compatibility.json)
-to see which models are available for your spaCy version. If you're using an old
-version, consider upgrading to the latest release. Note that while spaCy
+to see which packages are available for your spaCy version. If you're using an
+old version, consider upgrading to the latest release. Note that while spaCy
 supports tokenization for [a variety of languages](/usage/models#languages), not
-all of them come with statistical models. To only use the tokenizer, import the
+all of them come with trained pipelines. To only use the tokenizer, import the
 language's `Language` class instead, for example
 `from spacy.lang.fr import French`.
 
@@ -259,7 +257,7 @@ language's `Language` class instead, for example
 no such option: --no-cache-dir
 ```
 
-The `download` command uses pip to install the models and sets the
+The `download` command uses pip to install the pipeline packages and sets the
 `--no-cache-dir` flag to prevent it from requiring too much memory.
 [This setting](https://pip.pypa.io/en/stable/reference/pip_install/#caching)
 requires pip v6.0 or newer. Run `pip install -U pip` to upgrade to the latest
@@ -323,19 +321,19 @@ also run `which python` to find out where your Python executable is located.
 
 </Accordion>
 
-<Accordion title="Import error: No module named [model]" id="import-error-models">
+<Accordion title="Import error: No module named [name]" id="import-error-models">
 
 ```
 ImportError: No module named 'en_core_web_sm'
 ```
 
-As of spaCy v1.7, all models can be installed as Python packages. This means
-that they'll become importable modules of your application. If this fails, it's
-usually a sign that the package is not installed in the current environment. Run
-`pip list` or `pip freeze` to check which model packages you have installed, and
-install the [correct models](/models) if necessary. If you're importing a model
-manually at the top of a file, make sure to use the name of the package, not the
-shortcut link you've created.
+As of spaCy v1.7, all trained pipelines can be installed as Python packages.
+This means that they'll become importable modules of your application. If this
+fails, it's usually a sign that the package is not installed in the current
+environment. Run `pip list` or `pip freeze` to check which pipeline packages you
+have installed, and install the [correct package](/models) if necessary. If
+you're importing a package manually at the top of a file, make sure to use the
+full name of the package.
 
 </Accordion>
 

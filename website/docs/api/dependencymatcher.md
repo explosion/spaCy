@@ -9,8 +9,8 @@ The `DependencyMatcher` follows the same API as the [`Matcher`](/api/matcher)
 and [`PhraseMatcher`](/api/phrasematcher) and lets you match on dependency trees
 using the
 [Semgrex syntax](https://nlp.stanford.edu/nlp/javadoc/javanlp/edu/stanford/nlp/semgraph/semgrex/SemgrexPattern.html).
-It requires a pretrained [`DependencyParser`](/api/parser) or other component
-that sets the `Token.dep` attribute.
+It requires a trained [`DependencyParser`](/api/parser) or other component that
+sets the `Token.dep` attribute.
 
 ## Pattern format {#patterns}
 

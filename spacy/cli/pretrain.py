@@ -31,7 +31,7 @@ def pretrain_cli(
     # fmt: off
     ctx: typer.Context,  # This is only used to read additional arguments
     texts_loc: Path = Arg(..., help="Path to JSONL file with raw texts to learn from, with text provided as the key 'text' or tokens as the key 'tokens'", exists=True),
-    output_dir: Path = Arg(..., help="Directory to write models to on each epoch"),
+    output_dir: Path = Arg(..., help="Directory to write weights to on each epoch"),
     config_path: Path = Arg(..., help="Path to config file", exists=True, dir_okay=False),
     code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     resume_path: Optional[Path] = Opt(None, "--resume-path", "-r", help="Path to pretrained weights from which to resume pretraining"),
@@ -376,10 +376,9 @@ def verify_cli_args(texts_loc, output_dir, config_path, resume_path, epoch_resum
     if output_dir.exists() and [p for p in output_dir.iterdir()]:
         if resume_path:
             msg.warn(
-                "Output directory is not empty. ",
-                "If you're resuming a run from a previous model in this directory, "
-                "the old models for the consecutive epochs will be overwritten "
-                "with the new ones.",
+                "Output directory is not empty.",
+                "If you're resuming a run in this directory, the old weights "
+                "for the consecutive epochs will be overwritten with the new ones.",
             )
         else:
             msg.warn(

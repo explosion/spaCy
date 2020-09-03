@@ -7,9 +7,9 @@ source: spacy/language.py
 
 Usually you'll load this once per process as `nlp` and pass the instance around
 your application. The `Language` class is created when you call
-[`spacy.load()`](/api/top-level#spacy.load) and contains the shared vocabulary
-and [language data](/usage/adding-languages), optional model data loaded from a
-[model package](/models) or a path, and a
+[`spacy.load`](/api/top-level#spacy.load) and contains the shared vocabulary and
+[language data](/usage/adding-languages), optional binary weights, e.g. provided
+by a [trained pipeline](/models), and the
 [processing pipeline](/usage/processing-pipelines) containing components like
 the tagger or parser that are called on a document in order. You can also add
 your own processing pipeline components that take a `Doc` object, modify it and
@@ -37,7 +37,7 @@ Initialize a `Language` object.
 | `vocab`            | A `Vocab` object. If `True`, a vocab is created using the default language data settings. ~~Vocab~~                      |
 | _keyword-only_     |                                                                                                                          |
 | `max_length`       | Maximum number of characters allowed in a single text. Defaults to `10 ** 6`. ~~int~~                                    |
-| `meta`             | Custom meta data for the `Language` class. Is written to by models to add model meta data. ~~dict~~                      |
+| `meta`             | Custom meta data for the `Language` class. Is written to by pipelines to add meta data. ~~dict~~                         |
 | `create_tokenizer` | Optional function that receives the `nlp` object and returns a tokenizer. ~~Callable[[Language], Callable[[str], Doc]]~~ |
 
 ## Language.from_config {#from_config tag="classmethod" new="3"}
@@ -232,7 +232,7 @@ tuples of `Doc` and `GoldParse` objects.
 
 ## Language.resume_training {#resume_training tag="method,experimental" new="3"}
 
-Continue training a pretrained model. Create and return an optimizer, and
+Continue training a trained pipeline. Create and return an optimizer, and
 initialize "rehearsal" for any pipeline component that has a `rehearse` method.
 Rehearsal is used to prevent models from "forgetting" their initialized
 "knowledge". To perform rehearsal, collect samples of text you want the models
@@ -314,7 +314,7 @@ the "catastrophic forgetting" problem. This feature is experimental.
 
 ## Language.evaluate {#evaluate tag="method"}
 
-Evaluate a model's pipeline components.
+Evaluate a pipeline's components.
 
 <Infobox variant="warning" title="Changed in v3.0">
 
@@ -386,24 +386,24 @@ component, adds it to the pipeline and returns it.
 > nlp.add_pipe("component", before="ner")
 > component = nlp.add_pipe("component", name="custom_name", last=True)
 >
-> # Add component from source model
+> # Add component from source pipeline
 > source_nlp = spacy.load("en_core_web_sm")
 > nlp.add_pipe("ner", source=source_nlp)
 > ```
 
-| Name                                  | Description                                                                                                                                                                                                                                                                     |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `factory_name`                        | Name of the registered component factory. ~~str~~                                                                                                                                                                                                                               |
-| `name`                                | Optional unique name of pipeline component instance. If not set, the factory name is used. An error is raised if the name already exists in the pipeline. ~~Optional[str]~~                                                                                                     |
-| _keyword-only_                        |                                                                                                                                                                                                                                                                                 |
-| `before`                              | Component name or index to insert component directly before. ~~Optional[Union[str, int]]~~                                                                                                                                                                                      |
-| `after`                               | Component name or index to insert component directly after. ~~Optional[Union[str, int]]~~                                                                                                                                                                                       |
-| `first`                               | Insert component first / not first in the pipeline. ~~Optional[bool]~~                                                                                                                                                                                                          |
-| `last`                                | Insert component last / not last in the pipeline. ~~Optional[bool]~~                                                                                                                                                                                                            |
-| `config` <Tag variant="new">3</Tag>   | Optional config parameters to use for this component. Will be merged with the `default_config` specified by the component factory. ~~Optional[Dict[str, Any]]~~                                                                                                                 |
-| `source` <Tag variant="new">3</Tag>   | Optional source model to copy component from. If a source is provided, the `factory_name` is interpreted as the name of the component in the source pipeline. Make sure that the vocab, vectors and settings of the source model match the target model. ~~Optional[Language]~~ |
-| `validate` <Tag variant="new">3</Tag> | Whether to validate the component config and arguments against the types expected by the factory. Defaults to `True`. ~~bool~~                                                                                                                                                  |
-| **RETURNS**                           | The pipeline component. ~~Callable[[Doc], Doc]~~                                                                                                                                                                                                                                |
+| Name                                  | Description                                                                                                                                                                                                                                                                              |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `factory_name`                        | Name of the registered component factory. ~~str~~                                                                                                                                                                                                                                        |
+| `name`                                | Optional unique name of pipeline component instance. If not set, the factory name is used. An error is raised if the name already exists in the pipeline. ~~Optional[str]~~                                                                                                              |
+| _keyword-only_                        |                                                                                                                                                                                                                                                                                          |
+| `before`                              | Component name or index to insert component directly before. ~~Optional[Union[str, int]]~~                                                                                                                                                                                               |
+| `after`                               | Component name or index to insert component directly after. ~~Optional[Union[str, int]]~~                                                                                                                                                                                                |
+| `first`                               | Insert component first / not first in the pipeline. ~~Optional[bool]~~                                                                                                                                                                                                                   |
+| `last`                                | Insert component last / not last in the pipeline. ~~Optional[bool]~~                                                                                                                                                                                                                     |
+| `config` <Tag variant="new">3</Tag>   | Optional config parameters to use for this component. Will be merged with the `default_config` specified by the component factory. ~~Optional[Dict[str, Any]]~~                                                                                                                          |
+| `source` <Tag variant="new">3</Tag>   | Optional source pipeline to copy component from. If a source is provided, the `factory_name` is interpreted as the name of the component in the source pipeline. Make sure that the vocab, vectors and settings of the source pipeline match the target pipeline. ~~Optional[Language]~~ |
+| `validate` <Tag variant="new">3</Tag> | Whether to validate the component config and arguments against the types expected by the factory. Defaults to `True`. ~~bool~~                                                                                                                                                           |
+| **RETURNS**                           | The pipeline component. ~~Callable[[Doc], Doc]~~                                                                                                                                                                                                                                         |
 
 ## Language.create_pipe {#create_pipe tag="method" new="2"}
 
@@ -790,9 +790,10 @@ token.ent_iob, token.ent_type
 
 ## Language.meta {#meta tag="property"}
 
-Custom meta data for the Language class. If a model is loaded, contains meta
-data of the model. The `Language.meta` is also what's serialized as the
-[`meta.json`](/api/data-formats#meta) when you save an `nlp` object to disk.
+Custom meta data for the Language class. If a trained pipeline is loaded, this
+contains meta data of the pipeline. The `Language.meta` is also what's
+serialized as the [`meta.json`](/api/data-formats#meta) when you save an `nlp`
+object to disk.
 
 > #### Example
 >
@@ -827,13 +828,13 @@ subclass of the built-in `dict`. It supports the additional methods `to_disk`
 
 ## Language.to_disk {#to_disk tag="method" new="2"}
 
-Save the current state to a directory. If a model is loaded, this will **include
-the model**.
+Save the current state to a directory. If a trained pipeline is loaded, this
+will **include all model data**.
 
 > #### Example
 >
 > ```python
-> nlp.to_disk("/path/to/models")
+> nlp.to_disk("/path/to/pipeline")
 > ```
 
 | Name           | Description                                                                                                                                |
@@ -844,22 +845,28 @@ the model**.
 
 ## Language.from_disk {#from_disk tag="method" new="2"}
 
-Loads state from a directory. Modifies the object in place and returns it. If
-the saved `Language` object contains a model, the model will be loaded. Note
-that this method is commonly used via the subclasses like `English` or `German`
-to make language-specific functionality like the
-[lexical attribute getters](/usage/adding-languages#lex-attrs) available to the
-loaded object.
+Loads state from a directory, including all data that was saved with the
+`Language` object. Modifies the object in place and returns it.
+
+<Infobox variant="warning" title="Important note">
+
+Keep in mind that this method **only loads serialized state** and doesn't set up
+the `nlp` object. This means that it requires the correct language class to be
+initialized and all pipeline components to be added to the pipeline. If you want
+to load a serialized pipeline from a directory, you should use
+[`spacy.load`](/api/top-level#spacy.load), which will set everything up for you.
+
+</Infobox>
 
 > #### Example
 >
 > ```python
 > from spacy.language import Language
-> nlp = Language().from_disk("/path/to/model")
+> nlp = Language().from_disk("/path/to/pipeline")
 >
-> # using language-specific subclass
+> # Using language-specific subclass
 > from spacy.lang.en import English
-> nlp = English().from_disk("/path/to/en_model")
+> nlp = English().from_disk("/path/to/pipeline")
 > ```
 
 | Name           | Description                                                                                                 |
@@ -924,7 +931,7 @@ available to the loaded object.
 | `components` <Tag variant="new">3</Tag>       | List of all available `(name, component)` tuples, including components that are currently disabled. ~~List[Tuple[str, Callable[[Doc], Doc]]]~~ |
 | `component_names` <Tag variant="new">3</Tag>  | List of all available component names, including components that are currently disabled. ~~List[str]~~                                         |
 | `disabled` <Tag variant="new">3</Tag>         | Names of components that are currently disabled and don't run as part of the pipeline. ~~List[str]~~                                           |
-| `path` <Tag variant="new">2</Tag>             | Path to the model data directory, if a model is loaded. Otherwise `None`. ~~Optional[Path]~~                                                   |
+| `path` <Tag variant="new">2</Tag>             | Path to the pipeline data directory, if a pipeline is loaded from a path or package. Otherwise `None`. ~~Optional[Path]~~                      |
 
 ## Class attributes {#class-attributes}
 
@@ -1004,7 +1011,7 @@ serialization by passing in the string names via the `exclude` argument.
 >
 > ```python
 > data = nlp.to_bytes(exclude=["tokenizer", "vocab"])
-> nlp.from_disk("./model-data", exclude=["ner"])
+> nlp.from_disk("/pipeline", exclude=["ner"])
 > ```
 
 | Name        | Description                                                        |

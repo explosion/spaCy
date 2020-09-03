@@ -192,7 +192,7 @@ class Language:
             self._meta.setdefault("lang", self.vocab.lang)
         else:
             self._meta.setdefault("lang", self.lang)
-        self._meta.setdefault("name", "model")
+        self._meta.setdefault("name", "pipeline")
         self._meta.setdefault("version", "0.0.0")
         self._meta.setdefault("spacy_version", spacy_version)
         self._meta.setdefault("description", "")
