@@ -364,7 +364,7 @@ results to a [Weights & Biases](https://www.wandb.com/) dashboard. Instead of
 using one of the built-in loggers listed here, you can also
 [implement your own](/usage/training#custom-logging).
 
-#### spacy.ConsoleLogger.v1 {#ConsoleLogger tag="registered function"}
+#### spacy.ConsoleLogger {#ConsoleLogger tag="registered function"}
 
 > #### Example config
 >
@@ -410,7 +410,7 @@ start decreasing across epochs.
 
  </Accordion>
 
-#### spacy.WandbLogger.v1 {#WandbLogger tag="registered function"}
+#### spacy.WandbLogger {#WandbLogger tag="registered function"}
 
 > #### Installation
 >
@@ -466,7 +466,7 @@ Instead of using one of the built-in batchers listed here, you can also
 [implement your own](/usage/training#custom-code-readers-batchers), which may or
 may not use a custom schedule.
 
-#### batch_by_words.v1 {#batch_by_words tag="registered function"}
+#### batch_by_words {#batch_by_words tag="registered function"}
 
 Create minibatches of roughly a given number of words. If any examples are
 longer than the specified batch length, they will appear in a batch by
@@ -493,7 +493,7 @@ themselves, or be discarded if `discard_oversize` is set to `True`. The argument
 | `discard_oversize` | Whether to discard sequences that by themselves exceed the tolerated size. ~~bool~~                                                                                                     |
 | `get_length`       | Optional function that receives a sequence item and returns its length. Defaults to the built-in `len()` if not set. ~~Optional[Callable[[Any], int]]~~                                 |
 
-#### batch_by_sequence.v1 {#batch_by_sequence tag="registered function"}
+#### batch_by_sequence {#batch_by_sequence tag="registered function"}
 
 > #### Example config
 >
@@ -511,7 +511,7 @@ Create a batcher that creates batches of the specified size.
 | `size`       | The target number of items per batch. Can also be a block referencing a schedule, e.g. [`compounding`](https://thinc.ai/docs/api-schedules/#compounding). ~~Union[int, Sequence[int]]~~ |
 | `get_length` | Optional function that receives a sequence item and returns its length. Defaults to the built-in `len()` if not set. ~~Optional[Callable[[Any], int]]~~                                 |
 
-#### batch_by_padded.v1 {#batch_by_padded tag="registered function"}
+#### batch_by_padded {#batch_by_padded tag="registered function"}
 
 > #### Example config
 >
