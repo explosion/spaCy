@@ -27,10 +27,6 @@ and share your results with your team. spaCy projects can be used via the new
 [`spacy project`](/api/cli#project) command and we provide templates in our
 [`projects`](https://github.com/explosion/projects) repo.
 
-<!-- TODO: mention integrations -->
-
-<!-- TODO: decide how to introduce concept -->
-
 ![Illustration of project workflow and commands](../images/projects.svg)
 
 <!-- TODO:
