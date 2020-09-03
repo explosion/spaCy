@@ -1222,7 +1222,7 @@ print(doc.text, [token.text for token in doc])
 
 Keep in mind that your models' results may be less accurate if the tokenization
 during training differs from the tokenization at runtime. So if you modify a
-trained pipeline' tokenization afterwards, it may produce very different
+trained pipeline's tokenization afterwards, it may produce very different
 predictions. You should therefore train your pipeline with the **same
 tokenizer** it will be using at runtime. See the docs on
 [training with custom tokenization](#custom-tokenizer-training) for details.

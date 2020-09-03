@@ -828,8 +828,10 @@ subclass of the built-in `dict`. It supports the additional methods `to_disk`
 
 ## Language.to_disk {#to_disk tag="method" new="2"}
 
-Save the current state to a directory. If a trained pipeline is loaded, this
-will **include all model data**.
+Save the current state to a directory. Under the hood, this method delegates to
+the `to_disk` methods of the individual pipeline components, if available. This
+means that if a trained pipeline is loaded, all components and their weights
+will be saved to disk.
 
 > #### Example
 >
