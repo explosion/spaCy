@@ -1970,15 +1970,15 @@
         {
             "id": "amrlib",
             "slogan": "A python library that makes AMR parsing, generation and visualization simple.",
-            "description": "amrlib is a python module and SpaCy add-in for Abstract Meaning Representation (AMR).  The system can parse sentences to AMR graphs or generate text from existing graphs.  It includes a GUI for visualization and experimentation.",
+            "description": "amrlib is a python module and spaCy add-in for Abstract Meaning Representation (AMR).  The system can parse sentences to AMR graphs or generate text from existing graphs.  It includes a GUI for visualization and experimentation.",
             "github": "bjascob/amrlib",
             "pip": "amrlib",
             "code_example": [
                 "import spacy",
                 "import amrlib",
                 "amrlib.setup_spacy_extension()",
-                "nlp = spacy.load('en')",
-                "doc = nlp('This is a test of the SpaCy extension. The test has multiple sentences.')",
+                "nlp = spacy.load('en_core_web_sm')",
+                "doc = nlp('This is a test of the spaCy extension. The test has multiple sentences.')",
                 "graphs = doc._.to_amr()",
                 "for graph in graphs:",
                 "    print(graph)"
