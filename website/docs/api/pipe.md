@@ -286,7 +286,7 @@ context, the original parameters are restored.
 
 ## Pipe.add_label {#add_label tag="method"}
 
-Add a new label to the pipe. It's possible to extend pretrained models with new
+Add a new label to the pipe. It's possible to extend trained models with new
 labels, but care should be taken to avoid the "catastrophic forgetting" problem.
 
 > #### Example
