@@ -320,7 +320,7 @@ for details and system requirements.
 > tokenizer_config = {"use_fast": true}
 >
 > [model.get_spans]
-> @span_getters = "strided_spans.v1"
+> @span_getters = "spacy-transformers.strided_spans.v1"
 > window = 128
 > stride = 96
 > ```

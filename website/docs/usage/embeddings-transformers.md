@@ -331,7 +331,7 @@ name = "bert-base-cased"
 tokenizer_config = {"use_fast": true}
 
 [components.transformer.model.get_spans]
-@span_getters = "doc_spans.v1"
+@span_getters = "spacy-transformers.doc_spans.v1"
 
 [components.transformer.annotation_setter]
 @annotation_setters = "spacy-transformers.null_annotation_setter.v1"
@@ -369,8 +369,9 @@ all defaults.
 
 To change any of the settings, you can edit the `config.cfg` and re-run the
 training. To change any of the functions, like the span getter, you can replace
-the name of the referenced function – e.g. `@span_getters = "sent_spans.v1"` to
-process sentences. You can also register your own functions using the
+the name of the referenced function – e.g.
+`@span_getters = "spacy-transformers.sent_spans.v1"` to process sentences. You
+can also register your own functions using the
 [`span_getters` registry](/api/top-level#registry). For instance, the following
 custom function returns [`Span`](/api/span) objects following sentence
 boundaries, unless a sentence succeeds a certain amount of tokens, in which case
