@@ -317,11 +317,11 @@ factories.
 | `loggers`         | Registry for functions that log [training results](/usage/training).                                                                                                                                                                               |
 | `lookups`         | Registry for large lookup tables available via `vocab.lookups`.                                                                                                                                                                                    |
 | `losses`          | Registry for functions that create [losses](https://thinc.ai/docs/api-loss).                                                                                                                                                                       |
+| `misc`            | Registry for miscellaneous functions that return data assets, knowledge bases or anything else you may need.                                                                                                                                       |
 | `optimizers`      | Registry for functions that create [optimizers](https://thinc.ai/docs/api-optimizers).                                                                                                                                                             |
 | `readers`         | Registry for training and evaluation data readers like [`Corpus`](/api/corpus).                                                                                                                                                                    |
 | `schedules`       | Registry for functions that create [schedules](https://thinc.ai/docs/api-schedules).                                                                                                                                                               |
 | `tokenizers`      | Registry for tokenizer factories. Registered functions should return a callback that receives the `nlp` object and returns a [`Tokenizer`](/api/tokenizer) or a custom callable.                                                                   |
-| `misc`            | Registry for miscellaneous functions that return data assets, knowledge bases or anything else you may need.                                                                                                                                       |
 
 ### spacy-transformers registry {#registry-transformers}
 
