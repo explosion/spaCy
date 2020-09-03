@@ -249,6 +249,12 @@ class EntityRenderer:
         colors = dict(DEFAULT_LABEL_COLORS)
         user_colors = registry.displacy_colors.get_all()
         for user_color in user_colors.values():
+            if callable(user_color):
+                # Since this comes from the function registry, we want to make
+                # sure we support functions that *return* a dict of colors
+                user_color = user_color()
+            if not isinstance(user_color, dict):
+                raise ValueError(Errors.E925.format(obj=type(user_color)))
             colors.update(user_color)
         colors.update(options.get("colors", {}))
         self.default_color = DEFAULT_ENTITY_COLOR
