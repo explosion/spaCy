@@ -12,14 +12,14 @@ from .. import about
 @app.command("info")
 def info_cli(
     # fmt: off
-    model: Optional[str] = Arg(None, help="Optional model name"),
+    model: Optional[str] = Arg(None, help="Optional loadable spaCy pipeline"),
     markdown: bool = Opt(False, "--markdown", "-md", help="Generate Markdown for GitHub issues"),
     silent: bool = Opt(False, "--silent", "-s", "-S", help="Don't print anything (just return)"),
     # fmt: on
 ):
     """
-    Print info about spaCy installation. If a model is speficied as an argument,
-    print model information. Flag --markdown prints details in Markdown for easy
+    Print info about spaCy installation. If a pipeline is speficied as an argument,
+    print its meta information. Flag --markdown prints details in Markdown for easy
     copy-pasting to GitHub issues.
     """
     info(model, markdown=markdown, silent=silent)
@@ -30,14 +30,16 @@ def info(
 ) -> Union[str, dict]:
     msg = Printer(no_print=silent, pretty=not silent)
     if model:
-        title = f"Info about model '{model}'"
+        title = f"Info about pipeline '{model}'"
         data = info_model(model, silent=silent)
     else:
         title = "Info about spaCy"
         data = info_spacy()
     raw_data = {k.lower().replace(" ", "_"): v for k, v in data.items()}
-    if "Models" in data and isinstance(data["Models"], dict):
-        data["Models"] = ", ".join(f"{n} ({v})" for n, v in data["Models"].items())
+    if "Pipelines" in data and isinstance(data["Pipelines"], dict):
+        data["Pipelines"] = ", ".join(
+            f"{n} ({v})" for n, v in data["Pipelines"].items()
+        )
     markdown_data = get_markdown(data, title=title)
     if markdown:
         if not silent:
@@ -63,7 +65,7 @@ def info_spacy() -> Dict[str, any]:
         "Location": str(Path(__file__).parent.parent),
         "Platform": platform.platform(),
         "Python version": platform.python_version(),
-        "Models": all_models,
+        "Pipelines": all_models,
     }
 
 
@@ -81,7 +83,7 @@ def info_model(model: str, *, silent: bool = True) -> Dict[str, Any]:
         model_path = model
     meta_path = model_path / "meta.json"
     if not meta_path.is_file():
-        msg.fail("Can't find model meta.json", meta_path, exits=1)
+        msg.fail("Can't find pipeline meta.json", meta_path, exits=1)
     meta = srsly.read_json(meta_path)
     if model_path.resolve() != model_path:
         meta["source"] = str(model_path.resolve())

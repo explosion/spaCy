@@ -13,8 +13,8 @@ An `EntityLinker` component disambiguates textual mentions (tagged as named
 entities) to unique identifiers, grounding the named entities into the "real
 world". It requires a `KnowledgeBase`, as well as a function to generate
 plausible candidates from that `KnowledgeBase` given a certain textual mention,
-and a ML model to pick the right candidate, given the local context of the
-mention.
+and a machine learning model to pick the right candidate, given the local
+context of the mention.
 
 ## Config and implementation {#config}
 

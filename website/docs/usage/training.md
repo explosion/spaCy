@@ -1,5 +1,6 @@
 ---
-title: Training Models
+title: Training Pipelines & Models
+teaser: Train and update components on your own data and integrate custom models
 next: /usage/layers-architectures
 menu:
   - ['Introduction', 'basics']
@@ -10,7 +11,7 @@ menu:
   - ['Internal API', 'api']
 ---
 
-## Introduction to training models {#basics hidden="true"}
+## Introduction to training {#basics hidden="true"}
 
 import Training101 from 'usage/101/\_training.md'
 
@@ -25,13 +26,13 @@ new, active learning-powered annotation tool we've developed. Prodigy is fast
 and extensible, and comes with a modern **web application** that helps you
 collect training data faster. It integrates seamlessly with spaCy, pre-selects
 the **most relevant examples** for annotation, and lets you train and evaluate
-ready-to-use spaCy models.
+ready-to-use spaCy pipelines.
 
 </Infobox>
 
 ## Quickstart {#quickstart tag="new"}
 
-The recommended way to train your spaCy models is via the
+The recommended way to train your spaCy pipelines is via the
 [`spacy train`](/api/cli#train) command on the command line. It only needs a
 single [`config.cfg`](#config) **configuration file** that includes all settings
 and hyperparameters. You can optionally [overwrite](#config-overrides) settings
@@ -94,9 +95,9 @@ $ python -m spacy train config.cfg --output ./output --paths.train ./train.spacy
 ## Training config {#config}
 
 Training config files include all **settings and hyperparameters** for training
-your model. Instead of providing lots of arguments on the command line, you only
-need to pass your `config.cfg` file to [`spacy train`](/api/cli#train). Under
-the hood, the training config uses the
+your pipeline. Instead of providing lots of arguments on the command line, you
+only need to pass your `config.cfg` file to [`spacy train`](/api/cli#train).
+Under the hood, the training config uses the
 [configuration system](https://thinc.ai/docs/usage-config) provided by our
 machine learning library [Thinc](https://thinc.ai). This also makes it easy to
 integrate custom models and architectures, written in your framework of choice.
@@ -178,27 +179,26 @@ $ python -m spacy train config.cfg --paths.train ./corpus/train.spacy --paths.de
 ```
 
 Only existing sections and values in the config can be overwritten. At the end
-of the training, the final filled `config.cfg` is exported with your model, so
-you'll always have a record of the settings that were used, including your
+of the training, the final filled `config.cfg` is exported with your pipeline,
+so you'll always have a record of the settings that were used, including your
 overrides. Overrides are added before [variables](#config-interpolation) are
 resolved, by the way – so if you need to use a value in multiple places,
 reference it across your config and override it on the CLI once.
 
 ### Defining pipeline components {#config-components}
 
-When you train a model, you typically train a
-[pipeline](/usage/processing-pipelines) of **one or more components**. The
-`[components]` block in the config defines the available pipeline components and
-how they should be created – either by a built-in or custom
-[factory](/usage/processing-pipelines#built-in), or
+You typically train a [pipeline](/usage/processing-pipelines) of **one or more
+components**. The `[components]` block in the config defines the available
+pipeline components and how they should be created – either by a built-in or
+custom [factory](/usage/processing-pipelines#built-in), or
 [sourced](/usage/processing-pipelines#sourced-components) from an existing
-pretrained model. For example, `[components.parser]` defines the component named
+trained pipeline. For example, `[components.parser]` defines the component named
 `"parser"` in the pipeline. There are different ways you might want to treat
 your components during training, and the most common scenarios are:
 
 1. Train a **new component** from scratch on your data.
-2. Update an existing **pretrained component** with more examples.
-3. Include an existing pretrained component without updating it.
+2. Update an existing **trained component** with more examples.
+3. Include an existing trained component without updating it.
 4. Include a non-trainable component, like a rule-based
    [`EntityRuler`](/api/entityruler) or [`Sentencizer`](/api/sentencizer), or a
    fully [custom component](/usage/processing-pipelines#custom-components).
@@ -209,16 +209,16 @@ If a component block defines a `factory`, spaCy will look it up in the
 new component from scratch. All settings defined in the config block will be
 passed to the component factory as arguments. This lets you configure the model
 settings and hyperparameters. If a component block defines a `source`, the
-component will be copied over from an existing pretrained model, with its
+component will be copied over from an existing trained pipeline, with its
 existing weights. This lets you include an already trained component in your
-model pipeline, or update a pretrained component with more data specific to your
-use case.
+pipeline, or update a trained component with more data specific to your use
+case.
 
 ```ini
 ### config.cfg (excerpt)
 [components]
 
-# "parser" and "ner" are sourced from a pretrained model
+# "parser" and "ner" are sourced from a trained pipeline
 [components.parser]
 source = "en_core_web_sm"
 
@@ -243,7 +243,7 @@ weights and [resume training](/api/language#resume_training).
 
 If you don't want a component to be updated, you can **freeze** it by adding it
 to the `frozen_components` list in the `[training]` block. Frozen components are
-**not updated** during training and are included in the final trained model
+**not updated** during training and are included in the final trained pipeline
 as-is.
 
 > #### Note on frozen components
@@ -252,8 +252,8 @@ as-is.
 > still **run** during training and evaluation. This is very important, because
 > they may still impact your model's performance – for instance, a sentence
 > boundary detector can impact what the parser or entity recognizer considers a
-> valid parse. So the evaluation results should always reflect what your model
-> will produce at runtime.
+> valid parse. So the evaluation results should always reflect what your
+> pipeline will produce at runtime.
 
 ```ini
 [nlp]
@@ -398,11 +398,11 @@ different tasks. For example:
 
 ### Metrics, training output and weighted scores {#metrics}
 
-When you train a model using the [`spacy train`](/api/cli#train) command, you'll
-see a table showing the metrics after each pass over the data. The available
-metrics **depend on the pipeline components**. Pipeline components also define
-which scores are shown and how they should be **weighted in the final score**
-that decides about the best model.
+When you train a pipeline using the [`spacy train`](/api/cli#train) command,
+you'll see a table showing the metrics after each pass over the data. The
+available metrics **depend on the pipeline components**. Pipeline components
+also define which scores are shown and how they should be **weighted in the
+final score** that decides about the best model.
 
 The `training.score_weights` setting in your `config.cfg` lets you customize the
 scores shown in the table and how they should be weighted. In this example, the
@@ -415,8 +415,8 @@ score.
 >
 > At the end of your training process, you typically want to select the **best
 > model** – but what "best" means depends on the available components and your
-> specific use case. For instance, you may prefer a model with higher NER and
-> lower POS tagging accuracy over a model with lower NER and higher POS
+> specific use case. For instance, you may prefer a pipeline with higher NER and
+> lower POS tagging accuracy over a pipeline with lower NER and higher POS
 > accuracy. You can express this preference in the score weights, e.g. by
 > assigning `ents_f` (NER F-score) a higher weight.
 
@@ -488,8 +488,8 @@ The [`spacy train`](/api/cli#train) recipe lets you specify an optional argument
 `--code` that points to a Python file. The file is imported before training and
 allows you to add custom functions and architectures to the function registry
 that can then be referenced from your `config.cfg`. This lets you train spaCy
-models with custom components, without having to re-implement the whole training
-workflow.
+pipelines with custom components, without having to re-implement the whole
+training workflow.
 
 #### Example: Modifying the nlp object {#custom-code-nlp-callbacks}
 
@@ -837,11 +837,11 @@ def MyModel(output_width: int) -> Model[List[Doc], List[Floats2d]]:
 <Infobox variant="warning">
 
 spaCy gives you full control over the training loop. However, for most use
-cases, it's recommended to train your models via the
+cases, it's recommended to train your pipelines via the
 [`spacy train`](/api/cli#train) command with a [`config.cfg`](#config) to keep
 track of your settings and hyperparameters, instead of writing your own training
 scripts from scratch. [Custom registered functions](#custom-code) should
-typically give you everything you need to train fully custom models with
+typically give you everything you need to train fully custom pipelines with
 [`spacy train`](/api/cli#train).
 
 </Infobox>
@@ -874,8 +874,8 @@ their assigned part-of-speech tags.
 > #### About the tag map
 >
 > The tag map is part of the vocabulary and defines the annotation scheme. If
-> you're training a new language model, this will let you map the tags present
-> in the treebank you train on to spaCy's tag scheme:
+> you're training a new pipeline, this will let you map the tags present in the
+> treebank you train on to spaCy's tag scheme:
 >
 > ```python
 > tag_map = {"N": {"pos": "NOUN"}, "V": {"pos": "VERB"}}
@@ -924,15 +924,16 @@ it harder for the model to memorize the training data. For example, a `0.25`
 dropout means that each feature or internal representation has a 1/4 likelihood
 of being dropped.
 
-> - [`nlp`](/api/language): The `nlp` object with the model.
+> - [`nlp`](/api/language): The `nlp` object with the pipeline components and
+>   their models.
 > - [`nlp.begin_training`](/api/language#begin_training): Start the training and
->   return an optimizer to update the model's weights.
+>   return an optimizer to update the component model weights.
 > - [`Optimizer`](https://thinc.ai/docs/api-optimizers): Function that holds
 >   state between updates.
-> - [`nlp.update`](/api/language#update): Update model with examples.
+> - [`nlp.update`](/api/language#update): Update component models with examples.
 > - [`Example`](/api/example): object holding predictions and gold-standard
 >   annotations.
-> - [`nlp.to_disk`](/api/language#to_disk): Save the updated model to a
+> - [`nlp.to_disk`](/api/language#to_disk): Save the updated pipeline to a
 >   directory.
 
 ```python
@@ -944,7 +945,7 @@ for itn in range(100):
         doc = nlp.make_doc(raw_text)
         example = Example.from_dict(doc, {"entities": entity_offsets})
         nlp.update([example], sgd=optimizer)
-nlp.to_disk("/model")
+nlp.to_disk("/output")
 ```
 
 The [`nlp.update`](/api/language#update) method takes the following arguments:
