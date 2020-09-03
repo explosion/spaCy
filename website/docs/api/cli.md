@@ -183,7 +183,7 @@ This command was previously called `init-model`.
 </Infobox>
 
 ```cli
-$ python -m spacy init vocab [lang] [output_dir] [--jsonl-loc] [--vectors-loc] [--prune-vectors]
+$ python -m spacy init vocab [lang] [output_dir] [--jsonl-loc] [--vectors-loc] [--prune-vectors] [--vectors-name] [--meta-name] [--base]
 ```
 
 | Name                                                    | Description                                                                                                                                                                                                                                                                         |
@@ -194,7 +194,9 @@ $ python -m spacy init vocab [lang] [output_dir] [--jsonl-loc] [--vectors-loc] [
 | `--vectors-loc`, `-v`                                   | Optional location of vectors. Should be a file where the first row contains the dimensions of the vectors, followed by a space-separated Word2Vec table. File can be provided in `.txt` format or as a zipped text file in `.zip` or `.tar.gz` format. ~~Optional[Path] \(option)~~ |
 | `--truncate-vectors`, `-t` <Tag variant="new">2.3</Tag> | Number of vectors to truncate to when reading in vectors file. Defaults to `0` for no truncation. ~~int (option)~~                                                                                                                                                                  |
 | `--prune-vectors`, `-V`                                 | Number of vectors to prune the vocabulary to. Defaults to `-1` for no pruning. ~~int (option)~~                                                                                                                                                                                     |
-| `--vectors-name`, `-vn`                                 | Name to assign to the word vectors in the `meta.json`, e.g. `en_core_web_md.vectors`. ~~str (option)~~                                                                                                                                                                              |
+| `--vectors-name`, `-vn`                                 | Name to assign to the word vectors in the `meta.json`, e.g. `en_core_web_md.vectors`. ~~Optional[str] \(option)~~                                                                                                                                                                   |
+| `--meta-name`, `-mn`                                    | Optional name of the package for the pipeline meta. ~~Optional[str] \(option)~~                                                                                                                                                                                                     |
+| `--base`, `-b`                                          | Optional name of or path to base pipeline to start with (mostly relevant for pipelines with custom tokenizers). ~~Optional[str] \(option)~~                                                                                                                                         |
 | `--help`, `-h`                                          | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                                                                                          |
 | **CREATES**                                             | A spaCy pipeline directory containing the vocab and vectors.                                                                                                                                                                                                                        |
 
@@ -207,7 +209,7 @@ management functions. The converter can be specified on the command line, or
 chosen based on the file extension of the input file.
 
 ```cli
-$ python -m spacy convert [input_file] [output_dir] [--converter] [--file-type] [--n-sents] [--seg-sents] [--model] [--morphology] [--merge-subtokens] [--ner-map] [--lang]
+$ python -m spacy convert [input_file] [output_dir] [--converter] [--file-type] [--n-sents] [--seg-sents] [--base] [--morphology] [--merge-subtokens] [--ner-map] [--lang]
 ```
 
 | Name                                             | Description                                                                                                                               |
@@ -218,7 +220,7 @@ $ python -m spacy convert [input_file] [output_dir] [--converter] [--file-type] 
 | `--file-type`, `-t` <Tag variant="new">2.1</Tag> | Type of file to create. Either `spacy` (default) for binary [`DocBin`](/api/docbin) data or `json` for v2.x JSON format. ~~str (option)~~ |
 | `--n-sents`, `-n`                                | Number of sentences per document. ~~int (option)~~                                                                                        |
 | `--seg-sents`, `-s` <Tag variant="new">2.2</Tag> | Segment sentences (for `--converter ner`). ~~bool (flag)~~                                                                                |
-| `--model`, `-b` <Tag variant="new">2.2</Tag>     | Model for parser-based sentence segmentation (for `--seg-sents`). ~~Optional[str](option)~~                                               |
+| `--base`, `-b`                                   | Trained spaCy pipeline for sentence segmentation to use as base (for `--seg-sents`). ~~Optional[str](option)~~                            |
 | `--morphology`, `-m`                             | Enable appending morphology to tags. ~~bool (flag)~~                                                                                      |
 | `--ner-map`, `-nm`                               | NER tag mapping (as JSON-encoded dict of entity types). ~~Optional[Path](option)~~                                                        |
 | `--lang`, `-l` <Tag variant="new">2.1</Tag>      | Language code (if tokenizer required). ~~Optional[str] \(option)~~                                                                        |

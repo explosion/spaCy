@@ -46,8 +46,8 @@ def init_model_cli(
     prune_vectors: int = Opt(-1, "--prune-vectors", "-V", help="Optional number of vectors to prune to"),
     truncate_vectors: int = Opt(0, "--truncate-vectors", "-t", help="Optional number of vectors to truncate to when reading in vectors file"),
     vectors_name: Optional[str] = Opt(None, "--vectors-name", "-vn", help="Optional name for the word vectors, e.g. en_core_web_lg.vectors"),
-    model_name: Optional[str] = Opt(None, "--model-name", "-mn", help="Optional name for the pipeline meta"),
-    base_model: Optional[str] = Opt(None, "--base-model", "-b", help="Base pipeline (for languages with custom tokenizers)")
+    model_name: Optional[str] = Opt(None, "--meta-name", "-mn", help="Optional name of the package for the pipeline meta"),
+    base_model: Optional[str] = Opt(None, "--base", "-b", help="Name of or path to base pipeline to start with (mostly relevant for pipelines with custom tokenizers)")
     # fmt: on
 ):
     """
