@@ -1968,6 +1968,28 @@
             "tags": ["inflection", "lemmatizer"]
         },
         {
+            "id": "amrlib",
+            "slogan": "A python library that makes AMR parsing, generation and visualization simple.",
+            "description": "amrlib is a python module and SpaCy add-in for Abstract Meaning Representation (AMR).  The system can parse sentences to AMR graphs or generate text from existing graphs.  It includes a GUI for visualization and experimentation.",
+            "github": "bjascob/amrlib",
+            "pip": "amrlib",
+            "code_example": [
+                "import spacy",
+                "import amrlib",
+                "amrlib.setup_spacy_extension()",
+                "nlp = spacy.load('en')",
+                "doc = nlp('This is a test of the SpaCy extension. The test has multiple sentences.')",
+                "graphs = doc._.to_amr()",
+                "for graph in graphs:",
+                "    print(graph)"
+            ],
+            "author": "Brad Jascob",
+            "author_links": {
+                "github": "bjascob"
+            },
+            "category": ["pipeline"]
+        },
+        {
             "id": "blackstone",
             "title": "Blackstone",
             "slogan": "A spaCy pipeline and model for NLP on unstructured legal text",
