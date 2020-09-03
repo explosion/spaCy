@@ -103,7 +103,7 @@ bit of validation goes a long way, especially if you
 tools to highlight these errors early. The config file is also validated at the
 beginning of training, to verify that all the types match correctly.
 
-<Accordion title="Tip: Static type checking in your editor" emoji="💡">
+<Accordion title="Tip: Static type checking in your editor">
 
 If you're using a modern editor like Visual Studio Code, you can
 [set up `mypy`](https://thinc.ai/docs/usage-type-checking#install) with the
@@ -143,11 +143,11 @@ nO = null
 
 spaCy has two additional built-in `textcat` architectures, and you can easily
 use those by swapping out the definition of the textcat's model. For instance,
-to use the simpel and fast [bag-of-words model](/api/architectures#TextCatBOW),
-you can change the config to:
+to use the simple and fast bag-of-words model
+[TextCatBOW](/api/architectures#TextCatBOW), you can change the config to:
 
 ```ini
-### config.cfg (excerpt)
+### config.cfg (excerpt) {highlight="6-10"}
 [components.textcat]
 factory = "textcat"
 labels = []
@@ -160,8 +160,9 @@ no_output_layer = false
 nO = null
 ```
 
-The details of all prebuilt architectures and their parameters, can be consulted
-on the [API page for model architectures](/api/architectures).
+For details on all pre-defined architectures shipped with spaCy and how to
+configure them, check out the [model architectures](/api/architectures)
+documentation.
 
 ### Defining sublayers {#sublayers}
 

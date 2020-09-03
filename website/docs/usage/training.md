@@ -669,10 +669,9 @@ def custom_logger(log_path):
 
 #### Example: Custom batch size schedule {#custom-code-schedule}
 
-You can also implement your own batch size schedule to use
-during training. The `@spacy.registry.schedules` decorator lets you register
-that function in the `schedules` [registry](/api/top-level#registry) and assign
-it a string name:
+You can also implement your own batch size schedule to use during training. The
+`@spacy.registry.schedules` decorator lets you register that function in the
+`schedules` [registry](/api/top-level#registry) and assign it a string name:
 
 > #### Why the version in the name?
 >
@@ -806,14 +805,22 @@ def filter_batch(size: int) -> Callable[[Iterable[Example]], Iterator[List[Examp
 
 ### Defining custom architectures {#custom-architectures}
 
-Built-in pipeline components such as the tagger or named entity recognizer are 
-constructed with default neural network [models](/api/architectures). 
-You can change the model architecture 
-entirely by implementing your own custom models and providing those in the config 
-when creating the pipeline component. See the
-documentation on
-[layers and model architectures](/usage/layers-architectures) for more details.
+Built-in pipeline components such as the tagger or named entity recognizer are
+constructed with default neural network [models](/api/architectures). You can
+change the model architecture entirely by implementing your own custom models
+and providing those in the config when creating the pipeline component. See the
+documentation on [layers and model architectures](/usage/layers-architectures)
+for more details.
 
+> ```ini
+> ### config.cfg
+> [components.tagger]
+> factory = "tagger"
+>
+> [components.tagger.model]
+> @architectures = "custom_neural_network.v1"
+> output_width = 512
+> ```
 
 ```python
 ### functions.py
@@ -826,16 +833,6 @@ from spacy.tokens import Doc
 @spacy.registry.architectures("custom_neural_network.v1")
 def MyModel(output_width: int) -> Model[List[Doc], List[Floats2d]]:
     return create_model(output_width)
-```
-
-```ini
-### config.cfg (excerpt)
-[components.tagger]
-factory = "tagger"
-
-[components.tagger.model]
-@architectures = "custom_neural_network.v1"
-output_width = 512
 ```
 
 ## Internal training API {#api}
