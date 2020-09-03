@@ -31,7 +31,7 @@ def pattern_dicts():
     ]
 
 
-@registry.assets("attribute_ruler_patterns")
+@registry.misc("attribute_ruler_patterns")
 def attribute_ruler_patterns():
     return [
         {
@@ -86,7 +86,7 @@ def test_attributeruler_init_patterns(nlp, pattern_dicts):
     # initialize with patterns from asset
     nlp.add_pipe(
         "attribute_ruler",
-        config={"pattern_dicts": {"@assets": "attribute_ruler_patterns"}},
+        config={"pattern_dicts": {"@misc": "attribute_ruler_patterns"}},
     )
     doc = nlp("This is a test.")
     assert doc[2].lemma_ == "the"

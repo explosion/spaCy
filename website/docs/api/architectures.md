@@ -673,11 +673,11 @@ into the "real world". This requires 3 main components:
 > subword_features = true
 >
 > [kb_loader]
-> @assets = "spacy.EmptyKB.v1"
+> @misc = "spacy.EmptyKB.v1"
 > entity_vector_length = 64
 >
 > [get_candidates]
-> @assets = "spacy.CandidateGenerator.v1"
+> @misc = "spacy.CandidateGenerator.v1"
 > ```
 
 The `EntityLinker` model architecture is a Thinc `Model` with a

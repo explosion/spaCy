@@ -39,12 +39,12 @@ DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
     requires=["doc.ents", "doc.sents", "token.ent_iob", "token.ent_type"],
     assigns=["token.ent_kb_id"],
     default_config={
-        "kb_loader": {"@assets": "spacy.EmptyKB.v1", "entity_vector_length": 64},
+        "kb_loader": {"@misc": "spacy.EmptyKB.v1", "entity_vector_length": 64},
         "model": DEFAULT_NEL_MODEL,
         "labels_discard": [],
         "incl_prior": True,
         "incl_context": True,
-        "get_candidates": {"@assets": "spacy.CandidateGenerator.v1"},
+        "get_candidates": {"@misc": "spacy.CandidateGenerator.v1"},
     },
 )
 def make_entity_linker(
