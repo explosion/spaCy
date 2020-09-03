@@ -204,13 +204,13 @@ max_length = 0
 
 {% if use_transformer %}
 [training.batcher]
-@batchers = "batch_by_padded.v1"
+@batchers = "spacy.batch_by_padded.v1"
 discard_oversize = true
 size = 2000
 buffer = 256
 {%- else %}
 [training.batcher]
-@batchers = "batch_by_words.v1"
+@batchers = "spacy.batch_by_words.v1"
 discard_oversize = false
 tolerance = 0.2
 

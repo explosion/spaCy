@@ -478,7 +478,7 @@ themselves, or be discarded if `discard_oversize` is set to `True`. The argument
 >
 > ```ini
 > [training.batcher]
-> @batchers = "batch_by_words.v1"
+> @batchers = "spacy.batch_by_words.v1"
 > size = 100
 > tolerance = 0.2
 > discard_oversize = false
@@ -499,7 +499,7 @@ themselves, or be discarded if `discard_oversize` is set to `True`. The argument
 >
 > ```ini
 > [training.batcher]
-> @batchers = "batch_by_sequence.v1"
+> @batchers = "spacy.batch_by_sequence.v1"
 > size = 32
 > get_length = null
 > ```
@@ -517,7 +517,7 @@ Create a batcher that creates batches of the specified size.
 >
 > ```ini
 > [training.batcher]
-> @batchers = "batch_by_padded.v1"
+> @batchers = "spacy.batch_by_padded.v1"
 > size = 100
 > buffer = 256
 > discard_oversize = false
