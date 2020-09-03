@@ -169,8 +169,6 @@ cdef class Tokenizer:
         cdef int i = 0
         cdef int start = 0
         cdef int has_special = 0
-        cdef bint specials_hit = 0
-        cdef bint cache_hit = 0
         cdef bint in_ws = string[0].isspace()
         cdef unicode span
         # The task here is much like string.split, but not quite
@@ -186,13 +184,7 @@ cdef class Tokenizer:
                     # we don't have to create the slice when we hit the cache.
                     span = string[start:i]
                     key = hash_string(span)
-                    specials_hit = 0
-                    cache_hit = 0
-                    if with_special_cases:
-                        specials_hit = self._try_specials(key, doc, &has_special)
-                    if not specials_hit:
-                        cache_hit = self._try_cache(key, doc)
-                    if not specials_hit and not cache_hit:
+                    if not self._try_specials_and_cache(key, doc, &has_special, with_special_cases):
                         self._tokenize(doc, span, key, &has_special, with_special_cases)
                 if uc == ' ':
                     doc.c[doc.length - 1].spacy = True
@@ -204,13 +196,7 @@ cdef class Tokenizer:
         if start < i:
             span = string[start:]
             key = hash_string(span)
-            specials_hit = 0
-            cache_hit = 0
-            if with_special_cases:
-                specials_hit = self._try_specials(key, doc, &has_special)
-            if not specials_hit:
-                cache_hit = self._try_cache(key, doc)
-            if not specials_hit and not cache_hit:
+            if not self._try_specials_and_cache(key, doc, &has_special, with_special_cases):
                 self._tokenize(doc, span, key, &has_special, with_special_cases)
             doc.c[doc.length - 1].spacy = string[-1] == " " and not in_ws
         return doc
@@ -364,27 +350,33 @@ cdef class Tokenizer:
                     offset += span[3]
         return offset
 
-    cdef int _try_cache(self, hash_t key, Doc tokens) except -1:
-        cached = <_Cached*>self._cache.get(key)
-        if cached == NULL:
-            return False
+    cdef int _try_specials_and_cache(self, hash_t key, Doc tokens, int* has_special, bint with_special_cases) except -1:
+        cdef bint specials_hit = 0
+        cdef bint cache_hit = 0
         cdef int i
-        if cached.is_lex:
-            for i in range(cached.length):
-                tokens.push_back(cached.data.lexemes[i], False)
-        else:
-            for i in range(cached.length):
-                tokens.push_back(&cached.data.tokens[i], False)
-        return True
-
-    cdef int _try_specials(self, hash_t key, Doc tokens, int* has_special) except -1:
-        cached = <_Cached*>self._specials.get(key)
-        if cached == NULL:
+        if with_special_cases:
+            cached = <_Cached*>self._specials.get(key)
+            if cached == NULL:
+                specials_hit = False
+            else:
+                for i in range(cached.length):
+                    tokens.push_back(&cached.data.tokens[i], False)
+                has_special[0] = 1
+                specials_hit = True
+        if not specials_hit:
+            cached = <_Cached*>self._cache.get(key)
+            if cached == NULL:
+                cache_hit = False
+            else:
+                if cached.is_lex:
+                    for i in range(cached.length):
+                        tokens.push_back(cached.data.lexemes[i], False)
+                else:
+                    for i in range(cached.length):
+                        tokens.push_back(&cached.data.tokens[i], False)
+                cache_hit = True
+        if not specials_hit and not cache_hit:
             return False
-        cdef int i
-        for i in range(cached.length):
-            tokens.push_back(&cached.data.tokens[i], False)
-        has_special[0] = 1
         return True
 
     cdef int _tokenize(self, Doc tokens, unicode span, hash_t orig_key, int* has_special, bint with_special_cases) except -1:
@@ -462,12 +454,7 @@ cdef class Tokenizer:
             for i in range(prefixes.size()):
                 tokens.push_back(prefixes[0][i], False)
         if string:
-            if with_special_cases:
-                specials_hit = self._try_specials(hash_string(string), tokens,
-                                                  has_special)
-            if not specials_hit:
-                cache_hit = self._try_cache(hash_string(string), tokens)
-            if specials_hit or cache_hit:
+            if self._try_specials_and_cache(hash_string(string), tokens, has_special, with_special_cases):
                 pass
             elif (self.token_match and self.token_match(string)) or \
                     (self.url_match and \
