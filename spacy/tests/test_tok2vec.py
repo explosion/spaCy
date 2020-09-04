@@ -89,6 +89,7 @@ def test_init_tok2vec():
     tok2vec = nlp.add_pipe("tok2vec")
     assert tok2vec.listeners == []
     nlp.begin_training()
+    assert tok2vec.model.get_dim("nO")
 
 
 cfg_string = """

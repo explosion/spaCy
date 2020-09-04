@@ -79,6 +79,7 @@ def test_overfitting_IO():
     for tag in TAGS:
         tagger.add_label(tag)
     optimizer = nlp.begin_training()
+    assert tagger.model.get_dim("nO") == len(TAGS)
 
     for i in range(50):
         losses = {}

@@ -127,6 +127,7 @@ def test_overfitting_IO():
         for label, value in annotations.get("cats").items():
             textcat.add_label(label)
     optimizer = nlp.begin_training()
+    assert textcat.model.get_dim("nO") == 2
 
     for i in range(50):
         losses = {}

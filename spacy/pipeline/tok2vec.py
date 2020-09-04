@@ -222,11 +222,13 @@ class Tok2Vec(Pipe):
 
         DOCS: https://nightly.spacy.io/api/tok2vec#begin_training
         """
-        if get_examples is None or not hasattr(get_examples, "__call__"):
-            err = Errors.E930.format(name="Tok2Vec", obj=type(get_examples))
-            raise ValueError(err)
-        docs = [Doc(self.vocab, words=["hello"])]
-        self.model.initialize(X=docs)
+        self._ensure_examples(get_examples)
+        doc_sample = []
+        for example in get_examples():
+            if len(doc_sample) < 10:
+                doc_sample.append(example.x)
+        assert doc_sample
+        self.model.initialize(X=doc_sample)
 
     def add_label(self, label):
         raise NotImplementedError
