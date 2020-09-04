@@ -80,6 +80,41 @@ def test_label_types():
         textcat.add_label(9)
 
 
+def test_no_label():
+    nlp = Language()
+    nlp.add_pipe("textcat")
+    with pytest.raises(ValueError):
+        nlp.begin_training()
+
+
+def test_invalid_label():
+    nlp = Language()
+    textcat = nlp.add_pipe("textcat")
+    train_examples = []
+    textcat.add_label("IRRELEVANT")
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+    with pytest.raises(ValueError):
+        nlp.begin_training(get_examples=lambda: train_examples)
+
+
+def test_begin_training_examples():
+    nlp = Language()
+    textcat = nlp.add_pipe("textcat")
+    train_examples = []
+    for text, annotations in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
+        for label, value in annotations.get("cats").items():
+            textcat.add_label(label)
+    # you shouldn't really call this more than once, but for testing it should be fine
+    nlp.begin_training()
+    nlp.begin_training(get_examples=lambda: train_examples)
+    with pytest.raises(TypeError):
+        nlp.begin_training(get_examples=lambda: None)
+    with pytest.raises(ValueError):
+        nlp.begin_training(get_examples=train_examples)
+
+
 def test_overfitting_IO():
     # Simple test to try and quickly overfit the textcat component - ensuring the ML models work correctly
     fix_random_seed(0)

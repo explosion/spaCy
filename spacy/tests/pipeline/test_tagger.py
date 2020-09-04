@@ -46,7 +46,6 @@ def test_invalid_tag():
     tagger = nlp.add_pipe("tagger")
     train_examples = []
     tagger.add_label("N")
-    train_examples = []
     for t in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
     with pytest.raises(ValueError):
@@ -59,7 +58,6 @@ def test_begin_training_examples():
     train_examples = []
     for tag in TAGS:
         tagger.add_label(tag)
-    train_examples = []
     for t in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
     # you shouldn't really call this more than once, but for testing it should be fine
