@@ -1,9 +1,8 @@
 from typing import Optional, Any, Dict, Callable, Iterable, Union, List, Pattern
-from typing import Tuple, Iterator, Optional
+from typing import Tuple, Iterator
 from dataclasses import dataclass
 import random
 import itertools
-import weakref
 import functools
 from contextlib import contextmanager
 from copy import deepcopy
