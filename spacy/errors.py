@@ -1,7 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-
 def add_codes(err_cls):
     """Add error codes to string messages via class attribute names."""
 
@@ -19,24 +15,14 @@ def add_codes(err_cls):
 # fmt: off
 
 @add_codes
-class Warnings(object):
-    W001 = ("As of spaCy v2.0, the keyword argument `path=` is deprecated. "
-            "You can now call spacy.load with the path as its first argument, "
-            "and the model's meta.json will be used to determine the language "
-            "to load. For example:\nnlp = spacy.load('{path}')")
-    W002 = ("Tokenizer.from_list is now deprecated. Create a new Doc object "
-            "instead and pass in the strings as the `words` keyword argument, "
-            "for example:\nfrom spacy.tokens import Doc\n"
-            "doc = Doc(nlp.vocab, words=[...])")
-    W003 = ("Positional arguments to Doc.merge are deprecated. Instead, use "
-            "the keyword arguments, for example tag=, lemma= or ent_type=.")
+class Warnings:
     W004 = ("No text fixing enabled. Run `pip install ftfy` to enable fixing "
             "using ftfy.fix_text if necessary.")
     W005 = ("Doc object not parsed. This means displaCy won't be able to "
             "generate a dependency visualization for it. Make sure the Doc "
             "was processed with a model that supports dependency parsing, and "
             "not just a language class like `English()`. For more info, see "
-            "the docs:\nhttps://spacy.io/usage/models")
+            "the docs:\nhttps://nightly.spacy.io/usage/models")
     W006 = ("No entities to visualize found in Doc object. If this is "
             "surprising to you, make sure the Doc was processed using a model "
             "that supports named entity recognition, and check the `doc.ents` "
@@ -49,12 +35,6 @@ class Warnings(object):
             "use context-sensitive tensors. You can always add your own word "
             "vectors, or use one of the larger models instead if available.")
     W008 = ("Evaluating {obj}.similarity based on empty vectors.")
-    W009 = ("Custom factory '{name}' provided by entry points of another "
-            "package overwrites built-in factory.")
-    W010 = ("As of v2.1.0, the PhraseMatcher doesn't have a phrase length "
-            "limit anymore, so the max_length argument is now deprecated. "
-            "If you did not specify this parameter, make sure you call the "
-            "constructor with named arguments instead of positional ones.")
     W011 = ("It looks like you're calling displacy.serve from within a "
             "Jupyter notebook or a similar environment. This likely means "
             "you're already running a local web server, so there's no need to "
@@ -68,39 +48,15 @@ class Warnings(object):
             "components are applied. To only create tokenized Doc objects, "
             "try using `nlp.make_doc(text)` or process all texts as a stream "
             "using `list(nlp.tokenizer.pipe(all_texts))`.")
-    W013 = ("As of v2.1.0, {obj}.merge is deprecated. Please use the more "
-            "efficient and less error-prone Doc.retokenize context manager "
-            "instead.")
-    W014 = ("As of v2.1.0, the `disable` keyword argument on the serialization "
-            "methods is and should be replaced with `exclude`. This makes it "
-            "consistent with the other serializable objects.")
-    W015 = ("As of v2.1.0, the use of keyword arguments to exclude fields from "
-            "being serialized or deserialized is deprecated. Please use the "
-            "`exclude` argument instead. For example: exclude=['{arg}'].")
-    W016 = ("The keyword argument `n_threads` is now deprecated. As of v2.2.2, "
-            "the argument `n_process` controls parallel inference via "
-            "multiprocessing.")
     W017 = ("Alias '{alias}' already exists in the Knowledge Base.")
     W018 = ("Entity '{entity}' already exists in the Knowledge Base - "
             "ignoring the duplicate entry.")
-    W019 = ("Changing vectors name from {old} to {new}, to avoid clash with "
-            "previously loaded vectors. See Issue #3853.")
     W020 = ("Unnamed vectors. This won't allow multiple vectors models to be "
             "loaded. (Shape: {shape})")
     W021 = ("Unexpected hash collision in PhraseMatcher. Matches may be "
             "incorrect. Modify PhraseMatcher._terminal_hash to fix.")
-    W022 = ("Training a new part-of-speech tagger using a model with no "
-            "lemmatization rules or data. This means that the trained model "
-            "may not be able to lemmatize correctly. If this is intentional "
-            "or the language you're using doesn't have lemmatization data, "
-            "please ignore this warning. If this is surprising, make sure you "
-            "have the spacy-lookups-data package installed.")
-    W023 = ("Multiprocessing of Language.pipe is not supported in Python 2. "
-            "'n_process' will be set to 1.")
     W024 = ("Entity '{entity}' - Alias '{alias}' combination already exists in "
             "the Knowledge Base.")
-    W025 = ("'{name}' requires '{attr}' to be assigned, but none of the "
-            "previous components in the pipeline declare that they assign it.")
     W026 = ("Unable to set all sentence boundaries from dependency parses.")
     W027 = ("Found a large training file of {size} bytes. Note that it may "
             "be more efficient to split your training data into multiple "
@@ -108,70 +64,97 @@ class Warnings(object):
     W028 = ("Doc.from_array was called with a vector of type '{type}', "
             "but is expecting one of type 'uint64' instead. This may result "
             "in problems with the vocab further on in the pipeline.")
-    W029 = ("Unable to align tokens with entities from character offsets. "
-            "Discarding entity annotation for the text: {text}.")
     W030 = ("Some entities could not be aligned in the text \"{text}\" with "
             "entities \"{entities}\". Use "
             "`spacy.gold.biluo_tags_from_offsets(nlp.make_doc(text), entities)`"
-            " to check the alignment. Misaligned entities (with BILUO tag '-') "
-            "will be ignored during training.")
-    W031 = ("Model '{model}' ({model_version}) requires spaCy {version} and "
-            "is incompatible with the current spaCy version ({current}). This "
-            "may lead to unexpected results or runtime errors. To resolve "
-            "this, download a newer compatible model or retrain your custom "
-            "model with the current spaCy version. For more details and "
-            "available updates, run: python -m spacy validate")
-    W032 = ("Unable to determine model compatibility for model '{model}' "
-            "({model_version}) with the current spaCy version ({current}). "
-            "This may lead to unexpected results or runtime errors. To resolve "
-            "this, download a newer compatible model or retrain your custom "
-            "model with the current spaCy version. For more details and "
-            "available updates, run: python -m spacy validate")
-    W033 = ("Training a new {model} using a model with an empty lexeme "
-            "normalization table. This may degrade the performance to some "
-            "degree. If this is intentional or this language doesn't have a "
-            "normalization table, please ignore this warning.")
+            " to check the alignment. Misaligned entities ('-') will be "
+            "ignored during training.")
+    W033 = ("Training a new {model} using a model with no lexeme normalization "
+            "table. This may degrade the performance of the model to some "
+            "degree. If this is intentional or the language you're using "
+            "doesn't have a normalization table, please ignore this warning. "
+            "If this is surprising, make sure you have the spacy-lookups-data "
+            "package installed. The languages with lexeme normalization tables "
+            "are currently: {langs}")
     W034 = ("Please install the package spacy-lookups-data in order to include "
             "the default lexeme normalization table for the language '{lang}'.")
     W035 = ('Discarding subpattern "{pattern}" due to an unrecognized '
             "attribute or operator.")
 
+    # TODO: fix numbering after merging develop into master
+    W090 = ("Could not locate any binary .spacy files in path '{path}'.")
+    W091 = ("Could not clean/remove the temp directory at {dir}: {msg}.")
+    W092 = ("Ignoring annotations for sentence starts, as dependency heads are set.")
+    W093 = ("Could not find any data to train the {name} on. Is your "
+            "input data correctly formatted?")
+    W094 = ("Model '{model}' ({model_version}) specifies an under-constrained "
+            "spaCy version requirement: {version}. This can lead to compatibility "
+            "problems with older versions, or as new spaCy versions are "
+            "released, because the model may say it's compatible when it's "
+            'not. Consider changing the "spacy_version" in your meta.json to a '
+            "version range, with a lower and upper pin. For example: {example}")
+    W095 = ("Model '{model}' ({model_version}) requires spaCy {version} and is "
+            "incompatible with the current version ({current}). This may lead "
+            "to unexpected results or runtime errors. To resolve this, "
+            "download a newer compatible model or retrain your custom model "
+            "with the current spaCy version. For more details and available "
+            "updates, run: python -m spacy validate")
+    W096 = ("The method 'disable_pipes' has become deprecated - use 'select_pipes' "
+            "instead.")
+    W097 = ("No Model config was provided to create the '{name}' component, "
+            "and no default configuration could be found either.")
+    W098 = ("No Model config was provided to create the '{name}' component, "
+            "so a default configuration was used.")
+    W099 = ("Expected 'dict' type for the 'model' argument of pipe '{pipe}', "
+            "but got '{type}' instead, so ignoring it.")
+    W100 = ("Skipping unsupported morphological feature(s): '{feature}'. "
+            "Provide features as a dict {{\"Field1\": \"Value1,Value2\"}} or "
+            "string \"Field1=Value1,Value2|Field2=Value3\".")
+    W101 = ("Skipping `Doc` custom extension '{name}' while merging docs.")
+    W102 = ("Skipping unsupported user data '{key}: {value}' while merging docs.")
+    W103 = ("Unknown {lang} word segmenter '{segmenter}'. Supported "
+            "word segmenters: {supported}. Defaulting to {default}.")
+    W104 = ("Skipping modifications for '{target}' segmenter. The current "
+            "segmenter is '{current}'.")
+    W105 = ("As of spaCy v3.0, the {matcher}.pipe method is deprecated. If you "
+            "need to match on a stream of documents, you can use nlp.pipe and "
+            "call the {matcher} on each Doc object.")
+
 
 @add_codes
-class Errors(object):
+class Errors:
     E001 = ("No component '{name}' found in pipeline. Available names: {opts}")
-    E002 = ("Can't find factory for '{name}'. This usually happens when spaCy "
-            "calls `nlp.create_pipe` with a component name that's not built "
-            "in - for example, when constructing the pipeline from a model's "
-            "meta.json. If you're using a custom component, you can write to "
-            "`Language.factories['{name}']` or remove it from the model meta "
-            "and add it via `nlp.add_pipe` instead.")
+    E002 = ("Can't find factory for '{name}' for language {lang} ({lang_code}). "
+            "This usually happens when spaCy calls nlp.{method} with custom "
+            "component name that's not registered on the current language class. "
+            "If you're using a custom component, make sure you've added the "
+            "decorator @Language.component (for function components) or "
+            "@Language.factory (for class components).\n\nAvailable "
+            "factories: {opts}")
     E003 = ("Not a valid pipeline component. Expected callable, but "
-            "got {component} (name: '{name}').")
-    E004 = ("If you meant to add a built-in component, use `create_pipe`: "
-            "`nlp.add_pipe(nlp.create_pipe('{component}'))`")
+            "got {component} (name: '{name}'). If you're using a custom "
+            "component factory, double-check that it correctly returns your "
+            "initialized component.")
+    E004 = ("Can't set up pipeline component: a factory for '{name}' already "
+            "exists. Existing factory: {func}. New factory: {new_func}")
     E005 = ("Pipeline component '{name}' returned None. If you're using a "
             "custom component, maybe you forgot to return the processed Doc?")
-    E006 = ("Invalid constraints. You can only set one of the following: "
-            "before, after, first, last.")
+    E006 = ("Invalid constraints for adding pipeline component. You can only "
+            "set one of the following: before (component name or index), "
+            "after (component name or index), first (True) or last (True). "
+            "Invalid configuration: {args}. Existing components: {opts}")
     E007 = ("'{name}' already exists in pipeline. Existing names: {opts}")
-    E008 = ("Some current components would be lost when restoring previous "
-            "pipeline state. If you added components after calling "
-            "`nlp.disable_pipes()`, you should remove them explicitly with "
-            "`nlp.remove_pipe()` before the pipeline is restored. Names of "
-            "the new components: {names}")
-    E009 = ("The `update` method expects same number of docs and golds, but "
-            "got: {n_docs} docs, {n_golds} golds.")
+    E008 = ("Can't restore disabled pipeline component '{name}' because it "
+            "doesn't exist in the pipeline anymore. If you want to remove "
+            "components from the pipeline, you should do it before calling "
+            "`nlp.select_pipes()` or after restoring the disabled components.")
     E010 = ("Word vectors set to length 0. This may be because you don't have "
             "a model installed or loaded, or because your model doesn't "
             "include word vectors. For more info, see the docs:\n"
-            "https://spacy.io/usage/models")
+            "https://nightly.spacy.io/usage/models")
     E011 = ("Unknown operator: '{op}'. Options: {opts}")
     E012 = ("Cannot add pattern for zero tokens to matcher.\nKey: {key}")
-    E013 = ("Error selecting action in matcher")
     E014 = ("Unknown tag ID: {tag}")
-    E015 = ("Conflicting morphology exception for ({tag}, {orth}). Use "
-            "`force=True` to overwrite.")
     E016 = ("MultitaskObjective target should be function or one of: dep, "
             "tag, ent, dep_tag_offset, ent_tag.")
     E017 = ("Can only add unicode or bytes. Got type: {value_type}")
@@ -179,21 +162,8 @@ class Errors(object):
             "refers to an issue with the `Vocab` or `StringStore`.")
     E019 = ("Can't create transition with unknown action ID: {action}. Action "
             "IDs are enumerated in spacy/syntax/{src}.pyx.")
-    E020 = ("Could not find a gold-standard action to supervise the "
-            "dependency parser. The tree is non-projective (i.e. it has "
-            "crossing arcs - see spacy/syntax/nonproj.pyx for definitions). "
-            "The ArcEager transition system only supports projective trees. "
-            "To learn non-projective representations, transform the data "
-            "before training and after parsing. Either pass "
-            "`make_projective=True` to the GoldParse class, or use "
-            "spacy.syntax.nonproj.preprocess_training_data.")
-    E021 = ("Could not find a gold-standard action to supervise the "
-            "dependency parser. The GoldParse was projective. The transition "
-            "system has {n_actions} actions. State at failure: {state}")
     E022 = ("Could not find a transition with the name '{name}' in the NER "
             "model.")
-    E023 = ("Error cleaning up beam: The same state occurred twice at "
-            "memory address {addr} and position {i}.")
     E024 = ("Could not find an optimal move to supervise the parser. Usually, "
             "this means that the model can't be updated in a way that's valid "
             "and satisfies the correct annotations specified in the GoldParse. "
@@ -201,9 +171,9 @@ class Errors(object):
             "training a named entity recognizer, also make sure that none of "
             "your annotated entity spans have leading or trailing whitespace "
             "or punctuation. "
-            "You can also use the experimental `debug-data` command to "
+            "You can also use the experimental `debug data` command to "
             "validate your JSON-formatted training data. For details, run:\n"
-            "python -m spacy debug-data --help")
+            "python -m spacy debug data --help")
     E025 = ("String is too long: {length} characters. Max is 2**30.")
     E026 = ("Error accessing token at position {i}: out of bounds in Doc of "
             "length {length}.")
@@ -215,10 +185,10 @@ class Errors(object):
             "list of (unicode, bool) tuples. Got bytes instance: {value}")
     E029 = ("noun_chunks requires the dependency parse, which requires a "
             "statistical model to be installed and loaded. For more info, see "
-            "the documentation:\nhttps://spacy.io/usage/models")
+            "the documentation:\nhttps://nightly.spacy.io/usage/models")
     E030 = ("Sentence boundaries unset. You can add the 'sentencizer' "
             "component to the pipeline with: "
-            "nlp.add_pipe(nlp.create_pipe('sentencizer')) "
+            "nlp.add_pipe('sentencizer'). "
             "Alternatively, add the dependency parser, or set sentence "
             "boundaries by setting doc[i].is_sent_start.")
     E031 = ("Invalid token: empty string ('') at position {i}.")
@@ -228,16 +198,12 @@ class Errors(object):
             "the HEAD attribute would potentially override the sentence "
             "boundaries set by SENT_START.")
     E033 = ("Cannot load into non-empty Doc of length {length}.")
-    E034 = ("Doc.merge received {n_args} non-keyword arguments. Expected "
-            "either 3 arguments (deprecated), or 0 (use keyword arguments).\n"
-            "Arguments supplied:\n{args}\nKeyword arguments:{kwargs}")
     E035 = ("Error creating span with start {start} and end {end} for Doc of "
             "length {length}.")
     E036 = ("Error calculating span: Can't find a token starting at character "
             "offset {start}.")
     E037 = ("Error calculating span: Can't find a token ending at character "
             "offset {end}.")
-    E038 = ("Error finding sentence for span. Infinite loop detected.")
     E039 = ("Array bounds exceeded while searching for root word. This likely "
             "means the parse tree is in an invalid state. Please report this "
             "issue here: http://github.com/explosion/spaCy/issues")
@@ -254,15 +220,10 @@ class Errors(object):
     E047 = ("Can't assign a value to unregistered extension attribute "
             "'{name}'. Did you forget to call the `set_extension` method?")
     E048 = ("Can't import language {lang} from spacy.lang: {err}")
-    E049 = ("Can't find spaCy data directory: '{path}'. Check your "
-            "installation and permissions, or use spacy.util.set_data_path "
-            "to customise the location if necessary.")
-    E050 = ("Can't find model '{name}'. It doesn't seem to be a shortcut "
-            "link, a Python package or a valid path to a data directory.")
-    E051 = ("Cant' load '{name}'. If you're using a shortcut link, make sure "
-            "it points to a valid package (not just a data directory).")
+    E050 = ("Can't find model '{name}'. It doesn't seem to be a Python "
+            "package or a valid path to a data directory.")
     E052 = ("Can't find model directory: {path}")
-    E053 = ("Could not read meta.json from {path}")
+    E053 = ("Could not read {name} from {path}")
     E054 = ("No valid '{setting}' setting found in model meta.json.")
     E055 = ("Invalid ORTH value in exception:\nKey: {key}\nOrths: {orths}")
     E056 = ("Invalid tokenizer exception: ORTH values combined don't match "
@@ -273,8 +234,6 @@ class Errors(object):
     E059 = ("One (and only one) keyword arg must be set. Got: {kwargs}")
     E060 = ("Cannot add new key to vectors: the table is full. Current shape: "
             "({rows}, {cols}).")
-    E061 = ("Bad file name: {filename}. Example of a valid file name: "
-            "'vectors.128.f.bin'")
     E062 = ("Cannot find empty bit for new lexical flag. All bits between 0 "
             "and 63 are occupied. You can replace one by specifying the "
             "`flag_id` explicitly, e.g. "
@@ -288,39 +247,17 @@ class Errors(object):
             "Query string: {string}\nOrth cached: {orth}\nOrth ID: {orth_id}")
     E065 = ("Only one of the vector table's width and shape can be specified. "
             "Got width {width} and shape {shape}.")
-    E066 = ("Error creating model helper for extracting columns. Can only "
-            "extract columns by positive integer. Got: {value}.")
     E067 = ("Invalid BILUO tag sequence: Got a tag starting with 'I' (inside "
             "an entity) without a preceding 'B' (beginning of an entity). "
             "Tag sequence:\n{tags}")
     E068 = ("Invalid BILUO tag: '{tag}'.")
-    E069 = ("Invalid gold-standard parse tree. Found cycle between word "
-            "IDs: {cycle} (tokens: {cycle_tokens}) in the document starting "
-            "with tokens: {doc_tokens}.")
-    E070 = ("Invalid gold-standard data. Number of documents ({n_docs}) "
-            "does not align with number of annotations ({n_annots}).")
     E071 = ("Error creating lexeme: specified orth ID ({orth}) does not "
             "match the one in the vocab ({vocab_orth}).")
-    E072 = ("Error serializing lexeme: expected data length {length}, "
-            "got {bad_length}.")
     E073 = ("Cannot assign vector of length {new_length}. Existing vectors "
             "are of length {length}. You can use `vocab.reset_vectors` to "
             "clear the existing vectors and resize the table.")
     E074 = ("Error interpreting compiled match pattern: patterns are expected "
             "to end with the attribute {attr}. Got: {bad_attr}.")
-    E075 = ("Error accepting match: length ({length}) > maximum length "
-            "({max_len}).")
-    E076 = ("Error setting tensor on Doc: tensor has {rows} rows, while Doc "
-            "has {words} words.")
-    E077 = ("Error computing {value}: number of Docs ({n_docs}) does not "
-            "equal number of GoldParse objects ({n_golds}) in batch.")
-    E078 = ("Error computing score: number of words in Doc ({words_doc}) does "
-            "not equal number of words in GoldParse ({words_gold}).")
-    E079 = ("Error computing states in beam: number of predicted beams "
-            "({pbeams}) does not equal number of gold beams ({gbeams}).")
-    E080 = ("Duplicate state found in beam: {key}.")
-    E081 = ("Error getting gradient in beam: number of histories ({n_hist}) "
-            "does not equal number of losses ({losses}).")
     E082 = ("Error deprojectivizing parse: number of heads ({n_heads}), "
             "projective heads ({n_proj_heads}) and labels ({n_labels}) do not "
             "match.")
@@ -328,8 +265,6 @@ class Errors(object):
             "`getter` (plus optional `setter`) is allowed. Got: {nr_defined}")
     E084 = ("Error assigning label ID {label} to span: not in StringStore.")
     E085 = ("Can't create lexeme for string '{string}'.")
-    E086 = ("Error deserializing lexeme '{string}': orth ID {orth_id} does "
-            "not match hash {hash_id} in StringStore.")
     E087 = ("Unknown displaCy style: {style}.")
     E088 = ("Text of length {length} exceeds maximum of {max_length}. The "
             "v2.x parser and NER models require roughly 1GB of temporary "
@@ -345,10 +280,6 @@ class Errors(object):
             "existing extension, set `force=True` on `{obj}.set_extension`.")
     E091 = ("Invalid extension attribute {name}: expected callable or None, "
             "but got: {value}")
-    E092 = ("Could not find or assign name for word vectors. Ususally, the "
-            "name is read from the model's meta.json in vector.name. "
-            "Alternatively, it is built from the 'lang' and 'name' keys in "
-            "the meta.json. Vector names are required to avoid issue #1660.")
     E093 = ("token.ent_iob values make invalid sequence: I without B\n{seq}")
     E094 = ("Error reading line {line_num} in vectors file {loc}.")
     E095 = ("Can't write to frozen dictionary. This is likely an internal "
@@ -367,21 +298,15 @@ class Errors(object):
     E102 = ("Can't merge non-disjoint spans. '{token}' is already part of "
             "tokens to merge. If you want to find the longest non-overlapping "
             "spans, you can use the util.filter_spans helper:\n"
-            "https://spacy.io/api/top-level#util.filter_spans")
+            "https://nightly.spacy.io/api/top-level#util.filter_spans")
     E103 = ("Trying to set conflicting doc.ents: '{span1}' and '{span2}'. A "
             "token can only be part of one entity, so make sure the entities "
             "you're setting don't overlap.")
-    E104 = ("Can't find JSON schema for '{name}'.")
-    E105 = ("The Doc.print_tree() method is now deprecated. Please use "
-            "Doc.to_json() instead or write your own function.")
     E106 = ("Can't find doc._.{attr} attribute specified in the underscore "
             "settings: {opts}")
     E107 = ("Value of doc._.{attr} is not JSON-serializable: {value}")
-    E108 = ("As of spaCy v2.1, the pipe name `sbd` has been deprecated "
-            "in favor of the pipe name `sentencizer`, which does the same "
-            "thing. For example, use `nlp.create_pipeline('sentencizer')`")
-    E109 = ("Model for component '{name}' not initialized. Did you forget to "
-            "load a model, or forget to call begin_training()?")
+    E109 = ("Component '{name}' could not be run. Did you forget to "
+            "call begin_training()?")
     E110 = ("Invalid displaCy render wrapper. Expected callable, got: {obj}")
     E111 = ("Pickling a token is not supported, because tokens are only views "
             "of the parent Doc and can't exist on their own. A pickled token "
@@ -394,8 +319,6 @@ class Errors(object):
             "practically no advantage over pickling the parent Doc directly. "
             "So instead of pickling the span, pickle the Doc it belongs to or "
             "use Span.as_doc to convert the span to a standalone Doc object.")
-    E113 = ("The newly split token can only have one root (head = 0).")
-    E114 = ("The newly split token needs to have a root (head = 0).")
     E115 = ("All subtokens must have associated heads.")
     E116 = ("Cannot currently add labels to pretrained text classifier. Add "
             "labels before training begins. This functionality was available "
@@ -418,16 +341,9 @@ class Errors(object):
             "equal to span length ({span_len}).")
     E122 = ("Cannot find token to be split. Did it get merged?")
     E123 = ("Cannot find head of token to be split. Did it get merged?")
-    E124 = ("Cannot read from file: {path}. Supported formats: {formats}")
     E125 = ("Unexpected value: {value}")
     E126 = ("Unexpected matcher predicate: '{bad}'. Expected one of: {good}. "
             "This is likely a bug in spaCy, so feel free to open an issue.")
-    E127 = ("Cannot create phrase pattern representation for length 0. This "
-            "is likely a bug in spaCy.")
-    E128 = ("Unsupported serialization argument: '{arg}'. The use of keyword "
-            "arguments to exclude fields from being serialized or deserialized "
-            "is now deprecated. Please use the `exclude` argument instead. "
-            "For example: exclude=['{arg}'].")
     E129 = ("Cannot write the label of an existing Span object because a Span "
             "is a read-only view of the underlying Token objects stored in the "
             "Doc. Instead, create a new Span object and specify the `label` "
@@ -449,29 +365,21 @@ class Errors(object):
     E133 = ("The sum of prior probabilities for alias '{alias}' should not "
             "exceed 1, but found {sum}.")
     E134 = ("Entity '{entity}' is not defined in the Knowledge Base.")
-    E135 = ("If you meant to replace a built-in component, use `create_pipe`: "
-            "`nlp.replace_pipe('{name}', nlp.create_pipe('{name}'))`")
-    E136 = ("This additional feature requires the jsonschema library to be "
-            "installed:\npip install jsonschema")
     E137 = ("Expected 'dict' type, but got '{type}' from '{line}'. Make sure "
             "to provide a valid JSON object as input with either the `text` "
             "or `tokens` key. For more info, see the docs:\n"
-            "https://spacy.io/api/cli#pretrain-jsonl")
+            "https://nightly.spacy.io/api/cli#pretrain-jsonl")
     E138 = ("Invalid JSONL format for raw text '{text}'. Make sure the input "
             "includes either the `text` or `tokens` key. For more info, see "
-            "the docs:\nhttps://spacy.io/api/cli#pretrain-jsonl")
-    E139 = ("Knowledge Base for component '{name}' not initialized. Did you "
-            "forget to call set_kb()?")
+            "the docs:\nhttps://nightly.spacy.io/api/cli#pretrain-jsonl")
+    E139 = ("Knowledge Base for component '{name}' is empty. Use the methods "
+            "kb.add_entity and kb.add_alias to add entries.")
     E140 = ("The list of entities, prior probabilities and entity vectors "
             "should be of equal length.")
     E141 = ("Entity vectors should be of length {required} instead of the "
             "provided {found}.")
-    E142 = ("Unsupported loss_function '{loss_func}'. Use either 'L2' or "
-            "'cosine'.")
     E143 = ("Labels for component '{name}' not initialized. Did you forget to "
             "call add_label()?")
-    E144 = ("Could not find parameter `{param}` when building the entity "
-            "linker model.")
     E145 = ("Error reading `{param}` from input file.")
     E146 = ("Could not access `{path}`.")
     E147 = ("Unexpected error in the {method} functionality of the "
@@ -483,8 +391,6 @@ class Errors(object):
             "the component matches the model being loaded.")
     E150 = ("The language of the `nlp` object and the `vocab` should be the "
             "same, but found '{nlp}' and '{vocab}' respectively.")
-    E151 = ("Trying to call nlp.update without required annotation types. "
-            "Expected top-level keys: {exp}. Got: {unexp}.")
     E152 = ("The attribute {attr} is not supported for token patterns. "
             "Please use the option validate=True with Matcher, PhraseMatcher, "
             "or EntityRuler for more details.")
@@ -521,27 +427,14 @@ class Errors(object):
             "that case.")
     E166 = ("Can only merge DocBins with the same pre-defined attributes.\n"
             "Current DocBin: {current}\nOther DocBin: {other}")
-    E167 = ("Unknown morphological feature: '{feat}' ({feat_id}). This can "
-            "happen if the tagger was trained with a different set of "
-            "morphological features. If you're using a pretrained model, make "
-            "sure that your models are up to date:\npython -m spacy validate")
-    E168 = ("Unknown field: {field}")
     E169 = ("Can't find module: {module}")
     E170 = ("Cannot apply transition {name}: invalid for the current state.")
-    E171 = ("Matcher.add received invalid on_match callback argument: expected "
+    E171 = ("Matcher.add received invalid 'on_match' callback argument: expected "
             "callable or None, but got: {arg_type}")
-    E172 = ("The Lemmatizer.load classmethod is deprecated. To create a "
-            "Lemmatizer, initialize the class directly. See the docs for "
-            "details: https://spacy.io/api/lemmatizer")
-    E173 = ("As of v2.2, the Lemmatizer is initialized with an instance of "
-            "Lookups containing the lemmatization tables. See the docs for "
-            "details: https://spacy.io/api/lemmatizer#init")
-    E174 = ("Architecture '{name}' not found in registry. Available "
-            "names: {names}")
     E175 = ("Can't remove rule for unknown match pattern ID: {key}")
     E176 = ("Alias '{alias}' is not defined in the Knowledge Base.")
     E177 = ("Ill-formed IOB input detected: {tag}")
-    E178 = ("Invalid pattern. Expected list of dicts but got: {pat}. Maybe you "
+    E178 = ("Each pattern should be a list of dicts, but got: {pat}. Maybe you "
             "accidentally passed a single pattern to Matcher.add instead of a "
             "list of patterns? If you only want to add one pattern, make sure "
             "to wrap it in a list. For example: matcher.add('{key}', [pattern])")
@@ -565,9 +458,6 @@ class Errors(object):
             "{obj}.{attr}\nAttribute '{attr}' does not exist on {obj}.")
     E186 = ("'{tok_a}' and '{tok_b}' are different texts.")
     E187 = ("Only unicode strings are supported as labels.")
-    E188 = ("Could not match the gold entity links to entities in the doc - "
-            "make sure the gold EL data refers to valid results of the "
-            "named entity recognizer in the `nlp` pipeline.")
     E189 = ("Each argument to `get_doc` should be of equal length.")
     E190 = ("Token head out of range in `Doc.from_array()` for token index "
             "'{index}' with value '{value}' (equivalent to relative head "
@@ -592,17 +482,201 @@ class Errors(object):
             "can not be combined with adding a pretrained Tok2Vec layer.")
     E201 = ("Span index out of range.")
 
+    # TODO: fix numbering after merging develop into master
+    E925 = ("Invalid color values for displaCy visualizer: expected dictionary "
+            "mapping label names to colors but got: {obj}")
+    E926 = ("It looks like you're trying to modify nlp.{attr} directly. This "
+            "doesn't work because it's an immutable computed property. If you "
+            "need to modify the pipeline, use the built-in methods like "
+            "nlp.add_pipe, nlp.remove_pipe, nlp.disable_pipe or nlp.enable_pipe "
+            "instead.")
+    E927 = ("Can't write to frozen list Maybe you're trying to modify a computed "
+            "property or default function argument?")
+    E928 = ("A 'KnowledgeBase' should be written to / read from a file, but the "
+            "provided argument {loc} is an existing directory.")
+    E929 = ("A 'KnowledgeBase' could not be read from {loc} - the path does "
+            "not seem to exist.")
+    E930 = ("Received invalid get_examples callback in {name}.begin_training. "
+            "Expected function that returns an iterable of Example objects but "
+            "got: {obj}")
+    E931 = ("Encountered Pipe subclass without Pipe.{method} method in component "
+            "'{name}'. If the component is trainable and you want to use this "
+            "method, make sure it's overwritten on the subclass. If your "
+            "component isn't trainable, add a method that does nothing or "
+            "don't use the Pipe base class.")
+    E940 = ("Found NaN values in scores.")
+    E941 = ("Can't find model '{name}'. It looks like you're trying to load a "
+            "model from a shortcut, which is deprecated as of spaCy v3.0. To "
+            "load the model, use its full name instead:\n\n"
+            "nlp = spacy.load(\"{full}\")\n\nFor more details on the available "
+            "models, see the models directory: https://spacy.io/models. If you "
+            "want to create a blank model, use spacy.blank: "
+            "nlp = spacy.blank(\"{name}\")")
+    E942 = ("Executing after_{name} callback failed. Expected the function to "
+            "return an initialized nlp object but got: {value}. Maybe "
+            "you forgot to return the modified object in your function?")
+    E943 = ("Executing before_creation callback failed. Expected the function to "
+            "return an uninitialized Language subclass but got: {value}. Maybe "
+            "you forgot to return the modified object in your function or "
+            "returned the initialized nlp object instead?")
+    E944 = ("Can't copy pipeline component '{name}' from source model '{model}': "
+            "not found in pipeline. Available components: {opts}")
+    E945 = ("Can't copy pipeline component '{name}' from source. Expected loaded "
+            "nlp object, but got: {source}")
+    E947 = ("Matcher.add received invalid 'greedy' argument: expected "
+            "a string value from {expected} but got: '{arg}'")
+    E948 = ("Matcher.add received invalid 'patterns' argument: expected "
+            "a List, but got: {arg_type}")
+    E949 = ("Can only create an alignment when the texts are the same.")
+    E952 = ("The section '{name}' is not a valid section in the provided config.")
+    E953 = ("Mismatched IDs received by the Tok2Vec listener: {id1} vs. {id2}")
+    E954 = ("The Tok2Vec listener did not receive a valid input.")
+    E955 = ("Can't find table(s) '{table}' for language '{lang}' in spacy-lookups-data.")
+    E956 = ("Can't find component '{name}' in [components] block in the config. "
+            "Available components: {opts}")
+    E957 = ("Writing directly to Language.factories isn't needed anymore in "
+            "spaCy v3. Instead, you can use the @Language.factory decorator "
+            "to register your custom component factory or @Language.component "
+            "to register a simple stateless function component that just takes "
+            "a Doc and returns it.")
+    E958 = ("Language code defined in config ({bad_lang_code}) does not match "
+            "language code of current Language subclass {lang} ({lang_code})")
+    E959 = ("Can't insert component {dir} index {idx}. Existing components: {opts}")
+    E960 = ("No config data found for component '{name}'. This is likely a bug "
+            "in spaCy.")
+    E961 = ("Found non-serializable Python object in config. Configs should "
+            "only include values that can be serialized to JSON. If you need "
+            "to pass models or other objects to your component, use a reference "
+            "to a registered function or initialize the object in your "
+            "component.\n\n{config}")
+    E962 = ("Received incorrect {style} for pipe '{name}'. Expected dict, "
+            "got: {cfg_type}.")
+    E963 = ("Can't read component info from @Language.{decorator} decorator. "
+            "Maybe you forgot to call it? Make sure you're using "
+            "@Language.{decorator}() instead of @Language.{decorator}.")
+    E964 = ("The pipeline component factory for '{name}' needs to have the "
+            "following named arguments, which are passed in by spaCy:\n- nlp: "
+            "receives the current nlp object and lets you access the vocab\n- "
+            "name: the name of the component instance, can be used to identify "
+            "the component, output losses etc.")
+    E965 = ("It looks like you're using the @Language.component decorator to "
+            "register '{name}' on a class instead of a function component. If "
+            "you need to register a class or function that *returns* a component "
+            "function, use the @Language.factory decorator instead.")
+    E966 = ("nlp.add_pipe now takes the string name of the registered component "
+            "factory, not a callable component. Expected string, but got "
+            "{component} (name: '{name}').\n\n- If you created your component "
+            "with nlp.create_pipe('name'): remove nlp.create_pipe and call "
+            "nlp.add_pipe('name') instead.\n\n- If you passed in a component "
+            "like TextCategorizer(): call nlp.add_pipe with the string name "
+            "instead, e.g. nlp.add_pipe('textcat').\n\n- If you're using a custom "
+            "component: Add the decorator @Language.component (for function "
+            "components) or @Language.factory (for class components / factories) "
+            "to your custom component and assign it a name, e.g. "
+            "@Language.component('your_name'). You can then run "
+            "nlp.add_pipe('your_name') to add it to the pipeline.")
+    E967 = ("No {meta} meta information found for '{name}'. This is likely a bug in spaCy.")
+    E968 = ("nlp.replace_pipe now takes the string name of the registered component "
+            "factory, not a callable component. Expected string, but got "
+            "{component}.\n\n- If you created your component with"
+            "with nlp.create_pipe('name'): remove nlp.create_pipe and call "
+            "nlp.replace_pipe('{name}', 'name') instead.\n\n- If you passed in a "
+            "component like TextCategorizer(): call nlp.replace_pipe with the "
+            "string name instead, e.g. nlp.replace_pipe('{name}', 'textcat').\n\n"
+            "- If you're using a custom component: Add the decorator "
+            "@Language.component (for function components) or @Language.factory "
+            "(for class components / factories) to your custom component and "
+            "assign it a name, e.g. @Language.component('your_name'). You can "
+            "then run nlp.replace_pipe('{name}', 'your_name').")
+    E969 = ("Expected string values for field '{field}', but received {types} instead. ")
+    E970 = ("Can not execute command '{str_command}'. Do you have '{tool}' installed?")
+    E971 = ("Found incompatible lengths in Doc.from_array: {array_length} for the "
+            "array and {doc_length} for the Doc itself.")
+    E972 = ("Example.__init__ got None for '{arg}'. Requires Doc.")
+    E973 = ("Unexpected type for NER data")
+    E974 = ("Unknown {obj} attribute: {key}")
+    E976 = ("The method 'Example.from_dict' expects a {type} as {n} argument, "
+            "but received None.")
+    E977 = ("Can not compare a MorphAnalysis with a string object. "
+            "This is likely a bug in spaCy, so feel free to open an issue.")
+    E978 = ("The {name} method takes a list of Example objects, but got: {types}")
+    E979 = ("Cannot convert {type} to an Example object.")
+    E980 = ("Each link annotation should refer to a dictionary with at most one "
+            "identifier mapping to 1.0, and all others to 0.0.")
+    E981 = ("The offsets of the annotations for 'links' could not be aligned "
+            "to token boundaries.")
+    E982 = ("The 'ent_iob' attribute of a Token should be an integer indexing "
+            "into {values}, but found {value}.")
+    E983 = ("Invalid key for '{dict}': {key}. Available keys: "
+            "{keys}")
+    E984 = ("Invalid component config for '{name}': component block needs either "
+            "a key 'factory' specifying the registered function used to "
+            "initialize the component, or a key 'source' key specifying a "
+            "spaCy model to copy the component from. For example, factory = "
+            "\"ner\" will use the 'ner' factory and all other settings in the "
+            "block will be passed to it as arguments. Alternatively, source = "
+            "\"en_core_web_sm\" will copy the component from that model.\n\n{config}")
+    E985 = ("Can't load model from config file: no 'nlp' section found.\n\n{config}")
+    E986 = ("Could not create any training batches: check your input. "
+            "Are the train and dev paths defined? "
+            "Is 'discard_oversize' set appropriately? ")
+    E987 = ("The text of an example training instance is either a Doc or "
+            "a string, but found {type} instead.")
+    E988 = ("Could not parse any training examples. Ensure the data is "
+            "formatted correctly.")
+    E989 = ("'nlp.update()' was called with two positional arguments. This "
+            "may be due to a backwards-incompatible change to the format "
+            "of the training data in spaCy 3.0 onwards. The 'update' "
+            "function should now be called with a batch of 'Example' "
+            "objects, instead of (text, annotation) tuples. ")
+    E991 = ("The function 'select_pipes' should be called with either a "
+            "'disable' argument to list the names of the pipe components "
+            "that should be disabled, or with an 'enable' argument that "
+            "specifies which pipes should not be disabled.")
+    E992 = ("The function `select_pipes` was called with `enable`={enable} "
+            "and `disable`={disable} but that information is conflicting "
+            "for the `nlp` pipeline with components {names}.")
+    E993 = ("The config for 'nlp' needs to include a key 'lang' specifying "
+            "the code of the language to initialize it with (for example "
+            "'en' for English) - this can't be 'None'.\n\n{config}")
+    E996 = ("Could not parse {file}: {msg}")
+    E997 = ("Tokenizer special cases are not allowed to modify the text. "
+            "This would map '{chunk}' to '{orth}' given token attributes "
+            "'{token_attrs}'.")
+    E999 = ("Unable to merge the `Doc` objects because they do not all share "
+            "the same `Vocab`.")
+    E1000 = ("No pkuseg model available. Provide a pkuseg model when "
+             "initializing the pipeline:\n"
+             'cfg = {"tokenizer": {"segmenter": "pkuseg", "pkuseg_model": name_or_path}}\n'
+             'nlp = Chinese(config=cfg)')
+    E1001 = ("Target token outside of matched span for match with tokens "
+             "'{span}' and offset '{index}' matched by patterns '{patterns}'.")
+    E1002 = ("Span index out of range.")
+    E1003 = ("Unsupported lemmatizer mode '{mode}'.")
+    E1004 = ("Missing lemmatizer table(s) found for lemmatizer mode '{mode}'. "
+             "Required tables '{tables}', found '{found}'. If you are not "
+             "providing custom lookups, make sure you have the package "
+             "spacy-lookups-data installed.")
+    E1005 = ("Unable to set attribute '{attr}' in tokenizer exception for "
+             "'{chunk}'. Tokenizer exceptions are only allowed to specify "
+             "`ORTH` and `NORM`.")
+    E1006 = ("Unable to initialize {name} model with 0 labels.")
+
 
 @add_codes
-class TempErrors(object):
+class TempErrors:
     T003 = ("Resizing pretrained Tagger models is not currently supported.")
-    T004 = ("Currently parser depth is hard-coded to 1. Received: {value}.")
     T007 = ("Can't yet set {attr} from Span. Vote for this feature on the "
             "issue tracker: http://github.com/explosion/spaCy/issues")
-    T008 = ("Bad configuration of Tagger. This is probably a bug within "
-            "spaCy. We changed the name of an internal attribute for loading "
-            "pretrained vectors, and the class has been passed the old name "
-            "(pretrained_dims) but not the new name (pretrained_vectors).")
+
+
+# Deprecated model shortcuts, only used in errors and warnings
+OLD_MODEL_SHORTCUTS = {
+    "en": "en_core_web_sm", "de": "de_core_news_sm", "es": "es_core_news_sm",
+    "pt": "pt_core_news_sm", "fr": "fr_core_news_sm", "it": "it_core_news_sm",
+    "nl": "nl_core_news_sm", "el": "el_core_news_sm", "nb": "nb_core_news_sm",
+    "lt": "lt_core_news_sm", "xx": "xx_ent_wiki_sm"
+}
 
 
 # fmt: on
@@ -612,16 +686,12 @@ class MatchPatternError(ValueError):
     def __init__(self, key, errors):
         """Custom error for validating match patterns.
 
-        key (unicode): The name of the matcher rule.
+        key (str): The name of the matcher rule.
         errors (dict): Validation errors (sequence of strings) mapped to pattern
             ID, i.e. the index of the added pattern.
         """
-        msg = "Invalid token patterns for matcher rule '{}'\n".format(key)
+        msg = f"Invalid token patterns for matcher rule '{key}'\n"
         for pattern_idx, error_msgs in errors.items():
-            pattern_errors = "\n".join(["- {}".format(e) for e in error_msgs])
-            msg += "\nPattern {}:\n{}\n".format(pattern_idx, pattern_errors)
+            pattern_errors = "\n".join([f"- {e}" for e in error_msgs])
+            msg += f"\nPattern {pattern_idx}:\n{pattern_errors}\n"
         ValueError.__init__(self, msg)
-
-
-class AlignmentError(ValueError):
-    pass

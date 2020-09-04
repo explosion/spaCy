@@ -1,18 +1,13 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 import numpy
 from numpy.testing import assert_allclose, assert_equal
-from spacy._ml import cosine
 from spacy.vocab import Vocab
 from spacy.vectors import Vectors
 from spacy.tokenizer import Tokenizer
 from spacy.strings import hash_string
 from spacy.tokens import Doc
-from spacy.compat import is_python2
 
-from ..util import add_vecs_to_vocab, make_tempdir
+from ..util import add_vecs_to_vocab, get_cosine, make_tempdir
 
 
 @pytest.fixture
@@ -337,10 +332,9 @@ def test_vocab_prune_vectors():
     assert list(remap.keys()) == ["kitten"]
     neighbour, similarity = list(remap.values())[0]
     assert neighbour == "cat", remap
-    assert_allclose(similarity, cosine(data[0], data[2]), atol=1e-4, rtol=1e-3)
+    assert_allclose(similarity, get_cosine(data[0], data[2]), atol=1e-4, rtol=1e-3)
 
 
-@pytest.mark.skipif(is_python2, reason="Dict order? Not sure if worth investigating")
 def test_vectors_serialize():
     data = numpy.asarray([[4, 2, 2, 2], [4, 2, 2, 2], [1, 1, 1, 1]], dtype="f")
     v = Vectors(data=data, keys=["A", "B", "C"])

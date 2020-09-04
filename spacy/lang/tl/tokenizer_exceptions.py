@@ -1,20 +1,19 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-from ...symbols import ORTH, LEMMA
+from ..tokenizer_exceptions import BASE_EXCEPTIONS
+from ...symbols import ORTH, NORM
+from ...util import update_exc
 
 
 _exc = {
-    "tayo'y": [{ORTH: "tayo", LEMMA: "tayo"}, {ORTH: "'y", LEMMA: "ay"}],
-    "isa'y": [{ORTH: "isa", LEMMA: "isa"}, {ORTH: "'y", LEMMA: "ay"}],
-    "baya'y": [{ORTH: "baya", LEMMA: "bayan"}, {ORTH: "'y", LEMMA: "ay"}],
-    "sa'yo": [{ORTH: "sa", LEMMA: "sa"}, {ORTH: "'yo", LEMMA: "iyo"}],
-    "ano'ng": [{ORTH: "ano", LEMMA: "ano"}, {ORTH: "'ng", LEMMA: "ang"}],
-    "siya'y": [{ORTH: "siya", LEMMA: "siya"}, {ORTH: "'y", LEMMA: "ay"}],
-    "nawa'y": [{ORTH: "nawa", LEMMA: "nawa"}, {ORTH: "'y", LEMMA: "ay"}],
-    "papa'no": [{ORTH: "papa'no", LEMMA: "papaano"}],
-    "'di": [{ORTH: "'di", LEMMA: "hindi"}],
+    "tayo'y": [{ORTH: "tayo"}, {ORTH: "'y", NORM: "ay"}],
+    "isa'y": [{ORTH: "isa"}, {ORTH: "'y", NORM: "ay"}],
+    "baya'y": [{ORTH: "baya"}, {ORTH: "'y", NORM: "ay"}],
+    "sa'yo": [{ORTH: "sa"}, {ORTH: "'yo", NORM: "iyo"}],
+    "ano'ng": [{ORTH: "ano"}, {ORTH: "'ng", NORM: "ang"}],
+    "siya'y": [{ORTH: "siya"}, {ORTH: "'y", NORM: "ay"}],
+    "nawa'y": [{ORTH: "nawa"}, {ORTH: "'y", NORM: "ay"}],
+    "papa'no": [{ORTH: "papa'no", NORM: "papaano"}],
+    "'di": [{ORTH: "'di", NORM: "hindi"}],
 }
 
 
-TOKENIZER_EXCEPTIONS = _exc
+TOKENIZER_EXCEPTIONS = update_exc(BASE_EXCEPTIONS, _exc)

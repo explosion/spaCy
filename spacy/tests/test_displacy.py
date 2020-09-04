@@ -1,9 +1,6 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 from spacy import displacy
-from spacy.displacy.render import DependencyRenderer
+from spacy.displacy.render import DependencyRenderer, EntityRenderer
 from spacy.tokens import Span
 from spacy.lang.fa import Persian
 
@@ -80,10 +77,10 @@ def test_displacy_rtl():
     html = displacy.render(doc, page=True, style="dep")
     assert "direction: rtl" in html
     assert 'direction="rtl"' in html
-    assert 'lang="{}"'.format(nlp.lang) in html
+    assert f'lang="{nlp.lang}"' in html
     html = displacy.render(doc, page=True, style="ent")
     assert "direction: rtl" in html
-    assert 'lang="{}"'.format(nlp.lang) in html
+    assert f'lang="{nlp.lang}"' in html
 
 
 def test_displacy_render_wrapper(en_vocab):
@@ -100,3 +97,17 @@ def test_displacy_render_wrapper(en_vocab):
     assert html.endswith("/div>TEST")
     # Restore
     displacy.set_render_wrapper(lambda html: html)
+
+
+def test_displacy_options_case():
+    ents = ["foo", "BAR"]
+    colors = {"FOO": "red", "bar": "green"}
+    renderer = EntityRenderer({"ents": ents, "colors": colors})
+    text = "abcd"
+    labels = ["foo", "bar", "FOO", "BAR"]
+    spans = [{"start": i, "end": i + 1, "label": labels[i]} for i in range(len(text))]
+    result = renderer.render_ents("abcde", spans, None).split("\n\n")
+    assert "red" in result[0] and "foo" in result[0]
+    assert "green" in result[1] and "bar" in result[1]
+    assert "red" in result[2] and "FOO" in result[2]
+    assert "green" in result[3] and "BAR" in result[3]

@@ -1,9 +1,26 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 
-from ..util import get_doc, apply_transition_sequence
+from spacy.lang.en import English
+from ..util import get_doc, apply_transition_sequence, make_tempdir
+from ... import util
+from ...gold import Example
+
+TRAIN_DATA = [
+    (
+        "They trade mortgage-backed securities.",
+        {
+            "heads": [1, 1, 4, 4, 5, 1, 1],
+            "deps": ["nsubj", "ROOT", "compound", "punct", "nmod", "dobj", "punct"],
+        },
+    ),
+    (
+        "I like London and Berlin.",
+        {
+            "heads": [1, 1, 1, 2, 2, 1],
+            "deps": ["nsubj", "ROOT", "dobj", "cc", "conj", "punct"],
+        },
+    ),
+]
 
 
 def test_parser_root(en_tokenizer):
@@ -16,7 +33,9 @@ def test_parser_root(en_tokenizer):
         assert t.dep != 0, t.text
 
 
-@pytest.mark.xfail
+@pytest.mark.skip(
+    reason="The step_through API was removed (but should be brought back)"
+)
 @pytest.mark.parametrize("text", ["Hello"])
 def test_parser_parse_one_word_sentence(en_tokenizer, en_parser, text):
     tokens = en_tokenizer(text)
@@ -30,7 +49,9 @@ def test_parser_parse_one_word_sentence(en_tokenizer, en_parser, text):
     assert doc[0].dep != 0
 
 
-@pytest.mark.xfail
+@pytest.mark.skip(
+    reason="The step_through API was removed (but should be brought back)"
+)
 def test_parser_initial(en_tokenizer, en_parser):
     text = "I ate the pizza with anchovies."
     # heads = [1, 0, 1, -2, -3, -1, -5]
@@ -61,10 +82,10 @@ def test_parser_merge_pp(en_tokenizer):
     text = "A phrase with another phrase occurs"
     heads = [1, 4, -1, 1, -2, 0]
     deps = ["det", "nsubj", "prep", "det", "pobj", "ROOT"]
-    tags = ["DT", "NN", "IN", "DT", "NN", "VBZ"]
+    pos = ["DET", "NOUN", "ADP", "DET", "NOUN", "VERB"]
     tokens = en_tokenizer(text)
     doc = get_doc(
-        tokens.vocab, words=[t.text for t in tokens], deps=deps, heads=heads, tags=tags
+        tokens.vocab, words=[t.text for t in tokens], deps=deps, heads=heads, pos=pos,
     )
     with doc.retokenize() as retokenizer:
         for np in doc.noun_chunks:
@@ -75,7 +96,9 @@ def test_parser_merge_pp(en_tokenizer):
     assert doc[3].text == "occurs"
 
 
-@pytest.mark.xfail
+@pytest.mark.skip(
+    reason="The step_through API was removed (but should be brought back)"
+)
 def test_parser_arc_eager_finalize_state(en_tokenizer, en_parser):
     text = "a b c d e"
 
@@ -165,3 +188,36 @@ def test_parser_set_sent_starts(en_vocab):
     for sent in doc.sents:
         for token in sent:
             assert token.head in sent
+
+
+def test_overfitting_IO():
+    # Simple test to try and quickly overfit the dependency parser - ensuring the ML models work correctly
+    nlp = English()
+    parser = nlp.add_pipe("parser")
+    train_examples = []
+    for text, annotations in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
+        for dep in annotations.get("deps", []):
+            parser.add_label(dep)
+    optimizer = nlp.begin_training()
+
+    for i in range(100):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+    assert losses["parser"] < 0.0001
+
+    # test the trained model
+    test_text = "I like securities."
+    doc = nlp(test_text)
+    assert doc[0].dep_ is "nsubj"
+    assert doc[2].dep_ is "dobj"
+    assert doc[3].dep_ is "punct"
+
+    # Also test the results are still the same after IO
+    with make_tempdir() as tmp_dir:
+        nlp.to_disk(tmp_dir)
+        nlp2 = util.load_model_from_path(tmp_dir)
+        doc2 = nlp2(test_text)
+        assert doc2[0].dep_ is "nsubj"
+        assert doc2[2].dep_ is "dobj"
+        assert doc2[3].dep_ is "punct"

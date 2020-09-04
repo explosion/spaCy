@@ -1,12 +1,10 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import pytest
-from thinc.neural.optimizers import Adam
-from thinc.neural.ops import NumpyOps
+from thinc.api import Adam
 from spacy.attrs import NORM
-from spacy.gold import GoldParse
 from spacy.vocab import Vocab
+from spacy import registry
+from spacy.gold import Example
+from spacy.pipeline.dep_parser import DEFAULT_PARSER_MODEL
 from spacy.tokens import Doc
 from spacy.pipeline import DependencyParser
 
@@ -18,19 +16,28 @@ def vocab():
 
 @pytest.fixture
 def parser(vocab):
-    parser = DependencyParser(vocab)
+    config = {
+        "learn_tokens": False,
+        "min_action_freq": 30,
+        "update_with_oracle_cut_size": 100,
+    }
+    cfg = {"model": DEFAULT_PARSER_MODEL}
+    model = registry.make_from_config(cfg, validate=True)["model"]
+    parser = DependencyParser(vocab, model, **config)
     parser.cfg["token_vector_width"] = 4
     parser.cfg["hidden_width"] = 32
     # parser.add_label('right')
     parser.add_label("left")
-    parser.begin_training([], **parser.cfg)
-    sgd = Adam(NumpyOps(), 0.001)
+    parser.begin_training(lambda: [], **parser.cfg)
+    sgd = Adam(0.001)
 
     for i in range(10):
         losses = {}
         doc = Doc(vocab, words=["a", "b", "c", "d"])
-        gold = GoldParse(doc, heads=[1, 1, 3, 3], deps=["left", "ROOT", "left", "ROOT"])
-        parser.update([doc], [gold], sgd=sgd, losses=losses)
+        example = Example.from_dict(
+            doc, {"heads": [1, 1, 3, 3], "deps": ["left", "ROOT", "left", "ROOT"]}
+        )
+        parser.update([example], sgd=sgd, losses=losses)
     return parser
 
 

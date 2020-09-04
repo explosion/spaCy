@@ -1,7 +1,6 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-from ...symbols import ORTH, LEMMA, TAG, NORM, PRON_LEMMA
+from ..tokenizer_exceptions import BASE_EXCEPTIONS
+from ...symbols import ORTH, NORM
+from ...util import update_exc
 
 
 _exc = {}
@@ -29,258 +28,270 @@ _exclude = [
 for pron in ["i"]:
     for orth in [pron, pron.title()]:
         _exc[orth + "'m"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "'m", LEMMA: "be", NORM: "am", TAG: "VBP"},
+            {ORTH: orth, NORM: pron},
+            {ORTH: "'m", NORM: "am"},
         ]
 
         _exc[orth + "m"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "m", LEMMA: "be", TAG: "VBP", "tenspect": 1, "number": 1},
+            {ORTH: orth, NORM: pron},
+            {ORTH: "m", "tenspect": 1, "number": 1},
         ]
 
         _exc[orth + "'ma"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "'m", LEMMA: "be", NORM: "am"},
-            {ORTH: "a", LEMMA: "going to", NORM: "gonna"},
+            {ORTH: orth, NORM: pron},
+            {ORTH: "'m", NORM: "am"},
+            {ORTH: "a", NORM: "gonna"},
         ]
 
         _exc[orth + "ma"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "m", LEMMA: "be", NORM: "am"},
-            {ORTH: "a", LEMMA: "going to", NORM: "gonna"},
+            {ORTH: orth, NORM: pron},
+            {ORTH: "m", NORM: "am"},
+            {ORTH: "a", NORM: "gonna"},
         ]
 
 
 for pron in ["i", "you", "he", "she", "it", "we", "they"]:
     for orth in [pron, pron.title()]:
         _exc[orth + "'ll"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "'ll", LEMMA: "will", NORM: "will", TAG: "MD"},
+            {ORTH: orth, NORM: pron},
+            {ORTH: "'ll", NORM: "will"},
         ]
 
         _exc[orth + "ll"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "ll", LEMMA: "will", NORM: "will", TAG: "MD"},
+            {ORTH: orth, NORM: pron},
+            {ORTH: "ll", NORM: "will"},
         ]
 
         _exc[orth + "'ll've"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "'ll", LEMMA: "will", NORM: "will", TAG: "MD"},
-            {ORTH: "'ve", LEMMA: "have", NORM: "have", TAG: "VB"},
+            {ORTH: orth, NORM: pron},
+            {ORTH: "'ll", NORM: "will"},
+            {ORTH: "'ve", NORM: "have"},
         ]
 
         _exc[orth + "llve"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "ll", LEMMA: "will", NORM: "will", TAG: "MD"},
-            {ORTH: "ve", LEMMA: "have", NORM: "have", TAG: "VB"},
+            {ORTH: orth, NORM: pron},
+            {ORTH: "ll", NORM: "will"},
+            {ORTH: "ve", NORM: "have"},
         ]
 
         _exc[orth + "'d"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
+            {ORTH: orth, NORM: pron},
             {ORTH: "'d", NORM: "'d"},
         ]
 
         _exc[orth + "d"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
+            {ORTH: orth, NORM: pron},
             {ORTH: "d", NORM: "'d"},
         ]
 
         _exc[orth + "'d've"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "'d", LEMMA: "would", NORM: "would", TAG: "MD"},
-            {ORTH: "'ve", LEMMA: "have", NORM: "have", TAG: "VB"},
+            {ORTH: orth, NORM: pron},
+            {ORTH: "'d", NORM: "would"},
+            {ORTH: "'ve", NORM: "have"},
         ]
 
         _exc[orth + "dve"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "d", LEMMA: "would", NORM: "would", TAG: "MD"},
-            {ORTH: "ve", LEMMA: "have", NORM: "have", TAG: "VB"},
+            {ORTH: orth, NORM: pron},
+            {ORTH: "d", NORM: "would"},
+            {ORTH: "ve", NORM: "have"},
         ]
 
 
 for pron in ["i", "you", "we", "they"]:
     for orth in [pron, pron.title()]:
         _exc[orth + "'ve"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "'ve", LEMMA: "have", NORM: "have", TAG: "VB"},
+            {ORTH: orth, NORM: pron},
+            {ORTH: "'ve", NORM: "have"},
         ]
 
         _exc[orth + "ve"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "ve", LEMMA: "have", NORM: "have", TAG: "VB"},
+            {ORTH: orth, NORM: pron},
+            {ORTH: "ve", NORM: "have"},
         ]
 
 
 for pron in ["you", "we", "they"]:
     for orth in [pron, pron.title()]:
         _exc[orth + "'re"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "'re", LEMMA: "be", NORM: "are"},
+            {ORTH: orth, NORM: pron},
+            {ORTH: "'re", NORM: "are"},
         ]
 
         _exc[orth + "re"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "re", LEMMA: "be", NORM: "are", TAG: "VBZ"},
+            {ORTH: orth, NORM: pron},
+            {ORTH: "re", NORM: "are"},
         ]
 
 
 for pron in ["he", "she", "it"]:
     for orth in [pron, pron.title()]:
         _exc[orth + "'s"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
+            {ORTH: orth, NORM: pron},
             {ORTH: "'s", NORM: "'s"},
         ]
 
         _exc[orth + "s"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
+            {ORTH: orth, NORM: pron},
             {ORTH: "s"},
         ]
 
 
 # W-words, relative pronouns, prepositions etc.
 
-for word in ["who", "what", "when", "where", "why", "how", "there", "that", "this", "these", "those"]:
+for word in [
+    "who",
+    "what",
+    "when",
+    "where",
+    "why",
+    "how",
+    "there",
+    "that",
+    "this",
+    "these",
+    "those",
+]:
     for orth in [word, word.title()]:
         _exc[orth + "'s"] = [
-            {ORTH: orth, LEMMA: word, NORM: word},
+            {ORTH: orth, NORM: word},
             {ORTH: "'s", NORM: "'s"},
         ]
 
-        _exc[orth + "s"] = [{ORTH: orth, LEMMA: word, NORM: word}, {ORTH: "s"}]
+        _exc[orth + "s"] = [{ORTH: orth, NORM: word}, {ORTH: "s"}]
 
         _exc[orth + "'ll"] = [
-            {ORTH: orth, LEMMA: word, NORM: word},
-            {ORTH: "'ll", LEMMA: "will", NORM: "will", TAG: "MD"},
+            {ORTH: orth, NORM: word},
+            {ORTH: "'ll", NORM: "will"},
         ]
 
         _exc[orth + "ll"] = [
-            {ORTH: orth, LEMMA: word, NORM: word},
-            {ORTH: "ll", LEMMA: "will", NORM: "will", TAG: "MD"},
+            {ORTH: orth, NORM: word},
+            {ORTH: "ll", NORM: "will"},
         ]
 
         _exc[orth + "'ll've"] = [
-            {ORTH: orth, LEMMA: word, NORM: word},
-            {ORTH: "'ll", LEMMA: "will", NORM: "will", TAG: "MD"},
-            {ORTH: "'ve", LEMMA: "have", NORM: "have", TAG: "VB"},
+            {ORTH: orth, NORM: word},
+            {ORTH: "'ll", NORM: "will"},
+            {ORTH: "'ve", NORM: "have"},
         ]
 
         _exc[orth + "llve"] = [
-            {ORTH: orth, LEMMA: word, NORM: word},
-            {ORTH: "ll", LEMMA: "will", NORM: "will", TAG: "MD"},
-            {ORTH: "ve", LEMMA: "have", NORM: "have", TAG: "VB"},
+            {ORTH: orth, NORM: word},
+            {ORTH: "ll", NORM: "will"},
+            {ORTH: "ve", NORM: "have"},
         ]
 
         _exc[orth + "'re"] = [
-            {ORTH: orth, LEMMA: word, NORM: word},
-            {ORTH: "'re", LEMMA: "be", NORM: "are"},
+            {ORTH: orth, NORM: word},
+            {ORTH: "'re", NORM: "are"},
         ]
 
         _exc[orth + "re"] = [
-            {ORTH: orth, LEMMA: word, NORM: word},
-            {ORTH: "re", LEMMA: "be", NORM: "are"},
+            {ORTH: orth, NORM: word},
+            {ORTH: "re", NORM: "are"},
         ]
 
         _exc[orth + "'ve"] = [
-            {ORTH: orth, LEMMA: word, NORM: word},
-            {ORTH: "'ve", LEMMA: "have", TAG: "VB"},
+            {ORTH: orth, NORM: word},
+            {ORTH: "'ve"},
         ]
 
         _exc[orth + "ve"] = [
-            {ORTH: orth, LEMMA: word},
-            {ORTH: "ve", LEMMA: "have", NORM: "have", TAG: "VB"},
+            {ORTH: orth},
+            {ORTH: "ve", NORM: "have"},
         ]
 
         _exc[orth + "'d"] = [
-            {ORTH: orth, LEMMA: word, NORM: word},
+            {ORTH: orth, NORM: word},
             {ORTH: "'d", NORM: "'d"},
         ]
 
         _exc[orth + "d"] = [
-            {ORTH: orth, LEMMA: word, NORM: word},
+            {ORTH: orth, NORM: word},
             {ORTH: "d", NORM: "'d"},
         ]
 
         _exc[orth + "'d've"] = [
-            {ORTH: orth, LEMMA: word, NORM: word},
-            {ORTH: "'d", LEMMA: "would", NORM: "would", TAG: "MD"},
-            {ORTH: "'ve", LEMMA: "have", NORM: "have", TAG: "VB"},
+            {ORTH: orth, NORM: word},
+            {ORTH: "'d", NORM: "would"},
+            {ORTH: "'ve", NORM: "have"},
         ]
 
         _exc[orth + "dve"] = [
-            {ORTH: orth, LEMMA: word, NORM: word},
-            {ORTH: "d", LEMMA: "would", NORM: "would", TAG: "MD"},
-            {ORTH: "ve", LEMMA: "have", NORM: "have", TAG: "VB"},
+            {ORTH: orth, NORM: word},
+            {ORTH: "d", NORM: "would"},
+            {ORTH: "ve", NORM: "have"},
         ]
 
 
 # Verbs
 
 for verb_data in [
-    {ORTH: "ca", LEMMA: "can", NORM: "can", TAG: "MD"},
-    {ORTH: "could", NORM: "could", TAG: "MD"},
-    {ORTH: "do", LEMMA: "do", NORM: "do"},
-    {ORTH: "does", LEMMA: "do", NORM: "does"},
-    {ORTH: "did", LEMMA: "do", NORM: "do", TAG: "VBD"},
-    {ORTH: "had", LEMMA: "have", NORM: "have", TAG: "VBD"},
-    {ORTH: "may", NORM: "may", TAG: "MD"},
-    {ORTH: "might", NORM: "might", TAG: "MD"},
-    {ORTH: "must", NORM: "must", TAG: "MD"},
+    {ORTH: "ca", NORM: "can"},
+    {ORTH: "could", NORM: "could"},
+    {ORTH: "do", NORM: "do"},
+    {ORTH: "does", NORM: "does"},
+    {ORTH: "did", NORM: "do"},
+    {ORTH: "had", NORM: "have"},
+    {ORTH: "may", NORM: "may"},
+    {ORTH: "might", NORM: "might"},
+    {ORTH: "must", NORM: "must"},
     {ORTH: "need", NORM: "need"},
-    {ORTH: "ought", NORM: "ought", TAG: "MD"},
-    {ORTH: "sha", LEMMA: "shall", NORM: "shall", TAG: "MD"},
-    {ORTH: "should", NORM: "should", TAG: "MD"},
-    {ORTH: "wo", LEMMA: "will", NORM: "will", TAG: "MD"},
-    {ORTH: "would", NORM: "would", TAG: "MD"},
+    {ORTH: "ought", NORM: "ought"},
+    {ORTH: "sha", NORM: "shall"},
+    {ORTH: "should", NORM: "should"},
+    {ORTH: "wo", NORM: "will"},
+    {ORTH: "would", NORM: "would"},
 ]:
     verb_data_tc = dict(verb_data)
     verb_data_tc[ORTH] = verb_data_tc[ORTH].title()
     for data in [verb_data, verb_data_tc]:
         _exc[data[ORTH] + "n't"] = [
             dict(data),
-            {ORTH: "n't", LEMMA: "not", NORM: "not", TAG: "RB"},
+            {ORTH: "n't", NORM: "not"},
         ]
 
         _exc[data[ORTH] + "nt"] = [
             dict(data),
-            {ORTH: "nt", LEMMA: "not", NORM: "not", TAG: "RB"},
+            {ORTH: "nt", NORM: "not"},
         ]
 
         _exc[data[ORTH] + "n't've"] = [
             dict(data),
-            {ORTH: "n't", LEMMA: "not", NORM: "not", TAG: "RB"},
-            {ORTH: "'ve", LEMMA: "have", NORM: "have", TAG: "VB"},
+            {ORTH: "n't", NORM: "not"},
+            {ORTH: "'ve", NORM: "have"},
         ]
 
         _exc[data[ORTH] + "ntve"] = [
             dict(data),
-            {ORTH: "nt", LEMMA: "not", NORM: "not", TAG: "RB"},
-            {ORTH: "ve", LEMMA: "have", NORM: "have", TAG: "VB"},
+            {ORTH: "nt", NORM: "not"},
+            {ORTH: "ve", NORM: "have"},
         ]
 
 
 for verb_data in [
-    {ORTH: "could", NORM: "could", TAG: "MD"},
-    {ORTH: "might", NORM: "might", TAG: "MD"},
-    {ORTH: "must", NORM: "must", TAG: "MD"},
-    {ORTH: "should", NORM: "should", TAG: "MD"},
-    {ORTH: "would", NORM: "would", TAG: "MD"},
+    {ORTH: "could", NORM: "could"},
+    {ORTH: "might", NORM: "might"},
+    {ORTH: "must", NORM: "must"},
+    {ORTH: "should", NORM: "should"},
+    {ORTH: "would", NORM: "would"},
 ]:
     verb_data_tc = dict(verb_data)
     verb_data_tc[ORTH] = verb_data_tc[ORTH].title()
     for data in [verb_data, verb_data_tc]:
-        _exc[data[ORTH] + "'ve"] = [dict(data), {ORTH: "'ve", LEMMA: "have", TAG: "VB"}]
+        _exc[data[ORTH] + "'ve"] = [dict(data), {ORTH: "'ve"}]
 
-        _exc[data[ORTH] + "ve"] = [dict(data), {ORTH: "ve", LEMMA: "have", TAG: "VB"}]
+        _exc[data[ORTH] + "ve"] = [dict(data), {ORTH: "ve"}]
 
 
 for verb_data in [
-    {ORTH: "ai", LEMMA: "be", TAG: "VBP", "number": 2},
-    {ORTH: "are", LEMMA: "be", NORM: "are", TAG: "VBP", "number": 2},
-    {ORTH: "is", LEMMA: "be", NORM: "is", TAG: "VBZ"},
-    {ORTH: "was", LEMMA: "be", NORM: "was"},
-    {ORTH: "were", LEMMA: "be", NORM: "were"},
+    {ORTH: "ai", "number": 2},
+    {ORTH: "are", NORM: "are", "number": 2},
+    {ORTH: "is", NORM: "is"},
+    {ORTH: "was", NORM: "was"},
+    {ORTH: "were", NORM: "were"},
     {ORTH: "have", NORM: "have"},
-    {ORTH: "has", LEMMA: "have", NORM: "has"},
+    {ORTH: "has", NORM: "has"},
     {ORTH: "dare", NORM: "dare"},
 ]:
     verb_data_tc = dict(verb_data)
@@ -288,24 +299,24 @@ for verb_data in [
     for data in [verb_data, verb_data_tc]:
         _exc[data[ORTH] + "n't"] = [
             dict(data),
-            {ORTH: "n't", LEMMA: "not", NORM: "not", TAG: "RB"},
+            {ORTH: "n't", NORM: "not"},
         ]
 
         _exc[data[ORTH] + "nt"] = [
             dict(data),
-            {ORTH: "nt", LEMMA: "not", NORM: "not", TAG: "RB"},
+            {ORTH: "nt", NORM: "not"},
         ]
 
 
 # Other contractions with trailing apostrophe
 
 for exc_data in [
-    {ORTH: "doin", LEMMA: "do", NORM: "doing"},
-    {ORTH: "goin", LEMMA: "go", NORM: "going"},
-    {ORTH: "nothin", LEMMA: "nothing", NORM: "nothing"},
-    {ORTH: "nuthin", LEMMA: "nothing", NORM: "nothing"},
-    {ORTH: "ol", LEMMA: "old", NORM: "old"},
-    {ORTH: "somethin", LEMMA: "something", NORM: "something"},
+    {ORTH: "doin", NORM: "doing"},
+    {ORTH: "goin", NORM: "going"},
+    {ORTH: "nothin", NORM: "nothing"},
+    {ORTH: "nuthin", NORM: "nothing"},
+    {ORTH: "ol", NORM: "old"},
+    {ORTH: "somethin", NORM: "something"},
 ]:
     exc_data_tc = dict(exc_data)
     exc_data_tc[ORTH] = exc_data_tc[ORTH].title()
@@ -320,9 +331,9 @@ for exc_data in [
 
 for exc_data in [
     {ORTH: "cause", NORM: "because"},
-    {ORTH: "em", LEMMA: PRON_LEMMA, NORM: "them"},
-    {ORTH: "ll", LEMMA: "will", NORM: "will"},
-    {ORTH: "nuff", LEMMA: "enough", NORM: "enough"},
+    {ORTH: "em", NORM: "them"},
+    {ORTH: "ll", NORM: "will"},
+    {ORTH: "nuff", NORM: "enough"},
 ]:
     exc_data_apos = dict(exc_data)
     exc_data_apos[ORTH] = "'" + exc_data_apos[ORTH]
@@ -334,174 +345,133 @@ for exc_data in [
 
 for h in range(1, 12 + 1):
     for period in ["a.m.", "am"]:
-        _exc["%d%s" % (h, period)] = [
-            {ORTH: "%d" % h},
-            {ORTH: period, LEMMA: "a.m.", NORM: "a.m."},
+        _exc[f"{h}{period}"] = [
+            {ORTH: f"{h}"},
+            {ORTH: period, NORM: "a.m."},
         ]
     for period in ["p.m.", "pm"]:
-        _exc["%d%s" % (h, period)] = [
-            {ORTH: "%d" % h},
-            {ORTH: period, LEMMA: "p.m.", NORM: "p.m."},
+        _exc[f"{h}{period}"] = [
+            {ORTH: f"{h}"},
+            {ORTH: period, NORM: "p.m."},
         ]
 
 
 # Rest
 
 _other_exc = {
-    "y'all": [{ORTH: "y'", LEMMA: PRON_LEMMA, NORM: "you"}, {ORTH: "all"}],
-    "yall": [{ORTH: "y", LEMMA: PRON_LEMMA, NORM: "you"}, {ORTH: "all"}],
-    "how'd'y": [
-        {ORTH: "how", LEMMA: "how"},
-        {ORTH: "'d", LEMMA: "do"},
-        {ORTH: "'y", LEMMA: PRON_LEMMA, NORM: "you"},
-    ],
-    "How'd'y": [
-        {ORTH: "How", LEMMA: "how", NORM: "how"},
-        {ORTH: "'d", LEMMA: "do"},
-        {ORTH: "'y", LEMMA: PRON_LEMMA, NORM: "you"},
-    ],
-    "not've": [
-        {ORTH: "not", LEMMA: "not", TAG: "RB"},
-        {ORTH: "'ve", LEMMA: "have", NORM: "have", TAG: "VB"},
-    ],
-    "notve": [
-        {ORTH: "not", LEMMA: "not", TAG: "RB"},
-        {ORTH: "ve", LEMMA: "have", NORM: "have", TAG: "VB"},
-    ],
-    "Not've": [
-        {ORTH: "Not", LEMMA: "not", NORM: "not", TAG: "RB"},
-        {ORTH: "'ve", LEMMA: "have", NORM: "have", TAG: "VB"},
-    ],
-    "Notve": [
-        {ORTH: "Not", LEMMA: "not", NORM: "not", TAG: "RB"},
-        {ORTH: "ve", LEMMA: "have", NORM: "have", TAG: "VB"},
-    ],
-    "cannot": [
-        {ORTH: "can", LEMMA: "can", TAG: "MD"},
-        {ORTH: "not", LEMMA: "not", TAG: "RB"},
-    ],
-    "Cannot": [
-        {ORTH: "Can", LEMMA: "can", NORM: "can", TAG: "MD"},
-        {ORTH: "not", LEMMA: "not", TAG: "RB"},
-    ],
-    "gonna": [
-        {ORTH: "gon", LEMMA: "go", NORM: "going"},
-        {ORTH: "na", LEMMA: "to", NORM: "to"},
-    ],
-    "Gonna": [
-        {ORTH: "Gon", LEMMA: "go", NORM: "going"},
-        {ORTH: "na", LEMMA: "to", NORM: "to"},
-    ],
-    "gotta": [{ORTH: "got"}, {ORTH: "ta", LEMMA: "to", NORM: "to"}],
-    "Gotta": [{ORTH: "Got", NORM: "got"}, {ORTH: "ta", LEMMA: "to", NORM: "to"}],
-    "let's": [{ORTH: "let"}, {ORTH: "'s", LEMMA: PRON_LEMMA, NORM: "us"}],
-    "Let's": [
-        {ORTH: "Let", LEMMA: "let", NORM: "let"},
-        {ORTH: "'s", LEMMA: PRON_LEMMA, NORM: "us"},
-    ],
-    "c'mon": [
-        {ORTH: "c'm", NORM: "come", LEMMA: "come"},
-        {ORTH: "on"}
-    ],
-    "C'mon": [
-        {ORTH: "C'm", NORM: "come", LEMMA: "come"},
-        {ORTH: "on"}
-    ]
+    "y'all": [{ORTH: "y'", NORM: "you"}, {ORTH: "all"}],
+    "yall": [{ORTH: "y", NORM: "you"}, {ORTH: "all"}],
+    "how'd'y": [{ORTH: "how"}, {ORTH: "'d"}, {ORTH: "'y", NORM: "you"}],
+    "How'd'y": [{ORTH: "How", NORM: "how"}, {ORTH: "'d"}, {ORTH: "'y", NORM: "you"}],
+    "not've": [{ORTH: "not"}, {ORTH: "'ve", NORM: "have"}],
+    "notve": [{ORTH: "not"}, {ORTH: "ve", NORM: "have"}],
+    "Not've": [{ORTH: "Not", NORM: "not"}, {ORTH: "'ve", NORM: "have"}],
+    "Notve": [{ORTH: "Not", NORM: "not"}, {ORTH: "ve", NORM: "have"}],
+    "cannot": [{ORTH: "can"}, {ORTH: "not"}],
+    "Cannot": [{ORTH: "Can", NORM: "can"}, {ORTH: "not"}],
+    "gonna": [{ORTH: "gon", NORM: "going"}, {ORTH: "na", NORM: "to"}],
+    "Gonna": [{ORTH: "Gon", NORM: "going"}, {ORTH: "na", NORM: "to"}],
+    "gotta": [{ORTH: "got"}, {ORTH: "ta", NORM: "to"}],
+    "Gotta": [{ORTH: "Got", NORM: "got"}, {ORTH: "ta", NORM: "to"}],
+    "let's": [{ORTH: "let"}, {ORTH: "'s", NORM: "us"}],
+    "Let's": [{ORTH: "Let", NORM: "let"}, {ORTH: "'s", NORM: "us"}],
+    "c'mon": [{ORTH: "c'm", NORM: "come"}, {ORTH: "on"}],
+    "C'mon": [{ORTH: "C'm", NORM: "come"}, {ORTH: "on"}],
 }
 
 _exc.update(_other_exc)
 
 
 for exc_data in [
-    {ORTH: "'S", LEMMA: "'s", NORM: "'s"},
-    {ORTH: "'s", LEMMA: "'s", NORM: "'s"},
-    {ORTH: "\u2018S", LEMMA: "'s", NORM: "'s"},
-    {ORTH: "\u2018s", LEMMA: "'s", NORM: "'s"},
-    {ORTH: "and/or", LEMMA: "and/or", NORM: "and/or", TAG: "CC"},
-    {ORTH: "w/o", LEMMA: "without", NORM: "without"},
-    {ORTH: "'re", LEMMA: "be", NORM: "are"},
-    {ORTH: "'Cause", LEMMA: "because", NORM: "because"},
-    {ORTH: "'cause", LEMMA: "because", NORM: "because"},
-    {ORTH: "'cos", LEMMA: "because", NORM: "because"},
-    {ORTH: "'Cos", LEMMA: "because", NORM: "because"},
-    {ORTH: "'coz", LEMMA: "because", NORM: "because"},
-    {ORTH: "'Coz", LEMMA: "because", NORM: "because"},
-    {ORTH: "'cuz", LEMMA: "because", NORM: "because"},
-    {ORTH: "'Cuz", LEMMA: "because", NORM: "because"},
-    {ORTH: "'bout", LEMMA: "about", NORM: "about"},
-    {ORTH: "ma'am", LEMMA: "madam", NORM: "madam"},
-    {ORTH: "Ma'am", LEMMA: "madam", NORM: "madam"},
-    {ORTH: "o'clock", LEMMA: "o'clock", NORM: "o'clock"},
-    {ORTH: "O'clock", LEMMA: "o'clock", NORM: "o'clock"},
-    {ORTH: "lovin'", LEMMA: "love", NORM: "loving"},
-    {ORTH: "Lovin'", LEMMA: "love", NORM: "loving"},
-    {ORTH: "lovin", LEMMA: "love", NORM: "loving"},
-    {ORTH: "Lovin", LEMMA: "love", NORM: "loving"},
-    {ORTH: "havin'", LEMMA: "have", NORM: "having"},
-    {ORTH: "Havin'", LEMMA: "have", NORM: "having"},
-    {ORTH: "havin", LEMMA: "have", NORM: "having"},
-    {ORTH: "Havin", LEMMA: "have", NORM: "having"},
-    {ORTH: "doin'", LEMMA: "do", NORM: "doing"},
-    {ORTH: "Doin'", LEMMA: "do", NORM: "doing"},
-    {ORTH: "doin", LEMMA: "do", NORM: "doing"},
-    {ORTH: "Doin", LEMMA: "do", NORM: "doing"},
-    {ORTH: "goin'", LEMMA: "go", NORM: "going"},
-    {ORTH: "Goin'", LEMMA: "go", NORM: "going"},
-    {ORTH: "goin", LEMMA: "go", NORM: "going"},
-    {ORTH: "Goin", LEMMA: "go", NORM: "going"},
-    {ORTH: "Mt.", LEMMA: "Mount", NORM: "Mount"},
-    {ORTH: "Ak.", LEMMA: "Alaska", NORM: "Alaska"},
-    {ORTH: "Ala.", LEMMA: "Alabama", NORM: "Alabama"},
-    {ORTH: "Apr.", LEMMA: "April", NORM: "April"},
-    {ORTH: "Ariz.", LEMMA: "Arizona", NORM: "Arizona"},
-    {ORTH: "Ark.", LEMMA: "Arkansas", NORM: "Arkansas"},
-    {ORTH: "Aug.", LEMMA: "August", NORM: "August"},
-    {ORTH: "Calif.", LEMMA: "California", NORM: "California"},
-    {ORTH: "Colo.", LEMMA: "Colorado", NORM: "Colorado"},
-    {ORTH: "Conn.", LEMMA: "Connecticut", NORM: "Connecticut"},
-    {ORTH: "Dec.", LEMMA: "December", NORM: "December"},
-    {ORTH: "Del.", LEMMA: "Delaware", NORM: "Delaware"},
-    {ORTH: "Feb.", LEMMA: "February", NORM: "February"},
-    {ORTH: "Fla.", LEMMA: "Florida", NORM: "Florida"},
-    {ORTH: "Ga.", LEMMA: "Georgia", NORM: "Georgia"},
-    {ORTH: "Ia.", LEMMA: "Iowa", NORM: "Iowa"},
-    {ORTH: "Id.", LEMMA: "Idaho", NORM: "Idaho"},
-    {ORTH: "Ill.", LEMMA: "Illinois", NORM: "Illinois"},
-    {ORTH: "Ind.", LEMMA: "Indiana", NORM: "Indiana"},
-    {ORTH: "Jan.", LEMMA: "January", NORM: "January"},
-    {ORTH: "Jul.", LEMMA: "July", NORM: "July"},
-    {ORTH: "Jun.", LEMMA: "June", NORM: "June"},
-    {ORTH: "Kan.", LEMMA: "Kansas", NORM: "Kansas"},
-    {ORTH: "Kans.", LEMMA: "Kansas", NORM: "Kansas"},
-    {ORTH: "Ky.", LEMMA: "Kentucky", NORM: "Kentucky"},
-    {ORTH: "La.", LEMMA: "Louisiana", NORM: "Louisiana"},
-    {ORTH: "Mar.", LEMMA: "March", NORM: "March"},
-    {ORTH: "Mass.", LEMMA: "Massachusetts", NORM: "Massachusetts"},
-    {ORTH: "May.", LEMMA: "May", NORM: "May"},
-    {ORTH: "Mich.", LEMMA: "Michigan", NORM: "Michigan"},
-    {ORTH: "Minn.", LEMMA: "Minnesota", NORM: "Minnesota"},
-    {ORTH: "Miss.", LEMMA: "Mississippi", NORM: "Mississippi"},
-    {ORTH: "N.C.", LEMMA: "North Carolina", NORM: "North Carolina"},
-    {ORTH: "N.D.", LEMMA: "North Dakota", NORM: "North Dakota"},
-    {ORTH: "N.H.", LEMMA: "New Hampshire", NORM: "New Hampshire"},
-    {ORTH: "N.J.", LEMMA: "New Jersey", NORM: "New Jersey"},
-    {ORTH: "N.M.", LEMMA: "New Mexico", NORM: "New Mexico"},
-    {ORTH: "N.Y.", LEMMA: "New York", NORM: "New York"},
-    {ORTH: "Neb.", LEMMA: "Nebraska", NORM: "Nebraska"},
-    {ORTH: "Nebr.", LEMMA: "Nebraska", NORM: "Nebraska"},
-    {ORTH: "Nev.", LEMMA: "Nevada", NORM: "Nevada"},
-    {ORTH: "Nov.", LEMMA: "November", NORM: "November"},
-    {ORTH: "Oct.", LEMMA: "October", NORM: "October"},
-    {ORTH: "Okla.", LEMMA: "Oklahoma", NORM: "Oklahoma"},
-    {ORTH: "Ore.", LEMMA: "Oregon", NORM: "Oregon"},
-    {ORTH: "Pa.", LEMMA: "Pennsylvania", NORM: "Pennsylvania"},
-    {ORTH: "S.C.", LEMMA: "South Carolina", NORM: "South Carolina"},
-    {ORTH: "Sep.", LEMMA: "September", NORM: "September"},
-    {ORTH: "Sept.", LEMMA: "September", NORM: "September"},
-    {ORTH: "Tenn.", LEMMA: "Tennessee", NORM: "Tennessee"},
-    {ORTH: "Va.", LEMMA: "Virginia", NORM: "Virginia"},
-    {ORTH: "Wash.", LEMMA: "Washington", NORM: "Washington"},
-    {ORTH: "Wis.", LEMMA: "Wisconsin", NORM: "Wisconsin"},
+    {ORTH: "'S", NORM: "'s"},
+    {ORTH: "'s", NORM: "'s"},
+    {ORTH: "\u2018S", NORM: "'s"},
+    {ORTH: "\u2018s", NORM: "'s"},
+    {ORTH: "and/or", NORM: "and/or"},
+    {ORTH: "w/o", NORM: "without"},
+    {ORTH: "'re", NORM: "are"},
+    {ORTH: "'Cause", NORM: "because"},
+    {ORTH: "'cause", NORM: "because"},
+    {ORTH: "'cos", NORM: "because"},
+    {ORTH: "'Cos", NORM: "because"},
+    {ORTH: "'coz", NORM: "because"},
+    {ORTH: "'Coz", NORM: "because"},
+    {ORTH: "'cuz", NORM: "because"},
+    {ORTH: "'Cuz", NORM: "because"},
+    {ORTH: "'bout", NORM: "about"},
+    {ORTH: "ma'am", NORM: "madam"},
+    {ORTH: "Ma'am", NORM: "madam"},
+    {ORTH: "o'clock", NORM: "o'clock"},
+    {ORTH: "O'clock", NORM: "o'clock"},
+    {ORTH: "lovin'", NORM: "loving"},
+    {ORTH: "Lovin'", NORM: "loving"},
+    {ORTH: "lovin", NORM: "loving"},
+    {ORTH: "Lovin", NORM: "loving"},
+    {ORTH: "havin'", NORM: "having"},
+    {ORTH: "Havin'", NORM: "having"},
+    {ORTH: "havin", NORM: "having"},
+    {ORTH: "Havin", NORM: "having"},
+    {ORTH: "doin'", NORM: "doing"},
+    {ORTH: "Doin'", NORM: "doing"},
+    {ORTH: "doin", NORM: "doing"},
+    {ORTH: "Doin", NORM: "doing"},
+    {ORTH: "goin'", NORM: "going"},
+    {ORTH: "Goin'", NORM: "going"},
+    {ORTH: "goin", NORM: "going"},
+    {ORTH: "Goin", NORM: "going"},
+    {ORTH: "Mt.", NORM: "Mount"},
+    {ORTH: "Ak.", NORM: "Alaska"},
+    {ORTH: "Ala.", NORM: "Alabama"},
+    {ORTH: "Apr.", NORM: "April"},
+    {ORTH: "Ariz.", NORM: "Arizona"},
+    {ORTH: "Ark.", NORM: "Arkansas"},
+    {ORTH: "Aug.", NORM: "August"},
+    {ORTH: "Calif.", NORM: "California"},
+    {ORTH: "Colo.", NORM: "Colorado"},
+    {ORTH: "Conn.", NORM: "Connecticut"},
+    {ORTH: "Dec.", NORM: "December"},
+    {ORTH: "Del.", NORM: "Delaware"},
+    {ORTH: "Feb.", NORM: "February"},
+    {ORTH: "Fla.", NORM: "Florida"},
+    {ORTH: "Ga.", NORM: "Georgia"},
+    {ORTH: "Ia.", NORM: "Iowa"},
+    {ORTH: "Id.", NORM: "Idaho"},
+    {ORTH: "Ill.", NORM: "Illinois"},
+    {ORTH: "Ind.", NORM: "Indiana"},
+    {ORTH: "Jan.", NORM: "January"},
+    {ORTH: "Jul.", NORM: "July"},
+    {ORTH: "Jun.", NORM: "June"},
+    {ORTH: "Kan.", NORM: "Kansas"},
+    {ORTH: "Kans.", NORM: "Kansas"},
+    {ORTH: "Ky.", NORM: "Kentucky"},
+    {ORTH: "La.", NORM: "Louisiana"},
+    {ORTH: "Mar.", NORM: "March"},
+    {ORTH: "Mass.", NORM: "Massachusetts"},
+    {ORTH: "May.", NORM: "May"},
+    {ORTH: "Mich.", NORM: "Michigan"},
+    {ORTH: "Minn.", NORM: "Minnesota"},
+    {ORTH: "Miss.", NORM: "Mississippi"},
+    {ORTH: "N.C.", NORM: "North Carolina"},
+    {ORTH: "N.D.", NORM: "North Dakota"},
+    {ORTH: "N.H.", NORM: "New Hampshire"},
+    {ORTH: "N.J.", NORM: "New Jersey"},
+    {ORTH: "N.M.", NORM: "New Mexico"},
+    {ORTH: "N.Y.", NORM: "New York"},
+    {ORTH: "Neb.", NORM: "Nebraska"},
+    {ORTH: "Nebr.", NORM: "Nebraska"},
+    {ORTH: "Nev.", NORM: "Nevada"},
+    {ORTH: "Nov.", NORM: "November"},
+    {ORTH: "Oct.", NORM: "October"},
+    {ORTH: "Okla.", NORM: "Oklahoma"},
+    {ORTH: "Ore.", NORM: "Oregon"},
+    {ORTH: "Pa.", NORM: "Pennsylvania"},
+    {ORTH: "S.C.", NORM: "South Carolina"},
+    {ORTH: "Sep.", NORM: "September"},
+    {ORTH: "Sept.", NORM: "September"},
+    {ORTH: "Tenn.", NORM: "Tennessee"},
+    {ORTH: "Va.", NORM: "Virginia"},
+    {ORTH: "Wash.", NORM: "Washington"},
+    {ORTH: "Wis.", NORM: "Wisconsin"},
 ]:
     _exc[exc_data[ORTH]] = [exc_data]
 
@@ -552,4 +522,4 @@ for string in _exclude:
         _exc.pop(string)
 
 
-TOKENIZER_EXCEPTIONS = _exc
+TOKENIZER_EXCEPTIONS = update_exc(BASE_EXCEPTIONS, _exc)

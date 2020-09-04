@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 from spacy.attrs import LEMMA, ORTH, PROB, IS_ALPHA
 from spacy.parts_of_speech import NOUN, VERB

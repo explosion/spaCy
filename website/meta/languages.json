@@ -78,11 +78,14 @@
             "name": "Japanese",
             "models": ["ja_core_news_sm", "ja_core_news_md", "ja_core_news_lg"],
             "dependencies": [
+                { "name": "Unidic", "url": "http://unidic.ninjal.ac.jp/back_number#unidic_cwj" },
+                { "name": "Mecab", "url": "https://github.com/taku910/mecab" },
                 {
                     "name": "SudachiPy",
                     "url": "https://github.com/WorksApplications/SudachiPy"
                 }
             ],
+            "example": "これは文章です。",
             "has_examples": true
         },
         {
@@ -189,17 +192,6 @@
                 { "name": "pythainlp", "url": "https://github.com/wannaphongcom/pythainlp" }
             ],
             "example": "นี่คือประโยค",
-            "has_examples": true
-        },
-        {
-            "code": "ja",
-            "name": "Japanese",
-            "dependencies": [
-                { "name": "Unidic", "url": "http://unidic.ninjal.ac.jp/back_number#unidic_cwj" },
-                { "name": "Mecab", "url": "https://github.com/taku910/mecab" },
-                { "name": "fugashi", "url": "https://github.com/polm/fugashi" }
-            ],
-            "example": "これは文章です。",
             "has_examples": true
         },
         {

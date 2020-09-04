@@ -1,7 +1,4 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-import plac
+from typing import Optional, List, Dict, Any, Union, IO
 import math
 from tqdm import tqdm
 import numpy
@@ -13,13 +10,14 @@ import gzip
 import zipfile
 import srsly
 import warnings
-from wasabi import msg
+from wasabi import msg, Printer
+import typer
 
+from ._util import app, init_cli, Arg, Opt
 from ..vectors import Vectors
 from ..errors import Errors, Warnings
+from ..language import Language
 from ..util import ensure_path, get_lang_class, load_model, OOV_RANK
-from ..lookups import Lookups
-
 
 try:
     import ftfy
@@ -30,49 +28,72 @@ except ImportError:
 DEFAULT_OOV_PROB = -20
 
 
-@plac.annotations(
-    lang=("Model language", "positional", None, str),
-    output_dir=("Model output directory", "positional", None, Path),
-    freqs_loc=("Location of words frequencies file", "option", "f", Path),
-    jsonl_loc=("Location of JSONL-formatted attributes file", "option", "j", Path),
-    clusters_loc=("Optional location of brown clusters data", "option", "c", str),
-    vectors_loc=("Optional vectors file in Word2Vec format", "option", "v", str),
-    truncate_vectors=(
-        "Optional number of vectors to truncate to when reading in vectors file",
-        "option",
-        "t",
-        int,
-    ),
-    prune_vectors=("Optional number of vectors to prune to", "option", "V", int),
-    vectors_name=(
-        "Optional name for the word vectors, e.g. en_core_web_lg.vectors",
-        "option",
-        "vn",
-        str,
-    ),
-    model_name=("Optional name for the model meta", "option", "mn", str),
-    omit_extra_lookups=("Don't include extra lookups in model", "flag", "OEL", bool),
-    base_model=("Base model (for languages with custom tokenizers)", "option", "b", str),
+@init_cli.command("vocab")
+@app.command(
+    "init-model",
+    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+    hidden=True,  # hide this from main CLI help but still allow it to work with warning
 )
-def init_model(
-    lang,
-    output_dir,
-    freqs_loc=None,
-    clusters_loc=None,
-    jsonl_loc=None,
-    vectors_loc=None,
-    truncate_vectors=0,
-    prune_vectors=-1,
-    vectors_name=None,
-    model_name=None,
-    omit_extra_lookups=False,
-    base_model=None,
+def init_model_cli(
+    # fmt: off
+    ctx: typer.Context,  # This is only used to read additional arguments
+    lang: str = Arg(..., help="Pipeline language"),
+    output_dir: Path = Arg(..., help="Pipeline output directory"),
+    freqs_loc: Optional[Path] = Arg(None, help="Location of words frequencies file", exists=True),
+    clusters_loc: Optional[Path] = Opt(None, "--clusters-loc", "-c", help="Optional location of brown clusters data", exists=True),
+    jsonl_loc: Optional[Path] = Opt(None, "--jsonl-loc", "-j", help="Location of JSONL-formatted attributes file", exists=True),
+    vectors_loc: Optional[Path] = Opt(None, "--vectors-loc", "-v", help="Optional vectors file in Word2Vec format", exists=True),
+    prune_vectors: int = Opt(-1, "--prune-vectors", "-V", help="Optional number of vectors to prune to"),
+    truncate_vectors: int = Opt(0, "--truncate-vectors", "-t", help="Optional number of vectors to truncate to when reading in vectors file"),
+    vectors_name: Optional[str] = Opt(None, "--vectors-name", "-vn", help="Optional name for the word vectors, e.g. en_core_web_lg.vectors"),
+    model_name: Optional[str] = Opt(None, "--meta-name", "-mn", help="Optional name of the package for the pipeline meta"),
+    base_model: Optional[str] = Opt(None, "--base", "-b", help="Name of or path to base pipeline to start with (mostly relevant for pipelines with custom tokenizers)")
+    # fmt: on
 ):
     """
-    Create a new model from raw data, like word frequencies, Brown clusters
-    and word vectors. If vectors are provided in Word2Vec format, they can
-    be either a .txt or zipped as a .zip or .tar.gz.
+    Create a new blank pipeline directory with vocab and vectors from raw data.
+    If vectors are provided in Word2Vec format, they can be either a .txt or
+    zipped as a .zip or .tar.gz.
+
+    DOCS: https://nightly.spacy.io/api/cli#init-vocab
     """
+    if ctx.command.name == "init-model":
+        msg.warn(
+            "The init-model command is now called 'init vocab'. You can run "
+            "'python -m spacy init --help' for an overview of the other "
+            "available initialization commands."
+        )
+    init_model(
+        lang,
+        output_dir,
+        freqs_loc=freqs_loc,
+        clusters_loc=clusters_loc,
+        jsonl_loc=jsonl_loc,
+        vectors_loc=vectors_loc,
+        prune_vectors=prune_vectors,
+        truncate_vectors=truncate_vectors,
+        vectors_name=vectors_name,
+        model_name=model_name,
+        base_model=base_model,
+        silent=False,
+    )
+
+
+def init_model(
+    lang: str,
+    output_dir: Path,
+    freqs_loc: Optional[Path] = None,
+    clusters_loc: Optional[Path] = None,
+    jsonl_loc: Optional[Path] = None,
+    vectors_loc: Optional[Path] = None,
+    prune_vectors: int = -1,
+    truncate_vectors: int = 0,
+    vectors_name: Optional[str] = None,
+    model_name: Optional[str] = None,
+    base_model: Optional[str] = None,
+    silent: bool = True,
+) -> Language:
+    msg = Printer(no_print=silent, pretty=not silent)
     if jsonl_loc is not None:
         if freqs_loc is not None or clusters_loc is not None:
             settings = ["-j"]
@@ -95,27 +116,20 @@ def init_model(
         freqs_loc = ensure_path(freqs_loc)
         if freqs_loc is not None and not freqs_loc.exists():
             msg.fail("Can't find words frequencies file", freqs_loc, exits=1)
-        lex_attrs = read_attrs_from_deprecated(freqs_loc, clusters_loc)
+        lex_attrs = read_attrs_from_deprecated(msg, freqs_loc, clusters_loc)
 
-    with msg.loading("Creating model..."):
+    with msg.loading("Creating blank pipeline..."):
         nlp = create_model(lang, lex_attrs, name=model_name, base_model=base_model)
 
-    # Create empty extra lexeme tables so the data from spacy-lookups-data
-    # isn't loaded if these features are accessed
-    if omit_extra_lookups:
-        nlp.vocab.lookups_extra = Lookups()
-        nlp.vocab.lookups_extra.add_table("lexeme_cluster")
-        nlp.vocab.lookups_extra.add_table("lexeme_prob")
-        nlp.vocab.lookups_extra.add_table("lexeme_settings")
-
-    msg.good("Successfully created model")
+    msg.good("Successfully created blank pipeline")
     if vectors_loc is not None:
-        add_vectors(nlp, vectors_loc, truncate_vectors, prune_vectors, vectors_name)
+        add_vectors(
+            msg, nlp, vectors_loc, truncate_vectors, prune_vectors, vectors_name
+        )
     vec_added = len(nlp.vocab.vectors)
     lex_added = len(nlp.vocab)
     msg.good(
-        "Sucessfully compiled vocab",
-        "{} entries, {} vectors".format(lex_added, vec_added),
+        "Sucessfully compiled vocab", f"{lex_added} entries, {vec_added} vectors",
     )
     if not output_dir.exists():
         output_dir.mkdir()
@@ -123,7 +137,7 @@ def init_model(
     return nlp
 
 
-def open_file(loc):
+def open_file(loc: Union[str, Path]) -> IO:
     """Handle .gz, .tar.gz or unzipped files"""
     loc = ensure_path(loc)
     if tarfile.is_tarfile(str(loc)):
@@ -139,7 +153,9 @@ def open_file(loc):
         return loc.open("r", encoding="utf8")
 
 
-def read_attrs_from_deprecated(freqs_loc, clusters_loc):
+def read_attrs_from_deprecated(
+    msg: Printer, freqs_loc: Optional[Path], clusters_loc: Optional[Path]
+) -> List[Dict[str, Any]]:
     if freqs_loc is not None:
         with msg.loading("Counting frequencies..."):
             probs, _ = read_freqs(freqs_loc)
@@ -167,7 +183,12 @@ def read_attrs_from_deprecated(freqs_loc, clusters_loc):
     return lex_attrs
 
 
-def create_model(lang, lex_attrs, name=None, base_model=None):
+def create_model(
+    lang: str,
+    lex_attrs: List[Dict[str, Any]],
+    name: Optional[str] = None,
+    base_model: Optional[Union[str, Path]] = None,
+) -> Language:
     if base_model:
         nlp = load_model(base_model)
         # keep the tokenizer but remove any existing pipeline components due to
@@ -194,7 +215,14 @@ def create_model(lang, lex_attrs, name=None, base_model=None):
     return nlp
 
 
-def add_vectors(nlp, vectors_loc, truncate_vectors, prune_vectors, name=None):
+def add_vectors(
+    msg: Printer,
+    nlp: Language,
+    vectors_loc: Optional[Path],
+    truncate_vectors: int,
+    prune_vectors: int,
+    name: Optional[str] = None,
+) -> None:
     vectors_loc = ensure_path(vectors_loc)
     if vectors_loc and vectors_loc.parts[-1].endswith(".npz"):
         nlp.vocab.vectors = Vectors(data=numpy.load(vectors_loc.open("rb")))
@@ -203,9 +231,11 @@ def add_vectors(nlp, vectors_loc, truncate_vectors, prune_vectors, name=None):
                 nlp.vocab.vectors.add(lex.orth, row=lex.rank)
     else:
         if vectors_loc:
-            with msg.loading("Reading vectors from {}".format(vectors_loc)):
-                vectors_data, vector_keys = read_vectors(vectors_loc, truncate_vectors)
-            msg.good("Loaded vectors from {}".format(vectors_loc))
+            with msg.loading(f"Reading vectors from {vectors_loc}"):
+                vectors_data, vector_keys = read_vectors(
+                    msg, vectors_loc, truncate_vectors
+                )
+            msg.good(f"Loaded vectors from {vectors_loc}")
         else:
             vectors_data, vector_keys = (None, None)
         if vector_keys is not None:
@@ -215,7 +245,8 @@ def add_vectors(nlp, vectors_loc, truncate_vectors, prune_vectors, name=None):
         if vectors_data is not None:
             nlp.vocab.vectors = Vectors(data=vectors_data, keys=vector_keys)
     if name is None:
-        nlp.vocab.vectors.name = "%s_model.vectors" % nlp.meta["lang"]
+        # TODO: Is this correct? Does this matter?
+        nlp.vocab.vectors.name = f"{nlp.meta['lang']}_{nlp.meta['name']}.vectors"
     else:
         nlp.vocab.vectors.name = name
     nlp.meta["vectors"]["name"] = nlp.vocab.vectors.name
@@ -223,7 +254,7 @@ def add_vectors(nlp, vectors_loc, truncate_vectors, prune_vectors, name=None):
         nlp.vocab.prune_vectors(prune_vectors)
 
 
-def read_vectors(vectors_loc, truncate_vectors=0):
+def read_vectors(msg: Printer, vectors_loc: Path, truncate_vectors: int):
     f = open_file(vectors_loc)
     shape = tuple(int(size) for size in next(f).split())
     if truncate_vectors >= 1:
@@ -243,7 +274,9 @@ def read_vectors(vectors_loc, truncate_vectors=0):
     return vectors_data, vectors_keys
 
 
-def read_freqs(freqs_loc, max_length=100, min_doc_freq=5, min_freq=50):
+def read_freqs(
+    freqs_loc: Path, max_length: int = 100, min_doc_freq: int = 5, min_freq: int = 50
+):
     counts = PreshCounter()
     total = 0
     with freqs_loc.open() as f:
@@ -265,14 +298,14 @@ def read_freqs(freqs_loc, max_length=100, min_doc_freq=5, min_freq=50):
                     word = literal_eval(key)
                 except SyntaxError:
                     # Take odd strings literally.
-                    word = literal_eval("'%s'" % key)
+                    word = literal_eval(f"'{key}'")
                 smooth_count = counts.smoother(int(freq))
                 probs[word] = math.log(smooth_count) - log_total
     oov_prob = math.log(counts.smoother(0)) - log_total
     return probs, oov_prob
 
 
-def read_clusters(clusters_loc):
+def read_clusters(clusters_loc: Path) -> dict:
     clusters = {}
     if ftfy is None:
         warnings.warn(Warnings.W004)

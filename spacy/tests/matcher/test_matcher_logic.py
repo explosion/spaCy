@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 import re
 
@@ -9,19 +6,11 @@ from spacy.matcher import Matcher
 from spacy.tokens import Doc, Span
 
 
-pattern1 = [{"ORTH": "A", "OP": "1"}, {"ORTH": "A", "OP": "*"}]
-pattern2 = [{"ORTH": "A", "OP": "*"}, {"ORTH": "A", "OP": "1"}]
-pattern3 = [{"ORTH": "A", "OP": "1"}, {"ORTH": "A", "OP": "1"}]
-pattern4 = [
-    {"ORTH": "B", "OP": "1"},
-    {"ORTH": "A", "OP": "*"},
-    {"ORTH": "B", "OP": "1"},
-]
-pattern5 = [
-    {"ORTH": "B", "OP": "*"},
-    {"ORTH": "A", "OP": "*"},
-    {"ORTH": "B", "OP": "1"},
-]
+pattern1 = [{"ORTH": "A"}, {"ORTH": "A", "OP": "*"}]
+pattern2 = [{"ORTH": "A", "OP": "*"}, {"ORTH": "A"}]
+pattern3 = [{"ORTH": "A"}, {"ORTH": "A"}]
+pattern4 = [{"ORTH": "B"}, {"ORTH": "A", "OP": "*"}, {"ORTH": "B"}]
+pattern5 = [{"ORTH": "B", "OP": "*"}, {"ORTH": "A", "OP": "*"}, {"ORTH": "B"}]
 
 re_pattern1 = "AA*"
 re_pattern2 = "A*A"
@@ -29,10 +18,16 @@ re_pattern3 = "AA"
 re_pattern4 = "BA*B"
 re_pattern5 = "B*A*B"
 
+longest1 = "A A A A A"
+longest2 = "A A A A A"
+longest3 = "A A"
+longest4 = "B A A A A A B"  # "FIRST" would be "B B"
+longest5 = "B B A A A A A B"
+
 
 @pytest.fixture
 def text():
-    return "(ABBAAAAAB)."
+    return "(BBAAAAAB)."
 
 
 @pytest.fixture
@@ -44,25 +39,63 @@ def doc(en_tokenizer, text):
 @pytest.mark.parametrize(
     "pattern,re_pattern",
     [
-        pytest.param(pattern1, re_pattern1, marks=pytest.mark.xfail()),
-        pytest.param(pattern2, re_pattern2, marks=pytest.mark.xfail()),
-        pytest.param(pattern3, re_pattern3, marks=pytest.mark.xfail()),
+        (pattern1, re_pattern1),
+        (pattern2, re_pattern2),
+        (pattern3, re_pattern3),
         (pattern4, re_pattern4),
-        pytest.param(pattern5, re_pattern5, marks=pytest.mark.xfail()),
+        (pattern5, re_pattern5),
     ],
 )
-def test_greedy_matching(doc, text, pattern, re_pattern):
-    """Test that the greedy matching behavior of the * op is consistant with
+def test_greedy_matching_first(doc, text, pattern, re_pattern):
+    """Test that the greedy matching behavior "FIRST" is consistent with
     other re implementations."""
     matcher = Matcher(doc.vocab)
-    matcher.add(re_pattern, [pattern])
+    matcher.add(re_pattern, [pattern], greedy="FIRST")
     matches = matcher(doc)
     re_matches = [m.span() for m in re.finditer(re_pattern, text)]
-    for match, re_match in zip(matches, re_matches):
-        assert match[1:] == re_match
+    for (key, m_s, m_e), (re_s, re_e) in zip(matches, re_matches):
+        # matching the string, not the exact position
+        assert doc[m_s:m_e].text == doc[re_s:re_e].text
 
 
-@pytest.mark.xfail
+@pytest.mark.parametrize(
+    "pattern,longest",
+    [
+        (pattern1, longest1),
+        (pattern2, longest2),
+        (pattern3, longest3),
+        (pattern4, longest4),
+        (pattern5, longest5),
+    ],
+)
+def test_greedy_matching_longest(doc, text, pattern, longest):
+    """Test the "LONGEST" greedy matching behavior"""
+    matcher = Matcher(doc.vocab)
+    matcher.add("RULE", [pattern], greedy="LONGEST")
+    matches = matcher(doc)
+    for (key, s, e) in matches:
+        assert doc[s:e].text == longest
+
+
+def test_greedy_matching_longest_first(en_tokenizer):
+    """Test that "LONGEST" matching prefers the first of two equally long matches"""
+    doc = en_tokenizer(" ".join("CCC"))
+    matcher = Matcher(doc.vocab)
+    pattern = [{"ORTH": "C"}, {"ORTH": "C"}]
+    matcher.add("RULE", [pattern], greedy="LONGEST")
+    matches = matcher(doc)
+    # out of 0-2 and 1-3, the first should be picked
+    assert len(matches) == 1
+    assert matches[0][1] == 0
+    assert matches[0][2] == 2
+
+
+def test_invalid_greediness(doc, text):
+    matcher = Matcher(doc.vocab)
+    with pytest.raises(ValueError):
+        matcher.add("RULE", [pattern1], greedy="GREEDY")
+
+
 @pytest.mark.parametrize(
     "pattern,re_pattern",
     [
@@ -77,7 +110,7 @@ def test_match_consuming(doc, text, pattern, re_pattern):
     """Test that matcher.__call__ consumes tokens on a match similar to
     re.findall."""
     matcher = Matcher(doc.vocab)
-    matcher.add(re_pattern, [pattern])
+    matcher.add(re_pattern, [pattern], greedy="FIRST")
     matches = matcher(doc)
     re_matches = [m.span() for m in re.finditer(re_pattern, text)]
     assert len(matches) == len(re_matches)

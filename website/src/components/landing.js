@@ -2,7 +2,9 @@ import React, { Fragment } from 'react'
 import classNames from 'classnames'
 
 import pattern from '../images/pattern_blue.jpg'
+import patternNightly from '../images/pattern_nightly.jpg'
 import patternOverlay from '../images/pattern_landing.jpg'
+import patternOverlayNightly from '../images/pattern_landing_nightly.jpg'
 import logoSvgs from '../images/logos'
 
 import Grid from './grid'
@@ -14,9 +16,10 @@ import Link from './link'
 import { chunkArray } from './util'
 import classes from '../styles/landing.module.sass'
 
-export const LandingHeader = ({ style = {}, children }) => {
-    const wrapperStyle = { backgroundImage: `url(${pattern})` }
-    const contentStyle = { backgroundImage: `url(${patternOverlay})`, ...style }
+export const LandingHeader = ({ nightly, style = {}, children }) => {
+    const overlay = nightly ? patternOverlayNightly : patternOverlay
+    const wrapperStyle = { backgroundImage: `url(${nightly ? patternNightly : pattern})` }
+    const contentStyle = { backgroundImage: `url(${overlay})`, ...style }
     return (
         <header className={classes.header}>
             <div className={classes.headerWrapper} style={wrapperStyle}>

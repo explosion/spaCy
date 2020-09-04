@@ -1,7 +1,7 @@
-# coding: utf8
-from __future__ import unicode_literals
-
+from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...symbols import ORTH, NORM
+from ...util import update_exc
+
 
 _exc = {"sağol": [{ORTH: "sağ"}, {ORTH: "ol", NORM: "olun"}]}
 
@@ -116,4 +116,4 @@ for orth in ["Dr.", "yy."]:
     _exc[orth] = [{ORTH: orth}]
 
 
-TOKENIZER_EXCEPTIONS = _exc
+TOKENIZER_EXCEPTIONS = update_exc(BASE_EXCEPTIONS, _exc)

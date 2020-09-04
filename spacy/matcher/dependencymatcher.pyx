@@ -1,9 +1,9 @@
-# cython: infer_types=True
-# cython: profile=True
-from __future__ import unicode_literals
-
+# cython: infer_types=True, profile=True
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
+from libcpp cimport bool
+
+import numpy
 
 from .matcher cimport Matcher
 from ..vocab cimport Vocab
@@ -12,8 +12,6 @@ from ..tokens.doc cimport Doc
 from .matcher import unpickle_matcher
 from ..errors import Errors
 
-from libcpp cimport bool
-import numpy
 
 DELIMITER = "||"
 INDEX_HEAD = 1
@@ -38,10 +36,10 @@ cdef class DependencyMatcher:
 
         vocab (Vocab): The vocabulary object, which must be shared with the
             documents the matcher will operate on.
-        RETURNS (DependencyMatcher): The newly constructed object.
         """
         size = 20
-        self.token_matcher = Matcher(vocab)
+        # TODO: make matcher work with validation
+        self.token_matcher = Matcher(vocab, validate=False)
         self._keys_to_token = {}
         self._patterns = {}
         self._root = {}
@@ -67,14 +65,14 @@ cdef class DependencyMatcher:
     def __contains__(self, key):
         """Check whether the matcher contains rules for a match ID.
 
-        key (unicode): The match ID.
+        key (str): The match ID.
         RETURNS (bool): Whether the matcher contains rules for this match ID.
         """
-        return self._normalize_key(key) in self._patterns
+        return self.has_key(key)
 
-    def validateInput(self, pattern, key):
+    def validate_input(self, pattern, key):
         idx = 0
-        visitedNodes = {}
+        visited_nodes = {}
         for relation in pattern:
             if "PATTERN" not in relation or "SPEC" not in relation:
                 raise ValueError(Errors.E098.format(key=key))
@@ -85,7 +83,7 @@ cdef class DependencyMatcher:
                     and "NBOR_NAME" not in relation["SPEC"]
                 ):
                     raise ValueError(Errors.E099.format(key=key))
-                visitedNodes[relation["SPEC"]["NODE_NAME"]] = True
+                visited_nodes[relation["SPEC"]["NODE_NAME"]] = True
             else:
                 if not(
                     "NODE_NAME" in relation["SPEC"]
@@ -94,22 +92,28 @@ cdef class DependencyMatcher:
                 ):
                     raise ValueError(Errors.E100.format(key=key))
                 if (
-                    relation["SPEC"]["NODE_NAME"] in visitedNodes
-                    or relation["SPEC"]["NBOR_NAME"] not in visitedNodes
+                    relation["SPEC"]["NODE_NAME"] in visited_nodes
+                    or relation["SPEC"]["NBOR_NAME"] not in visited_nodes
                 ):
                     raise ValueError(Errors.E101.format(key=key))
-                visitedNodes[relation["SPEC"]["NODE_NAME"]] = True
-                visitedNodes[relation["SPEC"]["NBOR_NAME"]] = True
+                visited_nodes[relation["SPEC"]["NODE_NAME"]] = True
+                visited_nodes[relation["SPEC"]["NBOR_NAME"]] = True
             idx = idx + 1
 
     def add(self, key, patterns, *_patterns, on_match=None):
+        """Add a new matcher rule to the matcher.
+
+        key (str): The match ID.
+        patterns (list): The patterns to add for the given key.
+        on_match (callable): Optional callback executed on match.
+        """
         if patterns is None or hasattr(patterns, "__call__"):  # old API
             on_match = patterns
             patterns = _patterns
         for pattern in patterns:
             if len(pattern) == 0:
                 raise ValueError(Errors.E012.format(key=key))
-            self.validateInput(pattern,key)
+            self.validate_input(pattern,key)
         key = self._normalize_key(key)
         _patterns = []
         for pattern in patterns:
@@ -131,7 +135,7 @@ cdef class DependencyMatcher:
             # TODO: Better ways to hash edges in pattern?
             for j in range(len(_patterns[i])):
                 k = self._normalize_key(unicode(key) + DELIMITER + unicode(i) + DELIMITER + unicode(j))
-                self.token_matcher.add(k, None, _patterns[i][j])
+                self.token_matcher.add(k, [_patterns[i][j]])
                 _keys_to_token[k] = j
             _keys_to_token_list.append(_keys_to_token)
         self._keys_to_token.setdefault(key, [])
@@ -189,13 +193,12 @@ cdef class DependencyMatcher:
         key (string or int): The key to check.
         RETURNS (bool): Whether the matcher has the rule.
         """
-        key = self._normalize_key(key)
-        return key in self._patterns
+        return self._normalize_key(key) in self._patterns
 
     def get(self, key, default=None):
         """Retrieve the pattern stored for a key.
 
-        key (unicode or int): The key to retrieve.
+        key (str / int): The key to retrieve.
         RETURNS (tuple): The rule, as an (on_match, patterns) tuple.
         """
         key = self._normalize_key(key)
@@ -204,6 +207,13 @@ cdef class DependencyMatcher:
         return (self._callbacks[key], self._patterns[key])
 
     def __call__(self, Doc doc):
+        """Find all token sequences matching the supplied pattern.
+
+        doclike (Doc or Span): The document to match over.
+        RETURNS (list): A list of `(key, start, end)` tuples,
+            describing the matches. A match tuple describes a span
+            `doc[start:end]`. The `label_id` and `key` are both integers.
+        """
         matched_key_trees = []
         matches = self.token_matcher(doc)
         for key in list(self._patterns.keys()):
@@ -243,25 +253,25 @@ cdef class DependencyMatcher:
                     on_match(self, doc, i, matched_key_trees)
         return matched_key_trees
 
-    def recurse(self,tree,id_to_position,_node_operator_map,int patternLength,visitedNodes,matched_trees):
+    def recurse(self,tree,id_to_position,_node_operator_map,int patternLength,visited_nodes,matched_trees):
         cdef bool isValid;
         if(patternLength == len(id_to_position.keys())):
             isValid = True
             for node in range(patternLength):
                 if(node in tree):
                     for idx, (relop,nbor) in enumerate(tree[node]):
-                        computed_nbors = numpy.asarray(_node_operator_map[visitedNodes[node]][relop])
+                        computed_nbors = numpy.asarray(_node_operator_map[visited_nodes[node]][relop])
                         isNbor = False
                         for computed_nbor in computed_nbors:
-                            if(computed_nbor.i == visitedNodes[nbor]):
+                            if(computed_nbor.i == visited_nodes[nbor]):
                                 isNbor = True
                         isValid = isValid & isNbor
             if(isValid):
-                matched_trees.append(visitedNodes)
+                matched_trees.append(visited_nodes)
             return
         allPatternNodes = numpy.asarray(id_to_position[patternLength])
         for patternNode in allPatternNodes:
-            self.recurse(tree,id_to_position,_node_operator_map,patternLength+1,visitedNodes+[patternNode],matched_trees)
+            self.recurse(tree,id_to_position,_node_operator_map,patternLength+1,visited_nodes+[patternNode],matched_trees)
 
     # Given a node and an edge operator, to return the list of nodes
     # from the doc that belong to node+operator. This is used to store

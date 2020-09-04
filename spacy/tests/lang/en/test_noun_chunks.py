@@ -1,10 +1,7 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import numpy
 from spacy.attrs import HEAD, DEP
 from spacy.symbols import nsubj, dobj, amod, nmod, conj, cc, root
-from spacy.lang.en.syntax_iterators import SYNTAX_ITERATORS
+from spacy.lang.en.syntax_iterators import noun_chunks
 
 import pytest
 
@@ -44,7 +41,7 @@ def test_en_noun_chunks_not_nested(en_vocab):
             dtype="uint64",
         ),
     )
-    doc.noun_chunks_iterator = SYNTAX_ITERATORS["noun_chunks"]
+    doc.noun_chunks_iterator = noun_chunks
     word_occurred = {}
     for chunk in doc.noun_chunks:
         for word in chunk:

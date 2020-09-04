@@ -1,8 +1,4 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from .stop_words import STOP_WORDS
-
 from ...language import Language
 
 

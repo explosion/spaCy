@@ -51,6 +51,7 @@ cdef class Doc:
 
     cdef public bint is_tagged
     cdef public bint is_parsed
+    cdef public bint is_morphed
 
     cdef public float sentiment
 
@@ -58,10 +59,13 @@ cdef class Doc:
     cdef public dict user_token_hooks
     cdef public dict user_span_hooks
 
+    cdef public bint has_unknown_spaces
+
     cdef public list _py_tokens
 
     cdef int length
     cdef int max_length
+
 
     cdef public object noun_chunks_iterator
 

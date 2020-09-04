@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import itertools
 
 from ..char_classes import LIST_PUNCT, LIST_ELLIPSES, LIST_QUOTES, LIST_CURRENCY

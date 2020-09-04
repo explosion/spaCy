@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from ..punctuation import TOKENIZER_PREFIXES as BASE_TOKENIZER_PREFIXES
 from ..char_classes import LIST_ELLIPSES, LIST_ICONS
 from ..char_classes import ALPHA, HYPHENS, CONCAT_QUOTES

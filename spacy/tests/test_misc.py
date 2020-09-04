@@ -1,43 +1,12 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 import os
 import ctypes
-import srsly
 from pathlib import Path
+from spacy.about import __version__ as spacy_version
 from spacy import util
 from spacy import prefer_gpu, require_gpu
-from spacy.compat import symlink_to, symlink_remove, path2str, is_windows
-from spacy._ml import PrecomputableAffine
-from subprocess import CalledProcessError
-from .util import make_tempdir
-
-
-@pytest.fixture
-def symlink_target():
-    return Path("./foo-target")
-
-
-@pytest.fixture
-def symlink():
-    return Path("./foo-symlink")
-
-
-@pytest.fixture(scope="function")
-def symlink_setup_target(request, symlink_target, symlink):
-    if not symlink_target.exists():
-        os.mkdir(path2str(symlink_target))
-    # yield -- need to cleanup even if assertion fails
-    # https://github.com/pytest-dev/pytest/issues/2508#issuecomment-309934240
-
-    def cleanup():
-        # Remove symlink only if it was created
-        if symlink.exists():
-            symlink_remove(symlink)
-        os.rmdir(path2str(symlink_target))
-
-    request.addfinalizer(cleanup)
+from spacy.ml._precomputable_affine import PrecomputableAffine
+from spacy.ml._precomputable_affine import _backprop_precomputable_affine_padding
 
 
 @pytest.fixture
@@ -57,10 +26,12 @@ def test_util_ensure_path_succeeds(text):
     assert isinstance(path, Path)
 
 
-@pytest.mark.parametrize("package", ["numpy"])
-def test_util_is_package(package):
+@pytest.mark.parametrize(
+    "package,result", [("numpy", True), ("sfkodskfosdkfpsdpofkspdof", False)]
+)
+def test_util_is_package(package, result):
     """Test that an installed package via pip is recognised by util.is_package."""
-    assert util.is_package(package)
+    assert util.is_package(package) is result
 
 
 @pytest.mark.parametrize("package", ["thinc"])
@@ -71,29 +42,31 @@ def test_util_get_package_path(package):
 
 
 def test_PrecomputableAffine(nO=4, nI=5, nF=3, nP=2):
-    model = PrecomputableAffine(nO=nO, nI=nI, nF=nF, nP=nP)
-    assert model.W.shape == (nF, nO, nP, nI)
-    tensor = model.ops.allocate((10, nI))
+    model = PrecomputableAffine(nO=nO, nI=nI, nF=nF, nP=nP).initialize()
+    assert model.get_param("W").shape == (nF, nO, nP, nI)
+    tensor = model.ops.alloc((10, nI))
     Y, get_dX = model.begin_update(tensor)
     assert Y.shape == (tensor.shape[0] + 1, nF, nO, nP)
-    assert model.d_pad.shape == (1, nF, nO, nP)
-    dY = model.ops.allocate((15, nO, nP))
-    ids = model.ops.allocate((15, nF))
+    dY = model.ops.alloc((15, nO, nP))
+    ids = model.ops.alloc((15, nF))
     ids[1, 2] = -1
     dY[1] = 1
-    assert model.d_pad[0, 2, 0, 0] == 0.0
-    model._backprop_padding(dY, ids)
-    assert model.d_pad[0, 2, 0, 0] == 1.0
-    model.d_pad.fill(0.0)
+    assert not model.has_grad("pad")
+    d_pad = _backprop_precomputable_affine_padding(model, dY, ids)
+    assert d_pad[0, 2, 0, 0] == 1.0
     ids.fill(0.0)
     dY.fill(0.0)
-    ids[1, 2] = -1
+    dY[0] = 0
+    ids[1, 2] = 0
     ids[1, 1] = -1
     ids[1, 0] = -1
     dY[1] = 1
-    assert model.d_pad[0, 2, 0, 0] == 0.0
-    model._backprop_padding(dY, ids)
-    assert model.d_pad[0, 2, 0, 0] == 3.0
+    ids[2, 0] = -1
+    dY[2] = 5
+    d_pad = _backprop_precomputable_affine_padding(model, dY, ids)
+    assert d_pad[0, 0, 0, 0] == 6
+    assert d_pad[0, 1, 0, 0] == 1
+    assert d_pad[0, 2, 0, 0] == 0
 
 
 def test_prefer_gpu():
@@ -109,25 +82,6 @@ def test_require_gpu():
     except ImportError:
         with pytest.raises(ValueError):
             require_gpu()
-
-
-def test_create_symlink_windows(
-    symlink_setup_target, symlink_target, symlink, is_admin
-):
-    """Test the creation of symlinks on windows. If run as admin or not on windows it should succeed, otherwise a CalledProcessError should be raised."""
-    assert symlink_target.exists()
-
-    if is_admin or not is_windows:
-        try:
-            symlink_to(symlink, symlink_target)
-            assert symlink.exists()
-        except CalledProcessError as e:
-            pytest.fail(e)
-    else:
-        with pytest.raises(CalledProcessError):
-            symlink_to(symlink, symlink_target)
-
-        assert not symlink.exists()
 
 
 def test_ascii_filenames():
@@ -150,31 +104,56 @@ def test_load_model_blank_shortcut():
         util.load_model("blank:fjsfijsdof")
 
 
-def test_load_model_version_compat():
-    """Test warnings for various spacy_version specifications in meta. Since
-    this is more of a hack for v2, manually specify the current major.minor
-    version to simplify test creation."""
-    nlp = util.load_model("blank:en")
-    assert nlp.meta["spacy_version"].startswith(">=2.3")
-    with make_tempdir() as d:
-        # no change: compatible
-        nlp.to_disk(d)
-        meta_path = Path(d / "meta.json")
-        util.get_model_meta(d)
+@pytest.mark.parametrize(
+    "version,constraint,compatible",
+    [
+        (spacy_version, spacy_version, True),
+        (spacy_version, f">={spacy_version}", True),
+        ("3.0.0", "2.0.0", False),
+        ("3.2.1", ">=2.0.0", True),
+        ("2.2.10a1", ">=1.0.0,<2.1.1", False),
+        ("3.0.0.dev3", ">=1.2.3,<4.5.6", True),
+        ("n/a", ">=1.2.3,<4.5.6", None),
+        ("1.2.3", "n/a", None),
+        ("n/a", "n/a", None),
+    ],
+)
+def test_is_compatible_version(version, constraint, compatible):
+    assert util.is_compatible_version(version, constraint) is compatible
 
-        # additional compatible upper pin
-        nlp.meta["spacy_version"] = ">=2.3.0,<2.4.0"
-        srsly.write_json(meta_path, nlp.meta)
-        util.get_model_meta(d)
 
-        # incompatible older version
-        nlp.meta["spacy_version"] = ">=2.2.5"
-        srsly.write_json(meta_path, nlp.meta)
-        with pytest.warns(UserWarning):
-            util.get_model_meta(d)
+@pytest.mark.parametrize(
+    "constraint,expected",
+    [
+        ("3.0.0", False),
+        ("==3.0.0", False),
+        (">=2.3.0", True),
+        (">2.0.0", True),
+        ("<=2.0.0", True),
+        (">2.0.0,<3.0.0", False),
+        (">=2.0.0,<3.0.0", False),
+        ("!=1.1,>=1.0,~=1.0", True),
+        ("n/a", None),
+    ],
+)
+def test_is_unconstrained_version(constraint, expected):
+    assert util.is_unconstrained_version(constraint) is expected
 
-        # invalid version specification
-        nlp.meta["spacy_version"] = ">@#$%_invalid_version"
-        srsly.write_json(meta_path, nlp.meta)
-        with pytest.warns(UserWarning):
-            util.get_model_meta(d)
+
+@pytest.mark.parametrize(
+    "dot_notation,expected",
+    [
+        (
+            {"token.pos": True, "token._.xyz": True},
+            {"token": {"pos": True, "_": {"xyz": True}}},
+        ),
+        (
+            {"training.batch_size": 128, "training.optimizer.learn_rate": 0.01},
+            {"training": {"batch_size": 128, "optimizer": {"learn_rate": 0.01}}},
+        ),
+    ],
+)
+def test_dot_to_dict(dot_notation, expected):
+    result = util.dot_to_dict(dot_notation)
+    assert result == expected
+    assert util.dict_to_dot(result) == dot_notation

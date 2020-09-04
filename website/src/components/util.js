@@ -22,6 +22,7 @@ export const headingTextClassName = 'heading-text'
  * @returns {string} - URL to the file on GitHub.
  */
 export function github(filepath, branch = 'master') {
+    if (filepath && filepath.startsWith('github.com')) return `https://${filepath}`
     const path = filepath ? '/tree/' + (branch || 'master') + '/' + filepath : ''
     return `https://github.com/${repo}${path}`
 }
@@ -43,6 +44,17 @@ export function getCurrentSource(slug, isIndex = false, branch = 'master') {
  */
 export function isString(obj) {
     return typeof obj === 'string' || obj instanceof String
+}
+
+/**
+ * @param obj - The object to check.
+ * @returns {boolean} – Whether the object is an image
+ */
+export function isImage(obj) {
+    if (!obj || !React.isValidElement(obj)) {
+        return false
+    }
+    return obj.props.name == 'img' || obj.props.className == 'gatsby-resp-image-wrapper'
 }
 
 /**

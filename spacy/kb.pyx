@@ -1,6 +1,5 @@
-# cython: infer_types=True
-# cython: profile=True
-# coding: utf8
+# cython: infer_types=True, profile=True
+from typing import Iterator
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 from cpython.exc cimport PyErr_SetFromErrno
@@ -8,12 +7,11 @@ from libc.stdio cimport fopen, fclose, fread, fwrite, feof, fseek
 from libc.stdint cimport int32_t, int64_t
 from libcpp.vector cimport vector
 
+from pathlib import Path
 import warnings
 from os import path
-from pathlib import Path
 
 from .typedefs cimport hash_t
-
 from .errors import Errors, Warnings
 
 
@@ -23,7 +21,7 @@ cdef class Candidate:
     algorithm which will disambiguate the various candidates to the correct one.
     Each candidate (alias, entity) pair is assigned to a certain prior probability.
 
-    DOCS: https://spacy.io/api/kb/#candidate_init
+    DOCS: https://nightly.spacy.io/api/kb/#candidate_init
     """
 
     def __init__(self, KnowledgeBase kb, entity_hash, entity_freq, entity_vector, alias_hash, prior_prob):
@@ -41,7 +39,7 @@ cdef class Candidate:
 
     @property
     def entity_(self):
-        """RETURNS (unicode): ID/name of this entity in the KB"""
+        """RETURNS (str): ID/name of this entity in the KB"""
         return self.kb.vocab.strings[self.entity_hash]
 
     @property
@@ -51,7 +49,7 @@ cdef class Candidate:
 
     @property
     def alias_(self):
-        """RETURNS (unicode): ID of the original alias"""
+        """RETURNS (str): ID of the original alias"""
         return self.kb.vocab.strings[self.alias_hash]
 
     @property
@@ -67,21 +65,30 @@ cdef class Candidate:
         return self.prior_prob
 
 
+def get_candidates(KnowledgeBase kb, span) -> Iterator[Candidate]:
+    """
+    Return candidate entities for a given span by using the text of the span as the alias
+    and fetching appropriate entries from the index.
+    This particular function is optimized to work with the built-in KB functionality,
+    but any other custom candidate generation method can be used in combination with the KB as well.
+    """
+    return kb.get_alias_candidates(span.text)
+
+
 cdef class KnowledgeBase:
     """A `KnowledgeBase` instance stores unique identifiers for entities and their textual aliases,
     to support entity linking of named entities to real-world concepts.
 
-    DOCS: https://spacy.io/api/kb
+    DOCS: https://nightly.spacy.io/api/kb
     """
 
-    def __init__(self, Vocab vocab, entity_vector_length=64):
-        self.vocab = vocab
+    def __init__(self, Vocab vocab, entity_vector_length):
+        """Create a KnowledgeBase."""
         self.mem = Pool()
         self.entity_vector_length = entity_vector_length
-
         self._entry_index = PreshMap()
         self._alias_index = PreshMap()
-
+        self.vocab = vocab
         self.vocab.strings.add("")
         self._create_empty_vectors(dummy_hash=self.vocab.strings[""])
 
@@ -261,8 +268,7 @@ cdef class KnowledgeBase:
             alias_entry.probs = probs
             self._aliases_table[alias_index] = alias_entry
 
-
-    def get_candidates(self, unicode alias):
+    def get_alias_candidates(self, unicode alias) -> Iterator[Candidate]:
         """
         Return candidate entities for an alias. Each candidate defines the entity, the original alias,
         and the prior probability of that alias resolving to that entity.
@@ -313,7 +319,7 @@ cdef class KnowledgeBase:
         return 0.0
 
 
-    def dump(self, loc):
+    def to_disk(self, loc):
         cdef Writer writer = Writer(loc)
         writer.write_header(self.get_size_entities(), self.entity_vector_length)
 
@@ -353,7 +359,7 @@ cdef class KnowledgeBase:
 
         writer.close()
 
-    cpdef load_bulk(self, loc):
+    cpdef from_disk(self, loc):
         cdef hash_t entity_hash
         cdef hash_t alias_hash
         cdef int64_t entry_index
@@ -448,7 +454,8 @@ cdef class Writer:
         if isinstance(loc, Path):
             loc = bytes(loc)
         if path.exists(loc):
-            assert not path.isdir(loc), "%s is directory." % loc
+            if path.isdir(loc):
+                raise ValueError(Errors.E928.format(loc=loc))
         cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
         self._fp = fopen(<char*>bytes_loc, 'wb')
         if not self._fp:
@@ -492,8 +499,10 @@ cdef class Reader:
     def __init__(self, object loc):
         if isinstance(loc, Path):
             loc = bytes(loc)
-        assert path.exists(loc)
-        assert not path.isdir(loc)
+        if not path.exists(loc):
+            raise ValueError(Errors.E929.format(loc=loc))
+        if path.isdir(loc):
+            raise ValueError(Errors.E928.format(loc=loc))
         cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
         self._fp = fopen(<char*>bytes_loc, 'rb')
         if not self._fp:

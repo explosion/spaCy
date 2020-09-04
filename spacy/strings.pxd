@@ -1,7 +1,6 @@
 from libc.stdint cimport int64_t
 from libcpp.vector cimport vector
 from libcpp.set cimport set
-
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 from murmurhash.mrmr cimport hash64
@@ -24,7 +23,6 @@ cdef class StringStore:
     cdef Pool mem
 
     cdef vector[hash_t] keys
-    cdef set[hash_t] hits
     cdef public PreshMap _map
 
     cdef const Utf8Str* intern_unicode(self, unicode py_string)

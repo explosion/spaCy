@@ -19,6 +19,11 @@ import { ReactComponent as NoIcon } from '../images/icons/no.svg'
 import { ReactComponent as NeutralIcon } from '../images/icons/neutral.svg'
 import { ReactComponent as OfflineIcon } from '../images/icons/offline.svg'
 import { ReactComponent as SearchIcon } from '../images/icons/search.svg'
+import { ReactComponent as MoonIcon } from '../images/icons/moon.svg'
+import { ReactComponent as ClipboardIcon } from '../images/icons/clipboard.svg'
+import { ReactComponent as NetworkIcon } from '../images/icons/network.svg'
+import { ReactComponent as DownloadIcon } from '../images/icons/download.svg'
+import { ReactComponent as PackageIcon } from '../images/icons/package.svg'
 
 import classes from '../styles/icon.module.sass'
 
@@ -41,9 +46,22 @@ const icons = {
     neutral: NeutralIcon,
     offline: OfflineIcon,
     search: SearchIcon,
+    moon: MoonIcon,
+    clipboard: ClipboardIcon,
+    network: NetworkIcon,
+    download: DownloadIcon,
+    package: PackageIcon,
 }
 
-const Icon = ({ name, width, height, inline, variant, className }) => {
+export default function Icon({
+    name,
+    width = 20,
+    height,
+    inline = false,
+    variant,
+    className,
+    ...props
+}) {
     const IconComponent = icons[name]
     const iconClassNames = classNames(classes.root, className, {
         [classes.inline]: inline,
@@ -57,13 +75,9 @@ const Icon = ({ name, width, height, inline, variant, className }) => {
             aria-hidden="true"
             width={width}
             height={height || width}
+            {...props}
         />
     )
-}
-
-Icon.defaultProps = {
-    width: 20,
-    inline: false,
 }
 
 Icon.propTypes = {
@@ -74,5 +88,3 @@ Icon.propTypes = {
     variant: PropTypes.oneOf(['success', 'error', 'subtle']),
     className: PropTypes.string,
 }
-
-export default Icon

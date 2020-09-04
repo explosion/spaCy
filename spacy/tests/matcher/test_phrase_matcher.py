@@ -1,11 +1,8 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 import srsly
 from mock import Mock
 from spacy.matcher import PhraseMatcher
-from spacy.tokens import Doc
+from spacy.tokens import Doc, Span
 from ..util import get_doc
 
 
@@ -290,3 +287,30 @@ def test_phrase_matcher_pickle(en_vocab):
     # clunky way to vaguely check that callback is unpickled
     (vocab, docs, callbacks, attr) = matcher_unpickled.__reduce__()[1]
     assert isinstance(callbacks.get("TEST2"), Mock)
+
+
+def test_phrase_matcher_as_spans(en_vocab):
+    """Test the new as_spans=True API."""
+    matcher = PhraseMatcher(en_vocab)
+    matcher.add("A", [Doc(en_vocab, words=["hello", "world"])])
+    matcher.add("B", [Doc(en_vocab, words=["test"])])
+    doc = Doc(en_vocab, words=["...", "hello", "world", "this", "is", "a", "test"])
+    matches = matcher(doc, as_spans=True)
+    assert len(matches) == 2
+    assert isinstance(matches[0], Span)
+    assert matches[0].text == "hello world"
+    assert matches[0].label_ == "A"
+    assert isinstance(matches[1], Span)
+    assert matches[1].text == "test"
+    assert matches[1].label_ == "B"
+
+
+def test_phrase_matcher_deprecated(en_vocab):
+    matcher = PhraseMatcher(en_vocab)
+    matcher.add("TEST", [Doc(en_vocab, words=["helllo"])])
+    doc = Doc(en_vocab, words=["hello", "world"])
+    with pytest.warns(DeprecationWarning) as record:
+        for _ in matcher.pipe([doc]):
+            pass
+        assert record.list
+        assert "spaCy v3.0" in str(record.list[0].message)

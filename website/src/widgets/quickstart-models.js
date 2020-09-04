@@ -15,13 +15,13 @@ const data = [
             {
                 id: 'spacy',
                 title: 'Use spacy.load()',
-                help: "Use spaCy's built-in loader to load the model by name.",
+                help: "Use spaCy's built-in loader to load the package by name",
                 checked: true,
             },
             {
                 id: 'module',
                 title: 'Import as module',
-                help: 'Import the model explicitly as a Python module.',
+                help: 'Import the package explicitly as a Python module',
             },
         ],
     },
@@ -33,7 +33,7 @@ const data = [
     },
 ]
 
-const QuickstartInstall = ({ id, title, description, defaultLang, children }) => (
+const QuickstartInstall = ({ id, title, description, defaultLang = 'en', children }) => (
     <StaticQuery
         query={query}
         render={({ site }) => {
@@ -84,10 +84,6 @@ const QuickstartInstall = ({ id, title, description, defaultLang, children }) =>
         }}
     />
 )
-
-QuickstartInstall.defaultProps = {
-    defaultLang: 'en',
-}
 
 export default QuickstartInstall
 

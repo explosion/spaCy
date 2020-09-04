@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 
 
@@ -21,4 +18,3 @@ def test_de_tokenizer_handles_exc_in_text(de_tokenizer):
     tokens = de_tokenizer(text)
     assert len(tokens) == 6
     assert tokens[2].text == "z.Zt."
-    assert tokens[2].lemma_ == "zur Zeit"

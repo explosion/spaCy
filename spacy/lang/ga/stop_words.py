@@ -1,7 +1,3 @@
-# encoding: utf8
-from __future__ import unicode_literals
-
-
 STOP_WORDS = set(
     """
 a ach ag agus an aon ar arna as

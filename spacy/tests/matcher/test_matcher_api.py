@@ -1,11 +1,9 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 import re
 from mock import Mock
 from spacy.matcher import Matcher, DependencyMatcher
-from spacy.tokens import Doc, Token
+from spacy.tokens import Doc, Token, Span
+
 from ..doc.test_underscore import clean_underscore  # noqa: F401
 
 
@@ -66,18 +64,11 @@ def test_matcher_len_contains(matcher):
     assert "TEST2" not in matcher
 
 
-def test_matcher_add_new_old_api(en_vocab):
+def test_matcher_add_new_api(en_vocab):
     doc = Doc(en_vocab, words=["a", "b"])
     patterns = [[{"TEXT": "a"}], [{"TEXT": "a"}, {"TEXT": "b"}]]
     matcher = Matcher(en_vocab)
-    matcher.add("OLD_API", None, *patterns)
-    assert len(matcher(doc)) == 2
-    matcher = Matcher(en_vocab)
     on_match = Mock()
-    matcher.add("OLD_API_CALLBACK", on_match, *patterns)
-    assert len(matcher(doc)) == 2
-    assert on_match.call_count == 2
-    # New API: add(key: str, patterns: List[List[dict]], on_match: Callable)
     matcher = Matcher(en_vocab)
     matcher.add("NEW_API", patterns)
     assert len(matcher(doc)) == 2
@@ -179,11 +170,11 @@ def test_matcher_match_zero_plus(matcher):
 
 def test_matcher_match_one_plus(matcher):
     control = Matcher(matcher.vocab)
-    control.add("BasicPhilippe", None, [{"ORTH": "Philippe"}])
+    control.add("BasicPhilippe", [[{"ORTH": "Philippe"}]])
     doc = Doc(control.vocab, words=["Philippe", "Philippe"])
     m = control(doc)
     assert len(m) == 2
-    pattern = [{"ORTH": "Philippe", "OP": "1"}, {"ORTH": "Philippe", "OP": "+"}]
+    pattern = [{"ORTH": "Philippe"}, {"ORTH": "Philippe", "OP": "+"}]
     matcher.add("KleenePhilippe", [pattern])
     m = matcher(doc)
     assert len(m) == 1
@@ -479,3 +470,26 @@ def test_matcher_span(matcher):
     assert len(matcher(doc)) == 2
     assert len(matcher(span_js)) == 1
     assert len(matcher(span_java)) == 1
+
+
+def test_matcher_as_spans(matcher):
+    """Test the new as_spans=True API."""
+    text = "JavaScript is good but Java is better"
+    doc = Doc(matcher.vocab, words=text.split())
+    matches = matcher(doc, as_spans=True)
+    assert len(matches) == 2
+    assert isinstance(matches[0], Span)
+    assert matches[0].text == "JavaScript"
+    assert matches[0].label_ == "JS"
+    assert isinstance(matches[1], Span)
+    assert matches[1].text == "Java"
+    assert matches[1].label_ == "Java"
+
+
+def test_matcher_deprecated(matcher):
+    doc = Doc(matcher.vocab, words=["hello", "world"])
+    with pytest.warns(DeprecationWarning) as record:
+        for _ in matcher.pipe([doc]):
+            pass
+        assert record.list
+        assert "spaCy v3.0" in str(record.list[0].message)

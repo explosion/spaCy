@@ -1,6 +1,4 @@
-# coding: utf8
-from __future__ import unicode_literals
-
+from typing import Set
 import unicodedata
 import re
 
@@ -24,21 +22,21 @@ _tlds = set(
 )
 
 
-def is_punct(text):
+def is_punct(text: str) -> bool:
     for char in text:
         if not unicodedata.category(char).startswith("P"):
             return False
     return True
 
 
-def is_ascii(text):
+def is_ascii(text: str) -> bool:
     for char in text:
         if ord(char) >= 128:
             return False
     return True
 
 
-def like_num(text):
+def like_num(text: str) -> bool:
     if text.startswith(("+", "-", "±", "~")):
         text = text[1:]
     # can be overwritten by lang with list of number words
@@ -52,64 +50,31 @@ def like_num(text):
     return False
 
 
-def is_bracket(text):
+def is_bracket(text: str) -> bool:
     brackets = ("(", ")", "[", "]", "{", "}", "<", ">")
     return text in brackets
 
 
-def is_quote(text):
-    quotes = (
-        '"',
-        "'",
-        "`",
-        "«",
-        "»",
-        "‘",
-        "’",
-        "‚",
-        "‛",
-        "“",
-        "”",
-        "„",
-        "‟",
-        "‹",
-        "›",
-        "❮",
-        "❯",
-        "''",
-        "``",
-    )
+def is_quote(text: str) -> bool:
+    # fmt: off
+    quotes = ('"', "'", "`", "«", "»", "‘", "’", "‚", "‛", "“", "”", "„", "‟", "‹", "›", "❮", "❯", "''", "``")
+    # fmt: on
     return text in quotes
 
 
-def is_left_punct(text):
-    left_punct = (
-        "(",
-        "[",
-        "{",
-        "<",
-        '"',
-        "'",
-        "«",
-        "‘",
-        "‚",
-        "‛",
-        "“",
-        "„",
-        "‟",
-        "‹",
-        "❮",
-        "``",
-    )
+def is_left_punct(text: str) -> bool:
+    # fmt: off
+    left_punct = ("(", "[", "{", "<", '"', "'", "«", "‘", "‚", "‛", "“", "„", "‟", "‹", "❮", "``")
+    # fmt: on
     return text in left_punct
 
 
-def is_right_punct(text):
+def is_right_punct(text: str) -> bool:
     right_punct = (")", "]", "}", ">", '"', "'", "»", "’", "”", "›", "❯", "''")
     return text in right_punct
 
 
-def is_currency(text):
+def is_currency(text: str) -> bool:
     # can be overwritten by lang with list of currency words, e.g. dollar, euro
     for char in text:
         if unicodedata.category(char) != "Sc":
@@ -117,11 +82,11 @@ def is_currency(text):
     return True
 
 
-def like_email(text):
+def like_email(text: str) -> bool:
     return bool(_like_email(text))
 
 
-def like_url(text):
+def like_url(text: str) -> bool:
     # We're looking for things that function in text like URLs. So, valid URL
     # or not, anything they say http:// is going to be good.
     if text.startswith("http://") or text.startswith("https://"):
@@ -147,7 +112,7 @@ def like_url(text):
     return False
 
 
-def word_shape(text):
+def word_shape(text: str) -> str:
     if len(text) >= 100:
         return "LONG"
     shape = []
@@ -174,44 +139,50 @@ def word_shape(text):
     return "".join(shape)
 
 
-def lower(string):
+def lower(string: str) -> str:
     return string.lower()
 
 
-def prefix(string):
+def prefix(string: str) -> str:
     return string[0]
 
 
-def suffix(string):
+def suffix(string: str) -> str:
     return string[-3:]
 
 
-def is_alpha(string):
+def is_alpha(string: str) -> bool:
     return string.isalpha()
 
 
-def is_digit(string):
+def is_digit(string: str) -> bool:
     return string.isdigit()
 
 
-def is_lower(string):
+def is_lower(string: str) -> bool:
     return string.islower()
 
 
-def is_space(string):
+def is_space(string: str) -> bool:
     return string.isspace()
 
 
-def is_title(string):
+def is_title(string: str) -> bool:
     return string.istitle()
 
 
-def is_upper(string):
+def is_upper(string: str) -> bool:
     return string.isupper()
 
 
-def is_stop(string, stops=set()):
+def is_stop(string: str, stops: Set[str] = set()) -> bool:
     return string.lower() in stops
+
+
+def get_lang(text: str, lang: str = "") -> str:
+    # This function is partially applied so lang code can be passed in
+    # automatically while still allowing pickling
+    return lang
 
 
 LEX_ATTRS = {

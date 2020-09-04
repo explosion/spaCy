@@ -68,7 +68,7 @@ const Landing = ({ data }) => {
     const counts = getCounts(data.languages)
     return (
         <>
-            <LandingHeader>
+            <LandingHeader nightly={data.nightly}>
                 <LandingTitle>
                     Industrial-Strength
                     <br />
@@ -268,6 +268,7 @@ const landingQuery = graphql`
     query LandingQuery {
         site {
             siteMetadata {
+                nightly
                 repo
                 languages {
                     models

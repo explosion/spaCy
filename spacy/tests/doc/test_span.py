@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 from spacy.attrs import ORTH, LENGTH
 from spacy.tokens import Doc, Span
@@ -69,8 +66,6 @@ def test_spans_string_fn(doc):
     span = doc[0:4]
     assert len(span) == 4
     assert span.text == "This is a sentence"
-    assert span.upper_ == "THIS IS A SENTENCE"
-    assert span.lower_ == "this is a sentence"
 
 
 def test_spans_root2(en_tokenizer):
@@ -174,19 +169,25 @@ def test_spans_by_character(doc):
     assert span1.end_char == span2.end_char
     assert span2.label_ == "GPE"
 
-    span2 = doc.char_span(span1.start_char, span1.end_char, label="GPE", alignment_mode="strict")
+    span2 = doc.char_span(
+        span1.start_char, span1.end_char, label="GPE", alignment_mode="strict"
+    )
     assert span1.start_char == span2.start_char
     assert span1.end_char == span2.end_char
     assert span2.label_ == "GPE"
 
     # alignment mode "contract"
-    span2 = doc.char_span(span1.start_char - 3, span1.end_char, label="GPE", alignment_mode="contract")
+    span2 = doc.char_span(
+        span1.start_char - 3, span1.end_char, label="GPE", alignment_mode="contract"
+    )
     assert span1.start_char == span2.start_char
     assert span1.end_char == span2.end_char
     assert span2.label_ == "GPE"
 
     # alignment mode "expand"
-    span2 = doc.char_span(span1.start_char + 1, span1.end_char, label="GPE", alignment_mode="expand")
+    span2 = doc.char_span(
+        span1.start_char + 1, span1.end_char, label="GPE", alignment_mode="expand"
+    )
     assert span1.start_char == span2.start_char
     assert span1.end_char == span2.end_char
     assert span2.label_ == "GPE"
@@ -315,6 +316,6 @@ def test_span_boundaries(doc):
     for i in range(start, end):
         assert span[i - start] == doc[i]
     with pytest.raises(IndexError):
-        _ = span[-5]
+        span[-5]
     with pytest.raises(IndexError):
-        _ = span[5]
+        span[5]

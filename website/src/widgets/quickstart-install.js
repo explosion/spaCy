@@ -24,11 +24,6 @@ const DATA = [
         ],
     },
     {
-        id: 'python',
-        title: 'Python version',
-        options: [{ id: '2', title: '2.x' }, { id: '3', title: '3.x', checked: true }],
-    },
-    {
         id: 'config',
         title: 'Configuration',
         multiple: true,
@@ -41,13 +36,18 @@ const DATA = [
         ],
     },
     {
-        id: 'data',
-        title: 'Additional data',
+        id: 'addition',
+        title: 'Additions',
         multiple: true,
         options: [
             {
+                id: 'transformers',
+                title: 'Transformers',
+                help: 'Use transformers like BERT to train your spaCy pipelines',
+            },
+            {
                 id: 'lookups',
-                title: 'Lemmatization',
+                title: 'Lemmatizer data',
                 help: 'Install additional lookup tables and rules for lemmatization',
             },
         ],
@@ -63,22 +63,14 @@ const QuickstartInstall = ({ id, title }) => (
                 ...DATA,
                 {
                     id: 'models',
-                    title: 'Models',
+                    title: 'Trained Pipelines',
                     multiple: true,
                     options: models.map(({ code, name }) => ({ id: code, title: name })),
                 },
             ]
             return (
                 <Quickstart data={data} title={title} id={id}>
-                    <QS config="venv" python="2">
-                        python -m pip install -U virtualenv
-                    </QS>
-                    <QS config="venv" python="2">
-                        virtualenv .env
-                    </QS>
-                    <QS config="venv" python="3">
-                        python -m venv .env
-                    </QS>
+                    <QS config="venv">python -m venv .env</QS>
                     <QS config="venv" os="mac">
                         source .env/bin/activate
                     </QS>
@@ -96,16 +88,25 @@ const QuickstartInstall = ({ id, title }) => (
                         export PYTHONPATH=`pwd`
                     </QS>
                     <QS package="source" os="windows">
-                        set PYTHONPATH=/path/to/spaCy
+                        set PYTHONPATH=C:\path\to\spaCy
                     </QS>
                     <QS package="source">pip install -r requirements.txt</QS>
-                    <QS data="lookups" package="pip">
+                    <QS addition="transformers" package="pip">
+                        pip install -U spacy-transformers
+                    </QS>
+                    <QS addition="transformers" package="source">
+                        pip install -U spacy-transformers
+                    </QS>
+                    <QS addition="transformers" package="conda">
+                        conda install -c conda-forge spacy-transformers
+                    </QS>
+                    <QS addition="lookups" package="pip">
                         pip install -U spacy-lookups-data
                     </QS>
-                    <QS data="lookups" package="source">
+                    <QS addition="lookups" package="source">
                         pip install -U spacy-lookups-data
                     </QS>
-                    <QS data="lookups" package="conda">
+                    <QS addition="lookups" package="conda">
                         conda install -c conda-forge spacy-lookups-data
                     </QS>
                     <QS package="source">python setup.py build_ext --inplace</QS>

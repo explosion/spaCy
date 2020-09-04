@@ -1,7 +1,6 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-from ...symbols import ORTH, LEMMA
+from ..tokenizer_exceptions import BASE_EXCEPTIONS
+from ...symbols import ORTH, NORM
+from ...util import update_exc
 
 
 _exc = {}
@@ -9,41 +8,41 @@ _exc = {}
 
 # Time
 for exc_data in [
-    {LEMMA: "قبل الميلاد", ORTH: "ق.م"},
-    {LEMMA: "بعد الميلاد", ORTH: "ب. م"},
-    {LEMMA: "ميلادي", ORTH: ".م"},
-    {LEMMA: "هجري", ORTH: ".هـ"},
-    {LEMMA: "توفي", ORTH: ".ت"},
+    {NORM: "قبل الميلاد", ORTH: "ق.م"},
+    {NORM: "بعد الميلاد", ORTH: "ب. م"},
+    {NORM: "ميلادي", ORTH: ".م"},
+    {NORM: "هجري", ORTH: ".هـ"},
+    {NORM: "توفي", ORTH: ".ت"},
 ]:
     _exc[exc_data[ORTH]] = [exc_data]
 
 # Scientific abv.
 for exc_data in [
-    {LEMMA: "صلى الله عليه وسلم", ORTH: "صلعم"},
-    {LEMMA: "الشارح", ORTH: "الشـ"},
-    {LEMMA: "الظاهر", ORTH: "الظـ"},
-    {LEMMA: "أيضًا", ORTH: "أيضـ"},
-    {LEMMA: "إلى آخره", ORTH: "إلخ"},
-    {LEMMA: "انتهى", ORTH: "اهـ"},
-    {LEMMA: "حدّثنا", ORTH: "ثنا"},
-    {LEMMA: "حدثني", ORTH: "ثنى"},
-    {LEMMA: "أنبأنا", ORTH: "أنا"},
-    {LEMMA: "أخبرنا", ORTH: "نا"},
-    {LEMMA: "مصدر سابق", ORTH: "م. س"},
-    {LEMMA: "مصدر نفسه", ORTH: "م. ن"},
+    {NORM: "صلى الله عليه وسلم", ORTH: "صلعم"},
+    {NORM: "الشارح", ORTH: "الشـ"},
+    {NORM: "الظاهر", ORTH: "الظـ"},
+    {NORM: "أيضًا", ORTH: "أيضـ"},
+    {NORM: "إلى آخره", ORTH: "إلخ"},
+    {NORM: "انتهى", ORTH: "اهـ"},
+    {NORM: "حدّثنا", ORTH: "ثنا"},
+    {NORM: "حدثني", ORTH: "ثنى"},
+    {NORM: "أنبأنا", ORTH: "أنا"},
+    {NORM: "أخبرنا", ORTH: "نا"},
+    {NORM: "مصدر سابق", ORTH: "م. س"},
+    {NORM: "مصدر نفسه", ORTH: "م. ن"},
 ]:
     _exc[exc_data[ORTH]] = [exc_data]
 
 # Other abv.
 for exc_data in [
-    {LEMMA: "دكتور", ORTH: "د."},
-    {LEMMA: "أستاذ دكتور", ORTH: "أ.د"},
-    {LEMMA: "أستاذ", ORTH: "أ."},
-    {LEMMA: "بروفيسور", ORTH: "ب."},
+    {NORM: "دكتور", ORTH: "د."},
+    {NORM: "أستاذ دكتور", ORTH: "أ.د"},
+    {NORM: "أستاذ", ORTH: "أ."},
+    {NORM: "بروفيسور", ORTH: "ب."},
 ]:
     _exc[exc_data[ORTH]] = [exc_data]
 
-for exc_data in [{LEMMA: "تلفون", ORTH: "ت."}, {LEMMA: "صندوق بريد", ORTH: "ص.ب"}]:
+for exc_data in [{NORM: "تلفون", ORTH: "ت."}, {NORM: "صندوق بريد", ORTH: "ص.ب"}]:
     _exc[exc_data[ORTH]] = [exc_data]
 
-TOKENIZER_EXCEPTIONS = _exc
+TOKENIZER_EXCEPTIONS = update_exc(BASE_EXCEPTIONS, _exc)

@@ -1,12 +1,10 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
-
 import pytest
 import numpy
 from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
-from spacy.attrs import ENT_TYPE, ENT_IOB, SENT_START, HEAD, DEP
+from spacy.lexeme import Lexeme
+from spacy.lang.en import English
+from spacy.attrs import ENT_TYPE, ENT_IOB, SENT_START, HEAD, DEP, MORPH
 
 from ..util import get_doc
 
@@ -189,22 +187,9 @@ def test_doc_api_right_edge(en_tokenizer):
     doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
     assert doc[6].text == "for"
     subtree = [w.text for w in doc[6].subtree]
-    assert subtree == [
-        "for",
-        "the",
-        "sake",
-        "of",
-        "such",
-        "as",
-        "live",
-        "under",
-        "the",
-        "government",
-        "of",
-        "the",
-        "Romans",
-        ",",
-    ]
+    # fmt: off
+    assert subtree == ["for", "the", "sake", "of", "such", "as", "live", "under", "the", "government", "of", "the", "Romans", ","]
+    # fmt: on
     assert doc[6].right_edge.text == ","
 
 
@@ -313,7 +298,104 @@ def test_doc_from_array_sent_starts(en_vocab):
     assert new_doc.is_parsed
 
 
+def test_doc_from_array_morph(en_vocab):
+    words = ["I", "live", "in", "New", "York", "."]
+    # fmt: off
+    morphs = ["Feat1=A", "Feat1=B", "Feat1=C", "Feat1=A|Feat2=D", "Feat2=E", "Feat3=F"]
+    # fmt: on
+    doc = Doc(en_vocab, words=words)
+    for i, morph in enumerate(morphs):
+        doc[i].morph_ = morph
+
+    attrs = [MORPH]
+    arr = doc.to_array(attrs)
+    new_doc = Doc(en_vocab, words=words)
+    new_doc.from_array(attrs, arr)
+
+    assert [t.morph_ for t in new_doc] == morphs
+    assert [t.morph_ for t in doc] == [t.morph_ for t in new_doc]
+
+
+def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
+    en_texts = ["Merging the docs is fun.", "", "They don't think alike."]
+    en_texts_without_empty = [t for t in en_texts if len(t)]
+    de_text = "Wie war die Frage?"
+    en_docs = [en_tokenizer(text) for text in en_texts]
+    docs_idx = en_texts[0].index("docs")
+    de_doc = de_tokenizer(de_text)
+    en_docs[0].user_data[("._.", "is_ambiguous", docs_idx, None)] = (
+        True,
+        None,
+        None,
+        None,
+    )
+
+    assert Doc.from_docs([]) is None
+
+    assert de_doc is not Doc.from_docs([de_doc])
+    assert str(de_doc) == str(Doc.from_docs([de_doc]))
+
+    with pytest.raises(ValueError):
+        Doc.from_docs(en_docs + [de_doc])
+
+    m_doc = Doc.from_docs(en_docs)
+    assert len(en_texts_without_empty) == len(list(m_doc.sents))
+    assert len(str(m_doc)) > len(en_texts[0]) + len(en_texts[1])
+    assert str(m_doc) == " ".join(en_texts_without_empty)
+    p_token = m_doc[len(en_docs[0]) - 1]
+    assert p_token.text == "." and bool(p_token.whitespace_)
+    en_docs_tokens = [t for doc in en_docs for t in doc]
+    assert len(m_doc) == len(en_docs_tokens)
+    think_idx = len(en_texts[0]) + 1 + en_texts[2].index("think")
+    assert m_doc[9].idx == think_idx
+    with pytest.raises(AttributeError):
+        # not callable, because it was not set via set_extension
+        m_doc[2]._.is_ambiguous
+    assert len(m_doc.user_data) == len(en_docs[0].user_data)  # but it's there
+
+    m_doc = Doc.from_docs(en_docs, ensure_whitespace=False)
+    assert len(en_texts_without_empty) == len(list(m_doc.sents))
+    assert len(str(m_doc)) == sum(len(t) for t in en_texts)
+    assert str(m_doc) == "".join(en_texts)
+    p_token = m_doc[len(en_docs[0]) - 1]
+    assert p_token.text == "." and not bool(p_token.whitespace_)
+    en_docs_tokens = [t for doc in en_docs for t in doc]
+    assert len(m_doc) == len(en_docs_tokens)
+    think_idx = len(en_texts[0]) + 0 + en_texts[2].index("think")
+    assert m_doc[9].idx == think_idx
+
+    m_doc = Doc.from_docs(en_docs, attrs=["lemma", "length", "pos"])
+    with pytest.raises(ValueError):
+        # important attributes from sentenziser or parser are missing
+        assert list(m_doc.sents)
+    assert len(str(m_doc)) > len(en_texts[0]) + len(en_texts[1])
+    # space delimiter considered, although spacy attribute was missing
+    assert str(m_doc) == " ".join(en_texts_without_empty)
+    p_token = m_doc[len(en_docs[0]) - 1]
+    assert p_token.text == "." and bool(p_token.whitespace_)
+    en_docs_tokens = [t for doc in en_docs for t in doc]
+    assert len(m_doc) == len(en_docs_tokens)
+    think_idx = len(en_texts[0]) + 1 + en_texts[2].index("think")
+    assert m_doc[9].idx == think_idx
+
+
 def test_doc_lang(en_vocab):
     doc = Doc(en_vocab, words=["Hello", "world"])
     assert doc.lang_ == "en"
     assert doc.lang == en_vocab.strings["en"]
+    assert doc[0].lang_ == "en"
+    assert doc[0].lang == en_vocab.strings["en"]
+    nlp = English()
+    doc = nlp("Hello world")
+    assert doc.lang_ == "en"
+    assert doc.lang == en_vocab.strings["en"]
+    assert doc[0].lang_ == "en"
+    assert doc[0].lang == en_vocab.strings["en"]
+
+
+def test_token_lexeme(en_vocab):
+    """Test that tokens expose their lexeme."""
+    token = Doc(en_vocab, words=["Hello", "world"])[0]
+    assert isinstance(token.lex, Lexeme)
+    assert token.lex.text == token.text
+    assert en_vocab[token.orth] == token.lex

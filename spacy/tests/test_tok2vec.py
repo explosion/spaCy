@@ -1,35 +1,36 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 
-from spacy._ml import Tok2Vec
+from spacy.ml.models.tok2vec import build_Tok2Vec_model
+from spacy.ml.models.tok2vec import MultiHashEmbed, CharacterEmbed
+from spacy.ml.models.tok2vec import MishWindowEncoder, MaxoutWindowEncoder
+from spacy.pipeline.tok2vec import Tok2Vec, Tok2VecListener
 from spacy.vocab import Vocab
 from spacy.tokens import Doc
-from spacy.compat import unicode_
+from spacy.gold import Example
+from spacy import util
+from spacy.lang.en import English
+from .util import get_batch
+
+from thinc.api import Config
+
+from numpy.testing import assert_equal
 
 
-def get_batch(batch_size):
-    vocab = Vocab()
-    docs = []
-    start = 0
-    for size in range(1, batch_size + 1):
-        # Make the words numbers, so that they're distnct
-        # across the batch, and easy to track.
-        numbers = [unicode_(i) for i in range(start, start + size)]
-        docs.append(Doc(vocab, words=numbers))
-        start += size
-    return docs
-
-
-# This fails in Thinc v7.3.1. Need to push patch
-@pytest.mark.xfail
 def test_empty_doc():
     width = 128
     embed_size = 2000
     vocab = Vocab()
     doc = Doc(vocab, words=[])
-    tok2vec = Tok2Vec(width, embed_size)
+    tok2vec = build_Tok2Vec_model(
+        MultiHashEmbed(
+            width=width,
+            rows=embed_size,
+            also_use_static_vectors=False,
+            also_embed_subwords=True,
+        ),
+        MaxoutWindowEncoder(width=width, depth=4, window_size=1, maxout_pieces=3),
+    )
+    tok2vec.initialize()
     vectors, backprop = tok2vec.begin_update([doc])
     assert len(vectors) == 1
     assert vectors[0].shape == (0, width)
@@ -40,27 +41,129 @@ def test_empty_doc():
 )
 def test_tok2vec_batch_sizes(batch_size, width, embed_size):
     batch = get_batch(batch_size)
-    tok2vec = Tok2Vec(width, embed_size)
+    tok2vec = build_Tok2Vec_model(
+        MultiHashEmbed(
+            width=width,
+            rows=embed_size,
+            also_use_static_vectors=False,
+            also_embed_subwords=True,
+        ),
+        MaxoutWindowEncoder(width=width, depth=4, window_size=1, maxout_pieces=3),
+    )
+    tok2vec.initialize()
     vectors, backprop = tok2vec.begin_update(batch)
     assert len(vectors) == len(batch)
     for doc_vec, doc in zip(vectors, batch):
         assert doc_vec.shape == (len(doc), width)
 
 
+# fmt: off
 @pytest.mark.parametrize(
-    "tok2vec_config",
+    "width,embed_arch,embed_config,encode_arch,encode_config",
     [
-        {"width": 8, "embed_size": 100, "char_embed": False},
-        {"width": 8, "embed_size": 100, "char_embed": True},
-        {"width": 8, "embed_size": 100, "conv_depth": 6},
-        {"width": 8, "embed_size": 100, "conv_depth": 6},
-        {"width": 8, "embed_size": 100, "subword_features": False},
+        (8, MultiHashEmbed, {"rows": 100, "also_embed_subwords": True, "also_use_static_vectors": False}, MaxoutWindowEncoder, {"window_size": 1, "maxout_pieces": 3, "depth": 2}),
+        (8, MultiHashEmbed, {"rows": 100, "also_embed_subwords": True, "also_use_static_vectors": False}, MishWindowEncoder, {"window_size": 1, "depth": 6}),
+        (8, CharacterEmbed, {"rows": 100, "nM": 64, "nC": 8}, MaxoutWindowEncoder, {"window_size": 1, "maxout_pieces": 3, "depth": 3}),
+        (8, CharacterEmbed, {"rows": 100, "nM": 16, "nC": 2}, MishWindowEncoder, {"window_size": 1, "depth": 3}),
     ],
 )
-def test_tok2vec_configs(tok2vec_config):
+# fmt: on
+def test_tok2vec_configs(width, embed_arch, embed_config, encode_arch, encode_config):
+    embed_config["width"] = width
+    encode_config["width"] = width
     docs = get_batch(3)
-    tok2vec = Tok2Vec(**tok2vec_config)
+    tok2vec = build_Tok2Vec_model(
+        embed_arch(**embed_config),
+        encode_arch(**encode_config)
+    )
+    tok2vec.initialize(docs)
     vectors, backprop = tok2vec.begin_update(docs)
     assert len(vectors) == len(docs)
-    assert vectors[0].shape == (len(docs[0]), tok2vec_config["width"])
+    assert vectors[0].shape == (len(docs[0]), width)
     backprop(vectors)
+
+
+def test_init_tok2vec():
+    # Simple test to initialize the default tok2vec
+    nlp = English()
+    tok2vec = nlp.add_pipe("tok2vec")
+    assert tok2vec.listeners == []
+    nlp.begin_training()
+
+
+cfg_string = """
+    [nlp]
+    lang = "en"
+    pipeline = ["tok2vec","tagger"]
+
+    [components]
+
+    [components.tagger]
+    factory = "tagger"
+
+    [components.tagger.model]
+    @architectures = "spacy.Tagger.v1"
+    nO = null
+
+    [components.tagger.model.tok2vec]
+    @architectures = "spacy.Tok2VecListener.v1"
+    width = ${components.tok2vec.model.encode.width}
+
+    [components.tok2vec]
+    factory = "tok2vec"
+
+    [components.tok2vec.model]
+    @architectures = "spacy.Tok2Vec.v1"
+
+    [components.tok2vec.model.embed]
+    @architectures = "spacy.MultiHashEmbed.v1"
+    width = ${components.tok2vec.model.encode.width}
+    rows = 2000
+    also_embed_subwords = true
+    also_use_static_vectors = false
+
+    [components.tok2vec.model.encode]
+    @architectures = "spacy.MaxoutWindowEncoder.v1"
+    width = 96
+    depth = 4
+    window_size = 1
+    maxout_pieces = 3
+    """
+
+TRAIN_DATA = [
+    ("I like green eggs", {"tags": ["N", "V", "J", "N"]}),
+    ("Eat blue ham", {"tags": ["V", "J", "N"]}),
+]
+
+def test_tok2vec_listener():
+    orig_config = Config().from_str(cfg_string)
+    nlp, config = util.load_model_from_config(orig_config, auto_fill=True, validate=True)
+    assert nlp.pipe_names == ["tok2vec", "tagger"]
+    tagger = nlp.get_pipe("tagger")
+    tok2vec = nlp.get_pipe("tok2vec")
+    tagger_tok2vec = tagger.model.get_ref("tok2vec")
+    assert isinstance(tok2vec, Tok2Vec)
+    assert isinstance(tagger_tok2vec, Tok2VecListener)
+    train_examples = []
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+        for tag in t[1]["tags"]:
+            tagger.add_label(tag)
+
+    # Check that the Tok2Vec component finds it listeners
+    assert tok2vec.listeners == []
+    optimizer = nlp.begin_training(lambda: train_examples)
+    assert tok2vec.listeners == [tagger_tok2vec]
+
+    for i in range(5):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+
+    doc = nlp("Running the pipeline as a whole.")
+    doc_tensor = tagger_tok2vec.predict([doc])[0]
+    assert_equal(doc.tensor, doc_tensor)
+
+    # TODO: should this warn or error?
+    nlp.select_pipes(disable="tok2vec")
+    assert nlp.pipe_names == ["tagger"]
+    nlp("Running the pipeline with the Tok2Vec component disabled.")

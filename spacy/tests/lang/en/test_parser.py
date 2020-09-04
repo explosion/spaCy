@@ -1,17 +1,14 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 from ...util import get_doc
 
 
 def test_en_parser_noun_chunks_standard(en_tokenizer):
     text = "A base phrase should be recognized."
     heads = [2, 1, 3, 2, 1, 0, -1]
-    tags = ["DT", "JJ", "NN", "MD", "VB", "VBN", "."]
+    pos = ["DET", "ADJ", "NOUN", "AUX", "VERB", "VERB", "PUNCT"]
     deps = ["det", "amod", "nsubjpass", "aux", "auxpass", "ROOT", "punct"]
     tokens = en_tokenizer(text)
     doc = get_doc(
-        tokens.vocab, words=[t.text for t in tokens], tags=tags, deps=deps, heads=heads
+        tokens.vocab, words=[t.text for t in tokens], pos=pos, deps=deps, heads=heads
     )
     chunks = list(doc.noun_chunks)
     assert len(chunks) == 1
@@ -22,12 +19,12 @@ def test_en_parser_noun_chunks_coordinated(en_tokenizer):
     # fmt: off
     text = "A base phrase and a good phrase are often the same."
     heads = [2, 1, 5, -1, 2, 1, -4, 0, -1, 1, -3, -4]
-    tags = ["DT", "NN", "NN", "CC", "DT", "JJ", "NN", "VBP", "RB", "DT", "JJ", "."]
+    pos = ["DET", "NOUN", "NOUN", "CCONJ", "DET", "ADJ", "NOUN", "VERB", "ADV", "DET", "ADJ", "PUNCT"]
     deps = ["det", "compound", "nsubj", "cc", "det", "amod", "conj", "ROOT", "advmod", "det", "attr", "punct"]
     # fmt: on
     tokens = en_tokenizer(text)
     doc = get_doc(
-        tokens.vocab, words=[t.text for t in tokens], tags=tags, deps=deps, heads=heads
+        tokens.vocab, words=[t.text for t in tokens], pos=pos, deps=deps, heads=heads
     )
     chunks = list(doc.noun_chunks)
     assert len(chunks) == 2
@@ -38,11 +35,11 @@ def test_en_parser_noun_chunks_coordinated(en_tokenizer):
 def test_en_parser_noun_chunks_pp_chunks(en_tokenizer):
     text = "A phrase with another phrase occurs."
     heads = [1, 4, -1, 1, -2, 0, -1]
-    tags = ["DT", "NN", "IN", "DT", "NN", "VBZ", "."]
+    pos = ["DET", "NOUN", "ADP", "DET", "NOUN", "VERB", "PUNCT"]
     deps = ["det", "nsubj", "prep", "det", "pobj", "ROOT", "punct"]
     tokens = en_tokenizer(text)
     doc = get_doc(
-        tokens.vocab, words=[t.text for t in tokens], tags=tags, deps=deps, heads=heads
+        tokens.vocab, words=[t.text for t in tokens], pos=pos, deps=deps, heads=heads
     )
     chunks = list(doc.noun_chunks)
     assert len(chunks) == 2
@@ -54,12 +51,12 @@ def test_en_parser_noun_chunks_appositional_modifiers(en_tokenizer):
     # fmt: off
     text = "Sam, my brother, arrived to the house."
     heads = [5, -1, 1, -3, -4, 0, -1, 1, -2, -4]
-    tags = ["NNP", ",", "PRP$", "NN", ",", "VBD", "IN", "DT", "NN", "."]
+    pos = ["PROPN", "PUNCT", "DET", "NOUN", "PUNCT", "VERB", "ADP", "DET", "NOUN", "PUNCT"]
     deps = ["nsubj", "punct", "poss", "appos", "punct", "ROOT", "prep", "det", "pobj", "punct"]
     # fmt: on
     tokens = en_tokenizer(text)
     doc = get_doc(
-        tokens.vocab, words=[t.text for t in tokens], tags=tags, deps=deps, heads=heads
+        tokens.vocab, words=[t.text for t in tokens], pos=pos, deps=deps, heads=heads
     )
     chunks = list(doc.noun_chunks)
     assert len(chunks) == 3
@@ -71,11 +68,11 @@ def test_en_parser_noun_chunks_appositional_modifiers(en_tokenizer):
 def test_en_parser_noun_chunks_dative(en_tokenizer):
     text = "She gave Bob a raise."
     heads = [1, 0, -1, 1, -3, -4]
-    tags = ["PRP", "VBD", "NNP", "DT", "NN", "."]
+    pos = ["PRON", "VERB", "PROPN", "DET", "NOUN", "PUNCT"]
     deps = ["nsubj", "ROOT", "dative", "det", "dobj", "punct"]
     tokens = en_tokenizer(text)
     doc = get_doc(
-        tokens.vocab, words=[t.text for t in tokens], tags=tags, deps=deps, heads=heads
+        tokens.vocab, words=[t.text for t in tokens], pos=pos, deps=deps, heads=heads
     )
     chunks = list(doc.noun_chunks)
     assert len(chunks) == 3

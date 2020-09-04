@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 # Source: https://github.com/Alir3z4/stop-words
 # Source: https://github.com/stopwords-iso/stopwords-cs/blob/master/stopwords-cs.txt
 
