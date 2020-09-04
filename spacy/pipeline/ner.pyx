@@ -88,7 +88,7 @@ def make_ner(
 cdef class EntityRecognizer(Parser):
     """Pipeline component for named entity recognition.
 
-    DOCS: https://spacy.io/api/entityrecognizer
+    DOCS: https://nightly.spacy.io/api/entityrecognizer
     """
     TransitionSystem = BiluoPushDown
 
@@ -119,7 +119,7 @@ cdef class EntityRecognizer(Parser):
         examples (Iterable[Example]): The examples to score.
         RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_spans.
 
-        DOCS: https://spacy.io/api/entityrecognizer#score
+        DOCS: https://nightly.spacy.io/api/entityrecognizer#score
         """
         validate_examples(examples, "EntityRecognizer.score")
         return Scorer.score_spans(examples, "ents", **kwargs)

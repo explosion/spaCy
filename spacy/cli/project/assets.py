@@ -20,6 +20,8 @@ def project_assets_cli(
     defined in the "assets" section of the project.yml. If a checksum is
     provided in the project.yml, the file is only downloaded if no local file
     with the same checksum exists.
+
+    DOCS: https://nightly.spacy.io/api/cli#project-assets
     """
     project_assets(project_dir)
 

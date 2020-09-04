@@ -44,6 +44,8 @@ def train_cli(
     lets you pass in a Python file that's imported before training. It can be
     used to register custom functions and architectures that can then be
     referenced in the config.
+
+    DOCS: https://nightly.spacy.io/api/cli#train
     """
     util.logger.setLevel(logging.DEBUG if verbose else logging.ERROR)
     verify_cli_args(config_path, output_path)

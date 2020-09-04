@@ -105,7 +105,7 @@ def make_parser(
 cdef class DependencyParser(Parser):
     """Pipeline component for dependency parsing.
 
-    DOCS: https://spacy.io/api/dependencyparser
+    DOCS: https://nightly.spacy.io/api/dependencyparser
     """
     TransitionSystem = ArcEager
 
@@ -146,7 +146,7 @@ cdef class DependencyParser(Parser):
         RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_spans
             and Scorer.score_deps.
 
-        DOCS: https://spacy.io/api/dependencyparser#score
+        DOCS: https://nightly.spacy.io/api/dependencyparser#score
         """
         validate_examples(examples, "DependencyParser.score")
         def dep_getter(token, attr):

@@ -29,6 +29,8 @@ def profile_cli(
     Input should be formatted as one JSON object per line with a key "text".
     It can either be provided as a JSONL file, or be read from sys.sytdin.
     If no input file is specified, the IMDB dataset is loaded via Thinc.
+
+    DOCS: https://nightly.spacy.io/api/cli#debug-profile
     """
     if ctx.parent.command.name == NAME:  # called as top-level command
         msg.warn(

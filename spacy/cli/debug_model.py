@@ -30,6 +30,8 @@ def debug_model_cli(
     """
     Analyze a Thinc model implementation. Includes checks for internal structure
     and activations during training.
+
+    DOCS: https://nightly.spacy.io/api/cli#debug-model
     """
     if use_gpu >= 0:
         msg.info("Using GPU")

@@ -24,6 +24,8 @@ def project_run_cli(
     name is specified, all commands in the workflow are run, in order. If
     commands define dependencies and/or outputs, they will only be re-run if
     state has changed.
+
+    DOCS: https://nightly.spacy.io/api/cli#project-run
     """
     if show_help or not subcommand:
         print_run_help(project_dir, subcommand)

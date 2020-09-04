@@ -28,7 +28,7 @@ except ImportError:
 DEFAULT_OOV_PROB = -20
 
 
-@init_cli.command("vectors")
+@init_cli.command("vocab")
 @app.command(
     "init-model",
     context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
@@ -54,6 +54,8 @@ def init_model_cli(
     Create a new blank pipeline directory with vocab and vectors from raw data.
     If vectors are provided in Word2Vec format, they can be either a .txt or
     zipped as a .zip or .tar.gz.
+
+    DOCS: https://nightly.spacy.io/api/cli#init-vocab
     """
     if ctx.command.name == "init-model":
         msg.warn(
