@@ -65,6 +65,10 @@ def test_begin_training_examples():
     nlp.begin_training(get_examples=lambda: train_examples)
     with pytest.raises(TypeError):
         nlp.begin_training(get_examples=lambda: None)
+    with pytest.raises(TypeError):
+        nlp.begin_training(get_examples=lambda: train_examples[0])
+    with pytest.raises(ValueError):
+        nlp.begin_training(get_examples=lambda: [])
     with pytest.raises(ValueError):
         nlp.begin_training(get_examples=train_examples)
 

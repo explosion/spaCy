@@ -199,6 +199,10 @@ cdef class Pipe:
         if get_examples is None or not hasattr(get_examples, "__call__"):
             err = Errors.E930.format(name=self.name, obj=type(get_examples))
             raise ValueError(err)
+        if not get_examples():
+            err = Errors.E930.format(name=self.name, obj=get_examples())
+            raise ValueError(err)
+
 
     def set_output(self, nO):
         if self.model.has_dim("nO") is not False:

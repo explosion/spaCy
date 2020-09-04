@@ -156,8 +156,15 @@ class EntityLinker(Pipe):
         self._ensure_examples(get_examples)
         self._require_kb()
         nO = self.kb.entity_vector_length
-        self.set_output(nO)
-        self.model.initialize()
+        doc_sample = []
+        vector_sample = []
+        for example in get_examples():
+            if len(doc_sample) < 10:
+                doc_sample.append(example.x)
+                vector_sample.append(self.model.ops.alloc1f(nO))
+        assert doc_sample
+        assert vector_sample
+        self.model.initialize(X=doc_sample, Y=self.model.ops.asarray(vector_sample, dtype="float32"))
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd

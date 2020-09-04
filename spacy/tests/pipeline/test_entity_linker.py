@@ -281,11 +281,12 @@ def test_append_invalid_alias(nlp):
 
 def test_preserving_links_asdoc(nlp):
     """Test that Span.as_doc preserves the existing entity links"""
+    vector_length = 1
 
     @registry.misc.register("myLocationsKB.v1")
     def dummy_kb() -> Callable[["Vocab"], KnowledgeBase]:
         def create_kb(vocab):
-            mykb = KnowledgeBase(vocab, entity_vector_length=1)
+            mykb = KnowledgeBase(vocab, entity_vector_length=vector_length)
             # adding entities
             mykb.add_entity(entity="Q1", freq=19, entity_vector=[1])
             mykb.add_entity(entity="Q2", freq=8, entity_vector=[1])
@@ -305,10 +306,9 @@ def test_preserving_links_asdoc(nlp):
     ruler = nlp.add_pipe("entity_ruler")
     ruler.add_patterns(patterns)
     el_config = {"kb_loader": {"@misc": "myLocationsKB.v1"}, "incl_prior": False}
-    el_pipe = nlp.add_pipe("entity_linker", config=el_config, last=True)
-    el_pipe.begin_training(lambda: [])
-    el_pipe.incl_context = False
-    el_pipe.incl_prior = True
+    entity_linker = nlp.add_pipe("entity_linker", config=el_config, last=True)
+    nlp.begin_training()
+    assert entity_linker.model.get_dim("nO") == vector_length
 
     # test whether the entity links are preserved by the `as_doc()` function
     text = "She lives in Boston. He lives in Denver."
@@ -373,6 +373,7 @@ def test_overfitting_IO():
     # Simple test to try and quickly overfit the NEL component - ensuring the ML models work correctly
     nlp = English()
     nlp.add_pipe("sentencizer")
+    vector_length = 3
 
     # Add a custom component to recognize "Russ Cochran" as an entity for the example training data
     patterns = [
@@ -393,7 +394,7 @@ def test_overfitting_IO():
             # create artificial KB - assign same prior weight to the two russ cochran's
             # Q2146908 (Russ Cochran): American golfer
             # Q7381115 (Russ Cochran): publisher
-            mykb = KnowledgeBase(vocab, entity_vector_length=3)
+            mykb = KnowledgeBase(vocab, entity_vector_length=vector_length)
             mykb.add_entity(entity="Q2146908", freq=12, entity_vector=[6, -4, 3])
             mykb.add_entity(entity="Q7381115", freq=12, entity_vector=[9, 1, -7])
             mykb.add_alias(
@@ -406,14 +407,17 @@ def test_overfitting_IO():
         return create_kb
 
     # Create the Entity Linker component and add it to the pipeline
-    nlp.add_pipe(
+    entity_linker = nlp.add_pipe(
         "entity_linker",
         config={"kb_loader": {"@misc": "myOverfittingKB.v1"}},
         last=True,
     )
 
     # train the NEL pipe
-    optimizer = nlp.begin_training()
+    optimizer = nlp.begin_training(get_examples=lambda: train_examples)
+    assert entity_linker.model.get_dim("nO") == vector_length
+    assert entity_linker.model.get_dim("nO") == entity_linker.kb.entity_vector_length
+
     for i in range(50):
         losses = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)
