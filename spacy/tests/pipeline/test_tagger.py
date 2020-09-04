@@ -34,7 +34,14 @@ TRAIN_DATA = [
 ]
 
 
-def test_tagger_invalid_tag():
+def test_no_label():
+    nlp = Language()
+    nlp.add_pipe("tagger")
+    with pytest.raises(ValueError):
+        nlp.begin_training()
+
+
+def test_invalid_tag():
     nlp = Language()
     tagger = nlp.add_pipe("tagger")
     train_examples = []
@@ -46,7 +53,7 @@ def test_tagger_invalid_tag():
         nlp.begin_training(get_examples=lambda: train_examples)
 
 
-def test_tagger_begin_training_examples():
+def test_begin_training_examples():
     nlp = Language()
     tagger = nlp.add_pipe("tagger")
     train_examples = []

@@ -30,7 +30,7 @@ TRAIN_DATA = [
     ),
 ]
 
-def test_senter_begin_training_examples():
+def test_begin_training_examples():
     nlp = Language()
     senter = nlp.add_pipe("senter")
     train_examples = []

@@ -25,8 +25,44 @@ TRAIN_DATA = [
         },
     ),
     # test combinations of morph+POS
-    ("Eat blue ham", {"morphs": ["Feat=V", "", ""], "pos": ["", "ADJ", ""]},),
+    ("Eat blue ham", {"morphs": ["Feat=V", "", ""], "pos": ["", "ADJ", ""]}),
 ]
+
+
+def test_invalid_label():
+    nlp = Language()
+    morphologizer = nlp.add_pipe("morphologizer")
+    train_examples = []
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+    with pytest.raises(ValueError):
+        nlp.begin_training(get_examples=lambda: train_examples)
+
+
+def test_begin_training_examples():
+    nlp = Language()
+    morphologizer = nlp.add_pipe("morphologizer")
+    train_examples = []
+    for inst in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(inst[0]), inst[1]))
+        for morph, pos in zip(inst[1]["morphs"], inst[1]["pos"]):
+            if morph and pos:
+                morphologizer.add_label(
+                    morph + Morphology.FEATURE_SEP + "POS" + Morphology.FIELD_SEP + pos
+                )
+            elif pos:
+                morphologizer.add_label("POS" + Morphology.FIELD_SEP + pos)
+            elif morph:
+                morphologizer.add_label(morph)
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+    # you shouldn't really call this more than once, but for testing it should be fine
+    nlp.begin_training()
+    nlp.begin_training(get_examples=lambda: train_examples)
+    with pytest.raises(TypeError):
+        nlp.begin_training(get_examples=lambda: None)
+    with pytest.raises(ValueError):
+        nlp.begin_training(get_examples=train_examples)
 
 
 def test_overfitting_IO():
@@ -55,18 +91,8 @@ def test_overfitting_IO():
     # test the trained model
     test_text = "I like blue ham"
     doc = nlp(test_text)
-    gold_morphs = [
-        "Feat=N",
-        "Feat=V",
-        "",
-        "",
-    ]
-    gold_pos_tags = [
-        "NOUN",
-        "VERB",
-        "ADJ",
-        "",
-    ]
+    gold_morphs = ["Feat=N", "Feat=V", "", ""]
+    gold_pos_tags = ["NOUN", "VERB", "ADJ", ""]
     assert [t.morph_ for t in doc] == gold_morphs
     assert [t.pos_ for t in doc] == gold_pos_tags
 

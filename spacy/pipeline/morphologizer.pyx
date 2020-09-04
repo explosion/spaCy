@@ -144,7 +144,13 @@ class Morphologizer(Tagger):
         if get_examples is None or not hasattr(get_examples, "__call__"):
             err = Errors.E930.format(name="Morphologizer", obj=type(get_examples))
             raise ValueError(err)
+        if len(self.labels) == 0:
+            err = Errors.E1006.format(name="Morphologizer")
+            raise ValueError(err)
+        doc_sample = []
+        label_sample = []
         for example in get_examples():
+            gold_array = []
             for i, token in enumerate(example.reference):
                 pos = token.pos_
                 morph = token.morph_
@@ -153,12 +159,16 @@ class Morphologizer(Tagger):
                 if pos:
                     morph_dict[self.POS_FEAT] = pos
                 norm_label = self.vocab.strings[self.vocab.morphology.add(morph_dict)]
-                # add label->morph and label->POS mappings
-                if norm_label not in self.cfg["labels_morph"]:
-                    self.cfg["labels_morph"][norm_label] = morph
-                    self.cfg["labels_pos"][norm_label] = POS_IDS[pos]
-        self.set_output(len(self.labels))
-        self.model.initialize()
+                if norm_label not in self.labels:
+                    err = Errors.E920.format(component="morphologizer", label=norm_label)
+                    raise ValueError(err)
+                gold_array.append([1.0 if label == norm_label else 0.0 for label in self.labels])
+            if len(doc_sample) < 10:
+                doc_sample.append(example.x)
+                label_sample.append(self.model.ops.asarray(gold_array, dtype="float32"))
+        assert doc_sample
+        assert label_sample
+        self.model.initialize(X=doc_sample, Y=label_sample)
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
