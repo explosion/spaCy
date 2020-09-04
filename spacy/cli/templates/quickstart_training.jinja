@@ -186,11 +186,14 @@ accumulate_gradient = {{ transformer["size_factor"] }}
 [training.optimizer]
 @optimizers = "Adam.v1"
 
+
+{% if use_transformer -%}
 [training.optimizer.learn_rate]
 @schedules = "warmup_linear.v1"
 warmup_steps = 250
 total_steps = 20000
 initial_rate = 5e-5
+{% endif %}
 
 [training.train_corpus]
 @readers = "spacy.Corpus.v1"
