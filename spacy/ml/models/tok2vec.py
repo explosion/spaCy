@@ -165,7 +165,7 @@ def MultiHashEmbed(
 
 @registry.architectures.register("spacy.CharacterEmbed.v1")
 def CharacterEmbed(width: int, rows: int, nM: int, nC: int):
-    """Construct an embedded representations based on character embeddings, using
+    """Construct an embedded representation based on character embeddings, using
     a feed-forward network. A fixed number of UTF-8 byte characters are used for
     each word, taken from the beginning and end of the word equally. Padding is
     used in the centre for words that are too short.
