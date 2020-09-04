@@ -21,7 +21,7 @@ cdef class Candidate:
     algorithm which will disambiguate the various candidates to the correct one.
     Each candidate (alias, entity) pair is assigned to a certain prior probability.
 
-    DOCS: https://spacy.io/api/kb/#candidate_init
+    DOCS: https://nightly.spacy.io/api/kb/#candidate_init
     """
 
     def __init__(self, KnowledgeBase kb, entity_hash, entity_freq, entity_vector, alias_hash, prior_prob):
@@ -79,7 +79,7 @@ cdef class KnowledgeBase:
     """A `KnowledgeBase` instance stores unique identifiers for entities and their textual aliases,
     to support entity linking of named entities to real-world concepts.
 
-    DOCS: https://spacy.io/api/kb
+    DOCS: https://nightly.spacy.io/api/kb
     """
 
     def __init__(self, Vocab vocab, entity_vector_length):

@@ -78,7 +78,7 @@ class SimpleNER(Pipe):
     def add_label(self, label: str) -> None:
         """Add a new label to the pipe.
         label (str): The label to add.
-        DOCS: https://spacy.io/api/simplener#add_label
+        DOCS: https://nightly.spacy.io/api/simplener#add_label
         """
         if not isinstance(label, str):
             raise ValueError(Errors.E187)

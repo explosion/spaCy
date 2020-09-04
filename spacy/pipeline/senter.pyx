@@ -44,7 +44,7 @@ def make_senter(nlp: Language, name: str, model: Model):
 class SentenceRecognizer(Tagger):
     """Pipeline component for sentence segmentation.
 
-    DOCS: https://spacy.io/api/sentencerecognizer
+    DOCS: https://nightly.spacy.io/api/sentencerecognizer
     """
     def __init__(self, vocab, model, name="senter"):
         """Initialize a sentence recognizer.
@@ -54,7 +54,7 @@ class SentenceRecognizer(Tagger):
         name (str): The component instance name, used to add entries to the
             losses during training.
 
-        DOCS: https://spacy.io/api/sentencerecognizer#init
+        DOCS: https://nightly.spacy.io/api/sentencerecognizer#init
         """
         self.vocab = vocab
         self.model = model
@@ -76,7 +76,7 @@ class SentenceRecognizer(Tagger):
         docs (Iterable[Doc]): The documents to modify.
         batch_tag_ids: The IDs to set, produced by SentenceRecognizer.predict.
 
-        DOCS: https://spacy.io/api/sentencerecognizer#set_annotations
+        DOCS: https://nightly.spacy.io/api/sentencerecognizer#set_annotations
         """
         if isinstance(docs, Doc):
             docs = [docs]
@@ -101,7 +101,7 @@ class SentenceRecognizer(Tagger):
         scores: Scores representing the model's predictions.
         RETUTNRS (Tuple[float, float]): The loss and the gradient.
 
-        DOCS: https://spacy.io/api/sentencerecognizer#get_loss
+        DOCS: https://nightly.spacy.io/api/sentencerecognizer#get_loss
         """
         validate_examples(examples, "SentenceRecognizer.get_loss")
         labels = self.labels
@@ -135,7 +135,7 @@ class SentenceRecognizer(Tagger):
             create_optimizer if it doesn't exist.
         RETURNS (thinc.api.Optimizer): The optimizer.
 
-        DOCS: https://spacy.io/api/sentencerecognizer#begin_training
+        DOCS: https://nightly.spacy.io/api/sentencerecognizer#begin_training
         """
         self.set_output(len(self.labels))
         self.model.initialize()
@@ -151,7 +151,7 @@ class SentenceRecognizer(Tagger):
 
         examples (Iterable[Example]): The examples to score.
         RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_spans.
-        DOCS: https://spacy.io/api/sentencerecognizer#score
+        DOCS: https://nightly.spacy.io/api/sentencerecognizer#score
         """
         validate_examples(examples, "SentenceRecognizer.score")
         results = Scorer.score_spans(examples, "sents", **kwargs)
@@ -164,7 +164,7 @@ class SentenceRecognizer(Tagger):
         exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (bytes): The serialized object.
 
-        DOCS: https://spacy.io/api/sentencerecognizer#to_bytes
+        DOCS: https://nightly.spacy.io/api/sentencerecognizer#to_bytes
         """
         serialize = {}
         serialize["model"] = self.model.to_bytes
@@ -179,7 +179,7 @@ class SentenceRecognizer(Tagger):
         exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (Tagger): The loaded SentenceRecognizer.
 
-        DOCS: https://spacy.io/api/sentencerecognizer#from_bytes
+        DOCS: https://nightly.spacy.io/api/sentencerecognizer#from_bytes
         """
         def load_model(b):
             try:
@@ -201,7 +201,7 @@ class SentenceRecognizer(Tagger):
         path (str / Path): Path to a directory.
         exclude (Iterable[str]): String names of serialization fields to exclude.
 
-        DOCS: https://spacy.io/api/sentencerecognizer#to_disk
+        DOCS: https://nightly.spacy.io/api/sentencerecognizer#to_disk
         """
         serialize = {
             "vocab": lambda p: self.vocab.to_disk(p),
@@ -217,7 +217,7 @@ class SentenceRecognizer(Tagger):
         exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (Tagger): The modified SentenceRecognizer object.
 
-        DOCS: https://spacy.io/api/sentencerecognizer#from_disk
+        DOCS: https://nightly.spacy.io/api/sentencerecognizer#from_disk
         """
         def load_model(p):
             with p.open("rb") as file_:

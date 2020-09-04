@@ -21,6 +21,8 @@ def info_cli(
     Print info about spaCy installation. If a pipeline is speficied as an argument,
     print its meta information. Flag --markdown prints details in Markdown for easy
     copy-pasting to GitHub issues.
+
+    DOCS: https://nightly.spacy.io/api/cli#info
     """
     info(model, markdown=markdown, silent=silent)
 

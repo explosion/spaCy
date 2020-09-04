@@ -28,7 +28,7 @@ path = ${paths.train}
 path = ${paths.dev}
 
 [training.batcher]
-@batchers = "batch_by_words.v1"
+@batchers = "spacy.batch_by_words.v1"
 size = 666
 
 [nlp]

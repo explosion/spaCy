@@ -842,12 +842,20 @@ load and train custom pipelines with custom components. A simple solution is to
 **register a function** that returns your resources. The
 [registry](/api/top-level#registry) lets you **map string names to functions**
 that create objects, so given a name and optional arguments, spaCy will know how
-to recreate the object. To register a function that returns a custom asset, you
-can use the `@spacy.registry.assets` decorator with a single argument, the name:
+to recreate the object. To register a function that returns your custom
+dictionary, you can use the `@spacy.registry.misc` decorator with a single
+argument, the name:
+
+> #### What's the misc registry?
+>
+> The [`registry`](/api/top-level#registry) provides different categories for
+> different types of functions – for example, model architectures, tokenizers or
+> batchers. `misc` is intended for miscellaneous functions that don't fit
+> anywhere else.
 
 ```python
 ### Registered function for assets {highlight="1"}
-@spacy.registry.assets("acronyms.slang_dict.v1")
+@spacy.registry.misc("acronyms.slang_dict.v1")
 def create_acronyms_slang_dict():
     dictionary = {"lol": "laughing out loud", "brb": "be right back"}
     dictionary.update({value: key for key, value in dictionary.items()})
@@ -856,9 +864,9 @@ def create_acronyms_slang_dict():
 
 In your `default_config` (and later in your
 [training config](/usage/training#config)), you can now refer to the function
-registered under the name `"acronyms.slang_dict.v1"` using the `@assets` key.
-This tells spaCy how to create the value, and when your component is created,
-the result of the registered function is passed in as the key `"dictionary"`.
+registered under the name `"acronyms.slang_dict.v1"` using the `@misc` key. This
+tells spaCy how to create the value, and when your component is created, the
+result of the registered function is passed in as the key `"dictionary"`.
 
 > #### config.cfg
 >
@@ -867,22 +875,22 @@ the result of the registered function is passed in as the key `"dictionary"`.
 > factory = "acronyms"
 >
 > [components.acronyms.dictionary]
-> @assets = "acronyms.slang_dict.v1"
+> @misc = "acronyms.slang_dict.v1"
 > ```
 
 ```diff
 - default_config = {"dictionary:" DICTIONARY}
-+ default_config = {"dictionary": {"@assets": "acronyms.slang_dict.v1"}}
++ default_config = {"dictionary": {"@misc": "acronyms.slang_dict.v1"}}
 ```
 
 Using a registered function also means that you can easily include your custom
 components in pipelines that you [train](/usage/training). To make sure spaCy
-knows where to find your custom `@assets` function, you can pass in a Python
-file via the argument `--code`. If someone else is using your component, all
-they have to do to customize the data is to register their own function and swap
-out the name. Registered functions can also take **arguments** by the way that
-can be defined in the config as well – you can read more about this in the docs
-on [training with custom code](/usage/training#custom-code).
+knows where to find your custom `@misc` function, you can pass in a Python file
+via the argument `--code`. If someone else is using your component, all they
+have to do to customize the data is to register their own function and swap out
+the name. Registered functions can also take **arguments** by the way that can
+be defined in the config as well – you can read more about this in the docs on
+[training with custom code](/usage/training#custom-code).
 
 ### Python type hints and pydantic validation {#type-hints new="3"}
 

@@ -47,6 +47,8 @@ def debug_data_cli(
     Analyze, debug and validate your training and development data. Outputs
     useful stats, and can help you find problems like invalid entity annotations,
     cyclic dependencies, low data labels and more.
+
+    DOCS: https://nightly.spacy.io/api/cli#debug-data
     """
     if ctx.command.name == "debug-data":
         msg.warn(

@@ -53,8 +53,8 @@ class EntityRuler:
     purely rule-based entity recognition system. After initialization, the
     component is typically added to the pipeline using `nlp.add_pipe`.
 
-    DOCS: https://spacy.io/api/entityruler
-    USAGE: https://spacy.io/usage/rule-based-matching#entityruler
+    DOCS: https://nightly.spacy.io/api/entityruler
+    USAGE: https://nightly.spacy.io/usage/rule-based-matching#entityruler
     """
 
     def __init__(
@@ -88,7 +88,7 @@ class EntityRuler:
             added by the model, overwrite them by matches if necessary.
         ent_id_sep (str): Separator used internally for entity IDs.
 
-        DOCS: https://spacy.io/api/entityruler#init
+        DOCS: https://nightly.spacy.io/api/entityruler#init
         """
         self.nlp = nlp
         self.name = name
@@ -127,7 +127,7 @@ class EntityRuler:
         doc (Doc): The Doc object in the pipeline.
         RETURNS (Doc): The Doc with added entities, if available.
 
-        DOCS: https://spacy.io/api/entityruler#call
+        DOCS: https://nightly.spacy.io/api/entityruler#call
         """
         matches = list(self.matcher(doc)) + list(self.phrase_matcher(doc))
         matches = set(
@@ -165,7 +165,7 @@ class EntityRuler:
 
         RETURNS (set): The string labels.
 
-        DOCS: https://spacy.io/api/entityruler#labels
+        DOCS: https://nightly.spacy.io/api/entityruler#labels
         """
         keys = set(self.token_patterns.keys())
         keys.update(self.phrase_patterns.keys())
@@ -185,7 +185,7 @@ class EntityRuler:
 
         RETURNS (set): The string entity ids.
 
-        DOCS: https://spacy.io/api/entityruler#ent_ids
+        DOCS: https://nightly.spacy.io/api/entityruler#ent_ids
         """
         keys = set(self.token_patterns.keys())
         keys.update(self.phrase_patterns.keys())
@@ -203,7 +203,7 @@ class EntityRuler:
 
         RETURNS (list): The original patterns, one dictionary per pattern.
 
-        DOCS: https://spacy.io/api/entityruler#patterns
+        DOCS: https://nightly.spacy.io/api/entityruler#patterns
         """
         all_patterns = []
         for label, patterns in self.token_patterns.items():
@@ -230,7 +230,7 @@ class EntityRuler:
 
         patterns (list): The patterns to add.
 
-        DOCS: https://spacy.io/api/entityruler#add_patterns
+        DOCS: https://nightly.spacy.io/api/entityruler#add_patterns
         """
 
         # disable the nlp components after this one in case they hadn't been initialized / deserialised yet
@@ -324,7 +324,7 @@ class EntityRuler:
         patterns_bytes (bytes): The bytestring to load.
         RETURNS (EntityRuler): The loaded entity ruler.
 
-        DOCS: https://spacy.io/api/entityruler#from_bytes
+        DOCS: https://nightly.spacy.io/api/entityruler#from_bytes
         """
         cfg = srsly.msgpack_loads(patterns_bytes)
         self.clear()
@@ -346,7 +346,7 @@ class EntityRuler:
 
         RETURNS (bytes): The serialized patterns.
 
-        DOCS: https://spacy.io/api/entityruler#to_bytes
+        DOCS: https://nightly.spacy.io/api/entityruler#to_bytes
         """
         serial = {
             "overwrite": self.overwrite,
@@ -365,7 +365,7 @@ class EntityRuler:
         path (str / Path): The JSONL file to load.
         RETURNS (EntityRuler): The loaded entity ruler.
 
-        DOCS: https://spacy.io/api/entityruler#from_disk
+        DOCS: https://nightly.spacy.io/api/entityruler#from_disk
         """
         path = ensure_path(path)
         self.clear()
@@ -401,7 +401,7 @@ class EntityRuler:
 
         path (str / Path): The JSONL file to save.
 
-        DOCS: https://spacy.io/api/entityruler#to_disk
+        DOCS: https://nightly.spacy.io/api/entityruler#to_disk
         """
         path = ensure_path(path)
         cfg = {

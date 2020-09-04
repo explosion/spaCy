@@ -31,6 +31,8 @@ def package_cli(
     the existing values will be used as the defaults in the command-line prompt.
     After packaging, "python setup.py sdist" is run in the package directory,
     which will create a .tar.gz archive that can be installed via "pip install".
+
+    DOCS: https://nightly.spacy.io/api/cli#package
     """
     package(
         input_dir,
