@@ -1,7 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-
 """
 Example sentences to test spaCy and its language models.
 >>> from spacy.lang.cs.examples import sentences
@@ -10,9 +6,9 @@ Example sentences to test spaCy and its language models.
 
 
 sentences = [
-   "Máma mele maso.",
+    "Máma mele maso.",
     "Příliš žluťoučký kůň úpěl ďábelské ódy.",
-    "ArcGIS je geografický informační systém určený pro práci s prostorovými daty." ,
+    "ArcGIS je geografický informační systém určený pro práci s prostorovými daty.",
     "Může data vytvářet a spravovat, ale především je dokáže analyzovat, najít v nich nové vztahy a vše přehledně vizualizovat.",
     "Dnes je krásné počasí.",
     "Nestihl autobus, protože pozdě vstal z postele.",
@@ -39,4 +35,4 @@ sentences = [
     "Jaké PSČ má Praha 1?",
     "PSČ Prahy 1 je 110 00.",
     "Za 20 minut jede vlak.",
-    ]
+]
