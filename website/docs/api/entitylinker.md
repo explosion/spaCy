@@ -13,8 +13,8 @@ An `EntityLinker` component disambiguates textual mentions (tagged as named
 entities) to unique identifiers, grounding the named entities into the "real
 world". It requires a `KnowledgeBase`, as well as a function to generate
 plausible candidates from that `KnowledgeBase` given a certain textual mention,
-and a ML model to pick the right candidate, given the local context of the
-mention.
+and a machine learning model to pick the right candidate, given the local
+context of the mention.
 
 ## Config and implementation {#config}
 
@@ -34,8 +34,8 @@ architectures and their arguments and hyperparameters.
 >    "incl_prior": True,
 >    "incl_context": True,
 >    "model": DEFAULT_NEL_MODEL,
->    "kb_loader": {'@assets': 'spacy.EmptyKB.v1', 'entity_vector_length': 64},
->    "get_candidates": {'@assets': 'spacy.CandidateGenerator.v1'},
+>    "kb_loader": {'@misc': 'spacy.EmptyKB.v1', 'entity_vector_length': 64},
+>    "get_candidates": {'@misc': 'spacy.CandidateGenerator.v1'},
 > }
 > nlp.add_pipe("entity_linker", config=config)
 > ```
@@ -66,7 +66,7 @@ https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/entity_linker.py
 > entity_linker = nlp.add_pipe("entity_linker", config=config)
 >
 > # Construction via add_pipe with custom KB and candidate generation
-> config = {"kb": {"@assets": "my_kb.v1"}}
+> config = {"kb": {"@misc": "my_kb.v1"}}
 > entity_linker = nlp.add_pipe("entity_linker", config=config)
 >
 > # Construction from class

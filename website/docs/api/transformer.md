@@ -453,7 +453,7 @@ using the `@spacy.registry.span_getters` decorator.
 > #### Example
 >
 > ```python
-> @spacy.registry.span_getters("sent_spans.v1")
+> @spacy.registry.span_getters("custom_sent_spans")
 > def configure_get_sent_spans() -> Callable:
 >     def get_sent_spans(docs: Iterable[Doc]) -> List[List[Span]]:
 >         return [list(doc.sents) for doc in docs]
@@ -472,7 +472,7 @@ using the `@spacy.registry.span_getters` decorator.
 >
 > ```ini
 > [transformer.model.get_spans]
-> @span_getters = "doc_spans.v1"
+> @span_getters = "spacy-transformers.doc_spans.v1"
 > ```
 
 Create a span getter that uses the whole document as its spans. This is the best
@@ -485,7 +485,7 @@ texts.
 >
 > ```ini
 > [transformer.model.get_spans]
-> @span_getters = "sent_spans.v1"
+> @span_getters = "spacy-transformers.sent_spans.v1"
 > ```
 
 Create a span getter that uses sentence boundary markers to extract the spans.
@@ -500,7 +500,7 @@ more meaningful windows to attend over.
 >
 > ```ini
 > [transformer.model.get_spans]
-> @span_getters = "strided_spans.v1"
+> @span_getters = "spacy-transformers.strided_spans.v1"
 > window = 128
 > stride = 96
 > ```

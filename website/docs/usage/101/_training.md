@@ -1,25 +1,25 @@
 spaCy's tagger, parser, text categorizer and many other components are powered
 by **statistical models**. Every "decision" these components make – for example,
 which part-of-speech tag to assign, or whether a word is a named entity – is a
-**prediction** based on the model's current **weight values**. The weight
-values are estimated based on examples the model has seen
-during **training**. To train a model, you first need training data – examples
-of text, and the labels you want the model to predict. This could be a
-part-of-speech tag, a named entity or any other information.
+**prediction** based on the model's current **weight values**. The weight values
+are estimated based on examples the model has seen during **training**. To train
+a model, you first need training data – examples of text, and the labels you
+want the model to predict. This could be a part-of-speech tag, a named entity or
+any other information.
 
-Training is an iterative process in which the model's predictions are compared 
+Training is an iterative process in which the model's predictions are compared
 against the reference annotations in order to estimate the **gradient of the
 loss**. The gradient of the loss is then used to calculate the gradient of the
 weights through [backpropagation](https://thinc.ai/backprop101). The gradients
-indicate how the weight values should be changed so that the model's
-predictions become more similar to the reference labels over time. 
+indicate how the weight values should be changed so that the model's predictions
+become more similar to the reference labels over time.
 
 > - **Training data:** Examples and their annotations.
 > - **Text:** The input text the model should predict a label for.
 > - **Label:** The label the model should predict.
 > - **Gradient:** The direction and rate of change for a numeric value.
->   Minimising the gradient of the weights should result in predictions that
->   are closer to the reference labels on the training data.
+>   Minimising the gradient of the weights should result in predictions that are
+>   closer to the reference labels on the training data.
 
 ![The training process](../../images/training.svg)
 

@@ -13,7 +13,7 @@ def nlp():
 
 @pytest.fixture
 def lemmatizer(nlp):
-    @registry.assets("cope_lookups")
+    @registry.misc("cope_lookups")
     def cope_lookups():
         lookups = Lookups()
         lookups.add_table("lemma_lookup", {"cope": "cope"})
@@ -23,13 +23,13 @@ def lemmatizer(nlp):
         return lookups
 
     lemmatizer = nlp.add_pipe(
-        "lemmatizer", config={"mode": "rule", "lookups": {"@assets": "cope_lookups"}}
+        "lemmatizer", config={"mode": "rule", "lookups": {"@misc": "cope_lookups"}}
     )
     return lemmatizer
 
 
 def test_lemmatizer_init(nlp):
-    @registry.assets("cope_lookups")
+    @registry.misc("cope_lookups")
     def cope_lookups():
         lookups = Lookups()
         lookups.add_table("lemma_lookup", {"cope": "cope"})
@@ -39,7 +39,7 @@ def test_lemmatizer_init(nlp):
         return lookups
 
     lemmatizer = nlp.add_pipe(
-        "lemmatizer", config={"mode": "lookup", "lookups": {"@assets": "cope_lookups"}}
+        "lemmatizer", config={"mode": "lookup", "lookups": {"@misc": "cope_lookups"}}
     )
     assert isinstance(lemmatizer.lookups, Lookups)
     assert lemmatizer.mode == "lookup"
@@ -51,14 +51,14 @@ def test_lemmatizer_init(nlp):
 
     nlp.remove_pipe("lemmatizer")
 
-    @registry.assets("empty_lookups")
+    @registry.misc("empty_lookups")
     def empty_lookups():
         return Lookups()
 
     with pytest.raises(ValueError):
         nlp.add_pipe(
             "lemmatizer",
-            config={"mode": "lookup", "lookups": {"@assets": "empty_lookups"}},
+            config={"mode": "lookup", "lookups": {"@misc": "empty_lookups"}},
         )
 
 
@@ -79,7 +79,7 @@ def test_lemmatizer_config(nlp, lemmatizer):
 
 
 def test_lemmatizer_serialize(nlp, lemmatizer):
-    @registry.assets("cope_lookups")
+    @registry.misc("cope_lookups")
     def cope_lookups():
         lookups = Lookups()
         lookups.add_table("lemma_lookup", {"cope": "cope"})
@@ -90,7 +90,7 @@ def test_lemmatizer_serialize(nlp, lemmatizer):
 
     nlp2 = English()
     lemmatizer2 = nlp2.add_pipe(
-        "lemmatizer", config={"mode": "rule", "lookups": {"@assets": "cope_lookups"}}
+        "lemmatizer", config={"mode": "rule", "lookups": {"@misc": "cope_lookups"}}
     )
     lemmatizer2.from_bytes(lemmatizer.to_bytes())
     assert lemmatizer.to_bytes() == lemmatizer2.to_bytes()

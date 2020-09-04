@@ -19,7 +19,7 @@ from ..util import load_model
 def profile_cli(
     # fmt: off
     ctx: typer.Context,  # This is only used to read current calling context
-    model: str = Arg(..., help="Model to load"),
+    model: str = Arg(..., help="Trained pipeline to load"),
     inputs: Optional[Path] = Arg(None, help="Location of input file. '-' for stdin.", exists=True, allow_dash=True),
     n_texts: int = Opt(10000, "--n-texts", "-n", help="Maximum number of texts to use if available"),
     # fmt: on
@@ -29,6 +29,8 @@ def profile_cli(
     Input should be formatted as one JSON object per line with a key "text".
     It can either be provided as a JSONL file, or be read from sys.sytdin.
     If no input file is specified, the IMDB dataset is loaded via Thinc.
+
+    DOCS: https://nightly.spacy.io/api/cli#debug-profile
     """
     if ctx.parent.command.name == NAME:  # called as top-level command
         msg.warn(
@@ -60,9 +62,9 @@ def profile(model: str, inputs: Optional[Path] = None, n_texts: int = 10000) -> 
             inputs, _ = zip(*imdb_train)
         msg.info(f"Loaded IMDB dataset and using {n_inputs} examples")
         inputs = inputs[:n_inputs]
-    with msg.loading(f"Loading model '{model}'..."):
+    with msg.loading(f"Loading pipeline '{model}'..."):
         nlp = load_model(model)
-    msg.good(f"Loaded model '{model}'")
+    msg.good(f"Loaded pipeline '{model}'")
     texts = list(itertools.islice(inputs, n_texts))
     cProfile.runctx("parse_texts(nlp, texts)", globals(), locals(), "Profile.prof")
     s = pstats.Stats("Profile.prof")

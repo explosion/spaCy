@@ -30,7 +30,7 @@ cdef class Token:
     """An individual token – i.e. a word, punctuation symbol, whitespace,
     etc.
 
-    DOCS: https://spacy.io/api/token
+    DOCS: https://nightly.spacy.io/api/token
     """
     @classmethod
     def set_extension(cls, name, **kwargs):
@@ -43,8 +43,8 @@ cdef class Token:
         method (callable): Optional method for method extension.
         force (bool): Force overwriting existing attribute.
 
-        DOCS: https://spacy.io/api/token#set_extension
-        USAGE: https://spacy.io/usage/processing-pipelines#custom-components-attributes
+        DOCS: https://nightly.spacy.io/api/token#set_extension
+        USAGE: https://nightly.spacy.io/usage/processing-pipelines#custom-components-attributes
         """
         if cls.has_extension(name) and not kwargs.get("force", False):
             raise ValueError(Errors.E090.format(name=name, obj="Token"))
@@ -57,7 +57,7 @@ cdef class Token:
         name (str): Name of the extension.
         RETURNS (tuple): A `(default, method, getter, setter)` tuple.
 
-        DOCS: https://spacy.io/api/token#get_extension
+        DOCS: https://nightly.spacy.io/api/token#get_extension
         """
         return Underscore.token_extensions.get(name)
 
@@ -68,7 +68,7 @@ cdef class Token:
         name (str): Name of the extension.
         RETURNS (bool): Whether the extension has been registered.
 
-        DOCS: https://spacy.io/api/token#has_extension
+        DOCS: https://nightly.spacy.io/api/token#has_extension
         """
         return name in Underscore.token_extensions
 
@@ -80,7 +80,7 @@ cdef class Token:
         RETURNS (tuple): A `(default, method, getter, setter)` tuple of the
             removed extension.
 
-        DOCS: https://spacy.io/api/token#remove_extension
+        DOCS: https://nightly.spacy.io/api/token#remove_extension
         """
         if not cls.has_extension(name):
             raise ValueError(Errors.E046.format(name=name))
@@ -93,7 +93,7 @@ cdef class Token:
         doc (Doc): The parent document.
         offset (int): The index of the token within the document.
 
-        DOCS: https://spacy.io/api/token#init
+        DOCS: https://nightly.spacy.io/api/token#init
         """
         self.vocab = vocab
         self.doc = doc
@@ -108,7 +108,7 @@ cdef class Token:
 
         RETURNS (int): The number of unicode characters in the token.
 
-        DOCS: https://spacy.io/api/token#len
+        DOCS: https://nightly.spacy.io/api/token#len
         """
         return self.c.lex.length
 
@@ -171,7 +171,7 @@ cdef class Token:
         flag_id (int): The ID of the flag attribute.
         RETURNS (bool): Whether the flag is set.
 
-        DOCS: https://spacy.io/api/token#check_flag
+        DOCS: https://nightly.spacy.io/api/token#check_flag
         """
         return Lexeme.c_check_flag(self.c.lex, flag_id)
 
@@ -181,7 +181,7 @@ cdef class Token:
         i (int): The relative position of the token to get. Defaults to 1.
         RETURNS (Token): The token at position `self.doc[self.i+i]`.
 
-        DOCS: https://spacy.io/api/token#nbor
+        DOCS: https://nightly.spacy.io/api/token#nbor
         """
         if self.i+i < 0 or (self.i+i >= len(self.doc)):
             raise IndexError(Errors.E042.format(i=self.i, j=i, length=len(self.doc)))
@@ -195,7 +195,7 @@ cdef class Token:
             `Span`, `Token` and `Lexeme` objects.
         RETURNS (float): A scalar similarity score. Higher is more similar.
 
-        DOCS: https://spacy.io/api/token#similarity
+        DOCS: https://nightly.spacy.io/api/token#similarity
         """
         if "similarity" in self.doc.user_token_hooks:
             return self.doc.user_token_hooks["similarity"](self, other)
@@ -373,7 +373,7 @@ cdef class Token:
 
         RETURNS (bool): Whether a word vector is associated with the object.
 
-        DOCS: https://spacy.io/api/token#has_vector
+        DOCS: https://nightly.spacy.io/api/token#has_vector
         """
         if "has_vector" in self.doc.user_token_hooks:
             return self.doc.user_token_hooks["has_vector"](self)
@@ -388,7 +388,7 @@ cdef class Token:
         RETURNS (numpy.ndarray[ndim=1, dtype='float32']): A 1D numpy array
             representing the token's semantics.
 
-        DOCS: https://spacy.io/api/token#vector
+        DOCS: https://nightly.spacy.io/api/token#vector
         """
         if "vector" in self.doc.user_token_hooks:
             return self.doc.user_token_hooks["vector"](self)
@@ -403,7 +403,7 @@ cdef class Token:
 
         RETURNS (float): The L2 norm of the vector representation.
 
-        DOCS: https://spacy.io/api/token#vector_norm
+        DOCS: https://nightly.spacy.io/api/token#vector_norm
         """
         if "vector_norm" in self.doc.user_token_hooks:
             return self.doc.user_token_hooks["vector_norm"](self)
@@ -426,7 +426,7 @@ cdef class Token:
         RETURNS (int): The number of leftward immediate children of the
             word, in the syntactic dependency parse.
 
-        DOCS: https://spacy.io/api/token#n_lefts
+        DOCS: https://nightly.spacy.io/api/token#n_lefts
         """
         return self.c.l_kids
 
@@ -438,7 +438,7 @@ cdef class Token:
         RETURNS (int): The number of rightward immediate children of the
             word, in the syntactic dependency parse.
 
-        DOCS: https://spacy.io/api/token#n_rights
+        DOCS: https://nightly.spacy.io/api/token#n_rights
         """
         return self.c.r_kids
 
@@ -470,7 +470,7 @@ cdef class Token:
         RETURNS (bool / None): Whether the token starts a sentence.
             None if unknown.
 
-        DOCS: https://spacy.io/api/token#is_sent_start
+        DOCS: https://nightly.spacy.io/api/token#is_sent_start
         """
         def __get__(self):
             if self.c.sent_start == 0:
@@ -499,7 +499,7 @@ cdef class Token:
         RETURNS (bool / None): Whether the token ends a sentence.
             None if unknown.
 
-        DOCS: https://spacy.io/api/token#is_sent_end
+        DOCS: https://nightly.spacy.io/api/token#is_sent_end
         """
         def __get__(self):
             if self.i + 1 == len(self.doc):
@@ -521,7 +521,7 @@ cdef class Token:
 
         YIELDS (Token): A left-child of the token.
 
-        DOCS: https://spacy.io/api/token#lefts
+        DOCS: https://nightly.spacy.io/api/token#lefts
         """
         cdef int nr_iter = 0
         cdef const TokenC* ptr = self.c - (self.i - self.c.l_edge)
@@ -541,7 +541,7 @@ cdef class Token:
 
         YIELDS (Token): A right-child of the token.
 
-        DOCS: https://spacy.io/api/token#rights
+        DOCS: https://nightly.spacy.io/api/token#rights
         """
         cdef const TokenC* ptr = self.c + (self.c.r_edge - self.i)
         tokens = []
@@ -563,7 +563,7 @@ cdef class Token:
 
         YIELDS (Token): A child token such that `child.head==self`.
 
-        DOCS: https://spacy.io/api/token#children
+        DOCS: https://nightly.spacy.io/api/token#children
         """
         yield from self.lefts
         yield from self.rights
@@ -576,7 +576,7 @@ cdef class Token:
         YIELDS (Token): A descendent token such that
             `self.is_ancestor(descendent) or token == self`.
 
-        DOCS: https://spacy.io/api/token#subtree
+        DOCS: https://nightly.spacy.io/api/token#subtree
         """
         for word in self.lefts:
             yield from word.subtree
@@ -607,7 +607,7 @@ cdef class Token:
         YIELDS (Token): A sequence of ancestor tokens such that
             `ancestor.is_ancestor(self)`.
 
-        DOCS: https://spacy.io/api/token#ancestors
+        DOCS: https://nightly.spacy.io/api/token#ancestors
         """
         cdef const TokenC* head_ptr = self.c
         # Guard against infinite loop, no token can have
@@ -625,7 +625,7 @@ cdef class Token:
         descendant (Token): Another token.
         RETURNS (bool): Whether this token is the ancestor of the descendant.
 
-        DOCS: https://spacy.io/api/token#is_ancestor
+        DOCS: https://nightly.spacy.io/api/token#is_ancestor
         """
         if self.doc is not descendant.doc:
             return False
@@ -729,7 +729,7 @@ cdef class Token:
 
         RETURNS (tuple): The coordinated tokens.
 
-        DOCS: https://spacy.io/api/token#conjuncts
+        DOCS: https://nightly.spacy.io/api/token#conjuncts
         """
         cdef Token word, child
         if "conjuncts" in self.doc.user_token_hooks:

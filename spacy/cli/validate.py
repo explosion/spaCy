@@ -13,9 +13,11 @@ from ..util import get_package_path, get_model_meta, is_compatible_version
 @app.command("validate")
 def validate_cli():
     """
-    Validate the currently installed models and spaCy version. Checks if the
-    installed models are compatible and shows upgrade instructions if available.
-    Should be run after `pip install -U spacy`.
+    Validate the currently installed pipeline packages and spaCy version. Checks
+    if the installed packages are compatible and shows upgrade instructions if
+    available. Should be run after `pip install -U spacy`.
+
+    DOCS: https://nightly.spacy.io/api/cli#validate
     """
     validate()
 
@@ -25,13 +27,13 @@ def validate() -> None:
     spacy_version = get_base_version(about.__version__)
     current_compat = compat.get(spacy_version, {})
     if not current_compat:
-        msg.warn(f"No compatible models found for v{spacy_version} of spaCy")
+        msg.warn(f"No compatible packages found for v{spacy_version} of spaCy")
     incompat_models = {d["name"] for _, d in model_pkgs.items() if not d["compat"]}
     na_models = [m for m in incompat_models if m not in current_compat]
     update_models = [m for m in incompat_models if m in current_compat]
     spacy_dir = Path(__file__).parent.parent
 
-    msg.divider(f"Installed models (spaCy v{about.__version__})")
+    msg.divider(f"Installed pipeline packages (spaCy v{about.__version__})")
     msg.info(f"spaCy installation: {spacy_dir}")
 
     if model_pkgs:
@@ -47,15 +49,15 @@ def validate() -> None:
             rows.append((data["name"], data["spacy"], version, comp))
         msg.table(rows, header=header)
     else:
-        msg.text("No models found in your current environment.", exits=0)
+        msg.text("No pipeline packages found in your current environment.", exits=0)
     if update_models:
         msg.divider("Install updates")
-        msg.text("Use the following commands to update the model packages:")
+        msg.text("Use the following commands to update the packages:")
         cmd = "python -m spacy download {}"
         print("\n".join([cmd.format(pkg) for pkg in update_models]) + "\n")
     if na_models:
         msg.info(
-            f"The following models are custom spaCy models or not "
+            f"The following packages are custom spaCy pipelines or not "
             f"available for spaCy v{about.__version__}:",
             ", ".join(na_models),
         )

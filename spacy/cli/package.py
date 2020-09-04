@@ -14,23 +14,25 @@ from .. import about
 @app.command("package")
 def package_cli(
     # fmt: off
-    input_dir: Path = Arg(..., help="Directory with model data", exists=True, file_okay=False),
+    input_dir: Path = Arg(..., help="Directory with pipeline data", exists=True, file_okay=False),
     output_dir: Path = Arg(..., help="Output parent directory", exists=True, file_okay=False),
     meta_path: Optional[Path] = Opt(None, "--meta-path", "--meta", "-m", help="Path to meta.json", exists=True, dir_okay=False),
     create_meta: bool = Opt(False, "--create-meta", "-c", "-C", help="Create meta.json, even if one exists"),
     version: Optional[str] = Opt(None, "--version", "-v", help="Package version to override meta"),
     no_sdist: bool = Opt(False, "--no-sdist", "-NS", help="Don't build .tar.gz sdist, can be set if you want to run this step manually"),
-    force: bool = Opt(False, "--force", "-f", "-F", help="Force overwriting existing model in output directory"),
+    force: bool = Opt(False, "--force", "-f", "-F", help="Force overwriting existing data in output directory"),
     # fmt: on
 ):
     """
-    Generate an installable Python package for a model. Includes model data,
+    Generate an installable Python package for a pipeline. Includes binary data,
     meta and required installation files. A new directory will be created in the
-    specified output directory, and model data will be copied over. If
+    specified output directory, and the data will be copied over. If
     --create-meta is set and a meta.json already exists in the output directory,
     the existing values will be used as the defaults in the command-line prompt.
     After packaging, "python setup.py sdist" is run in the package directory,
     which will create a .tar.gz archive that can be installed via "pip install".
+
+    DOCS: https://nightly.spacy.io/api/cli#package
     """
     package(
         input_dir,
@@ -59,14 +61,14 @@ def package(
     output_path = util.ensure_path(output_dir)
     meta_path = util.ensure_path(meta_path)
     if not input_path or not input_path.exists():
-        msg.fail("Can't locate model data", input_path, exits=1)
+        msg.fail("Can't locate pipeline data", input_path, exits=1)
     if not output_path or not output_path.exists():
         msg.fail("Output directory not found", output_path, exits=1)
     if meta_path and not meta_path.exists():
-        msg.fail("Can't find model meta.json", meta_path, exits=1)
+        msg.fail("Can't find pipeline meta.json", meta_path, exits=1)
     meta_path = meta_path or input_dir / "meta.json"
     if not meta_path.exists() or not meta_path.is_file():
-        msg.fail("Can't load model meta.json", meta_path, exits=1)
+        msg.fail("Can't load pipeline meta.json", meta_path, exits=1)
     meta = srsly.read_json(meta_path)
     meta = get_meta(input_dir, meta)
     if version is not None:
@@ -77,7 +79,7 @@ def package(
         meta = generate_meta(meta, msg)
     errors = validate(ModelMetaSchema, meta)
     if errors:
-        msg.fail("Invalid model meta.json")
+        msg.fail("Invalid pipeline meta.json")
         print("\n".join(errors))
         sys.exit(1)
     model_name = meta["lang"] + "_" + meta["name"]
@@ -118,7 +120,7 @@ def get_meta(
 ) -> Dict[str, Any]:
     meta = {
         "lang": "en",
-        "name": "model",
+        "name": "pipeline",
         "version": "0.0.0",
         "description": "",
         "author": "",
@@ -143,10 +145,10 @@ def get_meta(
 def generate_meta(existing_meta: Dict[str, Any], msg: Printer) -> Dict[str, Any]:
     meta = existing_meta or {}
     settings = [
-        ("lang", "Model language", meta.get("lang", "en")),
-        ("name", "Model name", meta.get("name", "model")),
-        ("version", "Model version", meta.get("version", "0.0.0")),
-        ("description", "Model description", meta.get("description", None)),
+        ("lang", "Pipeline language", meta.get("lang", "en")),
+        ("name", "Pipeline name", meta.get("name", "pipeline")),
+        ("version", "Package version", meta.get("version", "0.0.0")),
+        ("description", "Package description", meta.get("description", None)),
         ("author", "Author", meta.get("author", None)),
         ("email", "Author email", meta.get("email", None)),
         ("url", "Author website", meta.get("url", None)),
@@ -154,8 +156,8 @@ def generate_meta(existing_meta: Dict[str, Any], msg: Printer) -> Dict[str, Any]
     ]
     msg.divider("Generating meta.json")
     msg.text(
-        "Enter the package settings for your model. The following information "
-        "will be read from your model data: pipeline, vectors."
+        "Enter the package settings for your pipeline. The following information "
+        "will be read from your pipeline data: pipeline, vectors."
     )
     for setting, desc, default in settings:
         response = get_raw_input(desc, default)

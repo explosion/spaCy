@@ -11,7 +11,7 @@ ItemT = TypeVar("ItemT")
 BatcherT = Callable[[Iterable[ItemT]], Iterable[List[ItemT]]]
 
 
-@registry.batchers("batch_by_padded.v1")
+@registry.batchers("spacy.batch_by_padded.v1")
 def configure_minibatch_by_padded_size(
     *,
     size: Sizing,
@@ -46,7 +46,7 @@ def configure_minibatch_by_padded_size(
     )
 
 
-@registry.batchers("batch_by_words.v1")
+@registry.batchers("spacy.batch_by_words.v1")
 def configure_minibatch_by_words(
     *,
     size: Sizing,
@@ -70,7 +70,7 @@ def configure_minibatch_by_words(
     )
 
 
-@registry.batchers("batch_by_sequence.v1")
+@registry.batchers("spacy.batch_by_sequence.v1")
 def configure_minibatch(
     size: Sizing, get_length: Optional[Callable[[ItemT], int]] = None
 ) -> BatcherT:

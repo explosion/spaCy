@@ -1,9 +1,9 @@
 When you call `nlp` on a text, spaCy first tokenizes the text to produce a `Doc`
 object. The `Doc` is then processed in several different steps – this is also
 referred to as the **processing pipeline**. The pipeline used by the
-[default models](/models) typically include a tagger, a lemmatizer, a parser and
-an entity recognizer. Each pipeline component returns the processed `Doc`, which
-is then passed on to the next component.
+[trained pipelines](/models) typically include a tagger, a lemmatizer, a parser
+and an entity recognizer. Each pipeline component returns the processed `Doc`,
+which is then passed on to the next component.
 
 ![The processing pipeline](../../images/pipeline.svg)
 
@@ -23,14 +23,15 @@ is then passed on to the next component.
 | **textcat**           | [`TextCategorizer`](/api/textcategorizer)                          | `Doc.cats`                                                | Assign document labels.                          |
 | **custom**            | [custom components](/usage/processing-pipelines#custom-components) | `Doc._.xxx`, `Token._.xxx`, `Span._.xxx`                  | Assign custom attributes, methods or properties. |
 
-The processing pipeline always **depends on the statistical model** and its
-capabilities. For example, a pipeline can only include an entity recognizer
-component if the model includes data to make predictions of entity labels. This
-is why each model will specify the pipeline to use in its meta data and
-[config](/usage/training#config), as a simple list containing the component
-names:
+The capabilities of a processing pipeline always depend on the components, their
+models and how they were trained. For example, a pipeline for named entity
+recognition needs to include a trained named entity recognizer component with a
+statistical model and weights that enable it to **make predictions** of entity
+labels. This is why each pipeline specifies its components and their settings in
+the [config](/usage/training#config):
 
 ```ini
+[nlp]
 pipeline = ["tagger", "parser", "ner"]
 ```
 

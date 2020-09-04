@@ -79,7 +79,7 @@ class Morphologizer(Tagger):
         labels_morph (dict): Mapping of morph + POS tags to morph labels.
         labels_pos (dict): Mapping of morph + POS tags to POS tags.
 
-        DOCS: https://spacy.io/api/morphologizer#init
+        DOCS: https://nightly.spacy.io/api/morphologizer#init
         """
         self.vocab = vocab
         self.model = model
@@ -106,7 +106,7 @@ class Morphologizer(Tagger):
         label (str): The label to add.
         RETURNS (int): 0 if label is already present, otherwise 1.
 
-        DOCS: https://spacy.io/api/morphologizer#add_label
+        DOCS: https://nightly.spacy.io/api/morphologizer#add_label
         """
         if not isinstance(label, str):
             raise ValueError(Errors.E187)
@@ -139,7 +139,7 @@ class Morphologizer(Tagger):
             create_optimizer if it doesn't exist.
         RETURNS (thinc.api.Optimizer): The optimizer.
 
-        DOCS: https://spacy.io/api/morphologizer#begin_training
+        DOCS: https://nightly.spacy.io/api/morphologizer#begin_training
         """
         if not hasattr(get_examples, "__call__"):
             err = Errors.E930.format(name="Morphologizer", obj=type(get_examples))
@@ -169,7 +169,7 @@ class Morphologizer(Tagger):
         docs (Iterable[Doc]): The documents to modify.
         batch_tag_ids: The IDs to set, produced by Morphologizer.predict.
 
-        DOCS: https://spacy.io/api/morphologizer#set_annotations
+        DOCS: https://nightly.spacy.io/api/morphologizer#set_annotations
         """
         if isinstance(docs, Doc):
             docs = [docs]
@@ -194,7 +194,7 @@ class Morphologizer(Tagger):
         scores: Scores representing the model's predictions.
         RETUTNRS (Tuple[float, float]): The loss and the gradient.
 
-        DOCS: https://spacy.io/api/morphologizer#get_loss
+        DOCS: https://nightly.spacy.io/api/morphologizer#get_loss
         """
         validate_examples(examples, "Morphologizer.get_loss")
         loss_func = SequenceCategoricalCrossentropy(names=self.labels, normalize=False)
@@ -231,7 +231,7 @@ class Morphologizer(Tagger):
             Scorer.score_token_attr for the attributes "pos" and "morph" and
             Scorer.score_token_attr_per_feat for the attribute "morph".
 
-        DOCS: https://spacy.io/api/morphologizer#score
+        DOCS: https://nightly.spacy.io/api/morphologizer#score
         """
         validate_examples(examples, "Morphologizer.score")
         results = {}
@@ -247,7 +247,7 @@ class Morphologizer(Tagger):
         exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (bytes): The serialized object.
 
-        DOCS: https://spacy.io/api/morphologizer#to_bytes
+        DOCS: https://nightly.spacy.io/api/morphologizer#to_bytes
         """
         serialize = {}
         serialize["model"] = self.model.to_bytes
@@ -262,7 +262,7 @@ class Morphologizer(Tagger):
         exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (Morphologizer): The loaded Morphologizer.
 
-        DOCS: https://spacy.io/api/morphologizer#from_bytes
+        DOCS: https://nightly.spacy.io/api/morphologizer#from_bytes
         """
         def load_model(b):
             try:
@@ -284,7 +284,7 @@ class Morphologizer(Tagger):
         path (str / Path): Path to a directory.
         exclude (Iterable[str]): String names of serialization fields to exclude.
 
-        DOCS: https://spacy.io/api/morphologizer#to_disk
+        DOCS: https://nightly.spacy.io/api/morphologizer#to_disk
         """
         serialize = {
             "vocab": lambda p: self.vocab.to_disk(p),
@@ -300,7 +300,7 @@ class Morphologizer(Tagger):
         exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (Morphologizer): The modified Morphologizer object.
 
-        DOCS: https://spacy.io/api/morphologizer#from_disk
+        DOCS: https://nightly.spacy.io/api/morphologizer#from_disk
         """
         def load_model(p):
             with p.open("rb") as file_:

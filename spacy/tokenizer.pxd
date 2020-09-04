@@ -34,9 +34,9 @@ cdef class Tokenizer:
                                        vector[SpanC] &filtered)
     cdef int _retokenize_special_spans(self, Doc doc, TokenC* tokens,
                                        object span_data)
-    cdef int _try_cache(self, hash_t key, Doc tokens) except -1
-    cdef int _try_specials(self, hash_t key, Doc tokens,
-                           int* has_special) except -1
+    cdef int _try_specials_and_cache(self, hash_t key, Doc tokens,
+                                     int* has_special,
+                                     bint with_special_cases) except -1
     cdef int _tokenize(self, Doc tokens, unicode span, hash_t key,
                        int* has_special, bint with_special_cases) except -1
     cdef unicode _split_affixes(self, Pool mem, unicode string,

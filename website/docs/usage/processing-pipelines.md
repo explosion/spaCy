@@ -42,8 +42,8 @@ texts = ["This is a text", "These are lots of texts", "..."]
 - Only apply the **pipeline components you need**. Getting predictions from the
   model that you don't actually need adds up and becomes very inefficient at
   scale. To prevent this, use the `disable` keyword argument to disable
-  components you don't need – either when loading a model, or during processing
-  with `nlp.pipe`. See the section on
+  components you don't need – either when loading a pipeline, or during
+  processing with `nlp.pipe`. See the section on
   [disabling pipeline components](#disabling) for more details and examples.
 
 </Infobox>
@@ -95,7 +95,7 @@ spaCy makes it very easy to create your own pipelines consisting of reusable
 components – this includes spaCy's default tagger, parser and entity recognizer,
 but also your own custom processing functions. A pipeline component can be added
 to an already existing `nlp` object, specified when initializing a `Language`
-class, or defined within a [model package](/usage/saving-loading#models).
+class, or defined within a [pipeline package](/usage/saving-loading#models).
 
 > #### config.cfg (excerpt)
 >
@@ -115,7 +115,7 @@ class, or defined within a [model package](/usage/saving-loading#models).
 > # Settings for the parser component
 > ```
 
-When you load a model, spaCy first consults the model's
+When you load a pipeline, spaCy first consults the
 [`meta.json`](/usage/saving-loading#models) and
 [`config.cfg`](/usage/training#config). The config tells spaCy what language
 class to use, which components are in the pipeline, and how those components
@@ -131,8 +131,7 @@ should be created. spaCy will then do the following:
    component with with [`add_pipe`](/api/language#add_pipe). The settings are
    passed into the factory.
 3. Make the **model data** available to the `Language` class by calling
-   [`from_disk`](/api/language#from_disk) with the path to the model data
-   directory.
+   [`from_disk`](/api/language#from_disk) with the path to the data directory.
 
 So when you call this...
 
@@ -140,27 +139,27 @@ So when you call this...
 nlp = spacy.load("en_core_web_sm")
 ```
 
-... the model's `config.cfg` tells spaCy to use the language `"en"` and the
+... the pipeline's `config.cfg` tells spaCy to use the language `"en"` and the
 pipeline `["tagger", "parser", "ner"]`. spaCy will then initialize
 `spacy.lang.en.English`, and create each pipeline component and add it to the
-processing pipeline. It'll then load in the model's data from its data directory
+processing pipeline. It'll then load in the model data from the data directory
 and return the modified `Language` class for you to use as the `nlp` object.
 
 <Infobox title="Changed in v3.0" variant="warning">
 
 spaCy v3.0 introduces a `config.cfg`, which includes more detailed settings for
-the model pipeline, its components and the
-[training process](/usage/training#config). You can export the config of your
-current `nlp` object by calling [`nlp.config.to_disk`](/api/language#config).
+the pipeline, its components and the [training process](/usage/training#config).
+You can export the config of your current `nlp` object by calling
+[`nlp.config.to_disk`](/api/language#config).
 
 </Infobox>
 
-Fundamentally, a [spaCy model](/models) consists of three components: **the
-weights**, i.e. binary data loaded in from a directory, a **pipeline** of
+Fundamentally, a [spaCy pipeline package](/models) consists of three components:
+**the weights**, i.e. binary data loaded in from a directory, a **pipeline** of
 functions called in order, and **language data** like the tokenization rules and
-language-specific settings. For example, a Spanish NER model requires different
-weights, language data and pipeline components than an English parsing and
-tagging model. This is also why the pipeline state is always held by the
+language-specific settings. For example, a Spanish NER pipeline requires
+different weights, language data and components than an English parsing and
+tagging pipeline. This is also why the pipeline state is always held by the
 `Language` class. [`spacy.load`](/api/top-level#spacy.load) puts this all
 together and returns an instance of `Language` with a pipeline set and access to
 the binary data:
@@ -175,7 +174,7 @@ cls = spacy.util.get_lang_class(lang)  # 1. Get Language class, e.g. English
 nlp = cls()                            # 2. Initialize it
 for name in pipeline:
     nlp.add_pipe(name)                 # 3. Add the component to the pipeline
-nlp.from_disk(model_data_path)         # 4. Load in the binary data
+nlp.from_disk(data_path)               # 4. Load in the binary data
 ```
 
 When you call `nlp` on a text, spaCy will **tokenize** it and then **call each
@@ -243,28 +242,29 @@ tagger or the parser, you can **disable or exclude** it. This can sometimes make
 a big difference and improve loading and inference speed. There are two
 different mechanisms you can use:
 
-1. **Disable:** The component and its data will be loaded with the model, but it
-   will be disabled by default and not run as part of the processing pipeline.
-   To run it, you can explicitly enable it by calling
+1. **Disable:** The component and its data will be loaded with the pipeline, but
+   it will be disabled by default and not run as part of the processing
+   pipeline. To run it, you can explicitly enable it by calling
    [`nlp.enable_pipe`](/api/language#enable_pipe). When you save out the `nlp`
    object, the disabled component will be included but disabled by default.
-2. **Exclude:** Don't load the component and its data with the model. Once the
-   model is loaded, there will be no reference to the excluded component.
+2. **Exclude:** Don't load the component and its data with the pipeline. Once
+   the pipeline is loaded, there will be no reference to the excluded component.
 
 Disabled and excluded component names can be provided to
 [`spacy.load`](/api/top-level#spacy.load) as a list.
 
 <!-- TODO: update with info on our models shipped with optional components -->
 
-> #### 💡 Models with optional components
+> #### 💡 Optional pipeline components
 >
-> The `disable` mechanism makes it easy to distribute models with optional
-> components that you can enable or disable at runtime. For instance, your model
-> may include a statistical _and_ a rule-based component for sentence
-> segmentation, and you can choose which one to run depending on your use case.
+> The `disable` mechanism makes it easy to distribute pipeline packages with
+> optional components that you can enable or disable at runtime. For instance,
+> your pipeline may include a statistical _and_ a rule-based component for
+> sentence segmentation, and you can choose which one to run depending on your
+> use case.
 
 ```python
-# Load the model without the entity recognizer
+# Load the pipeline without the entity recognizer
 nlp = spacy.load("en_core_web_sm", exclude=["ner"])
 
 # Load the tagger and parser but don't enable them
@@ -358,25 +358,25 @@ run as part of the pipeline.
 | `nlp.component_names` | All component names, including disabled components.              |
 | `nlp.disabled`        | Names of components that are currently disabled.                 |
 
-### Sourcing pipeline components from existing models {#sourced-components new="3"}
+### Sourcing components from existing pipelines {#sourced-components new="3"}
 
-Pipeline components that are independent can also be reused across models.
-Instead of adding a new blank component to a pipeline, you can also copy an
-existing component from a pretrained model by setting the `source` argument on
+Pipeline components that are independent can also be reused across pipelines.
+Instead of adding a new blank component, you can also copy an existing component
+from a trained pipeline by setting the `source` argument on
 [`nlp.add_pipe`](/api/language#add_pipe). The first argument will then be
 interpreted as the name of the component in the source pipeline – for instance,
 `"ner"`. This is especially useful for
-[training a model](/usage/training#config-components) because it lets you mix
-and match components and create fully custom model packages with updated
-pretrained components and new components trained on your data.
+[training a pipeline](/usage/training#config-components) because it lets you mix
+and match components and create fully custom pipeline packages with updated
+trained components and new components trained on your data.
 
-<Infobox variant="warning" title="Important note for pretrained components">
+<Infobox variant="warning" title="Important note for trained components">
 
-When reusing components across models, keep in mind that the **vocabulary**,
-**vectors** and model settings **must match**. If a pretrained model includes
+When reusing components across pipelines, keep in mind that the **vocabulary**,
+**vectors** and model settings **must match**. If a trained pipeline includes
 [word vectors](/usage/linguistic-features#vectors-similarity) and the component
-uses them as features, the model you copy it to needs to have the _same_ vectors
-available – otherwise, it won't be able to make the same predictions.
+uses them as features, the pipeline you copy it to needs to have the _same_
+vectors available – otherwise, it won't be able to make the same predictions.
 
 </Infobox>
 
@@ -384,7 +384,7 @@ available – otherwise, it won't be able to make the same predictions.
 >
 > Instead of providing a `factory`, component blocks in the training
 > [config](/usage/training#config) can also define a `source`. The string needs
-> to be a loadable spaCy model package or path. The
+> to be a loadable spaCy pipeline package or path. The
 >
 > ```ini
 > [components.ner]
@@ -404,11 +404,11 @@ available – otherwise, it won't be able to make the same predictions.
 ### {executable="true"}
 import spacy
 
-# The source model with different components
+# The source pipeline with different components
 source_nlp = spacy.load("en_core_web_sm")
 print(source_nlp.pipe_names)
 
-# Add only the entity recognizer to the new blank model
+# Add only the entity recognizer to the new blank pipeline
 nlp = spacy.blank("en")
 nlp.add_pipe("ner", source=source_nlp)
 print(nlp.pipe_names)
@@ -535,8 +535,8 @@ only being able to modify it afterwards.
 The [`@Language.component`](/api/language#component) decorator lets you turn a
 simple function into a pipeline component. It takes at least one argument, the
 **name** of the component factory. You can use this name to add an instance of
-your component to the pipeline. It can also be listed in your model config, so
-you can save, load and train models using your component.
+your component to the pipeline. It can also be listed in your pipeline config,
+so you can save, load and train pipelines using your component.
 
 Custom components can be added to the pipeline using the
 [`add_pipe`](/api/language#add_pipe) method. Optionally, you can either specify
@@ -838,16 +838,24 @@ If what you're passing in isn't JSON-serializable – e.g. a custom object like 
 [model](#trainable-components) – saving out the component config becomes
 impossible because there's no way for spaCy to know _how_ that object was
 created, and what to do to create it again. This makes it much harder to save,
-load and train custom models with custom components. A simple solution is to
+load and train custom pipelines with custom components. A simple solution is to
 **register a function** that returns your resources. The
 [registry](/api/top-level#registry) lets you **map string names to functions**
 that create objects, so given a name and optional arguments, spaCy will know how
-to recreate the object. To register a function that returns a custom asset, you
-can use the `@spacy.registry.assets` decorator with a single argument, the name:
+to recreate the object. To register a function that returns your custom
+dictionary, you can use the `@spacy.registry.misc` decorator with a single
+argument, the name:
+
+> #### What's the misc registry?
+>
+> The [`registry`](/api/top-level#registry) provides different categories for
+> different types of functions – for example, model architectures, tokenizers or
+> batchers. `misc` is intended for miscellaneous functions that don't fit
+> anywhere else.
 
 ```python
 ### Registered function for assets {highlight="1"}
-@spacy.registry.assets("acronyms.slang_dict.v1")
+@spacy.registry.misc("acronyms.slang_dict.v1")
 def create_acronyms_slang_dict():
     dictionary = {"lol": "laughing out loud", "brb": "be right back"}
     dictionary.update({value: key for key, value in dictionary.items()})
@@ -856,9 +864,9 @@ def create_acronyms_slang_dict():
 
 In your `default_config` (and later in your
 [training config](/usage/training#config)), you can now refer to the function
-registered under the name `"acronyms.slang_dict.v1"` using the `@assets` key.
-This tells spaCy how to create the value, and when your component is created,
-the result of the registered function is passed in as the key `"dictionary"`.
+registered under the name `"acronyms.slang_dict.v1"` using the `@misc` key. This
+tells spaCy how to create the value, and when your component is created, the
+result of the registered function is passed in as the key `"dictionary"`.
 
 > #### config.cfg
 >
@@ -867,21 +875,21 @@ the result of the registered function is passed in as the key `"dictionary"`.
 > factory = "acronyms"
 >
 > [components.acronyms.dictionary]
-> @assets = "acronyms.slang_dict.v1"
+> @misc = "acronyms.slang_dict.v1"
 > ```
 
 ```diff
 - default_config = {"dictionary:" DICTIONARY}
-+ default_config = {"dictionary": {"@assets": "acronyms.slang_dict.v1"}}
++ default_config = {"dictionary": {"@misc": "acronyms.slang_dict.v1"}}
 ```
 
 Using a registered function also means that you can easily include your custom
-components in models that you [train](/usage/training). To make sure spaCy knows
-where to find your custom `@assets` function, you can pass in a Python file via
-the argument `--code`. If someone else is using your component, all they have to
-do to customize the data is to register their own function and swap out the
-name. Registered functions can also take **arguments** by the way that can be
-defined in the config as well – you can read more about this in the docs on
+components in pipelines that you [train](/usage/training). To make sure spaCy
+knows where to find your custom `@misc` function, you can pass in a Python file
+via the argument `--code`. If someone else is using your component, all they
+have to do to customize the data is to register their own function and swap out
+the name. Registered functions can also take **arguments** by the way that can
+be defined in the config as well – you can read more about this in the docs on
 [training with custom code](/usage/training#custom-code).
 
 ### Python type hints and pydantic validation {#type-hints new="3"}
@@ -1121,7 +1129,14 @@ loss is calculated and to add evaluation scores to the training output.
 | [`get_loss`](/api/pipe#get_loss)             | Return a tuple of the loss and the gradient for a batch of [`Example`](/api/example) objects.                                                                                                                                                                                                                      |
 | [`score`](/api/pipe#score)                   | Score a batch of [`Example`](/api/example) objects and return a dictionary of scores. The [`@Language.factory`](/api/language#factory) decorator can define the `default_socre_weights` of the component to decide which keys of the scores to display during training and how they count towards the final score. |
 
-<!-- TODO: link to (not yet created) page for defining models for trainable components -->
+<Infobox title="Custom trainable components and models" emoji="📖">
+
+For more details on how to implement your own trainable components and model
+architectures, and plug existing models implemented in PyTorch or TensorFlow
+into your spaCy pipeline, see the usage guide on
+[layers and model architectures](/usage/layers-architectures#components).
+
+</Infobox>
 
 ## Extension attributes {#custom-components-attributes new="2"}
 
@@ -1322,9 +1337,9 @@ While it's generally recommended to use the `Doc._`, `Span._` and `Token._`
 proxies to add your own custom attributes, spaCy offers a few exceptions to
 allow **customizing the built-in methods** like
 [`Doc.similarity`](/api/doc#similarity) or [`Doc.vector`](/api/doc#vector) with
-your own hooks, which can rely on statistical models you train yourself. For
-instance, you can provide your own on-the-fly sentence segmentation algorithm or
-document similarity method.
+your own hooks, which can rely on components you train yourself. For instance,
+you can provide your own on-the-fly sentence segmentation algorithm or document
+similarity method.
 
 Hooks let you customize some of the behaviors of the `Doc`, `Span` or `Token`
 objects by adding a component to the pipeline. For instance, to customize the
@@ -1456,13 +1471,13 @@ function that takes a `Doc`, modifies it and returns it.
   method. However, a third-party extension should **never silently overwrite
   built-ins**, or attributes set by other extensions.
 
-- If you're looking to publish a model that depends on a custom pipeline
-  component, you can either **require it** in the model package's dependencies,
-  or – if the component is specific and lightweight – choose to **ship it with
-  your model package**. Just make sure the
+- If you're looking to publish a pipeline package that depends on a custom
+  pipeline component, you can either **require it** in the package's
+  dependencies, or – if the component is specific and lightweight – choose to
+  **ship it with your pipeline package**. Just make sure the
   [`@Language.component`](/api/language#component) or
   [`@Language.factory`](/api/language#factory) decorator that registers the
-  custom component runs in your model's `__init__.py` or is exposed via an
+  custom component runs in your package's `__init__.py` or is exposed via an
   [entry point](/usage/saving-loading#entry-points).
 
 - Once you're ready to share your extension with others, make sure to **add docs
@@ -1511,9 +1526,9 @@ def custom_ner_wrapper(doc):
     return doc
 ```
 
-The `custom_ner_wrapper` can then be added to the pipeline of a blank model
-using [`nlp.add_pipe`](/api/language#add_pipe). You can also replace the
-existing entity recognizer of a pretrained model with
+The `custom_ner_wrapper` can then be added to a blank pipeline using
+[`nlp.add_pipe`](/api/language#add_pipe). You can also replace the existing
+entity recognizer of a trained pipeline with
 [`nlp.replace_pipe`](/api/language#replace_pipe).
 
 Here's another example of a custom model, `your_custom_model`, that takes a list

@@ -38,7 +38,7 @@ class Corpus:
     limit (int): Limit corpus to a subset of examples, e.g. for debugging.
         Defaults to 0, which indicates no limit.
 
-    DOCS: https://spacy.io/api/corpus
+    DOCS: https://nightly.spacy.io/api/corpus
     """
 
     def __init__(
@@ -83,7 +83,7 @@ class Corpus:
         nlp (Language): The current nlp object.
         YIELDS (Example): The examples.
 
-        DOCS: https://spacy.io/api/corpus#call
+        DOCS: https://nightly.spacy.io/api/corpus#call
         """
         ref_docs = self.read_docbin(nlp.vocab, self.walk_corpus(self.path))
         if self.gold_preproc:

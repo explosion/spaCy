@@ -85,7 +85,7 @@ def test_serialize_subclassed_kb():
             super().__init__(vocab, entity_vector_length)
             self.custom_field = custom_field
 
-    @registry.assets.register("spacy.CustomKB.v1")
+    @registry.misc.register("spacy.CustomKB.v1")
     def custom_kb(
         entity_vector_length: int, custom_field: int
     ) -> Callable[["Vocab"], KnowledgeBase]:
@@ -101,7 +101,7 @@ def test_serialize_subclassed_kb():
     nlp = English()
     config = {
         "kb_loader": {
-            "@assets": "spacy.CustomKB.v1",
+            "@misc": "spacy.CustomKB.v1",
             "entity_vector_length": 342,
             "custom_field": 666,
         }

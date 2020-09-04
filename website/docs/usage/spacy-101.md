@@ -130,14 +130,15 @@ related to more general machine learning functionality.
 ### Statistical models {#statistical-models}
 
 While some of spaCy's features work independently, others require
-[ statistical models](/models) to be loaded, which enable spaCy to **predict**
-linguistic annotations – for example, whether a word is a verb or a noun. spaCy
-currently offers statistical models for a variety of languages, which can be
-installed as individual Python modules. Models can differ in size, speed, memory
-usage, accuracy and the data they include. The model you choose always depends
-on your use case and the texts you're working with. For a general-purpose use
-case, the small, default models are always a good start. They typically include
-the following components:
+[trained pipelines](/models) to be loaded, which enable spaCy to **predict**
+linguistic annotations – for example, whether a word is a verb or a noun. A
+trained pipeline can consist of multiple components that use a statistical model
+trained on labeled data. spaCy currently offers trained pipelines for a variety
+of languages, which can be installed as individual Python modules. Pipeline
+packages can differ in size, speed, memory usage, accuracy and the data they
+include. The package you choose always depends on your use case and the texts
+you're working with. For a general-purpose use case, the small, default packages
+are always a good start. They typically include the following components:
 
 - **Binary weights** for the part-of-speech tagger, dependency parser and named
   entity recognizer to predict those annotations in context.
@@ -146,8 +147,9 @@ the following components:
 - **Data files** like lemmatization rules and lookup tables.
 - **Word vectors**, i.e. multi-dimensional meaning representations of words that
   let you determine how similar they are to each other.
-- **Configuration** options, like the language and processing pipeline settings,
-  to put spaCy in the correct state when you load in the model.
+- **Configuration** options, like the language and processing pipeline settings
+  and model implementations to use, to put spaCy in the correct state when you
+  load the pipeline.
 
 ## Linguistic annotations {#annotations}
 
@@ -158,7 +160,7 @@ analyzing text, it makes a huge difference whether a noun is the subject of a
 sentence, or the object – or whether "google" is used as a verb, or refers to
 the website or company in a specific context.
 
-> #### Loading models
+> #### Loading pipelines
 >
 > ```cli
 > $ python -m spacy download en_core_web_sm
@@ -167,11 +169,11 @@ the website or company in a specific context.
 > >>> nlp = spacy.load("en_core_web_sm")
 > ```
 
-Once you've [downloaded and installed](/usage/models) a model, you can load it
-via [`spacy.load()`](/api/top-level#spacy.load). This will return a `Language`
-object containing all components and data needed to process text. We usually
-call it `nlp`. Calling the `nlp` object on a string of text will return a
-processed `Doc`:
+Once you've [downloaded and installed](/usage/models) a trained pipeline, you
+can load it via [`spacy.load`](/api/top-level#spacy.load). This will return a
+`Language` object containing all components and data needed to process text. We
+usually call it `nlp`. Calling the `nlp` object on a string of text will return
+a processed `Doc`:
 
 ```python
 ### {executable="true"}
@@ -233,7 +235,7 @@ To learn more about entity recognition in spaCy, how to **add your own
 entities** to a document and how to **train and update** the entity predictions
 of a model, see the usage guides on
 [named entity recognition](/usage/linguistic-features#named-entities) and
-[training the named entity recognizer](/usage/training#ner).
+[training pipelines](/usage/training).
 
 </Infobox>
 
@@ -346,7 +348,7 @@ The mapping of words to hashes doesn't depend on any state. To make sure each
 value is unique, spaCy uses a
 [hash function](https://en.wikipedia.org/wiki/Hash_function) to calculate the
 hash **based on the word string**. This also means that the hash for "coffee"
-will always be the same, no matter which model you're using or how you've
+will always be the same, no matter which pipeline you're using or how you've
 configured spaCy.
 
 However, hashes **cannot be reversed** and there's no way to resolve
@@ -391,7 +393,7 @@ import Serialization101 from 'usage/101/\_serialization.md'
 
 <Infobox title="Saving and loading" emoji="📖">
 
-To learn more about how to **save and load your own models**, see the usage
+To learn more about how to **save and load your own pipelines**, see the usage
 guide on [saving and loading](/usage/saving-loading#models).
 
 </Infobox>
@@ -402,9 +404,9 @@ import Training101 from 'usage/101/\_training.md'
 
 <Training101 />
 
-<Infobox title="Training statistical models" emoji="📖">
+<Infobox title="Training pipelines and models" emoji="📖">
 
-To learn more about **training and updating** models, how to create training
+To learn more about **training and updating** pipelines, how to create training
 data and how to improve spaCy's named entity recognition models, see the usage
 guides on [training](/usage/training).
 
@@ -454,8 +456,8 @@ via the following platforms:
   practices**.
 - [GitHub issue tracker](https://github.com/explosion/spaCy/issues): **Bug
   reports** and **improvement suggestions**, i.e. everything that's likely
-  spaCy's fault. This also includes problems with the models beyond statistical
-  imprecisions, like patterns that point to a bug.
+  spaCy's fault. This also includes problems with the trained pipelines beyond
+  statistical imprecisions, like patterns that point to a bug.
 
 <Infobox title="Important note" variant="warning">
 
@@ -484,10 +486,10 @@ Another way of getting involved is to help us improve the
 happen to speak one of the languages currently in
 [alpha support](/usage/models#languages). Even adding simple tokenizer
 exceptions, stop words or lemmatizer data can make a big difference. It will
-also make it easier for us to provide a statistical model for the language in
-the future. Submitting a test that documents a bug or performance issue, or
-covers functionality that's especially important for your application is also
-very helpful. This way, you'll also make sure we never accidentally introduce
+also make it easier for us to provide a trained pipeline for the language in the
+future. Submitting a test that documents a bug or performance issue, or covers
+functionality that's especially important for your application is also very
+helpful. This way, you'll also make sure we never accidentally introduce
 regressions to the parts of the library that you care about the most.
 
 **For more details on the types of contributions we're looking for, the code

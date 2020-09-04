@@ -22,6 +22,8 @@ def project_clone_cli(
     only download the files from the given subdirectory. The GitHub repo
     defaults to the official spaCy template repo, but can be customized
     (including using a private repo).
+
+    DOCS: https://nightly.spacy.io/api/cli#project-clone
     """
     if dest is None:
         dest = Path.cwd() / name

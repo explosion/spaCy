@@ -1,5 +1,5 @@
 from typing import Optional, Any, Dict, Callable, Iterable, Union, List, Pattern
-from typing import Tuple, Iterator
+from typing import Tuple, Iterator, Optional
 from dataclasses import dataclass
 import random
 import itertools
@@ -95,7 +95,7 @@ class Language:
         object and processing pipeline.
     lang (str): Two-letter language ID, i.e. ISO code.
 
-    DOCS: https://spacy.io/api/language
+    DOCS: https://nightly.spacy.io/api/language
     """
 
     Defaults = BaseDefaults
@@ -130,7 +130,7 @@ class Language:
         create_tokenizer (Callable): Function that takes the nlp object and
             returns a tokenizer.
 
-        DOCS: https://spacy.io/api/language#init
+        DOCS: https://nightly.spacy.io/api/language#init
         """
         # We're only calling this to import all factories provided via entry
         # points. The factory decorator applied to these functions takes care
@@ -185,14 +185,14 @@ class Language:
 
         RETURNS (Dict[str, Any]): The meta.
 
-        DOCS: https://spacy.io/api/language#meta
+        DOCS: https://nightly.spacy.io/api/language#meta
         """
         spacy_version = util.get_model_version_range(about.__version__)
         if self.vocab.lang:
             self._meta.setdefault("lang", self.vocab.lang)
         else:
             self._meta.setdefault("lang", self.lang)
-        self._meta.setdefault("name", "model")
+        self._meta.setdefault("name", "pipeline")
         self._meta.setdefault("version", "0.0.0")
         self._meta.setdefault("spacy_version", spacy_version)
         self._meta.setdefault("description", "")
@@ -225,7 +225,7 @@ class Language:
 
         RETURNS (thinc.api.Config): The config.
 
-        DOCS: https://spacy.io/api/language#config
+        DOCS: https://nightly.spacy.io/api/language#config
         """
         self._config.setdefault("nlp", {})
         self._config.setdefault("training", {})
@@ -433,7 +433,7 @@ class Language:
             will be combined and normalized for the whole pipeline.
         func (Optional[Callable]): Factory function if not used as a decorator.
 
-        DOCS: https://spacy.io/api/language#factory
+        DOCS: https://nightly.spacy.io/api/language#factory
         """
         if not isinstance(name, str):
             raise ValueError(Errors.E963.format(decorator="factory"))
@@ -513,7 +513,7 @@ class Language:
             Used for pipeline analysis.
         func (Optional[Callable]): Factory function if not used as a decorator.
 
-        DOCS: https://spacy.io/api/language#component
+        DOCS: https://nightly.spacy.io/api/language#component
         """
         if name is not None and not isinstance(name, str):
             raise ValueError(Errors.E963.format(decorator="component"))
@@ -579,7 +579,7 @@ class Language:
         name (str): Name of pipeline component to get.
         RETURNS (callable): The pipeline component.
 
-        DOCS: https://spacy.io/api/language#get_pipe
+        DOCS: https://nightly.spacy.io/api/language#get_pipe
         """
         for pipe_name, component in self._components:
             if pipe_name == name:
@@ -608,7 +608,7 @@ class Language:
             arguments and types expected by the factory.
         RETURNS (Callable[[Doc], Doc]): The pipeline component.
 
-        DOCS: https://spacy.io/api/language#create_pipe
+        DOCS: https://nightly.spacy.io/api/language#create_pipe
         """
         name = name if name is not None else factory_name
         if not isinstance(config, dict):
@@ -722,7 +722,7 @@ class Language:
             arguments and types expected by the factory.
         RETURNS (Callable[[Doc], Doc]): The pipeline component.
 
-        DOCS: https://spacy.io/api/language#add_pipe
+        DOCS: https://nightly.spacy.io/api/language#add_pipe
         """
         if not isinstance(factory_name, str):
             bad_val = repr(factory_name)
@@ -820,7 +820,7 @@ class Language:
         name (str): Name of the component.
         RETURNS (bool): Whether a component of the name exists in the pipeline.
 
-        DOCS: https://spacy.io/api/language#has_pipe
+        DOCS: https://nightly.spacy.io/api/language#has_pipe
         """
         return name in self.pipe_names
 
@@ -841,7 +841,7 @@ class Language:
         validate (bool): Whether to validate the component config against the
             arguments and types expected by the factory.
 
-        DOCS: https://spacy.io/api/language#replace_pipe
+        DOCS: https://nightly.spacy.io/api/language#replace_pipe
         """
         if name not in self.pipe_names:
             raise ValueError(Errors.E001.format(name=name, opts=self.pipe_names))
@@ -870,7 +870,7 @@ class Language:
         old_name (str): Name of the component to rename.
         new_name (str): New name of the component.
 
-        DOCS: https://spacy.io/api/language#rename_pipe
+        DOCS: https://nightly.spacy.io/api/language#rename_pipe
         """
         if old_name not in self.component_names:
             raise ValueError(
@@ -891,7 +891,7 @@ class Language:
         name (str): Name of the component to remove.
         RETURNS (tuple): A `(name, component)` tuple of the removed component.
 
-        DOCS: https://spacy.io/api/language#remove_pipe
+        DOCS: https://nightly.spacy.io/api/language#remove_pipe
         """
         if name not in self.component_names:
             raise ValueError(Errors.E001.format(name=name, opts=self.component_names))
@@ -944,7 +944,7 @@ class Language:
             keyword arguments for specific components.
         RETURNS (Doc): A container for accessing the annotations.
 
-        DOCS: https://spacy.io/api/language#call
+        DOCS: https://nightly.spacy.io/api/language#call
         """
         if len(text) > self.max_length:
             raise ValueError(
@@ -993,7 +993,7 @@ class Language:
         disable (str or iterable): The name(s) of the pipes to disable
         enable (str or iterable): The name(s) of the pipes to enable - all others will be disabled
 
-        DOCS: https://spacy.io/api/language#select_pipes
+        DOCS: https://nightly.spacy.io/api/language#select_pipes
         """
         if enable is None and disable is None:
             raise ValueError(Errors.E991)
@@ -1044,7 +1044,7 @@ class Language:
         exclude (Iterable[str]): Names of components that shouldn't be updated.
         RETURNS (Dict[str, float]): The updated losses dictionary
 
-        DOCS: https://spacy.io/api/language#update
+        DOCS: https://nightly.spacy.io/api/language#update
         """
         if _ is not None:
             raise ValueError(Errors.E989)
@@ -1106,7 +1106,7 @@ class Language:
             >>>     raw_batch = [Example.from_dict(nlp.make_doc(text), {}) for text in next(raw_text_batches)]
             >>>     nlp.rehearse(raw_batch)
 
-        DOCS: https://spacy.io/api/language#rehearse
+        DOCS: https://nightly.spacy.io/api/language#rehearse
         """
         if len(examples) == 0:
             return
@@ -1153,7 +1153,7 @@ class Language:
             create_optimizer if it doesn't exist.
         RETURNS (thinc.api.Optimizer): The optimizer.
 
-        DOCS: https://spacy.io/api/language#begin_training
+        DOCS: https://nightly.spacy.io/api/language#begin_training
         """
         # TODO: throw warning when get_gold_tuples is provided instead of get_examples
         if get_examples is None:
@@ -1200,7 +1200,7 @@ class Language:
         sgd (Optional[Optimizer]): An optimizer.
         RETURNS (Optimizer): The optimizer.
 
-        DOCS: https://spacy.io/api/language#resume_training
+        DOCS: https://nightly.spacy.io/api/language#resume_training
         """
         if device >= 0:  # TODO: do we need this here?
             require_gpu(device)
@@ -1236,7 +1236,7 @@ class Language:
             for the scorer.
         RETURNS (Scorer): The scorer containing the evaluation results.
 
-        DOCS: https://spacy.io/api/language#evaluate
+        DOCS: https://nightly.spacy.io/api/language#evaluate
         """
         validate_examples(examples, "Language.evaluate")
         if component_cfg is None:
@@ -1275,7 +1275,7 @@ class Language:
         return results
 
     @contextmanager
-    def use_params(self, params: dict):
+    def use_params(self, params: Optional[dict]):
         """Replace weights of models in the pipeline with those provided in the
         params dictionary. Can be used as a contextmanager, in which case,
         models go back to their original weights after the block.
@@ -1286,26 +1286,29 @@ class Language:
             >>> with nlp.use_params(optimizer.averages):
             >>>     nlp.to_disk("/tmp/checkpoint")
 
-        DOCS: https://spacy.io/api/language#use_params
+        DOCS: https://nightly.spacy.io/api/language#use_params
         """
-        contexts = [
-            pipe.use_params(params)
-            for name, pipe in self.pipeline
-            if hasattr(pipe, "use_params") and hasattr(pipe, "model")
-        ]
-        # TODO: Having trouble with contextlib
-        # Workaround: these aren't actually context managers atm.
-        for context in contexts:
-            try:
-                next(context)
-            except StopIteration:
-                pass
-        yield
-        for context in contexts:
-            try:
-                next(context)
-            except StopIteration:
-                pass
+        if not params:
+            yield
+        else:
+            contexts = [
+                pipe.use_params(params)
+                for name, pipe in self.pipeline
+                if hasattr(pipe, "use_params") and hasattr(pipe, "model")
+            ]
+            # TODO: Having trouble with contextlib
+            # Workaround: these aren't actually context managers atm.
+            for context in contexts:
+                try:
+                    next(context)
+                except StopIteration:
+                    pass
+            yield
+            for context in contexts:
+                try:
+                    next(context)
+                except StopIteration:
+                    pass
 
     def pipe(
         self,
@@ -1330,7 +1333,7 @@ class Language:
         n_process (int): Number of processors to process texts. If -1, set `multiprocessing.cpu_count()`.
         YIELDS (Doc): Documents in the order of the original text.
 
-        DOCS: https://spacy.io/api/language#pipe
+        DOCS: https://nightly.spacy.io/api/language#pipe
         """
         if n_process == -1:
             n_process = mp.cpu_count()
@@ -1466,7 +1469,7 @@ class Language:
             the types expected by the factory.
         RETURNS (Language): The initialized Language class.
 
-        DOCS: https://spacy.io/api/language#from_config
+        DOCS: https://nightly.spacy.io/api/language#from_config
         """
         if auto_fill:
             config = Config(
@@ -1579,7 +1582,7 @@ class Language:
             it doesn't exist.
         exclude (list): Names of components or serialization fields to exclude.
 
-        DOCS: https://spacy.io/api/language#to_disk
+        DOCS: https://nightly.spacy.io/api/language#to_disk
         """
         path = util.ensure_path(path)
         serializers = {}
@@ -1608,7 +1611,7 @@ class Language:
         exclude (list): Names of components or serialization fields to exclude.
         RETURNS (Language): The modified `Language` object.
 
-        DOCS: https://spacy.io/api/language#from_disk
+        DOCS: https://nightly.spacy.io/api/language#from_disk
         """
 
         def deserialize_meta(path: Path) -> None:
@@ -1656,7 +1659,7 @@ class Language:
         exclude (list): Names of components or serialization fields to exclude.
         RETURNS (bytes): The serialized form of the `Language` object.
 
-        DOCS: https://spacy.io/api/language#to_bytes
+        DOCS: https://nightly.spacy.io/api/language#to_bytes
         """
         serializers = {}
         serializers["vocab"] = lambda: self.vocab.to_bytes()
@@ -1680,7 +1683,7 @@ class Language:
         exclude (list): Names of components or serialization fields to exclude.
         RETURNS (Language): The `Language` object.
 
-        DOCS: https://spacy.io/api/language#from_bytes
+        DOCS: https://nightly.spacy.io/api/language#from_bytes
         """
 
         def deserialize_meta(b):

@@ -24,7 +24,7 @@ redirects = [
     {from = "/docs/usage/customizing-tokenizer", to = "/usage/linguistic-features#tokenization", force = true},
     {from = "/docs/usage/language-processing-pipeline", to = "/usage/processing-pipelines", force = true},
     {from = "/docs/usage/customizing-pipeline", to = "/usage/processing-pipelines", force = true},
-    {from = "/docs/usage/training-ner", to = "/usage/training#ner", force = true},
+    {from = "/docs/usage/training-ner", to = "/usage/training", force = true},
     {from = "/docs/usage/tutorials", to = "/usage/examples", force = true},
     {from = "/docs/usage/data-model", to = "/api", force = true},
     {from = "/docs/usage/cli", to = "/api/cli", force = true},

@@ -4,7 +4,7 @@ menu:
   - ['Basics', 'basics']
   - ['Serialization Methods', 'serialization-methods']
   - ['Entry Points', 'entry-points']
-  - ['Models', 'models']
+  - ['Trained Pipelines', 'models']
 ---
 
 ## Basics {#basics hidden="true"}
@@ -25,10 +25,10 @@ can load in the data.
 > #### Saving the meta and config
 >
 > The [`nlp.meta`](/api/language#meta) attribute is a JSON-serializable
-> dictionary and contains all model meta information like the author and license
-> information. The [`nlp.config`](/api/language#config) attribute is a
+> dictionary and contains all pipeline meta information like the author and
+> license information. The [`nlp.config`](/api/language#config) attribute is a
 > dictionary containing the training configuration, pipeline component factories
-> and other settings. It is saved out with a model as the `config.cfg`.
+> and other settings. It is saved out with a pipeline as the `config.cfg`.
 
 ```python
 ### Serialize
@@ -45,12 +45,11 @@ for pipe_name in pipeline:
 nlp.from_bytes(bytes_data)
 ```
 
-This is also how spaCy does it under the hood when loading a model: it loads the
-model's `config.cfg` containing the language and pipeline information,
-initializes the language class, creates and adds the pipeline components based
-on the defined
-[factories](/usage/processing-pipeline#custom-components-factories) and _then_
-loads in the binary data. You can read more about this process
+This is also how spaCy does it under the hood when loading a pipeline: it loads
+the `config.cfg` containing the language and pipeline information, initializes
+the language class, creates and adds the pipeline components based on the
+defined [factories](/usage/processing-pipeline#custom-components-factories) and
+_then_ loads in the binary data. You can read more about this process
 [here](/usage/processing-pipelines#pipelines).
 
 ### Serializing Doc objects efficiently {#docs new="2.2"}
@@ -168,10 +167,10 @@ data = pickle.dumps(span_doc)
 ## Implementing serialization methods {#serialization-methods}
 
 When you call [`nlp.to_disk`](/api/language#to_disk),
-[`nlp.from_disk`](/api/language#from_disk) or load a model package, spaCy will
-iterate over the components in the pipeline, check if they expose a `to_disk` or
-`from_disk` method and if so, call it with the path to the model directory plus
-the string name of the component. For example, if you're calling
+[`nlp.from_disk`](/api/language#from_disk) or load a pipeline package, spaCy
+will iterate over the components in the pipeline, check if they expose a
+`to_disk` or `from_disk` method and if so, call it with the path to the pipeline
+directory plus the string name of the component. For example, if you're calling
 `nlp.to_disk("/path")`, the data for the named entity recognizer will be saved
 in `/path/ner`.
 
@@ -191,8 +190,8 @@ add to that data and saves and loads the data to and from a JSON file.
 > [source](https://github.com/explosion/spaCy/tree/master/spacy/pipeline/entityruler.py).
 > Patterns added to the component will be saved to a `.jsonl` file if the
 > pipeline is serialized to disk, and to a bytestring if the pipeline is
-> serialized to bytes. This allows saving out a model with a rule-based entity
-> recognizer and including all rules _with_ the model data.
+> serialized to bytes. This allows saving out a pipeline with a rule-based
+> entity recognizer and including all rules _with_ the component data.
 
 ```python
 ### {highlight="14-18,20-25"}
@@ -232,7 +231,7 @@ component's `to_disk` method.
 nlp = spacy.load("en_core_web_sm")
 my_component = nlp.add_pipe("my_component")
 my_component.add({"hello": "world"})
-nlp.to_disk("/path/to/model")
+nlp.to_disk("/path/to/pipeline")
 ```
 
 The contents of the directory would then look like this.
@@ -241,15 +240,15 @@ file `data.json` in its subdirectory:
 
 ```yaml
 ### Directory structure {highlight="2-3"}
-└── /path/to/model
+└── /path/to/pipeline
     ├── my_component     # data serialized by "my_component"
     │   └── data.json
     ├── ner              # data for "ner" component
     ├── parser           # data for "parser" component
     ├── tagger           # data for "tagger" component
-    ├── vocab            # model vocabulary
-    ├── meta.json        # model meta.json
-    ├── config.cfg       # model config
+    ├── vocab            # pipeline vocabulary
+    ├── meta.json        # pipeline meta.json
+    ├── config.cfg       # pipeline config
     └── tokenizer        # tokenization rules
 ```
 
@@ -258,18 +257,19 @@ When you load the data back in, spaCy will call the custom component's
 contents of `data.json`, convert them to a Python object and restore the
 component state. The same works for other types of data, of course – for
 instance, you could add a
-[wrapper for a model](/usage/processing-pipelines#wrapping-models-libraries)
-trained with a different library like TensorFlow or PyTorch and make spaCy load
-its weights automatically when you load the model package.
+[wrapper for a model](/usage/layers-architectures#frameworks) trained with a
+different library like TensorFlow or PyTorch and make spaCy load its weights
+automatically when you load the pipeline package.
 
 <Infobox title="Important note on loading custom components" variant="warning">
 
-When you load back a model with custom components, make sure that the components
-are **available** and that the [`@Language.component`](/api/language#component)
-or [`@Language.factory`](/api/language#factory) decorators are executed _before_
-your model is loaded back. Otherwise, spaCy won't know how to resolve the string
-name of a component factory like `"my_component"` back to a function. For more
-details, see the documentation on
+When you load back a pipeline with custom components, make sure that the
+components are **available** and that the
+[`@Language.component`](/api/language#component) or
+[`@Language.factory`](/api/language#factory) decorators are executed _before_
+your pipeline is loaded back. Otherwise, spaCy won't know how to resolve the
+string name of a component factory like `"my_component"` back to a function. For
+more details, see the documentation on
 [adding factories](/usage/processing-pipelines#custom-components-factories) or
 use [entry points](#entry-points) to make your extension package expose your
 custom components to spaCy automatically.
@@ -297,18 +297,19 @@ installed in the same environment – that's it.
 
 ### Custom components via entry points {#entry-points-components}
 
-When you load a model, spaCy will generally use the model's `config.cfg` to set
-up the language class and construct the pipeline. The pipeline is specified as a
+When you load a pipeline, spaCy will generally use its `config.cfg` to set up
+the language class and construct the pipeline. The pipeline is specified as a
 list of strings, e.g. `pipeline = ["tagger", "paser", "ner"]`. For each of those
 strings, spaCy will call `nlp.add_pipe` and look up the name in all factories
 defined by the decorators [`@Language.component`](/api/language#component) and
 [`@Language.factory`](/api/language#factory). This means that you have to import
-your custom components _before_ loading the model.
+your custom components _before_ loading the pipeline.
 
-Using entry points, model packages and extension packages can define their own
-`"spacy_factories"`, which will be loaded automatically in the background when
-the `Language` class is initialized. So if a user has your package installed,
-they'll be able to use your components – even if they **don't import them**!
+Using entry points, pipeline packages and extension packages can define their
+own `"spacy_factories"`, which will be loaded automatically in the background
+when the `Language` class is initialized. So if a user has your package
+installed, they'll be able to use your components – even if they **don't import
+them**!
 
 To stick with the theme of
 [this entry points blog post](https://amir.rachum.com/blog/2017/07/28/python-entry-points/),
@@ -343,10 +344,10 @@ def snek_component(doc):
 
 Since it's a very complex and sophisticated module, you want to split it off
 into its own package so you can version it and upload it to PyPi. You also want
-your custom model to be able to define `pipeline = ["snek"]` in its
+your custom package to be able to define `pipeline = ["snek"]` in its
 `config.cfg`. For that, you need to be able to tell spaCy where to find the
 component `"snek"`. If you don't do this, spaCy will raise an error when you try
-to load the model because there's no built-in `"snek"` component. To add an
+to load the pipeline because there's no built-in `"snek"` component. To add an
 entry to the factories, you can now expose it in your `setup.py` via the
 `entry_points` dictionary:
 
@@ -380,7 +381,7 @@ $ python setup.py develop
 spaCy is now able to create the pipeline component `"snek"` – even though you
 never imported `snek_component`. When you save the
 [`nlp.config`](/api/language#config) to disk, it includes an entry for your
-`"snek"` component and any model you train with this config will include the
+`"snek"` component and any pipeline you train with this config will include the
 component and know how to load it – if your `snek` package is installed.
 
 > #### config.cfg (excerpt)
@@ -449,9 +450,9 @@ entry_points={
 
 The factory can also implement other pipeline component like `to_disk` and
 `from_disk` for serialization, or even `update` to make the component trainable.
-If a component exposes a `from_disk` method and is included in a model's
-pipeline, spaCy will call it on load. This lets you ship custom data with your
-model. When you save out a model using `nlp.to_disk` and the component exposes a
+If a component exposes a `from_disk` method and is included in a pipeline, spaCy
+will call it on load. This lets you ship custom data with your pipeline package.
+When you save out a pipeline using `nlp.to_disk` and the component exposes a
 `to_disk` method, it will be called with the disk path.
 
 ```python
@@ -467,8 +468,8 @@ def from_disk(self, path, exclude=tuple()):
     return self
 ```
 
-The above example will serialize the current snake in a `snek.txt` in the model
-data directory. When a model using the `snek` component is loaded, it will open
+The above example will serialize the current snake in a `snek.txt` in the data
+directory. When a pipeline using the `snek` component is loaded, it will open
 the `snek.txt` and make it available to the component.
 
 ### Custom language classes via entry points {#entry-points-languages}
@@ -476,7 +477,7 @@ the `snek.txt` and make it available to the component.
 To stay with the theme of the previous example and
 [this blog post on entry points](https://amir.rachum.com/blog/2017/07/28/python-entry-points/),
 let's imagine you wanted to implement your own `SnekLanguage` class for your
-custom model – but you don't necessarily want to modify spaCy's code to add a
+custom pipeline – but you don't necessarily want to modify spaCy's code to add a
 language. In your package, you could then implement the following
 [custom language subclass](/usage/linguistic-features#language-subclass):
 
@@ -510,10 +511,10 @@ setup(
 ```
 
 In spaCy, you can then load the custom `snk` language and it will be resolved to
-`SnekLanguage` via the custom entry point. This is especially relevant for model
-packages you train, which could then specify `lang = snk` in their `config.cfg`
-without spaCy raising an error because the language is not available in the core
-library.
+`SnekLanguage` via the custom entry point. This is especially relevant for
+pipeline packages you [train](/usage/training), which could then specify
+`lang = snk` in their `config.cfg` without spaCy raising an error because the
+language is not available in the core library.
 
 ### Custom displaCy colors via entry points {#entry-points-displacy new="2.2"}
 
@@ -526,7 +527,7 @@ values.
 
 > #### Domain-specific NER labels
 >
-> Good examples of models with domain-specific label schemes are
+> Good examples of pipelines with domain-specific label schemes are
 > [scispaCy](/universe/project/scispacy) and
 > [Blackstone](/universe/project/blackstone).
 
@@ -559,24 +560,23 @@ import DisplaCyEntSnekHtml from 'images/displacy-ent-snek.html'
 
 <Iframe title="displaCy visualization of entities" html={DisplaCyEntSnekHtml} height={100} />
 
-## Saving, loading and distributing models {#models}
+## Saving, loading and distributing trained pipelines {#models}
 
-After training your model, you'll usually want to save its state, and load it
+After training your pipeline, you'll usually want to save its state, and load it
 back later. You can do this with the [`Language.to_disk`](/api/language#to_disk)
 method:
 
 ```python
-nlp.to_disk("./en_example_model")
+nlp.to_disk("./en_example_pipeline")
 ```
 
 The directory will be created if it doesn't exist, and the whole pipeline data,
-model meta and model configuration will be written out. To make the model more
-convenient to deploy, we recommend wrapping it as a
-[Python package](/api/cli#package).
+meta and configuration will be written out. To make the pipeline more convenient
+to deploy, we recommend wrapping it as a [Python package](/api/cli#package).
 
 <Accordion title="What’s the difference between the config.cfg and meta.json?" spaced id="models-meta-vs-config">
 
-When you save a model in spaCy v3.0+, two files will be exported: a
+When you save a pipeline in spaCy v3.0+, two files will be exported: a
 [`config.cfg`](/api/data-formats#config) based on
 [`nlp.config`](/api/language#config) and a [`meta.json`](/api/data-formats#meta)
 based on [`nlp.meta`](/api/language#meta).
@@ -587,42 +587,42 @@ based on [`nlp.meta`](/api/language#meta).
   [pipeline components](/usage/processing-pipelines#custom-components) or
   [model architectures](/api/architectures). Given a config, spaCy is able
   reconstruct the whole tree of objects and the `nlp` object. An exported config
-  can also be used to [train a model](/usage/training#conig) with the same
+  can also be used to [train a pipeline](/usage/training#config) with the same
   settings.
-- **meta**: Meta information about the model and the Python package, such as the
-  author information, license, version, data sources and label scheme. This is
-  mostly used for documentation purposes and for packaging models. It has no
-  impact on the functionality of the `nlp` object.
+- **meta**: Meta information about the pipeline and the Python package, such as
+  the author information, license, version, data sources and label scheme. This
+  is mostly used for documentation purposes and for packaging pipelines. It has
+  no impact on the functionality of the `nlp` object.
 
 </Accordion>
 
-### Generating a model package {#models-generating}
+### Generating a pipeline package {#models-generating}
 
 <Infobox title="Important note" variant="warning">
 
-The model packages are **not suitable** for the public
+Pipeline packages are typically **not suitable** for the public
 [pypi.python.org](https://pypi.python.org) directory, which is not designed for
 binary data and files over 50 MB. However, if your company is running an
-**internal installation** of PyPi, publishing your models on there can be a
-convenient way to share them with your team.
+**internal installation** of PyPi, publishing your pipeline packages on there
+can be a convenient way to share them with your team.
 
 </Infobox>
 
 spaCy comes with a handy CLI command that will create all required files, and
-walk you through generating the meta data. You can also create the meta.json
-manually and place it in the model data directory, or supply a path to it using
-the `--meta` flag. For more info on this, see the [`package`](/api/cli#package)
+walk you through generating the meta data. You can also create the `meta.json`
+manually and place it in the data directory, or supply a path to it using the
+`--meta` flag. For more info on this, see the [`package`](/api/cli#package)
 docs.
 
 > #### meta.json (example)
 >
 > ```json
 > {
->   "name": "example_model",
+>   "name": "example_pipeline",
 >   "lang": "en",
 >   "version": "1.0.0",
 >   "spacy_version": ">=2.0.0,<3.0.0",
->   "description": "Example model for spaCy",
+>   "description": "Example pipeline for spaCy",
 >   "author": "You",
 >   "email": "you@example.com",
 >   "license": "CC BY-SA 3.0"
@@ -630,27 +630,27 @@ docs.
 > ```
 
 ```cli
-$ python -m spacy package ./en_example_model ./my_models
+$ python -m spacy package ./en_example_pipeline ./my_pipelines
 ```
 
-This command will create a model package directory and will run
+This command will create a pipeline package directory and will run
 `python setup.py sdist` in that directory to create `.tar.gz` archive of your
-model package that can be installed using `pip install`.
+package that can be installed using `pip install`.
 
 ```yaml
 ### Directory structure
 └── /
-    ├── MANIFEST.in                        # to include meta.json
-    ├── meta.json                          # model meta data
-    ├── setup.py                           # setup file for pip installation
-    ├── en_example_model                   # model directory
-    │    ├── __init__.py                   # init for pip installation
-    │    └── en_example_model-1.0.0        # model data
-    │        ├── config.cfg                # model config
-    │        ├── meta.json                 # model meta
-    │        └── ...                       # directories with component data
+    ├── MANIFEST.in                           # to include meta.json
+    ├── meta.json                             # pipeline meta data
+    ├── setup.py                              # setup file for pip installation
+    ├── en_example_pipeline                   # pipeline directory
+    │    ├── __init__.py                      # init for pip installation
+    │    └── en_example_pipeline-1.0.0        # pipeline data
+    │        ├── config.cfg                   # pipeline config
+    │        ├── meta.json                    # pipeline meta
+    │        └── ...                          # directories with component data
     └── dist
-        └── en_example_model-1.0.0.tar.gz  # installable package
+        └── en_example_pipeline-1.0.0.tar.gz  # installable package
 ```
 
 You can also find templates for all files in the
@@ -659,16 +659,15 @@ If you're creating the package manually, keep in mind that the directories need
 to be named according to the naming conventions of `lang_name` and
 `lang_name-version`.
 
-### Customizing the model setup {#models-custom}
+### Customizing the package setup {#models-custom}
 
-The `load()` method that comes with our model package templates will take care
-of putting all this together and returning a `Language` object with the loaded
-pipeline and data. If your model requires custom
-[pipeline components](/usage/processing-pipelines) or a custom language class,
-you can also **ship the code with your model** and include it in the
-`__init__.py` – for example, to register custom
-[pipeline components](/usage/processing-pipelines#custom-components) before the
-`nlp` object is created.
+The `load()` method that comes with our pipeline package templates will take
+care of putting all this together and returning a `Language` object with the
+loaded pipeline and data. If your pipeline requires
+[custom components](/usage/processing-pipelines#custom-components) or a custom
+language class, you can also **ship the code with your package** and include it
+in the `__init__.py` – for example, to register component before the `nlp`
+object is created.
 
 <Infobox variant="warning" title="Important note on making manual edits">
 
@@ -682,16 +681,16 @@ spaCy to export the current state of its `nlp` objects via
 
 </Infobox>
 
-### Loading a custom model package {#loading}
+### Loading a custom pipeline package {#loading}
 
-To load a model from a data directory, you can use
+To load a pipeline from a data directory, you can use
 [`spacy.load()`](/api/top-level#spacy.load) with the local path. This will look
 for a `config.cfg` in the directory and use the `lang` and `pipeline` settings
 to initialize a `Language` class with a processing pipeline and load in the
 model data.
 
 ```python
-nlp = spacy.load("/path/to/model")
+nlp = spacy.load("/path/to/pipeline")
 ```
 
 If you want to **load only the binary data**, you'll have to create a `Language`

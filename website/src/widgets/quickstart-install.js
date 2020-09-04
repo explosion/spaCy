@@ -43,7 +43,7 @@ const DATA = [
             {
                 id: 'transformers',
                 title: 'Transformers',
-                help: 'Use transformers like BERT to train your spaCy models',
+                help: 'Use transformers like BERT to train your spaCy pipelines',
             },
             {
                 id: 'lookups',
@@ -63,7 +63,7 @@ const QuickstartInstall = ({ id, title }) => (
                 ...DATA,
                 {
                     id: 'models',
-                    title: 'Models',
+                    title: 'Trained Pipelines',
                     multiple: true,
                     options: models.map(({ code, name }) => ({ id: code, title: name })),
                 },
