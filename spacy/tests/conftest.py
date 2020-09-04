@@ -46,7 +46,7 @@ def ca_tokenizer():
 
 @pytest.fixture(scope="session")
 def cs_tokenizer():
-    return get_lang_class("cs").Defaults.create_tokenizer()
+    return get_lang_class("cs")().tokenizer
 
 
 @pytest.fixture(scope="session")
@@ -211,7 +211,7 @@ def ru_lemmatizer():
 
 @pytest.fixture(scope="session")
 def sa_tokenizer():
-    return get_lang_class("sa").Defaults.create_tokenizer()
+    return get_lang_class("sa")().tokenizer
 
 
 @pytest.fixture(scope="session")
