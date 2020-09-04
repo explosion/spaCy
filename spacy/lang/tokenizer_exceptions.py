@@ -34,13 +34,13 @@ URL_PATTERN = (
     r"|"
     # host & domain names
     # mods: match is case-sensitive, so include [A-Z]
-      "(?:"  # noqa: E131
-        "(?:"
-          "[A-Za-z0-9\u00a1-\uffff]"
-          "[A-Za-z0-9\u00a1-\uffff_-]{0,62}"
-        ")?"
-        "[A-Za-z0-9\u00a1-\uffff]\."
-      ")+"
+    r"(?:"  # noqa: E131
+      r"(?:"
+        r"[A-Za-z0-9\u00a1-\uffff]"
+        r"[A-Za-z0-9\u00a1-\uffff_-]{0,62}"
+      r")?"
+      r"[A-Za-z0-9\u00a1-\uffff]\."
+    r")+"
     # TLD identifier
     # mods: use ALPHA_LOWER instead of a wider range so that this doesn't match
     # strings like "lower.Upper", which can be split on "." by infixes in some
@@ -128,6 +128,8 @@ emoticons = set(
 :-]
 [:
 [-:
+[=
+=]
 :o)
 (o:
 :}
@@ -159,6 +161,8 @@ emoticons = set(
 =|
 :|
 :-|
+]=
+=[
 :1
 :P
 :-P

@@ -1,9 +1,8 @@
 from typing import Optional, Any, Dict, Callable, Iterable, Union, List, Pattern
-from typing import Tuple, Iterator, Optional
+from typing import Tuple, Iterator
 from dataclasses import dataclass
 import random
 import itertools
-import weakref
 import functools
 from contextlib import contextmanager
 from copy import deepcopy
@@ -211,6 +210,7 @@ class Language:
         # TODO: Adding this back to prevent breaking people's code etc., but
         # we should consider removing it
         self._meta["pipeline"] = list(self.pipe_names)
+        self._meta["components"] = list(self.component_names)
         self._meta["disabled"] = list(self.disabled)
         return self._meta
 
@@ -1377,8 +1377,6 @@ class Language:
             docs = (self.make_doc(text) for text in texts)
             for pipe in pipes:
                 docs = pipe(docs)
-
-        nr_seen = 0
         for doc in docs:
             yield doc
 
