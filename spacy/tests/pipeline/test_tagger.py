@@ -34,6 +34,36 @@ TRAIN_DATA = [
 ]
 
 
+def test_tagger_invalid_tag():
+    nlp = Language()
+    tagger = nlp.add_pipe("tagger")
+    train_examples = []
+    tagger.add_label("N")
+    train_examples = []
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+    with pytest.raises(ValueError):
+        nlp.begin_training(get_examples=lambda: train_examples)
+
+
+def test_tagger_begin_training_examples():
+    nlp = Language()
+    tagger = nlp.add_pipe("tagger")
+    train_examples = []
+    for tag in TAGS:
+        tagger.add_label(tag)
+    train_examples = []
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+    # you shouldn't really call this more than once, but for testing it should be fine
+    nlp.begin_training()
+    nlp.begin_training(get_examples=lambda: train_examples)
+    with pytest.raises(TypeError):
+        nlp.begin_training(get_examples=lambda: None)
+    with pytest.raises(ValueError):
+        nlp.begin_training(get_examples=train_examples)
+
+
 def test_overfitting_IO():
     # Simple test to try and quickly overfit the tagger - ensuring the ML models work correctly
     nlp = English()

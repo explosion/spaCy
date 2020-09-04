@@ -259,9 +259,10 @@ class Tagger(Pipe):
 
     def begin_training(self, get_examples, *, pipeline=None, sgd=None):
         """Initialize the pipe for training, using data examples if available.
+        This function assumes that all labels have already been added.
 
-        get_examples (Callable[[], Iterable[Example]]): Optional function that
-            returns gold-standard Example objects.
+        get_examples (Callable[[], Iterable[Example]]): Function that
+            returns a sample of gold-standard Example objects.
         pipeline (List[Tuple[str, Callable]]): Optional list of pipeline
             components that this component is part of. Corresponds to
             nlp.pipeline.
@@ -271,32 +272,27 @@ class Tagger(Pipe):
 
         DOCS: https://spacy.io/api/tagger#begin_training
         """
-        if not hasattr(get_examples, "__call__"):
+        if get_examples is None or not hasattr(get_examples, "__call__"):
             err = Errors.E930.format(name="Tagger", obj=type(get_examples))
             raise ValueError(err)
-        tags = set()
-        doc_sample = []
-        for example in get_examples():
-            for token in example.y:
-                tags.add(token.tag_)
-            if len(doc_sample) < 10:
-                doc_sample.append(example.x)
-        if not doc_sample:
-            doc_sample.append(Doc(self.vocab, words=["hello"]))
-        for tag in sorted(tags):
-            self.add_label(tag)
         if len(self.labels) == 0:
             err = Errors.E1006.format(name="Tagger")
             raise ValueError(err)
-        self.set_output(len(self.labels))
-        if doc_sample:
-            label_sample = [
-                self.model.ops.alloc2f(len(doc), len(self.labels))
-                for doc in doc_sample
-            ]
-            self.model.initialize(X=doc_sample, Y=label_sample)
-        else:
-            self.model.initialize()
+        doc_sample = []
+        label_sample = []
+        for example in get_examples():
+            for token in example.y:
+                if token.tag_ and token.tag_ not in self.labels:
+                    err = Errors.E925.format(component="tagger", label=token.tag_)
+                    raise ValueError(err)
+            if len(doc_sample) < 10:
+                doc_sample.append(example.x)
+                gold_tags = example.get_aligned("TAG", as_string=True)
+                gold_array = [[1.0 if tag == gold_tag else 0.0 for tag in self.labels] for gold_tag in gold_tags]
+                label_sample.append(self.model.ops.asarray(gold_array, dtype="float32"))
+        assert doc_sample
+        assert label_sample
+        self.model.initialize(X=doc_sample, Y=label_sample)
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
