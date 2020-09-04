@@ -140,8 +140,18 @@ class SentenceRecognizer(Tagger):
         if get_examples is None or not hasattr(get_examples, "__call__"):
             err = Errors.E930.format(name="SentenceRecognizer", obj=type(get_examples))
             raise ValueError(err)
-        self.set_output(len(self.labels))
-        self.model.initialize()
+        doc_sample = []
+        label_sample = []
+        assert self.labels
+        for example in get_examples():
+            if len(doc_sample) < 10:
+                doc_sample.append(example.x)
+                gold_tags = example.get_aligned("SENT_START")
+                gold_array = [[1.0 if tag == gold_tag else 0.0 for tag in self.labels] for gold_tag in gold_tags]
+                label_sample.append(self.model.ops.asarray(gold_array, dtype="float32"))
+        assert doc_sample
+        assert label_sample
+        self.model.initialize(X=doc_sample, Y=label_sample)
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
