@@ -92,7 +92,7 @@ def make_textcat(
 class TextCategorizer(Pipe):
     """Pipeline component for text classification.
 
-    DOCS: https://spacy.io/api/textcategorizer
+    DOCS: https://nightly.spacy.io/api/textcategorizer
     """
 
     def __init__(
@@ -111,7 +111,7 @@ class TextCategorizer(Pipe):
             losses during training.
         labels (Iterable[str]): The labels to use.
 
-        DOCS: https://spacy.io/api/textcategorizer#init
+        DOCS: https://nightly.spacy.io/api/textcategorizer#init
         """
         self.vocab = vocab
         self.model = model
@@ -124,7 +124,7 @@ class TextCategorizer(Pipe):
     def labels(self) -> Tuple[str]:
         """RETURNS (Tuple[str]): The labels currently added to the component.
 
-        DOCS: https://spacy.io/api/textcategorizer#labels
+        DOCS: https://nightly.spacy.io/api/textcategorizer#labels
         """
         return tuple(self.cfg.setdefault("labels", []))
 
@@ -146,7 +146,7 @@ class TextCategorizer(Pipe):
         batch_size (int): The number of documents to buffer.
         YIELDS (Doc): Processed documents in order.
 
-        DOCS: https://spacy.io/api/textcategorizer#pipe
+        DOCS: https://nightly.spacy.io/api/textcategorizer#pipe
         """
         for docs in util.minibatch(stream, size=batch_size):
             scores = self.predict(docs)
@@ -159,7 +159,7 @@ class TextCategorizer(Pipe):
         docs (Iterable[Doc]): The documents to predict.
         RETURNS: The models prediction for each document.
 
-        DOCS: https://spacy.io/api/textcategorizer#predict
+        DOCS: https://nightly.spacy.io/api/textcategorizer#predict
         """
         tensors = [doc.tensor for doc in docs]
         if not any(len(doc) for doc in docs):
@@ -177,7 +177,7 @@ class TextCategorizer(Pipe):
         docs (Iterable[Doc]): The documents to modify.
         scores: The scores to set, produced by TextCategorizer.predict.
 
-        DOCS: https://spacy.io/api/textcategorizer#set_annotations
+        DOCS: https://nightly.spacy.io/api/textcategorizer#set_annotations
         """
         for i, doc in enumerate(docs):
             for j, label in enumerate(self.labels):
@@ -204,7 +204,7 @@ class TextCategorizer(Pipe):
             Updated using the component name as the key.
         RETURNS (Dict[str, float]): The updated losses dictionary.
 
-        DOCS: https://spacy.io/api/textcategorizer#update
+        DOCS: https://nightly.spacy.io/api/textcategorizer#update
         """
         if losses is None:
             losses = {}
@@ -245,7 +245,7 @@ class TextCategorizer(Pipe):
             Updated using the component name as the key.
         RETURNS (Dict[str, float]): The updated losses dictionary.
 
-        DOCS: https://spacy.io/api/textcategorizer#rehearse
+        DOCS: https://nightly.spacy.io/api/textcategorizer#rehearse
         """
         if losses is not None:
             losses.setdefault(self.name, 0.0)
@@ -289,7 +289,7 @@ class TextCategorizer(Pipe):
         scores: Scores representing the model's predictions.
         RETUTNRS (Tuple[float, float]): The loss and the gradient.
 
-        DOCS: https://spacy.io/api/textcategorizer#get_loss
+        DOCS: https://nightly.spacy.io/api/textcategorizer#get_loss
         """
         validate_examples(examples, "TextCategorizer.get_loss")
         truths, not_missing = self._examples_to_truth(examples)
@@ -305,7 +305,7 @@ class TextCategorizer(Pipe):
         label (str): The label to add.
         RETURNS (int): 0 if label is already present, otherwise 1.
 
-        DOCS: https://spacy.io/api/textcategorizer#add_label
+        DOCS: https://nightly.spacy.io/api/textcategorizer#add_label
         """
         if not isinstance(label, str):
             raise ValueError(Errors.E187)
@@ -343,7 +343,7 @@ class TextCategorizer(Pipe):
             create_optimizer if it doesn't exist.
         RETURNS (thinc.api.Optimizer): The optimizer.
 
-        DOCS: https://spacy.io/api/textcategorizer#begin_training
+        DOCS: https://nightly.spacy.io/api/textcategorizer#begin_training
         """
         if not hasattr(get_examples, "__call__"):
             err = Errors.E930.format(name="TextCategorizer", obj=type(get_examples))
@@ -378,7 +378,7 @@ class TextCategorizer(Pipe):
         positive_label (str): Optional positive label.
         RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_cats.
 
-        DOCS: https://spacy.io/api/textcategorizer#score
+        DOCS: https://nightly.spacy.io/api/textcategorizer#score
         """
         validate_examples(examples, "TextCategorizer.score")
         return Scorer.score_cats(

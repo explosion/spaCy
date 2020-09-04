@@ -28,7 +28,7 @@ path = ${paths.train}
 path = ${paths.dev}
 
 [training.batcher]
-@batchers = "batch_by_words.v1"
+@batchers = "spacy.batch_by_words.v1"
 size = 666
 
 [nlp]
@@ -144,6 +144,7 @@ def test_serialize_nlp():
     """ Create a custom nlp pipeline from config and ensure it serializes it correctly """
     nlp_config = Config().from_str(nlp_config_string)
     nlp, _ = load_model_from_config(nlp_config, auto_fill=True)
+    nlp.get_pipe("tagger").add_label("A")
     nlp.begin_training()
     assert "tok2vec" in nlp.pipe_names
     assert "tagger" in nlp.pipe_names

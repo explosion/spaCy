@@ -25,36 +25,6 @@ usage documentation on
 
 ## Tok2Vec architectures {#tok2vec-arch source="spacy/ml/models/tok2vec.py"}
 
-### spacy.HashEmbedCNN.v1 {#HashEmbedCNN}
-
-> #### Example Config
->
-> ```ini
-> [model]
-> @architectures = "spacy.HashEmbedCNN.v1"
-> pretrained_vectors = null
-> width = 96
-> depth = 4
-> embed_size = 2000
-> window_size = 1
-> maxout_pieces = 3
-> subword_features = true
-> ```
-
-Build spaCy's "standard" embedding layer, which uses hash embedding with subword
-features and a CNN with layer-normalized maxout.
-
-| Name                 | Description                                                                                                                                                                                                                                                                   |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `width`              | The width of the input and output. These are required to be the same, so that residual connections can be used. Recommended values are `96`, `128` or `300`. ~~int~~                                                                                                          |
-| `depth`              | The number of convolutional layers to use. Recommended values are between `2` and `8`. ~~int~~                                                                                                                                                                                |
-| `embed_size`         | The number of rows in the hash embedding tables. This can be surprisingly small, due to the use of the hash embeddings. Recommended values are between `2000` and `10000`. ~~int~~                                                                                            |
-| `window_size`        | The number of tokens on either side to concatenate during the convolutions. The receptive field of the CNN will be `depth * (window_size * 2 + 1)`, so a 4-layer network with a window size of `2` will be sensitive to 17 words at a time. Recommended value is `1`. ~~int~~ |
-| `maxout_pieces`      | The number of pieces to use in the maxout non-linearity. If `1`, the [`Mish`](https://thinc.ai/docs/api-layers#mish) non-linearity is used instead. Recommended values are `1`-`3`. ~~int~~                                                                                   |
-| `subword_features`   | Whether to also embed subword features, specifically the prefix, suffix and word shape. This is recommended for alphabetic languages like English, but not if single-character tokens are used for a language such as Chinese. ~~bool~~                                       |
-| `pretrained_vectors` | Whether to also use static vectors. ~~bool~~                                                                                                                                                                                                                                  |
-| **CREATES**          | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                        |
-
 ### spacy.Tok2Vec.v1 {#Tok2Vec}
 
 > #### Example config
@@ -72,7 +42,8 @@ features and a CNN with layer-normalized maxout.
 > # ...
 > ```
 
-Construct a tok2vec model out of embedding and encoding subnetworks. See the
+Construct a tok2vec model out of two subnetworks: one for embedding and one for
+encoding. See the
 ["Embed, Encode, Attend, Predict"](https://explosion.ai/blog/deep-learning-formula-nlp)
 blog post for background.
 
@@ -81,6 +52,39 @@ blog post for background.
 | `embed`     | Embed tokens into context-independent word vector representations. For example, [CharacterEmbed](/api/architectures#CharacterEmbed) or [MultiHashEmbed](/api/architectures#MultiHashEmbed). ~~Model[List[Doc], List[Floats2d]]~~ |
 | `encode`    | Encode context into the embeddings, using an architecture such as a CNN, BiLSTM or transformer. For example, [MaxoutWindowEncoder](/api/architectures#MaxoutWindowEncoder). ~~Model[List[Floats2d], List[Floats2d]]~~            |
 | **CREATES** | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                           |
+
+### spacy.HashEmbedCNN.v1 {#HashEmbedCNN}
+
+> #### Example Config
+>
+> ```ini
+> [model]
+> @architectures = "spacy.HashEmbedCNN.v1"
+> pretrained_vectors = null
+> width = 96
+> depth = 4
+> embed_size = 2000
+> window_size = 1
+> maxout_pieces = 3
+> subword_features = true
+> ```
+
+Build spaCy's "standard" tok2vec layer. This layer is defined by a
+[MultiHashEmbed](/api/architectures#MultiHashEmbed) embedding layer that uses
+subword features, and a
+[MaxoutWindowEncoder](/api/architectures#MaxoutWindowEncoder) encoding layer
+consisting of a CNN and a layer-normalized maxout activation function.
+
+| Name                 | Description                                                                                                                                                                                                                                                                   |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `width`              | The width of the input and output. These are required to be the same, so that residual connections can be used. Recommended values are `96`, `128` or `300`. ~~int~~                                                                                                          |
+| `depth`              | The number of convolutional layers to use. Recommended values are between `2` and `8`. ~~int~~                                                                                                                                                                                |
+| `embed_size`         | The number of rows in the hash embedding tables. This can be surprisingly small, due to the use of the hash embeddings. Recommended values are between `2000` and `10000`. ~~int~~                                                                                            |
+| `window_size`        | The number of tokens on either side to concatenate during the convolutions. The receptive field of the CNN will be `depth * (window_size * 2 + 1)`, so a 4-layer network with a window size of `2` will be sensitive to 17 words at a time. Recommended value is `1`. ~~int~~ |
+| `maxout_pieces`      | The number of pieces to use in the maxout non-linearity. If `1`, the [`Mish`](https://thinc.ai/docs/api-layers#mish) non-linearity is used instead. Recommended values are `1`-`3`. ~~int~~                                                                                   |
+| `subword_features`   | Whether to also embed subword features, specifically the prefix, suffix and word shape. This is recommended for alphabetic languages like English, but not if single-character tokens are used for a language such as Chinese. ~~bool~~                                       |
+| `pretrained_vectors` | Whether to also use static vectors. ~~bool~~                                                                                                                                                                                                                                  |
+| **CREATES**          | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                        |
 
 ### spacy.Tok2VecListener.v1 {#Tok2VecListener}
 
@@ -118,11 +122,11 @@ Instead of defining its own `Tok2Vec` instance, a model architecture like
 [Tagger](/api/architectures#tagger) can define a listener as its `tok2vec`
 argument that connects to the shared `tok2vec` component in the pipeline.
 
-| Name        | Description                                                                                                                                                                                                                                                                                                    |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `width`     | The width of the vectors produced by the "upstream" [`Tok2Vec`](/api/tok2vec) component. ~~int~~                                                                                                                                                                                                               |
-| `upstream`  | A string to identify the "upstream" `Tok2Vec` component to communicate with. The upstream name should either be the wildcard string `"*"`, or the name of the `Tok2Vec` component. You'll almost never have multiple upstream `Tok2Vec` components, so the wildcard string will almost always be fine. ~~str~~ |
-| **CREATES** | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                                                         |
+| Name        | Description                                                                                                                                                                                                                                                                                                                          |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `width`     | The width of the vectors produced by the "upstream" [`Tok2Vec`](/api/tok2vec) component. ~~int~~                                                                                                                                                                                                                                     |
+| `upstream`  | A string to identify the "upstream" `Tok2Vec` component to communicate with. By default, the upstream name is the wildcard string `"*"`, but you could also specify the name of the `Tok2Vec` component. You'll almost never have multiple upstream `Tok2Vec` components, so the wildcard string will almost always be fine. ~~str~~ |
+| **CREATES** | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                                                                               |
 
 ### spacy.MultiHashEmbed.v1 {#MultiHashEmbed}
 
@@ -316,18 +320,18 @@ for details and system requirements.
 > tokenizer_config = {"use_fast": true}
 >
 > [model.get_spans]
-> @span_getters = "strided_spans.v1"
+> @span_getters = "spacy-transformers.strided_spans.v1"
 > window = 128
 > stride = 96
 > ```
 
 Load and wrap a transformer model from the
 [HuggingFace `transformers`](https://huggingface.co/transformers) library. You
-can any transformer that has pretrained weights and a PyTorch implementation.
-The `name` variable is passed through to the underlying library, so it can be
-either a string or a path. If it's a string, the pretrained weights will be
-downloaded via the transformers library if they are not already available
-locally.
+can use any transformer that has pretrained weights and a PyTorch
+implementation. The `name` variable is passed through to the underlying library,
+so it can be either a string or a path. If it's a string, the pretrained weights
+will be downloaded via the transformers library if they are not already
+available locally.
 
 In order to support longer documents, the
 [TransformerModel](/api/architectures#TransformerModel) layer allows you to pass
@@ -346,13 +350,13 @@ in other components, see
 | `tokenizer_config` | Tokenizer settings passed to [`transformers.AutoTokenizer`](https://huggingface.co/transformers/model_doc/auto.html#transformers.AutoTokenizer). ~~Dict[str, Any]~~                                                                                   |
 | **CREATES**        | The model using the architecture. ~~Model[List[Doc], FullTransformerBatch]~~                                                                                                                                                                          |
 
-### spacy-transformers.Tok2VecListener.v1 {#transformers-Tok2VecListener}
+### spacy-transformers.TransformerListener.v1 {#TransformerListener}
 
 > #### Example Config
 >
 > ```ini
 > [model]
-> @architectures = "spacy-transformers.Tok2VecListener.v1"
+> @architectures = "spacy-transformers.TransformerListener.v1"
 > grad_factor = 1.0
 >
 > [model.pooling]
@@ -669,11 +673,11 @@ into the "real world". This requires 3 main components:
 > subword_features = true
 >
 > [kb_loader]
-> @assets = "spacy.EmptyKB.v1"
+> @misc = "spacy.EmptyKB.v1"
 > entity_vector_length = 64
 >
 > [get_candidates]
-> @assets = "spacy.CandidateGenerator.v1"
+> @misc = "spacy.CandidateGenerator.v1"
 > ```
 
 The `EntityLinker` model architecture is a Thinc `Model` with a

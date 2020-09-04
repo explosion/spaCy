@@ -56,7 +56,7 @@ class Tok2Vec(Pipe):
             a list of Doc objects as input, and output a list of 2d float arrays.
         name (str): The component instance name.
 
-        DOCS: https://spacy.io/api/tok2vec#init
+        DOCS: https://nightly.spacy.io/api/tok2vec#init
         """
         self.vocab = vocab
         self.model = model
@@ -88,10 +88,10 @@ class Tok2Vec(Pipe):
         """Add context-sensitive embeddings to the Doc.tensor attribute, allowing
         them to be used as features by downstream components.
 
-        docs (Doc): The Doc to preocess.
+        docs (Doc): The Doc to process.
         RETURNS (Doc): The processed Doc.
 
-        DOCS: https://spacy.io/api/tok2vec#call
+        DOCS: https://nightly.spacy.io/api/tok2vec#call
         """
         tokvecses = self.predict([doc])
         self.set_annotations([doc], tokvecses)
@@ -106,7 +106,7 @@ class Tok2Vec(Pipe):
         batch_size (int): The number of documents to buffer.
         YIELDS (Doc): Processed documents in order.
 
-        DOCS: https://spacy.io/api/tok2vec#pipe
+        DOCS: https://nightly.spacy.io/api/tok2vec#pipe
         """
         for docs in minibatch(stream, batch_size):
             docs = list(docs)
@@ -121,7 +121,7 @@ class Tok2Vec(Pipe):
         docs (Iterable[Doc]): The documents to predict.
         RETURNS: Vector representations for each token in the documents.
 
-        DOCS: https://spacy.io/api/tok2vec#predict
+        DOCS: https://nightly.spacy.io/api/tok2vec#predict
         """
         tokvecs = self.model.predict(docs)
         batch_id = Tok2VecListener.get_batch_id(docs)
@@ -135,7 +135,7 @@ class Tok2Vec(Pipe):
         docs (Iterable[Doc]): The documents to modify.
         tokvecses: The tensors to set, produced by Tok2Vec.predict.
 
-        DOCS: https://spacy.io/api/tok2vec#set_annotations
+        DOCS: https://nightly.spacy.io/api/tok2vec#set_annotations
         """
         for doc, tokvecs in zip(docs, tokvecses):
             assert tokvecs.shape[0] == len(doc)
@@ -162,7 +162,7 @@ class Tok2Vec(Pipe):
             Updated using the component name as the key.
         RETURNS (Dict[str, float]): The updated losses dictionary.
 
-        DOCS: https://spacy.io/api/tok2vec#update
+        DOCS: https://nightly.spacy.io/api/tok2vec#update
         """
         if losses is None:
             losses = {}
@@ -220,7 +220,7 @@ class Tok2Vec(Pipe):
             create_optimizer if it doesn't exist.
         RETURNS (thinc.api.Optimizer): The optimizer.
 
-        DOCS: https://spacy.io/api/tok2vec#begin_training
+        DOCS: https://nightly.spacy.io/api/tok2vec#begin_training
         """
         docs = [Doc(self.vocab, words=["hello"])]
         self.model.initialize(X=docs)

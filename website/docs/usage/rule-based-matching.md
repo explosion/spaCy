@@ -493,6 +493,39 @@ you prefer.
 | `i`       | Index of the current match (`matches[i`]). ~~int~~                                                                                                 |
 | `matches` | A list of `(match_id, start, end)` tuples, describing the matches. A match tuple describes a span `doc[start:end`]. ~~ List[Tuple[int, int int]]~~ |
 
+### Creating spans from matches {#matcher-spans}
+
+Creating [`Span`](/api/span) objects from the returned matches is a very common
+use case. spaCy makes this easy by giving you access to the `start` and `end`
+token of each match, which you can use to construct a new span with an optional
+label. As of spaCy v3.0, you can also set `as_spans=True` when calling the
+matcher on a `Doc`, which will return a list of [`Span`](/api/span) objects
+using the `match_id` as the span label.
+
+```python
+### {executable="true"}
+import spacy
+from spacy.matcher import Matcher
+from spacy.tokens import Span
+
+nlp = spacy.blank("en")
+matcher = Matcher(nlp.vocab)
+matcher.add("PERSON", [[{"lower": "barack"}, {"lower": "obama"}]])
+doc = nlp("Barack Obama was the 44th president of the United States")
+
+# 1. Return (match_id, start, end) tuples
+matches = matcher(doc)
+for match_id, start, end in matches:
+    # Create the matched span and assign the match_id as a label
+    span = Span(doc, start, end, label=match_id)
+    print(span.text, span.label_)
+
+# 2. Return Span objects directly
+matches = matcher(doc, as_spans=True)
+for span in matches:
+    print(span.text, span.label_)
+```
+
 ### Using custom pipeline components {#matcher-pipeline}
 
 Let's say your data also contains some annoying pre-processing artifacts, like
@@ -726,7 +759,7 @@ whitespace, making them easy to match as well.
 from spacy.lang.en import English
 from spacy.matcher import Matcher
 
-nlp = English()  # We only want the tokenizer, so no need to load a model
+nlp = English()  # We only want the tokenizer, so no need to load a pipeline
 matcher = Matcher(nlp.vocab)
 
 pos_emoji = ["😀", "😃", "😂", "🤣", "😊", "😍"]  # Positive emoji
@@ -823,15 +856,6 @@ for token in doc:
     print(token.text, token._.is_hashtag)
 ```
 
-To process a stream of social media posts, we can use
-[`Language.pipe`](/api/language#pipe), which will return a stream of `Doc`
-objects that we can pass to [`Matcher.pipe`](/api/matcher#pipe).
-
-```python
-docs = nlp.pipe(LOTS_OF_TWEETS)
-matches = matcher.pipe(docs)
-```
-
 ## Efficient phrase matching {#phrasematcher}
 
 If you need to match large terminology lists, you can also use the
@@ -869,12 +893,13 @@ pattern covering the exact tokenization of the term.
 <Infobox title="Important note on creating patterns" variant="warning">
 
 To create the patterns, each phrase has to be processed with the `nlp` object.
-If you have a model loaded, doing this in a loop or list comprehension can
-easily become inefficient and slow. If you **only need the tokenization and
-lexical attributes**, you can run [`nlp.make_doc`](/api/language#make_doc)
-instead, which will only run the tokenizer. For an additional speed boost, you
-can also use the [`nlp.tokenizer.pipe`](/api/tokenizer#pipe) method, which will
-process the texts as a stream.
+If you have a trained pipeline loaded, doing this in a loop or list
+comprehension can easily become inefficient and slow. If you **only need the
+tokenization and lexical attributes**, you can run
+[`nlp.make_doc`](/api/language#make_doc) instead, which will only run the
+tokenizer. For an additional speed boost, you can also use the
+[`nlp.tokenizer.pipe`](/api/tokenizer#pipe) method, which will process the texts
+as a stream.
 
 ```diff
 - patterns = [nlp(term) for term in LOTS_OF_TERMS]
@@ -953,7 +978,7 @@ of an advantage over writing one or two token patterns.
 The [`EntityRuler`](/api/entityruler) is an exciting new component that lets you
 add named entities based on pattern dictionaries, and makes it easy to combine
 rule-based and statistical named entity recognition for even more powerful
-models.
+pipelines.
 
 ### Entity Patterns {#entityruler-patterns}
 
@@ -997,8 +1022,8 @@ doc = nlp("Apple is opening its first big office in San Francisco.")
 print([(ent.text, ent.label_) for ent in doc.ents])
 ```
 
-The entity ruler is designed to integrate with spaCy's existing statistical
-models and enhance the named entity recognizer. If it's added **before the
+The entity ruler is designed to integrate with spaCy's existing pipeline
+components and enhance the named entity recognizer. If it's added **before the
 `"ner"` component**, the entity recognizer will respect the existing entity
 spans and adjust its predictions around it. This can significantly improve
 accuracy in some cases. If it's added **after the `"ner"` component**, the
@@ -1087,20 +1112,20 @@ versa.
 </Infobox>
 
 When you save out an `nlp` object that has an `EntityRuler` added to its
-pipeline, its patterns are automatically exported to the model directory:
+pipeline, its patterns are automatically exported to the pipeline directory:
 
 ```python
 nlp = spacy.load("en_core_web_sm")
 ruler = nlp.add_pipe("entity_ruler")
 ruler.add_patterns([{"label": "ORG", "pattern": "Apple"}])
-nlp.to_disk("/path/to/model")
+nlp.to_disk("/path/to/pipeline")
 ```
 
-The saved model now includes the `"entity_ruler"` in its
-[`config.cfg`](/api/data-formats#config) and the model directory contains a file
-`entityruler.jsonl` with the patterns. When you load the model back in, all
-pipeline components will be restored and deserialized – including the entity
-ruler. This lets you ship powerful model packages with binary weights _and_
+The saved pipeline now includes the `"entity_ruler"` in its
+[`config.cfg`](/api/data-formats#config) and the pipeline directory contains a
+file `entityruler.jsonl` with the patterns. When you load the pipeline back in,
+all pipeline components will be restored and deserialized – including the entity
+ruler. This lets you ship powerful pipeline packages with binary weights _and_
 rules included!
 
 ### Using a large number of phrase patterns {#entityruler-large-phrase-patterns new="2.2.4"}
@@ -1117,7 +1142,7 @@ of `"phrase_matcher_attr": "POS"` for the entity ruler.
 
 Running the full language pipeline across every pattern in a large list scales
 linearly and can therefore take a long time on large amounts of phrase patterns.
-As of spaCy 2.2.4 the `add_patterns` function has been refactored to use
+As of spaCy v2.2.4 the `add_patterns` function has been refactored to use
 nlp.pipe on all phrase patterns resulting in about a 10x-20x speed up with
 5,000-100,000 phrase patterns respectively. Even with this speedup (but
 especially if you're using an older version) the `add_patterns` function can
@@ -1144,7 +1169,7 @@ order to implement more abstract logic.
 
 ### Example: Expanding named entities {#models-rules-ner}
 
-When using the a pretrained
+When using a trained
 [named entity recognition](/usage/linguistic-features/#named-entities) model to
 extract information from your texts, you may find that the predicted span only
 includes parts of the entity you're looking for. Sometimes, this happens if
@@ -1154,15 +1179,15 @@ what you need for your application.
 
 > #### Where corpora come from
 >
-> Corpora used to train models from scratch are often produced in academia. They
-> contain text from various sources with linguistic features labeled manually by
-> human annotators (following a set of specific guidelines). The corpora are
-> then distributed with evaluation data, so other researchers can benchmark
-> their algorithms and everyone can report numbers on the same data. However,
-> most applications need to learn information that isn't contained in any
-> available corpus.
+> Corpora used to train pipelines from scratch are often produced in academia.
+> They contain text from various sources with linguistic features labeled
+> manually by human annotators (following a set of specific guidelines). The
+> corpora are then distributed with evaluation data, so other researchers can
+> benchmark their algorithms and everyone can report numbers on the same data.
+> However, most applications need to learn information that isn't contained in
+> any available corpus.
 
-For example, the corpus spaCy's [English models](/models/en) were trained on
+For example, the corpus spaCy's [English pipelines](/models/en) were trained on
 defines a `PERSON` entity as just the **person name**, without titles like "Mr."
 or "Dr.". This makes sense, because it makes it easier to resolve the entity
 type back to a knowledge base. But what if your application needs the full

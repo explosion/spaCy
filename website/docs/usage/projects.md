@@ -20,16 +20,12 @@ menu:
 
 spaCy projects let you manage and share **end-to-end spaCy workflows** for
 different **use cases and domains**, and orchestrate training, packaging and
-serving your custom models. You can start off by cloning a pre-defined project
-template, adjust it to fit your needs, load in your data, train a model, export
-it as a Python package, upload your outputs to a remote storage and share your
-results with your team. spaCy projects can be used via the new
+serving your custom pipelines. You can start off by cloning a pre-defined
+project template, adjust it to fit your needs, load in your data, train a
+pipeline, export it as a Python package, upload your outputs to a remote storage
+and share your results with your team. spaCy projects can be used via the new
 [`spacy project`](/api/cli#project) command and we provide templates in our
 [`projects`](https://github.com/explosion/projects) repo.
-
-<!-- TODO: mention integrations -->
-
-<!-- TODO: decide how to introduce concept -->
 
 ![Illustration of project workflow and commands](../images/projects.svg)
 
@@ -51,7 +47,7 @@ production.
 <Grid narrow cols={3}>
 <Integration title="DVC" logo="dvc" url="#dvc">Manage and version your data</Integration>
 <Integration title="Prodigy" logo="prodigy" url="#prodigy">Create labelled training data</Integration>
-<Integration title="Streamlit" logo="streamlit" url="#streamlit">Visualize and demo your models</Integration>
+<Integration title="Streamlit" logo="streamlit" url="#streamlit">Visualize and demo your pipelines</Integration>
 <Integration title="FastAPI" logo="fastapi" url="#fastapi">Serve your models and host APIs</Integration>
 <Integration title="Ray" logo="ray" url="#ray">Distributed and parallel training</Integration>
 <Integration title="Weights &amp; Biases" logo="wandb" url="#wandb">Track your experiments and results</Integration>
@@ -66,8 +62,8 @@ production.
 
 The [`spacy project clone`](/api/cli#project-clone) command clones an existing
 project template and copies the files to a local directory. You can then run the
-project, e.g. to train a model and edit the commands and scripts to build fully
-custom workflows.
+project, e.g. to train a pipeline and edit the commands and scripts to build
+fully custom workflows.
 
 ```cli
 python -m spacy project clone some_example_project
@@ -162,12 +158,12 @@ script).
 > ```
 
 Workflows are series of commands that are run in order and often depend on each
-other. For instance, to generate a packaged model, you might start by converting
-your data, then run [`spacy train`](/api/cli#train) to train your model on the
-converted data and if that's successful, run [`spacy package`](/api/cli#package)
-to turn the best model artifact into an installable Python package. The
-following command runs the workflow named `all` defined in the `project.yml`,
-and executes the commands it specifies, in order:
+other. For instance, to generate a pipeline package, you might start by
+converting your data, then run [`spacy train`](/api/cli#train) to train your
+pipeline on the converted data and if that's successful, run
+[`spacy package`](/api/cli#package) to turn the best trained artifact into an
+installable Python package. The following command runs the workflow named `all`
+defined in the `project.yml`, and executes the commands it specifies, in order:
 
 ```cli
 $ python -m spacy project run all
@@ -191,11 +187,11 @@ project as a DVC repo.
 >   local: '/mnt/scratch/cache'
 > ```
 
-After training a model, you can optionally use the
+After training a pipeline, you can optionally use the
 [`spacy project push`](/api/cli#project-push) command to upload your outputs to
 a remote storage, using protocols like [S3](https://aws.amazon.com/s3/),
 [Google Cloud Storage](https://cloud.google.com/storage) or SSH. This can help
-you **export** your model packages, **share** work with your team, or **cache
+you **export** your pipeline packages, **share** work with your team, or **cache
 results** to avoid repeating work.
 
 ```cli
@@ -214,8 +210,8 @@ docs on [remote storage](#remote).
 The `project.yml` defines the assets a project depends on, like datasets and
 pretrained weights, as well as a series of commands that can be run separately
 or as a workflow – for instance, to preprocess the data, convert it to spaCy's
-format, train a model, evaluate it and export metrics, package it and spin up a
-quick web demo. It looks pretty similar to a config file used to define CI
+format, train a pipeline, evaluate it and export metrics, package it and spin up
+a quick web demo. It looks pretty similar to a config file used to define CI
 pipelines.
 
 <!-- TODO: update with better (final) example -->
@@ -324,17 +320,17 @@ others are running your project with the same data.
 
 Each command defined in the `project.yml` can optionally define a list of
 dependencies and outputs. These are the files the command requires and creates.
-For example, a command for training a model may depend on a
+For example, a command for training a pipeline may depend on a
 [`config.cfg`](/usage/training#config) and the training and evaluation data, and
-it will export a directory `model-best`, containing the best model, which you
-can then re-use in other commands.
+it will export a directory `model-best`, which you can then re-use in other
+commands.
 
 <!-- prettier-ignore -->
 ```yaml
 ### project.yml
 commands:
   - name: train
-    help: 'Train a spaCy model using the specified corpus and config'
+    help: 'Train a spaCy pipeline using the specified corpus and config'
     script:
       - 'python -m spacy train ./configs/config.cfg -o training/ --paths.train ./corpus/training.spacy --paths.dev ./corpus/evaluation.spacy'
     deps:
@@ -392,14 +388,14 @@ directory:
 ├── project.yml          # the project settings
 ├── project.lock         # lockfile that tracks inputs/outputs
 ├── assets/              # downloaded data assets
-├── configs/             # model config.cfg files used for training
+├── configs/             # pipeline config.cfg files used for training
 ├── corpus/              # output directory for training corpus
-├── metas/               # model meta.json templates used for packaging
+├── metas/               # pipeline meta.json templates used for packaging
 ├── metrics/             # output directory for evaluation metrics
 ├── notebooks/           # directory for Jupyter notebooks
-├── packages/            # output directory for model Python packages
+├── packages/            # output directory for pipeline Python packages
 ├── scripts/             # directory for scripts, e.g. referenced in commands
-├── training/            # output directory for trained models
+├── training/            # output directory for trained pipelines
 └── ...                  # any other files, like a requirements.txt etc.
 ```
 
@@ -426,7 +422,7 @@ report:
 ### project.yml
 commands:
   - name: test
-    help: 'Test the trained model'
+    help: 'Test the trained pipeline'
     script:
       - 'pip install pytest pytest-html'
       - 'python -m pytest ./scripts/tests --html=metrics/test-report.html'
@@ -440,8 +436,8 @@ commands:
 Adding `training/model-best` to the command's `deps` lets you ensure that the
 file is available. If not, spaCy will show an error and the command won't run.
 Setting `no_skip: true` means that the command will always run, even if the
-dependencies (the trained model) hasn't changed. This makes sense here, because
-you typically don't want to skip your tests.
+dependencies (the trained pipeline) haven't changed. This makes sense here,
+because you typically don't want to skip your tests.
 
 ### Writing custom scripts {#custom-scripts}
 
@@ -526,6 +522,15 @@ before or after it and re-running the `project document` command will **only
 update the auto-generated part**. This makes it easy to keep your documentation
 up to date.
 
+<Infobox variant="warning">
+
+Note that the contents of an existing file will be **replaced** if no existing
+auto-generated docs are found. If you want spaCy to ignore a file and not update
+it, you can add the comment marker `<!-- SPACY PROJECT: IGNORE -->` anywhere in
+your markup.
+
+</Infobox>
+
 ### Cloning from your own repo {#custom-repo}
 
 The [`spacy project clone`](/api/cli#project-clone) command lets you customize
@@ -545,7 +550,7 @@ notebooks with usage examples.
 
 <Infobox title="Important note about assets" variant="warning">
 
-It's typically not a good idea to check large data assets, trained models or
+It's typically not a good idea to check large data assets, trained pipelines or
 other artifacts into a Git repo and you should exclude them from your project
 template by adding a `.gitignore`. If you want to version your data and models,
 check out [Data Version Control](#dvc) (DVC), which integrates with spaCy
@@ -557,7 +562,7 @@ projects.
 
 You can persist your project outputs to a remote storage using the
 [`project push`](/api/cli#project-push) command. This can help you **export**
-your model packages, **share** work with your team, or **cache results** to
+your pipeline packages, **share** work with your team, or **cache results** to
 avoid repeating work. The [`project pull`](/api/cli#project-pull) command will
 download any outputs that are in the remote storage and aren't available
 locally.
@@ -613,7 +618,7 @@ For instance, let's say you had the following command in your `project.yml`:
 ```yaml
 ### project.yml
 - name: train
-  help: 'Train a spaCy model using the specified corpus and config'
+  help: 'Train a spaCy pipeline using the specified corpus and config'
   script:
     - 'spacy train ./config.cfg --output training/'
   deps:
@@ -805,8 +810,8 @@ mattis pretium.
 [Streamlit](https://streamlit.io) is a Python framework for building interactive
 data apps. The [`spacy-streamlit`](https://github.com/explosion/spacy-streamlit)
 package helps you integrate spaCy visualizations into your Streamlit apps and
-quickly spin up demos to explore your models interactively. It includes a full
-embedded visualizer, as well as individual components.
+quickly spin up demos to explore your pipelines interactively. It includes a
+full embedded visualizer, as well as individual components.
 
 ```bash
 $ pip install spacy_streamlit
@@ -820,11 +825,11 @@ $ pip install spacy_streamlit
 
 Using [`spacy-streamlit`](https://github.com/explosion/spacy-streamlit), your
 projects can easily define their own scripts that spin up an interactive
-visualizer, using the latest model you trained, or a selection of models so you
-can compare their results. The following script starts an
+visualizer, using the latest pipeline you trained, or a selection of pipelines
+so you can compare their results. The following script starts an
 [NER visualizer](/usage/visualizers#ent) and takes two positional command-line
-argument you can pass in from your `config.yml`: a comma-separated list of model
-paths and an example text to use as the default text.
+argument you can pass in from your `config.yml`: a comma-separated list of paths
+to load the pipelines from and an example text to use as the default text.
 
 ```python
 ### scripts/visualize.py
@@ -832,8 +837,8 @@ import spacy_streamlit
 import sys
 
 DEFAULT_TEXT = sys.argv[2] if len(sys.argv) >= 3 else ""
-MODELS = [name.strip() for name in sys.argv[1].split(",")]
-spacy_streamlit.visualize(MODELS, DEFAULT_TEXT, visualizers=["ner"])
+PIPELINES = [name.strip() for name in sys.argv[1].split(",")]
+spacy_streamlit.visualize(PIPELINES, DEFAULT_TEXT, visualizers=["ner"])
 ```
 
 > #### Example usage
@@ -847,7 +852,7 @@ spacy_streamlit.visualize(MODELS, DEFAULT_TEXT, visualizers=["ner"])
 ### project.yml
 commands:
   - name: visualize
-    help: "Visualize the model's output interactively using Streamlit"
+    help: "Visualize the pipeline's output interactively using Streamlit"
     script:
       - 'streamlit run ./scripts/visualize.py ./training/model-best "I like Adidas shoes."'
     deps:
@@ -870,8 +875,8 @@ mattis pretium.
 for building REST APIs with Python, based on Python
 [type hints](https://fastapi.tiangolo.com/python-types/). It's become a popular
 library for serving machine learning models and you can use it in your spaCy
-projects to quickly serve up a trained model and make it available behind a REST
-API.
+projects to quickly serve up a trained pipeline and make it available behind a
+REST API.
 
 ```python
 # TODO: show an example that addresses some of the main concerns for serving ML (workers etc.)
@@ -888,7 +893,7 @@ API.
 ### project.yml
 commands:
   - name: serve
-    help: "Serve the trained model with FastAPI"
+    help: "Serve the trained pipeline with FastAPI"
     script:
       - 'python ./scripts/serve.py ./training/model-best'
     deps:
@@ -914,4 +919,4 @@ mattis pretium.
 
 ### Weights & Biases {#wandb} <IntegrationLogo name="wandb" width={175} height="auto" align="right" />
 
-<!-- TODO: decide how we want this to work? Just send results plus config from spacy evaluate in a separate command/script? -->
+<!-- TODO: link to WandB logger, explain that it's built-in but that you can also do other cool stuff with WandB? And then include example project (still need to decide what we want to do here)  -->

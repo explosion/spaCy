@@ -26,13 +26,16 @@ def evaluate_cli(
     # fmt: on
 ):
     """
-    Evaluate a model. Expects a loadable spaCy model and evaluation data in the
-    binary .spacy format. The --gold-preproc option sets up the evaluation
-    examples with gold-standard sentences and tokens for the predictions. Gold
-    preprocessing helps the annotations align to the tokenization, and may
-    result in sequences of more consistent length. However, it may reduce
-    runtime accuracy due to train/test skew. To render a sample of dependency
-    parses in a HTML file, set as output directory as the displacy_path argument.
+    Evaluate a trained pipeline. Expects a loadable spaCy pipeline and evaluation
+    data in the binary .spacy format. The --gold-preproc option sets up the
+    evaluation examples with gold-standard sentences and tokens for the
+    predictions. Gold preprocessing helps the annotations align to the
+    tokenization, and may result in sequences of more consistent length. However,
+    it may reduce runtime accuracy due to train/test skew. To render a sample of
+    dependency parses in a HTML file, set as output directory as the
+    displacy_path argument.
+
+    DOCS: https://nightly.spacy.io/api/cli#evaluate
     """
     evaluate(
         model,

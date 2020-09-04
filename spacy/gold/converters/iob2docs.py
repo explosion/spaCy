@@ -44,7 +44,7 @@ def read_iob(raw_sents, vocab, n_sents):
                 sent_tags = ["-"] * len(sent_words)
             else:
                 raise ValueError(
-                    "The sentence-per-line IOB/IOB2 file is not formatted correctly. Try checking whitespace and delimiters. See https://spacy.io/api/cli#convert"
+                    "The sentence-per-line IOB/IOB2 file is not formatted correctly. Try checking whitespace and delimiters. See https://nightly.spacy.io/api/cli#convert"
                 )
             words.extend(sent_words)
             tags.extend(sent_tags)

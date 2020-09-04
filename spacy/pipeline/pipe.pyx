@@ -15,7 +15,7 @@ cdef class Pipe:
     from it and it defines the interface that components should follow to
     function as trainable components in a spaCy pipeline.
 
-    DOCS: https://spacy.io/api/pipe
+    DOCS: https://nightly.spacy.io/api/pipe
     """
     def __init__(self, vocab, model, name, **cfg):
         """Initialize a pipeline component.
@@ -25,7 +25,7 @@ cdef class Pipe:
         name (str): The component instance name.
         **cfg: Additonal settings and config parameters.
 
-        DOCS: https://spacy.io/api/pipe#init
+        DOCS: https://nightly.spacy.io/api/pipe#init
         """
         self.vocab = vocab
         self.model = model
@@ -37,10 +37,10 @@ cdef class Pipe:
         and returned. This usually happens under the hood when the nlp object
         is called on a text and all components are applied to the Doc.
 
-        docs (Doc): The Doc to preocess.
+        docs (Doc): The Doc to process.
         RETURNS (Doc): The processed Doc.
 
-        DOCS: https://spacy.io/api/pipe#call
+        DOCS: https://nightly.spacy.io/api/pipe#call
         """
         scores = self.predict([doc])
         self.set_annotations([doc], scores)
@@ -55,7 +55,7 @@ cdef class Pipe:
         batch_size (int): The number of documents to buffer.
         YIELDS (Doc): Processed documents in order.
 
-        DOCS: https://spacy.io/api/pipe#pipe
+        DOCS: https://nightly.spacy.io/api/pipe#pipe
         """
         for docs in util.minibatch(stream, size=batch_size):
             scores = self.predict(docs)
@@ -69,7 +69,7 @@ cdef class Pipe:
         docs (Iterable[Doc]): The documents to predict.
         RETURNS: Vector representations for each token in the documents.
 
-        DOCS: https://spacy.io/api/pipe#predict
+        DOCS: https://nightly.spacy.io/api/pipe#predict
         """
         raise NotImplementedError(Errors.E931.format(method="predict", name=self.name))
 
@@ -79,7 +79,7 @@ cdef class Pipe:
         docs (Iterable[Doc]): The documents to modify.
         scores: The scores to assign.
 
-        DOCS: https://spacy.io/api/pipe#set_annotations
+        DOCS: https://nightly.spacy.io/api/pipe#set_annotations
         """
         raise NotImplementedError(Errors.E931.format(method="set_annotations", name=self.name))
 
@@ -96,7 +96,7 @@ cdef class Pipe:
             Updated using the component name as the key.
         RETURNS (Dict[str, float]): The updated losses dictionary.
 
-        DOCS: https://spacy.io/api/pipe#update
+        DOCS: https://nightly.spacy.io/api/pipe#update
         """
         if losses is None:
             losses = {}
@@ -132,7 +132,7 @@ cdef class Pipe:
             Updated using the component name as the key.
         RETURNS (Dict[str, float]): The updated losses dictionary.
 
-        DOCS: https://spacy.io/api/pipe#rehearse
+        DOCS: https://nightly.spacy.io/api/pipe#rehearse
         """
         pass
 
@@ -144,7 +144,7 @@ cdef class Pipe:
         scores: Scores representing the model's predictions.
         RETUTNRS (Tuple[float, float]): The loss and the gradient.
 
-        DOCS: https://spacy.io/api/pipe#get_loss
+        DOCS: https://nightly.spacy.io/api/pipe#get_loss
         """
         raise NotImplementedError(Errors.E931.format(method="get_loss", name=self.name))
 
@@ -156,7 +156,7 @@ cdef class Pipe:
         label (str): The label to add.
         RETURNS (int): 0 if label is already present, otherwise 1.
 
-        DOCS: https://spacy.io/api/pipe#add_label
+        DOCS: https://nightly.spacy.io/api/pipe#add_label
         """
         raise NotImplementedError(Errors.E931.format(method="add_label", name=self.name))
 
@@ -165,7 +165,7 @@ cdef class Pipe:
 
         RETURNS (thinc.api.Optimizer): The optimizer.
 
-        DOCS: https://spacy.io/api/pipe#create_optimizer
+        DOCS: https://nightly.spacy.io/api/pipe#create_optimizer
         """
         return util.create_default_optimizer()
 
@@ -181,7 +181,7 @@ cdef class Pipe:
             create_optimizer if it doesn't exist.
         RETURNS (thinc.api.Optimizer): The optimizer.
 
-        DOCS: https://spacy.io/api/pipe#begin_training
+        DOCS: https://nightly.spacy.io/api/pipe#begin_training
         """
         self.model.initialize()
         if sgd is None:
@@ -200,7 +200,7 @@ cdef class Pipe:
 
         params (dict): The parameter values to use in the model.
 
-        DOCS: https://spacy.io/api/pipe#use_params
+        DOCS: https://nightly.spacy.io/api/pipe#use_params
         """
         with self.model.use_params(params):
             yield
@@ -211,7 +211,7 @@ cdef class Pipe:
         examples (Iterable[Example]): The examples to score.
         RETURNS (Dict[str, Any]): The scores.
 
-        DOCS: https://spacy.io/api/pipe#score
+        DOCS: https://nightly.spacy.io/api/pipe#score
         """
         return {}
 
@@ -221,7 +221,7 @@ cdef class Pipe:
         exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (bytes): The serialized object.
 
-        DOCS: https://spacy.io/api/pipe#to_bytes
+        DOCS: https://nightly.spacy.io/api/pipe#to_bytes
         """
         serialize = {}
         serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
@@ -236,7 +236,7 @@ cdef class Pipe:
         exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (Pipe): The loaded object.
 
-        DOCS: https://spacy.io/api/pipe#from_bytes
+        DOCS: https://nightly.spacy.io/api/pipe#from_bytes
         """
 
         def load_model(b):
@@ -259,7 +259,7 @@ cdef class Pipe:
         path (str / Path): Path to a directory.
         exclude (Iterable[str]): String names of serialization fields to exclude.
 
-        DOCS: https://spacy.io/api/pipe#to_disk
+        DOCS: https://nightly.spacy.io/api/pipe#to_disk
         """
         serialize = {}
         serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
@@ -274,7 +274,7 @@ cdef class Pipe:
         exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (Pipe): The loaded object.
 
-        DOCS: https://spacy.io/api/pipe#from_disk
+        DOCS: https://nightly.spacy.io/api/pipe#from_disk
         """
 
         def load_model(p):

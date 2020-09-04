@@ -15,13 +15,13 @@ const data = [
             {
                 id: 'spacy',
                 title: 'Use spacy.load()',
-                help: "Use spaCy's built-in loader to load the model by name.",
+                help: "Use spaCy's built-in loader to load the package by name",
                 checked: true,
             },
             {
                 id: 'module',
                 title: 'Import as module',
-                help: 'Import the model explicitly as a Python module.',
+                help: 'Import the package explicitly as a Python module',
             },
         ],
     },

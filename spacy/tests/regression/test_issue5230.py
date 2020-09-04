@@ -63,6 +63,7 @@ def tagger():
     # need to add model for two reasons:
     # 1. no model leads to error in serialization,
     # 2. the affected line is the one for model serialization
+    tagger.add_label("A")
     tagger.begin_training(lambda: [], pipeline=nlp.pipeline)
     return tagger
 
@@ -70,7 +71,7 @@ def tagger():
 def entity_linker():
     nlp = Language()
 
-    @registry.assets.register("TestIssue5230KB.v1")
+    @registry.misc.register("TestIssue5230KB.v1")
     def dummy_kb() -> Callable[["Vocab"], KnowledgeBase]:
         def create_kb(vocab):
             kb = KnowledgeBase(vocab, entity_vector_length=1)
@@ -79,7 +80,7 @@ def entity_linker():
 
         return create_kb
 
-    config = {"kb_loader": {"@assets": "TestIssue5230KB.v1"}}
+    config = {"kb_loader": {"@misc": "TestIssue5230KB.v1"}}
     entity_linker = nlp.add_pipe("entity_linker", config=config)
     # need to add model for two reasons:
     # 1. no model leads to error in serialization,

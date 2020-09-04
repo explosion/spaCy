@@ -91,7 +91,7 @@ cdef Utf8Str* _allocate(Pool mem, const unsigned char* chars, uint32_t length) e
 cdef class StringStore:
     """Look up strings by 64-bit hashes.
 
-    DOCS: https://spacy.io/api/stringstore
+    DOCS: https://nightly.spacy.io/api/stringstore
     """
     def __init__(self, strings=None, freeze=False):
         """Create the StringStore.
@@ -127,7 +127,6 @@ cdef class StringStore:
             return SYMBOLS_BY_INT[string_or_id]
         else:
             key = string_or_id
-            self.hits.insert(key)
             utf8str = <Utf8Str*>self._map.get(key)
             if utf8str is NULL:
                 raise KeyError(Errors.E018.format(hash_value=string_or_id))
@@ -198,7 +197,6 @@ cdef class StringStore:
         if key < len(SYMBOLS_BY_INT):
             return True
         else:
-            self.hits.insert(key)
             return self._map.get(key) is not NULL
 
     def __iter__(self):
@@ -210,7 +208,6 @@ cdef class StringStore:
         cdef hash_t key
         for i in range(self.keys.size()):
             key = self.keys[i]
-            self.hits.insert(key)
             utf8str = <Utf8Str*>self._map.get(key)
             yield decode_Utf8Str(utf8str)
         # TODO: Iterate OOV here?
@@ -269,40 +266,8 @@ cdef class StringStore:
         self.mem = Pool()
         self._map = PreshMap()
         self.keys.clear()
-        self.hits.clear()
         for string in strings:
             self.add(string)
-
-    def _cleanup_stale_strings(self, excepted):
-        """
-        excepted (list): Strings that should not be removed.
-        RETURNS (keys, strings): Dropped strings and keys that can be dropped from other places
-        """
-        if self.hits.size() == 0:
-            # If we don't have any hits, just skip cleanup
-            return
-
-        cdef vector[hash_t] tmp
-        dropped_strings = []
-        dropped_keys = []
-        for i in range(self.keys.size()):
-            key = self.keys[i]
-            # Here we cannot use __getitem__ because it also set hit.
-            utf8str = <Utf8Str*>self._map.get(key)
-            value = decode_Utf8Str(utf8str)
-            if self.hits.count(key) != 0 or value in excepted:
-                tmp.push_back(key)
-            else:
-                dropped_keys.append(key)
-                dropped_strings.append(value)
-
-        self.keys.swap(tmp)
-        strings = list(self)
-        self._reset_and_load(strings)
-        # Here we have strings but hits to it should be reseted
-        self.hits.clear()
-
-        return dropped_keys, dropped_strings
 
     cdef const Utf8Str* intern_unicode(self, unicode py_string):
         # 0 means missing, but we don't bother offsetting the index.
@@ -319,6 +284,5 @@ cdef class StringStore:
             return value
         value = _allocate(self.mem, <unsigned char*>utf8_string, length)
         self._map.set(key, value)
-        self.hits.insert(key)
         self.keys.push_back(key)
         return value

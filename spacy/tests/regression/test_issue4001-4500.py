@@ -326,7 +326,8 @@ def test_issue4348():
     nlp = English()
     example = Example.from_dict(nlp.make_doc(""), {"tags": []})
     TRAIN_DATA = [example, example]
-    nlp.add_pipe("tagger")
+    tagger = nlp.add_pipe("tagger")
+    tagger.add_label("A")
     optimizer = nlp.begin_training()
     for i in range(5):
         losses = {}

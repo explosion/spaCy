@@ -22,6 +22,8 @@ def project_clone_cli(
     only download the files from the given subdirectory. The GitHub repo
     defaults to the official spaCy template repo, but can be customized
     (including using a private repo).
+
+    DOCS: https://nightly.spacy.io/api/cli#project-clone
     """
     if dest is None:
         dest = Path.cwd() / name
@@ -43,7 +45,7 @@ def project_clone(name: str, dest: Path, *, repo: str = about.__projects__) -> N
         git_sparse_checkout(repo, name, dest)
     except subprocess.CalledProcessError:
         err = f"Could not clone '{name}' from repo '{repo_name}'"
-        msg.fail(err)
+        msg.fail(err, exits=1)
     msg.good(f"Cloned '{name}' from {repo_name}", project_dir)
     if not (project_dir / PROJECT_FILE).exists():
         msg.warn(f"No {PROJECT_FILE} found in directory")
@@ -78,6 +80,7 @@ def check_clone(name: str, dest: Path, repo: str) -> None:
     if not dest.parent.exists():
         # We're not creating parents, parent dir should exist
         msg.fail(
-            f"Can't clone project, parent directory doesn't exist: {dest.parent}",
+            f"Can't clone project, parent directory doesn't exist: {dest.parent}. "
+            f"Create the necessary folder(s) first before continuing.",
             exits=1,
         )

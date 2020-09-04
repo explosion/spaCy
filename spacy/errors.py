@@ -22,7 +22,7 @@ class Warnings:
             "generate a dependency visualization for it. Make sure the Doc "
             "was processed with a model that supports dependency parsing, and "
             "not just a language class like `English()`. For more info, see "
-            "the docs:\nhttps://spacy.io/usage/models")
+            "the docs:\nhttps://nightly.spacy.io/usage/models")
     W006 = ("No entities to visualize found in Doc object. If this is "
             "surprising to you, make sure the Doc was processed using a model "
             "that supports named entity recognition, and check the `doc.ents` "
@@ -112,6 +112,9 @@ class Warnings:
             "word segmenters: {supported}. Defaulting to {default}.")
     W104 = ("Skipping modifications for '{target}' segmenter. The current "
             "segmenter is '{current}'.")
+    W105 = ("As of spaCy v3.0, the {matcher}.pipe method is deprecated. If you "
+            "need to match on a stream of documents, you can use nlp.pipe and "
+            "call the {matcher} on each Doc object.")
 
 
 @add_codes
@@ -144,7 +147,7 @@ class Errors:
     E010 = ("Word vectors set to length 0. This may be because you don't have "
             "a model installed or loaded, or because your model doesn't "
             "include word vectors. For more info, see the docs:\n"
-            "https://spacy.io/usage/models")
+            "https://nightly.spacy.io/usage/models")
     E011 = ("Unknown operator: '{op}'. Options: {opts}")
     E012 = ("Cannot add pattern for zero tokens to matcher.\nKey: {key}")
     E014 = ("Unknown tag ID: {tag}")
@@ -178,7 +181,7 @@ class Errors:
             "list of (unicode, bool) tuples. Got bytes instance: {value}")
     E029 = ("noun_chunks requires the dependency parse, which requires a "
             "statistical model to be installed and loaded. For more info, see "
-            "the documentation:\nhttps://spacy.io/usage/models")
+            "the documentation:\nhttps://nightly.spacy.io/usage/models")
     E030 = ("Sentence boundaries unset. You can add the 'sentencizer' "
             "component to the pipeline with: "
             "nlp.add_pipe('sentencizer'). "
@@ -291,7 +294,7 @@ class Errors:
     E102 = ("Can't merge non-disjoint spans. '{token}' is already part of "
             "tokens to merge. If you want to find the longest non-overlapping "
             "spans, you can use the util.filter_spans helper:\n"
-            "https://spacy.io/api/top-level#util.filter_spans")
+            "https://nightly.spacy.io/api/top-level#util.filter_spans")
     E103 = ("Trying to set conflicting doc.ents: '{span1}' and '{span2}'. A "
             "token can only be part of one entity, so make sure the entities "
             "you're setting don't overlap.")
@@ -361,10 +364,10 @@ class Errors:
     E137 = ("Expected 'dict' type, but got '{type}' from '{line}'. Make sure "
             "to provide a valid JSON object as input with either the `text` "
             "or `tokens` key. For more info, see the docs:\n"
-            "https://spacy.io/api/cli#pretrain-jsonl")
+            "https://nightly.spacy.io/api/cli#pretrain-jsonl")
     E138 = ("Invalid JSONL format for raw text '{text}'. Make sure the input "
             "includes either the `text` or `tokens` key. For more info, see "
-            "the docs:\nhttps://spacy.io/api/cli#pretrain-jsonl")
+            "the docs:\nhttps://nightly.spacy.io/api/cli#pretrain-jsonl")
     E139 = ("Knowledge Base for component '{name}' is empty. Use the methods "
             "kb.add_entity and kb.add_alias to add entries.")
     E140 = ("The list of entities, prior probabilities and entity vectors "
@@ -473,6 +476,8 @@ class Errors:
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
+    E925 = ("Invalid color values for displaCy visualizer: expected dictionary "
+            "mapping label names to colors but got: {obj}")
     E926 = ("It looks like you're trying to modify nlp.{attr} directly. This "
             "doesn't work because it's an immutable computed property. If you "
             "need to modify the pipeline, use the built-in methods like "
@@ -645,6 +650,10 @@ class Errors:
              "Required tables '{tables}', found '{found}'. If you are not "
              "providing custom lookups, make sure you have the package "
              "spacy-lookups-data installed.")
+    E1005 = ("Unable to set attribute '{attr}' in tokenizer exception for "
+             "'{chunk}'. Tokenizer exceptions are only allowed to specify "
+             "`ORTH` and `NORM`.")
+    E1006 = ("Unable to initialize {name} model with 0 labels.")
 
 
 @add_codes

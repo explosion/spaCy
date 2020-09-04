@@ -104,7 +104,7 @@ cdef class Doc:
         >>> from spacy.tokens import Doc
         >>> doc = Doc(nlp.vocab, words=["hello", "world", "!"], spaces=[True, False, False])
 
-    DOCS: https://spacy.io/api/doc
+    DOCS: https://nightly.spacy.io/api/doc
     """
 
     @classmethod
@@ -118,8 +118,8 @@ cdef class Doc:
         method (callable): Optional method for method extension.
         force (bool): Force overwriting existing attribute.
 
-        DOCS: https://spacy.io/api/doc#set_extension
-        USAGE: https://spacy.io/usage/processing-pipelines#custom-components-attributes
+        DOCS: https://nightly.spacy.io/api/doc#set_extension
+        USAGE: https://nightly.spacy.io/usage/processing-pipelines#custom-components-attributes
         """
         if cls.has_extension(name) and not kwargs.get("force", False):
             raise ValueError(Errors.E090.format(name=name, obj="Doc"))
@@ -132,7 +132,7 @@ cdef class Doc:
         name (str): Name of the extension.
         RETURNS (tuple): A `(default, method, getter, setter)` tuple.
 
-        DOCS: https://spacy.io/api/doc#get_extension
+        DOCS: https://nightly.spacy.io/api/doc#get_extension
         """
         return Underscore.doc_extensions.get(name)
 
@@ -143,7 +143,7 @@ cdef class Doc:
         name (str): Name of the extension.
         RETURNS (bool): Whether the extension has been registered.
 
-        DOCS: https://spacy.io/api/doc#has_extension
+        DOCS: https://nightly.spacy.io/api/doc#has_extension
         """
         return name in Underscore.doc_extensions
 
@@ -155,7 +155,7 @@ cdef class Doc:
         RETURNS (tuple): A `(default, method, getter, setter)` tuple of the
             removed extension.
 
-        DOCS: https://spacy.io/api/doc#remove_extension
+        DOCS: https://nightly.spacy.io/api/doc#remove_extension
         """
         if not cls.has_extension(name):
             raise ValueError(Errors.E046.format(name=name))
@@ -173,7 +173,7 @@ cdef class Doc:
             it is not. If `None`, defaults to `[True]*len(words)`
         user_data (dict or None): Optional extra data to attach to the Doc.
 
-        DOCS: https://spacy.io/api/doc#init
+        DOCS: https://nightly.spacy.io/api/doc#init
         """
         self.vocab = vocab
         size = max(20, (len(words) if words is not None else 0))
@@ -288,7 +288,7 @@ cdef class Doc:
             You can use negative indices and open-ended ranges, which have
             their normal Python semantics.
 
-        DOCS: https://spacy.io/api/doc#getitem
+        DOCS: https://nightly.spacy.io/api/doc#getitem
         """
         if isinstance(i, slice):
             start, stop = normalize_slice(len(self), i.start, i.stop, i.step)
@@ -305,7 +305,7 @@ cdef class Doc:
         than-Python speeds are required, you can instead access the annotations
         as a numpy array, or access the underlying C data directly from Cython.
 
-        DOCS: https://spacy.io/api/doc#iter
+        DOCS: https://nightly.spacy.io/api/doc#iter
         """
         cdef int i
         for i in range(self.length):
@@ -316,7 +316,7 @@ cdef class Doc:
 
         RETURNS (int): The number of tokens in the document.
 
-        DOCS: https://spacy.io/api/doc#len
+        DOCS: https://nightly.spacy.io/api/doc#len
         """
         return self.length
 
@@ -349,7 +349,7 @@ cdef class Doc:
             the span.
         RETURNS (Span): The newly constructed object.
 
-        DOCS: https://spacy.io/api/doc#char_span
+        DOCS: https://nightly.spacy.io/api/doc#char_span
         """
         if not isinstance(label, int):
             label = self.vocab.strings.add(label)
@@ -374,7 +374,7 @@ cdef class Doc:
             `Span`, `Token` and `Lexeme` objects.
         RETURNS (float): A scalar similarity score. Higher is more similar.
 
-        DOCS: https://spacy.io/api/doc#similarity
+        DOCS: https://nightly.spacy.io/api/doc#similarity
         """
         if "similarity" in self.user_hooks:
             return self.user_hooks["similarity"](self, other)
@@ -407,7 +407,7 @@ cdef class Doc:
 
         RETURNS (bool): Whether a word vector is associated with the object.
 
-        DOCS: https://spacy.io/api/doc#has_vector
+        DOCS: https://nightly.spacy.io/api/doc#has_vector
         """
         if "has_vector" in self.user_hooks:
             return self.user_hooks["has_vector"](self)
@@ -425,7 +425,7 @@ cdef class Doc:
         RETURNS (numpy.ndarray[ndim=1, dtype='float32']): A 1D numpy array
             representing the document's semantics.
 
-        DOCS: https://spacy.io/api/doc#vector
+        DOCS: https://nightly.spacy.io/api/doc#vector
         """
         def __get__(self):
             if "vector" in self.user_hooks:
@@ -453,7 +453,7 @@ cdef class Doc:
 
         RETURNS (float): The L2 norm of the vector representation.
 
-        DOCS: https://spacy.io/api/doc#vector_norm
+        DOCS: https://nightly.spacy.io/api/doc#vector_norm
         """
         def __get__(self):
             if "vector_norm" in self.user_hooks:
@@ -493,7 +493,7 @@ cdef class Doc:
 
         RETURNS (tuple): Entities in the document, one `Span` per entity.
 
-        DOCS: https://spacy.io/api/doc#ents
+        DOCS: https://nightly.spacy.io/api/doc#ents
         """
         def __get__(self):
             cdef int i
@@ -584,7 +584,7 @@ cdef class Doc:
 
         YIELDS (Span): Noun chunks in the document.
 
-        DOCS: https://spacy.io/api/doc#noun_chunks
+        DOCS: https://nightly.spacy.io/api/doc#noun_chunks
         """
 
         # Accumulate the result before beginning to iterate over it. This
@@ -609,7 +609,7 @@ cdef class Doc:
 
         YIELDS (Span): Sentences in the document.
 
-        DOCS: https://spacy.io/api/doc#sents
+        DOCS: https://nightly.spacy.io/api/doc#sents
         """
         if not self.is_sentenced:
             raise ValueError(Errors.E030)
@@ -722,7 +722,7 @@ cdef class Doc:
         attr_id (int): The attribute ID to key the counts.
         RETURNS (dict): A dictionary mapping attributes to integer counts.
 
-        DOCS: https://spacy.io/api/doc#count_by
+        DOCS: https://nightly.spacy.io/api/doc#count_by
         """
         cdef int i
         cdef attr_t attr
@@ -777,7 +777,7 @@ cdef class Doc:
         array (numpy.ndarray[ndim=2, dtype='int32']): The attribute values.
         RETURNS (Doc): Itself.
 
-        DOCS: https://spacy.io/api/doc#from_array
+        DOCS: https://nightly.spacy.io/api/doc#from_array
         """
         # Handle scalar/list inputs of strings/ints for py_attr_ids
         # See also #3064
@@ -872,7 +872,7 @@ cdef class Doc:
         attrs (list): Optional list of attribute ID ints or attribute name strings.
         RETURNS (Doc): A doc that contains the concatenated docs, or None if no docs were given.
 
-        DOCS: https://spacy.io/api/doc#from_docs
+        DOCS: https://nightly.spacy.io/api/doc#from_docs
         """
         if not docs:
             return None
@@ -920,7 +920,9 @@ cdef class Doc:
                         warnings.warn(Warnings.W101.format(name=name))
                 else:
                     warnings.warn(Warnings.W102.format(key=key, value=value))
-            char_offset += len(doc.text) if not ensure_whitespace or doc[-1].is_space else len(doc.text) + 1
+            char_offset += len(doc.text)
+            if ensure_whitespace and not (len(doc) > 0 and doc[-1].is_space):
+                char_offset += 1
 
         arrays = [doc.to_array(attrs) for doc in docs]
 
@@ -932,7 +934,7 @@ cdef class Doc:
             token_offset = -1
             for doc in docs[:-1]:
                 token_offset += len(doc)
-                if not doc[-1].is_space:
+                if not (len(doc) > 0 and doc[-1].is_space):
                     concat_spaces[token_offset] = True
 
         concat_array = numpy.concatenate(arrays)
@@ -951,7 +953,7 @@ cdef class Doc:
         RETURNS (np.array[ndim=2, dtype=numpy.int32]): LCA matrix with shape
             (n, n), where n = len(self).
 
-        DOCS: https://spacy.io/api/doc#get_lca_matrix
+        DOCS: https://nightly.spacy.io/api/doc#get_lca_matrix
         """
         return numpy.asarray(_get_lca_matrix(self, 0, len(self)))
 
@@ -985,7 +987,7 @@ cdef class Doc:
             it doesn't exist. Paths may be either strings or Path-like objects.
         exclude (Iterable[str]): String names of serialization fields to exclude.
 
-        DOCS: https://spacy.io/api/doc#to_disk
+        DOCS: https://nightly.spacy.io/api/doc#to_disk
         """
         path = util.ensure_path(path)
         with path.open("wb") as file_:
@@ -1000,7 +1002,7 @@ cdef class Doc:
         exclude (list): String names of serialization fields to exclude.
         RETURNS (Doc): The modified `Doc` object.
 
-        DOCS: https://spacy.io/api/doc#from_disk
+        DOCS: https://nightly.spacy.io/api/doc#from_disk
         """
         path = util.ensure_path(path)
         with path.open("rb") as file_:
@@ -1014,7 +1016,7 @@ cdef class Doc:
         RETURNS (bytes): A losslessly serialized copy of the `Doc`, including
             all annotations.
 
-        DOCS: https://spacy.io/api/doc#to_bytes
+        DOCS: https://nightly.spacy.io/api/doc#to_bytes
         """
         return srsly.msgpack_dumps(self.to_dict(exclude=exclude))
 
@@ -1025,7 +1027,7 @@ cdef class Doc:
         exclude (list): String names of serialization fields to exclude.
         RETURNS (Doc): Itself.
 
-        DOCS: https://spacy.io/api/doc#from_bytes
+        DOCS: https://nightly.spacy.io/api/doc#from_bytes
         """
         return self.from_dict(srsly.msgpack_loads(bytes_data), exclude=exclude)
 
@@ -1036,7 +1038,7 @@ cdef class Doc:
         RETURNS (bytes): A losslessly serialized copy of the `Doc`, including
             all annotations.
 
-        DOCS: https://spacy.io/api/doc#to_bytes
+        DOCS: https://nightly.spacy.io/api/doc#to_bytes
         """
         array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE, ENT_ID, NORM, ENT_KB_ID]
         if self.is_tagged:
@@ -1084,7 +1086,7 @@ cdef class Doc:
         exclude (list): String names of serialization fields to exclude.
         RETURNS (Doc): Itself.
 
-        DOCS: https://spacy.io/api/doc#from_dict
+        DOCS: https://nightly.spacy.io/api/doc#from_dict
         """
         if self.length != 0:
             raise ValueError(Errors.E033.format(length=self.length))
@@ -1164,8 +1166,8 @@ cdef class Doc:
         retokenization are invalidated, although they may accidentally
         continue to work.
 
-        DOCS: https://spacy.io/api/doc#retokenize
-        USAGE: https://spacy.io/usage/linguistic-features#retokenization
+        DOCS: https://nightly.spacy.io/api/doc#retokenize
+        USAGE: https://nightly.spacy.io/usage/linguistic-features#retokenization
         """
         return Retokenizer(self)
 
@@ -1200,7 +1202,7 @@ cdef class Doc:
         be added to an "_" key in the data, e.g. "_": {"foo": "bar"}.
         RETURNS (dict): The data in spaCy's JSON format.
 
-        DOCS: https://spacy.io/api/doc#to_json
+        DOCS: https://nightly.spacy.io/api/doc#to_json
         """
         data = {"text": self.text}
         if self.is_nered:

@@ -6,6 +6,9 @@ from .._util import project_cli, Arg, Opt, PROJECT_FILE, load_project_config
 
 
 DOCS_URL = "https://nightly.spacy.io"
+INTRO = f"""> ⚠️ This project template uses the new [**spaCy v3.0**]({DOCS_URL}), which
+> is currently available as a nightly pre-release. You can install it from pip as `spacy-nightly`:
+> `pip install spacy-nightly`. Make sure to use a fresh virtual environment."""
 INTRO_PROJECT = f"""The [`{PROJECT_FILE}`]({PROJECT_FILE}) defines the data assets required by the
 project, as well as the available commands and workflows. For details, see the
 [spaCy projects documentation]({DOCS_URL}/usage/projects)."""
@@ -21,8 +24,10 @@ be fetched by running [`spacy project assets`]({DOCS_URL}/api/cli#project-assets
 in the project directory."""
 # These markers are added to the Markdown and can be used to update the file in
 # place if it already exists. Only the auto-generated part will be replaced.
-MARKER_START = "<!-- AUTO-GENERATED DOCS START (do not remove) -->"
-MARKER_END = "<!-- AUTO-GENERATED DOCS END (do not remove) -->"
+MARKER_START = "<!-- SPACY PROJECT: AUTO-GENERATED DOCS START (do not remove) -->"
+MARKER_END = "<!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->"
+# If this marker is used in an existing README, it's ignored and not replaced
+MARKER_IGNORE = "<!-- SPACY PROJECT: IGNORE -->"
 
 
 @project_cli.command("document")
@@ -38,6 +43,8 @@ def project_document_cli(
     hidden markers are added so you can add custom content before or after the
     auto-generated section and only the auto-generated docs will be replaced
     when you re-run the command.
+
+    DOCS: https://nightly.spacy.io/api/cli#project-document
     """
     project_document(project_dir, output_file, no_emoji=no_emoji)
 
@@ -52,6 +59,7 @@ def project_document(
     title = config.get("title")
     description = config.get("description")
     md.add(md.title(1, f"spaCy Project{f': {title}' if title else ''}", "🪐"))
+    md.add(INTRO)
     if description:
         md.add(description)
     md.add(md.title(2, PROJECT_FILE, "📋"))
@@ -96,13 +104,16 @@ def project_document(
         if output_file.exists():
             with output_file.open("r", encoding="utf8") as f:
                 existing = f.read()
+            if MARKER_IGNORE in existing:
+                msg.warn("Found ignore marker in existing file: skipping", output_file)
+                return
             if MARKER_START in existing and MARKER_END in existing:
                 msg.info("Found existing file: only replacing auto-generated docs")
                 before = existing.split(MARKER_START)[0]
                 after = existing.split(MARKER_END)[1]
                 content = f"{before}{content}{after}"
             else:
-                msg.info("Replacing existing file")
+                msg.warn("Replacing existing file")
         with output_file.open("w") as f:
             f.write(content)
         msg.good("Saved project documentation", output_file)

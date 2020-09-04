@@ -26,7 +26,7 @@ def train_cli(
     # fmt: off
     ctx: typer.Context,  # This is only used to read additional arguments
     config_path: Path = Arg(..., help="Path to config file", exists=True),
-    output_path: Optional[Path] = Opt(None, "--output", "--output-path", "-o", help="Output directory to store model in"),
+    output_path: Optional[Path] = Opt(None, "--output", "--output-path", "-o", help="Output directory to store trained pipeline in"),
     code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
     use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU"),
@@ -34,7 +34,7 @@ def train_cli(
     # fmt: on
 ):
     """
-    Train or update a spaCy model. Requires data in spaCy's binary format. To
+    Train or update a spaCy pipeline. Requires data in spaCy's binary format. To
     convert data from other formats, use the `spacy convert` command. The
     config file includes all settings and hyperparameters used during traing.
     To override settings in the config, e.g. settings that point to local
@@ -44,6 +44,8 @@ def train_cli(
     lets you pass in a Python file that's imported before training. It can be
     used to register custom functions and architectures that can then be
     referenced in the config.
+
+    DOCS: https://nightly.spacy.io/api/cli#train
     """
     util.logger.setLevel(logging.DEBUG if verbose else logging.ERROR)
     verify_cli_args(config_path, output_path)
@@ -77,6 +79,9 @@ def train(
         )
     if config.get("training", {}).get("seed") is not None:
         fix_random_seed(config["training"]["seed"])
+    if config.get("system", {}).get("use_pytorch_for_gpu_memory"):
+        # It feels kind of weird to not have a default for this.
+        use_pytorch_for_gpu_memory()
     # Use original config here before it's resolved to functions
     sourced_components = get_sourced_components(config)
     with show_validation_error(config_path):
@@ -85,9 +90,6 @@ def train(
         util.load_vectors_into_model(nlp, config["training"]["vectors"])
     verify_config(nlp)
     raw_text, tag_map, morph_rules, weights_data = load_from_paths(config)
-    if config.get("system", {}).get("use_pytorch_for_gpu_memory"):
-        # It feels kind of weird to not have a default for this.
-        use_pytorch_for_gpu_memory()
     T_cfg = config["training"]
     optimizer = T_cfg["optimizer"]
     train_corpus = T_cfg["train_corpus"]
@@ -113,12 +115,12 @@ def train(
         # Load morph rules
         nlp.vocab.morphology.load_morph_exceptions(morph_rules)
 
-    # Load a pretrained tok2vec model - cf. CLI command 'pretrain'
+    # Load pretrained tok2vec weights - cf. CLI command 'pretrain'
     if weights_data is not None:
         tok2vec_path = config["pretraining"].get("tok2vec_model", None)
         if tok2vec_path is None:
             msg.fail(
-                f"To use a pretrained tok2vec model, the config needs to specify which "
+                f"To pretrained tok2vec weights, the config needs to specify which "
                 f"tok2vec layer to load in the setting [pretraining.tok2vec_model].",
                 exits=1,
             )
@@ -159,7 +161,8 @@ def train(
                 print_row(info)
                 if is_best_checkpoint and output_path is not None:
                     update_meta(T_cfg, nlp, info)
-                    nlp.to_disk(output_path / "model-best")
+                    with nlp.use_params(optimizer.averages):
+                        nlp.to_disk(output_path / "model-best")
                 progress = tqdm.tqdm(total=T_cfg["eval_frequency"], leave=False)
                 progress.set_description(f"Epoch {info['epoch']}")
     except Exception as e:
@@ -182,22 +185,16 @@ def train(
                     nlp.to_disk(final_model_path)
             else:
                 nlp.to_disk(final_model_path)
-            msg.good(f"Saved model to output directory {final_model_path}")
+            msg.good(f"Saved pipeline to output directory {final_model_path}")
 
 
 def create_train_batches(iterator, batcher, max_epochs: int):
-    epoch = 1
-    examples = []
-    # Stream the first epoch, so we start training faster and support
-    # infinite streams.
-    for batch in batcher(iterator):
-        yield epoch, batch
-        if max_epochs != 1:
-            examples.extend(batch)
+    epoch = 0
+    examples = list(iterator)
     if not examples:
         # Raise error if no data
         raise ValueError(Errors.E986)
-    while epoch != max_epochs:
+    while max_epochs < 1 or epoch != max_epochs:
         random.shuffle(examples)
         for batch in batcher(examples):
             yield epoch, batch
@@ -270,9 +267,9 @@ def train_while_improving(
 
         epoch (int): How many passes over the data have been completed.
         step (int): How many steps have been completed.
-        score (float): The main score form the last evaluation.
+        score (float): The main score from the last evaluation.
         other_scores: : The other scores from the last evaluation.
-        loss: The accumulated losses throughout training.
+        losses: The accumulated losses throughout training.
         checkpoints: A list of previous results, where each result is a
             (score, step, epoch) tuple.
     """

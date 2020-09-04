@@ -61,7 +61,7 @@ class DocBin:
         store_user_data (bool): Whether to include the `Doc.user_data`.
         docs (Iterable[Doc]): Docs to add.
 
-        DOCS: https://spacy.io/api/docbin#init
+        DOCS: https://nightly.spacy.io/api/docbin#init
         """
         attrs = sorted([intify_attr(attr) for attr in attrs])
         self.version = "0.1"
@@ -86,7 +86,7 @@ class DocBin:
 
         doc (Doc): The Doc object to add.
 
-        DOCS: https://spacy.io/api/docbin#add
+        DOCS: https://nightly.spacy.io/api/docbin#add
         """
         array = doc.to_array(self.attrs)
         if len(array.shape) == 1:
@@ -115,7 +115,7 @@ class DocBin:
         vocab (Vocab): The shared vocab.
         YIELDS (Doc): The Doc objects.
 
-        DOCS: https://spacy.io/api/docbin#get_docs
+        DOCS: https://nightly.spacy.io/api/docbin#get_docs
         """
         for string in self.strings:
             vocab[string]
@@ -141,7 +141,7 @@ class DocBin:
 
         other (DocBin): The DocBin to merge into the current bin.
 
-        DOCS: https://spacy.io/api/docbin#merge
+        DOCS: https://nightly.spacy.io/api/docbin#merge
         """
         if self.attrs != other.attrs:
             raise ValueError(Errors.E166.format(current=self.attrs, other=other.attrs))
@@ -158,7 +158,7 @@ class DocBin:
 
         RETURNS (bytes): The serialized DocBin.
 
-        DOCS: https://spacy.io/api/docbin#to_bytes
+        DOCS: https://nightly.spacy.io/api/docbin#to_bytes
         """
         for tokens in self.tokens:
             assert len(tokens.shape) == 2, tokens.shape  # this should never happen
@@ -185,7 +185,7 @@ class DocBin:
         bytes_data (bytes): The data to load from.
         RETURNS (DocBin): The loaded DocBin.
 
-        DOCS: https://spacy.io/api/docbin#from_bytes
+        DOCS: https://nightly.spacy.io/api/docbin#from_bytes
         """
         msg = srsly.msgpack_loads(zlib.decompress(bytes_data))
         self.attrs = msg["attrs"]
@@ -211,7 +211,7 @@ class DocBin:
 
         path (str / Path): The file path.
 
-        DOCS: https://spacy.io/api/docbin#to_disk
+        DOCS: https://nightly.spacy.io/api/docbin#to_disk
         """
         path = ensure_path(path)
         with path.open("wb") as file_:
@@ -223,7 +223,7 @@ class DocBin:
         path (str / Path): The file path.
         RETURNS (DocBin): The loaded DocBin.
 
-        DOCS: https://spacy.io/api/docbin#to_disk
+        DOCS: https://nightly.spacy.io/api/docbin#to_disk
         """
         path = ensure_path(path)
         with path.open("rb") as file_:

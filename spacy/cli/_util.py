@@ -25,7 +25,7 @@ COMMAND = "python -m spacy"
 NAME = "spacy"
 HELP = """spaCy Command-line Interface
 
-DOCS: https://spacy.io/api/cli
+DOCS: https://nightly.spacy.io/api/cli
 """
 PROJECT_HELP = f"""Command-line interface for spaCy projects and templates.
 You'd typically start by cloning a project template to a local directory and
@@ -36,7 +36,7 @@ DEBUG_HELP = """Suite of helpful commands for debugging and profiling. Includes
 commands to check and validate your config files, training and evaluation data,
 and custom model implementations.
 """
-INIT_HELP = """Commands for initializing configs and models."""
+INIT_HELP = """Commands for initializing configs and pipeline packages."""
 
 # Wrappers for Typer's annotations. Initially created to set defaults and to
 # keep the names short, but not needed at the moment.
@@ -297,9 +297,7 @@ def ensure_pathy(path):
     return Pathy(path)
 
 
-def git_sparse_checkout(
-    repo: str, subpath: str, dest: Path, *, branch: Optional[str] = None
-):
+def git_sparse_checkout(repo: str, subpath: str, dest: Path, *, branch: str = "master"):
     if dest.exists():
         msg.fail("Destination of checkout must not exist", exits=1)
     if not dest.parent.exists():
@@ -323,21 +321,30 @@ def git_sparse_checkout(
         # This is the "clone, but don't download anything" part.
         cmd = (
             f"git clone {repo} {tmp_dir} --no-checkout --depth 1 "
-            "--filter=blob:none"  # <-- The key bit
+            f"--filter=blob:none "  # <-- The key bit
+            f"-b {branch}"
         )
-        if branch is not None:
-            cmd = f"{cmd} -b {branch}"
         run_command(cmd, capture=True)
         # Now we need to find the missing filenames for the subpath we want.
         # Looking for this 'rev-list' command in the git --help? Hah.
         cmd = f"git -C {tmp_dir} rev-list --objects --all --missing=print -- {subpath}"
         ret = run_command(cmd, capture=True)
-        missings = "\n".join([x[1:] for x in ret.stdout.split() if x.startswith("?")])
+        repo = _from_http_to_git(repo)
         # Now pass those missings into another bit of git internals
-        run_command(
-            f"git -C {tmp_dir} fetch-pack --stdin {repo}", capture=True, stdin=missings
-        )
+        missings = " ".join([x[1:] for x in ret.stdout.split() if x.startswith("?")])
+        cmd = f"git -C {tmp_dir} fetch-pack {repo} {missings}"
+        run_command(cmd, capture=True)
         # And finally, we can checkout our subpath
-        run_command(f"git -C {tmp_dir} checkout {branch} {subpath}")
+        cmd = f"git -C {tmp_dir} checkout {branch} {subpath}"
+        run_command(cmd)
         # We need Path(name) to make sure we also support subdirectories
         shutil.move(str(tmp_dir / Path(subpath)), str(dest))
+
+
+def _from_http_to_git(repo):
+    if repo.startswith("http://"):
+        repo = repo.replace(r"http://", r"https://")
+    if repo.startswith(r"https://"):
+        repo = repo.replace("https://", "git@").replace("/", ":", 1)
+        repo = f"{repo}.git"
+    return repo
