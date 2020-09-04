@@ -167,6 +167,8 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
     const releaseUrl = `https://github.com/${repo}/releases/${releaseTag}`
     const pipeline =
         meta.pipeline && join(meta.pipeline.map(p => <InlineCode key={p}>{p}</InlineCode>))
+    const components =
+        meta.components && join(meta.components.map(p => <InlineCode key={p}>{p}</InlineCode>))
     const sources = formatSources(meta.sources)
     const author = !meta.url ? meta.author : <Link to={meta.url}>{meta.author}</Link>
     const licenseUrl = licenses[meta.license] ? licenses[meta.license].url : null
