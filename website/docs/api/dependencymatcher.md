@@ -1,65 +1,91 @@
 ---
 title: DependencyMatcher
-teaser: Match sequences of tokens, based on the dependency parse
+teaser: Match subtrees within a dependency parse
 tag: class
+new: 3
 source: spacy/matcher/dependencymatcher.pyx
 ---
 
 The `DependencyMatcher` follows the same API as the [`Matcher`](/api/matcher)
 and [`PhraseMatcher`](/api/phrasematcher) and lets you match on dependency trees
-using the
-[Semgrex syntax](https://nlp.stanford.edu/nlp/javadoc/javanlp/edu/stanford/nlp/semgraph/semgrex/SemgrexPattern.html).
-It requires a trained [`DependencyParser`](/api/parser) or other component that
-sets the `Token.dep` attribute.
+using
+[Semgrex operators](https://nlp.stanford.edu/nlp/javadoc/javanlp/edu/stanford/nlp/semgraph/semgrex/SemgrexPattern.html).
+It requires a pretrained [`DependencyParser`](/api/parser) or other component
+that sets the `Token.dep` and `Token.head` attributes. See the
+[usage guide](/usage/rule-based-matching#dependencymatcher) for examples.
 
 ## Pattern format {#patterns}
 
-> ```json
+> ```python
 > ### Example
+> # pattern: "[subject] ... initially founded"
 > [
+>   # anchor token: founded
 >   {
->     "SPEC": {"NODE_NAME": "founded"},
->     "PATTERN": {"ORTH": "founded"}
+>     "RIGHT_ID": "founded",
+>     "RIGHT_ATTRS": {"ORTH": "founded"}
 >   },
+>   # founded -> subject
 >   {
->     "SPEC": {
->       "NODE_NAME": "founder",
->       "NBOR_RELOP": ">",
->       "NBOR_NAME": "founded"
+>     "LEFT_ID": "founded",
+>     "REL_OP": ">",
+>     "RIGHT_ID": "subject",
+>     "RIGHT_ATTRS": {"DEP": "nsubj"}
 >   },
->     "PATTERN": {"DEP": "nsubj"}
->   },
+>   # "founded" follows "initially"
 >   {
->     "SPEC": {
->       "NODE_NAME": "object",
->       "NBOR_RELOP": ">",
->       "NBOR_NAME": "founded"
->   },
->     "PATTERN": {"DEP": "dobj"}
+>     "LEFT_ID": "founded",
+>     "REL_OP": ";",
+>     "RIGHT_ID": "initially",
+>     "RIGHT_ATTRS": {"ORTH": "initially"}
 >   }
 > ]
 > ```
 
 A pattern added to the `DependencyMatcher` consists of a list of dictionaries,
-with each dictionary describing a node to match. Each pattern should have the
-following top-level keys:
+with each dictionary describing a token to match. Except for the first
+dictionary, which defines an anchor token using only `RIGHT_ID` and
+`RIGHT_ATTRS`, each pattern should have the following keys:
 
-| Name      | Description                                                                                                                                    |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `PATTERN` | The token attributes to match in the same format as patterns provided to the regular token-based [`Matcher`](/api/matcher). ~~Dict[str, Any]~~ |
-| `SPEC`    | The relationships of the nodes in the subtree that should be matched. ~~Dict[str, str]~~                                                       |
+| Name          | Description                                                                                                                                                            |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `LEFT_ID`     | The name of the left-hand node in the relation, which has been defined in an earlier node. ~~str~~                                                                     |
+| `REL_OP`      | An operator that describes how the two nodes are related. ~~str~~                                                                                                      |
+| `RIGHT_ID`    | A unique name for the right-hand node in the relation. ~~str~~                                                                                                         |
+| `RIGHT_ATTRS` | The token attributes to match for the right-hand node in the same format as patterns provided to the regular token-based [`Matcher`](/api/matcher). ~~Dict[str, Any]~~ |
 
-The `SPEC` includes the following fields:
+<Infobox title="Designing dependency matcher patterns" emoji="📖">
 
-| Name         | Description                                                                                                                                                                    |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `NODE_NAME`  | A unique name for this node to refer to it in other specs. ~~str~~                                                                                                             |
-| `NBOR_RELOP` | A [Semgrex](https://nlp.stanford.edu/nlp/javadoc/javanlp/edu/stanford/nlp/semgraph/semgrex/SemgrexPattern.html) operator that describes how the two nodes are related. ~~str~~ |
-| `NBOR_NAME`  | The unique name of the node that this node is connected to. ~~str~~                                                                                                            |
+For examples of how to construct dependency matcher patterns for different types
+of relations, see the usage guide on
+[dependency matching](/usage/rule-based-matching#dependencymatcher).
+
+</Infobox>
+
+### Operators
+
+The following operators are supported by the `DependencyMatcher`, most of which
+come directly from
+[Semgrex](https://nlp.stanford.edu/nlp/javadoc/javanlp/edu/stanford/nlp/semgraph/semgrex/SemgrexPattern.html):
+
+| Symbol    | Description                                                                                                          |
+| --------- | -------------------------------------------------------------------------------------------------------------------- |
+| `A < B`   | `A` is the immediate dependent of `B`.                                                                               |
+| `A > B`   | `A` is the immediate head of `B`.                                                                                    |
+| `A << B`  | `A` is the dependent in a chain to `B` following dep &rarr; head paths.                                              |
+| `A >> B`  | `A` is the head in a chain to `B` following head &rarr; dep paths.                                                   |
+| `A . B`   | `A` immediately precedes `B`, i.e. `A.i == B.i - 1`, and both are within the same dependency tree.                   |
+| `A .* B`  | `A` precedes `B`, i.e. `A.i < B.i`, and both are within the same dependency tree _(not in Semgrex)_.                 |
+| `A ; B`   | `A` immediately follows `B`, i.e. `A.i == B.i + 1`, and both are within the same dependency tree _(not in Semgrex)_. |
+| `A ;* B`  | `A` follows `B`, i.e. `A.i > B.i`, and both are within the same dependency tree _(not in Semgrex)_.                  |
+| `A $+ B`  | `B` is a right immediate sibling of `A`, i.e. `A` and `B` have the same parent and `A.i == B.i - 1`.                 |
+| `A $- B`  | `B` is a left immediate sibling of `A`, i.e. `A` and `B` have the same parent and `A.i == B.i + 1`.                  |
+| `A $++ B` | `B` is a right sibling of `A`, i.e. `A` and `B` have the same parent and `A.i < B.i`.                                |
+| `A $-- B` | `B` is a left sibling of `A`, i.e. `A` and `B` have the same parent and `A.i > B.i`.                                 |
 
 ## DependencyMatcher.\_\_init\_\_ {#init tag="method"}
 
-Create a rule-based `DependencyMatcher`.
+Create a `DependencyMatcher`.
 
 > #### Example
 >
@@ -68,13 +94,15 @@ Create a rule-based `DependencyMatcher`.
 > matcher = DependencyMatcher(nlp.vocab)
 > ```
 
-| Name    | Description                                                                                           |
-| ------- | ----------------------------------------------------------------------------------------------------- |
-| `vocab` | The vocabulary object, which must be shared with the documents the matcher will operate on. ~~Vocab~~ |
+| Name           | Description                                                                                           |
+| -------------- | ----------------------------------------------------------------------------------------------------- |
+| `vocab`        | The vocabulary object, which must be shared with the documents the matcher will operate on. ~~Vocab~~ |
+| _keyword-only_ |                                                                                                       |
+| `validate`     | Validate all patterns added to this matcher. ~~bool~~                                                 |
 
 ## DependencyMatcher.\_\call\_\_ {#call tag="method"}
 
-Find all token sequences matching the supplied patterns on the `Doc` or `Span`.
+Find all tokens matching the supplied patterns on the `Doc` or `Span`.
 
 > #### Example
 >
@@ -82,36 +110,32 @@ Find all token sequences matching the supplied patterns on the `Doc` or `Span`.
 > from spacy.matcher import DependencyMatcher
 >
 > matcher = DependencyMatcher(nlp.vocab)
-> pattern = [
->     {"SPEC": {"NODE_NAME": "founded"}, "PATTERN": {"ORTH": "founded"}},
->     {"SPEC": {"NODE_NAME": "founder", "NBOR_RELOP": ">", "NBOR_NAME": "founded"}, "PATTERN": {"DEP": "nsubj"}},
-> ]
-> matcher.add("Founder", [pattern])
+> pattern = [{"RIGHT_ID": "founded_id",
+>   "RIGHT_ATTRS": {"ORTH": "founded"}}]
+> matcher.add("FOUNDED", [pattern])
 > doc = nlp("Bill Gates founded Microsoft.")
 > matches = matcher(doc)
 > ```
 
-| Name        | Description                                                                                                                                                                                             |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `doclike`   | The `Doc` or `Span` to match over. ~~Union[Doc, Span]~~                                                                                                                                                 |
-| **RETURNS** | A list of `(match_id, start, end)` tuples, describing the matches. A match tuple describes a span `doc[start:end`]. The `match_id` is the ID of the added match pattern. ~~List[Tuple[int, int, int]]~~ |
+| Name        | Description                                                                                                                                                                                                                                                                                                                           |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `doclike`   | The `Doc` or `Span` to match over. ~~Union[Doc, Span]~~                                                                                                                                                                                                                                                                               |
+| **RETURNS** | A list of `(match_id, token_ids)` tuples, describing the matches. The `match_id` is the ID of the match pattern and `token_ids` is a list of token indices matched by the pattern, where the position of each token in the list corresponds to the position of the node specification in the pattern. ~~List[Tuple[int, List[int]]]~~ |
 
 ## DependencyMatcher.\_\_len\_\_ {#len tag="method"}
 
-Get the number of rules (edges) added to the dependency matcher. Note that this
-only returns the number of rules (identical with the number of IDs), not the
-number of individual patterns.
+Get the number of rules added to the dependency matcher. Note that this only
+returns the number of rules (identical with the number of IDs), not the number
+of individual patterns.
 
 > #### Example
 >
 > ```python
 > matcher = DependencyMatcher(nlp.vocab)
 > assert len(matcher) == 0
-> pattern = [
->     {"SPEC": {"NODE_NAME": "founded"}, "PATTERN": {"ORTH": "founded"}},
->     {"SPEC": {"NODE_NAME": "START_ENTITY", "NBOR_RELOP": ">", "NBOR_NAME": "founded"}, "PATTERN": {"DEP": "nsubj"}},
-> ]
-> matcher.add("Rule", [pattern])
+> pattern = [{"RIGHT_ID": "founded_id",
+>   "RIGHT_ATTRS": {"ORTH": "founded"}}]
+> matcher.add("FOUNDED", [pattern])
 > assert len(matcher) == 1
 > ```
 
@@ -126,10 +150,10 @@ Check whether the matcher contains rules for a match ID.
 > #### Example
 >
 > ```python
-> matcher = Matcher(nlp.vocab)
-> assert "Rule" not in matcher
-> matcher.add("Rule", [pattern])
-> assert "Rule" in matcher
+> matcher = DependencyMatcher(nlp.vocab)
+> assert "FOUNDED" not in matcher
+> matcher.add("FOUNDED", [pattern])
+> assert "FOUNDED" in matcher
 > ```
 
 | Name        | Description                                                    |
@@ -152,33 +176,15 @@ will be overwritten.
 >     print('Matched!', matches)
 >
 > matcher = DependencyMatcher(nlp.vocab)
-> matcher.add("TEST_PATTERNS", patterns)
+> matcher.add("FOUNDED", patterns, on_match=on_match)
 > ```
 
-| Name           | Description                                                                                                                                                |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `match_id`     | An ID for the thing you're matching. ~~str~~                                                                                                               |
-| `patterns`     | list                                                                                                                                                       | Match pattern. A pattern consists of a list of dicts, where each dict describes a `"PATTERN"` and `"SPEC"`. ~~List[List[Dict[str, dict]]]~~ |
-| _keyword-only_ |                                                                                                                                                            |  |
-| `on_match`     | Callback function to act on matches. Takes the arguments `matcher`, `doc`, `i` and `matches`. ~~Optional[Callable[[Matcher, Doc, int, List[tuple], Any]]~~ |
-
-## DependencyMatcher.remove {#remove tag="method"}
-
-Remove a rule from the matcher. A `KeyError` is raised if the match ID does not
-exist.
-
-> #### Example
->
-> ```python
-> matcher.add("Rule", [pattern]])
-> assert "Rule" in matcher
-> matcher.remove("Rule")
-> assert "Rule" not in matcher
-> ```
-
-| Name  | Description                       |
-| ----- | --------------------------------- |
-| `key` | The ID of the match rule. ~~str~~ |
+| Name           | Description                                                                                                                                                          |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `match_id`     | An ID for the patterns. ~~str~~                                                                                                                                      |
+| `patterns`     | A list of match patterns. A pattern consists of a list of dicts, where each dict describes a token in the tree. ~~List[List[Dict[str, Union[str, Dict]]]]~~          |
+| _keyword-only_ |                                                                                                                                                                      |  |
+| `on_match`     | Callback function to act on matches. Takes the arguments `matcher`, `doc`, `i` and `matches`. ~~Optional[Callable[[DependencyMatcher, Doc, int, List[Tuple], Any]]~~ |
 
 ## DependencyMatcher.get {#get tag="method"}
 
@@ -188,11 +194,29 @@ Retrieve the pattern stored for a key. Returns the rule as an
 > #### Example
 >
 > ```python
-> matcher.add("Rule", [pattern], on_match=on_match)
-> on_match, patterns = matcher.get("Rule")
+> matcher.add("FOUNDED", patterns, on_match=on_match)
+> on_match, patterns = matcher.get("FOUNDED")
 > ```
 
-| Name        | Description                                                                                   |
-| ----------- | --------------------------------------------------------------------------------------------- |
-| `key`       | The ID of the match rule. ~~str~~                                                             |
-| **RETURNS** | The rule, as an `(on_match, patterns)` tuple. ~~Tuple[Optional[Callable], List[List[dict]]]~~ |
+| Name        | Description                                                                                                 |
+| ----------- | ----------------------------------------------------------------------------------------------------------- |
+| `key`       | The ID of the match rule. ~~str~~                                                                           |
+| **RETURNS** | The rule, as an `(on_match, patterns)` tuple. ~~Tuple[Optional[Callable], List[List[Union[Dict, Tuple]]]]~~ |
+
+## DependencyMatcher.remove {#remove tag="method"}
+
+Remove a rule from the dependency matcher. A `KeyError` is raised if the match
+ID does not exist.
+
+> #### Example
+>
+> ```python
+> matcher.add("FOUNDED", patterns)
+> assert "FOUNDED" in matcher
+> matcher.remove("FOUNDED")
+> assert "FOUNDED" not in matcher
+> ```
+
+| Name  | Description                       |
+| ----- | --------------------------------- |
+| `key` | The ID of the match rule. ~~str~~ |
