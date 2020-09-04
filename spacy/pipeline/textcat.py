@@ -348,18 +348,22 @@ class TextCategorizer(Pipe):
         if get_examples is None or not hasattr(get_examples, "__call__"):
             err = Errors.E930.format(name="TextCategorizer", obj=type(get_examples))
             raise ValueError(err)
+        if len(self.labels) == 0:
+            err = Errors.E1006.format(name="TextCategorizer")
+            raise ValueError(err)
         subbatch = []  # Select a subbatch of examples to initialize the model
         for example in get_examples():
             if len(subbatch) < 2:
                 subbatch.append(example)
             for cat in example.y.cats:
-                self.add_label(cat)
+                if cat and cat not in self.labels:
+                    err = Errors.E920.format(component="textcat", label=cat)
+                    raise ValueError(err)
         self.require_labels()
         docs = [eg.reference for eg in subbatch]
         if not docs:  # need at least one doc
             docs = [Doc(self.vocab, words=["hello"])]
         truths, _ = self._examples_to_truth(subbatch)
-        self.set_output(len(self.labels))
         self.model.initialize(X=docs, Y=truths)
         if sgd is None:
             sgd = self.create_optimizer()
