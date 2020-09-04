@@ -1376,8 +1376,6 @@ class Language:
             docs = (self.make_doc(text) for text in texts)
             for pipe in pipes:
                 docs = pipe(docs)
-
-        nr_seen = 0
         for doc in docs:
             yield doc
 

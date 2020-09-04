@@ -56,15 +56,7 @@ def test_lex_attrs_like_number(en_tokenizer, text, match):
     assert tokens[0].like_num == match
 
 
-@pytest.mark.parametrize(
-    "word",
-    [
-        "third",
-        "Millionth",
-        "100th",
-        "Hundredth",
-    ]
-)
+@pytest.mark.parametrize("word", ["third", "Millionth", "100th", "Hundredth"])
 def test_en_lex_attrs_like_number_for_ordinal(word):
     assert like_num(word)
 

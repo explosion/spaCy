@@ -135,6 +135,7 @@ TRAIN_DATA = [
     ("Eat blue ham", {"tags": ["V", "J", "N"]}),
 ]
 
+
 def test_tok2vec_listener():
     orig_config = Config().from_str(cfg_string)
     nlp, config = util.load_model_from_config(orig_config, auto_fill=True, validate=True)
