@@ -1,4 +1,5 @@
 # cython: infer_types=True, profile=True, binding=True
+from itertools import islice
 from typing import Optional
 import srsly
 from thinc.api import SequenceCategoricalCrossentropy, Model, Config
@@ -145,7 +146,7 @@ class Morphologizer(Tagger):
         self._require_labels()
         doc_sample = []
         label_sample = []
-        for example in get_examples():
+        for example in islice(get_examples(), 10):
             gold_array = []
             for i, token in enumerate(example.reference):
                 pos = token.pos_
@@ -159,9 +160,8 @@ class Morphologizer(Tagger):
                     err = Errors.E920.format(component="morphologizer", label=norm_label)
                     raise ValueError(err)
                 gold_array.append([1.0 if label == norm_label else 0.0 for label in self.labels])
-            if len(doc_sample) < 10:
-                doc_sample.append(example.x)
-                label_sample.append(self.model.ops.asarray(gold_array, dtype="float32"))
+            doc_sample.append(example.x)
+            label_sample.append(self.model.ops.asarray(gold_array, dtype="float32"))
         assert doc_sample
         assert label_sample
         self.model.initialize(X=doc_sample, Y=label_sample)

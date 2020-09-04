@@ -1,3 +1,4 @@
+from itertools import islice
 from typing import Iterator, Sequence, Iterable, Optional, Dict, Callable, List, Tuple
 from thinc.api import Model, set_dropout_rate, Optimizer, Config
 
@@ -224,9 +225,8 @@ class Tok2Vec(Pipe):
         """
         self._ensure_examples(get_examples)
         doc_sample = []
-        for example in get_examples():
-            if len(doc_sample) < 10:
-                doc_sample.append(example.x)
+        for example in islice(get_examples(), 10):
+            doc_sample.append(example.x)
         assert doc_sample
         self.model.initialize(X=doc_sample)
 

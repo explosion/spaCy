@@ -1,3 +1,4 @@
+from itertools import islice
 from typing import Optional, Iterable, Callable, Dict, Iterator, Union, List, Tuple
 from pathlib import Path
 import srsly
@@ -158,10 +159,9 @@ class EntityLinker(Pipe):
         nO = self.kb.entity_vector_length
         doc_sample = []
         vector_sample = []
-        for example in get_examples():
-            if len(doc_sample) < 10:
-                doc_sample.append(example.x)
-                vector_sample.append(self.model.ops.alloc1f(nO))
+        for example in islice(get_examples(), 10):
+            doc_sample.append(example.x)
+            vector_sample.append(self.model.ops.alloc1f(nO))
         assert doc_sample
         assert vector_sample
         self.model.initialize(X=doc_sample, Y=self.model.ops.asarray(vector_sample, dtype="float32"))

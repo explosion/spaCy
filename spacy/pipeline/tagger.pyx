@@ -1,4 +1,5 @@
 # cython: infer_types=True, profile=True, binding=True
+from itertools import islice
 from typing import List
 import numpy
 import srsly
@@ -276,16 +277,15 @@ class Tagger(Pipe):
         self._require_labels()
         doc_sample = []
         label_sample = []
-        for example in get_examples():
+        for example in islice(get_examples(), 10):
             for token in example.y:
                 if token.tag_ and token.tag_ not in self.labels:
                     err = Errors.E920.format(component="tagger", label=token.tag_)
                     raise ValueError(err)
-            if len(doc_sample) < 10:
-                doc_sample.append(example.x)
-                gold_tags = example.get_aligned("TAG", as_string=True)
-                gold_array = [[1.0 if tag == gold_tag else 0.0 for tag in self.labels] for gold_tag in gold_tags]
-                label_sample.append(self.model.ops.asarray(gold_array, dtype="float32"))
+            doc_sample.append(example.x)
+            gold_tags = example.get_aligned("TAG", as_string=True)
+            gold_array = [[1.0 if tag == gold_tag else 0.0 for tag in self.labels] for gold_tag in gold_tags]
+            label_sample.append(self.model.ops.asarray(gold_array, dtype="float32"))
         assert doc_sample
         assert label_sample
         self.model.initialize(X=doc_sample, Y=label_sample)
