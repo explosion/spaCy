@@ -476,6 +476,8 @@ class Errors:
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
+    E925 = ("Invalid color values for displaCy visualizer: expected dictionary "
+            "mapping label names to colors but got: {obj}")
     E926 = ("It looks like you're trying to modify nlp.{attr} directly. This "
             "doesn't work because it's an immutable computed property. If you "
             "need to modify the pipeline, use the built-in methods like "
