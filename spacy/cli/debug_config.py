@@ -31,6 +31,8 @@ def debug_config_cli(
     Similar as with the 'train' command, you can override settings from the config
     as command line options. For instance, --training.batch_size 128 overrides
     the value of "batch_size" in the block "[training]".
+
+    DOCS: https://nightly.spacy.io/api/cli#debug-config
     """
     overrides = parse_config_overrides(ctx.args)
     import_code(code_path)

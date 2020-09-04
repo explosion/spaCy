@@ -13,9 +13,12 @@ def project_push_cli(
     project_dir: Path = Arg(Path.cwd(), help="Location of project directory. Defaults to current working directory.", exists=True, file_okay=False),
     # fmt: on
 ):
-    """Persist outputs to a remote storage. You can alias remotes in your project.yml
-    by mapping them to storage paths. A storage can be anything that the smart-open
-    library can upload to, e.g. gcs, aws, ssh, local directories etc
+    """Persist outputs to a remote storage. You can alias remotes in your
+    project.yml by mapping them to storage paths. A storage can be anything that
+    the smart-open library can upload to, e.g. AWS, Google Cloud Storage, SSH,
+    local directories etc.
+
+    DOCS: https://nightly.spacy.io/api/cli#project-push
     """
     for output_path, url in project_push(project_dir, remote):
         if url is None:

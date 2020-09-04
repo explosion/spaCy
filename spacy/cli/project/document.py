@@ -43,6 +43,8 @@ def project_document_cli(
     hidden markers are added so you can add custom content before or after the
     auto-generated section and only the auto-generated docs will be replaced
     when you re-run the command.
+
+    DOCS: https://nightly.spacy.io/api/cli#project-document
     """
     project_document(project_dir, output_file, no_emoji=no_emoji)
 

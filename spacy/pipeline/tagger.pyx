@@ -58,7 +58,7 @@ def make_tagger(nlp: Language, name: str, model: Model):
 class Tagger(Pipe):
     """Pipeline component for part-of-speech tagging.
 
-    DOCS: https://spacy.io/api/tagger
+    DOCS: https://nightly.spacy.io/api/tagger
     """
     def __init__(self, vocab, model, name="tagger", *, labels=None):
         """Initialize a part-of-speech tagger.
@@ -69,7 +69,7 @@ class Tagger(Pipe):
             losses during training.
         labels (List): The set of labels. Defaults to None.
 
-        DOCS: https://spacy.io/api/tagger#init
+        DOCS: https://nightly.spacy.io/api/tagger#init
         """
         self.vocab = vocab
         self.model = model
@@ -86,7 +86,7 @@ class Tagger(Pipe):
 
         RETURNS (Tuple[str]): The labels.
 
-        DOCS: https://spacy.io/api/tagger#labels
+        DOCS: https://nightly.spacy.io/api/tagger#labels
         """
         return tuple(self.cfg["labels"])
 
@@ -96,7 +96,7 @@ class Tagger(Pipe):
         doc (Doc): The document to process.
         RETURNS (Doc): The processed Doc.
 
-        DOCS: https://spacy.io/api/tagger#call
+        DOCS: https://nightly.spacy.io/api/tagger#call
         """
         tags = self.predict([doc])
         self.set_annotations([doc], tags)
@@ -111,7 +111,7 @@ class Tagger(Pipe):
         batch_size (int): The number of documents to buffer.
         YIELDS (Doc): Processed documents in order.
 
-        DOCS: https://spacy.io/api/tagger#pipe
+        DOCS: https://nightly.spacy.io/api/tagger#pipe
         """
         for docs in util.minibatch(stream, size=batch_size):
             tag_ids = self.predict(docs)
@@ -124,7 +124,7 @@ class Tagger(Pipe):
         docs (Iterable[Doc]): The documents to predict.
         RETURNS: The models prediction for each document.
 
-        DOCS: https://spacy.io/api/tagger#predict
+        DOCS: https://nightly.spacy.io/api/tagger#predict
         """
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
@@ -153,7 +153,7 @@ class Tagger(Pipe):
         docs (Iterable[Doc]): The documents to modify.
         batch_tag_ids: The IDs to set, produced by Tagger.predict.
 
-        DOCS: https://spacy.io/api/tagger#set_annotations
+        DOCS: https://nightly.spacy.io/api/tagger#set_annotations
         """
         if isinstance(docs, Doc):
             docs = [docs]
@@ -182,7 +182,7 @@ class Tagger(Pipe):
             Updated using the component name as the key.
         RETURNS (Dict[str, float]): The updated losses dictionary.
 
-        DOCS: https://spacy.io/api/tagger#update
+        DOCS: https://nightly.spacy.io/api/tagger#update
         """
         if losses is None:
             losses = {}
@@ -220,7 +220,7 @@ class Tagger(Pipe):
             Updated using the component name as the key.
         RETURNS (Dict[str, float]): The updated losses dictionary.
 
-        DOCS: https://spacy.io/api/tagger#rehearse
+        DOCS: https://nightly.spacy.io/api/tagger#rehearse
         """
         validate_examples(examples, "Tagger.rehearse")
         docs = [eg.predicted for eg in examples]
@@ -247,7 +247,7 @@ class Tagger(Pipe):
         scores: Scores representing the model's predictions.
         RETUTNRS (Tuple[float, float]): The loss and the gradient.
 
-        DOCS: https://spacy.io/api/tagger#get_loss
+        DOCS: https://nightly.spacy.io/api/tagger#get_loss
         """
         validate_examples(examples, "Tagger.get_loss")
         loss_func = SequenceCategoricalCrossentropy(names=self.labels, normalize=False)
@@ -269,7 +269,7 @@ class Tagger(Pipe):
             create_optimizer if it doesn't exist.
         RETURNS (thinc.api.Optimizer): The optimizer.
 
-        DOCS: https://spacy.io/api/tagger#begin_training
+        DOCS: https://nightly.spacy.io/api/tagger#begin_training
         """
         if not hasattr(get_examples, "__call__"):
             err = Errors.E930.format(name="Tagger", obj=type(get_examples))
@@ -307,7 +307,7 @@ class Tagger(Pipe):
         label (str): The label to add.
         RETURNS (int): 0 if label is already present, otherwise 1.
 
-        DOCS: https://spacy.io/api/tagger#add_label
+        DOCS: https://nightly.spacy.io/api/tagger#add_label
         """
         if not isinstance(label, str):
             raise ValueError(Errors.E187)
@@ -324,7 +324,7 @@ class Tagger(Pipe):
         RETURNS (Dict[str, Any]): The scores, produced by
             Scorer.score_token_attr for the attributes "tag".
 
-        DOCS: https://spacy.io/api/tagger#score
+        DOCS: https://nightly.spacy.io/api/tagger#score
         """
         validate_examples(examples, "Tagger.score")
         return Scorer.score_token_attr(examples, "tag", **kwargs)
@@ -335,7 +335,7 @@ class Tagger(Pipe):
         exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (bytes): The serialized object.
 
-        DOCS: https://spacy.io/api/tagger#to_bytes
+        DOCS: https://nightly.spacy.io/api/tagger#to_bytes
         """
         serialize = {}
         serialize["model"] = self.model.to_bytes
@@ -350,7 +350,7 @@ class Tagger(Pipe):
         exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (Tagger): The loaded Tagger.
 
-        DOCS: https://spacy.io/api/tagger#from_bytes
+        DOCS: https://nightly.spacy.io/api/tagger#from_bytes
         """
         def load_model(b):
             try:
@@ -372,7 +372,7 @@ class Tagger(Pipe):
         path (str / Path): Path to a directory.
         exclude (Iterable[str]): String names of serialization fields to exclude.
 
-        DOCS: https://spacy.io/api/tagger#to_disk
+        DOCS: https://nightly.spacy.io/api/tagger#to_disk
         """
         serialize = {
             "vocab": lambda p: self.vocab.to_disk(p),
@@ -388,7 +388,7 @@ class Tagger(Pipe):
         exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (Tagger): The modified Tagger object.
 
-        DOCS: https://spacy.io/api/tagger#from_disk
+        DOCS: https://nightly.spacy.io/api/tagger#from_disk
         """
         def load_model(p):
             with p.open("rb") as file_:

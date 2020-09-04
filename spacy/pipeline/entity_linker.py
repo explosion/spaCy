@@ -83,7 +83,7 @@ def make_entity_linker(
 class EntityLinker(Pipe):
     """Pipeline component for named entity linking.
 
-    DOCS: https://spacy.io/api/entitylinker
+    DOCS: https://nightly.spacy.io/api/entitylinker
     """
 
     NIL = "NIL"  # string used to refer to a non-existing link
@@ -111,7 +111,7 @@ class EntityLinker(Pipe):
         incl_prior (bool): Whether or not to include prior probabilities from the KB in the model.
         incl_context (bool): Whether or not to include the local context in the model.
 
-        DOCS: https://spacy.io/api/entitylinker#init
+        DOCS: https://nightly.spacy.io/api/entitylinker#init
         """
         self.vocab = vocab
         self.model = model
@@ -151,7 +151,7 @@ class EntityLinker(Pipe):
             create_optimizer if it doesn't exist.
         RETURNS (thinc.api.Optimizer): The optimizer.
 
-        DOCS: https://spacy.io/api/entitylinker#begin_training
+        DOCS: https://nightly.spacy.io/api/entitylinker#begin_training
         """
         self.require_kb()
         nO = self.kb.entity_vector_length
@@ -182,7 +182,7 @@ class EntityLinker(Pipe):
             Updated using the component name as the key.
         RETURNS (Dict[str, float]): The updated losses dictionary.
 
-        DOCS: https://spacy.io/api/entitylinker#update
+        DOCS: https://nightly.spacy.io/api/entitylinker#update
         """
         self.require_kb()
         if losses is None:
@@ -264,7 +264,7 @@ class EntityLinker(Pipe):
         doc (Doc): The document to process.
         RETURNS (Doc): The processed Doc.
 
-        DOCS: https://spacy.io/api/entitylinker#call
+        DOCS: https://nightly.spacy.io/api/entitylinker#call
         """
         kb_ids = self.predict([doc])
         self.set_annotations([doc], kb_ids)
@@ -279,7 +279,7 @@ class EntityLinker(Pipe):
         batch_size (int): The number of documents to buffer.
         YIELDS (Doc): Processed documents in order.
 
-        DOCS: https://spacy.io/api/entitylinker#pipe
+        DOCS: https://nightly.spacy.io/api/entitylinker#pipe
         """
         for docs in util.minibatch(stream, size=batch_size):
             kb_ids = self.predict(docs)
@@ -294,7 +294,7 @@ class EntityLinker(Pipe):
         docs (Iterable[Doc]): The documents to predict.
         RETURNS (List[int]): The models prediction for each document.
 
-        DOCS: https://spacy.io/api/entitylinker#predict
+        DOCS: https://nightly.spacy.io/api/entitylinker#predict
         """
         self.require_kb()
         entity_count = 0
@@ -391,7 +391,7 @@ class EntityLinker(Pipe):
         docs (Iterable[Doc]): The documents to modify.
         kb_ids (List[str]): The IDs to set, produced by EntityLinker.predict.
 
-        DOCS: https://spacy.io/api/entitylinker#set_annotations
+        DOCS: https://nightly.spacy.io/api/entitylinker#set_annotations
         """
         count_ents = len([ent for doc in docs for ent in doc.ents])
         if count_ents != len(kb_ids):
@@ -412,7 +412,7 @@ class EntityLinker(Pipe):
         path (str / Path): Path to a directory.
         exclude (Iterable[str]): String names of serialization fields to exclude.
 
-        DOCS: https://spacy.io/api/entitylinker#to_disk
+        DOCS: https://nightly.spacy.io/api/entitylinker#to_disk
         """
         serialize = {}
         serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
@@ -430,7 +430,7 @@ class EntityLinker(Pipe):
         exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (EntityLinker): The modified EntityLinker object.
 
-        DOCS: https://spacy.io/api/entitylinker#from_disk
+        DOCS: https://nightly.spacy.io/api/entitylinker#from_disk
         """
 
         def load_model(p):

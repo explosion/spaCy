@@ -30,7 +30,7 @@ cdef class Lexeme:
     tag, dependency parse, or lemma (lemmatization depends on the
     part-of-speech tag).
 
-    DOCS: https://spacy.io/api/lexeme
+    DOCS: https://nightly.spacy.io/api/lexeme
     """
     def __init__(self, Vocab vocab, attr_t orth):
         """Create a Lexeme object.
