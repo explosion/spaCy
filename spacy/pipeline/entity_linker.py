@@ -128,7 +128,7 @@ class EntityLinker(Pipe):
         # how many neightbour sentences to take into account
         self.n_sents = cfg.get("n_sents", 0)
 
-    def require_kb(self) -> None:
+    def _require_kb(self) -> None:
         # Raise an error if the knowledge base is not initialized.
         if len(self.kb) == 0:
             raise ValueError(Errors.E139.format(name=self.name))
@@ -153,10 +153,8 @@ class EntityLinker(Pipe):
 
         DOCS: https://nightly.spacy.io/api/entitylinker#begin_training
         """
-        if get_examples is None or not hasattr(get_examples, "__call__"):
-            err = Errors.E930.format(name="EntityLinker", obj=type(get_examples))
-            raise ValueError(err)
-        self.require_kb()
+        self._ensure_examples(get_examples)
+        self._require_kb()
         nO = self.kb.entity_vector_length
         self.set_output(nO)
         self.model.initialize()
@@ -187,7 +185,7 @@ class EntityLinker(Pipe):
 
         DOCS: https://nightly.spacy.io/api/entitylinker#update
         """
-        self.require_kb()
+        self._require_kb()
         if losses is None:
             losses = {}
         losses.setdefault(self.name, 0.0)
@@ -299,7 +297,7 @@ class EntityLinker(Pipe):
 
         DOCS: https://nightly.spacy.io/api/entitylinker#predict
         """
-        self.require_kb()
+        self._require_kb()
         entity_count = 0
         final_kb_ids = []
         if not docs:

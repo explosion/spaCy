@@ -128,10 +128,6 @@ class TextCategorizer(Pipe):
         """
         return tuple(self.cfg.setdefault("labels", []))
 
-    def require_labels(self) -> None:
-        """Raise an error if the component's model has no labels defined."""
-        if not self.labels:
-            raise ValueError(Errors.E143.format(name=self.name))
 
     @labels.setter
     def labels(self, value: Iterable[str]) -> None:
@@ -345,12 +341,8 @@ class TextCategorizer(Pipe):
 
         DOCS: https://nightly.spacy.io/api/textcategorizer#begin_training
         """
-        if get_examples is None or not hasattr(get_examples, "__call__"):
-            err = Errors.E930.format(name="TextCategorizer", obj=type(get_examples))
-            raise ValueError(err)
-        if len(self.labels) == 0:
-            err = Errors.E1006.format(name="TextCategorizer")
-            raise ValueError(err)
+        self._ensure_examples(get_examples)
+        self._require_labels()
         subbatch = []  # Select a subbatch of examples to initialize the model
         for example in get_examples():
             if len(subbatch) < 2:
@@ -359,7 +351,6 @@ class TextCategorizer(Pipe):
                 if cat and cat not in self.labels:
                     err = Errors.E920.format(component="textcat", label=cat)
                     raise ValueError(err)
-        self.require_labels()
         docs = [eg.reference for eg in subbatch]
         if not docs:  # need at least one doc
             docs = [Doc(self.vocab, words=["hello"])]

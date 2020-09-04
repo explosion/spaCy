@@ -141,12 +141,8 @@ class Morphologizer(Tagger):
 
         DOCS: https://nightly.spacy.io/api/morphologizer#begin_training
         """
-        if get_examples is None or not hasattr(get_examples, "__call__"):
-            err = Errors.E930.format(name="Morphologizer", obj=type(get_examples))
-            raise ValueError(err)
-        if len(self.labels) == 0:
-            err = Errors.E1006.format(name="Morphologizer")
-            raise ValueError(err)
+        self._ensure_examples(get_examples)
+        self._require_labels()
         doc_sample = []
         label_sample = []
         for example in get_examples():

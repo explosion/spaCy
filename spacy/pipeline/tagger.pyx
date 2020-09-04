@@ -272,12 +272,8 @@ class Tagger(Pipe):
 
         DOCS: https://nightly.spacy.io/api/tagger#begin_training
         """
-        if get_examples is None or not hasattr(get_examples, "__call__"):
-            err = Errors.E930.format(name="Tagger", obj=type(get_examples))
-            raise ValueError(err)
-        if len(self.labels) == 0:
-            err = Errors.E1006.format(name="Tagger")
-            raise ValueError(err)
+        self._ensure_examples(get_examples)
+        self._require_labels()
         doc_sample = []
         label_sample = []
         for example in get_examples():

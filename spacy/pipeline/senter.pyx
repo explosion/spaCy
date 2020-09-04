@@ -137,9 +137,7 @@ class SentenceRecognizer(Tagger):
 
         DOCS: https://nightly.spacy.io/api/sentencerecognizer#begin_training
         """
-        if get_examples is None or not hasattr(get_examples, "__call__"):
-            err = Errors.E930.format(name="SentenceRecognizer", obj=type(get_examples))
-            raise ValueError(err)
+        self._ensure_examples(get_examples)
         doc_sample = []
         label_sample = []
         assert self.labels

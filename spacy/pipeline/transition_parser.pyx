@@ -406,9 +406,7 @@ cdef class Parser(Pipe):
         self.model.attrs["resize_output"](self.model, nO)
 
     def begin_training(self, get_examples, pipeline=None, sgd=None, **kwargs):
-        if get_examples is None or not hasattr(get_examples, "__call__"):
-            err = Errors.E930.format(name="DependencyParser/EntityRecognizer", obj=type(get_examples))
-            raise ValueError(err)
+        self._ensure_examples(get_examples)
         self.cfg.update(kwargs)
         lexeme_norms = self.vocab.lookups.get_table("lexeme_norm", {})
         if len(lexeme_norms) == 0 and self.vocab.lang in util.LEXEME_NORM_LANGS:
