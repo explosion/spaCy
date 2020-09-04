@@ -57,12 +57,13 @@ def validate_token_pattern(obj: list) -> List[str]:
 
 
 class TokenPatternString(BaseModel):
-    REGEX: Optional[StrictStr]
-    IN: Optional[List[StrictStr]]
-    NOT_IN: Optional[List[StrictStr]]
+    REGEX: Optional[StrictStr] = Field(None, alias="regex")
+    IN: Optional[List[StrictStr]] = Field(None, alias="in")
+    NOT_IN: Optional[List[StrictStr]] = Field(None, alias="not_in")
 
     class Config:
         extra = "forbid"
+        allow_population_by_field_name = True  # allow alias and field name
 
     @validator("*", pre=True, each_item=True, allow_reuse=True)
     def raise_for_none(cls, v):
@@ -72,9 +73,9 @@ class TokenPatternString(BaseModel):
 
 
 class TokenPatternNumber(BaseModel):
-    REGEX: Optional[StrictStr] = None
-    IN: Optional[List[StrictInt]] = None
-    NOT_IN: Optional[List[StrictInt]] = None
+    REGEX: Optional[StrictStr] = Field(None, alias="regex")
+    IN: Optional[List[StrictInt]] = Field(None, alias="in")
+    NOT_IN: Optional[List[StrictInt]] = Field(None, alias="not_in")
     EQ: Union[StrictInt, StrictFloat] = Field(None, alias="==")
     NEQ: Union[StrictInt, StrictFloat] = Field(None, alias="!=")
     GEQ: Union[StrictInt, StrictFloat] = Field(None, alias=">=")
@@ -84,6 +85,7 @@ class TokenPatternNumber(BaseModel):
 
     class Config:
         extra = "forbid"
+        allow_population_by_field_name = True  # allow alias and field name
 
     @validator("*", pre=True, each_item=True, allow_reuse=True)
     def raise_for_none(cls, v):

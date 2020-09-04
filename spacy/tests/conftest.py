@@ -45,6 +45,11 @@ def ca_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def cs_tokenizer():
+    return get_lang_class("cs")().tokenizer
+
+
+@pytest.fixture(scope="session")
 def da_tokenizer():
     return get_lang_class("da")().tokenizer
 
@@ -202,6 +207,11 @@ def ru_tokenizer():
 def ru_lemmatizer():
     pytest.importorskip("pymorphy2")
     return get_lang_class("ru")().add_pipe("lemmatizer")
+
+
+@pytest.fixture(scope="session")
+def sa_tokenizer():
+    return get_lang_class("sa")().tokenizer
 
 
 @pytest.fixture(scope="session")

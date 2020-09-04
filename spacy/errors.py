@@ -76,6 +76,10 @@ class Warnings:
             "If this is surprising, make sure you have the spacy-lookups-data "
             "package installed. The languages with lexeme normalization tables "
             "are currently: {langs}")
+    W034 = ("Please install the package spacy-lookups-data in order to include "
+            "the default lexeme normalization table for the language '{lang}'.")
+    W035 = ('Discarding subpattern "{pattern}" due to an unrecognized '
+            "attribute or operator.")
 
     # TODO: fix numbering after merging develop into master
     W090 = ("Could not locate any binary .spacy files in path '{path}'.")
@@ -474,6 +478,9 @@ class Errors:
     E198 = ("Unable to return {n} most similar vectors for the current vectors "
             "table, which contains {n_rows} vectors.")
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
+    E200 = ("Specifying a base model with a pretrained component '{component}' "
+            "can not be combined with adding a pretrained Tok2Vec layer.")
+    E201 = ("Span index out of range.")
 
     # TODO: fix numbering after merging develop into master
     E925 = ("Invalid color values for displaCy visualizer: expected dictionary "
