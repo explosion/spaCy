@@ -974,10 +974,12 @@ to match phrases with the same sequence of punctuation and non-punctuation
 tokens as the pattern. But this can easily get confusing and doesn't have much
 of an advantage over writing one or two token patterns.
 
-## Dependency Matcher {#dependencymatcher new="3"}
+## Dependency Matcher {#dependencymatcher new="3" model="parser"}
 
 The [`DependencyMatcher`](/api/dependencymatcher) lets you match patterns within
-the dependency parse. It requires a model containing a parser such as the
+the dependency parse using
+[Semgrex](https://nlp.stanford.edu/nlp/javadoc/javanlp/edu/stanford/nlp/semgraph/semgrex/SemgrexPattern.html)
+operators. It requires a model containing a parser such as the
 [`DependencyParser`](/api/dependencyparser). Instead of defining a list of
 adjacent tokens as in `Matcher` patterns, the `DependencyMatcher` patterns match
 tokens in the dependency parse and specify the relations between them.
@@ -1014,15 +1016,15 @@ tokens in the dependency parse and specify the relations between them.
 > matches = matcher(doc)
 > ```
 
-A pattern added to the `DependencyMatcher` consists of a list of dictionaries,
-with each dictionary describing a token to match and its relation to an existing
-token in the pattern. Except for the first dictionary, which defines an anchor
-token using only `RIGHT_ID` and `RIGHT_ATTRS`, each pattern should have the
-following keys:
+A pattern added to the dependency matcher consists of a **list of
+dictionaries**, with each dictionary describing a **token to match** and its
+**relation to an existing token** in the pattern. Except for the first
+dictionary, which defines an anchor token using only `RIGHT_ID` and
+`RIGHT_ATTRS`, each pattern should have the following keys:
 
 | Name          | Description                                                                                                                                                            |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `LEFT_ID`     | The name of the left-hand node in the relation, which has been defined in an earlier node.                                                                             |
+| `LEFT_ID`     | The name of the left-hand node in the relation, which has been defined in an earlier node. ~~str~~                                                                     |
 | `REL_OP`      | An operator that describes how the two nodes are related. ~~str~~                                                                                                      |
 | `RIGHT_ID`    | A unique name for the right-hand node in the relation. ~~str~~                                                                                                         |
 | `RIGHT_ATTRS` | The token attributes to match for the right-hand node in the same format as patterns provided to the regular token-based [`Matcher`](/api/matcher). ~~Dict[str, Any]~~ |
@@ -1040,37 +1042,51 @@ can be used as `LEFT_ID` in another dict.
 
 </Infobox>
 
-### Dependency matcher operators
+### Dependency matcher operators {#dependencymatcher-operators}
 
 The following operators are supported by the `DependencyMatcher`, most of which
 come directly from
 [Semgrex](https://nlp.stanford.edu/nlp/javadoc/javanlp/edu/stanford/nlp/semgraph/semgrex/SemgrexPattern.html):
 
-| Symbol    | Description                                                                                                         |
-| --------- | ------------------------------------------------------------------------------------------------------------------- |
-| `A < B`   | `A` is the immediate dependent of `B`                                                                               |
-| `A > B`   | `A` is the immediate head of `B`                                                                                    |
-| `A << B`  | `A` is the dependent in a chain to `B` following dep->head paths                                                    |
-| `A >> B`  | `A` is the head in a chain to `B` following head->dep paths                                                         |
-| `A . B`   | `A` immediately precedes `B`, i.e. `A.i == B.i - 1`, and both are within the same dependency tree                   |
-| `A .* B`  | `A` precedes `B`, i.e. `A.i < B.i`, and both are within the same dependency tree _(not in Semgrex)_                 |
-| `A ; B`   | `A` immediately follows `B`, i.e. `A.i == B.i + 1`, and both are within the same dependency tree _(not in Semgrex)_ |
-| `A ;* B`  | `A` follows `B`, i.e. `A.i > B.i`, and both are within the same dependency tree _(not in Semgrex)_                  |
-| `A $+ B`  | `B` is a right immediate sibling of `A`, i.e. `A` and `B` have the same parent and `A.i == B.i - 1`                 |
-| `A $- B`  | `B` is a left immediate sibling of `A`, i.e. `A` and `B` have the same parent and `A.i == B.i + 1`                  |
-| `A $++ B` | `B` is a right sibling of `A`, i.e. `A` and `B` have the same parent and `A.i < B.i`                                |
-| `A $-- B` | `B` is a left sibling of `A`, i.e. `A` and `B` have the same parent and `A.i > B.i`                                 |
+| Symbol    | Description                                                                                                          |
+| --------- | -------------------------------------------------------------------------------------------------------------------- |
+| `A < B`   | `A` is the immediate dependent of `B`.                                                                               |
+| `A > B`   | `A` is the immediate head of `B`.                                                                                    |
+| `A << B`  | `A` is the dependent in a chain to `B` following dep &rarr; head paths.                                              |
+| `A >> B`  | `A` is the head in a chain to `B` following head &rarr; dep paths.                                                   |
+| `A . B`   | `A` immediately precedes `B`, i.e. `A.i == B.i - 1`, and both are within the same dependency tree.                   |
+| `A .* B`  | `A` precedes `B`, i.e. `A.i < B.i`, and both are within the same dependency tree _(not in Semgrex)_.                 |
+| `A ; B`   | `A` immediately follows `B`, i.e. `A.i == B.i + 1`, and both are within the same dependency tree _(not in Semgrex)_. |
+| `A ;* B`  | `A` follows `B`, i.e. `A.i > B.i`, and both are within the same dependency tree _(not in Semgrex)_.                  |
+| `A $+ B`  | `B` is a right immediate sibling of `A`, i.e. `A` and `B` have the same parent and `A.i == B.i - 1`.                 |
+| `A $- B`  | `B` is a left immediate sibling of `A`, i.e. `A` and `B` have the same parent and `A.i == B.i + 1`.                  |
+| `A $++ B` | `B` is a right sibling of `A`, i.e. `A` and `B` have the same parent and `A.i < B.i`.                                |
+| `A $-- B` | `B` is a left sibling of `A`, i.e. `A` and `B` have the same parent and `A.i > B.i`.                                 |
 
-### Designing dependency matcher patterns
+### Designing dependency matcher patterns {#dependencymatcher-patterns}
 
 Let's say we want to find sentences describing who founded what kind of company:
 
-- `Smith founded a healthcare company in 2005.`
-- `Williams initially founded an insurance company in 1987.`
-- `Lee, an experienced CEO, has founded two AI startups.`
+- _Smith founded a healthcare company in 2005._
+- _Williams initially founded an insurance company in 1987._
+- _Lee, an experienced CEO, has founded two AI startups._
 
-The dependency parse for `Smith founded a healthcare company` shows types of
+The dependency parse for "Smith founded a healthcare company" shows types of
 relations and tokens we want to match:
+
+> #### Visualizing the parse
+>
+> The [`displacy` visualizer](/usage/visualizer) lets you render `Doc` objects
+> and their dependency parse and part-of-speech tags:
+>
+> ```python
+> import spacy
+> from spacy import displacy
+>
+> nlp = spacy.load("en_core_web_sm")
+> doc = nlp("Smith founded a healthcare company")
+> displacy.serve(doc)
+> ```
 
 import DisplaCyDepFoundedHtml from 'images/displacy-dep-founded.html'
 
@@ -1078,16 +1094,16 @@ import DisplaCyDepFoundedHtml from 'images/displacy-dep-founded.html'
 
 The relations we're interested in are:
 
-- the founder is the subject (`nsubj`) of the token with the text `founded`
-- the company is the object (`dobj`) of `founded`
-- the kind of company may be an adjective (`amod`, not shown above) or a
-  compound (`compound`)
+- the founder is the **subject** (`nsubj`) of the token with the text `founded`
+- the company is the **object** (`dobj`) of `founded`
+- the kind of company may be an **adjective** (`amod`, not shown above) or a
+  **compound** (`compound`)
 
-The first step is to pick an anchor token for the pattern. Since it's the root
-of the dependency parse, `founded` is a good choice here. It is often easier to
-construct patterns when all dependency relation operators point from the head to
-the children. In this example, we'll only use `>`, which connects a head to an
-immediate dependent as `head > child`.
+The first step is to pick an **anchor token** for the pattern. Since it's the
+root of the dependency parse, `founded` is a good choice here. It is often
+easier to construct patterns when all dependency relation operators point from
+the head to the children. In this example, we'll only use `>`, which connects a
+head to an immediate dependent as `head > child`.
 
 The simplest dependency matcher pattern will identify and name a single token in
 the tree:
@@ -1099,11 +1115,10 @@ from spacy.matcher import DependencyMatcher
 
 nlp = spacy.load("en_core_web_sm")
 matcher = DependencyMatcher(nlp.vocab)
-
 pattern = [
   {
-    "RIGHT_ID": "anchor_founded",      # unique name
-    "RIGHT_ATTRS": {"ORTH": "founded"} # token pattern for "founded"
+    "RIGHT_ID": "anchor_founded",       # unique name
+    "RIGHT_ATTRS": {"ORTH": "founded"}  # token pattern for "founded"
   }
 ]
 matcher.add("FOUNDED", [pattern])
@@ -1116,6 +1131,7 @@ Now that we have a named anchor token (`anchor_founded`), we can add the founder
 as the immediate dependent (`>`) of `founded` with the dependency label `nsubj`:
 
 ```python
+### Step 1 {highlight="8,10"}
 pattern = [
     {
         "RIGHT_ID": "anchor_founded",
@@ -1127,31 +1143,37 @@ pattern = [
         "RIGHT_ID": "subject",
         "RIGHT_ATTRS": {"DEP": "nsubj"},
     }
+    # ...
 ]
 ```
 
 The direct object (`dobj`) is added in the same way:
 
 ```python
-pattern = [ ...
+### Step 2 {highlight=""}
+pattern = [
+    #...
     {
         "LEFT_ID": "anchor_founded",
         "REL_OP": ">",
         "RIGHT_ID": "founded_object",
         "RIGHT_ATTRS": {"DEP": "dobj"},
     }
+    # ...
 ]
 ```
 
 When the subject and object tokens are added, they are required to have names
 under the key `RIGHT_ID`, which are allowed to be any unique string, e.g.
-`founded_subject`. These names can then be used as `LEFT_ID` to link new tokens
-into the pattern. For the final part of our pattern, we'll specify that the
-token `founded_object` should have a modifier with the dependency relation
+`founded_subject`. These names can then be used as `LEFT_ID` to **link new
+tokens into the pattern**. For the final part of our pattern, we'll specify that
+the token `founded_object` should have a modifier with the dependency relation
 `amod` or `compound`:
 
 ```python
-pattern = [ ...
+### Step 3 {highlight="7"}
+pattern = [
+    # ...
     {
         "LEFT_ID": "founded_object",
         "REL_OP": ">",
@@ -1167,8 +1189,6 @@ one-by-one on the right using relation operators. To create a valid pattern,
 each new token needs to be linked to an existing token on its left. As for
 `founded` in this example, a token may be linked to more than one token on its
 right:
-
-<!-- TODO: adjust for final example, prettify -->
 
 ![Dependency matcher pattern](../images/dep-match-diagram.svg)
 
@@ -1209,11 +1229,10 @@ pattern = [
 
 matcher.add("FOUNDED", [pattern])
 doc = nlp("Lee, an experienced CEO, has founded two AI startups.")
-
 matches = matcher(doc)
-print(matches) # [(4851363122962674176, [6, 0, 10, 9])]
 
-# each token_id corresponds to one pattern dict
+print(matches) # [(4851363122962674176, [6, 0, 10, 9])]
+# Each token_id corresponds to one pattern dict
 match_id, token_ids = matches[0]
 for i in range(len(token_ids)):
     print(pattern[i]["RIGHT_ID"] + ":", doc[token_ids[i]].text)

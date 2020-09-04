@@ -11,7 +11,8 @@ and [`PhraseMatcher`](/api/phrasematcher) and lets you match on dependency trees
 using
 [Semgrex operators](https://nlp.stanford.edu/nlp/javadoc/javanlp/edu/stanford/nlp/semgraph/semgrex/SemgrexPattern.html).
 It requires a pretrained [`DependencyParser`](/api/parser) or other component
-that sets the `Token.dep` and `Token.head` attributes.
+that sets the `Token.dep` and `Token.head` attributes. See the
+[usage guide](/usage/rule-based-matching#dependencymatcher) for examples.
 
 ## Pattern format {#patterns}
 
@@ -48,63 +49,18 @@ dictionary, which defines an anchor token using only `RIGHT_ID` and
 
 | Name          | Description                                                                                                                                                            |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `LEFT_ID`     | The name of the left-hand node in the relation, which has been defined in an earlier node.                                                                             |
+| `LEFT_ID`     | The name of the left-hand node in the relation, which has been defined in an earlier node. ~~str~~                                                                     |
 | `REL_OP`      | An operator that describes how the two nodes are related. ~~str~~                                                                                                      |
 | `RIGHT_ID`    | A unique name for the right-hand node in the relation. ~~str~~                                                                                                         |
 | `RIGHT_ATTRS` | The token attributes to match for the right-hand node in the same format as patterns provided to the regular token-based [`Matcher`](/api/matcher). ~~Dict[str, Any]~~ |
 
-The first pattern defines an anchor token and each additional token added to the
-pattern is linked to an existing token `LEFT_ID` by the relation `REL_OP` and is
-described by the name `RIGHT_ID` and the attributes `RIGHT_ATTRS`.
+<Infobox title="Designing dependency matcher patterns" emoji="📖">
 
-Let's say we want to find sentences describing who founded what kind of company:
+For examples of how to construct dependency matcher patterns for different types
+of relations, see the usage guide on
+[dependency matching](/usage/rule-based-matching#dependencymatcher).
 
-- `Smith founded a healthcare company in 2005.`
-- `Williams initially founded an insurance company in 1987.`
-- `Lee, an established CEO, founded yet another AI startup.`
-
-Since it's the root of the dependency parse, `founded` is a good choice for the
-anchor token in our pattern:
-
-```python
-pattern = [
-    {"RIGHT_ID": "anchor_founded", "RIGHT_ATTRS": {"ORTH": "founded"}}
-]
-```
-
-We can add the subject as the token with the dependency label `nsubj` that is a
-direct child `>` of the anchor token named `anchor_founded`:
-
-```python
-pattern = [
-    {"RIGHT_ID": "anchor_founded", "RIGHT_ATTRS": {"ORTH": "founded"}},
-    {
-        "LEFT_ID": "anchor_founded",
-        "REL_OP": ">",
-        "RIGHT_ID": "subject",
-        "RIGHT_ATTRS": {"DEP": "nsubj"},
-    }
-]
-```
-
-And the direct object along with its modifier:
-
-```python
-pattern = [ ...
-    {
-        "LEFT_ID": "anchor_founded",
-        "REL_OP": ">",
-        "RIGHT_ID": "founded_object",
-        "RIGHT_ATTRS": {"DEP": "dobj"},
-    },
-    {
-        "LEFT_ID": "founded_object",
-        "REL_OP": ">",
-        "RIGHT_ID": "founded_object_modifier",
-        "RIGHT_ATTRS": {"DEP": {"IN": ["amod", "compound"]}},
-    }
-]
-```
+</Infobox>
 
 ### Operators
 
@@ -112,20 +68,20 @@ The following operators are supported by the `DependencyMatcher`, most of which
 come directly from
 [Semgrex](https://nlp.stanford.edu/nlp/javadoc/javanlp/edu/stanford/nlp/semgraph/semgrex/SemgrexPattern.html):
 
-| Symbol    | Description                                                                                                         |
-| --------- | ------------------------------------------------------------------------------------------------------------------- |
-| `A < B`   | `A` is the immediate dependent of `B`                                                                               |
-| `A > B`   | `A` is the immediate head of `B`                                                                                    |
-| `A << B`  | `A` is the dependent in a chain to `B` following dep->head paths                                                    |
-| `A >> B`  | `A` is the head in a chain to `B` following head->dep paths                                                         |
-| `A . B`   | `A` immediately precedes `B`, i.e. `A.i == B.i - 1`, and both are within the same dependency tree                   |
-| `A .* B`  | `A` precedes `B`, i.e. `A.i < B.i`, and both are within the same dependency tree _(not in Semgrex)_                 |
-| `A ; B`   | `A` immediately follows `B`, i.e. `A.i == B.i + 1`, and both are within the same dependency tree _(not in Semgrex)_ |
-| `A ;* B`  | `A` follows `B`, i.e. `A.i > B.i`, and both are within the same dependency tree _(not in Semgrex)_                  |
-| `A $+ B`  | `B` is a right immediate sibling of `A`, i.e. `A` and `B` have the same parent and `A.i == B.i - 1`                 |
-| `A $- B`  | `B` is a left immediate sibling of `A`, i.e. `A` and `B` have the same parent and `A.i == B.i + 1`                  |
-| `A $++ B` | `B` is a right sibling of `A`, i.e. `A` and `B` have the same parent and `A.i < B.i`                                |
-| `A $-- B` | `B` is a left sibling of `A`, i.e. `A` and `B` have the same parent and `A.i > B.i`                                 |
+| Symbol    | Description                                                                                                          |
+| --------- | -------------------------------------------------------------------------------------------------------------------- |
+| `A < B`   | `A` is the immediate dependent of `B`.                                                                               |
+| `A > B`   | `A` is the immediate head of `B`.                                                                                    |
+| `A << B`  | `A` is the dependent in a chain to `B` following dep &rarr; head paths.                                              |
+| `A >> B`  | `A` is the head in a chain to `B` following head &rarr; dep paths.                                                   |
+| `A . B`   | `A` immediately precedes `B`, i.e. `A.i == B.i - 1`, and both are within the same dependency tree.                   |
+| `A .* B`  | `A` precedes `B`, i.e. `A.i < B.i`, and both are within the same dependency tree _(not in Semgrex)_.                 |
+| `A ; B`   | `A` immediately follows `B`, i.e. `A.i == B.i + 1`, and both are within the same dependency tree _(not in Semgrex)_. |
+| `A ;* B`  | `A` follows `B`, i.e. `A.i > B.i`, and both are within the same dependency tree _(not in Semgrex)_.                  |
+| `A $+ B`  | `B` is a right immediate sibling of `A`, i.e. `A` and `B` have the same parent and `A.i == B.i - 1`.                 |
+| `A $- B`  | `B` is a left immediate sibling of `A`, i.e. `A` and `B` have the same parent and `A.i == B.i + 1`.                  |
+| `A $++ B` | `B` is a right sibling of `A`, i.e. `A` and `B` have the same parent and `A.i < B.i`.                                |
+| `A $-- B` | `B` is a left sibling of `A`, i.e. `A` and `B` have the same parent and `A.i > B.i`.                                 |
 
 ## DependencyMatcher.\_\_init\_\_ {#init tag="method"}
 
