@@ -211,8 +211,8 @@ class Tok2Vec(Pipe):
     ):
         """Initialize the pipe for training, using data examples if available.
 
-        get_examples (Callable[[], Iterable[Example]]): Optional function that
-            returns gold-standard Example objects.
+        get_examples (Callable[[], Iterable[Example]]): Function that
+            returns a sample of gold-standard Example objects.
         pipeline (List[Tuple[str, Callable]]): Optional list of pipeline
             components that this component is part of. Corresponds to
             nlp.pipeline.
@@ -222,6 +222,9 @@ class Tok2Vec(Pipe):
 
         DOCS: https://nightly.spacy.io/api/tok2vec#begin_training
         """
+        if get_examples is None or not hasattr(get_examples, "__call__"):
+            err = Errors.E930.format(name="Tok2Vec", obj=type(get_examples))
+            raise ValueError(err)
         docs = [Doc(self.vocab, words=["hello"])]
         self.model.initialize(X=docs)
 

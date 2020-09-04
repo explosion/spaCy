@@ -142,8 +142,8 @@ class EntityLinker(Pipe):
     ) -> Optimizer:
         """Initialize the pipe for training, using data examples if available.
 
-        get_examples (Callable[[], Iterable[Example]]): Optional function that
-            returns gold-standard Example objects.
+        get_examples (Callable[[], Iterable[Example]]): Function that
+            returns a sample of gold-standard Example objects.
         pipeline (List[Tuple[str, Callable]]): Optional list of pipeline
             components that this component is part of. Corresponds to
             nlp.pipeline.
@@ -153,6 +153,9 @@ class EntityLinker(Pipe):
 
         DOCS: https://nightly.spacy.io/api/entitylinker#begin_training
         """
+        if get_examples is None or not hasattr(get_examples, "__call__"):
+            err = Errors.E930.format(name="EntityLinker", obj=type(get_examples))
+            raise ValueError(err)
         self.require_kb()
         nO = self.kb.entity_vector_length
         self.set_output(nO)

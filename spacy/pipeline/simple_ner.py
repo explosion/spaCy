@@ -168,10 +168,10 @@ class SimpleNER(Pipe):
         pipeline: Optional[List[Tuple[str, Callable[[Doc], Doc]]]] = None,
         sgd: Optional[Optimizer] = None,
     ):
-        all_labels = set()
-        if not hasattr(get_examples, "__call__"):
+        if get_examples is None or not hasattr(get_examples, "__call__"):
             err = Errors.E930.format(name="SimpleNER", obj=type(get_examples))
             raise ValueError(err)
+        all_labels = set()
         for example in get_examples():
             all_labels.update(_get_labels(example))
         for label in sorted(all_labels):
