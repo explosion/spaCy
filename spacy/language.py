@@ -1155,21 +1155,21 @@ class Language:
 
         DOCS: https://spacy.io/api/language#begin_training
         """
-        # TODO: throw warning when get_gold_tuples is provided instead of get_examples
         if get_examples is None:
-            get_examples = lambda: []
-        else:  # Populate vocab
-            if not hasattr(get_examples, "__call__"):
-                err = Errors.E930.format(name="Language", obj=type(get_examples))
+            doc = Doc(self.vocab, words=["This is an example sentence."])
+            get_examples = lambda: [Example.from_dict(doc, {})]
+        # Populate vocab
+        if not hasattr(get_examples, "__call__"):
+            err = Errors.E930.format(name="Language", obj=type(get_examples))
+            raise ValueError(err)
+        for example in get_examples():
+            if not isinstance(example, Example):
+                err = Errors.E978.format(
+                    name="Language.begin_training", types=type(example)
+                )
                 raise ValueError(err)
-            for example in get_examples():
-                if not isinstance(example, Example):
-                    err = Errors.E978.format(
-                        name="Language.begin_training", types=type(example)
-                    )
-                    raise ValueError(err)
-                for word in [t.text for t in example.reference]:
-                    _ = self.vocab[word]  # noqa: F841
+            for word in [t.text for t in example.reference]:
+                _ = self.vocab[word]  # noqa: F841
         if device >= 0:  # TODO: do we need this here?
             require_gpu(device)
             if self.vocab.vectors.data.shape[1] >= 1:
