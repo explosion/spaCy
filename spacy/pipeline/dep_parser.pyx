@@ -156,7 +156,7 @@ cdef class DependencyParser(Parser):
         results = {}
         results.update(Scorer.score_spans(examples, "sents", **kwargs))
         kwargs.setdefault("getter", dep_getter)
-        kwargs.setdefault("ignore_label", ("p", "punct"))
+        kwargs.setdefault("ignore_labels", ("p", "punct"))
         results.update(Scorer.score_deps(examples, "dep", **kwargs))
         del results["sents_per_type"]
         return results
