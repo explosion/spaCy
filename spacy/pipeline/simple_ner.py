@@ -170,15 +170,22 @@ class SimpleNER(Pipe):
     ):
         self._ensure_examples(get_examples)
         self._require_labels()
-        all_labels = set()
+        doc_sample = []
+        label_sample = []
         for example in get_examples():
-            all_labels.update(_get_labels(example))
-        for label in sorted(all_labels):
-            self.add_label(label)
-        labels = self.labels
-        n_actions = self.model.attrs["get_num_actions"](len(labels))
-        self.model.set_dim("nO", n_actions)
-        self.model.initialize()
+            for label in _get_labels(example):
+                if label and label not in self.labels:
+                    err = Errors.E920.format(component="simple_ner", label=label)
+                    raise ValueError(err)
+            doc_sample.append(example.x)
+            gold_tags = example.get_aligned_ner()
+            if not self.is_biluo:
+                gold_tags = biluo_to_iob(gold_tags)
+            gold_array = [[1.0 if tag == gold_tag else 0.0 for tag in self.get_tag_names()] for gold_tag in gold_tags]
+            label_sample.append(self.model.ops.asarray(gold_array, dtype="float32"))
+        assert doc_sample
+        assert label_sample
+        self.model.initialize(X=doc_sample, Y=label_sample)
         if pipeline is not None:
             self.init_multitask_objectives(get_examples, pipeline, sgd=sgd, **self.cfg)
         self.loss_func = SequenceCategoricalCrossentropy(

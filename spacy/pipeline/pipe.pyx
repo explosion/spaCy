@@ -178,6 +178,9 @@ cdef class Pipe:
 
     def begin_training(self, get_examples, *, pipeline=None, sgd=None):
         """Initialize the pipe for training, using data examples if available.
+        This method needs to be implemented by each Pipe component,
+        ensuring the internal model (if available) is initialized properly
+        using the provided sample of Example objects.
 
         get_examples (Callable[[], Iterable[Example]]): Function that
             returns a sample of gold-standard Example objects.
@@ -190,10 +193,7 @@ cdef class Pipe:
 
         DOCS: https://nightly.spacy.io/api/pipe#begin_training
         """
-        self.model.initialize()
-        if sgd is None:
-            sgd = self.create_optimizer()
-        return sgd
+        raise NotImplementedError(Errors.E931.format(method="add_label", name=self.name))
 
     def _ensure_examples(self, get_examples):
         if get_examples is None or not hasattr(get_examples, "__call__"):
