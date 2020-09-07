@@ -163,8 +163,8 @@ class Morphologizer(Tagger):
                 gold_array.append([1.0 if label == norm_label else 0.0 for label in self.labels])
             doc_sample.append(example.x)
             label_sample.append(self.model.ops.asarray(gold_array, dtype="float32"))
-        assert len(doc_sample) > 0
-        assert len(label_sample) > 0
+        assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
+        assert len(label_sample) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(X=doc_sample, Y=label_sample)
         if sgd is None:
             sgd = self.create_optimizer()
