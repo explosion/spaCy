@@ -162,8 +162,8 @@ class EntityLinker(Pipe):
         for example in islice(get_examples(), 10):
             doc_sample.append(example.x)
             vector_sample.append(self.model.ops.alloc1f(nO))
-        assert doc_sample
-        assert vector_sample
+        assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
+        assert len(vector_sample) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(X=doc_sample, Y=self.model.ops.asarray(vector_sample, dtype="float32"))
         if sgd is None:
             sgd = self.create_optimizer()

@@ -286,8 +286,8 @@ class Tagger(Pipe):
             gold_tags = example.get_aligned("TAG", as_string=True)
             gold_array = [[1.0 if tag == gold_tag else 0.0 for tag in self.labels] for gold_tag in gold_tags]
             label_sample.append(self.model.ops.asarray(gold_array, dtype="float32"))
-        assert len(doc_sample) > 0
-        assert len(label_sample) > 0
+        assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
+        assert len(label_sample) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(X=doc_sample, Y=label_sample)
         if sgd is None:
             sgd = self.create_optimizer()

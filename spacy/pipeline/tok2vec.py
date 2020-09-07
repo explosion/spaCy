@@ -227,7 +227,7 @@ class Tok2Vec(Pipe):
         doc_sample = []
         for example in islice(get_examples(), 10):
             doc_sample.append(example.x)
-        assert doc_sample
+        assert doc_sample, Errors.E923.format(name=self.name)
         self.model.initialize(X=doc_sample)
 
     def add_label(self, label):

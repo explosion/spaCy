@@ -244,7 +244,7 @@ cdef class Parser(Pipe):
             int nr_class, int batch_size) nogil:
         # n_moves should not be zero at this point, but make sure to avoid zero-length mem alloc
         with gil:
-            assert self.moves.n_moves > 0
+            assert self.moves.n_moves > 0, Errors.E924.format(name=self.name)
         is_valid = <int*>calloc(self.moves.n_moves, sizeof(int))
         cdef int i, guess
         cdef Transition action
@@ -378,7 +378,7 @@ cdef class Parser(Pipe):
         cdef int i
 
         # n_moves should not be zero at this point, but make sure to avoid zero-length mem alloc
-        assert self.moves.n_moves > 0
+        assert self.moves.n_moves > 0, Errors.E924.format(name=self.name)
 
         is_valid = <int*>mem.alloc(self.moves.n_moves, sizeof(int))
         costs = <float*>mem.alloc(self.moves.n_moves, sizeof(float))
@@ -439,7 +439,7 @@ cdef class Parser(Pipe):
         if not doc_sample:
             for example in islice(get_examples(), 10):
                 doc_sample.append(example.predicted)
-        assert len(doc_sample) > 0
+        assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(doc_sample)
         if pipeline is not None:
             self.init_multitask_objectives(get_examples, pipeline, sgd=sgd, **self.cfg)

@@ -343,8 +343,8 @@ class TextCategorizer(Pipe):
                     raise ValueError(err)
         doc_sample = [eg.reference for eg in subbatch]
         label_sample, _ = self._examples_to_truth(subbatch)
-        assert len(doc_sample) > 0
-        assert len(label_sample) > 0
+        assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
+        assert len(label_sample) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(X=doc_sample, Y=label_sample)
         if sgd is None:
             sgd = self.create_optimizer()
