@@ -41,6 +41,7 @@ def test_resize():
     nlp.begin_training()
     assert len(ner.labels) == 2
     ner.add_label("ORG")
+    nlp.begin_training()
     assert len(ner.labels) == 3
     nlp("Example sentence")
 
