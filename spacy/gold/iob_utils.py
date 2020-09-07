@@ -195,13 +195,15 @@ def tags_to_entities(tags):
             continue
         elif tag.startswith("I"):
             if start is None:
-                raise ValueError(Errors.E067.format(tags=tags[: i + 1]))
+                raise ValueError(Errors.E067.format(start="I", tags=tags[: i + 1]))
             continue
         if tag.startswith("U"):
             entities.append((tag[2:], i, i))
         elif tag.startswith("B"):
             start = i
         elif tag.startswith("L"):
+            if start is None:
+                raise ValueError(Errors.E067.format(start="L", tags=tags[: i + 1]))
             entities.append((tag[2:], start, i))
             start = None
         else:

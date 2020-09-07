@@ -243,8 +243,8 @@ class Errors:
             "Query string: {string}\nOrth cached: {orth}\nOrth ID: {orth_id}")
     E065 = ("Only one of the vector table's width and shape can be specified. "
             "Got width {width} and shape {shape}.")
-    E067 = ("Invalid BILUO tag sequence: Got a tag starting with 'I' (inside "
-            "an entity) without a preceding 'B' (beginning of an entity). "
+    E067 = ("Invalid BILUO tag sequence: Got a tag starting with {start} "
+            "without a preceding 'B' (beginning of an entity). "
             "Tag sequence:\n{tags}")
     E068 = ("Invalid BILUO tag: '{tag}'.")
     E071 = ("Error creating lexeme: specified orth ID ({orth}) does not "
