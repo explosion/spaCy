@@ -413,7 +413,7 @@ cdef class Parser(Pipe):
             langs = ", ".join(util.LEXEME_NORM_LANGS)
             util.logger.debug(Warnings.W033.format(model="parser or NER", langs=langs))
         actions = self.moves.get_actions(
-        #    examples=get_examples(),
+            examples=get_examples(),
             min_freq=self.cfg['min_action_freq'],
             learn_tokens=self.cfg["learn_tokens"]
         )

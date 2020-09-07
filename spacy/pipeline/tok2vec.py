@@ -1,6 +1,6 @@
-from itertools import islice
 from typing import Iterator, Sequence, Iterable, Optional, Dict, Callable, List, Tuple
 from thinc.api import Model, set_dropout_rate, Optimizer, Config
+from itertools import islice
 
 from .pipe import Pipe
 from ..gold import Example, validate_examples

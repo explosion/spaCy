@@ -1,11 +1,11 @@
 # cython: infer_types=True, profile=True, binding=True
-from itertools import islice
 from typing import List
 import numpy
 import srsly
 from thinc.api import Model, set_dropout_rate, SequenceCategoricalCrossentropy, Config
 from thinc.types import Floats2d
 import warnings
+from itertools import islice
 
 from ..tokens.doc cimport Doc
 from ..morphology cimport Morphology
