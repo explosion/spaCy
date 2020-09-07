@@ -259,11 +259,11 @@ class Tagger(Pipe):
         return float(loss), d_scores
 
     def begin_training(self, get_examples, *, pipeline=None, sgd=None):
-        """Initialize the pipe for training, using data examples if available.
-        This function assumes that all labels have already been added.
+        """Initialize the pipe for training, using a representative set
+        of data examples.
 
         get_examples (Callable[[], Iterable[Example]]): Function that
-            returns a sample of gold-standard Example objects.
+            returns a representative sample of gold-standard Example objects..
         pipeline (List[Tuple[str, Callable]]): Optional list of pipeline
             components that this component is part of. Corresponds to
             nlp.pipeline.
@@ -274,14 +274,16 @@ class Tagger(Pipe):
         DOCS: https://nightly.spacy.io/api/tagger#begin_training
         """
         self._ensure_examples(get_examples)
-        self._require_labels()
         doc_sample = []
         label_sample = []
-        for example in islice(get_examples(), 10):
+        tags = set()
+        for example in get_examples():
             for token in example.y:
-                if token.tag_ and token.tag_ not in self.labels:
-                    err = Errors.E920.format(component="tagger", label=token.tag_)
-                    raise ValueError(err)
+                if token.tag_:
+                    tags.add(token.tag_)
+        for tag in sorted(tags):
+            self.add_label(tag)
+        for example in islice(get_examples(), 10):
             doc_sample.append(example.x)
             gold_tags = example.get_aligned("TAG", as_string=True)
             gold_array = [[1.0 if tag == gold_tag else 0.0 for tag in self.labels] for gold_tag in gold_tags]

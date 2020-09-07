@@ -163,7 +163,7 @@ cdef class Pipe:
 
     def _require_labels(self) -> None:
         """Raise an error if the component's model has no labels defined."""
-        if not self.labels:
+        if not self.labels or list(self.labels) == [""]:
             raise ValueError(Errors.E143.format(name=self.name))
 
 
@@ -190,7 +190,7 @@ cdef class Pipe:
         using the provided sample of Example objects.
 
         get_examples (Callable[[], Iterable[Example]]): Function that
-            returns a sample of gold-standard Example objects.
+            returns a representative sample of gold-standard Example objects.
         pipeline (List[Tuple[str, Callable]]): Optional list of pipeline
             components that this component is part of. Corresponds to
             nlp.pipeline.

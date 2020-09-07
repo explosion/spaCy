@@ -126,10 +126,11 @@ class SentenceRecognizer(Tagger):
         return float(loss), d_scores
 
     def begin_training(self, get_examples, *, pipeline=None, sgd=None):
-        """Initialize the pipe for training, using data examples if available.
+        """Initialize the pipe for training, using a representative set
+        of data examples.
 
         get_examples (Callable[[], Iterable[Example]]): Function that
-            returns a sample of gold-standard Example objects.
+            returns a representative sample of gold-standard Example objects.
         pipeline (List[Tuple[str, Callable]]): Optional list of pipeline
             components that this component is part of. Corresponds to
             nlp.pipeline.

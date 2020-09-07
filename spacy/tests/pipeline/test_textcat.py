@@ -87,15 +87,13 @@ def test_no_label():
         nlp.begin_training()
 
 
-def test_invalid_label():
+def test_implicit_label():
     nlp = Language()
     textcat = nlp.add_pipe("textcat")
     train_examples = []
-    textcat.add_label("IRRELEVANT")
     for t in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
-    with pytest.raises(ValueError):
-        nlp.begin_training(get_examples=lambda: train_examples)
+    nlp.begin_training(get_examples=lambda: train_examples)
 
 
 def test_no_resize():
@@ -136,9 +134,7 @@ def test_overfitting_IO():
     train_examples = []
     for text, annotations in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
-        for label, value in annotations.get("cats").items():
-            textcat.add_label(label)
-    optimizer = nlp.begin_training()
+    optimizer = nlp.begin_training(get_examples=lambda: train_examples)
     assert textcat.model.get_dim("nO") == 2
 
     for i in range(50):

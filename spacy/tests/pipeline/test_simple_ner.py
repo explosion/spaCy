@@ -11,7 +11,6 @@ TRAIN_DATA = [
 ]
 
 
-
 def test_no_label():
     nlp = English()
     nlp.add_pipe("simple_ner")
@@ -19,15 +18,14 @@ def test_no_label():
         nlp.begin_training()
 
 
-def test_invalid_tag():
+def test_implicit_label():
     nlp = English()
     ner = nlp.add_pipe("simple_ner")
     train_examples = []
     ner.add_label("ORG")
     for t in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
-    with pytest.raises(ValueError):
-        nlp.begin_training(get_examples=lambda: train_examples)
+    nlp.begin_training(get_examples=lambda: train_examples)
 
 
 @pytest.mark.skip(reason="Should be fixed")
@@ -82,9 +80,7 @@ def test_overfitting_IO():
     train_examples = []
     for text, annotations in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
-        for ent in annotations.get("entities"):
-            ner.add_label(ent[2])
-    optimizer = nlp.begin_training()
+    optimizer = nlp.begin_training(get_examples=lambda: train_examples)
 
     for i in range(50):
         losses = {}

@@ -1,3 +1,4 @@
+from itertools import islice
 from typing import Iterable, Tuple, Optional, Dict, List, Callable, Iterator, Any
 from thinc.api import get_array_module, Model, Optimizer, set_dropout_rate, Config
 from thinc.types import Floats2d
@@ -127,7 +128,6 @@ class TextCategorizer(Pipe):
         DOCS: https://nightly.spacy.io/api/textcategorizer#labels
         """
         return tuple(self.cfg.setdefault("labels", []))
-
 
     @labels.setter
     def labels(self, value: Iterable[str]) -> None:
@@ -318,10 +318,11 @@ class TextCategorizer(Pipe):
         pipeline: Optional[List[Tuple[str, Callable[[Doc], Doc]]]] = None,
         sgd: Optional[Optimizer] = None,
     ) -> Optimizer:
-        """Initialize the pipe for training, using data examples if available.
+        """Initialize the pipe for training, using a representative set
+        of data examples.
 
         get_examples (Callable[[], Iterable[Example]]): Function that
-            returns a sample of gold-standard Example objects.
+            returns a representative sample of gold-standard Example objects.
         pipeline (List[Tuple[str, Callable]]): Optional list of pipeline
             components that this component is part of. Corresponds to
             nlp.pipeline.
@@ -332,17 +333,15 @@ class TextCategorizer(Pipe):
         DOCS: https://nightly.spacy.io/api/textcategorizer#begin_training
         """
         self._ensure_examples(get_examples)
-        self._require_labels()
         subbatch = []  # Select a subbatch of examples to initialize the model
-        for example in get_examples():
+        for example in islice(get_examples(), 10):
             if len(subbatch) < 2:
                 subbatch.append(example)
             for cat in example.y.cats:
-                if cat and cat not in self.labels:
-                    err = Errors.E920.format(component="textcat", label=cat)
-                    raise ValueError(err)
+                self.add_label(cat)
         doc_sample = [eg.reference for eg in subbatch]
         label_sample, _ = self._examples_to_truth(subbatch)
+        self._require_labels()
         assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
         assert len(label_sample) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(X=doc_sample, Y=label_sample)

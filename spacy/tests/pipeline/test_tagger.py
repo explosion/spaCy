@@ -54,15 +54,13 @@ def test_no_resize():
         tagger.add_label("J")
 
 
-def test_invalid_label():
+def test_implicit_label():
     nlp = Language()
-    tagger = nlp.add_pipe("tagger")
+    nlp.add_pipe("tagger")
     train_examples = []
-    tagger.add_label("N")
     for t in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
-    with pytest.raises(ValueError):
-        nlp.begin_training(get_examples=lambda: train_examples)
+    nlp.begin_training(get_examples=lambda: train_examples)
 
 
 def test_begin_training_examples():
@@ -93,9 +91,7 @@ def test_overfitting_IO():
     train_examples = []
     for t in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
-    for tag in TAGS:
-        tagger.add_label(tag)
-    optimizer = nlp.begin_training()
+    optimizer = nlp.begin_training(get_examples=lambda: train_examples)
     assert tagger.model.get_dim("nO") == len(TAGS)
 
     for i in range(50):

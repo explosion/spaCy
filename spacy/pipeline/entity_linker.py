@@ -141,10 +141,11 @@ class EntityLinker(Pipe):
         pipeline: Optional[List[Tuple[str, Callable[[Doc], Doc]]]] = None,
         sgd: Optional[Optimizer] = None,
     ) -> Optimizer:
-        """Initialize the pipe for training, using data examples if available.
+        """Initialize the pipe for training, using a representative set
+        of data examples.
 
         get_examples (Callable[[], Iterable[Example]]): Function that
-            returns a sample of gold-standard Example objects.
+            returns a representative sample of gold-standard Example objects.
         pipeline (List[Tuple[str, Callable]]): Optional list of pipeline
             components that this component is part of. Corresponds to
             nlp.pipeline.
@@ -164,7 +165,9 @@ class EntityLinker(Pipe):
             vector_sample.append(self.model.ops.alloc1f(nO))
         assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
         assert len(vector_sample) > 0, Errors.E923.format(name=self.name)
-        self.model.initialize(X=doc_sample, Y=self.model.ops.asarray(vector_sample, dtype="float32"))
+        self.model.initialize(
+            X=doc_sample, Y=self.model.ops.asarray(vector_sample, dtype="float32")
+        )
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
@@ -413,7 +416,7 @@ class EntityLinker(Pipe):
                     token.ent_kb_id_ = kb_id
 
     def to_disk(
-        self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList(),
+        self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList()
     ) -> None:
         """Serialize the pipe to disk.
 
@@ -430,7 +433,7 @@ class EntityLinker(Pipe):
         util.to_disk(path, serialize, exclude)
 
     def from_disk(
-        self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList(),
+        self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList()
     ) -> "EntityLinker":
         """Load the pipe from disk. Modifies the object in place and returns it.
 

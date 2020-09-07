@@ -370,8 +370,9 @@ class Errors:
             "should be of equal length.")
     E141 = ("Entity vectors should be of length {required} instead of the "
             "provided {found}.")
-    E143 = ("Labels for component '{name}' not initialized. Did you forget to "
-            "call add_label()?")
+    E143 = ("Labels for component '{name}' not initialized. This can be fixed "
+            "by calling add_label, or by providing a representative batch of "
+            "examples to the component's begin_training method.")
     E145 = ("Error reading `{param}` from input file.")
     E146 = ("Could not access `{path}`.")
     E147 = ("Unexpected error in the {method} functionality of the "
@@ -472,8 +473,6 @@ class Errors:
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
 
     # TODO: fix numbering after merging develop into master
-    E920 = ("Encountered an unknown label '{label}' in {component}. Did you call "
-            "{component}.add_label('{label}')?")
     E921 = ("The method 'set_output' can only be called on components that have "
             "a Model with a 'resize_output' attribute. Otherwise, the output "
             "layer can not be dynamically changed.")
