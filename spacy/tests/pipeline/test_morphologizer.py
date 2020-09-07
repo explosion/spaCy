@@ -39,6 +39,17 @@ def test_invalid_label():
         nlp.begin_training(get_examples=lambda: train_examples)
 
 
+def test_no_resize():
+    nlp = Language()
+    morphologizer = nlp.add_pipe("morphologizer")
+    morphologizer.add_label("POS" + Morphology.FIELD_SEP + "NOUN")
+    morphologizer.add_label("POS" + Morphology.FIELD_SEP + "VERB")
+    nlp.begin_training()
+    # this throws an error because the morphologizer can't be resized after initialization
+    with pytest.raises(ValueError):
+        morphologizer.add_label("POS" + Morphology.FIELD_SEP + "ADJ")
+
+
 def test_begin_training_examples():
     nlp = Language()
     morphologizer = nlp.add_pipe("morphologizer")

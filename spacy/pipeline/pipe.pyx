@@ -167,6 +167,13 @@ cdef class Pipe:
             raise ValueError(Errors.E143.format(name=self.name))
 
 
+    def _allow_extra_label(self) -> None:
+        """Raise an error if the component can not add any more labels."""
+        if self.model.has_dim("nO") and self.model.get_dim("nO") == len(self.labels):
+            if not self.is_resizable():
+                raise ValueError(Errors.E922.format(name=self.name, nO=self.model.get_dim("nO")))
+
+
     def create_optimizer(self):
         """Create an optimizer for the pipeline component.
 
@@ -203,8 +210,14 @@ cdef class Pipe:
             err = Errors.E930.format(name=self.name, obj=get_examples())
             raise ValueError(err)
 
+    def is_resizable(self):
+        return hasattr(self, "model") and "resize_output" in self.model.attrs
+
     def set_output(self, nO):
-        raise NotImplementedError(Errors.E931.format(method="set_output", name=self.name))
+        if self.is_resizable():
+            self.model.attrs["resize_output"](self.model, nO)
+        else:
+            raise NotImplementedError(Errors.E921)
 
     def use_params(self, params):
         """Modify the pipe's model, to use the given parameter values. At the

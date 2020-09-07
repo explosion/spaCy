@@ -307,17 +307,7 @@ class TextCategorizer(Pipe):
             raise ValueError(Errors.E187)
         if label in self.labels:
             return 0
-        if self.model.has_dim("nO"):
-            # This functionality was available previously, but was broken.
-            # The problem is that we resize the last layer, but the last layer
-            # is actually just an ensemble. We're not resizing the child layers
-            # - a huge problem.
-            raise ValueError(Errors.E116)
-            # smaller = self.model._layers[-1]
-            # larger = Linear(len(self.labels)+1, smaller.nI)
-            # copy_array(larger.W[:smaller.nO], smaller.W)
-            # copy_array(larger.b[:smaller.nO], smaller.b)
-            # self.model._layers[-1] = larger
+        self._allow_extra_label()
         self.labels = tuple(list(self.labels) + [label])
         return 1
 

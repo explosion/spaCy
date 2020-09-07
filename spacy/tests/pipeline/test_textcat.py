@@ -98,6 +98,18 @@ def test_invalid_label():
         nlp.begin_training(get_examples=lambda: train_examples)
 
 
+def test_no_resize():
+    nlp = Language()
+    textcat = nlp.add_pipe("textcat")
+    textcat.add_label("POSITIVE")
+    textcat.add_label("NEGATIVE")
+    nlp.begin_training()
+    assert textcat.model.get_dim("nO") == 2
+    # this throws an error because the textcat can't be resized after initialization
+    with pytest.raises(ValueError):
+        textcat.add_label("NEUTRAL")
+
+
 def test_begin_training_examples():
     nlp = Language()
     textcat = nlp.add_pipe("textcat")

@@ -305,6 +305,7 @@ class Tagger(Pipe):
             raise ValueError(Errors.E187)
         if label in self.labels:
             return 0
+        self._allow_extra_label()
         self.cfg["labels"].append(label)
         self.vocab.strings.add(label)
         return 1

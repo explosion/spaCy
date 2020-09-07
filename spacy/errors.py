@@ -316,10 +316,6 @@ class Errors:
             "So instead of pickling the span, pickle the Doc it belongs to or "
             "use Span.as_doc to convert the span to a standalone Doc object.")
     E115 = ("All subtokens must have associated heads.")
-    E116 = ("Cannot currently add labels to pretrained text classifier. Add "
-            "labels before training begins. This functionality was available "
-            "in previous versions, but had significant bugs that led to poor "
-            "performance.")
     E117 = ("The newly split tokens must match the text of the original token. "
             "New orths: {new}. Old text: {old}.")
     E118 = ("The custom extension attribute '{attr}' is not registered on the "
@@ -478,6 +474,11 @@ class Errors:
     # TODO: fix numbering after merging develop into master
     E920 = ("Encountered an unknown label '{label}' in {component}. Did you call "
             "{component}.add_label('{label}')?")
+    E921 = ("The method 'set_output' can only be called on components that have "
+            "a Model with a 'resize_output' attribute. Otherwise, the output "
+            "layer can not be dynamically changed.")
+    E922 = ("Component '{name}' has been initialized with an output dimension of "
+            "{nO} - cannot add any more labels.")
     E925 = ("Invalid color values for displaCy visualizer: expected dictionary "
             "mapping label names to colors but got: {obj}")
     E926 = ("It looks like you're trying to modify nlp.{attr} directly. This "

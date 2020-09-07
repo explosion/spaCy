@@ -113,6 +113,7 @@ class Morphologizer(Tagger):
             raise ValueError(Errors.E187)
         if label in self.labels:
             return 0
+        self._allow_extra_label()
         # normalize label
         norm_label = self.vocab.morphology.normalize_features(label)
         # extract separate POS and morph tags

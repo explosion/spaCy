@@ -41,7 +41,20 @@ def test_no_label():
         nlp.begin_training()
 
 
-def test_invalid_tag():
+def test_no_resize():
+    nlp = Language()
+    tagger = nlp.add_pipe("tagger")
+    tagger.add_label("N")
+    tagger.add_label("V")
+    assert tagger.labels == ("N", "V")
+    nlp.begin_training()
+    assert tagger.model.get_dim("nO") == 2
+    # this throws an error because the tagger can't be resized after initialization
+    with pytest.raises(ValueError):
+        tagger.add_label("J")
+
+
+def test_invalid_label():
     nlp = Language()
     tagger = nlp.add_pipe("tagger")
     train_examples = []
