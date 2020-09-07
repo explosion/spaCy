@@ -203,12 +203,8 @@ cdef class Pipe:
             err = Errors.E930.format(name=self.name, obj=get_examples())
             raise ValueError(err)
 
-
     def set_output(self, nO):
-        if self.model.has_dim("nO") is not False:
-            self.model.set_dim("nO", nO)
-        if self.model.has_ref("output_layer"):
-            self.model.get_ref("output_layer").set_dim("nO", nO)
+        raise NotImplementedError(Errors.E931.format(method="set_output", name=self.name))
 
     def use_params(self, params):
         """Modify the pipe's model, to use the given parameter values. At the

@@ -351,11 +351,11 @@ class TextCategorizer(Pipe):
                 if cat and cat not in self.labels:
                     err = Errors.E920.format(component="textcat", label=cat)
                     raise ValueError(err)
-        docs = [eg.reference for eg in subbatch]
-        if not docs:  # need at least one doc
-            docs = [Doc(self.vocab, words=["hello"])]
-        truths, _ = self._examples_to_truth(subbatch)
-        self.model.initialize(X=docs, Y=truths)
+        doc_sample = [eg.reference for eg in subbatch]
+        label_sample, _ = self._examples_to_truth(subbatch)
+        assert len(doc_sample) > 0
+        assert len(label_sample) > 0
+        self.model.initialize(X=doc_sample, Y=label_sample)
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd

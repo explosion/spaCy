@@ -413,7 +413,7 @@ cdef class Parser(Pipe):
             langs = ", ".join(util.LEXEME_NORM_LANGS)
             util.logger.debug(Warnings.W033.format(model="parser or NER", langs=langs))
         actions = self.moves.get_actions(
-            examples=get_examples(),
+        #    examples=get_examples(),
             min_freq=self.cfg['min_action_freq'],
             learn_tokens=self.cfg["learn_tokens"]
         )
@@ -428,9 +428,6 @@ cdef class Parser(Pipe):
         if sgd is None:
             sgd = self.create_optimizer()
         doc_sample = []
-        for example in islice(get_examples(), 10):
-            doc_sample.append(example.predicted)
-
         if pipeline is not None:
             for name, component in pipeline:
                 if component is self:
@@ -439,10 +436,11 @@ cdef class Parser(Pipe):
                     doc_sample = list(component.pipe(doc_sample, batch_size=8))
                 else:
                     doc_sample = [component(doc) for doc in doc_sample]
-        if doc_sample:
-            self.model.initialize(doc_sample)
-        else:
-            self.model.initialize()
+        if not doc_sample:
+            for example in islice(get_examples(), 10):
+                doc_sample.append(example.predicted)
+        assert len(doc_sample) > 0
+        self.model.initialize(doc_sample)
         if pipeline is not None:
             self.init_multitask_objectives(get_examples, pipeline, sgd=sgd, **self.cfg)
         return sgd

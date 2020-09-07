@@ -1,3 +1,4 @@
+from itertools import islice
 from typing import List, Iterable, Optional, Dict, Tuple, Callable, Set
 from thinc.types import Floats2d
 from thinc.api import SequenceCategoricalCrossentropy, set_dropout_rate, Model
@@ -172,7 +173,7 @@ class SimpleNER(Pipe):
         self._require_labels()
         doc_sample = []
         label_sample = []
-        for example in get_examples():
+        for example in islice(get_examples(), 10):
             for label in _get_labels(example):
                 if label and label not in self.labels:
                     err = Errors.E920.format(component="simple_ner", label=label)
@@ -183,8 +184,8 @@ class SimpleNER(Pipe):
                 gold_tags = biluo_to_iob(gold_tags)
             gold_array = [[1.0 if tag == gold_tag else 0.0 for tag in self.get_tag_names()] for gold_tag in gold_tags]
             label_sample.append(self.model.ops.asarray(gold_array, dtype="float32"))
-        assert doc_sample
-        assert label_sample
+        assert len(doc_sample) > 0
+        assert len(label_sample) > 0
         self.model.initialize(X=doc_sample, Y=label_sample)
         if pipeline is not None:
             self.init_multitask_objectives(get_examples, pipeline, sgd=sgd, **self.cfg)
