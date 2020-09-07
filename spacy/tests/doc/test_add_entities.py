@@ -1,10 +1,17 @@
+from spacy.gold import Example
 from spacy.pipeline import EntityRecognizer
-from spacy.tokens import Span
+from spacy.tokens import Span, Doc
 from spacy import registry
 import pytest
 
 from ..util import get_doc
 from spacy.pipeline.ner import DEFAULT_NER_MODEL
+
+
+def _ner_example(ner):
+    doc = Doc(ner.vocab, words=["Joe", "loves", "visiting", "London", "during", "the", "weekend"])
+    gold = {"entities": [(0, 3, "PERSON"), (19, 25, "LOC")]}
+    return Example.from_dict(doc, gold)
 
 
 def test_doc_add_entities_set_ents_iob(en_vocab):
@@ -18,7 +25,7 @@ def test_doc_add_entities_set_ents_iob(en_vocab):
     cfg = {"model": DEFAULT_NER_MODEL}
     model = registry.make_from_config(cfg, validate=True)["model"]
     ner = EntityRecognizer(en_vocab, model, **config)
-    ner.begin_training(lambda: [])
+    ner.begin_training(lambda: [_ner_example(ner)])
     ner(doc)
     assert len(list(doc.ents)) == 0
     assert [w.ent_iob_ for w in doc] == (["O"] * len(doc))
@@ -41,7 +48,7 @@ def test_ents_reset(en_vocab):
     cfg = {"model": DEFAULT_NER_MODEL}
     model = registry.make_from_config(cfg, validate=True)["model"]
     ner = EntityRecognizer(en_vocab, model, **config)
-    ner.begin_training(lambda: [])
+    ner.begin_training(lambda: [_ner_example(ner)])
     ner(doc)
     assert [t.ent_iob_ for t in doc] == (["O"] * len(doc))
     doc.ents = list(doc.ents)
