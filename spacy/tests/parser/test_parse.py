@@ -3,7 +3,7 @@ import pytest
 from spacy.lang.en import English
 from ..util import get_doc, apply_transition_sequence, make_tempdir
 from ... import util
-from ...gold import Example
+from ...training import Example
 
 TRAIN_DATA = [
     (

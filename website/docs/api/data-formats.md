@@ -175,7 +175,7 @@ run [`spacy pretrain`](/api/cli#pretrain).
 >
 > ```python
 > from spacy.tokens import DocBin
-> from spacy.gold import Corpus
+> from spacy.training import Corpus
 >
 > doc_bin = DocBin(docs=docs)
 > doc_bin.to_disk("./data.spacy")

@@ -6,7 +6,7 @@ from spacy.ml.models.tok2vec import MishWindowEncoder, MaxoutWindowEncoder
 from spacy.pipeline.tok2vec import Tok2Vec, Tok2VecListener
 from spacy.vocab import Vocab
 from spacy.tokens import Doc
-from spacy.gold import Example
+from spacy.training import Example
 from spacy import util
 from spacy.lang.en import English
 from .util import get_batch

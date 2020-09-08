@@ -1,6 +1,6 @@
 import pytest
 from spacy import displacy
-from spacy.gold import Example
+from spacy.training import Example
 from spacy.lang.en import English
 from spacy.lang.ja import Japanese
 from spacy.lang.xx import MultiLanguage

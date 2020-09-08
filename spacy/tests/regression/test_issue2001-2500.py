@@ -3,7 +3,7 @@ import numpy
 from spacy.tokens import Doc
 from spacy.matcher import Matcher
 from spacy.displacy import render
-from spacy.gold import iob_to_biluo
+from spacy.training import iob_to_biluo
 from spacy.lang.it import Italian
 from spacy.lang.en import English
 

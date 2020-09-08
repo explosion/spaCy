@@ -10,7 +10,7 @@ from spacy.tokens import Doc
 from spacy.pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
 
 from ..util import make_tempdir
-from ...gold import Example
+from ...training import Example
 
 
 TRAIN_DATA = [

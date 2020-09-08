@@ -66,7 +66,7 @@ class Warnings:
             "in problems with the vocab further on in the pipeline.")
     W030 = ("Some entities could not be aligned in the text \"{text}\" with "
             "entities \"{entities}\". Use "
-            "`spacy.gold.biluo_tags_from_offsets(nlp.make_doc(text), entities)`"
+            "`spacy.training.biluo_tags_from_offsets(nlp.make_doc(text), entities)`"
             " to check the alignment. Misaligned entities ('-') will be "
             "ignored during training.")
     W033 = ("Training a new {model} using a model with no lexeme normalization "

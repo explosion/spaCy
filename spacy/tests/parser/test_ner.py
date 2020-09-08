@@ -4,7 +4,7 @@ from spacy.lang.en import English
 from spacy.language import Language
 from spacy.lookups import Lookups
 from spacy.pipeline._parser_internals.ner import BiluoPushDown
-from spacy.gold import Example
+from spacy.training import Example
 from spacy.tokens import Doc
 from spacy.vocab import Vocab
 import logging

@@ -1500,7 +1500,7 @@ add those entities to the `doc.ents`, you can wrap it in a custom pipeline
 component function and pass it the token texts from the `Doc` object received by
 the component.
 
-The [`gold.spans_from_biluo_tags`](/api/top-level#spans_from_biluo_tags) is very
+The [`training.spans_from_biluo_tags`](/api/top-level#spans_from_biluo_tags) is very
 helpful here, because it takes a `Doc` object and token-based BILUO tags and
 returns a sequence of `Span` objects in the `Doc` with added labels. So all your
 wrapper has to do is compute the entity spans and overwrite the `doc.ents`.
@@ -1515,7 +1515,7 @@ wrapper has to do is compute the entity spans and overwrite the `doc.ents`.
 ```python
 ### {highlight="1,8-9"}
 import your_custom_entity_recognizer
-from spacy.gold import offsets_from_biluo_tags
+from spacy.training import offsets_from_biluo_tags
 from spacy.language import Language
 
 @Language.component("custom_ner_wrapper")

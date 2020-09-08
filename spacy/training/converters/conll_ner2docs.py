@@ -1,7 +1,7 @@
 from wasabi import Printer
 
 from .. import tags_to_entities
-from ...gold import iob_to_biluo
+from ...training import iob_to_biluo
 from ...lang.xx import MultiLanguage
 from ...tokens import Doc, Span
 from ...util import load_model

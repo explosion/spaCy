@@ -16,7 +16,7 @@ from .pipe import deserialize_config
 from .tagger import Tagger
 from .. import util
 from ..scorer import Scorer
-from ..gold import validate_examples
+from ..training import validate_examples
 
 
 default_model_config = """

@@ -3,7 +3,7 @@ import gc
 import numpy
 import copy
 
-from spacy.gold import Example
+from spacy.training import Example
 from spacy.lang.en import English
 from spacy.lang.en.stop_words import STOP_WORDS
 from spacy.lang.lex_attrs import is_stop

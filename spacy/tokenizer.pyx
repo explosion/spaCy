@@ -24,7 +24,7 @@ from .util import registry
 from .attrs import intify_attrs
 from .symbols import ORTH
 from .scorer import Scorer
-from .gold import validate_examples
+from .training import validate_examples
 
 
 cdef class Tokenizer:

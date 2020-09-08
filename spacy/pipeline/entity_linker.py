@@ -12,7 +12,7 @@ from ..tokens import Doc
 from .pipe import Pipe, deserialize_config
 from ..language import Language
 from ..vocab import Vocab
-from ..gold import Example, validate_examples
+from ..training import Example, validate_examples
 from ..errors import Errors, Warnings
 from ..util import SimpleFrozenList
 from .. import util

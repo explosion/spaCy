@@ -6,8 +6,8 @@ from thinc.util import to_numpy
 from itertools import islice
 
 from ..errors import Errors
-from ..gold import Example, spans_from_biluo_tags, iob_to_biluo, biluo_to_iob
-from ..gold import validate_examples
+from ..training import Example, spans_from_biluo_tags, iob_to_biluo, biluo_to_iob
+from ..training import validate_examples
 from ..tokens import Doc
 from ..language import Language
 from ..vocab import Vocab
