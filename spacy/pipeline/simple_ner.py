@@ -3,6 +3,7 @@ from thinc.types import Floats2d
 from thinc.api import SequenceCategoricalCrossentropy, set_dropout_rate, Model
 from thinc.api import Optimizer, Config
 from thinc.util import to_numpy
+from itertools import islice
 
 from ..errors import Errors
 from ..gold import Example, spans_from_biluo_tags, iob_to_biluo, biluo_to_iob
@@ -168,18 +169,29 @@ class SimpleNER(Pipe):
         pipeline: Optional[List[Tuple[str, Callable[[Doc], Doc]]]] = None,
         sgd: Optional[Optimizer] = None,
     ):
+        self._ensure_examples(get_examples)
         all_labels = set()
-        if not hasattr(get_examples, "__call__"):
-            err = Errors.E930.format(name="SimpleNER", obj=type(get_examples))
-            raise ValueError(err)
         for example in get_examples():
             all_labels.update(_get_labels(example))
         for label in sorted(all_labels):
-            self.add_label(label)
-        labels = self.labels
-        n_actions = self.model.attrs["get_num_actions"](len(labels))
-        self.model.set_dim("nO", n_actions)
-        self.model.initialize()
+            if label != "":
+                self.add_label(label)
+        doc_sample = []
+        label_sample = []
+        self._require_labels()
+        for example in islice(get_examples(), 10):
+            doc_sample.append(example.x)
+            gold_tags = example.get_aligned_ner()
+            if not self.is_biluo:
+                gold_tags = biluo_to_iob(gold_tags)
+            gold_array = [
+                [1.0 if tag == gold_tag else 0.0 for tag in self.get_tag_names()]
+                for gold_tag in gold_tags
+            ]
+            label_sample.append(self.model.ops.asarray(gold_array, dtype="float32"))
+        assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
+        assert len(label_sample) > 0, Errors.E923.format(name=self.name)
+        self.model.initialize(X=doc_sample, Y=label_sample)
         if pipeline is not None:
             self.init_multitask_objectives(get_examples, pipeline, sgd=sgd, **self.cfg)
         self.loss_func = SequenceCategoricalCrossentropy(
@@ -206,6 +218,6 @@ def _has_ner(example: Example) -> bool:
 def _get_labels(example: Example) -> Set[str]:
     labels = set()
     for ner_tag in example.get_aligned("ENT_TYPE", as_string=True):
-        if ner_tag != "O" and ner_tag != "-":
+        if ner_tag != "O" and ner_tag != "-" and ner_tag != "":
             labels.add(ner_tag)
     return labels

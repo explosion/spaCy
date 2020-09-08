@@ -656,7 +656,7 @@ class Language:
         return resolved[factory_name]
 
     def create_pipe_from_source(
-        self, source_name: str, source: "Language", *, name: str,
+        self, source_name: str, source: "Language", *, name: str
     ) -> Tuple[Callable[[Doc], Doc], str]:
         """Create a pipeline component by copying it from an existing model.
 
@@ -1155,21 +1155,24 @@ class Language:
 
         DOCS: https://nightly.spacy.io/api/language#begin_training
         """
-        # TODO: throw warning when get_gold_tuples is provided instead of get_examples
         if get_examples is None:
-            get_examples = lambda: []
-        else:  # Populate vocab
-            if not hasattr(get_examples, "__call__"):
-                err = Errors.E930.format(name="Language", obj=type(get_examples))
+            util.logger.debug(
+                "No 'get_examples' callback provided to 'Language.begin_training', creating dummy examples"
+            )
+            doc = Doc(self.vocab, words=["x", "y", "z"])
+            get_examples = lambda: [Example.from_dict(doc, {})]
+        # Populate vocab
+        if not hasattr(get_examples, "__call__"):
+            err = Errors.E930.format(name="Language", obj=type(get_examples))
+            raise ValueError(err)
+        for example in get_examples():
+            if not isinstance(example, Example):
+                err = Errors.E978.format(
+                    name="Language.begin_training", types=type(example)
+                )
                 raise ValueError(err)
-            for example in get_examples():
-                if not isinstance(example, Example):
-                    err = Errors.E978.format(
-                        name="Language.begin_training", types=type(example)
-                    )
-                    raise ValueError(err)
-                for word in [t.text for t in example.reference]:
-                    _ = self.vocab[word]  # noqa: F841
+            for word in [t.text for t in example.reference]:
+                _ = self.vocab[word]  # noqa: F841
         if device >= 0:  # TODO: do we need this here?
             require_gpu(device)
             if self.vocab.vectors.data.shape[1] >= 1:
@@ -1187,7 +1190,7 @@ class Language:
         return self._optimizer
 
     def resume_training(
-        self, *, sgd: Optional[Optimizer] = None, device: int = -1,
+        self, *, sgd: Optional[Optimizer] = None, device: int = -1
     ) -> Optimizer:
         """Continue training a pretrained model.
 

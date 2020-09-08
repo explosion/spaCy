@@ -1,3 +1,4 @@
+from itertools import islice
 from typing import Iterable, Tuple, Optional, Dict, List, Callable, Iterator, Any
 from thinc.api import get_array_module, Model, Optimizer, set_dropout_rate, Config
 from thinc.types import Floats2d
@@ -127,11 +128,6 @@ class TextCategorizer(Pipe):
         DOCS: https://nightly.spacy.io/api/textcategorizer#labels
         """
         return tuple(self.cfg.setdefault("labels", []))
-
-    def require_labels(self) -> None:
-        """Raise an error if the component's model has no labels defined."""
-        if not self.labels:
-            raise ValueError(Errors.E143.format(name=self.name))
 
     @labels.setter
     def labels(self, value: Iterable[str]) -> None:
@@ -311,17 +307,7 @@ class TextCategorizer(Pipe):
             raise ValueError(Errors.E187)
         if label in self.labels:
             return 0
-        if self.model.has_dim("nO"):
-            # This functionality was available previously, but was broken.
-            # The problem is that we resize the last layer, but the last layer
-            # is actually just an ensemble. We're not resizing the child layers
-            # - a huge problem.
-            raise ValueError(Errors.E116)
-            # smaller = self.model._layers[-1]
-            # larger = Linear(len(self.labels)+1, smaller.nI)
-            # copy_array(larger.W[:smaller.nO], smaller.W)
-            # copy_array(larger.b[:smaller.nO], smaller.b)
-            # self.model._layers[-1] = larger
+        self._allow_extra_label()
         self.labels = tuple(list(self.labels) + [label])
         return 1
 
@@ -332,10 +318,11 @@ class TextCategorizer(Pipe):
         pipeline: Optional[List[Tuple[str, Callable[[Doc], Doc]]]] = None,
         sgd: Optional[Optimizer] = None,
     ) -> Optimizer:
-        """Initialize the pipe for training, using data examples if available.
+        """Initialize the pipe for training, using a representative set
+        of data examples.
 
-        get_examples (Callable[[], Iterable[Example]]): Optional function that
-            returns gold-standard Example objects.
+        get_examples (Callable[[], Iterable[Example]]): Function that
+            returns a representative sample of gold-standard Example objects.
         pipeline (List[Tuple[str, Callable]]): Optional list of pipeline
             components that this component is part of. Corresponds to
             nlp.pipeline.
@@ -345,22 +332,19 @@ class TextCategorizer(Pipe):
 
         DOCS: https://nightly.spacy.io/api/textcategorizer#begin_training
         """
-        if not hasattr(get_examples, "__call__"):
-            err = Errors.E930.format(name="TextCategorizer", obj=type(get_examples))
-            raise ValueError(err)
+        self._ensure_examples(get_examples)
         subbatch = []  # Select a subbatch of examples to initialize the model
-        for example in get_examples():
+        for example in islice(get_examples(), 10):
             if len(subbatch) < 2:
                 subbatch.append(example)
             for cat in example.y.cats:
                 self.add_label(cat)
-        self.require_labels()
-        docs = [eg.reference for eg in subbatch]
-        if not docs:  # need at least one doc
-            docs = [Doc(self.vocab, words=["hello"])]
-        truths, _ = self._examples_to_truth(subbatch)
-        self.set_output(len(self.labels))
-        self.model.initialize(X=docs, Y=truths)
+        doc_sample = [eg.reference for eg in subbatch]
+        label_sample, _ = self._examples_to_truth(subbatch)
+        self._require_labels()
+        assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
+        assert len(label_sample) > 0, Errors.E923.format(name=self.name)
+        self.model.initialize(X=doc_sample, Y=label_sample)
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd

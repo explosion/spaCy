@@ -85,7 +85,7 @@ def test_parser_merge_pp(en_tokenizer):
     pos = ["DET", "NOUN", "ADP", "DET", "NOUN", "VERB"]
     tokens = en_tokenizer(text)
     doc = get_doc(
-        tokens.vocab, words=[t.text for t in tokens], deps=deps, heads=heads, pos=pos,
+        tokens.vocab, words=[t.text for t in tokens], deps=deps, heads=heads, pos=pos
     )
     with doc.retokenize() as retokenizer:
         for np in doc.noun_chunks:

@@ -14,6 +14,12 @@ def vocab():
     return Vocab(lex_attr_getters={NORM: lambda s: s})
 
 
+def _parser_example(parser):
+    doc = Doc(parser.vocab, words=["a", "b", "c", "d"])
+    gold = {"heads": [1, 1, 3, 3], "deps": ["right", "ROOT", "left", "ROOT"]}
+    return Example.from_dict(doc, gold)
+
+
 @pytest.fixture
 def parser(vocab):
     config = {
@@ -28,7 +34,7 @@ def parser(vocab):
     parser.cfg["hidden_width"] = 32
     # parser.add_label('right')
     parser.add_label("left")
-    parser.begin_training(lambda: [], **parser.cfg)
+    parser.begin_training(lambda: [_parser_example(parser)], **parser.cfg)
     sgd = Adam(0.001)
 
     for i in range(10):
