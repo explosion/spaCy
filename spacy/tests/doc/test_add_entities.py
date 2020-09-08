@@ -35,6 +35,25 @@ def test_doc_add_entities_set_ents_iob(en_vocab):
     assert [w.ent_iob_ for w in doc] == ["B", "I", "O", "O"]
 
 
+def test_ents_reset(en_vocab):
+    """Ensure that resetting doc.ents does not change anything"""
+    text = ["This", "is", "a", "lion"]
+    doc = get_doc(en_vocab, text)
+    config = {
+        "learn_tokens": False,
+        "min_action_freq": 30,
+        "update_with_oracle_cut_size": 100,
+    }
+    cfg = {"model": DEFAULT_NER_MODEL}
+    model = registry.make_from_config(cfg, validate=True)["model"]
+    ner = EntityRecognizer(en_vocab, model, **config)
+    ner.begin_training(lambda: [_ner_example(ner)])
+    ner(doc)
+    orig_iobs = [t.ent_iob_ for t in doc]
+    doc.ents = list(doc.ents)
+    assert [t.ent_iob_ for t in doc] == orig_iobs
+
+
 def test_add_overlapping_entities(en_vocab):
     text = ["Louisiana", "Office", "of", "Conservation"]
     doc = get_doc(en_vocab, text)
