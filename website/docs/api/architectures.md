@@ -181,10 +181,10 @@ characters would be `"jumpping"`: 4 from the start, 4 from the end. This ensures
 that the final character is always in the last position, instead of being in an
 arbitrary position depending on the word length.
 
-The characters are embedded in a embedding table with 256 rows, and the vectors
-concatenated. A hash-embedded vector of the `NORM` of the word is also
-concatenated on, and the result is then passed through a feed-forward network to
-construct a single vector to represent the information.
+The characters are embedded in a embedding table with a given number of rows,
+and the vectors concatenated. A hash-embedded vector of the `NORM` of the word
+is also concatenated on, and the result is then passed through a feed-forward
+network to construct a single vector to represent the information.
 
 | Name        | Description                                                                                                                                                     |
 | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
