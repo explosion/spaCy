@@ -330,7 +330,7 @@ custom component entirely (more details on this in the section on
 ```python
 nlp.remove_pipe("parser")
 nlp.rename_pipe("ner", "entityrecognizer")
-nlp.replace_pipe("tagger", my_custom_tagger)
+nlp.replace_pipe("tagger", "my_custom_tagger")
 ```
 
 The `Language` object exposes different [attributes](/api/language#attributes)
