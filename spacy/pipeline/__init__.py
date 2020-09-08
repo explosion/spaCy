@@ -8,7 +8,6 @@ from .morphologizer import Morphologizer
 from .pipe import Pipe
 from .senter import SentenceRecognizer
 from .sentencizer import Sentencizer
-from .simple_ner import SimpleNER
 from .tagger import Tagger
 from .textcat import TextCategorizer
 from .tok2vec import Tok2Vec
@@ -25,7 +24,6 @@ __all__ = [
     "Pipe",
     "SentenceRecognizer",
     "Sentencizer",
-    "SimpleNER",
     "Tagger",
     "TextCategorizer",
     "Tok2Vec",
