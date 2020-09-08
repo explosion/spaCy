@@ -343,8 +343,9 @@ cdef class Tokenizer:
                     for j in range(cached.length):
                         tokens[i + offset + j] = cached.data.tokens[j]
                         tokens[i + offset + j].idx = orig_idx + idx_offset
-                        idx_offset += cached.data.tokens[j].lex.length + \
-                                1 if cached.data.tokens[j].spacy else 0
+                        idx_offset += cached.data.tokens[j].lex.length
+                        if cached.data.tokens[j].spacy:
+                            idx_offset += 1
                     tokens[i + offset + cached.length - 1].spacy = orig_final_spacy
                     i += span_end - span_start
                     offset += span[3]
