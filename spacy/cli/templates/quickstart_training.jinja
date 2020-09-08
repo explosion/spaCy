@@ -29,7 +29,7 @@ name = "{{ transformer["name"] }}"
 tokenizer_config = {"use_fast": true}
 
 [components.transformer.model.get_spans]
-@span_getters = "strided_spans.v1"
+@span_getters = "spacy-transformers.strided_spans.v1"
 window = 128
 stride = 96
 
@@ -186,11 +186,14 @@ accumulate_gradient = {{ transformer["size_factor"] }}
 [training.optimizer]
 @optimizers = "Adam.v1"
 
+
+{% if use_transformer -%}
 [training.optimizer.learn_rate]
 @schedules = "warmup_linear.v1"
 warmup_steps = 250
 total_steps = 20000
 initial_rate = 5e-5
+{% endif %}
 
 [training.train_corpus]
 @readers = "spacy.Corpus.v1"
@@ -204,13 +207,13 @@ max_length = 0
 
 {% if use_transformer %}
 [training.batcher]
-@batchers = "batch_by_padded.v1"
+@batchers = "spacy.batch_by_padded.v1"
 discard_oversize = true
 size = 2000
 buffer = 256
 {%- else %}
 [training.batcher]
-@batchers = "batch_by_words.v1"
+@batchers = "spacy.batch_by_words.v1"
 discard_oversize = false
 tolerance = 0.2
 

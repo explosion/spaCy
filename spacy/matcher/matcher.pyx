@@ -31,8 +31,8 @@ DEF PADDING = 5
 cdef class Matcher:
     """Match sequences of tokens, based on pattern rules.
 
-    DOCS: https://spacy.io/api/matcher
-    USAGE: https://spacy.io/usage/rule-based-matching
+    DOCS: https://nightly.spacy.io/api/matcher
+    USAGE: https://nightly.spacy.io/usage/rule-based-matching
     """
 
     def __init__(self, vocab, validate=True):
@@ -829,9 +829,11 @@ def _get_extra_predicates(spec, extra_predicates):
                 attr = "ORTH"
             attr = IDS.get(attr.upper())
         if isinstance(value, dict):
+            processed = False
+            value_with_upper_keys = {k.upper(): v for k, v in value.items()}
             for type_, cls in predicate_types.items():
-                if type_ in value:
-                    predicate = cls(len(extra_predicates), attr, value[type_], type_)
+                if type_ in value_with_upper_keys:
+                    predicate = cls(len(extra_predicates), attr, value_with_upper_keys[type_], type_)
                     # Don't create a redundant predicates.
                     # This helps with efficiency, as we're caching the results.
                     if predicate.key in seen_predicates:
@@ -840,6 +842,9 @@ def _get_extra_predicates(spec, extra_predicates):
                         extra_predicates.append(predicate)
                         output.append(predicate.i)
                         seen_predicates[predicate.key] = predicate.i
+                    processed = True
+            if not processed:
+                warnings.warn(Warnings.W035.format(pattern=value))
     return output
 
 

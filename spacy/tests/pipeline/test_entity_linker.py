@@ -137,7 +137,7 @@ def test_kb_undefined(nlp):
 
 def test_kb_empty(nlp):
     """Test that the EL can't train with an empty KB"""
-    config = {"kb_loader": {"@assets": "spacy.EmptyKB.v1", "entity_vector_length": 342}}
+    config = {"kb_loader": {"@misc": "spacy.EmptyKB.v1", "entity_vector_length": 342}}
     entity_linker = nlp.add_pipe("entity_linker", config=config)
     assert len(entity_linker.kb) == 0
     with pytest.raises(ValueError):
@@ -183,7 +183,7 @@ def test_el_pipe_configuration(nlp):
     ruler = nlp.add_pipe("entity_ruler")
     ruler.add_patterns([pattern])
 
-    @registry.assets.register("myAdamKB.v1")
+    @registry.misc.register("myAdamKB.v1")
     def mykb() -> Callable[["Vocab"], KnowledgeBase]:
         def create_kb(vocab):
             kb = KnowledgeBase(vocab, entity_vector_length=1)
@@ -199,7 +199,7 @@ def test_el_pipe_configuration(nlp):
     # run an EL pipe without a trained context encoder, to check the candidate generation step only
     nlp.add_pipe(
         "entity_linker",
-        config={"kb_loader": {"@assets": "myAdamKB.v1"}, "incl_context": False},
+        config={"kb_loader": {"@misc": "myAdamKB.v1"}, "incl_context": False},
     )
     # With the default get_candidates function, matching is case-sensitive
     text = "Douglas and douglas are not the same."
@@ -211,7 +211,7 @@ def test_el_pipe_configuration(nlp):
     def get_lowercased_candidates(kb, span):
         return kb.get_alias_candidates(span.text.lower())
 
-    @registry.assets.register("spacy.LowercaseCandidateGenerator.v1")
+    @registry.misc.register("spacy.LowercaseCandidateGenerator.v1")
     def create_candidates() -> Callable[[KnowledgeBase, "Span"], Iterable[Candidate]]:
         return get_lowercased_candidates
 
@@ -220,9 +220,9 @@ def test_el_pipe_configuration(nlp):
         "entity_linker",
         "entity_linker",
         config={
-            "kb_loader": {"@assets": "myAdamKB.v1"},
+            "kb_loader": {"@misc": "myAdamKB.v1"},
             "incl_context": False,
-            "get_candidates": {"@assets": "spacy.LowercaseCandidateGenerator.v1"},
+            "get_candidates": {"@misc": "spacy.LowercaseCandidateGenerator.v1"},
         },
     )
     doc = nlp(text)
@@ -282,7 +282,7 @@ def test_append_invalid_alias(nlp):
 def test_preserving_links_asdoc(nlp):
     """Test that Span.as_doc preserves the existing entity links"""
 
-    @registry.assets.register("myLocationsKB.v1")
+    @registry.misc.register("myLocationsKB.v1")
     def dummy_kb() -> Callable[["Vocab"], KnowledgeBase]:
         def create_kb(vocab):
             mykb = KnowledgeBase(vocab, entity_vector_length=1)
@@ -304,7 +304,7 @@ def test_preserving_links_asdoc(nlp):
     ]
     ruler = nlp.add_pipe("entity_ruler")
     ruler.add_patterns(patterns)
-    el_config = {"kb_loader": {"@assets": "myLocationsKB.v1"}, "incl_prior": False}
+    el_config = {"kb_loader": {"@misc": "myLocationsKB.v1"}, "incl_prior": False}
     el_pipe = nlp.add_pipe("entity_linker", config=el_config, last=True)
     el_pipe.begin_training(lambda: [])
     el_pipe.incl_context = False
@@ -387,7 +387,7 @@ def test_overfitting_IO():
         doc = nlp(text)
         train_examples.append(Example.from_dict(doc, annotation))
 
-    @registry.assets.register("myOverfittingKB.v1")
+    @registry.misc.register("myOverfittingKB.v1")
     def dummy_kb() -> Callable[["Vocab"], KnowledgeBase]:
         def create_kb(vocab):
             # create artificial KB - assign same prior weight to the two russ cochran's
@@ -408,7 +408,7 @@ def test_overfitting_IO():
     # Create the Entity Linker component and add it to the pipeline
     nlp.add_pipe(
         "entity_linker",
-        config={"kb_loader": {"@assets": "myOverfittingKB.v1"}},
+        config={"kb_loader": {"@misc": "myOverfittingKB.v1"}},
         last=True,
     )
 

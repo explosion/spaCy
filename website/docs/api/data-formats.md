@@ -6,18 +6,18 @@ menu:
   - ['Training Data', 'training']
   - ['Pretraining Data', 'pretraining']
   - ['Vocabulary', 'vocab-jsonl']
-  - ['Model Meta', 'meta']
+  - ['Pipeline Meta', 'meta']
 ---
 
 This section documents input and output formats of data used by spaCy, including
 the [training config](/usage/training#config), training data and lexical
 vocabulary data. For an overview of label schemes used by the models, see the
-[models directory](/models). Each model documents the label schemes used in its
-components, depending on the data it was trained on.
+[models directory](/models). Each trained pipeline documents the label schemes
+used in its components, depending on the data it was trained on.
 
 ## Training config {#config new="3"}
 
-Config files define the training process and model pipeline and can be passed to
+Config files define the training process and pipeline and can be passed to
 [`spacy train`](/api/cli#train). They use
 [Thinc's configuration system](https://thinc.ai/docs/usage-config) under the
 hood. For details on how to use training configs, see the
@@ -74,16 +74,16 @@ your config and check that it's valid, you can run the
 Defines the `nlp` object, its tokenizer and
 [processing pipeline](/usage/processing-pipelines) component names.
 
-| Name                      | Description                                                                                                                                                                                                                                                                                          |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `lang`                    | Model language [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes). Defaults to `null`. ~~str~~                                                                                                                                                                                        |
-| `pipeline`                | Names of pipeline components in order. Should correspond to sections in the `[components]` block, e.g. `[components.ner]`. See docs on [defining components](/usage/training#config-components). Defaults to `[]`. ~~List[str]~~                                                                     |
-| `disabled`                | Names of pipeline components that are loaded but disabled by default and not run as part of the pipeline. Should correspond to components listed in `pipeline`. After a model is loaded, disabled components can be enabled using [`Language.enable_pipe`](/api/language#enable_pipe). ~~List[str]~~ |
-| `load_vocab_data`         | Whether to load additional lexeme and vocab data from [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) if available. Defaults to `true`. ~~bool~~                                                                                                                             |
-| `before_creation`         | Optional [callback](/usage/training#custom-code-nlp-callbacks) to modify `Language` subclass before it's initialized. Defaults to `null`. ~~Optional[Callable[[Type[Language]], Type[Language]]]~~                                                                                                   |
-| `after_creation`          | Optional [callback](/usage/training#custom-code-nlp-callbacks) to modify `nlp` object right after it's initialized. Defaults to `null`. ~~Optional[Callable[[Language], Language]]~~                                                                                                                 |
-| `after_pipeline_creation` | Optional [callback](/usage/training#custom-code-nlp-callbacks) to modify `nlp` object after the pipeline components have been added. Defaults to `null`. ~~Optional[Callable[[Language], Language]]~~                                                                                                |
-| `tokenizer`               | The tokenizer to use. Defaults to [`Tokenizer`](/api/tokenizer). ~~Callable[[str], Doc]~~                                                                                                                                                                                                            |
+| Name                      | Description                                                                                                                                                                                                                                                                                             |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lang`                    | Pipeline language [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes). Defaults to `null`. ~~str~~                                                                                                                                                                                        |
+| `pipeline`                | Names of pipeline components in order. Should correspond to sections in the `[components]` block, e.g. `[components.ner]`. See docs on [defining components](/usage/training#config-components). Defaults to `[]`. ~~List[str]~~                                                                        |
+| `disabled`                | Names of pipeline components that are loaded but disabled by default and not run as part of the pipeline. Should correspond to components listed in `pipeline`. After a pipeline is loaded, disabled components can be enabled using [`Language.enable_pipe`](/api/language#enable_pipe). ~~List[str]~~ |
+| `load_vocab_data`         | Whether to load additional lexeme and vocab data from [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) if available. Defaults to `true`. ~~bool~~                                                                                                                                |
+| `before_creation`         | Optional [callback](/usage/training#custom-code-nlp-callbacks) to modify `Language` subclass before it's initialized. Defaults to `null`. ~~Optional[Callable[[Type[Language]], Type[Language]]]~~                                                                                                      |
+| `after_creation`          | Optional [callback](/usage/training#custom-code-nlp-callbacks) to modify `nlp` object right after it's initialized. Defaults to `null`. ~~Optional[Callable[[Language], Language]]~~                                                                                                                    |
+| `after_pipeline_creation` | Optional [callback](/usage/training#custom-code-nlp-callbacks) to modify `nlp` object after the pipeline components have been added. Defaults to `null`. ~~Optional[Callable[[Language], Language]]~~                                                                                                   |
+| `tokenizer`               | The tokenizer to use. Defaults to [`Tokenizer`](/api/tokenizer). ~~Callable[[str], Doc]~~                                                                                                                                                                                                               |
 
 ### components {#config-components tag="section"}
 
@@ -105,8 +105,8 @@ This section includes definitions of the
 [pipeline components](/usage/processing-pipelines) and their models, if
 available. Components in this section can be referenced in the `pipeline` of the
 `[nlp]` block. Component blocks need to specify either a `factory` (named
-function to use to create component) or a `source` (name of path of pretrained
-model to copy components from). See the docs on
+function to use to create component) or a `source` (name of path of trained
+pipeline to copy components from). See the docs on
 [defining pipeline components](/usage/training#config-components) for details.
 
 ### paths, system {#config-variables tag="variables"}
@@ -145,7 +145,7 @@ process that are used when you run [`spacy train`](/api/cli#train).
 | `score_weights`       | Score names shown in metrics mapped to their weight towards the final weighted score. See [here](/usage/training#metrics) for details. Defaults to `{}`. ~~Dict[str, float]~~                                |
 | `seed`                | The random seed. Defaults to variable `${system.seed}`. ~~int~~                                                                                                                                              |
 | `train_corpus`        | Callable that takes the current `nlp` object and yields [`Example`](/api/example) objects. Defaults to [`Corpus`](/api/corpus). ~~Callable[[Language], Iterator[Example]]~~                                  |
-| `vectors`             | Model name or path to model containing pretrained word vectors to use, e.g. created with [`init model`](/api/cli#init-model). Defaults to `null`. ~~Optional[str]~~                                          |
+| `vectors`             | Name or path of pipeline containing pretrained word vectors to use, e.g. created with [`init vocab`](/api/cli#init-vocab). Defaults to `null`. ~~Optional[str]~~                                             |
 
 ### pretraining {#config-pretraining tag="section,optional"}
 
@@ -184,7 +184,7 @@ run [`spacy pretrain`](/api/cli#pretrain).
 
 The main data format used in spaCy v3.0 is a **binary format** created by
 serializing a [`DocBin`](/api/docbin), which represents a collection of `Doc`
-objects. This means that you can train spaCy models using the same format it
+objects. This means that you can train spaCy pipelines using the same format it
 outputs: annotated `Doc` objects. The binary format is extremely **efficient in
 storage**, especially when packing multiple documents together.
 
@@ -286,8 +286,8 @@ a dictionary of gold-standard annotations.
 [internal training API](/usage/training#api) and they're expected when you call
 [`nlp.update`](/api/language#update). However, for most use cases, you
 **shouldn't** have to write your own training scripts. It's recommended to train
-your models via the [`spacy train`](/api/cli#train) command with a config file
-to keep track of your settings and hyperparameters and your own
+your pipelines via the [`spacy train`](/api/cli#train) command with a config
+file to keep track of your settings and hyperparameters and your own
 [registered functions](/usage/training/#custom-code) to customize the setup.
 
 </Infobox>
@@ -406,15 +406,15 @@ in line-by-line, while still making it easy to represent newlines in the data.
 
 ## Lexical data for vocabulary {#vocab-jsonl new="2"}
 
-To populate a model's vocabulary, you can use the
-[`spacy init model`](/api/cli#init-model) command and load in a
+To populate a pipeline's vocabulary, you can use the
+[`spacy init vocab`](/api/cli#init-vocab) command and load in a
 [newline-delimited JSON](http://jsonlines.org/) (JSONL) file containing one
 lexical entry per line via the `--jsonl-loc` option. The first line defines the
 language and vocabulary settings. All other lines are expected to be JSON
 objects describing an individual lexeme. The lexical attributes will be then set
 as attributes on spaCy's [`Lexeme`](/api/lexeme#attributes) object. The `vocab`
-command outputs a ready-to-use spaCy model with a `Vocab` containing the lexical
-data.
+command outputs a ready-to-use spaCy pipeline with a `Vocab` containing the
+lexical data.
 
 ```python
 ### First line
@@ -459,11 +459,11 @@ Here's an example of the 20 most frequent lexemes in the English training data:
 https://github.com/explosion/spaCy/tree/master/examples/training/vocab-data.jsonl
 ```
 
-## Model meta {#meta}
+## Pipeline meta {#meta}
 
-The model meta is available as the file `meta.json` and exported automatically
-when you save an `nlp` object to disk. Its contents are available as
-[`nlp.meta`](/api/language#meta).
+The pipeline meta is available as the file `meta.json` and exported
+automatically when you save an `nlp` object to disk. Its contents are available
+as [`nlp.meta`](/api/language#meta).
 
 <Infobox variant="warning" title="Changed in v3.0">
 
@@ -473,8 +473,8 @@ creating a Python package with [`spacy package`](/api/cli#package). How to set
 up the `nlp` object is now defined in the
 [`config.cfg`](/api/data-formats#config), which includes detailed information
 about the pipeline components and their model architectures, and all other
-settings and hyperparameters used to train the model. It's the **single source
-of truth** used for loading a model.
+settings and hyperparameters used to train the pipeline. It's the **single
+source of truth** used for loading a pipeline.
 
 </Infobox>
 
@@ -482,12 +482,12 @@ of truth** used for loading a model.
 >
 > ```json
 > {
->   "name": "example_model",
+>   "name": "example_pipeline",
 >   "lang": "en",
 >   "version": "1.0.0",
 >   "spacy_version": ">=3.0.0,<3.1.0",
 >   "parent_package": "spacy",
->   "description": "Example model for spaCy",
+>   "description": "Example pipeline for spaCy",
 >   "author": "You",
 >   "email": "you@example.com",
 >   "url": "https://example.com",
@@ -510,23 +510,23 @@ of truth** used for loading a model.
 > }
 > ```
 
-| Name                                           | Description                                                                                                                                                                                                                                                                                                              |
-| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `lang`                                         | Model language [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes). Defaults to `"en"`. ~~str~~                                                                                                                                                                                                            |
-| `name`                                         | Model name, e.g. `"core_web_sm"`. The final model package name will be `{lang}_{name}`. Defaults to `"model"`. ~~str~~                                                                                                                                                                                                   |
-| `version`                                      | Model version. Will be used to version a Python package created with [`spacy package`](/api/cli#package). Defaults to `"0.0.0"`. ~~str~~                                                                                                                                                                                 |
-| `spacy_version`                                | spaCy version range the model is compatible with. Defaults to the spaCy version used to create the model, up to next minor version, which is the default compatibility for the available [pretrained models](/models). For instance, a model trained with v3.0.0 will have the version range `">=3.0.0,<3.1.0"`. ~~str~~ |
-| `parent_package`                               | Name of the spaCy package. Typically `"spacy"` or `"spacy_nightly"`. Defaults to `"spacy"`. ~~str~~                                                                                                                                                                                                                      |
-| `description`                                  | Model description. Also used for Python package. Defaults to `""`. ~~str~~                                                                                                                                                                                                                                               |
-| `author`                                       | Model author name. Also used for Python package. Defaults to `""`. ~~str~~                                                                                                                                                                                                                                               |
-| `email`                                        | Model author email. Also used for Python package. Defaults to `""`. ~~str~~                                                                                                                                                                                                                                              |
-| `url`                                          | Model author URL. Also used for Python package. Defaults to `""`. ~~str~~                                                                                                                                                                                                                                                |
-| `license`                                      | Model license. Also used for Python package. Defaults to `""`. ~~str~~                                                                                                                                                                                                                                                   |
-| `sources`                                      | Data sources used to train the model. Typically a list of dicts with the keys `"name"`, `"url"`, `"author"` and `"license"`. [See here](https://github.com/explosion/spacy-models/tree/master/meta) for examples. Defaults to `None`. ~~Optional[List[Dict[str, str]]]~~                                                 |
-| `vectors`                                      | Information about the word vectors included with the model. Typically a dict with the keys `"width"`, `"vectors"` (number of vectors), `"keys"` and `"name"`. ~~Dict[str, Any]~~                                                                                                                                         |
-| `pipeline`                                     | Names of pipeline component names in the model, in order. Corresponds to [`nlp.pipe_names`](/api/language#pipe_names). Only exists for reference and is not used to create the components. This information is defined in the [`config.cfg`](/api/data-formats#config). Defaults to `[]`. ~~List[str]~~                  |
-| `labels`                                       | Label schemes of the trained pipeline components, keyed by component name. Corresponds to [`nlp.pipe_labels`](/api/language#pipe_labels). [See here](https://github.com/explosion/spacy-models/tree/master/meta) for examples. Defaults to `{}`. ~~Dict[str, Dict[str, List[str]]]~~                                     |
-| `accuracy`                                     | Training accuracy, added automatically by [`spacy train`](/api/cli#train). Dictionary of [score names](/usage/training#metrics) mapped to scores. Defaults to `{}`. ~~Dict[str, Union[float, Dict[str, float]]]~~                                                                                                        |
-| `speed`                                        | Model speed, added automatically by [`spacy train`](/api/cli#train). Typically a dictionary with the keys `"cpu"`, `"gpu"` and `"nwords"` (words per second). Defaults to `{}`. ~~Dict[str, Optional[Union[float, str]]]~~                                                                                               |
-| `spacy_git_version` <Tag variant="new">3</Tag> | Git commit of [`spacy`](https://github.com/explosion/spaCy) used to create model. ~~str~~                                                                                                                                                                                                                                |
-| other                                          | Any other custom meta information you want to add. The data is preserved in [`nlp.meta`](/api/language#meta). ~~Any~~                                                                                                                                                                                                    |
+| Name                                           | Description                                                                                                                                                                                                                                                                                                                      |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lang`                                         | Pipeline language [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes). Defaults to `"en"`. ~~str~~                                                                                                                                                                                                                 |
+| `name`                                         | Pipeline name, e.g. `"core_web_sm"`. The final package name will be `{lang}_{name}`. Defaults to `"pipeline"`. ~~str~~                                                                                                                                                                                                           |
+| `version`                                      | Pipeline version. Will be used to version a Python package created with [`spacy package`](/api/cli#package). Defaults to `"0.0.0"`. ~~str~~                                                                                                                                                                                      |
+| `spacy_version`                                | spaCy version range the package is compatible with. Defaults to the spaCy version used to create the pipeline, up to next minor version, which is the default compatibility for the available [trained pipelines](/models). For instance, a pipeline trained with v3.0.0 will have the version range `">=3.0.0,<3.1.0"`. ~~str~~ |
+| `parent_package`                               | Name of the spaCy package. Typically `"spacy"` or `"spacy_nightly"`. Defaults to `"spacy"`. ~~str~~                                                                                                                                                                                                                              |
+| `description`                                  | Pipeline description. Also used for Python package. Defaults to `""`. ~~str~~                                                                                                                                                                                                                                                    |
+| `author`                                       | Pipeline author name. Also used for Python package. Defaults to `""`. ~~str~~                                                                                                                                                                                                                                                    |
+| `email`                                        | Pipeline author email. Also used for Python package. Defaults to `""`. ~~str~~                                                                                                                                                                                                                                                   |
+| `url`                                          | Pipeline author URL. Also used for Python package. Defaults to `""`. ~~str~~                                                                                                                                                                                                                                                     |
+| `license`                                      | Pipeline license. Also used for Python package. Defaults to `""`. ~~str~~                                                                                                                                                                                                                                                        |
+| `sources`                                      | Data sources used to train the pipeline. Typically a list of dicts with the keys `"name"`, `"url"`, `"author"` and `"license"`. [See here](https://github.com/explosion/spacy-models/tree/master/meta) for examples. Defaults to `None`. ~~Optional[List[Dict[str, str]]]~~                                                      |
+| `vectors`                                      | Information about the word vectors included with the pipeline. Typically a dict with the keys `"width"`, `"vectors"` (number of vectors), `"keys"` and `"name"`. ~~Dict[str, Any]~~                                                                                                                                              |
+| `pipeline`                                     | Names of pipeline component names, in order. Corresponds to [`nlp.pipe_names`](/api/language#pipe_names). Only exists for reference and is not used to create the components. This information is defined in the [`config.cfg`](/api/data-formats#config). Defaults to `[]`. ~~List[str]~~                                       |
+| `labels`                                       | Label schemes of the trained pipeline components, keyed by component name. Corresponds to [`nlp.pipe_labels`](/api/language#pipe_labels). [See here](https://github.com/explosion/spacy-models/tree/master/meta) for examples. Defaults to `{}`. ~~Dict[str, Dict[str, List[str]]]~~                                             |
+| `accuracy`                                     | Training accuracy, added automatically by [`spacy train`](/api/cli#train). Dictionary of [score names](/usage/training#metrics) mapped to scores. Defaults to `{}`. ~~Dict[str, Union[float, Dict[str, float]]]~~                                                                                                                |
+| `speed`                                        | Inference speed, added automatically by [`spacy train`](/api/cli#train). Typically a dictionary with the keys `"cpu"`, `"gpu"` and `"nwords"` (words per second). Defaults to `{}`. ~~Dict[str, Optional[Union[float, str]]]~~                                                                                                   |
+| `spacy_git_version` <Tag variant="new">3</Tag> | Git commit of [`spacy`](https://github.com/explosion/spaCy) used to create pipeline. ~~str~~                                                                                                                                                                                                                                     |
+| other                                          | Any other custom meta information you want to add. The data is preserved in [`nlp.meta`](/api/language#meta). ~~Any~~                                                                                                                                                                                                            |

@@ -106,7 +106,7 @@ def conll_ner2docs(
                 raise ValueError(
                     "The token-per-line NER file is not formatted correctly. "
                     "Try checking whitespace and delimiters. See "
-                    "https://spacy.io/api/cli#convert"
+                    "https://nightly.spacy.io/api/cli#convert"
                 )
             length = len(cols[0])
             words.extend(cols[0])

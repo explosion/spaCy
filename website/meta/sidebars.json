@@ -50,11 +50,11 @@
                 "items": [{ "text": "Overview", "url": "/models" }]
             },
             {
-                "label": "Core Models",
+                "label": "Trained Pipelines",
                 "items": []
             },
             {
-                "label": "Starter Models",
+                "label": "Starter Packages",
                 "items": []
             }
         ]

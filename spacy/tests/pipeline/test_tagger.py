@@ -71,6 +71,6 @@ def test_overfitting_IO():
 
 def test_tagger_requires_labels():
     nlp = English()
-    tagger = nlp.add_pipe("tagger")
+    nlp.add_pipe("tagger")
     with pytest.raises(ValueError):
-        optimizer = nlp.begin_training()
+        nlp.begin_training()

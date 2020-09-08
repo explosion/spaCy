@@ -18,7 +18,7 @@ from .. import util
 NEW_LABEL_THRESHOLD = 50
 # Minimum number of expected occurrences of dependency labels
 DEP_LABEL_THRESHOLD = 20
-# Minimum number of expected examples to train a blank model
+# Minimum number of expected examples to train a new pipeline
 BLANK_MODEL_MIN_THRESHOLD = 100
 BLANK_MODEL_THRESHOLD = 2000
 
@@ -47,6 +47,8 @@ def debug_data_cli(
     Analyze, debug and validate your training and development data. Outputs
     useful stats, and can help you find problems like invalid entity annotations,
     cyclic dependencies, low data labels and more.
+
+    DOCS: https://nightly.spacy.io/api/cli#debug-data
     """
     if ctx.command.name == "debug-data":
         msg.warn(
@@ -148,7 +150,7 @@ def debug_data(
     msg.text(f"Language: {config['nlp']['lang']}")
     msg.text(f"Training pipeline: {', '.join(pipeline)}")
     if resume_components:
-        msg.text(f"Components from other models: {', '.join(resume_components)}")
+        msg.text(f"Components from other pipelines: {', '.join(resume_components)}")
     if frozen_components:
         msg.text(f"Frozen components: {', '.join(frozen_components)}")
     msg.text(f"{len(train_dataset)} training docs")
@@ -164,9 +166,7 @@ def debug_data(
     # TODO: make this feedback more fine-grained and report on updated
     # components vs. blank components
     if not resume_components and len(train_dataset) < BLANK_MODEL_THRESHOLD:
-        text = (
-            f"Low number of examples to train from a blank model ({len(train_dataset)})"
-        )
+        text = f"Low number of examples to train a new pipeline ({len(train_dataset)})"
         if len(train_dataset) < BLANK_MODEL_MIN_THRESHOLD:
             msg.fail(text)
         else:
@@ -214,7 +214,7 @@ def debug_data(
             show=verbose,
         )
     else:
-        msg.info("No word vectors present in the model")
+        msg.info("No word vectors present in the package")
 
     if "ner" in factory_names:
         # Get all unique NER labels present in the data

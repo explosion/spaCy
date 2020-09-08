@@ -4,6 +4,7 @@ teaser: Find phrases and tokens, and match entities
 menu:
   - ['Token Matcher', 'matcher']
   - ['Phrase Matcher', 'phrasematcher']
+  - ['Dependency Matcher', 'dependencymatcher']
   - ['Entity Ruler', 'entityruler']
   - ['Models & Rules', 'models-rules']
 ---
@@ -759,7 +760,7 @@ whitespace, making them easy to match as well.
 from spacy.lang.en import English
 from spacy.matcher import Matcher
 
-nlp = English()  # We only want the tokenizer, so no need to load a model
+nlp = English()  # We only want the tokenizer, so no need to load a pipeline
 matcher = Matcher(nlp.vocab)
 
 pos_emoji = ["😀", "😃", "😂", "🤣", "😊", "😍"]  # Positive emoji
@@ -893,12 +894,13 @@ pattern covering the exact tokenization of the term.
 <Infobox title="Important note on creating patterns" variant="warning">
 
 To create the patterns, each phrase has to be processed with the `nlp` object.
-If you have a model loaded, doing this in a loop or list comprehension can
-easily become inefficient and slow. If you **only need the tokenization and
-lexical attributes**, you can run [`nlp.make_doc`](/api/language#make_doc)
-instead, which will only run the tokenizer. For an additional speed boost, you
-can also use the [`nlp.tokenizer.pipe`](/api/tokenizer#pipe) method, which will
-process the texts as a stream.
+If you have a trained pipeline loaded, doing this in a loop or list
+comprehension can easily become inefficient and slow. If you **only need the
+tokenization and lexical attributes**, you can run
+[`nlp.make_doc`](/api/language#make_doc) instead, which will only run the
+tokenizer. For an additional speed boost, you can also use the
+[`nlp.tokenizer.pipe`](/api/tokenizer#pipe) method, which will process the texts
+as a stream.
 
 ```diff
 - patterns = [nlp(term) for term in LOTS_OF_TERMS]
@@ -938,10 +940,10 @@ object patterns as efficiently as possible and without running any of the other
 pipeline components. If the token attribute you want to match on are set by a
 pipeline component, **make sure that the pipeline component runs** when you
 create the pattern. For example, to match on `POS` or `LEMMA`, the pattern `Doc`
-objects need to have part-of-speech tags set by the `tagger`. You can either
-call the `nlp` object on your pattern texts instead of `nlp.make_doc`, or use
-[`nlp.select_pipes`](/api/language#select_pipes) to disable components
-selectively.
+objects need to have part-of-speech tags set by the `tagger` or `morphologizer`.
+You can either call the `nlp` object on your pattern texts instead of
+`nlp.make_doc`, or use [`nlp.select_pipes`](/api/language#select_pipes) to
+disable components selectively.
 
 </Infobox>
 
@@ -972,12 +974,289 @@ to match phrases with the same sequence of punctuation and non-punctuation
 tokens as the pattern. But this can easily get confusing and doesn't have much
 of an advantage over writing one or two token patterns.
 
+## Dependency Matcher {#dependencymatcher new="3" model="parser"}
+
+The [`DependencyMatcher`](/api/dependencymatcher) lets you match patterns within
+the dependency parse using
+[Semgrex](https://nlp.stanford.edu/nlp/javadoc/javanlp/edu/stanford/nlp/semgraph/semgrex/SemgrexPattern.html)
+operators. It requires a model containing a parser such as the
+[`DependencyParser`](/api/dependencyparser). Instead of defining a list of
+adjacent tokens as in `Matcher` patterns, the `DependencyMatcher` patterns match
+tokens in the dependency parse and specify the relations between them.
+
+> ```python
+> ### Example
+> from spacy.matcher import DependencyMatcher
+>
+> # "[subject] ... initially founded"
+> pattern = [
+>   # anchor token: founded
+>   {
+>     "RIGHT_ID": "founded",
+>     "RIGHT_ATTRS": {"ORTH": "founded"}
+>   },
+>   # founded -> subject
+>   {
+>     "LEFT_ID": "founded",
+>     "REL_OP": ">",
+>     "RIGHT_ID": "subject",
+>     "RIGHT_ATTRS": {"DEP": "nsubj"}
+>   },
+>   # "founded" follows "initially"
+>   {
+>     "LEFT_ID": "founded",
+>     "REL_OP": ";",
+>     "RIGHT_ID": "initially",
+>     "RIGHT_ATTRS": {"ORTH": "initially"}
+>   }
+> ]
+>
+> matcher = DependencyMatcher(nlp.vocab)
+> matcher.add("FOUNDED", [pattern])
+> matches = matcher(doc)
+> ```
+
+A pattern added to the dependency matcher consists of a **list of
+dictionaries**, with each dictionary describing a **token to match** and its
+**relation to an existing token** in the pattern. Except for the first
+dictionary, which defines an anchor token using only `RIGHT_ID` and
+`RIGHT_ATTRS`, each pattern should have the following keys:
+
+| Name          | Description                                                                                                                                                            |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `LEFT_ID`     | The name of the left-hand node in the relation, which has been defined in an earlier node. ~~str~~                                                                     |
+| `REL_OP`      | An operator that describes how the two nodes are related. ~~str~~                                                                                                      |
+| `RIGHT_ID`    | A unique name for the right-hand node in the relation. ~~str~~                                                                                                         |
+| `RIGHT_ATTRS` | The token attributes to match for the right-hand node in the same format as patterns provided to the regular token-based [`Matcher`](/api/matcher). ~~Dict[str, Any]~~ |
+
+Each additional token added to the pattern is linked to an existing token
+`LEFT_ID` by the relation `REL_OP`. The new token is given the name `RIGHT_ID`
+and described by the attributes `RIGHT_ATTRS`.
+
+<Infobox title="Important note" variant="warning">
+
+Because the unique token **names** in `LEFT_ID` and `RIGHT_ID` are used to
+identify tokens, the order of the dicts in the patterns is important: a token
+name needs to be defined as `RIGHT_ID` in one dict in the pattern **before** it
+can be used as `LEFT_ID` in another dict.
+
+</Infobox>
+
+### Dependency matcher operators {#dependencymatcher-operators}
+
+The following operators are supported by the `DependencyMatcher`, most of which
+come directly from
+[Semgrex](https://nlp.stanford.edu/nlp/javadoc/javanlp/edu/stanford/nlp/semgraph/semgrex/SemgrexPattern.html):
+
+| Symbol    | Description                                                                                                          |
+| --------- | -------------------------------------------------------------------------------------------------------------------- |
+| `A < B`   | `A` is the immediate dependent of `B`.                                                                               |
+| `A > B`   | `A` is the immediate head of `B`.                                                                                    |
+| `A << B`  | `A` is the dependent in a chain to `B` following dep &rarr; head paths.                                              |
+| `A >> B`  | `A` is the head in a chain to `B` following head &rarr; dep paths.                                                   |
+| `A . B`   | `A` immediately precedes `B`, i.e. `A.i == B.i - 1`, and both are within the same dependency tree.                   |
+| `A .* B`  | `A` precedes `B`, i.e. `A.i < B.i`, and both are within the same dependency tree _(not in Semgrex)_.                 |
+| `A ; B`   | `A` immediately follows `B`, i.e. `A.i == B.i + 1`, and both are within the same dependency tree _(not in Semgrex)_. |
+| `A ;* B`  | `A` follows `B`, i.e. `A.i > B.i`, and both are within the same dependency tree _(not in Semgrex)_.                  |
+| `A $+ B`  | `B` is a right immediate sibling of `A`, i.e. `A` and `B` have the same parent and `A.i == B.i - 1`.                 |
+| `A $- B`  | `B` is a left immediate sibling of `A`, i.e. `A` and `B` have the same parent and `A.i == B.i + 1`.                  |
+| `A $++ B` | `B` is a right sibling of `A`, i.e. `A` and `B` have the same parent and `A.i < B.i`.                                |
+| `A $-- B` | `B` is a left sibling of `A`, i.e. `A` and `B` have the same parent and `A.i > B.i`.                                 |
+
+### Designing dependency matcher patterns {#dependencymatcher-patterns}
+
+Let's say we want to find sentences describing who founded what kind of company:
+
+- _Smith founded a healthcare company in 2005._
+- _Williams initially founded an insurance company in 1987._
+- _Lee, an experienced CEO, has founded two AI startups._
+
+The dependency parse for "Smith founded a healthcare company" shows types of
+relations and tokens we want to match:
+
+> #### Visualizing the parse
+>
+> The [`displacy` visualizer](/usage/visualizer) lets you render `Doc` objects
+> and their dependency parse and part-of-speech tags:
+>
+> ```python
+> import spacy
+> from spacy import displacy
+>
+> nlp = spacy.load("en_core_web_sm")
+> doc = nlp("Smith founded a healthcare company")
+> displacy.serve(doc)
+> ```
+
+import DisplaCyDepFoundedHtml from 'images/displacy-dep-founded.html'
+
+<Iframe title="displaCy visualization of dependencies" html={DisplaCyDepFoundedHtml} height={450} />
+
+The relations we're interested in are:
+
+- the founder is the **subject** (`nsubj`) of the token with the text `founded`
+- the company is the **object** (`dobj`) of `founded`
+- the kind of company may be an **adjective** (`amod`, not shown above) or a
+  **compound** (`compound`)
+
+The first step is to pick an **anchor token** for the pattern. Since it's the
+root of the dependency parse, `founded` is a good choice here. It is often
+easier to construct patterns when all dependency relation operators point from
+the head to the children. In this example, we'll only use `>`, which connects a
+head to an immediate dependent as `head > child`.
+
+The simplest dependency matcher pattern will identify and name a single token in
+the tree:
+
+```python
+### {executable="true"}
+import spacy
+from spacy.matcher import DependencyMatcher
+
+nlp = spacy.load("en_core_web_sm")
+matcher = DependencyMatcher(nlp.vocab)
+pattern = [
+  {
+    "RIGHT_ID": "anchor_founded",       # unique name
+    "RIGHT_ATTRS": {"ORTH": "founded"}  # token pattern for "founded"
+  }
+]
+matcher.add("FOUNDED", [pattern])
+doc = nlp("Smith founded two companies.")
+matches = matcher(doc)
+print(matches) # [(4851363122962674176, [1])]
+```
+
+Now that we have a named anchor token (`anchor_founded`), we can add the founder
+as the immediate dependent (`>`) of `founded` with the dependency label `nsubj`:
+
+```python
+### Step 1 {highlight="8,10"}
+pattern = [
+    {
+        "RIGHT_ID": "anchor_founded",
+        "RIGHT_ATTRS": {"ORTH": "founded"}
+    },
+    {
+        "LEFT_ID": "anchor_founded",
+        "REL_OP": ">",
+        "RIGHT_ID": "subject",
+        "RIGHT_ATTRS": {"DEP": "nsubj"},
+    }
+    # ...
+]
+```
+
+The direct object (`dobj`) is added in the same way:
+
+```python
+### Step 2 {highlight=""}
+pattern = [
+    #...
+    {
+        "LEFT_ID": "anchor_founded",
+        "REL_OP": ">",
+        "RIGHT_ID": "founded_object",
+        "RIGHT_ATTRS": {"DEP": "dobj"},
+    }
+    # ...
+]
+```
+
+When the subject and object tokens are added, they are required to have names
+under the key `RIGHT_ID`, which are allowed to be any unique string, e.g.
+`founded_subject`. These names can then be used as `LEFT_ID` to **link new
+tokens into the pattern**. For the final part of our pattern, we'll specify that
+the token `founded_object` should have a modifier with the dependency relation
+`amod` or `compound`:
+
+```python
+### Step 3 {highlight="7"}
+pattern = [
+    # ...
+    {
+        "LEFT_ID": "founded_object",
+        "REL_OP": ">",
+        "RIGHT_ID": "founded_object_modifier",
+        "RIGHT_ATTRS": {"DEP": {"IN": ["amod", "compound"]}},
+    }
+]
+```
+
+You can picture the process of creating a dependency matcher pattern as defining
+an anchor token on the left and building up the pattern by linking tokens
+one-by-one on the right using relation operators. To create a valid pattern,
+each new token needs to be linked to an existing token on its left. As for
+`founded` in this example, a token may be linked to more than one token on its
+right:
+
+![Dependency matcher pattern](../images/dep-match-diagram.svg)
+
+The full pattern comes together as shown in the example below:
+
+```python
+### {executable="true"}
+import spacy
+from spacy.matcher import DependencyMatcher
+
+nlp = spacy.load("en_core_web_sm")
+matcher = DependencyMatcher(nlp.vocab)
+
+pattern = [
+    {
+        "RIGHT_ID": "anchor_founded",
+        "RIGHT_ATTRS": {"ORTH": "founded"}
+    },
+    {
+        "LEFT_ID": "anchor_founded",
+        "REL_OP": ">",
+        "RIGHT_ID": "subject",
+        "RIGHT_ATTRS": {"DEP": "nsubj"},
+    },
+    {
+        "LEFT_ID": "anchor_founded",
+        "REL_OP": ">",
+        "RIGHT_ID": "founded_object",
+        "RIGHT_ATTRS": {"DEP": "dobj"},
+    },
+    {
+        "LEFT_ID": "founded_object",
+        "REL_OP": ">",
+        "RIGHT_ID": "founded_object_modifier",
+        "RIGHT_ATTRS": {"DEP": {"IN": ["amod", "compound"]}},
+    }
+]
+
+matcher.add("FOUNDED", [pattern])
+doc = nlp("Lee, an experienced CEO, has founded two AI startups.")
+matches = matcher(doc)
+
+print(matches) # [(4851363122962674176, [6, 0, 10, 9])]
+# Each token_id corresponds to one pattern dict
+match_id, token_ids = matches[0]
+for i in range(len(token_ids)):
+    print(pattern[i]["RIGHT_ID"] + ":", doc[token_ids[i]].text)
+```
+
+<Infobox title="Important note on speed" variant="warning">
+
+The dependency matcher may be slow when token patterns can potentially match
+many tokens in the sentence or when relation operators allow longer paths in the
+dependency parse, e.g. `<<`, `>>`, `.*` and `;*`.
+
+To improve the matcher speed, try to make your token patterns and operators as
+specific as possible. For example, use `>` instead of `>>` if possible and use
+token patterns that include dependency labels and other token attributes instead
+of patterns such as `{}` that match any token in the sentence.
+
+</Infobox>
+
 ## Rule-based entity recognition {#entityruler new="2.1"}
 
-The [`EntityRuler`](/api/entityruler) is an exciting new component that lets you
-add named entities based on pattern dictionaries, and makes it easy to combine
+The [`EntityRuler`](/api/entityruler) is a component that lets you add named
+entities based on pattern dictionaries, which makes it easy to combine
 rule-based and statistical named entity recognition for even more powerful
-models.
+pipelines.
 
 ### Entity Patterns {#entityruler-patterns}
 
@@ -1021,8 +1300,8 @@ doc = nlp("Apple is opening its first big office in San Francisco.")
 print([(ent.text, ent.label_) for ent in doc.ents])
 ```
 
-The entity ruler is designed to integrate with spaCy's existing statistical
-models and enhance the named entity recognizer. If it's added **before the
+The entity ruler is designed to integrate with spaCy's existing pipeline
+components and enhance the named entity recognizer. If it's added **before the
 `"ner"` component**, the entity recognizer will respect the existing entity
 spans and adjust its predictions around it. This can significantly improve
 accuracy in some cases. If it's added **after the `"ner"` component**, the
@@ -1111,20 +1390,20 @@ versa.
 </Infobox>
 
 When you save out an `nlp` object that has an `EntityRuler` added to its
-pipeline, its patterns are automatically exported to the model directory:
+pipeline, its patterns are automatically exported to the pipeline directory:
 
 ```python
 nlp = spacy.load("en_core_web_sm")
 ruler = nlp.add_pipe("entity_ruler")
 ruler.add_patterns([{"label": "ORG", "pattern": "Apple"}])
-nlp.to_disk("/path/to/model")
+nlp.to_disk("/path/to/pipeline")
 ```
 
-The saved model now includes the `"entity_ruler"` in its
-[`config.cfg`](/api/data-formats#config) and the model directory contains a file
-`entityruler.jsonl` with the patterns. When you load the model back in, all
-pipeline components will be restored and deserialized – including the entity
-ruler. This lets you ship powerful model packages with binary weights _and_
+The saved pipeline now includes the `"entity_ruler"` in its
+[`config.cfg`](/api/data-formats#config) and the pipeline directory contains a
+file `entityruler.jsonl` with the patterns. When you load the pipeline back in,
+all pipeline components will be restored and deserialized – including the entity
+ruler. This lets you ship powerful pipeline packages with binary weights _and_
 rules included!
 
 ### Using a large number of phrase patterns {#entityruler-large-phrase-patterns new="2.2.4"}
@@ -1141,7 +1420,7 @@ of `"phrase_matcher_attr": "POS"` for the entity ruler.
 
 Running the full language pipeline across every pattern in a large list scales
 linearly and can therefore take a long time on large amounts of phrase patterns.
-As of spaCy 2.2.4 the `add_patterns` function has been refactored to use
+As of spaCy v2.2.4 the `add_patterns` function has been refactored to use
 nlp.pipe on all phrase patterns resulting in about a 10x-20x speed up with
 5,000-100,000 phrase patterns respectively. Even with this speedup (but
 especially if you're using an older version) the `add_patterns` function can
@@ -1168,7 +1447,7 @@ order to implement more abstract logic.
 
 ### Example: Expanding named entities {#models-rules-ner}
 
-When using the a pretrained
+When using a trained
 [named entity recognition](/usage/linguistic-features/#named-entities) model to
 extract information from your texts, you may find that the predicted span only
 includes parts of the entity you're looking for. Sometimes, this happens if
@@ -1178,15 +1457,15 @@ what you need for your application.
 
 > #### Where corpora come from
 >
-> Corpora used to train models from scratch are often produced in academia. They
-> contain text from various sources with linguistic features labeled manually by
-> human annotators (following a set of specific guidelines). The corpora are
-> then distributed with evaluation data, so other researchers can benchmark
-> their algorithms and everyone can report numbers on the same data. However,
-> most applications need to learn information that isn't contained in any
-> available corpus.
+> Corpora used to train pipelines from scratch are often produced in academia.
+> They contain text from various sources with linguistic features labeled
+> manually by human annotators (following a set of specific guidelines). The
+> corpora are then distributed with evaluation data, so other researchers can
+> benchmark their algorithms and everyone can report numbers on the same data.
+> However, most applications need to learn information that isn't contained in
+> any available corpus.
 
-For example, the corpus spaCy's [English models](/models/en) were trained on
+For example, the corpus spaCy's [English pipelines](/models/en) were trained on
 defines a `PERSON` entity as just the **person name**, without titles like "Mr."
 or "Dr.". This makes sense, because it makes it easier to resolve the entity
 type back to a knowledge base. But what if your application needs the full

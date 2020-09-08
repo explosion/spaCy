@@ -25,7 +25,7 @@ COMMAND = "python -m spacy"
 NAME = "spacy"
 HELP = """spaCy Command-line Interface
 
-DOCS: https://spacy.io/api/cli
+DOCS: https://nightly.spacy.io/api/cli
 """
 PROJECT_HELP = f"""Command-line interface for spaCy projects and templates.
 You'd typically start by cloning a project template to a local directory and
@@ -36,7 +36,7 @@ DEBUG_HELP = """Suite of helpful commands for debugging and profiling. Includes
 commands to check and validate your config files, training and evaluation data,
 and custom model implementations.
 """
-INIT_HELP = """Commands for initializing configs and models."""
+INIT_HELP = """Commands for initializing configs and pipeline packages."""
 
 # Wrappers for Typer's annotations. Initially created to set defaults and to
 # keep the names short, but not needed at the moment.

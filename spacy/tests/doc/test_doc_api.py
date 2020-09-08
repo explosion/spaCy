@@ -317,7 +317,8 @@ def test_doc_from_array_morph(en_vocab):
 
 
 def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
-    en_texts = ["Merging the docs is fun.", "They don't think alike."]
+    en_texts = ["Merging the docs is fun.", "", "They don't think alike."]
+    en_texts_without_empty = [t for t in en_texts if len(t)]
     de_text = "Wie war die Frage?"
     en_docs = [en_tokenizer(text) for text in en_texts]
     docs_idx = en_texts[0].index("docs")
@@ -338,14 +339,14 @@ def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
         Doc.from_docs(en_docs + [de_doc])
 
     m_doc = Doc.from_docs(en_docs)
-    assert len(en_docs) == len(list(m_doc.sents))
+    assert len(en_texts_without_empty) == len(list(m_doc.sents))
     assert len(str(m_doc)) > len(en_texts[0]) + len(en_texts[1])
-    assert str(m_doc) == " ".join(en_texts)
+    assert str(m_doc) == " ".join(en_texts_without_empty)
     p_token = m_doc[len(en_docs[0]) - 1]
     assert p_token.text == "." and bool(p_token.whitespace_)
     en_docs_tokens = [t for doc in en_docs for t in doc]
     assert len(m_doc) == len(en_docs_tokens)
-    think_idx = len(en_texts[0]) + 1 + en_texts[1].index("think")
+    think_idx = len(en_texts[0]) + 1 + en_texts[2].index("think")
     assert m_doc[9].idx == think_idx
     with pytest.raises(AttributeError):
         # not callable, because it was not set via set_extension
@@ -353,14 +354,14 @@ def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
     assert len(m_doc.user_data) == len(en_docs[0].user_data)  # but it's there
 
     m_doc = Doc.from_docs(en_docs, ensure_whitespace=False)
-    assert len(en_docs) == len(list(m_doc.sents))
-    assert len(str(m_doc)) == len(en_texts[0]) + len(en_texts[1])
+    assert len(en_texts_without_empty) == len(list(m_doc.sents))
+    assert len(str(m_doc)) == sum(len(t) for t in en_texts)
     assert str(m_doc) == "".join(en_texts)
     p_token = m_doc[len(en_docs[0]) - 1]
     assert p_token.text == "." and not bool(p_token.whitespace_)
     en_docs_tokens = [t for doc in en_docs for t in doc]
     assert len(m_doc) == len(en_docs_tokens)
-    think_idx = len(en_texts[0]) + 0 + en_texts[1].index("think")
+    think_idx = len(en_texts[0]) + 0 + en_texts[2].index("think")
     assert m_doc[9].idx == think_idx
 
     m_doc = Doc.from_docs(en_docs, attrs=["lemma", "length", "pos"])
@@ -369,12 +370,12 @@ def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
         assert list(m_doc.sents)
     assert len(str(m_doc)) > len(en_texts[0]) + len(en_texts[1])
     # space delimiter considered, although spacy attribute was missing
-    assert str(m_doc) == " ".join(en_texts)
+    assert str(m_doc) == " ".join(en_texts_without_empty)
     p_token = m_doc[len(en_docs[0]) - 1]
     assert p_token.text == "." and bool(p_token.whitespace_)
     en_docs_tokens = [t for doc in en_docs for t in doc]
     assert len(m_doc) == len(en_docs_tokens)
-    think_idx = len(en_texts[0]) + 1 + en_texts[1].index("think")
+    think_idx = len(en_texts[0]) + 1 + en_texts[2].index("think")
     assert m_doc[9].idx == think_idx
 
 

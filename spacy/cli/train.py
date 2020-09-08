@@ -26,7 +26,7 @@ def train_cli(
     # fmt: off
     ctx: typer.Context,  # This is only used to read additional arguments
     config_path: Path = Arg(..., help="Path to config file", exists=True),
-    output_path: Optional[Path] = Opt(None, "--output", "--output-path", "-o", help="Output directory to store model in"),
+    output_path: Optional[Path] = Opt(None, "--output", "--output-path", "-o", help="Output directory to store trained pipeline in"),
     code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
     use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU"),
@@ -34,7 +34,7 @@ def train_cli(
     # fmt: on
 ):
     """
-    Train or update a spaCy model. Requires data in spaCy's binary format. To
+    Train or update a spaCy pipeline. Requires data in spaCy's binary format. To
     convert data from other formats, use the `spacy convert` command. The
     config file includes all settings and hyperparameters used during traing.
     To override settings in the config, e.g. settings that point to local
@@ -44,6 +44,8 @@ def train_cli(
     lets you pass in a Python file that's imported before training. It can be
     used to register custom functions and architectures that can then be
     referenced in the config.
+
+    DOCS: https://nightly.spacy.io/api/cli#train
     """
     util.logger.setLevel(logging.DEBUG if verbose else logging.ERROR)
     verify_cli_args(config_path, output_path)
@@ -113,12 +115,12 @@ def train(
         # Load morph rules
         nlp.vocab.morphology.load_morph_exceptions(morph_rules)
 
-    # Load a pretrained tok2vec model - cf. CLI command 'pretrain'
+    # Load pretrained tok2vec weights - cf. CLI command 'pretrain'
     if weights_data is not None:
         tok2vec_path = config["pretraining"].get("tok2vec_model", None)
         if tok2vec_path is None:
             msg.fail(
-                f"To use a pretrained tok2vec model, the config needs to specify which "
+                f"To pretrained tok2vec weights, the config needs to specify which "
                 f"tok2vec layer to load in the setting [pretraining.tok2vec_model].",
                 exits=1,
             )
@@ -183,7 +185,7 @@ def train(
                     nlp.to_disk(final_model_path)
             else:
                 nlp.to_disk(final_model_path)
-            msg.good(f"Saved model to output directory {final_model_path}")
+            msg.good(f"Saved pipeline to output directory {final_model_path}")
 
 
 def create_train_batches(iterator, batcher, max_epochs: int):

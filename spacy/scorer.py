@@ -85,7 +85,7 @@ class Scorer:
     ) -> None:
         """Initialize the Scorer.
 
-        DOCS: https://spacy.io/api/scorer#init
+        DOCS: https://nightly.spacy.io/api/scorer#init
         """
         self.nlp = nlp
         self.cfg = cfg
@@ -101,7 +101,7 @@ class Scorer:
         examples (Iterable[Example]): The predicted annotations + correct annotations.
         RETURNS (Dict): A dictionary of scores.
 
-        DOCS: https://spacy.io/api/scorer#score
+        DOCS: https://nightly.spacy.io/api/scorer#score
         """
         scores = {}
         if hasattr(self.nlp.tokenizer, "score"):
@@ -121,7 +121,7 @@ class Scorer:
         RETURNS (Dict[str, float]): A dictionary containing the scores
             token_acc/p/r/f.
 
-        DOCS: https://spacy.io/api/scorer#score_tokenization
+        DOCS: https://nightly.spacy.io/api/scorer#score_tokenization
         """
         acc_score = PRFScore()
         prf_score = PRFScore()
@@ -169,7 +169,7 @@ class Scorer:
         RETURNS (Dict[str, float]): A dictionary containing the accuracy score
             under the key attr_acc.
 
-        DOCS: https://spacy.io/api/scorer#score_token_attr
+        DOCS: https://nightly.spacy.io/api/scorer#score_token_attr
         """
         tag_score = PRFScore()
         for example in examples:
@@ -263,7 +263,7 @@ class Scorer:
         RETURNS (Dict[str, Any]): A dictionary containing the PRF scores under
             the keys attr_p/r/f and the per-type PRF scores under attr_per_type.
 
-        DOCS: https://spacy.io/api/scorer#score_spans
+        DOCS: https://nightly.spacy.io/api/scorer#score_spans
         """
         score = PRFScore()
         score_per_type = dict()
@@ -350,7 +350,7 @@ class Scorer:
                 attr_f_per_type,
                 attr_auc_per_type
 
-        DOCS: https://spacy.io/api/scorer#score_cats
+        DOCS: https://nightly.spacy.io/api/scorer#score_cats
         """
         if threshold is None:
             threshold = 0.5 if multi_label else 0.0
@@ -467,7 +467,7 @@ class Scorer:
         RETURNS (Dict[str, Any]): A dictionary containing the scores:
             attr_uas, attr_las, and attr_las_per_type.
 
-        DOCS: https://spacy.io/api/scorer#score_deps
+        DOCS: https://nightly.spacy.io/api/scorer#score_deps
         """
         unlabelled = PRFScore()
         labelled = PRFScore()

@@ -31,7 +31,10 @@ def project_update_dvc_cli(
     """Auto-generate Data Version Control (DVC) config. A DVC
     project can only define one pipeline, so you need to specify one workflow
     defined in the project.yml. If no workflow is specified, the first defined
-    workflow is used. The DVC config will only be updated if the project.yml changed.
+    workflow is used. The DVC config will only be updated if the project.yml
+    changed.
+
+    DOCS: https://nightly.spacy.io/api/cli#project-dvc
     """
     project_update_dvc(project_dir, workflow, verbose=verbose, force=force)
 

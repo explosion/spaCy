@@ -15,7 +15,7 @@ def merge_noun_chunks(doc: Doc) -> Doc:
     doc (Doc): The Doc object.
     RETURNS (Doc): The Doc object with merged noun chunks.
 
-    DOCS: https://spacy.io/api/pipeline-functions#merge_noun_chunks
+    DOCS: https://nightly.spacy.io/api/pipeline-functions#merge_noun_chunks
     """
     if not doc.is_parsed:
         return doc
@@ -37,7 +37,7 @@ def merge_entities(doc: Doc):
     doc (Doc): The Doc object.
     RETURNS (Doc): The Doc object with merged entities.
 
-    DOCS: https://spacy.io/api/pipeline-functions#merge_entities
+    DOCS: https://nightly.spacy.io/api/pipeline-functions#merge_entities
     """
     with doc.retokenize() as retokenizer:
         for ent in doc.ents:
@@ -54,7 +54,7 @@ def merge_subtokens(doc: Doc, label: str = "subtok") -> Doc:
     label (str): The subtoken dependency label.
     RETURNS (Doc): The Doc object with merged subtokens.
 
-    DOCS: https://spacy.io/api/pipeline-functions#merge_subtokens
+    DOCS: https://nightly.spacy.io/api/pipeline-functions#merge_subtokens
     """
     # TODO: make stateful component with "label" config
     merger = Matcher(doc.vocab)

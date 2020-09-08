@@ -1,7 +1,6 @@
 import React, { Fragment } from 'react'
 import PropTypes from 'prop-types'
 import { Link as GatsbyLink } from 'gatsby'
-import { OutboundLink } from 'gatsby-plugin-google-analytics'
 import classNames from 'classnames'
 
 import Icon from './icon'
@@ -81,15 +80,9 @@ export default function Link({
     const rel = isInternal ? null : 'noopener nofollow noreferrer'
     return (
         <Wrapper>
-            <OutboundLink
-                href={dest}
-                className={linkClassNames}
-                target="_blank"
-                rel={rel}
-                {...other}
-            >
+            <a href={dest} className={linkClassNames} target="_blank" rel={rel} {...other}>
                 {content}
-            </OutboundLink>
+            </a>
         </Wrapper>
     )
 }

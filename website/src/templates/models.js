@@ -37,14 +37,15 @@ const MODEL_META = {
     ents_r: 'Entities (recall)',
     cpu: 'words per second on CPU',
     gpu: 'words per second on GPU',
-    pipeline: 'Processing pipeline components in order',
+    pipeline: 'Active processing pipeline components in order',
+    components: 'All processing pipeline components (including disabled components)',
     sources: 'Sources of training data',
     vecs:
-        'Word vectors included in the model. Models that only support context vectors compute similarity via the tensors shared with the pipeline.',
+        'Word vectors included in the package. Packages that only support context vectors compute similarity via the tensors shared with the pipeline.',
     benchmark_parser: 'Syntax accuracy',
     benchmark_ner: 'NER accuracy',
     benchmark_speed: 'Speed',
-    compat: 'Latest compatible model version for your spaCy installation',
+    compat: 'Latest compatible package version for your spaCy installation',
 }
 
 const LABEL_SCHEME_META = {
@@ -166,6 +167,8 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
     const releaseUrl = `https://github.com/${repo}/releases/${releaseTag}`
     const pipeline =
         meta.pipeline && join(meta.pipeline.map(p => <InlineCode key={p}>{p}</InlineCode>))
+    const components =
+        meta.components && join(meta.components.map(p => <InlineCode key={p}>{p}</InlineCode>))
     const sources = formatSources(meta.sources)
     const author = !meta.url ? meta.author : <Link to={meta.url}>{meta.author}</Link>
     const licenseUrl = licenses[meta.license] ? licenses[meta.license].url : null
@@ -178,6 +181,7 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
         { label: 'Type', tag: type, content: MODEL_META[type] },
         { label: 'Genre', tag: genre, content: MODEL_META[genre] },
         { label: 'Size', tag: size, content: meta.sizeFull },
+        { label: 'Components', content: components, help: MODEL_META.components },
         { label: 'Pipeline', content: pipeline, help: MODEL_META.pipeline },
         { label: 'Vectors', content: meta.vectors, help: MODEL_META.vecs },
         { label: 'Sources', content: sources, help: MODEL_META.sources },
@@ -355,7 +359,7 @@ const Models = ({ pageContext, repo, children }) => {
     }, [initialized, baseUrl])
 
     const modelTitle = title
-    const modelTeaser = `Available pretrained statistical models for ${title}`
+    const modelTeaser = `Available trained pipelines for ${title}`
 
     const starterTitle = `${title} starters`
     const starterTeaser = `Available transfer learning starter packs for ${title}`

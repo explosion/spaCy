@@ -22,7 +22,7 @@ class Warnings:
             "generate a dependency visualization for it. Make sure the Doc "
             "was processed with a model that supports dependency parsing, and "
             "not just a language class like `English()`. For more info, see "
-            "the docs:\nhttps://spacy.io/usage/models")
+            "the docs:\nhttps://nightly.spacy.io/usage/models")
     W006 = ("No entities to visualize found in Doc object. If this is "
             "surprising to you, make sure the Doc was processed using a model "
             "that supports named entity recognition, and check the `doc.ents` "
@@ -76,6 +76,10 @@ class Warnings:
             "If this is surprising, make sure you have the spacy-lookups-data "
             "package installed. The languages with lexeme normalization tables "
             "are currently: {langs}")
+    W034 = ("Please install the package spacy-lookups-data in order to include "
+            "the default lexeme normalization table for the language '{lang}'.")
+    W035 = ('Discarding subpattern "{pattern}" due to an unrecognized '
+            "attribute or operator.")
 
     # TODO: fix numbering after merging develop into master
     W090 = ("Could not locate any binary .spacy files in path '{path}'.")
@@ -147,7 +151,7 @@ class Errors:
     E010 = ("Word vectors set to length 0. This may be because you don't have "
             "a model installed or loaded, or because your model doesn't "
             "include word vectors. For more info, see the docs:\n"
-            "https://spacy.io/usage/models")
+            "https://nightly.spacy.io/usage/models")
     E011 = ("Unknown operator: '{op}'. Options: {opts}")
     E012 = ("Cannot add pattern for zero tokens to matcher.\nKey: {key}")
     E014 = ("Unknown tag ID: {tag}")
@@ -181,7 +185,7 @@ class Errors:
             "list of (unicode, bool) tuples. Got bytes instance: {value}")
     E029 = ("noun_chunks requires the dependency parse, which requires a "
             "statistical model to be installed and loaded. For more info, see "
-            "the documentation:\nhttps://spacy.io/usage/models")
+            "the documentation:\nhttps://nightly.spacy.io/usage/models")
     E030 = ("Sentence boundaries unset. You can add the 'sentencizer' "
             "component to the pipeline with: "
             "nlp.add_pipe('sentencizer'). "
@@ -284,17 +288,17 @@ class Errors:
             "Span objects, or dicts if set to manual=True.")
     E097 = ("Invalid pattern: expected token pattern (list of dicts) or "
             "phrase pattern (string) but got:\n{pattern}")
-    E098 = ("Invalid pattern specified: expected both SPEC and PATTERN.")
-    E099 = ("First node of pattern should be a root node. The root should "
-            "only contain NODE_NAME.")
-    E100 = ("Nodes apart from the root should contain NODE_NAME, NBOR_NAME and "
-            "NBOR_RELOP.")
-    E101 = ("NODE_NAME should be a new node and NBOR_NAME should already have "
+    E098 = ("Invalid pattern: expected both RIGHT_ID and RIGHT_ATTRS.")
+    E099 = ("Invalid pattern: the first node of pattern should be an anchor "
+            "node. The node should only contain RIGHT_ID and RIGHT_ATTRS.")
+    E100 = ("Nodes other than the anchor node should all contain LEFT_ID, "
+            "REL_OP and RIGHT_ID.")
+    E101 = ("RIGHT_ID should be a new node and LEFT_ID should already have "
             "have been declared in previous edges.")
     E102 = ("Can't merge non-disjoint spans. '{token}' is already part of "
             "tokens to merge. If you want to find the longest non-overlapping "
             "spans, you can use the util.filter_spans helper:\n"
-            "https://spacy.io/api/top-level#util.filter_spans")
+            "https://nightly.spacy.io/api/top-level#util.filter_spans")
     E103 = ("Trying to set conflicting doc.ents: '{span1}' and '{span2}'. A "
             "token can only be part of one entity, so make sure the entities "
             "you're setting don't overlap.")
@@ -364,10 +368,10 @@ class Errors:
     E137 = ("Expected 'dict' type, but got '{type}' from '{line}'. Make sure "
             "to provide a valid JSON object as input with either the `text` "
             "or `tokens` key. For more info, see the docs:\n"
-            "https://spacy.io/api/cli#pretrain-jsonl")
+            "https://nightly.spacy.io/api/cli#pretrain-jsonl")
     E138 = ("Invalid JSONL format for raw text '{text}'. Make sure the input "
             "includes either the `text` or `tokens` key. For more info, see "
-            "the docs:\nhttps://spacy.io/api/cli#pretrain-jsonl")
+            "the docs:\nhttps://nightly.spacy.io/api/cli#pretrain-jsonl")
     E139 = ("Knowledge Base for component '{name}' is empty. Use the methods "
             "kb.add_entity and kb.add_alias to add entries.")
     E140 = ("The list of entities, prior probabilities and entity vectors "
@@ -474,8 +478,13 @@ class Errors:
     E198 = ("Unable to return {n} most similar vectors for the current vectors "
             "table, which contains {n_rows} vectors.")
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
+    E200 = ("Specifying a base model with a pretrained component '{component}' "
+            "can not be combined with adding a pretrained Tok2Vec layer.")
+    E201 = ("Span index out of range.")
 
     # TODO: fix numbering after merging develop into master
+    E925 = ("Invalid color values for displaCy visualizer: expected dictionary "
+            "mapping label names to colors but got: {obj}")
     E926 = ("It looks like you're trying to modify nlp.{attr} directly. This "
             "doesn't work because it's an immutable computed property. If you "
             "need to modify the pipeline, use the built-in methods like "
@@ -652,6 +661,9 @@ class Errors:
              "'{chunk}'. Tokenizer exceptions are only allowed to specify "
              "`ORTH` and `NORM`.")
     E1006 = ("Unable to initialize {name} model with 0 labels.")
+    E1007 = ("Unsupported DependencyMatcher operator '{op}'.")
+    E1008 = ("Invalid pattern: each pattern should be a list of dicts. Check "
+             "that you are providing a list of patterns as `List[List[dict]]`.")
 
 
 @add_codes

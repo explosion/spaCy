@@ -15,7 +15,7 @@ def test_tokenizer_splits_double_space(tokenizer, text):
 
 
 @pytest.mark.parametrize("text", ["lorem ipsum  "])
-def test_tokenizer_handles_double_trainling_ws(tokenizer, text):
+def test_tokenizer_handles_double_trailing_ws(tokenizer, text):
     tokens = tokenizer(text)
     assert repr(tokens.text_with_ws) == repr(text)
 
