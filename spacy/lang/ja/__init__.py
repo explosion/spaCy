@@ -254,7 +254,7 @@ def get_dtokens_and_spaces(dtokens, text, gap_tag="空白"):
         return text_dtokens, text_spaces
 
     # align words and dtokens by referring text, and insert gap tokens for the space char spans
-    for word, dtoken in zip(words, dtokens):
+    for i, (word, dtoken) in enumerate(zip(words, dtokens)):
         # skip all space tokens
         if word.isspace():
             continue
@@ -275,7 +275,7 @@ def get_dtokens_and_spaces(dtokens, text, gap_tag="空白"):
         text_spaces.append(False)
         text_pos += len(word)
         # poll a space char after the word
-        if text_pos < len(text) and text[text_pos] == " ":
+        if i + 1 < len(dtokens) and dtokens[i + 1].surface == " ":
             text_spaces[-1] = True
             text_pos += 1
 

@@ -28,7 +28,7 @@ const CODE_EXAMPLE = `# pip install spacy
 
 import spacy
 
-# Load English tokenizer, tagger, parser, NER and word vectors
+# Load English tokenizer, tagger, parser and NER
 nlp = spacy.load("en_core_web_sm")
 
 # Process whole documents

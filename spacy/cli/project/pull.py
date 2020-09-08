@@ -40,5 +40,6 @@ def project_pull(project_dir: Path, remote: str, *, verbose: bool = False):
             url = storage.pull(output_path, command_hash=cmd_hash)
             yield url, output_path
 
-        if cmd.get("outputs") and all(loc.exists() for loc in cmd["outputs"]):
+        out_locs = [project_dir / out for out in cmd.get("outputs", [])]
+        if all(loc.exists() for loc in out_locs):
             update_lockfile(project_dir, cmd)
