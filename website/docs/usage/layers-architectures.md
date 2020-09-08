@@ -118,7 +118,7 @@ code.
 
 If no model is specified for the [`TextCategorizer`](/api/textcategorizer), the
 [TextCatEnsemble](/api/architectures#TextCatEnsemble) architecture is used by
-default. This architecture combines a simpel bag-of-words model with a neural
+default. This architecture combines a simple bag-of-words model with a neural
 network, usually resulting in the most accurate results, but at the cost of
 speed. The config file for this model would look something like this:
 
@@ -225,10 +225,59 @@ you'll be able to try it out in any of the spaCy components. ​
 
 Thinc allows you to [wrap models](https://thinc.ai/docs/usage-frameworks)
 written in other machine learning frameworks like PyTorch, TensorFlow and MXNet
-using a unified [`Model`](https://thinc.ai/docs/api-model) API. As well as
-**wrapping whole models**, Thinc lets you call into an external framework for
-just **part of your model**: you can have a model where you use PyTorch just for
-the transformer layers, using "native" Thinc layers to do fiddly input and
+using a unified [`Model`](https://thinc.ai/docs/api-model) API. 
+
+For example, let's use Pytorch to define a very simple Neural network consisting 
+of two hidden `Linear` layers with `ReLU` activation and dropout, and a 
+softmax-activated output layer. 
+
+```python
+from torch import nn
+
+torch_model = nn.Sequential(
+    nn.Linear(width, hidden_width),
+    nn.ReLU(),
+    nn.Dropout2d(dropout),
+    nn.Linear(hidden_width, nO),
+    nn.ReLU(),
+    nn.Dropout2d(dropout),
+    nn.Softmax(dim=1)
+   )
+```
+
+This PyTorch model can be wrapped as a Thinc `Model` by using Thinc's `PyTorchWrapper`:
+
+```python
+from thinc.api import PyTorchWrapper
+
+wrapped_pt_model = PyTorchWrapper(torch_model)
+```
+
+The resulting wrapped `Model` can be used as a **custom architecture** as such, or 
+can be a **subcomponent of a larger model**. For instance, we can use Thinc's
+[`chain`](https://thinc.ai/docs/api-layers#chain)
+combinator, which works like `Sequential` in PyTorch, 
+to combine the wrapped model with other components in a larger network.
+This effectively means that you can easily wrap different components 
+from different frameworks, and "glue" them together with Thinc:
+ 
+```python
+from thinc.api import chain, with_array
+from spacy.ml import CharacterEmbed
+
+embed = CharacterEmbed(width, embed_size, nM, nC)
+model = chain(embed, with_array(wrapped_pt_model))
+```
+
+In the above example, we have combined our custom PyTorch model with a 
+character embedding layer defined by spaCy. 
+[CharacterEmbed](/api/architectures#CharacterEmbed) returns a 
+`Model` that takes a `List[Doc]` as input, and outputs a `List[Floats2d]`. 
+To make sure that the wrapped Pytorch model receives valid inputs, we use Thinc's 
+[`with_array`](https://thinc.ai/docs/api-layers#with_array) helper.
+ 
+As another example, you could have a model where you use PyTorch just for
+the transformer layers, and use "native" Thinc layers to do fiddly input and
 output transformations and add on task-specific "heads", as efficiency is less
 of a consideration for those parts of the network.
 
