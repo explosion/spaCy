@@ -21,6 +21,8 @@ from ..ml.models.multi_task import build_cloze_characters_multi_task_model
 from ..tokens import Doc
 from ..attrs import ID, HEAD
 from .. import util
+from ..util import registry
+from ..gold.batchers import minibatch_by_words
 
 
 @app.command(
@@ -90,6 +92,7 @@ def pretrain(
         msg.info("Using CPU")
     msg.info(f"Loading config from: {config_path}")
     with show_validation_error(config_path):
+        raw_config = util.load_config(config_path, overrides=config_overrides, interpolate=True)
         config = util.load_config(config_path, overrides=config_overrides)
         nlp, config = util.load_model_from_config(config)
     pretrain_config = config["pretraining"]
@@ -104,8 +107,8 @@ def pretrain(
         fix_random_seed(seed)
     if use_gpu >= 0 and pretrain_config["use_pytorch_for_gpu_memory"]:
         use_pytorch_for_gpu_memory()
-    config.to_disk(output_dir / "config.cfg")
-    msg.good("Saved config file in the output directory")
+    #config.to_disk(output_dir / "config.cfg")
+    #msg.good("Saved config file in the output directory")
     if texts_loc != "-":  # reading from a file
         with msg.loading("Loading input texts..."):
             texts = list(srsly.read_jsonl(texts_loc))
@@ -114,10 +117,11 @@ def pretrain(
         msg.info("Reading input text from stdin...")
         texts = srsly.read_jsonl("-")
 
-    tok2vec_path = pretrain_config["tok2vec_model"]
-    tok2vec = config
-    for subpath in tok2vec_path.split("."):
-        tok2vec = tok2vec.get(subpath)
+    tok2vec_path = pretrain_config["tok2vec_model"].split(".")
+    tok2vec = raw_config
+    for subpath in tok2vec_path[:-1]:
+        tok2vec = tok2vec[subpath]
+    tok2vec = registry.make_from_config(tok2vec)[tok2vec_path[-1]]
     model = create_pretraining_model(nlp, tok2vec, pretrain_config)
     optimizer = pretrain_config["optimizer"]
 
@@ -150,7 +154,7 @@ def pretrain(
     skip_counter = 0
     objective = create_objective(pretrain_config["objective"])
     for epoch in range(epoch_resume, pretrain_config["max_epochs"]):
-        batches = util.minibatch_by_words(texts, size=pretrain_config["batch_size"])
+        batches = minibatch_by_words(texts, size=pretrain_config["batch_size"])
         for batch_id, batch in enumerate(batches):
             docs, count = make_docs(
                 nlp,
