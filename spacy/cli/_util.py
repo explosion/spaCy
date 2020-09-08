@@ -13,7 +13,7 @@ from thinc.config import Config, ConfigValidationError
 from configparser import InterpolationError
 
 from ..schemas import ProjectConfigSchema, validate
-from ..util import import_file, run_command, make_tempdir
+from ..util import import_file, run_command, make_tempdir, registry
 
 if TYPE_CHECKING:
     from pathy import Pathy  # noqa: F401
@@ -54,6 +54,8 @@ app.add_typer(init_cli)
 
 
 def setup_cli() -> None:
+    # Make sure the entry-point for CLI runs, so that they get imported.
+    registry.cli.get_all()
     # Ensure that the help messages always display the correct prompt
     command = get_command(app)
     command(prog_name=COMMAND)
