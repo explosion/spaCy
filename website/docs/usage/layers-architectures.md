@@ -297,7 +297,8 @@ from spacy.ml import CharacterEmbed
 from torch import nn
 
 @spacy.registry.architectures("CustomTorchModel.v1")
-def TorchModel(nO: int,
+def TorchModel(
+    nO: int,
     width: int,
     hidden_width: int,
     embed_size: int,
@@ -324,19 +325,19 @@ Now you can use this model definition in any existing trainable spaCy component,
 by specifying it in the config file:
 
 ```ini
-### config.cfg (excerpt) {highlight="6-6"}
+### config.cfg (excerpt) {highlight="5-5"}
 [components.tagger]
 factory = "tagger"
 
 [components.tagger.model]
 @architectures = "CustomTorchModel.v1"
 nO = 50
-nM = 64
-nC = 8
-dropout = 0.2
 width = 96
 hidden_width = 48
 embed_size = 2000
+nM = 64
+nC = 8
+dropout = 0.2
 ```
 
 In this configuration, we pass all required parameters for the various
