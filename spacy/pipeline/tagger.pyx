@@ -17,7 +17,7 @@ from ..attrs import POS, ID
 from ..parts_of_speech import X
 from ..errors import Errors, TempErrors, Warnings
 from ..scorer import Scorer
-from ..gold import validate_examples
+from ..training import validate_examples
 from .. import util
 
 

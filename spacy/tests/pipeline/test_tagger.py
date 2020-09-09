@@ -1,6 +1,6 @@
 import pytest
 from spacy import util
-from spacy.gold import Example
+from spacy.training import Example
 from spacy.lang.en import English
 from spacy.language import Language
 

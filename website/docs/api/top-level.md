@@ -538,7 +538,7 @@ sequences in the batch.
 
 ## Training data and alignment {#gold source="spacy/gold"}
 
-### gold.biluo_tags_from_offsets {#biluo_tags_from_offsets tag="function"}
+### training.biluo_tags_from_offsets {#biluo_tags_from_offsets tag="function"}
 
 Encode labelled spans into per-token tags, using the
 [BILUO scheme](/usage/linguistic-features#accessing-ner) (Begin, In, Last, Unit,
@@ -554,7 +554,7 @@ single-token entity.
 > #### Example
 >
 > ```python
-> from spacy.gold import biluo_tags_from_offsets
+> from spacy.training import biluo_tags_from_offsets
 >
 > doc = nlp("I like London.")
 > entities = [(7, 13, "LOC")]
@@ -568,7 +568,7 @@ single-token entity.
 | `entities`  | A sequence of `(start, end, label)` triples. `start` and `end` should be character-offset integers denoting the slice into the original string. ~~List[Tuple[int, int, Union[str, int]]]~~ |
 | **RETURNS** | A list of strings, describing the [BILUO](/usage/linguistic-features#accessing-ner) tags. ~~List[str]~~                                                                                    |
 
-### gold.offsets_from_biluo_tags {#offsets_from_biluo_tags tag="function"}
+### training.offsets_from_biluo_tags {#offsets_from_biluo_tags tag="function"}
 
 Encode per-token tags following the
 [BILUO scheme](/usage/linguistic-features#accessing-ner) into entity offsets.
@@ -576,7 +576,7 @@ Encode per-token tags following the
 > #### Example
 >
 > ```python
-> from spacy.gold import offsets_from_biluo_tags
+> from spacy.training import offsets_from_biluo_tags
 >
 > doc = nlp("I like London.")
 > tags = ["O", "O", "U-LOC", "O"]
@@ -590,7 +590,7 @@ Encode per-token tags following the
 | `entities`  | A sequence of [BILUO](/usage/linguistic-features#accessing-ner) tags with each tag describing one token. Each tag string will be of the form of either `""`, `"O"` or `"{action}-{label}"`, where action is one of `"B"`, `"I"`, `"L"`, `"U"`. ~~List[str]~~ |
 | **RETURNS** | A sequence of `(start, end, label)` triples. `start` and `end` will be character-offset integers denoting the slice into the original string. ~~List[Tuple[int, int, str]]~~                                                                                 |
 
-### gold.spans_from_biluo_tags {#spans_from_biluo_tags tag="function" new="2.1"}
+### training.spans_from_biluo_tags {#spans_from_biluo_tags tag="function" new="2.1"}
 
 Encode per-token tags following the
 [BILUO scheme](/usage/linguistic-features#accessing-ner) into
@@ -600,7 +600,7 @@ token-based tags, e.g. to overwrite the `doc.ents`.
 > #### Example
 >
 > ```python
-> from spacy.gold import spans_from_biluo_tags
+> from spacy.training import spans_from_biluo_tags
 >
 > doc = nlp("I like London.")
 > tags = ["O", "O", "U-LOC", "O"]

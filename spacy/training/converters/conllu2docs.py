@@ -1,7 +1,7 @@
 import re
 
 from .conll_ner2docs import n_sents_info
-from ...gold import iob_to_biluo, spans_from_biluo_tags
+from ...training import iob_to_biluo, spans_from_biluo_tags
 from ...tokens import Doc, Token, Span
 from ...vocab import Vocab
 from wasabi import Printer

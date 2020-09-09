@@ -3,7 +3,7 @@ from thinc.api import Adam, fix_random_seed
 from spacy import registry
 from spacy.attrs import NORM
 from spacy.vocab import Vocab
-from spacy.gold import Example
+from spacy.training import Example
 from spacy.tokens import Doc
 from spacy.pipeline import DependencyParser, EntityRecognizer
 from spacy.pipeline.ner import DEFAULT_NER_MODEL

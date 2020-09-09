@@ -1,8 +1,8 @@
 import pytest
 from click import NoSuchOption
 
-from spacy.gold import docs_to_json, biluo_tags_from_offsets
-from spacy.gold.converters import iob2docs, conll_ner2docs, conllu2docs
+from spacy.training import docs_to_json, biluo_tags_from_offsets
+from spacy.training.converters import iob2docs, conll_ner2docs, conllu2docs
 from spacy.lang.en import English
 from spacy.schemas import ProjectConfigSchema, RecommendationSchema, validate
 from spacy.cli.pretrain import make_docs

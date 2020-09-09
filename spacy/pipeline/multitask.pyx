@@ -8,7 +8,7 @@ from ..tokens.doc cimport Doc
 
 from .pipe import Pipe
 from .tagger import Tagger
-from ..gold import validate_examples
+from ..training import validate_examples
 from ..language import Language
 from ._parser_internals import nonproj
 from ..attrs import POS, ID

@@ -6,7 +6,7 @@ import numpy
 
 from .pipe import Pipe
 from ..language import Language
-from ..gold import Example, validate_examples
+from ..training import Example, validate_examples
 from ..errors import Errors
 from ..scorer import Scorer
 from .. import util

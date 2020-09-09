@@ -3,7 +3,7 @@ from thinc.api import Model, set_dropout_rate, Optimizer, Config
 from itertools import islice
 
 from .pipe import Pipe
-from ..gold import Example, validate_examples
+from ..training import Example, validate_examples
 from ..tokens import Doc
 from ..vocab import Vocab
 from ..language import Language

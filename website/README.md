@@ -289,11 +289,11 @@ always be the **last element** in the row.
 > | Column 1 | Column 2 ~~List[Doc]~~ |
 > ```
 
-| Name                | Description                                                                                                                                                             |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`             | The shared vocabulary. ~~Vocab~~                                                                                                                                        |
-| `model`             | The Thinc [`Model`](https://thinc.ai/docs/api-model) wrapping the transformer. ~~Model[List[Doc], FullTransformerBatch]~~                                               |
-| `annotation_setter` | Function that takes a batch of `Doc` objects and transformer outputs can set additional annotations on the `Doc`. ~~Callable[[List[Doc], FullTransformerBatch], None]~~ |
+| Name                    | Description                                                                                                                                                                 |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`                 | The shared vocabulary. ~~Vocab~~                                                                                                                                            |
+| `model`                 | The Thinc [`Model`](https://thinc.ai/docs/api-model) wrapping the transformer. ~~Model[List[Doc], FullTransformerBatch]~~                                                   |
+| `set_extra_annotations` | Function that takes a batch of `Doc` objects and transformer outputs and can set additional annotations on the `Doc`. ~~Callable[[List[Doc], FullTransformerBatch], None]~~ |
 
 ### List {#list}
 

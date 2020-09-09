@@ -7,9 +7,9 @@ import re
 import sys
 
 from ._util import app, Arg, Opt
-from ..gold import docs_to_json
+from ..training import docs_to_json
 from ..tokens import DocBin
-from ..gold.converters import iob2docs, conll_ner2docs, json2docs, conllu2docs
+from ..training.converters import iob2docs, conll_ner2docs, json2docs, conllu2docs
 
 
 # Converters are matched by file extension except for ner/iob, which are

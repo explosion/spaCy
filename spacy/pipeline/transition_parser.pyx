@@ -21,7 +21,7 @@ from ..ml.parser_model cimport WeightsC, ActivationsC, SizesC, cpu_log_loss
 from ..ml.parser_model cimport get_c_weights, get_c_sizes
 from ..tokens.doc cimport Doc
 
-from ..gold import validate_examples
+from ..training import validate_examples
 from ..errors import Errors, Warnings
 from .. import util
 

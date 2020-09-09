@@ -357,12 +357,12 @@ File       /path/to/spacy/ml/models/tok2vec.py (line 207)
 ℹ [training.logger]
 Registry   @loggers
 Name       spacy.ConsoleLogger.v1
-Module     spacy.gold.loggers
+Module     spacy.training.loggers
 File       /path/to/spacy/gold/loggers.py (line 8)
 ℹ [training.batcher]
 Registry   @batchers
 Name       spacy.batch_by_words.v1
-Module     spacy.gold.batchers
+Module     spacy.training.batchers
 File       /path/to/spacy/gold/batchers.py (line 49)
 ℹ [training.batcher.size]
 Registry   @schedules
@@ -372,7 +372,7 @@ File       /Users/ines/Repos/explosion/thinc/thinc/schedules.py (line 43)
 ℹ [training.dev_corpus]
 Registry   @readers
 Name       spacy.Corpus.v1
-Module     spacy.gold.corpus
+Module     spacy.training.corpus
 File       /path/to/spacy/gold/corpus.py (line 18)
 ℹ [training.optimizer]
 Registry   @optimizers
@@ -387,7 +387,7 @@ File       /Users/ines/Repos/explosion/thinc/thinc/schedules.py (line 91)
 ℹ [training.train_corpus]
 Registry   @readers
 Name       spacy.Corpus.v1
-Module     spacy.gold.corpus
+Module     spacy.training.corpus
 File       /path/to/spacy/gold/corpus.py (line 18)
 ```
 

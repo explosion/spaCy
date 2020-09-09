@@ -7,7 +7,7 @@ from ._parser_internals.ner cimport BiluoPushDown
 
 from ..language import Language
 from ..scorer import Scorer
-from ..gold import validate_examples
+from ..training import validate_examples
 
 
 default_model_config = """

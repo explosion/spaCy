@@ -4,7 +4,7 @@ from thinc.api import set_dropout_rate, Model
 
 from ..tokens.doc cimport Doc
 
-from ..gold import validate_examples
+from ..training import validate_examples
 from ..errors import Errors
 from .. import util
 

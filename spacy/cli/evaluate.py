@@ -5,7 +5,7 @@ import re
 import srsly
 from thinc.api import require_gpu, fix_random_seed
 
-from ..gold import Corpus
+from ..training import Corpus
 from ..tokens import Doc
 from ._util import app, Arg, Opt
 from ..scorer import Scorer
