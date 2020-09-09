@@ -735,7 +735,7 @@ as **config settings** – in this case, `source`.
 ### functions.py {highlight="7-8"}
 from typing import Callable, Iterator, List
 import spacy
-from spacy.gold import Example
+from spacy.training import Example
 from spacy.language import Language
 import random
 
@@ -783,7 +783,7 @@ annotations are the same.
 ### functions.py
 from typing import Callable, Iterable, Iterator, List
 import spacy
-from spacy.gold import Example
+from spacy.training import Example
 
 @spacy.registry.batchers("filtering_batch.v1")
 def filter_batch(size: int) -> Callable[[Iterable[Example]], Iterator[List[Example]]]:

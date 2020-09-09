@@ -1366,7 +1366,7 @@ token.
 
 ```python
 ### {executable="true"}
-from spacy.gold import Alignment
+from spacy.training import Alignment
 
 other_tokens = ["i", "listened", "to", "obama", "'", "s", "podcasts", "."]
 spacy_tokens = ["i", "listened", "to", "obama", "'s", "podcasts", "."]

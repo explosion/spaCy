@@ -8,7 +8,7 @@ from ..tokens.doc cimport Doc
 
 from .pipe import Pipe
 from .tagger import Tagger
-from ..gold import validate_examples
+from ..training import validate_examples
 from ..language import Language
 from ._parser_internals import nonproj
 from ..attrs import POS, ID
@@ -90,7 +90,7 @@ class MultitaskObjective(Tagger):
                 label = self.make_label(token)
                 if label is not None and label not in self.labels:
                     self.labels[label] = len(self.labels)
-        self.model.initialize()
+        self.model.initialize()   # TODO: fix initialization by defining X and Y
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
@@ -178,7 +178,7 @@ class ClozeMultitask(Pipe):
         pass
 
     def begin_training(self, get_examples, pipeline=None, sgd=None):
-        self.model.initialize()
+        self.model.initialize()  # TODO: fix initialization by defining X and Y
         X = self.model.ops.alloc((5, self.model.get_ref("tok2vec").get_dim("nO")))
         self.model.output_layer.begin_training(X)
         if sgd is None:

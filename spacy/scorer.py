@@ -1,7 +1,7 @@
 from typing import Optional, Iterable, Dict, Any, Callable, TYPE_CHECKING
 import numpy as np
 
-from .gold import Example
+from .training import Example
 from .tokens import Token, Doc, Span
 from .errors import Errors
 from .util import get_lang_class, SimpleFrozenList

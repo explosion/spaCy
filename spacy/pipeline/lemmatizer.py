@@ -8,7 +8,7 @@ from ..lookups import Lookups, load_lookups
 from ..scorer import Scorer
 from ..tokens import Doc, Token
 from ..vocab import Vocab
-from ..gold import validate_examples
+from ..training import validate_examples
 from .. import util
 
 

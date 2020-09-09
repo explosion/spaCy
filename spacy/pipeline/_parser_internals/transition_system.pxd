@@ -3,7 +3,7 @@ from cymem.cymem cimport Pool
 from ...typedefs cimport attr_t, weight_t
 from ...structs cimport TokenC
 from ...strings cimport StringStore
-from ...gold.example cimport Example
+from ...training.example cimport Example
 from .stateclass cimport StateClass
 from ._state cimport StateC
 

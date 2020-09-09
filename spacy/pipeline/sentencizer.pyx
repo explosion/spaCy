@@ -7,7 +7,7 @@ from ..tokens.doc cimport Doc
 from .pipe import Pipe
 from ..language import Language
 from ..scorer import Scorer
-from ..gold import validate_examples
+from ..training import validate_examples
 from .. import util
 
 
