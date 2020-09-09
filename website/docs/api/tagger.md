@@ -289,7 +289,12 @@ context, the original parameters are restored.
 ## Tagger.add_label {#add_label tag="method"}
 
 Add a new label to the pipe. Raises an error if the output dimension is already
-set, or if the model has already been fully [initialized](#begin_training).
+set, or if the model has already been fully [initialized](#begin_training). Note
+that you don't have to call this method if you provide a **representative data
+sample** to the [`begin_training`](#begin_training) method. In this case, all
+labels found in the sample will be automatically added to the model, and the
+output dimension will be [inferred](/usage/layers-architectures#shape-inference)
+automatically.
 
 > #### Example
 >
@@ -302,12 +307,6 @@ set, or if the model has already been fully [initialized](#begin_training).
 | ----------- | ----------------------------------------------------------- |
 | `label`     | The label to add. ~~str~~                                   |
 | **RETURNS** | `0` if the label is already present, otherwise `1`. ~~int~~ |
-
-Note that you don't have to call `pipe.add_label` if you provide a
-representative data sample to the [`begin_training`](#begin_training) method. In
-this case, all labels found in the sample will be automatically added to the
-model, and the output dimension will be
-[inferred](/usage/layers-architectures#shape-inference) automatically.
 
 ## Tagger.to_disk {#to_disk tag="method"}
 

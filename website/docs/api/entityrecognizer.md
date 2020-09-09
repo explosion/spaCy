@@ -281,7 +281,11 @@ context, the original parameters are restored.
 
 ## EntityRecognizer.add_label {#add_label tag="method"}
 
-Add a new label to the pipe.
+Add a new label to the pipe. Note that you don't have to call this method if you
+provide a **representative data sample** to the
+[`begin_training`](#begin_training) method. In this case, all labels found in
+the sample will be automatically added to the model, and the output dimension
+will be [inferred](/usage/layers-architectures#shape-inference) automatically.
 
 > #### Example
 >
@@ -295,17 +299,13 @@ Add a new label to the pipe.
 | `label`     | The label to add. ~~str~~                                   |
 | **RETURNS** | `0` if the label is already present, otherwise `1`. ~~int~~ |
 
-Note that you don't have to call `pipe.add_label` if you provide a
-representative data sample to the [`begin_training`](#begin_training) method. In
-this case, all labels found in the sample will be automatically added to the
-model, and the output dimension will be
-[inferred](/usage/layers-architectures#shape-inference) automatically.
-
 ## EntityRecognizer.set_output {#set_output tag="method"}
 
 Change the output dimension of the component's model by calling the model's
 attribute `resize_output`. This is a function that takes the original model and
-the new output dimension `nO`, and changes the model in place.
+the new output dimension `nO`, and changes the model in place. When resizing an
+already trained model, care should be taken to avoid the "catastrophic
+forgetting" problem.
 
 > #### Example
 >
@@ -317,9 +317,6 @@ the new output dimension `nO`, and changes the model in place.
 | Name | Description                       |
 | ---- | --------------------------------- |
 | `nO` | The new output dimension. ~~int~~ |
-
-When resizing an already trained model, care should be taken to avoid the
-"catastrophic forgetting" problem.
 
 ## EntityRecognizer.to_disk {#to_disk tag="method"}
 
