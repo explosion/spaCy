@@ -576,7 +576,7 @@ cdef class Doc:
                 entity_type = 0
                 kb_id = 0
 
-                # Set ent_iob to Missing (0) bij default unless this token was nered before
+                # Set ent_iob to Missing (0) by default unless this token was nered before
                 ent_iob = 0
                 if self.c[i].ent_iob != 0:
                     ent_iob = 2

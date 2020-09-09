@@ -165,7 +165,7 @@ def MultiHashEmbed(
 
 @registry.architectures.register("spacy.CharacterEmbed.v1")
 def CharacterEmbed(width: int, rows: int, nM: int, nC: int):
-    """Construct an embedded representations based on character embeddings, using
+    """Construct an embedded representation based on character embeddings, using
     a feed-forward network. A fixed number of UTF-8 byte characters are used for
     each word, taken from the beginning and end of the word equally. Padding is
     used in the centre for words that are too short.
@@ -176,8 +176,8 @@ def CharacterEmbed(width: int, rows: int, nM: int, nC: int):
     ensures that the final character is always in the last position, instead
     of being in an arbitrary position depending on the word length.
 
-    The characters are embedded in a embedding table with 256 rows, and the
-    vectors concatenated. A hash-embedded vector of the NORM of the word is
+    The characters are embedded in a embedding table with a given number of rows,
+    and the vectors concatenated. A hash-embedded vector of the NORM of the word is
     also concatenated on, and the result is then passed through a feed-forward
     network to construct a single vector to represent the information.
 
