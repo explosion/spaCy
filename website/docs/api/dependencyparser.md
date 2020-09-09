@@ -307,6 +307,32 @@ Add a new label to the pipe.
 | `label`     | The label to add. ~~str~~                                   |
 | **RETURNS** | `0` if the label is already present, otherwise `1`. ~~int~~ |
 
+Note that you don't have to call `pipe.add_label` if you provide a
+representative data sample to the [`begin_training`](#begin_training) method. In
+this case, all labels found in the sample will be automatically added to the
+model, and the output dimension will be
+[inferred](/usage/layers-architectures#shape-inference) automatically.
+
+## DependencyParser.set_output {#set_output tag="method"}
+
+Change the output dimension of the component's model by calling the model's
+attribute `resize_output`. This is a function that takes the original model and
+the new output dimension `nO`, and changes the model in place.
+
+> #### Example
+>
+> ```python
+> parser = nlp.add_pipe("parser")
+> parser.set_output(512)
+> ```
+
+| Name | Description                       |
+| ---- | --------------------------------- |
+| `nO` | The new output dimension. ~~int~~ |
+
+When resizing an already trained model, care should be taken to avoid the
+"catastrophic forgetting" problem.
+
 ## DependencyParser.to_disk {#to_disk tag="method"}
 
 Serialize the pipe to disk.
