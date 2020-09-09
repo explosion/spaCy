@@ -415,11 +415,11 @@ with Model.define_operators({">>": chain}):
     model.initialize(X=input_sample, Y=output_sample)
 ```
 
-The built-in
-[pipeline components](http://localhost:8000/usage/processing-pipelines) in spaCy
-ensure that their internal models are always initialized with appropriate sample
-data. In this case, `X` is typically a `List` of `Doc` objects, while `Y` is a
-`List` of 1D or 2D arrays, depending on the specific task.
+The built-in [pipeline components](/usage/processing-pipelines) in spaCy ensure
+that their internal models are always initialized with appropriate sample data.
+In this case, `X` is typically a `List` of `Doc` objects, while `Y` is a `List`
+of 1D or 2D arrays, depending on the specific task. This functionality is
+triggered when [`nlp.begin_training`](/api/language#begin_training) is called.
 
 ### Dropout and normalization {#drop-norm}
 
@@ -443,7 +443,7 @@ with Model.define_operators({">>": chain}):
     model.initialize(X=input_sample, Y=output_sample)
 ```
 
-## Create new components {#components}
+## Create new trainable components {#components}
 
 <!-- TODO:
 
@@ -451,6 +451,8 @@ with Model.define_operators({">>": chain}):
 - Initialization life-cycle with `begin_training`, correlation with add_label
 
 Example: relation extraction component (implemented as project template)
+
+Avoid duplication with usage/processing-pipelines#trainable-components ?
 
 -->
 
