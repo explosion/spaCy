@@ -348,13 +348,14 @@ ensure that training configs are complete and experiments fully reproducible.
 ## Thinc implemention details {#thinc}
 
 Ofcourse it's also possible to define the `Model` from the previous section
-entirely in Thinc. The Thinc documentation documents the
+entirely in Thinc. The Thinc documentation provides details on the
 [various layers](https://thinc.ai/docs/api-layers) and helper functions
 available.
 
 The combinators often used in Thinc can be used to
 [overload operators](https://thinc.ai/docs/usage-models#operators). A common
-usage is for example to bind `chain` to `>>`:
+usage is to bind `chain` to `>>`. The "native" Thinc version of our simple
+neural network would then become:
 
 ```python
 from thinc.api import chain, with_array, Model, Relu, Dropout, Softmax
@@ -364,11 +365,11 @@ char_embed = CharacterEmbed(width, embed_size, nM, nC)
 
 with Model.define_operators({">>": chain}):
     layers = (
-            Relu(nO=hidden_width, nI=width)
+            Relu(hidden_width, width)
             >> Dropout(dropout)
-            >> Relu(nO=hidden_width, nI=hidden_width)
+            >> Relu(hidden_width, hidden_width)
             >> Dropout(dropout)
-            >> Softmax(nO=nO, nI=hidden_width)
+            >> Softmax(nO, hidden_width)
     )
     model = char_embed >> with_array(layers)
 ```
@@ -378,16 +379,76 @@ argument, followed (optionally) by the input dimension (`nI`). This is in
 contrast to how the PyTorch layers are defined, where `in_features` precedes
 `out_features`.**
 
+### Shape inference in thinc {#shape-inference}
 
-<!-- TODO:  shape inference, tagger assumes 50 output classes -->
+It is not strictly necessary to define all the input and output dimensions for
+each layer, as Thinc can perform shape inference between sequential layers by
+matching up the output dimensionality of one layer to the input dimensionality
+of the next. This means that we can simplify the `layers` definition:
 
+```python
+with Model.define_operators({">>": chain}):
+    layers = (
+            Relu(hidden_width, width)
+            >> Dropout(dropout)
+            >> Relu(hidden_width)
+            >> Dropout(dropout)
+            >> Softmax(nO)
+    )
+```
+
+Thinc can go one step further and deduce the correct input dimension of the
+first layer, and output dimension of the last. To enable this functionality, you
+can call [`model.initialize`](https://thinc.ai/docs/api-model#initialize) with
+an input sample `X` and an output sample `Y` with the correct dimensions.
+
+```python
+with Model.define_operators({">>": chain}):
+    layers = (
+            Relu(hidden_width)
+            >> Dropout(dropout)
+            >> Relu(hidden_width)
+            >> Dropout(dropout)
+            >> Softmax()
+    )
+    model = char_embed >> with_array(layers)
+    model.initialize(X=input_sample, Y=output_sample)
+```
+
+The built-in
+[pipeline components](http://localhost:8000/usage/processing-pipelines) in spaCy
+ensure that their internal models are always initialized with appropriate sample
+data. In this case, `X` is typically a `List` of `Doc` objects, while `Y` is a
+`List` of 1D or 2D arrays, depending on the specific task.
+
+### Dropout and normalization {#drop-norm}
+
+Many of the `Thinc` layers allow you to define a `dropout` argument that will
+result in "chaining" an additional
+[`Dropout`](https://thinc.ai/docs/api-layers#dropout) layer. Optionally, you can
+often specify whether or not you want to add layer normalization, which would
+result in an additional
+[`LayerNorm`](https://thinc.ai/docs/api-layers#layernorm) layer.
+
+That means that the following `layers` definition is equivalent to the previous:
+
+```python
+with Model.define_operators({">>": chain}):
+    layers = (
+            Relu(hidden_width, dropout=dropout, normalize=False)
+            >> Relu(hidden_width, dropout=dropout, normalize=False)
+            >> Softmax()
+    )
+    model = char_embed >> with_array(layers)
+    model.initialize(X=input_sample, Y=output_sample)
+```
 
 ## Create new components {#components}
 
 <!-- TODO:
 
 - Interaction with `predict`, `get_loss` and `set_annotations`
-- Initialization life-cycle with `begin_training`.
+- Initialization life-cycle with `begin_training`, correlation with add_label
 
 Example: relation extraction component (implemented as project template)
 
