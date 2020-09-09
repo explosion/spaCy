@@ -228,7 +228,7 @@ Thinc allows you to [wrap models](https://thinc.ai/docs/usage-frameworks)
 written in other machine learning frameworks like PyTorch, TensorFlow and MXNet
 using a unified [`Model`](https://thinc.ai/docs/api-model) API.
 
-For example, let's use Pytorch to define a very simple Neural network consisting
+For example, let's use PyTorch to define a very simple Neural network consisting
 of two hidden `Linear` layers with `ReLU` activation and dropout, and a
 softmax-activated output layer.
 
@@ -274,7 +274,7 @@ In the above example, we have combined our custom PyTorch model with a character
 embedding layer defined by spaCy.
 [CharacterEmbed](/api/architectures#CharacterEmbed) returns a `Model` that takes
 a `List[Doc]` as input, and outputs a `List[Floats2d]`. To make sure that the
-wrapped Pytorch model receives valid inputs, we use Thinc's
+wrapped PyTorch model receives valid inputs, we use Thinc's
 [`with_array`](https://thinc.ai/docs/api-layers#with_array) helper.
 
 As another example, you could have a model where you use PyTorch just for the
@@ -284,7 +284,7 @@ consideration for those parts of the network.
 
 ## Custom models for trainable components {#custom-models}
 
-To use our custom model including the Pytorch subnetwork, all we need to do is
+To use our custom model including the PyTorch subnetwork, all we need to do is
 register the architecture. The full example then becomes:
 
 ```python
