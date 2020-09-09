@@ -382,9 +382,11 @@ contrast to how the PyTorch layers are defined, where `in_features` precedes
 ### Shape inference in thinc {#shape-inference}
 
 It is not strictly necessary to define all the input and output dimensions for
-each layer, as Thinc can perform shape inference between sequential layers by
-matching up the output dimensionality of one layer to the input dimensionality
-of the next. This means that we can simplify the `layers` definition:
+each layer, as Thinc can perform
+[shape inference](https://thinc.ai/docs/usage-models#validation) between
+sequential layers by matching up the output dimensionality of one layer to the
+input dimensionality of the next. This means that we can simplify the `layers`
+definition:
 
 ```python
 with Model.define_operators({">>": chain}):
@@ -399,8 +401,8 @@ with Model.define_operators({">>": chain}):
 
 Thinc can go one step further and deduce the correct input dimension of the
 first layer, and output dimension of the last. To enable this functionality, you
-can call [`model.initialize`](https://thinc.ai/docs/api-model#initialize) with
-an input sample `X` and an output sample `Y` with the correct dimensions.
+have to call [`model.initialize`](https://thinc.ai/docs/api-model#initialize)
+with an input sample `X` and an output sample `Y` with the correct dimensions.
 
 ```python
 with Model.define_operators({">>": chain}):
