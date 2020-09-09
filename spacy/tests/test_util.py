@@ -5,7 +5,7 @@ from .util import get_random_doc
 from spacy import util
 from spacy.util import dot_to_object, SimpleFrozenList
 from thinc.api import Config, Optimizer
-from spacy.gold.batchers import minibatch_by_words
+from spacy.training.batchers import minibatch_by_words
 from ..lang.en import English
 from ..lang.nl import Dutch
 from ..language import DEFAULT_CONFIG_PATH

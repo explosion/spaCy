@@ -11,7 +11,7 @@ from .tagger import Tagger
 from ..language import Language
 from ..errors import Errors
 from ..scorer import Scorer
-from ..gold import validate_examples
+from ..training import validate_examples
 from .. import util
 
 

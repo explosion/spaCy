@@ -9,7 +9,7 @@ from spacy.tokens import Doc, Token
 from spacy.matcher import Matcher, PhraseMatcher
 from spacy.errors import MatchPatternError
 from spacy.util import minibatch
-from spacy.gold import Example
+from spacy.training import Example
 from spacy.lang.hi import Hindi
 from spacy.lang.es import Spanish
 from spacy.lang.en import English

@@ -1,6 +1,6 @@
 import pytest
 from spacy.lang.en import English
-from spacy.gold import Example
+from spacy.training import Example
 from spacy import util
 from ..util import make_tempdir
 

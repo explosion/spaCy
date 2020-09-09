@@ -1,7 +1,7 @@
 from wasabi import Printer
 
 from .conll_ner2docs import n_sents_info
-from ...gold import iob_to_biluo, tags_to_entities
+from ...training import iob_to_biluo, tags_to_entities
 from ...tokens import Doc, Span
 from ...util import minibatch
 

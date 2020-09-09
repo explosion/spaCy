@@ -1,4 +1,4 @@
-from spacy.gold import Example
+from spacy.training import Example
 from spacy.pipeline import EntityRecognizer
 from spacy.tokens import Span, Doc
 from spacy import registry

@@ -17,7 +17,7 @@ from timeit import default_timer as timer
 from .tokens.underscore import Underscore
 from .vocab import Vocab, create_vocab
 from .pipe_analysis import validate_attrs, analyze_pipes, print_pipe_analysis
-from .gold import Example, validate_examples
+from .training import Example, validate_examples
 from .scorer import Scorer
 from .util import create_default_optimizer, registry, SimpleFrozenList
 from .util import SimpleFrozenDict, combine_score_weights, CONFIG_SECTION_ORDER

@@ -4,7 +4,7 @@ import pytest
 from spacy.kb import KnowledgeBase, get_candidates, Candidate
 
 from spacy import util, registry
-from spacy.gold import Example
+from spacy.training import Example
 from spacy.lang.en import English
 from spacy.tests.util import make_tempdir
 from spacy.tokens import Span
