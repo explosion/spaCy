@@ -1,8 +1,9 @@
 from typing import Iterator, Sequence, Iterable, Optional, Dict, Callable, List, Tuple
 from thinc.api import Model, set_dropout_rate, Optimizer, Config
+from itertools import islice
 
 from .pipe import Pipe
-from ..gold import Example, validate_examples
+from ..training import Example, validate_examples
 from ..tokens import Doc
 from ..vocab import Vocab
 from ..language import Language
@@ -209,10 +210,11 @@ class Tok2Vec(Pipe):
         pipeline: Optional[List[Tuple[str, Callable[[Doc], Doc]]]] = None,
         sgd: Optional[Optimizer] = None,
     ):
-        """Initialize the pipe for training, using data examples if available.
+        """Initialize the pipe for training, using a representative set
+        of data examples.
 
-        get_examples (Callable[[], Iterable[Example]]): Optional function that
-            returns gold-standard Example objects.
+        get_examples (Callable[[], Iterable[Example]]): Function that
+            returns a representative sample of gold-standard Example objects.
         pipeline (List[Tuple[str, Callable]]): Optional list of pipeline
             components that this component is part of. Corresponds to
             nlp.pipeline.
@@ -222,8 +224,12 @@ class Tok2Vec(Pipe):
 
         DOCS: https://nightly.spacy.io/api/tok2vec#begin_training
         """
-        docs = [Doc(self.vocab, words=["hello"])]
-        self.model.initialize(X=docs)
+        self._ensure_examples(get_examples)
+        doc_sample = []
+        for example in islice(get_examples(), 10):
+            doc_sample.append(example.x)
+        assert doc_sample, Errors.E923.format(name=self.name)
+        self.model.initialize(X=doc_sample)
 
     def add_label(self, label):
         raise NotImplementedError

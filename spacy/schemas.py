@@ -12,7 +12,7 @@ from .attrs import NAMES
 if TYPE_CHECKING:
     # This lets us add type hints for mypy etc. without causing circular imports
     from .language import Language  # noqa: F401
-    from .gold import Example  # noqa: F401
+    from .training import Example  # noqa: F401
 
 
 ItemT = TypeVar("ItemT")

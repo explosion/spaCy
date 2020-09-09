@@ -9,7 +9,7 @@ from spacy.tokens import Doc, Token
 from spacy.matcher import Matcher, PhraseMatcher
 from spacy.errors import MatchPatternError
 from spacy.util import minibatch
-from spacy.gold import Example
+from spacy.training import Example
 from spacy.lang.hi import Hindi
 from spacy.lang.es import Spanish
 from spacy.lang.en import English
@@ -251,6 +251,12 @@ def test_issue3803():
     assert [t.like_num for t in doc] == [True, True, True, True, True, True]
 
 
+def _parser_example(parser):
+    doc = Doc(parser.vocab, words=["a", "b", "c", "d"])
+    gold = {"heads": [1, 1, 3, 3], "deps": ["right", "ROOT", "left", "ROOT"]}
+    return Example.from_dict(doc, gold)
+
+
 def test_issue3830_no_subtok():
     """Test that the parser doesn't have subtok label if not learn_tokens"""
     config = {
@@ -264,7 +270,7 @@ def test_issue3830_no_subtok():
     parser = DependencyParser(Vocab(), model, **config)
     parser.add_label("nsubj")
     assert "subtok" not in parser.labels
-    parser.begin_training(lambda: [])
+    parser.begin_training(lambda: [_parser_example(parser)])
     assert "subtok" not in parser.labels
 
 
@@ -281,7 +287,7 @@ def test_issue3830_with_subtok():
     parser = DependencyParser(Vocab(), model, **config)
     parser.add_label("nsubj")
     assert "subtok" not in parser.labels
-    parser.begin_training(lambda: [])
+    parser.begin_training(lambda: [_parser_example(parser)])
     assert "subtok" in parser.labels
 
 

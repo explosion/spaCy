@@ -253,10 +253,10 @@ for doc in nlp.pipe(["some text", "some other text"]):
 
 You can also customize how the [`Transformer`](/api/transformer) component sets
 annotations onto the [`Doc`](/api/doc), by specifying a custom
-`annotation_setter`. This callback will be called with the raw input and output
-data for the whole batch, along with the batch of `Doc` objects, allowing you to
-implement whatever you need. The annotation setter is called with a batch of
-[`Doc`](/api/doc) objects and a
+`set_extra_annotations` function. This callback will be called with the raw
+input and output data for the whole batch, along with the batch of `Doc`
+objects, allowing you to implement whatever you need. The annotation setter is
+called with a batch of [`Doc`](/api/doc) objects and a
 [`FullTransformerBatch`](/api/transformer#fulltransformerbatch) containing the
 transformers data for the batch.
 
@@ -267,7 +267,7 @@ def custom_annotation_setter(docs, trf_data):
         doc._.custom_attr = data
 
 nlp = spacy.load("en_core_trf_lg")
-nlp.get_pipe("transformer").annotation_setter = custom_annotation_setter
+nlp.get_pipe("transformer").set_extra_annotations = custom_annotation_setter
 doc = nlp("This is a text")
 assert isinstance(doc._.custom_attr, TransformerData)
 print(doc._.custom_attr.tensors)
@@ -314,7 +314,7 @@ component:
 >         get_spans=get_doc_spans,
 >         tokenizer_config={"use_fast": True},
 >     ),
->     annotation_setter=null_annotation_setter,
+>     set_extra_annotations=null_annotation_setter,
 >     max_batch_items=4096,
 > )
 > ```
@@ -333,7 +333,7 @@ tokenizer_config = {"use_fast": true}
 [components.transformer.model.get_spans]
 @span_getters = "spacy-transformers.doc_spans.v1"
 
-[components.transformer.annotation_setter]
+[components.transformer.set_extra_annotations]
 @annotation_setters = "spacy-transformers.null_annotation_setter.v1"
 
 ```

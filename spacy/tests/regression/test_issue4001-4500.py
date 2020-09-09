@@ -2,8 +2,8 @@ import pytest
 from spacy.pipeline import Pipe
 from spacy.matcher import PhraseMatcher, Matcher
 from spacy.tokens import Doc, Span, DocBin
-from spacy.gold import Example, Corpus
-from spacy.gold.converters import json2docs
+from spacy.training import Example, Corpus
+from spacy.training.converters import json2docs
 from spacy.vocab import Vocab
 from spacy.lang.en import English
 from spacy.util import minibatch, ensure_path, load_model

@@ -1,7 +1,7 @@
 import pytest
 from spacy.vocab import Vocab
 from spacy import registry
-from spacy.gold import Example
+from spacy.training import Example
 from spacy.pipeline import DependencyParser
 from spacy.tokens import Doc
 from spacy.pipeline._parser_internals.nonproj import projectivize

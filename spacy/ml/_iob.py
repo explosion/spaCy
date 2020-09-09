@@ -62,8 +62,6 @@ def forward(model: Model[Padded, Padded], Xp: Padded, is_train: bool):
 def get_num_actions(n_labels: int) -> int:
     # One BEGIN action per label
     # One IN action per label
-    # One LAST action per label
-    # One UNIT action per label
     # One OUT action
     return n_labels * 2 + 1
 

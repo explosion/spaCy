@@ -21,7 +21,7 @@ def BiluoTagger(
     A BILUO tag sequence encodes a sequence of non-overlapping labelled spans
     into tags assigned to each token. The first token of a span is given the
     tag B-LABEL, the last token of the span is given the tag L-LABEL, and tokens
-    within the span are given the tag U-LABEL. Single-token spans are given
+    within the span are given the tag I-LABEL. Single-token spans are given
     the tag U-LABEL. All other tokens are assigned the tag O.
 
     The BILUO tag scheme generally results in better linear separation between
@@ -86,7 +86,7 @@ def IOBTagger(
 
 
 def init(model: Model[List[Doc], List[Floats2d]], X=None, Y=None) -> None:
-    if model.get_dim("nO") is None and Y:
+    if model.has_dim("nO") is None and Y:
         model.set_dim("nO", Y[0].shape[1])
     nO = model.get_dim("nO")
     biluo = model.get_ref("biluo")

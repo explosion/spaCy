@@ -1,7 +1,7 @@
 import pytest
 import random
 from spacy import util
-from spacy.gold import Example
+from spacy.training import Example
 from spacy.matcher import Matcher
 from spacy.attrs import IS_PUNCT, ORTH, LOWER
 from spacy.vocab import Vocab

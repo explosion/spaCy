@@ -1,6 +1,6 @@
 import pytest
 from spacy import util
-from spacy.gold import Example
+from spacy.training import Example
 from spacy.lang.en import English
 from spacy.language import Language
 
@@ -34,6 +34,56 @@ TRAIN_DATA = [
 ]
 
 
+def test_no_label():
+    nlp = Language()
+    nlp.add_pipe("tagger")
+    with pytest.raises(ValueError):
+        nlp.begin_training()
+
+
+def test_no_resize():
+    nlp = Language()
+    tagger = nlp.add_pipe("tagger")
+    tagger.add_label("N")
+    tagger.add_label("V")
+    assert tagger.labels == ("N", "V")
+    nlp.begin_training()
+    assert tagger.model.get_dim("nO") == 2
+    # this throws an error because the tagger can't be resized after initialization
+    with pytest.raises(ValueError):
+        tagger.add_label("J")
+
+
+def test_implicit_label():
+    nlp = Language()
+    nlp.add_pipe("tagger")
+    train_examples = []
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+    nlp.begin_training(get_examples=lambda: train_examples)
+
+
+def test_begin_training_examples():
+    nlp = Language()
+    tagger = nlp.add_pipe("tagger")
+    train_examples = []
+    for tag in TAGS:
+        tagger.add_label(tag)
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+    # you shouldn't really call this more than once, but for testing it should be fine
+    nlp.begin_training()
+    nlp.begin_training(get_examples=lambda: train_examples)
+    with pytest.raises(TypeError):
+        nlp.begin_training(get_examples=lambda: None)
+    with pytest.raises(TypeError):
+        nlp.begin_training(get_examples=lambda: train_examples[0])
+    with pytest.raises(ValueError):
+        nlp.begin_training(get_examples=lambda: [])
+    with pytest.raises(ValueError):
+        nlp.begin_training(get_examples=train_examples)
+
+
 def test_overfitting_IO():
     # Simple test to try and quickly overfit the tagger - ensuring the ML models work correctly
     nlp = English()
@@ -41,9 +91,8 @@ def test_overfitting_IO():
     train_examples = []
     for t in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
-    for tag in TAGS:
-        tagger.add_label(tag)
-    optimizer = nlp.begin_training()
+    optimizer = nlp.begin_training(get_examples=lambda: train_examples)
+    assert tagger.model.get_dim("nO") == len(TAGS)
 
     for i in range(50):
         losses = {}

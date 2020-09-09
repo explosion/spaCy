@@ -10,7 +10,7 @@ from spacy.tokens import Doc
 from spacy.pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
 
 from ..util import make_tempdir
-from ...gold import Example
+from ...training import Example
 
 
 TRAIN_DATA = [
@@ -80,6 +80,51 @@ def test_label_types():
         textcat.add_label(9)
 
 
+def test_no_label():
+    nlp = Language()
+    nlp.add_pipe("textcat")
+    with pytest.raises(ValueError):
+        nlp.begin_training()
+
+
+def test_implicit_label():
+    nlp = Language()
+    textcat = nlp.add_pipe("textcat")
+    train_examples = []
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+    nlp.begin_training(get_examples=lambda: train_examples)
+
+
+def test_no_resize():
+    nlp = Language()
+    textcat = nlp.add_pipe("textcat")
+    textcat.add_label("POSITIVE")
+    textcat.add_label("NEGATIVE")
+    nlp.begin_training()
+    assert textcat.model.get_dim("nO") == 2
+    # this throws an error because the textcat can't be resized after initialization
+    with pytest.raises(ValueError):
+        textcat.add_label("NEUTRAL")
+
+
+def test_begin_training_examples():
+    nlp = Language()
+    textcat = nlp.add_pipe("textcat")
+    train_examples = []
+    for text, annotations in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
+        for label, value in annotations.get("cats").items():
+            textcat.add_label(label)
+    # you shouldn't really call this more than once, but for testing it should be fine
+    nlp.begin_training()
+    nlp.begin_training(get_examples=lambda: train_examples)
+    with pytest.raises(TypeError):
+        nlp.begin_training(get_examples=lambda: None)
+    with pytest.raises(ValueError):
+        nlp.begin_training(get_examples=train_examples)
+
+
 def test_overfitting_IO():
     # Simple test to try and quickly overfit the textcat component - ensuring the ML models work correctly
     fix_random_seed(0)
@@ -89,9 +134,8 @@ def test_overfitting_IO():
     train_examples = []
     for text, annotations in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
-        for label, value in annotations.get("cats").items():
-            textcat.add_label(label)
-    optimizer = nlp.begin_training()
+    optimizer = nlp.begin_training(get_examples=lambda: train_examples)
+    assert textcat.model.get_dim("nO") == 2
 
     for i in range(50):
         losses = {}

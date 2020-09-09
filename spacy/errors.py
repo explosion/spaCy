@@ -66,7 +66,7 @@ class Warnings:
             "in problems with the vocab further on in the pipeline.")
     W030 = ("Some entities could not be aligned in the text \"{text}\" with "
             "entities \"{entities}\". Use "
-            "`spacy.gold.biluo_tags_from_offsets(nlp.make_doc(text), entities)`"
+            "`spacy.training.biluo_tags_from_offsets(nlp.make_doc(text), entities)`"
             " to check the alignment. Misaligned entities ('-') will be "
             "ignored during training.")
     W033 = ("Training a new {model} using a model with no lexeme normalization "
@@ -247,8 +247,8 @@ class Errors:
             "Query string: {string}\nOrth cached: {orth}\nOrth ID: {orth_id}")
     E065 = ("Only one of the vector table's width and shape can be specified. "
             "Got width {width} and shape {shape}.")
-    E067 = ("Invalid BILUO tag sequence: Got a tag starting with 'I' (inside "
-            "an entity) without a preceding 'B' (beginning of an entity). "
+    E067 = ("Invalid BILUO tag sequence: Got a tag starting with {start} "
+            "without a preceding 'B' (beginning of an entity). "
             "Tag sequence:\n{tags}")
     E068 = ("Invalid BILUO tag: '{tag}'.")
     E071 = ("Error creating lexeme: specified orth ID ({orth}) does not "
@@ -320,10 +320,6 @@ class Errors:
             "So instead of pickling the span, pickle the Doc it belongs to or "
             "use Span.as_doc to convert the span to a standalone Doc object.")
     E115 = ("All subtokens must have associated heads.")
-    E116 = ("Cannot currently add labels to pretrained text classifier. Add "
-            "labels before training begins. This functionality was available "
-            "in previous versions, but had significant bugs that led to poor "
-            "performance.")
     E117 = ("The newly split tokens must match the text of the original token. "
             "New orths: {new}. Old text: {old}.")
     E118 = ("The custom extension attribute '{attr}' is not registered on the "
@@ -378,8 +374,9 @@ class Errors:
             "should be of equal length.")
     E141 = ("Entity vectors should be of length {required} instead of the "
             "provided {found}.")
-    E143 = ("Labels for component '{name}' not initialized. Did you forget to "
-            "call add_label()?")
+    E143 = ("Labels for component '{name}' not initialized. This can be fixed "
+            "by calling add_label, or by providing a representative batch of "
+            "examples to the component's begin_training method.")
     E145 = ("Error reading `{param}` from input file.")
     E146 = ("Could not access `{path}`.")
     E147 = ("Unexpected error in the {method} functionality of the "
@@ -483,6 +480,16 @@ class Errors:
     E201 = ("Span index out of range.")
 
     # TODO: fix numbering after merging develop into master
+    E921 = ("The method 'set_output' can only be called on components that have "
+            "a Model with a 'resize_output' attribute. Otherwise, the output "
+            "layer can not be dynamically changed.")
+    E922 = ("Component '{name}' has been initialized with an output dimension of "
+            "{nO} - cannot add any more labels.")
+    E923 = ("It looks like there is no proper sample data to initialize the "
+            "Model of component '{name}'. "
+            "This is likely a bug in spaCy, so feel free to open an issue.")
+    E924 = ("The '{name}' component does not seem to be initialized properly. "
+            "This is likely a bug in spaCy, so feel free to open an issue.")
     E925 = ("Invalid color values for displaCy visualizer: expected dictionary "
             "mapping label names to colors but got: {obj}")
     E926 = ("It looks like you're trying to modify nlp.{attr} directly. This "

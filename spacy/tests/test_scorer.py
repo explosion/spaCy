@@ -1,8 +1,8 @@
 from numpy.testing import assert_almost_equal, assert_array_almost_equal
 import pytest
 from pytest import approx
-from spacy.gold import Example
-from spacy.gold.iob_utils import biluo_tags_from_offsets
+from spacy.training import Example
+from spacy.training.iob_utils import biluo_tags_from_offsets
 from spacy.scorer import Scorer, ROCAUCScore
 from spacy.scorer import _roc_auc_score, _roc_curve
 from .util import get_doc

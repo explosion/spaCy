@@ -1,7 +1,7 @@
 from pathlib import Path
 import plac
 import spacy
-from spacy.gold import docs_to_json
+from spacy.training import docs_to_json
 import srsly
 import sys
 

@@ -1,7 +1,7 @@
 import pytest
 
 from spacy import registry
-from spacy.gold import Example
+from spacy.training import Example
 from spacy.vocab import Vocab
 from spacy.pipeline._parser_internals.arc_eager import ArcEager
 from spacy.pipeline.transition_parser import Parser

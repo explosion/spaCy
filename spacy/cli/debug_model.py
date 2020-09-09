@@ -84,11 +84,11 @@ def debug_model(model: Model, *, print_settings: Optional[Dict[str, Any]] = None
         _print_model(model, print_settings)
 
     # STEP 1: Initializing the model and printing again
+    X = _get_docs()
     Y = _get_output(model.ops.xp)
-    _set_output_dim(nO=Y.shape[-1], model=model)
     # The output vector might differ from the official type of the output layer
     with data_validation(False):
-        model.initialize(X=_get_docs(), Y=Y)
+        model.initialize(X=X, Y=Y)
     if print_settings.get("print_after_init"):
         msg.divider(f"STEP 1 - after initialization")
         _print_model(model, print_settings)
@@ -133,15 +133,6 @@ def _get_docs(lang: str = "en"):
 
 def _get_output(xp):
     return xp.asarray([i + 10 for i, _ in enumerate(_get_docs())], dtype="float32")
-
-
-def _set_output_dim(model, nO):
-    # the dim inference doesn't always work 100%, we need this hack like we have it in pipe.pyx
-    if model.has_dim("nO") is None:
-        model.set_dim("nO", nO)
-    if model.has_ref("output_layer"):
-        if model.get_ref("output_layer").has_dim("nO") is None:
-            model.get_ref("output_layer").set_dim("nO", nO)
 
 
 def _print_model(model, print_settings):

@@ -5,6 +5,7 @@ import srsly
 from thinc.api import Model, set_dropout_rate, SequenceCategoricalCrossentropy, Config
 from thinc.types import Floats2d
 import warnings
+from itertools import islice
 
 from ..tokens.doc cimport Doc
 from ..morphology cimport Morphology
@@ -16,7 +17,7 @@ from ..attrs import POS, ID
 from ..parts_of_speech import X
 from ..errors import Errors, TempErrors, Warnings
 from ..scorer import Scorer
-from ..gold import validate_examples
+from ..training import validate_examples
 from .. import util
 
 
@@ -257,10 +258,11 @@ class Tagger(Pipe):
         return float(loss), d_scores
 
     def begin_training(self, get_examples, *, pipeline=None, sgd=None):
-        """Initialize the pipe for training, using data examples if available.
+        """Initialize the pipe for training, using a representative set
+        of data examples.
 
-        get_examples (Callable[[], Iterable[Example]]): Optional function that
-            returns gold-standard Example objects.
+        get_examples (Callable[[], Iterable[Example]]): Function that
+            returns a representative sample of gold-standard Example objects..
         pipeline (List[Tuple[str, Callable]]): Optional list of pipeline
             components that this component is part of. Corresponds to
             nlp.pipeline.
@@ -270,32 +272,24 @@ class Tagger(Pipe):
 
         DOCS: https://nightly.spacy.io/api/tagger#begin_training
         """
-        if not hasattr(get_examples, "__call__"):
-            err = Errors.E930.format(name="Tagger", obj=type(get_examples))
-            raise ValueError(err)
-        tags = set()
+        self._ensure_examples(get_examples)
         doc_sample = []
+        label_sample = []
+        tags = set()
         for example in get_examples():
             for token in example.y:
-                tags.add(token.tag_)
-            if len(doc_sample) < 10:
-                doc_sample.append(example.x)
-        if not doc_sample:
-            doc_sample.append(Doc(self.vocab, words=["hello"]))
+                if token.tag_:
+                    tags.add(token.tag_)
         for tag in sorted(tags):
             self.add_label(tag)
-        if len(self.labels) == 0:
-            err = Errors.E1006.format(name="Tagger")
-            raise ValueError(err)
-        self.set_output(len(self.labels))
-        if doc_sample:
-            label_sample = [
-                self.model.ops.alloc2f(len(doc), len(self.labels))
-                for doc in doc_sample
-            ]
-            self.model.initialize(X=doc_sample, Y=label_sample)
-        else:
-            self.model.initialize()
+        for example in islice(get_examples(), 10):
+            doc_sample.append(example.x)
+            gold_tags = example.get_aligned("TAG", as_string=True)
+            gold_array = [[1.0 if tag == gold_tag else 0.0 for tag in self.labels] for gold_tag in gold_tags]
+            label_sample.append(self.model.ops.asarray(gold_array, dtype="float32"))
+        assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
+        assert len(label_sample) > 0, Errors.E923.format(name=self.name)
+        self.model.initialize(X=doc_sample, Y=label_sample)
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
@@ -312,6 +306,7 @@ class Tagger(Pipe):
             raise ValueError(Errors.E187)
         if label in self.labels:
             return 0
+        self._allow_extra_label()
         self.cfg["labels"].append(label)
         self.vocab.strings.add(label)
         return 1

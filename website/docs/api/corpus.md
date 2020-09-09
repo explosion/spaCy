@@ -58,7 +58,7 @@ train/test skew.
 > #### Example
 >
 > ```python
-> from spacy.gold import Corpus
+> from spacy.training import Corpus
 >
 > # With a single file
 > corpus = Corpus("./data/train.spacy")
@@ -82,7 +82,7 @@ Yield examples from the data.
 > #### Example
 >
 > ```python
-> from spacy.gold import Corpus
+> from spacy.training import Corpus
 > import spacy
 >
 > corpus = Corpus("./train.spacy")

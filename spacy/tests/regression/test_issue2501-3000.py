@@ -1,6 +1,6 @@
 import pytest
 from spacy import displacy
-from spacy.gold import Example
+from spacy.training import Example
 from spacy.lang.en import English
 from spacy.lang.ja import Japanese
 from spacy.lang.xx import MultiLanguage
@@ -20,7 +20,7 @@ def test_issue2564():
     nlp = Language()
     tagger = nlp.add_pipe("tagger")
     tagger.add_label("A")
-    tagger.begin_training(lambda: [])
+    nlp.begin_training()
     doc = nlp("hello world")
     assert doc.has_annotation("TAG")
     docs = nlp.pipe(["hello", "world"])
