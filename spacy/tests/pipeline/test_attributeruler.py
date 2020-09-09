@@ -1,6 +1,6 @@
 import pytest
 import numpy
-from spacy.gold import Example
+from spacy.training import Example
 from spacy.lang.en import English
 from spacy.pipeline import AttributeRuler
 from spacy import util, registry

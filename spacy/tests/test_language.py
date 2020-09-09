@@ -3,7 +3,7 @@ import pytest
 from spacy.language import Language
 from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
-from spacy.gold import Example
+from spacy.training import Example
 from spacy.lang.en import English
 from spacy.util import registry
 
