@@ -831,6 +831,8 @@ so you can compare their results. The following script starts an
 argument you can pass in from your `config.yml`: a comma-separated list of paths
 to load the pipelines from and an example text to use as the default text.
 
+<!-- TODO: replace with embed -->
+
 ```python
 ### scripts/visualize.py
 import spacy_streamlit

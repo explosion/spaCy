@@ -683,7 +683,7 @@ You can also implement your own batch size schedule to use during training. The
 import spacy
 
 @spacy.registry.schedules("my_custom_schedule.v1")
-def my_custom_schedule(start: int = 1, factor: int = 1.001):
+def my_custom_schedule(start: int = 1, factor: float = 1.001):
    while True:
       yield start
       start = start * factor
