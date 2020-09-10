@@ -893,7 +893,7 @@ can provide any other repo (public or private) that you have access to using the
 <!-- TODO: update example once we've decided on repo structure -->
 
 ```cli
-$ python -m spacy project clone [name] [dest] [--repo]
+$ python -m spacy project clone [name] [dest] [--repo] [--branch]
 ```
 
 > #### Example
@@ -908,13 +908,14 @@ $ python -m spacy project clone [name] [dest] [--repo]
 > $ python -m spacy project clone template --repo https://github.com/your_org/your_repo
 > ```
 
-| Name           | Description                                                                                                                                       |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`         | The name of the template to clone, relative to the repo. Can be a top-level directory or a subdirectory like `dir/template`. ~~str (positional)~~ |
-| `dest`         | Where to clone the project. Defaults to current working directory. ~~Path (positional)~~                                                          |
-| `--repo`, `-r` | The repository to clone from. Can be any public or private Git repo you have access to. ~~str (option)~~                                          |
-| `--help`, `-h` | Show help message and available arguments. ~~bool (flag)~~                                                                                        |
-| **CREATES**    | The cloned [project directory](/usage/projects#project-files).                                                                                    |
+| Name             | Description                                                                                                                                       |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`           | The name of the template to clone, relative to the repo. Can be a top-level directory or a subdirectory like `dir/template`. ~~str (positional)~~ |
+| `dest`           | Where to clone the project. Defaults to current working directory. ~~Path (positional)~~                                                          |
+| `--repo`, `-r`   | The repository to clone from. Can be any public or private Git repo you have access to. ~~str (option)~~                                          |
+| `--branch`, `-b` | The branch to clone from. Defaults to `master`. ~~str (option)~~                                                                                  |
+| `--help`, `-h`   | Show help message and available arguments. ~~bool (flag)~~                                                                                        |
+| **CREATES**      | The cloned [project directory](/usage/projects#project-files).                                                                                    |
 
 ### project assets {#project-assets tag="command"}
 
