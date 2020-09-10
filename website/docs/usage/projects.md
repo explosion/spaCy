@@ -879,7 +879,9 @@ REST API.
 
 <Project id="integrations/fastapi">
 
-Get started with spaCy and FastAPI using our project template.
+Get started with spaCy and FastAPI using our project template. It includes a
+simple REST API for processing batches of text, and usage examples for how to
+query your API from Python and JavaScript (Vanilla JS and React).
 
 </Project>
 
