@@ -332,14 +332,15 @@ def git_sparse_checkout(repo: str, subpath: str, dest: Path, *, branch: str = "m
         # Looking for this 'rev-list' command in the git --help? Hah.
         cmd = f"git -C {tmp_dir} rev-list --objects --all --missing=print -- {subpath}"
         ret = _attempt_run_command(cmd)
-        repo = _from_http_to_git(repo)
+        git_repo = _from_http_to_git(repo)
         # Now pass those missings into another bit of git internals
         missings = " ".join([x[1:] for x in ret.stdout.split() if x.startswith("?")])
         if not missings:
-           err = f"Could not find any relevant files for '{subpath}'. Did you specify a correct and complete Git path?"
+           err = f"Could not find any relevant files for '{subpath}'. " \
+                 f"Did you specify a correct and complete path within repo '{repo}'?"
            msg.fail(err, exits=1)
-        cmd = f"git -C {tmp_dir} fetch-pack {repo} {missings}"
-        _attempt_run_command(cmd, capture=True)
+        cmd = f"git -C {tmp_dir} fetch-pack {git_repo} {missings}"
+        _attempt_run_command(cmd)
         # And finally, we can checkout our subpath
         cmd = f"git -C {tmp_dir} checkout {branch} {subpath}"
         _attempt_run_command(cmd)
