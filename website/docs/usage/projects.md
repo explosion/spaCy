@@ -219,7 +219,7 @@ pipelines.
 <!-- TODO: update with better (final) example -->
 
 ```yaml
-https://github.com/explosion/spacy-boilerplates/blob/master/ner_fashion/project.yml
+https://github.com/explosion/projects/tree/v3/tutorials/ner_fashion_brands/project.yml
 ```
 
 | Section       | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
@@ -815,8 +815,10 @@ package helps you integrate spaCy visualizations into your Streamlit apps and
 quickly spin up demos to explore your pipelines interactively. It includes a
 full embedded visualizer, as well as individual components.
 
+<!-- TODO: update once version is stable -->
+
 ```bash
-$ pip install spacy_streamlit
+$ pip install "spacy_streamlit>=1.0.0a0"
 ```
 
 </div>
@@ -828,22 +830,15 @@ $ pip install spacy_streamlit
 Using [`spacy-streamlit`](https://github.com/explosion/spacy-streamlit), your
 projects can easily define their own scripts that spin up an interactive
 visualizer, using the latest pipeline you trained, or a selection of pipelines
-so you can compare their results. The following script starts an
-[NER visualizer](/usage/visualizers#ent) and takes two positional command-line
-argument you can pass in from your `config.yml`: a comma-separated list of paths
-to load the pipelines from and an example text to use as the default text.
+so you can compare their results.
 
-<!-- TODO: replace with embed -->
+<Project id="integrations/streamlit">
 
-```python
-### scripts/visualize.py
-import spacy_streamlit
-import sys
+Get started with spaCy and Streamlit using our project template. It includes a
+script to spin up a custom visualizer and commands you can adjust to showcase
+and explore your own custom trained pipelines.
 
-DEFAULT_TEXT = sys.argv[2] if len(sys.argv) >= 3 else ""
-PIPELINES = [name.strip() for name in sys.argv[1].split(",")]
-spacy_streamlit.visualize(PIPELINES, DEFAULT_TEXT, visualizers=["ner"])
-```
+</Project>
 
 > #### Example usage
 >
@@ -860,16 +855,16 @@ commands:
     script:
       - 'streamlit run ./scripts/visualize.py ./training/model-best "I like Adidas shoes."'
     deps:
-      - 'training/model-best'
+      - "training/model-best"
 ```
 
-<Project id="integrations/streamlit">
+The following script is called from the `project.yml` and takes two positional
+command-line argument: a comma-separated list of paths or packages to load the
+pipelines from and an example text to use as the default text.
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus interdum
-sodales lectus, ut sodales orci ullamcorper id. Sed condimentum neque ut erat
-mattis pretium.
-
-</Project>
+```python
+https://github.com/explosion/projects/blob/v3/integrations/streamlit/scripts/visualize.py
+```
 
 ---
 
@@ -882,9 +877,11 @@ library for serving machine learning models and you can use it in your spaCy
 projects to quickly serve up a trained pipeline and make it available behind a
 REST API.
 
-```python
-# TODO: show an example that addresses some of the main concerns for serving ML (workers etc.)
-```
+<Project id="integrations/fastapi">
+
+Get started with spaCy and FastAPI using our project template.
+
+</Project>
 
 > #### Example usage
 >
@@ -895,23 +892,24 @@ REST API.
 <!-- prettier-ignore -->
 ```yaml
 ### project.yml
-commands:
-  - name: serve
-    help: "Serve the trained pipeline with FastAPI"
+  - name: "serve"
+    help: "Serve the models via a FastAPI REST API using the given host and port"
     script:
-      - 'python ./scripts/serve.py ./training/model-best'
+      - "uvicorn scripts.main:app --reload --host 127.0.0.1 --port 5000"
     deps:
-      - 'training/model-best'
+      - "scripts/main.py"
     no_skip: true
 ```
 
-<Project id="integrations/fastapi">
+The script included in the template shows a simple REST API with a `POST`
+endpoint that accepts batches of texts and returns batches of predictions, e.g.
+named entities found in the documents. Type hints and
+[`pydantic`](https://github.com/samuelcolvin/pydantic) are used to define the
+expected data types.
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus interdum
-sodales lectus, ut sodales orci ullamcorper id. Sed condimentum neque ut erat
-mattis pretium.
-
-</Project>
+```python
+https://github.com/explosion/projects/blob/v3/integrations/fastapi/scripts/main.py
+```
 
 ---
 
