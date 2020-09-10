@@ -6,6 +6,7 @@ from wasabi import msg
 import srsly
 import hashlib
 import typer
+import subprocess
 from click import NoSuchOption
 from typer.main import get_command
 from contextlib import contextmanager
@@ -326,22 +327,31 @@ def git_sparse_checkout(repo: str, subpath: str, dest: Path, *, branch: str = "m
             f"--filter=blob:none "  # <-- The key bit
             f"-b {branch}"
         )
-        run_command(cmd, capture=True)
+        _attempt_run_command(cmd)
         # Now we need to find the missing filenames for the subpath we want.
         # Looking for this 'rev-list' command in the git --help? Hah.
         cmd = f"git -C {tmp_dir} rev-list --objects --all --missing=print -- {subpath}"
-        ret = run_command(cmd, capture=True)
+        ret = _attempt_run_command(cmd)
         repo = _from_http_to_git(repo)
         # Now pass those missings into another bit of git internals
         missings = " ".join([x[1:] for x in ret.stdout.split() if x.startswith("?")])
+        if not missings:
+           err = f"Could not find any relevant files for '{subpath}'. Did you specify a correct and complete Git path?"
+           msg.fail(err, exits=1)
         cmd = f"git -C {tmp_dir} fetch-pack {repo} {missings}"
-        run_command(cmd, capture=True)
+        _attempt_run_command(cmd, capture=True)
         # And finally, we can checkout our subpath
         cmd = f"git -C {tmp_dir} checkout {branch} {subpath}"
-        run_command(cmd)
+        _attempt_run_command(cmd)
         # We need Path(name) to make sure we also support subdirectories
         shutil.move(str(tmp_dir / Path(subpath)), str(dest))
 
+def _attempt_run_command(cmd):
+    try:
+        return run_command(cmd, capture=True)
+    except subprocess.CalledProcessError as e:
+        err = f"Could not run command: {cmd}."
+        msg.fail(err, exits=1)
 
 def _from_http_to_git(repo):
     if repo.startswith("http://"):
