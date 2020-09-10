@@ -40,33 +40,30 @@ def project_assets(project_dir: Path) -> None:
     for asset in assets:
         dest = project_dir / asset["dest"]
         checksum = asset.get("checksum")
-        if dest.exists():
-            # If there's already a file, check for checksum
-            if checksum and checksum == get_checksum(dest):
-                msg.good(f"Skipping download with matching checksum: {dest}")
-                continue
-            else:
-                msg.good(f"Removing asset with outdated checksum: {dest} ")
-                if dest.is_dir():
-                    shutil.rmtree(dest)
-                else:
-                    dest.unlink()
         if "git" in asset:
+            if dest.exists():
+                # If there's already a file, check for checksum
+                if checksum and checksum == get_checksum(dest):
+                    msg.good(f"Skipping download with matching checksum: {dest}")
+                    continue
+                else:
+                    if dest.is_dir():
+                        shutil.rmtree(dest)
+                    else:
+                        dest.unlink()
             git_sparse_checkout(
                 asset["git"]["repo"],
                 asset["git"]["path"],
                 dest,
                 branch=asset["git"].get("branch"),
             )
-        elif "url" in asset:
+        else:
             url = asset.get("url")
             if not url:
                 # project.yml defines asset without URL that the user has to place
                 check_private_asset(dest, checksum)
                 continue
             fetch_asset(project_path, url, dest, checksum)
-        else:
-            msg.warn(f"Could not fetch asset {dest} as neither a 'git' or 'url' parameter is specified.")
 
 
 def check_private_asset(dest: Path, checksum: Optional[str] = None) -> None:
@@ -76,7 +73,6 @@ def check_private_asset(dest: Path, checksum: Optional[str] = None) -> None:
     dest (Path): Destination path of the asset.
     checksum (Optional[str]): Optional checksum of the expected file.
     """
-    print("path", dest)
     if not Path(dest).exists():
         err = f"No URL provided for asset. You need to add this file yourself: {dest}"
         msg.warn(err)
