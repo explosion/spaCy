@@ -65,6 +65,8 @@ project template and copies the files to a local directory. You can then run the
 project, e.g. to train a pipeline and edit the commands and scripts to build
 fully custom workflows.
 
+<!-- TODO: update with real example project -->
+
 ```cli
 python -m spacy project clone some_example_project
 ```
