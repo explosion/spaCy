@@ -203,6 +203,10 @@ def get_checksum(path: Union[Path, str]) -> str:
     msg.fail(f"Can't get checksum for {path}: not a file or directory", exits=1)
 
 
+def _brol(path):
+    return str.encode(Path(path).read_text().replace("\r\n", "\n"))
+
+
 @contextmanager
 def show_validation_error(
     file_path: Optional[Union[str, Path]] = None,
@@ -360,5 +364,7 @@ def _from_http_to_git(repo):
         repo = repo.replace(r"http://", r"https://")
     if repo.startswith(r"https://"):
         repo = repo.replace("https://", "git@").replace("/", ":", 1)
+        if repo.endswith("/"):
+            repo = repo[:-1]
         repo = f"{repo}.git"
     return repo
