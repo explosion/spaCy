@@ -327,8 +327,9 @@ model, and the output dimension will be
 > can_resize = pipe.is_resizable()
 > ```
 >
+> With custom resizing implemented by a component:
+>
 > ```python
-> ### Custom resizing
 > def custom_resize(model, new_nO):
 >     # adjust model
 >     return model
