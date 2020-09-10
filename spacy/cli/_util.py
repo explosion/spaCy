@@ -203,10 +203,6 @@ def get_checksum(path: Union[Path, str]) -> str:
     msg.fail(f"Can't get checksum for {path}: not a file or directory", exits=1)
 
 
-def _brol(path):
-    return str.encode(Path(path).read_text().replace("\r\n", "\n"))
-
-
 @contextmanager
 def show_validation_error(
     file_path: Optional[Union[str, Path]] = None,
