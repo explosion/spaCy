@@ -16,6 +16,7 @@ def project_clone_cli(
     name: str = Arg(..., help="The name of the template to clone"),
     dest: Optional[Path] = Arg(None, help="Where to clone the project. Defaults to current working directory", exists=False),
     repo: str = Opt(about.__projects__, "--repo", "-r", help="The repository to clone from"),
+    branch: str = Opt("master", "--branch", "-b", help="The branch to clone from")
     # fmt: on
 ):
     """Clone a project template from a repository. Calls into "git" and will
@@ -30,7 +31,9 @@ def project_clone_cli(
     project_clone(name, dest, repo=repo)
 
 
-def project_clone(name: str, dest: Path, *, repo: str = about.__projects__) -> None:
+def project_clone(
+    name: str, dest: Path, *, repo: str = about.__projects__, branch: str = "master"
+) -> None:
     """Clone a project template from a repository.
 
     name (str): Name of subdirectory to clone.
