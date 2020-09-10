@@ -205,8 +205,8 @@ examples can either be the full training data or a representative sample. They
 are used to **initialize the models** of trainable pipeline components and are
 passed each component's [`begin_training`](/api/pipe#begin_training) method, if
 available. Initialization includes validating the network,
-[inferring missing shapes](/usage/layers-architectures#shape-inference) and
-setting up the label scheme based on the data.
+[inferring missing shapes](/usage/layers-architectures#thinc-shape-inference)
+and setting up the label scheme based on the data.
 
 If no `get_examples` function is provided when calling `nlp.begin_training`, the
 pipeline components will be initialized with generic data. In this case, it is

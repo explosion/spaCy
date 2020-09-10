@@ -317,7 +317,7 @@ Note that in general, you don't have to call `pipe.add_label` if you provide a
 representative data sample to the [`begin_training`](#begin_training) method. In
 this case, all labels found in the sample will be automatically added to the
 model, and the output dimension will be
-[inferred](/usage/layers-architectures#shape-inference) automatically.
+[inferred](/usage/layers-architectures#thinc-shape-inference) automatically.
 
 ## Pipe.is_resizable {#is_resizable tag="method"}
 

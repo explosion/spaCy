@@ -263,7 +263,8 @@ already been fully [initialized](#begin_training). Note that you don't have to
 call this method if you provide a **representative data sample** to the
 [`begin_training`](#begin_training) method. In this case, all labels found in
 the sample will be automatically added to the model, and the output dimension
-will be [inferred](/usage/layers-architectures#shape-inference) automatically.
+will be [inferred](/usage/layers-architectures#thinc-shape-inference)
+automatically.
 
 > #### Example
 >
