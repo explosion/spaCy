@@ -112,7 +112,6 @@ def test_doc_token_api_ancestors(en_tokenizer):
 
 
 def test_doc_token_api_head_setter(en_tokenizer):
-    # the structure of this sentence depends on the English annotation scheme
     text = "Yesterday I saw a dog that barked loudly."
     heads = [2, 1, 0, 1, -2, 1, -2, -1, -6]
     tokens = en_tokenizer(text)

@@ -408,7 +408,6 @@ cdef make_iob_consistent(TokenC* tokens, int length):
 def normalize_token_attrs(Vocab vocab, attrs):
     if "_" in attrs:  # Extension attributes
         extensions = attrs["_"]
-        print("EXTENSIONS", extensions)
         _validate_extensions(extensions)
         attrs = {key: value for key, value in attrs.items() if key != "_"}
         attrs = intify_attrs(attrs, strings_map=vocab.strings)

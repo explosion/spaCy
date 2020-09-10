@@ -1,6 +1,4 @@
 # cython: infer_types=True
-from libc.string cimport memcpy
-from cpython.mem cimport PyMem_Malloc, PyMem_Free
 # Compiler crashes on memory view coercion without this. Should report bug.
 from cython.view cimport array as cvarray
 cimport numpy as np
@@ -14,14 +12,13 @@ from ..typedefs cimport hash_t
 from ..lexeme cimport Lexeme
 from ..attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
 from ..attrs cimport IS_BRACKET, IS_QUOTE, IS_LEFT_PUNCT, IS_RIGHT_PUNCT
-from ..attrs cimport IS_TITLE, IS_UPPER, IS_CURRENCY, LIKE_URL, LIKE_NUM, LIKE_EMAIL
-from ..attrs cimport IS_STOP, ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX
-from ..attrs cimport LENGTH, CLUSTER, LEMMA, POS, TAG, DEP
+from ..attrs cimport IS_TITLE, IS_UPPER, IS_CURRENCY, IS_STOP
+from ..attrs cimport LIKE_URL, LIKE_NUM, LIKE_EMAIL
 from ..symbols cimport conj
 from .morphanalysis cimport MorphAnalysis
+from .doc cimport set_children_from_heads
 
 from .. import parts_of_speech
-from .. import util
 from ..errors import Errors, Warnings
 from .underscore import Underscore, get_ext_args
 
@@ -650,78 +647,8 @@ cdef class Token:
             # Do nothing if old head is new head
             if self.i + self.c.head == new_head.i:
                 return
-            cdef Token old_head = self.head
-            cdef int rel_newhead_i = new_head.i - self.i
-            # Is the new head a descendant of the old head
-            cdef bint is_desc = old_head.is_ancestor(new_head)
-            cdef int new_edge
-            cdef Token anc, child
-            # Update number of deps of old head
-            if self.c.head > 0:  # left dependent
-                old_head.c.l_kids -= 1
-                if self.c.l_edge == old_head.c.l_edge:
-                    # The token dominates the left edge so the left edge of
-                    # the head may change when the token is reattached, it may
-                    # not change if the new head is a descendant of the current
-                    # head.
-                    new_edge = self.c.l_edge
-                    # The new l_edge is the left-most l_edge on any of the
-                    # other dependents where the l_edge is left of the head,
-                    # otherwise it is the head
-                    if not is_desc:
-                        new_edge = old_head.i
-                        for child in old_head.children:
-                            if child == self:
-                                continue
-                            if child.c.l_edge < new_edge:
-                                new_edge = child.c.l_edge
-                        old_head.c.l_edge = new_edge
-                    # Walk up the tree from old_head and assign new l_edge to
-                    # ancestors until an ancestor already has an l_edge that's
-                    # further left
-                    for anc in old_head.ancestors:
-                        if anc.c.l_edge <= new_edge:
-                            break
-                        anc.c.l_edge = new_edge
-            elif self.c.head < 0:  # right dependent
-                old_head.c.r_kids -= 1
-                # Do the same thing as for l_edge
-                if self.c.r_edge == old_head.c.r_edge:
-                    new_edge = self.c.r_edge
-                    if not is_desc:
-                        new_edge = old_head.i
-                        for child in old_head.children:
-                            if child == self:
-                                continue
-                            if child.c.r_edge > new_edge:
-                                new_edge = child.c.r_edge
-                        old_head.c.r_edge = new_edge
-                    for anc in old_head.ancestors:
-                        if anc.c.r_edge >= new_edge:
-                            break
-                        anc.c.r_edge = new_edge
-            # Update number of deps of new head
-            if rel_newhead_i > 0:  # left dependent
-                new_head.c.l_kids += 1
-                # Walk up the tree from new head and set l_edge to self.l_edge
-                # until you hit a token with an l_edge further to the left
-                if self.c.l_edge < new_head.c.l_edge:
-                    new_head.c.l_edge = self.c.l_edge
-                    for anc in new_head.ancestors:
-                        if anc.c.l_edge <= self.c.l_edge:
-                            break
-                        anc.c.l_edge = self.c.l_edge
-            elif rel_newhead_i < 0:  # right dependent
-                new_head.c.r_kids += 1
-                # Do the same as for l_edge
-                if self.c.r_edge > new_head.c.r_edge:
-                    new_head.c.r_edge = self.c.r_edge
-                    for anc in new_head.ancestors:
-                        if anc.c.r_edge >= self.c.r_edge:
-                            break
-                        anc.c.r_edge = self.c.r_edge
-            # Set new head
-            self.c.head = rel_newhead_i
+            self.c.head = new_head.i - self.i
+            set_children_from_heads(self.doc.c, self.doc.length)
 
     @property
     def conjuncts(self):

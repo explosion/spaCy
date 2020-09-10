@@ -1,32 +1,27 @@
 # cython: infer_types=True, bounds_check=False, profile=True
 cimport cython
 cimport numpy as np
-from libc.string cimport memcpy, memset
+from libc.string cimport memcpy
 from libc.math cimport sqrt
 from libc.stdint cimport int32_t, uint64_t
 
 import copy
 from collections import Counter
 import numpy
-import numpy.linalg
-import struct
 import srsly
 from thinc.api import get_array_module
 from thinc.util import copy_array
 import warnings
-import copy
 
 from .span cimport Span
 from .token cimport Token
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
-from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, CLUSTER
+from ..attrs cimport attr_id_t
 from ..attrs cimport LENGTH, POS, LEMMA, TAG, MORPH, DEP, HEAD, SPACY, ENT_IOB
-from ..attrs cimport ENT_TYPE, ENT_ID, ENT_KB_ID, SENT_START, IDX, attr_id_t
-from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
+from ..attrs cimport ENT_TYPE, ENT_ID, ENT_KB_ID, SENT_START, IDX, NORM
 
-from ..attrs import intify_attr, intify_attrs, IDS
-from ..util import normalize_slice
+from ..attrs import intify_attr, IDS
 from ..compat import copy_reg, pickle
 from ..errors import Errors, Warnings
 from .. import util
@@ -291,7 +286,7 @@ cdef class Doc:
         DOCS: https://nightly.spacy.io/api/doc#getitem
         """
         if isinstance(i, slice):
-            start, stop = normalize_slice(len(self), i.start, i.stop, i.step)
+            start, stop = util.normalize_slice(len(self), i.start, i.stop, i.step)
             return Span(self, start, stop, label=0)
         if i < 0:
             i = self.length + i
@@ -627,10 +622,7 @@ cdef class Doc:
     @property
     def sents(self):
         """Iterate over the sentences in the document. Yields sentence `Span`
-        objects. Sentence spans have no label. To improve accuracy on informal
-        texts, spaCy calculates sentence boundaries from the syntactic
-        dependency parse. If the parser is disabled, the `sents` iterator will
-        be unavailable.
+        objects. Sentence spans have no label.
 
         YIELDS (Span): Sentences in the document.
 
@@ -785,14 +777,6 @@ cdef class Doc:
         cdef int i
         for i in range(self.length, self.max_length + PADDING):
             self.c[i].lex = &EMPTY_LEXEME
-
-    cdef void set_parse(self, const TokenC* parsed) nogil:
-        # TODO: This method is fairly misleading atm. It's used by Parser
-        # to actually apply the parse calculated. Need to rethink this.
-        # Probably we should use from_array?
-        self.is_parsed = True
-        for i in range(self.length):
-            self.c[i] = parsed[i]
 
     def from_array(self, attrs, array):
         """Load attributes from a numpy array. Write to a `Doc` object, from an
@@ -1321,7 +1305,6 @@ cdef int token_by_char(const TokenC* tokens, int length, int char_idx) except -2
             return mid
     return -1
 
-
 cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
     cdef TokenC* head
     cdef TokenC* child
@@ -1348,7 +1331,9 @@ cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
         loop_count += 1
     # Set sentence starts
     for i in range(length):
-        if tokens[i].head == 0 and tokens[i].dep != 0:
+        tokens[i].sent_start = -1
+    for i in range(length):
+        if tokens[i].head == 0:
             tokens[tokens[i].l_edge].sent_start = True
 
 
@@ -1362,7 +1347,7 @@ cdef int _set_lr_kids_and_edges(TokenC* tokens, int length, int loop_count) exce
     for i in range(length):
         child = &tokens[i]
         head = &tokens[i + child.head]
-        if child < head and loop_count == 0:
+        if loop_count == 0 and child < head:
             head.l_kids += 1
         if child.l_edge < head.l_edge:
             head.l_edge = child.l_edge
@@ -1372,7 +1357,7 @@ cdef int _set_lr_kids_and_edges(TokenC* tokens, int length, int loop_count) exce
     for i in range(length-1, -1, -1):
         child = &tokens[i]
         head = &tokens[i + child.head]
-        if child > head and loop_count == 0:
+        if loop_count == 0 and child > head:
             head.r_kids += 1
         if child.r_edge > head.r_edge:
             head.r_edge = child.r_edge
@@ -1381,7 +1366,7 @@ cdef int _set_lr_kids_and_edges(TokenC* tokens, int length, int loop_count) exce
     # Get sentence start positions according to current state
     sent_starts = set()
     for i in range(length):
-        if tokens[i].head == 0 and tokens[i].dep != 0:
+        if tokens[i].head == 0:
             sent_starts.add(tokens[i].l_edge)
     cdef int curr_sent_start = 0
     cdef int curr_sent_end = 0
@@ -1436,6 +1421,7 @@ cdef int [:,:] _get_lca_matrix(Doc doc, int start, int end):
         with shape (n, n), where n = len(doc).
     """
     cdef int [:,:] lca_matrix
+    cdef int j, k
     n_tokens= end - start
     lca_mat = numpy.empty((n_tokens, n_tokens), dtype=numpy.int32)
     lca_mat.fill(-1)

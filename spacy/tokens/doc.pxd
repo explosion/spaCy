@@ -74,5 +74,3 @@ cdef class Doc:
     cdef int push_back(self, LexemeOrToken lex_or_tok, bint has_space) except -1
 
     cpdef np.ndarray to_array(self, object features)
-
-    cdef void set_parse(self, const TokenC* parsed) nogil

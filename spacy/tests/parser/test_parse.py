@@ -184,7 +184,7 @@ def test_parser_set_sent_starts(en_vocab):
         if i == 0 or i == 3:
             assert doc[i].is_sent_start is True
         else:
-            assert doc[i].is_sent_start is None
+            assert not doc[i].is_sent_start
     for sent in doc.sents:
         for token in sent:
             assert token.head in sent
