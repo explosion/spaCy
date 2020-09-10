@@ -28,7 +28,7 @@ def project_clone_cli(
     """
     if dest is None:
         dest = Path.cwd() / name
-    project_clone(name, dest, repo=repo)
+    project_clone(name, dest, repo=repo, branch=branch)
 
 
 def project_clone(
@@ -43,13 +43,14 @@ def project_clone(
     name (str): Name of subdirectory to clone.
     dest (Path): Destination path of cloned project.
     repo (str): URL of Git repo containing project templates.
+    branch (str): The branch to clone from
     """
     dest = ensure_path(dest)
     check_clone(name, dest, repo)
     project_dir = dest.resolve()
     repo_name = re.sub(r"(http(s?)):\/\/github.com/", "", repo)
     try:
-        git_sparse_checkout(repo, name, dest)
+        git_sparse_checkout(repo, name, dest, branch=branch)
     except subprocess.CalledProcessError:
         err = f"Could not clone '{name}' from repo '{repo_name}'"
         msg.fail(err, exits=1)

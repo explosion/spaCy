@@ -337,7 +337,8 @@ def git_sparse_checkout(repo: str, subpath: str, dest: Path, *, branch: str = "m
         missings = " ".join([x[1:] for x in ret.stdout.split() if x.startswith("?")])
         if not missings:
            err = f"Could not find any relevant files for '{subpath}'. " \
-                 f"Did you specify a correct and complete path within repo '{repo}'?"
+                 f"Did you specify a correct and complete path within repo '{repo}' " \
+                 f"and branch {branch}?"
            msg.fail(err, exits=1)
         cmd = f"git -C {tmp_dir} fetch-pack {git_repo} {missings}"
         _attempt_run_command(cmd)
