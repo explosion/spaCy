@@ -56,7 +56,7 @@ subword_features = true
 @Language.factory(
     "textcat",
     assigns=["doc.cats"],
-    default_config={"labels": [], "model": DEFAULT_TEXTCAT_MODEL},
+    default_config={"labels": [], "threshold": 0.5, "model": DEFAULT_TEXTCAT_MODEL},
     scores=[
         "cats_score",
         "cats_score_desc",
@@ -75,6 +75,7 @@ def make_textcat(
     name: str,
     model: Model[List[Doc], List[Floats2d]],
     labels: Iterable[str],
+    threshold: float,
 ) -> "TextCategorizer":
     """Create a TextCategorizer compoment. The text categorizer predicts categories
     over a whole document. It can learn one or more labels, and the labels can
@@ -86,8 +87,9 @@ def make_textcat(
         scores for each category.
     labels (list): A list of categories to learn. If empty, the model infers the
         categories from the data.
+    threshold (float): Cutoff to consider a prediction "positive".
     """
-    return TextCategorizer(nlp.vocab, model, name, labels=labels)
+    return TextCategorizer(nlp.vocab, model, name, labels=labels, threshold=threshold)
 
 
 class TextCategorizer(Pipe):
@@ -103,6 +105,7 @@ class TextCategorizer(Pipe):
         name: str = "textcat",
         *,
         labels: Iterable[str],
+        threshold: float,
     ) -> None:
         """Initialize a text categorizer.
 
@@ -111,6 +114,7 @@ class TextCategorizer(Pipe):
         name (str): The component instance name, used to add entries to the
             losses during training.
         labels (Iterable[str]): The labels to use.
+        threshold (float): Cutoff to consider a prediction "positive".
 
         DOCS: https://nightly.spacy.io/api/textcategorizer#init
         """
@@ -118,7 +122,7 @@ class TextCategorizer(Pipe):
         self.model = model
         self.name = name
         self._rehearsal_model = None
-        cfg = {"labels": labels}
+        cfg = {"labels": labels, "threshold": threshold}
         self.cfg = dict(cfg)
 
     @property
@@ -371,5 +375,6 @@ class TextCategorizer(Pipe):
             labels=self.labels,
             multi_label=self.model.attrs["multi_label"],
             positive_label=positive_label,
+            threshold=self.cfg["threshold"],
             **kwargs,
         )
