@@ -360,5 +360,7 @@ def _from_http_to_git(repo):
         repo = repo.replace(r"http://", r"https://")
     if repo.startswith(r"https://"):
         repo = repo.replace("https://", "git@").replace("/", ":", 1)
+        if repo.endswith("/"):
+            repo = repo[:-1]
         repo = f"{repo}.git"
     return repo
