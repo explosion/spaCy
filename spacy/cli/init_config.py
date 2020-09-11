@@ -42,6 +42,8 @@ def init_config_cli(
     """
     if isinstance(optimize, Optimizations):  # instance of enum from the CLI
         optimize = optimize.value
+    if pipeline.startswith("[") and pipeline.endswith("]"):
+        pipeline = pipeline[1:-1]
     pipeline = [p.strip() for p in pipeline.split(",")]
     init_config(output_file, lang=lang, pipeline=pipeline, optimize=optimize, cpu=cpu)
 
