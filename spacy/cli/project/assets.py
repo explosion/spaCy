@@ -38,7 +38,7 @@ def project_assets(project_dir: Path) -> None:
         msg.warn(f"No assets specified in {PROJECT_FILE}", exits=0)
     msg.info(f"Fetching {len(assets)} asset(s)")
     for asset in assets:
-        dest = project_dir / asset["dest"]
+        dest = (project_dir / asset["dest"]).resolve()
         checksum = asset.get("checksum")
         if "git" in asset:
             if dest.exists():
