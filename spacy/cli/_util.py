@@ -331,8 +331,8 @@ def git_sparse_checkout(repo: str, subpath: str, dest: Path, *, branch: str = "m
             msg.warn(
                 f"You're running an old version of Git (v{git_version[0]}.{git_version[1]}) "
                 f"that doesn't fully support sparse checkout yet. This means that "
-                f"more files than necessary may be cloned. To only download the "
-                f"files needed, upgrade to Git v2.22 or above."
+                f"more files than necessary may be downloaded temporarily. To "
+                f"only download the files needed, upgrade to Git v2.22 or above."
             )
         _attempt_run_command(cmd)
         # Now we need to find the missing filenames for the subpath we want.
