@@ -1165,14 +1165,20 @@ class Language:
         if not hasattr(get_examples, "__call__"):
             err = Errors.E930.format(name="Language", obj=type(get_examples))
             raise ValueError(err)
+        valid_examples = False
         for example in get_examples():
             if not isinstance(example, Example):
                 err = Errors.E978.format(
                     name="Language.begin_training", types=type(example)
                 )
                 raise ValueError(err)
+            else:
+                valid_examples = True
             for word in [t.text for t in example.reference]:
                 _ = self.vocab[word]  # noqa: F841
+        if not valid_examples:
+            err = Errors.E930.format(name="Language", obj="empty list")
+            raise ValueError(err)
         if device >= 0:  # TODO: do we need this here?
             require_gpu(device)
             if self.vocab.vectors.data.shape[1] >= 1:
