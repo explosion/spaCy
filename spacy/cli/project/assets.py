@@ -44,7 +44,9 @@ def project_assets(project_dir: Path) -> None:
             if dest.exists():
                 # If there's already a file, check for checksum
                 if checksum and checksum == get_checksum(dest):
-                    msg.good(f"Skipping download with matching checksum: {dest}")
+                    msg.good(
+                        f"Skipping download with matching checksum: {asset['dest']}"
+                    )
                     continue
                 else:
                     if dest.is_dir():
