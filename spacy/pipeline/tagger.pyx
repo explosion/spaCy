@@ -255,7 +255,7 @@ class Tagger(Pipe):
         """
         validate_examples(examples, "Tagger.get_loss")
         loss_func = SequenceCategoricalCrossentropy(
-            names=self.label,
+            names=self.labels,
             normalize=False,
             missing_value=""
         )
