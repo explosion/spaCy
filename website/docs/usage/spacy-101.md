@@ -84,15 +84,13 @@ systems, or to pre-process text for **deep learning**.
 
 ### What spaCy isn't {#what-spacy-isnt}
 
-- **spaCy is not a platform or "an API"**. Unlike a platform, spaCy does not
+- ❌ **spaCy is not a platform or "an API"**. Unlike a platform, spaCy does not
   provide a software as a service, or a web application. It's an open-source
   library designed to help you build NLP applications, not a consumable service.
-
-- **spaCy is not an out-of-the-box chat bot engine**. While spaCy can be used to
-  power conversational applications, it's not designed specifically for chat
+- ❌ **spaCy is not an out-of-the-box chat bot engine**. While spaCy can be used
+  to power conversational applications, it's not designed specifically for chat
   bots, and only provides the underlying text processing capabilities.
-
-- **spaCy is not research software**. It's built on the latest research, but
+- ❌**spaCy is not research software**. It's built on the latest research, but
   it's designed to get things done. This leads to fairly different design
   decisions than [NLTK](https://github.com/nltk/nltk) or
   [CoreNLP](https://stanfordnlp.github.io/CoreNLP/), which were created as
@@ -101,8 +99,7 @@ systems, or to pre-process text for **deep learning**.
   between multiple algorithms that deliver equivalent functionality. Keeping the
   menu small lets spaCy deliver generally better performance and developer
   experience.
-
-- **spaCy is not a company**. It's an open-source library. Our company
+- ❌ **spaCy is not a company**. It's an open-source library. Our company
   publishing spaCy and other software is called
   [Explosion](https://explosion.ai).
 

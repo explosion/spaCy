@@ -12,16 +12,32 @@ menu:
 
 ### When should I use spaCy? {#comparison-usage}
 
-<!-- TODO: update -->
-
-| Use Cases                                                                                                                                                                                                                                                                                                  |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ✅ **I'm a beginner and just getting started with NLP.**<br />spaCy makes it easy to get started and comes with extensive documentation, including a beginner-friendly [101 guide](/usage/spacy-101) and a free interactive [online course](https://course.spacy.io).                                      |
-| ✅ **I want to build an end-to-end production application.**                                                                                                                                                                                                                                               |
-| ✅ **I want my application to be efficient on CPU.**<br />While spaCy lets you train modern NLP models that are best run on GPU, it also offers CPU-optimized pipelines, which may be less accurate but much cheaper to run.                                                                               |
-| ✅ **I want to try out different neural network architectures for NLP.**                                                                                                                                                                                                                                   |
-| ❌ **I want to build a language generation application.**<br />spaCy's focus is natural language _processing_ and extracting information from large volumes of text. While you can use it to help you re-write existing text, it doesn't include any specific functionality for language generation tasks. |
-| ❌ **I want to research machine learning algorithms.**                                                                                                                                                                                                                                                     |
+- ✅ **I'm a beginner and just getting started with NLP.** – spaCy makes it easy
+  to get started and comes with extensive documentation, including a
+  beginner-friendly [101 guide](/usage/spacy-101), a free interactive
+  [online course](https://course.spacy.io) and a range of
+  [video tutorials](https://www.youtube.com/c/ExplosionAI).
+- ✅ **I want to build an end-to-end production application.** – spaCy is
+  specifically designed for production use and lets you build and train powerful
+  NLP pipelines and package them for easy deployment.
+- ✅ **I want my application to be efficient on GPU _and_ CPU.** – While spaCy
+  lets you train modern NLP models that are best run on GPU, it also offers
+  CPU-optimized pipelines, which are less accurate but much cheaper to run.
+- ✅ **I want to try out different neural network architectures for NLP.** –
+  spaCy lets you customize and swap out the model architectures powering its
+  components, and implement your own using a framework like PyTorch or
+  TensorFlow. The declarative configuration system makes it easy to mix and
+  match functions and keep track of your hyperparameters to make sure your
+  experiments are reproducible.
+- ❌ **I want to build a language generation application.** – spaCy's focus is
+  natural language _processing_ and extracting information from large volumes of
+  text. While you can use it to help you re-write existing text, it doesn't
+  include any specific functionality for language generation tasks.
+- ❌ **I want to research machine learning algorithms.** spaCy is built on the
+  latest research, but it's not a research library. If your goal is to write
+  papers and run benchmarks, spaCy is probably not a good choice. However, you
+  can use it to make the results of your research easily available for others to
+  use, e.g. via a custom spaCy component.
 
 ## Benchmarks {#benchmarks}
 
@@ -45,7 +61,7 @@ import Benchmarks from 'usage/\_benchmarks-models.md'
 
 <Benchmarks />
 
-<!-- TODO: update -->
+<!-- TODO:
 
 <Project id="benchmarks/penn_treebank">
 
@@ -53,6 +69,8 @@ The easiest way to reproduce spaCy's benchmarks on the Penn Treebank is to clone
 our project template.
 
 </Project>
+
+-->
 
 <!-- ## Citing spaCy {#citation}
 

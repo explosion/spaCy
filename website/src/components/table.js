@@ -1,8 +1,7 @@
 import React, { Fragment } from 'react'
 import classNames from 'classnames'
 
-import Icon from './icon'
-import { Help } from './typography'
+import { replaceEmoji } from './icon'
 import { isString } from './util'
 import classes from '../styles/table.module.sass'
 
@@ -10,41 +9,6 @@ const FOOT_ROW_REGEX = /^(RETURNS|YIELDS|CREATES|PRINTS|EXECUTES|UPLOADS|DOWNLOA
 
 function isNum(children) {
     return isString(children) && /^\d+[.,]?[\dx]+?(|x|ms|mb|gb|k|m)?$/i.test(children)
-}
-
-function getCellContent(cellChildren) {
-    const icons = {
-        '✅': { name: 'yes', variant: 'success', 'aria-label': 'positive' },
-        '❌': { name: 'no', variant: 'error', 'aria-label': 'negative' },
-    }
-    const iconRe = new RegExp(`^(${Object.keys(icons).join('|')})`, 'g')
-    let children = isString(cellChildren) ? [cellChildren] : cellChildren
-    if (Array.isArray(children)) {
-        return children.map((child, i) => {
-            if (isString(child)) {
-                const icon = icons[child.trim()]
-                const props = {
-                    inline: i < children.length,
-                    'aria-hidden': undefined,
-                }
-                if (icon) {
-                    return <Icon {...icon} {...props} key={i} />
-                } else if (iconRe.test(child)) {
-                    const [, iconName, text] = child.split(iconRe)
-                    return (
-                        <Fragment key={i}>
-                            <Icon {...icons[iconName]} {...props} />
-                            {text.trim()}
-                        </Fragment>
-                    )
-                }
-                // Work around prettier auto-escape
-                if (child.startsWith('\\')) return child.slice(1)
-            }
-            return child
-        })
-    }
-    return children
 }
 
 function isDividerRow(children) {
@@ -114,7 +78,7 @@ export const Tr = ({ evenodd = true, children, ...props }) => {
 }
 
 export const Td = ({ num, nowrap, className, children, ...props }) => {
-    const content = getCellContent(children)
+    const { content } = replaceEmoji(children)
     const tdClassNames = classNames(classes.td, className, {
         [classes.num]: num || isNum(children),
         [classes.nowrap]: nowrap,
