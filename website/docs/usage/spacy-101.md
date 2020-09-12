@@ -494,7 +494,7 @@ regressions to the parts of the library that you care about the most.
 
 **For more details on the types of contributions we're looking for, the code
 conventions and other useful tips, make sure to check out the
-[contributing guidelines](https://github.com/explosion/spaCy/tree/master/CONTRIBUTING.md).**
+[contributing guidelines](%%GITHUB_SPACY/CONTRIBUTING.md).**
 
 <Infobox title="Code of Conduct" variant="warning">
 

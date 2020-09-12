@@ -84,7 +84,6 @@
     --syntax-function: hsl(195, 70%, 54%)
     --syntax-keyword: hsl(343, 100%, 68%)
     --syntax-operator: var(--syntax-keyword)
-    --syntax-regex: hsl(45, 90%, 55%)
 
     // Other
     --color-inline-code-text: var(--color-dark)
@@ -345,9 +344,6 @@ body [id]:target
     &.atrule, &.function, &.selector
         color: var(--syntax-function)
 
-    &.regex, &.important
-        color: var(--syntax-regex)
-
     &.keyword
         color: var(--syntax-keyword)
 
@@ -528,11 +524,14 @@ body [id]:target
 .gatsby-resp-image-figure
     margin-bottom: var(--spacing-md)
 
-.gatsby-resp-image-figcaption
+.gatsby-resp-image-figcaption, .caption
     font: var(--font-size-xs)/var(--line-height-md) var(--font-primary)
     color: var(--color-subtle-dark)
     padding-top: 0.75rem
     padding-left: 3rem
 
-    code
+    p
+        font: inherit
+
+    code, a
         color: inherit

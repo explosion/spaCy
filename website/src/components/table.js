@@ -1,7 +1,8 @@
-import React from 'react'
+import React, { Fragment } from 'react'
 import classNames from 'classnames'
 
 import Icon from './icon'
+import { Help } from './typography'
 import { isString } from './util'
 import classes from '../styles/table.module.sass'
 
@@ -16,14 +17,26 @@ function getCellContent(cellChildren) {
         '✅': { name: 'yes', variant: 'success', 'aria-label': 'positive' },
         '❌': { name: 'no', variant: 'error', 'aria-label': 'negative' },
     }
+    const iconRe = new RegExp(`^(${Object.keys(icons).join('|')})`, 'g')
     let children = isString(cellChildren) ? [cellChildren] : cellChildren
     if (Array.isArray(children)) {
         return children.map((child, i) => {
             if (isString(child)) {
                 const icon = icons[child.trim()]
+                const props = {
+                    inline: i < children.length,
+                    'aria-hidden': undefined,
+                }
                 if (icon) {
-                    const props = { ...icon, inline: i < children.length, 'aria-hidden': undefined }
-                    return <Icon {...props} key={i} />
+                    return <Icon {...icon} {...props} key={i} />
+                } else if (iconRe.test(child)) {
+                    const [, iconName, text] = child.split(iconRe)
+                    return (
+                        <Fragment key={i}>
+                            <Icon {...icons[iconName]} {...props} />
+                            {text.trim()}
+                        </Fragment>
+                    )
                 }
                 // Work around prettier auto-escape
                 if (child.startsWith('\\')) return child.slice(1)
@@ -66,7 +79,22 @@ export const Table = ({ fixed, className, ...props }) => {
     return <table className={tableClassNames} {...props} />
 }
 
-export const Th = props => <th className={classes.th} {...props} />
+export const Th = ({ children, ...props }) => {
+    const isRotated = children && !isString(children) && children.type && children.type.name == 'Tx'
+    const thClassNames = classNames(classes.th, { [classes.thRotated]: isRotated })
+    return (
+        <th className={thClassNames} {...props}>
+            {children}
+        </th>
+    )
+}
+
+// Rotated head, child of Th
+export const Tx = ({ children, ...props }) => (
+    <div className={classes.tx} {...props}>
+        <span>{children}</span>
+    </div>
+)
 
 export const Tr = ({ evenodd = true, children, ...props }) => {
     const foot = isFootRow(children)

@@ -579,12 +579,17 @@ def MyCustomVectors(
 
 ## Pretraining {#pretraining}
 
+<Infobox title="This section is still under construction" emoji="🚧" variant="warning">
+</Infobox>
+
+<!--
 - explain general concept and idea (short!)
 - present it as a separate lightweight mechanism for pretraining the tok2vec
   layer
 - advantages (could also be pros/cons table)
 - explain how it generates a separate file (!) and how it depends on the same
   vectors
+-->
 
 > #### Raw text format
 >

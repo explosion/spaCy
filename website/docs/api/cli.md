@@ -229,13 +229,13 @@ $ python -m spacy convert [input_file] [output_dir] [--converter] [--file-type] 
 
 ### Converters {#converters}
 
-| ID      | Description                                                                                                                                                                                                                                                                                                                                                                                    |
-| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `auto`  | Automatically pick converter based on file extension and file content (default).                                                                                                                                                                                                                                                                                                               |
-| `json`  | JSON-formatted training data used in spaCy v2.x.                                                                                                                                                                                                                                                                                                                                               |
-| `conll` | Universal Dependencies `.conllu` or `.conll` format.                                                                                                                                                                                                                                                                                                                                           |
-| `ner`   | NER with IOB/IOB2 tags, one token per line with columns separated by whitespace. The first column is the token and the final column is the IOB tag. Sentences are separated by blank lines and documents are separated by the line `-DOCSTART- -X- O O`. Supports CoNLL 2003 NER format. See [sample data](https://github.com/explosion/spaCy/tree/master/examples/training/ner_example_data). |
-| `iob`   | NER with IOB/IOB2 tags, one sentence per line with tokens separated by whitespace and annotation separated by `|`, either `word|B-ENT` or `word|POS|B-ENT`. See [sample data](https://github.com/explosion/spaCy/tree/master/examples/training/ner_example_data).                                                                                                                              |
+| ID      | Description                                                                                                                                                                                                                                                                                                                                                     |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `auto`  | Automatically pick converter based on file extension and file content (default).                                                                                                                                                                                                                                                                                |
+| `json`  | JSON-formatted training data used in spaCy v2.x.                                                                                                                                                                                                                                                                                                                |
+| `conll` | Universal Dependencies `.conllu` or `.conll` format.                                                                                                                                                                                                                                                                                                            |
+| `ner`   | NER with IOB/IOB2 tags, one token per line with columns separated by whitespace. The first column is the token and the final column is the IOB tag. Sentences are separated by blank lines and documents are separated by the line `-DOCSTART- -X- O O`. Supports CoNLL 2003 NER format. See [sample data](%%GITHUB_SPACY/extra/example_data/ner_example_data). |
+| `iob`   | NER with IOB/IOB2 tags, one sentence per line with tokens separated by whitespace and annotation separated by `|`, either `word|B-ENT` or `word|POS|B-ENT`. See [sample data](%%GITHUB_SPACY/extra/example_data/ner_example_data).                                                                                                                              |
 
 ## debug {#debug new="3"}
 
@@ -358,37 +358,37 @@ File       /path/to/spacy/ml/models/tok2vec.py (line 207)
 Registry   @loggers
 Name       spacy.ConsoleLogger.v1
 Module     spacy.training.loggers
-File       /path/to/spacy/gold/loggers.py (line 8)
+File       /path/to/spacy/training/loggers.py (line 8)
 ℹ [training.batcher]
 Registry   @batchers
 Name       spacy.batch_by_words.v1
 Module     spacy.training.batchers
-File       /path/to/spacy/gold/batchers.py (line 49)
+File       /path/to/spacy/training/batchers.py (line 49)
 ℹ [training.batcher.size]
 Registry   @schedules
 Name       compounding.v1
 Module     thinc.schedules
-File       /Users/ines/Repos/explosion/thinc/thinc/schedules.py (line 43)
+File       /path/to/thinc/thinc/schedules.py (line 43)
 ℹ [training.dev_corpus]
 Registry   @readers
 Name       spacy.Corpus.v1
 Module     spacy.training.corpus
-File       /path/to/spacy/gold/corpus.py (line 18)
+File       /path/to/spacy/training/corpus.py (line 18)
 ℹ [training.optimizer]
 Registry   @optimizers
 Name       Adam.v1
 Module     thinc.optimizers
-File       /Users/ines/Repos/explosion/thinc/thinc/optimizers.py (line 58)
+File       /path/to/thinc/thinc/optimizers.py (line 58)
 ℹ [training.optimizer.learn_rate]
 Registry   @schedules
 Name       warmup_linear.v1
 Module     thinc.schedules
-File       /Users/ines/Repos/explosion/thinc/thinc/schedules.py (line 91)
+File       /path/to/thinc/thinc/schedules.py (line 91)
 ℹ [training.train_corpus]
 Registry   @readers
 Name       spacy.Corpus.v1
 Module     spacy.training.corpus
-File       /path/to/spacy/gold/corpus.py (line 18)
+File       /path/to/spacy/training/corpus.py (line 18)
 ```
 
 </Accordion>

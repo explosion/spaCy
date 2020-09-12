@@ -609,7 +609,6 @@ In addition to the native markdown elements, you can use the components
 ├── docs                 # the actual markdown content
 ├── meta                 # JSON-formatted site metadata
 |   ├── languages.json   # supported languages and statistical models
-|   ├── logos.json       # logos and links for landing page
 |   ├── sidebars.json    # sidebar navigations for different sections
 |   ├── site.json        # general site metadata
 |   └── universe.json    # data for the spaCy universe section

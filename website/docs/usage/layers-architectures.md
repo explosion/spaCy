@@ -28,9 +28,9 @@ A **model architecture** is a function that wires up a
 neural network that is run internally as part of a component in a spaCy
 pipeline. To define the actual architecture, you can implement your logic in
 Thinc directly, or you can use Thinc as a thin wrapper around frameworks such as
-PyTorch, TensorFlow and MXNet. Each Model can also be used as a sublayer of a
+PyTorch, TensorFlow and MXNet. Each `Model` can also be used as a sublayer of a
 larger network, allowing you to freely combine implementations from different
-frameworks into one `Thinc` Model.
+frameworks into a single model.
 
 spaCy's built-in components require a `Model` instance to be passed to them via
 the config system. To change the model architecture of an existing component,
@@ -253,7 +253,7 @@ torch_model = nn.Sequential(
     nn.ReLU(),
     nn.Dropout2d(dropout),
     nn.Softmax(dim=1)
-   )
+)
 ```
 
 The resulting wrapped `Model` can be used as a **custom architecture** as such,
@@ -264,9 +264,10 @@ larger network. This effectively means that you can easily wrap different
 components from different frameworks, and "glue" them together with Thinc:
 
 ```python
-from thinc.api import chain, with_array
+from thinc.api import chain, with_array, PyTorchWrapper
 from spacy.ml import CharacterEmbed
 
+wrapped_pt_model = PyTorchWrapper(torch_model)
 char_embed = CharacterEmbed(width, embed_size, nM, nC)
 model = chain(char_embed, with_array(wrapped_pt_model))
 ```
@@ -473,18 +474,17 @@ with Model.define_operators({">>": chain}):
 
 ## Create new trainable components {#components}
 
-<!-- TODO:
+<Infobox title="This section is still under construction" emoji="🚧" variant="warning">
+</Infobox>
 
+<!-- TODO:
 - Interaction with `predict`, `get_loss` and `set_annotations`
 - Initialization life-cycle with `begin_training`, correlation with add_label
-
 Example: relation extraction component (implemented as project template)
-
 Avoid duplication with usage/processing-pipelines#trainable-components ?
-
 -->
 
-![Diagram of a pipeline component with its model](../images/layers-architectures.svg)
+<!-- ![Diagram of a pipeline component with its model](../images/layers-architectures.svg)
 
 ```python
 def update(self, examples):
@@ -498,3 +498,4 @@ def __call__(self, doc):
     predictions = self.model([doc])
     self.set_annotations(predictions)
 ```
+-->

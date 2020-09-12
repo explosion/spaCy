@@ -56,7 +56,7 @@ data formats used by the lookup and rule-based lemmatizers, see
 | `model`     | **Not yet implemented:** the model to use. ~~Model~~                                                                                                                                                                                                                                |
 
 ```python
-https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/lemmatizer.py
+%%GITHUB_SPACY/spacy/pipeline/lemmatizer.py
 ```
 
 ## Lemmatizer.\_\_init\_\_ {#init tag="method"}

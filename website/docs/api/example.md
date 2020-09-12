@@ -2,7 +2,7 @@
 title: Example
 teaser: A training instance
 tag: class
-source: spacy/gold/example.pyx
+source: spacy/training/example.pyx
 new: 3.0
 ---
 

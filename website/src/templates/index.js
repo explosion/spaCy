@@ -19,7 +19,7 @@ import Footer from '../components/footer'
 import SEO from '../components/seo'
 import Link from '../components/link'
 import Section, { Hr } from '../components/section'
-import { Table, Tr, Th, Td } from '../components/table'
+import { Table, Tr, Th, Tx, Td } from '../components/table'
 import { Pre, Code, InlineCode, TypeAnnotation } from '../components/code'
 import { Ol, Ul, Li } from '../components/list'
 import { H2, H3, H4, H5, P, Abbr, Help } from '../components/typography'
@@ -64,6 +64,7 @@ const scopeComponents = {
     Infobox,
     Table,
     Tr,
+    Tx,
     Th,
     Td,
     Help,

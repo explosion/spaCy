@@ -41,7 +41,7 @@ architectures and their arguments and hyperparameters.
 | `model`  | A model instance that predicts scores for each category. Defaults to [TextCatEnsemble](/api/architectures#TextCatEnsemble). ~~Model[List[Doc], List[Floats2d]]~~ |
 
 ```python
-https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/textcat.py
+%%GITHUB_SPACY/spacy/pipeline/textcat.py
 ```
 
 ## TextCategorizer.\_\_init\_\_ {#init tag="method"}

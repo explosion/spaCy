@@ -33,7 +33,7 @@ how the component should be configured. You can override its settings via the
 | `punct_chars` | Optional custom list of punctuation characters that mark sentence ends. See below for defaults if not set. Defaults to `None`. ~~Optional[List[str]]~~ | `None` |
 
 ```python
-https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/sentencizer.pyx
+%%GITHUB_SPACY/spacy/pipeline/sentencizer.pyx
 ```
 
 ## Sentencizer.\_\_init\_\_ {#init tag="method"}
