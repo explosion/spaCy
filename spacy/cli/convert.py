@@ -51,6 +51,7 @@ def convert_cli(
     ner_map: Optional[Path] = Opt(None, "--ner-map", "-nm", help="NER tag mapping (as JSON-encoded dict of entity types)", exists=True),
     lang: Optional[str] = Opt(None, "--lang", "-l", help="Language (if tokenizer required)"),
     concatenate: bool = Opt(None, "--concatenate", "-C", help="Concatenate output to a single file"),
+    tag_map: Optional[Path] = Opt(None, "--tag-map", "-tm", help="Tag mapping (as JSON-encoded dict of tag types)", exists=True),
     # fmt: on
 ):
     """
@@ -84,6 +85,7 @@ def convert_cli(
         merge_subtokens=merge_subtokens,
         converter=converter,
         ner_map=ner_map,
+        tag_map=tag_map,
         lang=lang,
         concatenate=concatenate,
         silent=silent,
@@ -103,6 +105,7 @@ def convert(
     merge_subtokens: bool = False,
     converter: str = "auto",
     ner_map: Optional[Path] = None,
+    tag_map: Optional[Path] = None,
     lang: Optional[str] = None,
     concatenate: bool = False,
     silent: bool = True,
@@ -111,6 +114,7 @@ def convert(
     if not msg:
         msg = Printer(no_print=silent)
     ner_map = srsly.read_json(ner_map) if ner_map is not None else None
+    tag_map = srsly.read_json(tag_map) if tag_map is not None else None
     doc_files = []
     for input_loc in walk_directory(Path(input_path), converter):
         input_data = input_loc.open("r", encoding="utf-8").read()
@@ -126,6 +130,7 @@ def convert(
             model=model,
             no_print=silent,
             ner_map=ner_map,
+            tag_map=tag_map,
         )
         doc_files.append((input_loc, docs))
     if concatenate:
