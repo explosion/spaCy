@@ -79,7 +79,9 @@ def check_private_asset(dest: Path, checksum: Optional[str] = None) -> None:
         err = f"No URL provided for asset. You need to add this file yourself: {dest}"
         msg.warn(err)
     else:
-        if checksum and checksum == get_checksum(dest):
+        if not checksum:
+            msg.good(f"Asset already exists: {dest}")
+        elif checksum == get_checksum(dest):
             msg.good(f"Asset exists with matching checksum: {dest}")
         else:
             msg.fail(f"Asset available but with incorrect checksum: {dest}")
