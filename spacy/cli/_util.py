@@ -336,10 +336,12 @@ def git_sparse_checkout(repo: str, subpath: str, dest: Path, *, branch: str = "m
         # Now pass those missings into another bit of git internals
         missings = " ".join([x[1:] for x in ret.stdout.split() if x.startswith("?")])
         if not missings:
-           err = f"Could not find any relevant files for '{subpath}'. " \
-                 f"Did you specify a correct and complete path within repo '{repo}' " \
-                 f"and branch {branch}?"
-           msg.fail(err, exits=1)
+            err = (
+                f"Could not find any relevant files for '{subpath}'. "
+                f"Did you specify a correct and complete path within repo '{repo}' "
+                f"and branch {branch}?"
+            )
+            msg.fail(err, exits=1)
         cmd = f"git -C {tmp_dir} fetch-pack {git_repo} {missings}"
         _attempt_run_command(cmd)
         # And finally, we can checkout our subpath
@@ -348,12 +350,14 @@ def git_sparse_checkout(repo: str, subpath: str, dest: Path, *, branch: str = "m
         # We need Path(name) to make sure we also support subdirectories
         shutil.move(str(tmp_dir / Path(subpath)), str(dest))
 
+
 def _attempt_run_command(cmd):
     try:
         return run_command(cmd, capture=True)
     except subprocess.CalledProcessError as e:
         err = f"Could not run command: {cmd}."
         msg.fail(err, exits=1)
+
 
 def _from_http_to_git(repo):
     if repo.startswith("http://"):
@@ -364,3 +368,23 @@ def _from_http_to_git(repo):
             repo = repo[:-1]
         repo = f"{repo}.git"
     return repo
+
+
+def string_to_list(value, intify=False):
+    """Parse a comma-separated string to a list"""
+    if not value:
+        return []
+    if value.startswith("[") and value.endswith("]"):
+        value = value[1:-1]
+    result = []
+    for p in value.split(","):
+        p = p.strip()
+        if p.startswith("'") and p.endswith("'"):
+            p = p[1:-1]
+        if p.startswith('"') and p.endswith('"'):
+            p = p[1:-1]
+        p = p.strip()
+        if intify:
+            p = int(p)
+        result.append(p)
+    return result
