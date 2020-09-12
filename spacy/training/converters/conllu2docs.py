@@ -12,6 +12,7 @@ def conllu2docs(
     n_sents=10,
     append_morphology=False,
     ner_map=None,
+    tag_map=None,
     merge_subtokens=False,
     no_print=False,
     **_
@@ -32,8 +33,10 @@ def conllu2docs(
         append_morphology=append_morphology,
         ner_tag_pattern=MISC_NER_PATTERN,
         ner_map=ner_map,
+        tag_map=tag_map,
         merge_subtokens=merge_subtokens,
     )
+    sent_docs = list(sent_docs)
     docs = []
     sent_docs_to_merge = []
     for sent_doc in sent_docs:
@@ -70,10 +73,14 @@ def read_conllx(
     merge_subtokens=False,
     ner_tag_pattern="",
     ner_map=None,
+    tag_map=None
 ):
     """ Yield docs, one for each sentence """
     vocab = Vocab()  # need vocab to make a minimal Doc
-    for sent in input_data.strip().split("\n\n"):
+    # Need to support older conll formats, where we might have spaces between
+    # the lines =/. Stanford convert 3.3 seems to do this?
+    segment_re = re.compile(r"\n *\n")
+    for sent in segment_re.split(input_data.strip()):
         lines = sent.strip().split("\n")
         if lines:
             while lines[0].startswith("#"):
@@ -85,6 +92,7 @@ def read_conllx(
                 merge_subtokens=merge_subtokens,
                 append_morphology=append_morphology,
                 ner_map=ner_map,
+                tag_map=tag_map
             )
             yield doc
 
@@ -135,6 +143,7 @@ def doc_from_conllu_sentence(
     merge_subtokens=False,
     append_morphology=False,
     ner_map=None,
+    tag_map=None
 ):
     """Create an Example from the lines for one CoNLL-U sentence, merging
     subtokens and appending morphology to tags if required.
@@ -161,6 +170,8 @@ def doc_from_conllu_sentence(
         line = lines[i]
         parts = line.split("\t")
         id_, word, lemma, pos, tag, morph, head, dep, _1, misc = parts
+        if tag_map is not None:
+            pos = tag_map[tag]["POS"]
         if "." in id_:
             continue
         if "-" in id_:
