@@ -102,20 +102,23 @@ export function replaceEmoji(cellChildren) {
         children = children.map((child, i) => {
             if (isString(child)) {
                 const icon = icons[child.trim()]
-                const props = {
-                    inline: i < children.length,
-                    'aria-hidden': undefined,
-                }
                 if (icon) {
                     hasIcon = true
-                    return <Icon {...icon} {...props} key={i} />
+                    return (
+                        <Icon
+                            {...icon}
+                            inline={i < children.length}
+                            aria-hidden={undefined}
+                            key={i}
+                        />
+                    )
                 } else if (iconRe.test(child)) {
                     hasIcon = true
                     const [, iconName, text] = child.split(iconRe)
                     return (
                         <Fragment key={i}>
-                            <Icon {...icons[iconName]} {...props} />
-                            {text.trim()}
+                            <Icon {...icons[iconName]} aria-hidden={undefined} />
+                            {text}
                         </Fragment>
                     )
                 }
