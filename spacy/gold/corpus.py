@@ -191,7 +191,7 @@ class JsonlTexts:
         self.max_length = max_length
         self.limit = limit
 
-    def __call__(self, nlp: "Language") -> Iterator[Doc]:
+    def __call__(self, nlp: "Language") -> Iterator[Example]:
         """Yield examples from the data.
 
         nlp (Language): The current nlp object.
@@ -208,4 +208,8 @@ class JsonlTexts:
                 elif self.max_length >= 1 and len(doc) >= self.max_length:
                     continue
                 else:
-                    yield doc
+                    words = [w.text for w in doc]
+                    spaces = [bool(w.whitespace_) for w in doc]
+                    # We don't *need* an example here, but it seems nice to
+                    # make it match the Corpus signature.
+                    yield Example(doc, Doc(nlp.vocab, words=words, spaces=spaces))
