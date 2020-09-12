@@ -117,8 +117,8 @@ export function replaceEmoji(cellChildren) {
                     const [, iconName, text] = child.split(iconRe)
                     return (
                         <Fragment key={i}>
-                            <Icon {...icons[iconName]} aria-hidden={undefined} />
-                            {text}
+                            <Icon {...icons[iconName]} aria-hidden={undefined} inline={true} />
+                            {text.replace(/^\s+/g, '')}
                         </Fragment>
                     )
                 }
