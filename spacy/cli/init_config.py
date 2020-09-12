@@ -9,7 +9,7 @@ import re
 from .. import util
 from ..language import DEFAULT_CONFIG_PRETRAIN_PATH
 from ..schemas import RecommendationSchema
-from ._util import init_cli, Arg, Opt, show_validation_error, COMMAND
+from ._util import init_cli, Arg, Opt, show_validation_error, COMMAND, string_to_list
 
 
 ROOT = Path(__file__).parent / "templates"
@@ -42,7 +42,7 @@ def init_config_cli(
     """
     if isinstance(optimize, Optimizations):  # instance of enum from the CLI
         optimize = optimize.value
-    pipeline = [p.strip() for p in pipeline.split(",")]
+    pipeline = string_to_list(pipeline)
     init_config(output_file, lang=lang, pipeline=pipeline, optimize=optimize, cpu=cpu)
 
 

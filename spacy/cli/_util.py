@@ -385,3 +385,23 @@ def _from_http_to_git(repo: str) -> str:
             repo = repo[:-1]
         repo = f"{repo}.git"
     return repo
+
+
+def string_to_list(value, intify=False):
+    """Parse a comma-separated string to a list"""
+    if not value:
+        return []
+    if value.startswith("[") and value.endswith("]"):
+        value = value[1:-1]
+    result = []
+    for p in value.split(","):
+        p = p.strip()
+        if p.startswith("'") and p.endswith("'"):
+            p = p[1:-1]
+        if p.startswith('"') and p.endswith('"'):
+            p = p[1:-1]
+        p = p.strip()
+        if intify:
+            p = int(p)
+        result.append(p)
+    return result
