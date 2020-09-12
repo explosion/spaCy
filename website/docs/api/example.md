@@ -2,7 +2,7 @@
 title: Example
 teaser: A training instance
 tag: class
-source: spacy/gold/example.pyx
+source: spacy/training/example.pyx
 new: 3.0
 ---
 
@@ -22,7 +22,7 @@ both documents.
 >
 > ```python
 > from spacy.tokens import Doc
-> from spacy.gold import Example
+> from spacy.training import Example
 >
 > words = ["hello", "world", "!"]
 > spaces = [True, False, False]
@@ -48,7 +48,7 @@ see the [training format documentation](/api/data-formats#dict-input).
 >
 > ```python
 > from spacy.tokens import Doc
-> from spacy.gold import Example
+> from spacy.training import Example
 >
 > predicted = Doc(vocab, words=["Apply", "some", "sunscreen"])
 > token_ref = ["Apply", "some", "sun", "screen"]
@@ -301,7 +301,7 @@ tokenizations add up to the same string. For example, you'll be able to align
 > #### Example
 >
 > ```python
-> from spacy.gold import Alignment
+> from spacy.training import Alignment
 >
 > bert_tokens = ["obama", "'", "s", "podcast"]
 > spacy_tokens = ["obama", "'s", "podcast"]

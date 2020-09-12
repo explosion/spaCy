@@ -76,7 +76,7 @@ spaCy also supports pipelines trained on more than one language. This is
 especially useful for named entity recognition. The language ID used for
 multi-language or language-neutral pipelines is `xx`. The language class, a
 generic subclass containing only the base language data, can be found in
-[`lang/xx`](https://github.com/explosion/spaCy/tree/master/spacy/lang/xx).
+[`lang/xx`](%%GITHUB_SPACY/spacy/lang/xx).
 
 To train a pipeline using the neutral multi-language class, you can set
 `lang = "xx"` in your [training config](/usage/training#config). You can also

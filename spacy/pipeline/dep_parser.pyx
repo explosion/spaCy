@@ -9,7 +9,7 @@ from .functions import merge_subtokens
 from ..language import Language
 from ._parser_internals import nonproj
 from ..scorer import Scorer
-from ..gold import validate_examples
+from ..training import validate_examples
 
 
 default_model_config = """

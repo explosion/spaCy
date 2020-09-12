@@ -8,7 +8,7 @@ from ...typedefs cimport hash_t, attr_t
 from ...strings cimport hash_string
 from ...structs cimport TokenC
 from ...tokens.doc cimport Doc, set_children_from_heads
-from ...gold.example cimport Example
+from ...training.example cimport Example
 from ...errors import Errors
 from .stateclass cimport StateClass
 from ._state cimport StateC

@@ -4,7 +4,7 @@ from thinc.api import set_dropout_rate, Model
 
 from ..tokens.doc cimport Doc
 
-from ..gold import validate_examples
+from ..training import validate_examples
 from ..errors import Errors
 from .. import util
 
@@ -160,6 +160,20 @@ cdef class Pipe:
         """
         raise NotImplementedError(Errors.E931.format(method="add_label", name=self.name))
 
+
+    def _require_labels(self) -> None:
+        """Raise an error if the component's model has no labels defined."""
+        if not self.labels or list(self.labels) == [""]:
+            raise ValueError(Errors.E143.format(name=self.name))
+
+
+    def _allow_extra_label(self) -> None:
+        """Raise an error if the component can not add any more labels."""
+        if self.model.has_dim("nO") and self.model.get_dim("nO") == len(self.labels):
+            if not self.is_resizable():
+                raise ValueError(Errors.E922.format(name=self.name, nO=self.model.get_dim("nO")))
+
+
     def create_optimizer(self):
         """Create an optimizer for the pipeline component.
 
@@ -171,9 +185,12 @@ cdef class Pipe:
 
     def begin_training(self, get_examples, *, pipeline=None, sgd=None):
         """Initialize the pipe for training, using data examples if available.
+        This method needs to be implemented by each Pipe component,
+        ensuring the internal model (if available) is initialized properly
+        using the provided sample of Example objects.
 
-        get_examples (Callable[[], Iterable[Example]]): Optional function that
-            returns gold-standard Example objects.
+        get_examples (Callable[[], Iterable[Example]]): Function that
+            returns a representative sample of gold-standard Example objects.
         pipeline (List[Tuple[str, Callable]]): Optional list of pipeline
             components that this component is part of. Corresponds to
             nlp.pipeline.
@@ -183,16 +200,24 @@ cdef class Pipe:
 
         DOCS: https://nightly.spacy.io/api/pipe#begin_training
         """
-        self.model.initialize()
-        if sgd is None:
-            sgd = self.create_optimizer()
-        return sgd
+        raise NotImplementedError(Errors.E931.format(method="add_label", name=self.name))
+
+    def _ensure_examples(self, get_examples):
+        if get_examples is None or not hasattr(get_examples, "__call__"):
+            err = Errors.E930.format(name=self.name, obj=type(get_examples))
+            raise ValueError(err)
+        if not get_examples():
+            err = Errors.E930.format(name=self.name, obj=get_examples())
+            raise ValueError(err)
+
+    def is_resizable(self):
+        return hasattr(self, "model") and "resize_output" in self.model.attrs
 
     def set_output(self, nO):
-        if self.model.has_dim("nO") is not False:
-            self.model.set_dim("nO", nO)
-        if self.model.has_ref("output_layer"):
-            self.model.get_ref("output_layer").set_dim("nO", nO)
+        if self.is_resizable():
+            self.model.attrs["resize_output"](self.model, nO)
+        else:
+            raise NotImplementedError(Errors.E921)
 
     def use_params(self, params):
         """Modify the pipe's model, to use the given parameter values. At the

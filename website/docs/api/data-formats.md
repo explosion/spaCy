@@ -37,7 +37,7 @@ recommended settings for your use case, check out the
 > guide on [registered functions](/usage/training#config-functions) for details.
 
 ```ini
-https://github.com/explosion/spaCy/blob/develop/spacy/default_config.cfg
+%%GITHUB_SPACY/spacy/default_config.cfg
 ```
 
 <Infobox title="Notes on data validation" emoji="💡">
@@ -45,8 +45,7 @@ https://github.com/explosion/spaCy/blob/develop/spacy/default_config.cfg
 Under the hood, spaCy's configs are powered by our machine learning library
 [Thinc's config system](https://thinc.ai/docs/usage-config), which uses
 [`pydantic`](https://github.com/samuelcolvin/pydantic/) for data validation
-based on type hints. See
-[`spacy/schemas.py`](https://github.com/explosion/spaCy/blob/develop/spacy/schemas.py)
+based on type hints. See [`spacy/schemas.py`](%%GITHUB_SPACY/spacy/schemas.py)
 for the schemas used to validate the default config. Arguments of registered
 functions are validated against their type annotations, if available. To debug
 your config and check that it's valid, you can run the
@@ -175,7 +174,7 @@ run [`spacy pretrain`](/api/cli#pretrain).
 >
 > ```python
 > from spacy.tokens import DocBin
-> from spacy.gold import Corpus
+> from spacy.training import Corpus
 >
 > doc_bin = DocBin(docs=docs)
 > doc_bin.to_disk("./data.spacy")
@@ -456,7 +455,7 @@ lexical data.
 Here's an example of the 20 most frequent lexemes in the English training data:
 
 ```json
-https://github.com/explosion/spaCy/tree/master/examples/training/vocab-data.jsonl
+%%GITHUB_SPACY / extra / example_data / vocab - data.jsonl
 ```
 
 ## Pipeline meta {#meta}

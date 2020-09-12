@@ -23,7 +23,7 @@ export default function Infobox({
         <aside className={infoboxClassNames} id={id}>
             {title && (
                 <h4 className={classes.title}>
-                    {variant !== 'default' && (
+                    {variant !== 'default' && !emoji && (
                         <Icon width={18} name={variant} inline className={classes.icon} />
                     )}
                     <span className={classes.titleText}>

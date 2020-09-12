@@ -34,7 +34,7 @@ architectures and their arguments and hyperparameters.
 | `model`          | A model instance that predicts the tag probabilities. The output vectors should match the number of tags in size, and be normalized as probabilities (all scores between 0 and 1, with the rows summing to `1`). Defaults to [Tagger](/api/architectures#Tagger). ~~Model[List[Doc], List[Floats2d]]~~ |
 
 ```python
-https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/tagger.pyx
+%%GITHUB_SPACY/spacy/pipeline/tagger.pyx
 ```
 
 ## Tagger.\_\_init\_\_ {#init tag="method"}
@@ -249,9 +249,9 @@ Score a batch of examples.
 > scores = tagger.score(examples)
 > ```
 
-| Name        | Description                                                                                                                                               |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `examples`  | The examples to score. ~~Iterable[Example]~~                                                                                                              |
+| Name        | Description                                                                                                                       |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `examples`  | The examples to score. ~~Iterable[Example]~~                                                                                      |
 | **RETURNS** | The scores, produced by [`Scorer.score_token_attr`](/api/scorer#score_token_attr) for the attribute `"tag"`. ~~Dict[str, float]~~ |
 
 ## Tagger.create_optimizer {#create_optimizer tag="method"}
@@ -288,7 +288,13 @@ context, the original parameters are restored.
 
 ## Tagger.add_label {#add_label tag="method"}
 
-Add a new label to the pipe.
+Add a new label to the pipe. Raises an error if the output dimension is already
+set, or if the model has already been fully [initialized](#begin_training). Note
+that you don't have to call this method if you provide a **representative data
+sample** to the [`begin_training`](#begin_training) method. In this case, all
+labels found in the sample will be automatically added to the model, and the
+output dimension will be
+[inferred](/usage/layers-architectures#thinc-shape-inference) automatically.
 
 > #### Example
 >

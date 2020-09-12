@@ -45,7 +45,7 @@ architectures and their arguments and hyperparameters.
 | `model` | The model to use. Defaults to [HashEmbedCNN](/api/architectures#HashEmbedCNN). ~~Model[List[Doc], List[Floats2d]~~ |
 
 ```python
-https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/tok2vec.py
+%%GITHUB_SPACY/spacy/pipeline/tok2vec.py
 ```
 
 ## Tok2Vec.\_\_init\_\_ {#init tag="method"}

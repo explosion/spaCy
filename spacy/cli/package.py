@@ -18,6 +18,7 @@ def package_cli(
     output_dir: Path = Arg(..., help="Output parent directory", exists=True, file_okay=False),
     meta_path: Optional[Path] = Opt(None, "--meta-path", "--meta", "-m", help="Path to meta.json", exists=True, dir_okay=False),
     create_meta: bool = Opt(False, "--create-meta", "-c", "-C", help="Create meta.json, even if one exists"),
+    name: Optional[str] = Opt(None, "--name", "-n", help="Package name to override meta"),
     version: Optional[str] = Opt(None, "--version", "-v", help="Package version to override meta"),
     no_sdist: bool = Opt(False, "--no-sdist", "-NS", help="Don't build .tar.gz sdist, can be set if you want to run this step manually"),
     force: bool = Opt(False, "--force", "-f", "-F", help="Force overwriting existing data in output directory"),
@@ -38,6 +39,7 @@ def package_cli(
         input_dir,
         output_dir,
         meta_path=meta_path,
+        name=name,
         version=version,
         create_meta=create_meta,
         create_sdist=not no_sdist,
@@ -50,6 +52,7 @@ def package(
     input_dir: Path,
     output_dir: Path,
     meta_path: Optional[Path] = None,
+    name: Optional[str] = None,
     version: Optional[str] = None,
     create_meta: bool = False,
     create_sdist: bool = True,
@@ -71,6 +74,8 @@ def package(
         msg.fail("Can't load pipeline meta.json", meta_path, exits=1)
     meta = srsly.read_json(meta_path)
     meta = get_meta(input_dir, meta)
+    if name is not None:
+        meta["name"] = name
     if version is not None:
         meta["version"] = version
     if not create_meta:  # only print if user doesn't want to overwrite

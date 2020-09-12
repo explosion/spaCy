@@ -2,7 +2,7 @@
 title: Corpus
 teaser: An annotated corpus
 tag: class
-source: spacy/gold/corpus.py
+source: spacy/training/corpus.py
 new: 3
 ---
 
@@ -42,7 +42,7 @@ streaming.
 | `limit`         | Limit corpus to a subset of examples, e.g. for debugging. Defaults to `0` for no limit. ~~int~~                                                          |
 
 ```python
-https://github.com/explosion/spaCy/blob/develop/spacy/gold/corpus.py
+%%GITHUB_SPACY/spacy/training/corpus.py
 ```
 
 ## Corpus.\_\_init\_\_ {#init tag="method"}
@@ -58,7 +58,7 @@ train/test skew.
 > #### Example
 >
 > ```python
-> from spacy.gold import Corpus
+> from spacy.training import Corpus
 >
 > # With a single file
 > corpus = Corpus("./data/train.spacy")
@@ -82,7 +82,7 @@ Yield examples from the data.
 > #### Example
 >
 > ```python
-> from spacy.gold import Corpus
+> from spacy.training import Corpus
 > import spacy
 >
 > corpus = Corpus("./train.spacy")

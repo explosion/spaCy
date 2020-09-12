@@ -5,7 +5,7 @@ menu:
   - ['Type Signatures', 'type-sigs']
   - ['Swapping Architectures', 'swap-architectures']
   - ['PyTorch & TensorFlow', 'frameworks']
-  - ['Thinc Models', 'thinc']
+  - ['Custom Thinc Models', 'thinc']
   - ['Trainable Components', 'components']
 next: /usage/projects
 ---
@@ -28,9 +28,9 @@ A **model architecture** is a function that wires up a
 neural network that is run internally as part of a component in a spaCy
 pipeline. To define the actual architecture, you can implement your logic in
 Thinc directly, or you can use Thinc as a thin wrapper around frameworks such as
-PyTorch, TensorFlow and MXNet. Each Model can also be used as a sublayer of a
+PyTorch, TensorFlow and MXNet. Each `Model` can also be used as a sublayer of a
 larger network, allowing you to freely combine implementations from different
-frameworks into one `Thinc` Model.
+frameworks into a single model.
 
 spaCy's built-in components require a `Model` instance to be passed to them via
 the config system. To change the model architecture of an existing component,
@@ -118,7 +118,7 @@ code.
 
 If no model is specified for the [`TextCategorizer`](/api/textcategorizer), the
 [TextCatEnsemble](/api/architectures#TextCatEnsemble) architecture is used by
-default. This architecture combines a simpel bag-of-words model with a neural
+default. This architecture combines a simple bag-of-words model with a neural
 network, usually resulting in the most accurate results, but at the cost of
 speed. The config file for this model would look something like this:
 
@@ -225,31 +225,266 @@ you'll be able to try it out in any of the spaCy components. ​
 
 Thinc allows you to [wrap models](https://thinc.ai/docs/usage-frameworks)
 written in other machine learning frameworks like PyTorch, TensorFlow and MXNet
-using a unified [`Model`](https://thinc.ai/docs/api-model) API. As well as
-**wrapping whole models**, Thinc lets you call into an external framework for
-just **part of your model**: you can have a model where you use PyTorch just for
-the transformer layers, using "native" Thinc layers to do fiddly input and
-output transformations and add on task-specific "heads", as efficiency is less
-of a consideration for those parts of the network.
+using a unified [`Model`](https://thinc.ai/docs/api-model) API. This makes it
+easy to use a model implemented in a different framework to power a component in
+your spaCy pipeline. For example, to wrap a PyTorch model as a Thinc `Model`,
+you can use Thinc's
+[`PyTorchWrapper`](https://thinc.ai/docs/api-layers#pytorchwrapper):
 
-<!-- TODO: custom tagger implemented in PyTorch, wrapped as Thinc model, link off to project (with notebook?) -->
+```python
+from thinc.api import PyTorchWrapper
 
-## Implementing models in Thinc {#thinc}
+wrapped_pt_model = PyTorchWrapper(torch_model)
+```
 
-<!-- TODO: use same example as above, custom tagger, but implemented in Thinc, link off to Thinc docs where appropriate -->
+Let's use PyTorch to define a very simple neural network consisting of two
+hidden `Linear` layers with `ReLU` activation and dropout, and a
+softmax-activated output layer:
 
-## Models for trainable components {#components}
+```python
+### PyTorch model
+from torch import nn
+
+torch_model = nn.Sequential(
+    nn.Linear(width, hidden_width),
+    nn.ReLU(),
+    nn.Dropout2d(dropout),
+    nn.Linear(hidden_width, nO),
+    nn.ReLU(),
+    nn.Dropout2d(dropout),
+    nn.Softmax(dim=1)
+)
+```
+
+The resulting wrapped `Model` can be used as a **custom architecture** as such,
+or can be a **subcomponent of a larger model**. For instance, we can use Thinc's
+[`chain`](https://thinc.ai/docs/api-layers#chain) combinator, which works like
+`Sequential` in PyTorch, to combine the wrapped model with other components in a
+larger network. This effectively means that you can easily wrap different
+components from different frameworks, and "glue" them together with Thinc:
+
+```python
+from thinc.api import chain, with_array, PyTorchWrapper
+from spacy.ml import CharacterEmbed
+
+wrapped_pt_model = PyTorchWrapper(torch_model)
+char_embed = CharacterEmbed(width, embed_size, nM, nC)
+model = chain(char_embed, with_array(wrapped_pt_model))
+```
+
+In the above example, we have combined our custom PyTorch model with a character
+embedding layer defined by spaCy.
+[CharacterEmbed](/api/architectures#CharacterEmbed) returns a `Model` that takes
+a ~~List[Doc]~~ as input, and outputs a ~~List[Floats2d]~~. To make sure that
+the wrapped PyTorch model receives valid inputs, we use Thinc's
+[`with_array`](https://thinc.ai/docs/api-layers#with_array) helper.
+
+You could also implement a model that only uses PyTorch for the transformer
+layers, and "native" Thinc layers to do fiddly input and output transformations
+and add on task-specific "heads", as efficiency is less of a consideration for
+those parts of the network.
+
+### Using wrapped models {#frameworks-usage}
+
+To use our custom model including the PyTorch subnetwork, all we need to do is
+register the architecture using the
+[`architectures` registry](/api/top-level#registry). This will assign the
+architecture a name so spaCy knows how to find it, and allows passing in
+arguments like hyperparameters via the [config](/usage/training#config). The
+full example then becomes:
+
+```python
+### Registering the architecture {highlight="9"}
+from typing import List
+from thinc.types import Floats2d
+from thinc.api import Model, PyTorchWrapper, chain, with_array
+import spacy
+from spacy.tokens.doc import Doc
+from spacy.ml import CharacterEmbed
+from torch import nn
+
+@spacy.registry.architectures("CustomTorchModel.v1")
+def create_torch_model(
+    nO: int,
+    width: int,
+    hidden_width: int,
+    embed_size: int,
+    nM: int,
+    nC: int,
+    dropout: float,
+) -> Model[List[Doc], List[Floats2d]]:
+    char_embed = CharacterEmbed(width, embed_size, nM, nC)
+    torch_model = nn.Sequential(
+        nn.Linear(width, hidden_width),
+        nn.ReLU(),
+        nn.Dropout2d(dropout),
+        nn.Linear(hidden_width, nO),
+        nn.ReLU(),
+        nn.Dropout2d(dropout),
+        nn.Softmax(dim=1)
+    )
+    wrapped_pt_model = PyTorchWrapper(torch_model)
+    model = chain(char_embed, with_array(wrapped_pt_model))
+    return model
+```
+
+The model definition can now be used in any existing trainable spaCy component,
+by specifying it in the config file. In this configuration, all required
+parameters for the various subcomponents of the custom architecture are passed
+in as settings via the config.
+
+```ini
+### config.cfg (excerpt) {highlight="5-5"}
+[components.tagger]
+factory = "tagger"
+
+[components.tagger.model]
+@architectures = "CustomTorchModel.v1"
+nO = 50
+width = 96
+hidden_width = 48
+embed_size = 2000
+nM = 64
+nC = 8
+dropout = 0.2
+```
+
+<Infobox variant="warning">
+
+Remember that it is best not to rely on any (hidden) default values, to ensure
+that training configs are complete and experiments fully reproducible.
+
+</Infobox>
+
+## Custom models with Thinc {#thinc}
+
+Of course it's also possible to define the `Model` from the previous section
+entirely in Thinc. The Thinc documentation provides details on the
+[various layers](https://thinc.ai/docs/api-layers) and helper functions
+available. Combinators can also be used to
+[overload operators](https://thinc.ai/docs/usage-models#operators) and a common
+usage pattern is to bind `chain` to `>>`. The "native" Thinc version of our
+simple neural network would then become:
+
+```python
+from thinc.api import chain, with_array, Model, Relu, Dropout, Softmax
+from spacy.ml import CharacterEmbed
+
+char_embed = CharacterEmbed(width, embed_size, nM, nC)
+with Model.define_operators({">>": chain}):
+    layers = (
+        Relu(hidden_width, width)
+        >> Dropout(dropout)
+        >> Relu(hidden_width, hidden_width)
+        >> Dropout(dropout)
+        >> Softmax(nO, hidden_width)
+    )
+    model = char_embed >> with_array(layers)
+```
+
+<Infobox variant="warning" title="Important note on inputs and outputs">
+
+Note that Thinc layers define the output dimension (`nO`) as the first argument,
+followed (optionally) by the input dimension (`nI`). This is in contrast to how
+the PyTorch layers are defined, where `in_features` precedes `out_features`.
+
+</Infobox>
+
+### Shape inference in Thinc {#thinc-shape-inference}
+
+It is **not** strictly necessary to define all the input and output dimensions
+for each layer, as Thinc can perform
+[shape inference](https://thinc.ai/docs/usage-models#validation) between
+sequential layers by matching up the output dimensionality of one layer to the
+input dimensionality of the next. This means that we can simplify the `layers`
+definition:
+
+> #### Diff
+>
+> ```diff
+> layers = (
+>     Relu(hidden_width, width)
+>     >> Dropout(dropout)
+> -   >> Relu(hidden_width, hidden_width)
+> +    >> Relu(hidden_width)
+>     >> Dropout(dropout)
+> -   >> Softmax(nO, hidden_width)
+> +   >> Softmax(nO)
+> )
+> ```
+
+```python
+with Model.define_operators({">>": chain}):
+    layers = (
+        Relu(hidden_width, width)
+        >> Dropout(dropout)
+        >> Relu(hidden_width)
+        >> Dropout(dropout)
+        >> Softmax(nO)
+    )
+```
+
+Thinc can even go one step further and **deduce the correct input dimension** of
+the first layer, and output dimension of the last. To enable this functionality,
+you have to call
+[`Model.initialize`](https://thinc.ai/docs/api-model#initialize) with an **input
+sample** `X` and an **output sample** `Y` with the correct dimensions:
+
+```python
+### Shape inference with initialization {highlight="3,7,10"}
+with Model.define_operators({">>": chain}):
+    layers = (
+        Relu(hidden_width)
+        >> Dropout(dropout)
+        >> Relu(hidden_width)
+        >> Dropout(dropout)
+        >> Softmax()
+    )
+    model = char_embed >> with_array(layers)
+    model.initialize(X=input_sample, Y=output_sample)
+```
+
+The built-in [pipeline components](/usage/processing-pipelines) in spaCy ensure
+that their internal models are **always initialized** with appropriate sample
+data. In this case, `X` is typically a ~~List[Doc]~~, while `Y` is typically a
+~~List[Array1d]~~ or ~~List[Array2d]~~, depending on the specific task. This
+functionality is triggered when
+[`nlp.begin_training`](/api/language#begin_training) is called.
+
+### Dropout and normalization in Thinc {#thinc-dropout-norm}
+
+Many of the available Thinc [layers](https://thinc.ai/docs/api-layers) allow you
+to define a `dropout` argument that will result in "chaining" an additional
+[`Dropout`](https://thinc.ai/docs/api-layers#dropout) layer. Optionally, you can
+often specify whether or not you want to add layer normalization, which would
+result in an additional
+[`LayerNorm`](https://thinc.ai/docs/api-layers#layernorm) layer. That means that
+the following `layers` definition is equivalent to the previous:
+
+```python
+with Model.define_operators({">>": chain}):
+    layers = (
+        Relu(hidden_width, dropout=dropout, normalize=False)
+        >> Relu(hidden_width, dropout=dropout, normalize=False)
+        >> Softmax()
+    )
+    model = char_embed >> with_array(layers)
+    model.initialize(X=input_sample, Y=output_sample)
+```
+
+## Create new trainable components {#components}
+
+<Infobox title="This section is still under construction" emoji="🚧" variant="warning">
+</Infobox>
 
 <!-- TODO:
-
 - Interaction with `predict`, `get_loss` and `set_annotations`
-- Initialization life-cycle with `begin_training`.
-
+- Initialization life-cycle with `begin_training`, correlation with add_label
 Example: relation extraction component (implemented as project template)
-
+Avoid duplication with usage/processing-pipelines#trainable-components ?
 -->
 
-![Diagram of a pipeline component with its model](../images/layers-architectures.svg)
+<!-- ![Diagram of a pipeline component with its model](../images/layers-architectures.svg)
 
 ```python
 def update(self, examples):
@@ -263,3 +498,4 @@ def __call__(self, doc):
     predictions = self.model([doc])
     self.set_annotations(predictions)
 ```
+-->

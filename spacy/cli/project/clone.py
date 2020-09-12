@@ -16,6 +16,7 @@ def project_clone_cli(
     name: str = Arg(..., help="The name of the template to clone"),
     dest: Optional[Path] = Arg(None, help="Where to clone the project. Defaults to current working directory", exists=False),
     repo: str = Opt(about.__projects__, "--repo", "-r", help="The repository to clone from"),
+    branch: str = Opt(about.__projects_branch__, "--branch", "-b", help="The branch to clone from")
     # fmt: on
 ):
     """Clone a project template from a repository. Calls into "git" and will
@@ -26,23 +27,30 @@ def project_clone_cli(
     DOCS: https://nightly.spacy.io/api/cli#project-clone
     """
     if dest is None:
-        dest = Path.cwd() / name
-    project_clone(name, dest, repo=repo)
+        dest = Path.cwd() / Path(name).parts[-1]
+    project_clone(name, dest, repo=repo, branch=branch)
 
 
-def project_clone(name: str, dest: Path, *, repo: str = about.__projects__) -> None:
+def project_clone(
+    name: str,
+    dest: Path,
+    *,
+    repo: str = about.__projects__,
+    branch: str = about.__projects_branch__,
+) -> None:
     """Clone a project template from a repository.
 
     name (str): Name of subdirectory to clone.
     dest (Path): Destination path of cloned project.
     repo (str): URL of Git repo containing project templates.
+    branch (str): The branch to clone from
     """
     dest = ensure_path(dest)
     check_clone(name, dest, repo)
     project_dir = dest.resolve()
     repo_name = re.sub(r"(http(s?)):\/\/github.com/", "", repo)
     try:
-        git_sparse_checkout(repo, name, dest)
+        git_sparse_checkout(repo, name, dest, branch=branch)
     except subprocess.CalledProcessError:
         err = f"Could not clone '{name}' from repo '{repo_name}'"
         msg.fail(err, exits=1)

@@ -21,7 +21,7 @@ from ..ml.parser_model cimport WeightsC, ActivationsC, SizesC, cpu_log_loss
 from ..ml.parser_model cimport get_c_weights, get_c_sizes
 from ..tokens.doc cimport Doc
 
-from ..gold import validate_examples
+from ..training import validate_examples
 from ..errors import Errors, Warnings
 from .. import util
 
@@ -244,7 +244,7 @@ cdef class Parser(Pipe):
             int nr_class, int batch_size) nogil:
         # n_moves should not be zero at this point, but make sure to avoid zero-length mem alloc
         with gil:
-            assert self.moves.n_moves > 0
+            assert self.moves.n_moves > 0, Errors.E924.format(name=self.name)
         is_valid = <int*>calloc(self.moves.n_moves, sizeof(int))
         cdef int i, guess
         cdef Transition action
@@ -378,7 +378,7 @@ cdef class Parser(Pipe):
         cdef int i
 
         # n_moves should not be zero at this point, but make sure to avoid zero-length mem alloc
-        assert self.moves.n_moves > 0
+        assert self.moves.n_moves > 0, Errors.E924.format(name=self.name)
 
         is_valid = <int*>mem.alloc(self.moves.n_moves, sizeof(int))
         costs = <float*>mem.alloc(self.moves.n_moves, sizeof(float))
@@ -406,9 +406,7 @@ cdef class Parser(Pipe):
         self.model.attrs["resize_output"](self.model, nO)
 
     def begin_training(self, get_examples, pipeline=None, sgd=None, **kwargs):
-        if not hasattr(get_examples, "__call__"):
-            err = Errors.E930.format(name="DependencyParser/EntityRecognizer", obj=type(get_examples))
-            raise ValueError(err)
+        self._ensure_examples(get_examples)
         self.cfg.update(kwargs)
         lexeme_norms = self.vocab.lookups.get_table("lexeme_norm", {})
         if len(lexeme_norms) == 0 and self.vocab.lang in util.LEXEME_NORM_LANGS:
@@ -430,9 +428,6 @@ cdef class Parser(Pipe):
         if sgd is None:
             sgd = self.create_optimizer()
         doc_sample = []
-        for example in islice(get_examples(), 10):
-            doc_sample.append(example.predicted)
-
         if pipeline is not None:
             for name, component in pipeline:
                 if component is self:
@@ -441,10 +436,11 @@ cdef class Parser(Pipe):
                     doc_sample = list(component.pipe(doc_sample, batch_size=8))
                 else:
                     doc_sample = [component(doc) for doc in doc_sample]
-        if doc_sample:
-            self.model.initialize(doc_sample)
-        else:
-            self.model.initialize()
+        if not doc_sample:
+            for example in islice(get_examples(), 10):
+                doc_sample.append(example.predicted)
+        assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
+        self.model.initialize(doc_sample)
         if pipeline is not None:
             self.init_multitask_objectives(get_examples, pipeline, sgd=sgd, **self.cfg)
         return sgd

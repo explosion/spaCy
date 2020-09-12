@@ -2,6 +2,7 @@
 from typing import Optional
 import srsly
 from thinc.api import SequenceCategoricalCrossentropy, Model, Config
+from itertools import islice
 
 from ..tokens.doc cimport Doc
 from ..vocab cimport Vocab
@@ -15,7 +16,7 @@ from .pipe import deserialize_config
 from .tagger import Tagger
 from .. import util
 from ..scorer import Scorer
-from ..gold import validate_examples
+from ..training import validate_examples
 
 
 default_model_config = """
@@ -112,6 +113,7 @@ class Morphologizer(Tagger):
             raise ValueError(Errors.E187)
         if label in self.labels:
             return 0
+        self._allow_extra_label()
         # normalize label
         norm_label = self.vocab.morphology.normalize_features(label)
         # extract separate POS and morph tags
@@ -128,10 +130,11 @@ class Morphologizer(Tagger):
         return 1
 
     def begin_training(self, get_examples, *, pipeline=None, sgd=None):
-        """Initialize the pipe for training, using data examples if available.
+        """Initialize the pipe for training, using a representative set
+        of data examples.
 
-        get_examples (Callable[[], Iterable[Example]]): Optional function that
-            returns gold-standard Example objects.
+        get_examples (Callable[[], Iterable[Example]]): Function that
+            returns a representative sample of gold-standard Example objects.
         pipeline (List[Tuple[str, Callable]]): Optional list of pipeline
             components that this component is part of. Corresponds to
             nlp.pipeline.
@@ -141,9 +144,8 @@ class Morphologizer(Tagger):
 
         DOCS: https://nightly.spacy.io/api/morphologizer#begin_training
         """
-        if not hasattr(get_examples, "__call__"):
-            err = Errors.E930.format(name="Morphologizer", obj=type(get_examples))
-            raise ValueError(err)
+        self._ensure_examples(get_examples)
+        # First, fetch all labels from the data
         for example in get_examples():
             for i, token in enumerate(example.reference):
                 pos = token.pos_
@@ -157,8 +159,25 @@ class Morphologizer(Tagger):
                 if norm_label not in self.cfg["labels_morph"]:
                     self.cfg["labels_morph"][norm_label] = morph
                     self.cfg["labels_pos"][norm_label] = POS_IDS[pos]
-        self.set_output(len(self.labels))
-        self.model.initialize()
+        if len(self.labels) <= 1:
+            raise ValueError(Errors.E143.format(name=self.name))
+        doc_sample = []
+        label_sample = []
+        for example in islice(get_examples(), 10):
+            gold_array = []
+            for i, token in enumerate(example.reference):
+                pos = token.pos_
+                morph = token.morph_
+                morph_dict = Morphology.feats_to_dict(morph)
+                if pos:
+                    morph_dict[self.POS_FEAT] = pos
+                norm_label = self.vocab.strings[self.vocab.morphology.add(morph_dict)]
+                gold_array.append([1.0 if label == norm_label else 0.0 for label in self.labels])
+            doc_sample.append(example.x)
+            label_sample.append(self.model.ops.asarray(gold_array, dtype="float32"))
+        assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
+        assert len(label_sample) > 0, Errors.E923.format(name=self.name)
+        self.model.initialize(X=doc_sample, Y=label_sample)
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd

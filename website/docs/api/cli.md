@@ -229,13 +229,13 @@ $ python -m spacy convert [input_file] [output_dir] [--converter] [--file-type] 
 
 ### Converters {#converters}
 
-| ID      | Description                                                                                                                                                                                                                                                                                                                                                                                    |
-| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `auto`  | Automatically pick converter based on file extension and file content (default).                                                                                                                                                                                                                                                                                                               |
-| `json`  | JSON-formatted training data used in spaCy v2.x.                                                                                                                                                                                                                                                                                                                                               |
-| `conll` | Universal Dependencies `.conllu` or `.conll` format.                                                                                                                                                                                                                                                                                                                                           |
-| `ner`   | NER with IOB/IOB2 tags, one token per line with columns separated by whitespace. The first column is the token and the final column is the IOB tag. Sentences are separated by blank lines and documents are separated by the line `-DOCSTART- -X- O O`. Supports CoNLL 2003 NER format. See [sample data](https://github.com/explosion/spaCy/tree/master/examples/training/ner_example_data). |
-| `iob`   | NER with IOB/IOB2 tags, one sentence per line with tokens separated by whitespace and annotation separated by `|`, either `word|B-ENT` or `word|POS|B-ENT`. See [sample data](https://github.com/explosion/spaCy/tree/master/examples/training/ner_example_data).                                                                                                                              |
+| ID      | Description                                                                                                                                                                                                                                                                                                                                                     |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `auto`  | Automatically pick converter based on file extension and file content (default).                                                                                                                                                                                                                                                                                |
+| `json`  | JSON-formatted training data used in spaCy v2.x.                                                                                                                                                                                                                                                                                                                |
+| `conll` | Universal Dependencies `.conllu` or `.conll` format.                                                                                                                                                                                                                                                                                                            |
+| `ner`   | NER with IOB/IOB2 tags, one token per line with columns separated by whitespace. The first column is the token and the final column is the IOB tag. Sentences are separated by blank lines and documents are separated by the line `-DOCSTART- -X- O O`. Supports CoNLL 2003 NER format. See [sample data](%%GITHUB_SPACY/extra/example_data/ner_example_data). |
+| `iob`   | NER with IOB/IOB2 tags, one sentence per line with tokens separated by whitespace and annotation separated by `|`, either `word|B-ENT` or `word|POS|B-ENT`. See [sample data](%%GITHUB_SPACY/extra/example_data/ner_example_data).                                                                                                                              |
 
 ## debug {#debug new="3"}
 
@@ -357,38 +357,38 @@ File       /path/to/spacy/ml/models/tok2vec.py (line 207)
 ℹ [training.logger]
 Registry   @loggers
 Name       spacy.ConsoleLogger.v1
-Module     spacy.gold.loggers
-File       /path/to/spacy/gold/loggers.py (line 8)
+Module     spacy.training.loggers
+File       /path/to/spacy/training/loggers.py (line 8)
 ℹ [training.batcher]
 Registry   @batchers
 Name       spacy.batch_by_words.v1
-Module     spacy.gold.batchers
-File       /path/to/spacy/gold/batchers.py (line 49)
+Module     spacy.training.batchers
+File       /path/to/spacy/training/batchers.py (line 49)
 ℹ [training.batcher.size]
 Registry   @schedules
 Name       compounding.v1
 Module     thinc.schedules
-File       /Users/ines/Repos/explosion/thinc/thinc/schedules.py (line 43)
+File       /path/to/thinc/thinc/schedules.py (line 43)
 ℹ [training.dev_corpus]
 Registry   @readers
 Name       spacy.Corpus.v1
-Module     spacy.gold.corpus
-File       /path/to/spacy/gold/corpus.py (line 18)
+Module     spacy.training.corpus
+File       /path/to/spacy/training/corpus.py (line 18)
 ℹ [training.optimizer]
 Registry   @optimizers
 Name       Adam.v1
 Module     thinc.optimizers
-File       /Users/ines/Repos/explosion/thinc/thinc/optimizers.py (line 58)
+File       /path/to/thinc/thinc/optimizers.py (line 58)
 ℹ [training.optimizer.learn_rate]
 Registry   @schedules
 Name       warmup_linear.v1
 Module     thinc.schedules
-File       /Users/ines/Repos/explosion/thinc/thinc/schedules.py (line 91)
+File       /path/to/thinc/thinc/schedules.py (line 91)
 ℹ [training.train_corpus]
 Registry   @readers
 Name       spacy.Corpus.v1
-Module     spacy.gold.corpus
-File       /path/to/spacy/gold/corpus.py (line 18)
+Module     spacy.training.corpus
+File       /path/to/spacy/training/corpus.py (line 18)
 ```
 
 </Accordion>
@@ -852,7 +852,7 @@ this, you can set the `--no-sdist` flag.
 </Infobox>
 
 ```cli
-$ python -m spacy package [input_dir] [output_dir] [--meta-path] [--create-meta] [--no-sdist] [--version] [--force]
+$ python -m spacy package [input_dir] [output_dir] [--meta-path] [--create-meta] [--no-sdist] [--name] [--version] [--force]
 ```
 
 > #### Example
@@ -870,6 +870,7 @@ $ python -m spacy package [input_dir] [output_dir] [--meta-path] [--create-meta]
 | `--meta-path`, `-m` <Tag variant="new">2</Tag>   | Path to [`meta.json`](/api/data-formats#meta) file (optional). ~~Optional[Path] \(option)~~                                                                                                                     |
 | `--create-meta`, `-C` <Tag variant="new">2</Tag> | Create a `meta.json` file on the command line, even if one already exists in the directory. If an existing file is found, its entries will be shown as the defaults in the command line prompt. ~~bool (flag)~~ |
 | `--no-sdist`, `-NS`,                             | Don't build the `.tar.gz` sdist automatically. Can be set if you want to run this step manually. ~~bool (flag)~~                                                                                                |
+| `--name`, `-n` <Tag variant="new">3</Tag>        | Package name to override in meta. ~~Optional[str] \(option)~~                                                                                                                                                   |
 | `--version`, `-v` <Tag variant="new">3</Tag>     | Package version to override in meta. Useful when training new versions, as it doesn't require editing the meta template. ~~Optional[str] \(option)~~                                                            |
 | `--force`, `-f`                                  | Force overwriting of existing folder in output directory. ~~bool (flag)~~                                                                                                                                       |
 | `--help`, `-h`                                   | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                      |
@@ -893,7 +894,7 @@ can provide any other repo (public or private) that you have access to using the
 <!-- TODO: update example once we've decided on repo structure -->
 
 ```cli
-$ python -m spacy project clone [name] [dest] [--repo]
+$ python -m spacy project clone [name] [dest] [--repo] [--branch]
 ```
 
 > #### Example
@@ -908,13 +909,14 @@ $ python -m spacy project clone [name] [dest] [--repo]
 > $ python -m spacy project clone template --repo https://github.com/your_org/your_repo
 > ```
 
-| Name           | Description                                                                                                                                       |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`         | The name of the template to clone, relative to the repo. Can be a top-level directory or a subdirectory like `dir/template`. ~~str (positional)~~ |
-| `dest`         | Where to clone the project. Defaults to current working directory. ~~Path (positional)~~                                                          |
-| `--repo`, `-r` | The repository to clone from. Can be any public or private Git repo you have access to. ~~str (option)~~                                          |
-| `--help`, `-h` | Show help message and available arguments. ~~bool (flag)~~                                                                                        |
-| **CREATES**    | The cloned [project directory](/usage/projects#project-files).                                                                                    |
+| Name             | Description                                                                                                                                       |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`           | The name of the template to clone, relative to the repo. Can be a top-level directory or a subdirectory like `dir/template`. ~~str (positional)~~ |
+| `dest`           | Where to clone the project. Defaults to current working directory. ~~Path (positional)~~                                                          |
+| `--repo`, `-r`   | The repository to clone from. Can be any public or private Git repo you have access to. ~~str (option)~~                                          |
+| `--branch`, `-b` | The branch to clone from. Defaults to `master`. ~~str (option)~~                                                                                  |
+| `--help`, `-h`   | Show help message and available arguments. ~~bool (flag)~~                                                                                        |
+| **CREATES**      | The cloned [project directory](/usage/projects#project-files).                                                                                    |
 
 ### project assets {#project-assets tag="command"}
 

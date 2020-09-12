@@ -105,8 +105,7 @@ your installation, installed pipelines and local setup from within spaCy.
 ### spacy.explain {#spacy.explain tag="function"}
 
 Get a description for a given POS tag, dependency label or entity type. For a
-list of available terms, see
-[`glossary.py`](https://github.com/explosion/spaCy/tree/master/spacy/glossary.py).
+list of available terms, see [`glossary.py`](%%GITHUB_SPACY/spacy/glossary.py).
 
 > #### Example
 >
@@ -262,11 +261,11 @@ If a setting is not present in the options, the default value will be used.
 > displacy.serve(doc, style="ent", options=options)
 > ```
 
-| Name                                    | Description                                                                                                                                                                                                                                                                 |
-| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ents`                                  | Entity types to highlight or `None` for all types (default). ~~Optional[List[str]]~~                                                                                                                                                                                        |
-| `colors`                                | Color overrides. Entity types should be mapped to color names or values. ~~Dict[str, str]~~                                                                                                                                                                                 |
-| `template` <Tag variant="new">2.2</Tag> | Optional template to overwrite the HTML used to render entity spans. Should be a format string and can use `{bg}`, `{text}` and `{label}`. See [`templates.py`](https://github.com/explosion/spaCy/blob/master/spacy/displacy/templates.py) for examples. ~~Optional[str]~~ |
+| Name                                    | Description                                                                                                                                                                                                                               |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ents`                                  | Entity types to highlight or `None` for all types (default). ~~Optional[List[str]]~~                                                                                                                                                      |
+| `colors`                                | Color overrides. Entity types should be mapped to color names or values. ~~Dict[str, str]~~                                                                                                                                               |
+| `template` <Tag variant="new">2.2</Tag> | Optional template to overwrite the HTML used to render entity spans. Should be a format string and can use `{bg}`, `{text}` and `{label}`. See [`templates.py`](GITHUB_SPACY/spacy/displacy/templates.py) for examples. ~~Optional[str]~~ |
 
 By default, displaCy comes with colors for all entity types used by
 [spaCy's trained pipelines](/models). If you're using custom entity types, you
@@ -348,7 +347,7 @@ See the [`Transformer`](/api/transformer) API reference and
 | [`span_getters`](/api/transformer#span_getters)             | Registry for functions that take a batch of `Doc` objects and return a list of `Span` objects to process by the transformer, e.g. sentences.                                                                                                      |
 | [`annotation_setters`](/api/transformer#annotation_setters) | Registry for functions that create annotation setters. Annotation setters are functions that take a batch of `Doc` objects and a [`FullTransformerBatch`](/api/transformer#fulltransformerbatch) and can set additional annotations on the `Doc`. |
 
-## Loggers {#loggers source="spacy/gold/loggers.py" new="3"}
+## Loggers {#loggers source="spacy/training/loggers.py" new="3"}
 
 A logger records the training results. When a logger is created, two functions
 are returned: one for logging the information for each training step, and a
@@ -452,7 +451,7 @@ remain in the config file stored on your local system.
 | `project_name`         | The name of the project in the Weights & Biases interface. The project will be created automatically if it doesn't exist yet. ~~str~~ |
 | `remove_config_values` | A list of values to include from the config before it is uploaded to W&B (default: empty). ~~List[str]~~                              |
 
-## Batchers {#batchers source="spacy/gold/batchers.py" new="3"}
+## Batchers {#batchers source="spacy/training/batchers.py" new="3"}
 
 A data batcher implements a batching strategy that essentially turns a stream of
 items into a stream of batches, with each batch consisting of one item or a list
@@ -536,9 +535,9 @@ sequences in the batch.
 | `discard_oversize` | Whether to discard sequences that are by themselves longer than the largest padded batch size. ~~bool~~                                                                                                                                     |
 | `get_length`       | Optional function that receives a sequence item and returns its length. Defaults to the built-in `len()` if not set. ~~Optional[Callable[[Any], int]]~~                                                                                     |
 
-## Training data and alignment {#gold source="spacy/gold"}
+## Training data and alignment {#gold source="spacy/training"}
 
-### gold.biluo_tags_from_offsets {#biluo_tags_from_offsets tag="function"}
+### training.biluo_tags_from_offsets {#biluo_tags_from_offsets tag="function"}
 
 Encode labelled spans into per-token tags, using the
 [BILUO scheme](/usage/linguistic-features#accessing-ner) (Begin, In, Last, Unit,
@@ -554,7 +553,7 @@ single-token entity.
 > #### Example
 >
 > ```python
-> from spacy.gold import biluo_tags_from_offsets
+> from spacy.training import biluo_tags_from_offsets
 >
 > doc = nlp("I like London.")
 > entities = [(7, 13, "LOC")]
@@ -568,7 +567,7 @@ single-token entity.
 | `entities`  | A sequence of `(start, end, label)` triples. `start` and `end` should be character-offset integers denoting the slice into the original string. ~~List[Tuple[int, int, Union[str, int]]]~~ |
 | **RETURNS** | A list of strings, describing the [BILUO](/usage/linguistic-features#accessing-ner) tags. ~~List[str]~~                                                                                    |
 
-### gold.offsets_from_biluo_tags {#offsets_from_biluo_tags tag="function"}
+### training.offsets_from_biluo_tags {#offsets_from_biluo_tags tag="function"}
 
 Encode per-token tags following the
 [BILUO scheme](/usage/linguistic-features#accessing-ner) into entity offsets.
@@ -576,7 +575,7 @@ Encode per-token tags following the
 > #### Example
 >
 > ```python
-> from spacy.gold import offsets_from_biluo_tags
+> from spacy.training import offsets_from_biluo_tags
 >
 > doc = nlp("I like London.")
 > tags = ["O", "O", "U-LOC", "O"]
@@ -590,7 +589,7 @@ Encode per-token tags following the
 | `entities`  | A sequence of [BILUO](/usage/linguistic-features#accessing-ner) tags with each tag describing one token. Each tag string will be of the form of either `""`, `"O"` or `"{action}-{label}"`, where action is one of `"B"`, `"I"`, `"L"`, `"U"`. ~~List[str]~~ |
 | **RETURNS** | A sequence of `(start, end, label)` triples. `start` and `end` will be character-offset integers denoting the slice into the original string. ~~List[Tuple[int, int, str]]~~                                                                                 |
 
-### gold.spans_from_biluo_tags {#spans_from_biluo_tags tag="function" new="2.1"}
+### training.spans_from_biluo_tags {#spans_from_biluo_tags tag="function" new="2.1"}
 
 Encode per-token tags following the
 [BILUO scheme](/usage/linguistic-features#accessing-ner) into
@@ -600,7 +599,7 @@ token-based tags, e.g. to overwrite the `doc.ents`.
 > #### Example
 >
 > ```python
-> from spacy.gold import spans_from_biluo_tags
+> from spacy.training import spans_from_biluo_tags
 >
 > doc = nlp("I like London.")
 > tags = ["O", "O", "U-LOC", "O"]
@@ -616,12 +615,12 @@ token-based tags, e.g. to overwrite the `doc.ents`.
 ## Utility functions {#util source="spacy/util.py"}
 
 spaCy comes with a small collection of utility functions located in
-[`spacy/util.py`](https://github.com/explosion/spaCy/tree/master/spacy/util.py).
-Because utility functions are mostly intended for **internal use within spaCy**,
-their behavior may change with future releases. The functions documented on this
-page should be safe to use and we'll try to ensure backwards compatibility.
-However, we recommend having additional tests in place if your application
-depends on any of spaCy's utilities.
+[`spacy/util.py`](%%GITHUB_SPACY/spacy/util.py). Because utility functions are
+mostly intended for **internal use within spaCy**, their behavior may change
+with future releases. The functions documented on this page should be safe to
+use and we'll try to ensure backwards compatibility. However, we recommend
+having additional tests in place if your application depends on any of spaCy's
+utilities.
 
 ### util.get_lang_class {#util.get_lang_class tag="function"}
 
@@ -832,10 +831,10 @@ Compile a sequence of prefix rules into a regex object.
 > nlp.tokenizer.prefix_search = prefix_regex.search
 > ```
 
-| Name        | Description                                                                                                                                                                 |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `entries`   | The prefix rules, e.g. [`lang.punctuation.TOKENIZER_PREFIXES`](https://github.com/explosion/spaCy/tree/master/spacy/lang/punctuation.py). ~~Iterable[Union[str, Pattern]]~~ |
-| **RETURNS** | The regex object. to be used for [`Tokenizer.prefix_search`](/api/tokenizer#attributes). ~~Pattern~~                                                                        |
+| Name        | Description                                                                                                                                 |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `entries`   | The prefix rules, e.g. [`lang.punctuation.TOKENIZER_PREFIXES`](%%GITHUB_SPACY/spacy/lang/punctuation.py). ~~Iterable[Union[str, Pattern]]~~ |
+| **RETURNS** | The regex object. to be used for [`Tokenizer.prefix_search`](/api/tokenizer#attributes). ~~Pattern~~                                        |
 
 ### util.compile_suffix_regex {#util.compile_suffix_regex tag="function"}
 
@@ -849,10 +848,10 @@ Compile a sequence of suffix rules into a regex object.
 > nlp.tokenizer.suffix_search = suffix_regex.search
 > ```
 
-| Name        | Description                                                                                                                                                                 |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `entries`   | The suffix rules, e.g. [`lang.punctuation.TOKENIZER_SUFFIXES`](https://github.com/explosion/spaCy/tree/master/spacy/lang/punctuation.py). ~~Iterable[Union[str, Pattern]]~~ |
-| **RETURNS** | The regex object. to be used for [`Tokenizer.suffix_search`](/api/tokenizer#attributes). ~~Pattern~~                                                                        |
+| Name        | Description                                                                                                                                 |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `entries`   | The suffix rules, e.g. [`lang.punctuation.TOKENIZER_SUFFIXES`](%%GITHUB_SPACY/spacy/lang/punctuation.py). ~~Iterable[Union[str, Pattern]]~~ |
+| **RETURNS** | The regex object. to be used for [`Tokenizer.suffix_search`](/api/tokenizer#attributes). ~~Pattern~~                                        |
 
 ### util.compile_infix_regex {#util.compile_infix_regex tag="function"}
 
@@ -866,10 +865,10 @@ Compile a sequence of infix rules into a regex object.
 > nlp.tokenizer.infix_finditer = infix_regex.finditer
 > ```
 
-| Name        | Description                                                                                                                                                               |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `entries`   | The infix rules, e.g. [`lang.punctuation.TOKENIZER_INFIXES`](https://github.com/explosion/spaCy/tree/master/spacy/lang/punctuation.py). ~~Iterable[Union[str, Pattern]]~~ |
-| **RETURNS** | The regex object. to be used for [`Tokenizer.infix_finditer`](/api/tokenizer#attributes). ~~Pattern~~                                                                     |
+| Name        | Description                                                                                                                               |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `entries`   | The infix rules, e.g. [`lang.punctuation.TOKENIZER_INFIXES`](%%GITHUB_SPACY/spacy/lang/punctuation.py). ~~Iterable[Union[str, Pattern]]~~ |
+| **RETURNS** | The regex object. to be used for [`Tokenizer.infix_finditer`](/api/tokenizer#attributes). ~~Pattern~~                                     |
 
 ### util.minibatch {#util.minibatch tag="function" new="2"}
 

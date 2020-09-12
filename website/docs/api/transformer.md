@@ -31,7 +31,7 @@ supports all models that are available via the
 Usually you will connect subsequent components to the shared transformer using
 the [TransformerListener](/api/architectures#TransformerListener) layer. This
 works similarly to spaCy's [Tok2Vec](/api/tok2vec) component and
-[Tok2VecListener](/api/architectures/Tok2VecListener) sublayer.
+[Tok2VecListener](/api/architectures/#Tok2VecListener) sublayer.
 
 The component assigns the output of the transformer to the `Doc`'s extension
 attributes. We also calculate an alignment between the word-piece tokens and the
@@ -61,11 +61,11 @@ on the transformer architectures and their arguments and hyperparameters.
 > nlp.add_pipe("transformer", config=DEFAULT_CONFIG)
 > ```
 
-| Setting             | Description                                                                                                                                                                                                                                                                                                           |
-| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `max_batch_items`   | Maximum size of a padded batch. Defaults to `4096`. ~~int~~                                                                                                                                                                                                                                                           |
-| `annotation_setter` | Function that takes a batch of `Doc` objects and transformer outputs to set additional annotations on the `Doc`. The `Doc._.transformer_data` attribute is set prior to calling the callback. Defaults to `null_annotation_setter` (no additional annotations). ~~Callable[[List[Doc], FullTransformerBatch], None]~~ |
-| `model`             | The Thinc [`Model`](https://thinc.ai/docs/api-model) wrapping the transformer. Defaults to [TransformerModel](/api/architectures#TransformerModel). ~~Model[List[Doc], FullTransformerBatch]~~                                                                                                                        |
+| Setting                 | Description                                                                                                                                                                                                                                                                                                           |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `max_batch_items`       | Maximum size of a padded batch. Defaults to `4096`. ~~int~~                                                                                                                                                                                                                                                           |
+| `set_extra_annotations` | Function that takes a batch of `Doc` objects and transformer outputs to set additional annotations on the `Doc`. The `Doc._.transformer_data` attribute is set prior to calling the callback. Defaults to `null_annotation_setter` (no additional annotations). ~~Callable[[List[Doc], FullTransformerBatch], None]~~ |
+| `model`                 | The Thinc [`Model`](https://thinc.ai/docs/api-model) wrapping the transformer. Defaults to [TransformerModel](/api/architectures#TransformerModel). ~~Model[List[Doc], FullTransformerBatch]~~                                                                                                                        |
 
 ```python
 https://github.com/explosion/spacy-transformers/blob/master/spacy_transformers/pipeline_component.py
@@ -102,14 +102,14 @@ attribute. You can also provide a callback to set additional annotations. In
 your application, you would normally use a shortcut for this and instantiate the
 component using its string name and [`nlp.add_pipe`](/api/language#create_pipe).
 
-| Name                | Description                                                                                                                                                                                                                                                                             |
-| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`             | The shared vocabulary. ~~Vocab~~                                                                                                                                                                                                                                                        |
-| `model`             | The Thinc [`Model`](https://thinc.ai/docs/api-model) wrapping the transformer. Usually you will want to use the [TransformerModel](/api/architectures#TransformerModel) layer for this. ~~Model[List[Doc], FullTransformerBatch]~~                                                      |
-| `annotation_setter` | Function that takes a batch of `Doc` objects and transformer outputs and stores the annotations on the `Doc`. The `Doc._.trf_data` attribute is set prior to calling the callback. By default, no additional annotations are set. ~~Callable[[List[Doc], FullTransformerBatch], None]~~ |
-| _keyword-only_      |                                                                                                                                                                                                                                                                                         |
-| `name`              | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                                                                                                                                                                                     |
-| `max_batch_items`   | Maximum size of a padded batch. Defaults to `128*32`. ~~int~~                                                                                                                                                                                                                           |
+| Name                    | Description                                                                                                                                                                                                                                                                             |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`                 | The shared vocabulary. ~~Vocab~~                                                                                                                                                                                                                                                        |
+| `model`                 | The Thinc [`Model`](https://thinc.ai/docs/api-model) wrapping the transformer. Usually you will want to use the [TransformerModel](/api/architectures#TransformerModel) layer for this. ~~Model[List[Doc], FullTransformerBatch]~~                                                      |
+| `set_extra_annotations` | Function that takes a batch of `Doc` objects and transformer outputs and stores the annotations on the `Doc`. The `Doc._.trf_data` attribute is set prior to calling the callback. By default, no additional annotations are set. ~~Callable[[List[Doc], FullTransformerBatch], None]~~ |
+| _keyword-only_          |                                                                                                                                                                                                                                                                                         |
+| `name`                  | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                                                                                                                                                                                     |
+| `max_batch_items`       | Maximum size of a padded batch. Defaults to `128*32`. ~~int~~                                                                                                                                                                                                                           |
 
 ## Transformer.\_\_call\_\_ {#call tag="method"}
 
@@ -205,7 +205,7 @@ modifying them.
 
 Assign the extracted features to the Doc objects. By default, the
 [`TransformerData`](/api/transformer#transformerdata) object is written to the
-[`Doc._.trf_data`](#custom-attributes) attribute. Your annotation_setter
+[`Doc._.trf_data`](#custom-attributes) attribute. Your `set_extra_annotations`
 callback is then called, if provided.
 
 > #### Example

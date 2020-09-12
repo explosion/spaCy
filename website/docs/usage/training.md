@@ -59,7 +59,7 @@ specific use case. It's also available in spaCy as the
 
 import QuickstartTraining from 'widgets/quickstart-training.js'
 
-<QuickstartTraining download="base_config.cfg" />
+<QuickstartTraining />
 
 After you've saved the starter config to a file `base_config.cfg`, you can use
 the [`init fill-config`](/api/cli#init-fill-config) command to fill in the
@@ -127,7 +127,7 @@ Some of the main advantages and features of spaCy's training config are:
   config which types of data to expect.
 
 ```ini
-https://github.com/explosion/spaCy/blob/develop/spacy/default_config.cfg
+%%GITHUB_SPACY/spacy/default_config.cfg
 ```
 
 Under the hood, the config is parsed into a dictionary. It's divided into
@@ -683,7 +683,7 @@ You can also implement your own batch size schedule to use during training. The
 import spacy
 
 @spacy.registry.schedules("my_custom_schedule.v1")
-def my_custom_schedule(start: int = 1, factor: int = 1.001):
+def my_custom_schedule(start: int = 1, factor: float = 1.001):
    while True:
       yield start
       start = start * factor
@@ -735,7 +735,7 @@ as **config settings** – in this case, `source`.
 ### functions.py {highlight="7-8"}
 from typing import Callable, Iterator, List
 import spacy
-from spacy.gold import Example
+from spacy.training import Example
 from spacy.language import Language
 import random
 
@@ -783,7 +783,7 @@ annotations are the same.
 ### functions.py
 from typing import Callable, Iterable, Iterator, List
 import spacy
-from spacy.gold import Example
+from spacy.training import Example
 
 @spacy.registry.batchers("filtering_batch.v1")
 def filter_batch(size: int) -> Callable[[Iterable[Example]], Iterator[List[Example]]]:

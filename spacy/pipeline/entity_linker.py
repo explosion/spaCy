@@ -1,3 +1,4 @@
+from itertools import islice
 from typing import Optional, Iterable, Callable, Dict, Iterator, Union, List, Tuple
 from pathlib import Path
 import srsly
@@ -11,7 +12,7 @@ from ..tokens import Doc
 from .pipe import Pipe, deserialize_config
 from ..language import Language
 from ..vocab import Vocab
-from ..gold import Example, validate_examples
+from ..training import Example, validate_examples
 from ..errors import Errors, Warnings
 from ..util import SimpleFrozenList
 from .. import util
@@ -128,7 +129,7 @@ class EntityLinker(Pipe):
         # how many neightbour sentences to take into account
         self.n_sents = cfg.get("n_sents", 0)
 
-    def require_kb(self) -> None:
+    def _require_kb(self) -> None:
         # Raise an error if the knowledge base is not initialized.
         if len(self.kb) == 0:
             raise ValueError(Errors.E139.format(name=self.name))
@@ -140,10 +141,11 @@ class EntityLinker(Pipe):
         pipeline: Optional[List[Tuple[str, Callable[[Doc], Doc]]]] = None,
         sgd: Optional[Optimizer] = None,
     ) -> Optimizer:
-        """Initialize the pipe for training, using data examples if available.
+        """Initialize the pipe for training, using a representative set
+        of data examples.
 
-        get_examples (Callable[[], Iterable[Example]]): Optional function that
-            returns gold-standard Example objects.
+        get_examples (Callable[[], Iterable[Example]]): Function that
+            returns a representative sample of gold-standard Example objects.
         pipeline (List[Tuple[str, Callable]]): Optional list of pipeline
             components that this component is part of. Corresponds to
             nlp.pipeline.
@@ -153,10 +155,19 @@ class EntityLinker(Pipe):
 
         DOCS: https://nightly.spacy.io/api/entitylinker#begin_training
         """
-        self.require_kb()
+        self._ensure_examples(get_examples)
+        self._require_kb()
         nO = self.kb.entity_vector_length
-        self.set_output(nO)
-        self.model.initialize()
+        doc_sample = []
+        vector_sample = []
+        for example in islice(get_examples(), 10):
+            doc_sample.append(example.x)
+            vector_sample.append(self.model.ops.alloc1f(nO))
+        assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
+        assert len(vector_sample) > 0, Errors.E923.format(name=self.name)
+        self.model.initialize(
+            X=doc_sample, Y=self.model.ops.asarray(vector_sample, dtype="float32")
+        )
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
@@ -184,7 +195,7 @@ class EntityLinker(Pipe):
 
         DOCS: https://nightly.spacy.io/api/entitylinker#update
         """
-        self.require_kb()
+        self._require_kb()
         if losses is None:
             losses = {}
         losses.setdefault(self.name, 0.0)
@@ -296,7 +307,7 @@ class EntityLinker(Pipe):
 
         DOCS: https://nightly.spacy.io/api/entitylinker#predict
         """
-        self.require_kb()
+        self._require_kb()
         entity_count = 0
         final_kb_ids = []
         if not docs:
@@ -405,7 +416,7 @@ class EntityLinker(Pipe):
                     token.ent_kb_id_ = kb_id
 
     def to_disk(
-        self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList(),
+        self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList()
     ) -> None:
         """Serialize the pipe to disk.
 
@@ -422,7 +433,7 @@ class EntityLinker(Pipe):
         util.to_disk(path, serialize, exclude)
 
     def from_disk(
-        self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList(),
+        self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList()
     ) -> "EntityLinker":
         """Load the pipe from disk. Modifies the object in place and returns it.
 

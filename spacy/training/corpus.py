@@ -78,7 +78,7 @@ class Corpus:
         *,
         limit: int = 0,
         gold_preproc: bool = False,
-        max_length: bool = False,
+        max_length: int = 0,
     ) -> None:
         self.path = util.ensure_path(path)
         self.gold_preproc = gold_preproc
@@ -97,7 +97,7 @@ class Corpus:
         if self.gold_preproc:
             examples = self.make_examples_gold_preproc(nlp, ref_docs)
         else:
-            examples = self.make_examples(nlp, ref_docs, self.max_length)
+            examples = self.make_examples(nlp, ref_docs)
         yield from examples
 
     def _make_example(
@@ -116,18 +116,18 @@ class Corpus:
             return Example(nlp.make_doc(reference.text), reference)
 
     def make_examples(
-        self, nlp: "Language", reference_docs: Iterable[Doc], max_length: int = 0
+        self, nlp: "Language", reference_docs: Iterable[Doc]
     ) -> Iterator[Example]:
         for reference in reference_docs:
             if len(reference) == 0:
                 continue
-            elif max_length == 0 or len(reference) < max_length:
+            elif self.max_length == 0 or len(reference) < self.max_length:
                 yield self._make_example(nlp, reference, False)
             elif reference.is_sentenced:
                 for ref_sent in reference.sents:
                     if len(ref_sent) == 0:
                         continue
-                    elif max_length == 0 or len(ref_sent) < max_length:
+                    elif self.max_length == 0 or len(ref_sent) < self.max_length:
                         yield self._make_example(nlp, ref_sent.as_doc(), False)
 
     def make_examples_gold_preproc(

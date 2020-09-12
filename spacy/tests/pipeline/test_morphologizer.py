@@ -1,7 +1,7 @@
 import pytest
 
 from spacy import util
-from spacy.gold import Example
+from spacy.training import Example
 from spacy.lang.en import English
 from spacy.language import Language
 from spacy.tests.util import make_tempdir
@@ -25,27 +25,61 @@ TRAIN_DATA = [
         },
     ),
     # test combinations of morph+POS
-    ("Eat blue ham", {"morphs": ["Feat=V", "", ""], "pos": ["", "ADJ", ""]},),
+    ("Eat blue ham", {"morphs": ["Feat=V", "", ""], "pos": ["", "ADJ", ""]}),
 ]
+
+
+def test_no_label():
+    nlp = Language()
+    nlp.add_pipe("morphologizer")
+    with pytest.raises(ValueError):
+        nlp.begin_training()
+
+
+def test_implicit_label():
+    nlp = Language()
+    nlp.add_pipe("morphologizer")
+    train_examples = []
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+    nlp.begin_training(get_examples=lambda: train_examples)
+
+
+def test_no_resize():
+    nlp = Language()
+    morphologizer = nlp.add_pipe("morphologizer")
+    morphologizer.add_label("POS" + Morphology.FIELD_SEP + "NOUN")
+    morphologizer.add_label("POS" + Morphology.FIELD_SEP + "VERB")
+    nlp.begin_training()
+    # this throws an error because the morphologizer can't be resized after initialization
+    with pytest.raises(ValueError):
+        morphologizer.add_label("POS" + Morphology.FIELD_SEP + "ADJ")
+
+
+def test_begin_training_examples():
+    nlp = Language()
+    morphologizer = nlp.add_pipe("morphologizer")
+    morphologizer.add_label("POS" + Morphology.FIELD_SEP + "NOUN")
+    train_examples = []
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+    # you shouldn't really call this more than once, but for testing it should be fine
+    nlp.begin_training()
+    nlp.begin_training(get_examples=lambda: train_examples)
+    with pytest.raises(TypeError):
+        nlp.begin_training(get_examples=lambda: None)
+    with pytest.raises(ValueError):
+        nlp.begin_training(get_examples=train_examples)
 
 
 def test_overfitting_IO():
     # Simple test to try and quickly overfit the morphologizer - ensuring the ML models work correctly
     nlp = English()
-    morphologizer = nlp.add_pipe("morphologizer")
+    nlp.add_pipe("morphologizer")
     train_examples = []
     for inst in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(inst[0]), inst[1]))
-        for morph, pos in zip(inst[1]["morphs"], inst[1]["pos"]):
-            if morph and pos:
-                morphologizer.add_label(
-                    morph + Morphology.FEATURE_SEP + "POS" + Morphology.FIELD_SEP + pos
-                )
-            elif pos:
-                morphologizer.add_label("POS" + Morphology.FIELD_SEP + pos)
-            elif morph:
-                morphologizer.add_label(morph)
-    optimizer = nlp.begin_training()
+    optimizer = nlp.begin_training(get_examples=lambda: train_examples)
 
     for i in range(50):
         losses = {}
@@ -55,18 +89,8 @@ def test_overfitting_IO():
     # test the trained model
     test_text = "I like blue ham"
     doc = nlp(test_text)
-    gold_morphs = [
-        "Feat=N",
-        "Feat=V",
-        "",
-        "",
-    ]
-    gold_pos_tags = [
-        "NOUN",
-        "VERB",
-        "ADJ",
-        "",
-    ]
+    gold_morphs = ["Feat=N", "Feat=V", "", ""]
+    gold_pos_tags = ["NOUN", "VERB", "ADJ", ""]
     assert [t.morph_ for t in doc] == gold_morphs
     assert [t.pos_ for t in doc] == gold_pos_tags
 
