@@ -205,8 +205,15 @@ examples can either be the full training data or a representative sample. They
 are used to **initialize the models** of trainable pipeline components and are
 passed each component's [`begin_training`](/api/pipe#begin_training) method, if
 available. Initialization includes validating the network,
-[inferring missing shapes](https://thinc.ai/docs/usage-models#validation) and
-setting up the label scheme based on the data.
+[inferring missing shapes](/usage/layers-architectures#thinc-shape-inference)
+and setting up the label scheme based on the data.
+
+If no `get_examples` function is provided when calling `nlp.begin_training`, the
+pipeline components will be initialized with generic data. In this case, it is
+crucial that the output dimension of each component has already been defined
+either in the [config](/usage/training#config), or by calling
+[`pipe.add_label`](/api/pipe#add_label) for each possible output label (e.g. for
+the tagger or textcat).
 
 <Infobox variant="warning" title="Changed in v3.0">
 
@@ -937,11 +944,11 @@ available to the loaded object.
 
 ## Class attributes {#class-attributes}
 
-| Name             | Description                                                                                                                                                                                                        |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `Defaults`       | Settings, data and factory methods for creating the `nlp` object and processing pipeline. ~~Defaults~~                                                                                                             |
-| `lang`           | Two-letter language ID, i.e. [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes). ~~str~~                                                                                                            |
-| `default_config` | Base [config](/usage/training#config) to use for [Language.config](/api/language#config). Defaults to [`default_config.cfg`](https://github.com/explosion/spaCy/tree/develop/spacy/default_config.cfg). ~~Config~~ |
+| Name             | Description                                                                                                                                                                       |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Defaults`       | Settings, data and factory methods for creating the `nlp` object and processing pipeline. ~~Defaults~~                                                                            |
+| `lang`           | Two-letter language ID, i.e. [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes). ~~str~~                                                                           |
+| `default_config` | Base [config](/usage/training#config) to use for [Language.config](/api/language#config). Defaults to [`default_config.cfg`](%%GITHUB_SPACY/spacy/default_config.cfg). ~~Config~~ |
 
 ## Defaults {#defaults}
 
@@ -974,34 +981,17 @@ customize the default language data:
 >    config = Config().from_str(DEFAULT_CONFIG)
 > ```
 
-| Name                              | Description                                                                                                                                                                                                                                                                         |
-| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `stop_words`                      | List of stop words, used for `Token.is_stop`.<br />**Example:** [`stop_words.py`][stop_words.py] ~~Set[str]~~                                                                                                                                                                       |
-| `tokenizer_exceptions`            | Tokenizer exception rules, string mapped to list of token attributes.<br />**Example:** [`de/tokenizer_exceptions.py`][de/tokenizer_exceptions.py] ~~Dict[str, List[dict]]~~                                                                                                        |
-| `prefixes`, `suffixes`, `infixes` | Prefix, suffix and infix rules for the default tokenizer.<br />**Example:** [`puncutation.py`][punctuation.py] ~~Optional[List[Union[str, Pattern]]]~~                                                                                                                              |
-| `token_match`                     | Optional regex for matching strings that should never be split, overriding the infix rules.<br />**Example:** [`fr/tokenizer_exceptions.py`][fr/tokenizer_exceptions.py] ~~Optional[Pattern]~~                                                                                      |
-| `url_match`                       | Regular expression for matching URLs. Prefixes and suffixes are removed before applying the match.<br />**Example:** [`tokenizer_exceptions.py`][tokenizer_exceptions.py] ~~Optional[Pattern]~~                                                                                     |
-| `lex_attr_getters`                | Custom functions for setting lexical attributes on tokens, e.g. `like_num`.<br />**Example:** [`lex_attrs.py`][lex_attrs.py] ~~Dict[int, Callable[[str], Any]]~~                                                                                                                    |
-| `syntax_iterators`                | Functions that compute views of a `Doc` object based on its syntax. At the moment, only used for [noun chunks](/usage/linguistic-features#noun-chunks).<br />**Example:** [`syntax_iterators.py`][syntax_iterators.py]. ~~Dict[str, Callable[[Union[Doc, Span]], Iterator[Span]]]~~ |
-| `writing_system`                  | Information about the language's writing system, available via `Vocab.writing_system`. Defaults to: `{"direction": "ltr", "has_case": True, "has_letters": True}.`.<br />**Example:** [`zh/__init__.py`][zh/__init__.py] ~~Dict[str, Any]~~                                         |
-| `config`                          | Default [config](/usage/training#config) added to `nlp.config`. This can include references to custom tokenizers or lemmatizers.<br />**Example:** [`zh/__init__.py`][zh/__init__.py] ~~Config~~                                                                                    |
-
-[stop_words.py]:
-  https://github.com/explosion/spaCy/tree/master/spacy/lang/en/stop_words.py
-[tokenizer_exceptions.py]:
-  https://github.com/explosion/spaCy/tree/master/spacy/lang/tokenizer_exceptions.py
-[de/tokenizer_exceptions.py]:
-  https://github.com/explosion/spaCy/tree/master/spacy/lang/de/tokenizer_exceptions.py
-[fr/tokenizer_exceptions.py]:
-  https://github.com/explosion/spaCy/tree/master/spacy/lang/fr/tokenizer_exceptions.py
-[punctuation.py]:
-  https://github.com/explosion/spaCy/tree/master/spacy/lang/punctuation.py
-[lex_attrs.py]:
-  https://github.com/explosion/spaCy/tree/master/spacy/lang/en/lex_attrs.py
-[syntax_iterators.py]:
-  https://github.com/explosion/spaCy/tree/master/spacy/lang/en/syntax_iterators.py
-[zh/__init__.py]:
-  https://github.com/explosion/spaCy/tree/master/spacy/lang/zh/__init__.py
+| Name                              | Description                                                                                                                                                                                                                                                                                                      |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `stop_words`                      | List of stop words, used for `Token.is_stop`.<br />**Example:** [`stop_words.py`](%%GITHUB_SPACY/spacy/lang/en/stop_words.py) ~~Set[str]~~                                                                                                                                                                       |
+| `tokenizer_exceptions`            | Tokenizer exception rules, string mapped to list of token attributes.<br />**Example:** [`de/tokenizer_exceptions.py`](%%GITHUB_SPACY/spacy/lang/de/tokenizer_exceptions.py) ~~Dict[str, List[dict]]~~                                                                                                           |
+| `prefixes`, `suffixes`, `infixes` | Prefix, suffix and infix rules for the default tokenizer.<br />**Example:** [`puncutation.py`](%%GITHUB_SPACY/spacy/lang/punctuation.py) ~~Optional[List[Union[str, Pattern]]]~~                                                                                                                                 |
+| `token_match`                     | Optional regex for matching strings that should never be split, overriding the infix rules.<br />**Example:** [`fr/tokenizer_exceptions.py`](%%GITHUB_SPACY/spacy/lang/fr/tokenizer_exceptions.py) ~~Optional[Pattern]~~                                                                                         |
+| `url_match`                       | Regular expression for matching URLs. Prefixes and suffixes are removed before applying the match.<br />**Example:** [`tokenizer_exceptions.py`](%%GITHUB_SPACY/spacy/lang/tokenizer_exceptions.py) ~~Optional[Pattern]~~                                                                                        |
+| `lex_attr_getters`                | Custom functions for setting lexical attributes on tokens, e.g. `like_num`.<br />**Example:** [`lex_attrs.py`](%%GITHUB_SPACY/spacy/lang/en/lex_attrs.py) ~~Dict[int, Callable[[str], Any]]~~                                                                                                                    |
+| `syntax_iterators`                | Functions that compute views of a `Doc` object based on its syntax. At the moment, only used for [noun chunks](/usage/linguistic-features#noun-chunks).<br />**Example:** [`syntax_iterators.py`](%%GITHUB_SPACY/spacy/lang/en/syntax_iterators.py). ~~Dict[str, Callable[[Union[Doc, Span]], Iterator[Span]]]~~ |
+| `writing_system`                  | Information about the language's writing system, available via `Vocab.writing_system`. Defaults to: `{"direction": "ltr", "has_case": True, "has_letters": True}.`.<br />**Example:** [`zh/__init__.py`](%%GITHUB_SPACY/spacy/lang/zh/__init__.py) ~~Dict[str, Any]~~                                            |
+| `config`                          | Default [config](/usage/training#config) added to `nlp.config`. This can include references to custom tokenizers or lemmatizers.<br />**Example:** [`zh/__init__.py`](%%GITHUB_SPACY/spacy/lang/zh/__init__.py) ~~Config~~                                                                                       |
 
 ## Serialization fields {#serialization-fields}
 

@@ -41,7 +41,7 @@ architectures and their arguments and hyperparameters.
 | `model`  | A model instance that predicts scores for each category. Defaults to [TextCatEnsemble](/api/architectures#TextCatEnsemble). ~~Model[List[Doc], List[Floats2d]]~~ |
 
 ```python
-https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/textcat.py
+%%GITHUB_SPACY/spacy/pipeline/textcat.py
 ```
 
 ## TextCategorizer.\_\_init\_\_ {#init tag="method"}
@@ -297,7 +297,13 @@ Modify the pipe's model, to use the given parameter values.
 
 ## TextCategorizer.add_label {#add_label tag="method"}
 
-Add a new label to the pipe.
+Add a new label to the pipe. Raises an error if the output dimension is already
+set, or if the model has already been fully [initialized](#begin_training). Note
+that you don't have to call this method if you provide a **representative data
+sample** to the [`begin_training`](#begin_training) method. In this case, all
+labels found in the sample will be automatically added to the model, and the
+output dimension will be
+[inferred](/usage/layers-architectures#thinc-shape-inference) automatically.
 
 > #### Example
 >

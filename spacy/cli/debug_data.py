@@ -8,7 +8,7 @@ import typer
 
 from ._util import app, Arg, Opt, show_validation_error, parse_config_overrides
 from ._util import import_code, debug_cli, get_sourced_components
-from ..gold import Corpus, Example
+from ..training import Corpus, Example
 from ..pipeline._parser_internals import nonproj
 from ..language import Language
 from .. import util

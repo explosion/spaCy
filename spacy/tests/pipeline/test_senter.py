@@ -1,7 +1,7 @@
 import pytest
 
 from spacy import util
-from spacy.gold import Example
+from spacy.training import Example
 from spacy.lang.en import English
 from spacy.language import Language
 from spacy.tests.util import make_tempdir
@@ -29,6 +29,20 @@ TRAIN_DATA = [
         {"sent_starts": SENT_STARTS},
     ),
 ]
+
+def test_begin_training_examples():
+    nlp = Language()
+    senter = nlp.add_pipe("senter")
+    train_examples = []
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+    # you shouldn't really call this more than once, but for testing it should be fine
+    nlp.begin_training()
+    nlp.begin_training(get_examples=lambda: train_examples)
+    with pytest.raises(TypeError):
+        nlp.begin_training(get_examples=lambda: None)
+    with pytest.raises(ValueError):
+        nlp.begin_training(get_examples=train_examples)
 
 
 def test_overfitting_IO():

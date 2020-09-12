@@ -23,7 +23,7 @@ Options.docstrings = True
 
 PACKAGES = find_packages()
 MOD_NAMES = [
-    "spacy.gold.example",
+    "spacy.training.example",
     "spacy.parts_of_speech",
     "spacy.strings",
     "spacy.lexeme",
@@ -48,7 +48,7 @@ MOD_NAMES = [
     "spacy.pipeline._parser_internals.stateclass",
     "spacy.pipeline._parser_internals.transition_system",
     "spacy.tokenizer",
-    "spacy.gold.gold_io",
+    "spacy.training.gold_io",
     "spacy.tokens.doc",
     "spacy.tokens.span",
     "spacy.tokens.token",

@@ -22,7 +22,7 @@ for how to use the `Pipe` base class to implement custom components.
 > inherit from `Pipe`.
 
 ```python
-https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/pipe.pyx
+%%GITHUB_SPACY/spacy/pipeline/pipe.pyx
 ```
 
 ## Pipe.\_\_init\_\_ {#init tag="method"}
@@ -286,9 +286,6 @@ context, the original parameters are restored.
 
 ## Pipe.add_label {#add_label tag="method"}
 
-Add a new label to the pipe. It's possible to extend trained models with new
-labels, but care should be taken to avoid the "catastrophic forgetting" problem.
-
 > #### Example
 >
 > ```python
@@ -296,10 +293,82 @@ labels, but care should be taken to avoid the "catastrophic forgetting" problem.
 > pipe.add_label("MY_LABEL")
 > ```
 
-| Name        | Description                                                 |
-| ----------- | ----------------------------------------------------------- |
-| `label`     | The label to add. ~~str~~                                   |
-| **RETURNS** | `0` if the label is already present, otherwise `1`. ~~int~~ |
+Add a new label to the pipe, to be predicted by the model. The actual
+implementation depends on the specific component, but in general `add_label`
+shouldn't be called if the output dimension is already set, or if the model has
+already been fully [initialized](#begin_training). If these conditions are
+violated, the function will raise an Error. The exception to this rule is when
+the component is [resizable](#is_resizable), in which case
+[`set_output`](#set_output) should be called to ensure that the model is
+properly resized.
+
+<Infobox variant="danger">
+
+This method needs to be overwritten with your own custom `add_label` method.
+
+</Infobox>
+
+| Name        | Description                                             |
+| ----------- | ------------------------------------------------------- |
+| `label`     | The label to add. ~~str~~                               |
+| **RETURNS** | 0 if the label is already present, otherwise 1. ~~int~~ |
+
+Note that in general, you don't have to call `pipe.add_label` if you provide a
+representative data sample to the [`begin_training`](#begin_training) method. In
+this case, all labels found in the sample will be automatically added to the
+model, and the output dimension will be
+[inferred](/usage/layers-architectures#thinc-shape-inference) automatically.
+
+## Pipe.is_resizable {#is_resizable tag="method"}
+
+> #### Example
+>
+> ```python
+> can_resize = pipe.is_resizable()
+> ```
+>
+> With custom resizing implemented by a component:
+>
+> ```python
+> def custom_resize(model, new_nO):
+>     # adjust model
+>     return model
+>
+> custom_model.attrs["resize_output"] = custom_resize
+> ```
+
+Check whether or not the output dimension of the component's model can be
+resized. If this method returns `True`, [`set_output`](#set_output) can be
+called to change the model's output dimension.
+
+For built-in components that are not resizable, you have to create and train a
+new model from scratch with the appropriate architecture and output dimension.
+For custom components, you can implement a `resize_output` function and add it
+as an attribute to the component's model.
+
+| Name        | Description                                                                                    |
+| ----------- | ---------------------------------------------------------------------------------------------- |
+| **RETURNS** | Whether or not the output dimension of the model can be changed after initialization. ~~bool~~ |
+
+## Pipe.set_output {#set_output tag="method"}
+
+Change the output dimension of the component's model. If the component is not
+[resizable](#is_resizable), this method will raise a `NotImplementedError`. If a
+component is resizable, the model's attribute `resize_output` will be called.
+This is a function that takes the original model and the new output dimension
+`nO`, and changes the model in place. When resizing an already trained model,
+care should be taken to avoid the "catastrophic forgetting" problem.
+
+> #### Example
+>
+> ```python
+> if pipe.is_resizable():
+>     pipe.set_output(512)
+> ```
+
+| Name | Description                       |
+| ---- | --------------------------------- |
+| `nO` | The new output dimension. ~~int~~ |
 
 ## Pipe.to_disk {#to_disk tag="method"}
 

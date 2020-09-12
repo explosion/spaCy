@@ -854,24 +854,22 @@ The algorithm can be summarized as follows:
 </Accordion>
 
 **Global** and **language-specific** tokenizer data is supplied via the language
-data in
-[`spacy/lang`](https://github.com/explosion/spaCy/tree/master/spacy/lang). The
-tokenizer exceptions define special cases like "don't" in English, which needs
-to be split into two tokens: `{ORTH: "do"}` and `{ORTH: "n't", NORM: "not"}`.
-The prefixes, suffixes and infixes mostly define punctuation rules – for
-example, when to split off periods (at the end of a sentence), and when to leave
-tokens containing periods intact (abbreviations like "U.S.").
+data in [`spacy/lang`](%%GITHUB_SPACY/spacy/lang). The tokenizer exceptions
+define special cases like "don't" in English, which needs to be split into two
+tokens: `{ORTH: "do"}` and `{ORTH: "n't", NORM: "not"}`. The prefixes, suffixes
+and infixes mostly define punctuation rules – for example, when to split off
+periods (at the end of a sentence), and when to leave tokens containing periods
+intact (abbreviations like "U.S.").
 
 <Accordion title="Should I change the language data or add custom tokenizer rules?" id="lang-data-vs-tokenizer">
 
 Tokenization rules that are specific to one language, but can be **generalized
 across that language** should ideally live in the language data in
-[`spacy/lang`](https://github.com/explosion/spaCy/tree/master/spacy/lang) – we
-always appreciate pull requests! Anything that's specific to a domain or text
-type – like financial trading abbreviations, or Bavarian youth slang – should be
-added as a special case rule to your tokenizer instance. If you're dealing with
-a lot of customizations, it might make sense to create an entirely custom
-subclass.
+[`spacy/lang`](%%GITHUB_SPACY/spacy/lang) – we always appreciate pull requests!
+Anything that's specific to a domain or text type – like financial trading
+abbreviations, or Bavarian youth slang – should be added as a special case rule
+to your tokenizer instance. If you're dealing with a lot of customizations, it
+might make sense to create an entirely custom subclass.
 
 </Accordion>
 
@@ -1059,7 +1057,7 @@ but also detailed regular expressions that take the surrounding context into
 account. For example, there is a regular expression that treats a hyphen between
 letters as an infix. If you do not want the tokenizer to split on hyphens
 between letters, you can modify the existing infix definition from
-[`lang/punctuation.py`](https://github.com/explosion/spaCy/blob/master/spacy/lang/punctuation.py):
+[`lang/punctuation.py`](%%GITHUB_SPACY/spacy/lang/punctuation.py):
 
 ```python
 ### {executable="true"}
@@ -1096,10 +1094,10 @@ print([t.text for t in doc]) # ['mother-in-law']
 ```
 
 For an overview of the default regular expressions, see
-[`lang/punctuation.py`](https://github.com/explosion/spaCy/blob/master/spacy/lang/punctuation.py)
-and language-specific definitions such as
-[`lang/de/punctuation.py`](https://github.com/explosion/spaCy/blob/master/spacy/lang/de/punctuation.py)
-for German.
+[`lang/punctuation.py`](%%GITHUB_SPACY/spacy/lang/punctuation.py) and
+language-specific definitions such as
+[`lang/de/punctuation.py`](%%GITHUB_SPACY/spacy/lang/de/punctuation.py) for
+German.
 
 ### Hooking a custom tokenizer into the pipeline {#custom-tokenizer}
 
@@ -1366,7 +1364,7 @@ token.
 
 ```python
 ### {executable="true"}
-from spacy.gold import Alignment
+from spacy.training import Alignment
 
 other_tokens = ["i", "listened", "to", "obama", "'", "s", "podcasts", "."]
 spacy_tokens = ["i", "listened", "to", "obama", "'s", "podcasts", "."]

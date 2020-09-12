@@ -38,16 +38,21 @@ def project_assets(project_dir: Path) -> None:
         msg.warn(f"No assets specified in {PROJECT_FILE}", exits=0)
     msg.info(f"Fetching {len(assets)} asset(s)")
     for asset in assets:
-        dest = Path(asset["dest"])
+        dest = (project_dir / asset["dest"]).resolve()
         checksum = asset.get("checksum")
         if "git" in asset:
             if dest.exists():
                 # If there's already a file, check for checksum
                 if checksum and checksum == get_checksum(dest):
-                    msg.good(f"Skipping download with matching checksum: {dest}")
+                    msg.good(
+                        f"Skipping download with matching checksum: {asset['dest']}"
+                    )
                     continue
                 else:
-                    shutil.rmtree(dest)
+                    if dest.is_dir():
+                        shutil.rmtree(dest)
+                    else:
+                        dest.unlink()
             git_sparse_checkout(
                 asset["git"]["repo"],
                 asset["git"]["path"],
@@ -67,14 +72,16 @@ def check_private_asset(dest: Path, checksum: Optional[str] = None) -> None:
     """Check and validate assets without a URL (private assets that the user
     has to provide themselves) and give feedback about the checksum.
 
-    dest (Path): Desintation path of the asset.
+    dest (Path): Destination path of the asset.
     checksum (Optional[str]): Optional checksum of the expected file.
     """
     if not Path(dest).exists():
         err = f"No URL provided for asset. You need to add this file yourself: {dest}"
         msg.warn(err)
     else:
-        if checksum and checksum == get_checksum(dest):
+        if not checksum:
+            msg.good(f"Asset already exists: {dest}")
+        elif checksum == get_checksum(dest):
             msg.good(f"Asset exists with matching checksum: {dest}")
         else:
             msg.fail(f"Asset available but with incorrect checksum: {dest}")

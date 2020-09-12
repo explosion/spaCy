@@ -50,7 +50,7 @@ architectures and their arguments and hyperparameters.
 | `get_candidates` | Function that generates plausible candidates for a given `Span` object. Defaults to [CandidateGenerator](/api/architectures#CandidateGenerator), a function looking up exact, case-dependent aliases in the KB. ~~Callable[[KnowledgeBase, Span], Iterable[Candidate]]~~ |
 
 ```python
-https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/entity_linker.py
+%%GITHUB_SPACY/spacy/pipeline/entity_linker.py
 ```
 
 ## EntityLinker.\_\_init\_\_ {#init tag="method"}

@@ -3,7 +3,7 @@ from thinc.api import Adam, fix_random_seed
 from spacy import registry
 from spacy.attrs import NORM
 from spacy.vocab import Vocab
-from spacy.gold import Example
+from spacy.training import Example
 from spacy.tokens import Doc
 from spacy.pipeline import DependencyParser, EntityRecognizer
 from spacy.pipeline.ner import DEFAULT_NER_MODEL
@@ -35,7 +35,7 @@ def test_init_parser(parser):
 def _train_parser(parser):
     fix_random_seed(1)
     parser.add_label("left")
-    parser.begin_training(lambda: [], **parser.cfg)
+    parser.begin_training(lambda: [_parser_example(parser)], **parser.cfg)
     sgd = Adam(0.001)
 
     for i in range(5):
@@ -47,16 +47,25 @@ def _train_parser(parser):
     return parser
 
 
+def _parser_example(parser):
+    doc = Doc(parser.vocab, words=["a", "b", "c", "d"])
+    gold = {"heads": [1, 1, 3, 3], "deps": ["right", "ROOT", "left", "ROOT"]}
+    return Example.from_dict(doc, gold)
+
+
+def _ner_example(ner):
+    doc = Doc(ner.vocab, words=["Joe", "loves", "visiting", "London", "during", "the", "weekend"])
+    gold = {"entities": [(0, 3, "PERSON"), (19, 25, "LOC")]}
+    return Example.from_dict(doc, gold)
+
+
 def test_add_label(parser):
     parser = _train_parser(parser)
     parser.add_label("right")
     sgd = Adam(0.001)
     for i in range(100):
         losses = {}
-        doc = Doc(parser.vocab, words=["a", "b", "c", "d"])
-        gold = {"heads": [1, 1, 3, 3], "deps": ["right", "ROOT", "left", "ROOT"]}
-        example = Example.from_dict(doc, gold)
-        parser.update([example], sgd=sgd, losses=losses)
+        parser.update([_parser_example(parser)], sgd=sgd, losses=losses)
     doc = Doc(parser.vocab, words=["a", "b", "c", "d"])
     doc = parser(doc)
     assert doc[0].dep_ == "right"
@@ -75,7 +84,7 @@ def test_add_label_deserializes_correctly():
     ner1.add_label("C")
     ner1.add_label("B")
     ner1.add_label("A")
-    ner1.begin_training(lambda: [])
+    ner1.begin_training(lambda: [_ner_example(ner1)])
     ner2 = EntityRecognizer(Vocab(), model, **config)
 
     # the second model needs to be resized before we can call from_bytes

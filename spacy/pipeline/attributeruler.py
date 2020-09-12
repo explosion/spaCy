@@ -4,7 +4,7 @@ from pathlib import Path
 
 from .pipe import Pipe
 from ..errors import Errors
-from ..gold import validate_examples
+from ..training import validate_examples
 from ..language import Language
 from ..matcher import Matcher
 from ..scorer import Scorer

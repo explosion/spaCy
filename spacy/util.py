@@ -93,6 +93,7 @@ class registry(thinc.registry):
     # environment. spaCy models packaged with `spacy package` will "advertise"
     # themselves via entry points.
     models = catalogue.create("spacy", "models", entry_points=True)
+    cli = catalogue.create("spacy", "cli", entry_points=True)
 
 
 class SimpleFrozenDict(dict):
@@ -647,7 +648,7 @@ def join_command(command: List[str]) -> str:
     return " ".join(shlex.quote(cmd) for cmd in command)
 
 
-def run_command(command: Union[str, List[str]], *, capture=False, stdin=None) -> None:
+def run_command(command: Union[str, List[str]], *, capture=False, stdin=None):
     """Run a command on the command line as a subprocess. If the subprocess
     returns a non-zero exit code, a system exit is performed.
 

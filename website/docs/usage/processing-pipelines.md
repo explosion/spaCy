@@ -1028,11 +1028,11 @@ plug fully custom machine learning components into your pipeline. You'll need
 the following:
 
 1. **Model:** A Thinc [`Model`](https://thinc.ai/docs/api-model) instance. This
-   can be a model using [layers](https://thinc.ai/docs/api-layers) implemented
-   in Thinc, or a [wrapped model](https://thinc.ai/docs/usage-frameworks)
-   implemented in PyTorch, TensorFlow, MXNet or a fully custom solution. The
-   model must take a list of [`Doc`](/api/doc) objects as input and can have any
-   type of output.
+   can be a model using implemented in
+   [Thinc](/usage/layers-architectures#thinc), or a
+   [wrapped model](/usage/layers-architectures#frameworks) implemented in
+   PyTorch, TensorFlow, MXNet or a fully custom solution. The model must take a
+   list of [`Doc`](/api/doc) objects as input and can have any type of output.
 2. **Pipe subclass:** A subclass of [`Pipe`](/api/pipe) that implements at least
    two methods: [`Pipe.predict`](/api/pipe#predict) and
    [`Pipe.set_annotations`](/api/pipe#set_annotations).
@@ -1078,8 +1078,9 @@ _first_ create a `Model` from a [registered architecture](/api/architectures),
 validate its arguments and _then_ pass the object forward to the component. This
 means that the config can express very complex, nested trees of objects – but
 the objects don't have to pass the model settings all the way down to the
-components. It also makes the components more **modular** and lets you swap
-different architectures in your config, and re-use model definitions.
+components. It also makes the components more **modular** and lets you
+[swap](/usage/layers-architectures#swap-architectures) different architectures
+in your config, and re-use model definitions.
 
 ```ini
 ### config.cfg (excerpt)
@@ -1134,7 +1135,7 @@ loss is calculated and to add evaluation scores to the training output.
 For more details on how to implement your own trainable components and model
 architectures, and plug existing models implemented in PyTorch or TensorFlow
 into your spaCy pipeline, see the usage guide on
-[layers and model architectures](/usage/layers-architectures#components).
+[layers and model architectures](/usage/layers-architectures).
 
 </Infobox>
 
@@ -1500,7 +1501,7 @@ add those entities to the `doc.ents`, you can wrap it in a custom pipeline
 component function and pass it the token texts from the `Doc` object received by
 the component.
 
-The [`gold.spans_from_biluo_tags`](/api/top-level#spans_from_biluo_tags) is very
+The [`training.spans_from_biluo_tags`](/api/top-level#spans_from_biluo_tags) is very
 helpful here, because it takes a `Doc` object and token-based BILUO tags and
 returns a sequence of `Span` objects in the `Doc` with added labels. So all your
 wrapper has to do is compute the entity spans and overwrite the `doc.ents`.
@@ -1515,7 +1516,7 @@ wrapper has to do is compute the entity spans and overwrite the `doc.ents`.
 ```python
 ### {highlight="1,8-9"}
 import your_custom_entity_recognizer
-from spacy.gold import offsets_from_biluo_tags
+from spacy.training import offsets_from_biluo_tags
 from spacy.language import Language
 
 @Language.component("custom_ner_wrapper")

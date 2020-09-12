@@ -1,9 +1,7 @@
 import pytest
-from mock import Mock
-from spacy.matcher import DependencyMatcher
 from spacy.tokens import Doc, Span, DocBin
-from spacy.gold import Example
-from spacy.gold.converters.conllu2docs import conllu2docs
+from spacy.training import Example
+from spacy.training.converters.conllu2docs import conllu2docs
 from spacy.lang.en import English
 from spacy.kb import KnowledgeBase
 from spacy.vocab import Vocab
@@ -12,7 +10,7 @@ from spacy.util import ensure_path, load_model_from_path
 import numpy
 import pickle
 
-from ..util import get_doc, make_tempdir
+from ..util import make_tempdir
 
 
 def test_issue4528(en_vocab):

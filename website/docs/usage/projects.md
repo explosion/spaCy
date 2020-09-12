@@ -65,6 +65,8 @@ project template and copies the files to a local directory. You can then run the
 project, e.g. to train a pipeline and edit the commands and scripts to build
 fully custom workflows.
 
+<!-- TODO: update with real example project -->
+
 ```cli
 python -m spacy project clone some_example_project
 ```
@@ -217,7 +219,7 @@ pipelines.
 <!-- TODO: update with better (final) example -->
 
 ```yaml
-https://github.com/explosion/spacy-boilerplates/blob/master/ner_fashion/project.yml
+https://github.com/explosion/projects/tree/v3/tutorials/ner_fashion_brands/project.yml
 ```
 
 | Section       | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
@@ -726,17 +728,20 @@ workflows, but only one can be tracked by DVC.
 
 </Infobox>
 
-<Project id="integrations/dvc">
+<!-- TODO: <Project id="integrations/dvc">
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus interdum
-sodales lectus, ut sodales orci ullamcorper id. Sed condimentum neque ut erat
-mattis pretium.
-
-</Project>
+</Project> -->
 
 ---
 
 ### Prodigy {#prodigy} <IntegrationLogo name="prodigy" width={100} height="auto" align="right" />
+
+<Infobox title="This section is still under construction" emoji="🚧" variant="warning">
+
+The Prodigy integration will require a nightly version of Prodigy that supports
+spaCy v3+.
+
+</Infobox>
 
 [Prodigy](https://prodi.gy) is a modern annotation tool for creating training
 data for machine learning models, developed by us. It integrates with spaCy
@@ -793,9 +798,7 @@ results.
 
 <Project id="integrations/prodigy">
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus interdum
-sodales lectus, ut sodales orci ullamcorper id. Sed condimentum neque ut erat
-mattis pretium.
+<!-- TODO: -->
 
 </Project>
 
@@ -803,43 +806,34 @@ mattis pretium.
 
 ### Streamlit {#streamlit} <IntegrationLogo name="streamlit" width={150} height="auto" align="right" />
 
-<Grid cols={2} gutterBottom={false}>
-
-<div>
-
 [Streamlit](https://streamlit.io) is a Python framework for building interactive
 data apps. The [`spacy-streamlit`](https://github.com/explosion/spacy-streamlit)
 package helps you integrate spaCy visualizations into your Streamlit apps and
 quickly spin up demos to explore your pipelines interactively. It includes a
 full embedded visualizer, as well as individual components.
 
-```bash
-$ pip install spacy_streamlit
-```
+<!-- TODO: update once version is stable -->
 
-</div>
+> #### Installation
+>
+> ```bash
+> $ pip install "spacy_streamlit>=1.0.0a0"
+> ```
 
 ![](../images/spacy-streamlit.png)
-
-</Grid>
 
 Using [`spacy-streamlit`](https://github.com/explosion/spacy-streamlit), your
 projects can easily define their own scripts that spin up an interactive
 visualizer, using the latest pipeline you trained, or a selection of pipelines
-so you can compare their results. The following script starts an
-[NER visualizer](/usage/visualizers#ent) and takes two positional command-line
-argument you can pass in from your `config.yml`: a comma-separated list of paths
-to load the pipelines from and an example text to use as the default text.
+so you can compare their results.
 
-```python
-### scripts/visualize.py
-import spacy_streamlit
-import sys
+<Project id="integrations/streamlit">
 
-DEFAULT_TEXT = sys.argv[2] if len(sys.argv) >= 3 else ""
-PIPELINES = [name.strip() for name in sys.argv[1].split(",")]
-spacy_streamlit.visualize(PIPELINES, DEFAULT_TEXT, visualizers=["ner"])
-```
+Get started with spaCy and Streamlit using our project template. It includes a
+script to spin up a custom visualizer and commands you can adjust to showcase
+and explore your own custom trained pipelines.
+
+</Project>
 
 > #### Example usage
 >
@@ -856,16 +850,16 @@ commands:
     script:
       - 'streamlit run ./scripts/visualize.py ./training/model-best "I like Adidas shoes."'
     deps:
-      - 'training/model-best'
+      - "training/model-best"
 ```
 
-<Project id="integrations/streamlit">
+The following script is called from the `project.yml` and takes two positional
+command-line argument: a comma-separated list of paths or packages to load the
+pipelines from and an example text to use as the default text.
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus interdum
-sodales lectus, ut sodales orci ullamcorper id. Sed condimentum neque ut erat
-mattis pretium.
-
-</Project>
+```python
+https://github.com/explosion/projects/blob/v3/integrations/streamlit/scripts/visualize.py
+```
 
 ---
 
@@ -878,9 +872,13 @@ library for serving machine learning models and you can use it in your spaCy
 projects to quickly serve up a trained pipeline and make it available behind a
 REST API.
 
-```python
-# TODO: show an example that addresses some of the main concerns for serving ML (workers etc.)
-```
+<Project id="integrations/fastapi">
+
+Get started with spaCy and FastAPI using our project template. It includes a
+simple REST API for processing batches of text, and usage examples for how to
+query your API from Python and JavaScript (Vanilla JS and React).
+
+</Project>
 
 > #### Example usage
 >
@@ -891,27 +889,31 @@ REST API.
 <!-- prettier-ignore -->
 ```yaml
 ### project.yml
-commands:
-  - name: serve
-    help: "Serve the trained pipeline with FastAPI"
+  - name: "serve"
+    help: "Serve the models via a FastAPI REST API using the given host and port"
     script:
-      - 'python ./scripts/serve.py ./training/model-best'
+      - "uvicorn scripts.main:app --reload --host 127.0.0.1 --port 5000"
     deps:
-      - 'training/model-best'
+      - "scripts/main.py"
     no_skip: true
 ```
 
-<Project id="integrations/fastapi">
+The script included in the template shows a simple REST API with a `POST`
+endpoint that accepts batches of texts and returns batches of predictions, e.g.
+named entities found in the documents. Type hints and
+[`pydantic`](https://github.com/samuelcolvin/pydantic) are used to define the
+expected data types.
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus interdum
-sodales lectus, ut sodales orci ullamcorper id. Sed condimentum neque ut erat
-mattis pretium.
-
-</Project>
+```python
+https://github.com/explosion/projects/blob/v3/integrations/fastapi/scripts/main.py
+```
 
 ---
 
 ### Ray {#ray} <IntegrationLogo name="ray" width={100} height="auto" align="right" />
+
+<Infobox title="This section is still under construction" emoji="🚧" variant="warning">
+</Infobox>
 
 <!-- TODO: document -->
 
@@ -919,4 +921,34 @@ mattis pretium.
 
 ### Weights & Biases {#wandb} <IntegrationLogo name="wandb" width={175} height="auto" align="right" />
 
-<!-- TODO: link to WandB logger, explain that it's built-in but that you can also do other cool stuff with WandB? And then include example project (still need to decide what we want to do here)  -->
+[Weights & Biases](https://www.wandb.com/) is a popular platform for experiment
+tracking. spaCy integrates with it out-of-the-box via the
+[`WandbLogger`](/api/top-level#WandbLogger), which you can add as the
+`[training.logger]` block of your training [config](/usage/training#config). The
+results of each step are then logged in your project, together with the full
+**training config**. This means that _every_ hyperparameter, registered function
+name and argument will be tracked and you'll be able to see the impact it has on
+your results.
+
+> #### Example config
+>
+> ```ini
+> [training.logger]
+> @loggers = "spacy.WandbLogger.v1"
+> project_name = "monitor_spacy_training"
+> remove_config_values = ["paths.train", "paths.dev", "training.dev_corpus.path", "training.train_corpus.path"]
+> ```
+
+![Screenshot: Visualized training results](../images/wandb1.jpg)
+
+![Screenshot: Parameter importance using config values](../images/wandb2.jpg 'Parameter importance using config values')
+
+<Project id="integrations/wandb">
+
+Get started with tracking your spaCy training runs in Weights & Biases using our
+project template. It includes a simple config using the `WandbLogger`, as well
+as a custom logger implementation you can adjust for your specific use case.
+
+<!-- TODO: -->
+
+</Project>

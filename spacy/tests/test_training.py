@@ -1,9 +1,10 @@
 import numpy
-from spacy.gold import biluo_tags_from_offsets, offsets_from_biluo_tags, Alignment
-from spacy.gold import spans_from_biluo_tags, iob_to_biluo
-from spacy.gold import Corpus, docs_to_json
-from spacy.gold.example import Example
-from spacy.gold.converters import json2docs
+from spacy.training import biluo_tags_from_offsets, offsets_from_biluo_tags, Alignment
+from spacy.training import spans_from_biluo_tags, iob_to_biluo
+from spacy.training import Corpus, docs_to_json
+from spacy.training.example import Example
+from spacy.training.converters import json2docs
+from spacy.training.augment import make_orth_variants_example
 from spacy.lang.en import English
 from spacy.tokens import Doc, DocBin
 from spacy.util import get_words_and_spaces, minibatch
@@ -12,7 +13,6 @@ import pytest
 import srsly
 
 from .util import make_tempdir
-from ..gold.augment import make_orth_variants_example
 
 
 @pytest.fixture

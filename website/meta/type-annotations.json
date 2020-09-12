@@ -34,6 +34,8 @@
     "Floats2d": "https://thinc.ai/docs/api-types#types",
     "Floats3d": "https://thinc.ai/docs/api-types#types",
     "FloatsXd": "https://thinc.ai/docs/api-types#types",
+    "Array1d": "https://thinc.ai/docs/api-types#types",
+    "Array2d": "https://thinc.ai/docs/api-types#types",
     "Ops": "https://thinc.ai/docs/api-backends#ops",
     "cymem.Pool": "https://github.com/explosion/cymem",
     "preshed.BloomFilter": "https://github.com/explosion/preshed",

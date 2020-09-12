@@ -12,7 +12,7 @@ from .attrs import NAMES
 if TYPE_CHECKING:
     # This lets us add type hints for mypy etc. without causing circular imports
     from .language import Language  # noqa: F401
-    from .gold import Example  # noqa: F401
+    from .training import Example  # noqa: F401
 
 
 ItemT = TypeVar("ItemT")
@@ -180,7 +180,7 @@ class ModelMetaSchema(BaseModel):
     url: StrictStr = Field("", title="Model author URL")
     sources: Optional[Union[List[StrictStr], List[Dict[str, str]]]] = Field(None, title="Training data sources")
     vectors: Dict[str, Any] = Field({}, title="Included word vectors")
-    labels: Dict[str, Dict[str, List[str]]] = Field({}, title="Component labels, keyed by component name")
+    labels: Dict[str, List[str]] = Field({}, title="Component labels, keyed by component name")
     accuracy: Dict[str, Union[float, Dict[str, float]]] = Field({}, title="Accuracy numbers")
     speed: Dict[str, Union[float, int]] = Field({}, title="Speed evaluation numbers")
     spacy_git_version: StrictStr = Field("", title="Commit of spaCy version used")

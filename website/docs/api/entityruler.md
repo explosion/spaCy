@@ -42,7 +42,7 @@ how the component should be configured. You can override its settings via the
 | `ent_id_sep`          | Separator used internally for entity IDs. Defaults to `"||"`. ~~str~~                                                                                                                         |
 
 ```python
-https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/entityruler.py
+%%GITHUB_SPACY/spacy/pipeline/entityruler.py
 ```
 
 ## EntityRuler.\_\_init\_\_ {#init tag="method"}
