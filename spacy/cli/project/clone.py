@@ -27,7 +27,7 @@ def project_clone_cli(
     DOCS: https://nightly.spacy.io/api/cli#project-clone
     """
     if dest is None:
-        dest = Path.cwd() / name
+        dest = Path.cwd() / Path(name).parts[-1]
     project_clone(name, dest, repo=repo, branch=branch)
 
 
