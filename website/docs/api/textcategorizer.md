@@ -60,7 +60,7 @@ https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/textcat.py
 >
 > # Construction from class
 > from spacy.pipeline import TextCategorizer
-> textcat = TextCategorizer(nlp.vocab, model)
+> textcat = TextCategorizer(nlp.vocab, model, labels=[], threshold=0.5)
 > ```
 
 Create a new pipeline instance. In your application, you would normally use a
