@@ -3,6 +3,7 @@ from itertools import islice
 
 import srsly
 from thinc.api import Model, SequenceCategoricalCrossentropy, Config
+from thinc.api import set_dropout_rate
 
 from ..tokens.doc cimport Doc
 
