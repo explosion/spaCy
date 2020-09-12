@@ -728,17 +728,20 @@ workflows, but only one can be tracked by DVC.
 
 </Infobox>
 
-<Project id="integrations/dvc">
+<!-- TODO: <Project id="integrations/dvc">
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus interdum
-sodales lectus, ut sodales orci ullamcorper id. Sed condimentum neque ut erat
-mattis pretium.
-
-</Project>
+</Project> -->
 
 ---
 
 ### Prodigy {#prodigy} <IntegrationLogo name="prodigy" width={100} height="auto" align="right" />
+
+<Infobox title="This section is still under construction" emoji="🚧" variant="warning">
+
+The Prodigy integration will require a nightly version of Prodigy that supports
+spaCy v3+.
+
+</Infobox>
 
 [Prodigy](https://prodi.gy) is a modern annotation tool for creating training
 data for machine learning models, developed by us. It integrates with spaCy
@@ -795,19 +798,13 @@ results.
 
 <Project id="integrations/prodigy">
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus interdum
-sodales lectus, ut sodales orci ullamcorper id. Sed condimentum neque ut erat
-mattis pretium.
+<!-- TODO: -->
 
 </Project>
 
 ---
 
 ### Streamlit {#streamlit} <IntegrationLogo name="streamlit" width={150} height="auto" align="right" />
-
-<Grid cols={2} gutterBottom={false}>
-
-<div>
 
 [Streamlit](https://streamlit.io) is a Python framework for building interactive
 data apps. The [`spacy-streamlit`](https://github.com/explosion/spacy-streamlit)
@@ -817,15 +814,13 @@ full embedded visualizer, as well as individual components.
 
 <!-- TODO: update once version is stable -->
 
-```bash
-$ pip install "spacy_streamlit>=1.0.0a0"
-```
-
-</div>
+> #### Installation
+>
+> ```bash
+> $ pip install "spacy_streamlit>=1.0.0a0"
+> ```
 
 ![](../images/spacy-streamlit.png)
-
-</Grid>
 
 Using [`spacy-streamlit`](https://github.com/explosion/spacy-streamlit), your
 projects can easily define their own scripts that spin up an interactive
@@ -917,10 +912,43 @@ https://github.com/explosion/projects/blob/v3/integrations/fastapi/scripts/main.
 
 ### Ray {#ray} <IntegrationLogo name="ray" width={100} height="auto" align="right" />
 
+<Infobox title="This section is still under construction" emoji="🚧" variant="warning">
+</Infobox>
+
 <!-- TODO: document -->
 
 ---
 
 ### Weights & Biases {#wandb} <IntegrationLogo name="wandb" width={175} height="auto" align="right" />
 
-<!-- TODO: link to WandB logger, explain that it's built-in but that you can also do other cool stuff with WandB? And then include example project (still need to decide what we want to do here)  -->
+[Weights & Biases](https://www.wandb.com/) is a popular platform for experiment
+tracking. spaCy integrates with it out-of-the-box via the
+[`WandbLogger`](/api/top-level#WandbLogger), which you can add as the
+`[training.logger]` block of your training [config](/usage/training#config). The
+results of each step are then logged in your project, together with the full
+**training config**. This means that _every_ hyperparameter, registered function
+name and argument will be tracked and you'll be able to see the impact it has on
+your results.
+
+> #### Example config
+>
+> ```ini
+> [training.logger]
+> @loggers = "spacy.WandbLogger.v1"
+> project_name = "monitor_spacy_training"
+> remove_config_values = ["paths.train", "paths.dev", "training.dev_corpus.path", "training.train_corpus.path"]
+> ```
+
+![Screenshot: Visualized training results](../images/wandb1.jpg)
+
+![Screenshot: Parameter importance using config values](../images/wandb2.jpg 'Parameter importance using config values')
+
+<Project id="integrations/wandb">
+
+Get started with tracking your spaCy training runs in Weights & Biases using our
+project template. It includes a simple config using the `WandbLogger`, as well
+as a custom logger implementation you can adjust for your specific use case.
+
+<!-- TODO: -->
+
+</Project>

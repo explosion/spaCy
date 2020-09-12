@@ -243,7 +243,8 @@ class Language:
         self._config["nlp"]["pipeline"] = list(self.component_names)
         self._config["nlp"]["disabled"] = list(self.disabled)
         self._config["components"] = pipeline
-        self._config["training"]["score_weights"] = combine_score_weights(score_weights)
+        if not self._config["training"].get("score_weights"):
+            self._config["training"]["score_weights"] = combine_score_weights(score_weights)
         if not srsly.is_json_serializable(self._config):
             raise ValueError(Errors.E961.format(config=self._config))
         return self._config

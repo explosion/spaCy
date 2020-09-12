@@ -34,7 +34,7 @@ architectures and their arguments and hyperparameters.
 | `model` | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. Defaults to [Tagger](/api/architectures#Tagger). ~~Model[List[Doc], List[Floats2d]]~~ |
 
 ```python
-https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/senter.pyx
+%%GITHUB_SPACY/spacy/pipeline/senter.pyx
 ```
 
 ## SentenceRecognizer.\_\_init\_\_ {#init tag="method"}

@@ -48,7 +48,7 @@ architectures and their arguments and hyperparameters.
 | `model`                       | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. Defaults to [TransitionBasedParser](/api/architectures#TransitionBasedParser). ~~Model[List[Doc], List[Floats2d]]~~                                                 |
 
 ```python
-https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/ner.pyx
+%%GITHUB_SPACY/spacy/pipeline/ner.pyx
 ```
 
 ## EntityRecognizer.\_\_init\_\_ {#init tag="method"}

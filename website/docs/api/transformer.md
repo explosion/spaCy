@@ -31,7 +31,7 @@ supports all models that are available via the
 Usually you will connect subsequent components to the shared transformer using
 the [TransformerListener](/api/architectures#TransformerListener) layer. This
 works similarly to spaCy's [Tok2Vec](/api/tok2vec) component and
-[Tok2VecListener](/api/architectures/Tok2VecListener) sublayer.
+[Tok2VecListener](/api/architectures/#Tok2VecListener) sublayer.
 
 The component assigns the output of the transformer to the `Doc`'s extension
 attributes. We also calculate an alignment between the word-piece tokens and the

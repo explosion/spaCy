@@ -6,6 +6,9 @@
     margin-bottom: var(--spacing-md)
     max-width: 100%
 
+figure > .root
+    margin-bottom: var(--spacing-sm)
+
 .fixed
     table-layout: fixed
 
@@ -53,6 +56,21 @@
     padding: 1rem 0.5rem
     border-bottom: 2px solid var(--color-theme)
     vertical-align: bottom
+
+.th-rotated
+    height: 100px
+
+.tx
+    transform: translate(15px, 0) rotate(315deg) // 45 = 360 - 45
+    width: 30px
+    white-space: nowrap
+
+    & > span
+        padding-left: 0.5rem
+
+    [data-tooltip]
+        display: inline-block
+        transform: rotate(-316deg)
 
 .divider
     height: 0

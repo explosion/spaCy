@@ -34,7 +34,7 @@ architectures and their arguments and hyperparameters.
 | `model`          | A model instance that predicts the tag probabilities. The output vectors should match the number of tags in size, and be normalized as probabilities (all scores between 0 and 1, with the rows summing to `1`). Defaults to [Tagger](/api/architectures#Tagger). ~~Model[List[Doc], List[Floats2d]]~~ |
 
 ```python
-https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/tagger.pyx
+%%GITHUB_SPACY/spacy/pipeline/tagger.pyx
 ```
 
 ## Tagger.\_\_init\_\_ {#init tag="method"}

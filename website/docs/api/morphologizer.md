@@ -37,7 +37,7 @@ architectures and their arguments and hyperparameters.
 | `model` | The model to use. Defaults to [Tagger](/api/architectures#Tagger). ~~Model[List[Doc], List[Floats2d]]~~ |
 
 ```python
-https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/morphologizer.pyx
+%%GITHUB_SPACY/spacy/pipeline/morphologizer.pyx
 ```
 
 ## Morphologizer.\_\_init\_\_ {#init tag="method"}

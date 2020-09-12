@@ -59,7 +59,7 @@ specific use case. It's also available in spaCy as the
 
 import QuickstartTraining from 'widgets/quickstart-training.js'
 
-<QuickstartTraining download="base_config.cfg" />
+<QuickstartTraining />
 
 After you've saved the starter config to a file `base_config.cfg`, you can use
 the [`init fill-config`](/api/cli#init-fill-config) command to fill in the
@@ -127,7 +127,7 @@ Some of the main advantages and features of spaCy's training config are:
   config which types of data to expect.
 
 ```ini
-https://github.com/explosion/spaCy/blob/develop/spacy/default_config.cfg
+%%GITHUB_SPACY/spacy/default_config.cfg
 ```
 
 Under the hood, the config is parsed into a dictionary. It's divided into

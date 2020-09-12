@@ -22,7 +22,7 @@ for how to use the `Pipe` base class to implement custom components.
 > inherit from `Pipe`.
 
 ```python
-https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/pipe.pyx
+%%GITHUB_SPACY/spacy/pipeline/pipe.pyx
 ```
 
 ## Pipe.\_\_init\_\_ {#init tag="method"}
