@@ -54,23 +54,8 @@ for entity in doc.ents:
     print(entity.text, entity.label_)
 `
 
-/**
- * Compute the overall total counts of models and languages
- */
-function getCounts(langs = []) {
-    return {
-        langs: langs.length,
-        modelLangs: langs.filter(({ models }) => models && !!models.length).length,
-        starterLangs: langs.filter(({ starters }) => starters && !!starters.length).length,
-        models: langs.map(({ models }) => (models ? models.length : 0)).reduce((a, b) => a + b, 0),
-        starters: langs
-            .map(({ starters }) => (starters ? starters.length : 0))
-            .reduce((a, b) => a + b, 0),
-    }
-}
-
 const Landing = ({ data }) => {
-    const counts = getCounts(data.languages)
+    const { counts } = data
     return (
         <>
             <LandingHeader nightly={data.nightly}>
@@ -345,7 +330,10 @@ const landingQuery = graphql`
             siteMetadata {
                 nightly
                 repo
-                languages {
+                counts {
+                    langs
+                    modelLangs
+                    starterLangs
                     models
                     starters
                 }
