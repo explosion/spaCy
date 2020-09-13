@@ -679,6 +679,10 @@ def run_command(
         raise FileNotFoundError(
             Errors.E970.format(str_command=" ".join(command), tool=command[0])
         ) from None
+    except subprocess.CalledProcessError as e:
+        # We don't want a duplicate traceback here
+        print(e)
+        sys.exit(1)
     if ret.returncode != 0:
         sys.exit(ret.returncode)
     return ret
