@@ -228,7 +228,7 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
                 {name}
             </H2>
             <Aside title="Installation">
-                <CodeBlock lang="bash" prompt="$">
+                <CodeBlock lang="cli" prompt="$">
                     python -m spacy download {name}
                 </CodeBlock>
             </Aside>
