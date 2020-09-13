@@ -38,10 +38,10 @@ def console_logger():
                 ) from None
             scores = []
             for col in score_cols:
-                score = float(info["other_scores"].get(col, 0.0)))
+                score = float(info["other_scores"].get(col, 0.0))
                 if col != "speed":
                     score *= 100
-                scores.append("{0:.2f}".format(score)
+                scores.append("{0:.2f}".format(score))
             data = (
                 [info["epoch"], info["step"]]
                 + losses
