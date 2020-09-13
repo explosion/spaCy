@@ -301,6 +301,7 @@ def ensure_pathy(path):
 
 
 def git_sparse_checkout(repo: str, subpath: str, dest: Path, *, branch: str = "master"):
+    git_version = get_git_version()
     if dest.exists():
         msg.fail("Destination of checkout must not exist", exits=1)
     if not dest.parent.exists():
@@ -321,24 +322,28 @@ def git_sparse_checkout(repo: str, subpath: str, dest: Path, *, branch: str = "m
     # *that* we can do by path.
     # We're using Git and sparse checkout to only clone the files we need
     with make_tempdir() as tmp_dir:
-        git_version = get_git_version()
         supports_sparse = git_version >= (2, 22)
         # This is the "clone, but don't download anything" part.
         cmd = f"git clone {repo} {tmp_dir} --no-checkout --depth 1 " f"-b {branch} "
         if supports_sparse:
             cmd += f"--filter=blob:none"  # <-- The key bit
         else:
-            msg.warn(
+            err_old = (
                 f"You're running an old version of Git (v{git_version[0]}.{git_version[1]}) "
-                f"that doesn't fully support sparse checkout yet. This means that "
-                f"more files than necessary may be downloaded temporarily. To "
-                f"only download the files needed, upgrade to Git v2.22 or above."
+                f"that doesn't fully support sparse checkout yet."
             )
-        _attempt_run_command(cmd)
+            err_unk = "You're running an unknown version of Git, so sparse checkout has been disabled."
+            msg.warn(
+                f"{err_unk if git_version == (0, 0) else err_old} "
+                f"This means that more files than necessary may be downloaded "
+                f"temporarily. To only download the files needed, make sure "
+                f"you're using Git v2.22 or above."
+            )
+        try_run_command(cmd)
         # Now we need to find the missing filenames for the subpath we want.
         # Looking for this 'rev-list' command in the git --help? Hah.
         cmd = f"git -C {tmp_dir} rev-list --objects --all {'--missing=print ' if supports_sparse else ''} -- {subpath}"
-        ret = _attempt_run_command(cmd)
+        ret = try_run_command(cmd)
         git_repo = _from_http_to_git(repo)
         # Now pass those missings into another bit of git internals
         missings = " ".join([x[1:] for x in ret.stdout.split() if x.startswith("?")])
@@ -351,27 +356,44 @@ def git_sparse_checkout(repo: str, subpath: str, dest: Path, *, branch: str = "m
             msg.fail(err, exits=1)
         if supports_sparse:
             cmd = f"git -C {tmp_dir} fetch-pack {git_repo} {missings}"
-            _attempt_run_command(cmd)
+            try_run_command(cmd)
         # And finally, we can checkout our subpath
         cmd = f"git -C {tmp_dir} checkout {branch} {subpath}"
-        _attempt_run_command(cmd)
+        try_run_command(cmd)
         # We need Path(name) to make sure we also support subdirectories
         shutil.move(str(tmp_dir / Path(subpath)), str(dest))
 
 
-def get_git_version() -> Tuple[int, int]:
-    ret = _attempt_run_command(["git", "--version"])
-    # TODO: this seems kinda brittle?
-    version = ret.stdout[11:].strip().split(".")
+def get_git_version(
+    error: str = "Could not run 'git'. Make sure it's installed and the executable is available.",
+) -> Tuple[int, int]:
+    """Get the version of git and raise an error if calling 'git --version' fails.
+
+    error (str): The error message to show.
+    RETURNS (Tuple[int, int]): The version as a (major, minor) tuple. Returns
+        (0, 0) if the version couldn't be determined.
+    """
+    ret = try_run_command(["git", "--version"], error=error)
+    stdout = ret.stdout.strip()
+    if not stdout or not stdout.startswith("git version"):
+        return (0, 0)
+    version = stdout[11:].strip().split(".")
     return (int(version[0]), int(version[1]))
 
 
-def _attempt_run_command(cmd: Union[str, List[str]]):
+def try_run_command(
+    cmd: Union[str, List[str]], error: str = "Could not run command"
+) -> subprocess.CompletedProcess:
+    """Try running a command and raise an error if it fails.
+
+    cmd (Union[str, List[str]]): The command to run.
+    error (str): The error message.
+    RETURNS (CompletedProcess): The completed process if the command ran.
+    """
     try:
         return run_command(cmd, capture=True)
     except subprocess.CalledProcessError as e:
-        err = f"Could not run command"
-        msg.fail(err)
+        msg.fail(error)
         print(cmd)
         sys.exit(1)
 
