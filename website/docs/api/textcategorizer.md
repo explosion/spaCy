@@ -30,15 +30,17 @@ architectures and their arguments and hyperparameters.
 > from spacy.pipeline.textcat import DEFAULT_TEXTCAT_MODEL
 > config = {
 >    "labels": [],
+>    "threshold": 0.5,
 >    "model": DEFAULT_TEXTCAT_MODEL,
 > }
 > nlp.add_pipe("textcat", config=config)
 > ```
 
-| Setting  | Description                                                                                                                                                      |
-| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `labels` | A list of categories to learn. If empty, the model infers the categories from the data. Defaults to `[]`. ~~Iterable[str]~~                                      |
-| `model`  | A model instance that predicts scores for each category. Defaults to [TextCatEnsemble](/api/architectures#TextCatEnsemble). ~~Model[List[Doc], List[Floats2d]]~~ |
+| Setting     | Description                                                                                                                                                      |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `labels`    | A list of categories to learn. If empty, the model infers the categories from the data. Defaults to `[]`. ~~Iterable[str]~~                                      |
+| `threshold` | Cutoff to consider a prediction "positive", relevant when printing accuracy results. ~~float~~                                                                   |
+| `model`     | A model instance that predicts scores for each category. Defaults to [TextCatEnsemble](/api/architectures#TextCatEnsemble). ~~Model[List[Doc], List[Floats2d]]~~ |
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/textcat.py
@@ -58,7 +60,7 @@ architectures and their arguments and hyperparameters.
 >
 > # Construction from class
 > from spacy.pipeline import TextCategorizer
-> textcat = TextCategorizer(nlp.vocab, model)
+> textcat = TextCategorizer(nlp.vocab, model, labels=[], threshold=0.5)
 > ```
 
 Create a new pipeline instance. In your application, you would normally use a
@@ -72,6 +74,7 @@ shortcut for this and instantiate the component using its string name and
 | `name`         | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                        |
 | _keyword-only_ |                                                                                                                            |
 | `labels`       | The labels to use. ~~Iterable[str]~~                                                                                       |
+| `threshold`    | Cutoff to consider a prediction "positive", relevant when printing accuracy results. ~~float~~                             |
 
 ## TextCategorizer.\_\_call\_\_ {#call tag="method"}
 
