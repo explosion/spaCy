@@ -5,7 +5,6 @@ from spacy.training import docs_to_json, biluo_tags_from_offsets
 from spacy.training.converters import iob2docs, conll_ner2docs, conllu2docs
 from spacy.lang.en import English
 from spacy.schemas import ProjectConfigSchema, RecommendationSchema, validate
-from spacy.cli.pretrain import make_docs
 from spacy.cli.init_config import init_config, RECOMMENDATIONS
 from spacy.cli._util import validate_project_commands, parse_config_overrides
 from spacy.cli._util import load_project_config, substitute_project_variables
@@ -229,48 +228,6 @@ def test_cli_converters_conll_ner2json():
     assert len(converted_docs[0].ents) == 10
     for ent in converted_docs[0].ents:
         assert ent.text in ["New York City", "London"]
-
-
-def test_pretrain_make_docs():
-    nlp = English()
-
-    valid_jsonl_text = {"text": "Some text"}
-    docs, skip_count = make_docs(nlp, [valid_jsonl_text], 1, 10)
-    assert len(docs) == 1
-    assert skip_count == 0
-
-    valid_jsonl_tokens = {"tokens": ["Some", "tokens"]}
-    docs, skip_count = make_docs(nlp, [valid_jsonl_tokens], 1, 10)
-    assert len(docs) == 1
-    assert skip_count == 0
-
-    invalid_jsonl_type = 0
-    with pytest.raises(TypeError):
-        make_docs(nlp, [invalid_jsonl_type], 1, 100)
-
-    invalid_jsonl_key = {"invalid": "Does not matter"}
-    with pytest.raises(ValueError):
-        make_docs(nlp, [invalid_jsonl_key], 1, 100)
-
-    empty_jsonl_text = {"text": ""}
-    docs, skip_count = make_docs(nlp, [empty_jsonl_text], 1, 10)
-    assert len(docs) == 0
-    assert skip_count == 1
-
-    empty_jsonl_tokens = {"tokens": []}
-    docs, skip_count = make_docs(nlp, [empty_jsonl_tokens], 1, 10)
-    assert len(docs) == 0
-    assert skip_count == 1
-
-    too_short_jsonl = {"text": "This text is not long enough"}
-    docs, skip_count = make_docs(nlp, [too_short_jsonl], 10, 15)
-    assert len(docs) == 0
-    assert skip_count == 0
-
-    too_long_jsonl = {"text": "This text contains way too much tokens for this test"}
-    docs, skip_count = make_docs(nlp, [too_long_jsonl], 1, 5)
-    assert len(docs) == 0
-    assert skip_count == 0
 
 
 def test_project_config_validation_full():
