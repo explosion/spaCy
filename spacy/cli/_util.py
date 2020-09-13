@@ -387,8 +387,15 @@ def _from_http_to_git(repo: str) -> str:
     return repo
 
 
-def string_to_list(value, intify=False):
-    """Parse a comma-separated string to a list"""
+def string_to_list(value: str, intify: bool = False) -> Union[List[str], List[int]]:
+    """Parse a comma-separated string to a list and account for various
+    formatting options. Mostly used to handle CLI arguments that take a list of
+    comma-separated values.
+
+    value (str): The value to parse.
+    intify (bool): Whether to convert values to ints.
+    RETURNS (Union[List[str], List[int]]): A list of strings or ints.
+    """
     if not value:
         return []
     if value.startswith("[") and value.endswith("]"):
