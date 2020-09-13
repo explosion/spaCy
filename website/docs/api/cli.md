@@ -1141,9 +1141,7 @@ $ python -m spacy project dvc [project_dir] [workflow] [--force] [--verbose]
 The `spacy ray` CLI includes commands for parallel and distributed computing via
 [Ray](https://ray.io).
 
-<!-- TODO: add links to parallel training docs and project template -->
-
-<Infobox variant="warning" title="Important note">
+<Infobox variant="warning">
 
 To use this command, you need the
 [`spacy-ray`](https://github.com/explosion/spacy-ray) package installed.
@@ -1155,10 +1153,13 @@ CLI.
 ### ray train {#ray-train tag="command"}
 
 Train a spaCy pipeline using [Ray](https://ray.io) for parallel training. The
-command works just like [`spacy train`](/api/cli#train).
+command works just like [`spacy train`](/api/cli#train). For more details and
+examples, see the usage guide on
+[parallel training](/usage/training#parallel-training) and the spaCy project
+[integration](/usage/projects#ray).
 
 ```cli
-$ python -m spacy ray train [config_path] [--code-path] [--strategy] [--n-workers] [--address] [--gpu-id] [--verbose] [overrides]
+$ python -m spacy ray train [config_path] [--code-path] [--output] [--n-workers] [--address] [--gpu-id] [--verbose] [overrides]
 ```
 
 > #### Example
@@ -1171,8 +1172,9 @@ $ python -m spacy ray train [config_path] [--code-path] [--strategy] [--n-worker
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `config_path`       | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. ~~Path (positional)~~                                                                |
 | `--code`, `-c`      | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~       |
+| `--output`, `-o`    | Directory or remote storage URL for saving trained pipeline. The directory will be created if it doesn't exist. ~~Optional[Path] \(positional)~~                                           |
 | `--n-workers`, `-n` | The number of workers. Defaults to `1`. ~~int (option)~~                                                                                                                                   |
-| `--address`, `-a`   | Optional address of the Ray cluster. Defaults to `None`. ~~Optional[str] \(option)~~                                                                                                       |
+| `--address`, `-a`   | Optional address of the Ray cluster. If not set (default), Ray will run locally. ~~Optional[str] \(option)~~                                                                               |
 | `--gpu-id`, `-g`    | GPU ID or `-1` for CPU. Defaults to `-1`. ~~int (option)~~                                                                                                                                 |
 | `--verbose`, `-V`   | Display more information for debugging purposes. ~~bool (flag)~~                                                                                                                           |
 | `--help`, `-h`      | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                 |

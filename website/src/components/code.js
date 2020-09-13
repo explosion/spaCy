@@ -108,7 +108,12 @@ function parseArgs(raw) {
             const isFlag = !args.length || (args[0].length > 1 && args[0].startsWith('-'))
             result[opt] = isFlag ? true : args.shift()
         } else {
-            const key = CLI_GROUPS.includes(opt) ? `${opt} ${args.shift()}` : opt
+            let key = opt
+            if (CLI_GROUPS.includes(opt)) {
+                if (args.length && !args[0].startsWith('-')) {
+                    key = `${opt} ${args.shift()}`
+                }
+            }
             result[key] = null
         }
     }
