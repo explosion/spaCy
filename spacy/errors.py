@@ -671,6 +671,9 @@ class Errors:
     E1007 = ("Unsupported DependencyMatcher operator '{op}'.")
     E1008 = ("Invalid pattern: each pattern should be a list of dicts. Check "
              "that you are providing a list of patterns as `List[List[dict]]`.")
+    E1009 = ("String for hash '{val}' not found in StringStore. Set the value "
+             "through token.morph_ instead or add the string to the "
+             "StringStore with `nlp.vocab.strings.add(string)`.")
 
 
 @add_codes
