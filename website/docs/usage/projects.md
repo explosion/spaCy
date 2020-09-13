@@ -796,11 +796,9 @@ workflows, including
 evaluation workflow that lets you compare two different models and their
 results.
 
-<Project id="integrations/prodigy">
+<!-- TODO: <Project id="integrations/prodigy">
 
-<!-- TODO: -->
-
-</Project>
+</Project> -->
 
 ---
 
@@ -943,12 +941,14 @@ your results.
 
 ![Screenshot: Parameter importance using config values](../images/wandb2.jpg 'Parameter importance using config values')
 
+<!-- TODO:
+
 <Project id="integrations/wandb">
 
 Get started with tracking your spaCy training runs in Weights & Biases using our
 project template. It includes a simple config using the `WandbLogger`, as well
 as a custom logger implementation you can adjust for your specific use case.
 
-<!-- TODO: -->
-
 </Project>
+
+-->

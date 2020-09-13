@@ -14,6 +14,7 @@ import GitHubCode from './github'
 import classes from '../styles/code.module.sass'
 
 const WRAP_THRESHOLD = 30
+const CLI_GROUPS = ['init', 'debug', 'project', 'ray']
 
 export default props => (
     <Pre>
@@ -99,7 +100,6 @@ function replacePrompt(line, prompt, isFirst = false) {
 }
 
 function parseArgs(raw) {
-    const commandGroups = ['init', 'debug', 'project']
     let args = raw.split(' ').filter(arg => arg)
     const result = {}
     while (args.length) {
@@ -108,7 +108,7 @@ function parseArgs(raw) {
             const isFlag = !args.length || (args[0].length > 1 && args[0].startsWith('-'))
             result[opt] = isFlag ? true : args.shift()
         } else {
-            const key = commandGroups.includes(opt) ? `${opt} ${args.shift()}` : opt
+            const key = CLI_GROUPS.includes(opt) ? `${opt} ${args.shift()}` : opt
             result[key] = null
         }
     }
