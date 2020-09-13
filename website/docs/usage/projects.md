@@ -90,7 +90,7 @@ can also use any private repo you have access to with Git.
 >     git:
 >       repo: 'https://github.com/example/repo'
 >       branch: 'master'
->       path: 'path/developments.spacy'
+>       path: 'path/development.spacy'
 >     checksum: '5113dc04e03f079525edd8df3f4f39e3'
 > ```
 
@@ -910,9 +910,6 @@ https://github.com/explosion/projects/blob/v3/integrations/fastapi/scripts/main.
 
 ### Ray {#ray} <IntegrationLogo name="ray" width={100} height="auto" align="right" />
 
-<Infobox title="This section is still under construction" emoji="🚧" variant="warning">
-</Infobox>
-
 > #### Installation
 >
 > ```cli
@@ -926,21 +923,27 @@ https://github.com/explosion/projects/blob/v3/integrations/fastapi/scripts/main.
 training with spaCy via our lightweight
 [`spacy-ray`](https://github.com/explosion/spacy-ray) extension package. If the
 package is installed in the same environment as spaCy, it will automatically add
-[`spacy ray`](/api/cli#ray) commands to your spaCy CLI.
+[`spacy ray`](/api/cli#ray) commands to your spaCy CLI. See the usage guide on
+[parallel training](/usage/training#parallel-training) for more details on how
+it works under the hood.
 
 You can integrate [`spacy ray train`](/api/cli#ray-train) into your
-`project.yml` just like the regular training command:
+`project.yml` just like the regular training command and pass it the config, and
+optional output directory or remote storage URL and config overrides if needed.
 
 <!-- prettier-ignore -->
 ```yaml
 ### project.yml
-- name: "ray"
+commands:
+  - name: "ray"
     help: "Train a model via parallel training with Ray"
     script:
-      - "python -m spacy ray train configs/config.cfg --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy"
+      - "python -m spacy ray train configs/config.cfg -o training/ --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy"
     deps:
       - "corpus/train.spacy"
       - "corpus/dev.spacy"
+    outputs:
+      - "training/model-best"
 ```
 
 <!-- TODO: <Project id="integrations/ray">

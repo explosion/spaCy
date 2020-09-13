@@ -8,9 +8,9 @@ import socialImageApi from '../images/social_api.jpg'
 import socialImageUniverse from '../images/social_universe.jpg'
 import socialImageNightly from '../images/social_nightly.jpg'
 
-function getPageTitle(title, sitename, slogan, sectionTitle) {
+function getPageTitle(title, sitename, slogan, sectionTitle, nightly) {
     if (sectionTitle && title) {
-        return `${title} · ${sitename} ${sectionTitle}`
+        return `${title} · ${sitename} ${sectionTitle}${nightly ? ' (nightly)' : ''}`
     }
     if (title) {
         return `${title} · ${sitename}`
@@ -44,7 +44,8 @@ export default function SEO({
                     title,
                     siteMetadata.title,
                     siteMetadata.slogan,
-                    sectionTitle
+                    sectionTitle,
+                    nightly
                 )
                 const socialImage = siteMetadata.siteUrl + getImage(section, nightly)
                 const meta = [
