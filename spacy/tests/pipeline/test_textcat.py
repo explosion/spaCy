@@ -89,7 +89,7 @@ def test_no_label():
 
 def test_implicit_label():
     nlp = Language()
-    textcat = nlp.add_pipe("textcat")
+    nlp.add_pipe("textcat")
     train_examples = []
     for t in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))

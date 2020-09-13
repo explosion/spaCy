@@ -277,7 +277,7 @@ def read_vectors(msg: Printer, vectors_loc: Path, truncate_vectors: int):
 
 def ensure_shape(lines):
     """Ensure that the first line of the data is the vectors shape.
-    
+
     If it's not, we read in the data and output the shape as the first result,
     so that the reader doesn't have to deal with the problem.
     """
