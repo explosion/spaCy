@@ -1281,7 +1281,7 @@ class Language:
             util.logger.debug(doc)
             eg.predicted = doc
         results = scorer.score(examples)
-        n_words = sum(len(eg.predicted) for eg in examples)
+        n_words = sum(len(doc) for doc in docs)
         results["speed"] = n_words / (end_time - start_time)
         return results
 

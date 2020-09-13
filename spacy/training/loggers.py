@@ -36,20 +36,12 @@ def console_logger():
                         keys=list(info["losses"].keys()),
                     )
                 ) from None
-
-            try:
-                scores = [
-                    "{0:.2f}".format(float(info["other_scores"].get(col, 0.0)) * 100)
-                    for col in score_cols
-                ]
-            except KeyError as e:
-                raise KeyError(
-                    Errors.E983.format(
-                        dict="scores (other)",
-                        key=str(e),
-                        keys=list(info["other_scores"].keys()),
-                    )
-                ) from None
+            scores = []
+            for col in score_cols:
+                score = float(info["other_scores"].get(col, 0.0)))
+                if col != "speed":
+                    score *= 100
+                scores.append("{0:.2f}".format(score)
             data = (
                 [info["epoch"], info["step"]]
                 + losses
