@@ -7,7 +7,7 @@ import re
 from ... import about
 from ...util import ensure_path
 from .._util import project_cli, Arg, Opt, COMMAND, PROJECT_FILE
-from .._util import git_sparse_checkout
+from .._util import git_sparse_checkout, get_git_version
 
 
 @project_cli.command("clone")
@@ -70,16 +70,12 @@ def check_clone(name: str, dest: Path, repo: str) -> None:
     dest (Path): Local destination of cloned directory.
     repo (str): URL of the repo to clone from.
     """
-    try:
-        subprocess.run(["git", "--version"], stdout=subprocess.DEVNULL)
-    except Exception:
-        msg.fail(
-            f"Cloning spaCy project templates requires Git and the 'git' command. ",
-            f"To clone a project without Git, copy the files from the '{name}' "
-            f"directory in the {repo} to {dest} manually and then run:",
-            f"{COMMAND} project init {dest}",
-            exits=1,
-        )
+    git_err = (
+        f"Cloning spaCy project templates requires Git and the 'git' command. ",
+        f"To clone a project without Git, copy the files from the '{name}' "
+        f"directory in the {repo} to {dest} manually.",
+    )
+    get_git_version(error=git_err)
     if not dest:
         msg.fail(f"Not a valid directory to clone project: {dest}", exits=1)
     if dest.exists():

@@ -26,7 +26,7 @@ on training Stanza on this corpus to allow direct comparison.
 
 <figure>
 
-| System                                                                         |  POS |  USA |  LAS |
+| System                                                                         |  POS |  UAS |  LAS |
 | ------------------------------------------------------------------------------ | ---: | ---: | ---: |
 | spaCy RoBERTa (2020)                                                           |      |      |      |
 | spaCy CNN (2020)                                                               |      |      |      |

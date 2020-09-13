@@ -796,11 +796,9 @@ workflows, including
 evaluation workflow that lets you compare two different models and their
 results.
 
-<Project id="integrations/prodigy">
+<!-- TODO: <Project id="integrations/prodigy">
 
-<!-- TODO: -->
-
-</Project>
+</Project> -->
 
 ---
 
@@ -817,7 +815,7 @@ full embedded visualizer, as well as individual components.
 > #### Installation
 >
 > ```bash
-> $ pip install "spacy_streamlit>=1.0.0a0"
+> $ pip install "spacy-streamlit>=1.0.0a0"
 > ```
 
 ![](../images/spacy-streamlit.png)
@@ -915,7 +913,39 @@ https://github.com/explosion/projects/blob/v3/integrations/fastapi/scripts/main.
 <Infobox title="This section is still under construction" emoji="🚧" variant="warning">
 </Infobox>
 
-<!-- TODO: document -->
+> #### Installation
+>
+> ```cli
+> $ pip install spacy-ray
+> # Check that the CLI is registered
+> $ python -m spacy ray --help
+> ```
+
+[Ray](https://ray.io/) is a fast and simple framework for building and running
+**distributed applications**. You can use Ray for parallel and distributed
+training with spaCy via our lightweight
+[`spacy-ray`](https://github.com/explosion/spacy-ray) extension package. If the
+package is installed in the same environment as spaCy, it will automatically add
+[`spacy ray`](/api/cli#ray) commands to your spaCy CLI.
+
+You can integrate [`spacy ray train`](/api/cli#ray-train) into your
+`project.yml` just like the regular training command:
+
+<!-- prettier-ignore -->
+```yaml
+### project.yml
+- name: "ray"
+    help: "Train a model via parallel training with Ray"
+    script:
+      - "python -m spacy ray train configs/config.cfg --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy"
+    deps:
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+```
+
+<!-- TODO: <Project id="integrations/ray">
+
+</Project> -->
 
 ---
 
@@ -943,12 +973,14 @@ your results.
 
 ![Screenshot: Parameter importance using config values](../images/wandb2.jpg 'Parameter importance using config values')
 
+<!-- TODO:
+
 <Project id="integrations/wandb">
 
 Get started with tracking your spaCy training runs in Weights & Biases using our
 project template. It includes a simple config using the `WandbLogger`, as well
 as a custom logger implementation you can adjust for your specific use case.
 
-<!-- TODO: -->
-
 </Project>
+
+-->

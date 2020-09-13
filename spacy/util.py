@@ -648,12 +648,20 @@ def join_command(command: List[str]) -> str:
     return " ".join(shlex.quote(cmd) for cmd in command)
 
 
-def run_command(command: Union[str, List[str]], *, capture=False, stdin=None):
+def run_command(
+    command: Union[str, List[str]],
+    *,
+    capture: bool = False,
+    stdin: Optional[Any] = None,
+) -> Optional[subprocess.CompletedProcess]:
     """Run a command on the command line as a subprocess. If the subprocess
     returns a non-zero exit code, a system exit is performed.
 
     command (str / List[str]): The command. If provided as a string, the
         string will be split using shlex.split.
+    stdin (Optional[Any]): stdin to read from or None.
+    capture (bool): Whether to capture the output.
+    RETURNS (Optional[CompletedProcess]): The process object.
     """
     if isinstance(command, str):
         command = split_command(command)
@@ -671,6 +679,10 @@ def run_command(command: Union[str, List[str]], *, capture=False, stdin=None):
         raise FileNotFoundError(
             Errors.E970.format(str_command=" ".join(command), tool=command[0])
         ) from None
+    except subprocess.CalledProcessError as e:
+        # We don't want a duplicate traceback here
+        print(e)
+        sys.exit(1)
     if ret.returncode != 0:
         sys.exit(ret.returncode)
     return ret

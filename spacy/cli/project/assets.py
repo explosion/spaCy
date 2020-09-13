@@ -7,7 +7,7 @@ import requests
 
 from ...util import ensure_path, working_dir
 from .._util import project_cli, Arg, PROJECT_FILE, load_project_config, get_checksum
-from .._util import download_file, git_sparse_checkout
+from .._util import download_file, git_sparse_checkout, get_git_version
 
 
 @project_cli.command("assets")
@@ -41,6 +41,11 @@ def project_assets(project_dir: Path) -> None:
         dest = (project_dir / asset["dest"]).resolve()
         checksum = asset.get("checksum")
         if "git" in asset:
+            git_err = (
+                f"Cloning spaCy project templates requires Git and the 'git' command. "
+                f"Make sure it's installed and that the executable is available."
+            )
+            get_git_version(error=git_err)
             if dest.exists():
                 # If there's already a file, check for checksum
                 if checksum and checksum == get_checksum(dest):

@@ -61,16 +61,12 @@ import Benchmarks from 'usage/\_benchmarks-models.md'
 
 <Benchmarks />
 
-<!-- TODO:
-
-<Project id="benchmarks/penn_treebank">
+<Project id="benchmarks/parsing_penn_treebank">
 
 The easiest way to reproduce spaCy's benchmarks on the Penn Treebank is to clone
 our project template.
 
 </Project>
-
--->
 
 <!-- ## Citing spaCy {#citation}
 

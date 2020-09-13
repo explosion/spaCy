@@ -1075,7 +1075,7 @@ relations and tokens we want to match:
 
 > #### Visualizing the parse
 >
-> The [`displacy` visualizer](/usage/visualizer) lets you render `Doc` objects
+> The [`displacy` visualizer](/usage/visualizers) lets you render `Doc` objects
 > and their dependency parse and part-of-speech tags:
 >
 > ```python

@@ -5,7 +5,8 @@ from thinc.api import require_gpu, fix_random_seed, set_dropout_rate, Adam
 from thinc.api import Model, data_validation
 import typer
 
-from ._util import Arg, Opt, debug_cli, show_validation_error, parse_config_overrides, string_to_list
+from ._util import Arg, Opt, debug_cli, show_validation_error
+from ._util import parse_config_overrides, string_to_list
 from .. import util
 
 

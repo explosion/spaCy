@@ -30,9 +30,10 @@ TRAIN_DATA = [
     ),
 ]
 
+
 def test_begin_training_examples():
     nlp = Language()
-    senter = nlp.add_pipe("senter")
+    nlp.add_pipe("senter")
     train_examples = []
     for t in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))

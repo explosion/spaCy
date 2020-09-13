@@ -9,7 +9,10 @@ from spacy.pipeline.ner import DEFAULT_NER_MODEL
 
 
 def _ner_example(ner):
-    doc = Doc(ner.vocab, words=["Joe", "loves", "visiting", "London", "during", "the", "weekend"])
+    doc = Doc(
+        ner.vocab,
+        words=["Joe", "loves", "visiting", "London", "during", "the", "weekend"],
+    )
     gold = {"entities": [(0, 3, "PERSON"), (19, 25, "LOC")]}
     return Example.from_dict(doc, gold)
 

@@ -214,9 +214,17 @@ cdef class Token:
         xp = get_array_module(vector)
         return (xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm))
 
-    @property
-    def morph(self):
-        return MorphAnalysis.from_id(self.vocab, self.c.morph)
+    property morph:
+        def __get__(self):
+            return MorphAnalysis.from_id(self.vocab, self.c.morph)
+
+        def __set__(self, attr_t morph):
+            if morph == 0:
+                self.c.morph = morph
+            elif morph in self.vocab.strings:
+                self.morph_ = self.vocab.strings[morph]
+            else:
+                raise ValueError(Errors.E1009.format(val=morph))
 
     property morph_:
         def __get__(self):

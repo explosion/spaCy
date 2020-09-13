@@ -244,7 +244,8 @@ class Language:
         self._config["nlp"]["disabled"] = list(self.disabled)
         self._config["components"] = pipeline
         if not self._config["training"].get("score_weights"):
-            self._config["training"]["score_weights"] = combine_score_weights(score_weights)
+            combined_score_weights = combine_score_weights(score_weights)
+            self._config["training"]["score_weights"] = combined_score_weights
         if not srsly.is_json_serializable(self._config):
             raise ValueError(Errors.E961.format(config=self._config))
         return self._config
@@ -1166,14 +1167,20 @@ class Language:
         if not hasattr(get_examples, "__call__"):
             err = Errors.E930.format(name="Language", obj=type(get_examples))
             raise ValueError(err)
+        valid_examples = False
         for example in get_examples():
             if not isinstance(example, Example):
                 err = Errors.E978.format(
                     name="Language.begin_training", types=type(example)
                 )
                 raise ValueError(err)
+            else:
+                valid_examples = True
             for word in [t.text for t in example.reference]:
                 _ = self.vocab[word]  # noqa: F841
+        if not valid_examples:
+            err = Errors.E930.format(name="Language", obj="empty list")
+            raise ValueError(err)
         if device >= 0:  # TODO: do we need this here?
             require_gpu(device)
             if self.vocab.vectors.data.shape[1] >= 1:
@@ -1274,7 +1281,7 @@ class Language:
             util.logger.debug(doc)
             eg.predicted = doc
         results = scorer.score(examples)
-        n_words = sum(len(eg.predicted) for eg in examples)
+        n_words = sum(len(doc) for doc in docs)
         results["speed"] = n_words / (end_time - start_time)
         return results
 
