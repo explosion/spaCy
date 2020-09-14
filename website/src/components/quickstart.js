@@ -27,6 +27,7 @@ const Quickstart = ({
     hidePrompts,
     small,
     codeLang,
+    Container = Section,
     children,
 }) => {
     const contentRef = useRef()
@@ -83,7 +84,7 @@ const Quickstart = ({
     }, [data, initialized])
 
     return !data.length ? null : (
-        <Section id={id}>
+        <Container id={id}>
             <div className={classNames(classes.root, { [classes.hidePrompts]: !!hidePrompts })}>
                 {title && (
                     <H2 className={classes.title} name={id}>
@@ -249,7 +250,7 @@ const Quickstart = ({
                 </pre>
                 {showCopy && <textarea ref={copyAreaRef} className={classes.copyArea} rows={1} />}
             </div>
-        </Section>
+        </Container>
     )
 }
 
