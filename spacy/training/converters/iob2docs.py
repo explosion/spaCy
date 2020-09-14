@@ -1,12 +1,13 @@
 from wasabi import Printer
 
 from .conll_ner2docs import n_sents_info
+from ...vocab import Vocab
 from ...training import iob_to_biluo, tags_to_entities
 from ...tokens import Doc, Span
 from ...util import minibatch
 
 
-def iob2docs(input_data, vocab, n_sents=10, no_print=False, *args, **kwargs):
+def iob2docs(input_data, n_sents=10, no_print=False, *args, **kwargs):
     """
     Convert IOB files with one sentence per line and tags separated with '|'
     into Doc objects so they can be saved. IOB and IOB2 are accepted.
@@ -18,6 +19,7 @@ def iob2docs(input_data, vocab, n_sents=10, no_print=False, *args, **kwargs):
     I|PRP|O like|VBP|O London|NNP|I-GPE and|CC|O New|NNP|B-GPE York|NNP|I-GPE City|NNP|I-GPE .|.|O
     I|PRP|O like|VBP|O London|NNP|B-GPE and|CC|O New|NNP|B-GPE York|NNP|I-GPE City|NNP|I-GPE .|.|O
     """
+    vocab = Vocab()  # need vocab to make a minimal Doc
     msg = Printer(no_print=no_print)
     if n_sents > 0:
         n_sents_info(msg, n_sents)

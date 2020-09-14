@@ -6,14 +6,15 @@ import shutil
 import requests
 
 from ...util import ensure_path, working_dir
-from .._util import project_cli, Arg, PROJECT_FILE, load_project_config, get_checksum
-from .._util import download_file, git_sparse_checkout, get_git_version
+from .._util import project_cli, Arg, Opt, PROJECT_FILE, load_project_config
+from .._util import get_checksum, download_file, git_checkout, get_git_version
 
 
 @project_cli.command("assets")
 def project_assets_cli(
     # fmt: off
     project_dir: Path = Arg(Path.cwd(), help="Path to cloned project. Defaults to current working directory.", exists=True, file_okay=False),
+    sparse_checkout: bool = Opt(False, "--sparse", "-S", help="Use sparse checkout for assets provided via Git, to only check out and clone the files needed. Requires Git v22.2+.")
     # fmt: on
 ):
     """Fetch project assets like datasets and pretrained weights. Assets are
@@ -23,10 +24,10 @@ def project_assets_cli(
 
     DOCS: https://nightly.spacy.io/api/cli#project-assets
     """
-    project_assets(project_dir)
+    project_assets(project_dir, sparse_checkout=sparse_checkout)
 
 
-def project_assets(project_dir: Path) -> None:
+def project_assets(project_dir: Path, *, sparse_checkout: bool = False) -> None:
     """Fetch assets for a project using DVC if possible.
 
     project_dir (Path): Path to project directory.
@@ -58,11 +59,12 @@ def project_assets(project_dir: Path) -> None:
                         shutil.rmtree(dest)
                     else:
                         dest.unlink()
-            git_sparse_checkout(
+            git_checkout(
                 asset["git"]["repo"],
                 asset["git"]["path"],
                 dest,
                 branch=asset["git"].get("branch"),
+                sparse=sparse_checkout,
             )
         else:
             url = asset.get("url")

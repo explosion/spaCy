@@ -5,6 +5,7 @@ menu:
   - ['displacy', 'displacy']
   - ['registry', 'registry']
   - ['Loggers', 'loggers']
+  - ['Readers', 'readers']
   - ['Batchers', 'batchers']
   - ['Data & Alignment', 'gold']
   - ['Utility Functions', 'util']
@@ -363,7 +364,7 @@ results to a [Weights & Biases](https://www.wandb.com/) dashboard. Instead of
 using one of the built-in loggers listed here, you can also
 [implement your own](/usage/training#custom-logging).
 
-#### spacy.ConsoleLogger {#ConsoleLogger tag="registered function"}
+#### ConsoleLogger {#ConsoleLogger tag="registered function"}
 
 > #### Example config
 >
@@ -409,7 +410,7 @@ start decreasing across epochs.
 
  </Accordion>
 
-#### spacy.WandbLogger {#WandbLogger tag="registered function"}
+#### WandbLogger {#WandbLogger tag="registered function"}
 
 > #### Installation
 >
@@ -451,6 +452,71 @@ remain in the config file stored on your local system.
 | `project_name`         | The name of the project in the Weights & Biases interface. The project will be created automatically if it doesn't exist yet. ~~str~~ |
 | `remove_config_values` | A list of values to include from the config before it is uploaded to W&B (default: empty). ~~List[str]~~                              |
 
+## Readers {#readers source="spacy/training/corpus.py" new="3"}
+
+Corpus readers are registered functions that load data and return a function
+that takes the current `nlp` object and yields [`Example`](/api/example) objects
+that can be used for [training](/usage/training) and
+[pretraining](/usage/embeddings-transformers#pretraining). You can replace it
+with your own registered function in the
+[`@readers` registry](/api/top-level#registry) to customize the data loading and
+streaming.
+
+### Corpus {#corpus}
+
+The `Corpus` reader manages annotated corpora and can be used for training and
+development datasets in the [DocBin](/api/docbin) (`.spacy`) format. Also see
+the [`Corpus`](/api/corpus) class.
+
+> #### Example config
+>
+> ```ini
+> [paths]
+> train = "corpus/train.spacy"
+>
+> [training.train_corpus]
+> @readers = "spacy.Corpus.v1"
+> path = ${paths.train}
+> gold_preproc = false
+> max_length = 0
+> limit = 0
+> ```
+
+| Name            | Description                                                                                                                                              |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `path`          | The directory or filename to read from. Expects data in spaCy's binary [`.spacy` format](/api/data-formats#binary-training). ~~Union[str, Path]~~        |
+|  `gold_preproc` | Whether to set up the Example object with gold-standard sentences and tokens for the predictions. See [`Corpus`](/api/corpus#init) for details. ~~bool~~ |
+| `max_length`    | Maximum document length. Longer documents will be split into sentences, if sentence boundaries are available. Defaults to `0` for no limit. ~~int~~      |
+| `limit`         | Limit corpus to a subset of examples, e.g. for debugging. Defaults to `0` for no limit. ~~int~~                                                          |
+
+### JsonlReader {#jsonlreader}
+
+Create [`Example`](/api/example) objects from a JSONL (newline-delimited JSON)
+file of texts keyed by `"text"`. Can be used to read the raw text corpus for
+language model [pretraining](/usage/embeddings-transformers#pretraining) from a
+JSONL file. Also see the [`JsonlReader`](/api/corpus#jsonlreader) class.
+
+> #### Example config
+>
+> ```ini
+> [paths]
+> pretrain = "corpus/raw_text.jsonl"
+>
+> [pretraining.corpus]
+> @readers = "spacy.JsonlReader.v1"
+> path = ${paths.pretrain}
+> min_length = 0
+> max_length = 0
+> limit = 0
+> ```
+
+| Name         | Description                                                                                                                      |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| `path`       | The directory or filename to read from. Expects newline-delimited JSON with a key `"text"` for each record. ~~Union[str, Path]~~ |
+| `min_length` | Minimum document length (in tokens). Shorter documents will be skipped. Defaults to `0`, which indicates no limit. ~~int~~       |
+| `max_length` | Maximum document length (in tokens). Longer documents will be skipped. Defaults to `0`, which indicates no limit. ~~int~~        |
+| `limit`      | Limit corpus to a subset of examples, e.g. for debugging. Defaults to `0` for no limit. ~~int~~                                  |
+
 ## Batchers {#batchers source="spacy/training/batchers.py" new="3"}
 
 A data batcher implements a batching strategy that essentially turns a stream of
@@ -465,7 +531,7 @@ Instead of using one of the built-in batchers listed here, you can also
 [implement your own](/usage/training#custom-code-readers-batchers), which may or
 may not use a custom schedule.
 
-#### batch_by_words {#batch_by_words tag="registered function"}
+### batch_by_words {#batch_by_words tag="registered function"}
 
 Create minibatches of roughly a given number of words. If any examples are
 longer than the specified batch length, they will appear in a batch by
@@ -492,7 +558,7 @@ themselves, or be discarded if `discard_oversize` is set to `True`. The argument
 | `discard_oversize` | Whether to discard sequences that by themselves exceed the tolerated size. ~~bool~~                                                                                                     |
 | `get_length`       | Optional function that receives a sequence item and returns its length. Defaults to the built-in `len()` if not set. ~~Optional[Callable[[Any], int]]~~                                 |
 
-#### batch_by_sequence {#batch_by_sequence tag="registered function"}
+### batch_by_sequence {#batch_by_sequence tag="registered function"}
 
 > #### Example config
 >
@@ -510,7 +576,7 @@ Create a batcher that creates batches of the specified size.
 | `size`       | The target number of items per batch. Can also be a block referencing a schedule, e.g. [`compounding`](https://thinc.ai/docs/api-schedules/#compounding). ~~Union[int, Sequence[int]]~~ |
 | `get_length` | Optional function that receives a sequence item and returns its length. Defaults to the built-in `len()` if not set. ~~Optional[Callable[[Any], int]]~~                                 |
 
-#### batch_by_padded {#batch_by_padded tag="registered function"}
+### batch_by_padded {#batch_by_padded tag="registered function"}
 
 > #### Example config
 >
