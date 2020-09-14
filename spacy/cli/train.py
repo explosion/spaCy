@@ -418,6 +418,10 @@ def verify_textcat_config(nlp: Language, pipe_config: Dict[str, Any]) -> None:
         textcat_labels = nlp.get_pipe("textcat").labels
         pos_label = pipe_config.get("positive_label")
         if pos_label not in textcat_labels:
-            raise ValueError(Errors.E920.format(pos_label=pos_label, labels=textcat_labels))
+            raise ValueError(
+                Errors.E920.format(pos_label=pos_label, labels=textcat_labels)
+            )
         if len(list(textcat_labels)) != 2:
-            raise ValueError(Errors.E919.format(pos_label=pos_label, labels=textcat_labels))
+            raise ValueError(
+                Errors.E919.format(pos_label=pos_label, labels=textcat_labels)
+            )

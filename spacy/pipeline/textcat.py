@@ -56,7 +56,12 @@ subword_features = true
 @Language.factory(
     "textcat",
     assigns=["doc.cats"],
-    default_config={"labels": [], "threshold": 0.5, "positive_label": None, "model": DEFAULT_TEXTCAT_MODEL},
+    default_config={
+        "labels": [],
+        "threshold": 0.5,
+        "positive_label": None,
+        "model": DEFAULT_TEXTCAT_MODEL,
+    },
     scores=[
         "cats_score",
         "cats_score_desc",
@@ -91,7 +96,14 @@ def make_textcat(
     threshold (float): Cutoff to consider a prediction "positive".
     positive_label (Optional[str]): The positive label for a binary task with exclusive classes, None otherwise.
     """
-    return TextCategorizer(nlp.vocab, model, name, labels=labels, threshold=threshold, positive_label=positive_label)
+    return TextCategorizer(
+        nlp.vocab,
+        model,
+        name,
+        labels=labels,
+        threshold=threshold,
+        positive_label=positive_label,
+    )
 
 
 class TextCategorizer(Pipe):
@@ -126,7 +138,11 @@ class TextCategorizer(Pipe):
         self.model = model
         self.name = name
         self._rehearsal_model = None
-        cfg = {"labels": labels, "threshold": threshold, "positive_label": positive_label}
+        cfg = {
+            "labels": labels,
+            "threshold": threshold,
+            "positive_label": positive_label,
+        }
         self.cfg = dict(cfg)
 
     @property
@@ -357,11 +373,7 @@ class TextCategorizer(Pipe):
             sgd = self.create_optimizer()
         return sgd
 
-    def score(
-        self,
-        examples: Iterable[Example],
-        **kwargs,
-    ) -> Dict[str, Any]:
+    def score(self, examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
         """Score a batch of examples.
 
         examples (Iterable[Example]): The examples to score.

@@ -131,7 +131,10 @@ def test_overfitting_IO():
     fix_random_seed(0)
     nlp = English()
     # Set exclusive labels
-    textcat = nlp.add_pipe("textcat", config={"model": {"exclusive_classes": True}, "positive_label": "POSITIVE"})
+    textcat = nlp.add_pipe(
+        "textcat",
+        config={"model": {"exclusive_classes": True}, "positive_label": "POSITIVE"},
+    )
     train_examples = []
     for text, annotations in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
