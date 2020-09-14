@@ -81,7 +81,7 @@ shortcut for this and instantiate the component using its string name and
 | `vocab`        | The shared vocabulary. ~~Vocab~~                                                                                                                               |
 | `model`        | **Not yet implemented:** The model to use. ~~Model~~                                                                                                           |
 | `name`         | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                                                            |
-| _keyword-only_ |                                                                                                                                                                |  |
+| _keyword-only_ |                                                                                                                                                                |
 | mode           | The lemmatizer mode, e.g. `"lookup"` or `"rule"`. Defaults to `"lookup"`. ~~str~~                                                                              |
 | lookups        | A lookups object containing the tables such as `"lemma_rules"`, `"lemma_index"`, `"lemma_exc"` and `"lemma_lookup"`. Defaults to `None`. ~~Optional[Lookups]~~ |
 | overwrite      | Whether to overwrite existing lemmas. ~~bool~                                                                                                                  |
