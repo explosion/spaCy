@@ -53,7 +53,7 @@ Initialize the sentencizer.
 
 | Name           | Description                                                                                                             |
 | -------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| _keyword-only_ |                                                                                                                         |  |
+| _keyword-only_ |                                                                                                                         |
 | `punct_chars`  | Optional custom list of punctuation characters that mark sentence ends. See below for defaults. ~~Optional[List[str]]~~ |
 
 ```python

@@ -139,7 +139,7 @@ setting up the label scheme based on the data.
 | Name           | Description                                                                                                                           |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. ~~Callable[[], Iterable[Example]]~~ |
-| _keyword-only_ |                                                                                                                                       |  |
+| _keyword-only_ |                                                                                                                                       |
 | `pipeline`     | Optional list of pipeline components that this component is part of. ~~Optional[List[Tuple[str, Callable[[Doc], Doc]]]]~~             |
 | `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                         |
 | **RETURNS**    | The optimizer. ~~Optimizer~~                                                                                                          |
@@ -196,7 +196,7 @@ Delegates to [`predict`](/api/morphologizer#predict) and
 | Name              | Description                                                                                                                        |
 | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | `examples`        | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                                  |
-| _keyword-only_    |                                                                                                                                    |  |
+| _keyword-only_    |                                                                                                                                    |
 | `drop`            | The dropout rate. ~~float~~                                                                                                        |
 | `set_annotations` | Whether or not to update the `Example` objects with the predictions, delegating to [`set_annotations`](#set_annotations). ~~bool~~ |
 | `sgd`             | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                      |

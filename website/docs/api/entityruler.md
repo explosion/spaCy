@@ -255,7 +255,7 @@ Get all patterns that were added to the entity ruler.
 
 | Name              | Description                                                                                                           |
 | ----------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `matcher`         | The underlying matcher used to process token patterns. ~~Matcher~~                                                    |  |
+| `matcher`         | The underlying matcher used to process token patterns. ~~Matcher~~                                                    |
 | `phrase_matcher`  | The underlying phrase matcher, used to process phrase patterns. ~~PhraseMatcher~~                                     |
 | `token_patterns`  | The token patterns present in the entity ruler, keyed by label. ~~Dict[str, List[Dict[str, Union[str, List[dict]]]]~~ |
 | `phrase_patterns` | The phrase patterns present in the entity ruler, keyed by label. ~~Dict[str, List[Doc]]~~                             |

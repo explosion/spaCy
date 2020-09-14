@@ -630,3 +630,49 @@ In addition to the native markdown elements, you can use the components
 ├── gatsby-node.js       # Node-specific hooks for Gatsby
 └── package.json         # package settings and dependencies
 ```
+
+## Editorial {#editorial}
+
+- "spaCy" should always be spelled with a lowercase "s" and a capital "C",
+  unless it specifically refers to the Python package or Python import `spacy`
+  (in which case it should be formatted as code).
+  - ✅ spaCy is a library for advanced NLP in Python.
+  - ❌ Spacy is a library for advanced NLP in Python.
+  - ✅ First, you need to install the `spacy` package from pip.
+- Mentions of code, like function names, classes, variable names etc. in inline
+  text should be formatted as `code`.
+  - ✅ "Calling the `nlp` object on a text returns a `Doc`."
+- Objects that have pages in the [API docs](/api) should be linked – for
+  example, [`Doc`](/api/doc) or [`Language.to_disk`](/api/language#to_disk). The
+  mentions should still be formatted as code within the link. Links pointing to
+  the API docs will automatically receive a little icon. However, if a paragraph
+  includes many references to the API, the links can easily get messy. In that
+  case, we typically only link the first mention of an object and not any
+  subsequent ones.
+  - ✅ The [`Span`](/api/span) and [`Token`](/api/token) objects are views of a
+    [`Doc`](/api/doc). [`Span.as_doc`](/api/span#as_doc) creates a `Doc` object
+    from a `Span`.
+  - ❌ The [`Span`](/api/span) and [`Token`](/api/token) objects are views of a
+    [`Doc`](/api/doc). [`Span.as_doc`](/api/span#as_doc) creates a
+    [`Doc`](/api/doc) object from a [`Span`](/api/span).
+
+* Other things we format as code are: references to trained pipeline packages
+  like `en_core_web_sm` or file names like `code.py` or `meta.json`.
+
+  - ✅ After training, the `config.cfg` is saved to disk.
+
+* [Type annotations](#type-annotations) are a special type of code formatting,
+  expressed by wrapping the text in `~~` instead of backticks. The result looks
+  like this: ~~List[Doc]~~. All references to known types will be linked
+  automatically.
+
+  - ✅ The model has the input type ~~List[Doc]~~ and it outputs a
+    ~~List[Array2d]~~.
+
+* We try to keep links meaningful but short.
+  - ✅ For details, see the usage guide on
+    [training with custom code](/usage/training#custom-code).
+  - ❌ For details, see
+    [the usage guide on training with custom code](/usage/training#custom-code).
+  - ❌ For details, see the usage guide on training with custom code
+    [here](/usage/training#custom-code).

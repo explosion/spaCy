@@ -87,6 +87,8 @@ export default function QuickstartTraining({ id, title, download = 'base_config.
                     .sort((a, b) => a.title.localeCompare(b.title))
                 return (
                     <Quickstart
+                        id="quickstart-widget"
+                        Container="div"
                         download={download}
                         rawContent={content}
                         data={DATA}

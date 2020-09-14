@@ -89,7 +89,6 @@ def train(
         nlp, config = util.load_model_from_config(config)
     if config["training"]["vectors"] is not None:
         util.load_vectors_into_model(nlp, config["training"]["vectors"])
-    verify_config(nlp)
     raw_text, tag_map, morph_rules, weights_data = load_from_paths(config)
     T_cfg = config["training"]
     optimizer = T_cfg["optimizer"]
@@ -108,6 +107,8 @@ def train(
             nlp.resume_training(sgd=optimizer)
     with nlp.select_pipes(disable=[*frozen_components, *resume_components]):
         nlp.begin_training(lambda: train_corpus(nlp), sgd=optimizer)
+    # Verify the config after calling 'begin_training' to ensure labels are properly initialized
+    verify_config(nlp)
 
     if tag_map:
         # Replace tag map with provided mapping
@@ -401,7 +402,7 @@ def verify_cli_args(config_path: Path, output_path: Optional[Path] = None) -> No
 
 
 def verify_config(nlp: Language) -> None:
-    """Perform additional checks based on the config and loaded nlp object."""
+    """Perform additional checks based on the config, loaded nlp object and training data."""
     # TODO: maybe we should validate based on the actual components, the list
     # in config["nlp"]["pipeline"] instead?
     for pipe_config in nlp.config["components"].values():
@@ -415,18 +416,13 @@ def verify_textcat_config(nlp: Language, pipe_config: Dict[str, Any]) -> None:
     # if 'positive_label' is provided: double check whether it's in the data and
     # the task is binary
     if pipe_config.get("positive_label"):
-        textcat_labels = nlp.get_pipe("textcat").cfg.get("labels", [])
+        textcat_labels = nlp.get_pipe("textcat").labels
         pos_label = pipe_config.get("positive_label")
         if pos_label not in textcat_labels:
-            msg.fail(
-                f"The textcat's 'positive_label' config setting '{pos_label}' "
-                f"does not match any label in the training data.",
-                exits=1,
+            raise ValueError(
+                Errors.E920.format(pos_label=pos_label, labels=textcat_labels)
             )
-        if len(textcat_labels) != 2:
-            msg.fail(
-                f"A textcat 'positive_label' '{pos_label}' was "
-                f"provided for training data that does not appear to be a "
-                f"binary classification problem with two labels.",
-                exits=1,
+        if len(list(textcat_labels)) != 2:
+            raise ValueError(
+                Errors.E919.format(pos_label=pos_label, labels=textcat_labels)
             )
