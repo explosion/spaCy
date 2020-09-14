@@ -183,7 +183,7 @@ will be overwritten.
 | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `match_id`     | An ID for the patterns. ~~str~~                                                                                                                                      |
 | `patterns`     | A list of match patterns. A pattern consists of a list of dicts, where each dict describes a token in the tree. ~~List[List[Dict[str, Union[str, Dict]]]]~~          |
-| _keyword-only_ |                                                                                                                                                                      |  |
+| _keyword-only_ |                                                                                                                                                                      |
 | `on_match`     | Callback function to act on matches. Takes the arguments `matcher`, `doc`, `i` and `matches`. ~~Optional[Callable[[DependencyMatcher, Doc, int, List[Tuple], Any]]~~ |
 
 ## DependencyMatcher.get {#get tag="method"}

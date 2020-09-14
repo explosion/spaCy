@@ -4,17 +4,19 @@
 
 spaCy is a library for advanced Natural Language Processing in Python and
 Cython. It's built on the very latest research, and was designed from day one to
-be used in real products. spaCy comes with
-[pretrained statistical models](https://spacy.io/models) and word vectors, and
-currently supports tokenization for **60+ languages**. It features
+be used in real products.
+
+spaCy comes with
+[pretrained pipelines](https://spacy.io/models) and vectors, and
+currently supports tokenization for **59+ languages**. It features
 state-of-the-art speed, convolutional **neural network models** for tagging,
-parsing and **named entity recognition** and easy **deep learning** integration.
-It's commercial open-source software, released under the MIT license.
+parsing, **named entity recognition**, **text classification** and more, multi-task learning with pretrained **transformers** like BERT, as well as a production-ready training system and easy model packaging, deployment and workflow management.
+spaCy is commercial open-source software, released under the MIT license.
 
 💫 **Version 2.3 out now!**
 [Check out the release notes here.](https://github.com/explosion/spaCy/releases)
 
-[![Azure Pipelines](<https://img.shields.io/azure-devops/build/explosion-ai/public/8/master.svg?logo=azure-pipelines&style=flat-square&label=build+(3.x)>)](https://dev.azure.com/explosion-ai/public/_build?definitionId=8)
+[![Azure Pipelines](https://img.shields.io/azure-devops/build/explosion-ai/public/8/master.svg?logo=azure-pipelines&style=flat-square&label=build)](https://dev.azure.com/explosion-ai/public/_build?definitionId=8)
 [![Current Release Version](https://img.shields.io/github/release/explosion/spacy.svg?style=flat-square&logo=github)](https://github.com/explosion/spaCy/releases)
 [![pypi Version](https://img.shields.io/pypi/v/spacy.svg?style=flat-square&logo=pypi&logoColor=white)](https://pypi.org/project/spacy/)
 [![conda Version](https://img.shields.io/conda/vn/conda-forge/spacy.svg?style=flat-square&logo=conda-forge&logoColor=white)](https://anaconda.org/conda-forge/spacy)
@@ -31,7 +33,7 @@ It's commercial open-source software, released under the MIT license.
 | --------------- | -------------------------------------------------------------- |
 | [spaCy 101]     | New to spaCy? Here's everything you need to know!              |
 | [Usage Guides]  | How to use spaCy and its features.                             |
-| [New in v2.3]   | New features, backwards incompatibilities and migration guide. |
+| [New in v3.0]   | New features, backwards incompatibilities and migration guide. |
 | [API Reference] | The detailed reference for spaCy's API.                        |
 | [Models]        | Download statistical language models for spaCy.                |
 | [Universe]      | Libraries, extensions, demos, books and courses.               |
@@ -39,7 +41,7 @@ It's commercial open-source software, released under the MIT license.
 | [Contribute]    | How to contribute to the spaCy project and code base.          |
 
 [spacy 101]: https://spacy.io/usage/spacy-101
-[new in v2.3]: https://spacy.io/usage/v2-3
+[new in v3.0]: https://spacy.io/usage/v3
 [usage guides]: https://spacy.io/usage/
 [api reference]: https://spacy.io/api/
 [models]: https://spacy.io/models
@@ -56,34 +58,29 @@ be able to provide individual support via email. We also believe that help is
 much more valuable if it's shared publicly, so that more people can benefit from
 it.
 
-| Type                     | Platforms                                              |
-| ------------------------ | ------------------------------------------------------ |
-| 🚨 **Bug Reports**       | [GitHub Issue Tracker]                                 |
-| 🎁 **Feature Requests**  | [GitHub Issue Tracker]                                 |
-| 👩‍💻 **Usage Questions**   | [Stack Overflow] · [Gitter Chat] · [Reddit User Group] |
-| 🗯 **General Discussion** | [Gitter Chat] · [Reddit User Group]                    |
+| Type                    | Platforms              |
+| ----------------------- | ---------------------- |
+| 🚨 **Bug Reports**      | [GitHub Issue Tracker] |
+| 🎁 **Feature Requests** | [GitHub Issue Tracker] |
+| 👩‍💻 **Usage Questions**  | [Stack Overflow]       |
 
 [github issue tracker]: https://github.com/explosion/spaCy/issues
 [stack overflow]: https://stackoverflow.com/questions/tagged/spacy
-[gitter chat]: https://gitter.im/explosion/spaCy
-[reddit user group]: https://www.reddit.com/r/spacynlp
 
 ## Features
 
-- Non-destructive **tokenization**
-- **Named entity** recognition
-- Support for **50+ languages**
-- pretrained [statistical models](https://spacy.io/models) and word vectors
+- Support for **59+ languages**
+- **Trained pipelines**
+- Multi-task learning with pretrained **transformers** like BERT
+- Pretrained **word vectors**
 - State-of-the-art speed
-- Easy **deep learning** integration
-- Part-of-speech tagging
-- Labelled dependency parsing
-- Syntax-driven sentence segmentation
+- Production-ready **training system**
+- Linguistically-motivated **tokenization**
+- Components for named **entity recognition**, part-of-speech-tagging, dependency parsing, sentence segmentation, **text classification**, lemmatization, morphological analysis, entity linking and more
+- Easily extensible with **custom components** and attributes
+- Support for custom models in **PyTorch**, **TensorFlow** and other frameworks
 - Built in **visualizers** for syntax and NER
-- Convenient string-to-hash mapping
-- Export to numpy data arrays
-- Efficient binary serialization
-- Easy **model packaging** and deployment
+- Easy **model packaging**, deployment and workflow management
 - Robust, rigorously evaluated accuracy
 
 📖 **For more details, see the
@@ -101,13 +98,6 @@ For detailed installation instructions, see the
 
 [pip]: https://pypi.org/project/spacy/
 [conda]: https://anaconda.org/conda-forge/spacy
-
-> ⚠️ **Important note for Python 3.8:** We can't yet ship pre-compiled binary
-> wheels for spaCy that work on Python 3.8, as we're still waiting for our CI
-> providers and other tooling to support it. This means that in order to run
-> spaCy on Python 3.8, you'll need [a compiler installed](#source) and compile
-> the library and its Cython dependencies locally. If this is causing problems
-> for you, the easiest solution is to **use Python 3.7** in the meantime.
 
 ### pip
 
@@ -164,26 +154,26 @@ If you've trained your own models, keep in mind that your training and runtime
 inputs must match. After updating spaCy, we recommend **retraining your models**
 with the new version.
 
-📖 **For details on upgrading from spaCy 1.x to spaCy 2.x, see the
-[migration guide](https://spacy.io/usage/v2#migrating).**
+📖 **For details on upgrading from spaCy 2.x to spaCy 3.x, see the
+[migration guide](https://spacy.io/usage/v3#migrating).**
 
 ## Download models
 
-As of v1.7.0, models for spaCy can be installed as **Python packages**. This
+Trained pipelines for spaCy can be installed as **Python packages**. This
 means that they're a component of your application, just like any other module.
 Models can be installed using spaCy's `download` command, or manually by
 pointing pip to a path or URL.
 
-| Documentation          |                                                               |
-| ---------------------- | ------------------------------------------------------------- |
-| [Available Models]     | Detailed model descriptions, accuracy figures and benchmarks. |
-| [Models Documentation] | Detailed usage instructions.                                  |
+| Documentation          |                                                                  |
+| ---------------------- | ---------------------------------------------------------------- |
+| [Available Pipelines]  | Detailed pipeline descriptions, accuracy figures and benchmarks. |
+| [Models Documentation] | Detailed usage instructions.                                     |
 
-[available models]: https://spacy.io/models
+[available pipelines]: https://spacy.io/models
 [models documentation]: https://spacy.io/docs/usage/models
 
 ```bash
-# download best-matching version of specific model for your spaCy installation
+# Download best-matching version of specific model for your spaCy installation
 python -m spacy download en_core_web_sm
 
 # pip install .tar.gz archive from path or URL

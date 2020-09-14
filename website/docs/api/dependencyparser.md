@@ -217,7 +217,7 @@ model. Delegates to [`predict`](/api/dependencyparser#predict) and
 | Name              | Description                                                                                                                        |
 | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | `examples`        | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                                  |
-| _keyword-only_    |                                                                                                                                    |  |
+| _keyword-only_    |                                                                                                                                    |
 | `drop`            | The dropout rate. ~~float~~                                                                                                        |
 | `set_annotations` | Whether or not to update the `Example` objects with the predictions, delegating to [`set_annotations`](#set_annotations). ~~bool~~ |
 | `sgd`             | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                      |
