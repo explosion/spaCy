@@ -22,9 +22,10 @@ def create_docbin_reader(
 ) -> Callable[["Language"], Iterable[Example]]:
     return Corpus(path, gold_preproc=gold_preproc, max_length=max_length, limit=limit)
 
+
 @util.registry.readers("spacy.JsonlReader.v1")
 def create_jsonl_reader(
-    path: Path, min_length: int=0, max_length: int = 0, limit: int = 0
+    path: Path, min_length: int = 0, max_length: int = 0, limit: int = 0
 ) -> Callable[["Language"], Iterable[Doc]]:
     return JsonlTexts(path, min_length=min_length, max_length=max_length, limit=limit)
 
@@ -50,7 +51,6 @@ def walk_corpus(path: Union[str, Path], file_type) -> List[Path]:
     if len(locs) == 0:
         warnings.warn(Warnings.W090.format(path=orig_path))
     return locs
-
 
 
 class Corpus:
@@ -162,20 +162,21 @@ class Corpus:
 
 
 class JsonlTexts:
-    """Iterate Doc objects from a file or directory of jsonl 
+    """Iterate Doc objects from a file or directory of jsonl
     formatted raw text files.
 
     path (Path): The directory or filename to read from.
     min_length (int): Minimum document length (in tokens). Shorter documents
         will be skipped. Defaults to 0, which indicates no limit.
- 
+
     max_length (int): Maximum document length (in tokens). Longer documents will
         be skipped. Defaults to 0, which indicates no limit.
     limit (int): Limit corpus to a subset of examples, e.g. for debugging.
         Defaults to 0, which indicates no limit.
 
-    DOCS: https://nightly.spacy.io/api/corpus
+    DOCS: https://nightly.spacy.io/api/corpus#jsonltexts
     """
+
     file_type = "jsonl"
 
     def __init__(
@@ -195,9 +196,9 @@ class JsonlTexts:
         """Yield examples from the data.
 
         nlp (Language): The current nlp object.
-        YIELDS (Doc): The docs.
+        YIELDS (Example): The example objects.
 
-        DOCS: https://nightly.spacy.io/api/corpus#call
+        DOCS: https://nightly.spacy.io/api/corpus#jsonltexts-call
         """
         for loc in walk_corpus(self.path, "jsonl"):
             records = srsly.read_jsonl(loc)

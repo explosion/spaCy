@@ -4,7 +4,6 @@ teaser: Details on spaCy's input and output data formats
 menu:
   - ['Training Config', 'config']
   - ['Training Data', 'training']
-  - ['Pretraining Data', 'pretraining']
   - ['Vocabulary', 'vocab-jsonl']
   - ['Pipeline Meta', 'meta']
 ---
@@ -131,7 +130,7 @@ process that are used when you run [`spacy train`](/api/cli#train).
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `accumulate_gradient` | Whether to divide the batch up into substeps. Defaults to `1`. ~~int~~                                                                                                                                       |
 | `batcher`             | Callable that takes an iterator of [`Doc`](/api/doc) objects and yields batches of `Doc`s. Defaults to [`batch_by_words`](/api/top-level#batch_by_words). ~~Callable[[Iterator[Doc], Iterator[List[Doc]]]]~~ |
-| `dev_corpus`          | Callable that takes the current `nlp` object and yields [`Example`](/api/example) objects. Defaults to [`Corpus`](/api/corpus). ~~Callable[[Language], Iterator[Example]]~~                                  |
+| `dev_corpus`          | Callable that takes the current `nlp` object and yields [`Example`](/api/example) objects. Defaults to [`Corpus`](/api/top-level#Corpus). ~~Callable[[Language], Iterator[Example]]~~                        |
 | `dropout`             | The dropout rate. Defaults to `0.1`. ~~float~~                                                                                                                                                               |
 | `eval_frequency`      | How often to evaluate during training (steps). Defaults to `200`. ~~int~~                                                                                                                                    |
 | `frozen_components`   | Pipeline component names that are "frozen" and shouldn't be updated during training. See [here](/usage/training#config-components) for details. Defaults to `[]`. ~~List[str]~~                              |
@@ -143,28 +142,26 @@ process that are used when you run [`spacy train`](/api/cli#train).
 | `raw_text`            | Optional path to a jsonl file with unlabelled text documents for a [rehearsal](/api/language#rehearse) step. Defaults to variable `${paths.raw}`. ~~Optional[str]~~                                          |
 | `score_weights`       | Score names shown in metrics mapped to their weight towards the final weighted score. See [here](/usage/training#metrics) for details. Defaults to `{}`. ~~Dict[str, float]~~                                |
 | `seed`                | The random seed. Defaults to variable `${system.seed}`. ~~int~~                                                                                                                                              |
-| `train_corpus`        | Callable that takes the current `nlp` object and yields [`Example`](/api/example) objects. Defaults to [`Corpus`](/api/corpus). ~~Callable[[Language], Iterator[Example]]~~                                  |
+| `train_corpus`        | Callable that takes the current `nlp` object and yields [`Example`](/api/example) objects. Defaults to [`Corpus`](/api/top-level#Corpus). ~~Callable[[Language], Iterator[Example]]~~                        |
 | `vectors`             | Name or path of pipeline containing pretrained word vectors to use, e.g. created with [`init vocab`](/api/cli#init-vocab). Defaults to `null`. ~~Optional[str]~~                                             |
 
 ### pretraining {#config-pretraining tag="section,optional"}
 
 This section is optional and defines settings and controls for
-[language model pretraining](/usage/training#pretraining). It's used when you
-run [`spacy pretrain`](/api/cli#pretrain).
+[language model pretraining](/usage/embeddings-transformers#pretraining). It's
+used when you run [`spacy pretrain`](/api/cli#pretrain).
 
-| Name                         | Description                                                                                                                     |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `max_epochs`                 | Maximum number of epochs. Defaults to `1000`. ~~int~~                                                                           |
-| `min_length`                 | Minimum length of examples. Defaults to `5`. ~~int~~                                                                            |
-| `max_length`                 | Maximum length of examples. Defaults to `500`. ~~int~~                                                                          |
-| `dropout`                    | The dropout rate. Defaults to `0.2`. ~~float~~                                                                                  |
-| `n_save_every`               | Saving frequency. Defaults to `null`. ~~Optional[int]~~                                                                         |
-| `batch_size`                 | The batch size or batch size [schedule](https://thinc.ai/docs/api-schedules). Defaults to `3000`. ~~Union[int, Sequence[int]]~~ |
-| `seed`                       | The random seed. Defaults to variable `${system.seed}`. ~~int~~                                                                 |
-| `use_pytorch_for_gpu_memory` | Allocate memory via PyTorch. Defaults to variable `${system.use_pytorch_for_gpu_memory}`. ~~bool~~                              |
-| `tok2vec_model`              | The model section of the embedding component in the config. Defaults to `"components.tok2vec.model"`. ~~str~~                   |
-| `objective`                  | The pretraining objective. Defaults to `{"type": "characters", "n_characters": 4}`. ~~Dict[str, Any]~~                          |
-| `optimizer`                  | The optimizer. Defaults to [`Adam`](https://thinc.ai/docs/api-optimizers#adam). ~~Optimizer~~                                   |
+| Name           | Description                                                                                                                                                                                  |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `max_epochs`   | Maximum number of epochs. Defaults to `1000`. ~~int~~                                                                                                                                        |
+| `dropout`      | The dropout rate. Defaults to `0.2`. ~~float~~                                                                                                                                               |
+| `n_save_every` | Saving frequency. Defaults to `null`. ~~Optional[int]~~                                                                                                                                      |
+| `objective`    | The pretraining objective. Defaults to `{"type": "characters", "n_characters": 4}`. ~~Dict[str, Any]~~                                                                                       |
+| `optimizer`    | The optimizer. Defaults to [`Adam`](https://thinc.ai/docs/api-optimizers#adam). ~~Optimizer~~                                                                                                |
+| `corpus`       | Callable that takes the current `nlp` object and yields [`Doc`](/api/doc) objects. Defaults to [`JsonlReader`](/api/top-level#JsonlReader). ~~Callable[[Language, str], Iterable[Example]]~~ |
+| `batcher`      | Batcher for the training data. ~~Callable[[Iterator[Doc], Iterator[List[Doc]]]]~~                                                                                                            |
+| `component`    | Component to find the layer to pretrain. Defaults to `"tok2vec"`. ~~str~~                                                                                                                    |
+| `layer`        | The layer to pretrain. If empty, the whole component model will be used. ~~str~~                                                                                                             |
 
 ## Training data {#training}
 
@@ -367,40 +364,6 @@ example = Example.from_dict(doc, gold_dict)
 doc = nlp("Russ Cochran his reprints include EC Comics.")
 gold_dict = {"links": {(0, 12): {"Q7381115": 1.0, "Q2146908": 0.0}}}
 example = Example.from_dict(doc, gold_dict)
-```
-
-## Pretraining data {#pretraining}
-
-The [`spacy pretrain`](/api/cli#pretrain) command lets you pretrain the
-"token-to-vector" embedding layer of pipeline components from raw text. Raw text
-can be provided as a `.jsonl` (newline-delimited JSON) file containing one input
-text per line (roughly paragraph length is good). Optionally, custom
-tokenization can be provided. The JSONL format means that the texts can be read
-in line-by-line, while still making it easy to represent newlines in the data.
-
-> #### Tip: Writing JSONL
->
-> Our utility library [`srsly`](https://github.com/explosion/srsly) provides a
-> handy `write_jsonl` helper that takes a file path and list of dictionaries and
-> writes out JSONL-formatted data.
->
-> ```python
-> import srsly
-> data = [{"text": "Some text"}, {"text": "More..."}]
-> srsly.write_jsonl("/path/to/text.jsonl", data)
-> ```
-
-| Key      | Description                                                           |
-| -------- | --------------------------------------------------------------------- |
-| `text`   | The raw input text. Is not required if `tokens` is available. ~~str~~ |
-| `tokens` | Optional tokenization, one string per token. ~~List[str]~~            |
-
-```json
-### Example
-{"text": "Can I ask where you work now and what you do, and if you enjoy it?"}
-{"text": "They may just pull out of the Seattle market completely, at least until they have autonomous vehicles."}
-{"text": "My cynical view on this is that it will never be free to the public. Reason: what would be the draw of joining the military? Right now their selling point is free Healthcare and Education. Ironically both are run horribly and most, that I've talked to, come out wishing they never went in."}
-{"tokens": ["If", "tokens", "are", "provided", "then", "we", "can", "skip", "the", "raw", "input", "text"]}
 ```
 
 ## Lexical data for vocabulary {#vocab-jsonl new="2"}
