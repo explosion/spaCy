@@ -415,18 +415,9 @@ def verify_textcat_config(nlp: Language, pipe_config: Dict[str, Any]) -> None:
     # if 'positive_label' is provided: double check whether it's in the data and
     # the task is binary
     if pipe_config.get("positive_label"):
-        textcat_labels = nlp.get_pipe("textcat").cfg.get("labels", [])
+        textcat_labels = nlp.get_pipe("textcat").labels
         pos_label = pipe_config.get("positive_label")
         if pos_label not in textcat_labels:
-            msg.fail(
-                f"The textcat's 'positive_label' config setting '{pos_label}' "
-                f"does not match any label in the training data.",
-                exits=1,
-            )
-        if len(textcat_labels) != 2:
-            msg.fail(
-                f"A textcat 'positive_label' '{pos_label}' was "
-                f"provided for training data that does not appear to be a "
-                f"binary classification problem with two labels.",
-                exits=1,
-            )
+            raise ValueError(Errors.E920.format(pos_label=pos_label, labels=textcat_labels))
+        if len(list(textcat_labels)) != 2:
+            raise ValueError(Errors.E919.format(pos_label=pos_label, labels=textcat_labels))

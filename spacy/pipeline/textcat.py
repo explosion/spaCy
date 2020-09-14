@@ -56,7 +56,7 @@ subword_features = true
 @Language.factory(
     "textcat",
     assigns=["doc.cats"],
-    default_config={"labels": [], "threshold": 0.5, "model": DEFAULT_TEXTCAT_MODEL},
+    default_config={"labels": [], "threshold": 0.5, "positive_label": None, "model": DEFAULT_TEXTCAT_MODEL},
     scores=[
         "cats_score",
         "cats_score_desc",
@@ -74,8 +74,9 @@ def make_textcat(
     nlp: Language,
     name: str,
     model: Model[List[Doc], List[Floats2d]],
-    labels: Iterable[str],
+    labels: List[str],
     threshold: float,
+    positive_label: Optional[str],
 ) -> "TextCategorizer":
     """Create a TextCategorizer compoment. The text categorizer predicts categories
     over a whole document. It can learn one or more labels, and the labels can
@@ -88,8 +89,9 @@ def make_textcat(
     labels (list): A list of categories to learn. If empty, the model infers the
         categories from the data.
     threshold (float): Cutoff to consider a prediction "positive".
+    positive_label (Optional[str]): The positive label for a binary task with exclusive classes, None otherwise.
     """
-    return TextCategorizer(nlp.vocab, model, name, labels=labels, threshold=threshold)
+    return TextCategorizer(nlp.vocab, model, name, labels=labels, threshold=threshold, positive_label=positive_label)
 
 
 class TextCategorizer(Pipe):
@@ -104,8 +106,9 @@ class TextCategorizer(Pipe):
         model: Model,
         name: str = "textcat",
         *,
-        labels: Iterable[str],
+        labels: List[str],
         threshold: float,
+        positive_label: Optional[str],
     ) -> None:
         """Initialize a text categorizer.
 
@@ -113,8 +116,9 @@ class TextCategorizer(Pipe):
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
         name (str): The component instance name, used to add entries to the
             losses during training.
-        labels (Iterable[str]): The labels to use.
+        labels (List[str]): The labels to use.
         threshold (float): Cutoff to consider a prediction "positive".
+        positive_label (Optional[str]): The positive label for a binary task with exclusive classes, None otherwise.
 
         DOCS: https://nightly.spacy.io/api/textcategorizer#init
         """
@@ -122,7 +126,7 @@ class TextCategorizer(Pipe):
         self.model = model
         self.name = name
         self._rehearsal_model = None
-        cfg = {"labels": labels, "threshold": threshold}
+        cfg = {"labels": labels, "threshold": threshold, "positive_label": positive_label}
         self.cfg = dict(cfg)
 
     @property
@@ -131,10 +135,10 @@ class TextCategorizer(Pipe):
 
         DOCS: https://nightly.spacy.io/api/textcategorizer#labels
         """
-        return tuple(self.cfg.setdefault("labels", []))
+        return tuple(self.cfg["labels"])
 
     @labels.setter
-    def labels(self, value: Iterable[str]) -> None:
+    def labels(self, value: List[str]) -> None:
         self.cfg["labels"] = tuple(value)
 
     def pipe(self, stream: Iterable[Doc], *, batch_size: int = 128) -> Iterator[Doc]:
@@ -356,14 +360,11 @@ class TextCategorizer(Pipe):
     def score(
         self,
         examples: Iterable[Example],
-        *,
-        positive_label: Optional[str] = None,
         **kwargs,
     ) -> Dict[str, Any]:
         """Score a batch of examples.
 
         examples (Iterable[Example]): The examples to score.
-        positive_label (str): Optional positive label.
         RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_cats.
 
         DOCS: https://nightly.spacy.io/api/textcategorizer#score
@@ -374,7 +375,7 @@ class TextCategorizer(Pipe):
             "cats",
             labels=self.labels,
             multi_label=self.model.attrs["multi_label"],
-            positive_label=positive_label,
+            positive_label=self.cfg["positive_label"],
             threshold=self.cfg["threshold"],
             **kwargs,
         )
