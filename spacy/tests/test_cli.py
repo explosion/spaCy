@@ -137,7 +137,7 @@ def test_cli_converters_conllu2json_subtokens():
     assert biluo_tags == ["O", "U-PER", "O", "O"]
 
 
-def test_cli_converters_iob2json(en_vocab):
+def test_cli_converters_iob2json():
     lines = [
         "I|O like|O London|I-GPE and|O New|B-GPE York|I-GPE City|I-GPE .|O",
         "I|O like|O London|B-GPE and|O New|B-GPE York|I-GPE City|I-GPE .|O",
@@ -145,7 +145,7 @@ def test_cli_converters_iob2json(en_vocab):
         "I|PRP|O like|VBP|O London|NNP|B-GPE and|CC|O New|NNP|B-GPE York|NNP|I-GPE City|NNP|I-GPE .|.|O",
     ]
     input_data = "\n".join(lines)
-    converted_docs = iob2docs(input_data, en_vocab, n_sents=10)
+    converted_docs = iob2docs(input_data, n_sents=10)
     assert len(converted_docs) == 1
     converted = docs_to_json(converted_docs)
     assert converted["id"] == 0
