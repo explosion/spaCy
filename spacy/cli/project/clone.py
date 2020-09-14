@@ -7,7 +7,7 @@ import re
 from ... import about
 from ...util import ensure_path
 from .._util import project_cli, Arg, Opt, COMMAND, PROJECT_FILE
-from .._util import git_sparse_checkout, get_git_version
+from .._util import git_checkout, get_git_version
 
 
 @project_cli.command("clone")
@@ -16,7 +16,8 @@ def project_clone_cli(
     name: str = Arg(..., help="The name of the template to clone"),
     dest: Optional[Path] = Arg(None, help="Where to clone the project. Defaults to current working directory", exists=False),
     repo: str = Opt(about.__projects__, "--repo", "-r", help="The repository to clone from"),
-    branch: str = Opt(about.__projects_branch__, "--branch", "-b", help="The branch to clone from")
+    branch: str = Opt(about.__projects_branch__, "--branch", "-b", help="The branch to clone from"),
+    sparse_checkout: bool = Opt(False, "--sparse", "-S", help="Use sparse Git checkout to only check out and clone the files needed. Requires Git v22.2+.")
     # fmt: on
 ):
     """Clone a project template from a repository. Calls into "git" and will
@@ -28,7 +29,7 @@ def project_clone_cli(
     """
     if dest is None:
         dest = Path.cwd() / Path(name).parts[-1]
-    project_clone(name, dest, repo=repo, branch=branch)
+    project_clone(name, dest, repo=repo, branch=branch, sparse_checkout=sparse_checkout)
 
 
 def project_clone(
@@ -37,6 +38,7 @@ def project_clone(
     *,
     repo: str = about.__projects__,
     branch: str = about.__projects_branch__,
+    sparse_checkout: bool = False,
 ) -> None:
     """Clone a project template from a repository.
 
@@ -50,7 +52,7 @@ def project_clone(
     project_dir = dest.resolve()
     repo_name = re.sub(r"(http(s?)):\/\/github.com/", "", repo)
     try:
-        git_sparse_checkout(repo, name, dest, branch=branch)
+        git_checkout(repo, name, dest, branch=branch, sparse=sparse_checkout)
     except subprocess.CalledProcessError:
         err = f"Could not clone '{name}' from repo '{repo_name}'"
         msg.fail(err, exits=1)

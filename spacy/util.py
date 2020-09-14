@@ -680,7 +680,10 @@ def run_command(
             Errors.E970.format(str_command=" ".join(command), tool=command[0])
         ) from None
     except subprocess.CalledProcessError as e:
-        # We don't want a duplicate traceback here
+        # We don't want a duplicate traceback here so we're making sure the
+        # CalledProcessError isn't re-raised. We also print both the string
+        # message and the stderr, in case the error only has one of them.
+        print(e.stderr)
         print(e)
         sys.exit(1)
     if ret.returncode != 0:
