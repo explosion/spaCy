@@ -10,6 +10,7 @@ from spacy.tokens import Doc
 from spacy.pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
 
 from ..util import make_tempdir
+from ...cli.train import verify_textcat_config
 from ...training import Example
 
 
@@ -130,7 +131,10 @@ def test_overfitting_IO():
     fix_random_seed(0)
     nlp = English()
     # Set exclusive labels
-    textcat = nlp.add_pipe("textcat", config={"model": {"exclusive_classes": True}})
+    textcat = nlp.add_pipe(
+        "textcat",
+        config={"model": {"exclusive_classes": True}, "positive_label": "POSITIVE"},
+    )
     train_examples = []
     for text, annotations in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
@@ -159,7 +163,7 @@ def test_overfitting_IO():
         assert cats2["POSITIVE"] + cats2["NEGATIVE"] == pytest.approx(1.0, 0.001)
 
     # Test scoring
-    scores = nlp.evaluate(train_examples, scorer_cfg={"positive_label": "POSITIVE"})
+    scores = nlp.evaluate(train_examples)
     assert scores["cats_micro_f"] == 1.0
     assert scores["cats_score"] == 1.0
     assert "cats_score_desc" in scores
@@ -194,3 +198,29 @@ def test_textcat_configs(textcat_config):
     for i in range(5):
         losses = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)
+
+
+def test_positive_class():
+    nlp = English()
+    pipe_config = {"positive_label": "POS", "labels": ["POS", "NEG"]}
+    textcat = nlp.add_pipe("textcat", config=pipe_config)
+    assert textcat.labels == ("POS", "NEG")
+    verify_textcat_config(nlp, pipe_config)
+
+
+def test_positive_class_not_present():
+    nlp = English()
+    pipe_config = {"positive_label": "POS", "labels": ["SOME", "THING"]}
+    textcat = nlp.add_pipe("textcat", config=pipe_config)
+    assert textcat.labels == ("SOME", "THING")
+    with pytest.raises(ValueError):
+        verify_textcat_config(nlp, pipe_config)
+
+
+def test_positive_class_not_binary():
+    nlp = English()
+    pipe_config = {"positive_label": "POS", "labels": ["SOME", "THING", "POS"]}
+    textcat = nlp.add_pipe("textcat", config=pipe_config)
+    assert textcat.labels == ("SOME", "THING", "POS")
+    with pytest.raises(ValueError):
+        verify_textcat_config(nlp, pipe_config)

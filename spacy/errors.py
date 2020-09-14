@@ -480,6 +480,11 @@ class Errors:
     E201 = ("Span index out of range.")
 
     # TODO: fix numbering after merging develop into master
+    E919 = ("A textcat 'positive_label' '{pos_label}' was provided for training "
+            "data that does not appear to be a binary classification problem "
+            "with two labels. Labels found: {labels}")
+    E920 = ("The textcat's 'positive_label' config setting '{pos_label}' "
+            "does not match any label in the training data. Labels found: {labels}")
     E921 = ("The method 'set_output' can only be called on components that have "
             "a Model with a 'resize_output' attribute. Otherwise, the output "
             "layer can not be dynamically changed.")

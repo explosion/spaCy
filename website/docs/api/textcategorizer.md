@@ -36,11 +36,12 @@ architectures and their arguments and hyperparameters.
 > nlp.add_pipe("textcat", config=config)
 > ```
 
-| Setting     | Description                                                                                                                                                      |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `labels`    | A list of categories to learn. If empty, the model infers the categories from the data. Defaults to `[]`. ~~Iterable[str]~~                                      |
-| `threshold` | Cutoff to consider a prediction "positive", relevant when printing accuracy results. ~~float~~                                                                   |
-| `model`     | A model instance that predicts scores for each category. Defaults to [TextCatEnsemble](/api/architectures#TextCatEnsemble). ~~Model[List[Doc], List[Floats2d]]~~ |
+| Setting          | Description                                                                                                                                                      |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `labels`         | A list of categories to learn. If empty, the model infers the categories from the data. Defaults to `[]`. ~~Iterable[str]~~                                      |
+| `threshold`      | Cutoff to consider a prediction "positive", relevant when printing accuracy results. ~~float~~                                                                   |
+| `positive_label` | The positive label for a binary task with exclusive classes, None otherwise and by default. ~~Optional[str]~~                                                    |
+| `model`          | A model instance that predicts scores for each category. Defaults to [TextCatEnsemble](/api/architectures#TextCatEnsemble). ~~Model[List[Doc], List[Floats2d]]~~ |
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/textcat.py
@@ -60,21 +61,22 @@ architectures and their arguments and hyperparameters.
 >
 > # Construction from class
 > from spacy.pipeline import TextCategorizer
-> textcat = TextCategorizer(nlp.vocab, model, labels=[], threshold=0.5)
+> textcat = TextCategorizer(nlp.vocab, model, labels=[], threshold=0.5, positive_label="POS")
 > ```
 
 Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
 [`nlp.add_pipe`](/api/language#create_pipe).
 
-| Name           | Description                                                                                                                |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`        | The shared vocabulary. ~~Vocab~~                                                                                           |
-| `model`        | The Thinc [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model[List[Doc], List[Floats2d]]~~ |
-| `name`         | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                        |
-| _keyword-only_ |                                                                                                                            |
-| `labels`       | The labels to use. ~~Iterable[str]~~                                                                                       |
-| `threshold`    | Cutoff to consider a prediction "positive", relevant when printing accuracy results. ~~float~~                             |
+| Name             | Description                                                                                                                |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`          | The shared vocabulary. ~~Vocab~~                                                                                           |
+| `model`          | The Thinc [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model[List[Doc], List[Floats2d]]~~ |
+| `name`           | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                        |
+| _keyword-only_   |                                                                                                                            |
+| `labels`         | The labels to use. ~~Iterable[str]~~                                                                                       |
+| `threshold`      | Cutoff to consider a prediction "positive", relevant when printing accuracy results. ~~float~~                             |
+| `positive_label` | The positive label for a binary task with exclusive classes, None otherwise. ~~Optional[str]~~                             |
 
 ## TextCategorizer.\_\_call\_\_ {#call tag="method"}
 
