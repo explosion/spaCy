@@ -89,7 +89,6 @@ def train(
         nlp, config = util.load_model_from_config(config)
     if config["training"]["vectors"] is not None:
         util.load_vectors_into_model(nlp, config["training"]["vectors"])
-    verify_config(nlp)
     raw_text, tag_map, morph_rules, weights_data = load_from_paths(config)
     T_cfg = config["training"]
     optimizer = T_cfg["optimizer"]
@@ -108,6 +107,8 @@ def train(
             nlp.resume_training(sgd=optimizer)
     with nlp.select_pipes(disable=[*frozen_components, *resume_components]):
         nlp.begin_training(lambda: train_corpus(nlp), sgd=optimizer)
+    # Verify the config after calling 'begin_training' to ensure labels are properly initialized
+    verify_config(nlp)
 
     if tag_map:
         # Replace tag map with provided mapping
@@ -401,7 +402,7 @@ def verify_cli_args(config_path: Path, output_path: Optional[Path] = None) -> No
 
 
 def verify_config(nlp: Language) -> None:
-    """Perform additional checks based on the config and loaded nlp object."""
+    """Perform additional checks based on the config, loaded nlp object and training data."""
     # TODO: maybe we should validate based on the actual components, the list
     # in config["nlp"]["pipeline"] instead?
     for pipe_config in nlp.config["components"].values():
