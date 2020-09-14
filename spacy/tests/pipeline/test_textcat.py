@@ -202,7 +202,7 @@ def test_textcat_configs(textcat_config):
 
 def test_positive_class():
     nlp = English()
-    pipe_config = {"positive_label": "POS", "labels": ["POS", "NEG"], "model": {"exclusive_classes": True}}
+    pipe_config = {"positive_label": "POS", "labels": ["POS", "NEG"]}
     textcat = nlp.add_pipe("textcat", config=pipe_config)
     assert textcat.labels == ("POS", "NEG")
     verify_textcat_config(nlp, pipe_config)
@@ -211,7 +211,8 @@ def test_positive_class():
 def test_positive_class_not_present():
     nlp = English()
     pipe_config = {"positive_label": "POS", "labels": ["SOME", "THING"]}
-    nlp.add_pipe("textcat", config=pipe_config)
+    textcat = textcat = nlp.add_pipe("textcat", config=pipe_config)
+    assert textcat.labels == ("SOME", "THING")
     with pytest.raises(ValueError):
         verify_textcat_config(nlp, pipe_config)
 
@@ -219,6 +220,7 @@ def test_positive_class_not_present():
 def test_positive_class_not_binary():
     nlp = English()
     pipe_config = {"positive_label": "POS", "labels": ["SOME", "THING", "POS"]}
-    nlp.add_pipe("textcat", config=pipe_config)
+    textcat = nlp.add_pipe("textcat", config=pipe_config)
+    assert textcat.labels == ("SOME", "THING", "POS")
     with pytest.raises(ValueError):
         verify_textcat_config(nlp, pipe_config)
