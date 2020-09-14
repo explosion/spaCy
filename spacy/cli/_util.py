@@ -300,7 +300,9 @@ def ensure_pathy(path):
     return Pathy(path)
 
 
-def git_sparse_checkout(repo: str, subpath: str, dest: Path, *, branch: str = "master"):
+def git_checkout(
+    repo: str, subpath: str, dest: Path, *, branch: str = "master", sparse: bool = False
+):
     git_version = get_git_version()
     if dest.exists():
         msg.fail("Destination of checkout must not exist", exits=1)
@@ -323,11 +325,14 @@ def git_sparse_checkout(repo: str, subpath: str, dest: Path, *, branch: str = "m
     # We're using Git and sparse checkout to only clone the files we need
     with make_tempdir() as tmp_dir:
         supports_sparse = git_version >= (2, 22)
+        use_sparse = supports_sparse and sparse
         # This is the "clone, but don't download anything" part.
         cmd = f"git clone {repo} {tmp_dir} --no-checkout --depth 1 " f"-b {branch} "
-        if supports_sparse:
+        if use_sparse:
             cmd += f"--filter=blob:none"  # <-- The key bit
-        else:
+        # Only show warnings if the user explicitly wants sparse checkout but
+        # the Git version doesn't support it
+        elif sparse:
             err_old = (
                 f"You're running an old version of Git (v{git_version[0]}.{git_version[1]}) "
                 f"that doesn't fully support sparse checkout yet."
@@ -342,19 +347,19 @@ def git_sparse_checkout(repo: str, subpath: str, dest: Path, *, branch: str = "m
         try_run_command(cmd)
         # Now we need to find the missing filenames for the subpath we want.
         # Looking for this 'rev-list' command in the git --help? Hah.
-        cmd = f"git -C {tmp_dir} rev-list --objects --all {'--missing=print ' if supports_sparse else ''} -- {subpath}"
+        cmd = f"git -C {tmp_dir} rev-list --objects --all {'--missing=print ' if use_sparse else ''} -- {subpath}"
         ret = try_run_command(cmd)
         git_repo = _from_http_to_git(repo)
         # Now pass those missings into another bit of git internals
         missings = " ".join([x[1:] for x in ret.stdout.split() if x.startswith("?")])
-        if supports_sparse and not missings:
+        if use_sparse and not missings:
             err = (
                 f"Could not find any relevant files for '{subpath}'. "
                 f"Did you specify a correct and complete path within repo '{repo}' "
                 f"and branch {branch}?"
             )
             msg.fail(err, exits=1)
-        if supports_sparse:
+        if use_sparse:
             cmd = f"git -C {tmp_dir} fetch-pack {git_repo} {missings}"
             try_run_command(cmd)
         # And finally, we can checkout our subpath
