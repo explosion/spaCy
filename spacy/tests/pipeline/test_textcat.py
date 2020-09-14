@@ -211,7 +211,7 @@ def test_positive_class():
 def test_positive_class_not_present():
     nlp = English()
     pipe_config = {"positive_label": "POS", "labels": ["SOME", "THING"]}
-    textcat = textcat = nlp.add_pipe("textcat", config=pipe_config)
+    textcat = nlp.add_pipe("textcat", config=pipe_config)
     assert textcat.labels == ("SOME", "THING")
     with pytest.raises(ValueError):
         verify_textcat_config(nlp, pipe_config)
