@@ -46,12 +46,14 @@ def load(
     return util.load_model(name, disable=disable, exclude=exclude, config=config)
 
 
-def blank(name: str, **overrides) -> Language:
+def blank(
+    name: str, *, config: Union[Dict[str, Any], Config] = util.SimpleFrozenDict()
+) -> Language:
     """Create a blank nlp object for a given language code.
 
     name (str): The language code, e.g. "en".
-    **overrides: Keyword arguments passed to language subclass on init.
+    config (Dict[str, Any] / Config): Optional config overrides.
     RETURNS (Language): The nlp object.
     """
     LangClass = util.get_lang_class(name)
-    return LangClass(**overrides)
+    return LangClass.from_config(config)
