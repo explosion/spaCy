@@ -1487,7 +1487,7 @@ class Language:
         if "nlp" not in config:
             raise ValueError(Errors.E985.format(config=config))
         config_lang = config["nlp"]["lang"]
-        if cls.lang is not None and config_lang is not None and config_lang != cls.lang:
+        if config_lang is not None and config_lang != cls.lang:
             raise ValueError(
                 Errors.E958.format(
                     bad_lang_code=config["nlp"]["lang"],

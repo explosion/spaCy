@@ -5,6 +5,7 @@ from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
 from spacy.training import Example
 from spacy.lang.en import English
+from spacy.lang.de import German
 from spacy.util import registry
 
 from .util import add_vecs_to_vocab, assert_docs_equal
@@ -266,3 +267,13 @@ def test_language_custom_tokenizer():
     assert [t.text for t in doc] == ["_hello", "_world"]
     doc = list(nlp.pipe(["hello world"]))[0]
     assert [t.text for t in doc] == ["_hello", "_world"]
+
+
+def test_language_from_config_invalid_lang():
+    """Test that calling Language.from_config raises an error and lang defined
+    in config needs to match language-specific subclasses."""
+    config = {"nlp": {"lang": "en"}}
+    with pytest.raises(ValueError):
+        Language.from_config(config)
+    with pytest.raises(ValueError):
+        German.from_config(config)
