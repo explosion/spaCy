@@ -396,8 +396,6 @@ class Language:
         if name not in self._pipe_configs:
             raise ValueError(Errors.E960.format(name=name))
         pipe_config = self._pipe_configs[name]
-        pipe_config.pop("nlp", None)
-        pipe_config.pop("name", None)
         return pipe_config
 
     @classmethod
@@ -650,6 +648,10 @@ class Language:
         filled = Config(filled[factory_name])
         filled["factory"] = factory_name
         filled.pop("@factories", None)
+        # Remove the extra values we added because we don't want to keep passing
+        # them around, copying them etc.
+        filled.pop("nlp", None)
+        filled.pop("name", None)
         # Merge the final filled config with the raw config (including non-
         # interpolated variables)
         if raw_config:

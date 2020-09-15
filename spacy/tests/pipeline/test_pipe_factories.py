@@ -470,3 +470,21 @@ def test_pipe_factories_decorator_idempotent():
     nlp = Language()
     nlp.add_pipe(name)
     Language.component(name2, func=func2)
+
+
+def test_pipe_factories_config_excludes_nlp():
+    """Test that the extra values we temporarily add to component config
+    blocks/functions are removed and not copied around.
+    """
+    name = "test_pipe_factories_config_excludes_nlp"
+    func = lambda nlp, name: lambda doc: doc
+    Language.factory(name, func=func)
+    config = {
+        "nlp": {"lang": "en", "pipeline": [name]},
+        "components": {name: {"factory": name}},
+    }
+    nlp = English.from_config(config)
+    assert nlp.pipe_names == [name]
+    pipe_cfg = nlp.get_pipe_config(name)
+    pipe_cfg == {"factory": name}
+    assert nlp._pipe_configs[name] == {"factory": name}
