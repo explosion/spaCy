@@ -1458,6 +1458,7 @@ class Language:
         vocab: Union[Vocab, bool] = True,
         disable: Iterable[str] = SimpleFrozenList(),
         exclude: Iterable[str] = SimpleFrozenList(),
+        meta: Dict[str, Any] = SimpleFrozenDict(),
         auto_fill: bool = True,
         validate: bool = True,
     ) -> "Language":
@@ -1472,6 +1473,7 @@ class Language:
             explicitly enable them by calling nlp.enable_pipe.
         exclude (Iterable[str]): Names of pipeline components to exclude.
             Excluded components won't be loaded.
+        meta (Dict[str, Any]): Meta overrides for nlp.meta.
         auto_fill (bool): Automatically fill in missing values in config based
             on defaults and function argument annotations.
         validate (bool): Validate the component config and arguments against
@@ -1525,7 +1527,7 @@ class Language:
         # inside stuff like the spacy train function. If we loaded them here,
         # then we would load them twice at runtime: once when we make from config,
         # and then again when we load from disk.
-        nlp = lang_cls(vocab=vocab, create_tokenizer=create_tokenizer)
+        nlp = lang_cls(vocab=vocab, create_tokenizer=create_tokenizer, meta=meta)
         if after_creation is not None:
             nlp = after_creation(nlp)
             if not isinstance(nlp, cls):

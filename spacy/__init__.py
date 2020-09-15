@@ -47,13 +47,17 @@ def load(
 
 
 def blank(
-    name: str, *, config: Union[Dict[str, Any], Config] = util.SimpleFrozenDict()
+    name: str,
+    *,
+    config: Union[Dict[str, Any], Config] = util.SimpleFrozenDict(),
+    meta: Dict[str, Any] = util.SimpleFrozenDict()
 ) -> Language:
     """Create a blank nlp object for a given language code.
 
     name (str): The language code, e.g. "en".
     config (Dict[str, Any] / Config): Optional config overrides.
+    meta (Dict[str, Any]): Overrides for nlp.meta.
     RETURNS (Language): The nlp object.
     """
     LangClass = util.get_lang_class(name)
-    return LangClass.from_config(config)
+    return LangClass.from_config(config, meta=meta)

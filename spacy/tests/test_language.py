@@ -6,6 +6,7 @@ from spacy.vocab import Vocab
 from spacy.training import Example
 from spacy.lang.en import English
 from spacy.util import registry
+import spacy
 
 from .util import add_vecs_to_vocab, assert_docs_equal
 
@@ -266,3 +267,13 @@ def test_language_custom_tokenizer():
     assert [t.text for t in doc] == ["_hello", "_world"]
     doc = list(nlp.pipe(["hello world"]))[0]
     assert [t.text for t in doc] == ["_hello", "_world"]
+
+
+def test_spacy_blank():
+    nlp = spacy.blank("en")
+    assert nlp.config["training"]["dropout"] == 0.1
+    config = {"training": {"dropout": 0.2}}
+    meta = {"name": "my_custom_model"}
+    nlp = spacy.blank("en", config=config, meta=meta)
+    assert nlp.config["training"]["dropout"] == 0.2
+    assert nlp.meta["name"] == "my_custom_model"
