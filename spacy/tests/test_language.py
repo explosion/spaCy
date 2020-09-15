@@ -277,3 +277,14 @@ def test_spacy_blank():
     nlp = spacy.blank("en", config=config, meta=meta)
     assert nlp.config["training"]["dropout"] == 0.2
     assert nlp.meta["name"] == "my_custom_model"
+
+
+@pytest.mark.parametrize(
+    "value",
+    [False, None, ["x", "y"], Language, Vocab],
+)
+def test_language_init_invalid_vocab(value):
+    err_fragment = "invalid value"
+    with pytest.raises(ValueError) as e:
+        Language(value)
+    assert err_fragment in str(e)

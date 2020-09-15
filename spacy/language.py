@@ -144,6 +144,8 @@ class Language:
         self._pipe_meta: Dict[str, "FactoryMeta"] = {}  # meta by component
         self._pipe_configs: Dict[str, Config] = {}  # config by component
 
+        if not isinstance(vocab, Vocab) and vocab is not True:
+            raise ValueError(Errors.E918.format(vocab=vocab, vocab_type=type(Vocab)))
         if vocab is True:
             vectors_name = meta.get("vectors", {}).get("name")
             vocab = create_vocab(

@@ -480,6 +480,9 @@ class Errors:
     E201 = ("Span index out of range.")
 
     # TODO: fix numbering after merging develop into master
+    E918 = ("Received invalid value for vocab: {vocab} ({vocab_type}). Valid "
+            "values are an instance of spacy.vocab.Vocab or True to create one"
+            " (default).")
     E919 = ("A textcat 'positive_label' '{pos_label}' was provided for training "
             "data that does not appear to be a binary classification problem "
             "with two labels. Labels found: {labels}")
