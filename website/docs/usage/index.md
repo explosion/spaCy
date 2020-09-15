@@ -170,27 +170,52 @@ Compared to regular install via pip, the
 developer dependencies such as Cython. See the [quickstart widget](#quickstart)
 to get the right commands for your platform and Python version.
 
-#### Ubuntu {#source-ubuntu}
+<a id="source-ubuntu"></a><a id="source-osx"></a><a id="source-windows"></a>
 
-Install system-level dependencies via `apt-get`:
+- **Ubuntu:** Install system-level dependencies via `apt-get`:
+  `sudo apt-get install build-essential python-dev git`
+- **macOS / OS X:** Install a recent version of
+  [XCode](https://developer.apple.com/xcode/), including the so-called "Command
+  Line Tools". macOS and OS X ship with Python and git preinstalled.
+- **Windows:** Install a version of the
+  [Visual C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
+  or
+  [Visual Studio Express](https://www.visualstudio.com/vs/visual-studio-express/)
+  that matches the version that was used to compile your Python interpreter.
+
+### Building an executable {#executable}
+
+The spaCy repository includes a [`Makefile`](%%GITHUB_SPACY/Makefile) that
+builds an executable zip file using [`pex`](https://github.com/pantsbuild/pex)
+(**P**ython **Ex**ecutable). The executable includes spaCy and all its package
+dependencies and only requires the system Python at runtime. Building an
+executable `.pex` file is often the most convenient way to deploy spaCy, as it
+lets you separate the build from the deployment process.
+
+> #### Usage
+>
+> To use a `.pex` file, just replace `python` with the path to the file when you
+> execute your code or CLI commands. This is equivalent to running Python in a
+> virtual environment with spaCy installed.
+>
+> ```bash
+> $ ./spacy.pex my_script.py
+> $ ./spacy.pex -m spacy info
+> ```
 
 ```bash
-$ sudo apt-get install build-essential python-dev git
+$ git clone https://github.com/explosion/spaCy
+$ cd spaCy
+$ make
 ```
 
-#### macOS / OS X {#source-osx}
+You can configure the build process with the following environment variables:
 
-Install a recent version of [XCode](https://developer.apple.com/xcode/),
-including the so-called "Command Line Tools". macOS and OS X ship with Python
-and git preinstalled.
-
-#### Windows {#source-windows}
-
-Install a version of the
-[Visual C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
-or
-[Visual Studio Express](https://www.visualstudio.com/vs/visual-studio-express/)
-that matches the version that was used to compile your Python interpreter.
+| Variable       | Description                                                                                                                                                                                                 |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SPACY_EXTRAS` | Additional Python packages to install alongside spaCy with optional version specifications. Should be a string that can be passed to `pip install`. See [`Makefile`](%%GITHUB_SPACY/Makefile) for defaults. |
+| `PYVER`        | The Python version to build against. This version needs to be available on your build and runtime machines. Defaults to `3.6`.                                                                              |
+| `WHEELHOUSE`   | Directory to store the wheel files during compilation. Defaults to `./wheelhouse`.                                                                                                                          |
 
 ### Run tests {#run-tests}
 
