@@ -26,7 +26,7 @@ streaming.
 > [paths]
 > train = "corpus/train.spacy"
 >
-> [training.train_corpus]
+> [training.corpus.train]
 > @readers = "spacy.Corpus.v1"
 > path = ${paths.train}
 > gold_preproc = false

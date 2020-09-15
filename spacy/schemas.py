@@ -198,8 +198,7 @@ class ModelMetaSchema(BaseModel):
 class ConfigSchemaTraining(BaseModel):
     # fmt: off
     vectors: Optional[StrictStr] = Field(..., title="Path to vectors")
-    train_corpus: Reader = Field(..., title="Reader for the training data")
-    dev_corpus: Reader = Field(..., title="Reader for the dev data")
+    corpus: Reader = Field(..., title="Reader for the training and dev data")
     batcher: Batcher = Field(..., title="Batcher for the training data")
     dropout: StrictFloat = Field(..., title="Dropout rate")
     patience: StrictInt = Field(..., title="How many steps to continue without improvement in evaluation score")

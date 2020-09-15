@@ -746,7 +746,7 @@ as **config settings** – in this case, `source`.
 > #### config.cfg
 >
 > ```ini
-> [training.train_corpus]
+> [training.corpus.train]
 > @readers = "corpus_variants.v1"
 > source = "s3://your_bucket/path/data.csv"
 > ```

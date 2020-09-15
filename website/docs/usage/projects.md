@@ -969,7 +969,7 @@ your results.
 > [training.logger]
 > @loggers = "spacy.WandbLogger.v1"
 > project_name = "monitor_spacy_training"
-> remove_config_values = ["paths.train", "paths.dev", "training.dev_corpus.path", "training.train_corpus.path"]
+> remove_config_values = ["paths.train", "paths.dev", "training.corpus.train.path", "training.corpus.dev.path"]
 > ```
 
 ![Screenshot: Visualized training results](../images/wandb1.jpg)

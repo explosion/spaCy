@@ -195,12 +195,14 @@ total_steps = 20000
 initial_rate = 5e-5
 {% endif %}
 
-[training.train_corpus]
+[training.corpus]
+
+[training.corpus.train]
 @readers = "spacy.Corpus.v1"
 path = ${paths.train}
 max_length = {{ 500 if hardware == "gpu" else 2000 }}
 
-[training.dev_corpus]
+[training.corpus.dev]
 @readers = "spacy.Corpus.v1"
 path = ${paths.dev}
 max_length = 0
