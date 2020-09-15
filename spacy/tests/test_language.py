@@ -7,6 +7,7 @@ from spacy.training import Example
 from spacy.lang.en import English
 from spacy.lang.de import German
 from spacy.util import registry
+import spacy
 
 from .util import add_vecs_to_vocab, assert_docs_equal
 
@@ -277,3 +278,24 @@ def test_language_from_config_invalid_lang():
         Language.from_config(config)
     with pytest.raises(ValueError):
         German.from_config(config)
+
+
+def test_spacy_blank():
+    nlp = spacy.blank("en")
+    assert nlp.config["training"]["dropout"] == 0.1
+    config = {"training": {"dropout": 0.2}}
+    meta = {"name": "my_custom_model"}
+    nlp = spacy.blank("en", config=config, meta=meta)
+    assert nlp.config["training"]["dropout"] == 0.2
+    assert nlp.meta["name"] == "my_custom_model"
+
+
+@pytest.mark.parametrize(
+    "value",
+    [False, None, ["x", "y"], Language, Vocab],
+)
+def test_language_init_invalid_vocab(value):
+    err_fragment = "invalid value"
+    with pytest.raises(ValueError) as e:
+        Language(value)
+    assert err_fragment in str(e)
