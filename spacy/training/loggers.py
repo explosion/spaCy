@@ -72,7 +72,7 @@ def wandb_logger(project_name: str, remove_config_values: List[str] = []):
         for field in remove_config_values:
             del config_dot[field]
         config = util.dot_to_dict(config_dot)
-        wandb.init(project=project_name, config=config)
+        wandb.init(project=project_name, config=config, reinit=True)
         console_log_step, console_finalize = console(nlp)
 
         def log_step(info: Dict[str, Any]):
@@ -88,7 +88,7 @@ def wandb_logger(project_name: str, remove_config_values: List[str] = []):
 
         def finalize():
             console_finalize()
-            pass
+            wandb.join()
 
         return log_step, finalize
 
