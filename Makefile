@@ -21,6 +21,10 @@ ifndef WHEELHOUSE
 override WHEELHOUSE = "./wheelhouse"
 endif
 
+ifndef SPACY_PEX_MODULE
+# By default, don't execute a module, so we just run Python, not spaCy
+override SPACY_PEX_MODULE = ""
+endif
 
 
 dist/$(SPACY_BIN) : $(WHEELHOUSE)/spacy-$(PYVER)-$(version).stamp
@@ -28,7 +32,7 @@ dist/$(SPACY_BIN) : $(WHEELHOUSE)/spacy-$(PYVER)-$(version).stamp
 		-f $(WHEELHOUSE) \
 		--no-index \
 		--disable-cache \
-		-m spacy \
+		$(SPACY_PEX_MODULE)
 		-o $@ \
 		$(package)==$(version) \
 		$(SPACY_EXTRAS)
