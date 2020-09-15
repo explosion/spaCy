@@ -25,7 +25,6 @@ default_model_config = """
 
 [model.tok2vec]
 @architectures = "spacy.Tok2Vec.v1"
-pretrained_vectors = null
 
 [model.tok2vec.embed]
 @architectures = "spacy.CharacterEmbed.v1"
