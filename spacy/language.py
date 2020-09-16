@@ -1448,6 +1448,11 @@ class Language:
         """Register 'listeners' within pipeline components, to allow them to
         effectively share weights.
         """
+        # I had though, "Why do we do this inside the Language object? Shouldn't
+        # it be the tok2vec/transformer/etc's job?
+        # The problem is we need to do it during deserialization...And the
+        # components don't receive the pipeline then. So this does have to be
+        # here :(
         for i, (name1, proc1) in enumerate(self.pipeline):
             if hasattr(proc1, "find_listeners"):
                 for name2, proc2 in self.pipeline[i+1:]:
