@@ -4,13 +4,10 @@ cimport numpy as np
 from libc.math cimport sqrt
 
 import numpy
-import numpy.linalg
 from thinc.api import get_array_module
-from collections import defaultdict
 import warnings
 
 from .doc cimport token_by_start, token_by_end, get_token_attr, _get_lca_matrix
-from .token cimport TokenC
 from ..structs cimport TokenC, LexemeC
 from ..typedefs cimport flags_t, attr_t, hash_t
 from ..attrs cimport attr_id_t

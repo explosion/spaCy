@@ -123,7 +123,7 @@ def test_issue2772(en_vocab):
     heads = [4, 1, 7, -1, -2, -1, 3, 2, 1, 0, 2, 1, -3, -4]
     deps = ["dep"] * len(heads)
     doc = get_doc(en_vocab, words=words, heads=heads, deps=deps)
-    assert doc[1].is_sent_start is None
+    assert not doc[1].is_sent_start
 
 
 @pytest.mark.parametrize("text", ["-0.23", "+123,456", "±1"])

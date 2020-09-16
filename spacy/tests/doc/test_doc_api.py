@@ -265,17 +265,11 @@ def test_doc_is_nered(en_vocab):
 
 def test_doc_from_array_sent_starts(en_vocab):
     words = ["I", "live", "in", "New", "York", ".", "I", "like", "cats", "."]
-    heads = [0, 0, 0, 0, 0, 0, 6, 6, 6, 6]
+    heads = [0, -1, -2, -3, -4, -5, 0, -1, -2, -3]
     # fmt: off
-    deps = ["ROOT", "dep", "dep", "dep", "dep", "dep", "ROOT", "dep", "dep", "dep", "dep"]
+    deps = ["ROOT", "dep", "dep", "dep", "dep", "dep", "ROOT", "dep", "dep", "dep"]
     # fmt: on
-    doc = Doc(en_vocab, words=words)
-    for i, (dep, head) in enumerate(zip(deps, heads)):
-        doc[i].dep_ = dep
-        doc[i].head = doc[head]
-        if head == i:
-            doc[i].is_sent_start = True
-    doc.is_parsed
+    doc = get_doc(en_vocab, words=words, heads=heads, deps=deps)
 
     attrs = [SENT_START, HEAD]
     arr = doc.to_array(attrs)
