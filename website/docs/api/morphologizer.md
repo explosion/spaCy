@@ -37,7 +37,7 @@ architectures and their arguments and hyperparameters.
 | `model` | The model to use. Defaults to [Tagger](/api/architectures#Tagger). ~~Model[List[Doc], List[Floats2d]]~~ |
 
 ```python
-https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/morphologizer.pyx
+%%GITHUB_SPACY/spacy/pipeline/morphologizer.pyx
 ```
 
 ## Morphologizer.\_\_init\_\_ {#init tag="method"}
@@ -139,7 +139,7 @@ setting up the label scheme based on the data.
 | Name           | Description                                                                                                                           |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. ~~Callable[[], Iterable[Example]]~~ |
-| _keyword-only_ |                                                                                                                                       |  |
+| _keyword-only_ |                                                                                                                                       |
 | `pipeline`     | Optional list of pipeline components that this component is part of. ~~Optional[List[Tuple[str, Callable[[Doc], Doc]]]]~~             |
 | `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                         |
 | **RETURNS**    | The optimizer. ~~Optimizer~~                                                                                                          |
@@ -196,7 +196,7 @@ Delegates to [`predict`](/api/morphologizer#predict) and
 | Name              | Description                                                                                                                        |
 | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | `examples`        | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                                  |
-| _keyword-only_    |                                                                                                                                    |  |
+| _keyword-only_    |                                                                                                                                    |
 | `drop`            | The dropout rate. ~~float~~                                                                                                        |
 | `set_annotations` | Whether or not to update the `Example` objects with the predictions, delegating to [`set_annotations`](#set_annotations). ~~bool~~ |
 | `sgd`             | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                      |
@@ -258,6 +258,13 @@ context, the original parameters are restored.
 
 Add a new label to the pipe. If the `Morphologizer` should set annotations for
 both `pos` and `morph`, the label should include the UPOS as the feature `POS`.
+Raises an error if the output dimension is already set, or if the model has
+already been fully [initialized](#begin_training). Note that you don't have to
+call this method if you provide a **representative data sample** to the
+[`begin_training`](#begin_training) method. In this case, all labels found in
+the sample will be automatically added to the model, and the output dimension
+will be [inferred](/usage/layers-architectures#thinc-shape-inference)
+automatically.
 
 > #### Example
 >

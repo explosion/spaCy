@@ -2,7 +2,7 @@
 title: Corpus
 teaser: An annotated corpus
 tag: class
-source: spacy/gold/corpus.py
+source: spacy/training/corpus.py
 new: 3
 ---
 
@@ -42,7 +42,7 @@ streaming.
 | `limit`         | Limit corpus to a subset of examples, e.g. for debugging. Defaults to `0` for no limit. ~~int~~                                                          |
 
 ```python
-https://github.com/explosion/spaCy/blob/develop/spacy/gold/corpus.py
+%%GITHUB_SPACY/spacy/training/corpus.py
 ```
 
 ## Corpus.\_\_init\_\_ {#init tag="method"}
@@ -88,6 +88,82 @@ Yield examples from the data.
 > corpus = Corpus("./train.spacy")
 > nlp = spacy.blank("en")
 > train_data = corpus(nlp)
+> ```
+
+| Name       | Description                            |
+| ---------- | -------------------------------------- |
+| `nlp`      | The current `nlp` object. ~~Language~~ |
+| **YIELDS** | The examples. ~~Example~~              |
+
+## JsonlTexts {#jsonltexts tag="class"}
+
+Iterate Doc objects from a file or directory of JSONL (newline-delimited JSON)
+formatted raw text files. Can be used to read the raw text corpus for language
+model [pretraining](/usage/embeddings-transformers#pretraining) from a JSONL
+file.
+
+> #### Tip: Writing JSONL
+>
+> Our utility library [`srsly`](https://github.com/explosion/srsly) provides a
+> handy `write_jsonl` helper that takes a file path and list of dictionaries and
+> writes out JSONL-formatted data.
+>
+> ```python
+> import srsly
+> data = [{"text": "Some text"}, {"text": "More..."}]
+> srsly.write_jsonl("/path/to/text.jsonl", data)
+> ```
+
+```json
+### Example
+{"text": "Can I ask where you work now and what you do, and if you enjoy it?"}
+{"text": "They may just pull out of the Seattle market completely, at least until they have autonomous vehicles."}
+{"text": "My cynical view on this is that it will never be free to the public. Reason: what would be the draw of joining the military? Right now their selling point is free Healthcare and Education. Ironically both are run horribly and most, that I've talked to, come out wishing they never went in."}
+```
+
+### JsonlTexts.\_\init\_\_ {#jsonltexts-init tag="method"}
+
+Initialize the reader.
+
+> #### Example
+>
+> ```python
+> from spacy.training import JsonlTexts
+>
+> corpus = JsonlTexts("./data/texts.jsonl")
+> ```
+>
+> ```ini
+> ### Example config
+> [pretraining.corpus]
+> @readers = "spacy.JsonlReader.v1"
+> path = "corpus/raw_text.jsonl"
+> min_length = 0
+> max_length = 0
+> limit = 0
+> ```
+
+| Name           | Description                                                                                                                      |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `path`         | The directory or filename to read from. Expects newline-delimited JSON with a key `"text"` for each record. ~~Union[str, Path]~~ |
+| _keyword-only_ |                                                                                                                                  |
+| `min_length`   | Minimum document length (in tokens). Shorter documents will be skipped. Defaults to `0`, which indicates no limit. ~~int~~       |
+| `max_length`   | Maximum document length (in tokens). Longer documents will be skipped. Defaults to `0`, which indicates no limit. ~~int~~        |
+| `limit`        | Limit corpus to a subset of examples, e.g. for debugging. Defaults to `0` for no limit. ~~int~~                                  |
+
+### JsonlTexts.\_\_call\_\_ {#jsonltexts-call tag="method"}
+
+Yield examples from the data.
+
+> #### Example
+>
+> ```python
+> from spacy.training import JsonlTexts
+> import spacy
+>
+> corpus = JsonlTexts("./texts.jsonl")
+> nlp = spacy.blank("en")
+> data = corpus(nlp)
 > ```
 
 | Name       | Description                            |

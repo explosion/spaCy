@@ -17,7 +17,10 @@ return it.
 
 ## Language.\_\_init\_\_ {#init tag="method"}
 
-Initialize a `Language` object.
+Initialize a `Language` object. Note that the `meta` is only used for meta
+information in [`Language.meta`](/api/language#meta) and not to configure the
+`nlp` object or to override the config. To initialize from a config, use
+[`Language.from_config`](/api/language#from_config) instead.
 
 > #### Example
 >
@@ -37,7 +40,7 @@ Initialize a `Language` object.
 | `vocab`            | A `Vocab` object. If `True`, a vocab is created using the default language data settings. ~~Vocab~~                      |
 | _keyword-only_     |                                                                                                                          |
 | `max_length`       | Maximum number of characters allowed in a single text. Defaults to `10 ** 6`. ~~int~~                                    |
-| `meta`             | Custom meta data for the `Language` class. Is written to by pipelines to add meta data. ~~dict~~                         |
+| `meta`             | [Meta data](/api/data-formats#meta) overrides. ~~Dict[str, Any]~~                                                        |
 | `create_tokenizer` | Optional function that receives the `nlp` object and returns a tokenizer. ~~Callable[[Language], Callable[[str], Doc]]~~ |
 
 ## Language.from_config {#from_config tag="classmethod" new="3"}
@@ -58,14 +61,17 @@ model under the hood based on its [`config.cfg`](/api/data-formats#config).
 > nlp = Language.from_config(config)
 > ```
 
-| Name           | Description                                                                                                                                      |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `config`       | The loaded config. ~~Union[Dict[str, Any], Config]~~                                                                                             |
-| _keyword-only_ |                                                                                                                                                  |
-| `disable`      | List of pipeline component names to disable. ~~Iterable[str]~~                                                                                   |
-| `auto_fill`    | Whether to automatically fill in missing values in the config, based on defaults and function argument annotations. Defaults to `True`. ~~bool~~ |
-| `validate`     | Whether to validate the component config and arguments against the types expected by the factory. Defaults to `True`. ~~bool~~                   |
-| **RETURNS**    | The initialized object. ~~Language~~                                                                                                             |
+| Name           | Description                                                                                                                                                                                                                                      |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `config`       | The loaded config. ~~Union[Dict[str, Any], Config]~~                                                                                                                                                                                             |
+| _keyword-only_ |                                                                                                                                                                                                                                                  |
+| `vocab`        | A `Vocab` object. If `True`, a vocab is created using the default language data settings. ~~Vocab~~                                                                                                                                              |
+| `disable`      | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). Disabled pipes will be loaded but they won't be run unless you explicitly enable them by calling [`nlp.enable_pipe`](/api/language#enable_pipe). ~~List[str]~~ |
+| `exclude`      | Names of pipeline components to [exclude](/usage/processing-pipelines#disabling). Excluded components won't be loaded. ~~List[str]~~                                                                                                             |
+| `meta`         | [Meta data](/api/data-formats#meta) overrides. ~~Dict[str, Any]~~                                                                                                                                                                                |
+| `auto_fill`    | Whether to automatically fill in missing values in the config, based on defaults and function argument annotations. Defaults to `True`. ~~bool~~                                                                                                 |
+| `validate`     | Whether to validate the component config and arguments against the types expected by the factory. Defaults to `True`. ~~bool~~                                                                                                                   |
+| **RETURNS**    | The initialized object. ~~Language~~                                                                                                                                                                                                             |
 
 ## Language.component {#component tag="classmethod" new="3"}
 
@@ -205,8 +211,15 @@ examples can either be the full training data or a representative sample. They
 are used to **initialize the models** of trainable pipeline components and are
 passed each component's [`begin_training`](/api/pipe#begin_training) method, if
 available. Initialization includes validating the network,
-[inferring missing shapes](https://thinc.ai/docs/usage-models#validation) and
-setting up the label scheme based on the data.
+[inferring missing shapes](/usage/layers-architectures#thinc-shape-inference)
+and setting up the label scheme based on the data.
+
+If no `get_examples` function is provided when calling `nlp.begin_training`, the
+pipeline components will be initialized with generic data. In this case, it is
+crucial that the output dimension of each component has already been defined
+either in the [config](/usage/training#config), or by calling
+[`pipe.add_label`](/api/pipe#add_label) for each possible output label (e.g. for
+the tagger or textcat).
 
 <Infobox variant="warning" title="Changed in v3.0">
 
@@ -790,10 +803,19 @@ token.ent_iob, token.ent_type
 
 ## Language.meta {#meta tag="property"}
 
-Custom meta data for the Language class. If a trained pipeline is loaded, this
+Meta data for the `Language` class, including name, version, data sources,
+license, author information and more. If a trained pipeline is loaded, this
 contains meta data of the pipeline. The `Language.meta` is also what's
-serialized as the [`meta.json`](/api/data-formats#meta) when you save an `nlp`
-object to disk.
+serialized as the `meta.json` when you save an `nlp` object to disk. See the
+[meta data format](/api/data-formats#meta) for more details.
+
+<Infobox variant="warning" title="Changed in v3.0">
+
+As of v3.0, the meta only contains **meta information** about the pipeline and
+isn't used to construct the language class and pipeline components. This
+information is expressed in the [`config.cfg`](/api/data-formats#config).
+
+</Infobox>
 
 > #### Example
 >
@@ -937,11 +959,11 @@ available to the loaded object.
 
 ## Class attributes {#class-attributes}
 
-| Name             | Description                                                                                                                                                                                                        |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `Defaults`       | Settings, data and factory methods for creating the `nlp` object and processing pipeline. ~~Defaults~~                                                                                                             |
-| `lang`           | Two-letter language ID, i.e. [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes). ~~str~~                                                                                                            |
-| `default_config` | Base [config](/usage/training#config) to use for [Language.config](/api/language#config). Defaults to [`default_config.cfg`](https://github.com/explosion/spaCy/tree/develop/spacy/default_config.cfg). ~~Config~~ |
+| Name             | Description                                                                                                                                                                       |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Defaults`       | Settings, data and factory methods for creating the `nlp` object and processing pipeline. ~~Defaults~~                                                                            |
+| `lang`           | Two-letter language ID, i.e. [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes). ~~str~~                                                                           |
+| `default_config` | Base [config](/usage/training#config) to use for [Language.config](/api/language#config). Defaults to [`default_config.cfg`](%%GITHUB_SPACY/spacy/default_config.cfg). ~~Config~~ |
 
 ## Defaults {#defaults}
 
@@ -974,34 +996,17 @@ customize the default language data:
 >    config = Config().from_str(DEFAULT_CONFIG)
 > ```
 
-| Name                              | Description                                                                                                                                                                                                                                                                         |
-| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `stop_words`                      | List of stop words, used for `Token.is_stop`.<br />**Example:** [`stop_words.py`][stop_words.py] ~~Set[str]~~                                                                                                                                                                       |
-| `tokenizer_exceptions`            | Tokenizer exception rules, string mapped to list of token attributes.<br />**Example:** [`de/tokenizer_exceptions.py`][de/tokenizer_exceptions.py] ~~Dict[str, List[dict]]~~                                                                                                        |
-| `prefixes`, `suffixes`, `infixes` | Prefix, suffix and infix rules for the default tokenizer.<br />**Example:** [`puncutation.py`][punctuation.py] ~~Optional[List[Union[str, Pattern]]]~~                                                                                                                              |
-| `token_match`                     | Optional regex for matching strings that should never be split, overriding the infix rules.<br />**Example:** [`fr/tokenizer_exceptions.py`][fr/tokenizer_exceptions.py] ~~Optional[Pattern]~~                                                                                      |
-| `url_match`                       | Regular expression for matching URLs. Prefixes and suffixes are removed before applying the match.<br />**Example:** [`tokenizer_exceptions.py`][tokenizer_exceptions.py] ~~Optional[Pattern]~~                                                                                     |
-| `lex_attr_getters`                | Custom functions for setting lexical attributes on tokens, e.g. `like_num`.<br />**Example:** [`lex_attrs.py`][lex_attrs.py] ~~Dict[int, Callable[[str], Any]]~~                                                                                                                    |
-| `syntax_iterators`                | Functions that compute views of a `Doc` object based on its syntax. At the moment, only used for [noun chunks](/usage/linguistic-features#noun-chunks).<br />**Example:** [`syntax_iterators.py`][syntax_iterators.py]. ~~Dict[str, Callable[[Union[Doc, Span]], Iterator[Span]]]~~ |
-| `writing_system`                  | Information about the language's writing system, available via `Vocab.writing_system`. Defaults to: `{"direction": "ltr", "has_case": True, "has_letters": True}.`.<br />**Example:** [`zh/__init__.py`][zh/__init__.py] ~~Dict[str, Any]~~                                         |
-| `config`                          | Default [config](/usage/training#config) added to `nlp.config`. This can include references to custom tokenizers or lemmatizers.<br />**Example:** [`zh/__init__.py`][zh/__init__.py] ~~Config~~                                                                                    |
-
-[stop_words.py]:
-  https://github.com/explosion/spaCy/tree/master/spacy/lang/en/stop_words.py
-[tokenizer_exceptions.py]:
-  https://github.com/explosion/spaCy/tree/master/spacy/lang/tokenizer_exceptions.py
-[de/tokenizer_exceptions.py]:
-  https://github.com/explosion/spaCy/tree/master/spacy/lang/de/tokenizer_exceptions.py
-[fr/tokenizer_exceptions.py]:
-  https://github.com/explosion/spaCy/tree/master/spacy/lang/fr/tokenizer_exceptions.py
-[punctuation.py]:
-  https://github.com/explosion/spaCy/tree/master/spacy/lang/punctuation.py
-[lex_attrs.py]:
-  https://github.com/explosion/spaCy/tree/master/spacy/lang/en/lex_attrs.py
-[syntax_iterators.py]:
-  https://github.com/explosion/spaCy/tree/master/spacy/lang/en/syntax_iterators.py
-[zh/__init__.py]:
-  https://github.com/explosion/spaCy/tree/master/spacy/lang/zh/__init__.py
+| Name                              | Description                                                                                                                                                                                                                                                                                                      |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `stop_words`                      | List of stop words, used for `Token.is_stop`.<br />**Example:** [`stop_words.py`](%%GITHUB_SPACY/spacy/lang/en/stop_words.py) ~~Set[str]~~                                                                                                                                                                       |
+| `tokenizer_exceptions`            | Tokenizer exception rules, string mapped to list of token attributes.<br />**Example:** [`de/tokenizer_exceptions.py`](%%GITHUB_SPACY/spacy/lang/de/tokenizer_exceptions.py) ~~Dict[str, List[dict]]~~                                                                                                           |
+| `prefixes`, `suffixes`, `infixes` | Prefix, suffix and infix rules for the default tokenizer.<br />**Example:** [`puncutation.py`](%%GITHUB_SPACY/spacy/lang/punctuation.py) ~~Optional[List[Union[str, Pattern]]]~~                                                                                                                                 |
+| `token_match`                     | Optional regex for matching strings that should never be split, overriding the infix rules.<br />**Example:** [`fr/tokenizer_exceptions.py`](%%GITHUB_SPACY/spacy/lang/fr/tokenizer_exceptions.py) ~~Optional[Pattern]~~                                                                                         |
+| `url_match`                       | Regular expression for matching URLs. Prefixes and suffixes are removed before applying the match.<br />**Example:** [`tokenizer_exceptions.py`](%%GITHUB_SPACY/spacy/lang/tokenizer_exceptions.py) ~~Optional[Pattern]~~                                                                                        |
+| `lex_attr_getters`                | Custom functions for setting lexical attributes on tokens, e.g. `like_num`.<br />**Example:** [`lex_attrs.py`](%%GITHUB_SPACY/spacy/lang/en/lex_attrs.py) ~~Dict[int, Callable[[str], Any]]~~                                                                                                                    |
+| `syntax_iterators`                | Functions that compute views of a `Doc` object based on its syntax. At the moment, only used for [noun chunks](/usage/linguistic-features#noun-chunks).<br />**Example:** [`syntax_iterators.py`](%%GITHUB_SPACY/spacy/lang/en/syntax_iterators.py). ~~Dict[str, Callable[[Union[Doc, Span]], Iterator[Span]]]~~ |
+| `writing_system`                  | Information about the language's writing system, available via `Vocab.writing_system`. Defaults to: `{"direction": "ltr", "has_case": True, "has_letters": True}.`.<br />**Example:** [`zh/__init__.py`](%%GITHUB_SPACY/spacy/lang/zh/__init__.py) ~~Dict[str, Any]~~                                            |
+| `config`                          | Default [config](/usage/training#config) added to `nlp.config`. This can include references to custom tokenizers or lemmatizers.<br />**Example:** [`zh/__init__.py`](%%GITHUB_SPACY/spacy/lang/zh/__init__.py) ~~Config~~                                                                                       |
 
 ## Serialization fields {#serialization-fields}
 

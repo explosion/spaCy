@@ -78,7 +78,7 @@ def patterns(en_vocab):
             "REL_OP": ">",
             "RIGHT_ID": "fox",
             "RIGHT_ATTRS": {"ORTH": "fox"},
-        }
+        },
     ]
 
     pattern5 = [
@@ -233,9 +233,7 @@ def test_dependency_matcher_callback(en_vocab, doc):
     assert matches == matches2
 
 
-@pytest.mark.parametrize(
-    "op,num_matches", [(".", 8), (".*", 20), (";", 8), (";*", 20),]
-)
+@pytest.mark.parametrize("op,num_matches", [(".", 8), (".*", 20), (";", 8), (";*", 20)])
 def test_dependency_matcher_precedence_ops(en_vocab, op, num_matches):
     # two sentences to test that all matches are within the same sentence
     doc = get_doc(
@@ -248,7 +246,7 @@ def test_dependency_matcher_precedence_ops(en_vocab, op, num_matches):
     for text in ["a", "b", "c", "d", "e"]:
         pattern = [
             {"RIGHT_ID": "1", "RIGHT_ATTRS": {"ORTH": text}},
-            {"LEFT_ID": "1", "REL_OP": op, "RIGHT_ID": "2", "RIGHT_ATTRS": {},},
+            {"LEFT_ID": "1", "REL_OP": op, "RIGHT_ID": "2", "RIGHT_ATTRS": {}},
         ]
         matcher = DependencyMatcher(en_vocab)
         matcher.add("A", [pattern])

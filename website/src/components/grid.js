@@ -9,6 +9,7 @@ export default function Grid({
     narrow = false,
     gutterBottom = true,
     className,
+    style,
     children,
 }) {
     const gridClassNames = classNames(classes.root, className, {
@@ -18,7 +19,11 @@ export default function Grid({
         [classes.third]: cols === 3,
         [classes.quarter]: cols === 4,
     })
-    return <div className={gridClassNames}>{children}</div>
+    return (
+        <div className={gridClassNames} style={style}>
+            {children}
+        </div>
+    )
 }
 
 Grid.propTypes = {

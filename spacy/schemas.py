@@ -180,7 +180,7 @@ class ModelMetaSchema(BaseModel):
     url: StrictStr = Field("", title="Model author URL")
     sources: Optional[Union[List[StrictStr], List[Dict[str, str]]]] = Field(None, title="Training data sources")
     vectors: Dict[str, Any] = Field({}, title="Included word vectors")
-    labels: Dict[str, Dict[str, List[str]]] = Field({}, title="Component labels, keyed by component name")
+    labels: Dict[str, List[str]] = Field({}, title="Component labels, keyed by component name")
     accuracy: Dict[str, Union[float, Dict[str, float]]] = Field({}, title="Accuracy numbers")
     speed: Dict[str, Union[float, int]] = Field({}, title="Speed evaluation numbers")
     spacy_git_version: StrictStr = Field("", title="Commit of spaCy version used")
@@ -246,15 +246,14 @@ class ConfigSchemaPretrainEmpty(BaseModel):
 class ConfigSchemaPretrain(BaseModel):
     # fmt: off
     max_epochs: StrictInt = Field(..., title="Maximum number of epochs to train for")
-    min_length: StrictInt = Field(..., title="Minimum length of examples")
-    max_length: StrictInt = Field(..., title="Maximum length of examples")
     dropout: StrictFloat = Field(..., title="Dropout rate")
     n_save_every: Optional[StrictInt] = Field(..., title="Saving frequency")
-    batch_size: Union[Sequence[int], int] = Field(..., title="The batch size or batch size schedule")
-    seed: Optional[StrictInt] = Field(..., title="Random seed")
-    use_pytorch_for_gpu_memory: StrictBool = Field(..., title="Allocate memory via PyTorch")
-    tok2vec_model: StrictStr = Field(..., title="tok2vec model in config, e.g. components.tok2vec.model")
     optimizer: Optimizer = Field(..., title="The optimizer to use")
+    corpus: Reader = Field(..., title="Reader for the training data")
+    batcher: Batcher = Field(..., title="Batcher for the training data")
+    component: str = Field(..., title="Component to find the layer to pretrain")
+    layer: str = Field(..., title="Layer to pretrain. Whole model if empty.")
+ 
     # TODO: use a more detailed schema for this?
     objective: Dict[str, Any] = Field(..., title="Pretraining objective")
     # fmt: on

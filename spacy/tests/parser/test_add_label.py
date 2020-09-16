@@ -54,7 +54,10 @@ def _parser_example(parser):
 
 
 def _ner_example(ner):
-    doc = Doc(ner.vocab, words=["Joe", "loves", "visiting", "London", "during", "the", "weekend"])
+    doc = Doc(
+        ner.vocab,
+        words=["Joe", "loves", "visiting", "London", "during", "the", "weekend"],
+    )
     gold = {"entities": [(0, 3, "PERSON"), (19, 25, "LOC")]}
     return Example.from_dict(doc, gold)
 

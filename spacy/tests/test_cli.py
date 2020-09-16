@@ -5,10 +5,10 @@ from spacy.training import docs_to_json, biluo_tags_from_offsets
 from spacy.training.converters import iob2docs, conll_ner2docs, conllu2docs
 from spacy.lang.en import English
 from spacy.schemas import ProjectConfigSchema, RecommendationSchema, validate
-from spacy.cli.pretrain import make_docs
 from spacy.cli.init_config import init_config, RECOMMENDATIONS
 from spacy.cli._util import validate_project_commands, parse_config_overrides
 from spacy.cli._util import load_project_config, substitute_project_variables
+from spacy.cli._util import string_to_list
 from thinc.config import ConfigValidationError
 import srsly
 
@@ -137,7 +137,7 @@ def test_cli_converters_conllu2json_subtokens():
     assert biluo_tags == ["O", "U-PER", "O", "O"]
 
 
-def test_cli_converters_iob2json(en_vocab):
+def test_cli_converters_iob2json():
     lines = [
         "I|O like|O London|I-GPE and|O New|B-GPE York|I-GPE City|I-GPE .|O",
         "I|O like|O London|B-GPE and|O New|B-GPE York|I-GPE City|I-GPE .|O",
@@ -145,7 +145,7 @@ def test_cli_converters_iob2json(en_vocab):
         "I|PRP|O like|VBP|O London|NNP|B-GPE and|CC|O New|NNP|B-GPE York|NNP|I-GPE City|NNP|I-GPE .|.|O",
     ]
     input_data = "\n".join(lines)
-    converted_docs = iob2docs(input_data, en_vocab, n_sents=10)
+    converted_docs = iob2docs(input_data, n_sents=10)
     assert len(converted_docs) == 1
     converted = docs_to_json(converted_docs)
     assert converted["id"] == 0
@@ -228,48 +228,6 @@ def test_cli_converters_conll_ner2json():
     assert len(converted_docs[0].ents) == 10
     for ent in converted_docs[0].ents:
         assert ent.text in ["New York City", "London"]
-
-
-def test_pretrain_make_docs():
-    nlp = English()
-
-    valid_jsonl_text = {"text": "Some text"}
-    docs, skip_count = make_docs(nlp, [valid_jsonl_text], 1, 10)
-    assert len(docs) == 1
-    assert skip_count == 0
-
-    valid_jsonl_tokens = {"tokens": ["Some", "tokens"]}
-    docs, skip_count = make_docs(nlp, [valid_jsonl_tokens], 1, 10)
-    assert len(docs) == 1
-    assert skip_count == 0
-
-    invalid_jsonl_type = 0
-    with pytest.raises(TypeError):
-        make_docs(nlp, [invalid_jsonl_type], 1, 100)
-
-    invalid_jsonl_key = {"invalid": "Does not matter"}
-    with pytest.raises(ValueError):
-        make_docs(nlp, [invalid_jsonl_key], 1, 100)
-
-    empty_jsonl_text = {"text": ""}
-    docs, skip_count = make_docs(nlp, [empty_jsonl_text], 1, 10)
-    assert len(docs) == 0
-    assert skip_count == 1
-
-    empty_jsonl_tokens = {"tokens": []}
-    docs, skip_count = make_docs(nlp, [empty_jsonl_tokens], 1, 10)
-    assert len(docs) == 0
-    assert skip_count == 1
-
-    too_short_jsonl = {"text": "This text is not long enough"}
-    docs, skip_count = make_docs(nlp, [too_short_jsonl], 10, 15)
-    assert len(docs) == 0
-    assert skip_count == 0
-
-    too_long_jsonl = {"text": "This text contains way too much tokens for this test"}
-    docs, skip_count = make_docs(nlp, [too_long_jsonl], 1, 5)
-    assert len(docs) == 0
-    assert skip_count == 0
 
 
 def test_project_config_validation_full():
@@ -372,17 +330,13 @@ def test_parse_config_overrides(args, expected):
     assert parse_config_overrides(args) == expected
 
 
-@pytest.mark.parametrize(
-    "args", [["--foo"], ["--x.foo", "bar", "--baz"]],
-)
+@pytest.mark.parametrize("args", [["--foo"], ["--x.foo", "bar", "--baz"]])
 def test_parse_config_overrides_invalid(args):
     with pytest.raises(NoSuchOption):
         parse_config_overrides(args)
 
 
-@pytest.mark.parametrize(
-    "args", [["--x.foo", "bar", "baz"], ["x.foo"]],
-)
+@pytest.mark.parametrize("args", [["--x.foo", "bar", "baz"], ["x.foo"]])
 def test_parse_config_overrides_invalid_2(args):
     with pytest.raises(SystemExit):
         parse_config_overrides(args)
@@ -401,3 +355,44 @@ def test_init_config(lang, pipeline, optimize):
 def test_model_recommendations():
     for lang, data in RECOMMENDATIONS.items():
         assert RecommendationSchema(**data)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        # fmt: off
+        "parser,textcat,tagger",
+        " parser, textcat ,tagger ",
+        'parser,textcat,tagger',
+        ' parser, textcat ,tagger ',
+        ' "parser"," textcat " ,"tagger "',
+        " 'parser',' textcat ' ,'tagger '",
+        '[parser,textcat,tagger]',
+        '["parser","textcat","tagger"]',
+        '[" parser" ,"textcat ", " tagger " ]',
+        "[parser,textcat,tagger]",
+        "[ parser, textcat , tagger]",
+        "['parser','textcat','tagger']",
+        "[' parser' , 'textcat', ' tagger ' ]",
+        # fmt: on
+    ],
+)
+def test_string_to_list(value):
+    assert string_to_list(value, intify=False) == ["parser", "textcat", "tagger"]
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        # fmt: off
+        "1,2,3",
+        '[1,2,3]',
+        '["1","2","3"]',
+        '[" 1" ,"2 ", " 3 " ]',
+        "[' 1' , '2', ' 3 ' ]",
+        # fmt: on
+    ],
+)
+def test_string_to_list_intify(value):
+    assert string_to_list(value, intify=False) == ["1", "2", "3"]
+    assert string_to_list(value, intify=True) == [1, 2, 3]

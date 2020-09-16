@@ -32,6 +32,7 @@ width = 128
 rows = 7000
 nM = 64
 nC = 8
+also_use_static_vectors = false
 
 [model.tok2vec.encode]
 @architectures = "spacy.MaxoutWindowEncoder.v1"
@@ -257,79 +258,3 @@ class Morphologizer(Tagger):
         results.update(Scorer.score_token_attr_per_feat(examples,
             "morph", **kwargs))
         return results
-
-    def to_bytes(self, *, exclude=tuple()):
-        """Serialize the pipe to a bytestring.
-
-        exclude (Iterable[str]): String names of serialization fields to exclude.
-        RETURNS (bytes): The serialized object.
-
-        DOCS: https://nightly.spacy.io/api/morphologizer#to_bytes
-        """
-        serialize = {}
-        serialize["model"] = self.model.to_bytes
-        serialize["vocab"] = self.vocab.to_bytes
-        serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
-        return util.to_bytes(serialize, exclude)
-
-    def from_bytes(self, bytes_data, *, exclude=tuple()):
-        """Load the pipe from a bytestring.
-
-        bytes_data (bytes): The serialized pipe.
-        exclude (Iterable[str]): String names of serialization fields to exclude.
-        RETURNS (Morphologizer): The loaded Morphologizer.
-
-        DOCS: https://nightly.spacy.io/api/morphologizer#from_bytes
-        """
-        def load_model(b):
-            try:
-                self.model.from_bytes(b)
-            except AttributeError:
-                raise ValueError(Errors.E149) from None
-
-        deserialize = {
-            "vocab": lambda b: self.vocab.from_bytes(b),
-            "cfg": lambda b: self.cfg.update(srsly.json_loads(b)),
-            "model": lambda b: load_model(b),
-        }
-        util.from_bytes(bytes_data, deserialize, exclude)
-        return self
-
-    def to_disk(self, path, *, exclude=tuple()):
-        """Serialize the pipe to disk.
-
-        path (str / Path): Path to a directory.
-        exclude (Iterable[str]): String names of serialization fields to exclude.
-
-        DOCS: https://nightly.spacy.io/api/morphologizer#to_disk
-        """
-        serialize = {
-            "vocab": lambda p: self.vocab.to_disk(p),
-            "model": lambda p: p.open("wb").write(self.model.to_bytes()),
-            "cfg": lambda p: srsly.write_json(p, self.cfg),
-        }
-        util.to_disk(path, serialize, exclude)
-
-    def from_disk(self, path, *, exclude=tuple()):
-        """Load the pipe from disk. Modifies the object in place and returns it.
-
-        path (str / Path): Path to a directory.
-        exclude (Iterable[str]): String names of serialization fields to exclude.
-        RETURNS (Morphologizer): The modified Morphologizer object.
-
-        DOCS: https://nightly.spacy.io/api/morphologizer#from_disk
-        """
-        def load_model(p):
-            with p.open("rb") as file_:
-                try:
-                    self.model.from_bytes(file_.read())
-                except AttributeError:
-                    raise ValueError(Errors.E149) from None
-
-        deserialize = {
-            "vocab": lambda p: self.vocab.from_disk(p),
-            "cfg": lambda p: self.cfg.update(deserialize_config(p)),
-            "model": load_model,
-        }
-        util.from_disk(path, deserialize, exclude)
-        return self

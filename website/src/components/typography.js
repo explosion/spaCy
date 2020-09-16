@@ -64,8 +64,8 @@ export const InlineList = ({ Component = 'p', gutterBottom = true, className, ch
     return <Component className={listClassNames}>{children}</Component>
 }
 
-export const Help = ({ children, size = 16 }) => (
-    <span className={classes.help} data-tooltip={children}>
+export const Help = ({ children, className, size = 16 }) => (
+    <span className={classNames(classes.help, className)} data-tooltip={children}>
         <Icon name="help2" width={size} />
     </span>
 )

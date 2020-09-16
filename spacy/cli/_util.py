@@ -1,4 +1,4 @@
-from typing import Dict, Any, Union, List, Optional, TYPE_CHECKING
+from typing import Dict, Any, Union, List, Optional, Tuple, TYPE_CHECKING
 import sys
 import shutil
 from pathlib import Path
@@ -6,6 +6,7 @@ from wasabi import msg
 import srsly
 import hashlib
 import typer
+import subprocess
 from click import NoSuchOption
 from typer.main import get_command
 from contextlib import contextmanager
@@ -299,7 +300,10 @@ def ensure_pathy(path):
     return Pathy(path)
 
 
-def git_sparse_checkout(repo: str, subpath: str, dest: Path, *, branch: str = "master"):
+def git_checkout(
+    repo: str, subpath: str, dest: Path, *, branch: str = "master", sparse: bool = False
+):
+    git_version = get_git_version()
     if dest.exists():
         msg.fail("Destination of checkout must not exist", exits=1)
     if not dest.parent.exists():
@@ -320,33 +324,118 @@ def git_sparse_checkout(repo: str, subpath: str, dest: Path, *, branch: str = "m
     # *that* we can do by path.
     # We're using Git and sparse checkout to only clone the files we need
     with make_tempdir() as tmp_dir:
+        supports_sparse = git_version >= (2, 22)
+        use_sparse = supports_sparse and sparse
         # This is the "clone, but don't download anything" part.
-        cmd = (
-            f"git clone {repo} {tmp_dir} --no-checkout --depth 1 "
-            f"--filter=blob:none "  # <-- The key bit
-            f"-b {branch}"
-        )
-        run_command(cmd, capture=True)
+        cmd = f"git clone {repo} {tmp_dir} --no-checkout --depth 1 " f"-b {branch} "
+        if use_sparse:
+            cmd += f"--filter=blob:none"  # <-- The key bit
+        # Only show warnings if the user explicitly wants sparse checkout but
+        # the Git version doesn't support it
+        elif sparse:
+            err_old = (
+                f"You're running an old version of Git (v{git_version[0]}.{git_version[1]}) "
+                f"that doesn't fully support sparse checkout yet."
+            )
+            err_unk = "You're running an unknown version of Git, so sparse checkout has been disabled."
+            msg.warn(
+                f"{err_unk if git_version == (0, 0) else err_old} "
+                f"This means that more files than necessary may be downloaded "
+                f"temporarily. To only download the files needed, make sure "
+                f"you're using Git v2.22 or above."
+            )
+        try_run_command(cmd)
         # Now we need to find the missing filenames for the subpath we want.
         # Looking for this 'rev-list' command in the git --help? Hah.
-        cmd = f"git -C {tmp_dir} rev-list --objects --all --missing=print -- {subpath}"
-        ret = run_command(cmd, capture=True)
-        repo = _from_http_to_git(repo)
+        cmd = f"git -C {tmp_dir} rev-list --objects --all {'--missing=print ' if use_sparse else ''} -- {subpath}"
+        ret = try_run_command(cmd)
+        git_repo = _from_http_to_git(repo)
         # Now pass those missings into another bit of git internals
         missings = " ".join([x[1:] for x in ret.stdout.split() if x.startswith("?")])
-        cmd = f"git -C {tmp_dir} fetch-pack {repo} {missings}"
-        run_command(cmd, capture=True)
+        if use_sparse and not missings:
+            err = (
+                f"Could not find any relevant files for '{subpath}'. "
+                f"Did you specify a correct and complete path within repo '{repo}' "
+                f"and branch {branch}?"
+            )
+            msg.fail(err, exits=1)
+        if use_sparse:
+            cmd = f"git -C {tmp_dir} fetch-pack {git_repo} {missings}"
+            try_run_command(cmd)
         # And finally, we can checkout our subpath
         cmd = f"git -C {tmp_dir} checkout {branch} {subpath}"
-        run_command(cmd)
+        try_run_command(cmd)
         # We need Path(name) to make sure we also support subdirectories
         shutil.move(str(tmp_dir / Path(subpath)), str(dest))
 
 
-def _from_http_to_git(repo):
+def get_git_version(
+    error: str = "Could not run 'git'. Make sure it's installed and the executable is available.",
+) -> Tuple[int, int]:
+    """Get the version of git and raise an error if calling 'git --version' fails.
+
+    error (str): The error message to show.
+    RETURNS (Tuple[int, int]): The version as a (major, minor) tuple. Returns
+        (0, 0) if the version couldn't be determined.
+    """
+    ret = try_run_command(["git", "--version"], error=error)
+    stdout = ret.stdout.strip()
+    if not stdout or not stdout.startswith("git version"):
+        return (0, 0)
+    version = stdout[11:].strip().split(".")
+    return (int(version[0]), int(version[1]))
+
+
+def try_run_command(
+    cmd: Union[str, List[str]], error: str = "Could not run command"
+) -> subprocess.CompletedProcess:
+    """Try running a command and raise an error if it fails.
+
+    cmd (Union[str, List[str]]): The command to run.
+    error (str): The error message.
+    RETURNS (CompletedProcess): The completed process if the command ran.
+    """
+    try:
+        return run_command(cmd, capture=True)
+    except subprocess.CalledProcessError as e:
+        msg.fail(error)
+        print(cmd)
+        sys.exit(1)
+
+
+def _from_http_to_git(repo: str) -> str:
     if repo.startswith("http://"):
         repo = repo.replace(r"http://", r"https://")
     if repo.startswith(r"https://"):
         repo = repo.replace("https://", "git@").replace("/", ":", 1)
+        if repo.endswith("/"):
+            repo = repo[:-1]
         repo = f"{repo}.git"
     return repo
+
+
+def string_to_list(value: str, intify: bool = False) -> Union[List[str], List[int]]:
+    """Parse a comma-separated string to a list and account for various
+    formatting options. Mostly used to handle CLI arguments that take a list of
+    comma-separated values.
+
+    value (str): The value to parse.
+    intify (bool): Whether to convert values to ints.
+    RETURNS (Union[List[str], List[int]]): A list of strings or ints.
+    """
+    if not value:
+        return []
+    if value.startswith("[") and value.endswith("]"):
+        value = value[1:-1]
+    result = []
+    for p in value.split(","):
+        p = p.strip()
+        if p.startswith("'") and p.endswith("'"):
+            p = p[1:-1]
+        if p.startswith('"') and p.endswith('"'):
+            p = p[1:-1]
+        p = p.strip()
+        if intify:
+            p = int(p)
+        result.append(p)
+    return result

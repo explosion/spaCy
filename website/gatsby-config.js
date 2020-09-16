@@ -8,7 +8,6 @@ const codeBlocksPlugin = require('./src/plugins/remark-code-blocks.js')
 
 // Import metadata
 const site = require('./meta/site.json')
-const logos = require('./meta/logos.json')
 const sidebars = require('./meta/sidebars.json')
 const models = require('./meta/languages.json')
 const universe = require('./meta/universe.json')
@@ -20,13 +19,34 @@ const favicon = isNightly ? `src/images/icon_nightly.png` : `src/images/icon.png
 const binderBranch = isNightly ? 'nightly' : site.binderBranch
 const siteUrl = isNightly ? site.siteUrlNightly : site.siteUrl
 const domain = isNightly ? site.domainNightly : site.domain
+const branch = isNightly ? 'develop' : 'master'
+
+// Those variables are going to be replaced in the Markdown, e.g. %%GITHUB_SPACY
+const replacements = {
+    GITHUB_SPACY: `https://github.com/explosion/spaCy/tree/${branch}`,
+}
+
+/**
+ * Compute the overall total counts of models and languages
+ */
+function getCounts(langs = []) {
+    return {
+        langs: langs.length,
+        modelLangs: langs.filter(({ models }) => models && !!models.length).length,
+        starterLangs: langs.filter(({ starters }) => starters && !!starters.length).length,
+        models: langs.map(({ models }) => (models ? models.length : 0)).reduce((a, b) => a + b, 0),
+        starters: langs
+            .map(({ starters }) => (starters ? starters.length : 0))
+            .reduce((a, b) => a + b, 0),
+    }
+}
 
 module.exports = {
     siteMetadata: {
         ...site,
-        ...logos,
         sidebars,
         ...models,
+        counts: getCounts(models.languages),
         universe,
         nightly: isNightly,
         binderBranch,
@@ -120,6 +140,13 @@ module.exports = {
                     },
                     {
                         resolve: `gatsby-remark-copy-linked-files`,
+                    },
+                    {
+                        resolve: 'gatsby-remark-find-replace',
+                        options: {
+                            replacements,
+                            prefix: '%%',
+                        },
                     },
                 ],
             },

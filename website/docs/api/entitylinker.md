@@ -50,7 +50,7 @@ architectures and their arguments and hyperparameters.
 | `get_candidates` | Function that generates plausible candidates for a given `Span` object. Defaults to [CandidateGenerator](/api/architectures#CandidateGenerator), a function looking up exact, case-dependent aliases in the KB. ~~Callable[[KnowledgeBase, Span], Iterable[Candidate]]~~ |
 
 ```python
-https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/entity_linker.py
+%%GITHUB_SPACY/spacy/pipeline/entity_linker.py
 ```
 
 ## EntityLinker.\_\_init\_\_ {#init tag="method"}
@@ -85,7 +85,7 @@ providing custom registered functions.
 | `vocab`          | The shared vocabulary. ~~Vocab~~                                                                                                 |
 | `model`          | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model~~                                        |
 | `name`           | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                              |
-| _keyword-only_   |                                                                                                                                  |  |
+| _keyword-only_   |                                                                                                                                  |
 | `kb_loader`      | Function that creates a [`KnowledgeBase`](/api/kb) from a `Vocab` instance. ~~Callable[[Vocab], KnowledgeBase]~~                 |
 | `get_candidates` | Function that generates plausible candidates for a given `Span` object. ~~Callable[[KnowledgeBase, Span], Iterable[Candidate]]~~ |
 | `labels_discard` | NER labels that will automatically get a `"NIL"` prediction. ~~Iterable[str]~~                                                   |
@@ -218,7 +218,7 @@ pipe's entity linking model and context encoder. Delegates to
 | Name              | Description                                                                                                                        |
 | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | `examples`        | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                                  |
-| _keyword-only_    |                                                                                                                                    |  |
+| _keyword-only_    |                                                                                                                                    |
 | `drop`            | The dropout rate. ~~float~~                                                                                                        |
 | `set_annotations` | Whether or not to update the `Example` objects with the predictions, delegating to [`set_annotations`](#set_annotations). ~~bool~~ |
 | `sgd`             | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                      |

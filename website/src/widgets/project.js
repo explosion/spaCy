@@ -6,7 +6,7 @@ import Link from '../components/link'
 import { InlineCode } from '../components/code'
 
 // TODO: move to meta?
-const DEFAULT_REPO = 'https://github.com/explosion/projects'
+const DEFAULT_REPO = 'https://github.com/explosion/projects/tree/v3'
 const COMMAND = 'python -m spacy project clone'
 
 export default function Project({ id, repo, children }) {

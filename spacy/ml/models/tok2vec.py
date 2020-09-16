@@ -164,8 +164,8 @@ def MultiHashEmbed(
 
 
 @registry.architectures.register("spacy.CharacterEmbed.v1")
-def CharacterEmbed(width: int, rows: int, nM: int, nC: int):
-    """Construct an embedded representations based on character embeddings, using
+def CharacterEmbed(width: int, rows: int, nM: int, nC: int, also_use_static_vectors: bool):
+    """Construct an embedded representation based on character embeddings, using
     a feed-forward network. A fixed number of UTF-8 byte characters are used for
     each word, taken from the beginning and end of the word equally. Padding is
     used in the centre for words that are too short.
@@ -176,8 +176,8 @@ def CharacterEmbed(width: int, rows: int, nM: int, nC: int):
     ensures that the final character is always in the last position, instead
     of being in an arbitrary position depending on the word length.
 
-    The characters are embedded in a embedding table with 256 rows, and the
-    vectors concatenated. A hash-embedded vector of the NORM of the word is
+    The characters are embedded in a embedding table with a given number of rows,
+    and the vectors concatenated. A hash-embedded vector of the NORM of the word is
     also concatenated on, and the result is then passed through a feed-forward
     network to construct a single vector to represent the information.
 
@@ -188,18 +188,35 @@ def CharacterEmbed(width: int, rows: int, nM: int, nC: int):
     nC (int): The number of UTF-8 bytes to embed per word. Recommended values
         are between 3 and 8, although it may depend on the length of words in the
         language.
+    also_use_static_vectors (bool): Whether to also use static word vectors.
+        Requires a vectors table to be loaded in the Doc objects' vocab.
     """
-    model = chain(
-        concatenate(
-            chain(_character_embed.CharacterEmbed(nM=nM, nC=nC), list2ragged()),
-            chain(
-                FeatureExtractor([NORM]),
-                list2ragged(),
-                with_array(HashEmbed(nO=width, nV=rows, column=0, seed=5)),
+    if also_use_static_vectors:
+        model = chain(
+            concatenate(
+                chain(_character_embed.CharacterEmbed(nM=nM, nC=nC), list2ragged()),
+                chain(
+                    FeatureExtractor([NORM]),
+                    list2ragged(),
+                    with_array(HashEmbed(nO=width, nV=rows, column=0, seed=5)),
+                ),
+                StaticVectors(width, dropout=0.0),
             ),
-        ),
-        with_array(Maxout(width, nM * nC + width, nP=3, normalize=True, dropout=0.0)),
-        ragged2list(),
+            with_array(Maxout(width, nM * nC + (2 * width), nP=3, normalize=True, dropout=0.0)),
+            ragged2list(),
+    )
+    else:
+        model = chain(
+            concatenate(
+                chain(_character_embed.CharacterEmbed(nM=nM, nC=nC), list2ragged()),
+                chain(
+                    FeatureExtractor([NORM]),
+                    list2ragged(),
+                    with_array(HashEmbed(nO=width, nV=rows, column=0, seed=5)),
+                ),
+            ),
+            with_array(Maxout(width, nM * nC + width, nP=3, normalize=True, dropout=0.0)),
+            ragged2list(),
     )
     return model
 

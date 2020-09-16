@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 
 ifndef SPACY_EXTRAS
-override SPACY_EXTRAS = spacy-lookups-data jieba pkuseg==0.0.25 sudachipy sudachidict_core
+override SPACY_EXTRAS = spacy-lookups-data==0.4.0.dev0 jieba pkuseg==0.0.25 sudachipy sudachidict_core
 endif
 
 ifndef PYVER
@@ -22,13 +22,11 @@ override WHEELHOUSE = "./wheelhouse"
 endif
 
 
-
 dist/$(SPACY_BIN) : $(WHEELHOUSE)/spacy-$(PYVER)-$(version).stamp
 	$(VENV)/bin/pex \
 		-f $(WHEELHOUSE) \
 		--no-index \
 		--disable-cache \
-		-m spacy \
 		-o $@ \
 		$(package)==$(version) \
 		$(SPACY_EXTRAS)

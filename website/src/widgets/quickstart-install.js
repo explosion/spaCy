@@ -58,7 +58,8 @@ const QuickstartInstall = ({ id, title }) => (
     <StaticQuery
         query={query}
         render={({ site }) => {
-            const models = site.siteMetadata.languages.filter(({ models }) => models !== null)
+            const { nightly, languages } = site.siteMetadata
+            const models = languages.filter(({ models }) => models !== null)
             const data = [
                 ...DATA,
                 {
@@ -82,7 +83,10 @@ const QuickstartInstall = ({ id, title }) => (
                     </QS>
                     <QS package="pip">pip install -U spacy</QS>
                     <QS package="conda">conda install -c conda-forge spacy</QS>
-                    <QS package="source">git clone https://github.com/{repo}</QS>
+                    <QS package="source">
+                        git clone https://github.com/{repo}
+                        {nightly ? ` --branch develop` : ''}
+                    </QS>
                     <QS package="source">cd spaCy</QS>
                     <QS package="source" os="linux">
                         export PYTHONPATH=`pwd`
@@ -127,6 +131,7 @@ const query = graphql`
     query QuickstartInstallQuery {
         site {
             siteMetadata {
+                nightly
                 languages {
                     code
                     name

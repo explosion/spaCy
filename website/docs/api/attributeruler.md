@@ -38,7 +38,7 @@ how the component should be configured. You can override its settings via the
 | `validate`      | Whether patterns should be validated (passed to the `Matcher`). Defaults to `False`. ~~bool~~                                                                                                                                                  |
 
 ```python
-https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/attributeruler.py
+%%GITHUB_SPACY/spacy/pipeline/attributeruler.py
 ```
 
 ## AttributeRuler.\_\_init\_\_ {#init tag="method"}

@@ -11,6 +11,7 @@ menu:
   - ['Setup & Installation', 'setup']
   - ['Markdown Reference', 'markdown']
   - ['Project Structure', 'structure']
+  - ['Editorial', 'editorial']
 sidebar:
   - label: Styleguide
     items:

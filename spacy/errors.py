@@ -480,6 +480,14 @@ class Errors:
     E201 = ("Span index out of range.")
 
     # TODO: fix numbering after merging develop into master
+    E918 = ("Received invalid value for vocab: {vocab} ({vocab_type}). Valid "
+            "values are an instance of spacy.vocab.Vocab or True to create one"
+            " (default).")
+    E919 = ("A textcat 'positive_label' '{pos_label}' was provided for training "
+            "data that does not appear to be a binary classification problem "
+            "with two labels. Labels found: {labels}")
+    E920 = ("The textcat's 'positive_label' config setting '{pos_label}' "
+            "does not match any label in the training data. Labels found: {labels}")
     E921 = ("The method 'set_output' can only be called on components that have "
             "a Model with a 'resize_output' attribute. Otherwise, the output "
             "layer can not be dynamically changed.")
@@ -547,7 +555,10 @@ class Errors:
             "to register a simple stateless function component that just takes "
             "a Doc and returns it.")
     E958 = ("Language code defined in config ({bad_lang_code}) does not match "
-            "language code of current Language subclass {lang} ({lang_code})")
+            "language code of current Language subclass {lang} ({lang_code}). "
+            "If you want to create an nlp object from a config, make sure to "
+            "use the matching subclass with the language-specific settings and "
+            "data.")
     E959 = ("Can't insert component {dir} index {idx}. Existing components: {opts}")
     E960 = ("No config data found for component '{name}'. This is likely a bug "
             "in spaCy.")
@@ -671,6 +682,9 @@ class Errors:
     E1007 = ("Unsupported DependencyMatcher operator '{op}'.")
     E1008 = ("Invalid pattern: each pattern should be a list of dicts. Check "
              "that you are providing a list of patterns as `List[List[dict]]`.")
+    E1009 = ("String for hash '{val}' not found in StringStore. Set the value "
+             "through token.morph_ instead or add the string to the "
+             "StringStore with `nlp.vocab.strings.add(string)`.")
 
 
 @add_codes

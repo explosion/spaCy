@@ -47,7 +47,7 @@ const DATA = [
     },
 ]
 
-export default function QuickstartTraining({ id, title, download = 'config.cfg' }) {
+export default function QuickstartTraining({ id, title, download = 'base_config.cfg' }) {
     const [lang, setLang] = useState(DEFAULT_LANG)
     const [components, setComponents] = useState([])
     const [[hardware], setHardware] = useState([DEFAULT_HARDWARE])
@@ -87,6 +87,8 @@ export default function QuickstartTraining({ id, title, download = 'config.cfg' 
                     .sort((a, b) => a.title.localeCompare(b.title))
                 return (
                     <Quickstart
+                        id="quickstart-widget"
+                        Container="div"
                         download={download}
                         rawContent={content}
                         data={DATA}

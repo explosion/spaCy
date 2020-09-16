@@ -36,20 +36,12 @@ def console_logger():
                         keys=list(info["losses"].keys()),
                     )
                 ) from None
-
-            try:
-                scores = [
-                    "{0:.2f}".format(float(info["other_scores"].get(col, 0.0)) * 100)
-                    for col in score_cols
-                ]
-            except KeyError as e:
-                raise KeyError(
-                    Errors.E983.format(
-                        dict="scores (other)",
-                        key=str(e),
-                        keys=list(info["other_scores"].keys()),
-                    )
-                ) from None
+            scores = []
+            for col in score_cols:
+                score = float(info["other_scores"].get(col, 0.0))
+                if col != "speed":
+                    score *= 100
+                scores.append("{0:.2f}".format(score))
             data = (
                 [info["epoch"], info["step"]]
                 + losses
@@ -80,7 +72,7 @@ def wandb_logger(project_name: str, remove_config_values: List[str] = []):
         for field in remove_config_values:
             del config_dot[field]
         config = util.dot_to_dict(config_dot)
-        wandb.init(project=project_name, config=config)
+        wandb.init(project=project_name, config=config, reinit=True)
         console_log_step, console_finalize = console(nlp)
 
         def log_step(info: Dict[str, Any]):
@@ -96,7 +88,7 @@ def wandb_logger(project_name: str, remove_config_values: List[str] = []):
 
         def finalize():
             console_finalize()
-            pass
+            wandb.join()
 
         return log_step, finalize
 

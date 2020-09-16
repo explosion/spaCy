@@ -57,7 +57,7 @@ architectures and their arguments and hyperparameters.
 | `model`                       | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. Defaults to [TransitionBasedParser](/api/architectures#TransitionBasedParser). ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                   |
 
 ```python
-https://github.com/explosion/spaCy/blob/develop/spacy/pipeline/dep_parser.pyx
+%%GITHUB_SPACY/spacy/pipeline/dep_parser.pyx
 ```
 
 ## DependencyParser.\_\_init\_\_ {#init tag="method"}
@@ -217,7 +217,7 @@ model. Delegates to [`predict`](/api/dependencyparser#predict) and
 | Name              | Description                                                                                                                        |
 | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | `examples`        | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                                  |
-| _keyword-only_    |                                                                                                                                    |  |
+| _keyword-only_    |                                                                                                                                    |
 | `drop`            | The dropout rate. ~~float~~                                                                                                        |
 | `set_annotations` | Whether or not to update the `Example` objects with the predictions, delegating to [`set_annotations`](#set_annotations). ~~bool~~ |
 | `sgd`             | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                      |
@@ -293,7 +293,12 @@ context, the original parameters are restored.
 
 ## DependencyParser.add_label {#add_label tag="method"}
 
-Add a new label to the pipe.
+Add a new label to the pipe. Note that you don't have to call this method if you
+provide a **representative data sample** to the
+[`begin_training`](#begin_training) method. In this case, all labels found in
+the sample will be automatically added to the model, and the output dimension
+will be [inferred](/usage/layers-architectures#thinc-shape-inference)
+automatically.
 
 > #### Example
 >
@@ -306,6 +311,25 @@ Add a new label to the pipe.
 | ----------- | ----------------------------------------------------------- |
 | `label`     | The label to add. ~~str~~                                   |
 | **RETURNS** | `0` if the label is already present, otherwise `1`. ~~int~~ |
+
+## DependencyParser.set_output {#set_output tag="method"}
+
+Change the output dimension of the component's model by calling the model's
+attribute `resize_output`. This is a function that takes the original model and
+the new output dimension `nO`, and changes the model in place. When resizing an
+already trained model, care should be taken to avoid the "catastrophic
+forgetting" problem.
+
+> #### Example
+>
+> ```python
+> parser = nlp.add_pipe("parser")
+> parser.set_output(512)
+> ```
+
+| Name | Description                       |
+| ---- | --------------------------------- |
+| `nO` | The new output dimension. ~~int~~ |
 
 ## DependencyParser.to_disk {#to_disk tag="method"}
 

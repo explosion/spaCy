@@ -192,12 +192,11 @@ of [`Token`](/api/token). This means that all of the attributes that refer to
 computed properties can't be accessed.
 
 The uppercase attribute names like `LOWER` or `IS_PUNCT` refer to symbols from
-the
-[`spacy.attrs`](https://github.com/explosion/spaCy/tree/master/spacy/attrs.pyx)
-enum table. They're passed into a function that essentially is a big case/switch
-statement, to figure out which struct field to return. The same attribute
-identifiers are used in [`Doc.to_array`](/api/doc#to_array), and a few other
-places in the code where you need to describe fields like this.
+the [`spacy.attrs`](%%GITHUB_SPACY/spacy/attrs.pyx) enum table. They're passed
+into a function that essentially is a big case/switch statement, to figure out
+which struct field to return. The same attribute identifiers are used in
+[`Doc.to_array`](/api/doc#to_array), and a few other places in the code where
+you need to describe fields like this.
 
 </Accordion>
 
@@ -1076,7 +1075,7 @@ relations and tokens we want to match:
 
 > #### Visualizing the parse
 >
-> The [`displacy` visualizer](/usage/visualizer) lets you render `Doc` objects
+> The [`displacy` visualizer](/usage/visualizers) lets you render `Doc` objects
 > and their dependency parse and part-of-speech tags:
 >
 > ```python

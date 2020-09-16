@@ -181,10 +181,10 @@ characters would be `"jumpping"`: 4 from the start, 4 from the end. This ensures
 that the final character is always in the last position, instead of being in an
 arbitrary position depending on the word length.
 
-The characters are embedded in a embedding table with 256 rows, and the vectors
-concatenated. A hash-embedded vector of the `NORM` of the word is also
-concatenated on, and the result is then passed through a feed-forward network to
-construct a single vector to represent the information.
+The characters are embedded in a embedding table with a given number of rows,
+and the vectors concatenated. A hash-embedded vector of the `NORM` of the word
+is also concatenated on, and the result is then passed through a feed-forward
+network to construct a single vector to represent the information.
 
 | Name        | Description                                                                                                                                                     |
 | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -455,62 +455,6 @@ consists of either two or three subnetworks:
 | `use_upper`         | Whether to use an additional hidden layer after the state vector in order to predict the action scores. It is recommended to set this to `False` for large pretrained models such as transformers, and `True` for smaller networks. The upper layer is computed on CPU, which becomes a bottleneck on larger GPU-based models, where it's also less necessary. ~~bool~~ |
 | `nO`                | The number of actions the model will predict between. Usually inferred from data at the beginning of training, or loaded from disk. ~~int~~                                                                                                                                                                                                                             |
 | **CREATES**         | The model using the architecture. ~~Model[List[Docs], List[List[Floats2d]]]~~                                                                                                                                                                                                                                                                                           |
-
-### spacy.BILUOTagger.v1 {#BILUOTagger source="spacy/ml/models/simple_ner.py"}
-
-> #### Example Config
->
-> ```ini
-> [model]
-> @architectures = "spacy.BILUOTagger.v1 "
->
-> [model.tok2vec]
-> @architectures = "spacy.HashEmbedCNN.v1"
-> # etc.
-> ```
-
-Construct a simple NER tagger that predicts
-[BILUO](/usage/linguistic-features#accessing-ner) tag scores for each token and
-uses greedy decoding with transition-constraints to return a valid BILUO tag
-sequence. A BILUO tag sequence encodes a sequence of non-overlapping labelled
-spans into tags assigned to each token. The first token of a span is given the
-tag `B-LABEL`, the last token of the span is given the tag `L-LABEL`, and tokens
-within the span are given the tag `U-LABEL`. Single-token spans are given the
-tag `U-LABEL`. All other tokens are assigned the tag `O`. The BILUO tag scheme
-generally results in better linear separation between classes, especially for
-non-CRF models, because there are more distinct classes for the different
-situations ([Ratinov et al., 2009](https://www.aclweb.org/anthology/W09-1119/)).
-
-| Name        | Description                                                                                |
-| ----------- | ------------------------------------------------------------------------------------------ |
-| `tok2vec`   | Subnetwork to map tokens into vector representations. ~~Model[List[Doc], List[Floats2d]]~~ |
-| **CREATES** | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                     |
-
-### spacy.IOBTagger.v1 {#IOBTagger source="spacy/ml/models/simple_ner.py"}
-
-> #### Example Config
->
-> ```ini
-> [model]
-> @architectures = "spacy.IOBTagger.v1 "
->
-> [model.tok2vec]
-> @architectures = "spacy.HashEmbedCNN.v1"
-> # etc.
-> ```
-
-Construct a simple NER tagger, that predicts
-[IOB](/usage/linguistic-features#accessing-ner) tag scores for each token and
-uses greedy decoding with transition-constraints to return a valid IOB tag
-sequence. An IOB tag sequence encodes a sequence of non-overlapping labeled
-spans into tags assigned to each token. The first token of a span is given the
-tag B-LABEL, and subsequent tokens are given the tag I-LABEL. All other tokens
-are assigned the tag O.
-
-| Name        | Description                                                                                |
-| ----------- | ------------------------------------------------------------------------------------------ |
-| `tok2vec`   | Subnetwork to map tokens into vector representations. ~~Model[List[Doc], List[Floats2d]]~~ |
-| **CREATES** | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                     |
 
 ## Tagging architectures {#tagger source="spacy/ml/models/tagger.py"}
 

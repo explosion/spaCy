@@ -26,8 +26,11 @@
         border-bottom-right-radius: 0
 
 .icon
-    width: 2rem
-    height: 2rem
+    $width: 2rem
+
+    width: $width
+    height: $width
+    flex: 0 0 $width
     background: var(--color-theme)
     color: var(--color-back)
     border-radius: 50%

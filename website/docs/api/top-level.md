@@ -5,6 +5,7 @@ menu:
   - ['displacy', 'displacy']
   - ['registry', 'registry']
   - ['Loggers', 'loggers']
+  - ['Readers', 'readers']
   - ['Batchers', 'batchers']
   - ['Data & Alignment', 'gold']
   - ['Utility Functions', 'util']
@@ -77,10 +78,14 @@ Create a blank pipeline of a given language class. This function is the twin of
 > nlp_de = spacy.blank("de")   # equivalent to German()
 > ```
 
-| Name        | Description                                                                                              |
-| ----------- | -------------------------------------------------------------------------------------------------------- |
-| `name`      | [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) of the language class to load. ~~str~~ |
-| **RETURNS** | An empty `Language` object of the appropriate subclass. ~~Language~~                                     |
+| Name                                | Description                                                                                                                                                        |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `name`                              | [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) of the language class to load. ~~str~~                                                           |
+| _keyword-only_                      |                                                                                                                                                                    |
+| `vocab` <Tag variant="new">3</Tag>  | Optional shared vocab to pass in on initialization. If `True` (default), a new `Vocab` object will be created. ~~Union[Vocab, bool]~~.                             |
+| `config` <Tag variant="new">3</Tag> | Optional config overrides, either as nested dict or dict keyed by section value in dot notation, e.g. `"components.name.value"`. ~~Union[Dict[str, Any], Config]~~ |
+| `meta` <Tag variant="new">3</tag>   | Optional meta overrides for [`nlp.meta`](/api/language#meta). ~~Dict[str, Any]~~                                                                                   |
+| **RETURNS**                         | An empty `Language` object of the appropriate subclass. ~~Language~~                                                                                               |
 
 ### spacy.info {#spacy.info tag="function"}
 
@@ -105,8 +110,7 @@ your installation, installed pipelines and local setup from within spaCy.
 ### spacy.explain {#spacy.explain tag="function"}
 
 Get a description for a given POS tag, dependency label or entity type. For a
-list of available terms, see
-[`glossary.py`](https://github.com/explosion/spaCy/tree/master/spacy/glossary.py).
+list of available terms, see [`glossary.py`](%%GITHUB_SPACY/spacy/glossary.py).
 
 > #### Example
 >
@@ -262,11 +266,11 @@ If a setting is not present in the options, the default value will be used.
 > displacy.serve(doc, style="ent", options=options)
 > ```
 
-| Name                                    | Description                                                                                                                                                                                                                                                                 |
-| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ents`                                  | Entity types to highlight or `None` for all types (default). ~~Optional[List[str]]~~                                                                                                                                                                                        |
-| `colors`                                | Color overrides. Entity types should be mapped to color names or values. ~~Dict[str, str]~~                                                                                                                                                                                 |
-| `template` <Tag variant="new">2.2</Tag> | Optional template to overwrite the HTML used to render entity spans. Should be a format string and can use `{bg}`, `{text}` and `{label}`. See [`templates.py`](https://github.com/explosion/spaCy/blob/master/spacy/displacy/templates.py) for examples. ~~Optional[str]~~ |
+| Name                                    | Description                                                                                                                                                                                                                               |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ents`                                  | Entity types to highlight or `None` for all types (default). ~~Optional[List[str]]~~                                                                                                                                                      |
+| `colors`                                | Color overrides. Entity types should be mapped to color names or values. ~~Dict[str, str]~~                                                                                                                                               |
+| `template` <Tag variant="new">2.2</Tag> | Optional template to overwrite the HTML used to render entity spans. Should be a format string and can use `{bg}`, `{text}` and `{label}`. See [`templates.py`](GITHUB_SPACY/spacy/displacy/templates.py) for examples. ~~Optional[str]~~ |
 
 By default, displaCy comes with colors for all entity types used by
 [spaCy's trained pipelines](/models). If you're using custom entity types, you
@@ -348,7 +352,7 @@ See the [`Transformer`](/api/transformer) API reference and
 | [`span_getters`](/api/transformer#span_getters)             | Registry for functions that take a batch of `Doc` objects and return a list of `Span` objects to process by the transformer, e.g. sentences.                                                                                                      |
 | [`annotation_setters`](/api/transformer#annotation_setters) | Registry for functions that create annotation setters. Annotation setters are functions that take a batch of `Doc` objects and a [`FullTransformerBatch`](/api/transformer#fulltransformerbatch) and can set additional annotations on the `Doc`. |
 
-## Loggers {#loggers source="spacy/gold/loggers.py" new="3"}
+## Loggers {#loggers source="spacy/training/loggers.py" new="3"}
 
 A logger records the training results. When a logger is created, two functions
 are returned: one for logging the information for each training step, and a
@@ -364,7 +368,7 @@ results to a [Weights & Biases](https://www.wandb.com/) dashboard. Instead of
 using one of the built-in loggers listed here, you can also
 [implement your own](/usage/training#custom-logging).
 
-#### spacy.ConsoleLogger {#ConsoleLogger tag="registered function"}
+#### ConsoleLogger {#ConsoleLogger tag="registered function"}
 
 > #### Example config
 >
@@ -410,7 +414,7 @@ start decreasing across epochs.
 
  </Accordion>
 
-#### spacy.WandbLogger {#WandbLogger tag="registered function"}
+#### WandbLogger {#WandbLogger tag="registered function"}
 
 > #### Installation
 >
@@ -452,7 +456,72 @@ remain in the config file stored on your local system.
 | `project_name`         | The name of the project in the Weights & Biases interface. The project will be created automatically if it doesn't exist yet. ~~str~~ |
 | `remove_config_values` | A list of values to include from the config before it is uploaded to W&B (default: empty). ~~List[str]~~                              |
 
-## Batchers {#batchers source="spacy/gold/batchers.py" new="3"}
+## Readers {#readers source="spacy/training/corpus.py" new="3"}
+
+Corpus readers are registered functions that load data and return a function
+that takes the current `nlp` object and yields [`Example`](/api/example) objects
+that can be used for [training](/usage/training) and
+[pretraining](/usage/embeddings-transformers#pretraining). You can replace it
+with your own registered function in the
+[`@readers` registry](/api/top-level#registry) to customize the data loading and
+streaming.
+
+### Corpus {#corpus}
+
+The `Corpus` reader manages annotated corpora and can be used for training and
+development datasets in the [DocBin](/api/docbin) (`.spacy`) format. Also see
+the [`Corpus`](/api/corpus) class.
+
+> #### Example config
+>
+> ```ini
+> [paths]
+> train = "corpus/train.spacy"
+>
+> [training.train_corpus]
+> @readers = "spacy.Corpus.v1"
+> path = ${paths.train}
+> gold_preproc = false
+> max_length = 0
+> limit = 0
+> ```
+
+| Name            | Description                                                                                                                                              |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `path`          | The directory or filename to read from. Expects data in spaCy's binary [`.spacy` format](/api/data-formats#binary-training). ~~Union[str, Path]~~        |
+|  `gold_preproc` | Whether to set up the Example object with gold-standard sentences and tokens for the predictions. See [`Corpus`](/api/corpus#init) for details. ~~bool~~ |
+| `max_length`    | Maximum document length. Longer documents will be split into sentences, if sentence boundaries are available. Defaults to `0` for no limit. ~~int~~      |
+| `limit`         | Limit corpus to a subset of examples, e.g. for debugging. Defaults to `0` for no limit. ~~int~~                                                          |
+
+### JsonlReader {#jsonlreader}
+
+Create [`Example`](/api/example) objects from a JSONL (newline-delimited JSON)
+file of texts keyed by `"text"`. Can be used to read the raw text corpus for
+language model [pretraining](/usage/embeddings-transformers#pretraining) from a
+JSONL file. Also see the [`JsonlReader`](/api/corpus#jsonlreader) class.
+
+> #### Example config
+>
+> ```ini
+> [paths]
+> pretrain = "corpus/raw_text.jsonl"
+>
+> [pretraining.corpus]
+> @readers = "spacy.JsonlReader.v1"
+> path = ${paths.pretrain}
+> min_length = 0
+> max_length = 0
+> limit = 0
+> ```
+
+| Name         | Description                                                                                                                      |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| `path`       | The directory or filename to read from. Expects newline-delimited JSON with a key `"text"` for each record. ~~Union[str, Path]~~ |
+| `min_length` | Minimum document length (in tokens). Shorter documents will be skipped. Defaults to `0`, which indicates no limit. ~~int~~       |
+| `max_length` | Maximum document length (in tokens). Longer documents will be skipped. Defaults to `0`, which indicates no limit. ~~int~~        |
+| `limit`      | Limit corpus to a subset of examples, e.g. for debugging. Defaults to `0` for no limit. ~~int~~                                  |
+
+## Batchers {#batchers source="spacy/training/batchers.py" new="3"}
 
 A data batcher implements a batching strategy that essentially turns a stream of
 items into a stream of batches, with each batch consisting of one item or a list
@@ -466,7 +535,7 @@ Instead of using one of the built-in batchers listed here, you can also
 [implement your own](/usage/training#custom-code-readers-batchers), which may or
 may not use a custom schedule.
 
-#### batch_by_words {#batch_by_words tag="registered function"}
+### batch_by_words {#batch_by_words tag="registered function"}
 
 Create minibatches of roughly a given number of words. If any examples are
 longer than the specified batch length, they will appear in a batch by
@@ -493,7 +562,7 @@ themselves, or be discarded if `discard_oversize` is set to `True`. The argument
 | `discard_oversize` | Whether to discard sequences that by themselves exceed the tolerated size. ~~bool~~                                                                                                     |
 | `get_length`       | Optional function that receives a sequence item and returns its length. Defaults to the built-in `len()` if not set. ~~Optional[Callable[[Any], int]]~~                                 |
 
-#### batch_by_sequence {#batch_by_sequence tag="registered function"}
+### batch_by_sequence {#batch_by_sequence tag="registered function"}
 
 > #### Example config
 >
@@ -511,7 +580,7 @@ Create a batcher that creates batches of the specified size.
 | `size`       | The target number of items per batch. Can also be a block referencing a schedule, e.g. [`compounding`](https://thinc.ai/docs/api-schedules/#compounding). ~~Union[int, Sequence[int]]~~ |
 | `get_length` | Optional function that receives a sequence item and returns its length. Defaults to the built-in `len()` if not set. ~~Optional[Callable[[Any], int]]~~                                 |
 
-#### batch_by_padded {#batch_by_padded tag="registered function"}
+### batch_by_padded {#batch_by_padded tag="registered function"}
 
 > #### Example config
 >
@@ -536,7 +605,7 @@ sequences in the batch.
 | `discard_oversize` | Whether to discard sequences that are by themselves longer than the largest padded batch size. ~~bool~~                                                                                                                                     |
 | `get_length`       | Optional function that receives a sequence item and returns its length. Defaults to the built-in `len()` if not set. ~~Optional[Callable[[Any], int]]~~                                                                                     |
 
-## Training data and alignment {#gold source="spacy/gold"}
+## Training data and alignment {#gold source="spacy/training"}
 
 ### training.biluo_tags_from_offsets {#biluo_tags_from_offsets tag="function"}
 
@@ -616,12 +685,12 @@ token-based tags, e.g. to overwrite the `doc.ents`.
 ## Utility functions {#util source="spacy/util.py"}
 
 spaCy comes with a small collection of utility functions located in
-[`spacy/util.py`](https://github.com/explosion/spaCy/tree/master/spacy/util.py).
-Because utility functions are mostly intended for **internal use within spaCy**,
-their behavior may change with future releases. The functions documented on this
-page should be safe to use and we'll try to ensure backwards compatibility.
-However, we recommend having additional tests in place if your application
-depends on any of spaCy's utilities.
+[`spacy/util.py`](%%GITHUB_SPACY/spacy/util.py). Because utility functions are
+mostly intended for **internal use within spaCy**, their behavior may change
+with future releases. The functions documented on this page should be safe to
+use and we'll try to ensure backwards compatibility. However, we recommend
+having additional tests in place if your application depends on any of spaCy's
+utilities.
 
 ### util.get_lang_class {#util.get_lang_class tag="function"}
 
@@ -679,14 +748,14 @@ and create a `Language` object. The model data will then be loaded in via
 > nlp = util.load_model("/path/to/data")
 > ```
 
-| Name                                 | Description                                                                                                                                                                                                                                    |
-| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`                               | Package name or path. ~~str~~                                                                                                                                                                                                                  |
-| `vocab` <Tag variant="new">3</Tag>   | Optional shared vocab to pass in on initialization. If `True` (default), a new `Vocab` object will be created. ~~Union[Vocab, bool]~~.                                                                                                         |
-| `disable`                            | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). Disabled pipes will be loaded but they won't be run unless you explicitly enable them by calling [nlp.enable_pipe](/api/language#enable_pipe). ~~List[str]~~ |
-| `exclude` <Tag variant="new">3</Tag> | Names of pipeline components to [exclude](/usage/processing-pipelines#disabling). Excluded components won't be loaded. ~~List[str]~~                                                                                                           |
-| `config` <Tag variant="new">3</Tag>  | Config overrides as nested dict or flat dict keyed by section values in dot notation, e.g. `"nlp.pipeline"`. ~~Union[Dict[str, Any], Config]~~                                                                                                 |
-| **RETURNS**                          | `Language` class with the loaded pipeline. ~~Language~~                                                                                                                                                                                        |
+| Name                                 | Description                                                                                                                                                                                                                                      |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `name`                               | Package name or path. ~~str~~                                                                                                                                                                                                                    |
+| `vocab` <Tag variant="new">3</Tag>   | Optional shared vocab to pass in on initialization. If `True` (default), a new `Vocab` object will be created. ~~Union[Vocab, bool]~~.                                                                                                           |
+| `disable`                            | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). Disabled pipes will be loaded but they won't be run unless you explicitly enable them by calling [`nlp.enable_pipe`](/api/language#enable_pipe). ~~List[str]~~ |
+| `exclude` <Tag variant="new">3</Tag> | Names of pipeline components to [exclude](/usage/processing-pipelines#disabling). Excluded components won't be loaded. ~~List[str]~~                                                                                                             |
+| `config` <Tag variant="new">3</Tag>  | Config overrides as nested dict or flat dict keyed by section values in dot notation, e.g. `"nlp.pipeline"`. ~~Union[Dict[str, Any], Config]~~                                                                                                   |
+| **RETURNS**                          | `Language` class with the loaded pipeline. ~~Language~~                                                                                                                                                                                          |
 
 ### util.load_model_from_init_py {#util.load_model_from_init_py tag="function" new="2"}
 
@@ -832,10 +901,10 @@ Compile a sequence of prefix rules into a regex object.
 > nlp.tokenizer.prefix_search = prefix_regex.search
 > ```
 
-| Name        | Description                                                                                                                                                                 |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `entries`   | The prefix rules, e.g. [`lang.punctuation.TOKENIZER_PREFIXES`](https://github.com/explosion/spaCy/tree/master/spacy/lang/punctuation.py). ~~Iterable[Union[str, Pattern]]~~ |
-| **RETURNS** | The regex object. to be used for [`Tokenizer.prefix_search`](/api/tokenizer#attributes). ~~Pattern~~                                                                        |
+| Name        | Description                                                                                                                                 |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `entries`   | The prefix rules, e.g. [`lang.punctuation.TOKENIZER_PREFIXES`](%%GITHUB_SPACY/spacy/lang/punctuation.py). ~~Iterable[Union[str, Pattern]]~~ |
+| **RETURNS** | The regex object. to be used for [`Tokenizer.prefix_search`](/api/tokenizer#attributes). ~~Pattern~~                                        |
 
 ### util.compile_suffix_regex {#util.compile_suffix_regex tag="function"}
 
@@ -849,10 +918,10 @@ Compile a sequence of suffix rules into a regex object.
 > nlp.tokenizer.suffix_search = suffix_regex.search
 > ```
 
-| Name        | Description                                                                                                                                                                 |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `entries`   | The suffix rules, e.g. [`lang.punctuation.TOKENIZER_SUFFIXES`](https://github.com/explosion/spaCy/tree/master/spacy/lang/punctuation.py). ~~Iterable[Union[str, Pattern]]~~ |
-| **RETURNS** | The regex object. to be used for [`Tokenizer.suffix_search`](/api/tokenizer#attributes). ~~Pattern~~                                                                        |
+| Name        | Description                                                                                                                                 |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `entries`   | The suffix rules, e.g. [`lang.punctuation.TOKENIZER_SUFFIXES`](%%GITHUB_SPACY/spacy/lang/punctuation.py). ~~Iterable[Union[str, Pattern]]~~ |
+| **RETURNS** | The regex object. to be used for [`Tokenizer.suffix_search`](/api/tokenizer#attributes). ~~Pattern~~                                        |
 
 ### util.compile_infix_regex {#util.compile_infix_regex tag="function"}
 
@@ -866,10 +935,10 @@ Compile a sequence of infix rules into a regex object.
 > nlp.tokenizer.infix_finditer = infix_regex.finditer
 > ```
 
-| Name        | Description                                                                                                                                                               |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `entries`   | The infix rules, e.g. [`lang.punctuation.TOKENIZER_INFIXES`](https://github.com/explosion/spaCy/tree/master/spacy/lang/punctuation.py). ~~Iterable[Union[str, Pattern]]~~ |
-| **RETURNS** | The regex object. to be used for [`Tokenizer.infix_finditer`](/api/tokenizer#attributes). ~~Pattern~~                                                                     |
+| Name        | Description                                                                                                                               |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `entries`   | The infix rules, e.g. [`lang.punctuation.TOKENIZER_INFIXES`](%%GITHUB_SPACY/spacy/lang/punctuation.py). ~~Iterable[Union[str, Pattern]]~~ |
+| **RETURNS** | The regex object. to be used for [`Tokenizer.infix_finditer`](/api/tokenizer#attributes). ~~Pattern~~                                     |
 
 ### util.minibatch {#util.minibatch tag="function" new="2"}
 

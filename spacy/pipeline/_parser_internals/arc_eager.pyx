@@ -679,7 +679,7 @@ cdef class ArcEager(TransitionSystem):
                 st._sent[i].dep = self.root_label
 
     def finalize_doc(self, Doc doc):
-        set_children_from_heads(doc.c, doc.length)
+        set_children_from_heads(doc.c, 0, doc.length)
 
     def has_gold(self, Example eg, start=0, end=None):
         for word in eg.y[start:end]:

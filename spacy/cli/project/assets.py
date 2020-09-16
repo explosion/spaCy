@@ -6,14 +6,15 @@ import shutil
 import requests
 
 from ...util import ensure_path, working_dir
-from .._util import project_cli, Arg, PROJECT_FILE, load_project_config, get_checksum
-from .._util import download_file, git_sparse_checkout
+from .._util import project_cli, Arg, Opt, PROJECT_FILE, load_project_config
+from .._util import get_checksum, download_file, git_checkout, get_git_version
 
 
 @project_cli.command("assets")
 def project_assets_cli(
     # fmt: off
     project_dir: Path = Arg(Path.cwd(), help="Path to cloned project. Defaults to current working directory.", exists=True, file_okay=False),
+    sparse_checkout: bool = Opt(False, "--sparse", "-S", help="Use sparse checkout for assets provided via Git, to only check out and clone the files needed. Requires Git v22.2+.")
     # fmt: on
 ):
     """Fetch project assets like datasets and pretrained weights. Assets are
@@ -23,10 +24,10 @@ def project_assets_cli(
 
     DOCS: https://nightly.spacy.io/api/cli#project-assets
     """
-    project_assets(project_dir)
+    project_assets(project_dir, sparse_checkout=sparse_checkout)
 
 
-def project_assets(project_dir: Path) -> None:
+def project_assets(project_dir: Path, *, sparse_checkout: bool = False) -> None:
     """Fetch assets for a project using DVC if possible.
 
     project_dir (Path): Path to project directory.
@@ -38,21 +39,32 @@ def project_assets(project_dir: Path) -> None:
         msg.warn(f"No assets specified in {PROJECT_FILE}", exits=0)
     msg.info(f"Fetching {len(assets)} asset(s)")
     for asset in assets:
-        dest = Path(asset["dest"])
+        dest = (project_dir / asset["dest"]).resolve()
         checksum = asset.get("checksum")
         if "git" in asset:
+            git_err = (
+                f"Cloning spaCy project templates requires Git and the 'git' command. "
+                f"Make sure it's installed and that the executable is available."
+            )
+            get_git_version(error=git_err)
             if dest.exists():
                 # If there's already a file, check for checksum
                 if checksum and checksum == get_checksum(dest):
-                    msg.good(f"Skipping download with matching checksum: {dest}")
+                    msg.good(
+                        f"Skipping download with matching checksum: {asset['dest']}"
+                    )
                     continue
                 else:
-                    shutil.rmtree(dest)
-            git_sparse_checkout(
+                    if dest.is_dir():
+                        shutil.rmtree(dest)
+                    else:
+                        dest.unlink()
+            git_checkout(
                 asset["git"]["repo"],
                 asset["git"]["path"],
                 dest,
                 branch=asset["git"].get("branch"),
+                sparse=sparse_checkout,
             )
         else:
             url = asset.get("url")
@@ -67,14 +79,16 @@ def check_private_asset(dest: Path, checksum: Optional[str] = None) -> None:
     """Check and validate assets without a URL (private assets that the user
     has to provide themselves) and give feedback about the checksum.
 
-    dest (Path): Desintation path of the asset.
+    dest (Path): Destination path of the asset.
     checksum (Optional[str]): Optional checksum of the expected file.
     """
     if not Path(dest).exists():
         err = f"No URL provided for asset. You need to add this file yourself: {dest}"
         msg.warn(err)
     else:
-        if checksum and checksum == get_checksum(dest):
+        if not checksum:
+            msg.good(f"Asset already exists: {dest}")
+        elif checksum == get_checksum(dest):
             msg.good(f"Asset exists with matching checksum: {dest}")
         else:
             msg.fail(f"Asset available but with incorrect checksum: {dest}")
