@@ -67,8 +67,9 @@ def test_parser_initial(en_tokenizer, en_parser):
 def test_parser_parse_subtrees(en_tokenizer, en_parser):
     text = "The four wheels on the bus turned quickly"
     heads = [2, 1, 4, -1, 1, -2, 0, -1]
+    deps = ["dep"] * len(heads)
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
     assert len(list(doc[2].lefts)) == 2
     assert len(list(doc[2].rights)) == 1
     assert len(list(doc[2].children)) == 3
@@ -184,7 +185,7 @@ def test_parser_set_sent_starts(en_vocab):
         if i == 0 or i == 3:
             assert doc[i].is_sent_start is True
         else:
-            assert not doc[i].is_sent_start
+            assert doc[i].is_sent_start is False
     for sent in doc.sents:
         for token in sent:
             assert token.head in sent

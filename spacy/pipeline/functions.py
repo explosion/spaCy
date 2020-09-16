@@ -17,7 +17,7 @@ def merge_noun_chunks(doc: Doc) -> Doc:
 
     DOCS: https://nightly.spacy.io/api/pipeline-functions#merge_noun_chunks
     """
-    if not doc.is_parsed:
+    if not doc.has_annotation("DEP"):
         return doc
     with doc.retokenize() as retokenizer:
         for np in doc.noun_chunks:

@@ -486,7 +486,7 @@ cdef class Token:
                 return True
 
         def __set__(self, value):
-            if self.doc.is_parsed:
+            if self.doc.has_annotation("DEP"):
                 raise ValueError(Errors.E043)
             if value is None:
                 self.c.sent_start = 0

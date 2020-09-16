@@ -106,6 +106,7 @@ def test_doc_api_serialize(en_tokenizer, text):
     tokens = en_tokenizer(text)
     tokens[0].lemma_ = "lemma"
     tokens[0].norm_ = "norm"
+    tokens.ents = [(tokens.vocab.strings["PRODUCT"], 0, 1)]
     tokens[0].ent_kb_id_ = "ent_kb_id"
     new_tokens = Doc(tokens.vocab).from_bytes(tokens.to_bytes())
     assert tokens.text == new_tokens.text
@@ -144,7 +145,6 @@ def test_doc_api_set_ents(en_tokenizer):
 
 def test_doc_api_sents_empty_string(en_tokenizer):
     doc = en_tokenizer("")
-    doc.is_parsed = True
     sents = list(doc.sents)
     assert len(sents) == 0
 
@@ -181,10 +181,11 @@ def test_doc_api_right_edge(en_tokenizer):
     text = "I have proposed to myself, for the sake of such as live under the government of the Romans, to translate those books into the Greek tongue."
     heads = [2, 1, 0, -1, -1, -3, 15, 1, -2, -1, 1, -3, -1, -1, 1, -2, -1, 1,
              -2, -7, 1, -19, 1, -2, -3, 2, 1, -3, -26]
+    deps = ["dep"] * len(heads)
     # fmt: on
 
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
     assert doc[6].text == "for"
     subtree = [w.text for w in doc[6].subtree]
     # fmt: off
@@ -240,7 +241,9 @@ def test_doc_api_similarity_match():
 )
 def test_lowest_common_ancestor(en_tokenizer, sentence, heads, lca_matrix):
     tokens = en_tokenizer(sentence)
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads)
+    doc = get_doc(
+        tokens.vocab, [t.text for t in tokens], heads=heads, deps=["dep"] * len(heads)
+    )
     lca = doc.get_lca_matrix()
     assert (lca == lca_matrix).all()
     assert lca[1, 1] == 1
@@ -251,16 +254,16 @@ def test_lowest_common_ancestor(en_tokenizer, sentence, heads, lca_matrix):
 def test_doc_is_nered(en_vocab):
     words = ["I", "live", "in", "New", "York"]
     doc = Doc(en_vocab, words=words)
-    assert not doc.is_nered
+    assert not doc.has_annotation("ENT_IOB")
     doc.ents = [Span(doc, 3, 5, label="GPE")]
-    assert doc.is_nered
+    assert doc.has_annotation("ENT_IOB")
     # Test creating doc from array with unknown values
     arr = numpy.array([[0, 0], [0, 0], [0, 0], [384, 3], [384, 1]], dtype="uint64")
     doc = Doc(en_vocab, words=words).from_array([ENT_TYPE, ENT_IOB], arr)
-    assert doc.is_nered
+    assert doc.has_annotation("ENT_IOB")
     # Test serialization
     new_doc = Doc(en_vocab).from_bytes(doc.to_bytes())
-    assert new_doc.is_nered
+    assert new_doc.has_annotation("ENT_IOB")
 
 
 def test_doc_from_array_sent_starts(en_vocab):
@@ -271,25 +274,35 @@ def test_doc_from_array_sent_starts(en_vocab):
     # fmt: on
     doc = get_doc(en_vocab, words=words, heads=heads, deps=deps)
 
+    # HEAD overrides SENT_START with warning
     attrs = [SENT_START, HEAD]
     arr = doc.to_array(attrs)
     new_doc = Doc(en_vocab, words=words)
-    with pytest.raises(ValueError):
+    with pytest.warns(UserWarning):
         new_doc.from_array(attrs, arr)
 
-    attrs = [SENT_START, DEP]
+    # no warning using default attrs
+    attrs = doc._get_array_attrs()
+    arr = doc.to_array(attrs)
+    with pytest.warns(None) as record:
+        new_doc.from_array(attrs, arr)
+        assert len(record) == 0
+
+    # only SENT_START uses SENT_START
+    attrs = [SENT_START]
     arr = doc.to_array(attrs)
     new_doc = Doc(en_vocab, words=words)
     new_doc.from_array(attrs, arr)
     assert [t.is_sent_start for t in doc] == [t.is_sent_start for t in new_doc]
-    assert not new_doc.is_parsed
+    assert not new_doc.has_annotation("DEP")
 
+    # only HEAD uses HEAD
     attrs = [HEAD, DEP]
     arr = doc.to_array(attrs)
     new_doc = Doc(en_vocab, words=words)
     new_doc.from_array(attrs, arr)
     assert [t.is_sent_start for t in doc] == [t.is_sent_start for t in new_doc]
-    assert new_doc.is_parsed
+    assert new_doc.has_annotation("DEP")
 
 
 def test_doc_from_array_morph(en_vocab):
@@ -359,9 +372,6 @@ def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
     assert m_doc[9].idx == think_idx
 
     m_doc = Doc.from_docs(en_docs, attrs=["lemma", "length", "pos"])
-    with pytest.raises(ValueError):
-        # important attributes from sentenziser or parser are missing
-        assert list(m_doc.sents)
     assert len(str(m_doc)) > len(en_texts[0]) + len(en_texts[1])
     # space delimiter considered, although spacy attribute was missing
     assert str(m_doc) == " ".join(en_texts_without_empty)
@@ -371,6 +381,15 @@ def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
     assert len(m_doc) == len(en_docs_tokens)
     think_idx = len(en_texts[0]) + 1 + en_texts[2].index("think")
     assert m_doc[9].idx == think_idx
+
+
+def test_doc_api_from_docs_ents(en_tokenizer):
+    texts = ["Merging the docs is fun.", "They don't think alike."]
+    docs = [en_tokenizer(t) for t in texts]
+    docs[0].ents = ()
+    docs[1].ents = (Span(docs[1], 0, 1, label="foo"),)
+    doc = Doc.from_docs(docs)
+    assert len(doc.ents) == 1
 
 
 def test_doc_lang(en_vocab):
@@ -393,3 +412,45 @@ def test_token_lexeme(en_vocab):
     assert isinstance(token.lex, Lexeme)
     assert token.lex.text == token.text
     assert en_vocab[token.orth] == token.lex
+
+
+def test_has_annotation(en_vocab):
+    doc = Doc(en_vocab, words=["Hello", "world"])
+    attrs = ("TAG", "POS", "MORPH", "LEMMA", "DEP", "HEAD", "ENT_IOB", "ENT_TYPE")
+    for attr in attrs:
+        assert not doc.has_annotation(attr)
+
+    doc[0].tag_ = "A"
+    doc[0].pos_ = "X"
+    doc[0].morph_ = "Feat=Val"
+    doc[0].lemma_ = "a"
+    doc[0].dep_ = "dep"
+    doc[0].head = doc[1]
+    doc.ents = [Span(doc, 0, 1, label="HELLO")]
+
+    for attr in attrs:
+        assert doc.has_annotation(attr)
+        assert not doc.has_annotation(attr, require_complete=True)
+
+    doc[1].tag_ = "A"
+    doc[1].pos_ = "X"
+    doc[1].morph_ = ""
+    doc[1].lemma_ = "a"
+    doc[1].dep_ = "dep"
+    doc.ents = [Span(doc, 0, 2, label="HELLO")]
+
+    for attr in attrs:
+        assert doc.has_annotation(attr)
+        assert doc.has_annotation(attr, require_complete=True)
+
+
+def test_is_flags_deprecated(en_tokenizer):
+    doc = en_tokenizer("test")
+    with pytest.deprecated_call():
+        doc.is_tagged
+    with pytest.deprecated_call():
+        doc.is_parsed
+    with pytest.deprecated_call():
+        doc.is_nered
+    with pytest.deprecated_call():
+        doc.is_sentenced

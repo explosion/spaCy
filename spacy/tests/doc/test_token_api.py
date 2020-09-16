@@ -114,8 +114,9 @@ def test_doc_token_api_ancestors(en_tokenizer):
 def test_doc_token_api_head_setter(en_tokenizer):
     text = "Yesterday I saw a dog that barked loudly."
     heads = [2, 1, 0, 1, -2, 1, -2, -1, -6]
+    deps = ["dep"] * len(heads)
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
 
     assert doc[6].n_lefts == 1
     assert doc[6].n_rights == 1
@@ -208,7 +209,6 @@ def test_is_sent_start(en_tokenizer):
     assert doc[5].is_sent_start is None
     doc[5].is_sent_start = True
     assert doc[5].is_sent_start is True
-    doc.is_parsed = True
     assert len(list(doc.sents)) == 2
 
 
@@ -217,7 +217,6 @@ def test_is_sent_end(en_tokenizer):
     assert doc[4].is_sent_end is None
     doc[5].is_sent_start = True
     assert doc[4].is_sent_end is True
-    doc.is_parsed = True
     assert len(list(doc.sents)) == 2
 
 
@@ -242,14 +241,14 @@ def test_token0_has_sent_start_true():
     doc = Doc(Vocab(), words=["hello", "world"])
     assert doc[0].is_sent_start is True
     assert doc[1].is_sent_start is None
-    assert not doc.is_sentenced
+    assert not doc.has_annotation("SENT_START")
 
 
 def test_tokenlast_has_sent_end_true():
     doc = Doc(Vocab(), words=["hello", "world"])
     assert doc[0].is_sent_end is None
     assert doc[1].is_sent_end is True
-    assert not doc.is_sentenced
+    assert not doc.has_annotation("SENT_START")
 
 
 def test_token_api_conjuncts_chain(en_vocab):

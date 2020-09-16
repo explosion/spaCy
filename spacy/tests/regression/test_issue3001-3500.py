@@ -63,7 +63,7 @@ def test_issue3012(en_vocab):
     pos = ["DET", "VERB", "NUM", "NOUN", "PUNCT"]
     ents = [(2, 4, "PERCENT")]
     doc = get_doc(en_vocab, words=words, tags=tags, pos=pos, ents=ents)
-    assert doc.is_tagged
+    assert doc.has_annotation("TAG")
 
     expected = ("10", "NUM", "CD", "PERCENT")
     assert (doc[2].text, doc[2].pos_, doc[2].tag_, doc[2].ent_type_) == expected
@@ -83,10 +83,14 @@ def test_issue3012(en_vocab):
 def test_issue3199():
     """Test that Span.noun_chunks works correctly if no noun chunks iterator
     is available. To make this test future-proof, we're constructing a Doc
-    with a new Vocab here and setting is_parsed to make sure the noun chunks run.
+    with a new Vocab here and a parse tree to make sure the noun chunks run.
     """
-    doc = Doc(Vocab(), words=["This", "is", "a", "sentence"])
-    doc.is_parsed = True
+    doc = get_doc(
+        Vocab(),
+        words=["This", "is", "a", "sentence"],
+        heads=[0, -1, -2, -3],
+        deps=["dep"] * 4,
+    )
     assert list(doc[0:3].noun_chunks) == []
 
 
@@ -250,16 +254,16 @@ def test_issue3456():
 
 
 def test_issue3468():
-    """Test that sentence boundaries are set correctly so Doc.is_sentenced can
+    """Test that sentence boundaries are set correctly so Doc.has_annotation("SENT_START") can
     be restored after serialization."""
     nlp = English()
     nlp.add_pipe("sentencizer")
     doc = nlp("Hello world")
     assert doc[0].is_sent_start
-    assert doc.is_sentenced
+    assert doc.has_annotation("SENT_START")
     assert len(list(doc.sents)) == 1
     doc_bytes = doc.to_bytes()
     new_doc = Doc(nlp.vocab).from_bytes(doc_bytes)
     assert new_doc[0].is_sent_start
-    assert new_doc.is_sentenced
+    assert new_doc.has_annotation("SENT_START")
     assert len(list(new_doc.sents)) == 1

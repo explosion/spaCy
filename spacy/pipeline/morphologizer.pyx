@@ -204,8 +204,6 @@ class Morphologizer(Tagger):
                 doc.c[j].morph = self.vocab.morphology.add(self.cfg["labels_morph"][morph])
                 doc.c[j].pos = self.cfg["labels_pos"][morph]
 
-            doc.is_morphed = True
-
     def get_loss(self, examples, scores):
         """Find the loss and gradient of loss for the batch of documents and
         their predicted scores.
