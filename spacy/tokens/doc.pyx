@@ -881,8 +881,8 @@ cdef class Doc:
         # If document is parsed, set children and sentence boundaries
         if HEAD in attrs and DEP in attrs:
             col = attrs.index(DEP)
-            if any(array[i, col] for i in range(length)):
-                set_children_from_heads(self.c, length)
+            if array[:, col].any():
+                set_children_from_heads(self.c, 0, length)
         return self
 
     @staticmethod
