@@ -647,8 +647,19 @@ cdef class Token:
             # Do nothing if old head is new head
             if self.i + self.c.head == new_head.i:
                 return
+            # Find the widest l/r_edges of the roots of the two tokens involved
+            # to limit the number of tokens for set_children_from_heads
+            cdef Token self_root, new_head_root
+            self_ancestors = list(self.ancestors)
+            new_head_ancestors = list(new_head.ancestors)
+            self_root = self_ancestors[-1] if self_ancestors else self
+            new_head_root = new_head_ancestors[-1] if new_head_ancestors else new_head
+            start = self_root.c.l_edge if self_root.c.l_edge < new_head_root.c.l_edge else new_head_root.c.l_edge
+            end = self_root.c.r_edge if self_root.c.r_edge > new_head_root.c.r_edge else new_head_root.c.r_edge
+            # Set new head
             self.c.head = new_head.i - self.i
-            set_children_from_heads(self.doc.c, self.doc.length)
+            # Adjust parse properties and sentence starts
+            set_children_from_heads(self.doc.c, start, end + 1)
 
     @property
     def conjuncts(self):

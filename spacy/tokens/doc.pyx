@@ -868,7 +868,7 @@ cdef class Doc:
         self.is_tagged = bool(self.is_tagged or TAG in attrs or POS in attrs)
         # If document is parsed, set children
         if self.is_parsed:
-            set_children_from_heads(self.c, length)
+            set_children_from_heads(self.c, 0, length)
         return self
 
     @staticmethod
@@ -1305,12 +1305,13 @@ cdef int token_by_char(const TokenC* tokens, int length, int char_idx) except -2
             return mid
     return -1
 
-cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
+cdef int set_children_from_heads(TokenC* tokens, int start, int end) except -1:
+    # note: end is exclusive
     cdef TokenC* head
     cdef TokenC* child
     cdef int i
     # Set number of left/right children to 0. We'll increment it in the loops.
-    for i in range(length):
+    for i in range(start, end):
         tokens[i].l_kids = 0
         tokens[i].r_kids = 0
         tokens[i].l_edge = i
@@ -1324,27 +1325,27 @@ cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
     # without risking getting stuck in an infinite loop if something is
     # terribly malformed.
     while not heads_within_sents:
-        heads_within_sents = _set_lr_kids_and_edges(tokens, length, loop_count)
+        heads_within_sents = _set_lr_kids_and_edges(tokens, start, end, loop_count)
         if loop_count > 10:
             warnings.warn(Warnings.W026)
             break
         loop_count += 1
     # Set sentence starts
-    for i in range(length):
+    for i in range(start, end):
         tokens[i].sent_start = -1
-    for i in range(length):
+    for i in range(start, end):
         if tokens[i].head == 0:
             tokens[tokens[i].l_edge].sent_start = True
 
 
-cdef int _set_lr_kids_and_edges(TokenC* tokens, int length, int loop_count) except -1:
+cdef int _set_lr_kids_and_edges(TokenC* tokens, int start, int end, int loop_count) except -1:
     # May be called multiple times due to non-projectivity. See issues #3170
     # and #4688.
     # Set left edges
     cdef TokenC* head
     cdef TokenC* child
     cdef int i, j
-    for i in range(length):
+    for i in range(start, end):
         child = &tokens[i]
         head = &tokens[i + child.head]
         if loop_count == 0 and child < head:
@@ -1354,7 +1355,7 @@ cdef int _set_lr_kids_and_edges(TokenC* tokens, int length, int loop_count) exce
         if child.r_edge > head.r_edge:
             head.r_edge = child.r_edge
     # Set right edges - same as above, but iterate in reverse
-    for i in range(length-1, -1, -1):
+    for i in range(end-1, start-1, -1):
         child = &tokens[i]
         head = &tokens[i + child.head]
         if loop_count == 0 and child > head:
@@ -1365,14 +1366,14 @@ cdef int _set_lr_kids_and_edges(TokenC* tokens, int length, int loop_count) exce
             head.l_edge = child.l_edge
     # Get sentence start positions according to current state
     sent_starts = set()
-    for i in range(length):
+    for i in range(start, end):
         if tokens[i].head == 0:
             sent_starts.add(tokens[i].l_edge)
     cdef int curr_sent_start = 0
     cdef int curr_sent_end = 0
     # Check whether any heads are not within the current sentence
-    for i in range(length):
-        if (i > 0 and i in sent_starts) or i == length - 1:
+    for i in range(start, end):
+        if (i > 0 and i in sent_starts) or i == end - 1:
             curr_sent_end = i
             for j in range(curr_sent_start, curr_sent_end):
                 if tokens[j].head + j < curr_sent_start or tokens[j].head + j >= curr_sent_end + 1:
