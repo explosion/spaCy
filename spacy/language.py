@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from copy import deepcopy
 from pathlib import Path
 import warnings
-from thinc.api import get_current_ops, Config, require_gpu, Optimizer
+from thinc.api import Model, get_current_ops, Config, require_gpu, Optimizer
 import srsly
 import multiprocessing as mp
 from itertools import chain, cycle
