@@ -32,6 +32,7 @@ width = 128
 rows = 7000
 nM = 64
 nC = 8
+also_use_static_vectors = false
 
 [model.tok2vec.encode]
 @architectures = "spacy.MaxoutWindowEncoder.v1"
