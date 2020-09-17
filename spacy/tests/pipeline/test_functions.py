@@ -35,8 +35,6 @@ def doc2(en_tokenizer):
         deps=deps,
     )
     doc.ents = [Span(doc, 2, 4, doc.vocab.strings["GPE"])]
-    doc.is_parsed = True
-    doc.is_tagged = True
     return doc
 
 

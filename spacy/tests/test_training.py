@@ -12,7 +12,7 @@ from thinc.api import compounding
 import pytest
 import srsly
 
-from .util import make_tempdir
+from .util import make_tempdir, get_doc
 
 
 @pytest.fixture
@@ -26,24 +26,16 @@ def doc():
               "NounType=prop|Number=sing", "PunctType=peri"]
     # head of '.' is intentionally nonprojective for testing
     heads = [2, 0, 3, 3, 3, 6, 4, 3, 7, 5]
+    heads = [head - i for i, head in enumerate(heads)]
     deps = ["poss", "case", "nsubj", "ROOT", "prep", "compound", "pobj", "prep", "pobj", "punct"]
     lemmas = ["Sarah", "'s", "sister", "fly", "to", "Silicon", "Valley", "via", "London", "."]
-    biluo_tags = ["U-PERSON", "O", "O", "O", "O", "B-LOC", "L-LOC", "O", "U-GPE", "O"]
+    ents = ((0, 2, "PERSON"), (5, 7, "LOC"), (8, 9, "GPE"))
     cats = {"TRAVEL": 1.0, "BAKING": 0.0}
     # fmt: on
     nlp = English()
-    doc = nlp(text)
-    for i in range(len(tags)):
-        doc[i].tag_ = tags[i]
-        doc[i].pos_ = pos[i]
-        doc[i].morph_ = morphs[i]
-        doc[i].lemma_ = lemmas[i]
-        doc[i].dep_ = deps[i]
-        doc[i].head = doc[heads[i]]
-    doc.ents = spans_from_biluo_tags(doc, biluo_tags)
+    words = [t.text for t in nlp.make_doc(text)]
+    doc = get_doc(nlp.vocab, words=words, tags=tags, pos=pos, morphs=morphs, heads=heads, deps=deps, lemmas=lemmas, ents=ents)
     doc.cats = cats
-    doc.is_tagged = True
-    doc.is_parsed = True
     return doc
 
 
@@ -194,7 +186,7 @@ def test_json2docs_no_ner(en_vocab):
     docs = json2docs(data)
     assert len(docs) == 1
     for doc in docs:
-        assert not doc.is_nered
+        assert not doc.has_annotation("ENT_IOB")
     for token in doc:
         assert token.ent_iob == 0
     eg = Example(

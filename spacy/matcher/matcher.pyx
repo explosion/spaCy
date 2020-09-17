@@ -17,7 +17,7 @@ from ..vocab cimport Vocab
 from ..tokens.doc cimport Doc, get_token_attr_for_matcher
 from ..tokens.span cimport Span
 from ..tokens.token cimport Token
-from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH, POS, TAG, DEP, LEMMA
+from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH, POS, TAG, DEP, LEMMA, MORPH
 
 from ..schemas import validate_token_pattern
 from ..errors import Errors, MatchPatternError, Warnings
@@ -215,10 +215,15 @@ cdef class Matcher:
         else:
             raise ValueError(Errors.E195.format(good="Doc or Span", got=type(doclike).__name__))
         cdef Pool tmp_pool = Pool()
-        if len(set([LEMMA, POS, TAG]) & self._seen_attrs) > 0 \
-          and not doc.is_tagged:
-            raise ValueError(Errors.E155.format())
-        if DEP in self._seen_attrs and not doc.is_parsed:
+        if TAG in self._seen_attrs and not doc.has_annotation("TAG"):
+            raise ValueError(Errors.E155.format(pipe="tagger", attr="TAG"))
+        if POS in self._seen_attrs and not doc.has_annotation("POS"):
+            raise ValueError(Errors.E155.format(pipe="morphologizer", attr="POS"))
+        if MORPH in self._seen_attrs and not doc.has_annotation("MORPH"):
+            raise ValueError(Errors.E155.format(pipe="morphologizer", attr="MORPH"))
+        if LEMMA in self._seen_attrs and not doc.has_annotation("LEMMA"):
+            raise ValueError(Errors.E155.format(pipe="lemmatizer", attr="LEMMA"))
+        if DEP in self._seen_attrs and not doc.has_annotation("DEP"):
             raise ValueError(Errors.E156.format())
         matches = find_matches(&self.patterns[0], self.patterns.size(), doclike, length,
                                 extensions=self._extensions, predicates=self._extra_predicates)

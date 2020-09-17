@@ -112,11 +112,11 @@ def test_doc_token_api_ancestors(en_tokenizer):
 
 
 def test_doc_token_api_head_setter(en_tokenizer):
-    # the structure of this sentence depends on the English annotation scheme
     text = "Yesterday I saw a dog that barked loudly."
     heads = [2, 1, 0, 1, -2, 1, -2, -1, -6]
+    deps = ["dep"] * len(heads)
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
 
     assert doc[6].n_lefts == 1
     assert doc[6].n_rights == 1
@@ -169,13 +169,46 @@ def test_doc_token_api_head_setter(en_tokenizer):
     with pytest.raises(ValueError):
         doc[0].head = doc2[0]
 
+    # test sentence starts when two sentences are joined
+    text = "This is one sentence. This is another sentence."
+    heads = [0, -1, -2, -3, -4, 0, -1, -2, -3, -4]
+    tokens = en_tokenizer(text)
+    doc = get_doc(
+        tokens.vocab,
+        words=[t.text for t in tokens],
+        heads=heads,
+        deps=["dep"] * len(heads),
+    )
+    # initially two sentences
+    assert doc[0].is_sent_start
+    assert doc[5].is_sent_start
+    assert doc[0].left_edge == doc[0]
+    assert doc[0].right_edge == doc[4]
+    assert doc[5].left_edge == doc[5]
+    assert doc[5].right_edge == doc[9]
+
+    # modifying with a sentence doesn't change sent starts
+    doc[2].head = doc[3]
+    assert doc[0].is_sent_start
+    assert doc[5].is_sent_start
+    assert doc[0].left_edge == doc[0]
+    assert doc[0].right_edge == doc[4]
+    assert doc[5].left_edge == doc[5]
+    assert doc[5].right_edge == doc[9]
+
+    # attach the second sentence to the first, resulting in one sentence
+    doc[5].head = doc[0]
+    assert doc[0].is_sent_start
+    assert not doc[5].is_sent_start
+    assert doc[0].left_edge == doc[0]
+    assert doc[0].right_edge == doc[9]
+
 
 def test_is_sent_start(en_tokenizer):
     doc = en_tokenizer("This is a sentence. This is another.")
     assert doc[5].is_sent_start is None
     doc[5].is_sent_start = True
     assert doc[5].is_sent_start is True
-    doc.is_parsed = True
     assert len(list(doc.sents)) == 2
 
 
@@ -184,7 +217,6 @@ def test_is_sent_end(en_tokenizer):
     assert doc[4].is_sent_end is None
     doc[5].is_sent_start = True
     assert doc[4].is_sent_end is True
-    doc.is_parsed = True
     assert len(list(doc.sents)) == 2
 
 
@@ -209,14 +241,14 @@ def test_token0_has_sent_start_true():
     doc = Doc(Vocab(), words=["hello", "world"])
     assert doc[0].is_sent_start is True
     assert doc[1].is_sent_start is None
-    assert not doc.is_sentenced
+    assert not doc.has_annotation("SENT_START")
 
 
 def test_tokenlast_has_sent_end_true():
     doc = Doc(Vocab(), words=["hello", "world"])
     assert doc[0].is_sent_end is None
     assert doc[1].is_sent_end is True
-    assert not doc.is_sentenced
+    assert not doc.has_annotation("SENT_START")
 
 
 def test_token_api_conjuncts_chain(en_vocab):

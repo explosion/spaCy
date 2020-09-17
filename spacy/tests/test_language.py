@@ -298,4 +298,4 @@ def test_language_init_invalid_vocab(value):
     err_fragment = "invalid value"
     with pytest.raises(ValueError) as e:
         Language(value)
-    assert err_fragment in str(e)
+    assert err_fragment in str(e.value)
