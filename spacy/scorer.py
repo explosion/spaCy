@@ -275,8 +275,8 @@ class Scorer:
             # ValueError here. Or we need to make this less abstract. Do we
             # really need this getter system?
             try:
-                getter(gold_doc, attr)
-                getter(pred_doc, attr)
+                list(getter(gold_doc, attr))
+                list(getter(pred_doc, attr))
             except ValueError:
                 continue
             # Find all labels in gold and doc
