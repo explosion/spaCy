@@ -610,99 +610,141 @@ def MyCustomVectors(
 
 ## Pretraining {#pretraining}
 
-The `spacy pretrain` command lets you initialize your models with information
-from raw text. Without pretraining, the models for your components will usually
-be initialized randomly. The idea behind pretraining is simple: random probably
-isn't optimal, so if we have some text to learn from, we can probably find
-a way to get the model off to a better start. The impact of `spacy pretrain` varies,
-but it will usually be worth trying if you're not using a transformer model and
-you have relatively little training data (for instance, fewer than 5,000 sentence).
-A good rule of thumb is that pretraining will generally give you a similar accuracy
-improvement to using word vectors in your model. If word vectors have given you
-a 10% error reduction, the `spacy pretrain` command might give you another 10%,
-for a 20% error reduction in total.
+The [`spacy pretrain`](/api/cli#pretrain) command lets you initialize your
+models with **information from raw text**. Without pretraining, the models for
+your components will usually be initialized randomly. The idea behind
+pretraining is simple: random probably isn't optimal, so if we have some text to
+learn from, we can probably find a way to get the model off to a better start.
 
-The `spacy pretrain` command will take a specific subnetwork within one of your
-components, and add additional layers to build a network for a temporary task,
-that forces the model to learn something about sentence structure and word
-cooccurrence statistics. Pretraining produces a binary weights file that can be
-loaded back in at the start of training. The weights file specifies an initial
-set of weights. Training then proceeds as normal.
-
-You can only pretrain one subnetwork from your pipeline at a time, and the subnetwork
-must be typed `Model[List[Doc], List[Floats2d]]` (i.e., it has to be a "tok2vec" layer).
-The most common workflow is to use the `Tok2Vec` component to create a shared
-token-to-vector layer for several components of your pipeline, and apply
-pretraining to its whole model. 
-
-The `spacy pretrain` command is configured using the `[pretraining]` section of
-your config file. The `pretraining.component` and `pretraining.layer` settings
-tell spaCy how to find the subnetwork to pretrain. The `pretraining.layer`
-setting should be either the empty string (to use the whole model), or a 
-[node reference](https://thinc.ai/docs/usage-models#model-state). Most of spaCy's
-built-in model architectures have a reference named `"tok2vec"` that will refer
-to the right layer.
-
-```ini
-# Pretrain nlp.get_pipe("tok2vec").model
-[pretraining]
-component = "tok2vec"
-layer = ""
-
-[pretraining]
-# Pretrain nlp.get_pipe("textcat").model.get_ref("tok2vec")
-component = "textcat"
-layer = "tok2vec"
-```
-
-two pretraining objectives are available, both of which are variants of the cloze
-task Devlin et al (2018) introduced for BERT.
-
-* The *characters* objective asks the model to predict some number of leading and
-  trailing UTF-8 bytes for the words. For instance, setting `n_characters=2`, the
-  model will try to predict the first two and last two characters of the word.
-
-* The *vectors* objective asks the model to predict the word's vector, from
-  a static embeddings table. This requires a word vectors model to be trained
-  and loaded. The vectors objective can optimize either a cosine or an L2 loss.
-  We've generally found cosine loss to perform better.
-
-These pretraining objectives use a trick that we term _language modelling with
-approximate outputs (LMAO)_. The motivation for the trick is that predicting
-an exact word ID introduces a lot of incidental complexity. You need a large
-output layer, and even then, the vocabulary is too large, which motivates
-tokenization schemes that do not align to actual word boundaries. At the end of
-training, the output layer will be thrown away regardless: we just want a task
-that forces the network to model something about word cooccurrence statistics.
-Predicting leading and trailing characters does that more than adequately, as
-the exact word sequence could be recovered with high accuracy if the initial
-and trailing characters are predicted accurately. With the vectors objective,
-the pretraining is use the embedding space learned by an algorithm such as
-GloVe or word2vec, allowing the model to focus on the contextual
-modelling we actual care about.
-
-The `[pretraining]` section has several configuration subsections that are
-familiar from the training block: the `[pretraining.batcher]`,
-[pretraining.optimizer]` and `[pretraining.corpus]` all work the same way and
+Pretraining uses the same [`config.cfg`](/usage/training#config) file as the
+regular training, which helps keep the settings and hyperparameters consistent.
+The additional `[pretraining]` section has several configuration subsections
+that are familiar from the training block: the `[pretraining.batcher]`,
+`[pretraining.optimizer]` and `[pretraining.corpus]` all work the same way and
 expect the same types of objects, although for pretraining your corpus does not
-need to have any annotations, so you will often use a different reader, such as 
-`spacy.training.JsonlReader1`.
+need to have any annotations, so you will often use a different reader, such as
+the [`JsonlReader`](/api/toplevel#jsonlreader).
 
 > #### Raw text format
 >
-> The raw text can be provided as JSONL (newline-delimited JSON) with a key
-> `"text"` per entry. This allows the data to be read in line by line, while
-> also allowing you to include newlines in the texts.
+> The raw text can be provided in spaCy's
+> [binary `.spacy` format](/api/data-formats#training) consisting of serialized
+> `Doc` objects or as a JSONL (newline-delimited JSON) with a key `"text"` per
+> entry. This allows the data to be read in line by line, while also allowing
+> you to include newlines in the texts.
 >
 > ```json
 > {"text": "Can I ask where you work now and what you do, and if you enjoy it?"}
 > {"text": "They may just pull out of the Seattle market completely, at least until they have autonomous vehicles."}
 > ```
+>
+> You can also use your own custom corpus loader instead.
+
+You can add a `[pretraining]` block to your config by setting the
+`--pretraining` flag on [`init config`](/api/cli#init-config) or
+[`init fill-config`](/api/cli#init-fill-config):
 
 ```cli
 $ python -m spacy init fill-config config.cfg config_pretrain.cfg --pretraining
 ```
 
+You can then run [`spacy pretrain`](/api/cli#pretrain) with the updated config
+and pass in optional config overrides, like the path to the raw text file:
+
 ```cli
-$ python -m spacy pretrain raw_text.jsonl /output config_pretrain.cfg
+$ python -m spacy pretrain config_pretrain.cfg ./output --paths.raw text.jsonl
 ```
+
+### How pretraining works {#pretraining-details}
+
+The impact of [`spacy pretrain`](/api/cli#pretrain) varies, but it will usually
+be worth trying if you're **not using a transformer** model and you have
+**relatively little training data** (for instance, fewer than 5,000 sentences).
+A good rule of thumb is that pretraining will generally give you a similar
+accuracy improvement to using word vectors in your model. If word vectors have
+given you a 10% error reduction, pretraining with spaCy might give you another
+10%, for a 20% error reduction in total.
+
+The [`spacy pretrain`](/api/cli#pretrain) command will take a **specific
+subnetwork** within one of your components, and add additional layers to build a
+network for a temporary task, that forces the model to learn something about
+sentence structure and word cooccurrence statistics. Pretraining produces a
+**binary weights file** that can be loaded back in at the start of training. The
+weights file specifies an initial set of weights. Training then proceeds as
+normal.
+
+You can only pretrain one subnetwork from your pipeline at a time, and the
+subnetwork must be typed ~~Model[List[Doc], List[Floats2d]]~~ (i.e. it has to be
+a "tok2vec" layer). The most common workflow is to use the
+[`Tok2Vec`](/api/tok2vec) component to create a shared token-to-vector layer for
+several components of your pipeline, and apply pretraining to its whole model.
+
+#### Configuring the pretraining {#pretraining-configure}
+
+The [`spacy pretrain`](/api/cli#pretrain) command is configured using the
+`[pretraining]` section of your [config file](/usage/training#config). The
+`component` and `layer` settings tell spaCy how to **find the subnetwork** to
+pretrain. The `layer` setting should be either the empty string (to use the
+whole model), or a
+[node reference](https://thinc.ai/docs/usage-models#model-state). Most of
+spaCy's built-in model architectures have a reference named `"tok2vec"` that
+will refer to the right layer.
+
+```ini
+### config.cfg
+# 1. Use the whole model of the "tok2vec" component
+[pretraining]
+component = "tok2vec"
+layer = ""
+
+# 2. Pretrain the "tok2vec" node of the "textcat" component
+[pretraining]
+component = "textcat"
+layer = "tok2vec"
+```
+
+#### Pretraining objectives {#pretraining-details}
+
+Two pretraining objectives are available, both of which are variants of the
+cloze task [Devlin et al. (2018)](https://arxiv.org/abs/1810.04805) introduced
+for BERT. The objective can be defined and configured via the
+`[pretraining.objective]` config block.
+
+> ```ini
+> ### Characters objective
+> [pretraining.objective]
+> type = "characters"
+> n_characters = 4
+> ```
+>
+> ```ini
+> ### Vectors objective
+> [pretraining.objective]
+> type = "vectors"
+> loss = "cosine"
+> ```
+
+- **Characters:** The `"characters"` objective asks the model to predict some
+  number of leading and trailing UTF-8 bytes for the words. For instance,
+  setting `n_characters = 2`, the model will try to predict the first two and
+  last two characters of the word.
+
+- **Vectors:** The `"vectors"` objective asks the model to predict the word's
+  vector, from a static embeddings table. This requires a word vectors model to
+  be trained and loaded. The vectors objective can optimize either a cosine or
+  an L2 loss. We've generally found cosine loss to perform better.
+
+These pretraining objectives use a trick that we term **language modelling with
+approximate outputs (LMAO)**. The motivation for the trick is that predicting an
+exact word ID introduces a lot of incidental complexity. You need a large output
+layer, and even then, the vocabulary is too large, which motivates tokenization
+schemes that do not align to actual word boundaries. At the end of training, the
+output layer will be thrown away regardless: we just want a task that forces the
+network to model something about word cooccurrence statistics. Predicting
+leading and trailing characters does that more than adequately, as the exact
+word sequence could be recovered with high accuracy if the initial and trailing
+characters are predicted accurately. With the vectors objective, the pretraining
+is use the embedding space learned by an algorithm such as
+[GloVe](https://nlp.stanford.edu/projects/glove/) or
+[Word2vec](https://code.google.com/archive/p/word2vec/), allowing the model to
+focus on the contextual modelling we actual care about.
