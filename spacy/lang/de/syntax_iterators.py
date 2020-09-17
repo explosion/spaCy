@@ -16,7 +16,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
     labels = ["sb", "oa", "da", "nk", "mo", "ag", "ROOT", "root", "cj", "pd", "og", "app"]
     # fmt: on
     doc = doclike.doc  # Ensure works on both Doc and Span.
-    if not doc.is_parsed:
+    if not doc.has_annotation("DEP"):
         raise ValueError(Errors.E029)
     np_label = doc.vocab.strings.add("NP")
     np_deps = set(doc.vocab.strings.add(label) for label in labels)

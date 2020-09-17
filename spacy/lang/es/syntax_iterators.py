@@ -8,7 +8,7 @@ from ...tokens import Doc, Span, Token
 def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
     """Detect base noun phrases from a dependency parse. Works on Doc and Span."""
     doc = doclike.doc
-    if not doc.is_parsed:
+    if not doc.has_annotation("DEP"):
         raise ValueError(Errors.E029)
     if not len(doc):
         return

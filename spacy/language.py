@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from copy import deepcopy
 from pathlib import Path
 import warnings
-from thinc.api import get_current_ops, Config, require_gpu, Optimizer
+from thinc.api import Model, get_current_ops, Config, require_gpu, Optimizer
 import srsly
 import multiprocessing as mp
 from itertools import chain, cycle
@@ -1448,10 +1448,15 @@ class Language:
         """Register 'listeners' within pipeline components, to allow them to
         effectively share weights.
         """
+        # I had though, "Why do we do this inside the Language object? Shouldn't
+        # it be the tok2vec/transformer/etc's job?
+        # The problem is we need to do it during deserialization...And the
+        # components don't receive the pipeline then. So this does have to be
+        # here :(
         for i, (name1, proc1) in enumerate(self.pipeline):
             if hasattr(proc1, "find_listeners"):
-                for name2, proc2 in self.pipeline[i:]:
-                    if hasattr(proc2, "model"):
+                for name2, proc2 in self.pipeline[i+1:]:
+                    if isinstance(getattr(proc2, "model", None), Model):
                         proc1.find_listeners(proc2.model)
 
     @classmethod
