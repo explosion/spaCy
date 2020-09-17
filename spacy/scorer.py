@@ -276,6 +276,7 @@ class Scorer:
             # really need this getter system?
             try:
                 getter(gold_doc, attr)
+                getter(pred_doc, attr)
             except ValueError:
                 continue
             # Find all labels in gold and doc
