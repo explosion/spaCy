@@ -44,7 +44,14 @@ def init_config_cli(
     if isinstance(optimize, Optimizations):  # instance of enum from the CLI
         optimize = optimize.value
     pipeline = string_to_list(pipeline)
-    init_config(output_file, lang=lang, pipeline=pipeline, optimize=optimize, cpu=cpu,  pretraining=pretraining)
+    init_config(
+        output_file,
+        lang=lang,
+        pipeline=pipeline,
+        optimize=optimize,
+        cpu=cpu,
+        pretraining=pretraining,
+    )
 
 
 @init_cli.command("fill-config")
@@ -52,7 +59,7 @@ def init_fill_config_cli(
     # fmt: off
     base_path: Path = Arg(..., help="Base config to fill", exists=True, dir_okay=False),
     output_file: Path = Arg("-", help="File to save config.cfg to (or - for stdout)", allow_dash=True),
-    pretraining: bool = Opt(False, "--pretraining", "-p", help="Include config for pretraining (with 'spacy pretrain')"),
+    pretraining: bool = Opt(False, "--pretraining", "-pt", help="Include config for pretraining (with 'spacy pretrain')"),
     diff: bool = Opt(False, "--diff", "-D", help="Print a visual diff highlighting the changes")
     # fmt: on
 ):
@@ -110,7 +117,13 @@ def fill_config(
 
 
 def init_config(
-    output_file: Path, *, lang: str, pipeline: List[str], optimize: str, cpu: bool, pretraining: bool = False,
+    output_file: Path,
+    *,
+    lang: str,
+    pipeline: List[str],
+    optimize: str,
+    cpu: bool,
+    pretraining: bool = False,
 ) -> None:
     is_stdout = str(output_file) == "-"
     msg = Printer(no_print=is_stdout)
