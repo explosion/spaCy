@@ -119,9 +119,6 @@ class Warnings:
     W105 = ("As of spaCy v3.0, the {matcher}.pipe method is deprecated. If you "
             "need to match on a stream of documents, you can use nlp.pipe and "
             "call the {matcher} on each Doc object.")
-    W106 = ("Both HEAD and SENT_START are included as attributes in "
-            "doc.from_array(). The parse trees based on the HEAD attribute "
-            "will override the values in SENT_START.")
     W107 = ("The property Doc.{prop} is deprecated. Use "
             "Doc.has_annotation(\"{attr}\") instead.")
 
