@@ -30,14 +30,20 @@ to predict. Otherwise, you could try using a "one-shot learning" approach using
 
 <Accordion title="What’s the difference between word vectors and language models?" id="vectors-vs-language-models">
 
-The key difference between [word vectors](#word-vectors) and contextual language
-models such as [transformers](#transformers) is that word vectors model
-**lexical types**, rather than _tokens_. If you have a list of terms with no
-context around them, a transformer model like BERT can't really help you. BERT
-is designed to understand language **in context**, which isn't what you have. A
-word vectors table will be a much better fit for your task. However, if you do
-have words in context — whole sentences or paragraphs of running text — word
-vectors will only provide a very rough approximation of what the text is about.
+[Transformers](#transformers) are large and powerful neural networks that give
+you better accuracy, but are harder to deploy in production, as they require a
+GPU to run effectively. [Word vectors](#word-vectors) are a slightly older
+technique that can give your models a smaller improvement in accuracy, and can
+also provide some additional capabilities.
+
+The key difference between word-vectors and contextual language models such as
+transformers is that word vectors model **lexical types**, rather than _tokens_.
+If you have a list of terms with no context around them, a transformer model
+like BERT can't really help you. BERT is designed to understand language **in
+context**, which isn't what you have. A word vectors table will be a much better
+fit for your task. However, if you do have words in context — whole sentences or
+paragraphs of running text — word vectors will only provide a very rough
+approximation of what the text is about.
 
 Word vectors are also very computationally efficient, as they map a word to a
 vector with a single indexing operation. Word vectors are therefore useful as a
@@ -478,7 +484,32 @@ training.
 
 ## Static vectors {#static-vectors}
 
-<!-- TODO: write -->
+If your pipeline includes a **word vectors table**, you'll be able to use the
+`.similarity()` method on the [`Doc`](/api/doc), [`Span`](/api/span),
+[`Token`](/api/token) and [`Lexeme`](/api/lexeme) objects. You'll also be able
+to access the vectors using the `.vector` attribute, or you can look up one or
+more vectors directly using the [`Vocab`](/api/vocab) object. Pipelines with
+word vectors can also **use the vectors as features** for the statistical
+models, which can **improve the accuracy** of your components.
+
+Word vectors in spaCy are "static" in the sense that they are not learned
+parameters of the statistical models, and spaCy itself does not feature any
+algorithms for learning word vector tables. You can train a word vectors table
+using tools such as [Gensim](https://radimrehurek.com/gensim/),
+[FastText](https://fasttext.cc/) or
+[GloVe](https://nlp.stanford.edu/projects/glove/), or download existing
+pretrained vectors. The [`init vocab`](/api/cli#init-vocab) command lets you
+convert vectors for use with spaCy and will give you a directory you can load or
+refer to in your [training configs](/usage/training#config).
+
+<Infobox title="Word vectors and similarity" emoji="📖">
+
+For more details on loading word vectors into spaCy, using them for similarity
+and improving word vector coverage by truncating and pruning the vectors, see
+the usage guide on
+[word vectors and similarity](/usage/linguistic-features#vectors-similarity).
+
+</Infobox>
 
 ### Using word vectors in your models {#word-vectors-models}
 
