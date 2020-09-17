@@ -355,6 +355,16 @@ Registry   @architectures
 Name       spacy.MaxoutWindowEncoder.v1
 Module     spacy.ml.models.tok2vec
 File       /path/to/spacy/ml/models/tok2vec.py (line 207)
+ℹ [corpora.dev]
+Registry   @readers
+Name       spacy.Corpus.v1
+Module     spacy.training.corpus
+File       /path/to/spacy/training/corpus.py (line 18)
+ℹ [corpora.train]
+Registry   @readers
+Name       spacy.Corpus.v1
+Module     spacy.training.corpus
+File       /path/to/spacy/training/corpus.py (line 18)
 ℹ [training.logger]
 Registry   @loggers
 Name       spacy.ConsoleLogger.v1
@@ -370,16 +380,6 @@ Registry   @schedules
 Name       compounding.v1
 Module     thinc.schedules
 File       /path/to/thinc/thinc/schedules.py (line 43)
-ℹ [training.corpus.dev]
-Registry   @readers
-Name       spacy.Corpus.v1
-Module     spacy.training.corpus
-File       /path/to/spacy/training/corpus.py (line 18)
-ℹ [training.corpus.train]
-Registry   @readers
-Name       spacy.Corpus.v1
-Module     spacy.training.corpus
-File       /path/to/spacy/training/corpus.py (line 18)
 ℹ [training.optimizer]
 Registry   @optimizers
 Name       Adam.v1

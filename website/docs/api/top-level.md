@@ -448,7 +448,7 @@ remain in the config file stored on your local system.
 > [training.logger]
 > @loggers = "spacy.WandbLogger.v1"
 > project_name = "monitor_spacy_training"
-> remove_config_values = ["paths.train", "paths.dev", "training.corpus.train.path", "training.corpus.dev.path"]
+> remove_config_values = ["paths.train", "paths.dev", "corpora.train.path", "corpora.dev.path"]
 > ```
 
 | Name                   | Description                                                                                                                           |
@@ -478,7 +478,7 @@ the [`Corpus`](/api/corpus) class.
 > [paths]
 > train = "corpus/train.spacy"
 >
-> [training.corpus.train]
+> [corpora.train]
 > @readers = "spacy.Corpus.v1"
 > path = ${paths.train}
 > gold_preproc = false
@@ -506,7 +506,7 @@ JSONL file. Also see the [`JsonlReader`](/api/corpus#jsonlreader) class.
 > [paths]
 > pretrain = "corpus/raw_text.jsonl"
 >
-> [pretraining.corpus]
+> [corpora.pretrain]
 > @readers = "spacy.JsonlReader.v1"
 > path = ${paths.pretrain}
 > min_length = 0
