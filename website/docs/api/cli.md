@@ -121,7 +121,7 @@ customize those settings in your config file later.
 > ```
 
 ```cli
-$ python -m spacy init config [output_file] [--lang] [--pipeline] [--optimize] [--cpu]
+$ python -m spacy init config [output_file] [--lang] [--pipeline] [--optimize] [--cpu] [--pretraining]
 ```
 
 | Name                   | Description                                                                                                                                                                                                                                                                                                                        |
