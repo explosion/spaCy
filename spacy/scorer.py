@@ -270,6 +270,14 @@ class Scorer:
         for example in examples:
             pred_doc = example.predicted
             gold_doc = example.reference
+            # This isn't great but we need to somehow check whether the gold
+            # doc doesn't have the annotation? We need a more precise error than
+            # ValueError here. Or we need to make this less abstract. Do we
+            # really need this getter system?
+            try:
+                getter(gold_doc, attr)
+            except ValueError:
+                continue
             # Find all labels in gold and doc
             labels = set(
                 [k.label_ for k in getter(gold_doc, attr)]
