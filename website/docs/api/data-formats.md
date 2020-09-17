@@ -191,7 +191,7 @@ process that are used when you run [`spacy train`](/api/cli#train).
 | `raw_text`            | Optional path to a jsonl file with unlabelled text documents for a [rehearsal](/api/language#rehearse) step. Defaults to variable `${paths.raw}`. ~~Optional[str]~~                                          |
 | `score_weights`       | Score names shown in metrics mapped to their weight towards the final weighted score. See [here](/usage/training#metrics) for details. Defaults to `{}`. ~~Dict[str, float]~~                                |
 | `seed`                | The random seed. Defaults to variable `${system.seed}`. ~~int~~                                                                                                                                              |
-| `corpus`              | Dot notation of the config location defining the train corpus. Defaults to `corpora.train`. ~~str~~                                                                                                          |
+| `train_corpus`        | Dot notation of the config location defining the train corpus. Defaults to `corpora.train`. ~~str~~                                                                                                          |
 | `vectors`             | Name or path of pipeline containing pretrained word vectors to use, e.g. created with [`init vocab`](/api/cli#init-vocab). Defaults to `null`. ~~Optional[str]~~                                             |
 
 ### pretraining {#config-pretraining tag="section,optional"}
@@ -207,7 +207,7 @@ used when you run [`spacy pretrain`](/api/cli#pretrain).
 | `n_save_every` | Saving frequency. Defaults to `null`. ~~Optional[int]~~                                                |
 | `objective`    | The pretraining objective. Defaults to `{"type": "characters", "n_characters": 4}`. ~~Dict[str, Any]~~ |
 | `optimizer`    | The optimizer. Defaults to [`Adam`](https://thinc.ai/docs/api-optimizers#adam). ~~Optimizer~~          |
-| `corpus`       | Dot notation of the config location defining the train corpus. Defaults to `corpora.train`. ~~str~~    |
+| `corpus`       | Dot notation of the config location defining the train corpus. Defaults to `corpora.pretrain`. ~~str~~ |
 | `batcher`      | Batcher for the training data. ~~Callable[[Iterator[Doc], Iterator[List[Doc]]]]~~                      |
 | `component`    | Component to find the layer to pretrain. Defaults to `"tok2vec"`. ~~str~~                              |
 | `layer`        | The layer to pretrain. If empty, the whole component model will be used. ~~str~~                       |
