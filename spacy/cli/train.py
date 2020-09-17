@@ -93,8 +93,8 @@ def train(
     raw_text, tag_map, morph_rules, weights_data = load_from_paths(config)
     T_cfg = config["training"]
     optimizer = T_cfg["optimizer"]
-    train_corpus = dot_to_object(config, config["training"]["train_corpus"])
-    dev_corpus = dot_to_object(config, config["training"]["dev_corpus"])
+    train_corpus = dot_to_object(config, T_cfg["train_corpus"])
+    dev_corpus = dot_to_object(config, T_cfg["dev_corpus"])
     batcher = T_cfg["batcher"]
     train_logger = T_cfg["logger"]
     # Components that shouldn't be updated during training

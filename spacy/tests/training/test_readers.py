@@ -26,12 +26,15 @@ def test_readers():
     [components.textcat]
     factory = "textcat"
     """
+
     @registry.readers.register("myreader.v1")
     def myreader() -> Dict[str, Callable[[Language, str], Iterable[Example]]]:
         annots = {"cats": {"POS": 1.0, "NEG": 0.0}}
+
         def reader(nlp: Language):
             doc = nlp.make_doc(f"This is an example")
             return [Example.from_dict(doc, annots)]
+
         return {"train": reader, "dev": reader, "extra": reader, "something": reader}
 
     config = Config().from_str(config_string)

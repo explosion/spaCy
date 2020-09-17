@@ -104,7 +104,7 @@ class TokenPatternOperator(str, Enum):
 StringValue = Union[TokenPatternString, StrictStr]
 NumberValue = Union[TokenPatternNumber, StrictInt, StrictFloat]
 UnderscoreValue = Union[
-    TokenPatternString, TokenPatternNumber, str, int, float, list, bool,
+    TokenPatternString, TokenPatternNumber, str, int, float, list, bool
 ]
 
 
