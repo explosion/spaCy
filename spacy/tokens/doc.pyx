@@ -590,17 +590,16 @@ cdef class Doc:
                 entity_type = 0
                 kb_id = 0
 
-                # Set ent_iob to Missing (0) by default unless this token was nered before
-                ent_iob = 0
-                if self.c[i].ent_iob != 0:
-                    ent_iob = 2
+                # Set ent_iob to Outside (2) by default
+                ent_iob = 2
 
                 # overwrite if the token was part of a specified entity
                 if i in tokens_in_ents.keys():
                     ent_start, ent_end, entity_type, kb_id = tokens_in_ents[i]
                     if entity_type is None or entity_type <= 0:
-                        # Blocking this token from being overwritten by downstream NER
-                        ent_iob = 3
+                        # Empty label: Missing, unset this token
+                        ent_iob = 0
+                        entity_type = 0
                     elif ent_start == i:
                         # Marking the start of an entity
                         ent_iob = 3
@@ -611,6 +610,20 @@ cdef class Doc:
                 self.c[i].ent_type = entity_type
                 self.c[i].ent_kb_id = kb_id
                 self.c[i].ent_iob = ent_iob
+
+    def block_ents(self, spans):
+        """Mark spans as never an entity for the EntityRecognizer.
+
+        spans (List[Span]): The spans to block as never entities.
+        """
+        for span in spans:
+            for i in range(span.start, span.end):
+                self.c[i].ent_iob = 3
+                self.c[i].ent_type = 0
+            # if the following token is I, set to B
+            if span.end < self.length:
+                if self.c[span.end].ent_iob == 1:
+                    self.c[span.end].ent_iob = 3
 
     @property
     def noun_chunks(self):

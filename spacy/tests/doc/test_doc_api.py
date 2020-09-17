@@ -137,7 +137,7 @@ def test_doc_api_set_ents(en_tokenizer):
     assert len(tokens.ents) == 0
     tokens.ents = [(tokens.vocab.strings["PRODUCT"], 2, 4)]
     assert len(list(tokens.ents)) == 1
-    assert [t.ent_iob for t in tokens] == [0, 0, 3, 1, 0, 0, 0, 0]
+    assert [t.ent_iob for t in tokens] == [2, 2, 3, 1, 2, 2, 2, 2]
     assert tokens.ents[0].label_ == "PRODUCT"
     assert tokens.ents[0].start == 2
     assert tokens.ents[0].end == 4
@@ -426,7 +426,7 @@ def test_has_annotation(en_vocab):
     doc[0].lemma_ = "a"
     doc[0].dep_ = "dep"
     doc[0].head = doc[1]
-    doc.ents = [Span(doc, 0, 1, label="HELLO")]
+    doc.ents = [Span(doc, 0, 1, label="HELLO"), Span(doc, 1, 2, label="")]
 
     for attr in attrs:
         assert doc.has_annotation(attr)
@@ -454,3 +454,17 @@ def test_is_flags_deprecated(en_tokenizer):
         doc.is_nered
     with pytest.deprecated_call():
         doc.is_sentenced
+
+
+def test_block_ents(en_tokenizer):
+    doc = en_tokenizer("a b c d e")
+    doc.block_ents([doc[1:2], doc[3:5]])
+    assert [t.ent_iob for t in doc] == [0, 3, 0, 3, 3]
+    assert [t.ent_type for t in doc] == [0, 0, 0, 0, 0]
+    assert doc.ents == tuple()
+
+    # invalid IOB repaired
+    doc.ents = [Span(doc, 3, 5, "ENT")]
+    assert [t.ent_iob for t in doc] == [2, 2, 2, 3, 1]
+    doc.block_ents([doc[3:4]])
+    assert [t.ent_iob for t in doc] == [2, 2, 2, 3, 3]

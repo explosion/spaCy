@@ -182,22 +182,18 @@ def tags_to_entities(tags):
     entities = []
     start = None
     for i, tag in enumerate(tags):
-        if tag is None:
-            continue
-        if tag.startswith("O"):
+        if tag is None or tag.startswith("-"):
             # TODO: We shouldn't be getting these malformed inputs. Fix this.
             if start is not None:
                 start = None
             else:
                 entities.append(("", i, i))
-            continue
-        elif tag == "-":
-            continue
+        elif tag.startswith("O"):
+            pass
         elif tag.startswith("I"):
             if start is None:
                 raise ValueError(Errors.E067.format(start="I", tags=tags[: i + 1]))
-            continue
-        if tag.startswith("U"):
+        elif tag.startswith("U"):
             entities.append((tag[2:], i, i))
         elif tag.startswith("B"):
             start = i

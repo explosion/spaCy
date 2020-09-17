@@ -172,7 +172,7 @@ cdef class Example:
         return output
 
     def get_aligned_ner(self):
-        if not self.y.is_nered:
+        if not self.y.has_annotation("ENT_IOB"):
             return [None] * len(self.x)  # should this be 'missing' instead of 'None' ?
         x_ents = self.get_aligned_spans_y2x(self.y.ents)
         # Default to 'None' for missing values
@@ -303,9 +303,7 @@ def _add_entities_to_doc(doc, ner_data):
             spans_from_biluo_tags(doc, ner_data)
         )
     elif isinstance(ner_data[0], Span):
-        # Ugh, this is super messy. Really hard to set O entities
         doc.ents = ner_data
-        doc.ents = [span for span in ner_data if span.label_]
     else:
         raise ValueError(Errors.E973)
 

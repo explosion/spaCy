@@ -168,7 +168,7 @@ def test_accept_blocked_token():
     ner2 = nlp2.create_pipe("ner", config=config)
 
     # set "New York" to a blocked entity
-    doc2.ents = [(0, 3, 5)]
+    doc2.block_ents([doc2[3:5]])
     assert [token.ent_iob_ for token in doc2] == ["", "", "", "B", "B"]
     assert [token.ent_type_ for token in doc2] == ["", "", "", "", ""]
 
@@ -358,5 +358,5 @@ class BlockerComponent1:
         self.name = name
 
     def __call__(self, doc):
-        doc.ents = [(0, self.start, self.end)]
+        doc.block_ents([doc[self.start:self.end]])
         return doc
