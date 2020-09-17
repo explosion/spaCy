@@ -174,19 +174,25 @@ def test_spans_by_character(doc):
     assert span1.end_char == span2.end_char
     assert span2.label_ == "GPE"
 
-    span2 = doc.char_span(span1.start_char, span1.end_char, label="GPE", alignment_mode="strict")
+    span2 = doc.char_span(
+        span1.start_char, span1.end_char, label="GPE", alignment_mode="strict"
+    )
     assert span1.start_char == span2.start_char
     assert span1.end_char == span2.end_char
     assert span2.label_ == "GPE"
 
     # alignment mode "contract"
-    span2 = doc.char_span(span1.start_char - 3, span1.end_char, label="GPE", alignment_mode="contract")
+    span2 = doc.char_span(
+        span1.start_char - 3, span1.end_char, label="GPE", alignment_mode="contract"
+    )
     assert span1.start_char == span2.start_char
     assert span1.end_char == span2.end_char
     assert span2.label_ == "GPE"
 
     # alignment mode "expand"
-    span2 = doc.char_span(span1.start_char + 1, span1.end_char, label="GPE", alignment_mode="expand")
+    span2 = doc.char_span(
+        span1.start_char + 1, span1.end_char, label="GPE", alignment_mode="expand"
+    )
     assert span1.start_char == span2.start_char
     assert span1.end_char == span2.end_char
     assert span2.label_ == "GPE"
@@ -318,3 +324,9 @@ def test_span_boundaries(doc):
         _ = span[-5]
     with pytest.raises(IndexError):
         _ = span[5]
+
+
+def test_sent(doc):
+    span = doc[1:3]
+    with pytest.raises(ValueError):
+        span.sent
