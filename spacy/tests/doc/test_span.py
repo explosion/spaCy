@@ -326,7 +326,9 @@ def test_span_boundaries(doc):
         _ = span[5]
 
 
-def test_sent(doc):
+def test_sent(en_tokenizer):
+    doc = en_tokenizer("Check span.sent raises error if doc is not sentencized.")
     span = doc[1:3]
+    assert not span.doc.is_sentenced
     with pytest.raises(ValueError):
         span.sent
