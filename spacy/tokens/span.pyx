@@ -402,13 +402,14 @@ cdef class Span:
                 start += -1
             # Find end of the sentence
             end = self.end
-            n = 0
             while end < self.doc.length and self.doc.c[end].sent_start != 1:
                 end += 1
                 n += 1
                 if n >= self.doc.length:
                     break
             return self.doc[start:end]
+        else:
+            raise ValueError(Errors.E030)
 
     @property
     def ents(self):
