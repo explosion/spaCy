@@ -33,19 +33,25 @@ def docs_to_json(docs, doc_id=0, ner_missing_tag="O"):
                 link_dict = {(ent.start_char, ent.end_char): {ent.kb_id_: 1.0}}
                 json_para["links"].append(link_dict)
         biluo_tags = biluo_tags_from_offsets(doc, json_para["entities"], missing=ner_missing_tag)
+        attrs = ("TAG", "POS", "MORPH", "LEMMA", "DEP", "ENT_IOB")
+        include_annotation = {attr: doc.has_annotation(attr) for attr in attrs}
         for j, sent in enumerate(doc.sents):
             json_sent = {"tokens": [], "brackets": []}
             for token in sent:
                 json_token = {"id": token.i, "orth": token.text, "space": token.whitespace_}
-                if doc.is_tagged:
+                if include_annotation["TAG"]:
                     json_token["tag"] = token.tag_
+                if include_annotation["POS"]:
                     json_token["pos"] = token.pos_
+                if include_annotation["MORPH"]:
                     json_token["morph"] = token.morph_
+                if include_annotation["LEMMA"]:
                     json_token["lemma"] = token.lemma_
-                if doc.is_parsed:
+                if include_annotation["DEP"]:
                     json_token["head"] = token.head.i-token.i
                     json_token["dep"] = token.dep_
-                json_token["ner"] = biluo_tags[token.i]
+                if include_annotation["ENT_IOB"]:
+                    json_token["ner"] = biluo_tags[token.i]
                 json_sent["tokens"].append(json_token)
             json_para["sentences"].append(json_sent)
         json_doc["paragraphs"].append(json_para)

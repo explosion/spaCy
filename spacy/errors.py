@@ -119,6 +119,11 @@ class Warnings:
     W105 = ("As of spaCy v3.0, the {matcher}.pipe method is deprecated. If you "
             "need to match on a stream of documents, you can use nlp.pipe and "
             "call the {matcher} on each Doc object.")
+    W106 = ("Both HEAD and SENT_START are included as attributes in "
+            "doc.from_array(). The parse trees based on the HEAD attribute "
+            "will override the values in SENT_START.")
+    W107 = ("The property Doc.{prop} is deprecated. Use "
+            "Doc.has_annotation(\"{attr}\") instead.")
 
 
 @add_codes
@@ -192,11 +197,6 @@ class Errors:
             "Alternatively, add the dependency parser, or set sentence "
             "boundaries by setting doc[i].is_sent_start.")
     E031 = ("Invalid token: empty string ('') at position {i}.")
-    E032 = ("Conflicting attributes specified in doc.from_array(): "
-            "(HEAD, SENT_START). The HEAD attribute currently sets sentence "
-            "boundaries implicitly, based on the tree structure. This means "
-            "the HEAD attribute would potentially override the sentence "
-            "boundaries set by SENT_START.")
     E033 = ("Cannot load into non-empty Doc of length {length}.")
     E035 = ("Error creating span with start {start} and end {end} for Doc of "
             "length {length}.")
@@ -397,8 +397,8 @@ class Errors:
     E154 = ("One of the attributes or values is not supported for token "
             "patterns. Please use the option validate=True with Matcher, "
             "PhraseMatcher, or EntityRuler for more details.")
-    E155 = ("The pipeline needs to include a tagger in order to use "
-            "Matcher or PhraseMatcher with the attributes POS, TAG, or LEMMA. "
+    E155 = ("The pipeline needs to include a {pipe} in order to use "
+            "Matcher or PhraseMatcher with the attribute {attr}. "
             "Try using nlp() instead of nlp.make_doc() or list(nlp.pipe()) "
             "instead of list(nlp.tokenizer.pipe()).")
     E156 = ("The pipeline needs to include a parser in order to use "
@@ -480,6 +480,9 @@ class Errors:
     E201 = ("Span index out of range.")
 
     # TODO: fix numbering after merging develop into master
+    E918 = ("Received invalid value for vocab: {vocab} ({vocab_type}). Valid "
+            "values are an instance of spacy.vocab.Vocab or True to create one"
+            " (default).")
     E919 = ("A textcat 'positive_label' '{pos_label}' was provided for training "
             "data that does not appear to be a binary classification problem "
             "with two labels. Labels found: {labels}")
@@ -552,7 +555,10 @@ class Errors:
             "to register a simple stateless function component that just takes "
             "a Doc and returns it.")
     E958 = ("Language code defined in config ({bad_lang_code}) does not match "
-            "language code of current Language subclass {lang} ({lang_code})")
+            "language code of current Language subclass {lang} ({lang_code}). "
+            "If you want to create an nlp object from a config, make sure to "
+            "use the matching subclass with the language-specific settings and "
+            "data.")
     E959 = ("Can't insert component {dir} index {idx}. Existing components: {opts}")
     E960 = ("No config data found for component '{name}'. This is likely a bug "
             "in spaCy.")

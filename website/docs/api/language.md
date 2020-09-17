@@ -17,7 +17,10 @@ return it.
 
 ## Language.\_\_init\_\_ {#init tag="method"}
 
-Initialize a `Language` object.
+Initialize a `Language` object. Note that the `meta` is only used for meta
+information in [`Language.meta`](/api/language#meta) and not to configure the
+`nlp` object or to override the config. To initialize from a config, use
+[`Language.from_config`](/api/language#from_config) instead.
 
 > #### Example
 >
@@ -37,7 +40,7 @@ Initialize a `Language` object.
 | `vocab`            | A `Vocab` object. If `True`, a vocab is created using the default language data settings. ~~Vocab~~                      |
 | _keyword-only_     |                                                                                                                          |
 | `max_length`       | Maximum number of characters allowed in a single text. Defaults to `10 ** 6`. ~~int~~                                    |
-| `meta`             | Custom meta data for the `Language` class. Is written to by pipelines to add meta data. ~~dict~~                         |
+| `meta`             | [Meta data](/api/data-formats#meta) overrides. ~~Dict[str, Any]~~                                                        |
 | `create_tokenizer` | Optional function that receives the `nlp` object and returns a tokenizer. ~~Callable[[Language], Callable[[str], Doc]]~~ |
 
 ## Language.from_config {#from_config tag="classmethod" new="3"}
@@ -58,14 +61,17 @@ model under the hood based on its [`config.cfg`](/api/data-formats#config).
 > nlp = Language.from_config(config)
 > ```
 
-| Name           | Description                                                                                                                                      |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `config`       | The loaded config. ~~Union[Dict[str, Any], Config]~~                                                                                             |
-| _keyword-only_ |                                                                                                                                                  |
-| `disable`      | List of pipeline component names to disable. ~~Iterable[str]~~                                                                                   |
-| `auto_fill`    | Whether to automatically fill in missing values in the config, based on defaults and function argument annotations. Defaults to `True`. ~~bool~~ |
-| `validate`     | Whether to validate the component config and arguments against the types expected by the factory. Defaults to `True`. ~~bool~~                   |
-| **RETURNS**    | The initialized object. ~~Language~~                                                                                                             |
+| Name           | Description                                                                                                                                                                                                                                      |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `config`       | The loaded config. ~~Union[Dict[str, Any], Config]~~                                                                                                                                                                                             |
+| _keyword-only_ |                                                                                                                                                                                                                                                  |
+| `vocab`        | A `Vocab` object. If `True`, a vocab is created using the default language data settings. ~~Vocab~~                                                                                                                                              |
+| `disable`      | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). Disabled pipes will be loaded but they won't be run unless you explicitly enable them by calling [`nlp.enable_pipe`](/api/language#enable_pipe). ~~List[str]~~ |
+| `exclude`      | Names of pipeline components to [exclude](/usage/processing-pipelines#disabling). Excluded components won't be loaded. ~~List[str]~~                                                                                                             |
+| `meta`         | [Meta data](/api/data-formats#meta) overrides. ~~Dict[str, Any]~~                                                                                                                                                                                |
+| `auto_fill`    | Whether to automatically fill in missing values in the config, based on defaults and function argument annotations. Defaults to `True`. ~~bool~~                                                                                                 |
+| `validate`     | Whether to validate the component config and arguments against the types expected by the factory. Defaults to `True`. ~~bool~~                                                                                                                   |
+| **RETURNS**    | The initialized object. ~~Language~~                                                                                                                                                                                                             |
 
 ## Language.component {#component tag="classmethod" new="3"}
 
@@ -797,10 +803,19 @@ token.ent_iob, token.ent_type
 
 ## Language.meta {#meta tag="property"}
 
-Custom meta data for the Language class. If a trained pipeline is loaded, this
+Meta data for the `Language` class, including name, version, data sources,
+license, author information and more. If a trained pipeline is loaded, this
 contains meta data of the pipeline. The `Language.meta` is also what's
-serialized as the [`meta.json`](/api/data-formats#meta) when you save an `nlp`
-object to disk.
+serialized as the `meta.json` when you save an `nlp` object to disk. See the
+[meta data format](/api/data-formats#meta) for more details.
+
+<Infobox variant="warning" title="Changed in v3.0">
+
+As of v3.0, the meta only contains **meta information** about the pipeline and
+isn't used to construct the language class and pipeline components. This
+information is expressed in the [`config.cfg`](/api/data-formats#config).
+
+</Infobox>
 
 > #### Example
 >

@@ -345,7 +345,10 @@ def test_language_factories_invalid():
             [{"a": 100, "b": 400}, {"c": 0.5, "d": 0.5}],
             {"a": 0.1, "b": 0.4, "c": 0.25, "d": 0.25},
         ),
-        ([{"a": 0.5, "b": 0.5}, {"b": 1.0}], {"a": 0.25, "b": 0.75},),
+        (
+            [{"a": 0.5, "b": 0.5}, {"b": 1.0}],
+            {"a": 0.25, "b": 0.75},
+        ),
     ],
 )
 def test_language_factories_combine_score_weights(weights, expected):
@@ -360,10 +363,16 @@ def test_language_factories_scores():
     weights1 = {"a1": 0.5, "a2": 0.5}
     weights2 = {"b1": 0.2, "b2": 0.7, "b3": 0.1}
     Language.factory(
-        f"{name}1", scores=list(weights1), default_score_weights=weights1, func=func,
+        f"{name}1",
+        scores=list(weights1),
+        default_score_weights=weights1,
+        func=func,
     )
     Language.factory(
-        f"{name}2", scores=list(weights2), default_score_weights=weights2, func=func,
+        f"{name}2",
+        scores=list(weights2),
+        default_score_weights=weights2,
+        func=func,
     )
     meta1 = Language.get_factory_meta(f"{name}1")
     assert meta1.default_score_weights == weights1
@@ -461,3 +470,21 @@ def test_pipe_factories_decorator_idempotent():
     nlp = Language()
     nlp.add_pipe(name)
     Language.component(name2, func=func2)
+
+
+def test_pipe_factories_config_excludes_nlp():
+    """Test that the extra values we temporarily add to component config
+    blocks/functions are removed and not copied around.
+    """
+    name = "test_pipe_factories_config_excludes_nlp"
+    func = lambda nlp, name: lambda doc: doc
+    Language.factory(name, func=func)
+    config = {
+        "nlp": {"lang": "en", "pipeline": [name]},
+        "components": {name: {"factory": name}},
+    }
+    nlp = English.from_config(config)
+    assert nlp.pipe_names == [name]
+    pipe_cfg = nlp.get_pipe_config(name)
+    pipe_cfg == {"factory": name}
+    assert nlp._pipe_configs[name] == {"factory": name}

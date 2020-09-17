@@ -22,13 +22,11 @@ override WHEELHOUSE = "./wheelhouse"
 endif
 
 
-
 dist/$(SPACY_BIN) : $(WHEELHOUSE)/spacy-$(PYVER)-$(version).stamp
 	$(VENV)/bin/pex \
 		-f $(WHEELHOUSE) \
 		--no-index \
 		--disable-cache \
-		-m spacy \
 		-o $@ \
 		$(package)==$(version) \
 		$(SPACY_EXTRAS)

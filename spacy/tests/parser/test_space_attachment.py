@@ -8,8 +8,9 @@ from ..util import get_doc, apply_transition_sequence
 def test_parser_space_attachment(en_tokenizer):
     text = "This is a test.\nTo ensure  spaces are attached well."
     heads = [1, 0, 1, -2, -3, -1, 1, 4, -1, 2, 1, 0, -1, -2]
+    deps = ["dep"] * len(heads)
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
+    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
     for sent in doc.sents:
         if len(sent) == 1:
             assert not sent[-1].is_space

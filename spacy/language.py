@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from copy import deepcopy
 from pathlib import Path
 import warnings
-from thinc.api import get_current_ops, Config, require_gpu, Optimizer
+from thinc.api import Model, get_current_ops, Config, require_gpu, Optimizer
 import srsly
 import multiprocessing as mp
 from itertools import chain, cycle
@@ -144,6 +144,8 @@ class Language:
         self._pipe_meta: Dict[str, "FactoryMeta"] = {}  # meta by component
         self._pipe_configs: Dict[str, Config] = {}  # config by component
 
+        if not isinstance(vocab, Vocab) and vocab is not True:
+            raise ValueError(Errors.E918.format(vocab=vocab, vocab_type=type(Vocab)))
         if vocab is True:
             vectors_name = meta.get("vectors", {}).get("name")
             vocab = create_vocab(
@@ -396,8 +398,6 @@ class Language:
         if name not in self._pipe_configs:
             raise ValueError(Errors.E960.format(name=name))
         pipe_config = self._pipe_configs[name]
-        pipe_config.pop("nlp", None)
-        pipe_config.pop("name", None)
         return pipe_config
 
     @classmethod
@@ -650,6 +650,10 @@ class Language:
         filled = Config(filled[factory_name])
         filled["factory"] = factory_name
         filled.pop("@factories", None)
+        # Remove the extra values we added because we don't want to keep passing
+        # them around, copying them etc.
+        filled.pop("nlp", None)
+        filled.pop("name", None)
         # Merge the final filled config with the raw config (including non-
         # interpolated variables)
         if raw_config:
@@ -1444,10 +1448,15 @@ class Language:
         """Register 'listeners' within pipeline components, to allow them to
         effectively share weights.
         """
+        # I had though, "Why do we do this inside the Language object? Shouldn't
+        # it be the tok2vec/transformer/etc's job?
+        # The problem is we need to do it during deserialization...And the
+        # components don't receive the pipeline then. So this does have to be
+        # here :(
         for i, (name1, proc1) in enumerate(self.pipeline):
             if hasattr(proc1, "find_listeners"):
-                for name2, proc2 in self.pipeline[i:]:
-                    if hasattr(proc2, "model"):
+                for name2, proc2 in self.pipeline[i+1:]:
+                    if isinstance(getattr(proc2, "model", None), Model):
                         proc1.find_listeners(proc2.model)
 
     @classmethod
@@ -1458,6 +1467,7 @@ class Language:
         vocab: Union[Vocab, bool] = True,
         disable: Iterable[str] = SimpleFrozenList(),
         exclude: Iterable[str] = SimpleFrozenList(),
+        meta: Dict[str, Any] = SimpleFrozenDict(),
         auto_fill: bool = True,
         validate: bool = True,
     ) -> "Language":
@@ -1472,6 +1482,7 @@ class Language:
             explicitly enable them by calling nlp.enable_pipe.
         exclude (Iterable[str]): Names of pipeline components to exclude.
             Excluded components won't be loaded.
+        meta (Dict[str, Any]): Meta overrides for nlp.meta.
         auto_fill (bool): Automatically fill in missing values in config based
             on defaults and function argument annotations.
         validate (bool): Validate the component config and arguments against
@@ -1487,7 +1498,7 @@ class Language:
         if "nlp" not in config:
             raise ValueError(Errors.E985.format(config=config))
         config_lang = config["nlp"]["lang"]
-        if cls.lang is not None and config_lang is not None and config_lang != cls.lang:
+        if config_lang is not None and config_lang != cls.lang:
             raise ValueError(
                 Errors.E958.format(
                     bad_lang_code=config["nlp"]["lang"],
@@ -1525,7 +1536,7 @@ class Language:
         # inside stuff like the spacy train function. If we loaded them here,
         # then we would load them twice at runtime: once when we make from config,
         # and then again when we load from disk.
-        nlp = lang_cls(vocab=vocab, create_tokenizer=create_tokenizer)
+        nlp = lang_cls(vocab=vocab, create_tokenizer=create_tokenizer, meta=meta)
         if after_creation is not None:
             nlp = after_creation(nlp)
             if not isinstance(nlp, cls):
