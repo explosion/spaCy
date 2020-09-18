@@ -5,7 +5,7 @@ import re
 from collections import Counter
 from pathlib import Path
 from thinc.api import Config
-from thinc.api import use_pytorch_for_gpu_memory, require_gpu
+from thinc.api import require_gpu
 from thinc.api import set_dropout_rate, to_categorical, fix_random_seed
 from thinc.api import CosineDistance, L2Distance
 from wasabi import msg
@@ -14,7 +14,7 @@ from functools import partial
 import typer
 
 from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
-from ._util import import_code
+from ._util import import_code, set_gpu_allocator
 from ..ml.models.multi_task import build_cloze_multi_task_model
 from ..ml.models.multi_task import build_cloze_characters_multi_task_model
 from ..tokens import Doc
@@ -70,9 +70,7 @@ def pretrain_cli(
 
     with show_validation_error(config_path):
         config = util.load_config(
-            config_path,
-            overrides=config_overrides,
-            interpolate=True
+            config_path, overrides=config_overrides, interpolate=True
         )
     if not config.get("pretraining"):
         # TODO: What's the solution here? How do we handle optional blocks?
@@ -83,7 +81,7 @@ def pretrain_cli(
 
     config.to_disk(output_dir / "config.cfg")
     msg.good("Saved config file in the output directory")
- 
+
     pretrain(
         config,
         output_dir,
@@ -98,12 +96,14 @@ def pretrain(
     output_dir: Path,
     resume_path: Optional[Path] = None,
     epoch_resume: Optional[int] = None,
-    use_gpu: int=-1
+    use_gpu: int = -1,
 ):
-    if config["system"].get("seed") is not None:
+    if config["training"]["seed"] is not None:
         fix_random_seed(config["system"]["seed"])
-    if use_gpu >= 0 and config["system"].get("use_pytorch_for_gpu_memory"):
-        use_pytorch_for_gpu_memory()
+    allocator = config["training"]["gpu_allocator"]
+    if use_gpu >= 0 and allocator:
+        set_gpu_allocator(allocator)
+
     nlp, config = util.load_model_from_config(config)
     P_cfg = config["pretraining"]
     corpus = P_cfg["corpus"]
@@ -147,9 +147,7 @@ def pretrain(
             progress = tracker.update(epoch, loss, docs)
             if progress:
                 msg.row(progress, **row_settings)
-            if P_cfg["n_save_every"] and (
-                batch_id % P_cfg["n_save_every"] == 0
-            ):
+            if P_cfg["n_save_every"] and (batch_id % P_cfg["n_save_every"] == 0):
                 _save_model(epoch, is_temp=True)
         _save_model(epoch)
         tracker.epoch_loss = 0.0

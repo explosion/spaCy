@@ -6,7 +6,7 @@ from thinc.api import Model, data_validation
 import typer
 
 from ._util import Arg, Opt, debug_cli, show_validation_error
-from ._util import parse_config_overrides, string_to_list
+from ._util import parse_config_overrides, string_to_list, set_gpu_allocator
 from .. import util
 
 
@@ -53,7 +53,12 @@ def debug_model_cli(
     }
     config_overrides = parse_config_overrides(ctx.args)
     with show_validation_error(config_path):
-        config = util.load_config(config_path, overrides=config_overrides)
+        config = util.load_config(
+            config_path, overrides=config_overrides, interpolate=True
+        )
+        allocator = config["training"]["gpu_allocator"]
+        if use_gpu >= 0 and allocator:
+            set_gpu_allocator(allocator)
         nlp, config = util.load_model_from_config(config_path)
     seed = config["training"]["seed"]
     if seed is not None:

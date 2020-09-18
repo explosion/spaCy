@@ -6,14 +6,13 @@ from pathlib import Path
 from wasabi import msg
 import thinc
 import thinc.schedules
-from thinc.api import use_pytorch_for_gpu_memory, require_gpu, fix_random_seed
-from thinc.api import Config, Optimizer
+from thinc.api import Config, Optimizer, require_gpu, fix_random_seed
 import random
 import typer
 import logging
 
 from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
-from ._util import import_code, get_sourced_components
+from ._util import import_code, get_sourced_components, set_gpu_allocator
 from ..language import Language
 from .. import util
 from ..training.example import Example
@@ -78,11 +77,11 @@ def train(
         config = util.load_config(
             config_path, overrides=config_overrides, interpolate=True
         )
-    if config.get("training", {}).get("seed") is not None:
+    if config["training"]["seed"] is not None:
         fix_random_seed(config["training"]["seed"])
-    if config.get("system", {}).get("use_pytorch_for_gpu_memory"):
-        # It feels kind of weird to not have a default for this.
-        use_pytorch_for_gpu_memory()
+    allocator = config["training"]["gpu_allocator"]
+    if use_gpu >= 0 and allocator:
+        set_gpu_allocator(allocator)
     # Use original config here before it's resolved to functions
     sourced_components = get_sourced_components(config)
     with show_validation_error(config_path):

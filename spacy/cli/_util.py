@@ -11,6 +11,7 @@ from click import NoSuchOption
 from typer.main import get_command
 from contextlib import contextmanager
 from thinc.config import Config, ConfigValidationError
+from thinc.api import use_pytorch_for_gpu_memory, use_tensorflow_for_gpu_memory
 from configparser import InterpolationError
 
 from ..schemas import ProjectConfigSchema, validate
@@ -439,3 +440,12 @@ def string_to_list(value: str, intify: bool = False) -> Union[List[str], List[in
             p = int(p)
         result.append(p)
     return result
+
+
+def set_gpu_allocator(allocator):
+    if allocator == "pytorch":
+        use_pytorch_for_gpu_memory()
+    elif allocator == "tensorflow":
+        use_tensorflow_for_gpu_memory()
+    else:
+        msg.warn(f"Ignored unknown 'gpu_allocator' argument: '{allocator}'")
