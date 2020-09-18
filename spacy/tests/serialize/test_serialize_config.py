@@ -17,15 +17,17 @@ nlp_config_string = """
 train = ""
 dev = ""
 
-[training]
+[corpora]
 
-[training.train_corpus]
+[corpora.train]
 @readers = "spacy.Corpus.v1"
 path = ${paths.train}
 
-[training.dev_corpus]
+[corpora.dev]
 @readers = "spacy.Corpus.v1"
 path = ${paths.dev}
+
+[training]
 
 [training.batcher]
 @batchers = "spacy.batch_by_words.v1"
@@ -300,20 +302,20 @@ def test_config_overrides():
 
 def test_config_interpolation():
     config = Config().from_str(nlp_config_string, interpolate=False)
-    assert config["training"]["train_corpus"]["path"] == "${paths.train}"
+    assert config["corpora"]["train"]["path"] == "${paths.train}"
     interpolated = config.interpolate()
-    assert interpolated["training"]["train_corpus"]["path"] == ""
+    assert interpolated["corpora"]["train"]["path"] == ""
     nlp = English.from_config(config)
-    assert nlp.config["training"]["train_corpus"]["path"] == "${paths.train}"
+    assert nlp.config["corpora"]["train"]["path"] == "${paths.train}"
     # Ensure that variables are preserved in nlp config
     width = "${components.tok2vec.model.width}"
     assert config["components"]["tagger"]["model"]["tok2vec"]["width"] == width
     assert nlp.config["components"]["tagger"]["model"]["tok2vec"]["width"] == width
     interpolated2 = nlp.config.interpolate()
-    assert interpolated2["training"]["train_corpus"]["path"] == ""
+    assert interpolated2["corpora"]["train"]["path"] == ""
     assert interpolated2["components"]["tagger"]["model"]["tok2vec"]["width"] == 342
     nlp2 = English.from_config(interpolated)
-    assert nlp2.config["training"]["train_corpus"]["path"] == ""
+    assert nlp2.config["corpora"]["train"]["path"] == ""
     assert nlp2.config["components"]["tagger"]["model"]["tok2vec"]["width"] == 342
 
 

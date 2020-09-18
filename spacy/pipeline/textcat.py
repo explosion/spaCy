@@ -181,9 +181,9 @@ class TextCategorizer(Pipe):
 
         DOCS: https://nightly.spacy.io/api/textcategorizer#predict
         """
-        tensors = [doc.tensor for doc in docs]
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
+            tensors = [doc.tensor for doc in docs]
             xp = get_array_module(tensors)
             scores = xp.zeros((len(docs), len(self.labels)))
             return scores
