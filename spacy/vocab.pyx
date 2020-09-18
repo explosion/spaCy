@@ -417,13 +417,18 @@ cdef class Vocab:
             orth = self.strings.add(orth)
         return orth in self.vectors
 
-    def load_lookups(self, lookups):
-        self.lookups = lookups
-        if lookups.has_table("lexeme_norm"):
-            self.lex_attr_getters[NORM] = util.add_lookups(
-                self.lex_attr_getters[NORM],
-                lookups.get_table("lexeme_norm"),
-            )
+    property lookups:
+        def __get__(self):
+            return self._lookups
+
+        def __set__(self, lookups):
+            self._lookups = lookups
+            if lookups.has_table("lexeme_norm"):
+                self.lex_attr_getters[NORM] = util.add_lookups(
+                    self.lex_attr_getters.get(NORM, LEX_ATTRS[NORM]),
+                    self.lookups.get_table("lexeme_norm"),
+                )
+
 
     def to_disk(self, path, *, exclude=tuple()):
         """Save the current state to a directory.

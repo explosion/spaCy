@@ -87,8 +87,9 @@ def create_tokenizer() -> Callable[["Language"], Tokenizer]:
     return tokenizer_factory
 
 
-@registry.misc("spacy.LoadLookupsData.v1")
+@registry.misc("spacy.LookupsDataLoader.v1")
 def load_lookups_data(lang, tables):
+    util.logger.debug(f"Loading lookups from spacy-lookups-data: {tables}")
     lookups = load_lookups(lang=lang, tables=tables)
     return lookups
 

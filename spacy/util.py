@@ -258,7 +258,7 @@ def load_vocab_data_into_model(
 ) -> None:
     """Load vocab data."""
     if lookups:
-        nlp.vocab.load_lookups(lookups)
+        nlp.vocab.lookups = lookups
 
 
 def load_model(
