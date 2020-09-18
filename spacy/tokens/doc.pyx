@@ -817,8 +817,6 @@ cdef class Doc:
         if array.dtype != numpy.uint64:
             warnings.warn(Warnings.W028.format(type=array.dtype))
 
-        if set(attrs) != set(Doc._get_array_attrs()) and SENT_START in attrs and HEAD in attrs:
-            warnings.warn(Warnings.W106)
         cdef int i, col
         cdef int32_t abs_head_index
         cdef attr_id_t attr_id

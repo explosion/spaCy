@@ -274,12 +274,11 @@ def test_doc_from_array_sent_starts(en_vocab):
     # fmt: on
     doc = get_doc(en_vocab, words=words, heads=heads, deps=deps)
 
-    # HEAD overrides SENT_START with warning
+    # HEAD overrides SENT_START without warning
     attrs = [SENT_START, HEAD]
     arr = doc.to_array(attrs)
     new_doc = Doc(en_vocab, words=words)
-    with pytest.warns(UserWarning):
-        new_doc.from_array(attrs, arr)
+    new_doc.from_array(attrs, arr)
 
     # no warning using default attrs
     attrs = doc._get_array_attrs()
