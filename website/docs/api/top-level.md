@@ -84,7 +84,7 @@ Create a blank pipeline of a given language class. This function is the twin of
 | _keyword-only_                      |                                                                                                                                                                    |
 | `vocab` <Tag variant="new">3</Tag>  | Optional shared vocab to pass in on initialization. If `True` (default), a new `Vocab` object will be created. ~~Union[Vocab, bool]~~.                             |
 | `config` <Tag variant="new">3</Tag> | Optional config overrides, either as nested dict or dict keyed by section value in dot notation, e.g. `"components.name.value"`. ~~Union[Dict[str, Any], Config]~~ |
-| `meta` <Tag variant="new">3</tag>   | Optional meta overrides for [`nlp.meta`](/api/language#meta). ~~Dict[str, Any]~~                                                                                   |
+| `meta` <Tag variant="new">3</Tag>   | Optional meta overrides for [`nlp.meta`](/api/language#meta). ~~Dict[str, Any]~~                                                                                   |
 | **RETURNS**                         | An empty `Language` object of the appropriate subclass. ~~Language~~                                                                                               |
 
 ### spacy.info {#spacy.info tag="function"}
