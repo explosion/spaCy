@@ -363,7 +363,7 @@ preventing OOM errors when there's available memory sitting in the other
 library's pool.
 
 ```ini
-### config.cfg (excerpt)}
+### config.cfg (excerpt)
 [training]
 gpu_allocator = "pytorch"
 ```
