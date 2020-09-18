@@ -20,6 +20,7 @@ from ..ml.models.multi_task import build_cloze_characters_multi_task_model
 from ..tokens import Doc
 from ..attrs import ID
 from .. import util
+from ..util import dot_to_object
 
 
 @app.command(
@@ -70,9 +71,7 @@ def pretrain_cli(
 
     with show_validation_error(config_path):
         config = util.load_config(
-            config_path,
-            overrides=config_overrides,
-            interpolate=True
+            config_path, overrides=config_overrides, interpolate=True
         )
     if not config.get("pretraining"):
         # TODO: What's the solution here? How do we handle optional blocks?
@@ -83,7 +82,7 @@ def pretrain_cli(
 
     config.to_disk(output_dir / "config.cfg")
     msg.good("Saved config file in the output directory")
- 
+
     pretrain(
         config,
         output_dir,
@@ -98,7 +97,7 @@ def pretrain(
     output_dir: Path,
     resume_path: Optional[Path] = None,
     epoch_resume: Optional[int] = None,
-    use_gpu: int=-1
+    use_gpu: int = -1,
 ):
     if config["system"].get("seed") is not None:
         fix_random_seed(config["system"]["seed"])
@@ -106,7 +105,7 @@ def pretrain(
         use_pytorch_for_gpu_memory()
     nlp, config = util.load_model_from_config(config)
     P_cfg = config["pretraining"]
-    corpus = P_cfg["corpus"]
+    corpus = dot_to_object(config, P_cfg["corpus"])
     batcher = P_cfg["batcher"]
     model = create_pretraining_model(nlp, config["pretraining"])
     optimizer = config["pretraining"]["optimizer"]
@@ -147,9 +146,7 @@ def pretrain(
             progress = tracker.update(epoch, loss, docs)
             if progress:
                 msg.row(progress, **row_settings)
-            if P_cfg["n_save_every"] and (
-                batch_id % P_cfg["n_save_every"] == 0
-            ):
+            if P_cfg["n_save_every"] and (batch_id % P_cfg["n_save_every"] == 0):
                 _save_model(epoch, is_temp=True)
         _save_model(epoch)
         tracker.epoch_loss = 0.0
