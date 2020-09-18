@@ -12,7 +12,7 @@ from thinc.api import compounding
 import pytest
 import srsly
 
-from .util import make_tempdir, get_doc
+from ..util import make_tempdir, get_doc
 
 
 @pytest.fixture

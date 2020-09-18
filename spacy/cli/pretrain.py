@@ -20,6 +20,7 @@ from ..ml.models.multi_task import build_cloze_characters_multi_task_model
 from ..tokens import Doc
 from ..attrs import ID
 from .. import util
+from ..util import dot_to_object
 
 
 @app.command(
@@ -106,7 +107,7 @@ def pretrain(
 
     nlp, config = util.load_model_from_config(config)
     P_cfg = config["pretraining"]
-    corpus = P_cfg["corpus"]
+    corpus = dot_to_object(config, P_cfg["corpus"])
     batcher = P_cfg["batcher"]
     model = create_pretraining_model(nlp, config["pretraining"])
     optimizer = config["pretraining"]["optimizer"]

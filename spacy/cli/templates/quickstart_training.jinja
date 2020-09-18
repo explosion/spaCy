@@ -173,6 +173,18 @@ factory = "{{ pipe }}"
 {% endif %}
 {% endfor %}
 
+[corpora]
+
+[corpora.train]
+@readers = "spacy.Corpus.v1"
+path = ${paths.train}
+max_length = {{ 500 if hardware == "gpu" else 2000 }}
+
+[corpora.dev]
+@readers = "spacy.Corpus.v1"
+path = ${paths.dev}
+max_length = 0
+
 [training]
 {% if use_transformer or optimize == "efficiency" or not word_vectors -%}
 vectors = null
@@ -182,10 +194,11 @@ vectors = "{{ word_vectors }}"
 {% if use_transformer -%}
 accumulate_gradient = {{ transformer["size_factor"] }}
 {% endif %}
+dev_corpus = "corpora.dev"
+train_corpus = "corpora.train"
 
 [training.optimizer]
 @optimizers = "Adam.v1"
-
 
 {% if use_transformer -%}
 [training.optimizer.learn_rate]
@@ -194,16 +207,6 @@ warmup_steps = 250
 total_steps = 20000
 initial_rate = 5e-5
 {% endif %}
-
-[training.train_corpus]
-@readers = "spacy.Corpus.v1"
-path = ${paths.train}
-max_length = {{ 500 if hardware == "gpu" else 2000 }}
-
-[training.dev_corpus]
-@readers = "spacy.Corpus.v1"
-path = ${paths.dev}
-max_length = 0
 
 {% if use_transformer %}
 [training.batcher]

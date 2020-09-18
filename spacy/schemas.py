@@ -198,8 +198,8 @@ class ModelMetaSchema(BaseModel):
 class ConfigSchemaTraining(BaseModel):
     # fmt: off
     vectors: Optional[StrictStr] = Field(..., title="Path to vectors")
-    train_corpus: Reader = Field(..., title="Reader for the training data")
-    dev_corpus: Reader = Field(..., title="Reader for the dev data")
+    dev_corpus: StrictStr = Field(..., title="Path in the config to the dev data")
+    train_corpus: StrictStr = Field(..., title="Path in the config to the training data")
     batcher: Batcher = Field(..., title="Batcher for the training data")
     dropout: StrictFloat = Field(..., title="Dropout rate")
     patience: StrictInt = Field(..., title="How many steps to continue without improvement in evaluation score")
@@ -250,7 +250,7 @@ class ConfigSchemaPretrain(BaseModel):
     dropout: StrictFloat = Field(..., title="Dropout rate")
     n_save_every: Optional[StrictInt] = Field(..., title="Saving frequency")
     optimizer: Optimizer = Field(..., title="The optimizer to use")
-    corpus: Reader = Field(..., title="Reader for the training data")
+    corpus: StrictStr = Field(..., title="Path in the config to the training data")
     batcher: Batcher = Field(..., title="Batcher for the training data")
     component: str = Field(..., title="Component to find the layer to pretrain")
     layer: str = Field(..., title="Layer to pretrain. Whole model if empty.")
@@ -269,6 +269,7 @@ class ConfigSchema(BaseModel):
     nlp: ConfigSchemaNlp
     pretraining: Union[ConfigSchemaPretrain, ConfigSchemaPretrainEmpty] = {}
     components: Dict[str, Dict[str, Any]]
+    corpora: Dict[str, Reader]
 
     @root_validator(allow_reuse=True)
     def validate_config(cls, values):

@@ -121,6 +121,55 @@ that you don't want to hard-code in your config file.
 $ python -m spacy train config.cfg --paths.train ./corpus/train.spacy
 ```
 
+### corpora {#config-corpora tag="section"}
+
+This section defines a dictionary mapping of string keys to `Callable`
+functions. Each callable takes an `nlp` object and yields
+[`Example`](/api/example) objects. By default, the two keys `train` and `dev`
+are specified and each refer to a [`Corpus`](/api/top-level#Corpus). When
+pretraining, an additional pretrain section is added that defaults to a
+[`JsonlReader`](/api/top-level#JsonlReader).
+
+These subsections can be expanded with additional subsections, each referring to
+a callback of type `Callable[[Language], Iterator[Example]]`:
+
+> #### Example
+>
+> ```ini
+> [corpora]
+> [corpora.train]
+> @readers = "spacy.Corpus.v1"
+> path = ${paths:train}
+>
+> [corpora.dev]
+> @readers = "spacy.Corpus.v1"
+> path = ${paths:dev}
+>
+> [corpora.pretrain]
+> @readers = "spacy.JsonlReader.v1"
+> path = ${paths.raw}
+> min_length = 5
+> max_length = 500
+>
+> [corpora.mydata]
+> @readers = "my_reader.v1"
+> shuffle = true
+> ```
+
+Alternatively, the `corpora` block could refer to one function with return type
+`Dict[str, Callable[[Language], Iterator[Example]]]`:
+
+> #### Example
+>
+> ```ini
+> [corpora]
+> @readers = "my_dict_reader.v1"
+> train_path = ${paths:train}
+> dev_path = ${paths:dev}
+> shuffle = true
+>
+> ```
+
 ### training {#config-training tag="section"}
 
 This section defines settings and controls for the training and evaluation
@@ -130,7 +179,7 @@ process that are used when you run [`spacy train`](/api/cli#train).
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `accumulate_gradient` | Whether to divide the batch up into substeps. Defaults to `1`. ~~int~~                                                                                                                                       |
 | `batcher`             | Callable that takes an iterator of [`Doc`](/api/doc) objects and yields batches of `Doc`s. Defaults to [`batch_by_words`](/api/top-level#batch_by_words). ~~Callable[[Iterator[Doc], Iterator[List[Doc]]]]~~ |
-| `dev_corpus`          | Callable that takes the current `nlp` object and yields [`Example`](/api/example) objects. Defaults to [`Corpus`](/api/top-level#Corpus). ~~Callable[[Language], Iterator[Example]]~~                        |
+| `dev_corpus`          | Dot notation of the config location defining the dev corpus. Defaults to `corpora.dev`. ~~str~~                                                                                                              |
 | `dropout`             | The dropout rate. Defaults to `0.1`. ~~float~~                                                                                                                                                               |
 | `eval_frequency`      | How often to evaluate during training (steps). Defaults to `200`. ~~int~~                                                                                                                                    |
 | `gpu_allocator`       | Library for cupy to route GPU memory allocation to. Can be "", "pytorch" or "tensorflow". Defaults to variable `${system.seed}`. ~~str~~                                                                     |
@@ -143,7 +192,7 @@ process that are used when you run [`spacy train`](/api/cli#train).
 | `raw_text`            | Optional path to a jsonl file with unlabelled text documents for a [rehearsal](/api/language#rehearse) step. Defaults to variable `${paths.raw}`. ~~Optional[str]~~                                          |
 | `score_weights`       | Score names shown in metrics mapped to their weight towards the final weighted score. See [here](/usage/training#metrics) for details. Defaults to `{}`. ~~Dict[str, float]~~                                |
 | `seed`                | The random seed. Defaults to variable `${system.seed}`. ~~int~~                                                                                                                                              |
-| `train_corpus`        | Callable that takes the current `nlp` object and yields [`Example`](/api/example) objects. Defaults to [`Corpus`](/api/top-level#Corpus). ~~Callable[[Language], Iterator[Example]]~~                        |
+| `train_corpus`        | Dot notation of the config location defining the train corpus. Defaults to `corpora.train`. ~~str~~                                                                                                          |
 | `vectors`             | Name or path of pipeline containing pretrained word vectors to use, e.g. created with [`init vocab`](/api/cli#init-vocab). Defaults to `null`. ~~Optional[str]~~                                             |
 
 ### pretraining {#config-pretraining tag="section,optional"}
@@ -152,17 +201,18 @@ This section is optional and defines settings and controls for
 [language model pretraining](/usage/embeddings-transformers#pretraining). It's
 used when you run [`spacy pretrain`](/api/cli#pretrain).
 
-| Name           | Description                                                                                                                                                                                  |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `max_epochs`   | Maximum number of epochs. Defaults to `1000`. ~~int~~                                                                                                                                        |
-| `dropout`      | The dropout rate. Defaults to `0.2`. ~~float~~                                                                                                                                               |
-| `n_save_every` | Saving frequency. Defaults to `null`. ~~Optional[int]~~                                                                                                                                      |
-| `objective`    | The pretraining objective. Defaults to `{"type": "characters", "n_characters": 4}`. ~~Dict[str, Any]~~                                                                                       |
-| `optimizer`    | The optimizer. Defaults to [`Adam`](https://thinc.ai/docs/api-optimizers#adam). ~~Optimizer~~                                                                                                |
-| `corpus`       | Callable that takes the current `nlp` object and yields [`Doc`](/api/doc) objects. Defaults to [`JsonlReader`](/api/top-level#JsonlReader). ~~Callable[[Language, str], Iterable[Example]]~~ |
-| `batcher`      | Batcher for the training data. ~~Callable[[Iterator[Doc], Iterator[List[Doc]]]]~~                                                                                                            |
-| `component`    | Component to find the layer to pretrain. Defaults to `"tok2vec"`. ~~str~~                                                                                                                    |
-| `layer`        | The layer to pretrain. If empty, the whole component model will be used. ~~str~~                                                                                                             |
+| Name           | Description                                                                                            |
+| -------------- | ------------------------------------------------------------------------------------------------------ |
+| `max_epochs`   | Maximum number of epochs. Defaults to `1000`. ~~int~~                                                  |
+| `dropout`      | The dropout rate. Defaults to `0.2`. ~~float~~                                                         |
+| `n_save_every` | Saving frequency. Defaults to `null`. ~~Optional[int]~~                                                |
+| `objective`    | The pretraining objective. Defaults to `{"type": "characters", "n_characters": 4}`. ~~Dict[str, Any]~~ |
+| `optimizer`    | The optimizer. Defaults to [`Adam`](https://thinc.ai/docs/api-optimizers#adam). ~~Optimizer~~          |
+| `corpus`       | Dot notation of the config location defining the train corpus. Defaults to `corpora.pretrain`. ~~str~~ |
+| `batcher`      | Batcher for the training data. ~~Callable[[Iterator[Doc], Iterator[List[Doc]]]]~~                      |
+| `component`    | Component to find the layer to pretrain. Defaults to `"tok2vec"`. ~~str~~                              |
+| `layer`        | The layer to pretrain. If empty, the whole component model will be used. ~~str~~                       |
+|                |
 
 ## Training data {#training}
 

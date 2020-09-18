@@ -84,7 +84,7 @@ Create a blank pipeline of a given language class. This function is the twin of
 | _keyword-only_                      |                                                                                                                                                                    |
 | `vocab` <Tag variant="new">3</Tag>  | Optional shared vocab to pass in on initialization. If `True` (default), a new `Vocab` object will be created. ~~Union[Vocab, bool]~~.                             |
 | `config` <Tag variant="new">3</Tag> | Optional config overrides, either as nested dict or dict keyed by section value in dot notation, e.g. `"components.name.value"`. ~~Union[Dict[str, Any], Config]~~ |
-| `meta` <Tag variant="new">3</tag>   | Optional meta overrides for [`nlp.meta`](/api/language#meta). ~~Dict[str, Any]~~                                                                                   |
+| `meta` <Tag variant="new">3</Tag>   | Optional meta overrides for [`nlp.meta`](/api/language#meta). ~~Dict[str, Any]~~                                                                                   |
 | **RETURNS**                         | An empty `Language` object of the appropriate subclass. ~~Language~~                                                                                               |
 
 ### spacy.info {#spacy.info tag="function"}
@@ -450,7 +450,7 @@ remain in the config file stored on your local system.
 > [training.logger]
 > @loggers = "spacy.WandbLogger.v1"
 > project_name = "monitor_spacy_training"
-> remove_config_values = ["paths.train", "paths.dev", "training.dev_corpus.path", "training.train_corpus.path"]
+> remove_config_values = ["paths.train", "paths.dev", "corpora.train.path", "corpora.dev.path"]
 > ```
 
 | Name                   | Description                                                                                                                           |
@@ -480,7 +480,7 @@ the [`Corpus`](/api/corpus) class.
 > [paths]
 > train = "corpus/train.spacy"
 >
-> [training.train_corpus]
+> [corpora.train]
 > @readers = "spacy.Corpus.v1"
 > path = ${paths.train}
 > gold_preproc = false
@@ -508,7 +508,7 @@ JSONL file. Also see the [`JsonlReader`](/api/corpus#jsonlreader) class.
 > [paths]
 > pretrain = "corpus/raw_text.jsonl"
 >
-> [pretraining.corpus]
+> [corpora.pretrain]
 > @readers = "spacy.JsonlReader.v1"
 > path = ${paths.pretrain}
 > min_length = 0
