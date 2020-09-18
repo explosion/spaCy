@@ -2,11 +2,11 @@ from typing import Dict, Any, Optional
 from pathlib import Path
 from wasabi import msg
 from thinc.api import require_gpu, fix_random_seed, set_dropout_rate, Adam
-from thinc.api import Model, data_validation
+from thinc.api import Model, data_validation, set_gpu_allocator
 import typer
 
 from ._util import Arg, Opt, debug_cli, show_validation_error
-from ._util import parse_config_overrides, string_to_list, set_gpu_allocator
+from ._util import parse_config_overrides, string_to_list
 from .. import util
 
 

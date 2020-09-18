@@ -4,17 +4,16 @@ import time
 import re
 from collections import Counter
 from pathlib import Path
-from thinc.api import Config
-from thinc.api import require_gpu
+from thinc.api import require_gpu, set_gpu_allocator
 from thinc.api import set_dropout_rate, to_categorical, fix_random_seed
-from thinc.api import CosineDistance, L2Distance
+from thinc.api import Config, CosineDistance, L2Distance
 from wasabi import msg
 import srsly
 from functools import partial
 import typer
 
 from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
-from ._util import import_code, set_gpu_allocator
+from ._util import import_code
 from ..ml.models.multi_task import build_cloze_multi_task_model
 from ..ml.models.multi_task import build_cloze_characters_multi_task_model
 from ..tokens import Doc

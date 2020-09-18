@@ -6,13 +6,13 @@ from pathlib import Path
 from wasabi import msg
 import thinc
 import thinc.schedules
-from thinc.api import Config, Optimizer, require_gpu, fix_random_seed
+from thinc.api import Config, Optimizer, require_gpu, fix_random_seed, set_gpu_allocator
 import random
 import typer
 import logging
 
 from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
-from ._util import import_code, get_sourced_components, set_gpu_allocator
+from ._util import import_code, get_sourced_components
 from ..language import Language
 from .. import util
 from ..training.example import Example
