@@ -99,7 +99,7 @@ def pretrain(
     use_gpu: int = -1,
 ):
     if config["training"]["seed"] is not None:
-        fix_random_seed(config["system"]["seed"])
+        fix_random_seed(config["training"]["seed"])
     allocator = config["training"]["gpu_allocator"]
     if use_gpu >= 0 and allocator:
         set_gpu_allocator(allocator)
