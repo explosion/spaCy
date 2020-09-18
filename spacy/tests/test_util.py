@@ -69,7 +69,6 @@ def test_util_dot_section():
     [nlp]
     lang = "en"
     pipeline = ["textcat"]
-    load_vocab_data = false
 
     [components]
 
@@ -95,15 +94,13 @@ def test_util_dot_section():
     # not exclusive_classes
     assert en_nlp.get_pipe("textcat").model.attrs["multi_label"] is False
     # Test that default values got overwritten
-    assert not en_config["nlp"]["load_vocab_data"]
-    assert nl_config["nlp"]["load_vocab_data"]  # default value True
+    assert en_config["nlp"]["pipeline"] == ["textcat"]
+    assert nl_config["nlp"]["pipeline"] == [] # default value []
     # Test proper functioning of 'dot_to_object'
     with pytest.raises(KeyError):
         dot_to_object(en_config, "nlp.pipeline.tagger")
     with pytest.raises(KeyError):
         dot_to_object(en_config, "nlp.unknownattribute")
-    assert not dot_to_object(en_config, "nlp.load_vocab_data")
-    assert dot_to_object(nl_config, "nlp.load_vocab_data")
     assert isinstance(dot_to_object(nl_config, "training.optimizer"), Optimizer)
 
 

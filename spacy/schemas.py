@@ -8,6 +8,7 @@ from collections import defaultdict
 from thinc.api import Optimizer
 
 from .attrs import NAMES
+from .lookups import Lookups
 
 if TYPE_CHECKING:
     # This lets us add type hints for mypy etc. without causing circular imports
@@ -198,6 +199,7 @@ class ModelMetaSchema(BaseModel):
 class ConfigSchemaTraining(BaseModel):
     # fmt: off
     vectors: Optional[StrictStr] = Field(..., title="Path to vectors")
+    lookups: Optional[Lookups] = Field(..., title="Vocab lookups")
     dev_corpus: StrictStr = Field(..., title="Path in the config to the dev data")
     train_corpus: StrictStr = Field(..., title="Path in the config to the training data")
     batcher: Batcher = Field(..., title="Batcher for the training data")
@@ -228,7 +230,6 @@ class ConfigSchemaNlp(BaseModel):
     pipeline: List[StrictStr] = Field(..., title="The pipeline component names in order")
     disabled: List[StrictStr] = Field(..., title="Pipeline components to disable by default")
     tokenizer: Callable = Field(..., title="The tokenizer to use")
-    load_vocab_data: StrictBool = Field(..., title="Whether to load additional vocab data from spacy-lookups-data")
     before_creation: Optional[Callable[[Type["Language"]], Type["Language"]]] = Field(..., title="Optional callback to modify Language class before initialization")
     after_creation: Optional[Callable[["Language"], "Language"]] = Field(..., title="Optional callback to modify nlp object after creation and before the pipeline is constructed")
     after_pipeline_creation: Optional[Callable[["Language"], "Language"]] = Field(..., title="Optional callback to modify nlp object after the pipeline is constructed")
