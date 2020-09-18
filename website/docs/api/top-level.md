@@ -145,9 +145,10 @@ pipelines.
 > nlp = spacy.load("en_core_web_sm")
 > ```
 
-| Name        | Description                             |
-| ----------- | --------------------------------------- |
-| **RETURNS** | Whether the GPU was activated. ~~bool~~ |
+| Name        | Description                                      |
+| ----------- | ------------------------------------------------ |
+| `gpu_id`    | Device index to select. Defaults to `0`. ~~int~~ |
+| **RETURNS** | Whether the GPU was activated. ~~bool~~          |
 
 ### spacy.require_gpu {#spacy.require_gpu tag="function" new="2.0.14"}
 
@@ -164,9 +165,10 @@ and _before_ loading any pipelines.
 > nlp = spacy.load("en_core_web_sm")
 > ```
 
-| Name        | Description     |
-| ----------- | --------------- |
-| **RETURNS** | `True` ~~bool~~ |
+| Name        | Description                                      |
+| ----------- | ------------------------------------------------ |
+| `gpu_id`    | Device index to select. Defaults to `0`. ~~int~~ |
+| **RETURNS** | `True` ~~bool~~                                  |
 
 ## displaCy {#displacy source="spacy/displacy"}
 
