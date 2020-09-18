@@ -66,10 +66,12 @@ def debug_model_cli(
             exits=1,
         )
     model = pipe.model
-    debug_model(model, print_settings=print_settings)
+    # call _link_components directly as we won't call nlp.begin_training
+    nlp._link_components()
+    debug_model(nlp, model, print_settings=print_settings)
 
 
-def debug_model(model: Model, *, print_settings: Optional[Dict[str, Any]] = None):
+def debug_model(nlp, model: Model, *, print_settings: Optional[Dict[str, Any]] = None):
     if not isinstance(model, Model):
         msg.fail(
             f"Requires a Thinc Model to be analysed, but found {type(model)} instead.",
@@ -86,10 +88,10 @@ def debug_model(model: Model, *, print_settings: Optional[Dict[str, Any]] = None
 
     # STEP 1: Initializing the model and printing again
     X = _get_docs()
-    Y = _get_output(model.ops)
+    goldY = _get_output(model.ops)
     # The output vector might differ from the official type of the output layer
     with data_validation(False):
-        model.initialize(X=X, Y=Y)
+        model.initialize(X=X, Y=goldY)
     if print_settings.get("print_after_init"):
         msg.divider(f"STEP 1 - after initialization")
         _print_model(model, print_settings)
@@ -97,9 +99,16 @@ def debug_model(model: Model, *, print_settings: Optional[Dict[str, Any]] = None
     # STEP 2: Updating the model and printing again
     optimizer = Adam(0.001)
     set_dropout_rate(model, 0.2)
+    # ugly hack to deal with Tok2Vec listeners
+    tok2vec = None
+    if model.has_ref("tok2vec") and model.get_ref("tok2vec").name == "tok2vec-listener":
+        tok2vec = nlp.get_pipe("tok2vec")
+        tok2vec.model.initialize(X=X)
     for e in range(3):
-        Y, get_dX = model.begin_update(_get_docs())
-        dY = get_gradient(model, Y)
+        if tok2vec:
+            tok2vec.predict(X)
+        Y, get_dX = model.begin_update(X)
+        dY = get_gradient(goldY, Y)
         get_dX(dY)
         model.finish_update(optimizer)
     if print_settings.get("print_after_training"):
@@ -107,7 +116,7 @@ def debug_model(model: Model, *, print_settings: Optional[Dict[str, Any]] = None
         _print_model(model, print_settings)
 
     # STEP 3: the final prediction
-    prediction = model.predict(_get_docs())
+    prediction = model.predict(X)
     if print_settings.get("print_prediction"):
         msg.divider(f"STEP 3 - prediction")
         msg.info(str(prediction))
@@ -115,8 +124,7 @@ def debug_model(model: Model, *, print_settings: Optional[Dict[str, Any]] = None
     msg.good(f"Succesfully ended analysis - model looks good!")
 
 
-def get_gradient(model, Y):
-    goldY = _get_output(model.ops)
+def get_gradient(goldY, Y):
     return Y - goldY
 
 
