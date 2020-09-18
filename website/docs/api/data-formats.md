@@ -123,20 +123,11 @@ $ python -m spacy train config.cfg --paths.train ./corpus/train.spacy
 
 ### corpora {#config-corpora tag="section"}
 
-This section defines a dictionary mapping of string keys to `Callable`
-functions. Each callable takes an `nlp` object and yields
-[`Example`](/api/example) objects. By default, the two keys `train` and `dev`
-are specified and each refer to a [`Corpus`](/api/top-level#Corpus). When
-pretraining, an additional pretrain section is added that defaults to a
-[`JsonlReader`](/api/top-level#JsonlReader).
-
-These subsections can be expanded with additional subsections, each referring to
-a callback of type `Callable[[Language], Iterator[Example]]`:
-
 > #### Example
 >
 > ```ini
 > [corpora]
+>
 > [corpora.train]
 > @readers = "spacy.Corpus.v1"
 > path = ${paths:train}
@@ -148,27 +139,43 @@ a callback of type `Callable[[Language], Iterator[Example]]`:
 > [corpora.pretrain]
 > @readers = "spacy.JsonlReader.v1"
 > path = ${paths.raw}
-> min_length = 5
-> max_length = 500
 >
-> [corpora.mydata]
-> @readers = "my_reader.v1"
-> shuffle = true
+> [corpora.my_custom_data]
+> @readers = "my_custom_reader.v1"
 > ```
 
-Alternatively, the `corpora` block could refer to one function with return type
-`Dict[str, Callable[[Language], Iterator[Example]]]`:
+This section defines a **dictionary** mapping of string keys to functions. Each
+function takes an `nlp` object and yields [`Example`](/api/example) objects. By
+default, the two keys `train` and `dev` are specified and each refer to a
+[`Corpus`](/api/top-level#Corpus). When pretraining, an additional `pretrain`
+section is added that defaults to a [`JsonlReader`](/api/top-level#JsonlReader).
+You can also register custom functions that return a callable.
+
+| Name       | Description                                                                                                                                                                 |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `train`    | Training data corpus, typically used in `[training]` block. ~~Callable[[Language], Iterator[Example]]~~                                                                     |
+| `dev`      | Development data corpus, typically used in `[training]` block. ~~Callable[[Language], Iterator[Example]]~~                                                                  |
+| `pretrain` | Raw text for [pretraining](/usage/embeddings-transformers#pretraining), typically used in `[pretraining]` block (if available). ~~Callable[[Language], Iterator[Example]]~~ |
+| ...        | Any custom or alternative corpora. ~~Callable[[Language], Iterator[Example]]~~                                                                                              |
+
+Alternatively, the `[corpora]` block can refer to **one function** that returns
+a dictionary keyed by the corpus names. This can be useful if you want to load a
+single corpus once and then divide it up into `train` and `dev` partitions.
 
 > #### Example
 >
 > ```ini
 > [corpora]
-> @readers = "my_dict_reader.v1"
+> @readers = "my_custom_reader.v1"
 > train_path = ${paths:train}
 > dev_path = ${paths:dev}
 > shuffle = true
 >
 > ```
+
+| Name      | Description                                                                                                                                                                                                              |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `corpora` | A dictionary keyed by string names, mapped to corpus functions that receive the current `nlp` object and return an iterator of [`Example`](/api/example) objects. ~~Dict[str, Callable[[Language], Iterator[Example]]]~~ |
 
 ### training {#config-training tag="section"}
 
