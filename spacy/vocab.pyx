@@ -22,14 +22,9 @@ from .lang.norm_exceptions import BASE_NORMS
 from .lang.lex_attrs import LEX_ATTRS, is_stop, get_lang
 
 
-def create_vocab(lang, defaults, vectors_name=None, load_data=True):
+def create_vocab(lang, defaults, vectors_name=None):
     # If the spacy-lookups-data package is installed, we pre-populate the lookups
     # with lexeme data, if available
-    if load_data:
-        tables = ["lexeme_norm", "lexeme_prob", "lexeme_cluster", "lexeme_settings"]
-        lookups = load_lookups(lang, tables=tables, strict=False)
-    else:
-        lookups = Lookups()
     lex_attrs = {**LEX_ATTRS, **defaults.lex_attr_getters}
     # This is messy, but it's the minimal working fix to Issue #639.
     lex_attrs[IS_STOP] = functools.partial(is_stop, stops=defaults.stop_words)
@@ -38,11 +33,9 @@ def create_vocab(lang, defaults, vectors_name=None, load_data=True):
     lex_attrs[NORM] = util.add_lookups(
         lex_attrs.get(NORM, LEX_ATTRS[NORM]),
         BASE_NORMS,
-        lookups.get_table("lexeme_norm", {}),
     )
     return Vocab(
         lex_attr_getters=lex_attrs,
-        lookups=lookups,
         writing_system=defaults.writing_system,
         get_noun_chunks=defaults.syntax_iterators.get("noun_chunks"),
         vectors_name=vectors_name,
@@ -423,6 +416,14 @@ cdef class Vocab:
         if isinstance(orth, str):
             orth = self.strings.add(orth)
         return orth in self.vectors
+
+    def load_lookups(self, lookups):
+        self.lookups = lookups
+        if lookups.has_table("lexeme_norm"):
+            self.lex_attr_getters[NORM] = util.add_lookups(
+                self.lex_attr_getters[NORM],
+                lookups.get_table("lexeme_norm"),
+            )
 
     def to_disk(self, path, *, exclude=tuple()):
         """Save the current state to a directory.

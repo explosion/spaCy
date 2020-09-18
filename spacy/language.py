@@ -31,6 +31,7 @@ from .schemas import ConfigSchema
 from .git_info import GIT_VERSION
 from . import util
 from . import about
+from .lookups import load_lookups
 
 
 # This is the base config will all settings (training etc.)
@@ -84,6 +85,12 @@ def create_tokenizer() -> Callable[["Language"], Tokenizer]:
         )
 
     return tokenizer_factory
+
+
+@registry.misc("spacy.LoadLookupsData.v1")
+def load_lookups_data(lang, tables):
+    lookups = load_lookups(lang=lang, tables=tables)
+    return lookups
 
 
 class Language:
@@ -152,7 +159,6 @@ class Language:
                 self.lang,
                 self.Defaults,
                 vectors_name=vectors_name,
-                load_data=self._config["nlp"]["load_vocab_data"],
             )
         else:
             if (self.lang and vocab.lang) and (self.lang != vocab.lang):

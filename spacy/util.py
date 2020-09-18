@@ -253,6 +253,14 @@ def load_vectors_into_model(
                 nlp.vocab.strings.add(vectors_nlp.vocab.strings[key])
 
 
+def load_vocab_data_into_model(
+    nlp: "Language", *, lookups: Optional["Lookups"]=None
+) -> None:
+    """Load vocab data."""
+    if lookups:
+        nlp.vocab.load_lookups(lookups)
+
+
 def load_model(
     name: Union[str, Path],
     *,
