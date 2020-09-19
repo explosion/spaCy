@@ -89,6 +89,7 @@ def debug_model(nlp, model: Model, *, print_settings: Optional[Dict[str, Any]] =
     # STEP 1: Initializing the model and printing again
     X = _get_docs()
     goldY = _get_output(model.ops)
+    # _set_output_dim(nO=goldY.shape[-1], model=model)
     # The output vector might differ from the official type of the output layer
     with data_validation(False):
         model.initialize(X=X, Y=goldY)
@@ -108,6 +109,7 @@ def debug_model(nlp, model: Model, *, print_settings: Optional[Dict[str, Any]] =
         if tok2vec:
             tok2vec.predict(X)
         Y, get_dX = model.begin_update(X)
+        print("get_dX", get_dX)
         dY = get_gradient(goldY, Y)
         get_dX(dY)
         model.finish_update(optimizer)
@@ -150,6 +152,10 @@ def _get_output(ops):
         for j in range(labels):
             output[i, j] = 1 / (i+j+0.01)
     return ops.xp.asarray(output)
+
+
+def _get_output_old(xp):
+    return xp.asarray([i + 10 for i, _ in enumerate(_get_docs())], dtype="float32")
 
 
 def _print_model(model, print_settings):
@@ -200,3 +206,12 @@ def _print_matrix(value):
     sample_matrix = sample_matrix[0:5]
     result = result + str(sample_matrix)
     return result
+
+
+def _set_output_dim(model, nO):
+    # the dim inference doesn't always work 100%, we need this hack like we have it in pipe.pyx
+    if model.has_dim("nO") is None:
+        model.set_dim("nO", nO)
+    if model.has_ref("output_layer"):
+        if model.get_ref("output_layer").has_dim("nO") is None:
+            model.get_ref("output_layer").set_dim("nO", nO)
