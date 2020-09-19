@@ -87,6 +87,7 @@ def train(
     sourced_components = get_sourced_components(config)
     with show_validation_error(config_path):
         nlp, config = util.load_model_from_config(config)
+    util.load_vocab_data_into_model(nlp, lookups=config["training"]["lookups"])
     if config["training"]["vectors"] is not None:
         util.load_vectors_into_model(nlp, config["training"]["vectors"])
     raw_text, tag_map, morph_rules, weights_data = load_from_paths(config)
