@@ -254,7 +254,7 @@ def load_vectors_into_model(
 
 
 def load_vocab_data_into_model(
-    nlp: "Language", *, lookups: Optional["Lookups"]=None
+    nlp: "Language", *, lookups: Optional["Lookups"] = None
 ) -> None:
     """Load vocab data."""
     if lookups:
@@ -660,7 +660,7 @@ def run_command(
     command: Union[str, List[str]],
     *,
     stdin: Optional[Any] = None,
-    capture: bool=False,
+    capture: bool = False,
 ) -> Optional[subprocess.CompletedProcess]:
     """Run a command on the command line as a subprocess. If the subprocess
     returns a non-zero exit code, a system exit is performed.
