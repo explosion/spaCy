@@ -144,7 +144,7 @@ def run_commands(
         if not silent:
             print(f"Running command: {join_command(command)}")
         if not dry:
-            run_command(command)
+            run_command(command, capture=False)
 
 
 def validate_subcommand(
