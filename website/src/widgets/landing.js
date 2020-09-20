@@ -30,7 +30,6 @@ import Benchmarks from 'usage/_benchmarks-models.md'
 
 const CODE_EXAMPLE = `# pip install spacy
 # python -m spacy download en_core_web_sm
-
 import spacy
 
 # Load English tokenizer, tagger, parser and NER
@@ -120,7 +119,7 @@ const Landing = ({ data }) => {
                         </Li>
                         <Li>
                             ✅ Components for <strong>named entity</strong> recognition,
-                            part-of-speech-tagging, dependency parsing, sentence segmentation,{' '}
+                            part-of-speech tagging, dependency parsing, sentence segmentation,{' '}
                             <strong>text classification</strong>, lemmatization, morphological
                             analysis, entity linking and more
                         </Li>
