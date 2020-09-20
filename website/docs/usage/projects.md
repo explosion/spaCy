@@ -976,14 +976,12 @@ your results.
 
 ![Screenshot: Parameter importance using config values](../images/wandb2.jpg 'Parameter importance using config values')
 
-<!-- TODO:
-
 <Project id="integrations/wandb">
 
 Get started with tracking your spaCy training runs in Weights & Biases using our
-project template. It includes a simple config using the `WandbLogger`, as well
-as a custom logger implementation you can adjust for your specific use case.
+project template. It trains on the IMDB Movie Review Dataset and includes a
+simple config with the built-in `WandbLogger`, as well as a custom example of
+creating variants of the config for a simple hyperparameter grid search and
+logging the results.
 
 </Project>
-
--->

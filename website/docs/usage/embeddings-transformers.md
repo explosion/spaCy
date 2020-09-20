@@ -655,6 +655,16 @@ and pass in optional config overrides, like the path to the raw text file:
 $ python -m spacy pretrain config_pretrain.cfg ./output --paths.raw text.jsonl
 ```
 
+The following defaults are used for the `[pretraining]` block and merged into
+your existing config when you run [`init config`](/api/cli#init-config) or
+[`init fill-config`](/api/cli#init-fill-config) with `--pretraining`. If needed,
+you can [configure](#pretraining-configure) the settings and hyperparameters or
+change the [objective](#pretraining-details).
+
+```ini
+%%GITHUB_SPACY/spacy/default_config_pretraining.cfg
+```
+
 ### How pretraining works {#pretraining-details}
 
 The impact of [`spacy pretrain`](/api/cli#pretrain) varies, but it will usually
