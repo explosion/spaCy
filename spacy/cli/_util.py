@@ -354,7 +354,7 @@ def git_sparse_checkout(repo, subpath, dest, branch):
         run_command(cmd)
         # Now we need to find the missing filenames for the subpath we want.
         # Looking for this 'rev-list' command in the git --help? Hah.
-        cmd = f"git -C {tmp_dir} rev-list --objects --all {'--missing=print ' if use_sparse else ''} -- {subpath}"
+        cmd = f"git -C {tmp_dir} rev-list --objects --all --missing=print -- {subpath}"
         ret = run_command(cmd, capture=True)
         git_repo = _from_http_to_git(repo)
         # Now pass those missings into another bit of git internals
