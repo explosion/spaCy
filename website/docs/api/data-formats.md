@@ -60,7 +60,6 @@ your config and check that it's valid, you can run the
 > [nlp]
 > lang = "en"
 > pipeline = ["tagger", "parser", "ner"]
-> load_vocab_data = true
 > before_creation = null
 > after_creation = null
 > after_pipeline_creation = null
@@ -77,7 +76,6 @@ Defines the `nlp` object, its tokenizer and
 | `lang`                    | Pipeline language [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes). Defaults to `null`. ~~str~~                                                                                                                                                                                        |
 | `pipeline`                | Names of pipeline components in order. Should correspond to sections in the `[components]` block, e.g. `[components.ner]`. See docs on [defining components](/usage/training#config-components). Defaults to `[]`. ~~List[str]~~                                                                        |
 | `disabled`                | Names of pipeline components that are loaded but disabled by default and not run as part of the pipeline. Should correspond to components listed in `pipeline`. After a pipeline is loaded, disabled components can be enabled using [`Language.enable_pipe`](/api/language#enable_pipe). ~~List[str]~~ |
-| `load_vocab_data`         | Whether to load additional lexeme and vocab data from [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) if available. Defaults to `true`. ~~bool~~                                                                                                                                |
 | `before_creation`         | Optional [callback](/usage/training#custom-code-nlp-callbacks) to modify `Language` subclass before it's initialized. Defaults to `null`. ~~Optional[Callable[[Type[Language]], Type[Language]]]~~                                                                                                      |
 | `after_creation`          | Optional [callback](/usage/training#custom-code-nlp-callbacks) to modify `nlp` object right after it's initialized. Defaults to `null`. ~~Optional[Callable[[Language], Language]]~~                                                                                                                    |
 | `after_pipeline_creation` | Optional [callback](/usage/training#custom-code-nlp-callbacks) to modify `nlp` object after the pipeline components have been added. Defaults to `null`. ~~Optional[Callable[[Language], Language]]~~                                                                                                   |
@@ -190,7 +188,9 @@ process that are used when you run [`spacy train`](/api/cli#train).
 | `dropout`             | The dropout rate. Defaults to `0.1`. ~~float~~                                                                                                                                                               |
 | `eval_frequency`      | How often to evaluate during training (steps). Defaults to `200`. ~~int~~                                                                                                                                    |
 | `frozen_components`   | Pipeline component names that are "frozen" and shouldn't be updated during training. See [here](/usage/training#config-components) for details. Defaults to `[]`. ~~List[str]~~                              |
+| `gpu_allocator`       | Library for cupy to route GPU memory allocation to. Can be `"pytorch"` or `"tensorflow"`. Defaults to variable `${system.gpu_allocator}`. ~~str~~                                                            |
 | `init_tok2vec`        | Optional path to pretrained tok2vec weights created with [`spacy pretrain`](/api/cli#pretrain). Defaults to variable `${paths.init_tok2vec}`. ~~Optional[str]~~                                              |
+| `lookups`             | Additional lexeme and vocab data from [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data). Defaults to `null`. ~~Optional[Lookups]~~                                                     |
 | `max_epochs`          | Maximum number of epochs to train for. Defaults to `0`. ~~int~~                                                                                                                                              |
 | `max_steps`           | Maximum number of update steps to train for. Defaults to `20000`. ~~int~~                                                                                                                                    |
 | `optimizer`           | The optimizer. The learning rate schedule and other settings can be configured as part of the optimizer. Defaults to [`Adam`](https://thinc.ai/docs/api-optimizers#adam). ~~Optimizer~~                      |
@@ -475,7 +475,7 @@ lexical data.
 Here's an example of the 20 most frequent lexemes in the English training data:
 
 ```json
-%%GITHUB_SPACY / extra / example_data / vocab - data.jsonl
+%%GITHUB_SPACY/extra/example_data/vocab-data.jsonl
 ```
 
 ## Pipeline meta {#meta}

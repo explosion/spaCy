@@ -145,9 +145,10 @@ pipelines.
 > nlp = spacy.load("en_core_web_sm")
 > ```
 
-| Name        | Description                             |
-| ----------- | --------------------------------------- |
-| **RETURNS** | Whether the GPU was activated. ~~bool~~ |
+| Name        | Description                                      |
+| ----------- | ------------------------------------------------ |
+| `gpu_id`    | Device index to select. Defaults to `0`. ~~int~~ |
+| **RETURNS** | Whether the GPU was activated. ~~bool~~          |
 
 ### spacy.require_gpu {#spacy.require_gpu tag="function" new="2.0.14"}
 
@@ -164,9 +165,10 @@ and _before_ loading any pipelines.
 > nlp = spacy.load("en_core_web_sm")
 > ```
 
-| Name        | Description     |
-| ----------- | --------------- |
-| **RETURNS** | `True` ~~bool~~ |
+| Name        | Description                                      |
+| ----------- | ------------------------------------------------ |
+| `gpu_id`    | Device index to select. Defaults to `0`. ~~int~~ |
+| **RETURNS** | `True` ~~bool~~                                  |
 
 ## displaCy {#displacy source="spacy/displacy"}
 
@@ -455,6 +457,16 @@ remain in the config file stored on your local system.
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `project_name`         | The name of the project in the Weights & Biases interface. The project will be created automatically if it doesn't exist yet. ~~str~~ |
 | `remove_config_values` | A list of values to include from the config before it is uploaded to W&B (default: empty). ~~List[str]~~                              |
+
+<Project id="integrations/wandb">
+
+Get started with tracking your spaCy training runs in Weights & Biases using our
+project template. It trains on the IMDB Movie Review Dataset and includes a
+simple config with the built-in `WandbLogger`, as well as a custom example of
+creating variants of the config for a simple hyperparameter grid search and
+logging the results.
+
+</Project>
 
 ## Readers {#readers source="spacy/training/corpus.py" new="3"}
 

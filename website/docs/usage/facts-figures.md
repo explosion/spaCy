@@ -45,7 +45,7 @@ spaCy v3.0 introduces transformer-based pipelines that bring spaCy's accuracy
 right up to **current state-of-the-art**. You can also use a CPU-optimized
 pipeline, which is less accurate but much cheaper to run.
 
-<!-- TODO: -->
+<!-- TODO: update benchmarks and intro -->
 
 > #### Evaluation details
 >
@@ -68,6 +68,6 @@ our project template.
 
 </Project>
 
-<!-- ## Citing spaCy {#citation}
+<!-- TODO: ## Citing spaCy {#citation}
 
-<!-- TODO: update -->
+-->

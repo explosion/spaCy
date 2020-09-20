@@ -574,7 +574,7 @@ The directory will be created if it doesn't exist, and the whole pipeline data,
 meta and configuration will be written out. To make the pipeline more convenient
 to deploy, we recommend wrapping it as a [Python package](/api/cli#package).
 
-<Accordion title="What’s the difference between the config.cfg and meta.json?" spaced id="models-meta-vs-config">
+<Accordion title="What’s the difference between the config.cfg and meta.json?" spaced id="models-meta-vs-config" spaced>
 
 When you save a pipeline in spaCy v3.0+, two files will be exported: a
 [`config.cfg`](/api/data-formats#config) based on
@@ -595,6 +595,15 @@ based on [`nlp.meta`](/api/language#meta).
   no impact on the functionality of the `nlp` object.
 
 </Accordion>
+
+<Project id="pipelines/tagger_parser_ud">
+
+The easiest way to get started with an end-to-end workflow is to clone a
+[project template](/usage/projects) and run it – for example, this template that
+lets you train a **part-of-speech tagger** and **dependency parser** on a
+Universal Dependencies treebank and generates an installable Python package.
+
+</Project>
 
 ### Generating a pipeline package {#models-generating}
 
@@ -699,5 +708,3 @@ class and call [`from_disk`](/api/language#from_disk) instead.
 ```python
 nlp = spacy.blank("en").from_disk("/path/to/data")
 ```
-
-<!-- TODO: point to spaCy projects? -->

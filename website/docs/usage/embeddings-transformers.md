@@ -289,8 +289,7 @@ of objects by referring to creation functions, including functions you register
 yourself. For details on how to get started with training your own model, check
 out the [training quickstart](/usage/training#quickstart).
 
-<!-- TODO:
-<Project id="en_core_trf_lg">
+<!-- TODO: <Project id="en_core_trf_lg">
 
 The easiest way to get started is to clone a transformers-based project
 template. Swap in your data, edit the settings and hyperparameters and train,
@@ -623,7 +622,7 @@ that are familiar from the training block: the `[pretraining.batcher]`,
 `[pretraining.optimizer]` and `[pretraining.corpus]` all work the same way and
 expect the same types of objects, although for pretraining your corpus does not
 need to have any annotations, so you will often use a different reader, such as
-the [`JsonlReader`](/api/toplevel#jsonlreader).
+the [`JsonlReader`](/api/top-level#jsonlreader).
 
 > #### Raw text format
 >
@@ -653,6 +652,16 @@ and pass in optional config overrides, like the path to the raw text file:
 
 ```cli
 $ python -m spacy pretrain config_pretrain.cfg ./output --paths.raw text.jsonl
+```
+
+The following defaults are used for the `[pretraining]` block and merged into
+your existing config when you run [`init config`](/api/cli#init-config) or
+[`init fill-config`](/api/cli#init-fill-config) with `--pretraining`. If needed,
+you can [configure](#pretraining-configure) the settings and hyperparameters or
+change the [objective](#pretraining-details).
+
+```ini
+%%GITHUB_SPACY/spacy/default_config_pretraining.cfg
 ```
 
 ### How pretraining works {#pretraining-details}

@@ -763,6 +763,7 @@ $ python -m spacy train [config_path] [--output] [--code] [--verbose] [overrides
 | `--output`, `-o`  | Directory to store trained pipeline in. Will be created if it doesn't exist. ~~Optional[Path] \(positional)~~                                                                              |
 | `--code`, `-c`    | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~       |
 | `--verbose`, `-V` | Show more detailed messages during training. ~~bool (flag)~~                                                                                                                               |
+| `--gpu-id`, `-g`  | GPU ID or `-1` for CPU. Defaults to `-1`. ~~int (option)~~                                                                                                                                 |
 | `--help`, `-h`    | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                 |
 | overrides         | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~ |
 | **CREATES**       | The final trained pipeline and the best trained pipeline.                                                                                                                                  |
@@ -798,11 +799,12 @@ $ python -m spacy pretrain [config_path] [output_dir] [--code] [--resume-path] [
 
 | Name                    | Description                                                                                                                                                                           |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `output_dir`            | Directory to save binary weights to on each epoch. ~~Path (positional)~~                                                                                                              |
 | `config_path`           | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. ~~Path (positional)~~                                                           |
+| `output_dir`            | Directory to save binary weights to on each epoch. ~~Path (positional)~~                                                                                                              |
 | `--code`, `-c`          | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~  |
 | `--resume-path`, `-r`   | Path to pretrained weights from which to resume pretraining. ~~Optional[Path] \(option)~~                                                                                             |
 | `--epoch-resume`, `-er` | The epoch to resume counting from when using `--resume-path`. Prevents unintended overwriting of existing weight files. ~~Optional[int] \(option)~~                                   |
+| `--gpu-id`, `-g`        | GPU ID or `-1` for CPU. Defaults to `-1`. ~~int (option)~~                                                                                                                            |
 | `--help`, `-h`          | Show help message and available arguments. ~~bool (flag)~~                                                                                                                            |
 | overrides               | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--training.dropout 0.2`. ~~Any (option/flag)~~ |
 | **CREATES**             | The pretrained weights that can be used to initialize `spacy train`.                                                                                                                  |
@@ -893,8 +895,6 @@ what you need. By default, spaCy's
 can provide any other repo (public or private) that you have access to using the
 `--repo` option.
 
-<!-- TODO: update example once we've decided on repo structure -->
-
 ```cli
 $ python -m spacy project clone [name] [dest] [--repo] [--branch] [--sparse]
 ```
@@ -902,7 +902,7 @@ $ python -m spacy project clone [name] [dest] [--repo] [--branch] [--sparse]
 > #### Example
 >
 > ```cli
-> $ python -m spacy project clone some_example
+> $ python -m spacy project clone pipelines/ner_wikiner
 > ```
 >
 > Clone from custom repo:

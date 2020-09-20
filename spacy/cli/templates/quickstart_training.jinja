@@ -8,7 +8,11 @@ train = ""
 dev = ""
 
 [system]
-use_pytorch_for_gpu_memory = {{ "true" if use_transformer else "false" }}
+{% if use_transformer -%}
+gpu_allocator = "pytorch"
+{% else -%}
+gpu_allocator = null
+{% endif %}
 
 [nlp]
 lang = "{{ lang }}"

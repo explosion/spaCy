@@ -8,6 +8,7 @@ from collections import defaultdict
 from thinc.api import Optimizer
 
 from .attrs import NAMES
+from .lookups import Lookups
 
 if TYPE_CHECKING:
     # This lets us add type hints for mypy etc. without causing circular imports
@@ -198,6 +199,7 @@ class ModelMetaSchema(BaseModel):
 class ConfigSchemaTraining(BaseModel):
     # fmt: off
     vectors: Optional[StrictStr] = Field(..., title="Path to vectors")
+    lookups: Optional[Lookups] = Field(..., title="Vocab lookups")
     dev_corpus: StrictStr = Field(..., title="Path in the config to the dev data")
     train_corpus: StrictStr = Field(..., title="Path in the config to the training data")
     batcher: Batcher = Field(..., title="Batcher for the training data")
@@ -207,6 +209,7 @@ class ConfigSchemaTraining(BaseModel):
     max_steps: StrictInt = Field(..., title="Maximum number of update steps to train for")
     eval_frequency: StrictInt = Field(..., title="How often to evaluate during training (steps)")
     seed: Optional[StrictInt] = Field(..., title="Random seed")
+    gpu_allocator: Optional[StrictStr] = Field(..., title="Memory allocator when running on GPU")
     accumulate_gradient: StrictInt = Field(..., title="Whether to divide the batch up into substeps")
     score_weights: Dict[StrictStr, Union[StrictFloat, StrictInt]] = Field(..., title="Scores to report and their weights for selecting final model")
     init_tok2vec: Optional[StrictStr] = Field(..., title="Path to pretrained tok2vec weights")
@@ -227,7 +230,6 @@ class ConfigSchemaNlp(BaseModel):
     pipeline: List[StrictStr] = Field(..., title="The pipeline component names in order")
     disabled: List[StrictStr] = Field(..., title="Pipeline components to disable by default")
     tokenizer: Callable = Field(..., title="The tokenizer to use")
-    load_vocab_data: StrictBool = Field(..., title="Whether to load additional vocab data from spacy-lookups-data")
     before_creation: Optional[Callable[[Type["Language"]], Type["Language"]]] = Field(..., title="Optional callback to modify Language class before initialization")
     after_creation: Optional[Callable[["Language"], "Language"]] = Field(..., title="Optional callback to modify nlp object after creation and before the pipeline is constructed")
     after_pipeline_creation: Optional[Callable[["Language"], "Language"]] = Field(..., title="Optional callback to modify nlp object after the pipeline is constructed")
