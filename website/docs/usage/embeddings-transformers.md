@@ -289,8 +289,7 @@ of objects by referring to creation functions, including functions you register
 yourself. For details on how to get started with training your own model, check
 out the [training quickstart](/usage/training#quickstart).
 
-<!-- TODO:
-<Project id="en_core_trf_lg">
+<!-- TODO: <Project id="en_core_trf_lg">
 
 The easiest way to get started is to clone a transformers-based project
 template. Swap in your data, edit the settings and hyperparameters and train,
@@ -623,7 +622,7 @@ that are familiar from the training block: the `[pretraining.batcher]`,
 `[pretraining.optimizer]` and `[pretraining.corpus]` all work the same way and
 expect the same types of objects, although for pretraining your corpus does not
 need to have any annotations, so you will often use a different reader, such as
-the [`JsonlReader`](/api/toplevel#jsonlreader).
+the [`JsonlReader`](/api/top-level#jsonlreader).
 
 > #### Raw text format
 >

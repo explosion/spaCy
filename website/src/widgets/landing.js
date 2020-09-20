@@ -222,10 +222,11 @@ const Landing = ({ data }) => {
                     <br />
                     <br />
                     <br />
-                    {/** TODO: update with actual example */}
-                    <Project id="some_example">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus interdum
-                        sodales lectus.
+                    <Project id="pipelines/tagger_parser_ud" title="Get started">
+                        The easiest way to get started is to clone a project template and run it
+                        – for example, this template for training a{' '}
+                        <strong>part-of-speech tagger</strong> and{' '}
+                        <strong>dependency parser</strong> on a Universal Dependencies treebank.
                     </Project>
                 </LandingCol>
                 <LandingCol>

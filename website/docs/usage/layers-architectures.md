@@ -356,11 +356,11 @@ that training configs are complete and experiments fully reproducible.
 
 </Infobox>
 
-Note that when using a PyTorch or Tensorflow model, it is recommended to set the GPU
-memory allocator accordingly. When `gpu_allocator` is set to "pytorch" or
-"tensorflow" in the training config, cupy will allocate memory via those respective libraries,
-preventing OOM errors when there's available memory sitting in the other
-library's pool.
+Note that when using a PyTorch or Tensorflow model, it is recommended to set the
+GPU memory allocator accordingly. When `gpu_allocator` is set to "pytorch" or
+"tensorflow" in the training config, cupy will allocate memory via those
+respective libraries, preventing OOM errors when there's available memory
+sitting in the other library's pool.
 
 ```ini
 ### config.cfg (excerpt)
@@ -489,7 +489,7 @@ with Model.define_operators({">>": chain}):
 <Infobox title="This section is still under construction" emoji="🚧" variant="warning">
 </Infobox>
 
-<!-- TODO:
+<!-- TODO: write trainable component section
 - Interaction with `predict`, `get_loss` and `set_annotations`
 - Initialization life-cycle with `begin_training`, correlation with add_label
 Example: relation extraction component (implemented as project template)

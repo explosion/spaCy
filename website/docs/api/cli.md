@@ -895,8 +895,6 @@ what you need. By default, spaCy's
 can provide any other repo (public or private) that you have access to using the
 `--repo` option.
 
-<!-- TODO: update example once we've decided on repo structure -->
-
 ```cli
 $ python -m spacy project clone [name] [dest] [--repo] [--branch] [--sparse]
 ```
@@ -904,7 +902,7 @@ $ python -m spacy project clone [name] [dest] [--repo] [--branch] [--sparse]
 > #### Example
 >
 > ```cli
-> $ python -m spacy project clone some_example
+> $ python -m spacy project clone pipelines/ner_wikiner
 > ```
 >
 > Clone from custom repo:
