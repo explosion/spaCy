@@ -95,7 +95,7 @@ def test_util_dot_section():
     assert en_nlp.get_pipe("textcat").model.attrs["multi_label"] is False
     # Test that default values got overwritten
     assert en_config["nlp"]["pipeline"] == ["textcat"]
-    assert nl_config["nlp"]["pipeline"] == [] # default value []
+    assert nl_config["nlp"]["pipeline"] == []  # default value []
     # Test proper functioning of 'dot_to_object'
     with pytest.raises(KeyError):
         dot_to_object(en_config, "nlp.pipeline.tagger")

@@ -164,7 +164,9 @@ def MultiHashEmbed(
 
 
 @registry.architectures.register("spacy.CharacterEmbed.v1")
-def CharacterEmbed(width: int, rows: int, nM: int, nC: int, also_use_static_vectors: bool):
+def CharacterEmbed(
+    width: int, rows: int, nM: int, nC: int, also_use_static_vectors: bool
+):
     """Construct an embedded representation based on character embeddings, using
     a feed-forward network. A fixed number of UTF-8 byte characters are used for
     each word, taken from the beginning and end of the word equally. Padding is
@@ -202,9 +204,11 @@ def CharacterEmbed(width: int, rows: int, nM: int, nC: int, also_use_static_vect
                 ),
                 StaticVectors(width, dropout=0.0),
             ),
-            with_array(Maxout(width, nM * nC + (2 * width), nP=3, normalize=True, dropout=0.0)),
+            with_array(
+                Maxout(width, nM * nC + (2 * width), nP=3, normalize=True, dropout=0.0)
+            ),
             ragged2list(),
-    )
+        )
     else:
         model = chain(
             concatenate(
@@ -215,9 +219,11 @@ def CharacterEmbed(width: int, rows: int, nM: int, nC: int, also_use_static_vect
                     with_array(HashEmbed(nO=width, nV=rows, column=0, seed=5)),
                 ),
             ),
-            with_array(Maxout(width, nM * nC + width, nP=3, normalize=True, dropout=0.0)),
+            with_array(
+                Maxout(width, nM * nC + width, nP=3, normalize=True, dropout=0.0)
+            ),
             ragged2list(),
-    )
+        )
     return model
 
 

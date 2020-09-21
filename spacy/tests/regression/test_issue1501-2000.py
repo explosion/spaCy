@@ -212,9 +212,17 @@ def test_issue1834():
         heads=[0, -1, -2, -3, -4, -5, 0, -1, -2],
         deps=["dep"] * len(words),
     )
-    print(doc.has_annotation("DEP"), [t.head.i for t in doc], [t.is_sent_start for t in doc])
+    print(
+        doc.has_annotation("DEP"),
+        [t.head.i for t in doc],
+        [t.is_sent_start for t in doc],
+    )
     new_doc = Doc(doc.vocab).from_bytes(doc.to_bytes())
-    print(new_doc.has_annotation("DEP"), [t.head.i for t in new_doc], [t.is_sent_start for t in new_doc])
+    print(
+        new_doc.has_annotation("DEP"),
+        [t.head.i for t in new_doc],
+        [t.is_sent_start for t in new_doc],
+    )
     assert new_doc[6].sent_start
     assert new_doc.has_annotation("DEP")
     assert new_doc.has_annotation("TAG")

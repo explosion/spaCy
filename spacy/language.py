@@ -156,11 +156,7 @@ class Language:
             raise ValueError(Errors.E918.format(vocab=vocab, vocab_type=type(Vocab)))
         if vocab is True:
             vectors_name = meta.get("vectors", {}).get("name")
-            vocab = create_vocab(
-                self.lang,
-                self.Defaults,
-                vectors_name=vectors_name,
-            )
+            vocab = create_vocab(self.lang, self.Defaults, vectors_name=vectors_name)
         else:
             if (self.lang and vocab.lang) and (self.lang != vocab.lang):
                 raise ValueError(Errors.E150.format(nlp=self.lang, vocab=vocab.lang))
@@ -1462,7 +1458,7 @@ class Language:
         # here :(
         for i, (name1, proc1) in enumerate(self.pipeline):
             if hasattr(proc1, "find_listeners"):
-                for name2, proc2 in self.pipeline[i+1:]:
+                for name2, proc2 in self.pipeline[i + 1 :]:
                     if isinstance(getattr(proc2, "model", None), Model):
                         proc1.find_listeners(proc2.model)
 

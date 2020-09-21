@@ -6,7 +6,6 @@ from wasabi import msg
 import srsly
 import hashlib
 import typer
-import subprocess
 from click import NoSuchOption
 from typer.main import get_command
 from contextlib import contextmanager
@@ -327,7 +326,7 @@ def git_checkout(
         )
     with make_tempdir() as tmp_dir:
         cmd = f"git -C {tmp_dir} clone {repo} . -b {branch}"
-        ret = run_command(cmd, capture=True)
+        run_command(cmd, capture=True)
         # We need Path(name) to make sure we also support subdirectories
         shutil.copytree(str(tmp_dir / Path(subpath)), str(dest))
 
