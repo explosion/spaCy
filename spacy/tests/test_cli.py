@@ -3,7 +3,6 @@ from click import NoSuchOption
 
 from spacy.training import docs_to_json, biluo_tags_from_offsets
 from spacy.training.converters import iob2docs, conll_ner2docs, conllu2docs
-from spacy.lang.en import English
 from spacy.schemas import ProjectConfigSchema, RecommendationSchema, validate
 from spacy.cli.init_config import init_config, RECOMMENDATIONS
 from spacy.cli._util import validate_project_commands, parse_config_overrides

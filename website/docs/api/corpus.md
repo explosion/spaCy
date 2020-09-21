@@ -26,7 +26,7 @@ streaming.
 > [paths]
 > train = "corpus/train.spacy"
 >
-> [training.train_corpus]
+> [corpora.train]
 > @readers = "spacy.Corpus.v1"
 > path = ${paths.train}
 > gold_preproc = false
@@ -135,7 +135,7 @@ Initialize the reader.
 >
 > ```ini
 > ### Example config
-> [pretraining.corpus]
+> [corpora.pretrain]
 > @readers = "spacy.JsonlReader.v1"
 > path = "corpus/raw_text.jsonl"
 > min_length = 0

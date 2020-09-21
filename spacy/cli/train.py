@@ -6,8 +6,7 @@ from pathlib import Path
 from wasabi import msg
 import thinc
 import thinc.schedules
-from thinc.api import use_pytorch_for_gpu_memory, require_gpu, fix_random_seed
-from thinc.api import Config, Optimizer
+from thinc.api import Config, Optimizer, require_gpu, fix_random_seed, set_gpu_allocator
 import random
 import typer
 import logging
@@ -18,6 +17,7 @@ from ..language import Language
 from .. import util
 from ..training.example import Example
 from ..errors import Errors
+from ..util import dot_to_object
 
 
 @app.command(
@@ -28,7 +28,7 @@ def train_cli(
     ctx: typer.Context,  # This is only used to read additional arguments
     config_path: Path = Arg(..., help="Path to config file", exists=True),
     output_path: Optional[Path] = Opt(None, "--output", "--output-path", "-o", help="Output directory to store trained pipeline in"),
-    code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
+    code_path: Optional[Path] = Opt(None, "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
     use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU"),
     resume: bool = Opt(False, "--resume", "-R", help="Resume training"),
@@ -78,22 +78,23 @@ def train(
         config = util.load_config(
             config_path, overrides=config_overrides, interpolate=True
         )
-    if config.get("training", {}).get("seed") is not None:
+    if config["training"]["seed"] is not None:
         fix_random_seed(config["training"]["seed"])
-    if config.get("system", {}).get("use_pytorch_for_gpu_memory"):
-        # It feels kind of weird to not have a default for this.
-        use_pytorch_for_gpu_memory()
+    allocator = config["training"]["gpu_allocator"]
+    if use_gpu >= 0 and allocator:
+        set_gpu_allocator(allocator)
     # Use original config here before it's resolved to functions
     sourced_components = get_sourced_components(config)
     with show_validation_error(config_path):
         nlp, config = util.load_model_from_config(config)
+    util.load_vocab_data_into_model(nlp, lookups=config["training"]["lookups"])
     if config["training"]["vectors"] is not None:
         util.load_vectors_into_model(nlp, config["training"]["vectors"])
     raw_text, tag_map, morph_rules, weights_data = load_from_paths(config)
     T_cfg = config["training"]
     optimizer = T_cfg["optimizer"]
-    train_corpus = T_cfg["train_corpus"]
-    dev_corpus = T_cfg["dev_corpus"]
+    train_corpus = dot_to_object(config, T_cfg["train_corpus"])
+    dev_corpus = dot_to_object(config, T_cfg["dev_corpus"])
     batcher = T_cfg["batcher"]
     train_logger = T_cfg["logger"]
     # Components that shouldn't be updated during training

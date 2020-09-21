@@ -31,6 +31,7 @@ from .schemas import ConfigSchema
 from .git_info import GIT_VERSION
 from . import util
 from . import about
+from .lookups import load_lookups
 
 
 # This is the base config will all settings (training etc.)
@@ -84,6 +85,13 @@ def create_tokenizer() -> Callable[["Language"], Tokenizer]:
         )
 
     return tokenizer_factory
+
+
+@registry.misc("spacy.LookupsDataLoader.v1")
+def load_lookups_data(lang, tables):
+    util.logger.debug(f"Loading lookups from spacy-lookups-data: {tables}")
+    lookups = load_lookups(lang=lang, tables=tables)
+    return lookups
 
 
 class Language:
@@ -148,12 +156,7 @@ class Language:
             raise ValueError(Errors.E918.format(vocab=vocab, vocab_type=type(Vocab)))
         if vocab is True:
             vectors_name = meta.get("vectors", {}).get("name")
-            vocab = create_vocab(
-                self.lang,
-                self.Defaults,
-                vectors_name=vectors_name,
-                load_data=self._config["nlp"]["load_vocab_data"],
-            )
+            vocab = create_vocab(self.lang, self.Defaults, vectors_name=vectors_name)
         else:
             if (self.lang and vocab.lang) and (self.lang != vocab.lang):
                 raise ValueError(Errors.E150.format(nlp=self.lang, vocab=vocab.lang))
@@ -1455,7 +1458,7 @@ class Language:
         # here :(
         for i, (name1, proc1) in enumerate(self.pipeline):
             if hasattr(proc1, "find_listeners"):
-                for name2, proc2 in self.pipeline[i+1:]:
+                for name2, proc2 in self.pipeline[i + 1 :]:
                     if isinstance(getattr(proc2, "model", None), Model):
                         proc1.find_listeners(proc2.model)
 

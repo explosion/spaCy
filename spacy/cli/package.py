@@ -110,7 +110,7 @@ def package(
     msg.good(f"Successfully created package '{model_name_v}'", main_path)
     if create_sdist:
         with util.working_dir(main_path):
-            util.run_command([sys.executable, "setup.py", "sdist"])
+            util.run_command([sys.executable, "setup.py", "sdist"], capture=False)
         zip_file = main_path / "dist" / f"{model_name_v}.tar.gz"
         msg.good(f"Successfully created zipped Python package", zip_file)
 
