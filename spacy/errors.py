@@ -455,7 +455,7 @@ class Errors:
             "{obj}.{attr}\nAttribute '{attr}' does not exist on {obj}.")
     E186 = ("'{tok_a}' and '{tok_b}' are different texts.")
     E187 = ("Only unicode strings are supported as labels.")
-    E189 = ("Each argument to `get_doc` should be of equal length.")
+    E189 = ("Each argument to Doc.__init__ should be of equal length.")
     E190 = ("Token head out of range in `Doc.from_array()` for token index "
             "'{index}' with value '{value}' (equivalent to relative head "
             "index: '{rel_head_index}'). The head indices should be relative "

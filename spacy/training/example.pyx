@@ -172,7 +172,7 @@ cdef class Example:
         return output
 
     def get_aligned_ner(self):
-        if not self.y.is_nered:
+        if not self.y.has_annotation("ENT_IOB"):
             return [None] * len(self.x)  # should this be 'missing' instead of 'None' ?
         x_ents = self.get_aligned_spans_y2x(self.y.ents)
         # Default to 'None' for missing values
@@ -221,7 +221,7 @@ cdef class Example:
     def split_sents(self):
         """ Split the token annotations into multiple Examples based on
         sent_starts and return a list of the new Examples"""
-        if not self.reference.is_sentenced:
+        if not self.reference.has_annotation("SENT_START"):
             return [self]
 
         align = self.alignment.y2x

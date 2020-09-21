@@ -200,8 +200,8 @@ cdef class Doc:
         sent_starts (Optional[List[Union[bool, None]]]): A list of values, of
             the same length as words, to assign as token.is_sent_start. Will be
             overridden by heads if heads is provided. Defaults to None.
-        ents (Optional[List[Span]]): A list of spans to assign as doc.ents.
-            Defaults to None.
+        ents (Optional[List[Tuple[Union[str, int], int, int]]]): A list of
+            (label, start, end) tuples to assign as doc.ents. Defaults to None.
 
         DOCS: https://nightly.spacy.io/api/doc#init
         """
@@ -665,7 +665,7 @@ cdef class Doc:
             cdef attr_t kb_id
             cdef int ent_start, ent_end
             for ent_info in ents:
-                entity_type, kb_id, ent_start, ent_end = get_entity_info(ent_info)
+                entity_type, kb_id, ent_start, ent_end = get_entity_info(ent_info, self.vocab)
                 for token_index in range(ent_start, ent_end):
                     if token_index in tokens_in_ents.keys():
                         raise ValueError(Errors.E103.format(
@@ -1583,7 +1583,7 @@ def fix_attributes(doc, attributes):
         attributes[ENT_TYPE] = attributes["ent_type"]
 
 
-def get_entity_info(ent_info):
+def get_entity_info(ent_info, vocab):
     if isinstance(ent_info, Span):
         ent_type = ent_info.label
         ent_kb_id = ent_info.kb_id
@@ -1596,4 +1596,6 @@ def get_entity_info(ent_info):
         ent_type, ent_kb_id, start, end = ent_info
     else:
         ent_id, ent_kb_id, ent_type, start, end = ent_info
+    if isinstance(ent_type, str):
+        ent_type = vocab.strings.add(ent_type)
     return ent_type, ent_kb_id, start, end

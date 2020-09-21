@@ -3,7 +3,6 @@ import srsly
 from mock import Mock
 from spacy.matcher import PhraseMatcher
 from spacy.tokens import Doc, Span
-from ..util import get_doc
 
 
 def test_matcher_phrase_matcher(en_vocab):
@@ -140,10 +139,10 @@ def test_phrase_matcher_string_attrs(en_vocab):
     pos1 = ["PRON", "VERB", "NOUN"]
     words2 = ["Yes", ",", "you", "hate", "dogs", "very", "much"]
     pos2 = ["INTJ", "PUNCT", "PRON", "VERB", "NOUN", "ADV", "ADV"]
-    pattern = get_doc(en_vocab, words=words1, pos=pos1)
+    pattern = Doc(en_vocab, words=words1, pos=pos1)
     matcher = PhraseMatcher(en_vocab, attr="POS")
     matcher.add("TEST", [pattern])
-    doc = get_doc(en_vocab, words=words2, pos=pos2)
+    doc = Doc(en_vocab, words=words2, pos=pos2)
     matches = matcher(doc)
     assert len(matches) == 1
     match_id, start, end = matches[0]
@@ -158,10 +157,10 @@ def test_phrase_matcher_string_attrs_negative(en_vocab):
     pos1 = ["PRON", "VERB", "NOUN"]
     words2 = ["matcher:POS-PRON", "matcher:POS-VERB", "matcher:POS-NOUN"]
     pos2 = ["X", "X", "X"]
-    pattern = get_doc(en_vocab, words=words1, pos=pos1)
+    pattern = Doc(en_vocab, words=words1, pos=pos1)
     matcher = PhraseMatcher(en_vocab, attr="POS")
     matcher.add("TEST", [pattern])
-    doc = get_doc(en_vocab, words=words2, pos=pos2)
+    doc = Doc(en_vocab, words=words2, pos=pos2)
     matches = matcher(doc)
     assert len(matches) == 0
 

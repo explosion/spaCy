@@ -2,8 +2,7 @@ import pytest
 from spacy.pipeline._parser_internals.nonproj import ancestors, contains_cycle
 from spacy.pipeline._parser_internals.nonproj import is_nonproj_tree, is_nonproj_arc
 from spacy.pipeline._parser_internals import nonproj
-
-from ..util import get_doc
+from spacy.tokens import Doc
 
 
 @pytest.fixture
@@ -74,16 +73,10 @@ def test_parser_is_nonproj_tree(
     assert is_nonproj_tree(multirooted_tree) is True
 
 
-def test_parser_pseudoprojectivity(en_tokenizer):
+def test_parser_pseudoprojectivity(en_vocab):
     def deprojectivize(proj_heads, deco_labels):
-        tokens = en_tokenizer("whatever " * len(proj_heads))
-        rel_proj_heads = [head - i for i, head in enumerate(proj_heads)]
-        doc = get_doc(
-            tokens.vocab,
-            words=[t.text for t in tokens],
-            deps=deco_labels,
-            heads=rel_proj_heads,
-        )
+        words = ["whatever "] * len(proj_heads)
+        doc = Doc(en_vocab, words=words, deps=deco_labels, heads=proj_heads)
         nonproj.deprojectivize(doc)
         return [t.head.i for t in doc], [token.dep_ for token in doc]
 
@@ -94,49 +87,39 @@ def test_parser_pseudoprojectivity(en_tokenizer):
     labels = ["det", "nsubj", "root", "det", "dobj", "aux", "nsubj", "acl", "punct"]
     labels2 = ["advmod", "root", "det", "nsubj", "advmod", "det", "dobj", "det", "nmod", "aux", "nmod", "advmod", "det", "amod", "punct"]
     # fmt: on
-
     assert nonproj.decompose("X||Y") == ("X", "Y")
     assert nonproj.decompose("X") == ("X", "")
     assert nonproj.is_decorated("X||Y") is True
     assert nonproj.is_decorated("X") is False
-
     nonproj._lift(0, tree)
     assert tree == [2, 2, 2]
-
     assert nonproj._get_smallest_nonproj_arc(nonproj_tree) == 7
     assert nonproj._get_smallest_nonproj_arc(nonproj_tree2) == 10
-
     # fmt: off
     proj_heads, deco_labels = nonproj.projectivize(nonproj_tree, labels)
     assert proj_heads == [1, 2, 2, 4, 5, 2, 7, 5, 2]
     assert deco_labels == ["det", "nsubj", "root", "det", "dobj", "aux",
                            "nsubj", "acl||dobj", "punct"]
-
     deproj_heads, undeco_labels = deprojectivize(proj_heads, deco_labels)
     assert deproj_heads == nonproj_tree
     assert undeco_labels == labels
-
     proj_heads, deco_labels = nonproj.projectivize(nonproj_tree2, labels2)
     assert proj_heads == [1, 1, 3, 1, 5, 6, 9, 8, 6, 1, 9, 12, 13, 10, 1]
     assert deco_labels == ["advmod||aux", "root", "det", "nsubj", "advmod",
                            "det", "dobj", "det", "nmod", "aux", "nmod||dobj",
                            "advmod", "det", "amod", "punct"]
-
     deproj_heads, undeco_labels = deprojectivize(proj_heads, deco_labels)
     assert deproj_heads == nonproj_tree2
     assert undeco_labels == labels2
-
     # if decoration is wrong such that there is no head with the desired label
     # the structure is kept and the label is undecorated
     proj_heads = [1, 2, 2, 4, 5, 2, 7, 5, 2]
     deco_labels = ["det", "nsubj", "root", "det", "dobj", "aux", "nsubj",
                    "acl||iobj", "punct"]
-
     deproj_heads, undeco_labels = deprojectivize(proj_heads, deco_labels)
     assert deproj_heads == proj_heads
     assert undeco_labels == ["det", "nsubj", "root", "det", "dobj", "aux",
                              "nsubj", "acl", "punct"]
-
     # if there are two potential new heads, the first one is chosen even if
     # it"s wrong
     proj_heads = [1, 1, 3, 1, 5, 6, 9, 8, 6, 1, 9, 12, 13, 10, 1]

@@ -12,13 +12,14 @@ from thinc.api import compounding
 import pytest
 import srsly
 
-from ..util import make_tempdir, get_doc
+from ..util import make_tempdir
 
 
 @pytest.fixture
-def doc():
+def doc(en_vocab):
+    nlp = English()  # make sure we get a new vocab every time
     # fmt: off
-    text = "Sarah's sister flew to Silicon Valley via London."
+    words = ["Sarah", "'s", "sister", "flew", "to", "Silicon", "Valley", "via", "London", "."]
     tags = ["NNP", "POS", "NN", "VBD", "IN", "NNP", "NNP", "IN", "NNP", "."]
     pos = ["PROPN", "PART", "NOUN", "VERB", "ADP", "PROPN", "PROPN", "ADP", "PROPN", "PUNCT"]
     morphs = ["NounType=prop|Number=sing", "Poss=yes", "Number=sing", "Tense=past|VerbForm=fin",
@@ -26,15 +27,12 @@ def doc():
               "NounType=prop|Number=sing", "PunctType=peri"]
     # head of '.' is intentionally nonprojective for testing
     heads = [2, 0, 3, 3, 3, 6, 4, 3, 7, 5]
-    heads = [head - i for i, head in enumerate(heads)]
     deps = ["poss", "case", "nsubj", "ROOT", "prep", "compound", "pobj", "prep", "pobj", "punct"]
     lemmas = ["Sarah", "'s", "sister", "fly", "to", "Silicon", "Valley", "via", "London", "."]
-    ents = ((0, 2, "PERSON"), (5, 7, "LOC"), (8, 9, "GPE"))
+    ents = (("PERSON", 0, 2), ("LOC", 5, 7), ("GPE", 8, 9))
     cats = {"TRAVEL": 1.0, "BAKING": 0.0}
     # fmt: on
-    nlp = English()
-    words = [t.text for t in nlp.make_doc(text)]
-    doc = get_doc(
+    doc = Doc(
         nlp.vocab,
         words=words,
         tags=tags,
@@ -212,41 +210,24 @@ def test_json2docs_no_ner(en_vocab):
 
 
 def test_split_sentences(en_vocab):
+    # fmt: off
     words = ["I", "flew", "to", "San Francisco Valley", "had", "loads of fun"]
-    doc = Doc(en_vocab, words=words)
-    gold_words = [
-        "I",
-        "flew",
-        "to",
-        "San",
-        "Francisco",
-        "Valley",
-        "had",
-        "loads",
-        "of",
-        "fun",
-    ]
+    gold_words = ["I", "flew", "to", "San", "Francisco", "Valley", "had", "loads", "of", "fun"]
     sent_starts = [True, False, False, False, False, False, True, False, False, False]
+    # fmt: on
+    doc = Doc(en_vocab, words=words)
     example = Example.from_dict(doc, {"words": gold_words, "sent_starts": sent_starts})
     assert example.text == "I flew to San Francisco Valley had loads of fun "
     split_examples = example.split_sents()
     assert len(split_examples) == 2
     assert split_examples[0].text == "I flew to San Francisco Valley "
     assert split_examples[1].text == "had loads of fun "
-
+    # fmt: off
     words = ["I", "flew", "to", "San", "Francisco", "Valley", "had", "loads", "of fun"]
-    doc = Doc(en_vocab, words=words)
-    gold_words = [
-        "I",
-        "flew",
-        "to",
-        "San Francisco",
-        "Valley",
-        "had",
-        "loads of",
-        "fun",
-    ]
+    gold_words = ["I", "flew", "to", "San Francisco", "Valley", "had", "loads of", "fun"]
     sent_starts = [True, False, False, False, False, True, False, False]
+    # fmt: on
+    doc = Doc(en_vocab, words=words)
     example = Example.from_dict(doc, {"words": gold_words, "sent_starts": sent_starts})
     assert example.text == "I flew to San Francisco Valley had loads of fun "
     split_examples = example.split_sents()
@@ -479,7 +460,6 @@ def test_roundtrip_docs_to_docbin(doc):
     heads = [t.head.i for t in doc]
     cats = doc.cats
     ents = [(e.start_char, e.end_char, e.label_) for e in doc.ents]
-
     # roundtrip to DocBin
     with make_tempdir() as tmpdir:
         # use a separate vocab to test that all labels are added
@@ -600,7 +580,6 @@ def test_tuple_format_implicit():
 
 def test_tuple_format_implicit_invalid():
     """Test that an error is thrown for an implicit invalid field"""
-
     train_data = [
         ("Uber blew through $1 million a week", {"frumble": [(0, 4, "ORG")]}),
         (
@@ -609,7 +588,6 @@ def test_tuple_format_implicit_invalid():
         ),
         ("Google rebrands its business apps", {"entities": [(0, 6, "ORG")]}),
     ]
-
     with pytest.raises(KeyError):
         _train_tuples(train_data)
 
@@ -619,11 +597,9 @@ def _train_tuples(train_data):
     ner = nlp.add_pipe("ner")
     ner.add_label("ORG")
     ner.add_label("LOC")
-
     train_examples = []
     for t in train_data:
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
-
     optimizer = nlp.begin_training()
     for i in range(5):
         losses = {}
@@ -639,17 +615,14 @@ def test_split_sents(merged_dict):
         merged_dict,
     )
     assert example.text == "Hi there everyone It is just me"
-
     split_examples = example.split_sents()
     assert len(split_examples) == 2
     assert split_examples[0].text == "Hi there everyone "
     assert split_examples[1].text == "It is just me"
-
     token_annotation_1 = split_examples[0].to_dict()["token_annotation"]
     assert token_annotation_1["ORTH"] == ["Hi", "there", "everyone"]
     assert token_annotation_1["TAG"] == ["INTJ", "ADV", "PRON"]
     assert token_annotation_1["SENT_START"] == [1, 0, 0]
-
     token_annotation_2 = split_examples[1].to_dict()["token_annotation"]
     assert token_annotation_2["ORTH"] == ["It", "is", "just", "me"]
     assert token_annotation_2["TAG"] == ["PRON", "AUX", "ADV", "PRON"]
