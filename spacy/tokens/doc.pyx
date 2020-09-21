@@ -1414,6 +1414,7 @@ cdef int set_children_from_heads(TokenC* tokens, int start, int end) except -1:
         if tokens[i].head == 0:
             tokens[tokens[i].l_edge].sent_start = 1
 
+
 cdef int _set_lr_kids_and_edges(TokenC* tokens, int start, int end, int loop_count) except -1:
     # May be called multiple times due to non-projectivity. See issues #3170
     # and #4688.

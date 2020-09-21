@@ -34,8 +34,17 @@ def get_doc(
         heads = [i + head for i, head in enumerate(heads)]
     if ents is not None:
         ents = [(vocab.strings[ent_type], start, end) for start, end, ent_type in ents]
-    return Doc(vocab, words=words, pos=pos, heads=heads, deps=deps, tags=tags,
-        ents=ents, lemmas=lemmas, morphs=morphs)
+    return Doc(
+        vocab,
+        words=words,
+        pos=pos,
+        heads=heads,
+        deps=deps,
+        tags=tags,
+        ents=ents,
+        lemmas=lemmas,
+        morphs=morphs,
+    )
 
 
 def get_batch(batch_size):
