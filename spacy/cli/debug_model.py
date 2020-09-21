@@ -1,5 +1,9 @@
+import warnings
 from typing import Dict, Any, Optional, Iterable
 from pathlib import Path
+
+from spacy.training import Example
+from spacy.util import dot_to_object
 from wasabi import msg
 from thinc.api import require_gpu, fix_random_seed, set_dropout_rate, Adam
 from thinc.api import Model, data_validation, set_gpu_allocator
@@ -71,12 +75,10 @@ def debug_model_cli(
             exits=1,
         )
     model = pipe.model
-    # call _link_components directly as we won't call nlp.begin_training
-    nlp._link_components()
-    debug_model(nlp, model, print_settings=print_settings)
+    debug_model(config, nlp, model, print_settings=print_settings)
 
 
-def debug_model(nlp, model: Model, *, print_settings: Optional[Dict[str, Any]] = None):
+def debug_model(config, nlp, model: Model, *, print_settings: Optional[Dict[str, Any]] = None):
     if not isinstance(model, Model):
         msg.fail(
             f"Requires a Thinc Model to be analysed, but found {type(model)} instead.",
@@ -93,10 +95,21 @@ def debug_model(nlp, model: Model, *, print_settings: Optional[Dict[str, Any]] =
 
     # STEP 1: Initializing the model and printing again
     X = _get_docs()
-    _set_output_dim(nO=7, model=model)
     # The output vector might differ from the official type of the output layer
     with data_validation(False):
-        model.initialize(X=X)
+        # msg.info(f"Could not initialize the model with dummy data - using the train_corpus.")
+        try:
+            train_corpus = dot_to_object(config, config["training"]["train_corpus"])
+            nlp.begin_training(lambda: train_corpus(nlp))
+            msg.info("Initialized the model with the training corpus.")
+        except ValueError:
+            try:
+                _set_output_dim(nO=7, model=model)
+                nlp.begin_training(lambda: [Example.from_dict(x, {}) for x in X])
+                msg.info("Initialized the model with dummy data.")
+            except:
+                msg.fail("Could not initialize the model: you'll have to provide a valid train_corpus argument in the config file.", exits=1)
+
     if print_settings.get("print_after_init"):
         msg.divider(f"STEP 1 - after initialization")
         _print_model(model, print_settings)
@@ -114,8 +127,7 @@ def debug_model(nlp, model: Model, *, print_settings: Optional[Dict[str, Any]] =
         if tok2vec:
             tok2vec.predict(X)
         Y, get_dX = model.begin_update(X)
-        # simulate a goldY value
-        if not goldY:
+        if goldY is None:
             goldY = _simulate_gold(Y)
         dY = get_gradient(goldY, Y, model.ops)
         get_dX(dY)
