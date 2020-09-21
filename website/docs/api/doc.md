@@ -43,6 +43,7 @@ Construct a `Doc` object. The most common way to get a `Doc` object is via the
 | lemmas         | A list of strings, of the same length as words, to assign as `token.lemma` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                          |
 | heads          | A list of values, of the same length as words, to assign as the head for each word. Head indices are the absolute position of the head in the doc. Defaults to `None`. ~~Optional[List[int]]~~ |
 | deps           | A list of strings, of the same length as words, to assign as `token.dep` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                            |
+| sent_starts    | A list of values, of the same length as words, to assign as token.is_sent_start. Will be overridden by heads if heads is provided. Defaults to `None`. ~~Optional[List[Union[bool, None]]~~    |
 | ents           | A list of spans to assign as doc.ents. Defaults to `None`. ~~Optional[List[Span]]~~                                                                                                            |
 
 ## Doc.\_\_getitem\_\_ {#getitem tag="method"}

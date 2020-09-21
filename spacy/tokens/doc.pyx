@@ -171,6 +171,7 @@ cdef class Doc:
         lemmas=None,
         heads=None,
         deps=None,
+        sent_starts=None,
         ents=None,
     ):
         """Create a Doc object.
@@ -183,13 +184,24 @@ cdef class Doc:
             words. True means that the word is followed by a space, False means
             it is not. If `None`, defaults to `[True]*len(words)`
         user_data (dict or None): Optional extra data to attach to the Doc.
-        tags (Optional[List[str]]): A list of unicode strings, of the same length as words, to assign as token.tag. Defaults to None.
-        pos (Optional[List[str]]): A list of unicode strings, of the same length as words, to assign as token.pos. Defaults to None.
-        morphs (Optional[List[str]]): A list of unicode strings, of the same length as words, to assign as token.morph. Defaults to None.
-        lemmas (Optional[List[str]]): A list of unicode strings, of the same length as words, to assign as token.lemma. Defaults to None.
-        heads (Optional[List[int]]): A list of values, of the same length as words, to assign as heads. Head indices are the position of the head in the doc. Defaults to None.
-        deps (Optional[List[str]]): A list of unicode strings, of the same length as words, to assign as token.dep. Defaults to None.
-        ents (Optional[List[Span]]): A list of spans to assign as doc.ents. Defaults to None.
+        tags (Optional[List[str]]): A list of unicode strings, of the same
+            length as words, to assign as token.tag. Defaults to None.
+        pos (Optional[List[str]]): A list of unicode strings, of the same
+            length as words, to assign as token.pos. Defaults to None.
+        morphs (Optional[List[str]]): A list of unicode strings, of the same
+            length as words, to assign as token.morph. Defaults to None.
+        lemmas (Optional[List[str]]): A list of unicode strings, of the same
+            length as words, to assign as token.lemma. Defaults to None.
+        heads (Optional[List[int]]): A list of values, of the same length as
+            words, to assign as heads. Head indices are the position of the
+            head in the doc. Defaults to None.
+        deps (Optional[List[str]]): A list of unicode strings, of the same
+            length as words, to assign as token.dep. Defaults to None.
+        sent_starts (Optional[List[Union[bool, None]]]): A list of values, of
+            the same length as words, to assign as token.is_sent_start. Will be
+            overridden by heads if heads is provided. Defaults to None.
+        ents (Optional[List[Span]]): A list of spans to assign as doc.ents.
+            Defaults to None.
 
         DOCS: https://nightly.spacy.io/api/doc#init
         """
@@ -242,16 +254,24 @@ cdef class Doc:
             heads = [head - i for i, head in enumerate(heads)]
         if deps and not heads:
             heads = [0] * len(deps)
+        if sent_starts is not None:
+            for i in range(len(sent_starts)):
+                if sent_starts[i] is True:
+                    sent_starts[i] = 1
+                elif sent_starts[i] is False:
+                    sent_starts[i] = -1
+                elif sent_starts[i] is None or sent_starts[i] not in [-1, 0, 1]:
+                    sent_starts[i] = 0
         headings = []
         values = []
-        annotations = [pos, heads, deps, lemmas, tags, morphs]
-        possible_headings = [POS, HEAD, DEP, LEMMA, TAG, MORPH]
+        annotations = [pos, heads, deps, lemmas, tags, morphs, sent_starts]
+        possible_headings = [POS, HEAD, DEP, LEMMA, TAG, MORPH, SENT_START]
         for a, annot in enumerate(annotations):
             if annot is not None:
                 if len(annot) != len(words):
                     raise ValueError(Errors.E189)
                 headings.append(possible_headings[a])
-                if annot is not heads:
+                if annot is not heads and annot is not sent_starts:
                     values.extend(annot)
         for value in values:
             self.vocab.strings.add(value)
@@ -263,12 +283,12 @@ cdef class Doc:
             j = 0
             for annot in annotations:
                 if annot:
-                    if annot is heads:
+                    if annot is heads or annot is sent_starts:
                         for i in range(len(words)):
                             if attrs.ndim == 1:
-                                attrs[i] = heads[i]
+                                attrs[i] = annot[i]
                             else:
-                                attrs[i, j] = heads[i]
+                                attrs[i, j] = annot[i]
                     elif annot is morphs:
                         for i in range(len(words)):
                             morph_key = vocab.morphology.add(morphs[i])
