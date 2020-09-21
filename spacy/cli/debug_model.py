@@ -1,4 +1,4 @@
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Iterable
 from pathlib import Path
 from wasabi import msg
 from thinc.api import require_gpu, fix_random_seed, set_dropout_rate, Adam
@@ -93,11 +93,10 @@ def debug_model(nlp, model: Model, *, print_settings: Optional[Dict[str, Any]] =
 
     # STEP 1: Initializing the model and printing again
     X = _get_docs()
-    goldY = _get_output(model.ops)
-    # _set_output_dim(nO=goldY.shape[-1], model=model)
+    _set_output_dim(nO=7, model=model)
     # The output vector might differ from the official type of the output layer
     with data_validation(False):
-        model.initialize(X=X, Y=goldY)
+        model.initialize(X=X)
     if print_settings.get("print_after_init"):
         msg.divider(f"STEP 1 - after initialization")
         _print_model(model, print_settings)
@@ -110,12 +109,15 @@ def debug_model(nlp, model: Model, *, print_settings: Optional[Dict[str, Any]] =
     if model.has_ref("tok2vec") and model.get_ref("tok2vec").name == "tok2vec-listener":
         tok2vec = nlp.get_pipe("tok2vec")
         tok2vec.model.initialize(X=X)
+    goldY = None
     for e in range(3):
         if tok2vec:
             tok2vec.predict(X)
         Y, get_dX = model.begin_update(X)
-        print("get_dX", get_dX)
-        dY = get_gradient(goldY, Y)
+        # simulate a goldY value
+        if not goldY:
+            goldY = _simulate_gold(Y)
+        dY = get_gradient(goldY, Y, model.ops)
         get_dX(dY)
         model.finish_update(optimizer)
     if print_settings.get("print_after_training"):
@@ -128,11 +130,20 @@ def debug_model(nlp, model: Model, *, print_settings: Optional[Dict[str, Any]] =
         msg.divider(f"STEP 3 - prediction")
         msg.info(str(prediction))
 
-    msg.good(f"Succesfully ended analysis - model looks good!")
+    msg.good(f"Succesfully ended analysis - model looks good.")
 
 
-def get_gradient(goldY, Y):
-    return Y - goldY
+def _simulate_gold(element, counter=1):
+    if isinstance(element, Iterable):
+        for i in range(len(element)):
+            element[i] = _simulate_gold(element[i], counter+i)
+        return element
+    else:
+        return 1/counter
+
+
+def get_gradient(goldY, Y, ops):
+    return ops.asarray(Y) - ops.asarray(goldY)
 
 
 def _sentences():
@@ -149,18 +160,13 @@ def _get_docs(lang: str = "en"):
     return list(nlp.pipe(_sentences()))
 
 
-def _get_output(ops):
-    docs = len(_get_docs())
-    labels = 6
-    output = ops.alloc2f(d0=docs, d1=labels)
-    for i in range(docs):
-        for j in range(labels):
-            output[i, j] = 1 / (i+j+0.01)
-    return ops.xp.asarray(output)
-
-
-def _get_output_old(xp):
-    return xp.asarray([i + 10 for i, _ in enumerate(_get_docs())], dtype="float32")
+def _set_output_dim(model, nO):
+    # simulating dim inference by directly setting the nO argument of the model
+    if model.has_dim("nO") is None:
+        model.set_dim("nO", nO)
+    if model.has_ref("output_layer"):
+        if model.get_ref("output_layer").has_dim("nO") is None:
+            model.get_ref("output_layer").set_dim("nO", nO)
 
 
 def _print_model(model, print_settings):
