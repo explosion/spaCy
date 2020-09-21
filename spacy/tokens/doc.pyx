@@ -7,6 +7,7 @@ from libc.stdint cimport int32_t, uint64_t
 
 import copy
 from collections import Counter
+from enum import Enum
 import numpy
 import srsly
 from thinc.api import get_array_module
@@ -84,6 +85,17 @@ cdef attr_t get_token_attr_for_matcher(const TokenC* token, attr_id_t feat_name)
             return False
     else:
         return get_token_attr(token, feat_name)
+
+
+class SetEntsDefault(str, Enum):
+    blocked = "blocked"
+    missing = "missing"
+    outside = "outside"
+    unmodified = "unmodified"
+
+    @classmethod
+    def values(cls):
+        return list(cls.__members__.keys())
 
 
 cdef class Doc:
@@ -597,9 +609,9 @@ cdef class Doc:
                 if i in tokens_in_ents.keys():
                     ent_start, ent_end, entity_type, kb_id = tokens_in_ents[i]
                     if entity_type is None or entity_type <= 0:
-                        # Empty label: Missing, unset this token
-                        ent_iob = 0
-                        entity_type = 0
+                        # Only allow labelled spans
+                        print(i, ent_start, ent_end, entity_type)
+                        raise ValueError(Errors.E1013)
                     elif ent_start == i:
                         # Marking the start of an entity
                         ent_iob = 3
@@ -611,19 +623,107 @@ cdef class Doc:
                 self.c[i].ent_kb_id = kb_id
                 self.c[i].ent_iob = ent_iob
 
-    def block_ents(self, spans):
-        """Mark spans as never an entity for the EntityRecognizer.
+    def set_ents(self, entities, *, blocked=None, missing=None, outside=None, default=SetEntsDefault.outside):
+        """Set entity annotation.
 
-        spans (List[Span]): The spans to block as never entities.
+        entities (List[Span]): Spans with labels to set as entities.
+        blocked (Optional[List[Span]]): Spans to set as 'blocked' (never an
+            entity) for spacy's built-in NER component. Other components may
+            ignore this setting.
+        missing (Optional[List[Span]]): Spans with missing/unknown entity
+            information.
+        outside (Optional[List[Span]]): Spans outside of entities (O in IOB).
+        default (str): How to set entity annotation for tokens outside of any
+            provided spans. Options: "blocked", "missing", "outside" and
+            "unmodified" (preserve current state). Defaults to "outside".
         """
-        for span in spans:
+        if default not in SetEntsDefault.values():
+            raise ValueError(Errors.E1011.format(default=default, modes=", ".join(SetEntsDefault)))
+
+        if blocked is None:
+            blocked = tuple()
+        if missing is None:
+            missing = tuple()
+        if outside is None:
+            outside = tuple()
+
+        # Find all tokens covered by spans and check that none are overlapping
+        seen_tokens = set()
+        for span in entities:
+            if not isinstance(span, Span):
+                raise ValueError(Errors.E1012.format(span=span))
+            for i in range(span.start, span.end):
+                if i in seen_tokens:
+                    raise ValueError(Errors.E1010.format(i=i))
+                seen_tokens.add(i)
+        for span in blocked:
+            if not isinstance(span, Span):
+                raise ValueError(Errors.E1012.format(span=span))
+            for i in range(span.start, span.end):
+                if i in seen_tokens:
+                    raise ValueError(Errors.E1010.format(i=i))
+                seen_tokens.add(i)
+        for span in missing:
+            if not isinstance(span, Span):
+                raise ValueError(Errors.E1012.format(span=span))
+            for i in range(span.start, span.end):
+                if i in seen_tokens:
+                    raise ValueError(Errors.E1010.format(i=i))
+                seen_tokens.add(i)
+        for span in outside:
+            if not isinstance(span, Span):
+                raise ValueError(Errors.E1012.format(span=span))
+            for i in range(span.start, span.end):
+                if i in seen_tokens:
+                    raise ValueError(Errors.E1010.format(i=i))
+                seen_tokens.add(i)
+
+        # Set all specified entity information
+        for span in entities:
+            for i in range(span.start, span.end):
+                if not span.label:
+                    raise ValueError(Errors.E1013)
+                if i == span.start:
+                    self.c[i].ent_iob = 3
+                else:
+                    self.c[i].ent_iob = 1
+                self.c[i].ent_type = span.label
+        for span in blocked:
             for i in range(span.start, span.end):
                 self.c[i].ent_iob = 3
                 self.c[i].ent_type = 0
-            # if the following token is I, set to B
-            if span.end < self.length:
-                if self.c[span.end].ent_iob == 1:
-                    self.c[span.end].ent_iob = 3
+        for span in missing:
+            for i in range(span.start, span.end):
+                self.c[i].ent_iob = 0
+                self.c[i].ent_type = 0
+        for span in outside:
+            for i in range(span.start, span.end):
+                self.c[i].ent_iob = 2
+                self.c[i].ent_type = 0
+
+        # Set tokens outside of all provided spans
+        if default != SetEntsDefault.unmodified:
+            for i in range(self.length):
+                if i not in seen_tokens:
+                    self.c[i].ent_type = 0
+                    if default == SetEntsDefault.outside:
+                        self.c[i].ent_iob = 2
+                    elif default == SetEntsDefault.missing:
+                        self.c[i].ent_iob = 0
+                    elif default == SetEntsDefault.blocked:
+                        self.c[i].ent_iob = 3
+
+        # Fix any resulting inconsistent annotation
+        for i in range(self.length - 1):
+            # I must follow B or I: convert I to B
+            if (self.c[i].ent_iob == 0 or self.c[i].ent_iob == 2) and \
+                    self.c[i+1].ent_iob == 1:
+                self.c[i+1].ent_iob = 3
+            # Change of type with BI or II: convert second I to B
+            if self.c[i].ent_type != self.c[i+1].ent_type and \
+                    (self.c[i].ent_iob == 3 or self.c[i].ent_iob == 1) and \
+                    self.c[i+1].ent_iob == 1:
+                self.c[i+1].ent_iob = 3
 
     @property
     def noun_chunks(self):

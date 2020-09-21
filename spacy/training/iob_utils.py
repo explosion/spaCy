@@ -149,9 +149,10 @@ def spans_from_biluo_tags(doc, tags):
 
     doc (Doc): The document that the BILUO tags refer to.
     entities (iterable): A sequence of BILUO tags with each tag describing one
-        token. Each tags string will be of the form of either "", "O" or
+        token. Each tag string will be of the form of either "", "O" or
         "{action}-{label}", where action is one of "B", "I", "L", "U".
-    RETURNS (list): A sequence of Span objects.
+    RETURNS (list): A sequence of Span objects. Each token with a missing IOB
+        tag is returned as a Span with an empty label.
     """
     token_offsets = tags_to_entities(tags)
     spans = []

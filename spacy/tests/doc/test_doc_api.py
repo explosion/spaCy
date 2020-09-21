@@ -425,7 +425,7 @@ def test_has_annotation(en_vocab):
     doc[0].lemma_ = "a"
     doc[0].dep_ = "dep"
     doc[0].head = doc[1]
-    doc.ents = [Span(doc, 0, 1, label="HELLO"), Span(doc, 1, 2, label="")]
+    doc.set_ents([Span(doc, 0, 1, label="HELLO")], default="missing")
 
     for attr in attrs:
         assert doc.has_annotation(attr)
@@ -455,15 +455,68 @@ def test_is_flags_deprecated(en_tokenizer):
         doc.is_sentenced
 
 
-def test_block_ents(en_tokenizer):
+def test_set_ents(en_tokenizer):
+    # set ents
     doc = en_tokenizer("a b c d e")
-    doc.block_ents([doc[1:2], doc[3:5]])
+    doc.set_ents([Span(doc, 0, 1, 10), Span(doc, 1, 3, 11)])
+    assert [t.ent_iob for t in doc] == [3, 3, 1, 2, 2]
+    assert [t.ent_type for t in doc] == [10, 11, 11, 0, 0]
+
+    # add ents, invalid IOB repaired
+    doc = en_tokenizer("a b c d e")
+    doc.set_ents([Span(doc, 0, 1, 10), Span(doc, 1, 3, 11)])
+    doc.set_ents([Span(doc, 0, 2, 12)], default="unmodified")
+    assert [t.ent_iob for t in doc] == [3, 1, 3, 2, 2]
+    assert [t.ent_type for t in doc] == [12, 12, 11, 0, 0]
+
+    # missing ents
+    doc = en_tokenizer("a b c d e")
+    doc.set_ents([Span(doc, 0, 1, 10), Span(doc, 1, 3, 11)], missing=[doc[4:5]])
+    assert [t.ent_iob for t in doc] == [3, 3, 1, 2, 0]
+    assert [t.ent_type for t in doc] == [10, 11, 11, 0, 0]
+
+    # outside ents
+    doc = en_tokenizer("a b c d e")
+    doc.set_ents(
+        [Span(doc, 0, 1, 10), Span(doc, 1, 3, 11)],
+        outside=[doc[4:5]],
+        default="missing",
+    )
+    assert [t.ent_iob for t in doc] == [3, 3, 1, 0, 2]
+    assert [t.ent_type for t in doc] == [10, 11, 11, 0, 0]
+
+    # blocked ents
+    doc = en_tokenizer("a b c d e")
+    doc.set_ents([], blocked=[doc[1:2], doc[3:5]], default="unmodified")
     assert [t.ent_iob for t in doc] == [0, 3, 0, 3, 3]
     assert [t.ent_type for t in doc] == [0, 0, 0, 0, 0]
     assert doc.ents == tuple()
 
-    # invalid IOB repaired
+    # invalid IOB repaired after blocked
     doc.ents = [Span(doc, 3, 5, "ENT")]
     assert [t.ent_iob for t in doc] == [2, 2, 2, 3, 1]
-    doc.block_ents([doc[3:4]])
+    doc.set_ents([], blocked=[doc[3:4]], default="unmodified")
     assert [t.ent_iob for t in doc] == [2, 2, 2, 3, 3]
+
+    # all types
+    doc = en_tokenizer("a b c d e")
+    doc.set_ents(
+        [Span(doc, 0, 1, 10)],
+        blocked=[doc[1:2]],
+        missing=[doc[2:3]],
+        outside=[doc[3:4]],
+        default="unmodified",
+    )
+    assert [t.ent_iob for t in doc] == [3, 3, 0, 2, 0]
+    assert [t.ent_type for t in doc] == [10, 0, 0, 0, 0]
+
+    doc = en_tokenizer("a b c d e")
+    # single span instead of a list
+    with pytest.raises(ValueError):
+        doc.set_ents([], missing=doc[1:2])
+    # invalid default mode
+    with pytest.raises(ValueError):
+        doc.set_ents([], missing=[doc[1:2]], default="none")
+    # conflicting/overlapping specifications
+    with pytest.raises(ValueError):
+        doc.set_ents([], missing=[doc[1:2]], outside=[doc[1:2]])
