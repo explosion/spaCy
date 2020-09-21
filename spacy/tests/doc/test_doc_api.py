@@ -9,6 +9,26 @@ from spacy.attrs import ENT_TYPE, ENT_IOB, SENT_START, HEAD, DEP, MORPH
 from ..util import get_doc
 
 
+def test_doc_api_init(en_vocab):
+    # set sent_start by sent_starts
+    doc = Doc(
+        en_vocab, words=["a", "b", "c", "d"], sent_starts=[True, False, True, False]
+    )
+    assert [t.is_sent_start for t in doc] == [True, False, True, False]
+
+    # set sent_start by heads
+    doc = Doc(
+        en_vocab, words=["a", "b", "c", "d"], heads=[0, 0, 2, 2], deps=["dep"] * 4
+    )
+    assert [t.is_sent_start for t in doc] == [True, False, True, False]
+
+    # heads override sent_starts
+    doc = Doc(
+        en_vocab, words=["a", "b", "c", "d"], sent_starts=[True] * 4, heads=[0, 0, 2, 2], deps=["dep"] * 4
+    )
+    assert [t.is_sent_start for t in doc] == [True, False, True, False]
+
+
 @pytest.mark.parametrize("text", [["one", "two", "three"]])
 def test_doc_api_compare_by_string_position(en_vocab, text):
     doc = Doc(en_vocab, words=text)
