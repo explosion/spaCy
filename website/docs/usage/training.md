@@ -895,9 +895,13 @@ cluster. If it's not set, Ray will run locally.
 python -m spacy ray train config.cfg --n-workers 2
 ```
 
-<!-- TODO: <Project id="integrations/ray">
+<Project id="integrations/ray">
 
-</Project> -->
+Get started with parallel training using our project template. It trains a
+simple model on a Universal Dependencies Treebank and lets you parallelize the
+training with Ray.
+
+</Project>
 
 ### How parallel training works {#parallel-training-details}
 
