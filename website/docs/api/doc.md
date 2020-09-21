@@ -30,11 +30,20 @@ Construct a `Doc` object. The most common way to get a `Doc` object is via the
 > doc = Doc(nlp.vocab, words=words, spaces=spaces)
 > ```
 
-| Name     | Description                                                                                                                                                                                  |
-| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`  | A storage container for lexical types. ~~Vocab~~                                                                                                                                             |
-| `words`  | A list of strings to add to the container. ~~Optional[List[str]]~~                                                                                                                           |
-| `spaces` | A list of boolean values indicating whether each word has a subsequent space. Must have the same length as `words`, if specified. Defaults to a sequence of `True`. ~~Optional[List[bool]]~~ |
+| Name           | Description                                                                                                                                                                                    |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`        | A storage container for lexical types. ~~Vocab~~                                                                                                                                               |
+| `words`        | A list of strings to add to the container. ~~Optional[List[str]]~~                                                                                                                             |
+| `spaces`       | A list of boolean values indicating whether each word has a subsequent space. Must have the same length as `words`, if specified. Defaults to a sequence of `True`. ~~Optional[List[bool]]~~   |
+| `user_data`    | Optional extra data to attach to the Doc. ~~Dict~~                                                                                                                                             |
+| _keyword-only_ |                                                                                                                                                                                                |
+| tags           | A list of strings, of the same length as words, to assign as `token.tag` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                            |
+| pos            | A list of strings, of the same length as words, to assign as `token.pos` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                            |
+| morphs         | A list of strings, of the same length as words, to assign as `token.morph` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                          |
+| lemmas         | A list of strings, of the same length as words, to assign as `token.lemma` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                          |
+| heads          | A list of values, of the same length as words, to assign as the head for each word. Head indices are the absolute position of the head in the doc. Defaults to `None`. ~~Optional[List[int]]~~ |
+| deps           | A list of strings, of the same length as words, to assign as `token.dep` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                            |
+| ents           | A list of spans to assign as doc.ents. Defaults to `None`. ~~Optional[List[Span]]~~                                                                                                            |
 
 ## Doc.\_\_getitem\_\_ {#getitem tag="method"}
 
