@@ -1,15 +1,15 @@
 import pytest
 from click import NoSuchOption
-
 from spacy.training import docs_to_json, biluo_tags_from_offsets
 from spacy.training.converters import iob2docs, conll_ner2docs, conllu2docs
 from spacy.schemas import ProjectConfigSchema, RecommendationSchema, validate
 from spacy.cli.init_config import init_config, RECOMMENDATIONS
 from spacy.cli._util import validate_project_commands, parse_config_overrides
 from spacy.cli._util import load_project_config, substitute_project_variables
-from spacy.cli._util import string_to_list
+from spacy.cli._util import string_to_list, parse_config_env_overrides
 from thinc.config import ConfigValidationError
 import srsly
+import os
 
 from .util import make_tempdir
 
@@ -339,6 +339,18 @@ def test_parse_config_overrides_invalid(args):
 def test_parse_config_overrides_invalid_2(args):
     with pytest.raises(SystemExit):
         parse_config_overrides(args)
+
+
+def test_parse_cli_overrides():
+    prefix = "SPACY_CONFIG_"
+    dot = "__"
+    os.environ[f"{prefix}TRAINING{dot}BATCH_SIZE"] = "123"
+    os.environ[f"{prefix}FOO{dot}BAR{dot}BAZ"] = "hello"
+    os.environ[prefix] = "bad"
+    result = parse_config_env_overrides(prefix=prefix, dot=dot)
+    assert len(result) == 2
+    assert result["training.batch_size"] == 123
+    assert result["foo.bar.baz"] == "hello"
 
 
 @pytest.mark.parametrize("lang", ["en", "nl"])
