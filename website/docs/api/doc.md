@@ -187,8 +187,8 @@ Remove a previously registered extension.
 ## Doc.char_span {#char_span tag="method" new="2"}
 
 Create a `Span` object from the slice `doc.text[start_idx:end_idx]`. Returns
-`None` if the character indices don't map to a valid span using the default mode
-`"strict".
+`None` if the character indices don't map to a valid span using the default
+alignment mode `"strict".
 
 > #### Example
 >
@@ -198,15 +198,15 @@ Create a `Span` object from the slice `doc.text[start_idx:end_idx]`. Returns
 > assert span.text == "New York"
 > ```
 
-| Name                                 | Description                                                                                                                                                                                                                                                                 |
-| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `start`                              | The index of the first character of the span. ~~int~~                                                                                                                                                                                                                       |
-| `end`                                | The index of the last character after the span. ~int~~                                                                                                                                                                                                                      |
-| `label`                              | A label to attach to the span, e.g. for named entities. ~~Union[int, str]~~                                                                                                                                                                                                 |
-| `kb_id` <Tag variant="new">2.2</Tag> | An ID from a knowledge base to capture the meaning of a named entity. ~~Union[int, str]~~                                                                                                                                                                                   |
-| `vector`                             | A meaning representation of the span. ~~numpy.ndarray[ndim=1, dtype=float32]~~                                                                                                                                                                                              |
-| `mode`                               | How character indices snap to token boundaries. Options: `"strict"` (no snapping), `"inside"` (span of all tokens completely within the character span), `"outside"` (span of all tokens at least partially covered by the character span). Defaults to `"strict"`. ~~str~~ |
-| **RETURNS**                          | The newly constructed object or `None`. ~~Optional[Span]~~                                                                                                                                                                                                                  |
+| Name                                 | Description                                                                                                                                                                                                                                                                  |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `start`                              | The index of the first character of the span. ~~int~~                                                                                                                                                                                                                        |
+| `end`                                | The index of the last character after the span. ~int~~                                                                                                                                                                                                                       |
+| `label`                              | A label to attach to the span, e.g. for named entities. ~~Union[int, str]~~                                                                                                                                                                                                  |
+| `kb_id` <Tag variant="new">2.2</Tag> | An ID from a knowledge base to capture the meaning of a named entity. ~~Union[int, str]~~                                                                                                                                                                                    |
+| `vector`                             | A meaning representation of the span. ~~numpy.ndarray[ndim=1, dtype=float32]~~                                                                                                                                                                                               |
+| `alignment_mode`                     | How character indices snap to token boundaries. Options: `"strict"` (no snapping), `"contract"` (span of all tokens completely within the character span), `"expand"` (span of all tokens at least partially covered by the character span). Defaults to `"strict"`. ~~str~~ |
+| **RETURNS**                          | The newly constructed object or `None`. ~~Optional[Span]~~                                                                                                                                                                                                                   |
 
 ## Doc.similarity {#similarity tag="method" model="vectors"}
 
