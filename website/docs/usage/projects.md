@@ -921,6 +921,14 @@ package is installed in the same environment as spaCy, it will automatically add
 [parallel training](/usage/training#parallel-training) for more details on how
 it works under the hood.
 
+<Project id="integrations/ray">
+
+Get started with parallel training using our project template. It trains a
+simple model on a Universal Dependencies Treebank and lets you parallelize the
+training with Ray.
+
+</Project>
+
 You can integrate [`spacy ray train`](/api/cli#ray-train) into your
 `project.yml` just like the regular training command and pass it the config, and
 optional output directory or remote storage URL and config overrides if needed.
@@ -939,10 +947,6 @@ commands:
     outputs:
       - "training/model-best"
 ```
-
-<!-- TODO: <Project id="integrations/ray">
-
-</Project> -->
 
 ---
 
