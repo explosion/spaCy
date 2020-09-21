@@ -9,7 +9,7 @@ from spacy.tokens import Doc
 from spacy.training import Example
 from spacy import util
 from spacy.lang.en import English
-from .util import get_batch
+from ..util import get_batch
 
 from thinc.api import Config
 

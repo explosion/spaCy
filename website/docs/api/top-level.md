@@ -84,7 +84,7 @@ Create a blank pipeline of a given language class. This function is the twin of
 | _keyword-only_                      |                                                                                                                                                                    |
 | `vocab` <Tag variant="new">3</Tag>  | Optional shared vocab to pass in on initialization. If `True` (default), a new `Vocab` object will be created. ~~Union[Vocab, bool]~~.                             |
 | `config` <Tag variant="new">3</Tag> | Optional config overrides, either as nested dict or dict keyed by section value in dot notation, e.g. `"components.name.value"`. ~~Union[Dict[str, Any], Config]~~ |
-| `meta` <Tag variant="new">3</tag>   | Optional meta overrides for [`nlp.meta`](/api/language#meta). ~~Dict[str, Any]~~                                                                                   |
+| `meta` <Tag variant="new">3</Tag>   | Optional meta overrides for [`nlp.meta`](/api/language#meta). ~~Dict[str, Any]~~                                                                                   |
 | **RETURNS**                         | An empty `Language` object of the appropriate subclass. ~~Language~~                                                                                               |
 
 ### spacy.info {#spacy.info tag="function"}
@@ -145,9 +145,10 @@ pipelines.
 > nlp = spacy.load("en_core_web_sm")
 > ```
 
-| Name        | Description                             |
-| ----------- | --------------------------------------- |
-| **RETURNS** | Whether the GPU was activated. ~~bool~~ |
+| Name        | Description                                      |
+| ----------- | ------------------------------------------------ |
+| `gpu_id`    | Device index to select. Defaults to `0`. ~~int~~ |
+| **RETURNS** | Whether the GPU was activated. ~~bool~~          |
 
 ### spacy.require_gpu {#spacy.require_gpu tag="function" new="2.0.14"}
 
@@ -164,9 +165,10 @@ and _before_ loading any pipelines.
 > nlp = spacy.load("en_core_web_sm")
 > ```
 
-| Name        | Description     |
-| ----------- | --------------- |
-| **RETURNS** | `True` ~~bool~~ |
+| Name        | Description                                      |
+| ----------- | ------------------------------------------------ |
+| `gpu_id`    | Device index to select. Defaults to `0`. ~~int~~ |
+| **RETURNS** | `True` ~~bool~~                                  |
 
 ## displaCy {#displacy source="spacy/displacy"}
 
@@ -448,13 +450,23 @@ remain in the config file stored on your local system.
 > [training.logger]
 > @loggers = "spacy.WandbLogger.v1"
 > project_name = "monitor_spacy_training"
-> remove_config_values = ["paths.train", "paths.dev", "training.dev_corpus.path", "training.train_corpus.path"]
+> remove_config_values = ["paths.train", "paths.dev", "corpora.train.path", "corpora.dev.path"]
 > ```
 
 | Name                   | Description                                                                                                                           |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `project_name`         | The name of the project in the Weights & Biases interface. The project will be created automatically if it doesn't exist yet. ~~str~~ |
 | `remove_config_values` | A list of values to include from the config before it is uploaded to W&B (default: empty). ~~List[str]~~                              |
+
+<Project id="integrations/wandb">
+
+Get started with tracking your spaCy training runs in Weights & Biases using our
+project template. It trains on the IMDB Movie Review Dataset and includes a
+simple config with the built-in `WandbLogger`, as well as a custom example of
+creating variants of the config for a simple hyperparameter grid search and
+logging the results.
+
+</Project>
 
 ## Readers {#readers source="spacy/training/corpus.py" new="3"}
 
@@ -478,7 +490,7 @@ the [`Corpus`](/api/corpus) class.
 > [paths]
 > train = "corpus/train.spacy"
 >
-> [training.train_corpus]
+> [corpora.train]
 > @readers = "spacy.Corpus.v1"
 > path = ${paths.train}
 > gold_preproc = false
@@ -506,7 +518,7 @@ JSONL file. Also see the [`JsonlReader`](/api/corpus#jsonlreader) class.
 > [paths]
 > pretrain = "corpus/raw_text.jsonl"
 >
-> [pretraining.corpus]
+> [corpora.pretrain]
 > @readers = "spacy.JsonlReader.v1"
 > path = ${paths.pretrain}
 > min_length = 0

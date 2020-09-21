@@ -345,10 +345,7 @@ def test_language_factories_invalid():
             [{"a": 100, "b": 400}, {"c": 0.5, "d": 0.5}],
             {"a": 0.1, "b": 0.4, "c": 0.25, "d": 0.25},
         ),
-        (
-            [{"a": 0.5, "b": 0.5}, {"b": 1.0}],
-            {"a": 0.25, "b": 0.75},
-        ),
+        ([{"a": 0.5, "b": 0.5}, {"b": 1.0}], {"a": 0.25, "b": 0.75},),
     ],
 )
 def test_language_factories_combine_score_weights(weights, expected):
@@ -363,16 +360,10 @@ def test_language_factories_scores():
     weights1 = {"a1": 0.5, "a2": 0.5}
     weights2 = {"b1": 0.2, "b2": 0.7, "b3": 0.1}
     Language.factory(
-        f"{name}1",
-        scores=list(weights1),
-        default_score_weights=weights1,
-        func=func,
+        f"{name}1", scores=list(weights1), default_score_weights=weights1, func=func,
     )
     Language.factory(
-        f"{name}2",
-        scores=list(weights2),
-        default_score_weights=weights2,
-        func=func,
+        f"{name}2", scores=list(weights2), default_score_weights=weights2, func=func,
     )
     meta1 = Language.get_factory_meta(f"{name}1")
     assert meta1.default_score_weights == weights1

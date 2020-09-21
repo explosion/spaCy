@@ -1,4 +1,4 @@
-from typing import Dict, List, Union, Optional, Sequence, Any, Callable, Type, Tuple
+from typing import Dict, List, Union, Optional, Any, Callable, Type, Tuple
 from typing import Iterable, TypeVar, TYPE_CHECKING
 from enum import Enum
 from pydantic import BaseModel, Field, ValidationError, validator
@@ -8,6 +8,7 @@ from collections import defaultdict
 from thinc.api import Optimizer
 
 from .attrs import NAMES
+from .lookups import Lookups
 
 if TYPE_CHECKING:
     # This lets us add type hints for mypy etc. without causing circular imports
@@ -104,7 +105,7 @@ class TokenPatternOperator(str, Enum):
 StringValue = Union[TokenPatternString, StrictStr]
 NumberValue = Union[TokenPatternNumber, StrictInt, StrictFloat]
 UnderscoreValue = Union[
-    TokenPatternString, TokenPatternNumber, str, int, float, list, bool,
+    TokenPatternString, TokenPatternNumber, str, int, float, list, bool
 ]
 
 
@@ -198,8 +199,9 @@ class ModelMetaSchema(BaseModel):
 class ConfigSchemaTraining(BaseModel):
     # fmt: off
     vectors: Optional[StrictStr] = Field(..., title="Path to vectors")
-    train_corpus: Reader = Field(..., title="Reader for the training data")
-    dev_corpus: Reader = Field(..., title="Reader for the dev data")
+    lookups: Optional[Lookups] = Field(..., title="Vocab lookups")
+    dev_corpus: StrictStr = Field(..., title="Path in the config to the dev data")
+    train_corpus: StrictStr = Field(..., title="Path in the config to the training data")
     batcher: Batcher = Field(..., title="Batcher for the training data")
     dropout: StrictFloat = Field(..., title="Dropout rate")
     patience: StrictInt = Field(..., title="How many steps to continue without improvement in evaluation score")
@@ -207,6 +209,7 @@ class ConfigSchemaTraining(BaseModel):
     max_steps: StrictInt = Field(..., title="Maximum number of update steps to train for")
     eval_frequency: StrictInt = Field(..., title="How often to evaluate during training (steps)")
     seed: Optional[StrictInt] = Field(..., title="Random seed")
+    gpu_allocator: Optional[StrictStr] = Field(..., title="Memory allocator when running on GPU")
     accumulate_gradient: StrictInt = Field(..., title="Whether to divide the batch up into substeps")
     score_weights: Dict[StrictStr, Union[StrictFloat, StrictInt]] = Field(..., title="Scores to report and their weights for selecting final model")
     init_tok2vec: Optional[StrictStr] = Field(..., title="Path to pretrained tok2vec weights")
@@ -227,7 +230,6 @@ class ConfigSchemaNlp(BaseModel):
     pipeline: List[StrictStr] = Field(..., title="The pipeline component names in order")
     disabled: List[StrictStr] = Field(..., title="Pipeline components to disable by default")
     tokenizer: Callable = Field(..., title="The tokenizer to use")
-    load_vocab_data: StrictBool = Field(..., title="Whether to load additional vocab data from spacy-lookups-data")
     before_creation: Optional[Callable[[Type["Language"]], Type["Language"]]] = Field(..., title="Optional callback to modify Language class before initialization")
     after_creation: Optional[Callable[["Language"], "Language"]] = Field(..., title="Optional callback to modify nlp object after creation and before the pipeline is constructed")
     after_pipeline_creation: Optional[Callable[["Language"], "Language"]] = Field(..., title="Optional callback to modify nlp object after the pipeline is constructed")
@@ -249,11 +251,11 @@ class ConfigSchemaPretrain(BaseModel):
     dropout: StrictFloat = Field(..., title="Dropout rate")
     n_save_every: Optional[StrictInt] = Field(..., title="Saving frequency")
     optimizer: Optimizer = Field(..., title="The optimizer to use")
-    corpus: Reader = Field(..., title="Reader for the training data")
+    corpus: StrictStr = Field(..., title="Path in the config to the training data")
     batcher: Batcher = Field(..., title="Batcher for the training data")
     component: str = Field(..., title="Component to find the layer to pretrain")
     layer: str = Field(..., title="Layer to pretrain. Whole model if empty.")
- 
+
     # TODO: use a more detailed schema for this?
     objective: Dict[str, Any] = Field(..., title="Pretraining objective")
     # fmt: on
@@ -268,6 +270,7 @@ class ConfigSchema(BaseModel):
     nlp: ConfigSchemaNlp
     pretraining: Union[ConfigSchemaPretrain, ConfigSchemaPretrainEmpty] = {}
     components: Dict[str, Dict[str, Any]]
+    corpora: Dict[str, Reader]
 
     @root_validator(allow_reuse=True)
     def validate_config(cls, values):

@@ -381,8 +381,6 @@ and loading pipeline packages, the underlying functionality is entirely based on
 native Python packaging. This allows your application to handle a spaCy pipeline
 like any other package dependency.
 
-<!-- TODO: reference relevant spaCy project -->
-
 ### Downloading and requiring package dependencies {#models-download}
 
 spaCy's built-in [`download`](/api/cli#download) command is mostly intended as a

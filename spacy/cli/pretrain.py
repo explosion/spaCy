@@ -4,10 +4,9 @@ import time
 import re
 from collections import Counter
 from pathlib import Path
-from thinc.api import Config
-from thinc.api import use_pytorch_for_gpu_memory, require_gpu
+from thinc.api import require_gpu, set_gpu_allocator
 from thinc.api import set_dropout_rate, to_categorical, fix_random_seed
-from thinc.api import CosineDistance, L2Distance
+from thinc.api import Config, CosineDistance, L2Distance
 from wasabi import msg
 import srsly
 from functools import partial
@@ -20,6 +19,7 @@ from ..ml.models.multi_task import build_cloze_characters_multi_task_model
 from ..tokens import Doc
 from ..attrs import ID
 from .. import util
+from ..util import dot_to_object
 
 
 @app.command(
@@ -31,7 +31,7 @@ def pretrain_cli(
     ctx: typer.Context,  # This is only used to read additional arguments
     config_path: Path = Arg(..., help="Path to config file", exists=True, dir_okay=False),
     output_dir: Path = Arg(..., help="Directory to write weights to on each epoch"),
-    code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
+    code_path: Optional[Path] = Opt(None, "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     resume_path: Optional[Path] = Opt(None, "--resume-path", "-r", help="Path to pretrained weights from which to resume pretraining"),
     epoch_resume: Optional[int] = Opt(None, "--epoch-resume", "-er", help="The epoch to resume counting from when using --resume-path. Prevents unintended overwriting of existing weight files."),
     use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU"),
@@ -70,9 +70,7 @@ def pretrain_cli(
 
     with show_validation_error(config_path):
         config = util.load_config(
-            config_path,
-            overrides=config_overrides,
-            interpolate=True
+            config_path, overrides=config_overrides, interpolate=True
         )
     if not config.get("pretraining"):
         # TODO: What's the solution here? How do we handle optional blocks?
@@ -83,7 +81,7 @@ def pretrain_cli(
 
     config.to_disk(output_dir / "config.cfg")
     msg.good("Saved config file in the output directory")
- 
+
     pretrain(
         config,
         output_dir,
@@ -98,15 +96,17 @@ def pretrain(
     output_dir: Path,
     resume_path: Optional[Path] = None,
     epoch_resume: Optional[int] = None,
-    use_gpu: int=-1
+    use_gpu: int = -1,
 ):
-    if config["system"].get("seed") is not None:
-        fix_random_seed(config["system"]["seed"])
-    if use_gpu >= 0 and config["system"].get("use_pytorch_for_gpu_memory"):
-        use_pytorch_for_gpu_memory()
+    if config["training"]["seed"] is not None:
+        fix_random_seed(config["training"]["seed"])
+    allocator = config["training"]["gpu_allocator"]
+    if use_gpu >= 0 and allocator:
+        set_gpu_allocator(allocator)
+
     nlp, config = util.load_model_from_config(config)
     P_cfg = config["pretraining"]
-    corpus = P_cfg["corpus"]
+    corpus = dot_to_object(config, P_cfg["corpus"])
     batcher = P_cfg["batcher"]
     model = create_pretraining_model(nlp, config["pretraining"])
     optimizer = config["pretraining"]["optimizer"]
@@ -147,9 +147,7 @@ def pretrain(
             progress = tracker.update(epoch, loss, docs)
             if progress:
                 msg.row(progress, **row_settings)
-            if P_cfg["n_save_every"] and (
-                batch_id % P_cfg["n_save_every"] == 0
-            ):
+            if P_cfg["n_save_every"] and (batch_id % P_cfg["n_save_every"] == 0):
                 _save_model(epoch, is_temp=True)
         _save_model(epoch)
         tracker.epoch_loss = 0.0

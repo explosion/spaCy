@@ -29,15 +29,13 @@ and share your results with your team. spaCy projects can be used via the new
 
 ![Illustration of project workflow and commands](../images/projects.svg)
 
-<!-- TODO:
-<Project id="some_example_project">
+<Project id="pipelines/tagger_parser_ud">
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus interdum
-sodales lectus, ut sodales orci ullamcorper id. Sed condimentum neque ut erat
-mattis pretium.
+The easiest way to get started is to clone a project template and run it – for
+example, this end-to-end template that lets you train a **part-of-speech
+tagger** and **dependency parser** on a Universal Dependencies treebank.
 
 </Project>
--->
 
 spaCy projects make it easy to integrate with many other **awesome tools** in
 the data science and machine learning ecosystem to track and manage your data
@@ -65,10 +63,8 @@ project template and copies the files to a local directory. You can then run the
 project, e.g. to train a pipeline and edit the commands and scripts to build
 fully custom workflows.
 
-<!-- TODO: update with real example project -->
-
 ```cli
-python -m spacy project clone some_example_project
+python -m spacy project clone pipelines/tagger_parser_ud
 ```
 
 By default, the project will be cloned into the current working directory. You
@@ -216,10 +212,8 @@ format, train a pipeline, evaluate it and export metrics, package it and spin up
 a quick web demo. It looks pretty similar to a config file used to define CI
 pipelines.
 
-<!-- TODO: update with better (final) example -->
-
 ```yaml
-https://github.com/explosion/projects/tree/v3/tutorials/ner_fashion_brands/project.yml
+https://github.com/explosion/projects/tree/v3/pipelines/tagger_parser_ud/project.yml
 ```
 
 | Section       | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
@@ -927,6 +921,14 @@ package is installed in the same environment as spaCy, it will automatically add
 [parallel training](/usage/training#parallel-training) for more details on how
 it works under the hood.
 
+<Project id="integrations/ray">
+
+Get started with parallel training using our project template. It trains a
+simple model on a Universal Dependencies Treebank and lets you parallelize the
+training with Ray.
+
+</Project>
+
 You can integrate [`spacy ray train`](/api/cli#ray-train) into your
 `project.yml` just like the regular training command and pass it the config, and
 optional output directory or remote storage URL and config overrides if needed.
@@ -945,10 +947,6 @@ commands:
     outputs:
       - "training/model-best"
 ```
-
-<!-- TODO: <Project id="integrations/ray">
-
-</Project> -->
 
 ---
 
@@ -969,21 +967,19 @@ your results.
 > [training.logger]
 > @loggers = "spacy.WandbLogger.v1"
 > project_name = "monitor_spacy_training"
-> remove_config_values = ["paths.train", "paths.dev", "training.dev_corpus.path", "training.train_corpus.path"]
+> remove_config_values = ["paths.train", "paths.dev", "corpora.train.path", "corpora.dev.path"]
 > ```
 
 ![Screenshot: Visualized training results](../images/wandb1.jpg)
 
 ![Screenshot: Parameter importance using config values](../images/wandb2.jpg 'Parameter importance using config values')
 
-<!-- TODO:
-
 <Project id="integrations/wandb">
 
 Get started with tracking your spaCy training runs in Weights & Biases using our
-project template. It includes a simple config using the `WandbLogger`, as well
-as a custom logger implementation you can adjust for your specific use case.
+project template. It trains on the IMDB Movie Review Dataset and includes a
+simple config with the built-in `WandbLogger`, as well as a custom example of
+creating variants of the config for a simple hyperparameter grid search and
+logging the results.
 
 </Project>
-
--->
