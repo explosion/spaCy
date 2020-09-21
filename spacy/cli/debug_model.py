@@ -78,7 +78,9 @@ def debug_model_cli(
     debug_model(config, nlp, model, print_settings=print_settings)
 
 
-def debug_model(config, nlp, model: Model, *, print_settings: Optional[Dict[str, Any]] = None):
+def debug_model(
+    config, nlp, model: Model, *, print_settings: Optional[Dict[str, Any]] = None
+):
     if not isinstance(model, Model):
         msg.fail(
             f"Requires a Thinc Model to be analysed, but found {type(model)} instead.",
@@ -97,7 +99,6 @@ def debug_model(config, nlp, model: Model, *, print_settings: Optional[Dict[str,
     X = _get_docs()
     # The output vector might differ from the official type of the output layer
     with data_validation(False):
-        # msg.info(f"Could not initialize the model with dummy data - using the train_corpus.")
         try:
             train_corpus = dot_to_object(config, config["training"]["train_corpus"])
             nlp.begin_training(lambda: train_corpus(nlp))
@@ -108,7 +109,10 @@ def debug_model(config, nlp, model: Model, *, print_settings: Optional[Dict[str,
                 nlp.begin_training(lambda: [Example.from_dict(x, {}) for x in X])
                 msg.info("Initialized the model with dummy data.")
             except:
-                msg.fail("Could not initialize the model: you'll have to provide a valid train_corpus argument in the config file.", exits=1)
+                msg.fail(
+                    "Could not initialize the model: you'll have to provide a valid train_corpus argument in the config file.",
+                    exits=1,
+                )
 
     if print_settings.get("print_after_init"):
         msg.divider(f"STEP 1 - after initialization")
@@ -121,7 +125,6 @@ def debug_model(config, nlp, model: Model, *, print_settings: Optional[Dict[str,
     tok2vec = None
     if model.has_ref("tok2vec") and model.get_ref("tok2vec").name == "tok2vec-listener":
         tok2vec = nlp.get_pipe("tok2vec")
-        tok2vec.model.initialize(X=X)
     goldY = None
     for e in range(3):
         if tok2vec:
@@ -145,17 +148,17 @@ def debug_model(config, nlp, model: Model, *, print_settings: Optional[Dict[str,
     msg.good(f"Succesfully ended analysis - model looks good.")
 
 
+def get_gradient(goldY, Y, ops):
+    return ops.asarray(Y) - ops.asarray(goldY)
+
+
 def _simulate_gold(element, counter=1):
     if isinstance(element, Iterable):
         for i in range(len(element)):
-            element[i] = _simulate_gold(element[i], counter+i)
+            element[i] = _simulate_gold(element[i], counter + i)
         return element
     else:
-        return 1/counter
-
-
-def get_gradient(goldY, Y, ops):
-    return ops.asarray(Y) - ops.asarray(goldY)
+        return 1 / counter
 
 
 def _sentences():
@@ -229,12 +232,3 @@ def _print_matrix(value):
     sample_matrix = sample_matrix[0:5]
     result = result + str(sample_matrix)
     return result
-
-
-def _set_output_dim(model, nO):
-    # the dim inference doesn't always work 100%, we need this hack like we have it in pipe.pyx
-    if model.has_dim("nO") is None:
-        model.set_dim("nO", nO)
-    if model.has_ref("output_layer"):
-        if model.get_ref("output_layer").has_dim("nO") is None:
-            model.get_ref("output_layer").set_dim("nO", nO)
