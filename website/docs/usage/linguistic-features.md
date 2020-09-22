@@ -205,9 +205,10 @@ acquired from [WordNet](https://wordnet.princeton.edu/).
 spaCy features a fast and accurate syntactic dependency parser, and has a rich
 API for navigating the tree. The parser also powers the sentence boundary
 detection, and lets you iterate over base noun phrases, or "chunks". You can
-check whether a [`Doc`](/api/doc) object has been parsed with the
-`doc.is_parsed` attribute, which returns a boolean value. If this attribute is
-`False`, the default sentence iterator will raise an exception.
+check whether a [`Doc`](/api/doc) object has been parsed by calling
+`doc.has_annotation("DEP")`, which checks whether the attribute `Token.dep` has
+been set returns a boolean value. If the result is `False`, the default sentence
+iterator will raise an exception.
 
 <Infobox title="Dependency label scheme" emoji="📖">
 
@@ -1705,9 +1706,10 @@ and can still be overwritten by the parser.
 <Infobox title="Important note" variant="warning">
 
 To prevent inconsistent state, you can only set boundaries **before** a document
-is parsed (and `doc.is_parsed` is `False`). To ensure that your component is
-added in the right place, you can set `before='parser'` or `first=True` when
-adding it to the pipeline using [`nlp.add_pipe`](/api/language#add_pipe).
+is parsed (and `doc.has_annotation("DEP")` is `False`). To ensure that your
+component is added in the right place, you can set `before='parser'` or
+`first=True` when adding it to the pipeline using
+[`nlp.add_pipe`](/api/language#add_pipe).
 
 </Infobox>
 
