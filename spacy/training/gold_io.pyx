@@ -3,7 +3,7 @@ import srsly
 from .. import util
 from ..errors import Warnings
 from ..tokens import Doc
-from .iob_utils import biluo_tags_from_offsets, tags_to_entities
+from .iob_utils import offsets_to_biluo_tags, tags_to_entities
 import json
 
 
@@ -32,7 +32,7 @@ def docs_to_json(docs, doc_id=0, ner_missing_tag="O"):
             if ent.kb_id_:
                 link_dict = {(ent.start_char, ent.end_char): {ent.kb_id_: 1.0}}
                 json_para["links"].append(link_dict)
-        biluo_tags = biluo_tags_from_offsets(doc, json_para["entities"], missing=ner_missing_tag)
+        biluo_tags = offsets_to_biluo_tags(doc, json_para["entities"], missing=ner_missing_tag)
         attrs = ("TAG", "POS", "MORPH", "LEMMA", "DEP", "ENT_IOB")
         include_annotation = {attr: doc.has_annotation(attr) for attr in attrs}
         for j, sent in enumerate(doc.sents):

@@ -378,7 +378,7 @@ def git_sparse_checkout(repo, subpath, dest, branch):
         # Looking for this 'rev-list' command in the git --help? Hah.
         cmd = f"git -C {tmp_dir} rev-list --objects --all --missing=print -- {subpath}"
         ret = run_command(cmd, capture=True)
-        git_repo = _from_http_to_git(repo)
+        git_repo = _http_to_git(repo)
         # Now pass those missings into another bit of git internals
         missings = " ".join([x[1:] for x in ret.stdout.split() if x.startswith("?")])
         if not missings:
@@ -414,7 +414,7 @@ def get_git_version(
     return (int(version[0]), int(version[1]))
 
 
-def _from_http_to_git(repo: str) -> str:
+def _http_to_git(repo: str) -> str:
     if repo.startswith("http://"):
         repo = repo.replace(r"http://", r"https://")
     if repo.startswith(r"https://"):
