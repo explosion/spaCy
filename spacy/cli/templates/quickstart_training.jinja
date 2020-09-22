@@ -93,6 +93,22 @@ grad_factor = 1.0
 @layers = "reduce_mean.v1"
 {% endif -%}
 
+{% if "entity_linker" in components -%}
+[components.entity_linker]
+factory = "entity_linker"
+get_candidates = {"@misc":"spacy.CandidateGenerator.v1"}
+incl_context = true
+incl_prior = true
+
+[components.entity_linker.model]
+@architectures = "spacy.EntityLinker.v1"
+nO = null
+
+[components.entity_linker.model.tok2vec]
+@architectures = "spacy-transformers.TransformerListener.v1"
+grad_factor = 1.0
+{% endif -%}
+
 {% if "textcat" in components %}
 [components.textcat]
 factory = "textcat"
@@ -191,6 +207,22 @@ nO = null
 width = ${components.tok2vec.model.encode.width}
 {% endif %}
 
+{% if "entity_linker" in components -%}
+[components.entity_linker]
+factory = "entity_linker"
+get_candidates = {"@misc":"spacy.CandidateGenerator.v1"}
+incl_context = true
+incl_prior = true
+
+[components.entity_linker.model]
+@architectures = "spacy.EntityLinker.v1"
+nO = null
+
+[components.entity_linker.model.tok2vec]
+@architectures = "spacy.Tok2VecListener.v1"
+width = ${components.tok2vec.model.encode.width}
+{% endif %}
+
 {% if "textcat" in components %}
 [components.textcat]
 factory = "textcat"
@@ -216,7 +248,7 @@ ngram_size = 1
 {% endif %}
 
 {% for pipe in components %}
-{% if pipe not in ["tagger", "parser", "ner", "textcat"] %}
+{% if pipe not in ["tagger", "parser", "ner", "textcat", "entity_linker"] %}
 {# Other components defined by the user: we just assume they're factories #}
 [components.{{ pipe }}]
 factory = "{{ pipe }}"
