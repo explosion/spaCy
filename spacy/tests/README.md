@@ -38,18 +38,17 @@ py.test spacy/tests/tokenizer/test_exceptions.py::test_tokenizer_handles_emoji #
 
 ## Dos and don'ts
 
-To keep the behaviour of the tests consistent and predictable, we try to follow a few basic conventions:
+To keep the behavior of the tests consistent and predictable, we try to follow a few basic conventions:
 
 - **Test names** should follow a pattern of `test_[module]_[tested behaviour]`. For example: `test_tokenizer_keeps_email` or `test_spans_override_sentiment`.
 - If you're testing for a bug reported in a specific issue, always create a **regression test**. Regression tests should be named `test_issue[ISSUE NUMBER]` and live in the [`regression`](regression) directory.
-- Only use `@pytest.mark.xfail` for tests that **should pass, but currently fail**. To test for desired negative behaviour, use `assert not` in your test.
-- Very **extensive tests** that take a long time to run should be marked with `@pytest.mark.slow`. If your slow test is testing important behaviour, consider adding an additional simpler version.
+- Only use `@pytest.mark.xfail` for tests that **should pass, but currently fail**. To test for desired negative behavior, use `assert not` in your test.
+- Very **extensive tests** that take a long time to run should be marked with `@pytest.mark.slow`. If your slow test is testing important behavior, consider adding an additional simpler version.
 - If tests require **loading the models**, they should be added to the [`spacy-models`](https://github.com/explosion/spacy-models) tests.
-- Before requiring the models, always make sure there is no other way to test the particular behaviour. In a lot of cases, it's sufficient to simply create a `Doc` object manually. See the section on [helpers and utility functions](#helpers-and-utilities) for more info on this.
+- Before requiring the models, always make sure there is no other way to test the particular behavior. In a lot of cases, it's sufficient to simply create a `Doc` object manually. See the section on [helpers and utility functions](#helpers-and-utilities) for more info on this.
 - **Avoid unnecessary imports.** There should never be a need to explicitly import spaCy at the top of a file, and many components are available as [fixtures](#fixtures). You should also avoid wildcard imports (`from module import *`).
 - If you're importing from spaCy, **always use absolute imports**. For example: `from spacy.language import Language`.
-- Don't forget the **unicode declarations** at the top of each file. This way, unicode strings won't have to be prefixed with `u`.
-- Try to keep the tests **readable and concise**. Use clear and descriptive variable names (`doc`, `tokens` and `text` are great), keep it short and only test for one behaviour at a time.
+- Try to keep the tests **readable and concise**. Use clear and descriptive variable names (`doc`, `tokens` and `text` are great), keep it short and only test for one behavior at a time.
 
 ## Parameters
 
@@ -77,7 +76,7 @@ To test for combinations of parameters, you can add several `parametrize` marker
 @pytest.mark.parametrize('punct', ['.', '!', '?'])
 ```
 
-This will run the test with all combinations of the two parameters `text` and `punct`. **Use this feature sparingly**, though, as it can easily cause unneccessary or undesired test bloat.
+This will run the test with all combinations of the two parameters `text` and `punct`. **Use this feature sparingly**, though, as it can easily cause unnecessary or undesired test bloat.
 
 ## Fixtures
 
@@ -104,9 +103,9 @@ If all tests in a file require a specific configuration, or use the same complex
 
 Our new test setup comes with a few handy utility functions that can be imported from [`util.py`](util.py).
 
-### Constructing a `Doc` object manually with
+### Constructing a `Doc` object manually
 
-Loading the models is expensive and not necessary if you're not actually testing the model performance. If all you need ia a `Doc` object with annotations like heads, POS tags or the dependency parse, you can construct it manually.
+Loading the models is expensive and not necessary if you're not actually testing the model performance. If all you need is a `Doc` object with annotations like heads, POS tags or the dependency parse, you can construct it manually.
 
 ```python
 def test_doc_token_api_strings(en_vocab):
