@@ -184,7 +184,7 @@ def test_tok2vec_listener_callback():
     label_sample = [tagger.model.ops.asarray(gold_array, dtype="float32")]
     tagger.model.initialize(X=docs, Y=label_sample)
     docs = [nlp.make_doc("Another entirely random sentence")]
-    tok2vec.predict(docs)
+    tok2vec.update([Example.from_dict(x, {}) for x in docs])
     Y, get_dX = tagger.model.begin_update(docs)
     # assure that the backprop call works (and doesn't hit a 'None' callback)
     assert get_dX(Y) is not None
