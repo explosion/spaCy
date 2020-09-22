@@ -57,7 +57,10 @@ class Warnings:
             "incorrect. Modify PhraseMatcher._terminal_hash to fix.")
     W024 = ("Entity '{entity}' - Alias '{alias}' combination already exists in "
             "the Knowledge Base.")
-    W026 = ("Unable to set all sentence boundaries from dependency parses.")
+    W026 = ("Unable to set all sentence boundaries from dependency parses. If "
+            "you are constructing a parse tree incrementally by setting "
+            "token.head values, you can probably ignore this warning. Consider "
+            "using Doc(words, ..., heads=heads, deps=deps) instead.")
     W027 = ("Found a large training file of {size} bytes. Note that it may "
             "be more efficient to split your training data into multiple "
             "smaller JSON files instead.")

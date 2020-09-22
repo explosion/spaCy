@@ -6,15 +6,16 @@ from wasabi import msg
 import srsly
 import hashlib
 import typer
-import subprocess
 from click import NoSuchOption
+from click.parser import split_arg_string
 from typer.main import get_command
 from contextlib import contextmanager
 from thinc.config import Config, ConfigValidationError
 from configparser import InterpolationError
+import os
 
 from ..schemas import ProjectConfigSchema, validate
-from ..util import import_file, run_command, make_tempdir, registry
+from ..util import import_file, run_command, make_tempdir, registry, logger
 
 if TYPE_CHECKING:
     from pathy import Pathy  # noqa: F401
@@ -38,6 +39,7 @@ commands to check and validate your config files, training and evaluation data,
 and custom model implementations.
 """
 INIT_HELP = """Commands for initializing configs and pipeline packages."""
+OVERRIDES_ENV_VAR = "SPACY_CONFIG_OVERRIDES"
 
 # Wrappers for Typer's annotations. Initially created to set defaults and to
 # keep the names short, but not needed at the moment.
@@ -62,24 +64,41 @@ def setup_cli() -> None:
     command(prog_name=COMMAND)
 
 
-def parse_config_overrides(args: List[str]) -> Dict[str, Any]:
+def parse_config_overrides(
+    args: List[str], env_var: Optional[str] = OVERRIDES_ENV_VAR
+) -> Dict[str, Any]:
     """Generate a dictionary of config overrides based on the extra arguments
     provided on the CLI, e.g. --training.batch_size to override
     "training.batch_size". Arguments without a "." are considered invalid,
     since the config only allows top-level sections to exist.
 
-    args (List[str]): The extra arguments from the command line.
+    env_vars (Optional[str]): Optional environment variable to read from.
     RETURNS (Dict[str, Any]): The parsed dict, keyed by nested config setting.
     """
+    env_string = os.environ.get(env_var, "") if env_var else ""
+    env_overrides = _parse_overrides(split_arg_string(env_string))
+    cli_overrides = _parse_overrides(args, is_cli=True)
+    if cli_overrides:
+        keys = [k for k in cli_overrides if k not in env_overrides]
+        logger.debug(f"Config overrides from CLI: {keys}")
+    if env_overrides:
+        logger.debug(f"Config overrides from env variables: {list(env_overrides)}")
+    return {**cli_overrides, **env_overrides}
+
+
+def _parse_overrides(args: List[str], is_cli: bool = False) -> Dict[str, Any]:
     result = {}
     while args:
         opt = args.pop(0)
-        err = f"Invalid CLI argument '{opt}'"
+        err = f"Invalid config override '{opt}'"
         if opt.startswith("--"):  # new argument
             orig_opt = opt
             opt = opt.replace("--", "")
             if "." not in opt:
-                raise NoSuchOption(orig_opt)
+                if is_cli:
+                    raise NoSuchOption(orig_opt)
+                else:
+                    msg.fail(f"{err}: can't override top-level sections", exits=1)
             if "=" in opt:  # we have --opt=value
                 opt, value = opt.split("=", 1)
                 opt = opt.replace("-", "_")
@@ -98,7 +117,7 @@ def parse_config_overrides(args: List[str]) -> Dict[str, Any]:
             except ValueError:
                 result[opt] = str(value)
         else:
-            msg.fail(f"{err}: override option should start with --", exits=1)
+            msg.fail(f"{err}: name should start with --", exits=1)
     return result
 
 
@@ -287,7 +306,7 @@ def download_file(src: Union[str, "Pathy"], dest: Path, *, force: bool = False) 
     if dest.exists() and not force:
         return None
     src = str(src)
-    with smart_open.open(src, mode="rb") as input_file:
+    with smart_open.open(src, mode="rb", ignore_ext=True) as input_file:
         with dest.open(mode="wb") as output_file:
             output_file.write(input_file.read())
 
@@ -327,7 +346,7 @@ def git_checkout(
         )
     with make_tempdir() as tmp_dir:
         cmd = f"git -C {tmp_dir} clone {repo} . -b {branch}"
-        ret = run_command(cmd, capture=True)
+        run_command(cmd, capture=True)
         # We need Path(name) to make sure we also support subdirectories
         shutil.copytree(str(tmp_dir / Path(subpath)), str(dest))
 

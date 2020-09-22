@@ -34,7 +34,17 @@ def doc():
     # fmt: on
     nlp = English()
     words = [t.text for t in nlp.make_doc(text)]
-    doc = get_doc(nlp.vocab, words=words, tags=tags, pos=pos, morphs=morphs, heads=heads, deps=deps, lemmas=lemmas, ents=ents)
+    doc = get_doc(
+        nlp.vocab,
+        words=words,
+        tags=tags,
+        pos=pos,
+        morphs=morphs,
+        heads=heads,
+        deps=deps,
+        lemmas=lemmas,
+        ents=ents,
+    )
     doc.cats = cats
     return doc
 

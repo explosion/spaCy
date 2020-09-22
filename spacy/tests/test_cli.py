@@ -1,16 +1,15 @@
 import pytest
 from click import NoSuchOption
-
 from spacy.training import docs_to_json, biluo_tags_from_offsets
 from spacy.training.converters import iob2docs, conll_ner2docs, conllu2docs
-from spacy.lang.en import English
 from spacy.schemas import ProjectConfigSchema, RecommendationSchema, validate
 from spacy.cli.init_config import init_config, RECOMMENDATIONS
 from spacy.cli._util import validate_project_commands, parse_config_overrides
 from spacy.cli._util import load_project_config, substitute_project_variables
-from spacy.cli._util import string_to_list
+from spacy.cli._util import string_to_list, OVERRIDES_ENV_VAR
 from thinc.config import ConfigValidationError
 import srsly
+import os
 
 from .util import make_tempdir
 
@@ -340,6 +339,24 @@ def test_parse_config_overrides_invalid(args):
 def test_parse_config_overrides_invalid_2(args):
     with pytest.raises(SystemExit):
         parse_config_overrides(args)
+
+
+def test_parse_cli_overrides():
+    os.environ[OVERRIDES_ENV_VAR] = "--x.foo bar --x.bar=12 --x.baz false --y.foo=hello"
+    result = parse_config_overrides([])
+    assert len(result) == 4
+    assert result["x.foo"] == "bar"
+    assert result["x.bar"] == 12
+    assert result["x.baz"] is False
+    assert result["y.foo"] == "hello"
+    os.environ[OVERRIDES_ENV_VAR] = "--x"
+    assert parse_config_overrides([], env_var=None) == {}
+    with pytest.raises(SystemExit):
+        parse_config_overrides([])
+    os.environ[OVERRIDES_ENV_VAR] = "hello world"
+    with pytest.raises(SystemExit):
+        parse_config_overrides([])
+    del os.environ[OVERRIDES_ENV_VAR]
 
 
 @pytest.mark.parametrize("lang", ["en", "nl"])

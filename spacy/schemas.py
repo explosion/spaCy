@@ -1,4 +1,4 @@
-from typing import Dict, List, Union, Optional, Sequence, Any, Callable, Type, Tuple
+from typing import Dict, List, Union, Optional, Any, Callable, Type, Tuple
 from typing import Iterable, TypeVar, TYPE_CHECKING
 from enum import Enum
 from pydantic import BaseModel, Field, ValidationError, validator
@@ -255,7 +255,7 @@ class ConfigSchemaPretrain(BaseModel):
     batcher: Batcher = Field(..., title="Batcher for the training data")
     component: str = Field(..., title="Component to find the layer to pretrain")
     layer: str = Field(..., title="Layer to pretrain. Whole model if empty.")
- 
+
     # TODO: use a more detailed schema for this?
     objective: Dict[str, Any] = Field(..., title="Pretraining objective")
     # fmt: on

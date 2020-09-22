@@ -92,7 +92,12 @@ def test_spans_span_sent(doc, doc_not_parsed):
 def test_spans_lca_matrix(en_tokenizer):
     """Test span's lca matrix generation"""
     tokens = en_tokenizer("the lazy dog slept")
-    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=[2, 1, 1, 0], deps=["dep"] * 4)
+    doc = get_doc(
+        tokens.vocab,
+        words=[t.text for t in tokens],
+        heads=[2, 1, 1, 0],
+        deps=["dep"] * 4,
+    )
     lca = doc[:2].get_lca_matrix()
     assert lca.shape == (2, 2)
     assert lca[0, 0] == 0  # the & the -> the
