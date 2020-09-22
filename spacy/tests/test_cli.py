@@ -14,7 +14,7 @@ import os
 from .util import make_tempdir
 
 
-def test_cli_converters_conllu_to_json():
+def test_cli_converters_conllu_to_docs():
     # from NorNE: https://github.com/ltgoslo/norne/blob/3d23274965f513f23aa48455b28b1878dad23c05/ud/nob/no_bokmaal-ud-dev.conllu
     lines = [
         "1\tDommer\tdommer\tNOUN\t_\tDefinite=Ind|Gender=Masc|Number=Sing\t2\tappos\t_\tO",
@@ -62,7 +62,7 @@ def test_cli_converters_conllu_to_json():
         ),
     ],
 )
-def test_cli_converters_conllu_to_json_name_ner_map(lines):
+def test_cli_converters_conllu_to_docs_name_ner_map(lines):
     input_data = "\n".join(lines)
     converted_docs = conllu_to_docs(
         input_data, n_sents=1, ner_map={"PER": "PERSON", "BAD": ""}
@@ -87,7 +87,7 @@ def test_cli_converters_conllu_to_json_name_ner_map(lines):
     assert biluo_tags == ["O", "B-PERSON", "L-PERSON", "O", "O"]
 
 
-def test_cli_converters_conllu_to_json_subtokens():
+def test_cli_converters_conllu_to_docs_subtokens():
     # https://raw.githubusercontent.com/ohenrik/nb_news_ud_sm/master/original_data/no-ud-dev-ner.conllu
     lines = [
         "1\tDommer\tdommer\tNOUN\t_\tDefinite=Ind|Gender=Masc|Number=Sing\t2\tappos\t_\tname=O",
