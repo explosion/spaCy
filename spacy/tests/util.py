@@ -2,11 +2,7 @@ import numpy
 import tempfile
 import contextlib
 import srsly
-
-from spacy import Errors
-from spacy.tokens import Doc, Span
-from spacy.attrs import POS, TAG, HEAD, DEP, LEMMA, MORPH
-
+from spacy.tokens import Doc
 from spacy.vocab import Vocab
 from spacy.util import make_tempdir  # noqa: F401
 
@@ -16,35 +12,6 @@ def make_tempfile(mode="r"):
     f = tempfile.TemporaryFile(mode=mode)
     yield f
     f.close()
-
-
-def get_doc(
-    vocab,
-    words=[],
-    pos=None,
-    heads=None,
-    deps=None,
-    tags=None,
-    ents=None,
-    lemmas=None,
-    morphs=None,
-):
-    """Create Doc object from given vocab, words and annotations."""
-    if heads is not None:
-        heads = [i + head for i, head in enumerate(heads)]
-    if ents is not None:
-        ents = [(vocab.strings[ent_type], start, end) for start, end, ent_type in ents]
-    return Doc(
-        vocab,
-        words=words,
-        pos=pos,
-        heads=heads,
-        deps=deps,
-        tags=tags,
-        ents=ents,
-        lemmas=lemmas,
-        morphs=morphs,
-    )
 
 
 def get_batch(batch_size):

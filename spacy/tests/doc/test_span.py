@@ -4,19 +4,17 @@ from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
 from spacy.util import filter_spans
 
-from ..util import get_doc
-
 
 @pytest.fixture
 def doc(en_tokenizer):
     # fmt: off
     text = "This is a sentence. This is another sentence. And a third."
-    heads = [1, 0, 1, -2, -3, 1, 0, 1, -2, -3, 0, 1, -2, -1]
+    heads = [1, 1, 3, 1, 1, 6, 6, 8, 6, 6, 12, 12, 12, 12]
     deps = ["nsubj", "ROOT", "det", "attr", "punct", "nsubj", "ROOT", "det",
             "attr", "punct", "ROOT", "det", "npadvmod", "punct"]
     # fmt: on
     tokens = en_tokenizer(text)
-    return get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
+    return Doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
 
 
 @pytest.fixture
@@ -69,10 +67,10 @@ def test_spans_string_fn(doc):
 
 def test_spans_root2(en_tokenizer):
     text = "through North and South Carolina"
-    heads = [0, 3, -1, -2, -4]
+    heads = [0, 4, 1, 1, 0]
     deps = ["dep"] * len(heads)
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
+    doc = Doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
     assert doc[-2:].root.text == "Carolina"
 
 
@@ -92,10 +90,10 @@ def test_spans_span_sent(doc, doc_not_parsed):
 def test_spans_lca_matrix(en_tokenizer):
     """Test span's lca matrix generation"""
     tokens = en_tokenizer("the lazy dog slept")
-    doc = get_doc(
+    doc = Doc(
         tokens.vocab,
         words=[t.text for t in tokens],
-        heads=[2, 1, 1, 0],
+        heads=[2, 2, 3, 3],
         deps=["dep"] * 4,
     )
     lca = doc[:2].get_lca_matrix()

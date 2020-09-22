@@ -25,26 +25,27 @@ Construct a `Doc` object. The most common way to get a `Doc` object is via the
 >
 > # Construction 2
 > from spacy.tokens import Doc
+>
 > words = ["hello", "world", "!"]
 > spaces = [True, False, False]
 > doc = Doc(nlp.vocab, words=words, spaces=spaces)
 > ```
 
-| Name           | Description                                                                                                                                                                                    |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`        | A storage container for lexical types. ~~Vocab~~                                                                                                                                               |
-| `words`        | A list of strings to add to the container. ~~Optional[List[str]]~~                                                                                                                             |
-| `spaces`       | A list of boolean values indicating whether each word has a subsequent space. Must have the same length as `words`, if specified. Defaults to a sequence of `True`. ~~Optional[List[bool]]~~   |
-| _keyword-only_ |                                                                                                                                                                                                |
-| `user\_data`   | Optional extra data to attach to the Doc. ~~Dict~~                                                                                                                                             |
-| tags           | A list of strings, of the same length as words, to assign as `token.tag` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                            |
-| pos            | A list of strings, of the same length as words, to assign as `token.pos` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                            |
-| morphs         | A list of strings, of the same length as words, to assign as `token.morph` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                          |
-| lemmas         | A list of strings, of the same length as words, to assign as `token.lemma` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                          |
-| heads          | A list of values, of the same length as words, to assign as the head for each word. Head indices are the absolute position of the head in the doc. Defaults to `None`. ~~Optional[List[int]]~~ |
-| deps           | A list of strings, of the same length as words, to assign as `token.dep` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                            |
-| sent_starts    | A list of values, of the same length as words, to assign as token.is_sent_start. Will be overridden by heads if heads is provided. Defaults to `None`. ~~Optional[List[Union[bool, None]]~~    |
-| ents           | A list of spans to assign as doc.ents. Defaults to `None`. ~~Optional[List[Span]]~~                                                                                                            |
+| Name                                     | Description                                                                                                                                                                                                       |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`                                  | A storage container for lexical types. ~~Vocab~~                                                                                                                                                                  |
+| `words`                                  | A list of strings to add to the container. ~~Optional[List[str]]~~                                                                                                                                                |
+| `spaces`                                 | A list of boolean values indicating whether each word has a subsequent space. Must have the same length as `words`, if specified. Defaults to a sequence of `True`. ~~Optional[List[bool]]~~                      |
+| _keyword-only_                           |                                                                                                                                                                                                                   |
+| `user\_data`                             | Optional extra data to attach to the Doc. ~~Dict~~                                                                                                                                                                |
+| `tags` <Tag variant="new">3</Tag>        | A list of strings, of the same length as `words`, to assign as `token.tag` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                                             |
+| `pos` <Tag variant="new">3</Tag>         | A list of strings, of the same length as `words`, to assign as `token.pos` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                                             |
+| `morphs` <Tag variant="new">3</Tag>      | A list of strings, of the same length as `words`, to assign as `token.morph` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                                           |
+| `lemmas` <Tag variant="new">3</Tag>      | A list of strings, of the same length as `words`, to assign as `token.lemma` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                                           |
+| `heads` <Tag variant="new">3</Tag>       | A list of values, of the same length as `words`, to assign as the head for each word. Head indices are the absolute position of the head in the `Doc`. Defaults to `None`. ~~Optional[List[int]]~~                |
+| `deps` <Tag variant="new">3</Tag>        | A list of strings, of the same length as `words`, to assign as `token.dep` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                                             |
+| `sent_starts` <Tag variant="new">3</Tag> | A list of values, of the same length as `words`, to assign as `token.is_sent_start`. Will be overridden by heads if `heads` is provided. Defaults to `None`. ~~Optional[List[Union[bool, None]]~~                 |
+| `ents` <Tag variant="new">3</Tag>        | A list of `(label, start, end)` tuples to assign as `doc.ents`. Note that the `start` and `end` indices here refer to the token indices. Defaults to `None`. ~~Optional[List[Tuple[Union[str, int], int, int]]]~~ |
 
 ## Doc.\_\_getitem\_\_ {#getitem tag="method"}
 
@@ -280,6 +281,19 @@ ancestor is found, e.g. if span excludes a necessary ancestor.
 ## Doc.has_annotation {#has_annotation tag="method"}
 
 Check whether the doc contains annotation on a token attribute.
+
+<Infobox title="Changed in v3.0" variant="warning">
+
+This method replaces the previous boolean attributes like `Doc.is_tagged`,
+`Doc.is_parsed` or `Doc.is_sentenced`.
+
+```diff
+doc = nlp("This is a text")
+- assert doc.is_parsed
++ assert doc.has_annotation("DEP")
+```
+
+</Infobox>
 
 | Name               | Description                                                                                         |
 | ------------------ | --------------------------------------------------------------------------------------------------- |

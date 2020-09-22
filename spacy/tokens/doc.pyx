@@ -200,8 +200,8 @@ cdef class Doc:
         sent_starts (Optional[List[Union[bool, None]]]): A list of values, of
             the same length as words, to assign as token.is_sent_start. Will be
             overridden by heads if heads is provided. Defaults to None.
-        ents (Optional[List[Span]]): A list of spans to assign as doc.ents.
-            Defaults to None.
+        ents (Optional[List[Tuple[Union[str, int], int, int]]]): A list of
+            (label, start, end) tuples to assign as doc.ents. Defaults to None.
 
         DOCS: https://nightly.spacy.io/api/doc#init
         """
@@ -663,11 +663,14 @@ cdef class Doc:
             tokens_in_ents = {}
             cdef attr_t entity_type
             cdef attr_t kb_id
-            cdef int ent_start, ent_end
+            cdef int ent_start, ent_end, token_index
             for ent_info in ents:
-                entity_type, kb_id, ent_start, ent_end = get_entity_info(ent_info)
+                entity_type_, kb_id, ent_start, ent_end = get_entity_info(ent_info)
+                if isinstance(entity_type_, str):
+                    self.vocab.strings.add(entity_type_)
+                entity_type = self.vocab.strings.as_int(entity_type_)
                 for token_index in range(ent_start, ent_end):
-                    if token_index in tokens_in_ents.keys():
+                    if token_index in tokens_in_ents:
                         raise ValueError(Errors.E103.format(
                             span1=(tokens_in_ents[token_index][0],
                                    tokens_in_ents[token_index][1],

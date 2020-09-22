@@ -9,7 +9,7 @@ from spacy.lang.en import English
 from spacy.lookups import Lookups
 from spacy.tokens import Doc, Span
 
-from ..util import get_doc, make_tempdir
+from ..util import make_tempdir
 
 
 @pytest.mark.parametrize(
@@ -88,12 +88,9 @@ def test_issue242(en_tokenizer):
         doc.ents += tuple(matches)
 
 
-def test_issue309(en_tokenizer):
+def test_issue309(en_vocab):
     """Test Issue #309: SBD fails on empty string"""
-    tokens = en_tokenizer(" ")
-    doc = get_doc(
-        tokens.vocab, words=[t.text for t in tokens], heads=[0], deps=["ROOT"]
-    )
+    doc = Doc(en_vocab, words=[" "], heads=[0], deps=["ROOT"])
     assert len(doc) == 1
     sents = list(doc.sents)
     assert len(sents) == 1

@@ -12,8 +12,6 @@ from spacy.compat import pickle
 import numpy
 import random
 
-from ..util import get_doc
-
 
 def test_issue2564():
     """Test the tagger sets has_annotation("TAG") correctly when used via Language.pipe."""
@@ -117,12 +115,14 @@ def test_issue2754(en_tokenizer):
 
 def test_issue2772(en_vocab):
     """Test that deprojectivization doesn't mess up sentence boundaries."""
-    words = "When we write or communicate virtually , we can hide our true feelings .".split()
+    # fmt: off
+    words = ["When", "we", "write", "or", "communicate", "virtually", ",", "we", "can", "hide", "our", "true", "feelings", "."]
+    # fmt: on
     # A tree with a non-projective (i.e. crossing) arc
     # The arcs (0, 4) and (2, 9) cross.
-    heads = [4, 1, 7, -1, -2, -1, 3, 2, 1, 0, 2, 1, -3, -4]
+    heads = [4, 2, 9, 2, 2, 4, 9, 9, 9, 9, 12, 12, 9, 9]
     deps = ["dep"] * len(heads)
-    doc = get_doc(en_vocab, words=words, heads=heads, deps=deps)
+    doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
     assert doc[1].is_sent_start is False
 
 
