@@ -221,7 +221,7 @@ cdef class Example:
     def split_sents(self):
         """ Split the token annotations into multiple Examples based on
         sent_starts and return a list of the new Examples"""
-        if not self.reference.is_sentenced:
+        if not self.reference.has_annotation("SENT_START"):
             return [self]
 
         align = self.alignment.y2x

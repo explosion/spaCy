@@ -60,6 +60,11 @@ def de_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def de_vocab():
+    return get_lang_class("de")().vocab
+
+
+@pytest.fixture(scope="session")
 def el_tokenizer():
     return get_lang_class("el")().tokenizer
 

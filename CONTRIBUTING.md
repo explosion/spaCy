@@ -224,7 +224,7 @@ for that particular code. Here's an example:
 ```python
 # fmt: off
 text = "I look forward to using Thingamajig.  I've been told it will make my life easier..."
-heads = [1, 0, -1, -2, -1, -1, -5, -1, 3, 2, 1, 0, 2, 1, -3, 1, 1, -3, -7]
+heads = [1, 1, 1, 1, 3, 4, 1, 6, 11, 11, 11, 11, 14, 14, 11, 16, 17, 14, 11]
 deps = ["nsubj", "ROOT", "advmod", "prep", "pcomp", "dobj", "punct", "",
         "nsubjpass", "aux", "auxpass", "ROOT", "nsubj", "aux", "ccomp",
         "poss", "nsubj", "ccomp", "punct"]
@@ -421,7 +421,7 @@ Tests that require the model to be loaded should be marked with
 `@pytest.mark.models`. Loading the models is expensive and not necessary if
 you're not actually testing the model performance. If all you need is a `Doc`
 object with annotations like heads, POS tags or the dependency parse, you can
-use the `get_doc()` utility function to construct it manually.
+use the `Doc` constructor to construct it manually.
 
 📖 **For more guidelines and information on how to add tests, check out the [tests README](spacy/tests/README.md).**
 

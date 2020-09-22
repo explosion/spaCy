@@ -214,6 +214,24 @@ overrides. Overrides are added before [variables](#config-interpolation) are
 resolved, by the way – so if you need to use a value in multiple places,
 reference it across your config and override it on the CLI once.
 
+> #### 💡 Tip: Verbose logging
+>
+> If you're using config overrides, you can set the `--verbose` flag on
+> [`spacy train`](/api/cli#train) to make spaCy log more info, including which
+> overrides were set via the CLI and environment variables.
+
+#### Adding overrides via environment variables {#config-overrides-env}
+
+Instead of defining the overrides as CLI arguments, you can also use the
+`SPACY_CONFIG_OVERRIDES` environment variable using the same argument syntax.
+This is especially useful if you're training models as part of an automated
+process. Environment variables **take precedence** over CLI overrides and values
+defined in the config file.
+
+```cli
+$ SPACY_CONFIG_OVERRIDES="--system.gpu_allocator pytorch --training.batch_size 128" ./your_script.sh
+```
+
 ### Defining pipeline components {#config-components}
 
 You typically train a [pipeline](/usage/processing-pipelines) of **one or more

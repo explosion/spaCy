@@ -6,7 +6,22 @@ from spacy.lexeme import Lexeme
 from spacy.lang.en import English
 from spacy.attrs import ENT_TYPE, ENT_IOB, SENT_START, HEAD, DEP, MORPH
 
-from ..util import get_doc
+
+def test_doc_api_init(en_vocab):
+    words = ["a", "b", "c", "d"]
+    heads = [0, 0, 2, 2]
+    # set sent_start by sent_starts
+    doc = Doc(en_vocab, words=words, sent_starts=[True, False, True, False])
+    assert [t.is_sent_start for t in doc] == [True, False, True, False]
+
+    # set sent_start by heads
+    doc = Doc(en_vocab, words=words, heads=heads, deps=["dep"] * 4)
+    assert [t.is_sent_start for t in doc] == [True, False, True, False]
+    # heads override sent_starts
+    doc = Doc(
+        en_vocab, words=words, sent_starts=[True] * 4, heads=heads, deps=["dep"] * 4,
+    )
+    assert [t.is_sent_start for t in doc] == [True, False, True, False]
 
 
 @pytest.mark.parametrize("text", [["one", "two", "three"]])
@@ -158,7 +173,7 @@ def test_doc_api_runtime_error(en_tokenizer):
             "", "nummod", "nsubj", "prep", "det", "amod", "pobj", "aux", "neg", "ccomp", "amod", "dobj"]
     # fmt: on
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], deps=deps)
+    doc = Doc(tokens.vocab, words=[t.text for t in tokens], deps=deps)
     nps = []
     for np in doc.noun_chunks:
         while len(np) > 1 and np[0].dep_ not in ("advmod", "amod", "compound"):
@@ -175,17 +190,19 @@ def test_doc_api_runtime_error(en_tokenizer):
             retokenizer.merge(np, attrs=attrs)
 
 
-def test_doc_api_right_edge(en_tokenizer):
+def test_doc_api_right_edge(en_vocab):
     """Test for bug occurring from Unshift action, causing incorrect right edge"""
     # fmt: off
-    text = "I have proposed to myself, for the sake of such as live under the government of the Romans, to translate those books into the Greek tongue."
-    heads = [2, 1, 0, -1, -1, -3, 15, 1, -2, -1, 1, -3, -1, -1, 1, -2, -1, 1,
-             -2, -7, 1, -19, 1, -2, -3, 2, 1, -3, -26]
+    words = [
+        "I", "have", "proposed", "to", "myself", ",", "for", "the", "sake",
+        "of", "such", "as", "live", "under", "the", "government", "of", "the",
+        "Romans", ",", "to", "translate", "those", "books", "into", "the",
+        "Greek", "tongue", "."
+    ]
+    heads = [2, 2, 2, 2, 3, 2, 21, 8, 6, 8, 11, 8, 11, 12, 15, 13, 15, 18, 16, 12, 21, 2, 23, 21, 21, 27, 27, 24, 2]
     deps = ["dep"] * len(heads)
     # fmt: on
-
-    tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
+    doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
     assert doc[6].text == "for"
     subtree = [w.text for w in doc[6].subtree]
     # fmt: off
@@ -213,16 +230,16 @@ def test_doc_api_similarity_match():
 
 
 @pytest.mark.parametrize(
-    "sentence,heads,lca_matrix",
+    "words,heads,lca_matrix",
     [
         (
-            "the lazy dog slept",
-            [2, 1, 1, 0],
+            ["the", "lazy", "dog", "slept"],
+            [2, 2, 3, 3],
             numpy.array([[0, 2, 2, 3], [2, 1, 2, 3], [2, 2, 2, 3], [3, 3, 3, 3]]),
         ),
         (
-            "The lazy dog slept. The quick fox jumped",
-            [2, 1, 1, 0, -1, 2, 1, 1, 0],
+            ["The", "lazy", "dog", "slept", ".", "The", "quick", "fox", "jumped"],
+            [2, 2, 3, 3, 3, 7, 7, 8, 8],
             numpy.array(
                 [
                     [0, 2, 2, 3, 3, -1, -1, -1, -1],
@@ -239,11 +256,8 @@ def test_doc_api_similarity_match():
         ),
     ],
 )
-def test_lowest_common_ancestor(en_tokenizer, sentence, heads, lca_matrix):
-    tokens = en_tokenizer(sentence)
-    doc = get_doc(
-        tokens.vocab, [t.text for t in tokens], heads=heads, deps=["dep"] * len(heads)
-    )
+def test_lowest_common_ancestor(en_vocab, words, heads, lca_matrix):
+    doc = Doc(en_vocab, words, heads=heads, deps=["dep"] * len(heads))
     lca = doc.get_lca_matrix()
     assert (lca == lca_matrix).all()
     assert lca[1, 1] == 1
@@ -267,26 +281,23 @@ def test_doc_is_nered(en_vocab):
 
 
 def test_doc_from_array_sent_starts(en_vocab):
-    words = ["I", "live", "in", "New", "York", ".", "I", "like", "cats", "."]
-    heads = [0, -1, -2, -3, -4, -5, 0, -1, -2, -3]
     # fmt: off
+    words = ["I", "live", "in", "New", "York", ".", "I", "like", "cats", "."]
+    heads = [0, 0, 0, 0, 0, 0, 6, 6, 6, 6]
     deps = ["ROOT", "dep", "dep", "dep", "dep", "dep", "ROOT", "dep", "dep", "dep"]
     # fmt: on
-    doc = get_doc(en_vocab, words=words, heads=heads, deps=deps)
-
+    doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
     # HEAD overrides SENT_START without warning
     attrs = [SENT_START, HEAD]
     arr = doc.to_array(attrs)
     new_doc = Doc(en_vocab, words=words)
     new_doc.from_array(attrs, arr)
-
     # no warning using default attrs
     attrs = doc._get_array_attrs()
     arr = doc.to_array(attrs)
     with pytest.warns(None) as record:
         new_doc.from_array(attrs, arr)
         assert len(record) == 0
-
     # only SENT_START uses SENT_START
     attrs = [SENT_START]
     arr = doc.to_array(attrs)
@@ -294,7 +305,6 @@ def test_doc_from_array_sent_starts(en_vocab):
     new_doc.from_array(attrs, arr)
     assert [t.is_sent_start for t in doc] == [t.is_sent_start for t in new_doc]
     assert not new_doc.has_annotation("DEP")
-
     # only HEAD uses HEAD
     attrs = [HEAD, DEP]
     arr = doc.to_array(attrs)
@@ -305,19 +315,17 @@ def test_doc_from_array_sent_starts(en_vocab):
 
 
 def test_doc_from_array_morph(en_vocab):
-    words = ["I", "live", "in", "New", "York", "."]
     # fmt: off
+    words = ["I", "live", "in", "New", "York", "."]
     morphs = ["Feat1=A", "Feat1=B", "Feat1=C", "Feat1=A|Feat2=D", "Feat2=E", "Feat3=F"]
     # fmt: on
     doc = Doc(en_vocab, words=words)
     for i, morph in enumerate(morphs):
         doc[i].morph_ = morph
-
     attrs = [MORPH]
     arr = doc.to_array(attrs)
     new_doc = Doc(en_vocab, words=words)
     new_doc.from_array(attrs, arr)
-
     assert [t.morph_ for t in new_doc] == morphs
     assert [t.morph_ for t in doc] == [t.morph_ for t in new_doc]
 
@@ -329,15 +337,9 @@ def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
     en_docs = [en_tokenizer(text) for text in en_texts]
     docs_idx = en_texts[0].index("docs")
     de_doc = de_tokenizer(de_text)
-    en_docs[0].user_data[("._.", "is_ambiguous", docs_idx, None)] = (
-        True,
-        None,
-        None,
-        None,
-    )
-
+    expected = (True, None, None, None)
+    en_docs[0].user_data[("._.", "is_ambiguous", docs_idx, None)] = expected
     assert Doc.from_docs([]) is None
-
     assert de_doc is not Doc.from_docs([de_doc])
     assert str(de_doc) == str(Doc.from_docs([de_doc]))
 
@@ -455,7 +457,7 @@ def test_is_flags_deprecated(en_tokenizer):
         doc.is_sentenced
 
 
-def test_set_ents(en_tokenizer):
+def test_doc_set_ents(en_tokenizer):
     # set ents
     doc = en_tokenizer("a b c d e")
     doc.set_ents([Span(doc, 0, 1, 10), Span(doc, 1, 3, 11)])
@@ -520,3 +522,16 @@ def test_set_ents(en_tokenizer):
     # conflicting/overlapping specifications
     with pytest.raises(ValueError):
         doc.set_ents([], missing=[doc[1:2]], outside=[doc[1:2]])
+
+
+def test_doc_ents_setter():
+    """Test that both strings and integers can be used to set entities in
+    tuple format via doc.ents."""
+    words = ["a", "b", "c", "d", "e"]
+    doc = Doc(Vocab(), words=words)
+    doc.ents = [("HELLO", 0, 2), (doc.vocab.strings.add("WORLD"), 3, 5)]
+    assert [e.label_ for e in doc.ents] == ["HELLO", "WORLD"]
+    vocab = Vocab()
+    ents = [("HELLO", 0, 2), (vocab.strings.add("WORLD"), 3, 5)]
+    doc = Doc(vocab, words=words, ents=ents)
+    assert [e.label_ for e in doc.ents] == ["HELLO", "WORLD"]

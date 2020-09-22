@@ -199,13 +199,17 @@ def doc_from_conllu_sentence(
         heads.append(head)
         deps.append(dep)
 
-    doc = Doc(vocab, words=words, spaces=spaces)
+    doc = Doc(
+        vocab,
+        words=words,
+        spaces=spaces,
+        tags=tags,
+        pos=poses,
+        deps=deps,
+        lemmas=lemmas,
+        heads=heads,
+    )
     for i in range(len(doc)):
-        doc[i].tag_ = tags[i]
-        doc[i].pos_ = poses[i]
-        doc[i].dep_ = deps[i]
-        doc[i].lemma_ = lemmas[i]
-        doc[i].head = doc[heads[i]]
         doc[i]._.merged_orth = words[i]
         doc[i]._.merged_morph = morphs[i]
         doc[i]._.merged_lemma = lemmas[i]
@@ -232,14 +236,17 @@ def doc_from_conllu_sentence(
         heads.append(t.head.i)
         deps.append(t.dep_)
 
-    doc_x = Doc(vocab, words=words, spaces=spaces)
-    for i in range(len(doc)):
-        doc_x[i].tag_ = tags[i]
-        doc_x[i].morph_ = morphs[i]
-        doc_x[i].lemma_ = lemmas[i]
-        doc_x[i].pos_ = poses[i]
-        doc_x[i].dep_ = deps[i]
-        doc_x[i].head = doc_x[heads[i]]
+    doc_x = Doc(
+        vocab,
+        words=words,
+        spaces=spaces,
+        tags=tags,
+        morphs=morphs,
+        lemmas=lemmas,
+        pos=poses,
+        deps=deps,
+        heads=heads,
+    )
     doc_x.ents = [Span(doc_x, ent.start, ent.end, label=ent.label) for ent in doc.ents]
 
     return doc_x

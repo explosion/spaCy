@@ -299,9 +299,10 @@ installed in the same environment – that's it.
 
 When you load a pipeline, spaCy will generally use its `config.cfg` to set up
 the language class and construct the pipeline. The pipeline is specified as a
-list of strings, e.g. `pipeline = ["tagger", "paser", "ner"]`. For each of those
-strings, spaCy will call `nlp.add_pipe` and look up the name in all factories
-defined by the decorators [`@Language.component`](/api/language#component) and
+list of strings, e.g. `pipeline = ["tagger", "parser", "ner"]`. For each of
+those strings, spaCy will call `nlp.add_pipe` and look up the name in all
+factories defined by the decorators
+[`@Language.component`](/api/language#component) and
 [`@Language.factory`](/api/language#factory). This means that you have to import
 your custom components _before_ loading the pipeline.
 

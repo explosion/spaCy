@@ -187,7 +187,7 @@ more efficient than processing texts one-by-one.
 > ```python
 > texts = ["One document.", "...", "Lots of documents"]
 > for doc in nlp.pipe(texts, batch_size=50):
->     assert doc.is_parsed
+>     assert doc.has_annotation("DEP")
 > ```
 
 | Name                                       | Description                                                                                                                                                         |

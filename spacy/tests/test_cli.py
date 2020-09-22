@@ -1,15 +1,16 @@
 import pytest
 from click import NoSuchOption
-
 from spacy.training import docs_to_json, biluo_tags_from_offsets
 from spacy.training.converters import iob2docs, conll_ner2docs, conllu2docs
 from spacy.schemas import ProjectConfigSchema, RecommendationSchema, validate
 from spacy.cli.init_config import init_config, RECOMMENDATIONS
 from spacy.cli._util import validate_project_commands, parse_config_overrides
 from spacy.cli._util import load_project_config, substitute_project_variables
-from spacy.cli._util import string_to_list
-from thinc.config import ConfigValidationError
+from spacy.cli._util import string_to_list, OVERRIDES_ENV_VAR
+from spacy.cli.debug_config import check_section_refs
+from thinc.config import ConfigValidationError, Config
 import srsly
+import os
 
 from .util import make_tempdir
 
@@ -341,6 +342,24 @@ def test_parse_config_overrides_invalid_2(args):
         parse_config_overrides(args)
 
 
+def test_parse_cli_overrides():
+    os.environ[OVERRIDES_ENV_VAR] = "--x.foo bar --x.bar=12 --x.baz false --y.foo=hello"
+    result = parse_config_overrides([])
+    assert len(result) == 4
+    assert result["x.foo"] == "bar"
+    assert result["x.bar"] == 12
+    assert result["x.baz"] is False
+    assert result["y.foo"] == "hello"
+    os.environ[OVERRIDES_ENV_VAR] = "--x"
+    assert parse_config_overrides([], env_var=None) == {}
+    with pytest.raises(SystemExit):
+        parse_config_overrides([])
+    os.environ[OVERRIDES_ENV_VAR] = "hello world"
+    with pytest.raises(SystemExit):
+        parse_config_overrides([])
+    del os.environ[OVERRIDES_ENV_VAR]
+
+
 @pytest.mark.parametrize("lang", ["en", "nl"])
 @pytest.mark.parametrize(
     "pipeline", [["tagger", "parser", "ner"], [], ["ner", "textcat", "sentencizer"]]
@@ -395,3 +414,15 @@ def test_string_to_list(value):
 def test_string_to_list_intify(value):
     assert string_to_list(value, intify=False) == ["1", "2", "3"]
     assert string_to_list(value, intify=True) == [1, 2, 3]
+
+
+def test_check_section_refs():
+    config = {"a": {"b": {"c": "a.d.e"}, "d": {"e": 1}}, "f": {"g": "d.f"}}
+    config = Config(config)
+    # Valid section reference
+    check_section_refs(config, ["a.b.c"])
+    # Section that doesn't exist in this config
+    check_section_refs(config, ["x.y.z"])
+    # Invalid section reference
+    with pytest.raises(ConfigValidationError):
+        check_section_refs(config, ["a.b.c", "f.g"])
