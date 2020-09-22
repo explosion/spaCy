@@ -59,7 +59,7 @@ def project_run(
         for dep in cmd.get("deps", []):
             if not (project_dir / dep).exists():
                 err = f"Missing dependency specified by command '{subcommand}': {dep}"
-                err_help = "Maybe you forgot to run the 'project assets' command?"
+                err_help = "Maybe you forgot to run the 'project assets' command or a previous step?"
                 err_kwargs = {"exits": 1} if not dry else {}
                 msg.fail(err, err_help, **err_kwargs)
         with working_dir(project_dir) as current_dir:
