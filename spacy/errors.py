@@ -57,7 +57,10 @@ class Warnings:
             "incorrect. Modify PhraseMatcher._terminal_hash to fix.")
     W024 = ("Entity '{entity}' - Alias '{alias}' combination already exists in "
             "the Knowledge Base.")
-    W026 = ("Unable to set all sentence boundaries from dependency parses.")
+    W026 = ("Unable to set all sentence boundaries from dependency parses. If "
+            "you are constructing a parse tree incrementally by setting "
+            "token.head values, you can probably ignore this warning. Consider "
+            "using Doc(words, ..., heads=heads, deps=deps) instead.")
     W027 = ("Found a large training file of {size} bytes. Note that it may "
             "be more efficient to split your training data into multiple "
             "smaller JSON files instead.")
@@ -452,7 +455,7 @@ class Errors:
             "{obj}.{attr}\nAttribute '{attr}' does not exist on {obj}.")
     E186 = ("'{tok_a}' and '{tok_b}' are different texts.")
     E187 = ("Only unicode strings are supported as labels.")
-    E189 = ("Each argument to `get_doc` should be of equal length.")
+    E189 = ("Each argument to Doc.__init__ should be of equal length.")
     E190 = ("Token head out of range in `Doc.from_array()` for token index "
             "'{index}' with value '{value}' (equivalent to relative head "
             "index: '{rel_head_index}'). The head indices should be relative "
@@ -542,7 +545,8 @@ class Errors:
     E949 = ("Can only create an alignment when the texts are the same.")
     E952 = ("The section '{name}' is not a valid section in the provided config.")
     E953 = ("Mismatched IDs received by the Tok2Vec listener: {id1} vs. {id2}")
-    E954 = ("The Tok2Vec listener did not receive a valid input.")
+    E954 = ("The Tok2Vec listener did not receive any valid input from an upstream "
+            "component.")
     E955 = ("Can't find table(s) '{table}' for language '{lang}' in spacy-lookups-data.")
     E956 = ("Can't find component '{name}' in [components] block in the config. "
             "Available components: {opts}")

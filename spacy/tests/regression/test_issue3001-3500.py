@@ -10,10 +10,8 @@ from spacy.vocab import Vocab
 from spacy.attrs import ENT_IOB, ENT_TYPE
 from spacy.compat import pickle
 from spacy import displacy
-import numpy
-
 from spacy.vectors import Vectors
-from ..util import get_doc
+import numpy
 
 
 def test_issue3002():
@@ -47,7 +45,7 @@ def test_issue3009(en_vocab):
     words = ["also", "has", "to", "do", "with"]
     tags = ["RB", "VBZ", "TO", "VB", "IN"]
     pos = ["ADV", "VERB", "ADP", "VERB", "ADP"]
-    doc = get_doc(en_vocab, words=words, tags=tags, pos=pos)
+    doc = Doc(en_vocab, words=words, tags=tags, pos=pos)
     matcher = Matcher(en_vocab)
     for i, pattern in enumerate(patterns):
         matcher.add(str(i), [pattern])
@@ -61,19 +59,15 @@ def test_issue3012(en_vocab):
     words = ["This", "is", "10", "%", "."]
     tags = ["DT", "VBZ", "CD", "NN", "."]
     pos = ["DET", "VERB", "NUM", "NOUN", "PUNCT"]
-    ents = [(2, 4, "PERCENT")]
-    doc = get_doc(en_vocab, words=words, tags=tags, pos=pos, ents=ents)
+    ents = [("PERCENT", 2, 4)]
+    doc = Doc(en_vocab, words=words, tags=tags, pos=pos, ents=ents)
     assert doc.has_annotation("TAG")
-
     expected = ("10", "NUM", "CD", "PERCENT")
     assert (doc[2].text, doc[2].pos_, doc[2].tag_, doc[2].ent_type_) == expected
-
     header = [ENT_IOB, ENT_TYPE]
     ent_array = doc.to_array(header)
     doc.from_array(header, ent_array)
-
     assert (doc[2].text, doc[2].pos_, doc[2].tag_, doc[2].ent_type_) == expected
-
     # Serializing then deserializing
     doc_bytes = doc.to_bytes()
     doc2 = Doc(en_vocab).from_bytes(doc_bytes)
@@ -85,12 +79,8 @@ def test_issue3199():
     is available. To make this test future-proof, we're constructing a Doc
     with a new Vocab here and a parse tree to make sure the noun chunks run.
     """
-    doc = get_doc(
-        Vocab(),
-        words=["This", "is", "a", "sentence"],
-        heads=[0, -1, -2, -3],
-        deps=["dep"] * 4,
-    )
+    words = ["This", "is", "a", "sentence"]
+    doc = Doc(Vocab(), words=words, heads=[0] * len(words), deps=["dep"] * len(words))
     assert list(doc[0:3].noun_chunks) == []
 
 
@@ -147,9 +137,9 @@ def test_issue3288(en_vocab):
     """Test that retokenization works correctly via displaCy when punctuation
     is merged onto the preceeding token and tensor is resized."""
     words = ["Hello", "World", "!", "When", "is", "this", "breaking", "?"]
-    heads = [1, 0, -1, 1, 0, 1, -2, -3]
+    heads = [1, 1, 1, 4, 4, 6, 4, 4]
     deps = ["intj", "ROOT", "punct", "advmod", "ROOT", "det", "nsubj", "punct"]
-    doc = get_doc(en_vocab, words=words, heads=heads, deps=deps)
+    doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
     doc.tensor = numpy.zeros((len(words), 96), dtype="float32")
     displacy.render(doc)
 

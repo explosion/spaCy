@@ -20,7 +20,7 @@ import spacy
 import srsly
 import numpy
 
-from ..util import make_tempdir, get_doc
+from ..util import make_tempdir
 
 
 @pytest.mark.parametrize("word", ["don't", "don’t", "I'd", "I’d"])
@@ -355,7 +355,7 @@ def test_issue3882(en_vocab):
     """Test that displaCy doesn't serialize the doc.user_data when making a
     copy of the Doc.
     """
-    doc = Doc(en_vocab, words=["Hello", "world"])
+    doc = Doc(en_vocab, words=["Hello", "world"], deps=["dep", "dep"])
     doc.user_data["test"] = set()
     parse_deps(doc)
 
@@ -398,10 +398,10 @@ def test_issue3962(en_vocab):
     This is achieved by setting the head to itself if it would lie out of the span otherwise."""
     # fmt: off
     words = ["He", "jests", "at", "scars", ",", "that", "never", "felt", "a", "wound", "."]
-    heads = [1, 6, -1, -1, 3, 2, 1, 0, 1, -2, -3]
+    heads = [1, 7, 1, 2, 7, 7, 7, 7, 9, 7, 7]
     deps = ["nsubj", "ccomp", "prep", "pobj", "punct", "nsubj", "neg", "ROOT", "det", "dobj", "punct"]
     # fmt: on
-    doc = get_doc(en_vocab, words=words, heads=heads, deps=deps)
+    doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
     span2 = doc[1:5]  # "jests at scars ,"
     doc2 = span2.as_doc()
     doc2_json = doc2.to_json()
@@ -436,10 +436,10 @@ def test_issue3962_long(en_vocab):
     This is achieved by setting the head to itself if it would lie out of the span otherwise."""
     # fmt: off
     words = ["He", "jests", "at", "scars", ".", "They", "never", "felt", "a", "wound", "."]
-    heads = [1, 0, -1, -1, -3, 2, 1, 0, 1, -2, -3]
+    heads = [1, 1, 1, 2, 1, 7, 7, 7, 9, 7, 7]
     deps = ["nsubj", "ROOT", "prep", "pobj", "punct", "nsubj", "neg", "ROOT", "det", "dobj", "punct"]
     # fmt: on
-    two_sent_doc = get_doc(en_vocab, words=words, heads=heads, deps=deps)
+    two_sent_doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
     span2 = two_sent_doc[1:7]  # "jests at scars. They never"
     doc2 = span2.as_doc()
     doc2_json = doc2.to_json()

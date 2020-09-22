@@ -291,8 +291,7 @@ def test_spacy_blank():
 
 
 @pytest.mark.parametrize(
-    "value",
-    [False, None, ["x", "y"], Language, Vocab],
+    "value", [False, None, ["x", "y"], Language, Vocab],
 )
 def test_language_init_invalid_vocab(value):
     err_fragment = "invalid value"

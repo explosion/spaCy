@@ -1,7 +1,6 @@
 from typing import Dict, Iterable, Callable
 import pytest
 from thinc.api import Config
-
 from spacy import Language
 from spacy.util import load_model_from_config, registry, dot_to_object
 from spacy.training import Example
@@ -10,19 +9,19 @@ from spacy.training import Example
 def test_readers():
     config_string = """
     [training]
-    
+
     [corpora]
     @readers = "myreader.v1"
 
     [nlp]
     lang = "en"
     pipeline = ["tok2vec", "textcat"]
-    
+
     [components]
-    
+
     [components.tok2vec]
     factory = "tok2vec"
-    
+
     [components.textcat]
     factory = "textcat"
     """
@@ -69,19 +68,19 @@ def test_readers():
 def test_cat_readers(reader, additional_config):
     nlp_config_string = """
     [training]
-    
+
     [corpora]
     @readers = "PLACEHOLDER"
 
     [nlp]
     lang = "en"
     pipeline = ["tok2vec", "textcat"]
-    
+
     [components]
-    
+
     [components.tok2vec]
     factory = "tok2vec"
-    
+
     [components.textcat]
     factory = "textcat"
     """
