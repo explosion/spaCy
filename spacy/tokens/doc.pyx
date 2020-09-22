@@ -8,6 +8,7 @@ from libc.stdint cimport int32_t, uint64_t
 import copy
 from collections import Counter
 from enum import Enum
+import itertools
 import numpy
 import srsly
 from thinc.api import get_array_module
@@ -742,28 +743,7 @@ cdef class Doc:
 
         # Find all tokens covered by spans and check that none are overlapping
         seen_tokens = set()
-        for span in entities:
-            if not isinstance(span, Span):
-                raise ValueError(Errors.E1012.format(span=span))
-            for i in range(span.start, span.end):
-                if i in seen_tokens:
-                    raise ValueError(Errors.E1010.format(i=i))
-                seen_tokens.add(i)
-        for span in blocked:
-            if not isinstance(span, Span):
-                raise ValueError(Errors.E1012.format(span=span))
-            for i in range(span.start, span.end):
-                if i in seen_tokens:
-                    raise ValueError(Errors.E1010.format(i=i))
-                seen_tokens.add(i)
-        for span in missing:
-            if not isinstance(span, Span):
-                raise ValueError(Errors.E1012.format(span=span))
-            for i in range(span.start, span.end):
-                if i in seen_tokens:
-                    raise ValueError(Errors.E1010.format(i=i))
-                seen_tokens.add(i)
-        for span in outside:
+        for span in itertools.chain.from_iterable([entities, blocked, missing, outside]):
             if not isinstance(span, Span):
                 raise ValueError(Errors.E1012.format(span=span))
             for i in range(span.start, span.end):

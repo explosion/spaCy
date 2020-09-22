@@ -690,8 +690,8 @@ class Errors:
              "in more than one span in entities, blocked, missing or outside.")
     E1011 = ("Unsupported default '{default}' in doc.set_ents. Available "
              "options: {modes}")
-    E1012 = ("Spans provided to doc.set_ents must be provided as a list of "
-             "`Span` objects.")
+    E1012 = ("Entity spans and blocked/missing/outside spans should be "
+             "provided to doc.set_ents as lists of `Span` objects.")
     E1013 = ("Unable to set entity for span with empty label. Entity spans are "
              "required to have a label. To set entity information as missing "
              "or blocked, use the keyword arguments with doc.set_ents.")
