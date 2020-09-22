@@ -119,6 +119,7 @@
                     { "text": "Corpus", "url": "/api/corpus" },
                     { "text": "KnowledgeBase", "url": "/api/kb" },
                     { "text": "Lookups", "url": "/api/lookups" },
+                    { "text": "MorphAnalysis", "url": "/api/morphanalysis" },
                     { "text": "Morphology", "url": "/api/morphology" },
                     { "text": "Scorer", "url": "/api/scorer" },
                     { "text": "StringStore", "url": "/api/stringstore" },
