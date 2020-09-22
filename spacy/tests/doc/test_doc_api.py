@@ -455,3 +455,16 @@ def test_is_flags_deprecated(en_tokenizer):
         doc.is_nered
     with pytest.deprecated_call():
         doc.is_sentenced
+
+
+def test_doc_set_ents():
+    """Test that both strings and integers can be used to set entities in
+    tuple format via doc.ents."""
+    words = ["a", "b", "c", "d", "e"]
+    doc = Doc(Vocab(), words=words)
+    doc.ents = [("HELLO", 0, 2), (doc.vocab.strings.add("WORLD"), 3, 5)]
+    assert [e.label_ for e in doc.ents] == ["HELLO", "WORLD"]
+    vocab = Vocab()
+    ents = [("HELLO", 0, 2), (vocab.strings.add("WORLD"), 3, 5)]
+    doc = Doc(vocab, words=words, ents=ents)
+    assert [e.label_ for e in doc.ents] == ["HELLO", "WORLD"]
