@@ -545,7 +545,8 @@ class Errors:
     E949 = ("Can only create an alignment when the texts are the same.")
     E952 = ("The section '{name}' is not a valid section in the provided config.")
     E953 = ("Mismatched IDs received by the Tok2Vec listener: {id1} vs. {id2}")
-    E954 = ("The Tok2Vec listener did not receive a valid input.")
+    E954 = ("The Tok2Vec listener did not receive any valid input from an upstream "
+            "component.")
     E955 = ("Can't find table(s) '{table}' for language '{lang}' in spacy-lookups-data.")
     E956 = ("Can't find component '{name}' in [components] block in the config. "
             "Available components: {opts}")
