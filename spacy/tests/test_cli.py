@@ -7,7 +7,8 @@ from spacy.cli.init_config import init_config, RECOMMENDATIONS
 from spacy.cli._util import validate_project_commands, parse_config_overrides
 from spacy.cli._util import load_project_config, substitute_project_variables
 from spacy.cli._util import string_to_list, OVERRIDES_ENV_VAR
-from thinc.config import ConfigValidationError
+from spacy.cli.debug_config import check_section_refs
+from thinc.config import ConfigValidationError, Config
 import srsly
 import os
 
@@ -413,3 +414,15 @@ def test_string_to_list(value):
 def test_string_to_list_intify(value):
     assert string_to_list(value, intify=False) == ["1", "2", "3"]
     assert string_to_list(value, intify=True) == [1, 2, 3]
+
+
+def test_check_section_refs():
+    config = {"a": {"b": {"c": "a.d.e"}, "d": {"e": 1}}, "f": {"g": "d.f"}}
+    config = Config(config)
+    # Valid section reference
+    check_section_refs(config, ["a.b.c"])
+    # Section that doesn't exist in this config
+    check_section_refs(config, ["x.y.z"])
+    # Invalid section reference
+    with pytest.raises(ConfigValidationError):
+        check_section_refs(config, ["a.b.c", "f.g"])
