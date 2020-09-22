@@ -779,7 +779,7 @@ class _SetPredicate:
                 value = set(get_string_id(v) for v in MorphAnalysis.from_id(self.vocab, value))
             else:
                 # ISSUBSET for other attrs will be equivalent to "IN"
-                # ISSUPERSET will never match
+                # ISSUPERSET will only match for other attrs with 0 or 1 values
                 value = set([value])
         if self.predicate == "IN":
             return value in self.value

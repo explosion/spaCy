@@ -303,15 +303,17 @@ def test_matcher_superset_value_operator(en_vocab):
 def test_matcher_morph_handling(en_vocab):
     # order of features in pattern doesn't matter
     matcher = Matcher(en_vocab)
-    pattern = [{"MORPH": {"IN": ["Feat1=Val1|Feat2=Val2"]}}]
-    matcher.add("M", [pattern])
+    pattern1 = [{"MORPH": {"IN": ["Feat1=Val1|Feat2=Val2"]}}]
+    pattern2 = [{"MORPH": {"IN": ["Feat2=Val2|Feat1=Val1"]}}]
+    matcher.add("M", [pattern1])
+    matcher.add("N", [pattern2])
     doc = Doc(en_vocab, words=["a", "b", "c"])
     assert len(matcher(doc)) == 0
 
     doc[0].morph_ = "Feat2=Val2|Feat1=Val1"
-    assert len(matcher(doc)) == 1
+    assert len(matcher(doc)) == 2
     doc[0].morph_ = "Feat1=Val1|Feat2=Val2"
-    assert len(matcher(doc)) == 1
+    assert len(matcher(doc)) == 2
 
     # multiple values are split
     matcher = Matcher(en_vocab)
