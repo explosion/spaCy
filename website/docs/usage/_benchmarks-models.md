@@ -28,7 +28,7 @@ on training Stanza on this corpus to allow direct comparison.
 
 | System                                                                         |  POS |  UAS |  LAS |
 | ------------------------------------------------------------------------------ | ---: | ---: | ---: |
-| spaCy RoBERTa (2020)                                                           |      |      |      |
+| spaCy RoBERTa (2020)                                                           | 97.8 | 96.6 | 94.7 |
 | spaCy CNN (2020)                                                               |      |      |      |
 | [Mrini et al.](https://khalilmrini.github.io/Label_Attention_Layer.pdf) (2019) | 97.3 | 97.4 | 96.3 |
 | [Zhou and Zhao](https://www.aclweb.org/anthology/P19-1230/) (2019)             | 97.3 | 97.2 | 95.7 |
@@ -37,7 +37,8 @@ on training Stanza on this corpus to allow direct comparison.
 
 **Accuracy on the Penn Treebank.** See
 [NLP-progress](http://nlpprogress.com/english/dependency_parsing.html) for more
-results.
+results. For spaCy's evaluation, see the
+[project template](https://github.com/explosion/projects/tree/v3/benchmarks/parsing_penn_treebank).
 
 </figcaption>
 
