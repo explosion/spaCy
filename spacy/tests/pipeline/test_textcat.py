@@ -8,6 +8,7 @@ from spacy.language import Language
 from spacy.pipeline import TextCategorizer
 from spacy.tokens import Doc
 from spacy.pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
+from spacy.scorer import Scorer
 
 from ..util import make_tempdir
 from ...cli.train import verify_textcat_config
@@ -224,3 +225,31 @@ def test_positive_class_not_binary():
     assert textcat.labels == ("SOME", "THING", "POS")
     with pytest.raises(ValueError):
         verify_textcat_config(nlp, pipe_config)
+
+def test_textcat_evaluation():
+    train_examples = []
+    nlp = English()
+    ref1 = nlp("one")
+    ref1.cats = {"winter": 1.0, "summer": 1.0, "spring": 1.0, "autumn": 1.0}
+    pred1 = nlp("one")
+    pred1.cats = {"winter": 1.0, "summer": 0.0, "spring": 1.0, "autumn": 1.0}
+    train_examples.append(Example(pred1, ref1))
+
+    ref2 = nlp("two")
+    ref2.cats = {"winter": 0.0, "summer": 0.0, "spring": 1.0, "autumn": 1.0}
+    pred2 = nlp("one")
+    pred2.cats = {"winter": 1.0, "summer": 0.0, "spring": 0.0, "autumn": 1.0}
+    train_examples.append(Example(pred2, ref2))
+
+    scores = Scorer().score_cats(train_examples, "cats", labels=["winter", "summer", "spring", "autumn"])
+    assert scores["cats_f_per_type"]["winter"]["p"] == 1/2
+    assert scores["cats_f_per_type"]["winter"]["r"] == 1/1
+    assert scores["cats_f_per_type"]["summer"]["p"] == 0
+    assert scores["cats_f_per_type"]["summer"]["r"] == 0/1
+    assert scores["cats_f_per_type"]["spring"]["p"] == 1/1
+    assert scores["cats_f_per_type"]["spring"]["r"] == 1/2
+    assert scores["cats_f_per_type"]["autumn"]["p"] == 2/2
+    assert scores["cats_f_per_type"]["autumn"]["r"] == 2/2
+
+    assert scores["cats_micro_p"] == 4/5
+    assert scores["cats_micro_r"] == 4/6
