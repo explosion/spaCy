@@ -152,7 +152,7 @@ def train(
         exclude=frozen_components,
     )
     msg.info(f"Training. Initial learn rate: {optimizer.learn_rate}")
-    with nlp.select_pipes(disable=[*frozen_components]):
+    with nlp.select_pipes(disable=frozen_components):
         print_row, finalize_logger = train_logger(nlp)
 
     try:
@@ -164,7 +164,7 @@ def train(
                 progress.close()
                 print_row(info)
                 if is_best_checkpoint and output_path is not None:
-                    with nlp.select_pipes(disable=[*frozen_components]):
+                    with nlp.select_pipes(disable=frozen_components):
                         update_meta(T_cfg, nlp, info)
                     with nlp.use_params(optimizer.averages):
                         nlp.to_disk(output_path / "model-best")
