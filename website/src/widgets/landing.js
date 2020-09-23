@@ -297,7 +297,7 @@ const Landing = ({ data }) => {
                         to run.
                     </p>
                     <p>
-                        <Button to="/usage/facts-figures#benchmarks">See details</Button>
+                        <Button to="/usage/facts-figures#benchmarks">More results</Button>
                     </p>
                 </LandingCol>
 
