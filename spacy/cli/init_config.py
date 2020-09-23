@@ -36,7 +36,7 @@ def init_config_cli(
     """
     Generate a starter config.cfg for training. Based on your requirements
     specified via the CLI arguments, this command generates a config with the
-    optimal settings for you use case. This includes the choice of architecture,
+    optimal settings for your use case. This includes the choice of architecture,
     pretrained weights and related hyperparameters.
 
     DOCS: https://nightly.spacy.io/api/cli#init-config

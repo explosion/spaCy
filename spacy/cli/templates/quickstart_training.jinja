@@ -93,6 +93,49 @@ grad_factor = 1.0
 @layers = "reduce_mean.v1"
 {% endif -%}
 
+{% if "entity_linker" in components -%}
+[components.entity_linker]
+factory = "entity_linker"
+get_candidates = {"@misc":"spacy.CandidateGenerator.v1"}
+incl_context = true
+incl_prior = true
+
+[components.entity_linker.model]
+@architectures = "spacy.EntityLinker.v1"
+nO = null
+
+[components.entity_linker.model.tok2vec]
+@architectures = "spacy-transformers.TransformerListener.v1"
+grad_factor = 1.0
+
+[components.entity_linker.model.tok2vec.pooling]
+@layers = "reduce_mean.v1"
+{% endif -%}
+
+{% if "textcat" in components %}
+[components.textcat]
+factory = "textcat"
+
+{% if optimize == "accuracy" %}
+[components.textcat.model]
+@architectures = "spacy.TextCatEnsemble.v1"
+exclusive_classes = false
+width = 64
+conv_depth = 2
+embed_size = 2000
+window_size = 1
+ngram_size = 1
+nO = null
+
+{% else -%}
+[components.textcat.model]
+@architectures = "spacy.TextCatBOW.v1"
+exclusive_classes = false
+ngram_size = 1
+no_output_layer = false
+{%- endif %}
+{%- endif %}
+
 {# NON-TRANSFORMER PIPELINE #}
 {% else -%}
 
@@ -167,10 +210,50 @@ nO = null
 @architectures = "spacy.Tok2VecListener.v1"
 width = ${components.tok2vec.model.encode.width}
 {% endif %}
+
+{% if "entity_linker" in components -%}
+[components.entity_linker]
+factory = "entity_linker"
+get_candidates = {"@misc":"spacy.CandidateGenerator.v1"}
+incl_context = true
+incl_prior = true
+
+[components.entity_linker.model]
+@architectures = "spacy.EntityLinker.v1"
+nO = null
+
+[components.entity_linker.model.tok2vec]
+@architectures = "spacy.Tok2VecListener.v1"
+width = ${components.tok2vec.model.encode.width}
+{% endif %}
+
+{% if "textcat" in components %}
+[components.textcat]
+factory = "textcat"
+
+{% if optimize == "accuracy" %}
+[components.textcat.model]
+@architectures = "spacy.TextCatEnsemble.v1"
+exclusive_classes = false
+width = 64
+conv_depth = 2
+embed_size = 2000
+window_size = 1
+ngram_size = 1
+nO = null
+
+{% else -%}
+[components.textcat.model]
+@architectures = "spacy.TextCatBOW.v1"
+exclusive_classes = false
+ngram_size = 1
+no_output_layer = false
+{%- endif %}
+{%- endif %}
 {% endif %}
 
 {% for pipe in components %}
-{% if pipe not in ["tagger", "parser", "ner"] %}
+{% if pipe not in ["tagger", "parser", "ner", "textcat", "entity_linker"] %}
 {# Other components defined by the user: we just assume they're factories #}
 [components.{{ pipe }}]
 factory = "{{ pipe }}"
@@ -244,4 +327,7 @@ sents_f = 0.0
 ents_f = {{ (1.0 / components|length)|round(2) }}
 ents_p = 0.0
 ents_r = 0.0
+{%- endif -%}
+{%- if "textcat" in components %}
+cats_score = {{ (1.0 / components|length)|round(2) }}
 {%- endif -%}
