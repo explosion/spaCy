@@ -1075,7 +1075,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "One",
-                    "Case": "dat",
+                    "Case": "Dat",
                     "Number": "Sing"
                     },
             "kendimden": {
@@ -1084,7 +1084,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "One",
-                    "Case": "abl",
+                    "Case": "Abl",
                     "Number": "Sing"
                     },
             "kendimde": {
@@ -1093,7 +1093,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "One",
-                    "Case": "loc",
+                    "Case": "Loc",
                     "Number": "Sing"
                     },
             "kendimi": {
@@ -1102,7 +1102,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "One",
-                    "Case": "acc",
+                    "Case": "Acc",
                     "Number": "Sing"
                     },
             "kendimle": {
@@ -1111,7 +1111,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "One",
-                    "Case": "instr",
+                    "Case": "Ins",
                     "Number": "Sing"
                     },
             "kendim": {
@@ -1120,7 +1120,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "One",
-                    "Case": "nom",
+                    "Case": "Nom",
                     "Number": "Sing"
                     },
             "kendimin": {
@@ -1129,7 +1129,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "One",
-                    "Case": "gen",
+                    "Case": "Gen",
                     "Number": "Sing"
                     },
             "kendine": {
@@ -1138,7 +1138,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "Two",
-                    "Case": "dat",
+                    "Case": "Dat",
                     "Number": "Sing"
                     },
             "kendinden": {
@@ -1147,7 +1147,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "Two",
-                    "Case": "abl",
+                    "Case": "Abl",
                     "Number": "Sing"
                     },
             "kendinde": {
@@ -1156,7 +1156,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "Two",
-                    "Case": "loc",
+                    "Case": "Loc",
                     "Number": "Sing"
                     },
             "kendini": {
@@ -1165,7 +1165,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "Two",
-                    "Case": "acc",
+                    "Case": "Acc",
                     "Number": "Sing"
                     },
             "kendiyle": {
@@ -1174,7 +1174,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "Two",
-                    "Case": "instr",
+                    "Case": "Ins",
                     "Number": "Sing"
                     },
             "kendi": {
@@ -1183,7 +1183,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "Two",
-                    "Case": "nom",
+                    "Case": "Nom",
                     "Number": "Sing"
                     },
             "kendinin": {
@@ -1192,7 +1192,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "Two",
-                    "Case": "gen",
+                    "Case": "Gen",
                     "Number": "Sing"
                     },
             "kendisine": {
@@ -1201,7 +1201,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "Three",
-                    "Case": "dat",
+                    "Case": "Dat",
                     "Number": "Sing"
                     },
             "kendisinden": {
@@ -1210,7 +1210,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "Three",
-                    "Case": "abl",
+                    "Case": "Abl",
                     "Number": "Sing"
                     },
             "kendisinde": {
@@ -1219,7 +1219,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "Three",
-                    "Case": "loc",
+                    "Case": "Loc",
                     "Number": "Sing"
                     },
             "kendisini": {
@@ -1228,7 +1228,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "Three",
-                    "Case": "acc",
+                    "Case": "Acc",
                     "Number": "Sing"
                     },
             "kendisiyle": {
@@ -1237,7 +1237,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "Three",
-                    "Case": "instr",
+                    "Case": "Ins",
                     "Number": "Sing"
                     },
             "kendisi": {
@@ -1246,7 +1246,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "Three",
-                    "Case": "nom",
+                    "Case": "Nom",
                     "Number": "Sing"
                     },
             "kendisinin": {
@@ -1255,7 +1255,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "Three",
-                    "Case": "gen",
+                    "Case": "Gen",
                     "Number": "Sing"
                     },
             "kendimize": {
@@ -1264,7 +1264,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "One",
-                    "Case": "dat",
+                    "Case": "Dat",
                     "Number": "Sing"
                     },
             "kendimizden": {
@@ -1273,7 +1273,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "One",
-                    "Case": "abl",
+                    "Case": "Abl",
                     "Number": "Sing"
                     },
             "kendimizde": {
@@ -1282,7 +1282,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "One",
-                    "Case": "loc",
+                    "Case": "Loc",
                     "Number": "Sing"
                     },
             "kendimizi": {
@@ -1291,7 +1291,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "One",
-                    "Case": "acc",
+                    "Case": "Acc",
                     "Number": "Sing"
                     },
             "kendimizle": {
@@ -1300,7 +1300,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "One",
-                    "Case": "instr",
+                    "Case": "Ins",
                     "Number": "Sing"
                     },
             "kendimiz": {
@@ -1309,7 +1309,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "One",
-                    "Case": "nom",
+                    "Case": "Nom",
                     "Number": "Sing"
                     },
             "kendimizin": {
@@ -1318,7 +1318,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "One",
-                    "Case": "gen",
+                    "Case": "Gen",
                     "Number": "Sing"
                     },
             "kendinize": {
@@ -1327,7 +1327,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "Two",
-                    "Case": "dat",
+                    "Case": "Dat",
                     "Number": "Sing"
                     },
             "kendinizden": {
@@ -1336,7 +1336,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "Two",
-                    "Case": "abl",
+                    "Case": "Abl",
                     "Number": "Sing"
                     },
             "kendinizde": {
@@ -1345,7 +1345,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "Two",
-                    "Case": "loc",
+                    "Case": "Loc",
                     "Number": "Sing"
                     },
             "kendinizi": {
@@ -1354,7 +1354,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "Two",
-                    "Case": "acc",
+                    "Case": "Acc",
                     "Number": "Sing"
                     },
             "kendinizle": {
@@ -1363,7 +1363,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "Two",
-                    "Case": "instr",
+                    "Case": "Ins",
                     "Number": "Sing"
                     },
             "kendiniz": {
@@ -1372,7 +1372,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "Two",
-                    "Case": "nom",
+                    "Case": "Nom",
                     "Number": "Sing"
                     },
             "kendinizin": {
@@ -1381,7 +1381,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "Two",
-                    "Case": "gen",
+                    "Case": "Gen",
                     "Number": "Sing"
                     },
             "kendilerine": {
@@ -1390,7 +1390,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "Three",
-                    "Case": "dat",
+                    "Case": "Dat",
                     "Number": "Sing"
                     },
             "kendilerinden": {
@@ -1399,7 +1399,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "Three",
-                    "Case": "abl",
+                    "Case": "Abl",
                     "Number": "Sing"
                     },
             "kendilerinde": {
@@ -1408,7 +1408,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "Three",
-                    "Case": "loc",
+                    "Case": "Loc",
                     "Number": "Sing"
                     },
             "kendilerini": {
@@ -1417,7 +1417,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "Three",
-                    "Case": "acc",
+                    "Case": "Acc",
                     "Number": "Sing"
                     },
             "kendileriyle": {
@@ -1426,7 +1426,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "Three",
-                    "Case": "instr",
+                    "Case": "Ins",
                     "Number": "Sing"
                     },
             "kendileriyken": {
@@ -1435,7 +1435,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "Three",
-                    "Case": "nom",
+                    "Case": "Nom",
                     "Number": "Sing"
                     },
             "kendilerinin": {
@@ -1444,7 +1444,7 @@ MORPH_RULES = {
                     "PronType": "Prs",
                     "Reflex": "Yes",
                     "Person": "Three",
-                    "Case": "gen",
+                    "Case": "Gen",
                     "Number": "Sing"
                     }
             }
