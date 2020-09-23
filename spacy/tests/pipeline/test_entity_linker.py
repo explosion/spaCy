@@ -2,6 +2,7 @@ from typing import Callable, Iterable
 import pytest
 
 from spacy.kb import KnowledgeBase, get_candidates, Candidate
+from spacy.vocab import Vocab
 
 from spacy import util, registry
 from spacy.training import Example
@@ -252,6 +253,38 @@ def test_el_pipe_configuration(nlp):
     assert doc[0].ent_kb_id_ == "Q2"
     assert doc[1].ent_kb_id_ == ""
     assert doc[2].ent_kb_id_ == "Q2"
+
+
+def test_vocab_serialization(nlp):
+    """Test that string information is retained across storage"""
+    mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
+
+    # adding entities
+    q1_hash = mykb.add_entity(entity="Q1", freq=27, entity_vector=[1])
+    q2_hash = mykb.add_entity(entity="Q2", freq=12, entity_vector=[2])
+    q3_hash = mykb.add_entity(entity="Q3", freq=5, entity_vector=[3])
+
+    # adding aliases
+    douglas_hash = mykb.add_alias(alias="douglas", entities=["Q2", "Q3"], probabilities=[0.4, 0.1])
+    adam_hash = mykb.add_alias(alias="adam", entities=["Q2"], probabilities=[0.9])
+
+    candidates = mykb.get_alias_candidates("adam")
+    assert len(candidates) == 1
+    assert candidates[0].entity == q2_hash
+    assert candidates[0].entity_ == "Q2"
+    assert candidates[0].alias == adam_hash
+    assert candidates[0].alias_ == "adam"
+
+    with make_tempdir() as d:
+        mykb.to_disk(d / "kb")
+        kb_new_vocab = KnowledgeBase(Vocab(), entity_vector_length=1)
+        kb_new_vocab.from_disk(d / "kb")
+
+        candidates = kb_new_vocab.get_alias_candidates("adam")
+        assert len(candidates) == 1
+        assert candidates[0].entity == q2_hash
+        with pytest.raises(KeyError):
+            assert candidates[0].entity_ == "Q2"
 
 
 def test_append_alias(nlp):
