@@ -2,6 +2,7 @@ from typing import Optional, List
 from thinc.api import Model, chain, list2array, Linear, zero_init, use_ops
 from thinc.types import Floats2d
 
+from ... import Errors
 from ...util import registry
 from .._precomputable_affine import PrecomputableAffine
 from ..tb_framework import TransitionModel
@@ -66,7 +67,7 @@ def build_tb_parser_model(
     elif state_type == "ner":
         nr_feature_tokens = 6 if extra_state_tokens else 3
     else:
-        raise ValueError(f"unknown state type {state_type}")  # TODO error
+        raise ValueError(Errors.E917.format(value=state_type))
     t2v_width = tok2vec.get_dim("nO") if tok2vec.has_dim("nO") else None
     tok2vec = chain(tok2vec, list2array(), Linear(hidden_width, t2v_width))
     tok2vec.set_dim("nO", hidden_width)
