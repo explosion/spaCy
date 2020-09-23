@@ -50,12 +50,20 @@ def _consume_ent(tags):
         return [start] + middle + [end]
 
 
+def biluo_tags_from_doc(doc, missing="O"):
+    return doc_to_biluo_tags(doc, missing)
+
+
 def doc_to_biluo_tags(doc, missing="O"):
     return offsets_to_biluo_tags(
         doc,
         [(ent.start_char, ent.end_char, ent.label_) for ent in doc.ents],
         missing=missing,
     )
+
+
+def biluo_tags_from_offsets(doc, entities, missing="O"):
+    return offsets_to_biluo_tags(doc, entities, missing)
 
 
 def offsets_to_biluo_tags(doc, entities, missing="O"):
@@ -143,6 +151,10 @@ def offsets_to_biluo_tags(doc, entities, missing="O"):
     return biluo
 
 
+def spans_from_biluo_tags(doc, tags):
+    return biluo_tags_to_spans(doc, tags)
+
+
 def biluo_tags_to_spans(doc, tags):
     """Encode per-token tags following the BILUO scheme into Span object, e.g.
     to overwrite the doc.ents.
@@ -159,6 +171,10 @@ def biluo_tags_to_spans(doc, tags):
         span = Span(doc, start_idx, end_idx + 1, label=label)
         spans.append(span)
     return spans
+
+
+def offsets_from_biluo_tags(doc, tags):
+    return biluo_tags_to_offsets(doc, tags)
 
 
 def biluo_tags_to_offsets(doc, tags):
