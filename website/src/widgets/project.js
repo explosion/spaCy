@@ -16,7 +16,8 @@ export default function Project({
 }) {
     const repoArg = repo ? ` --repo ${repo}` : ''
     const text = `${COMMAND} ${id}${repoArg}`
-    const url = `${repo || projectsRepo}/${id}`
+    const defaultRepo = `https://github.com/${projectsRepo}`
+    const url = `${repo || defaultRepo}/${id}`
     const header = (
         <>
             {title}:{' '}
