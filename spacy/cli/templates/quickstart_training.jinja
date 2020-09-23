@@ -107,6 +107,9 @@ nO = null
 [components.entity_linker.model.tok2vec]
 @architectures = "spacy-transformers.TransformerListener.v1"
 grad_factor = 1.0
+
+[components.entity_linker.model.tok2vec.pooling]
+@layers = "reduce_mean.v1"
 {% endif -%}
 
 {% if "textcat" in components %}
