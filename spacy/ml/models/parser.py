@@ -2,6 +2,7 @@ from typing import Optional, List
 from thinc.api import Model, chain, list2array, Linear, zero_init, use_ops
 from thinc.types import Floats2d
 
+from ...compat import Literal
 from ...util import registry
 from .._precomputable_affine import PrecomputableAffine
 from ..tb_framework import TransitionModel
@@ -11,7 +12,7 @@ from ...tokens import Doc
 @registry.architectures.register("spacy.TransitionBasedParser.v1")
 def build_tb_parser_model(
     tok2vec: Model[List[Doc], List[Floats2d]],
-    nr_feature_tokens: int,
+    nr_feature_tokens: Literal[3, 6, 8, 13],
     hidden_width: int,
     maxout_pieces: int,
     use_upper: bool = True,
@@ -41,8 +42,8 @@ def build_tb_parser_model(
     tok2vec (Model[List[Doc], List[Floats2d]]):
         Subnetwork to map tokens into vector representations.
     nr_feature_tokens (int): The number of tokens in the context to use to
-        construct the state vector. Valid choices are 1, 2, 3, 6, 8 and 13. The
-        2, 8 and 13 feature sets are designed for the parser, while the 3 and 6
+        construct the state vector. Valid choices are 3, 6, 8 and 13. The
+        8 and 13 feature sets are designed for the parser, while the 3 and 6
         feature sets are designed for the NER. The recommended feature sets are
         3 for NER, and 8 for the dependency parser.
 

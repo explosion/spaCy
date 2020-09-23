@@ -20,6 +20,7 @@ pytokenizations
 setuptools
 packaging
 importlib_metadata>=0.20; python_version < "3.8"
+typing_extensions>=3.7.4; python_version < "3.8"
 # Development dependencies
 cython>=0.25
 pytest>=4.6.5
