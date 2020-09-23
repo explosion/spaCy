@@ -209,12 +209,11 @@ class EntityLinker(Pipe):
             # it does run the model twice :(
             predictions = self.model.predict(docs)
         for eg in examples:
-            sentences = [s for s in eg.predicted.sents]
+            sentences = [s for s in eg.reference.sents]
             kb_ids = eg.get_aligned("ENT_KB_ID", as_string=True)
-            for ent in eg.predicted.ents:
-                kb_id = kb_ids[
-                    ent.start
-                ]  # KB ID of the first token is the same as the whole span
+            for ent in eg.reference.ents:
+                # KB ID of the first token is the same as the whole span
+                kb_id = kb_ids[ent.start]
                 if kb_id:
                     try:
                         # find the sentence in the list of sentences.
@@ -253,7 +252,7 @@ class EntityLinker(Pipe):
         entity_encodings = []
         for eg in examples:
             kb_ids = eg.get_aligned("ENT_KB_ID", as_string=True)
-            for ent in eg.predicted.ents:
+            for ent in eg.reference.ents:
                 kb_id = kb_ids[ent.start]
                 if kb_id:
                     entity_encoding = self.kb.get_vector(kb_id)
