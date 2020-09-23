@@ -28,7 +28,7 @@ on training Stanza on this corpus to allow direct comparison.
 
 | System                                                                         |  POS |  UAS |  LAS |
 | ------------------------------------------------------------------------------ | ---: | ---: | ---: |
-| spaCy RoBERTa (2020)                                                           | 97.8 | 96.6 | 94.7 |
+| spaCy RoBERTa (2020)                                                           | 98.0 | 96.8 | 95.0 |
 | spaCy CNN (2020)                                                               |      |      |      |
 | [Mrini et al.](https://khalilmrini.github.io/Label_Attention_Layer.pdf) (2019) | 97.3 | 97.4 | 96.3 |
 | [Zhou and Zhao](https://www.aclweb.org/anthology/P19-1230/) (2019)             | 97.3 | 97.2 | 95.7 |
