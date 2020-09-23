@@ -51,7 +51,11 @@ def _consume_ent(tags):
 
 
 def biluo_tags_from_doc(doc, missing="O"):
-    return biluo_tags_from_offsets(
+    return doc_to_biluo_tags(doc, missing)
+
+
+def doc_to_biluo_tags(doc, missing="O"):
+    return offsets_to_biluo_tags(
         doc,
         [(ent.start_char, ent.end_char, ent.label_) for ent in doc.ents],
         missing=missing,
@@ -59,6 +63,10 @@ def biluo_tags_from_doc(doc, missing="O"):
 
 
 def biluo_tags_from_offsets(doc, entities, missing="O"):
+    return offsets_to_biluo_tags(doc, entities, missing)
+
+
+def offsets_to_biluo_tags(doc, entities, missing="O"):
     """Encode labelled spans into per-token tags, using the
     Begin/In/Last/Unit/Out scheme (BILUO).
 
@@ -80,7 +88,7 @@ def biluo_tags_from_offsets(doc, entities, missing="O"):
         >>> text = 'I like London.'
         >>> entities = [(len('I like '), len('I like London'), 'LOC')]
         >>> doc = nlp.tokenizer(text)
-        >>> tags = biluo_tags_from_offsets(doc, entities)
+        >>> tags = offsets_to_biluo_tags(doc, entities)
         >>> assert tags == ["O", "O", 'U-LOC', "O"]
     """
     # Ensure no overlapping entity labels exist
@@ -144,6 +152,10 @@ def biluo_tags_from_offsets(doc, entities, missing="O"):
 
 
 def spans_from_biluo_tags(doc, tags):
+    return biluo_tags_to_spans(doc, tags)
+
+
+def biluo_tags_to_spans(doc, tags):
     """Encode per-token tags following the BILUO scheme into Span object, e.g.
     to overwrite the doc.ents.
 
@@ -162,6 +174,10 @@ def spans_from_biluo_tags(doc, tags):
 
 
 def offsets_from_biluo_tags(doc, tags):
+    return biluo_tags_to_offsets(doc, tags)
+
+
+def biluo_tags_to_offsets(doc, tags):
     """Encode per-token tags following the BILUO scheme into entity offsets.
 
     doc (Doc): The document that the BILUO tags refer to.
@@ -172,7 +188,7 @@ def offsets_from_biluo_tags(doc, tags):
         `end` will be character-offset integers denoting the slice into the
         original string.
     """
-    spans = spans_from_biluo_tags(doc, tags)
+    spans = biluo_tags_to_spans(doc, tags)
     return [(span.start_char, span.end_char, span.label_) for span in spans]
 
 

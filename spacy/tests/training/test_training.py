@@ -1,9 +1,9 @@
 import numpy
-from spacy.training import biluo_tags_from_offsets, offsets_from_biluo_tags, Alignment
-from spacy.training import spans_from_biluo_tags, iob_to_biluo
+from spacy.training import offsets_to_biluo_tags, biluo_tags_to_offsets, Alignment
+from spacy.training import biluo_tags_to_spans, iob_to_biluo
 from spacy.training import Corpus, docs_to_json
 from spacy.training.example import Example
-from spacy.training.converters import json2docs
+from spacy.training.converters import json_to_docs
 from spacy.training.augment import make_orth_variants_example
 from spacy.lang.en import English
 from spacy.tokens import Doc, DocBin
@@ -69,7 +69,7 @@ def test_gold_biluo_U(en_vocab):
     spaces = [True, True, True, False, True]
     doc = Doc(en_vocab, words=words, spaces=spaces)
     entities = [(len("I flew to "), len("I flew to London"), "LOC")]
-    tags = biluo_tags_from_offsets(doc, entities)
+    tags = offsets_to_biluo_tags(doc, entities)
     assert tags == ["O", "O", "O", "U-LOC", "O"]
 
 
@@ -78,7 +78,7 @@ def test_gold_biluo_BL(en_vocab):
     spaces = [True, True, True, True, False, True]
     doc = Doc(en_vocab, words=words, spaces=spaces)
     entities = [(len("I flew to "), len("I flew to San Francisco"), "LOC")]
-    tags = biluo_tags_from_offsets(doc, entities)
+    tags = offsets_to_biluo_tags(doc, entities)
     assert tags == ["O", "O", "O", "B-LOC", "L-LOC", "O"]
 
 
@@ -87,7 +87,7 @@ def test_gold_biluo_BIL(en_vocab):
     spaces = [True, True, True, True, True, False, True]
     doc = Doc(en_vocab, words=words, spaces=spaces)
     entities = [(len("I flew to "), len("I flew to San Francisco Valley"), "LOC")]
-    tags = biluo_tags_from_offsets(doc, entities)
+    tags = offsets_to_biluo_tags(doc, entities)
     assert tags == ["O", "O", "O", "B-LOC", "I-LOC", "L-LOC", "O"]
 
 
@@ -100,7 +100,7 @@ def test_gold_biluo_overlap(en_vocab):
         (len("I flew to "), len("I flew to San Francisco"), "LOC"),
     ]
     with pytest.raises(ValueError):
-        biluo_tags_from_offsets(doc, entities)
+        offsets_to_biluo_tags(doc, entities)
 
 
 def test_gold_biluo_misalign(en_vocab):
@@ -109,7 +109,7 @@ def test_gold_biluo_misalign(en_vocab):
     doc = Doc(en_vocab, words=words, spaces=spaces)
     entities = [(len("I flew to "), len("I flew to San Francisco Valley"), "LOC")]
     with pytest.warns(UserWarning):
-        tags = biluo_tags_from_offsets(doc, entities)
+        tags = offsets_to_biluo_tags(doc, entities)
     assert tags == ["O", "O", "O", "-", "-", "-"]
 
 
@@ -155,7 +155,7 @@ def test_example_from_dict_some_ner(en_vocab):
 
 
 @pytest.mark.filterwarnings("ignore::UserWarning")
-def test_json2docs_no_ner(en_vocab):
+def test_json_to_docs_no_ner(en_vocab):
     data = [
         {
             "id": 1,
@@ -191,7 +191,7 @@ def test_json2docs_no_ner(en_vocab):
             ],
         }
     ]
-    docs = json2docs(data)
+    docs = json_to_docs(data)
     assert len(docs) == 1
     for doc in docs:
         assert not doc.has_annotation("ENT_IOB")
@@ -358,9 +358,9 @@ def test_roundtrip_offsets_biluo_conversion(en_tokenizer):
     biluo_tags = ["O", "O", "O", "B-LOC", "L-LOC", "O", "U-GPE", "O"]
     offsets = [(10, 24, "LOC"), (29, 35, "GPE")]
     doc = en_tokenizer(text)
-    biluo_tags_converted = biluo_tags_from_offsets(doc, offsets)
+    biluo_tags_converted = offsets_to_biluo_tags(doc, offsets)
     assert biluo_tags_converted == biluo_tags
-    offsets_converted = offsets_from_biluo_tags(doc, biluo_tags)
+    offsets_converted = biluo_tags_to_offsets(doc, biluo_tags)
     offsets_converted = [ent for ent in offsets if ent[2]]
     assert offsets_converted == offsets
 
@@ -368,7 +368,7 @@ def test_roundtrip_offsets_biluo_conversion(en_tokenizer):
 def test_biluo_spans(en_tokenizer):
     doc = en_tokenizer("I flew to Silicon Valley via London.")
     biluo_tags = ["O", "O", "O", "B-LOC", "L-LOC", "O", "U-GPE", "O"]
-    spans = spans_from_biluo_tags(doc, biluo_tags)
+    spans = biluo_tags_to_spans(doc, biluo_tags)
     spans = [span for span in spans if span.label_]
     assert len(spans) == 2
     assert spans[0].text == "Silicon Valley"

@@ -3,7 +3,7 @@ from spacy.pipeline import Pipe
 from spacy.matcher import PhraseMatcher, Matcher
 from spacy.tokens import Doc, Span, DocBin
 from spacy.training import Example, Corpus
-from spacy.training.converters import json2docs
+from spacy.training.converters import json_to_docs
 from spacy.vocab import Vocab
 from spacy.lang.en import English
 from spacy.util import minibatch, ensure_path, load_model
@@ -425,7 +425,7 @@ def test_issue4402():
     attrs = ["ORTH", "SENT_START", "ENT_IOB", "ENT_TYPE"]
     with make_tempdir() as tmpdir:
         output_file = tmpdir / "test4402.spacy"
-        docs = json2docs([json_data])
+        docs = json_to_docs([json_data])
         data = DocBin(docs=docs, attrs=attrs).to_bytes()
         with output_file.open("wb") as file_:
             file_.write(data)

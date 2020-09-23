@@ -7,7 +7,7 @@ from ...tokens import Doc, Span
 from ...util import load_model
 
 
-def conll_ner2docs(
+def conll_ner_to_docs(
     input_data, n_sents=10, seg_sents=False, model=None, no_print=False, **kwargs
 ):
     """
