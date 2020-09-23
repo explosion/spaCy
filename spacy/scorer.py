@@ -1,4 +1,4 @@
-from typing import Optional, Iterable, Dict, Any, Callable, TYPE_CHECKING, List
+from typing import Optional, Iterable, Dict, Any, Callable, TYPE_CHECKING
 import numpy as np
 
 from .training import Example
@@ -453,17 +453,15 @@ class Scorer:
 
     @staticmethod
     def score_links(
-        examples: Iterable[Example],
-        *,
-        negative_labels: List[str],
+        examples: Iterable[Example], *, negative_labels: Iterable[str]
     ) -> Dict[str, Any]:
-        """Returns PRF and ROC AUC scores for a span-level attribute with a
-        string value like Span.kb_id_. The reported overall
-        score depends on the scorer settings.
+        """Returns PRF for predicted links on the entity level.
+        To disentangle the performance of the NEL from the NER,
+        this method only evaluates NEL links for entities that overlap
+        between the gold reference and the predictions.
 
         examples (Iterable[Example]): Examples to score
-        attr (str): The label attribute to score.
-        labels (Iterable[str]): The set of span labels to evaluate on.
+        negative_labels (Iterable[str]): The string values that refer to no annotation (e.g. "NIL")
         RETURNS (Dict[str, Any]): A dictionary containing the scores.
 
         DOCS (TODO): https://nightly.spacy.io/api/scorer#score_links
