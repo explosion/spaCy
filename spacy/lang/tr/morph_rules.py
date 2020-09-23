@@ -14,8 +14,11 @@ _coordinating_conjunctions = [
         "ama",
         "hem"
         "fakat",
+        "ila",
+        "lakin",
         "ve",
-        "veya"
+        "veya",
+        "veyahut",
         ]
 
 MORPH_RULES = {
