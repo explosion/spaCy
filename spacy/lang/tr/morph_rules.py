@@ -3900,3 +3900,6 @@ MORPH_RULES = {
             }
     }
 
+for tag, rules in MORPH_RULES.items():
+    for key, attrs in dict(rules).items():
+        rules[key.title()] = attrs
