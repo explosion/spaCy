@@ -42,8 +42,8 @@ def build_tb_parser_model(
     tok2vec (Model[List[Doc], List[Floats2d]]):
         Subnetwork to map tokens into vector representations.
     nr_feature_tokens (int): The number of tokens in the context to use to
-        construct the state vector. Valid choices are 1, 2, 3, 6, 8 and 13. The
-        2, 8 and 13 feature sets are designed for the parser, while the 3 and 6
+        construct the state vector. Valid choices are 3, 6, 8 and 13. The
+        8 and 13 feature sets are designed for the parser, while the 3 and 6
         feature sets are designed for the NER. The recommended feature sets are
         3 for NER, and 8 for the dependency parser.
 
