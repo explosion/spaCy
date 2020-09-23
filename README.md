@@ -8,7 +8,7 @@ be used in real products.
 
 spaCy comes with
 [pretrained pipelines](https://spacy.io/models) and vectors, and
-currently supports tokenization for **59+ languages**. It features
+currently supports tokenization for **60+ languages**. It features
 state-of-the-art speed, convolutional **neural network models** for tagging,
 parsing, **named entity recognition**, **text classification** and more, multi-task learning with pretrained **transformers** like BERT, as well as a production-ready training system and easy model packaging, deployment and workflow management.
 spaCy is commercial open-source software, released under the MIT license.
@@ -69,7 +69,7 @@ it.
 
 ## Features
 
-- Support for **59+ languages**
+- Support for **60+ languages**
 - **Trained pipelines**
 - Multi-task learning with pretrained **transformers** like BERT
 - Pretrained **word vectors**
