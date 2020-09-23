@@ -13,7 +13,7 @@ state-of-the-art speed, convolutional **neural network models** for tagging,
 parsing, **named entity recognition**, **text classification** and more, multi-task learning with pretrained **transformers** like BERT, as well as a production-ready training system and easy model packaging, deployment and workflow management.
 spaCy is commercial open-source software, released under the MIT license.
 
-💫 **Version 2.3 out now!**
+💫 **Version 3.0 out now!**
 [Check out the release notes here.](https://github.com/explosion/spaCy/releases)
 
 [![Azure Pipelines](https://img.shields.io/azure-devops/build/explosion-ai/public/8/master.svg?logo=azure-pipelines&style=flat-square&label=build)](https://dev.azure.com/explosion-ai/public/_build?definitionId=8)
@@ -29,16 +29,17 @@ spaCy is commercial open-source software, released under the MIT license.
 
 ## 📖 Documentation
 
-| Documentation   |                                                                |
-| --------------- | -------------------------------------------------------------- |
-| [spaCy 101]     | New to spaCy? Here's everything you need to know!              |
-| [Usage Guides]  | How to use spaCy and its features.                             |
-| [New in v3.0]   | New features, backwards incompatibilities and migration guide. |
-| [API Reference] | The detailed reference for spaCy's API.                        |
-| [Models]        | Download statistical language models for spaCy.                |
-| [Universe]      | Libraries, extensions, demos, books and courses.               |
-| [Changelog]     | Changes and version history.                                   |
-| [Contribute]    | How to contribute to the spaCy project and code base.          |
+| Documentation       |                                                                |
+| ------------------- | -------------------------------------------------------------- |
+| [spaCy 101]         | New to spaCy? Here's everything you need to know!              |
+| [Usage Guides]      | How to use spaCy and its features.                             |
+| [New in v3.0]       | New features, backwards incompatibilities and migration guide. |
+| [Project Templates] | End-to-end workflows you can clone, modify and run.            |
+| [API Reference]     | The detailed reference for spaCy's API.                        |
+| [Models]            | Download statistical language models for spaCy.                |
+| [Universe]          | Libraries, extensions, demos, books and courses.               |
+| [Changelog]         | Changes and version history.                                   |
+| [Contribute]        | How to contribute to the spaCy project and code base.          |
 
 [spacy 101]: https://spacy.io/usage/spacy-101
 [new in v3.0]: https://spacy.io/usage/v3
@@ -46,6 +47,7 @@ spaCy is commercial open-source software, released under the MIT license.
 [api reference]: https://spacy.io/api/
 [models]: https://spacy.io/models
 [universe]: https://spacy.io/universe
+[project templates]: https://github.com/explosion/projects
 [changelog]: https://spacy.io/usage#changelog
 [contribute]: https://github.com/explosion/spaCy/blob/master/CONTRIBUTING.md
 
