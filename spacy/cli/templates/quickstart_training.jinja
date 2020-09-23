@@ -284,7 +284,7 @@ vectors = "{{ word_vectors }}"
 {% endif -%}
 {% if use_transformer -%}
 accumulate_gradient = {{ transformer["size_factor"] }}
-{% endif %}
+{% endif -%}
 dev_corpus = "corpora.dev"
 train_corpus = "corpora.train"
 
