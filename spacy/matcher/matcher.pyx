@@ -195,7 +195,7 @@ cdef class Matcher:
                 else:
                     yield doc
 
-    def __call__(self, object doclike, *, as_spans=False):
+    def __call__(self, object doclike, *, as_spans=False, suppress_errors=False):
         """Find all token sequences matching the supplied pattern.
 
         doclike (Doc or Span): The document to match over.
@@ -215,16 +215,17 @@ cdef class Matcher:
         else:
             raise ValueError(Errors.E195.format(good="Doc or Span", got=type(doclike).__name__))
         cdef Pool tmp_pool = Pool()
-        if TAG in self._seen_attrs and not doc.has_annotation("TAG"):
-            raise ValueError(Errors.E155.format(pipe="tagger", attr="TAG"))
-        if POS in self._seen_attrs and not doc.has_annotation("POS"):
-            raise ValueError(Errors.E155.format(pipe="morphologizer", attr="POS"))
-        if MORPH in self._seen_attrs and not doc.has_annotation("MORPH"):
-            raise ValueError(Errors.E155.format(pipe="morphologizer", attr="MORPH"))
-        if LEMMA in self._seen_attrs and not doc.has_annotation("LEMMA"):
-            raise ValueError(Errors.E155.format(pipe="lemmatizer", attr="LEMMA"))
-        if DEP in self._seen_attrs and not doc.has_annotation("DEP"):
-            raise ValueError(Errors.E156.format())
+        if not suppress_errors:
+            if TAG in self._seen_attrs and not doc.has_annotation("TAG"):
+                raise ValueError(Errors.E155.format(pipe="tagger", attr="TAG"))
+            if POS in self._seen_attrs and not doc.has_annotation("POS"):
+                raise ValueError(Errors.E155.format(pipe="morphologizer", attr="POS"))
+            if MORPH in self._seen_attrs and not doc.has_annotation("MORPH"):
+                raise ValueError(Errors.E155.format(pipe="morphologizer", attr="MORPH"))
+            if LEMMA in self._seen_attrs and not doc.has_annotation("LEMMA"):
+                raise ValueError(Errors.E155.format(pipe="lemmatizer", attr="LEMMA"))
+            if DEP in self._seen_attrs and not doc.has_annotation("DEP"):
+                raise ValueError(Errors.E156.format())
         matches = find_matches(&self.patterns[0], self.patterns.size(), doclike, length,
                                 extensions=self._extensions, predicates=self._extra_predicates)
         final_matches = []
