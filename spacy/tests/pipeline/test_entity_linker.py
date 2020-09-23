@@ -377,16 +377,20 @@ def test_preserving_links_ents_2(nlp):
 TRAIN_DATA = [
     ("Russ Cochran captured his first major title with his son as caddie.",
         {"links": {(0, 12): {"Q7381115": 0.0, "Q2146908": 1.0}},
-         "entities": [(0, 12, "PERSON")]}),
+         "entities": [(0, 12, "PERSON")],
+         "sent_starts": [1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}),
     ("Russ Cochran his reprints include EC Comics.",
         {"links": {(0, 12): {"Q7381115": 1.0, "Q2146908": 0.0}},
-         "entities": [(0, 12, "PERSON")]}),
+         "entities": [(0, 12, "PERSON")],
+         "sent_starts": [1, -1, 0, 0, 0, 0, 0, 0]}),
     ("Russ Cochran has been publishing comic art.",
         {"links": {(0, 12): {"Q7381115": 1.0, "Q2146908": 0.0}},
-         "entities": [(0, 12, "PERSON")]}),
+         "entities": [(0, 12, "PERSON")],
+         "sent_starts": [1, -1, 0, 0, 0, 0, 0, 0]}),
     ("Russ Cochran was a member of University of Kentucky's golf team.",
         {"links": {(0, 12): {"Q7381115": 0.0, "Q2146908": 1.0}},
-         "entities": [(0, 12, "PERSON"), (43, 51, "LOC")]}),
+         "entities": [(0, 12, "PERSON"), (43, 51, "LOC")],
+         "sent_starts": [1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]})
 ]
 GOLD_entities = ["Q2146908", "Q7381115", "Q7381115", "Q2146908"]
 # fmt: on
@@ -395,15 +399,7 @@ GOLD_entities = ["Q2146908", "Q7381115", "Q7381115", "Q2146908"]
 def test_overfitting_IO():
     # Simple test to try and quickly overfit the NEL component - ensuring the ML models work correctly
     nlp = English()
-    nlp.add_pipe("sentencizer")
     vector_length = 3
-
-    # Add a custom component to recognize "Russ Cochran" as an entity for the example training data
-    patterns = [
-        {"label": "PERSON", "pattern": [{"LOWER": "russ"}, {"LOWER": "cochran"}]}
-    ]
-    ruler = nlp.add_pipe("entity_ruler")
-    ruler.add_patterns(patterns)
 
     # Convert the texts to docs to make sure we have doc.ents set for the training examples
     train_examples = []
@@ -445,6 +441,16 @@ def test_overfitting_IO():
         losses = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)
     assert losses["entity_linker"] < 0.001
+
+    # adding additional components that are required for the entity_linker
+    nlp.add_pipe("sentencizer", first=True)
+
+    # Add a custom component to recognize "Russ Cochran" as an entity for the example training data
+    patterns = [
+        {"label": "PERSON", "pattern": [{"LOWER": "russ"}, {"LOWER": "cochran"}]}
+    ]
+    ruler = nlp.add_pipe("entity_ruler", before="entity_linker")
+    ruler.add_patterns(patterns)
 
     # test the trained model
     predictions = []
