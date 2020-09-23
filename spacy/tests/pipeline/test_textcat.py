@@ -237,7 +237,7 @@ def test_textcat_evaluation():
 
     ref2 = nlp("two")
     ref2.cats = {"winter": 0.0, "summer": 0.0, "spring": 1.0, "autumn": 1.0}
-    pred2 = nlp("one")
+    pred2 = nlp("two")
     pred2.cats = {"winter": 1.0, "summer": 0.0, "spring": 0.0, "autumn": 1.0}
     train_examples.append(Example(pred2, ref2))
 
