@@ -20,24 +20,27 @@ export default function Infobox({
         [classes.danger]: variant === 'danger',
     })
     return (
-        <aside className={infoboxClassNames} id={id}>
-            {title && (
-                <h4 className={classes.title}>
-                    {variant !== 'default' && !emoji && (
-                        <Icon width={18} name={variant} inline className={classes.icon} />
-                    )}
-                    <span className={classes.titleText}>
-                        {emoji && (
-                            <span className={classes.emoji} aria-hidden="true">
-                                {emoji}
-                            </span>
+        <>
+            {id && <a id={id} />}
+            <aside className={infoboxClassNames}>
+                {title && (
+                    <h4 className={classes.title}>
+                        {variant !== 'default' && !emoji && (
+                            <Icon width={18} name={variant} inline className={classes.icon} />
                         )}
-                        {title}
-                    </span>
-                </h4>
-            )}
-            {children}
-        </aside>
+                        <span className={classes.titleText}>
+                            {emoji && (
+                                <span className={classes.emoji} aria-hidden="true">
+                                    {emoji}
+                                </span>
+                            )}
+                            {title}
+                        </span>
+                    </h4>
+                )}
+                {children}
+            </aside>
+        </>
     )
 }
 

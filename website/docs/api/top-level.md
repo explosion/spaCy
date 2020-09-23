@@ -632,6 +632,12 @@ the beginning of a multi-token entity, `I` the inside of an entity of three or
 more tokens, and `L` the end of an entity of two or more tokens. `U` denotes a
 single-token entity.
 
+<Infobox title="Changed in v3.0" variant="warning" id="biluo_tags_from_offsets">
+
+This method was previously available as `spacy.gold.biluo_tags_from_offsets`.
+
+</Infobox>
+
 > #### Example
 >
 > ```python
@@ -647,12 +653,19 @@ single-token entity.
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `doc`       | The document that the entity offsets refer to. The output tags will refer to the token boundaries within the document. ~~Doc~~                                                             |
 | `entities`  | A sequence of `(start, end, label)` triples. `start` and `end` should be character-offset integers denoting the slice into the original string. ~~List[Tuple[int, int, Union[str, int]]]~~ |
+| `missing`   | The label used for missing values, e.g. if tokenization doesn't align with the entity offsets. Defaults to `"O"`. ~~str~~                                                                  |
 | **RETURNS** | A list of strings, describing the [BILUO](/usage/linguistic-features#accessing-ner) tags. ~~List[str]~~                                                                                    |
 
 ### training.biluo_tags_to_offsets {#biluo_tags_to_offsets tag="function"}
 
 Encode per-token tags following the
 [BILUO scheme](/usage/linguistic-features#accessing-ner) into entity offsets.
+
+<Infobox title="Changed in v3.0" variant="warning" id="offsets_from_biluo_tags">
+
+This method was previously available as `spacy.gold.offsets_from_biluo_tags`.
+
+</Infobox>
 
 > #### Example
 >
@@ -677,6 +690,12 @@ Encode per-token tags following the
 [BILUO scheme](/usage/linguistic-features#accessing-ner) into
 [`Span`](/api/span) objects. This can be used to create entity spans from
 token-based tags, e.g. to overwrite the `doc.ents`.
+
+<Infobox title="Changed in v3.0" variant="warning" id="spans_from_biluo_tags">
+
+This method was previously available as `spacy.gold.spans_from_biluo_tags`.
+
+</Infobox>
 
 > #### Example
 >
