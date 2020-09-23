@@ -1068,7 +1068,7 @@ MORPH_RULES = {
                     "PronType": "Dem",
                     "Number": "Plur",
                     "Case": "Gen"
-                    }
+                    },
             "kendime": {
                     "LEMMA": "kendi",
                     "POS": "PRON",
@@ -1446,7 +1446,497 @@ MORPH_RULES = {
                     "Person": "Three",
                     "Case": "Gen",
                     "Number": "Sing"
-                    }
+                    },
+            "hangilerine": {
+                    "LEMMA": "hangileri",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Dat",
+                    "Number": "Sing"
+                    },
+            "hangilerinden": {
+                    "LEMMA": "hangileri",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Abl",
+                    "Number": "Sing"
+                    },
+            "hangilerinde": {
+                    "LEMMA": "hangileri",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Loc",
+                    "Number": "Sing"
+                    },
+            "hangilerini": {
+                    "LEMMA": "hangileri",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Acc",
+                    "Number": "Sing"
+                    },
+            "hangileriyle": {
+                    "LEMMA": "hangileri",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Ins",
+                    "Number": "Sing"
+                    },
+            "hangileri": {
+                    "LEMMA": "hangileri",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Nom",
+                    "Number": "Sing"
+                    },
+            "hangilerinin": {
+                    "LEMMA": "hangileri",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Gen",
+                    "Number": "Sing"
+                    },
+            "hangisine": {
+                    "LEMMA": "hangi",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Dat",
+                    "Number": "Sing"
+                    },
+            "hangisinden": {
+                    "LEMMA": "hangi",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Abl",
+                    "Number": "Sing"
+                    },
+            "hangisinde": {
+                    "LEMMA": "hangi",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Loc",
+                    "Number": "Sing"
+                    },
+            "hangisini": {
+                    "LEMMA": "hangi",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Acc",
+                    "Number": "Sing"
+                    },
+            "hangisiyle": {
+                    "LEMMA": "hangi",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Ins",
+                    "Number": "Sing"
+                    },
+            "hangisi": {
+                    "LEMMA": "hangi",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Nom",
+                    "Number": "Sing"
+                    },
+            "hangisinin": {
+                    "LEMMA": "hangi",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Gen",
+                    "Number": "Sing"
+                    },
+            "kime": {
+                    "LEMMA": "kim",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Dat",
+                    "Number": "Sing"
+                    },
+            "kimden": {
+                    "LEMMA": "kim",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Abl",
+                    "Number": "Sing"
+                    },
+            "kimde": {
+                    "LEMMA": "kim",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Loc",
+                    "Number": "Sing"
+                    },
+            "kimi": {
+                    "LEMMA": "kim",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Acc",
+                    "Number": "Sing"
+                    },
+            "kimle": {
+                    "LEMMA": "kim",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Ins",
+                    "Number": "Sing"
+                    },
+            "kim": {
+                    "LEMMA": "kim",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Nom",
+                    "Number": "Sing"
+                    },
+            "kimin": {
+                    "LEMMA": "kim",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Gen",
+                    "Number": "Sing"
+                    },
+            "kimlere": {
+                    "LEMMA": "kim",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Dat",
+                    "Number": "Plur"
+                    },
+            "kimlerden": {
+                    "LEMMA": "kim",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Abl",
+                    "Number": "Plur"
+                    },
+            "kimlerde": {
+                    "LEMMA": "kim",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Loc",
+                    "Number": "Plur"
+                    },
+            "kimleri": {
+                    "LEMMA": "kim",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Acc",
+                    "Number": "Plur"
+                    },
+            "kimlerle": {
+                    "LEMMA": "kim",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Ins",
+                    "Number": "Plur"
+                    },
+            "kimler": {
+                    "LEMMA": "kim",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Nom",
+                    "Number": "Plur"
+                    },
+            "kimlerin": {
+                    "LEMMA": "kim",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Gen",
+                    "Number": "Plur"
+                    },
+            "neye": {
+                    "LEMMA": "ne",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Dat",
+                    "Number": "Sing"
+                    },
+            "neden": {
+                    "LEMMA": "ne",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Abl",
+                    "Number": "Sing"
+                    },
+            "nede": {
+                    "LEMMA": "ne",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Loc",
+                    "Number": "Sing"
+                    },
+            "neyi": {
+                    "LEMMA": "ne",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Acc",
+                    "Number": "Sing"
+                    },
+            "neyle": {
+                    "LEMMA": "ne",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Ins",
+                    "Number": "Sing"
+                    },
+            "ne": {
+                    "LEMMA": "ne",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Nom",
+                    "Number": "Sing"
+                    },
+            "neyin": {
+                    "LEMMA": "ne",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Gen",
+                    "Number": "Sing"
+                    },
+            "nelere": {
+                    "LEMMA": "ne",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Dat",
+                    "Number": "Plur"
+                    },
+            "nelerden": {
+                    "LEMMA": "ne",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Abl",
+                    "Number": "Plur"
+                    },
+            "nelerde": {
+                    "LEMMA": "ne",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Loc",
+                    "Number": "Plur"
+                    },
+            "neleri": {
+                    "LEMMA": "ne",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Acc",
+                    "Number": "Plur"
+                    },
+            "nelerle": {
+                    "LEMMA": "ne",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Ins",
+                    "Number": "Plur"
+                    },
+            "neler": {
+                    "LEMMA": "ne",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Nom",
+                    "Number": "Plur"
+                    },
+            "nelerin": {
+                    "LEMMA": "ne",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Gen",
+                    "Number": "Plur"
+                    },
+            "nereye": {
+                    "LEMMA": "nere",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Dat",
+                    "Number": "Sing"
+                    },
+            "nereden": {
+                    "LEMMA": "nere",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Abl",
+                    "Number": "Sing"
+                    },
+            "nerede": {
+                    "LEMMA": "nere",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Loc",
+                    "Number": "Sing"
+                    },
+            "nereyi": {
+                    "LEMMA": "nere",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Acc",
+                    "Number": "Sing"
+                    },
+            "nereyle": {
+                    "LEMMA": "nere",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Ins",
+                    "Number": "Sing"
+                    },
+            "nere": {
+                    "LEMMA": "nere",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Nom",
+                    "Number": "Sing"
+                    },
+            "nerenin": {
+                    "LEMMA": "nere",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Gen",
+                    "Number": "Sing"
+                    },
+            "nerelere": {
+                    "LEMMA": "nere",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Dat",
+                    "Number": "Plur"
+                    },
+            "nerelerden": {
+                    "LEMMA": "nere",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Abl",
+                    "Number": "Plur"
+                    },
+            "nerelerde": {
+                    "LEMMA": "nere",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Loc",
+                    "Number": "Plur"
+                    },
+            "nereleri": {
+                    "LEMMA": "nere",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Acc",
+                    "Number": "Plur"
+                    },
+            "nerelerle": {
+                    "LEMMA": "nere",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Ins",
+                    "Number": "Plur"
+                    },
+            "nereler": {
+                    "LEMMA": "nere",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Nom",
+                    "Number": "Plur"
+                    },
+            "nerelerin": {
+                    "LEMMA": "nere",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Gen",
+                    "Number": "Plur"
+                    },
+            "kaçlarına": {
+                    "LEMMA": "kaçları",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Dat",
+                    "Number": "Sing"
+                    },
+            "kaçlarından": {
+                    "LEMMA": "kaçları",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Abl",
+                    "Number": "Sing"
+                    },
+            "kaçlarında": {
+                    "LEMMA": "kaçları",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Loc",
+                    "Number": "Sing"
+                    },
+            "kaçlarını": {
+                    "LEMMA": "kaçları",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Acc",
+                    "Number": "Sing"
+                    },
+            "kaçlarıyla": {
+                    "LEMMA": "kaçları",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Ins",
+                    "Number": "Sing"
+                    },
+            "kaçları": {
+                    "LEMMA": "kaçı",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Nom",
+                    "Number": "Sing"
+                    },
+            "kaçlarının": {
+                    "LEMMA": "kaçları",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Gen",
+                    "Number": "Sing"
+                    },
+            "kaçına": {
+                    "LEMMA": "kaçı",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Dat",
+                    "Number": "Sing"
+                    },
+            "kaçından": {
+                    "LEMMA": "kaçı",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Abl",
+                    "Number": "Sing"
+                    },
+            "kaçında": {
+                    "LEMMA": "kaçı",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Loc",
+                    "Number": "Sing"
+                    },
+            "kaçını": {
+                    "LEMMA": "kaçı",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Acc",
+                    "Number": "Sing"
+                    },
+            "kaçıyla": {
+                    "LEMMA": "kaçı",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Ins",
+                    "Number": "Sing"
+                    },
+            "kaçı": {
+                    "LEMMA": "kaçı",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Nom",
+                    "Number": "Sing"
+                    },
+            "kaçının": {
+                    "LEMMA": "kaçı",
+                    "POS": "PRON",
+                    "PronType": "Int",
+                    "Case": "Gen",
+                    "Number": "Sing"
+                    },
             }
     }
 
