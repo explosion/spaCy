@@ -67,7 +67,8 @@ width = ${components.tok2vec.model.width}
 parser_config_string = """
 [model]
 @architectures = "spacy.TransitionBasedParser.v1"
-nr_feature_tokens = 99
+state_type = "deps"
+extra_state_tokens = false
 hidden_width = 66
 maxout_pieces = 2
 
@@ -95,7 +96,11 @@ def my_parser():
         MaxoutWindowEncoder(width=321, window_size=3, maxout_pieces=4, depth=2),
     )
     parser = build_tb_parser_model(
-        tok2vec=tok2vec, nr_feature_tokens=7, hidden_width=65, maxout_pieces=5
+        tok2vec=tok2vec,
+        state_type="deps",
+        extra_state_tokens=True,
+        hidden_width=65,
+        maxout_pieces=5,
     )
     return parser
 

@@ -448,7 +448,8 @@ factory = "ner"
 
 [nlp.pipeline.ner.model]
 @architectures = "spacy.TransitionBasedParser.v1"
-nr_feature_tokens = 3
+state_type = "ner"
+extra_state_tokens = false
 hidden_width = 128
 maxout_pieces = 3
 use_upper = false
