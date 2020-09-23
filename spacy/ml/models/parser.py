@@ -2,6 +2,7 @@ from typing import Optional, List
 from thinc.api import Model, chain, list2array, Linear, zero_init, use_ops
 from thinc.types import Floats2d
 
+from ...compat import Literal
 from ...util import registry
 from .._precomputable_affine import PrecomputableAffine
 from ..tb_framework import TransitionModel
@@ -11,7 +12,7 @@ from ...tokens import Doc
 @registry.architectures.register("spacy.TransitionBasedParser.v1")
 def build_tb_parser_model(
     tok2vec: Model[List[Doc], List[Floats2d]],
-    nr_feature_tokens: int,
+    nr_feature_tokens: Literal[3, 6, 8, 13],
     hidden_width: int,
     maxout_pieces: int,
     use_upper: bool = True,
