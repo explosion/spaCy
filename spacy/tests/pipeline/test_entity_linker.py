@@ -152,18 +152,10 @@ def test_kb_serialize(nlp):
         # normal read-write behaviour
         mykb.to_disk(d / "kb")
         mykb.from_disk(d / "kb")
-        mykb.to_disk(d / "kb.file")
-        mykb.from_disk(d / "kb.file")
         mykb.to_disk(d / "new" / "kb")
         mykb.from_disk(d / "new" / "kb")
         # allow overwriting an existing file
-        mykb.to_disk(d / "kb.file")
-        with pytest.raises(ValueError):
-            # can not write to a directory
-            mykb.to_disk(d)
-        with pytest.raises(ValueError):
-            # can not read from a directory
-            mykb.from_disk(d)
+        mykb.to_disk(d / "kb")
         with pytest.raises(ValueError):
             # can not read from an unknown file
             mykb.from_disk(d / "unknown" / "kb")
@@ -283,8 +275,9 @@ def test_vocab_serialization(nlp):
         candidates = kb_new_vocab.get_alias_candidates("adam")
         assert len(candidates) == 1
         assert candidates[0].entity == q2_hash
-        with pytest.raises(KeyError):
-            assert candidates[0].entity_ == "Q2"
+        assert candidates[0].entity_ == "Q2"
+        assert candidates[0].alias == adam_hash
+        assert candidates[0].alias_ == "adam"
 
 
 def test_append_alias(nlp):
