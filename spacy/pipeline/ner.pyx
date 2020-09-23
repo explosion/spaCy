@@ -13,7 +13,8 @@ from ..training import validate_examples
 default_model_config = """
 [model]
 @architectures = "spacy.TransitionBasedParser.v1"
-nr_feature_tokens = 6
+state_type = "ner"
+extra_state_tokens = false
 hidden_width = 64
 maxout_pieces = 2
 

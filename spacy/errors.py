@@ -480,6 +480,8 @@ class Errors:
     E201 = ("Span index out of range.")
 
     # TODO: fix numbering after merging develop into master
+    E917 = ("Received invalid value {value} for 'state_type' in "
+            "TransitionBasedParser: only 'parser' or 'ner' are valid options.")
     E918 = ("Received invalid value for vocab: {vocab} ({vocab_type}). Valid "
             "values are an instance of spacy.vocab.Vocab or True to create one"
             " (default).")
