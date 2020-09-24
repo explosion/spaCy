@@ -359,12 +359,8 @@ def test_language_factories_scores():
     func = lambda nlp, name: lambda doc: doc
     weights1 = {"a1": 0.5, "a2": 0.5}
     weights2 = {"b1": 0.2, "b2": 0.7, "b3": 0.1}
-    Language.factory(
-        f"{name}1", scores=list(weights1), default_score_weights=weights1, func=func,
-    )
-    Language.factory(
-        f"{name}2", scores=list(weights2), default_score_weights=weights2, func=func,
-    )
+    Language.factory(f"{name}1", default_score_weights=weights1, func=func)
+    Language.factory(f"{name}2", default_score_weights=weights2, func=func)
     meta1 = Language.get_factory_meta(f"{name}1")
     assert meta1.default_score_weights == weights1
     meta2 = Language.get_factory_meta(f"{name}2")
@@ -376,6 +372,21 @@ def test_language_factories_scores():
     cfg = nlp.config["training"]
     expected_weights = {"a1": 0.25, "a2": 0.25, "b1": 0.1, "b2": 0.35, "b3": 0.05}
     assert cfg["score_weights"] == expected_weights
+    # Test with custom defaults
+    config = nlp.config.copy()
+    config["training"]["score_weights"]["a1"] = 0.0
+    config["training"]["score_weights"]["b3"] = 1.0
+    nlp = English.from_config(config)
+    score_weights = nlp.config["training"]["score_weights"]
+    expected = {"a1": 0.0, "a2": 0.5, "b1": 0.03, "b2": 0.12, "b3": 0.34}
+    assert score_weights == expected
+    # Test with null values
+    config = nlp.config.copy()
+    config["training"]["score_weights"]["a1"] = None
+    nlp = English.from_config(config)
+    score_weights = nlp.config["training"]["score_weights"]
+    expected = {"a1": None, "a2": 0.5, "b1": 0.03, "b2": 0.12, "b3": 0.35}
+    assert score_weights == expected
 
 
 def test_pipe_factories_from_source():

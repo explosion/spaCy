@@ -2,7 +2,7 @@ from numpy.testing import assert_almost_equal, assert_array_almost_equal
 import pytest
 from pytest import approx
 from spacy.training import Example
-from spacy.training.iob_utils import biluo_tags_from_offsets
+from spacy.training.iob_utils import offsets_to_biluo_tags
 from spacy.scorer import Scorer, ROCAUCScore
 from spacy.scorer import _roc_auc_score, _roc_curve
 from spacy.lang.en import English
@@ -186,7 +186,7 @@ def test_ner_per_type(en_vocab):
             words=input_.split(" "),
             ents=[("CARDINAL", 0, 1), ("CARDINAL", 2, 3)],
         )
-        entities = biluo_tags_from_offsets(doc, annot["entities"])
+        entities = offsets_to_biluo_tags(doc, annot["entities"])
         example = Example.from_dict(doc, {"entities": entities})
         # a hack for sentence boundaries
         example.predicted[1].is_sent_start = False
@@ -211,7 +211,7 @@ def test_ner_per_type(en_vocab):
             words=input_.split(" "),
             ents=[("ORG", 0, 1), ("GPE", 5, 6), ("ORG", 6, 7)],
         )
-        entities = biluo_tags_from_offsets(doc, annot["entities"])
+        entities = offsets_to_biluo_tags(doc, annot["entities"])
         example = Example.from_dict(doc, {"entities": entities})
         # a hack for sentence boundaries
         example.predicted[1].is_sent_start = False

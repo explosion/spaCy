@@ -7,13 +7,13 @@ from ..tokens.span cimport Span
 from ..tokens.span import Span
 from ..attrs import IDS
 from .align import Alignment
-from .iob_utils import biluo_to_iob, biluo_tags_from_offsets, biluo_tags_from_doc
-from .iob_utils import spans_from_biluo_tags
+from .iob_utils import biluo_to_iob, offsets_to_biluo_tags, doc_to_biluo_tags
+from .iob_utils import biluo_tags_to_spans
 from ..errors import Errors, Warnings
 from ..pipeline._parser_internals import nonproj
 
 
-cpdef Doc annotations2doc(vocab, tok_annot, doc_annot):
+cpdef Doc annotations_to_doc(vocab, tok_annot, doc_annot):
     """ Create a Doc from dictionaries with token and doc annotations. """
     attrs, array = _annot2array(vocab, tok_annot, doc_annot)
     output = Doc(vocab, words=tok_annot["ORTH"], spaces=tok_annot["SPACY"])
@@ -92,7 +92,7 @@ cdef class Example:
             tok_dict["SPACY"] = [tok.whitespace_ for tok in predicted]
         return Example(
             predicted,
-            annotations2doc(predicted.vocab, tok_dict, doc_dict)
+            annotations_to_doc(predicted.vocab, tok_dict, doc_dict)
         )
 
     @property
@@ -176,7 +176,7 @@ cdef class Example:
             return [None] * len(self.x)  # should this be 'missing' instead of 'None' ?
         x_ents = self.get_aligned_spans_y2x(self.y.ents)
         # Default to 'None' for missing values
-        x_tags = biluo_tags_from_offsets(
+        x_tags = offsets_to_biluo_tags(
             self.x,
             [(e.start_char, e.end_char, e.label_) for e in x_ents],
             missing=None
@@ -195,7 +195,7 @@ cdef class Example:
         return {
             "doc_annotation": {
                 "cats": dict(self.reference.cats),
-                "entities": biluo_tags_from_doc(self.reference),
+                "entities": doc_to_biluo_tags(self.reference),
                 "links": self._links_to_dict()
             },
             "token_annotation": {
@@ -295,12 +295,12 @@ def _add_entities_to_doc(doc, ner_data):
     elif isinstance(ner_data[0], tuple):
         return _add_entities_to_doc(
             doc,
-            biluo_tags_from_offsets(doc, ner_data)
+            offsets_to_biluo_tags(doc, ner_data)
         )
     elif isinstance(ner_data[0], str) or ner_data[0] is None:
         return _add_entities_to_doc(
             doc,
-            spans_from_biluo_tags(doc, ner_data)
+            biluo_tags_to_spans(doc, ner_data)
         )
     elif isinstance(ner_data[0], Span):
         # Ugh, this is super messy. Really hard to set O entities
@@ -388,7 +388,7 @@ def _parse_ner_tags(biluo_or_offsets, vocab, words, spaces):
         # This is annoying but to convert the offsets we need a Doc
         # that has the target tokenization.
         reference = Doc(vocab, words=words, spaces=spaces)
-        biluo = biluo_tags_from_offsets(reference, biluo_or_offsets)
+        biluo = offsets_to_biluo_tags(reference, biluo_or_offsets)
     else:
         biluo = biluo_or_offsets
     ent_iobs = []

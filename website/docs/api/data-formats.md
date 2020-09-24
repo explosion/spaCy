@@ -275,7 +275,7 @@ $ python -m spacy convert ./data.json ./output.spacy
 > entity label, prefixed by the BILUO marker. For example `"B-ORG"` describes
 > the first token of a multi-token `ORG` entity and `"U-PERSON"` a single token
 > representing a `PERSON` entity. The
-> [`biluo_tags_from_offsets`](/api/top-level#biluo_tags_from_offsets) function
+> [`offsets_to_biluo_tags`](/api/top-level#offsets_to_biluo_tags) function
 > can help you convert entity offsets to the right format.
 
 ```python

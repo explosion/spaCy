@@ -9,7 +9,7 @@ import sys
 from ._util import app, Arg, Opt
 from ..training import docs_to_json
 from ..tokens import DocBin
-from ..training.converters import iob2docs, conll_ner2docs, json2docs, conllu2docs
+from ..training.converters import iob_to_docs, conll_ner_to_docs, json_to_docs, conllu_to_docs
 
 
 # Converters are matched by file extension except for ner/iob, which are
@@ -18,12 +18,12 @@ from ..training.converters import iob2docs, conll_ner2docs, json2docs, conllu2do
 # imported from /converters.
 
 CONVERTERS = {
-    "conllubio": conllu2docs,
-    "conllu": conllu2docs,
-    "conll": conllu2docs,
-    "ner": conll_ner2docs,
-    "iob": iob2docs,
-    "json": json2docs,
+    "conllubio": conllu_to_docs,
+    "conllu": conllu_to_docs,
+    "conll": conllu_to_docs,
+    "ner": conll_ner_to_docs,
+    "iob": iob_to_docs,
+    "json": json_to_docs,
 }
 
 

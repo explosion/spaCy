@@ -235,8 +235,6 @@ The `Transformer` component sets the
 [`Doc._.trf_data`](/api/transformer#custom_attributes) extension attribute,
 which lets you access the transformers outputs at runtime.
 
-<!-- TODO: update/confirm once we have final models trained -->
-
 ```cli
 $ python -m spacy download en_core_trf_lg
 ```
@@ -448,7 +446,8 @@ factory = "ner"
 
 [nlp.pipeline.ner.model]
 @architectures = "spacy.TransitionBasedParser.v1"
-nr_feature_tokens = 3
+state_type = "ner"
+extra_state_tokens = false
 hidden_width = 128
 maxout_pieces = 3
 use_upper = false

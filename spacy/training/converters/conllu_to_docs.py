@@ -1,13 +1,13 @@
 import re
 
-from .conll_ner2docs import n_sents_info
-from ...training import iob_to_biluo, spans_from_biluo_tags
+from .conll_ner_to_docs import n_sents_info
+from ...training import iob_to_biluo, biluo_tags_to_spans
 from ...tokens import Doc, Token, Span
 from ...vocab import Vocab
 from wasabi import Printer
 
 
-def conllu2docs(
+def conllu_to_docs(
     input_data,
     n_sents=10,
     append_morphology=False,
@@ -78,7 +78,7 @@ def read_conllx(
         if lines:
             while lines[0].startswith("#"):
                 lines.pop(0)
-            doc = doc_from_conllu_sentence(
+            doc = conllu_sentence_to_doc(
                 vocab,
                 lines,
                 ner_tag_pattern,
@@ -128,7 +128,7 @@ def get_entities(lines, tag_pattern, ner_map=None):
     return iob_to_biluo(iob)
 
 
-def doc_from_conllu_sentence(
+def conllu_sentence_to_doc(
     vocab,
     lines,
     ner_tag_pattern,
@@ -215,7 +215,7 @@ def doc_from_conllu_sentence(
         doc[i]._.merged_lemma = lemmas[i]
         doc[i]._.merged_spaceafter = spaces[i]
     ents = get_entities(lines, ner_tag_pattern, ner_map)
-    doc.ents = spans_from_biluo_tags(doc, ents)
+    doc.ents = biluo_tags_to_spans(doc, ents)
 
     if merge_subtokens:
         doc = merge_conllu_subtokens(lines, doc)

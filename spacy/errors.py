@@ -69,7 +69,7 @@ class Warnings:
             "in problems with the vocab further on in the pipeline.")
     W030 = ("Some entities could not be aligned in the text \"{text}\" with "
             "entities \"{entities}\". Use "
-            "`spacy.training.biluo_tags_from_offsets(nlp.make_doc(text), entities)`"
+            "`spacy.training.offsets_to_biluo_tags(nlp.make_doc(text), entities)`"
             " to check the alignment. Misaligned entities ('-') will be "
             "ignored during training.")
     W033 = ("Training a new {model} using a model with no lexeme normalization "
@@ -480,6 +480,13 @@ class Errors:
     E201 = ("Span index out of range.")
 
     # TODO: fix numbering after merging develop into master
+    E915 = ("Can't use score '{name}' to calculate final weighted score. Expected "
+            "float or int but got: {score_type}. To exclude the score from the "
+            "final score, set its weight to null in the [training.score_weights] "
+            "section of your training config.")
+    E916 = ("Can't log score for '{name}' in table: not a valid score ({score_type})")
+    E917 = ("Received invalid value {value} for 'state_type' in "
+            "TransitionBasedParser: only 'parser' or 'ner' are valid options.")
     E918 = ("Received invalid value for vocab: {vocab} ({vocab_type}). Valid "
             "values are an instance of spacy.vocab.Vocab or True to create one"
             " (default).")

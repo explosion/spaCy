@@ -67,7 +67,8 @@ width = ${components.tok2vec.model.width}
 parser_config_string = """
 [model]
 @architectures = "spacy.TransitionBasedParser.v1"
-nr_feature_tokens = 99
+state_type = "parser"
+extra_state_tokens = false
 hidden_width = 66
 maxout_pieces = 2
 
@@ -95,7 +96,11 @@ def my_parser():
         MaxoutWindowEncoder(width=321, window_size=3, maxout_pieces=4, depth=2),
     )
     parser = build_tb_parser_model(
-        tok2vec=tok2vec, nr_feature_tokens=7, hidden_width=65, maxout_pieces=5
+        tok2vec=tok2vec,
+        state_type="parser",
+        extra_state_tokens=True,
+        hidden_width=65,
+        maxout_pieces=5,
     )
     return parser
 
@@ -340,3 +345,13 @@ def test_config_auto_fill_extra_fields():
     assert "extra" not in nlp.config["training"]
     # Make sure the config generated is valid
     load_model_from_config(nlp.config)
+
+
+def test_config_validate_literal():
+    nlp = English()
+    config = Config().from_str(parser_config_string)
+    config["model"]["state_type"] = "nonsense"
+    with pytest.raises(ConfigValidationError):
+        nlp.add_pipe("parser", config=config)
+    config["model"]["state_type"] = "ner"
+    nlp.add_pipe("parser", config=config)

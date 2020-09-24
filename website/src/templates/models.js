@@ -12,7 +12,6 @@ import Tag from '../components/tag'
 import { H2, Label } from '../components/typography'
 import Icon from '../components/icon'
 import Link from '../components/link'
-import Grid from '../components/grid'
 import Infobox from '../components/infobox'
 import Accordion from '../components/accordion'
 import { join, arrayToObj, abbrNum, markdownToReact } from '../components/util'
@@ -31,10 +30,16 @@ const MODEL_META = {
     wiki: 'Wikipedia',
     uas: 'Unlabelled dependencies',
     las: 'Labelled dependencies',
+    token_acc: 'Tokenization',
+    tok: 'Tokenization',
     tags_acc: 'Part-of-speech tags (fine grained tags, Token.tag)',
-    ents_f: 'Entities (F-score)',
-    ents_p: 'Entities (precision)',
-    ents_r: 'Entities (recall)',
+    tag: 'Part-of-speech tags (fine grained tags, Token.tag)',
+    ents_f: 'Named entities (F-score)',
+    ents_p: 'Named entities (precision)',
+    ents_r: 'Named entities (recall)',
+    sent_f: 'Sentence segmentation (F-score)',
+    sent_p: 'Sentence segmentation (precision)',
+    sent_r: 'Sentence segmentation (recall)',
     cpu: 'words per second on CPU',
     gpu: 'words per second on GPU',
     pipeline: 'Active processing pipeline components in order',
@@ -83,25 +88,19 @@ function formatVectors(data) {
 }
 
 function formatAccuracy(data) {
-    if (!data) return null
-    const labels = {
-        las: 'LAS',
-        uas: 'UAS',
-        tags_acc: 'TAG',
-        ents_f: 'NER F',
-        ents_p: 'NER P',
-        ents_r: 'NER R',
-    }
-    const isSyntax = key => ['tags_acc', 'las', 'uas'].includes(key)
-    const isNer = key => key.startsWith('ents_')
+    if (!data) return []
     return Object.keys(data)
-        .filter(key => labels[key])
-        .map(key => ({
-            label: labels[key],
-            value: data[key].toFixed(2),
-            help: MODEL_META[key],
-            type: isNer(key) ? 'ner' : isSyntax(key) ? 'syntax' : null,
-        }))
+        .map(label => {
+            const value = data[label]
+            return isNaN(value)
+                ? null
+                : {
+                      label,
+                      value: value.toFixed(2),
+                      help: MODEL_META[label],
+                  }
+        })
+        .filter(item => item)
 }
 
 function formatModelMeta(data) {
@@ -188,16 +187,6 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
         { label: 'Author', content: author },
         { label: 'License', content: license },
     ]
-    const accuracy = [
-        {
-            label: 'Syntax Accuracy',
-            items: meta.accuracy ? meta.accuracy.filter(a => a.type === 'syntax') : null,
-        },
-        {
-            label: 'NER Accuracy',
-            items: meta.accuracy ? meta.accuracy.filter(a => a.type === 'ner') : null,
-        },
-    ]
 
     const error = (
         <Infobox title="Unable to load model details from GitHub" variant="danger">
@@ -209,7 +198,6 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
             </p>
         </Infobox>
     )
-
     return (
         <Section id={name}>
             <H2
@@ -254,33 +242,6 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
                     )}
                 </tbody>
             </Table>
-            <Grid cols={2} gutterBottom={hasInteractiveCode || !!labels}>
-                {accuracy &&
-                    accuracy.map(({ label, items }, i) =>
-                        !items ? null : (
-                            <Table fixed key={i}>
-                                <thead>
-                                    <Tr>
-                                        <Th colSpan={2}>{label}</Th>
-                                    </Tr>
-                                </thead>
-                                <tbody>
-                                    {items.map((item, i) => (
-                                        <Tr key={i}>
-                                            <Td>
-                                                <Label>
-                                                    {item.label}{' '}
-                                                    {item.help && <Help>{item.help}</Help>}
-                                                </Label>
-                                            </Td>
-                                            <Td num>{item.value}</Td>
-                                        </Tr>
-                                    ))}
-                                </tbody>
-                            </Table>
-                        )
-                    )}
-            </Grid>
             {meta.notes && markdownToReact(meta.notes, MARKDOWN_COMPONENTS)}
             {hasInteractiveCode && (
                 <CodeBlock title="Try out the model" lang="python" executable={true}>
@@ -288,13 +249,32 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
                         `import spacy`,
                         `from spacy.lang.${langId}.examples import sentences `,
                         ``,
-                        `nlp = spacy.load('${name}')`,
+                        `nlp = spacy.load("${name}")`,
                         `doc = nlp(sentences[0])`,
                         `print(doc.text)`,
                         `for token in doc:`,
                         `    print(token.text, token.pos_, token.dep_)`,
                     ].join('\n')}
                 </CodeBlock>
+            )}
+            {meta.accuracy && (
+                <Accordion id={`${name}-accuracy`} title="Accuracy Evaluation">
+                    <Table>
+                        <tbody>
+                            {meta.accuracy.map(({ label, value, help }) => (
+                                <Tr key={`${name}-${label}`}>
+                                    <Td nowrap>
+                                        <InlineCode>{label.toUpperCase()}</InlineCode>
+                                    </Td>
+                                    <Td>{help}</Td>
+                                    <Td num style={{ textAlign: 'right' }}>
+                                        {value}
+                                    </Td>
+                                </Tr>
+                            ))}
+                        </tbody>
+                    </Table>
+                </Accordion>
             )}
             {labels && (
                 <Accordion id={`${name}-labels`} title="Label Scheme">
@@ -313,7 +293,7 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
                                 const labelNames = labels[pipe] || []
                                 const help = LABEL_SCHEME_META[pipe]
                                 return (
-                                    <Tr key={pipe} evenodd={false} key={pipe}>
+                                    <Tr key={`${name}-${pipe}`} evenodd={false} key={pipe}>
                                         <Td style={{ width: '20%' }}>
                                             <Label>
                                                 {pipe} {help && <Help>{help}</Help>}
@@ -343,7 +323,7 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
 const Models = ({ pageContext, repo, children }) => {
     const [initialized, setInitialized] = useState(false)
     const [compatibility, setCompatibility] = useState({})
-    const { id, title, meta } = pageContext
+    const { id, title, meta, hasExamples } = pageContext
     const { models, isStarters } = meta
     const baseUrl = `https://raw.githubusercontent.com/${repo}/master`
 
@@ -360,7 +340,6 @@ const Models = ({ pageContext, repo, children }) => {
 
     const modelTitle = title
     const modelTeaser = `Available trained pipelines for ${title}`
-
     const starterTitle = `${title} starters`
     const starterTeaser = `Available transfer learning starter packs for ${title}`
 
@@ -392,6 +371,7 @@ const Models = ({ pageContext, repo, children }) => {
                             baseUrl={baseUrl}
                             repo={repo}
                             licenses={arrayToObj(site.siteMetadata.licenses, 'id')}
+                            hasExamples={meta.hasExamples}
                         />
                     ))
                 }

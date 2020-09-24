@@ -128,7 +128,7 @@ def debug_model(
     goldY = None
     for e in range(3):
         if tok2vec:
-            tok2vec.predict(X)
+            tok2vec.update([Example.from_dict(x, {}) for x in X])
         Y, get_dX = model.begin_update(X)
         if goldY is None:
             goldY = _simulate_gold(Y)

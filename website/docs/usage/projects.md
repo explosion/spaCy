@@ -213,7 +213,7 @@ a quick web demo. It looks pretty similar to a config file used to define CI
 pipelines.
 
 ```yaml
-https://github.com/explosion/projects/tree/v3/pipelines/tagger_parser_ud/project.yml
+%%GITHUB_PROJECTS/pipelines/tagger_parser_ud/project.yml
 ```
 
 | Section       | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
@@ -733,7 +733,10 @@ workflows, but only one can be tracked by DVC.
 <Infobox title="This section is still under construction" emoji="🚧" variant="warning">
 
 The Prodigy integration will require a nightly version of Prodigy that supports
-spaCy v3+.
+spaCy v3+. You can already use annotations created with Prodigy in spaCy v3 by
+exporting your data with
+[`data-to-spacy`](https://prodi.gy/docs/recipes#data-to-spacy) and running
+[`spacy convert`](/api/cli#convert) to convert it to the binary format.
 
 </Infobox>
 

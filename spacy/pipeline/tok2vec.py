@@ -127,7 +127,7 @@ class Tok2Vec(Pipe):
         tokvecs = self.model.predict(docs)
         batch_id = Tok2VecListener.get_batch_id(docs)
         for listener in self.listeners:
-            listener.receive(batch_id, tokvecs, None)
+            listener.receive(batch_id, tokvecs, lambda dX: [])
         return tokvecs
 
     def set_annotations(self, docs: Sequence[Doc], tokvecses) -> None:
