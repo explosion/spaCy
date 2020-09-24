@@ -17,6 +17,7 @@ from ..vocab cimport Vocab
 from ..tokens.doc cimport Doc, get_token_attr_for_matcher
 from ..tokens.span cimport Span
 from ..tokens.token cimport Token
+from ..tokens.morphanalysis cimport MorphAnalysis
 from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH, POS, TAG, DEP, LEMMA, MORPH
 
 from ..schemas import validate_token_pattern
@@ -124,7 +125,7 @@ cdef class Matcher:
         key = self._normalize_key(key)
         for pattern in patterns:
             try:
-                specs = _preprocess_pattern(pattern, self.vocab.strings,
+                specs = _preprocess_pattern(pattern, self.vocab,
                     self._extensions, self._extra_predicates)
                 self.patterns.push_back(init_pattern(self.mem, key, specs))
                 for spec in specs:
@@ -663,7 +664,7 @@ cdef attr_t get_ent_id(const TokenPatternC* pattern) nogil:
     return id_attr.value
 
 
-def _preprocess_pattern(token_specs, string_store, extensions_table, extra_predicates):
+def _preprocess_pattern(token_specs, vocab, extensions_table, extra_predicates):
     """This function interprets the pattern, converting the various bits of
     syntactic sugar before we compile it into a struct with init_pattern.
 
@@ -678,6 +679,7 @@ def _preprocess_pattern(token_specs, string_store, extensions_table, extra_predi
         extra_predicates.
     """
     tokens = []
+    string_store = vocab.strings
     for spec in token_specs:
         if not spec:
             # Signifier for 'any token'
@@ -688,7 +690,7 @@ def _preprocess_pattern(token_specs, string_store, extensions_table, extra_predi
         ops = _get_operators(spec)
         attr_values = _get_attr_values(spec, string_store)
         extensions = _get_extensions(spec, string_store, extensions_table)
-        predicates = _get_extra_predicates(spec, extra_predicates)
+        predicates = _get_extra_predicates(spec, extra_predicates, vocab)
         for op in ops:
             tokens.append((op, list(attr_values), list(extensions), list(predicates)))
     return tokens
@@ -732,7 +734,7 @@ def _get_attr_values(spec, string_store):
 class _RegexPredicate:
     operators = ("REGEX",)
 
-    def __init__(self, i, attr, value, predicate, is_extension=False):
+    def __init__(self, i, attr, value, predicate, is_extension=False, vocab=None):
         self.i = i
         self.attr = attr
         self.value = re.compile(value)
@@ -750,13 +752,18 @@ class _RegexPredicate:
         return bool(self.value.search(value))
 
 
-class _SetMemberPredicate:
-    operators = ("IN", "NOT_IN")
+class _SetPredicate:
+    operators = ("IN", "NOT_IN", "IS_SUBSET", "IS_SUPERSET")
 
-    def __init__(self, i, attr, value, predicate, is_extension=False):
+    def __init__(self, i, attr, value, predicate, is_extension=False, vocab=None):
         self.i = i
         self.attr = attr
-        self.value = set(get_string_id(v) for v in value)
+        self.vocab = vocab
+        if self.attr == MORPH:
+            # normalize morph strings
+            self.value = set(self.vocab.morphology.add(v) for v in value)
+        else:
+            self.value = set(get_string_id(v) for v in value)
         self.predicate = predicate
         self.is_extension = is_extension
         self.key = (attr, self.predicate, srsly.json_dumps(value, sort_keys=True))
@@ -768,19 +775,32 @@ class _SetMemberPredicate:
             value = get_string_id(token._.get(self.attr))
         else:
             value = get_token_attr_for_matcher(token.c, self.attr)
+
+        if self.predicate in ("IS_SUBSET", "IS_SUPERSET"):
+            if self.attr == MORPH:
+                # break up MORPH into individual Feat=Val values
+                value = set(get_string_id(v) for v in MorphAnalysis.from_id(self.vocab, value))
+            else:
+                # IS_SUBSET for other attrs will be equivalent to "IN"
+                # IS_SUPERSET will only match for other attrs with 0 or 1 values
+                value = set([value])
         if self.predicate == "IN":
             return value in self.value
-        else:
+        elif self.predicate == "NOT_IN":
             return value not in self.value
+        elif self.predicate == "IS_SUBSET":
+            return value <= self.value
+        elif self.predicate == "IS_SUPERSET":
+            return value >= self.value
 
     def __repr__(self):
-        return repr(("SetMemberPredicate", self.i, self.attr, self.value, self.predicate))
+        return repr(("SetPredicate", self.i, self.attr, self.value, self.predicate))
 
 
 class _ComparisonPredicate:
     operators = ("==", "!=", ">=", "<=", ">", "<")
 
-    def __init__(self, i, attr, value, predicate, is_extension=False):
+    def __init__(self, i, attr, value, predicate, is_extension=False, vocab=None):
         self.i = i
         self.attr = attr
         self.value = value
@@ -809,11 +829,13 @@ class _ComparisonPredicate:
             return value < self.value
 
 
-def _get_extra_predicates(spec, extra_predicates):
+def _get_extra_predicates(spec, extra_predicates, vocab):
     predicate_types = {
         "REGEX": _RegexPredicate,
-        "IN": _SetMemberPredicate,
-        "NOT_IN": _SetMemberPredicate,
+        "IN": _SetPredicate,
+        "NOT_IN": _SetPredicate,
+        "IS_SUBSET": _SetPredicate,
+        "IS_SUPERSET": _SetPredicate,
         "==": _ComparisonPredicate,
         "!=": _ComparisonPredicate,
         ">=": _ComparisonPredicate,
@@ -841,7 +863,7 @@ def _get_extra_predicates(spec, extra_predicates):
             value_with_upper_keys = {k.upper(): v for k, v in value.items()}
             for type_, cls in predicate_types.items():
                 if type_ in value_with_upper_keys:
-                    predicate = cls(len(extra_predicates), attr, value_with_upper_keys[type_], type_)
+                    predicate = cls(len(extra_predicates), attr, value_with_upper_keys[type_], type_, vocab=vocab)
                     # Don't create a redundant predicates.
                     # This helps with efficiency, as we're caching the results.
                     if predicate.key in seen_predicates:
