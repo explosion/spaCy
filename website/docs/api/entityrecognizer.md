@@ -242,10 +242,10 @@ Score a batch of examples.
 > scores = ner.score(examples)
 > ```
 
-| Name        | Description                                                                                                            |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `examples`  | The examples to score. ~~Iterable[Example]~~                                                                           |
-| **RETURNS** | The scores, produced by [`Scorer.score_spans`](/api/scorer#score_spans). ~~Dict[str, Union[float, Dict[str, float]]]~~ |
+| Name        | Description                                               |
+| ----------- | --------------------------------------------------------- |
+| `examples`  | The examples to score. ~~Iterable[Example]~~              |
+| **RETURNS** | The scores. ~~Dict[str, Union[float, Dict[str, float]]]~~ |
 
 ## EntityRecognizer.create_optimizer {#create_optimizer tag="method"}
 
