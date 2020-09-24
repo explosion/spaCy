@@ -97,6 +97,7 @@ def train(
     dev_corpus = dot_to_object(config, T_cfg["dev_corpus"])
     batcher = T_cfg["batcher"]
     train_logger = T_cfg["logger"]
+    before_to_disk = create_before_to_disk_callback(T_cfg["before_to_disk"])
     # Components that shouldn't be updated during training
     frozen_components = T_cfg["frozen_components"]
     # Sourced components that require resume_training
@@ -167,6 +168,7 @@ def train(
                     with nlp.select_pipes(disable=frozen_components):
                         update_meta(T_cfg, nlp, info)
                     with nlp.use_params(optimizer.averages):
+                        nlp = before_to_disk(nlp)
                         nlp.to_disk(output_path / "model-best")
                 progress = tqdm.tqdm(total=T_cfg["eval_frequency"], leave=False)
                 progress.set_description(f"Epoch {info['epoch']}")
@@ -179,6 +181,7 @@ def train(
                 f"Aborting and saving the final best model. "
                 f"Encountered exception: {str(e)}"
             )
+            nlp = before_to_disk(nlp)
             nlp.to_disk(output_path / "model-final")
         raise e
     finally:
@@ -231,6 +234,21 @@ def create_evaluation_callback(
         return weighted_score, scores
 
     return evaluate
+
+
+def create_before_to_disk_callback(
+    callback: Optional[Callable[[Language], Language]]
+) -> Callable[[Language], Language]:
+    def before_to_disk(nlp: Language) -> Language:
+        if not callback:
+            return nlp
+        modified_nlp = callback(nlp)
+        if not isinstance(modified_nlp, Language):
+            err = Errors.E914.format(name="before_to_disk", value=type(modified_nlp))
+            raise ValueError(err)
+        return modified_nlp
+
+    return before_to_disk
 
 
 def train_while_improving(

@@ -480,6 +480,9 @@ class Errors:
     E201 = ("Span index out of range.")
 
     # TODO: fix numbering after merging develop into master
+    E914 = ("Executing {name} callback failed. Expected the function to "
+            "return the nlp object but got: {value}. Maybe you forgot to return "
+            "the modified object in your function?")
     E915 = ("Can't use score '{name}' to calculate final weighted score. Expected "
             "float or int but got: {score_type}. To exclude the score from the "
             "final score, set its weight to null in the [training.score_weights] "
