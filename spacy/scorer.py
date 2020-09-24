@@ -1,5 +1,6 @@
 from typing import Optional, Iterable, Dict, Any, Callable, TYPE_CHECKING
 import numpy as np
+from collections import defaultdict
 
 from .training import Example
 from .tokens import Token, Doc, Span
