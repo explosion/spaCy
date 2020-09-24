@@ -1,5 +1,5 @@
 from ..tokens.doc cimport Doc
-from murmurhash.mrmr cimport hash_t
+from libc.stdint cimport uint64_t
 
 
 cdef class Example:
@@ -8,5 +8,5 @@ cdef class Example:
     cdef readonly object _cached_alignment
     cdef readonly object _cached_words_x
     cdef readonly object _cached_words_y
-    cdef readonly hash_t _x_sig
-    cdef readonly hash_t _y_sig
+    cdef readonly uint64_t _x_sig
+    cdef readonly uint64_t _y_sig
