@@ -401,10 +401,6 @@ class Errors:
             "Matcher or PhraseMatcher with the attribute {attr}. "
             "Try using nlp() instead of nlp.make_doc() or list(nlp.pipe()) "
             "instead of list(nlp.tokenizer.pipe()).")
-    E156 = ("The pipeline needs to include a parser in order to use "
-            "Matcher or PhraseMatcher with the attribute DEP. Try using "
-            "nlp() instead of nlp.make_doc() or list(nlp.pipe()) instead of "
-            "list(nlp.tokenizer.pipe()).")
     E157 = ("Can't render negative values for dependency arc start or end. "
             "Make sure that you're passing in absolute token indices, not "
             "relative token offsets.\nstart: {start}, end: {end}, label: "

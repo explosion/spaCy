@@ -79,7 +79,7 @@ class AttributeRuler(Pipe):
 
         DOCS: https://nightly.spacy.io/api/attributeruler#call
         """
-        matches = sorted(self.matcher(doc))
+        matches = sorted(self.matcher(doc, allow_missing=True))
 
         for match_id, start, end in matches:
             span = Span(doc, start, end, label=match_id)
@@ -126,8 +126,12 @@ class AttributeRuler(Pipe):
         for tag, attrs in tag_map.items():
             pattern = [{"TAG": tag}]
             attrs, morph_attrs = _split_morph_attrs(attrs)
-            morph = self.vocab.morphology.add(morph_attrs)
-            attrs["MORPH"] = self.vocab.strings[morph]
+            if "MORPH" not in attrs:
+                morph = self.vocab.morphology.add(morph_attrs)
+                attrs["MORPH"] = self.vocab.strings[morph]
+            else:
+                morph = self.vocab.morphology.add(attrs["MORPH"])
+                attrs["MORPH"] = self.vocab.strings[morph]
             self.add([pattern], attrs)
 
     def load_from_morph_rules(
@@ -146,8 +150,12 @@ class AttributeRuler(Pipe):
                 pattern = [{"ORTH": word, "TAG": tag}]
                 attrs = morph_rules[tag][word]
                 attrs, morph_attrs = _split_morph_attrs(attrs)
-                morph = self.vocab.morphology.add(morph_attrs)
-                attrs["MORPH"] = self.vocab.strings[morph]
+                if "MORPH" in attrs:
+                    morph = self.vocab.morphology.add(attrs["MORPH"])
+                    attrs["MORPH"] = self.vocab.strings[morph]
+                elif morph_attrs:
+                    morph = self.vocab.morphology.add(morph_attrs)
+                    attrs["MORPH"] = self.vocab.strings[morph]
                 self.add([pattern], attrs)
 
     def add(
