@@ -725,8 +725,6 @@ cdef class Doc:
         # Set all specified entity information
         for span in entities:
             for i in range(span.start, span.end):
-                if not span.label:
-                    raise ValueError(Errors.E1013)
                 if i == span.start:
                     self.c[i].ent_iob = 3
                 else:
