@@ -91,7 +91,9 @@ def info_model(model: str, *, silent: bool = True) -> Dict[str, Any]:
         meta["source"] = str(model_path.resolve())
     else:
         meta["source"] = str(model_path)
-    return {k: v for k, v in meta.items() if k not in ("accuracy", "speed")}
+    return {
+        k: v for k, v in meta.items() if k not in ("accuracy", "performance", "speed")
+    }
 
 
 def get_markdown(data: Dict[str, Any], title: Optional[str] = None) -> str:

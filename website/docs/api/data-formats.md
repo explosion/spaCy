@@ -180,26 +180,27 @@ single corpus once and then divide it up into `train` and `dev` partitions.
 This section defines settings and controls for the training and evaluation
 process that are used when you run [`spacy train`](/api/cli#train).
 
-| Name                  | Description                                                                                                                                                                                                  |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `accumulate_gradient` | Whether to divide the batch up into substeps. Defaults to `1`. ~~int~~                                                                                                                                       |
-| `batcher`             | Callable that takes an iterator of [`Doc`](/api/doc) objects and yields batches of `Doc`s. Defaults to [`batch_by_words`](/api/top-level#batch_by_words). ~~Callable[[Iterator[Doc], Iterator[List[Doc]]]]~~ |
-| `dev_corpus`          | Dot notation of the config location defining the dev corpus. Defaults to `corpora.dev`. ~~str~~                                                                                                              |
-| `dropout`             | The dropout rate. Defaults to `0.1`. ~~float~~                                                                                                                                                               |
-| `eval_frequency`      | How often to evaluate during training (steps). Defaults to `200`. ~~int~~                                                                                                                                    |
-| `frozen_components`   | Pipeline component names that are "frozen" and shouldn't be updated during training. See [here](/usage/training#config-components) for details. Defaults to `[]`. ~~List[str]~~                              |
-| `gpu_allocator`       | Library for cupy to route GPU memory allocation to. Can be `"pytorch"` or `"tensorflow"`. Defaults to variable `${system.gpu_allocator}`. ~~str~~                                                            |
-| `init_tok2vec`        | Optional path to pretrained tok2vec weights created with [`spacy pretrain`](/api/cli#pretrain). Defaults to variable `${paths.init_tok2vec}`. ~~Optional[str]~~                                              |
-| `lookups`             | Additional lexeme and vocab data from [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data). Defaults to `null`. ~~Optional[Lookups]~~                                                     |
-| `max_epochs`          | Maximum number of epochs to train for. Defaults to `0`. ~~int~~                                                                                                                                              |
-| `max_steps`           | Maximum number of update steps to train for. Defaults to `20000`. ~~int~~                                                                                                                                    |
-| `optimizer`           | The optimizer. The learning rate schedule and other settings can be configured as part of the optimizer. Defaults to [`Adam`](https://thinc.ai/docs/api-optimizers#adam). ~~Optimizer~~                      |
-| `patience`            | How many steps to continue without improvement in evaluation score. Defaults to `1600`. ~~int~~                                                                                                              |
-| `raw_text`            | Optional path to a jsonl file with unlabelled text documents for a [rehearsal](/api/language#rehearse) step. Defaults to variable `${paths.raw}`. ~~Optional[str]~~                                          |
-| `score_weights`       | Score names shown in metrics mapped to their weight towards the final weighted score. See [here](/usage/training#metrics) for details. Defaults to `{}`. ~~Dict[str, float]~~                                |
-| `seed`                | The random seed. Defaults to variable `${system.seed}`. ~~int~~                                                                                                                                              |
-| `train_corpus`        | Dot notation of the config location defining the train corpus. Defaults to `corpora.train`. ~~str~~                                                                                                          |
-| `vectors`             | Name or path of pipeline containing pretrained word vectors to use, e.g. created with [`init vocab`](/api/cli#init-vocab). Defaults to `null`. ~~Optional[str]~~                                             |
+| Name                  | Description                                                                                                                                                                                                                               |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `accumulate_gradient` | Whether to divide the batch up into substeps. Defaults to `1`. ~~int~~                                                                                                                                                                    |
+| `batcher`             | Callable that takes an iterator of [`Doc`](/api/doc) objects and yields batches of `Doc`s. Defaults to [`batch_by_words`](/api/top-level#batch_by_words). ~~Callable[[Iterator[Doc], Iterator[List[Doc]]]]~~                              |
+| `before_to_disk`      | Optional callback to modify `nlp` object right before it is saved to disk during and after training. Can be used to remove or reset config values or disable components. Defaults to `null`. ~~Optional[Callable[[Language], Language]]~~ |
+| `dev_corpus`          | Dot notation of the config location defining the dev corpus. Defaults to `corpora.dev`. ~~str~~                                                                                                                                           |
+| `dropout`             | The dropout rate. Defaults to `0.1`. ~~float~~                                                                                                                                                                                            |
+| `eval_frequency`      | How often to evaluate during training (steps). Defaults to `200`. ~~int~~                                                                                                                                                                 |
+| `frozen_components`   | Pipeline component names that are "frozen" and shouldn't be updated during training. See [here](/usage/training#config-components) for details. Defaults to `[]`. ~~List[str]~~                                                           |
+| `gpu_allocator`       | Library for cupy to route GPU memory allocation to. Can be `"pytorch"` or `"tensorflow"`. Defaults to variable `${system.gpu_allocator}`. ~~str~~                                                                                         |
+| `init_tok2vec`        | Optional path to pretrained tok2vec weights created with [`spacy pretrain`](/api/cli#pretrain). Defaults to variable `${paths.init_tok2vec}`. ~~Optional[str]~~                                                                           |
+| `lookups`             | Additional lexeme and vocab data from [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data). Defaults to `null`. ~~Optional[Lookups]~~                                                                                  |
+| `max_epochs`          | Maximum number of epochs to train for. Defaults to `0`. ~~int~~                                                                                                                                                                           |
+| `max_steps`           | Maximum number of update steps to train for. Defaults to `20000`. ~~int~~                                                                                                                                                                 |
+| `optimizer`           | The optimizer. The learning rate schedule and other settings can be configured as part of the optimizer. Defaults to [`Adam`](https://thinc.ai/docs/api-optimizers#adam). ~~Optimizer~~                                                   |
+| `patience`            | How many steps to continue without improvement in evaluation score. Defaults to `1600`. ~~int~~                                                                                                                                           |
+| `raw_text`            | Optional path to a jsonl file with unlabelled text documents for a [rehearsal](/api/language#rehearse) step. Defaults to variable `${paths.raw}`. ~~Optional[str]~~                                                                       |
+| `score_weights`       | Score names shown in metrics mapped to their weight towards the final weighted score. See [here](/usage/training#metrics) for details. Defaults to `{}`. ~~Dict[str, float]~~                                                             |
+| `seed`                | The random seed. Defaults to variable `${system.seed}`. ~~int~~                                                                                                                                                                           |
+| `train_corpus`        | Dot notation of the config location defining the train corpus. Defaults to `corpora.train`. ~~str~~                                                                                                                                       |
+| `vectors`             | Name or path of pipeline containing pretrained word vectors to use, e.g. created with [`init vocab`](/api/cli#init-vocab). Defaults to `null`. ~~Optional[str]~~                                                                          |
 
 ### pretraining {#config-pretraining tag="section,optional"}
 
@@ -275,8 +276,8 @@ $ python -m spacy convert ./data.json ./output.spacy
 > entity label, prefixed by the BILUO marker. For example `"B-ORG"` describes
 > the first token of a multi-token `ORG` entity and `"U-PERSON"` a single token
 > representing a `PERSON` entity. The
-> [`offsets_to_biluo_tags`](/api/top-level#offsets_to_biluo_tags) function
-> can help you convert entity offsets to the right format.
+> [`offsets_to_biluo_tags`](/api/top-level#offsets_to_biluo_tags) function can
+> help you convert entity offsets to the right format.
 
 ```python
 ### Example structure
@@ -518,7 +519,7 @@ source of truth** used for loading a pipeline.
 >     "ner": ["PERSON", "ORG", "PRODUCT"],
 >     "textcat": ["POSITIVE", "NEGATIVE"]
 >   },
->   "accuracy": {
+>   "performance": {
 >     "ents_f": 82.7300930714,
 >     "ents_p": 82.135523614,
 >     "ents_r": 83.3333333333,
