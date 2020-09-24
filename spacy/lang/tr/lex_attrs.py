@@ -37,7 +37,7 @@ _num_words = [
 
 _ordinal_words = [
     "birinci",
-    "ikinci"
+    "ikinci",
     "üçüncü",
     "dördüncü",
     "beşinci",
