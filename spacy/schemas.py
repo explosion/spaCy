@@ -61,8 +61,8 @@ class TokenPatternString(BaseModel):
     REGEX: Optional[StrictStr] = Field(None, alias="regex")
     IN: Optional[List[StrictStr]] = Field(None, alias="in")
     NOT_IN: Optional[List[StrictStr]] = Field(None, alias="not_in")
-    ISSUBSET: Optional[List[StrictStr]] = Field(None, alias="issubset")
-    ISSUPERSET: Optional[List[StrictStr]] = Field(None, alias="issuperset")
+    IS_SUBSET: Optional[List[StrictStr]] = Field(None, alias="is_subset")
+    IS_SUPERSET: Optional[List[StrictStr]] = Field(None, alias="is_superset")
 
     class Config:
         extra = "forbid"

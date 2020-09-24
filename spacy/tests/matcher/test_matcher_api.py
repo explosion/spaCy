@@ -232,7 +232,7 @@ def test_matcher_set_value_operator(en_vocab):
 
 def test_matcher_subset_value_operator(en_vocab):
     matcher = Matcher(en_vocab)
-    pattern = [{"MORPH": {"ISSUBSET": ["Feat=Val", "Feat2=Val2"]}}]
+    pattern = [{"MORPH": {"IS_SUBSET": ["Feat=Val", "Feat2=Val2"]}}]
     matcher.add("M", [pattern])
     doc = Doc(en_vocab, words=["a", "b", "c"])
     assert len(matcher(doc)) == 3
@@ -245,17 +245,17 @@ def test_matcher_subset_value_operator(en_vocab):
     doc[0].morph_ = "Feat=Val|Feat2=Val2|Feat3=Val3|Feat4=Val4"
     assert len(matcher(doc)) == 2
 
-    # ISSUBSET acts like "IN" for attrs other than MORPH
+    # IS_SUBSET acts like "IN" for attrs other than MORPH
     matcher = Matcher(en_vocab)
-    pattern = [{"TAG": {"ISSUBSET": ["A", "B"]}}]
+    pattern = [{"TAG": {"IS_SUBSET": ["A", "B"]}}]
     matcher.add("M", [pattern])
     doc = Doc(en_vocab, words=["a", "b", "c"])
     doc[0].tag_ = "A"
     assert len(matcher(doc)) == 1
 
-    # ISSUBSET with an empty list matches nothing
+    # IS_SUBSET with an empty list matches nothing
     matcher = Matcher(en_vocab)
-    pattern = [{"TAG": {"ISSUBSET": []}}]
+    pattern = [{"TAG": {"IS_SUBSET": []}}]
     matcher.add("M", [pattern])
     doc = Doc(en_vocab, words=["a", "b", "c"])
     doc[0].tag_ = "A"
@@ -264,7 +264,7 @@ def test_matcher_subset_value_operator(en_vocab):
 
 def test_matcher_superset_value_operator(en_vocab):
     matcher = Matcher(en_vocab)
-    pattern = [{"MORPH": {"ISSUPERSET": ["Feat=Val", "Feat2=Val2", "Feat3=Val3"]}}]
+    pattern = [{"MORPH": {"IS_SUPERSET": ["Feat=Val", "Feat2=Val2", "Feat3=Val3"]}}]
     matcher.add("M", [pattern])
     doc = Doc(en_vocab, words=["a", "b", "c"])
     assert len(matcher(doc)) == 0
@@ -275,25 +275,25 @@ def test_matcher_superset_value_operator(en_vocab):
     doc[0].morph_ = "Feat=Val|Feat2=Val2|Feat3=Val3|Feat4=Val4"
     assert len(matcher(doc)) == 1
 
-    # ISSUPERSET with more than one value only matches for MORPH
+    # IS_SUPERSET with more than one value only matches for MORPH
     matcher = Matcher(en_vocab)
-    pattern = [{"TAG": {"ISSUPERSET": ["A", "B"]}}]
+    pattern = [{"TAG": {"IS_SUPERSET": ["A", "B"]}}]
     matcher.add("M", [pattern])
     doc = Doc(en_vocab, words=["a", "b", "c"])
     doc[0].tag_ = "A"
     assert len(matcher(doc)) == 0
 
-    # ISSUPERSET with one value is the same as ==
+    # IS_SUPERSET with one value is the same as ==
     matcher = Matcher(en_vocab)
-    pattern = [{"TAG": {"ISSUPERSET": ["A"]}}]
+    pattern = [{"TAG": {"IS_SUPERSET": ["A"]}}]
     matcher.add("M", [pattern])
     doc = Doc(en_vocab, words=["a", "b", "c"])
     doc[0].tag_ = "A"
     assert len(matcher(doc)) == 1
 
-    # ISSUPERSET with an empty value matches everything
+    # IS_SUPERSET with an empty value matches everything
     matcher = Matcher(en_vocab)
-    pattern = [{"TAG": {"ISSUPERSET": []}}]
+    pattern = [{"TAG": {"IS_SUPERSET": []}}]
     matcher.add("M", [pattern])
     doc = Doc(en_vocab, words=["a", "b", "c"])
     doc[0].tag_ = "A"
@@ -317,8 +317,8 @@ def test_matcher_morph_handling(en_vocab):
 
     # multiple values are split
     matcher = Matcher(en_vocab)
-    pattern1 = [{"MORPH": {"ISSUPERSET": ["Feat1=Val1", "Feat2=Val2"]}}]
-    pattern2 = [{"MORPH": {"ISSUPERSET": ["Feat1=Val1", "Feat1=Val3", "Feat2=Val2"]}}]
+    pattern1 = [{"MORPH": {"IS_SUPERSET": ["Feat1=Val1", "Feat2=Val2"]}}]
+    pattern2 = [{"MORPH": {"IS_SUPERSET": ["Feat1=Val1", "Feat1=Val3", "Feat2=Val2"]}}]
     matcher.add("M", [pattern1])
     matcher.add("N", [pattern2])
     doc = Doc(en_vocab, words=["a", "b", "c"])
