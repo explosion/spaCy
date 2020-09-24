@@ -1237,7 +1237,9 @@ def combine_score_weights(
                 weight = 0.0
             else:
                 weight = round(value / total / len(all_weights), 2)
-            result[key] = result.get(key, 0.0) + weight
+            prev_weight = result.get(key, 0.0)
+            prev_weight = 0.0 if prev_weight is None else prev_weight
+            result[key] = prev_weight + weight
     return result
 
 

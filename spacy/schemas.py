@@ -61,6 +61,8 @@ class TokenPatternString(BaseModel):
     REGEX: Optional[StrictStr] = Field(None, alias="regex")
     IN: Optional[List[StrictStr]] = Field(None, alias="in")
     NOT_IN: Optional[List[StrictStr]] = Field(None, alias="not_in")
+    IS_SUBSET: Optional[List[StrictStr]] = Field(None, alias="is_subset")
+    IS_SUPERSET: Optional[List[StrictStr]] = Field(None, alias="is_superset")
 
     class Config:
         extra = "forbid"
@@ -77,6 +79,8 @@ class TokenPatternNumber(BaseModel):
     REGEX: Optional[StrictStr] = Field(None, alias="regex")
     IN: Optional[List[StrictInt]] = Field(None, alias="in")
     NOT_IN: Optional[List[StrictInt]] = Field(None, alias="not_in")
+    ISSUBSET: Optional[List[StrictInt]] = Field(None, alias="issubset")
+    ISSUPERSET: Optional[List[StrictInt]] = Field(None, alias="issuperset")
     EQ: Union[StrictInt, StrictFloat] = Field(None, alias="==")
     NEQ: Union[StrictInt, StrictFloat] = Field(None, alias="!=")
     GEQ: Union[StrictInt, StrictFloat] = Field(None, alias=">=")
@@ -115,6 +119,7 @@ class TokenPattern(BaseModel):
     lower: Optional[StringValue] = None
     pos: Optional[StringValue] = None
     tag: Optional[StringValue] = None
+    morph: Optional[StringValue] = None
     dep: Optional[StringValue] = None
     lemma: Optional[StringValue] = None
     shape: Optional[StringValue] = None
