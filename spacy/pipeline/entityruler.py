@@ -25,8 +25,12 @@ PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
         "overwrite_ents": False,
         "ent_id_sep": DEFAULT_ENT_ID_SEP,
     },
-    scores=["ents_p", "ents_r", "ents_f", "ents_per_type"],
-    default_score_weights={"ents_f": 1.0, "ents_p": 0.0, "ents_r": 0.0},
+    default_score_weights={
+        "ents_f": 1.0,
+        "ents_p": 0.0,
+        "ents_r": 0.0,
+        "ents_per_type": None,
+    },
 )
 def make_entity_ruler(
     nlp: Language,

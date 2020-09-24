@@ -42,7 +42,6 @@ DEFAULT_TAGGER_MODEL = Config().from_str(default_model_config)["model"]
     "tagger",
     assigns=["token.tag"],
     default_config={"model": DEFAULT_TAGGER_MODEL},
-    scores=["tag_acc"],
     default_score_weights={"tag_acc": 1.0},
 )
 def make_tagger(nlp: Language, name: str, model: Model):

@@ -13,7 +13,8 @@ def console_logger():
     ) -> Tuple[Callable[[Dict[str, Any]], None], Callable]:
         # we assume here that only components are enabled that should be trained & logged
         logged_pipes = nlp.pipe_names
-        score_cols = list(nlp.config["training"]["score_weights"])
+        score_weights = nlp.config["training"]["score_weights"]
+        score_cols = [col for col, value in score_weights.items() if value is not None]
         score_widths = [max(len(col), 6) for col in score_cols]
         loss_cols = [f"Loss {pipe}" for pipe in logged_pipes]
         loss_widths = [max(len(col), 8) for col in loss_cols]
@@ -40,10 +41,15 @@ def console_logger():
                 ) from None
             scores = []
             for col in score_cols:
-                score = float(info["other_scores"].get(col, 0.0))
-                if col != "speed":
-                    score *= 100
-                scores.append("{0:.2f}".format(score))
+                score = info["other_scores"].get(col, 0.0)
+                try:
+                    score = float(score)
+                    if col != "speed":
+                        score *= 100
+                    scores.append("{0:.2f}".format(score))
+                except TypeError:
+                    err = Errors.E916.format(name=col, score_type=type(score))
+                    raise ValueError(err) from None
             data = (
                 [info["epoch"], info["step"]]
                 + losses

@@ -211,7 +211,7 @@ class ConfigSchemaTraining(BaseModel):
     seed: Optional[StrictInt] = Field(..., title="Random seed")
     gpu_allocator: Optional[StrictStr] = Field(..., title="Memory allocator when running on GPU")
     accumulate_gradient: StrictInt = Field(..., title="Whether to divide the batch up into substeps")
-    score_weights: Dict[StrictStr, Union[StrictFloat, StrictInt]] = Field(..., title="Scores to report and their weights for selecting final model")
+    score_weights: Dict[StrictStr, Optional[Union[StrictFloat, StrictInt]]] = Field(..., title="Scores to report and their weights for selecting final model")
     init_tok2vec: Optional[StrictStr] = Field(..., title="Path to pretrained tok2vec weights")
     raw_text: Optional[StrictStr] = Field(default=None, title="Raw text")
     optimizer: Optimizer = Field(..., title="The optimizer to use")

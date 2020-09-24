@@ -317,21 +317,3 @@ start = 100
 stop = 1000
 compound = 1.001
 {% endif %}
-
-[training.score_weights]
-{%- if "tagger" in components %}
-tag_acc = {{ (1.0 / components|length)|round(2) }}
-{%- endif -%}
-{%- if "parser" in components %}
-dep_uas = 0.0
-dep_las = {{ (1.0 / components|length)|round(2) }}
-sents_f = 0.0
-{%- endif %}
-{%- if "ner" in components %}
-ents_f = {{ (1.0 / components|length)|round(2) }}
-ents_p = 0.0
-ents_r = 0.0
-{%- endif %}
-{%- if "textcat" in components %}
-cats_score = {{ (1.0 / components|length)|round(2) }}
-{%- endif -%}
