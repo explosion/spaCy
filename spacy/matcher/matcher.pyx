@@ -195,7 +195,7 @@ cdef class Matcher:
                 else:
                     yield doc
 
-    def __call__(self, object doclike, *, as_spans=False, suppress_errors=False):
+    def __call__(self, object doclike, *, as_spans=False, allow_missing=False):
         """Find all token sequences matching the supplied pattern.
 
         doclike (Doc or Span): The document to match over.
@@ -215,7 +215,7 @@ cdef class Matcher:
         else:
             raise ValueError(Errors.E195.format(good="Doc or Span", got=type(doclike).__name__))
         cdef Pool tmp_pool = Pool()
-        if not suppress_errors:
+        if not allow_missing:
             if TAG in self._seen_attrs and not doc.has_annotation("TAG"):
                 raise ValueError(Errors.E155.format(pipe="tagger", attr="TAG"))
             if POS in self._seen_attrs and not doc.has_annotation("POS"):

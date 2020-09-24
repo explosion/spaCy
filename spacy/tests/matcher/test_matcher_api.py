@@ -317,8 +317,8 @@ def test_attr_pipeline_checks(en_vocab):
     with pytest.raises(ValueError):
         matcher(doc3)
     # errors can be suppressed if desired
-    matcher(doc2, suppress_errors=True)
-    matcher(doc3, suppress_errors=True)
+    matcher(doc2, allow_missing=True)
+    matcher(doc3, allow_missing=True)
     # TAG, POS, LEMMA require those values
     for attr in ("TAG", "POS", "LEMMA"):
         matcher = Matcher(en_vocab)
