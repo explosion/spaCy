@@ -2533,14 +2533,14 @@
                 "github": "abchapman93"
             }
         },
-	{
+	      {
             "id": "rita-dsl",
             "title": "RITA DSL",
             "slogan": "Domain Specific Language for creating language rules",
             "github": "zaibacu/rita-dsl",
             "description": "A Domain Specific Language (DSL) for building language patterns. These can be later compiled into spaCy patterns, pure regex, or any other format",
             "pip": "rita-dsl",
-	    "thumb": "https://raw.githubusercontent.com/zaibacu/rita-dsl/master/docs/assets/logo-100px.png",
+	          "thumb": "https://raw.githubusercontent.com/zaibacu/rita-dsl/master/docs/assets/logo-100px.png",
             "code_language": "python",
             "code_example": [
                 "import spacy",
