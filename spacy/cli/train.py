@@ -214,7 +214,12 @@ def create_evaluation_callback(
     def evaluate() -> Tuple[float, Dict[str, float]]:
         dev_examples = list(dev_corpus(nlp))
         scores = nlp.evaluate(dev_examples)
-        # Calculate a weighted sum based on score_weights for the main score
+        # Calculate a weighted sum based on score_weights for the main score.
+        # We can only consider scores that are ints/floats, not dicts like
+        # entity scores per type etc.
+        for key, value in scores.items():
+            if key in weights and not isinstance(value, (int, float)):
+                raise ValueError(Errors.E915.format(name=key, score_type=type(value)))
         try:
             weighted_score = sum(
                 scores.get(s, 0.0) * weights.get(s, 0.0) for s in weights

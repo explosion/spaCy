@@ -480,6 +480,10 @@ class Errors:
     E201 = ("Span index out of range.")
 
     # TODO: fix numbering after merging develop into master
+    E915 = ("Can't use score '{name}' to calculate final weighted score. Expected "
+            "float or int but got: {score_type}. To exclude the score from the "
+            "final score, set its weight to null in the [training.score_weights] "
+            "section of your training config.")
     E916 = ("Can't log score for '{name}' in table: not a valid score ({score_type})")
     E917 = ("Received invalid value {value} for 'state_type' in "
             "TransitionBasedParser: only 'parser' or 'ner' are valid options.")

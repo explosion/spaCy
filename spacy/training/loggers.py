@@ -49,7 +49,7 @@ def console_logger():
                     scores.append("{0:.2f}".format(score))
                 except TypeError:
                     err = Errors.E916.format(name=col, score_type=type(score))
-                    raise TypeError(err) from None
+                    raise ValueError(err) from None
             data = (
                 [info["epoch"], info["step"]]
                 + losses
