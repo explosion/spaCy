@@ -295,20 +295,18 @@ class Scorer:
             # Find all predidate labels, for all and per type
             gold_spans = set()
             pred_spans = set()
-            # Special case for ents:
-            # If we have missing values in the gold, we can't easily tell
-            # whether our NER predictions are true.
-            # It seems bad but it's what we've always done.
-            if attr == "ents" and not all(token.ent_iob != 0 for token in gold_doc):
-                continue
             for span in getter(gold_doc, attr):
                 gold_span = (span.label_, span.start, span.end - 1)
                 gold_spans.add(gold_span)
                 gold_per_type[span.label_].add((span.label_, span.start, span.end - 1))
             pred_per_type = {label: set() for label in labels}
-            for span in example.get_aligned_spans_x2y(getter(pred_doc, attr)):
-                pred_spans.add((span.label_, span.start, span.end - 1))
-                pred_per_type[span.label_].add((span.label_, span.start, span.end - 1))
+            align_x2y = example.alignment.x2y
+            for pred_span in getter(pred_doc, attr):
+                indices = align_x2y[pred_span.start : pred_span.end].dataXd.ravel()
+                if len(indices):
+                    span = (pred_span.label_, indices[0], indices[-1])
+                    pred_spans.add(span)
+                    pred_per_type[pred_span.label_].add(span)
             # Scores per label
             for k, v in score_per_type.items():
                 if k in pred_per_type:
