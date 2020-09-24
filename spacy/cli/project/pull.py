@@ -51,7 +51,7 @@ def project_pull(project_dir: Path, remote: str, *, verbose: bool = False):
                     update_lockfile(project_dir, cmd)
                 # We remove the command from the list here, and break, so that
                 # we iterate over the loop again.
-                commands.remove(i)
+                commands.pop(i)
                 break
         else:
             # If we didn't break the for loop, break the while loop.
