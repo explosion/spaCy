@@ -87,7 +87,7 @@ U.S. Federal law. Any choice of law rules will not apply.
 7. Please place an “x” on one of the applicable statement below. Please do NOT
 mark both statements:
 
-    * [ ] I am signing on behalf of myself as an individual and no other person
+    * [x] I am signing on behalf of myself as an individual and no other person
     or entity, including my employer, has or will have rights with respect to my
     contributions.
 
@@ -99,8 +99,8 @@ mark both statements:
 | Field                          | Entry                |
 |------------------------------- | -------------------- |
 | Name                           | Šarūnas Navickas     |
-| Company name (if applicable)   |                      |
-| Title or role (if applicable)  |                      |
-| Date                           |                      |
+| Company name (if applicable)   | TokenMill            |
+| Title or role (if applicable)  | Data Engineer        |
+| Date                           | 2020-09-24           |
 | GitHub username                | zaibacu              |
 | Website (optional)             |                      |
