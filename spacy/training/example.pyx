@@ -1,6 +1,7 @@
 from collections import Iterable as IterableInstance
 import warnings
 import numpy
+from murmurhash.mrmr cimport hash64
 
 from ..tokens.doc cimport Doc
 from ..tokens.span cimport Span
@@ -97,29 +98,30 @@ cdef class Example:
 
     @property
     def alignment(self):
+        x_sig = hash64(doc.c, sizeof(self.x.c[0]) * self.x.length, 0)
+        y_sig = hash64(doc.c, sizeof(self.y.c[0]) * self.y.length, 0)
         if (
             self._cached_alignment is not None
-            and self._cached_mem_size_x == self.x.mem.size
-            and self._cached_mem_size_y == self.y.mem.size
+            and self._x_sig == x_sig
+            and self._y_sig == y_sig
         ):
             # If we have a cached alignment, check whether the cache is invalid
-            # due to retokenization. To make this check fast in loops, we play
-            # a somewhat dirty trick: we check whether the doc's memory pool
-            # has changed size. If it hasn't, we can't have changed the size of
-            # the tokens array, as the Doc object's memory pool is guaranteed
-            # to own that data.
+            # due to retokenization. To make this check fast in loops, we first
+            # check a hash of the TokenC arrays.
             return self._cached_alignment
         else:
             words_x = [token.text for token in self.x]
             words_y = [token.text for token in self.y]
             if words_x == self._cached_words_x and words_y == self._cached_words_y:
+                self._x_sig = x_sig
+                self._y_sig = y_sig
                 return self._cached_alignment
             else:
                 self._cached_alignment = Alignment.from_strings(words_x, words_y)
                 self._cached_words_x = words_x
                 self._cached_words_y = words_y
-                self._cached_mem_size_x = self.x.mem.size
-                self._cached_mem_size_y = self.y.mem.size
+                self._x_sig = x_sig
+                self._y_sig = y_sig
                 return self._cached_alignment
 
     def get_aligned(self, field, as_string=False):
