@@ -235,8 +235,6 @@ The `Transformer` component sets the
 [`Doc._.trf_data`](/api/transformer#custom_attributes) extension attribute,
 which lets you access the transformers outputs at runtime.
 
-<!-- TODO: update/confirm once we have final models trained -->
-
 ```cli
 $ python -m spacy download en_core_trf_lg
 ```

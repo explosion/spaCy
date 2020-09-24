@@ -7,6 +7,8 @@ from libc.stdint cimport int32_t, uint64_t
 
 import copy
 from collections import Counter
+from enum import Enum
+import itertools
 import numpy
 import srsly
 from thinc.api import get_array_module
@@ -84,6 +86,17 @@ cdef attr_t get_token_attr_for_matcher(const TokenC* token, attr_id_t feat_name)
             return False
     else:
         return get_token_attr(token, feat_name)
+
+
+class SetEntsDefault(str, Enum):
+    blocked = "blocked"
+    missing = "missing"
+    outside = "outside"
+    unmodified = "unmodified"
+
+    @classmethod
+    def values(cls):
+        return list(cls.__members__.keys())
 
 
 cdef class Doc:
@@ -660,50 +673,100 @@ cdef class Doc:
             # TODO:
             # 1. Test basic data-driven ORTH gazetteer
             # 2. Test more nuanced date and currency regex
-            tokens_in_ents = {}
-            cdef attr_t entity_type
-            cdef attr_t kb_id
-            cdef int ent_start, ent_end, token_index
+            cdef attr_t entity_type, kb_id
+            cdef int ent_start, ent_end
+            ent_spans = []
             for ent_info in ents:
                 entity_type_, kb_id, ent_start, ent_end = get_entity_info(ent_info)
                 if isinstance(entity_type_, str):
                     self.vocab.strings.add(entity_type_)
-                entity_type = self.vocab.strings.as_int(entity_type_)
-                for token_index in range(ent_start, ent_end):
-                    if token_index in tokens_in_ents:
-                        raise ValueError(Errors.E103.format(
-                            span1=(tokens_in_ents[token_index][0],
-                                   tokens_in_ents[token_index][1],
-                                   self.vocab.strings[tokens_in_ents[token_index][2]]),
-                            span2=(ent_start, ent_end, self.vocab.strings[entity_type])))
-                    tokens_in_ents[token_index] = (ent_start, ent_end, entity_type, kb_id)
-            cdef int i
+                span = Span(self, ent_start, ent_end, label=entity_type_, kb_id=kb_id)
+                ent_spans.append(span)
+            self.set_ents(ent_spans, default=SetEntsDefault.outside)
+
+    def set_ents(self, entities, *, blocked=None, missing=None, outside=None, default=SetEntsDefault.outside):
+        """Set entity annotation.
+
+        entities (List[Span]): Spans with labels to set as entities.
+        blocked (Optional[List[Span]]): Spans to set as 'blocked' (never an
+            entity) for spacy's built-in NER component. Other components may
+            ignore this setting.
+        missing (Optional[List[Span]]): Spans with missing/unknown entity
+            information.
+        outside (Optional[List[Span]]): Spans outside of entities (O in IOB).
+        default (str): How to set entity annotation for tokens outside of any
+            provided spans. Options: "blocked", "missing", "outside" and
+            "unmodified" (preserve current state). Defaults to "outside".
+        """
+        if default not in SetEntsDefault.values():
+            raise ValueError(Errors.E1011.format(default=default, modes=", ".join(SetEntsDefault)))
+
+        # Ignore spans with missing labels
+        entities = [ent for ent in entities if ent.label > 0]
+
+        if blocked is None:
+            blocked = tuple()
+        if missing is None:
+            missing = tuple()
+        if outside is None:
+            outside = tuple()
+
+        # Find all tokens covered by spans and check that none are overlapping
+        cdef int i
+        seen_tokens = set()
+        for span in itertools.chain.from_iterable([entities, blocked, missing, outside]):
+            if not isinstance(span, Span):
+                raise ValueError(Errors.E1012.format(span=span))
+            for i in range(span.start, span.end):
+                if i in seen_tokens:
+                    raise ValueError(Errors.E1010.format(i=i))
+                seen_tokens.add(i)
+
+        # Set all specified entity information
+        for span in entities:
+            for i in range(span.start, span.end):
+                if i == span.start:
+                    self.c[i].ent_iob = 3
+                else:
+                    self.c[i].ent_iob = 1
+                self.c[i].ent_type = span.label
+                self.c[i].ent_kb_id = span.kb_id
+        for span in blocked:
+            for i in range(span.start, span.end):
+                self.c[i].ent_iob = 3
+                self.c[i].ent_type = 0
+        for span in missing:
+            for i in range(span.start, span.end):
+                self.c[i].ent_iob = 0
+                self.c[i].ent_type = 0
+        for span in outside:
+            for i in range(span.start, span.end):
+                self.c[i].ent_iob = 2
+                self.c[i].ent_type = 0
+
+        # Set tokens outside of all provided spans
+        if default != SetEntsDefault.unmodified:
             for i in range(self.length):
-                # default values
-                entity_type = 0
-                kb_id = 0
+                if i not in seen_tokens:
+                    self.c[i].ent_type = 0
+                    if default == SetEntsDefault.outside:
+                        self.c[i].ent_iob = 2
+                    elif default == SetEntsDefault.missing:
+                        self.c[i].ent_iob = 0
+                    elif default == SetEntsDefault.blocked:
+                        self.c[i].ent_iob = 3
 
-                # Set ent_iob to Missing (0) by default unless this token was nered before
-                ent_iob = 0
-                if self.c[i].ent_iob != 0:
-                    ent_iob = 2
-
-                # overwrite if the token was part of a specified entity
-                if i in tokens_in_ents.keys():
-                    ent_start, ent_end, entity_type, kb_id = tokens_in_ents[i]
-                    if entity_type is None or entity_type <= 0:
-                        # Blocking this token from being overwritten by downstream NER
-                        ent_iob = 3
-                    elif ent_start == i:
-                        # Marking the start of an entity
-                        ent_iob = 3
-                    else:
-                        # Marking the inside of an entity
-                        ent_iob = 1
-
-                self.c[i].ent_type = entity_type
-                self.c[i].ent_kb_id = kb_id
-                self.c[i].ent_iob = ent_iob
+        # Fix any resulting inconsistent annotation
+        for i in range(self.length - 1):
+            # I must follow B or I: convert I to B
+            if (self.c[i].ent_iob == 0 or self.c[i].ent_iob == 2) and \
+                    self.c[i+1].ent_iob == 1:
+                self.c[i+1].ent_iob = 3
+            # Change of type with BI or II: convert second I to B
+            if self.c[i].ent_type != self.c[i+1].ent_type and \
+                    (self.c[i].ent_iob == 3 or self.c[i].ent_iob == 1) and \
+                    self.c[i+1].ent_iob == 1:
+                self.c[i+1].ent_iob = 3
 
     @property
     def noun_chunks(self):

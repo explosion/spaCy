@@ -151,9 +151,10 @@ def biluo_tags_to_spans(doc: Doc, tags: Iterable[str]) -> List[Span]:
 
     doc (Doc): The document that the BILUO tags refer to.
     entities (iterable): A sequence of BILUO tags with each tag describing one
-        token. Each tags string will be of the form of either "", "O" or
+        token. Each tag string will be of the form of either "", "O" or
         "{action}-{label}", where action is one of "B", "I", "L", "U".
-    RETURNS (list): A sequence of Span objects.
+    RETURNS (list): A sequence of Span objects. Each token with a missing IOB
+        tag is returned as a Span with an empty label.
     """
     token_offsets = tags_to_entities(tags)
     spans = []
@@ -186,22 +187,18 @@ def tags_to_entities(tags: Iterable[str]) -> List[Tuple[str, int, int]]:
     entities = []
     start = None
     for i, tag in enumerate(tags):
-        if tag is None:
-            continue
-        if tag.startswith("O"):
+        if tag is None or tag.startswith("-"):
             # TODO: We shouldn't be getting these malformed inputs. Fix this.
             if start is not None:
                 start = None
             else:
                 entities.append(("", i, i))
-            continue
-        elif tag == "-":
-            continue
+        elif tag.startswith("O"):
+            pass
         elif tag.startswith("I"):
             if start is None:
                 raise ValueError(Errors.E067.format(start="I", tags=tags[: i + 1]))
-            continue
-        if tag.startswith("U"):
+        elif tag.startswith("U"):
             entities.append((tag[2:], i, i))
         elif tag.startswith("B"):
             start = i
