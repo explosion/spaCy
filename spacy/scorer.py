@@ -630,15 +630,15 @@ def get_ner_prf(examples: Iterable[Example]) -> Dict[str, PRFScore]:
     for eg in examples:
         if not eg.y.has_annotation("ENT_IOB"):
             continue
-        golds = {(e.label_, e.start, e.end) for e in example.y.ents}
-        align_x2y = example.alignment.x2y
+        golds = {(e.label_, e.start, e.end) for e in eg.y.ents}
+        align_x2y = eg.alignment.x2y
         preds = set()
-        for pred_ent in example.x.ents:
+        for pred_ent in eg.x.ents:
             if pred_ent.label_ not in scores:
                 scores[pred_ent.label_] = PRFScore()
             indices = align_x2y[pred_ent.start : pred_ent.end].dataXd.ravel()
             if len(indices):
-                g_span = example.y[indices[0] : indices[-1]]
+                g_span = eg.y[indices[0] : indices[-1]]
                 # Check we aren't missing annotation on this span. If so,
                 # our prediction is neither right nor wrong, we just
                 # ignore it.
