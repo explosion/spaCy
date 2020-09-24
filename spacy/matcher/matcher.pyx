@@ -216,16 +216,18 @@ cdef class Matcher:
             raise ValueError(Errors.E195.format(good="Doc or Span", got=type(doclike).__name__))
         cdef Pool tmp_pool = Pool()
         if not allow_missing:
-            if TAG in self._seen_attrs and not doc.has_annotation("TAG"):
-                raise ValueError(Errors.E155.format(pipe="tagger", attr="TAG"))
-            if POS in self._seen_attrs and not doc.has_annotation("POS"):
-                raise ValueError(Errors.E155.format(pipe="morphologizer", attr="POS"))
-            if MORPH in self._seen_attrs and not doc.has_annotation("MORPH"):
-                raise ValueError(Errors.E155.format(pipe="morphologizer", attr="MORPH"))
-            if LEMMA in self._seen_attrs and not doc.has_annotation("LEMMA"):
-                raise ValueError(Errors.E155.format(pipe="lemmatizer", attr="LEMMA"))
-            if DEP in self._seen_attrs and not doc.has_annotation("DEP"):
-                raise ValueError(Errors.E156.format())
+            for attr in (TAG, POS, MORPH, LEMMA, DEP):
+                if attr in self._seen_attrs and not doc.has_annotation(attr):
+                    if attr == TAG:
+                        pipe = "tagger"
+                    elif attr in (POS, MORPH):
+                        pipe = "morphologizer"
+                    elif attr == LEMMA:
+                        pipe = "lemmatizer"
+                    elif attr == DEP:
+                        pipe = "parser"
+                    error_msg = Errors.E155.format(pipe=pipe, attr=self.vocab.strings.as_string(attr))
+                    raise ValueError(error_msg)
         matches = find_matches(&self.patterns[0], self.patterns.size(), doclike, length,
                                 extensions=self._extensions, predicates=self._extra_predicates)
         final_matches = []
