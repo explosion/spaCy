@@ -29,10 +29,10 @@ def test_doc_add_entities_set_ents_iob(en_vocab):
     ner.begin_training(lambda: [_ner_example(ner)])
     ner(doc)
 
-    doc.ents = [(doc.vocab.strings["ANIMAL"], 3, 4)]
+    doc.ents = [("ANIMAL", 3, 4)]
     assert [w.ent_iob_ for w in doc] == ["O", "O", "O", "B"]
 
-    doc.ents = [(doc.vocab.strings["WORD"], 0, 2)]
+    doc.ents = [("WORD", 0, 2)]
     assert [w.ent_iob_ for w in doc] == ["B", "I", "O", "O"]
 
 

@@ -696,6 +696,12 @@ class Errors:
     E1009 = ("String for hash '{val}' not found in StringStore. Set the value "
              "through token.morph_ instead or add the string to the "
              "StringStore with `nlp.vocab.strings.add(string)`.")
+    E1010 = ("Unable to set entity information for token {i} which is included "
+             "in more than one span in entities, blocked, missing or outside.")
+    E1011 = ("Unsupported default '{default}' in doc.set_ents. Available "
+             "options: {modes}")
+    E1012 = ("Entity spans and blocked/missing/outside spans should be "
+             "provided to doc.set_ents as lists of `Span` objects.")
 
 
 @add_codes

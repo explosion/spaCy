@@ -219,6 +219,30 @@ alignment mode `"strict".
 | `alignment_mode`                     | How character indices snap to token boundaries. Options: `"strict"` (no snapping), `"contract"` (span of all tokens completely within the character span), `"expand"` (span of all tokens at least partially covered by the character span). Defaults to `"strict"`. ~~str~~ |
 | **RETURNS**                          | The newly constructed object or `None`. ~~Optional[Span]~~                                                                                                                                                                                                                   |
 
+## Doc.set_ents {#ents tag="method" new="3"}
+
+Set the named entities in the document.
+
+> #### Example
+>
+> ```python
+> from spacy.tokens import Span
+> doc = nlp("Mr. Best flew to New York on Saturday morning.")
+> doc.set_ents([Span(doc, 0, 2, "PERSON")])
+> ents = list(doc.ents)
+> assert ents[0].label_ == "PERSON"
+> assert ents[0].text == "Mr. Best"
+> ```
+
+| Name           | Description                                                                                                                                                                               |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| entities       | Spans with labels to set as entities. ~~List[Span]~~                                                                                                                                      |
+| _keyword-only_ |                                                                                                                                                                                           |
+| blocked        | Spans to set as "blocked" (never an entity) for spacy's built-in NER component. Other components may ignore this setting. ~~Optional[List[Span]]~~                                        |
+| missing        | Spans with missing/unknown entity information. ~~Optional[List[Span]]~~                                                                                                                   |
+| outside        | Spans outside of entities (O in IOB). ~~Optional[List[Span]]~~                                                                                                                            |
+| default        | How to set entity annotation for tokens outside of any provided spans. Options: "blocked", "missing", "outside" and "unmodified" (preserve current state). Defaults to "outside". ~~str~~ |
+
 ## Doc.similarity {#similarity tag="method" model="vectors"}
 
 Make a semantic similarity estimate. The default estimate is cosine similarity
@@ -542,7 +566,6 @@ objects, if the entity recognizer has been applied.
 > ```python
 > doc = nlp("Mr. Best flew to New York on Saturday morning.")
 > ents = list(doc.ents)
-> assert ents[0].label == 346
 > assert ents[0].label_ == "PERSON"
 > assert ents[0].text == "Mr. Best"
 > ```
