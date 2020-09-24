@@ -61,7 +61,7 @@ LEXEME_NORM_LANGS = ["da", "de", "el", "en", "id", "lb", "pt", "ru", "sr", "ta",
 # Default order of sections in the config.cfg. Not all sections needs to exist,
 # and additional sections are added at the end, in alphabetical order.
 # fmt: off
-CONFIG_SECTION_ORDER = ["paths", "variables", "system", "nlp", "components", "training", "pretraining"]
+CONFIG_SECTION_ORDER = ["paths", "variables", "system", "nlp", "components", "corpora", "training", "pretraining"]
 # fmt: on
 
 
@@ -251,6 +251,14 @@ def load_vectors_into_model(
         for key in nlp.vocab.vectors.key2row:
             if key in vectors_nlp.vocab.strings:
                 nlp.vocab.strings.add(vectors_nlp.vocab.strings[key])
+
+
+def load_vocab_data_into_model(
+    nlp: "Language", *, lookups: Optional["Lookups"] = None
+) -> None:
+    """Load vocab data."""
+    if lookups:
+        nlp.vocab.lookups = lookups
 
 
 def load_model(
@@ -651,8 +659,8 @@ def join_command(command: List[str]) -> str:
 def run_command(
     command: Union[str, List[str]],
     *,
-    capture: bool = False,
     stdin: Optional[Any] = None,
+    capture: bool = False,
 ) -> Optional[subprocess.CompletedProcess]:
     """Run a command on the command line as a subprocess. If the subprocess
     returns a non-zero exit code, a system exit is performed.
@@ -660,33 +668,46 @@ def run_command(
     command (str / List[str]): The command. If provided as a string, the
         string will be split using shlex.split.
     stdin (Optional[Any]): stdin to read from or None.
-    capture (bool): Whether to capture the output.
+    capture (bool): Whether to capture the output and errors. If False,
+        the stdout and stderr will not be redirected, and if there's an error,
+        sys.exit will be called with the returncode. You should use capture=False
+        when you want to turn over execution to the command, and capture=True
+        when you want to run the command more like a function.
     RETURNS (Optional[CompletedProcess]): The process object.
     """
     if isinstance(command, str):
-        command = split_command(command)
+        cmd_list = split_command(command)
+        cmd_str = command
+    else:
+        cmd_list = command
+        cmd_str = " ".join(command)
     try:
         ret = subprocess.run(
-            command,
+            cmd_list,
             env=os.environ.copy(),
             input=stdin,
             encoding="utf8",
-            check=True,
+            check=False,
             stdout=subprocess.PIPE if capture else None,
-            stderr=subprocess.PIPE if capture else None,
+            stderr=subprocess.STDOUT if capture else None,
         )
     except FileNotFoundError:
+        # Indicates the *command* wasn't found, it's an error before the command
+        # is run.
         raise FileNotFoundError(
-            Errors.E970.format(str_command=" ".join(command), tool=command[0])
+            Errors.E970.format(str_command=cmd_str, tool=cmd_list[0])
         ) from None
-    except subprocess.CalledProcessError as e:
-        # We don't want a duplicate traceback here so we're making sure the
-        # CalledProcessError isn't re-raised. We also print both the string
-        # message and the stderr, in case the error only has one of them.
-        print(e.stderr)
-        print(e)
-        sys.exit(1)
-    if ret.returncode != 0:
+    if ret.returncode != 0 and capture:
+        message = f"Error running command:\n\n{cmd_str}\n\n"
+        message += f"Subprocess exited with status {ret.returncode}"
+        if ret.stdout is not None:
+            message += f"\n\nProcess log (stdout and stderr):\n\n"
+            message += ret.stdout
+        error = subprocess.SubprocessError(message)
+        error.ret = ret
+        error.command = cmd_str
+        raise error
+    elif ret.returncode != 0:
         sys.exit(ret.returncode)
     return ret
 
@@ -1181,21 +1202,38 @@ def get_arg_names(func: Callable) -> List[str]:
     return list(set([*argspec.args, *argspec.kwonlyargs]))
 
 
-def combine_score_weights(weights: List[Dict[str, float]]) -> Dict[str, float]:
+def combine_score_weights(
+    weights: List[Dict[str, float]],
+    overrides: Dict[str, Optional[Union[float, int]]] = SimpleFrozenDict(),
+) -> Dict[str, float]:
     """Combine and normalize score weights defined by components, e.g.
     {"ents_r": 0.2, "ents_p": 0.3, "ents_f": 0.5} and {"some_other_score": 1.0}.
 
     weights (List[dict]): The weights defined by the components.
+    overrides (Dict[str, Optional[Union[float, int]]]): Existing scores that
+        should be preserved.
     RETURNS (Dict[str, float]): The combined and normalized weights.
     """
+    # We first need to extract all None/null values for score weights that
+    # shouldn't be shown in the table *or* be weighted
     result = {}
+    all_weights = []
     for w_dict in weights:
+        filtered_weights = {}
+        for key, value in w_dict.items():
+            value = overrides.get(key, value)
+            if value is None:
+                result[key] = None
+            else:
+                filtered_weights[key] = value
+        all_weights.append(filtered_weights)
+    for w_dict in all_weights:
         # We need to account for weights that don't sum to 1.0 and normalize
         # the score weights accordingly, then divide score by the number of
         # components.
         total = sum(w_dict.values())
         for key, value in w_dict.items():
-            weight = round(value / total / len(weights), 2)
+            weight = round(value / total / len(all_weights), 2)
             result[key] = result.get(key, 0.0) + weight
     return result
 

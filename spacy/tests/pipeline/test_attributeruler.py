@@ -4,8 +4,9 @@ from spacy.training import Example
 from spacy.lang.en import English
 from spacy.pipeline import AttributeRuler
 from spacy import util, registry
+from spacy.tokens import Doc
 
-from ..util import get_doc, make_tempdir
+from ..util import make_tempdir
 
 
 @pytest.fixture
@@ -66,12 +67,13 @@ def test_attributeruler_init(nlp, pattern_dicts):
     a = nlp.add_pipe("attribute_ruler")
     for p in pattern_dicts:
         a.add(**p)
-
     doc = nlp("This is a test.")
     assert doc[2].lemma_ == "the"
     assert doc[2].morph_ == "Case=Nom|Number=Plur"
     assert doc[3].lemma_ == "cat"
     assert doc[3].morph_ == "Case=Nom|Number=Sing"
+    assert doc.has_annotation("LEMMA")
+    assert doc.has_annotation("MORPH")
 
 
 def test_attributeruler_init_patterns(nlp, pattern_dicts):
@@ -82,6 +84,8 @@ def test_attributeruler_init_patterns(nlp, pattern_dicts):
     assert doc[2].morph_ == "Case=Nom|Number=Plur"
     assert doc[3].lemma_ == "cat"
     assert doc[3].morph_ == "Case=Nom|Number=Sing"
+    assert doc.has_annotation("LEMMA")
+    assert doc.has_annotation("MORPH")
     nlp.remove_pipe("attribute_ruler")
     # initialize with patterns from asset
     nlp.add_pipe(
@@ -93,6 +97,8 @@ def test_attributeruler_init_patterns(nlp, pattern_dicts):
     assert doc[2].morph_ == "Case=Nom|Number=Plur"
     assert doc[3].lemma_ == "cat"
     assert doc[3].morph_ == "Case=Nom|Number=Sing"
+    assert doc.has_annotation("LEMMA")
+    assert doc.has_annotation("MORPH")
 
 
 def test_attributeruler_score(nlp, pattern_dicts):
@@ -123,7 +129,7 @@ def test_attributeruler_rule_order(nlp):
         {"patterns": [[{"TAG": "VBZ"}]], "attrs": {"POS": "NOUN"}},
     ]
     a.add_patterns(patterns)
-    doc = get_doc(
+    doc = Doc(
         nlp.vocab,
         words=["This", "is", "a", "test", "."],
         tags=["DT", "VBZ", "DT", "NN", "."],
@@ -135,13 +141,12 @@ def test_attributeruler_rule_order(nlp):
 def test_attributeruler_tag_map(nlp, tag_map):
     a = AttributeRuler(nlp.vocab)
     a.load_from_tag_map(tag_map)
-    doc = get_doc(
+    doc = Doc(
         nlp.vocab,
         words=["This", "is", "a", "test", "."],
         tags=["DT", "VBZ", "DT", "NN", "."],
     )
     doc = a(doc)
-
     for i in range(len(doc)):
         if i == 4:
             assert doc[i].pos_ == "PUNCT"
@@ -154,13 +159,12 @@ def test_attributeruler_tag_map(nlp, tag_map):
 def test_attributeruler_morph_rules(nlp, morph_rules):
     a = AttributeRuler(nlp.vocab)
     a.load_from_morph_rules(morph_rules)
-    doc = get_doc(
+    doc = Doc(
         nlp.vocab,
         words=["This", "is", "the", "test", "."],
         tags=["DT", "VBZ", "DT", "NN", "."],
     )
     doc = a(doc)
-
     for i in range(len(doc)):
         if i != 2:
             assert doc[i].pos_ == ""
@@ -187,7 +191,6 @@ def test_attributeruler_indices(nlp):
 
     text = "This is a test."
     doc = nlp(text)
-
     for i in range(len(doc)):
         if i == 1:
             assert doc[i].lemma_ == "was"
@@ -199,12 +202,10 @@ def test_attributeruler_indices(nlp):
             assert doc[i].lemma_ == "cat"
         else:
             assert doc[i].morph_ == ""
-
     # raises an error when trying to modify a token outside of the match
     a.add([[{"ORTH": "a"}, {"ORTH": "test"}]], {"LEMMA": "cat"}, index=2)
     with pytest.raises(ValueError):
         doc = nlp(text)
-
     # raises an error when trying to modify a token outside of the match
     a.add([[{"ORTH": "a"}, {"ORTH": "test"}]], {"LEMMA": "cat"}, index=10)
     with pytest.raises(ValueError):
@@ -214,7 +215,6 @@ def test_attributeruler_indices(nlp):
 def test_attributeruler_patterns_prop(nlp, pattern_dicts):
     a = nlp.add_pipe("attribute_ruler")
     a.add_patterns(pattern_dicts)
-
     for p1, p2 in zip(pattern_dicts, a.patterns):
         assert p1["patterns"] == p2["patterns"]
         assert p1["attrs"] == p2["attrs"]
@@ -225,18 +225,15 @@ def test_attributeruler_patterns_prop(nlp, pattern_dicts):
 def test_attributeruler_serialize(nlp, pattern_dicts):
     a = nlp.add_pipe("attribute_ruler")
     a.add_patterns(pattern_dicts)
-
     text = "This is a test."
     attrs = ["ORTH", "LEMMA", "MORPH"]
     doc = nlp(text)
-
     # bytes roundtrip
     a_reloaded = AttributeRuler(nlp.vocab).from_bytes(a.to_bytes())
     assert a.to_bytes() == a_reloaded.to_bytes()
     doc1 = a_reloaded(nlp.make_doc(text))
     numpy.array_equal(doc.to_array(attrs), doc1.to_array(attrs))
     assert a.patterns == a_reloaded.patterns
-
     # disk roundtrip
     with make_tempdir() as tmp_dir:
         nlp.to_disk(tmp_dir)

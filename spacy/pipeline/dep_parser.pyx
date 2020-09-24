@@ -15,7 +15,8 @@ from ..training import validate_examples
 default_model_config = """
 [model]
 @architectures = "spacy.TransitionBasedParser.v1"
-nr_feature_tokens = 8
+state_type = "parser"
+extra_state_tokens = false
 hidden_width = 64
 maxout_pieces = 2
 
@@ -42,8 +43,14 @@ DEFAULT_PARSER_MODEL = Config().from_str(default_model_config)["model"]
         "min_action_freq": 30,
         "model": DEFAULT_PARSER_MODEL,
     },
-    scores=["dep_uas", "dep_las", "dep_las_per_type", "sents_p", "sents_r", "sents_f"],
-    default_score_weights={"dep_uas": 0.5, "dep_las": 0.5, "sents_f": 0.0},
+    default_score_weights={
+        "dep_uas": 0.5,
+        "dep_las": 0.5,
+        "dep_las_per_type": None,
+        "sents_p": None,
+        "sents_r": None,
+        "sents_f": 0.0,
+    },
 )
 def make_parser(
     nlp: Language,

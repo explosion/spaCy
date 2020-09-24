@@ -33,7 +33,6 @@ class French(Language):
     "lemmatizer",
     assigns=["token.lemma"],
     default_config={"model": None, "mode": "rule", "lookups": None},
-    scores=["lemma_acc"],
     default_score_weights={"lemma_acc": 1.0},
 )
 def make_lemmatizer(

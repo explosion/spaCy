@@ -15,7 +15,6 @@ from .. import util
     "sentencizer",
     assigns=["token.is_sent_start", "doc.sents"],
     default_config={"punct_chars": None},
-    scores=["sents_p", "sents_r", "sents_f"],
     default_score_weights={"sents_f": 1.0, "sents_p": 0.0, "sents_r": 0.0},
 )
 def make_sentencizer(

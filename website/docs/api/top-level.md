@@ -84,7 +84,7 @@ Create a blank pipeline of a given language class. This function is the twin of
 | _keyword-only_                      |                                                                                                                                                                    |
 | `vocab` <Tag variant="new">3</Tag>  | Optional shared vocab to pass in on initialization. If `True` (default), a new `Vocab` object will be created. ~~Union[Vocab, bool]~~.                             |
 | `config` <Tag variant="new">3</Tag> | Optional config overrides, either as nested dict or dict keyed by section value in dot notation, e.g. `"components.name.value"`. ~~Union[Dict[str, Any], Config]~~ |
-| `meta` <Tag variant="new">3</tag>   | Optional meta overrides for [`nlp.meta`](/api/language#meta). ~~Dict[str, Any]~~                                                                                   |
+| `meta` <Tag variant="new">3</Tag>   | Optional meta overrides for [`nlp.meta`](/api/language#meta). ~~Dict[str, Any]~~                                                                                   |
 | **RETURNS**                         | An empty `Language` object of the appropriate subclass. ~~Language~~                                                                                               |
 
 ### spacy.info {#spacy.info tag="function"}
@@ -145,9 +145,10 @@ pipelines.
 > nlp = spacy.load("en_core_web_sm")
 > ```
 
-| Name        | Description                             |
-| ----------- | --------------------------------------- |
-| **RETURNS** | Whether the GPU was activated. ~~bool~~ |
+| Name        | Description                                      |
+| ----------- | ------------------------------------------------ |
+| `gpu_id`    | Device index to select. Defaults to `0`. ~~int~~ |
+| **RETURNS** | Whether the GPU was activated. ~~bool~~          |
 
 ### spacy.require_gpu {#spacy.require_gpu tag="function" new="2.0.14"}
 
@@ -164,9 +165,10 @@ and _before_ loading any pipelines.
 > nlp = spacy.load("en_core_web_sm")
 > ```
 
-| Name        | Description     |
-| ----------- | --------------- |
-| **RETURNS** | `True` ~~bool~~ |
+| Name        | Description                                      |
+| ----------- | ------------------------------------------------ |
+| `gpu_id`    | Device index to select. Defaults to `0`. ~~int~~ |
+| **RETURNS** | `True` ~~bool~~                                  |
 
 ## displaCy {#displacy source="spacy/displacy"}
 
@@ -448,13 +450,23 @@ remain in the config file stored on your local system.
 > [training.logger]
 > @loggers = "spacy.WandbLogger.v1"
 > project_name = "monitor_spacy_training"
-> remove_config_values = ["paths.train", "paths.dev", "training.dev_corpus.path", "training.train_corpus.path"]
+> remove_config_values = ["paths.train", "paths.dev", "corpora.train.path", "corpora.dev.path"]
 > ```
 
 | Name                   | Description                                                                                                                           |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `project_name`         | The name of the project in the Weights & Biases interface. The project will be created automatically if it doesn't exist yet. ~~str~~ |
 | `remove_config_values` | A list of values to include from the config before it is uploaded to W&B (default: empty). ~~List[str]~~                              |
+
+<Project id="integrations/wandb">
+
+Get started with tracking your spaCy training runs in Weights & Biases using our
+project template. It trains on the IMDB Movie Review Dataset and includes a
+simple config with the built-in `WandbLogger`, as well as a custom example of
+creating variants of the config for a simple hyperparameter grid search and
+logging the results.
+
+</Project>
 
 ## Readers {#readers source="spacy/training/corpus.py" new="3"}
 
@@ -478,7 +490,7 @@ the [`Corpus`](/api/corpus) class.
 > [paths]
 > train = "corpus/train.spacy"
 >
-> [training.train_corpus]
+> [corpora.train]
 > @readers = "spacy.Corpus.v1"
 > path = ${paths.train}
 > gold_preproc = false
@@ -506,7 +518,7 @@ JSONL file. Also see the [`JsonlReader`](/api/corpus#jsonlreader) class.
 > [paths]
 > pretrain = "corpus/raw_text.jsonl"
 >
-> [pretraining.corpus]
+> [corpora.pretrain]
 > @readers = "spacy.JsonlReader.v1"
 > path = ${paths.pretrain}
 > min_length = 0
@@ -607,7 +619,7 @@ sequences in the batch.
 
 ## Training data and alignment {#gold source="spacy/training"}
 
-### training.biluo_tags_from_offsets {#biluo_tags_from_offsets tag="function"}
+### training.offsets_to_biluo_tags {#offsets_to_biluo_tags tag="function"}
 
 Encode labelled spans into per-token tags, using the
 [BILUO scheme](/usage/linguistic-features#accessing-ner) (Begin, In, Last, Unit,
@@ -620,14 +632,20 @@ the beginning of a multi-token entity, `I` the inside of an entity of three or
 more tokens, and `L` the end of an entity of two or more tokens. `U` denotes a
 single-token entity.
 
+<Infobox title="Changed in v3.0" variant="warning" id="biluo_tags_from_offsets">
+
+This method was previously available as `spacy.gold.biluo_tags_from_offsets`.
+
+</Infobox>
+
 > #### Example
 >
 > ```python
-> from spacy.training import biluo_tags_from_offsets
+> from spacy.training import offsets_to_biluo_tags
 >
 > doc = nlp("I like London.")
 > entities = [(7, 13, "LOC")]
-> tags = biluo_tags_from_offsets(doc, entities)
+> tags = offsets_to_biluo_tags(doc, entities)
 > assert tags == ["O", "O", "U-LOC", "O"]
 > ```
 
@@ -635,21 +653,28 @@ single-token entity.
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `doc`       | The document that the entity offsets refer to. The output tags will refer to the token boundaries within the document. ~~Doc~~                                                             |
 | `entities`  | A sequence of `(start, end, label)` triples. `start` and `end` should be character-offset integers denoting the slice into the original string. ~~List[Tuple[int, int, Union[str, int]]]~~ |
+| `missing`   | The label used for missing values, e.g. if tokenization doesn't align with the entity offsets. Defaults to `"O"`. ~~str~~                                                                  |
 | **RETURNS** | A list of strings, describing the [BILUO](/usage/linguistic-features#accessing-ner) tags. ~~List[str]~~                                                                                    |
 
-### training.offsets_from_biluo_tags {#offsets_from_biluo_tags tag="function"}
+### training.biluo_tags_to_offsets {#biluo_tags_to_offsets tag="function"}
 
 Encode per-token tags following the
 [BILUO scheme](/usage/linguistic-features#accessing-ner) into entity offsets.
 
+<Infobox title="Changed in v3.0" variant="warning" id="offsets_from_biluo_tags">
+
+This method was previously available as `spacy.gold.offsets_from_biluo_tags`.
+
+</Infobox>
+
 > #### Example
 >
 > ```python
-> from spacy.training import offsets_from_biluo_tags
+> from spacy.training import biluo_tags_to_offsets
 >
 > doc = nlp("I like London.")
 > tags = ["O", "O", "U-LOC", "O"]
-> entities = offsets_from_biluo_tags(doc, tags)
+> entities = biluo_tags_to_offsets(doc, tags)
 > assert entities == [(7, 13, "LOC")]
 > ```
 
@@ -659,21 +684,27 @@ Encode per-token tags following the
 | `entities`  | A sequence of [BILUO](/usage/linguistic-features#accessing-ner) tags with each tag describing one token. Each tag string will be of the form of either `""`, `"O"` or `"{action}-{label}"`, where action is one of `"B"`, `"I"`, `"L"`, `"U"`. ~~List[str]~~ |
 | **RETURNS** | A sequence of `(start, end, label)` triples. `start` and `end` will be character-offset integers denoting the slice into the original string. ~~List[Tuple[int, int, str]]~~                                                                                 |
 
-### training.spans_from_biluo_tags {#spans_from_biluo_tags tag="function" new="2.1"}
+### training.biluo_tags_to_spans {#biluo_tags_to_spans tag="function" new="2.1"}
 
 Encode per-token tags following the
 [BILUO scheme](/usage/linguistic-features#accessing-ner) into
 [`Span`](/api/span) objects. This can be used to create entity spans from
 token-based tags, e.g. to overwrite the `doc.ents`.
 
+<Infobox title="Changed in v3.0" variant="warning" id="spans_from_biluo_tags">
+
+This method was previously available as `spacy.gold.spans_from_biluo_tags`.
+
+</Infobox>
+
 > #### Example
 >
 > ```python
-> from spacy.training import spans_from_biluo_tags
+> from spacy.training import biluo_tags_to_spans
 >
 > doc = nlp("I like London.")
 > tags = ["O", "O", "U-LOC", "O"]
-> doc.ents = spans_from_biluo_tags(doc, tags)
+> doc.ents = biluo_tags_to_spans(doc, tags)
 > ```
 
 | Name        | Description                                                                                                                                                                                                                                                  |

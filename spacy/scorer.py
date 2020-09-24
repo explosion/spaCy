@@ -240,7 +240,7 @@ class Scorer:
                             pred_per_feat[field].add((gold_i, feat))
             for field in per_feat:
                 per_feat[field].score_set(
-                    pred_per_feat.get(field, set()), gold_per_feat.get(field, set()),
+                    pred_per_feat.get(field, set()), gold_per_feat.get(field, set())
                 )
         result = {k: v.to_dict() for k, v in per_feat.items()}
         return {f"{attr}_per_feat": result}
@@ -270,6 +270,18 @@ class Scorer:
         for example in examples:
             pred_doc = example.predicted
             gold_doc = example.reference
+            # TODO
+            # This is a temporary hack to work around the problem that the scorer
+            # fails if you have examples that are not fully annotated for all
+            # the tasks in your pipeline. For instance, you might have a corpus
+            # of NER annotations that does not set sentence boundaries, but the
+            # pipeline includes a parser or senter, and then the score_weights
+            # are used to evaluate that component. When the scorer attempts
+            # to read the sentences from the gold document, it fails.
+            try:
+                list(getter(gold_doc, attr))
+            except ValueError:
+                continue
             # Find all labels in gold and doc
             labels = set(
                 [k.label_ for k in getter(gold_doc, attr)]
@@ -406,9 +418,9 @@ class Scorer:
                     f_per_type[pred_label].fp += 1
         micro_prf = PRFScore()
         for label_prf in f_per_type.values():
-            micro_prf.tp = label_prf.tp
-            micro_prf.fn = label_prf.fn
-            micro_prf.fp = label_prf.fp
+            micro_prf.tp += label_prf.tp
+            micro_prf.fn += label_prf.fn
+            micro_prf.fp += label_prf.fp
         n_cats = len(f_per_type) + 1e-100
         macro_p = sum(prf.precision for prf in f_per_type.values()) / n_cats
         macro_r = sum(prf.recall for prf in f_per_type.values()) / n_cats

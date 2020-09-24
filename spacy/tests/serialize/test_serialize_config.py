@@ -17,15 +17,17 @@ nlp_config_string = """
 train = ""
 dev = ""
 
-[training]
+[corpora]
 
-[training.train_corpus]
+[corpora.train]
 @readers = "spacy.Corpus.v1"
 path = ${paths.train}
 
-[training.dev_corpus]
+[corpora.dev]
 @readers = "spacy.Corpus.v1"
 path = ${paths.dev}
+
+[training]
 
 [training.batcher]
 @batchers = "spacy.batch_by_words.v1"
@@ -65,7 +67,8 @@ width = ${components.tok2vec.model.width}
 parser_config_string = """
 [model]
 @architectures = "spacy.TransitionBasedParser.v1"
-nr_feature_tokens = 99
+state_type = "parser"
+extra_state_tokens = false
 hidden_width = 66
 maxout_pieces = 2
 
@@ -93,7 +96,11 @@ def my_parser():
         MaxoutWindowEncoder(width=321, window_size=3, maxout_pieces=4, depth=2),
     )
     parser = build_tb_parser_model(
-        tok2vec=tok2vec, nr_feature_tokens=7, hidden_width=65, maxout_pieces=5
+        tok2vec=tok2vec,
+        state_type="parser",
+        extra_state_tokens=True,
+        hidden_width=65,
+        maxout_pieces=5,
     )
     return parser
 
@@ -300,20 +307,20 @@ def test_config_overrides():
 
 def test_config_interpolation():
     config = Config().from_str(nlp_config_string, interpolate=False)
-    assert config["training"]["train_corpus"]["path"] == "${paths.train}"
+    assert config["corpora"]["train"]["path"] == "${paths.train}"
     interpolated = config.interpolate()
-    assert interpolated["training"]["train_corpus"]["path"] == ""
+    assert interpolated["corpora"]["train"]["path"] == ""
     nlp = English.from_config(config)
-    assert nlp.config["training"]["train_corpus"]["path"] == "${paths.train}"
+    assert nlp.config["corpora"]["train"]["path"] == "${paths.train}"
     # Ensure that variables are preserved in nlp config
     width = "${components.tok2vec.model.width}"
     assert config["components"]["tagger"]["model"]["tok2vec"]["width"] == width
     assert nlp.config["components"]["tagger"]["model"]["tok2vec"]["width"] == width
     interpolated2 = nlp.config.interpolate()
-    assert interpolated2["training"]["train_corpus"]["path"] == ""
+    assert interpolated2["corpora"]["train"]["path"] == ""
     assert interpolated2["components"]["tagger"]["model"]["tok2vec"]["width"] == 342
     nlp2 = English.from_config(interpolated)
-    assert nlp2.config["training"]["train_corpus"]["path"] == ""
+    assert nlp2.config["corpora"]["train"]["path"] == ""
     assert nlp2.config["components"]["tagger"]["model"]["tok2vec"]["width"] == 342
 
 
@@ -338,3 +345,13 @@ def test_config_auto_fill_extra_fields():
     assert "extra" not in nlp.config["training"]
     # Make sure the config generated is valid
     load_model_from_config(nlp.config)
+
+
+def test_config_validate_literal():
+    nlp = English()
+    config = Config().from_str(parser_config_string)
+    config["model"]["state_type"] = "nonsense"
+    with pytest.raises(ConfigValidationError):
+        nlp.add_pipe("parser", config=config)
+    config["model"]["state_type"] = "ner"
+    nlp.add_pipe("parser", config=config)
