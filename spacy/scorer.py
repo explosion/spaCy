@@ -626,6 +626,10 @@ class Scorer:
 
 
 def get_ner_prf(examples: Iterable[Example]) -> Dict[str, PRFScore]:
+    """Compute per-entity PRFScore objects for a sequence of examples. The
+    results are returned as a dictionary keyed by the entity type. You can
+    add the PRFScore objects to get micro-averaged total.
+    """
     scores = defaultdict(PRFScore)
     for eg in examples:
         if not eg.y.has_annotation("ENT_IOB"):
