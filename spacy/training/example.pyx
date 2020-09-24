@@ -98,8 +98,8 @@ cdef class Example:
 
     @property
     def alignment(self):
-        x_sig = hash64(doc.c, sizeof(self.x.c[0]) * self.x.length, 0)
-        y_sig = hash64(doc.c, sizeof(self.y.c[0]) * self.y.length, 0)
+        x_sig = hash64(self.x.c, sizeof(self.x.c[0]) * self.x.length, 0)
+        y_sig = hash64(self.y.c, sizeof(self.y.c[0]) * self.y.length, 0)
         if (
             self._cached_alignment is not None
             and self._x_sig == x_sig
