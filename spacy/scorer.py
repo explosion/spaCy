@@ -304,9 +304,14 @@ class Scorer:
             for pred_span in getter(pred_doc, attr):
                 indices = align_x2y[pred_span.start : pred_span.end].dataXd.ravel()
                 if len(indices):
-                    span = (pred_span.label_, indices[0], indices[-1])
-                    pred_spans.add(span)
-                    pred_per_type[pred_span.label_].add(span)
+                    g_span = gold_doc[indices[0] : indices[-1]]
+                    # Check we aren't missing annotation on this span. If so,
+                    # our prediction is neither right nor wrong, we just
+                    # ignore it.
+                    if any(token.ent_iob == 0 for token in g_span):
+                        span = (pred_span.label_, indices[0], indices[-1])
+                        pred_spans.add(span)
+                        pred_per_type[pred_span.label_].add(span)
             # Scores per label
             for k, v in score_per_type.items():
                 if k in pred_per_type:
