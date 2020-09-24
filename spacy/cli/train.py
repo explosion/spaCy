@@ -133,7 +133,7 @@ def train(
         if tok2vec_layer:
             layer = layer.get_ref(tok2vec_layer)
         layer.from_bytes(weights_data)
-        msg.good(f"Loaded pretrained weights into component '{tok2vec_component}'")
+        msg.info(f"Loaded pretrained weights into component '{tok2vec_component}'")
 
     # Create iterator, which yields out info after each optimization step.
     msg.info("Start training")
