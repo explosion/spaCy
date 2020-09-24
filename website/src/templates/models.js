@@ -117,7 +117,7 @@ function formatModelMeta(data) {
         license: data.license,
         labels: isEmptyObj(data.labels) ? null : data.labels,
         vectors: formatVectors(data.vectors),
-        accuracy: formatAccuracy(data.accuracy),
+        accuracy: formatAccuracy(data.performance),
     }
 }
 

@@ -518,7 +518,7 @@ source of truth** used for loading a pipeline.
 >     "ner": ["PERSON", "ORG", "PRODUCT"],
 >     "textcat": ["POSITIVE", "NEGATIVE"]
 >   },
->   "accuracy": {
+>   "performance": {
 >     "ents_f": 82.7300930714,
 >     "ents_p": 82.135523614,
 >     "ents_r": 83.3333333333,
