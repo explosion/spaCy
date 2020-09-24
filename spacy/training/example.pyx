@@ -100,11 +100,16 @@ cdef class Example:
     def alignment(self):
         x_sig = hash64(self.x.c, sizeof(self.x.c[0]) * self.x.length, 0)
         y_sig = hash64(self.y.c, sizeof(self.y.c[0]) * self.y.length, 0)
-        if (
-            self._cached_alignment is not None
-            and self._x_sig == x_sig
-            and self._y_sig == y_sig
-        ):
+        if self._cached_alignment is None:
+            words_x = [token.text for token in self.x]
+            words_y = [token.text for token in self.y]
+            self._x_sig = x_sig
+            self._y_sig = y_sig
+            self._cached_words_x = words_x
+            self._cached_words_y = words_y
+            self._cached_alignment = Alignment.from_strings(words_x, words_y)
+            return self._cached_alignment
+        elif self._x_sig == x_sig and self._y_sig == y_sig:
             # If we have a cached alignment, check whether the cache is invalid
             # due to retokenization. To make this check fast in loops, we first
             # check a hash of the TokenC arrays.
