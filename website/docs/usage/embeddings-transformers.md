@@ -752,7 +752,7 @@ network to model something about word cooccurrence statistics. Predicting
 leading and trailing characters does that more than adequately, as the exact
 word sequence could be recovered with high accuracy if the initial and trailing
 characters are predicted accurately. With the vectors objective, the pretraining
-is use the embedding space learned by an algorithm such as
+uses the embedding space learned by an algorithm such as
 [GloVe](https://nlp.stanford.edu/projects/glove/) or
 [Word2vec](https://code.google.com/archive/p/word2vec/), allowing the model to
 focus on the contextual modelling we actual care about.
