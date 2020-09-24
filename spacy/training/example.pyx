@@ -310,7 +310,6 @@ def _annot2array(vocab, tok_annot, doc_annot):
 
 
 def _add_entities_to_doc(doc, ner_data):
-    print(ner_data)
     if ner_data is None:
         return
     elif ner_data == []:
