@@ -378,14 +378,14 @@ def test_language_factories_scores():
     config["training"]["score_weights"]["b3"] = 1.0
     nlp = English.from_config(config)
     score_weights = nlp.config["training"]["score_weights"]
-    expected = {"a1": 0.0, "a2": 0.15, "b1": 0.06, "b2": 0.21, "b3": 0.59}
+    expected = {"a1": 0.0, "a2": 0.5, "b1": 0.03, "b2": 0.12, "b3": 0.34}
     assert score_weights == expected
     # Test with null values
     config = nlp.config.copy()
     config["training"]["score_weights"]["a1"] = None
     nlp = English.from_config(config)
     score_weights = nlp.config["training"]["score_weights"]
-    expected = {"a1": None, "a2": 0.15, "b1": 0.06, "b2": 0.21, "b3": 0.58}  # rounding :(
+    expected = {"a1": None, "a2": 0.5, "b1": 0.03, "b2": 0.12, "b3": 0.35}
     assert score_weights == expected
 
 

@@ -251,11 +251,8 @@ class Language:
         # We're merging the existing score weights back into the combined
         # weights to make sure we're preserving custom settings in the config
         # but also reflect updates (e.g. new components added)
-        prev_score_weights = self._config["training"].get("score_weights", {})
-        combined_score_weights = combine_score_weights(score_weights)
-        combined_score_weights.update(prev_score_weights)
-        # Combine the scores a second time to normalize them
-        combined_score_weights = combine_score_weights([combined_score_weights])
+        prev_weights = self._config["training"].get("score_weights", {})
+        combined_score_weights = combine_score_weights(score_weights, prev_weights)
         self._config["training"]["score_weights"] = combined_score_weights
         if not srsly.is_json_serializable(self._config):
             raise ValueError(Errors.E961.format(config=self._config))
