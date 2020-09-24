@@ -12,8 +12,8 @@ import { Help } from 'components/typography'; import Link from 'components/link'
 
 <figcaption class="caption">
 
-**Accuracy and speed on the
-[OntoNotes 5.0](https://catalog.ldc.upenn.edu/LDC2013T19) corpus.**
+**Full pipeline accuracy and speed** on the
+[OntoNotes 5.0](https://catalog.ldc.upenn.edu/LDC2013T19) corpus.
 
 </figcaption>
 

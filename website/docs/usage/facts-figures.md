@@ -65,27 +65,21 @@ import Benchmarks from 'usage/\_benchmarks-models.md'
 
 | System                                                                         |  UAS |  LAS |
 | ------------------------------------------------------------------------------ | ---: | ---: |
-| spaCy RoBERTa (2020)                                                           | 96.8 | 95.0 |
-| spaCy CNN (2020)                                                               | 93.7 | 91.8 |
+| spaCy RoBERTa (2020)<sup>1</sup>                                               | 96.8 | 95.0 |
+| spaCy CNN (2020)<sup>1</sup>                                                   | 93.7 | 91.8 |
 | [Mrini et al.](https://khalilmrini.github.io/Label_Attention_Layer.pdf) (2019) | 97.4 | 96.3 |
 | [Zhou and Zhao](https://www.aclweb.org/anthology/P19-1230/) (2019)             | 97.2 | 95.7 |
 
 <figcaption class="caption">
 
-**Accuracy on the Penn Treebank.** See
+**Dependency parsing accuracy** on the Penn Treebank. See
 [NLP-progress](http://nlpprogress.com/english/dependency_parsing.html) for more
-results.
+results. **1. ** Project template:
+[`benchmarks/parsing_penn_treebank`](%%GITHUB_PROJECTS/benchmarks/parsing_penn_treebank).
 
 </figcaption>
 
 </figure>
-
-<Project id="benchmarks/parsing_penn_treebank">
-
-The easiest way to reproduce spaCy's benchmarks on the Penn Treebank is to clone
-our project template.
-
-</Project>
 
 <!-- TODO: ## Citing spaCy {#citation}
 

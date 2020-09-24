@@ -213,7 +213,7 @@ a quick web demo. It looks pretty similar to a config file used to define CI
 pipelines.
 
 ```yaml
-https://github.com/explosion/projects/tree/v3/pipelines/tagger_parser_ud/project.yml
+%%GITHUB_PROJECTS/pipelines/tagger_parser_ud/project.yml
 ```
 
 | Section       | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
