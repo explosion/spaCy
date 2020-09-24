@@ -6,7 +6,7 @@ from .transition_parser cimport Parser
 from ._parser_internals.ner cimport BiluoPushDown
 
 from ..language import Language
-from ..scorer import Scorer
+from ..scorer import get_ner_prf, PRFScore
 from ..training import validate_examples
 
 
@@ -117,9 +117,18 @@ cdef class EntityRecognizer(Parser):
         """Score a batch of examples.
 
         examples (Iterable[Example]): The examples to score.
-        RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_spans.
+        RETURNS (Dict[str, Any]): The NER precision, recall and f-scores.
 
         DOCS: https://nightly.spacy.io/api/entityrecognizer#score
         """
         validate_examples(examples, "EntityRecognizer.score")
-        return Scorer.score_spans(examples, "ents", **kwargs)
+        score_per_type = get_ner_prf(examples)
+        totals = PRFScore()
+        for prf in score_per_type.values():
+            totals += prf
+        return {
+            "ents_p": totals.precision,
+            "ents_r": totals.recall,
+            "ents_f": totals.fscore,
+            "ents_per_type": {k: v.to_dict() for k, v in score_per_type.items()},
+        }
