@@ -345,12 +345,13 @@ def test_language_factories_invalid():
             [{"a": 100, "b": 400}, {"c": 0.5, "d": 0.5}],
             {"a": 0.1, "b": 0.4, "c": 0.25, "d": 0.25},
         ),
-        ([{"a": 0.5, "b": 0.5}, {"b": 1.0}], {"a": 0.25, "b": 0.75},),
+        ([{"a": 0.5, "b": 0.5}, {"b": 1.0}], {"a": 0.25, "b": 0.75}),
+        ([{"a": 0.0, "b": 0.0}, {"c": 0.0}], {"a": 0.0, "b": 0.0, "c": 0.0}),
     ],
 )
 def test_language_factories_combine_score_weights(weights, expected):
     result = combine_score_weights(weights)
-    assert sum(result.values()) in (0.99, 1.0)
+    assert sum(result.values()) in (0.99, 1.0, 0.0)
     assert result == expected
 
 
