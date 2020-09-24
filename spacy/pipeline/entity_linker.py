@@ -48,8 +48,11 @@ DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
         "incl_context": True,
         "get_candidates": {"@misc": "spacy.CandidateGenerator.v1"},
     },
-    scores=["nel_micro_p", "nel_micro_r", "nel_micro_f"],
-    default_score_weights={"nel_micro_f": 1.0},
+    default_score_weights={
+        "nel_micro_f": 1.0,
+        "nel_micro_r": None,
+        "nel_micro_p": None,
+    },
 )
 def make_entity_linker(
     nlp: Language,
@@ -427,7 +430,6 @@ class EntityLinker(Pipe):
         """
         validate_examples(examples, "EntityLinker.score")
         return Scorer.score_links(examples, negative_labels=[self.NIL])
-
 
     def to_disk(
         self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList()
