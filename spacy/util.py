@@ -1233,7 +1233,10 @@ def combine_score_weights(
         # components.
         total = sum(w_dict.values())
         for key, value in w_dict.items():
-            weight = round(value / total / len(all_weights), 2)
+            if total == 0:
+                weight = 0.0
+            else:
+                weight = round(value / total / len(all_weights), 2)
             result[key] = result.get(key, 0.0) + weight
     return result
 

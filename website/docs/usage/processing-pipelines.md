@@ -253,8 +253,6 @@ different mechanisms you can use:
 Disabled and excluded component names can be provided to
 [`spacy.load`](/api/top-level#spacy.load) as a list.
 
-<!-- TODO: update with info on our models shipped with optional components -->
-
 > #### 💡 Optional pipeline components
 >
 > The `disable` mechanism makes it easy to distribute pipeline packages with
@@ -262,6 +260,11 @@ Disabled and excluded component names can be provided to
 > your pipeline may include a statistical _and_ a rule-based component for
 > sentence segmentation, and you can choose which one to run depending on your
 > use case.
+>
+> For example, spaCy's [trained pipelines](/models) like
+> [`en_core_web_sm`](/models/en#en_core_web_sm) contain both a `parser` and
+> `senter` that perform sentence segmentation, but the `senter` is disabled by
+> default.
 
 ```python
 # Load the pipeline without the entity recognizer

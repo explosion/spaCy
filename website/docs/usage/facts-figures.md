@@ -63,7 +63,7 @@ import Benchmarks from 'usage/\_benchmarks-models.md'
 
 <figure>
 
-| System                                                                         |  UAS |  LAS |
+| Dependency Parsing System                                                      |  UAS |  LAS |
 | ------------------------------------------------------------------------------ | ---: | ---: |
 | spaCy RoBERTa (2020)<sup>1</sup>                                               | 96.8 | 95.0 |
 | spaCy CNN (2020)<sup>1</sup>                                                   | 93.7 | 91.8 |

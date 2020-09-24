@@ -32,11 +32,17 @@ const MODEL_META = {
     las: 'Labelled dependencies',
     token_acc: 'Tokenization',
     tok: 'Tokenization',
+    lemma: 'Statistical lemmatization',
+    morph: 'Morphological analysis',
     tags_acc: 'Part-of-speech tags (fine grained tags, Token.tag)',
     tag: 'Part-of-speech tags (fine grained tags, Token.tag)',
+    pos: 'Part-of-speech tags (coarse grained tags, Token.pos)',
     ents_f: 'Named entities (F-score)',
     ents_p: 'Named entities (precision)',
     ents_r: 'Named entities (recall)',
+    ner_f: 'Named entities (F-score)',
+    ner_p: 'Named entities (precision)',
+    ner_r: 'Named entities (recall)',
     sent_f: 'Sentence segmentation (F-score)',
     sent_p: 'Sentence segmentation (precision)',
     sent_r: 'Sentence segmentation (recall)',
@@ -88,11 +94,12 @@ function formatVectors(data) {
 }
 
 function formatAccuracy(data) {
+    const exclude = ['speed']
     if (!data) return []
     return Object.keys(data)
         .map(label => {
             const value = data[label]
-            return isNaN(value)
+            return isNaN(value) || exclude.includes(label)
                 ? null
                 : {
                       label,
@@ -109,6 +116,7 @@ function formatModelMeta(data) {
         version: data.version,
         sizeFull: data.size,
         pipeline: data.pipeline,
+        components: data.components,
         notes: data.notes,
         description: data.description,
         sources: data.sources,
@@ -117,7 +125,8 @@ function formatModelMeta(data) {
         license: data.license,
         labels: isEmptyObj(data.labels) ? null : data.labels,
         vectors: formatVectors(data.vectors),
-        accuracy: formatAccuracy(data.accuracy),
+        // TODO: remove accuracy fallback
+        accuracy: formatAccuracy(data.accuracy || data.performance),
     }
 }
 
