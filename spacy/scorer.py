@@ -23,6 +23,18 @@ class PRFScore:
         self.fp = 0
         self.fn = 0
 
+    def __iadd__(self, other):
+        self.tp += other.tp
+        self.fp += other.fp
+        self.fn += other.fn
+
+    def __add__(self, other):
+        return PRFScore(
+            tp=self.tp+other.tp,
+            fp=self.fp+other.fp,
+            fn=self.fn+other.fn
+        )
+
     def score_set(self, cand: set, gold: set) -> None:
         self.tp += len(cand.intersection(gold))
         self.fp += len(cand - gold)
@@ -305,13 +317,9 @@ class Scorer:
                 indices = align_x2y[pred_span.start : pred_span.end].dataXd.ravel()
                 if len(indices):
                     g_span = gold_doc[indices[0] : indices[-1]]
-                    # Check we aren't missing annotation on this span. If so,
-                    # our prediction is neither right nor wrong, we just
-                    # ignore it.
-                    if all(token.ent_iob != 0 for token in g_span):
-                        span = (pred_span.label_, indices[0], indices[-1])
-                        pred_spans.add(span)
-                        pred_per_type[pred_span.label_].add(span)
+                    span = (pred_span.label_, indices[0], indices[-1])
+                    pred_spans.add(span)
+                    pred_per_type[pred_span.label_].add(span)
             # Scores per label
             for k, v in score_per_type.items():
                 if k in pred_per_type:
@@ -614,6 +622,35 @@ class Scorer:
                 k: v.to_dict() for k, v in labelled_per_dep.items()
             },
         }
+
+
+def get_ner_prf(examples: Iterable[Example]) -> Dict[str, PRFScore]:
+    scores = defaultdict(PRFScore)
+    for eg in examples:
+        if not eg.y.has_annotation("ENT_IOB"):
+            continue
+        golds = {(e.label_, e.start, e.end) for e in example.y.ents}
+        align_x2y = example.alignment.x2y
+        preds = set()
+        for pred_ent in example.x.ents:
+            if pred_ent.label_ not in scores:
+                scores[pred_ent.label_] = PRFScore()
+            indices = align_x2y[pred_ent.start : pred_ent.end].dataXd.ravel()
+            if len(indices):
+                g_span = example.y[indices[0] : indices[-1]]
+                # Check we aren't missing annotation on this span. If so,
+                # our prediction is neither right nor wrong, we just
+                # ignore it.
+                if all(token.ent_iob != 0 for token in g_span):
+                    key = (pred_ent.label_, indices[0], indices[-1])
+                    if key in golds:
+                        scores[pred_ent.label_].tp += 1
+                        golds.pop(span)
+                    else:
+                        scores[pred_ent.label_].fp += 1
+        for label, start, end in golds:
+            scores[label].fn += 1
+    return scores
 
 
 #############################################################################
