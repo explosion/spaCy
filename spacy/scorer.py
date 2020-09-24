@@ -308,7 +308,7 @@ class Scorer:
                     # Check we aren't missing annotation on this span. If so,
                     # our prediction is neither right nor wrong, we just
                     # ignore it.
-                    if any(token.ent_iob == 0 for token in g_span):
+                    if all(token.ent_iob != 0 for token in g_span):
                         span = (pred_span.label_, indices[0], indices[-1])
                         pred_spans.add(span)
                         pred_per_type[pred_span.label_].add(span)
