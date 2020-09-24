@@ -225,6 +225,21 @@ pipe's entity linking model and context encoder. Delegates to
 | `losses`          | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~           |
 | **RETURNS**       | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                              |
 
+## EntityLinker.score {#score tag="method" new="3"}
+
+Score a batch of examples.
+
+> #### Example
+>
+> ```python
+> scores = entity_linker.score(examples)
+> ```
+
+| Name        | Description                                                                                    |
+| ----------- | ---------------------------------------------------------------------------------------------- |
+| `examples`  | The examples to score. ~~Iterable[Example]~~                                                   |
+| **RETURNS** | The scores, produced by [`Scorer.score_links`](/api/scorer#score_links) . ~~Dict[str, float]~~ |
+
 ## EntityLinker.create_optimizer {#create_optimizer tag="method"}
 
 Create an optimizer for the pipeline component.

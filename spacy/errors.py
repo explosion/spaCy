@@ -517,8 +517,8 @@ class Errors:
             "instead.")
     E927 = ("Can't write to frozen list Maybe you're trying to modify a computed "
             "property or default function argument?")
-    E928 = ("A 'KnowledgeBase' should be written to / read from a file, but the "
-            "provided argument {loc} is an existing directory.")
+    E928 = ("A 'KnowledgeBase' can only be serialized to/from from a directory, "
+            "but the provided argument {loc} points to a file.")
     E929 = ("A 'KnowledgeBase' could not be read from {loc} - the path does "
             "not seem to exist.")
     E930 = ("Received invalid get_examples callback in {name}.begin_training. "

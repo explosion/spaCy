@@ -16,6 +16,7 @@ from ..training import Example, validate_examples
 from ..errors import Errors, Warnings
 from ..util import SimpleFrozenList
 from .. import util
+from ..scorer import Scorer
 
 
 default_model_config = """
@@ -47,6 +48,8 @@ DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
         "incl_context": True,
         "get_candidates": {"@misc": "spacy.CandidateGenerator.v1"},
     },
+    scores=["nel_micro_p", "nel_micro_r", "nel_micro_f"],
+    default_score_weights={"nel_micro_f": 1.0},
 )
 def make_entity_linker(
     nlp: Language,
@@ -209,12 +212,11 @@ class EntityLinker(Pipe):
             # it does run the model twice :(
             predictions = self.model.predict(docs)
         for eg in examples:
-            sentences = [s for s in eg.predicted.sents]
+            sentences = [s for s in eg.reference.sents]
             kb_ids = eg.get_aligned("ENT_KB_ID", as_string=True)
-            for ent in eg.predicted.ents:
-                kb_id = kb_ids[
-                    ent.start
-                ]  # KB ID of the first token is the same as the whole span
+            for ent in eg.reference.ents:
+                # KB ID of the first token is the same as the whole span
+                kb_id = kb_ids[ent.start]
                 if kb_id:
                     try:
                         # find the sentence in the list of sentences.
@@ -253,7 +255,7 @@ class EntityLinker(Pipe):
         entity_encodings = []
         for eg in examples:
             kb_ids = eg.get_aligned("ENT_KB_ID", as_string=True)
-            for ent in eg.predicted.ents:
+            for ent in eg.reference.ents:
                 kb_id = kb_ids[ent.start]
                 if kb_id:
                     entity_encoding = self.kb.get_vector(kb_id)
@@ -414,6 +416,18 @@ class EntityLinker(Pipe):
                 i += 1
                 for token in ent:
                     token.ent_kb_id_ = kb_id
+
+    def score(self, examples, **kwargs):
+        """Score a batch of examples.
+
+        examples (Iterable[Example]): The examples to score.
+        RETURNS (Dict[str, Any]): The scores.
+
+        DOCS TODO: https://nightly.spacy.io/api/entity_linker#score
+        """
+        validate_examples(examples, "EntityLinker.score")
+        return Scorer.score_links(examples, negative_labels=[self.NIL])
+
 
     def to_disk(
         self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList()

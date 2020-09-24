@@ -10,6 +10,8 @@ from libcpp.vector cimport vector
 from pathlib import Path
 import warnings
 
+from spacy.strings import StringStore
+
 from spacy import util
 
 from .typedefs cimport hash_t
@@ -82,6 +84,9 @@ cdef class KnowledgeBase:
 
     DOCS: https://nightly.spacy.io/api/kb
     """
+
+    contents_loc = "contents"
+    strings_loc = "strings.json"
 
     def __init__(self, Vocab vocab, entity_vector_length):
         """Create a KnowledgeBase."""
@@ -319,15 +324,29 @@ cdef class KnowledgeBase:
 
         return 0.0
 
-
     def to_disk(self, path):
         path = util.ensure_path(path)
-        if path.is_dir():
+        if not path.exists():
+            path.mkdir(parents=True)
+        if not path.is_dir():
             raise ValueError(Errors.E928.format(loc=path))
-        if not path.parent.exists():
-            path.parent.mkdir(parents=True)
+        self.write_contents(path / self.contents_loc)
+        self.vocab.strings.to_disk(path / self.strings_loc)
 
-        cdef Writer writer = Writer(path)
+    def from_disk(self, path):
+        path = util.ensure_path(path)
+        if not path.exists():
+            raise ValueError(Errors.E929.format(loc=path))
+        if not path.is_dir():
+            raise ValueError(Errors.E928.format(loc=path))
+        self.read_contents(path / self.contents_loc)
+        kb_strings = StringStore()
+        kb_strings.from_disk(path / self.strings_loc)
+        for string in kb_strings:
+            self.vocab.strings.add(string)
+
+    def write_contents(self, file_path):
+        cdef Writer writer = Writer(file_path)
         writer.write_header(self.get_size_entities(), self.entity_vector_length)
 
         # dumping the entity vectors in their original order
@@ -366,13 +385,7 @@ cdef class KnowledgeBase:
 
         writer.close()
 
-    def from_disk(self, path):
-        path = util.ensure_path(path)
-        if path.is_dir():
-            raise ValueError(Errors.E928.format(loc=path))
-        if not path.exists():
-            raise ValueError(Errors.E929.format(loc=path))
-
+    def read_contents(self, file_path):
         cdef hash_t entity_hash
         cdef hash_t alias_hash
         cdef int64_t entry_index
@@ -382,7 +395,7 @@ cdef class KnowledgeBase:
         cdef AliasC alias
         cdef float vector_element
 
-        cdef Reader reader = Reader(path)
+        cdef Reader reader = Reader(file_path)
 
         # STEP 0: load header and initialize KB
         cdef int64_t nr_entities
