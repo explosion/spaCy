@@ -248,9 +248,15 @@ class Language:
         self._config["nlp"]["pipeline"] = list(self.component_names)
         self._config["nlp"]["disabled"] = list(self.disabled)
         self._config["components"] = pipeline
-        if not self._config["training"].get("score_weights"):
-            combined_score_weights = combine_score_weights(score_weights)
-            self._config["training"]["score_weights"] = combined_score_weights
+        # We're merging the existing score weights back into the combined
+        # weights to make sure we're preserving custom settings in the config
+        # but also reflect updates (e.g. new components added)
+        prev_score_weights = self._config["training"].get("score_weights", {})
+        combined_score_weights = combine_score_weights(score_weights)
+        combined_score_weights.update(prev_score_weights)
+        # Combine the scores a second time to normalize them
+        combined_score_weights = combine_score_weights([combined_score_weights])
+        self._config["training"]["score_weights"] = combined_score_weights
         if not srsly.is_json_serializable(self._config):
             raise ValueError(Errors.E961.format(config=self._config))
         return self._config
@@ -412,7 +418,6 @@ class Language:
         assigns: Iterable[str] = SimpleFrozenList(),
         requires: Iterable[str] = SimpleFrozenList(),
         retokenizes: bool = False,
-        scores: Iterable[str] = SimpleFrozenList(),
         default_score_weights: Dict[str, float] = SimpleFrozenDict(),
         func: Optional[Callable] = None,
     ) -> Callable:
@@ -430,12 +435,11 @@ class Language:
             e.g. "token.ent_id". Used for pipeline analyis.
         retokenizes (bool): Whether the component changes the tokenization.
             Used for pipeline analysis.
-        scores (Iterable[str]): All scores set by the component if it's trainable,
-            e.g. ["ents_f", "ents_r", "ents_p"].
         default_score_weights (Dict[str, float]): The scores to report during
             training, and their default weight towards the final score used to
             select the best model. Weights should sum to 1.0 per component and
-            will be combined and normalized for the whole pipeline.
+            will be combined and normalized for the whole pipeline. If None,
+            the score won't be shown in the logs or be weighted.
         func (Optional[Callable]): Factory function if not used as a decorator.
 
         DOCS: https://nightly.spacy.io/api/language#factory
@@ -475,7 +479,7 @@ class Language:
                 default_config=default_config,
                 assigns=validate_attrs(assigns),
                 requires=validate_attrs(requires),
-                scores=scores,
+                scores=list(default_score_weights.keys()),
                 default_score_weights=default_score_weights,
                 retokenizes=retokenizes,
             )

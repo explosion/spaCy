@@ -209,6 +209,8 @@ def create_train_batches(iterator, batcher, max_epochs: int):
 def create_evaluation_callback(
     nlp: Language, dev_corpus: Callable, weights: Dict[str, float]
 ) -> Callable[[], Tuple[float, Dict[str, float]]]:
+    weights = {key: value for key, value in weights.items() if value is not None}
+
     def evaluate() -> Tuple[float, Dict[str, float]]:
         dev_examples = list(dev_corpus(nlp))
         scores = nlp.evaluate(dev_examples)
@@ -368,7 +370,8 @@ def update_meta(
 ) -> None:
     nlp.meta["performance"] = {}
     for metric in training["score_weights"]:
-        nlp.meta["performance"][metric] = info["other_scores"].get(metric, 0.0)
+        if metric is not None:
+            nlp.meta["performance"][metric] = info["other_scores"].get(metric, 0.0)
     for pipe_name in nlp.pipe_names:
         nlp.meta["performance"][f"{pipe_name}_loss"] = info["losses"][pipe_name]
 

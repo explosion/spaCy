@@ -21,7 +21,6 @@ from .. import util
         "lookups": None,
         "overwrite": False,
     },
-    scores=["lemma_acc"],
     default_score_weights={"lemma_acc": 1.0},
 )
 def make_lemmatizer(

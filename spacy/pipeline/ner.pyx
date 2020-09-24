@@ -39,8 +39,7 @@ DEFAULT_NER_MODEL = Config().from_str(default_model_config)["model"]
         "update_with_oracle_cut_size": 100,
         "model": DEFAULT_NER_MODEL,
     },
-    scores=["ents_p", "ents_r", "ents_f", "ents_per_type"],
-    default_score_weights={"ents_f": 1.0, "ents_p": 0.0, "ents_r": 0.0},
+    default_score_weights={"ents_f": 1.0, "ents_p": 0.0, "ents_r": 0.0, "ents_per_type": None},
 
 )
 def make_ner(
