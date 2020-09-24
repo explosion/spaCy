@@ -1654,9 +1654,12 @@ The [`SentenceRecognizer`](/api/sentencerecognizer) is a simple statistical
 component that only provides sentence boundaries. Along with being faster and
 smaller than the parser, its primary advantage is that it's easier to train
 because it only requires annotated sentence boundaries rather than full
-dependency parses.
-
-<!-- TODO: update/confirm usage once we have final models trained -->
+dependency parses. spaCy's [trained pipelines](/models) include both a parser
+and a trained sentence segmenter, which is
+[disabled](/usage/processing-pipelines#disabling) by default. If you only need
+sentence boundaries and no parser, you can use the `enable` and `disable`
+arguments on [`spacy.load`](/api/top-level#spacy.load) to enable the senter and
+disable the parser.
 
 > #### senter vs. parser
 >

@@ -288,6 +288,7 @@ def _annot2array(vocab, tok_annot, doc_annot):
 
 
 def _add_entities_to_doc(doc, ner_data):
+    print(ner_data)
     if ner_data is None:
         return
     elif ner_data == []:
@@ -303,9 +304,14 @@ def _add_entities_to_doc(doc, ner_data):
             biluo_tags_to_spans(doc, ner_data)
         )
     elif isinstance(ner_data[0], Span):
-        # Ugh, this is super messy. Really hard to set O entities
-        doc.ents = ner_data
-        doc.ents = [span for span in ner_data if span.label_]
+        entities = []
+        missing = []
+        for span in ner_data:
+            if span.label:
+                entities.append(span)
+            else:
+                missing.append(span)
+        doc.set_ents(entities, missing=missing)
     else:
         raise ValueError(Errors.E973)
 
