@@ -480,6 +480,7 @@ class Errors:
     E201 = ("Span index out of range.")
 
     # TODO: fix numbering after merging develop into master
+    E916 = ("Can't log score for '{name}' in table: not a valid score ({score_type})")
     E917 = ("Received invalid value {value} for 'state_type' in "
             "TransitionBasedParser: only 'parser' or 'ner' are valid options.")
     E918 = ("Received invalid value for vocab: {vocab} ({vocab_type}). Valid "
