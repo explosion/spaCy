@@ -143,7 +143,7 @@ argument that connects to the shared `tok2vec` component in the pipeline.
 
 Construct an embedding layer that separately embeds a number of lexical
 attributes using hash embedding, concatenates the results, and passes it through
-a feed-forward subnetwork to build a mixed representations. The features used
+a feed-forward subnetwork to build mixed representations. The features used
 are the `NORM`, `PREFIX`, `SUFFIX` and `SHAPE`, which can have varying
 definitions depending on the `Vocab` of the `Doc` object passed in. Vectors from
 pretrained static vectors can also be incorporated into the concatenated
@@ -170,7 +170,7 @@ representation.
 > nC = 8
 > ```
 
-Construct an embedded representations based on character embeddings, using a
+Construct an embedded representation based on character embeddings, using a
 feed-forward network. A fixed number of UTF-8 byte characters are used for each
 word, taken from the beginning and end of the word equally. Padding is used in
 the center for words that are too short.
@@ -392,7 +392,7 @@ a single token vector given zero or more wordpiece vectors.
 > ```
 
 Use a transformer as a [`Tok2Vec`](/api/tok2vec) layer directly. This does
-**not** allow multiple components to share the transformer weights, and does
+**not** allow multiple components to share the transformer weights and does
 **not** allow the transformer to set annotations into the [`Doc`](/api/doc)
 object, but it's a **simpler solution** if you only need the transformer within
 one component.
@@ -436,7 +436,7 @@ might find [this tutorial](https://explosion.ai/blog/parsing-english-in-python)
 helpful for background information. The neural network state prediction model
 consists of either two or three subnetworks:
 
-- **tok2vec**: Map each token into a vector representations. This subnetwork is
+- **tok2vec**: Map each token into a vector representation. This subnetwork is
   run once for each batch.
 - **lower**: Construct a feature-specific vector for each `(token, feature)`
   pair. This is also run once for each batch. Constructing the state
@@ -573,14 +573,14 @@ architecture is usually less accurate than the ensemble, but runs faster.
 > nO = null
 > ```
 
-An ngram "bag-of-words" model. This architecture should run much faster than the
+An n-gram "bag-of-words" model. This architecture should run much faster than the
 others, but may not be as accurate, especially if texts are short.
 
 | Name                | Description                                                                                                                                                                                        |
 | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `exclusive_classes` | Whether or not categories are mutually exclusive. ~~bool~~                                                                                                                                         |
 | `ngram_size`        | Determines the maximum length of the n-grams in the BOW model. For instance, `ngram_size=3`would give unigram, trigram and bigram features. ~~int~~                                                |
-| `no_output_layer`   | Whether or not to add an output layer to the model (`Softmax` activation if `exclusive_classes` is `True`, else `Logistic`. ~~bool~~                                                               |
+| `no_output_layer`   | Whether or not to add an output layer to the model (`Softmax` activation if `exclusive_classes` is `True`, else `Logistic`). ~~bool~~                                                               |
 | `nO`                | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `begin_training` is called. ~~Optional[int]~~ |
 | **CREATES**         | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                                   |
 
@@ -594,7 +594,7 @@ into the "real world". This requires 3 main components:
   synonyms and prior probabilities.
 - A candidate generation step to produce a set of likely identifiers, given a
   certain textual mention.
-- A Machine learning [`Model`](https://thinc.ai/docs/api-model) that picks the
+- A machine learning [`Model`](https://thinc.ai/docs/api-model) that picks the
   most plausible ID from the set of candidates.
 
 ### spacy.EntityLinker.v1 {#EntityLinker}

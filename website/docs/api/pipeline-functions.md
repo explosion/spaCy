@@ -26,7 +26,7 @@ Merge noun chunks into a single token. Also available via the string name
 
 <Infobox variant="warning">
 
-Since noun chunks require part-of-speech tags and the dependency parse, make
+Since noun chunks require part-of-speech tags and the dependency parser, make
 sure to add this component _after_ the `"tagger"` and `"parser"` components. By
 default, `nlp.add_pipe` will add components to the end of the pipeline and after
 all other components.

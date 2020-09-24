@@ -94,7 +94,7 @@ providing custom registered functions.
 
 ## EntityLinker.\_\_call\_\_ {#call tag="method"}
 
-Apply the pipe to one document. The document is modified in place, and returned.
+Apply the pipe to one document. The document is modified in place and returned.
 This usually happens under the hood when the `nlp` object is called on a text
 and all pipeline components are applied to the `Doc` in order. Both
 [`__call__`](/api/entitylinker#call) and [`pipe`](/api/entitylinker#pipe)

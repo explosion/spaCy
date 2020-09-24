@@ -8,7 +8,7 @@ A slice from a [`Doc`](/api/doc) object.
 
 ## Span.\_\_init\_\_ {#init tag="method"}
 
-Create a Span object from the slice `doc[start : end]`.
+Create a `Span` object from the slice `doc[start : end]`.
 
 > #### Example
 >

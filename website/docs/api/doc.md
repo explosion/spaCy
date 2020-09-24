@@ -445,7 +445,7 @@ Mark a span for merging. The `attrs` will be applied to the resulting token (if
 they're context-dependent token attributes like `LEMMA` or `DEP`) or to the
 underlying lexeme (if they're context-independent lexical attributes like
 `LOWER` or `IS_STOP`). Writable custom extension attributes can be provided as a
-dictionary mapping attribute names to values as the `"_"` key.
+dictionary mapping attribute name to values as the `"_"` key.
 
 > #### Example
 >

@@ -188,7 +188,7 @@ Typically, the extension for these binary files is `.spacy`, and they are used
 as input format for specifying a [training corpus](/api/corpus) and for spaCy's
 CLI [`train`](/api/cli#train) command. The built-in
 [`convert`](/api/cli#convert) command helps you convert spaCy's previous
-[JSON format](#json-input) to the new binary format format. It also supports
+[JSON format](#json-input) to the new binary format. It also supports
 conversion of the `.conllu` format used by the
 [Universal Dependencies corpora](https://github.com/UniversalDependencies).
 
@@ -252,7 +252,7 @@ $ python -m spacy convert ./data.json ./output.spacy
 
 <Accordion title="Sample JSON data" spaced>
 
-Here's an example of dependencies, part-of-speech tags and names entities, taken
+Here's an example of dependencies, part-of-speech tags and named entities, taken
 from the English Wall Street Journal portion of the Penn Treebank:
 
 ```json
