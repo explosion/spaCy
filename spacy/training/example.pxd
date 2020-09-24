@@ -7,3 +7,5 @@ cdef class Example:
     cdef readonly object _cached_alignment
     cdef readonly object _cached_words_x
     cdef readonly object _cached_words_y
+    cdef readonly int _cached_mem_size_x
+    cdef readonly int _cached_mem_size_y
