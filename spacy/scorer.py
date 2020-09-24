@@ -28,6 +28,7 @@ class PRFScore:
         self.tp += other.tp
         self.fp += other.fp
         self.fn += other.fn
+        return self
 
     def __add__(self, other):
         return PRFScore(
@@ -642,15 +643,15 @@ def get_ner_prf(examples: Iterable[Example]) -> Dict[str, PRFScore]:
                 scores[pred_ent.label_] = PRFScore()
             indices = align_x2y[pred_ent.start : pred_ent.end].dataXd.ravel()
             if len(indices):
-                g_span = eg.y[indices[0] : indices[-1]]
+                g_span = eg.y[indices[0] : indices[-1] + 1]
                 # Check we aren't missing annotation on this span. If so,
                 # our prediction is neither right nor wrong, we just
                 # ignore it.
                 if all(token.ent_iob != 0 for token in g_span):
-                    key = (pred_ent.label_, indices[0], indices[-1])
+                    key = (pred_ent.label_, indices[0], indices[-1] + 1)
                     if key in golds:
                         scores[pred_ent.label_].tp += 1
-                        golds.pop(span)
+                        golds.remove(key)
                     else:
                         scores[pred_ent.label_].fp += 1
         for label, start, end in golds:
