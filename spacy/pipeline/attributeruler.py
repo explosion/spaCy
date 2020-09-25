@@ -173,7 +173,9 @@ class AttributeRuler(Pipe):
 
         DOCS: https://nightly.spacy.io/api/attributeruler#add
         """
-        self.matcher.add(len(self.attrs), patterns)
+        # This needs to be a string, because otherwise it's interpreted as a
+        # string key.
+        self.matcher.add(f"attr_rules_{len(self.attrs)}", patterns)
         self._attrs_unnormed.append(attrs)
         attrs = normalize_token_attrs(self.vocab, attrs)
         self.attrs.append(attrs)
