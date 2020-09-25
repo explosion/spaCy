@@ -50,6 +50,8 @@ def walk_corpus(path: Union[str, Path], file_type) -> List[Path]:
             locs.append(path)
     if len(locs) == 0:
         warnings.warn(Warnings.W090.format(path=orig_path, format=file_type))
+    # It's good to sort these, in case the ordering messes up a cache.
+    locs.sort()
     return locs
 
 

@@ -209,6 +209,8 @@ def walk_directory(path: Path, converter: str) -> List[Path]:
             continue
         else:
             locs.append(path)
+    # It's good to sort these, in case the ordering messes up cache.
+    locs.sort()
     return locs
 
 
