@@ -49,7 +49,7 @@ def walk_corpus(path: Union[str, Path], file_type) -> List[Path]:
         elif path.parts[-1].endswith(file_type):
             locs.append(path)
     if len(locs) == 0:
-        warnings.warn(Warnings.W090.format(path=orig_path))
+        warnings.warn(Warnings.W090.format(path=orig_path, format=file_type))
     return locs
 
 
@@ -200,7 +200,7 @@ class JsonlTexts:
 
         DOCS: https://nightly.spacy.io/api/corpus#jsonltexts-call
         """
-        for loc in walk_corpus(self.path, "jsonl"):
+        for loc in walk_corpus(self.path, ".jsonl"):
             records = srsly.read_jsonl(loc)
             for record in records:
                 doc = nlp.make_doc(record["text"])

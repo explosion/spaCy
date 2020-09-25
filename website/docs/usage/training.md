@@ -175,7 +175,7 @@ sections of a config file are:
 | `paths`       | Paths to data and other assets. Re-used across the config as variables, e.g. `${paths.train}`, and can be [overwritten](#config-overrides) on the CLI.          |
 | `system`      | Settings related to system and hardware. Re-used across the config as variables, e.g. `${system.seed}`, and can be [overwritten](#config-overrides) on the CLI. |
 | `training`    | Settings and controls for the training and evaluation process.                                                                                                  |
-| `pretraining` | Optional settings and controls for the [language model pretraining](#pretraining).                                                                              |
+| `pretraining` | Optional settings and controls for the [language model pretraining](/usage/embeddings-transformers#pretraining).                                                |
 
 <Infobox title="Config format and settings" emoji="📖">
 

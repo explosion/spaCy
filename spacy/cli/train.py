@@ -121,20 +121,19 @@ def train(
 
     # Load pretrained tok2vec weights - cf. CLI command 'pretrain'
     if weights_data is not None:
-        tok2vec_path = config["pretraining"].get("tok2vec_model", None)
-        if tok2vec_path is None:
+        tok2vec_component = config["pretraining"]["component"]
+        if tok2vec_component is None:
             msg.fail(
-                f"To pretrained tok2vec weights, the config needs to specify which "
-                f"tok2vec layer to load in the setting [pretraining.tok2vec_model].",
+                f"To use pretrained tok2vec weights, [pretraining.component] "
+                f"needs to specify the component that should load them.",
                 exits=1,
             )
-        tok2vec = config
-        for subpath in tok2vec_path.split("."):
-            tok2vec = tok2vec.get(subpath)
-        if not tok2vec:
-            err = f"Could not locate the tok2vec model at {tok2vec_path}"
-            msg.fail(err, exits=1)
-        tok2vec.from_bytes(weights_data)
+        layer = nlp.get_pipe(tok2vec_component).model
+        tok2vec_layer = config["pretraining"]["layer"]
+        if tok2vec_layer:
+            layer = layer.get_ref(tok2vec_layer)
+        layer.from_bytes(weights_data)
+        msg.info(f"Loaded pretrained weights into component '{tok2vec_component}'")
 
     # Create iterator, which yields out info after each optimization step.
     msg.info("Start training")
