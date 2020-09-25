@@ -2,8 +2,10 @@ from typing import Callable, Iterable
 import pytest
 
 from spacy.kb import KnowledgeBase, get_candidates, Candidate
+from spacy.vocab import Vocab
 
 from spacy import util, registry
+from spacy.scorer import Scorer
 from spacy.training import Example
 from spacy.lang.en import English
 from spacy.tests.util import make_tempdir
@@ -151,21 +153,14 @@ def test_kb_serialize(nlp):
         # normal read-write behaviour
         mykb.to_disk(d / "kb")
         mykb.from_disk(d / "kb")
-        mykb.to_disk(d / "kb.file")
-        mykb.from_disk(d / "kb.file")
         mykb.to_disk(d / "new" / "kb")
         mykb.from_disk(d / "new" / "kb")
         # allow overwriting an existing file
-        mykb.to_disk(d / "kb.file")
-        with pytest.raises(ValueError):
-            # can not write to a directory
-            mykb.to_disk(d)
-        with pytest.raises(ValueError):
-            # can not read from a directory
-            mykb.from_disk(d)
+        mykb.to_disk(d / "kb")
         with pytest.raises(ValueError):
             # can not read from an unknown file
             mykb.from_disk(d / "unknown" / "kb")
+
 
 def test_candidate_generation(nlp):
     """Test correct candidate generation"""
@@ -252,6 +247,41 @@ def test_el_pipe_configuration(nlp):
     assert doc[0].ent_kb_id_ == "Q2"
     assert doc[1].ent_kb_id_ == ""
     assert doc[2].ent_kb_id_ == "Q2"
+
+
+def test_vocab_serialization(nlp):
+    """Test that string information is retained across storage"""
+    mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
+
+    # adding entities
+    q1_hash = mykb.add_entity(entity="Q1", freq=27, entity_vector=[1])
+    q2_hash = mykb.add_entity(entity="Q2", freq=12, entity_vector=[2])
+    q3_hash = mykb.add_entity(entity="Q3", freq=5, entity_vector=[3])
+
+    # adding aliases
+    douglas_hash = mykb.add_alias(
+        alias="douglas", entities=["Q2", "Q3"], probabilities=[0.4, 0.1]
+    )
+    adam_hash = mykb.add_alias(alias="adam", entities=["Q2"], probabilities=[0.9])
+
+    candidates = mykb.get_alias_candidates("adam")
+    assert len(candidates) == 1
+    assert candidates[0].entity == q2_hash
+    assert candidates[0].entity_ == "Q2"
+    assert candidates[0].alias == adam_hash
+    assert candidates[0].alias_ == "adam"
+
+    with make_tempdir() as d:
+        mykb.to_disk(d / "kb")
+        kb_new_vocab = KnowledgeBase(Vocab(), entity_vector_length=1)
+        kb_new_vocab.from_disk(d / "kb")
+
+        candidates = kb_new_vocab.get_alias_candidates("adam")
+        assert len(candidates) == 1
+        assert candidates[0].entity == q2_hash
+        assert candidates[0].entity_ == "Q2"
+        assert candidates[0].alias == adam_hash
+        assert candidates[0].alias_ == "adam"
 
 
 def test_append_alias(nlp):
@@ -377,16 +407,20 @@ def test_preserving_links_ents_2(nlp):
 TRAIN_DATA = [
     ("Russ Cochran captured his first major title with his son as caddie.",
         {"links": {(0, 12): {"Q7381115": 0.0, "Q2146908": 1.0}},
-         "entities": [(0, 12, "PERSON")]}),
+         "entities": [(0, 12, "PERSON")],
+         "sent_starts": [1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}),
     ("Russ Cochran his reprints include EC Comics.",
         {"links": {(0, 12): {"Q7381115": 1.0, "Q2146908": 0.0}},
-         "entities": [(0, 12, "PERSON")]}),
+         "entities": [(0, 12, "PERSON")],
+         "sent_starts": [1, -1, 0, 0, 0, 0, 0, 0]}),
     ("Russ Cochran has been publishing comic art.",
         {"links": {(0, 12): {"Q7381115": 1.0, "Q2146908": 0.0}},
-         "entities": [(0, 12, "PERSON")]}),
+         "entities": [(0, 12, "PERSON")],
+         "sent_starts": [1, -1, 0, 0, 0, 0, 0, 0]}),
     ("Russ Cochran was a member of University of Kentucky's golf team.",
         {"links": {(0, 12): {"Q7381115": 0.0, "Q2146908": 1.0}},
-         "entities": [(0, 12, "PERSON"), (43, 51, "LOC")]}),
+         "entities": [(0, 12, "PERSON"), (43, 51, "LOC")],
+         "sent_starts": [1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]})
 ]
 GOLD_entities = ["Q2146908", "Q7381115", "Q7381115", "Q2146908"]
 # fmt: on
@@ -395,15 +429,7 @@ GOLD_entities = ["Q2146908", "Q7381115", "Q7381115", "Q2146908"]
 def test_overfitting_IO():
     # Simple test to try and quickly overfit the NEL component - ensuring the ML models work correctly
     nlp = English()
-    nlp.add_pipe("sentencizer")
     vector_length = 3
-
-    # Add a custom component to recognize "Russ Cochran" as an entity for the example training data
-    patterns = [
-        {"label": "PERSON", "pattern": [{"LOWER": "russ"}, {"LOWER": "cochran"}]}
-    ]
-    ruler = nlp.add_pipe("entity_ruler")
-    ruler.add_patterns(patterns)
 
     # Convert the texts to docs to make sure we have doc.ents set for the training examples
     train_examples = []
@@ -446,6 +472,16 @@ def test_overfitting_IO():
         nlp.update(train_examples, sgd=optimizer, losses=losses)
     assert losses["entity_linker"] < 0.001
 
+    # adding additional components that are required for the entity_linker
+    nlp.add_pipe("sentencizer", first=True)
+
+    # Add a custom component to recognize "Russ Cochran" as an entity for the example training data
+    patterns = [
+        {"label": "PERSON", "pattern": [{"LOWER": "russ"}, {"LOWER": "cochran"}]}
+    ]
+    ruler = nlp.add_pipe("entity_ruler", before="entity_linker")
+    ruler.add_patterns(patterns)
+
     # test the trained model
     predictions = []
     for text, annotation in TRAIN_DATA:
@@ -465,3 +501,46 @@ def test_overfitting_IO():
             for ent in doc2.ents:
                 predictions.append(ent.kb_id_)
         assert predictions == GOLD_entities
+
+
+def test_scorer_links():
+    train_examples = []
+    nlp = English()
+    ref1 = nlp("Julia lives in London happily.")
+    ref1.ents = [
+        Span(ref1, 0, 1, label="PERSON", kb_id="Q2"),
+        Span(ref1, 3, 4, label="LOC", kb_id="Q3"),
+    ]
+    pred1 = nlp("Julia lives in London happily.")
+    pred1.ents = [
+        Span(pred1, 0, 1, label="PERSON", kb_id="Q70"),
+        Span(pred1, 3, 4, label="LOC", kb_id="Q3"),
+    ]
+    train_examples.append(Example(pred1, ref1))
+
+    ref2 = nlp("She loves London.")
+    ref2.ents = [
+        Span(ref2, 0, 1, label="PERSON", kb_id="Q2"),
+        Span(ref2, 2, 3, label="LOC", kb_id="Q13"),
+    ]
+    pred2 = nlp("She loves London.")
+    pred2.ents = [
+        Span(pred2, 0, 1, label="PERSON", kb_id="Q2"),
+        Span(pred2, 2, 3, label="LOC", kb_id="NIL"),
+    ]
+    train_examples.append(Example(pred2, ref2))
+
+    ref3 = nlp("London is great.")
+    ref3.ents = [Span(ref3, 0, 1, label="LOC", kb_id="NIL")]
+    pred3 = nlp("London is great.")
+    pred3.ents = [Span(pred3, 0, 1, label="LOC", kb_id="NIL")]
+    train_examples.append(Example(pred3, ref3))
+
+    scores = Scorer().score_links(train_examples, negative_labels=["NIL"])
+    assert scores["nel_f_per_type"]["PERSON"]["p"] == 1 / 2
+    assert scores["nel_f_per_type"]["PERSON"]["r"] == 1 / 2
+    assert scores["nel_f_per_type"]["LOC"]["p"] == 1 / 1
+    assert scores["nel_f_per_type"]["LOC"]["r"] == 1 / 2
+
+    assert scores["nel_micro_p"] == 2 / 3
+    assert scores["nel_micro_r"] == 2 / 4

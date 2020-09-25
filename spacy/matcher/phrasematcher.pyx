@@ -186,16 +186,18 @@ cdef class PhraseMatcher:
             if isinstance(doc, Doc):
                 attrs = (TAG, POS, MORPH, LEMMA, DEP)
                 has_annotation = {attr: doc.has_annotation(attr) for attr in attrs}
-                if self.attr == TAG and not has_annotation[TAG]:
-                    raise ValueError(Errors.E155.format(pipe="tagger", attr="TAG"))
-                if self.attr == POS and not has_annotation[POS]:
-                    raise ValueError(Errors.E155.format(pipe="morphologizer", attr="POS"))
-                if self.attr == MORPH and not has_annotation[MORPH]:
-                    raise ValueError(Errors.E155.format(pipe="morphologizer", attr="MORPH"))
-                if self.attr == LEMMA and not has_annotation[LEMMA]:
-                    raise ValueError(Errors.E155.format(pipe="lemmatizer", attr="LEMMA"))
-                if self.attr == DEP and not has_annotation[DEP]:
-                    raise ValueError(Errors.E156.format())
+                for attr in attrs:
+                    if self.attr == attr and not has_annotation[attr]:
+                        if attr == TAG:
+                            pipe = "tagger"
+                        elif attr in (POS, MORPH):
+                            pipe = "morphologizer"
+                        elif attr == LEMMA:
+                            pipe = "lemmatizer"
+                        elif attr == DEP:
+                            pipe = "parser"
+                        error_msg = Errors.E155.format(pipe=pipe, attr=self.vocab.strings.as_string(attr))
+                        raise ValueError(error_msg)
                 if self._validate and any(has_annotation.values()) \
                         and self.attr not in attrs:
                     string_attr = self.vocab.strings[self.attr]

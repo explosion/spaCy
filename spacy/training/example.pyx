@@ -1,6 +1,7 @@
 from collections import Iterable as IterableInstance
 import warnings
 import numpy
+from murmurhash.mrmr cimport hash64
 
 from ..tokens.doc cimport Doc
 from ..tokens.span cimport Span
@@ -97,15 +98,36 @@ cdef class Example:
 
     @property
     def alignment(self):
-        words_x = [token.text for token in self.x]
-        words_y = [token.text for token in self.y]
-        if self._cached_alignment is None or \
-                words_x != self._cached_words_x or \
-                words_y != self._cached_words_y:
-            self._cached_alignment = Alignment.from_strings(words_x, words_y)
+        x_sig = hash64(self.x.c, sizeof(self.x.c[0]) * self.x.length, 0)
+        y_sig = hash64(self.y.c, sizeof(self.y.c[0]) * self.y.length, 0)
+        if self._cached_alignment is None:
+            words_x = [token.text for token in self.x]
+            words_y = [token.text for token in self.y]
+            self._x_sig = x_sig
+            self._y_sig = y_sig
             self._cached_words_x = words_x
             self._cached_words_y = words_y
-        return self._cached_alignment
+            self._cached_alignment = Alignment.from_strings(words_x, words_y)
+            return self._cached_alignment
+        elif self._x_sig == x_sig and self._y_sig == y_sig:
+            # If we have a cached alignment, check whether the cache is invalid
+            # due to retokenization. To make this check fast in loops, we first
+            # check a hash of the TokenC arrays.
+            return self._cached_alignment
+        else:
+            words_x = [token.text for token in self.x]
+            words_y = [token.text for token in self.y]
+            if words_x == self._cached_words_x and words_y == self._cached_words_y:
+                self._x_sig = x_sig
+                self._y_sig = y_sig
+                return self._cached_alignment
+            else:
+                self._cached_alignment = Alignment.from_strings(words_x, words_y)
+                self._cached_words_x = words_x
+                self._cached_words_y = words_y
+                self._x_sig = x_sig
+                self._y_sig = y_sig
+                return self._cached_alignment
 
     def get_aligned(self, field, as_string=False):
         """Return an aligned array for a token attribute."""
@@ -288,7 +310,6 @@ def _annot2array(vocab, tok_annot, doc_annot):
 
 
 def _add_entities_to_doc(doc, ner_data):
-    print(ner_data)
     if ner_data is None:
         return
     elif ner_data == []:

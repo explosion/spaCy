@@ -11,11 +11,23 @@ import { Table, Tr, Td, Th } from '../components/table'
 import Tag from '../components/tag'
 import { H2, Label } from '../components/typography'
 import Icon from '../components/icon'
-import Link from '../components/link'
+import Link, { OptionalLink } from '../components/link'
 import Infobox from '../components/infobox'
 import Accordion from '../components/accordion'
 import { join, arrayToObj, abbrNum, markdownToReact } from '../components/util'
 import { isString, isEmptyObj } from '../components/util'
+
+const COMPONENT_LINKS = {
+    tok2vec: '/api/tok2vec',
+    transformer: '/api/transformer',
+    tagger: '/api/tagger',
+    parser: '/api/dependencyparser',
+    ner: '/api/entityrecognizer',
+    lemmatizer: '/api/lemmatizer',
+    attribute_ruler: '/api/attributeruler',
+    senter: '/api/sentencerecognizer',
+    morphologizer: '/api/morphologizer',
+}
 
 const MODEL_META = {
     core: 'Vocabulary, syntax, entities, vectors',
@@ -78,10 +90,15 @@ function isStableVersion(v) {
     return !v.includes('a') && !v.includes('b') && !v.includes('dev') && !v.includes('rc')
 }
 
-function getLatestVersion(modelId, compatibility) {
+function getLatestVersion(modelId, compatibility, prereleases) {
     for (let [version, models] of Object.entries(compatibility)) {
         if (isStableVersion(version) && models[modelId]) {
-            return models[modelId][0]
+            const modelVersions = models[modelId]
+            for (let modelVersion of modelVersions) {
+                if (isStableVersion(modelVersion) || prereleases) {
+                    return modelVersion
+                }
+            }
         }
     }
 }
@@ -141,18 +158,44 @@ function formatSources(data = []) {
     ))
 }
 
+function linkComponents(components = []) {
+    return join(
+        components.map(c => (
+            <Fragment key={c}>
+                <OptionalLink to={COMPONENT_LINKS[c]} hideIcon>
+                    <InlineCode>{c}</InlineCode>
+                </OptionalLink>
+            </Fragment>
+        ))
+    )
+}
+
 const Help = ({ children }) => (
     <span data-tooltip={children}>
         <Icon name="help2" width={16} variant="subtle" inline />
     </span>
 )
 
-const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExamples, licenses }) => {
+const Model = ({
+    name,
+    langId,
+    langName,
+    baseUrl,
+    repo,
+    compatibility,
+    hasExamples,
+    licenses,
+    prereleases,
+}) => {
     const [initialized, setInitialized] = useState(false)
     const [isError, setIsError] = useState(true)
     const [meta, setMeta] = useState({})
     const { type, genre, size } = getModelComponents(name)
-    const version = useMemo(() => getLatestVersion(name, compatibility), [name, compatibility])
+    const version = useMemo(() => getLatestVersion(name, compatibility, prereleases), [
+        name,
+        compatibility,
+        prereleases,
+    ])
 
     useEffect(() => {
         window.dispatchEvent(new Event('resize')) // scroll position for progress
@@ -173,10 +216,8 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
 
     const releaseTag = meta.fullName ? `/tag/${meta.fullName}` : ''
     const releaseUrl = `https://github.com/${repo}/releases/${releaseTag}`
-    const pipeline =
-        meta.pipeline && join(meta.pipeline.map(p => <InlineCode key={p}>{p}</InlineCode>))
-    const components =
-        meta.components && join(meta.components.map(p => <InlineCode key={p}>{p}</InlineCode>))
+    const pipeline = linkComponents(meta.pipeline)
+    const components = linkComponents(meta.components)
     const sources = formatSources(meta.sources)
     const author = !meta.url ? meta.author : <Link to={meta.url}>{meta.author}</Link>
     const licenseUrl = licenses[meta.license] ? licenses[meta.license].url : null
@@ -332,7 +373,7 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
 const Models = ({ pageContext, repo, children }) => {
     const [initialized, setInitialized] = useState(false)
     const [compatibility, setCompatibility] = useState({})
-    const { id, title, meta, hasExamples } = pageContext
+    const { id, title, meta } = pageContext
     const { models, isStarters } = meta
     const baseUrl = `https://raw.githubusercontent.com/${repo}/master`
 
@@ -381,6 +422,7 @@ const Models = ({ pageContext, repo, children }) => {
                             repo={repo}
                             licenses={arrayToObj(site.siteMetadata.licenses, 'id')}
                             hasExamples={meta.hasExamples}
+                            prereleases={site.siteMetadata.nightly}
                         />
                     ))
                 }
@@ -397,6 +439,7 @@ const query = graphql`
     query ModelsQuery {
         site {
             siteMetadata {
+                nightly
                 licenses {
                     id
                     url

@@ -401,10 +401,6 @@ class Errors:
             "Matcher or PhraseMatcher with the attribute {attr}. "
             "Try using nlp() instead of nlp.make_doc() or list(nlp.pipe()) "
             "instead of list(nlp.tokenizer.pipe()).")
-    E156 = ("The pipeline needs to include a parser in order to use "
-            "Matcher or PhraseMatcher with the attribute DEP. Try using "
-            "nlp() instead of nlp.make_doc() or list(nlp.pipe()) instead of "
-            "list(nlp.tokenizer.pipe()).")
     E157 = ("Can't render negative values for dependency arc start or end. "
             "Make sure that you're passing in absolute token indices, not "
             "relative token offsets.\nstart: {start}, end: {end}, label: "
@@ -517,8 +513,8 @@ class Errors:
             "instead.")
     E927 = ("Can't write to frozen list Maybe you're trying to modify a computed "
             "property or default function argument?")
-    E928 = ("A 'KnowledgeBase' should be written to / read from a file, but the "
-            "provided argument {loc} is an existing directory.")
+    E928 = ("A 'KnowledgeBase' can only be serialized to/from from a directory, "
+            "but the provided argument {loc} points to a file.")
     E929 = ("A 'KnowledgeBase' could not be read from {loc} - the path does "
             "not seem to exist.")
     E930 = ("Received invalid get_examples callback in {name}.begin_training. "

@@ -206,3 +206,26 @@ depends on the scorer settings:
 | `multi_label`    | Whether the attribute allows multiple labels. Defaults to `True`. ~~bool~~                                                                         |
 | `positive_label` | The positive label for a binary task with exclusive classes. Defaults to `None`. ~~Optional[str]~~                                                 |
 | **RETURNS**      | A dictionary containing the scores, with inapplicable scores as `None`. ~~Dict[str, Optional[float]]~~                                             |
+
+## Scorer.score_links {#score_links tag="staticmethod" new="3"}
+
+Returns PRF for predicted links on the entity level. To disentangle the
+performance of the NEL from the NER, this method only evaluates NEL links for
+entities that overlap between the gold reference and the predictions.
+
+> #### Example
+>
+> ```python
+> scores = Scorer.score_links(
+>     examples,
+>     negative_labels=["NIL", ""]
+> )
+> print(scores["nel_micro_f"])
+> ```
+
+| Name              | Description                                                                                                         |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `examples`        | The `Example` objects holding both the predictions and the correct gold-standard annotations. ~~Iterable[Example]~~ |
+| _keyword-only_    |                                                                                                                     |
+| `negative_labels` | The string values that refer to no annotation (e.g. "NIL"). ~~Iterable[str]~~                                       |
+| **RETURNS**       | A dictionary containing the scores. ~~Dict[str, Optional[float]]~~                                                  |
