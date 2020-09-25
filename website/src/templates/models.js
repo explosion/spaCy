@@ -69,7 +69,12 @@ function isStableVersion(v) {
 function getLatestVersion(modelId, compatibility) {
     for (let [version, models] of Object.entries(compatibility)) {
         if (isStableVersion(version) && models[modelId]) {
-            return models[modelId][0]
+            const modelVersions = models[modelId]
+            for (let modelVersion of modelVersions) {
+                if (isStableVersion(modelVersion)) {
+                    return modelVersion
+                }
+            }
         }
     }
 }
