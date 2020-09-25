@@ -135,9 +135,14 @@ def train(
         layer.from_bytes(weights_data)
         msg.info(f"Loaded pretrained weights into component '{tok2vec_component}'")
 
-    # Create iterator, which yields out info after each optimization step.
-    msg.info("Start training")
     score_weights = T_cfg["score_weights"]
+    if resume_training and has_checkpoint(output_path):
+        nlp, optimizer, resumed_from = load_checkpoint(output_path, nlp, optimizer)
+        msg.info(f"Resuming training from step {nr_step}")
+    else:
+        msg.info("Start training")
+        resumed_from = None
+    # Create iterator, which yields out info after each optimization step.
     training_step_iterator = train_while_improving(
         nlp,
         optimizer,
@@ -150,6 +155,7 @@ def train(
         eval_frequency=T_cfg["eval_frequency"],
         raw_text=None,
         exclude=frozen_components,
+        resumed_from=resumed_from
     )
     msg.info(f"Training. Initial learn rate: {optimizer.learn_rate}")
     with nlp.select_pipes(disable=frozen_components):
@@ -161,6 +167,7 @@ def train(
         for batch, info, is_best_checkpoint in training_step_iterator:
             progress.update(1)
             if is_best_checkpoint is not None:
+                save_checkpoint(output_path, nlp, optimizer, info)
                 progress.close()
                 print_row(info)
                 if is_best_checkpoint and output_path is not None:
@@ -171,28 +178,16 @@ def train(
                         nlp.to_disk(output_path / "model-best")
                 progress = tqdm.tqdm(total=T_cfg["eval_frequency"], leave=False)
                 progress.set_description(f"Epoch {info['epoch']}")
-    except Exception as e:
-        finalize_logger()
-        if output_path is not None:
-            # We don't want to swallow the traceback if we don't have a
-            # specific error.
-            msg.warn(
-                f"Aborting and saving the final best model. "
-                f"Encountered exception: {str(e)}"
-            )
-            nlp = before_to_disk(nlp)
-            nlp.to_disk(output_path / "model-final")
-        raise e
     finally:
         finalize_logger()
-        if output_path is not None:
-            final_model_path = output_path / "model-final"
-            if optimizer.averages:
-                with nlp.use_params(optimizer.averages):
-                    nlp.to_disk(final_model_path)
-            else:
+    if output_path is not None:
+        final_model_path = output_path / "model-last"
+        if optimizer.averages:
+            with nlp.use_params(optimizer.averages):
                 nlp.to_disk(final_model_path)
-            msg.good(f"Saved pipeline to output directory {final_model_path}")
+        else:
+            nlp.to_disk(final_model_path)
+        msg.good(f"Saved pipeline to output directory {final_model_path}")
 
 
 def create_train_batches(iterator, batcher, max_epochs: int):
@@ -263,6 +258,7 @@ def train_while_improving(
     max_steps: int,
     raw_text: List[Dict[str, str]],
     exclude: List[str],
+    resumed_from: Optional[Dict]=None
 ):
     """Train until an evaluation stops improving. Works as a generator,
     with each iteration yielding a tuple `(batch, info, is_best_checkpoint)`,
@@ -306,8 +302,17 @@ def train_while_improving(
         dropouts = thinc.schedules.constant(dropout)
     else:
         dropouts = dropout
-    results = []
-    losses = {}
+    if resumed_from:
+        results = resumed_from["results"]
+        losses = resumed_from["losses"]
+        step = resumed_from["step"]
+        prev_seconds = resumed_from["seconds"]
+    else:
+        results = []
+        losses = {}
+        step = 0
+        words_seen = 0
+        prev_seconds = 0
     if raw_text:
         random.shuffle(raw_text)
         raw_examples = [
@@ -315,9 +320,14 @@ def train_while_improving(
         ]
         raw_batches = util.minibatch(raw_examples, size=8)
 
-    words_seen = 0
+    for _, (epoch, batch) in zip(range(step), train_data):
+        # If we're resuming, allow the generators to advance for the steps we
+        # did before. It's hard to otherwise restore the generator state.
+        dropout = next(dropouts)
+        optimizer.step_schedules()
+    
     start_time = timer()
-    for step, (epoch, batch) in enumerate(train_data):
+    for epoch, batch in train_data:
         dropout = next(dropouts)
         for subbatch in subdivide_batch(batch, accumulate_gradient):
 
@@ -338,7 +348,7 @@ def train_while_improving(
             ):
                 proc.model.finish_update(optimizer)
         optimizer.step_schedules()
-        if not (step % eval_frequency):
+        if step % eval_frequency:
             if optimizer.averages:
                 with nlp.use_params(optimizer.averages):
                     score, other_scores = evaluate()
@@ -346,21 +356,21 @@ def train_while_improving(
                 score, other_scores = evaluate()
             results.append((score, step))
             is_best_checkpoint = score == max(results)[0]
+            words_seen += sum(len(eg) for eg in batch)
+            info = {
+                "epoch": epoch,
+                "step": step,
+                "score": score,
+                "other_scores": other_scores,
+                "losses": losses,
+                "checkpoints": results,
+                "seconds": int(timer() - start_time) + prev_seconds,
+                "words": words_seen,
+            }
+            yield batch, info, is_best_checkpoint
         else:
             score, other_scores = (None, None)
             is_best_checkpoint = None
-        words_seen += sum(len(eg) for eg in batch)
-        info = {
-            "epoch": epoch,
-            "step": step,
-            "score": score,
-            "other_scores": other_scores,
-            "losses": losses,
-            "checkpoints": results,
-            "seconds": int(timer() - start_time),
-            "words": words_seen,
-        }
-        yield batch, info, is_best_checkpoint
         if is_best_checkpoint is not None:
             losses = {}
         # Stop if no improvement in `patience` updates (if specified)
@@ -370,6 +380,7 @@ def train_while_improving(
         # Stop if we've exhausted our max steps (if specified)
         if max_steps and step >= max_steps:
             break
+        step += 1
 
 
 def subdivide_batch(batch, accumulate_gradient):
