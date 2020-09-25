@@ -314,14 +314,9 @@ class Scorer:
                 gold_spans.add(gold_span)
                 gold_per_type[span.label_].add((span.label_, span.start, span.end - 1))
             pred_per_type = {label: set() for label in labels}
-            align_x2y = example.alignment.x2y
-            for pred_span in getter(pred_doc, attr):
-                indices = align_x2y[pred_span.start : pred_span.end].dataXd.ravel()
-                if len(indices):
-                    g_span = gold_doc[indices[0] : indices[-1]]
-                    span = (pred_span.label_, indices[0], indices[-1])
-                    pred_spans.add(span)
-                    pred_per_type[pred_span.label_].add(span)
+            for span in example.get_aligned_spans_x2y(getter(pred_doc, attr)):
+                pred_spans.add((span.label_, span.start, span.end - 1))
+                pred_per_type[span.label_].add((span.label_, span.start, span.end - 1))
             # Scores per label
             for k, v in score_per_type.items():
                 if k in pred_per_type:
