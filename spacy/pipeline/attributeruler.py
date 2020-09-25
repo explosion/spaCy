@@ -79,26 +79,32 @@ class AttributeRuler(Pipe):
 
         DOCS: https://nightly.spacy.io/api/attributeruler#call
         """
-        matches = sorted(self.matcher(doc, allow_missing=True))
-        print("Attrs", self.attrs)
-        print("Matches", matches)
-
-        for match_id, start, end in matches:
+        matches = self.matcher(doc, allow_missing=True)
+        # Sort by the attribute ID, so that later rules have precendence
+        matches = [
+            (_parse_key(self.vocab.strings[m_id]), m_id, s, e)
+            for m_id, s, e in matches
+        ]
+        matches.sort()
+        for attr_id, match_id, start, end in matches:
             span = Span(doc, start, end, label=match_id)
-            attr_id = _parse_key(span.label_)
             attrs = self.attrs[attr_id]
             index = self.indices[attr_id]
             try:
+                # The index can be negative, which makes it annoying to do
+                # the boundscheck. Let Span do it instead.
                 token = span[index]
             except IndexError:
+                # The original exception is just our conditional logic, so we
+                # raise from.
                 raise ValueError(
                     Errors.E1001.format(
                         patterns=self.matcher.get(span.label),
                         span=[t.text for t in span],
                         index=index,
                     )
-                ) from None
-            set_token_attrs(token, attrs)
+                ) from None 
+            set_token_attrs(span[index], attrs)
         return doc
 
     def pipe(self, stream, *, batch_size=128):
