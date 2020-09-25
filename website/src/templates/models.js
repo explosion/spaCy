@@ -26,6 +26,7 @@ const COMPONENT_LINKS = {
     lemmatizer: '/api/lemmatizer',
     attribute_ruler: '/api/attributeruler',
     senter: '/api/sentencerecognizer',
+    morphologizer: '/api/morphologizer',
 }
 
 const MODEL_META = {
