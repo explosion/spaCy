@@ -78,10 +78,15 @@ function isStableVersion(v) {
     return !v.includes('a') && !v.includes('b') && !v.includes('dev') && !v.includes('rc')
 }
 
-function getLatestVersion(modelId, compatibility) {
+function getLatestVersion(modelId, compatibility, prereleases) {
     for (let [version, models] of Object.entries(compatibility)) {
         if (isStableVersion(version) && models[modelId]) {
-            return models[modelId][0]
+            const modelVersions = models[modelId]
+            for (let modelVersion of modelVersions) {
+                if (isStableVersion(modelVersion) || prereleases) {
+                    return modelVersion
+                }
+            }
         }
     }
 }
@@ -147,12 +152,26 @@ const Help = ({ children }) => (
     </span>
 )
 
-const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExamples, licenses }) => {
+const Model = ({
+    name,
+    langId,
+    langName,
+    baseUrl,
+    repo,
+    compatibility,
+    hasExamples,
+    licenses,
+    prereleases,
+}) => {
     const [initialized, setInitialized] = useState(false)
     const [isError, setIsError] = useState(true)
     const [meta, setMeta] = useState({})
     const { type, genre, size } = getModelComponents(name)
-    const version = useMemo(() => getLatestVersion(name, compatibility), [name, compatibility])
+    const version = useMemo(() => getLatestVersion(name, compatibility, prereleases), [
+        name,
+        compatibility,
+        prereleases,
+    ])
 
     useEffect(() => {
         window.dispatchEvent(new Event('resize')) // scroll position for progress
@@ -332,7 +351,7 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
 const Models = ({ pageContext, repo, children }) => {
     const [initialized, setInitialized] = useState(false)
     const [compatibility, setCompatibility] = useState({})
-    const { id, title, meta, hasExamples } = pageContext
+    const { id, title, meta } = pageContext
     const { models, isStarters } = meta
     const baseUrl = `https://raw.githubusercontent.com/${repo}/master`
 
@@ -381,6 +400,7 @@ const Models = ({ pageContext, repo, children }) => {
                             repo={repo}
                             licenses={arrayToObj(site.siteMetadata.licenses, 'id')}
                             hasExamples={meta.hasExamples}
+                            prereleases={site.siteMetadata.nightly}
                         />
                     ))
                 }
@@ -397,6 +417,7 @@ const query = graphql`
     query ModelsQuery {
         site {
             siteMetadata {
+                nightly
                 licenses {
                     id
                     url
