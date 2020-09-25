@@ -11,11 +11,22 @@ import { Table, Tr, Td, Th } from '../components/table'
 import Tag from '../components/tag'
 import { H2, Label } from '../components/typography'
 import Icon from '../components/icon'
-import Link from '../components/link'
+import Link, { OptionalLink } from '../components/link'
 import Infobox from '../components/infobox'
 import Accordion from '../components/accordion'
 import { join, arrayToObj, abbrNum, markdownToReact } from '../components/util'
 import { isString, isEmptyObj } from '../components/util'
+
+const COMPONENT_LINKS = {
+    tok2vec: '/api/tok2vec',
+    transformer: '/api/transformer',
+    tagger: '/api/tagger',
+    parser: '/api/dependencyparser',
+    ner: '/api/entityrecognizer',
+    lemmatizer: '/api/lemmatizer',
+    attribute_ruler: '/api/attributeruler',
+    senter: '/api/sentencerecognizer',
+}
 
 const MODEL_META = {
     core: 'Vocabulary, syntax, entities, vectors',
@@ -146,6 +157,18 @@ function formatSources(data = []) {
     ))
 }
 
+function linkComponents(components = []) {
+    return join(
+        components.map(c => (
+            <Fragment key={c}>
+                <OptionalLink to={COMPONENT_LINKS[c]} hideIcon>
+                    <InlineCode>{c}</InlineCode>
+                </OptionalLink>
+            </Fragment>
+        ))
+    )
+}
+
 const Help = ({ children }) => (
     <span data-tooltip={children}>
         <Icon name="help2" width={16} variant="subtle" inline />
@@ -192,10 +215,8 @@ const Model = ({
 
     const releaseTag = meta.fullName ? `/tag/${meta.fullName}` : ''
     const releaseUrl = `https://github.com/${repo}/releases/${releaseTag}`
-    const pipeline =
-        meta.pipeline && join(meta.pipeline.map(p => <InlineCode key={p}>{p}</InlineCode>))
-    const components =
-        meta.components && join(meta.components.map(p => <InlineCode key={p}>{p}</InlineCode>))
+    const pipeline = linkComponents(meta.pipeline)
+    const components = linkComponents(meta.components)
     const sources = formatSources(meta.sources)
     const author = !meta.url ? meta.author : <Link to={meta.url}>{meta.author}</Link>
     const licenseUrl = licenses[meta.license] ? licenses[meta.license].url : null
