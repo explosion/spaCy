@@ -78,6 +78,9 @@ def train(
         config = util.load_config(
             config_path, overrides=config_overrides, interpolate=True
         )
+        # Keep a second un-interpolated config so we can preserve variables in
+        # the final nlp object we train and serialize
+        raw_config = util.load_config(config_path, overrides=config_overrides)
     if config["training"]["seed"] is not None:
         fix_random_seed(config["training"]["seed"])
     allocator = config["training"]["gpu_allocator"]
@@ -86,10 +89,10 @@ def train(
     # Use original config here before it's resolved to functions
     sourced_components = get_sourced_components(config)
     with show_validation_error(config_path):
-        nlp, config = util.load_model_from_config(config)
+        nlp, config = util.load_model_from_config(raw_config)
     util.load_vocab_data_into_model(nlp, lookups=config["training"]["lookups"])
     if config["training"]["vectors"] is not None:
-        util.load_vectors_into_model(nlp, config["training"]["vectors"])
+        add_vectors(nlp, config["training"]["vectors"])
     raw_text, tag_map, morph_rules, weights_data = load_from_paths(config)
     T_cfg = config["training"]
     optimizer = T_cfg["optimizer"]
@@ -193,6 +196,19 @@ def train(
             else:
                 nlp.to_disk(final_model_path)
             msg.good(f"Saved pipeline to output directory {final_model_path}")
+
+
+def add_vectors(nlp: Language, vectors: str) -> None:
+    title = f"Config validation error for vectors {vectors}"
+    desc = (
+        "This typically means that there's a problem in the config.cfg included "
+        "with the packaged vectors. Make sure that the vectors package you're "
+        "loading is compatible with the current version of spaCy."
+    )
+    with show_validation_error(
+        title=title, desc=desc, hint_fill=False, show_config=False
+    ):
+        util.load_vectors_into_model(nlp, vectors)
 
 
 def create_train_batches(iterator, batcher, max_epochs: int):

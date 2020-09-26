@@ -210,7 +210,7 @@
         {
             "code": "zh",
             "name": "Chinese",
-            "models": ["zh_core_web_sm", "zh_core_web_md", "zh_core_web_lg"],
+            "models": ["zh_core_web_sm", "zh_core_web_md", "zh_core_web_lg", "zh_core_web_trf"],
             "dependencies": [
                 {
                     "name": "Jieba",

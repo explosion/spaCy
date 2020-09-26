@@ -1,8 +1,8 @@
 from typing import Optional, Dict, Any, Union, List
 from pathlib import Path
 from wasabi import msg, table
-from thinc.api import Config
-from thinc.config import VARIABLE_RE, ConfigValidationError
+from thinc.api import Config, ConfigValidationError
+from thinc.config import VARIABLE_RE
 import typer
 
 from ._util import Arg, Opt, show_validation_error, parse_config_overrides
@@ -115,4 +115,4 @@ def check_section_refs(config: Config, fields: List[str]) -> None:
             msg = f"not a valid section reference: {value}"
             errors.append({"loc": field.split("."), "msg": msg})
     if errors:
-        raise ConfigValidationError(config, errors)
+        raise ConfigValidationError(config=config, errors=errors)

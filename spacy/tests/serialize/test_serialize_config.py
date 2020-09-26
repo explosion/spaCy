@@ -1,5 +1,5 @@
 import pytest
-from thinc.config import Config, ConfigValidationError
+from thinc.api import Config, ConfigValidationError
 import spacy
 from spacy.lang.en import English
 from spacy.lang.de import German
