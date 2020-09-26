@@ -8,7 +8,7 @@ from spacy.cli._util import validate_project_commands, parse_config_overrides
 from spacy.cli._util import load_project_config, substitute_project_variables
 from spacy.cli._util import string_to_list, OVERRIDES_ENV_VAR
 from spacy.cli.debug_config import check_section_refs
-from thinc.config import ConfigValidationError, Config
+from thinc.api import ConfigValidationError, Config
 import srsly
 import os
 
