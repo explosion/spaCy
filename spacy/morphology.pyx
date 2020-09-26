@@ -29,13 +29,13 @@ cdef class Morphology:
     FEATURE_SEP = "|"
     FIELD_SEP = "="
     VALUE_SEP = ","
-    EMPTY_MORPH = "_" # not an empty string so that the PreshMap key is not 0
+    # not an empty string so that the PreshMap key is not 0
+    EMPTY_MORPH = symbols.NAMES[symbols._]
 
     def __init__(self, StringStore strings):
         self.mem = Pool()
         self.strings = strings
         self.tags = PreshMap()
-        self.strings.add(self.EMPTY_MORPH)
 
     def __reduce__(self):
         tags = set([self.get(self.strings[s]) for s in self.strings])
