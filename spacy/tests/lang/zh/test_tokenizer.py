@@ -1,6 +1,6 @@
 import pytest
 from spacy.lang.zh import Chinese, _get_pkuseg_trie_data
-from thinc.config import ConfigValidationError
+from thinc.api import ConfigValidationError
 
 
 # fmt: off
