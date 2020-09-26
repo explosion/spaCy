@@ -31,7 +31,8 @@ def make_lemmatizer(
     lookups: Optional[Lookups],
     overwrite: bool = False,
 ):
-    lookups = Lemmatizer.load_lookups(nlp.lang, mode, lookups)
+    if nlp._context != "loading":
+        lookups = Lemmatizer.load_lookups(nlp.lang, mode, lookups)
     return Lemmatizer(
         nlp.vocab, model, name, mode=mode, lookups=lookups, overwrite=overwrite
     )

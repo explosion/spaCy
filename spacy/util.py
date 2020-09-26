@@ -345,14 +345,16 @@ def load_model_from_path(
         keyed by section values in dot notation.
     RETURNS (Language): The loaded nlp object.
     """
+    from . import language
     if not model_path.exists():
         raise IOError(Errors.E052.format(path=model_path))
     if not meta:
         meta = get_model_meta(model_path)
     config_path = model_path / "config.cfg"
     config = load_config(config_path, overrides=dict_to_dot(config))
+    language._CONTEXT = "loading"
     nlp, _ = load_model_from_config(
-        config, vocab=vocab, disable=disable, exclude=exclude
+        config, vocab=vocab, disable=disable, exclude=exclude, _context="loading"
     )
     return nlp.from_disk(model_path, exclude=exclude)
 
@@ -365,6 +367,7 @@ def load_model_from_config(
     exclude: Iterable[str] = SimpleFrozenList(),
     auto_fill: bool = False,
     validate: bool = True,
+    _context: str = ""
 ) -> Tuple["Language", Config]:
     """Create an nlp object from a config. Expects the full config file including
     a section "nlp" containing the settings for the nlp object.
@@ -397,6 +400,7 @@ def load_model_from_config(
         exclude=exclude,
         auto_fill=auto_fill,
         validate=validate,
+        _context=_context
     )
     return nlp, nlp.resolved
 

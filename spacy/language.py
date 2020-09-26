@@ -31,7 +31,7 @@ from .schemas import ConfigSchema
 from .git_info import GIT_VERSION
 from . import util
 from . import about
-from .lookups import load_lookups
+from .lookups import load_lookups, Lookups
 
 
 # This is the base config will all settings (training etc.)
@@ -68,9 +68,14 @@ def create_tokenizer() -> Callable[["Language"], Tokenizer]:
     """
 
     def tokenizer_factory(nlp: "Language") -> Tokenizer:
-        prefixes = nlp.Defaults.prefixes
-        suffixes = nlp.Defaults.suffixes
-        infixes = nlp.Defaults.infixes
+        if nlp._context != "loading":
+            prefixes = nlp.Defaults.prefixes
+            suffixes = nlp.Defaults.suffixes
+            infixes = nlp.Defaults.infixes
+        else:
+            prefixes = None
+            suffixes = None
+            infixes = None
         prefix_search = util.compile_prefix_regex(prefixes).search if prefixes else None
         suffix_search = util.compile_suffix_regex(suffixes).search if suffixes else None
         infix_finditer = util.compile_infix_regex(infixes).finditer if infixes else None
@@ -86,11 +91,14 @@ def create_tokenizer() -> Callable[["Language"], Tokenizer]:
 
     return tokenizer_factory
 
-
+_CONTEXT = ""
 @registry.misc("spacy.LookupsDataLoader.v1")
 def load_lookups_data(lang, tables):
     util.logger.debug(f"Loading lookups from spacy-lookups-data: {tables}")
-    lookups = load_lookups(lang=lang, tables=tables)
+    if _CONTEXT != "loading":
+        lookups = load_lookups(lang=lang, tables=tables)
+    else:
+        lookups = Lookups()
     return lookups
 
 
@@ -111,6 +119,7 @@ class Language:
 
     factories = SimpleFrozenDict(error=Errors.E957)
     _factory_meta: Dict[str, "FactoryMeta"] = {}  # meta by factory
+    _context: str
 
     def __init__(
         self,
@@ -119,6 +128,7 @@ class Language:
         max_length: int = 10 ** 6,
         meta: Dict[str, Any] = {},
         create_tokenizer: Optional[Callable[["Language"], Callable[[str], Doc]]] = None,
+        _context: str = "",
         **kwargs,
     ) -> None:
         """Initialise a Language object.
@@ -139,6 +149,8 @@ class Language:
 
         DOCS: https://nightly.spacy.io/api/language#init
         """
+        global _CONTEXT
+        _CONTEXT = _context
         # We're only calling this to import all factories provided via entry
         # points. The factory decorator applied to these functions takes care
         # of the rest.
@@ -148,6 +160,7 @@ class Language:
         self._meta = dict(meta)
         self._path = None
         self._optimizer = None
+        self._context = _context
         # Component meta and configs are only needed on the instance
         self._pipe_meta: Dict[str, "FactoryMeta"] = {}  # meta by component
         self._pipe_configs: Dict[str, Config] = {}  # config by component
@@ -1474,6 +1487,7 @@ class Language:
         meta: Dict[str, Any] = SimpleFrozenDict(),
         auto_fill: bool = True,
         validate: bool = True,
+        _context: str = ""
     ) -> "Language":
         """Create the nlp object from a loaded config. Will set up the tokenizer
         and language data, add pipeline components etc. If no config is provided,
@@ -1540,7 +1554,12 @@ class Language:
         # inside stuff like the spacy train function. If we loaded them here,
         # then we would load them twice at runtime: once when we make from config,
         # and then again when we load from disk.
-        nlp = lang_cls(vocab=vocab, create_tokenizer=create_tokenizer, meta=meta)
+        nlp = lang_cls(
+            vocab=vocab,
+            create_tokenizer=create_tokenizer,
+            meta=meta,
+            _context=_context
+        )
         if after_creation is not None:
             nlp = after_creation(nlp)
             if not isinstance(nlp, cls):
@@ -1637,6 +1656,7 @@ class Language:
 
         DOCS: https://nightly.spacy.io/api/language#from_disk
         """
+        global _CONTEXT
 
         def deserialize_meta(path: Path) -> None:
             if path.exists():
@@ -1675,6 +1695,8 @@ class Language:
         util.from_disk(path, deserializers, exclude)
         self._path = path
         self._link_components()
+        self._context = ""
+        _CONTEXT = ""
         return self
 
     def to_bytes(self, *, exclude: Iterable[str] = SimpleFrozenList()) -> bytes:
@@ -1736,6 +1758,7 @@ class Language:
             )
         util.from_bytes(bytes_data, deserializers, exclude)
         self._link_components()
+        self._context = ""
         return self
 
 
