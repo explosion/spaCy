@@ -171,7 +171,7 @@ class DocBin:
             "tokens": tokens.tobytes("C"),
             "spaces": spaces.tobytes("C"),
             "lengths": numpy.asarray(lengths, dtype="int32").tobytes("C"),
-            "strings": list(self.strings),
+            "strings": list(sorted(self.strings)),
             "cats": self.cats,
             "flags": self.flags,
         }

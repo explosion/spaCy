@@ -62,7 +62,7 @@ def read_json_file(loc, docs_filter=None, limit=None):
     """Read Example dictionaries from a json file or directory."""
     loc = util.ensure_path(loc)
     if loc.is_dir():
-        for filename in loc.iterdir():
+        for filename in sorted(loc.iterdir()):
             yield from read_json_file(loc / filename, limit=limit)
     else:
         with loc.open("rb") as file_:

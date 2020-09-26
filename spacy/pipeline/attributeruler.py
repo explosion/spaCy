@@ -79,23 +79,32 @@ class AttributeRuler(Pipe):
 
         DOCS: https://nightly.spacy.io/api/attributeruler#call
         """
-        matches = sorted(self.matcher(doc, allow_missing=True))
-
-        for match_id, start, end in matches:
+        matches = self.matcher(doc, allow_missing=True)
+        # Sort by the attribute ID, so that later rules have precendence
+        matches = [
+            (_parse_key(self.vocab.strings[m_id]), m_id, s, e)
+            for m_id, s, e in matches
+        ]
+        matches.sort()
+        for attr_id, match_id, start, end in matches:
             span = Span(doc, start, end, label=match_id)
-            attrs = self.attrs[span.label]
-            index = self.indices[span.label]
+            attrs = self.attrs[attr_id]
+            index = self.indices[attr_id]
             try:
+                # The index can be negative, which makes it annoying to do
+                # the boundscheck. Let Span do it instead.
                 token = span[index]
             except IndexError:
+                # The original exception is just our conditional logic, so we
+                # raise from.
                 raise ValueError(
                     Errors.E1001.format(
                         patterns=self.matcher.get(span.label),
                         span=[t.text for t in span],
                         index=index,
                     )
-                ) from None
-            set_token_attrs(token, attrs)
+                ) from None 
+            set_token_attrs(span[index], attrs)
         return doc
 
     def pipe(self, stream, *, batch_size=128):
@@ -173,7 +182,10 @@ class AttributeRuler(Pipe):
 
         DOCS: https://nightly.spacy.io/api/attributeruler#add
         """
-        self.matcher.add(len(self.attrs), patterns)
+        # We need to make a string here, because otherwise the ID we pass back
+        # will be interpreted as the hash of a string, rather than an ordinal.
+        key = _make_key(len(self.attrs))
+        self.matcher.add(self.vocab.strings.add(key), patterns)
         self._attrs_unnormed.append(attrs)
         attrs = normalize_token_attrs(self.vocab, attrs)
         self.attrs.append(attrs)
@@ -197,7 +209,7 @@ class AttributeRuler(Pipe):
         all_patterns = []
         for i in range(len(self.attrs)):
             p = {}
-            p["patterns"] = self.matcher.get(i)[1]
+            p["patterns"] = self.matcher.get(_make_key(i))[1]
             p["attrs"] = self._attrs_unnormed[i]
             p["index"] = self.indices[i]
             all_patterns.append(p)
@@ -300,6 +312,12 @@ class AttributeRuler(Pipe):
         util.from_disk(path, deserialize, exclude)
 
         return self
+
+def _make_key(n_attr):
+    return f"attr_rule_{n_attr}"
+
+def _parse_key(key):
+    return int(key.rsplit("_", 1)[1])
 
 
 def _split_morph_attrs(attrs):

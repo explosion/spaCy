@@ -85,7 +85,7 @@ class Warnings:
             "attribute or operator.")
 
     # TODO: fix numbering after merging develop into master
-    W090 = ("Could not locate any binary .spacy files in path '{path}'.")
+    W090 = ("Could not locate any {format} files in path '{path}'.")
     W091 = ("Could not clean/remove the temp directory at {dir}: {msg}.")
     W092 = ("Ignoring annotations for sentence starts, as dependency heads are set.")
     W093 = ("Could not find any data to train the {name} on. Is your "
