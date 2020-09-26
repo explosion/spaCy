@@ -71,9 +71,9 @@ class ChineseTokenizer(DummyTokenizer):
         self.pkuseg_user_dict = pkuseg_user_dict
         self.pkuseg_seg = None
         self.jieba_seg = None
-        self.configure_segmenter(segmenter)
+        self.configure_segmenter(segmenter, _context=nlp._context)
 
-    def configure_segmenter(self, segmenter: str):
+    def configure_segmenter(self, segmenter: str, *, _context: str=""):
         if segmenter not in Segmenter.values():
             warn_msg = Warnings.W103.format(
                 lang="Chinese",
@@ -84,11 +84,14 @@ class ChineseTokenizer(DummyTokenizer):
             warnings.warn(warn_msg)
             self.segmenter = Segmenter.char
         self.jieba_seg = try_jieba_import(self.segmenter)
-        self.pkuseg_seg = try_pkuseg_import(
-            self.segmenter,
-            pkuseg_model=self.pkuseg_model,
-            pkuseg_user_dict=self.pkuseg_user_dict,
-        )
+        if _context == "loading":
+            self.pkuseg_seg = None
+        else:
+            self.pkuseg_seg = try_pkuseg_import(
+                self.segmenter,
+                pkuseg_model=self.pkuseg_model,
+                pkuseg_user_dict=self.pkuseg_user_dict
+            )
 
     def __call__(self, text: str) -> Doc:
         if self.segmenter == Segmenter.jieba:
