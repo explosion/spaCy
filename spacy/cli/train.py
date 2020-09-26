@@ -78,6 +78,9 @@ def train(
         config = util.load_config(
             config_path, overrides=config_overrides, interpolate=True
         )
+        # Keep a second un-interpolated config so we can preserve variables in
+        # the final nlp object we train and serialize
+        raw_config = util.load_config(config_path, overrides=config_overrides)
     if config["training"]["seed"] is not None:
         fix_random_seed(config["training"]["seed"])
     allocator = config["training"]["gpu_allocator"]
@@ -86,7 +89,7 @@ def train(
     # Use original config here before it's resolved to functions
     sourced_components = get_sourced_components(config)
     with show_validation_error(config_path):
-        nlp, config = util.load_model_from_config(config)
+        nlp, config = util.load_model_from_config(raw_config)
     util.load_vocab_data_into_model(nlp, lookups=config["training"]["lookups"])
     if config["training"]["vectors"] is not None:
         add_vectors(nlp, config["training"]["vectors"])
