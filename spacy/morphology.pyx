@@ -35,6 +35,7 @@ cdef class Morphology:
         self.mem = Pool()
         self.strings = strings
         self.tags = PreshMap()
+        self.strings.add(self.EMPTY_MORPH)
 
     def __reduce__(self):
         tags = set([self.get(self.strings[s]) for s in self.strings])
