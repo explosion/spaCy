@@ -32,6 +32,7 @@ def train_cli(
     verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
     use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU"),
     resume: bool = Opt(False, "--resume", "-R", help="Resume training"),
+    dave_path: Optional[Path] = Opt(None, "--dave", "-D", help="etc etc"),
     # fmt: on
 ):
     """
@@ -52,9 +53,12 @@ def train_cli(
     verify_cli_args(config_path, output_path)
     overrides = parse_config_overrides(ctx.args)
     import_code(code_path)
+    if prepared is None:
+        prepare(config_path, output_path / "prepared", config_overrides=overrides)
     train(
         config_path,
         output_path=output_path,
+        dave_path=dave_path,
         config_overrides=overrides,
         use_gpu=use_gpu,
         resume_training=resume,
@@ -62,8 +66,7 @@ def train_cli(
 
 
 def train(
-    config_path: Path,
-    output_path: Optional[Path] = None,
+    output_path: Path,
     config_overrides: Dict[str, Any] = {},
     use_gpu: int = -1,
     resume_training: bool = False,
@@ -74,73 +77,14 @@ def train(
     else:
         msg.info("Using CPU")
     msg.info(f"Loading config and nlp from: {config_path}")
+    # TODO: The details of this will change
+    dave_path = output_path / "dave"
+    config_path = dave_path / "config.cfg"
     with show_validation_error(config_path):
-        config = util.load_config(
-            config_path, overrides=config_overrides, interpolate=True
-        )
-        # Keep a second un-interpolated config so we can preserve variables in
-        # the final nlp object we train and serialize
-        raw_config = util.load_config(config_path, overrides=config_overrides)
-    if config["training"]["seed"] is not None:
-        fix_random_seed(config["training"]["seed"])
-    allocator = config["training"]["gpu_allocator"]
-    if use_gpu >= 0 and allocator:
-        set_gpu_allocator(allocator)
-    # Use original config here before it's resolved to functions
-    sourced_components = get_sourced_components(config)
-    with show_validation_error(config_path):
-        nlp, config = util.load_model_from_config(raw_config)
-    util.load_vocab_data_into_model(nlp, lookups=config["training"]["lookups"])
-    if config["training"]["vectors"] is not None:
-        add_vectors(nlp, config["training"]["vectors"])
-    raw_text, tag_map, morph_rules, weights_data = load_from_paths(config)
-    T_cfg = config["training"]
-    optimizer = T_cfg["optimizer"]
-    train_corpus = dot_to_object(config, T_cfg["train_corpus"])
-    dev_corpus = dot_to_object(config, T_cfg["dev_corpus"])
-    batcher = T_cfg["batcher"]
-    train_logger = T_cfg["logger"]
-    before_to_disk = create_before_to_disk_callback(T_cfg["before_to_disk"])
-    # Components that shouldn't be updated during training
-    frozen_components = T_cfg["frozen_components"]
-    # Sourced components that require resume_training
-    resume_components = [p for p in sourced_components if p not in frozen_components]
-    msg.info(f"Pipeline: {nlp.pipe_names}")
-    if resume_components:
-        with nlp.select_pipes(enable=resume_components):
-            msg.info(f"Resuming training for: {resume_components}")
-            nlp.resume_training(sgd=optimizer)
-    with nlp.select_pipes(disable=[*frozen_components, *resume_components]):
-        nlp.begin_training(lambda: train_corpus(nlp), sgd=optimizer)
-    # Verify the config after calling 'begin_training' to ensure labels are properly initialized
-    verify_config(nlp)
+        config = fill_config_etc_etc(config_path)
+        nlp = make_and_load_nlp_etc_etc(config, dave_path)
+        optimizer, train_corpus, dev_corpus, score_weights, T_cfg = resolve_more_things_etc_etc(config)
 
-    if tag_map:
-        # Replace tag map with provided mapping
-        nlp.vocab.morphology.load_tag_map(tag_map)
-    if morph_rules:
-        # Load morph rules
-        nlp.vocab.morphology.load_morph_exceptions(morph_rules)
-
-    # Load pretrained tok2vec weights - cf. CLI command 'pretrain'
-    if weights_data is not None:
-        tok2vec_component = config["pretraining"]["component"]
-        if tok2vec_component is None:
-            msg.fail(
-                f"To use pretrained tok2vec weights, [pretraining.component] "
-                f"needs to specify the component that should load them.",
-                exits=1,
-            )
-        layer = nlp.get_pipe(tok2vec_component).model
-        tok2vec_layer = config["pretraining"]["layer"]
-        if tok2vec_layer:
-            layer = layer.get_ref(tok2vec_layer)
-        layer.from_bytes(weights_data)
-        msg.info(f"Loaded pretrained weights into component '{tok2vec_component}'")
-
-    # Create iterator, which yields out info after each optimization step.
-    msg.info("Start training")
-    score_weights = T_cfg["score_weights"]
     training_step_iterator = train_while_improving(
         nlp,
         optimizer,
