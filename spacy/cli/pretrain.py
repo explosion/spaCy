@@ -69,17 +69,18 @@ def pretrain_cli(
     msg.info(f"Loading config from: {config_path}")
 
     with show_validation_error(config_path):
-        config = util.load_config(
-            config_path, overrides=config_overrides, interpolate=True
+        raw_config = util.load_config(
+            config_path, overrides=config_overrides, interpolate=False
         )
+    config = raw_config.interpolate()
     if not config.get("pretraining"):
         # TODO: What's the solution here? How do we handle optional blocks?
         msg.fail("The [pretraining] block in your config is empty", exits=1)
     if not output_dir.exists():
         output_dir.mkdir()
         msg.good(f"Created output directory: {output_dir}")
-
-    config.to_disk(output_dir / "config.cfg")
+    # Save non-interpolated config
+    raw_config.to_disk(output_dir / "config.cfg")
     msg.good("Saved config file in the output directory")
 
     pretrain(
@@ -103,14 +104,13 @@ def pretrain(
     allocator = config["training"]["gpu_allocator"]
     if use_gpu >= 0 and allocator:
         set_gpu_allocator(allocator)
-
-    nlp, config = util.load_model_from_config(config)
-    P_cfg = config["pretraining"]
-    corpus = dot_to_object(config, P_cfg["corpus"])
+    nlp = util.load_model_from_config(config)
+    C = util.resolve_training_config(nlp.config)
+    P_cfg = C["pretraining"]
+    corpus = dot_to_object(C, P_cfg["corpus"])
     batcher = P_cfg["batcher"]
-    model = create_pretraining_model(nlp, config["pretraining"])
-    optimizer = config["pretraining"]["optimizer"]
-
+    model = create_pretraining_model(nlp, C["pretraining"])
+    optimizer = C["pretraining"]["optimizer"]
     # Load in pretrained weights to resume from
     if resume_path is not None:
         _resume_model(model, resume_path, epoch_resume)

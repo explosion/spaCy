@@ -51,9 +51,10 @@ def debug_config(
     msg.divider("Config validation")
     with show_validation_error(config_path):
         config = util.load_config(config_path, overrides=overrides)
-        nlp, resolved = util.load_model_from_config(config)
+        nlp = util.load_model_from_config(config)
         # Use the resolved config here in case user has one function returning
         # a dict of corpora etc.
+        resolved = util.resolve_training_config(nlp.config)
         check_section_refs(resolved, ["training.dev_corpus", "training.train_corpus"])
     msg.good("Config is valid")
     if show_vars:

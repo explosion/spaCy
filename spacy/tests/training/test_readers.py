@@ -3,6 +3,7 @@ import pytest
 from thinc.api import Config
 from spacy import Language
 from spacy.util import load_model_from_config, registry, dot_to_object
+from spacy.util import resolve_training_config
 from spacy.training import Example
 
 
@@ -37,8 +38,8 @@ def test_readers():
         return {"train": reader, "dev": reader, "extra": reader, "something": reader}
 
     config = Config().from_str(config_string)
-    nlp, resolved = load_model_from_config(config, auto_fill=True)
-
+    nlp = load_model_from_config(config, auto_fill=True)
+    resolved = resolve_training_config(nlp.config)
     train_corpus = dot_to_object(resolved, resolved["training"]["train_corpus"])
     assert isinstance(train_corpus, Callable)
     optimizer = resolved["training"]["optimizer"]
@@ -87,8 +88,8 @@ def test_cat_readers(reader, additional_config):
     config = Config().from_str(nlp_config_string)
     config["corpora"]["@readers"] = reader
     config["corpora"].update(additional_config)
-    nlp, resolved = load_model_from_config(config, auto_fill=True)
-
+    nlp = load_model_from_config(config, auto_fill=True)
+    resolved = resolve_training_config(nlp.config)
     train_corpus = dot_to_object(resolved, resolved["training"]["train_corpus"])
     optimizer = resolved["training"]["optimizer"]
     # simulate a training loop

@@ -86,7 +86,7 @@ class registry(thinc.registry):
     # spacy_factories entry point. This registry only exists so we can easily
     # load them via the entry points. The "true" factories are added via the
     # Language.factory decorator (in the spaCy code base and user code) and those
-    # are the factories used to initialize components via registry.make_from_config.
+    # are the factories used to initialize components via registry.resolve.
     _entry_point_factories = catalogue.create("spacy", "factories", entry_points=True)
     factories = catalogue.create("spacy", "internal_factories")
     # This is mostly used to get a list of all installed models in the current
@@ -351,9 +351,7 @@ def load_model_from_path(
         meta = get_model_meta(model_path)
     config_path = model_path / "config.cfg"
     config = load_config(config_path, overrides=dict_to_dot(config))
-    nlp, _ = load_model_from_config(
-        config, vocab=vocab, disable=disable, exclude=exclude
-    )
+    nlp = load_model_from_config(config, vocab=vocab, disable=disable, exclude=exclude)
     return nlp.from_disk(model_path, exclude=exclude)
 
 
@@ -365,7 +363,7 @@ def load_model_from_config(
     exclude: Iterable[str] = SimpleFrozenList(),
     auto_fill: bool = False,
     validate: bool = True,
-) -> Tuple["Language", Config]:
+) -> "Language":
     """Create an nlp object from a config. Expects the full config file including
     a section "nlp" containing the settings for the nlp object.
 
@@ -398,7 +396,31 @@ def load_model_from_config(
         auto_fill=auto_fill,
         validate=validate,
     )
-    return nlp, nlp.resolved
+    return nlp
+
+
+def resolve_training_config(
+    config: Config,
+    exclude: Iterable[str] = ("nlp", "components"),
+    validate: bool = True,
+) -> Dict[str, Any]:
+    """Resolve the config sections relevant for trainig and create all objects.
+    Mostly used in the CLI to separate training config (not resolved by default
+    because not runtime-relevant – an nlp object should load fine even if it's
+    [training] block refers to functions that are not available etc.).
+
+    config (Config): The config to resolve.
+    exclude (Iterable[str]): The config blocks to exclude. Those blocks won't
+        be available in the final resolved config.
+    validate (bool): Whether to validate the config.
+    RETURNS (Dict[str, Any]): The resolved config.
+    """
+    config = config.copy()
+    excluded = {}
+    for key in exclude:
+        if key in config:
+            excluded.pop(key, None)
+    return registry.resolve(config, validate=validate)
 
 
 def load_model_from_init_py(

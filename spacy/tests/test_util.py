@@ -82,10 +82,10 @@ def test_util_dot_section():
     no_output_layer = false
     """
     nlp_config = Config().from_str(cfg_string)
-    en_nlp, en_config = util.load_model_from_config(nlp_config, auto_fill=True)
+    en_nlp = util.load_model_from_config(nlp_config, auto_fill=True)
     default_config = Config().from_disk(DEFAULT_CONFIG_PATH)
     default_config["nlp"]["lang"] = "nl"
-    nl_nlp, nl_config = util.load_model_from_config(default_config, auto_fill=True)
+    nl_nlp = util.load_model_from_config(default_config, auto_fill=True)
     # Test that creation went OK
     assert isinstance(en_nlp, English)
     assert isinstance(nl_nlp, Dutch)
@@ -94,14 +94,15 @@ def test_util_dot_section():
     # not exclusive_classes
     assert en_nlp.get_pipe("textcat").model.attrs["multi_label"] is False
     # Test that default values got overwritten
-    assert en_config["nlp"]["pipeline"] == ["textcat"]
-    assert nl_config["nlp"]["pipeline"] == []  # default value []
+    assert en_nlp.config["nlp"]["pipeline"] == ["textcat"]
+    assert nl_nlp.config["nlp"]["pipeline"] == []  # default value []
     # Test proper functioning of 'dot_to_object'
     with pytest.raises(KeyError):
-        dot_to_object(en_config, "nlp.pipeline.tagger")
+        dot_to_object(en_nlp.config, "nlp.pipeline.tagger")
     with pytest.raises(KeyError):
-        dot_to_object(en_config, "nlp.unknownattribute")
-    assert isinstance(dot_to_object(nl_config, "training.optimizer"), Optimizer)
+        dot_to_object(en_nlp.config, "nlp.unknownattribute")
+    resolved = util.resolve_training_config(nl_nlp.config)
+    assert isinstance(dot_to_object(resolved, "training.optimizer"), Optimizer)
 
 
 def test_simple_frozen_list():

@@ -93,18 +93,19 @@ def debug_data(
         msg.fail("Config file not found", config_path, exists=1)
     with show_validation_error(config_path):
         cfg = util.load_config(config_path, overrides=config_overrides)
-        nlp, config = util.load_model_from_config(cfg)
+        nlp = util.load_model_from_config(cfg)
+        C = util.resolve_training_config(nlp.config)
     # Use original config here, not resolved version
     sourced_components = get_sourced_components(cfg)
-    frozen_components = config["training"]["frozen_components"]
+    frozen_components = C["training"]["frozen_components"]
     resume_components = [p for p in sourced_components if p not in frozen_components]
     pipeline = nlp.pipe_names
     factory_names = [nlp.get_pipe_meta(pipe).factory for pipe in nlp.pipe_names]
-    tag_map_path = util.ensure_path(config["training"]["tag_map"])
+    tag_map_path = util.ensure_path(C["training"]["tag_map"])
     tag_map = {}
     if tag_map_path is not None:
         tag_map = srsly.read_json(tag_map_path)
-    morph_rules_path = util.ensure_path(config["training"]["morph_rules"])
+    morph_rules_path = util.ensure_path(C["training"]["morph_rules"])
     morph_rules = {}
     if morph_rules_path is not None:
         morph_rules = srsly.read_json(morph_rules_path)
@@ -144,10 +145,10 @@ def debug_data(
 
     train_texts = gold_train_data["texts"]
     dev_texts = gold_dev_data["texts"]
-    frozen_components = config["training"]["frozen_components"]
+    frozen_components = C["training"]["frozen_components"]
 
     msg.divider("Training stats")
-    msg.text(f"Language: {config['nlp']['lang']}")
+    msg.text(f"Language: {C['nlp']['lang']}")
     msg.text(f"Training pipeline: {', '.join(pipeline)}")
     if resume_components:
         msg.text(f"Components from other pipelines: {', '.join(resume_components)}")

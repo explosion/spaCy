@@ -166,11 +166,10 @@ class Language:
         self._components = []
         self._disabled = set()
         self.max_length = max_length
-        self.resolved = {}
         # Create the default tokenizer from the default config
         if not create_tokenizer:
             tokenizer_cfg = {"tokenizer": self._config["nlp"]["tokenizer"]}
-            create_tokenizer = registry.make_from_config(tokenizer_cfg)["tokenizer"]
+            create_tokenizer = registry.resolve(tokenizer_cfg)["tokenizer"]
         self.tokenizer = create_tokenizer(self)
 
     def __init_subclass__(cls, **kwargs):
@@ -467,7 +466,7 @@ class Language:
             if "nlp" not in arg_names or "name" not in arg_names:
                 raise ValueError(Errors.E964.format(name=name))
             # Officially register the factory so we can later call
-            # registry.make_from_config and refer to it in the config as
+            # registry.resolve and refer to it in the config as
             # @factories = "spacy.Language.xyz". We use the class name here so
             # different classes can have different factories.
             registry.factories.register(internal_name, func=factory_func)
@@ -650,8 +649,9 @@ class Language:
         cfg = {factory_name: config}
         # We're calling the internal _fill here to avoid constructing the
         # registered functions twice
-        resolved, filled = registry.resolve(cfg, validate=validate)
-        filled = Config(filled[factory_name])
+        resolved = registry.resolve(cfg, validate=validate)
+        filled = registry.fill({"cfg": cfg[factory_name]}, validate=validate)["cfg"]
+        filled = Config(filled)
         filled["factory"] = factory_name
         filled.pop("@factories", None)
         # Remove the extra values we added because we don't want to keep passing
@@ -1518,15 +1518,14 @@ class Language:
         config = util.copy_config(config)
         orig_pipeline = config.pop("components", {})
         config["components"] = {}
-        resolved, filled = registry.resolve(
-            config, validate=validate, schema=ConfigSchema
-        )
+        filled = registry.fill(config, validate=validate, schema=ConfigSchema)
         filled["components"] = orig_pipeline
         config["components"] = orig_pipeline
-        create_tokenizer = resolved["nlp"]["tokenizer"]
-        before_creation = resolved["nlp"]["before_creation"]
-        after_creation = resolved["nlp"]["after_creation"]
-        after_pipeline_creation = resolved["nlp"]["after_pipeline_creation"]
+        resolved_nlp = registry.resolve(filled["nlp"], validate=validate)
+        create_tokenizer = resolved_nlp["tokenizer"]
+        before_creation = resolved_nlp["before_creation"]
+        after_creation = resolved_nlp["after_creation"]
+        after_pipeline_creation = resolved_nlp["after_pipeline_creation"]
         lang_cls = cls
         if before_creation is not None:
             lang_cls = before_creation(cls)
@@ -1587,7 +1586,6 @@ class Language:
         disabled_pipes = [*config["nlp"]["disabled"], *disable]
         nlp._disabled = set(p for p in disabled_pipes if p not in exclude)
         nlp.config = filled if auto_fill else config
-        nlp.resolved = resolved
         if after_pipeline_creation is not None:
             nlp = after_pipeline_creation(nlp)
             if not isinstance(nlp, cls):

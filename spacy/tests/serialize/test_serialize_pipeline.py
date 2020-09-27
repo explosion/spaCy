@@ -23,7 +23,7 @@ def parser(en_vocab):
         "update_with_oracle_cut_size": 100,
     }
     cfg = {"model": DEFAULT_PARSER_MODEL}
-    model = registry.make_from_config(cfg, validate=True)["model"]
+    model = registry.resolve(cfg, validate=True)["model"]
     parser = DependencyParser(en_vocab, model, **config)
     parser.add_label("nsubj")
     return parser
@@ -37,7 +37,7 @@ def blank_parser(en_vocab):
         "update_with_oracle_cut_size": 100,
     }
     cfg = {"model": DEFAULT_PARSER_MODEL}
-    model = registry.make_from_config(cfg, validate=True)["model"]
+    model = registry.resolve(cfg, validate=True)["model"]
     parser = DependencyParser(en_vocab, model, **config)
     return parser
 
@@ -45,7 +45,7 @@ def blank_parser(en_vocab):
 @pytest.fixture
 def taggers(en_vocab):
     cfg = {"model": DEFAULT_TAGGER_MODEL}
-    model = registry.make_from_config(cfg, validate=True)["model"]
+    model = registry.resolve(cfg, validate=True)["model"]
     tagger1 = Tagger(en_vocab, model)
     tagger2 = Tagger(en_vocab, model)
     return tagger1, tagger2
@@ -59,7 +59,7 @@ def test_serialize_parser_roundtrip_bytes(en_vocab, Parser):
         "update_with_oracle_cut_size": 100,
     }
     cfg = {"model": DEFAULT_PARSER_MODEL}
-    model = registry.make_from_config(cfg, validate=True)["model"]
+    model = registry.resolve(cfg, validate=True)["model"]
     parser = Parser(en_vocab, model, **config)
     new_parser = Parser(en_vocab, model, **config)
     new_parser = new_parser.from_bytes(parser.to_bytes(exclude=["vocab"]))
@@ -77,7 +77,7 @@ def test_serialize_parser_roundtrip_disk(en_vocab, Parser):
         "update_with_oracle_cut_size": 100,
     }
     cfg = {"model": DEFAULT_PARSER_MODEL}
-    model = registry.make_from_config(cfg, validate=True)["model"]
+    model = registry.resolve(cfg, validate=True)["model"]
     parser = Parser(en_vocab, model, **config)
     with make_tempdir() as d:
         file_path = d / "parser"
@@ -111,7 +111,7 @@ def test_serialize_tagger_roundtrip_bytes(en_vocab, taggers):
     tagger1 = tagger1.from_bytes(tagger1_b)
     assert tagger1.to_bytes() == tagger1_b
     cfg = {"model": DEFAULT_TAGGER_MODEL}
-    model = registry.make_from_config(cfg, validate=True)["model"]
+    model = registry.resolve(cfg, validate=True)["model"]
     new_tagger1 = Tagger(en_vocab, model).from_bytes(tagger1_b)
     new_tagger1_b = new_tagger1.to_bytes()
     assert len(new_tagger1_b) == len(tagger1_b)
@@ -126,7 +126,7 @@ def test_serialize_tagger_roundtrip_disk(en_vocab, taggers):
         tagger1.to_disk(file_path1)
         tagger2.to_disk(file_path2)
         cfg = {"model": DEFAULT_TAGGER_MODEL}
-        model = registry.make_from_config(cfg, validate=True)["model"]
+        model = registry.resolve(cfg, validate=True)["model"]
         tagger1_d = Tagger(en_vocab, model).from_disk(file_path1)
         tagger2_d = Tagger(en_vocab, model).from_disk(file_path2)
         assert tagger1_d.to_bytes() == tagger2_d.to_bytes()
@@ -135,7 +135,7 @@ def test_serialize_tagger_roundtrip_disk(en_vocab, taggers):
 def test_serialize_textcat_empty(en_vocab):
     # See issue #1105
     cfg = {"model": DEFAULT_TEXTCAT_MODEL}
-    model = registry.make_from_config(cfg, validate=True)["model"]
+    model = registry.resolve(cfg, validate=True)["model"]
     textcat = TextCategorizer(
         en_vocab,
         model,
@@ -149,7 +149,7 @@ def test_serialize_textcat_empty(en_vocab):
 @pytest.mark.parametrize("Parser", test_parsers)
 def test_serialize_pipe_exclude(en_vocab, Parser):
     cfg = {"model": DEFAULT_PARSER_MODEL}
-    model = registry.make_from_config(cfg, validate=True)["model"]
+    model = registry.resolve(cfg, validate=True)["model"]
     config = {
         "learn_tokens": False,
         "min_action_freq": 0,
@@ -176,7 +176,7 @@ def test_serialize_pipe_exclude(en_vocab, Parser):
 
 def test_serialize_sentencerecognizer(en_vocab):
     cfg = {"model": DEFAULT_SENTER_MODEL}
-    model = registry.make_from_config(cfg, validate=True)["model"]
+    model = registry.resolve(cfg, validate=True)["model"]
     sr = SentenceRecognizer(en_vocab, model)
     sr_b = sr.to_bytes()
     sr_d = SentenceRecognizer(en_vocab, model).from_bytes(sr_b)
