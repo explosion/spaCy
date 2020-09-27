@@ -264,9 +264,7 @@ def test_issue3830_no_subtok():
         "min_action_freq": 30,
         "update_with_oracle_cut_size": 100,
     }
-    model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)[
-        "model"
-    ]
+    model = registry.resolve({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
     parser = DependencyParser(Vocab(), model, **config)
     parser.add_label("nsubj")
     assert "subtok" not in parser.labels
@@ -281,9 +279,7 @@ def test_issue3830_with_subtok():
         "min_action_freq": 30,
         "update_with_oracle_cut_size": 100,
     }
-    model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)[
-        "model"
-    ]
+    model = registry.resolve({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
     parser = DependencyParser(Vocab(), model, **config)
     parser.add_label("nsubj")
     assert "subtok" not in parser.labels

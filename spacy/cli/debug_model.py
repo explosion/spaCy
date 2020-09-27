@@ -1,4 +1,3 @@
-import warnings
 from typing import Dict, Any, Optional, Iterable
 from pathlib import Path
 
@@ -57,14 +56,17 @@ def debug_model_cli(
     }
     config_overrides = parse_config_overrides(ctx.args)
     with show_validation_error(config_path):
-        config = util.load_config(
-            config_path, overrides=config_overrides, interpolate=True
+        raw_config = util.load_config(
+            config_path, overrides=config_overrides, interpolate=False
         )
-        allocator = config["training"]["gpu_allocator"]
-        if use_gpu >= 0 and allocator:
-            set_gpu_allocator(allocator)
-        nlp, config = util.load_model_from_config(config)
-    seed = config["training"]["seed"]
+    config = raw_config.iterpolate()
+    allocator = config["training"]["gpu_allocator"]
+    if use_gpu >= 0 and allocator:
+        set_gpu_allocator(allocator)
+    with show_validation_error(config_path):
+        nlp = util.load_model_from_config(raw_config)
+        C = util.resolve_training_config(nlp.config)
+    seed = C["training"]["seed"]
     if seed is not None:
         msg.info(f"Fixing random seed: {seed}")
         fix_random_seed(seed)
@@ -75,7 +77,7 @@ def debug_model_cli(
             exits=1,
         )
     model = pipe.model
-    debug_model(config, nlp, model, print_settings=print_settings)
+    debug_model(C, nlp, model, print_settings=print_settings)
 
 
 def debug_model(
@@ -108,7 +110,7 @@ def debug_model(
                 _set_output_dim(nO=7, model=model)
                 nlp.begin_training(lambda: [Example.from_dict(x, {}) for x in X])
                 msg.info("Initialized the model with dummy data.")
-            except:
+            except Exception:
                 msg.fail(
                     "Could not initialize the model: you'll have to provide a valid train_corpus argument in the config file.",
                     exits=1,

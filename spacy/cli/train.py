@@ -75,12 +75,12 @@ def train(
         msg.info("Using CPU")
     msg.info(f"Loading config and nlp from: {config_path}")
     with show_validation_error(config_path):
-        config = util.load_config(
-            config_path, overrides=config_overrides, interpolate=True
-        )
-        # Keep a second un-interpolated config so we can preserve variables in
+        # Keep an un-interpolated config so we can preserve variables in
         # the final nlp object we train and serialize
-        raw_config = util.load_config(config_path, overrides=config_overrides)
+        raw_config = util.load_config(
+            config_path, overrides=config_overrides, interpolate=False
+        )
+    config = raw_config.interpolate()
     if config["training"]["seed"] is not None:
         fix_random_seed(config["training"]["seed"])
     allocator = config["training"]["gpu_allocator"]
@@ -89,15 +89,17 @@ def train(
     # Use original config here before it's resolved to functions
     sourced_components = get_sourced_components(config)
     with show_validation_error(config_path):
-        nlp, config = util.load_model_from_config(raw_config)
-    util.load_vocab_data_into_model(nlp, lookups=config["training"]["lookups"])
-    if config["training"]["vectors"] is not None:
-        add_vectors(nlp, config["training"]["vectors"])
-    raw_text, tag_map, morph_rules, weights_data = load_from_paths(config)
-    T_cfg = config["training"]
+        nlp = util.load_model_from_config(raw_config)
+        # Resolve all training-relevant sections using the filled nlp config
+        C = util.resolve_training_config(nlp.config)
+    util.load_vocab_data_into_model(nlp, lookups=C["training"]["lookups"])
+    if C["training"]["vectors"] is not None:
+        add_vectors(nlp, C["training"]["vectors"])
+    raw_text, tag_map, morph_rules, weights_data = load_from_paths(C)
+    T_cfg = C["training"]
     optimizer = T_cfg["optimizer"]
-    train_corpus = dot_to_object(config, T_cfg["train_corpus"])
-    dev_corpus = dot_to_object(config, T_cfg["dev_corpus"])
+    train_corpus = dot_to_object(C, T_cfg["train_corpus"])
+    dev_corpus = dot_to_object(C, T_cfg["dev_corpus"])
     batcher = T_cfg["batcher"]
     train_logger = T_cfg["logger"]
     before_to_disk = create_before_to_disk_callback(T_cfg["before_to_disk"])
@@ -124,7 +126,7 @@ def train(
 
     # Load pretrained tok2vec weights - cf. CLI command 'pretrain'
     if weights_data is not None:
-        tok2vec_component = config["pretraining"]["component"]
+        tok2vec_component = C["pretraining"]["component"]
         if tok2vec_component is None:
             msg.fail(
                 f"To use pretrained tok2vec weights, [pretraining.component] "
@@ -132,7 +134,7 @@ def train(
                 exits=1,
             )
         layer = nlp.get_pipe(tok2vec_component).model
-        tok2vec_layer = config["pretraining"]["layer"]
+        tok2vec_layer = C["pretraining"]["layer"]
         if tok2vec_layer:
             layer = layer.get_ref(tok2vec_layer)
         layer.from_bytes(weights_data)

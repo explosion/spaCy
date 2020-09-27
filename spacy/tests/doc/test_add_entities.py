@@ -24,7 +24,7 @@ def test_doc_add_entities_set_ents_iob(en_vocab):
         "update_with_oracle_cut_size": 100,
     }
     cfg = {"model": DEFAULT_NER_MODEL}
-    model = registry.make_from_config(cfg, validate=True)["model"]
+    model = registry.resolve(cfg, validate=True)["model"]
     ner = EntityRecognizer(en_vocab, model, **config)
     ner.begin_training(lambda: [_ner_example(ner)])
     ner(doc)
@@ -46,7 +46,7 @@ def test_ents_reset(en_vocab):
         "update_with_oracle_cut_size": 100,
     }
     cfg = {"model": DEFAULT_NER_MODEL}
-    model = registry.make_from_config(cfg, validate=True)["model"]
+    model = registry.resolve(cfg, validate=True)["model"]
     ner = EntityRecognizer(en_vocab, model, **config)
     ner.begin_training(lambda: [_ner_example(ner)])
     ner(doc)
