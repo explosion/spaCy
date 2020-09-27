@@ -8,7 +8,9 @@ from thinc.api import Config
 
 from ...errors import Warnings, Errors
 from ...language import Language
+from ...scorer import Scorer
 from ...tokens import Doc
+from ...training import validate_examples
 from ...util import DummyTokenizer, registry
 from .lex_attrs import LEX_ATTRS
 from .stop_words import STOP_WORDS
@@ -135,6 +137,10 @@ class ChineseTokenizer(DummyTokenizer):
         else:
             warn_msg = Warnings.W104.format(target="pkuseg", current=self.segmenter)
             warnings.warn(warn_msg)
+
+    def score(self, examples):
+        validate_examples(examples, "ChineseTokenizer.score")
+        return Scorer.score_tokenization(examples)
 
     def _get_config(self) -> Dict[str, Any]:
         return {
