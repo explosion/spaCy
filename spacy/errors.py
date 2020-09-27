@@ -670,10 +670,15 @@ class Errors:
             "'{token_attrs}'.")
     E999 = ("Unable to merge the `Doc` objects because they do not all share "
             "the same `Vocab`.")
-    E1000 = ("No pkuseg model available. Provide a pkuseg model when "
-             "initializing the pipeline:\n"
-             'cfg = {"tokenizer": {"segmenter": "pkuseg", "pkuseg_model": name_or_path}}\n'
-             'nlp = Chinese(config=cfg)')
+    E1000 = ("The Chinese word segmenter is pkuseg but no pkuseg model was "
+             "specified. Provide the name of a pretrained model or the path to "
+             "a model when initializing the pipeline:\n"
+             'config = {\n'
+             '   "@tokenizers": "spacy.zh.ChineseTokenizer",\n'
+             '   "segmenter": "pkuseg",\n'
+             '   "pkuseg_model": "default", # or "/path/to/pkuseg_model" \n'
+             '}\n'
+             'nlp = Chinese.from_config({"nlp": {"tokenizer": config}})')
     E1001 = ("Target token outside of matched span for match with tokens "
              "'{span}' and offset '{index}' matched by patterns '{patterns}'.")
     E1002 = ("Span index out of range.")
