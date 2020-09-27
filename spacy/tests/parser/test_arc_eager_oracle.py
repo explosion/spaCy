@@ -127,7 +127,7 @@ def test_get_oracle_actions():
         "update_with_oracle_cut_size": 100,
     }
     cfg = {"model": DEFAULT_PARSER_MODEL}
-    model = registry.make_from_config(cfg, validate=True)["model"]
+    model = registry.resolve(cfg, validate=True)["model"]
     parser = DependencyParser(doc.vocab, model, **config)
     parser.moves.add_action(0, "")
     parser.moves.add_action(1, "")

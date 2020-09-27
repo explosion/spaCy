@@ -23,7 +23,7 @@ def parser(vocab):
         "update_with_oracle_cut_size": 100,
     }
     cfg = {"model": DEFAULT_PARSER_MODEL}
-    model = registry.make_from_config(cfg, validate=True)["model"]
+    model = registry.resolve(cfg, validate=True)["model"]
     parser = DependencyParser(vocab, model, **config)
     return parser
 
@@ -82,7 +82,7 @@ def test_add_label_deserializes_correctly():
         "update_with_oracle_cut_size": 100,
     }
     cfg = {"model": DEFAULT_NER_MODEL}
-    model = registry.make_from_config(cfg, validate=True)["model"]
+    model = registry.resolve(cfg, validate=True)["model"]
     ner1 = EntityRecognizer(Vocab(), model, **config)
     ner1.add_label("C")
     ner1.add_label("B")
@@ -111,7 +111,7 @@ def test_add_label_get_label(pipe_cls, n_moves, model_config):
     splitting the move names.
     """
     labels = ["A", "B", "C"]
-    model = registry.make_from_config({"model": model_config}, validate=True)["model"]
+    model = registry.resolve({"model": model_config}, validate=True)["model"]
     config = {
         "learn_tokens": False,
         "min_action_freq": 30,

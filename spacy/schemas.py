@@ -4,6 +4,7 @@ from enum import Enum
 from pydantic import BaseModel, Field, ValidationError, validator
 from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool
 from pydantic import root_validator
+from thinc.config import Promise
 from collections import defaultdict
 from thinc.api import Optimizer
 
@@ -16,10 +17,12 @@ if TYPE_CHECKING:
     from .training import Example  # noqa: F401
 
 
+# fmt: off
 ItemT = TypeVar("ItemT")
-Batcher = Callable[[Iterable[ItemT]], Iterable[List[ItemT]]]
-Reader = Callable[["Language", str], Iterable["Example"]]
-Logger = Callable[["Language"], Tuple[Callable[[Dict[str, Any]], None], Callable]]
+Batcher = Union[Callable[[Iterable[ItemT]], Iterable[List[ItemT]]], Promise]
+Reader = Union[Callable[["Language", str], Iterable["Example"]], Promise]
+Logger = Union[Callable[["Language"], Tuple[Callable[[Dict[str, Any]], None], Callable]], Promise]
+# fmt: on
 
 
 def validate(schema: Type[BaseModel], obj: Dict[str, Any]) -> List[str]:
@@ -286,6 +289,16 @@ class ConfigSchema(BaseModel):
                 err = "Need nlp.vectors if pretraining.objective.type is vectors"
                 raise ValueError(err)
         return values
+
+    class Config:
+        extra = "allow"
+        arbitrary_types_allowed = True
+
+
+class TrainingSchema(BaseModel):
+    training: ConfigSchemaTraining
+    pretraining: Union[ConfigSchemaPretrain, ConfigSchemaPretrainEmpty] = {}
+    corpora: Dict[str, Reader]
 
     class Config:
         extra = "allow"

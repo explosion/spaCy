@@ -195,7 +195,7 @@ def test_issue3345():
         "update_with_oracle_cut_size": 100,
     }
     cfg = {"model": DEFAULT_NER_MODEL}
-    model = registry.make_from_config(cfg, validate=True)["model"]
+    model = registry.resolve(cfg, validate=True)["model"]
     ner = EntityRecognizer(doc.vocab, model, **config)
     # Add the OUT action. I wouldn't have thought this would be necessary...
     ner.moves.add_action(5, "")

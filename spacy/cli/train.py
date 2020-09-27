@@ -58,7 +58,7 @@ def train_cli(
     else:
         msg.info("Using CPU")
     config = util.load_config(
-        config_path, overrides=config_overrides, interpolate=True
+        config_path, overrides=config_overrides, interpolate=False
     )
     if output_path is None:
         nlp = init_pipeline(config)
@@ -75,24 +75,32 @@ def train_cli(
 
 def train(nlp: Language, output_path: Optional[Path]=None) -> None:
     # Create iterator, which yields out info after each optimization step.
-    config = nlp.config
-    T_cfg = config["training"]
-    score_weights = T_cfg["score_weights"]
-    optimizer = T_cfg["optimizer"]
-    train_corpus = dot_to_object(config, T_cfg["train_corpus"])
-    dev_corpus = dot_to_object(config, T_cfg["dev_corpus"])
-    batcher = T_cfg["batcher"]
+    config = nlp.config.interpolate()
+    T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
+    optimizer T["optimizer"]
+    score_weights = T["score_weights"]
+    # TODO: This might not be called corpora
+    corpora = registry.resolve(config["corpora"], schema=ConfigSchemaCorpora)
+    train_corpus = dot_to_object({"corpora": corpora}, T["train_corpus"])
+    dev_corpus = dot_to_object({"corpora": corpora}, T["dev_corpus"])
+    batcher = T["batcher"]
+    train_logger = T["logger"]
+    before_to_disk = create_before_to_disk_callback(T["before_to_disk"])
+    # Components that shouldn't be updated during training
+    frozen_components = T["frozen_components"]
  
+    # Create iterator, which yields out info after each optimization step.
+    msg.info("Start training")
     training_step_iterator = train_while_improving(
         nlp,
         optimizer,
-        create_train_batches(train_corpus(nlp), batcher, T_cfg["max_epochs"]),
+        create_train_batches(train_corpus(nlp), batcher, T["max_epochs"]),
         create_evaluation_callback(nlp, dev_corpus, score_weights),
-        dropout=T_cfg["dropout"],
-        accumulate_gradient=T_cfg["accumulate_gradient"],
-        patience=T_cfg["patience"],
-        max_steps=T_cfg["max_steps"],
-        eval_frequency=T_cfg["eval_frequency"],
+        dropout=T["dropout"],
+        accumulate_gradient=T["accumulate_gradient"],
+        patience=T["patience"],
+        max_steps=T["max_steps"],
+        eval_frequency=T["eval_frequency"],
         raw_text=None,
         exclude=frozen_components,
     )
@@ -101,7 +109,7 @@ def train(nlp: Language, output_path: Optional[Path]=None) -> None:
         print_row, finalize_logger = train_logger(nlp)
 
     try:
-        progress = tqdm.tqdm(total=T_cfg["eval_frequency"], leave=False)
+        progress = tqdm.tqdm(total=T["eval_frequency"], leave=False)
         progress.set_description(f"Epoch 1")
         for batch, info, is_best_checkpoint in training_step_iterator:
             progress.update(1)
@@ -110,11 +118,11 @@ def train(nlp: Language, output_path: Optional[Path]=None) -> None:
                 print_row(info)
                 if is_best_checkpoint and output_path is not None:
                     with nlp.select_pipes(disable=frozen_components):
-                        update_meta(T_cfg, nlp, info)
+                        update_meta(T, nlp, info)
                     with nlp.use_params(optimizer.averages):
                         nlp = before_to_disk(nlp)
                         nlp.to_disk(output_path / "model-best")
-                progress = tqdm.tqdm(total=T_cfg["eval_frequency"], leave=False)
+                progress = tqdm.tqdm(total=T["eval_frequency"], leave=False)
                 progress.set_description(f"Epoch {info['epoch']}")
     except Exception as e:
         finalize_logger()

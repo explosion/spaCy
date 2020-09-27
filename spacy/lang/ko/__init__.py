@@ -7,7 +7,9 @@ from .lex_attrs import LEX_ATTRS
 from ...language import Language
 from ...tokens import Doc
 from ...compat import copy_reg
+from ...scorer import Scorer
 from ...symbols import POS
+from ...training import validate_examples
 from ...util import DummyTokenizer, registry
 
 
@@ -61,6 +63,10 @@ class KoreanTokenizer(DummyTokenizer):
             if lemma == "*":
                 lemma = surface
             yield {"surface": surface, "lemma": lemma, "tag": tag}
+
+    def score(self, examples):
+        validate_examples(examples, "KoreanTokenizer.score")
+        return Scorer.score_tokenization(examples)
 
 
 class KoreanDefaults(Language.Defaults):

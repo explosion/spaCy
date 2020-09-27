@@ -7,6 +7,7 @@ from spacy import util
 from spacy import prefer_gpu, require_gpu
 from spacy.ml._precomputable_affine import PrecomputableAffine
 from spacy.ml._precomputable_affine import _backprop_precomputable_affine_padding
+from thinc.api import Optimizer
 
 
 @pytest.fixture
@@ -157,3 +158,16 @@ def test_dot_to_dict(dot_notation, expected):
     result = util.dot_to_dict(dot_notation)
     assert result == expected
     assert util.dict_to_dot(result) == dot_notation
+
+
+def test_resolve_training_config():
+    config = {
+        "nlp": {"lang": "en", "disabled": []},
+        "training": {"dropout": 0.1, "optimizer": {"@optimizers": "Adam.v1"}},
+        "corpora": {},
+    }
+    resolved = util.resolve_training_config(config)
+    assert resolved["training"]["dropout"] == 0.1
+    assert isinstance(resolved["training"]["optimizer"], Optimizer)
+    assert resolved["corpora"] == {}
+    assert "nlp" not in resolved

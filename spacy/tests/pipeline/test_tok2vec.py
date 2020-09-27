@@ -139,7 +139,7 @@ TRAIN_DATA = [
 
 def test_tok2vec_listener():
     orig_config = Config().from_str(cfg_string)
-    nlp, config = util.load_model_from_config(orig_config, auto_fill=True, validate=True)
+    nlp = util.load_model_from_config(orig_config, auto_fill=True, validate=True)
     assert nlp.pipe_names == ["tok2vec", "tagger"]
     tagger = nlp.get_pipe("tagger")
     tok2vec = nlp.get_pipe("tok2vec")
@@ -173,7 +173,7 @@ def test_tok2vec_listener():
 
 def test_tok2vec_listener_callback():
     orig_config = Config().from_str(cfg_string)
-    nlp, config = util.load_model_from_config(orig_config, auto_fill=True, validate=True)
+    nlp = util.load_model_from_config(orig_config, auto_fill=True, validate=True)
     assert nlp.pipe_names == ["tok2vec", "tagger"]
     tagger = nlp.get_pipe("tagger")
     tok2vec = nlp.get_pipe("tok2vec")
