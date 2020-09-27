@@ -12,7 +12,7 @@ def create_null_augmenter():
 
 
 @registry.augmenters("spacy.orth_variants.v1")
-def create_orth_variants_augmenter(level: float = 0.0) -> Callable:
+def create_orth_variants_augmenter(level: float, lower: float) -> Callable:
     """Create a data augmentation callback that uses orth-variant replacement.
     The callback can be added to a corpus or other data iterator during training.
     """
