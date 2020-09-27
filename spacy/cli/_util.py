@@ -258,8 +258,10 @@ def show_validation_error(
             )
             print(f"{COMMAND} init fill-config {config_path} --base {config_path}\n")
         sys.exit(1)
-    except InterpolationError as e:
-        msg.fail("Config validation error", e, exits=1)
+    except Exception as e:
+        msg.fail("Error while loading the config")
+        print(e)
+        sys.exit(1)
 
 
 def import_code(code_path: Optional[Union[Path, str]]) -> None:
