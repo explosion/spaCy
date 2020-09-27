@@ -40,7 +40,7 @@ def orth_variants_augmenter(nlp, example, *, level: float=0.0):
 
 
 def make_orth_variants(nlp, raw, token_dict, orth_variant_level=0.0):
-    orig_token_dict = copy.deepcopy(orig_token_dict)
+    orig_token_dict = copy.deepcopy(token_dict)
     lower = False
     if random.random() >= 0.5:
         lower = True
