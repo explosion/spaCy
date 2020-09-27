@@ -10,8 +10,9 @@ from ..util import registry
 def create_null_augmenter():
     return dont_augment
 
+
 @registry.augmenters("spacy.orth_variants.v1")
-def create_orth_variants_augmenter(level: float=0.0) -> Callable:
+def create_orth_variants_augmenter(level: float = 0.0) -> Callable:
     """Create a data augmentation callback that uses orth-variant replacement.
     The callback can be added to a corpus or other data iterator during training.
     """
@@ -22,7 +23,7 @@ def dont_augment(nlp, example):
     yield example
 
 
-def orth_variants_augmenter(nlp, example, *, level: float=0.0):
+def orth_variants_augmenter(nlp, example, *, level: float = 0.0):
     if random.random() >= level:
         yield example
     else:

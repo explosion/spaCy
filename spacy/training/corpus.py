@@ -20,14 +20,18 @@ FILE_TYPE = ".spacy"
 
 @util.registry.readers("spacy.Corpus.v1")
 def create_docbin_reader(
-    path: Path, gold_preproc: bool, max_length: int = 0, limit: int = 0, augmenter: Optional[Callable]=None
+    path: Path,
+    gold_preproc: bool,
+    max_length: int = 0,
+    limit: int = 0,
+    augmenter: Optional[Callable] = None,
 ) -> Callable[["Language"], Iterable[Example]]:
     return Corpus(
         path,
         gold_preproc=gold_preproc,
         max_length=max_length,
         limit=limit,
-        augmenter=augmenter
+        augmenter=augmenter,
     )
 
 
@@ -91,7 +95,7 @@ class Corpus:
         limit: int = 0,
         gold_preproc: bool = False,
         max_length: int = 0,
-        augmenter: Optional[Callable]=None
+        augmenter: Optional[Callable] = None,
     ) -> None:
         self.path = util.ensure_path(path)
         self.gold_preproc = gold_preproc
