@@ -27,7 +27,7 @@ from .lang.punctuation import TOKENIZER_INFIXES
 from .tokens import Doc
 from .tokenizer import Tokenizer
 from .errors import Errors, Warnings
-from .schemas import ConfigSchema
+from .schemas import ConfigSchema, ConfigSchemaNlp
 from .git_info import GIT_VERSION
 from . import util
 from . import about
@@ -1518,10 +1518,15 @@ class Language:
         config = util.copy_config(config)
         orig_pipeline = config.pop("components", {})
         config["components"] = {}
-        filled = registry.fill(config, validate=validate, schema=ConfigSchema)
+        if auto_fill:
+            filled = registry.fill(config, validate=validate, schema=ConfigSchema)
+        else:
+            filled = config
         filled["components"] = orig_pipeline
         config["components"] = orig_pipeline
-        resolved_nlp = registry.resolve(filled["nlp"], validate=validate)
+        resolved_nlp = registry.resolve(
+            filled["nlp"], validate=validate, schema=ConfigSchemaNlp
+        )
         create_tokenizer = resolved_nlp["tokenizer"]
         before_creation = resolved_nlp["before_creation"]
         after_creation = resolved_nlp["after_creation"]

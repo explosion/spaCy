@@ -295,10 +295,6 @@ class ConfigSchema(BaseModel):
         arbitrary_types_allowed = True
 
 
-class NlpSchema(BaseModel):
-    nlp: ConfigSchemaNlp
-
-
 class TrainingSchema(BaseModel):
     training: ConfigSchemaTraining
     pretraining: Union[ConfigSchemaPretrain, ConfigSchemaPretrainEmpty] = {}
