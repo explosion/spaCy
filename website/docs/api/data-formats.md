@@ -219,7 +219,6 @@ used when you run [`spacy pretrain`](/api/cli#pretrain).
 | `batcher`      | Batcher for the training data. ~~Callable[[Iterator[Doc], Iterator[List[Doc]]]]~~                      |
 | `component`    | Component to find the layer to pretrain. Defaults to `"tok2vec"`. ~~str~~                              |
 | `layer`        | The layer to pretrain. If empty, the whole component model will be used. ~~str~~                       |
-|                |
 
 ## Training data {#training}
 
