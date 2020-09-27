@@ -416,10 +416,9 @@ def resolve_training_config(
     RETURNS (Dict[str, Any]): The resolved config.
     """
     config = config.copy()
-    excluded = {}
     for key in exclude:
         if key in config:
-            excluded.pop(key, None)
+            config.pop(key)
     return registry.resolve(config, validate=validate)
 
 
