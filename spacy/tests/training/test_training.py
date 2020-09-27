@@ -4,7 +4,7 @@ from spacy.training import biluo_tags_to_spans, iob_to_biluo
 from spacy.training import Corpus, docs_to_json
 from spacy.training.example import Example
 from spacy.training.converters import json_to_docs
-from spacy.training.augment import orth_variants_augmenter
+from spacy.training.augment import create_orth_variants_augmenter
 from spacy.lang.en import English
 from spacy.tokens import Doc, DocBin
 from spacy.util import get_words_and_spaces, minibatch
