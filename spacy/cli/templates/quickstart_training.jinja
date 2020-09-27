@@ -270,6 +270,7 @@ factory = "{{ pipe }}"
 @readers = "spacy.Corpus.v1"
 path = ${paths.train}
 max_length = {{ 500 if hardware == "gpu" else 2000 }}
+augmenter = {"@augmenters": "spacy.orth_variants.v1", "level": 0.1}
 
 [corpora.dev]
 @readers = "spacy.Corpus.v1"
