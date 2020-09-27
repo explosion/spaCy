@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 from enum import Enum
 import tempfile
 import srsly
@@ -16,7 +16,7 @@ from ... import util
 
 
 _PKUSEG_INSTALL_MSG = "install pkuseg and pickle5 with `pip install pkuseg==0.0.25 pickle5`"
-_PKUSEG_PICKLE_WARNING = "Failed to force pkuseg model to use pickle protocol 4. If you're saving this model with python 3.8, it may not work with python 3.6-3.7.
+_PKUSEG_PICKLE_WARNING = "Failed to force pkuseg model to use pickle protocol 4. If you're saving this model with python 3.8, it may not work with python 3.6-3.7."
 
 DEFAULT_CONFIG = """
 [nlp]
@@ -158,7 +158,9 @@ class ChineseTokenizer(DummyTokenizer):
                         features = pickle5.load(fileh)
                     with open(tempdir / "features.pkl", "wb") as fileh:
                         pickle5.dump(features, fileh, protocol=4)
-                except:
+                except ImportError as e:
+                    raise(e)
+                except Exception:
                     warnings.warn(_PKUSEG_PICKLE_WARNING)
                 with open(tempdir / "features.pkl", "rb") as fileh:
                     pkuseg_features_b = fileh.read()
@@ -238,7 +240,9 @@ class ChineseTokenizer(DummyTokenizer):
                         features = pickle5.load(fileh)
                     with open(path / "features.pkl", "wb") as fileh:
                         pickle5.dump(features, fileh, protocol=4)
-                except:
+                except ImportError as e:
+                    raise(e)
+                except Exception:
                     warnings.warn(_PKUSEG_PICKLE_WARNING)
 
         def save_pkuseg_processors(path):
