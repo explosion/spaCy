@@ -12,8 +12,10 @@ from .tag_bigram_map import TAG_BIGRAM_MAP
 from ...compat import copy_reg
 from ...errors import Errors
 from ...language import Language
+from ...scorer import Scorer
 from ...symbols import POS
 from ...tokens import Doc
+from ...training import validate_examples
 from ...util import DummyTokenizer, registry
 from ... import util
 
@@ -129,6 +131,10 @@ class JapaneseTokenizer(DummyTokenizer):
                         ]
                     )
         return sub_tokens_list
+
+    def score(self, examples):
+        validate_examples(examples, "JapaneseTokenizer.score")
+        return Scorer.score_tokenization(examples)
 
     def _get_config(self) -> Dict[str, Any]:
         return {"split_mode": self.split_mode}
