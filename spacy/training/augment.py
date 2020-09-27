@@ -32,21 +32,20 @@ def orth_variants_augmenter(nlp, example, *, level: float = 0.0, lower: float=0.
         if not orig_dict["token_annotation"]:
             yield example
         else:
+            if raw_text is not None and random.random() < lower_prob:
+                lower = True
+            else:
+                lower = False
             variant_text, variant_token_annot = make_orth_variants(
-                nlp, raw_text, orig_dict["token_annotation"], lower_prob=lower
+                nlp, raw_text, orig_dict["token_annotation"], lower=lower
             )
             doc = nlp.make_doc(variant_text)
             orig_dict["token_annotation"] = variant_token_annot
             yield example.from_dict(doc, orig_dict)
 
 
-def make_orth_variants(nlp, raw, token_dict, *, lower_prob: float=0.0):
+def make_orth_variants(nlp, raw, token_dict, *, lower: bool=False):
     orig_token_dict = copy.deepcopy(token_dict)
-    if raw is not None and random.random() < lower_prob:
-        lower = True
-        raw = raw.lower()
-    else:
-        lower = False
     orth_variants = nlp.vocab.lookups.get_table("orth_variants", {})
     ndsv = orth_variants.get("single", [])
     ndpv = orth_variants.get("paired", [])
