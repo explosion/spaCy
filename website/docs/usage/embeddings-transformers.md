@@ -36,7 +36,7 @@ models such as [transformers](#transformers) is that word vectors model
 context around them, a transformer model like BERT can't really help you. BERT
 is designed to understand language **in context**, which isn't what you have. A
 word vectors table will be a much better fit for your task. However, if you do
-have words in context — whole sentences or paragraphs of running text — word
+have words in context – whole sentences or paragraphs of running text – word
 vectors will only provide a very rough approximation of what the text is about.
 
 Word vectors are also very computationally efficient, as they map a word to a

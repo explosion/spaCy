@@ -151,7 +151,7 @@ setting up the label scheme based on the data.
 
 ## Tok2Vec.predict {#predict tag="method"}
 
-Apply the component's model to a batch of [`Doc`](/api/doc) objects, without
+Apply the component's model to a batch of [`Doc`](/api/doc) objects without
 modifying them.
 
 > #### Example
@@ -224,7 +224,7 @@ Create an optimizer for the pipeline component.
 
 ## Tok2Vec.use_params {#use_params tag="method, contextmanager"}
 
-Modify the pipe's model, to use the given parameter values. At the end of the
+Modify the pipe's model to use the given parameter values. At the end of the
 context, the original parameters are restored.
 
 > #### Example
