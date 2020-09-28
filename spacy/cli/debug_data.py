@@ -7,10 +7,13 @@ from wasabi import Printer, MESSAGES, msg
 import typer
 
 from ._util import app, Arg, Opt, show_validation_error, parse_config_overrides
-from ._util import import_code, debug_cli, get_sourced_components
+from ._util import import_code, debug_cli
 from ..training import Corpus, Example
+from ..training.initialize import get_sourced_components
+from ..schemas import ConfigSchemaTraining
 from ..pipeline._parser_internals import nonproj
 from ..language import Language
+from ..util import registry
 from .. import util
 
 
@@ -94,26 +97,13 @@ def debug_data(
     with show_validation_error(config_path):
         cfg = util.load_config(config_path, overrides=config_overrides)
         nlp = util.load_model_from_config(cfg)
-        C = util.resolve_training_config(nlp.config)
+        T = registry.resolve(nlp.config["training"], schema=ConfigSchemaTraining)
     # Use original config here, not resolved version
     sourced_components = get_sourced_components(cfg)
-    frozen_components = C["training"]["frozen_components"]
+    frozen_components = T["frozen_components"]
     resume_components = [p for p in sourced_components if p not in frozen_components]
     pipeline = nlp.pipe_names
     factory_names = [nlp.get_pipe_meta(pipe).factory for pipe in nlp.pipe_names]
-    tag_map_path = util.ensure_path(C["training"]["tag_map"])
-    tag_map = {}
-    if tag_map_path is not None:
-        tag_map = srsly.read_json(tag_map_path)
-    morph_rules_path = util.ensure_path(C["training"]["morph_rules"])
-    morph_rules = {}
-    if morph_rules_path is not None:
-        morph_rules = srsly.read_json(morph_rules_path)
-    # Replace tag map with provided mapping
-    nlp.vocab.morphology.load_tag_map(tag_map)
-    # Load morph rules
-    nlp.vocab.morphology.load_morph_exceptions(morph_rules)
-
     msg.divider("Data file validation")
 
     # Create the gold corpus to be able to better analyze data
@@ -145,10 +135,10 @@ def debug_data(
 
     train_texts = gold_train_data["texts"]
     dev_texts = gold_dev_data["texts"]
-    frozen_components = C["training"]["frozen_components"]
+    frozen_components = T["frozen_components"]
 
     msg.divider("Training stats")
-    msg.text(f"Language: {C['nlp']['lang']}")
+    msg.text(f"Language: {nlp.lang}")
     msg.text(f"Training pipeline: {', '.join(pipeline)}")
     if resume_components:
         msg.text(f"Components from other pipelines: {', '.join(resume_components)}")
@@ -355,6 +345,7 @@ def debug_data(
     if "tagger" in factory_names:
         msg.divider("Part-of-speech Tagging")
         labels = [label for label in gold_train_data["tags"]]
+        # TODO: does this need to be updated?
         tag_map = nlp.vocab.morphology.tag_map
         msg.info(f"{len(labels)} label(s) in data ({len(tag_map)} label(s) in tag map)")
         labels_with_counts = _format_labels(

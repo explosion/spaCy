@@ -9,10 +9,10 @@ from spacy.pipeline import TextCategorizer
 from spacy.tokens import Doc
 from spacy.pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
 from spacy.scorer import Scorer
+from spacy.training import Example
+from spacy.training.initialize import verify_textcat_config
 
 from ..util import make_tempdir
-from ...cli.train import verify_textcat_config
-from ...training import Example
 
 
 TRAIN_DATA = [

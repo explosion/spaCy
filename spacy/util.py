@@ -8,6 +8,7 @@ import re
 from pathlib import Path
 import thinc
 from thinc.api import NumpyOps, get_current_ops, Adam, Config, Optimizer
+from thinc.api import ConfigValidationError
 import functools
 import itertools
 import numpy.random
@@ -56,6 +57,7 @@ if TYPE_CHECKING:
 
 
 OOV_RANK = numpy.iinfo(numpy.uint64).max
+DEFAULT_OOV_PROB = -20
 LEXEME_NORM_LANGS = ["da", "de", "el", "en", "id", "lb", "pt", "ru", "sr", "ta", "th"]
 
 # Default order of sections in the config.cfg. Not all sections needs to exist,
@@ -239,20 +241,6 @@ def get_module_path(module: ModuleType) -> Path:
     return Path(sys.modules[module.__module__].__file__).parent
 
 
-def load_vectors_into_model(
-    nlp: "Language", name: Union[str, Path], *, add_strings=True
-) -> None:
-    """Load word vectors from an installed model or path into a model instance."""
-    vectors_nlp = load_model(name)
-    nlp.vocab.vectors = vectors_nlp.vocab.vectors
-    if add_strings:
-        # I guess we should add the strings from the vectors_nlp model?
-        # E.g. if someone does a similarity query, they might expect the strings.
-        for key in nlp.vocab.vectors.key2row:
-            if key in vectors_nlp.vocab.strings:
-                nlp.vocab.strings.add(vectors_nlp.vocab.strings[key])
-
-
 def load_model(
     name: Union[str, Path],
     *,
@@ -391,32 +379,9 @@ def load_model_from_config(
     return nlp
 
 
-def resolve_training_config(
-    config: Config,
-    exclude: Iterable[str] = ("nlp", "components"),
-    validate: bool = True,
-) -> Dict[str, Any]:
-    """Resolve the config sections relevant for trainig and create all objects.
-    Mostly used in the CLI to separate training config (not resolved by default
-    because not runtime-relevant – an nlp object should load fine even if it's
-    [training] block refers to functions that are not available etc.).
-
-    config (Config): The config to resolve.
-    exclude (Iterable[str]): The config blocks to exclude. Those blocks won't
-        be available in the final resolved config.
-    validate (bool): Whether to validate the config.
-    RETURNS (Dict[str, Any]): The resolved config.
-    """
-    config = config.copy()
-    for key in exclude:
-        if key in config:
-            config.pop(key)
-    return registry.resolve(config, validate=validate)
-
-
 def resolve_dot_names(
     config: Config, dot_names: List[Optional[str]]
-) -> List[Optional[Callable]]:
+) -> Tuple[Any]:
     """Resolve one or more "dot notation" names, e.g. corpora.train.
     The paths could point anywhere into the config, so we don't know which
     top-level section we'll be looking within.
@@ -424,18 +389,42 @@ def resolve_dot_names(
     We resolve the whole top-level section, although we could resolve less --
     we could find the lowest part of the tree.
     """
+    # TODO: include schema?
+    # TODO: clean this up and avoid duplication
     resolved = {}
     output = []
+    errors = []
     for name in dot_names:
         if name is None:
             output.append(name)
         else:
             section = name.split(".")[0]
-            # We want to avoid resolving the same thing twice.
+            # We want to avoid resolving the same thing twice
             if section not in resolved:
                 resolved[section] = registry.resolve(config[section])
-            output.append(dot_to_object(resolved, name))
-    return output
+            try:
+                output.append(dot_to_object(resolved, name))
+            except KeyError:
+                msg = f"not a valid section reference: {name}"
+                errors.append({"loc": name.split("."), "msg": msg})
+    objects = []
+    for ref in output:
+        if not isinstance(ref, str):
+            msg = f"not a valid section reference: {ref} ({type(ref)})"
+            errors.append({"loc": ref.split("."), "msg": msg})
+            continue
+        section = ref.split(".")[0]
+        # We want to avoid resolving the same thing twice
+        if section not in resolved:
+            resolved[section] = registry.resolve(config[section])
+        try:
+            objects.append(dot_to_object(resolved, ref))
+        except KeyError:
+            msg = f"not a valid section reference: {name}"
+            errors.append({"loc": ref.split("."), "msg": msg})
+    if errors:
+        raise ConfigValidationError(config=config, errors=errors)
+    return tuple(objects)
 
 
 def load_model_from_init_py(

@@ -4,12 +4,14 @@ from pathlib import Path
 from spacy.training import Example
 from spacy.util import dot_to_object
 from wasabi import msg
-from thinc.api import require_gpu, fix_random_seed, set_dropout_rate, Adam
+from thinc.api import fix_random_seed, set_dropout_rate, Adam
 from thinc.api import Model, data_validation, set_gpu_allocator
 import typer
 
 from ._util import Arg, Opt, debug_cli, show_validation_error
-from ._util import parse_config_overrides, string_to_list
+from ._util import parse_config_overrides, string_to_list, setup_gpu
+from ..schemas import ConfigSchemaTraining
+from ..util import registry
 from .. import util
 
 
@@ -37,11 +39,7 @@ def debug_model_cli(
 
     DOCS: https://nightly.spacy.io/api/cli#debug-model
     """
-    if use_gpu >= 0:
-        msg.info("Using GPU")
-        require_gpu(use_gpu)
-    else:
-        msg.info("Using CPU")
+    setup_gpu(use_gpu)
     layers = string_to_list(layers, intify=True)
     print_settings = {
         "dimensions": dimensions,
@@ -65,8 +63,8 @@ def debug_model_cli(
         set_gpu_allocator(allocator)
     with show_validation_error(config_path):
         nlp = util.load_model_from_config(raw_config)
-        C = util.resolve_training_config(nlp.config)
-    seed = C["training"]["seed"]
+        T = registry.resolve(nlp.config["training"], schema=ConfigSchemaTraining)
+    seed = T["seed"]
     if seed is not None:
         msg.info(f"Fixing random seed: {seed}")
         fix_random_seed(seed)
@@ -77,7 +75,7 @@ def debug_model_cli(
             exits=1,
         )
     model = pipe.model
-    debug_model(C, nlp, model, print_settings=print_settings)
+    debug_model(T, nlp, model, print_settings=print_settings)
 
 
 def debug_model(

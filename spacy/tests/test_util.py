@@ -1,14 +1,15 @@
 import pytest
 
-from .util import get_random_doc
-
 from spacy import util
 from spacy.util import dot_to_object, SimpleFrozenList
-from thinc.api import Config, Optimizer
+from thinc.api import Config, Optimizer, ConfigValidationError
 from spacy.training.batchers import minibatch_by_words
-from ..lang.en import English
-from ..lang.nl import Dutch
-from ..language import DEFAULT_CONFIG_PATH
+from spacy.lang.en import English
+from spacy.lang.nl import Dutch
+from spacy.language import DEFAULT_CONFIG_PATH
+from spacy.schemas import ConfigSchemaTraining
+
+from .util import get_random_doc
 
 
 @pytest.mark.parametrize(
@@ -101,8 +102,8 @@ def test_util_dot_section():
         dot_to_object(en_nlp.config, "nlp.pipeline.tagger")
     with pytest.raises(KeyError):
         dot_to_object(en_nlp.config, "nlp.unknownattribute")
-    resolved = util.resolve_training_config(nl_nlp.config)
-    assert isinstance(dot_to_object(resolved, "training.optimizer"), Optimizer)
+    T = util.registry.resolve(nl_nlp.config["training"], schema=ConfigSchemaTraining)
+    assert isinstance(dot_to_object({"training": T}, "training.optimizer"), Optimizer)
 
 
 def test_simple_frozen_list():
@@ -120,3 +121,17 @@ def test_simple_frozen_list():
     t = SimpleFrozenList(["foo", "bar"], error="Error!")
     with pytest.raises(NotImplementedError):
         t.append("baz")
+
+
+def test_resolve_dot_names():
+    config = {
+        "training": {"optimizer": {"@optimizers": "Adam.v1"}},
+        "foo": {"bar": "training.optimizer", "baz": "training.xyz"},
+    }
+    result = util.resolve_dot_names(config, ["foo.bar"])
+    assert isinstance(result[0], Optimizer)
+    with pytest.raises(ConfigValidationError) as e:
+        util.resolve_dot_names(config, ["foo.baz", "foo.bar"])
+    errors = e.value.errors
+    assert len(errors) == 1
+    assert errors[0]["loc"] == ["training", "xyz"]
