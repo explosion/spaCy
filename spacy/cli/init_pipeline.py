@@ -20,7 +20,9 @@ DEFAULT_OOV_PROB = -20
 
 
 @init_cli.command(
-    "nlp", context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+    "nlp",
+    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+    hidden=True,
 )
 def init_pipeline_cli(
     # fmt: off
@@ -38,7 +40,6 @@ def init_pipeline_cli(
         config = util.load_config(config_path, overrides=overrides)
     nlp = init_pipeline(config)
     nlp.to_disk(output_path)
-    # TODO: add more instructions
     msg.good(f"Saved initialized pipeline to {output_path}")
 
 

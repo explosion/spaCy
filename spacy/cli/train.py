@@ -30,7 +30,6 @@ def train_cli(
     config_path: Path = Arg(..., help="Path to config file", exists=True),
     output_path: Optional[Path] = Opt(None, "--output", "--output-path", "-o", help="Output directory to store trained pipeline in"),
     code_path: Optional[Path] = Opt(None, "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
-    init_path: Optional[Path] = Opt(None, "--init", "-i", help="Path to already initialized pipeline directory, e.g. created with 'spacy init pipeline' (will speed up training)"),
     verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
     use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU")
     # fmt: on
@@ -60,46 +59,34 @@ def train_cli(
         msg.info("Using CPU")
     config = util.load_config(config_path, overrides=overrides, interpolate=False)
     msg.divider("Initializing pipeline")
-    nlp = init_nlp(config, output_path, init_path)
+    nlp = init_nlp(config, output_path)
     msg.divider("Training pipeline")
     train(nlp, output_path, use_gpu=use_gpu)
 
 
-def init_nlp(
-    config: Config, output_path: Optional[Path], init_path: Optional[Path]
-) -> None:
-    if init_path is not None:
-        nlp = util.load_model(init_path)
-        if must_reinitialize(config, nlp.config):
-            msg.fail(
-                f"Config has changed: can't use initialized pipeline from "
-                f"{init_path}. Please re-run 'spacy init nlp'.",
-                exits=1,
-            )
-        msg.good(f"Loaded initialized pipeline from {init_path}")
-        return nlp
+def init_nlp(config: Config, output_path: Optional[Path]) -> Language:
     if output_path is not None:
-        output_init_path = output_path / "model-initial"
-        if not output_init_path.exists():
-            msg.info(f"Initializing the pipeline in {output_init_path}")
+        init_path = output_path / "model-initial"
+        if not init_path.exists():
+            msg.info(f"Initializing the pipeline in {init_path}")
             nlp = init_pipeline(config)
-            nlp.to_disk(output_init_path)
-            msg.good(f"Saved initialized pipeline to {output_init_path}")
+            nlp.to_disk(init_path)
+            msg.good(f"Saved initialized pipeline to {init_path}")
         else:
-            nlp = util.load_model(output_init_path)
+            nlp = util.load_model(init_path)
             if must_reinitialize(config, nlp.config):
                 msg.warn("Config has changed: need to re-initialize pipeline")
                 nlp = init_pipeline(config)
-                nlp.to_disk(output_init_path)
-                msg.good(f"Re-initialized pipeline in {output_init_path}")
+                nlp.to_disk(init_path)
+                msg.good(f"Re-initialized pipeline in {init_path}")
             else:
-                msg.good(f"Loaded initialized pipeline from {output_init_path}")
+                msg.good(f"Loaded initialized pipeline from {init_path}")
         return nlp
     msg.warn(
         "Not saving initialized model: no output directory specified. "
         "To speed up training, spaCy can save the initialized nlp object with "
         "the vocabulary, vectors and label scheme. To take advantage of this, "
-        "provide an output directory or use the 'spacy init nlp' command."
+        "provide an output directory."
     )
     return init_pipeline(config)
 
