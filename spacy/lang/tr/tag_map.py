@@ -10,7 +10,7 @@ TAG_MAP = {
         "ADJ": {POS: ADJ},
         "ADP": {POS: ADP},
         "ADV": {POS: ADV},
-        "AUX": {POS: AUX}
+        "AUX": {POS: AUX},
         "CCONJ": {POS: CCONJ},
         "DET": {POS: DET},
         "INTJ": {POS: INTJ},
