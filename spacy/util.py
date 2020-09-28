@@ -439,7 +439,7 @@ def resolve_dot_names(config: Config, dot_names: List[Optional[str]]) -> List[Op
             section = name.split(".")[0]
             # We want to avoid resolving the same thing twice.
             if section not in resolved:
-                resolved[section] = registry.resolve(config[section], schema=None)
+                resolved[section] = registry.resolve(config[section])
             output.append(dot_to_object(resolved, name))
     return output
 
