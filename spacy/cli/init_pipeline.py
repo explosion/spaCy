@@ -1,18 +1,17 @@
-from typing import Optional, Dict, Any, Tuple, Union, Callable, List
+from typing import Optional, Dict, Callable, Any
 import logging
-import srsly
 from pathlib import Path
 from wasabi import msg
 import typer
-from thinc.api import Config, fix_random_seed
+from thinc.api import Config, fix_random_seed, set_gpu_allocator
 
-from .train import create_before_to_disk_callback
 from .. import util
-from ..util import registry
-from ..schemas import ConfigSchemaTraining
+from ..util import registry, resolve_dot_names
+from ..schemas import ConfigSchemaTraining, ConfigSchemaPretrain
+from ..language import Language
+from ..errors import Errors
 from ._util import init_cli, Arg, Opt, parse_config_overrides, show_validation_error
-from ._util import import_code, get_sourced_components
-from ..util import resolve_dot_names
+from ._util import import_code, get_sourced_components, load_from_paths
 
 
 @init_cli.command(
@@ -31,10 +30,12 @@ def init_pipeline_cli(
     util.logger.setLevel(logging.DEBUG if verbose else logging.ERROR)
     overrides = parse_config_overrides(ctx.args)
     import_code(code_path)
-    config = util.load_config(config_path, overrides=overrides)
     with show_validation_error(config_path):
-        nlp = init_pipeline(config)
+        config = util.load_config(config_path, overrides=overrides)
+    nlp = init_pipeline(config)
     nlp.to_disk(output_path)
+    # TODO: add more instructions
+    msg.good(f"Saved initialized pipeline to {output_path}")
 
 
 def must_initialize(init_path: Path, config_path: Path, overrides: Dict) -> bool:
@@ -51,7 +52,7 @@ def must_initialize(init_path: Path, config_path: Path, overrides: Dict) -> bool
             return False
 
 
-def init_pipeline(config: Config, use_gpu=-1):
+def init_pipeline(config: Config, use_gpu: int = -1) -> Language:
     raw_config = config
     config = raw_config.interpolate()
     if config["training"]["seed"] is not None:
@@ -61,22 +62,19 @@ def init_pipeline(config: Config, use_gpu=-1):
         set_gpu_allocator(allocator)
     # Use original config here before it's resolved to functions
     sourced_components = get_sourced_components(config)
-    nlp = util.load_model_from_config(raw_config)
+    with show_validation_error():
+        nlp = util.load_model_from_config(raw_config)
+    msg.good("Set up nlp object from config")
     # Resolve all training-relevant sections using the filled nlp config
-    T = registry.resolve(
-        config["training"],
-        schema=ConfigSchemaTraining,
-        validate=True,
-    )
+    T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
     dot_names = [T["train_corpus"], T["dev_corpus"], T["raw_text"]]
     train_corpus, dev_corpus, raw_text = resolve_dot_names(config, dot_names)
     util.load_vocab_data_into_model(nlp, lookups=T["lookups"])
+    msg.good("Created vocabulary")
     if T["vectors"] is not None:
         add_vectors(nlp, T["vectors"])
-    score_weights = T["score_weights"]
+        msg.good(f"Added vectors: {T['vectors']}")
     optimizer = T["optimizer"]
-    batcher = T["batcher"]
-    train_logger = T["logger"]
     before_to_disk = create_before_to_disk_callback(T["before_to_disk"])
     # Components that shouldn't be updated during training
     frozen_components = T["frozen_components"]
@@ -89,13 +87,23 @@ def init_pipeline(config: Config, use_gpu=-1):
             nlp.resume_training(sgd=optimizer)
     with nlp.select_pipes(disable=[*frozen_components, *resume_components]):
         nlp.begin_training(lambda: train_corpus(nlp), sgd=optimizer)
+        msg.good(f"Initialized pipeline components")
     # Verify the config after calling 'begin_training' to ensure labels
     # are properly initialized
     verify_config(nlp)
+    if "pretraining" in config and config["pretraining"]:
+        P = registry.resolve(config["pretraining"], schema=ConfigSchemaPretrain)
+        add_tok2vec_weights({"training": T, "pretraining": P}, nlp)
+    # TODO: this should be handled better?
+    nlp = before_to_disk(nlp)
+    return nlp
 
+
+def add_tok2vec_weights(config: Config, nlp: Language) -> None:
     # Load pretrained tok2vec weights - cf. CLI command 'pretrain'
+    weights_data = load_from_paths(config)
     if weights_data is not None:
-        tok2vec_component = C["pretraining"]["component"]
+        tok2vec_component = config["pretraining"]["component"]
         if tok2vec_component is None:
             msg.fail(
                 f"To use pretrained tok2vec weights, [pretraining.component] "
@@ -103,9 +111,63 @@ def init_pipeline(config: Config, use_gpu=-1):
                 exits=1,
             )
         layer = nlp.get_pipe(tok2vec_component).model
-        tok2vec_layer = C["pretraining"]["layer"]
+        tok2vec_layer = config["pretraining"]["layer"]
         if tok2vec_layer:
             layer = layer.get_ref(tok2vec_layer)
         layer.from_bytes(weights_data)
-        msg.info(f"Loaded pretrained weights into component '{tok2vec_component}'")
-    return nlp
+        msg.good(f"Loaded pretrained weights into component '{tok2vec_component}'")
+
+
+def add_vectors(nlp: Language, vectors: str) -> None:
+    title = f"Config validation error for vectors {vectors}"
+    desc = (
+        "This typically means that there's a problem in the config.cfg included "
+        "with the packaged vectors. Make sure that the vectors package you're "
+        "loading is compatible with the current version of spaCy."
+    )
+    with show_validation_error(
+        title=title, desc=desc, hint_fill=False, show_config=False
+    ):
+        util.load_vectors_into_model(nlp, vectors)
+
+
+def verify_config(nlp: Language) -> None:
+    """Perform additional checks based on the config, loaded nlp object and training data."""
+    # TODO: maybe we should validate based on the actual components, the list
+    # in config["nlp"]["pipeline"] instead?
+    for pipe_config in nlp.config["components"].values():
+        # We can't assume that the component name == the factory
+        factory = pipe_config["factory"]
+        if factory == "textcat":
+            verify_textcat_config(nlp, pipe_config)
+
+
+def verify_textcat_config(nlp: Language, pipe_config: Dict[str, Any]) -> None:
+    # if 'positive_label' is provided: double check whether it's in the data and
+    # the task is binary
+    if pipe_config.get("positive_label"):
+        textcat_labels = nlp.get_pipe("textcat").labels
+        pos_label = pipe_config.get("positive_label")
+        if pos_label not in textcat_labels:
+            raise ValueError(
+                Errors.E920.format(pos_label=pos_label, labels=textcat_labels)
+            )
+        if len(list(textcat_labels)) != 2:
+            raise ValueError(
+                Errors.E919.format(pos_label=pos_label, labels=textcat_labels)
+            )
+
+
+def create_before_to_disk_callback(
+    callback: Optional[Callable[[Language], Language]]
+) -> Callable[[Language], Language]:
+    def before_to_disk(nlp: Language) -> Language:
+        if not callback:
+            return nlp
+        modified_nlp = callback(nlp)
+        if not isinstance(modified_nlp, Language):
+            err = Errors.E914.format(name="before_to_disk", value=type(modified_nlp))
+            raise ValueError(err)
+        return modified_nlp
+
+    return before_to_disk

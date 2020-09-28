@@ -16,6 +16,7 @@ import os
 
 from ..schemas import ProjectConfigSchema, validate
 from ..util import import_file, run_command, make_tempdir, registry, logger
+from ..util import ensure_path
 
 if TYPE_CHECKING:
     from pathy import Pathy  # noqa: F401
@@ -458,3 +459,24 @@ def string_to_list(value: str, intify: bool = False) -> Union[List[str], List[in
             p = int(p)
         result.append(p)
     return result
+
+
+def load_from_paths(
+    config: Config,
+) -> Tuple[List[Dict[str, str]], Dict[str, dict], bytes]:
+    # TODO: separate checks from loading
+    raw_text = ensure_path(config["training"]["raw_text"])
+    if raw_text is not None:
+        if not raw_text.exists():
+            msg.fail("Can't find raw text", raw_text, exits=1)
+        raw_text = list(srsly.read_jsonl(config["training"]["raw_text"]))
+    tag_map = {}
+    morph_rules = {}
+    weights_data = None
+    init_tok2vec = ensure_path(config["training"]["init_tok2vec"])
+    if init_tok2vec is not None:
+        if not init_tok2vec.exists():
+            msg.fail("Can't find pretrained tok2vec", init_tok2vec, exits=1)
+        with init_tok2vec.open("rb") as file_:
+            weights_data = file_.read()
+    return raw_text, tag_map, morph_rules, weights_data

@@ -1,6 +1,5 @@
 from typing import Optional, Dict, Any, Tuple, Union, Callable, List
 from timeit import default_timer as timer
-import srsly
 import tqdm
 from pathlib import Path
 from wasabi import msg
@@ -11,13 +10,17 @@ import random
 import typer
 import logging
 
+from .init_pipeline import init_pipeline, must_initialize
+from .init_pipeline import create_before_to_disk_callback
 from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
-from ._util import import_code, get_sourced_components
+from ._util import import_code
+from ._util import load_from_paths  # noqa: F401 (needed for Ray extension for now)
 from ..language import Language
 from .. import util
 from ..training.example import Example
 from ..errors import Errors
-from ..util import resolve_dot_names
+from ..util import resolve_dot_names, registry
+from ..schemas import ConfigSchemaTraining
 
 
 @app.command(
@@ -56,25 +59,35 @@ def train_cli(
         require_gpu(use_gpu)
     else:
         msg.info("Using CPU")
-    config = util.load_config(
-        config_path, overrides=config_overrides, interpolate=False
-    )
+    config = util.load_config(config_path, overrides=overrides, interpolate=False)
+    msg.divider("Initializing pipeline")
+    # TODO: add warnings / --initialize (?) argument
     if output_path is None:
         nlp = init_pipeline(config)
     else:
-        init_path = output_path / "model-initial" 
-        if must_reinitialize(config, init_path):
+        init_path = output_path / "model-initial"
+        if must_initialize(config, init_path):
             nlp = init_pipeline(config)
             nlp.to_disk(init_path)
+            msg.good(f"Saved initialized pipeline to {init_path}")
         else:
-            nlp = spacy.load(output_path / "model-initial")
-    msg.info("Start training")
-    train(nlp, config, output_path)
+            nlp = util.load_model(init_path)
+            msg.good(f"Loaded initialized pipeline from {init_path}")
+    msg.divider("Training pipeline")
+    train(nlp, output_path, use_gpu=use_gpu)
 
 
-def train(nlp: Language, output_path: Optional[Path]=None) -> None:
+def train(
+    nlp: Language, output_path: Optional[Path] = None, *, use_gpu: int = -1
+) -> None:
+    # TODO: random seed, GPU allocator
     # Create iterator, which yields out info after each optimization step.
     config = nlp.config.interpolate()
+    if config["training"]["seed"] is not None:
+        fix_random_seed(config["training"]["seed"])
+    allocator = config["training"]["gpu_allocator"]
+    if use_gpu >= 0 and allocator:
+        set_gpu_allocator(allocator)
     T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
     dot_names = [T["train_corpus"], T["dev_corpus"], T["raw_text"]]
     train_corpus, dev_corpus, raw_text = resolve_dot_names(config, dot_names)
@@ -85,9 +98,7 @@ def train(nlp: Language, output_path: Optional[Path]=None) -> None:
     before_to_disk = create_before_to_disk_callback(T["before_to_disk"])
     # Components that shouldn't be updated during training
     frozen_components = T["frozen_components"]
- 
     # Create iterator, which yields out info after each optimization step.
-    msg.info("Start training")
     training_step_iterator = train_while_improving(
         nlp,
         optimizer,
@@ -101,7 +112,7 @@ def train(nlp: Language, output_path: Optional[Path]=None) -> None:
         raw_text=raw_text,
         exclude=frozen_components,
     )
-    msg.info(f"Training. Initial learn rate: {optimizer.learn_rate}")
+    msg.info(f"Initial learn rate: {optimizer.learn_rate}")
     with nlp.select_pipes(disable=frozen_components):
         print_row, finalize_logger = train_logger(nlp)
 
@@ -143,7 +154,6 @@ def train(nlp: Language, output_path: Optional[Path]=None) -> None:
             else:
                 nlp.to_disk(final_model_path)
             msg.good(f"Saved pipeline to output directory {final_model_path}")
-
 
 
 def add_vectors(nlp: Language, vectors: str) -> None:
@@ -197,21 +207,6 @@ def create_evaluation_callback(
         return weighted_score, scores
 
     return evaluate
-
-
-def create_before_to_disk_callback(
-    callback: Optional[Callable[[Language], Language]]
-) -> Callable[[Language], Language]:
-    def before_to_disk(nlp: Language) -> Language:
-        if not callback:
-            return nlp
-        modified_nlp = callback(nlp)
-        if not isinstance(modified_nlp, Language):
-            err = Errors.E914.format(name="before_to_disk", value=type(modified_nlp))
-            raise ValueError(err)
-        return modified_nlp
-
-    return before_to_disk
 
 
 def train_while_improving(
@@ -370,30 +365,3 @@ def verify_cli_args(config_path: Path, output_path: Optional[Path] = None) -> No
         if not output_path.exists():
             output_path.mkdir()
             msg.good(f"Created output directory: {output_path}")
-
-
-def verify_config(nlp: Language) -> None:
-    """Perform additional checks based on the config, loaded nlp object and training data."""
-    # TODO: maybe we should validate based on the actual components, the list
-    # in config["nlp"]["pipeline"] instead?
-    for pipe_config in nlp.config["components"].values():
-        # We can't assume that the component name == the factory
-        factory = pipe_config["factory"]
-        if factory == "textcat":
-            verify_textcat_config(nlp, pipe_config)
-
-
-def verify_textcat_config(nlp: Language, pipe_config: Dict[str, Any]) -> None:
-    # if 'positive_label' is provided: double check whether it's in the data and
-    # the task is binary
-    if pipe_config.get("positive_label"):
-        textcat_labels = nlp.get_pipe("textcat").labels
-        pos_label = pipe_config.get("positive_label")
-        if pos_label not in textcat_labels:
-            raise ValueError(
-                Errors.E920.format(pos_label=pos_label, labels=textcat_labels)
-            )
-        if len(list(textcat_labels)) != 2:
-            raise ValueError(
-                Errors.E919.format(pos_label=pos_label, labels=textcat_labels)
-            )
