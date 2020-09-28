@@ -42,7 +42,9 @@ def test_readers():
     dot_names = ["training.train_corpus", "training.dev_corpus"]
     train_corpus, dev_corpus = resolve_dot_names(nlp.config, dot_names)
     assert isinstance(train_corpus, Callable)
-    T = registry.resolve(nlp.config["training"], schema=ConfigSchemaTraining)
+    T = registry.resolve(
+        nlp.config.interpolate()["training"], schema=ConfigSchemaTraining
+    )
     optimizer = T["optimizer"]
     # simulate a training loop
     nlp.begin_training(lambda: train_corpus(nlp), sgd=optimizer)
@@ -53,7 +55,8 @@ def test_readers():
     # ensure the pipeline runs
     doc = nlp("Quick test")
     assert doc.cats
-    extra_corpus = registry.resolve(nlp.config["corpora"])["extra"]
+    corpora = {"corpora": nlp.config.interpolate()["corpora"]}
+    extra_corpus = registry.resolve(corpora)["corpora"]["extra"]
     assert isinstance(extra_corpus, Callable)
 
 
@@ -91,7 +94,9 @@ def test_cat_readers(reader, additional_config):
     nlp = load_model_from_config(config, auto_fill=True)
     dot_names = ["training.train_corpus", "training.dev_corpus"]
     train_corpus, dev_corpus = resolve_dot_names(nlp.config, dot_names)
-    T = registry.resolve(nlp.config["training"], schema=ConfigSchemaTraining)
+    T = registry.resolve(
+        nlp.config["training"].interpolate(), schema=ConfigSchemaTraining
+    )
     optimizer = T["optimizer"]
     # simulate a training loop
     nlp.begin_training(lambda: train_corpus(nlp), sgd=optimizer)

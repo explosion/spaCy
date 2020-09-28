@@ -97,7 +97,9 @@ def debug_data(
     with show_validation_error(config_path):
         cfg = util.load_config(config_path, overrides=config_overrides)
         nlp = util.load_model_from_config(cfg)
-        T = registry.resolve(nlp.config["training"], schema=ConfigSchemaTraining)
+        T = registry.resolve(
+            nlp.config.interpolate()["training"], schema=ConfigSchemaTraining
+        )
     # Use original config here, not resolved version
     sourced_components = get_sourced_components(cfg)
     frozen_components = T["frozen_components"]

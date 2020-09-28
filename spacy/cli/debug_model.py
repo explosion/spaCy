@@ -63,7 +63,9 @@ def debug_model_cli(
         set_gpu_allocator(allocator)
     with show_validation_error(config_path):
         nlp = util.load_model_from_config(raw_config)
-        T = registry.resolve(nlp.config["training"], schema=ConfigSchemaTraining)
+        T = registry.resolve(
+            nlp.config.interpolate()["training"], schema=ConfigSchemaTraining
+        )
     seed = T["seed"]
     if seed is not None:
         msg.info(f"Fixing random seed: {seed}")

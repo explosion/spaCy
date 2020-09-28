@@ -413,7 +413,12 @@ def resolve_dot_names(config: Config, dot_names: List[Optional[str]]) -> Tuple[A
         section = ref.split(".")[0]
         # We want to avoid resolving the same thing twice
         if section not in resolved:
-            resolved[section] = registry.resolve(config[section])
+            if registry.is_promise(config[section]):
+                # Otherwise we can't resolve [corpus] if it's a promise
+                result = registry.resolve({"config": config[section]})["config"]
+            else:
+                result = registry.resolve(config[section])
+            resolved[section] = result
         try:
             objects.append(dot_to_object(resolved, ref))
         except KeyError:

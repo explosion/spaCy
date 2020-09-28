@@ -33,8 +33,9 @@ def pretrain(
     if use_gpu >= 0 and allocator:
         set_gpu_allocator(allocator)
     nlp = load_model_from_config(config)
-    T = registry.resolve(nlp.config["training"], schema=ConfigSchemaTraining)
-    P = registry.resolve(nlp.config["pretraining"], schema=ConfigSchemaPretrain)
+    _config = nlp.config.interpolate()
+    T = registry.resolve(_config["training"], schema=ConfigSchemaTraining)
+    P = registry.resolve(_config["pretraining"], schema=ConfigSchemaPretrain)
     corpus = dot_to_object(T, P["corpus"])
     batcher = P["batcher"]
     model = create_pretraining_model(nlp, P)
