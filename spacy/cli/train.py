@@ -32,8 +32,9 @@ def train_cli(
     config_path: Path = Arg(..., help="Path to config file", exists=True),
     output_path: Optional[Path] = Opt(None, "--output", "--output-path", "-o", help="Output directory to store trained pipeline in"),
     code_path: Optional[Path] = Opt(None, "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
+    init_path: Optional[Path] = Opt(None, "--init", "-i", help="Path to already initialized pipeline directory, e.g. created with 'spacy init pipeline' (will speed up training)"),
     verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
-    use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU"),
+    use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU")
     # fmt: on
 ):
     """
@@ -61,26 +62,38 @@ def train_cli(
         msg.info("Using CPU")
     config = util.load_config(config_path, overrides=overrides, interpolate=False)
     msg.divider("Initializing pipeline")
-    # TODO: add warnings / --initialize (?) argument
-    if output_path is None:
-        nlp = init_pipeline(config)
-    else:
-        init_path = output_path / "model-initial"
-        if must_initialize(config, init_path):
-            nlp = init_pipeline(config)
-            nlp.to_disk(init_path)
-            msg.good(f"Saved initialized pipeline to {init_path}")
-        else:
-            nlp = util.load_model(init_path)
-            msg.good(f"Loaded initialized pipeline from {init_path}")
+    nlp = init_nlp(config, output_path, init_path)
     msg.divider("Training pipeline")
     train(nlp, output_path, use_gpu=use_gpu)
+
+
+def init_nlp(
+    config: Config, output_path: Optional[Path], init_path: Optional[Path]
+) -> None:
+
+    if init_path is not None:
+        nlp = util.load_model(init_path)
+        # TODO: how to handle provided pipeline that needs to be reinitialized?
+        msg.good(f"Loaded initialized pipeline from {init_path}")
+        return nlp
+    if output_path is not None:
+        output_init_path = output_path / "model-initial"
+        if must_initialize(config, output_init_path):
+            msg.warn("TODO:")
+            nlp = init_pipeline(config)
+            nlp.to_disk(init_path)
+            msg.good(f"Saved initialized pipeline to {output_init_path}")
+        else:
+            nlp = util.load_model(output_init_path)
+            msg.good(f"Loaded initialized pipeline from {output_init_path}")
+        return nlp
+    msg.warn("TODO:")
+    return init_pipeline(config)
 
 
 def train(
     nlp: Language, output_path: Optional[Path] = None, *, use_gpu: int = -1
 ) -> None:
-    # TODO: random seed, GPU allocator
     # Create iterator, which yields out info after each optimization step.
     config = nlp.config.interpolate()
     if config["training"]["seed"] is not None:
@@ -112,6 +125,9 @@ def train(
         raw_text=raw_text,
         exclude=frozen_components,
     )
+    msg.info(f"Pipeline: {nlp.pipe_names}")
+    if frozen_components:
+        msg.info(f"Frozen components: {frozen_components}")
     msg.info(f"Initial learn rate: {optimizer.learn_rate}")
     with nlp.select_pipes(disable=frozen_components):
         print_row, finalize_logger = train_logger(nlp)
