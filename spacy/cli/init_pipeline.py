@@ -63,11 +63,7 @@ def init_pipeline(config: Config, use_gpu: int = -1) -> Language:
     train_corpus, dev_corpus = resolve_dot_names(config, dot_names)
     I = registry.resolve(config["initialize"], schema=ConfigSchemaInit)
     V = I["vocab"]
-    init_vocab(nlp, data=V["data"], lookups=V["lookups"])
-    msg.good("Created vocabulary")
-    if V["vectors"] is not None:
-        add_vectors(nlp, V["vectors"])
-        msg.good(f"Added vectors: {V['vectors']}")
+    init_vocab(nlp, data=V["data"], lookups=V["lookups"], vectors=V["vectors"])
     optimizer = T["optimizer"]
     before_to_disk = create_before_to_disk_callback(T["before_to_disk"])
     # Components that shouldn't be updated during training
@@ -94,7 +90,11 @@ def init_pipeline(config: Config, use_gpu: int = -1) -> Language:
 
 
 def init_vocab(
-    nlp: Language, *, data: Optional[Path] = None, lookups: Optional[Lookups] = None,
+    nlp: Language,
+    *,
+    data: Optional[Path] = None,
+    lookups: Optional[Lookups] = None,
+    vectors: Optional[str] = None,
 ) -> Language:
     if lookups:
         nlp.vocab.lookups = lookups
@@ -115,6 +115,10 @@ def init_vocab(
             oov_prob = DEFAULT_OOV_PROB
         nlp.vocab.cfg.update({"oov_prob": oov_prob})
         msg.good(f"Added {len(nlp.vocab)} lexical entries to the vocab")
+    msg.good("Created vocabulary")
+    if vectors is not None:
+        add_vectors(nlp, vectors)
+        msg.good(f"Added vectors: {V['vectors']}")
 
 
 def add_tok2vec_weights(
