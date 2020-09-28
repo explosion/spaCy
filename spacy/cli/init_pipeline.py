@@ -118,7 +118,7 @@ def init_vocab(
     msg.good("Created vocabulary")
     if vectors is not None:
         add_vectors(nlp, vectors)
-        msg.good(f"Added vectors: {V['vectors']}")
+        msg.good(f"Added vectors: {vectors}")
 
 
 def add_tok2vec_weights(
