@@ -422,6 +422,28 @@ def resolve_training_config(
     return registry.resolve(config, validate=validate)
 
 
+def resolve_dot_names(config: Config, dot_names: List[Optional[str]]) -> List[Optional[Callable]]:
+    """Resolve one or more "dot notation" names, e.g. corpora.train. 
+    The paths could point anywhere into the config, so we don't know which
+    top-level section we'll be looking within.
+    
+    We resolve the whole top-level section, although we could resolve less --
+    we could find the lowest part of the tree.
+    """
+    resolved = {}
+    output = []
+    for name in dot_names:
+        if name is None:
+            output.append(name)
+        else:
+            section = name.split(".")[0]
+            # We want to avoid resolving the same thing twice.
+            if section not in resolved:
+                resolved[section] = registry.resolve(config[section], schema=None)
+            output.append(dot_to_object(resolved, name))
+    return output
+
+
 def load_model_from_init_py(
     init_file: Union[Path, str],
     *,
