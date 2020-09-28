@@ -497,7 +497,7 @@ def test_make_orth_variants(doc):
         DocBin(docs=[doc]).to_disk(output_file)
         # due to randomness, test only that this runs with no errors for now
         reader = Corpus(output_file, augmenter=create_orth_variants_augmenter(level=0.2, lower=0.5))
-        train_examples = list(next(reader(nlp)))
+        train_examples = list(reader(nlp))
 
 
 @pytest.mark.skip("Outdated")
