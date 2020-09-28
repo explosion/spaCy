@@ -141,7 +141,7 @@ def add_tok2vec_weights(
             raise ConfigValidationError(config=nlp.config, errors=errors)
         if not init_tok2vec.exists():
             err = f"can't find pretrained tok2vec: {init_tok2vec}"
-            errors = [{"loc": ["initialize", "vectors", "init_tok2vec"], "msg": err}]
+            errors = [{"loc": ["initialize", "vocab", "init_tok2vec"], "msg": err}]
             raise ConfigValidationError(config=nlp.config, errors=errors)
         with init_tok2vec.open("rb") as file_:
             weights_data = file_.read()
