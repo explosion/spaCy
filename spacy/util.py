@@ -379,9 +379,7 @@ def load_model_from_config(
     return nlp
 
 
-def resolve_dot_names(
-    config: Config, dot_names: List[Optional[str]]
-) -> Tuple[Any]:
+def resolve_dot_names(config: Config, dot_names: List[Optional[str]]) -> Tuple[Any]:
     """Resolve one or more "dot notation" names, e.g. corpora.train.
     The paths could point anywhere into the config, so we don't know which
     top-level section we'll be looking within.
@@ -410,8 +408,7 @@ def resolve_dot_names(
     objects = []
     for ref in output:
         if not isinstance(ref, str):
-            msg = f"not a valid section reference: {ref} ({type(ref)})"
-            errors.append({"loc": ref.split("."), "msg": msg})
+            objects.append(ref)
             continue
         section = ref.split(".")[0]
         # We want to avoid resolving the same thing twice
