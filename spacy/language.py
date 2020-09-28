@@ -1155,6 +1155,16 @@ class Language:
         sgd: Optional[Optimizer] = None,
         device: int = -1,
     ) -> Optimizer:
+        warnings.warn(Warnings.W089, DeprecationWarning)
+        return self.initialize(get_examples, sgd=sgd, device=device)
+
+    def initialize(
+        self,
+        get_examples: Optional[Callable[[], Iterable[Example]]] = None,
+        *,
+        sgd: Optional[Optimizer] = None,
+        device: int = -1,
+    ) -> Optimizer:
         """Initialize the pipe for training, using data examples if available.
 
         get_examples (Callable[[], Iterable[Example]]): Optional function that
@@ -1163,11 +1173,11 @@ class Language:
             create_optimizer if it doesn't exist.
         RETURNS (thinc.api.Optimizer): The optimizer.
 
-        DOCS: https://nightly.spacy.io/api/language#begin_training
+        DOCS: https://nightly.spacy.io/api/language#initialize
         """
         if get_examples is None:
             util.logger.debug(
-                "No 'get_examples' callback provided to 'Language.begin_training', creating dummy examples"
+                "No 'get_examples' callback provided to 'Language.initialize', creating dummy examples"
             )
             doc = Doc(self.vocab, words=["x", "y", "z"])
             get_examples = lambda: [Example.from_dict(doc, {})]
@@ -1179,7 +1189,7 @@ class Language:
         for example in get_examples():
             if not isinstance(example, Example):
                 err = Errors.E978.format(
-                    name="Language.begin_training", types=type(example)
+                    name="Language.initialize", types=type(example)
                 )
                 raise ValueError(err)
             else:
@@ -1198,8 +1208,8 @@ class Language:
             sgd = create_default_optimizer()
         self._optimizer = sgd
         for name, proc in self.pipeline:
-            if hasattr(proc, "begin_training"):
-                proc.begin_training(
+            if hasattr(proc, "initialize"):
+                proc.initialize(
                     get_examples, pipeline=self.pipeline, sgd=self._optimizer
                 )
         self._link_components()

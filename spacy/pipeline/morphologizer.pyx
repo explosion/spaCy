@@ -129,7 +129,7 @@ class Morphologizer(Tagger):
             self.cfg["labels_pos"][norm_label] = POS_IDS[pos]
         return 1
 
-    def begin_training(self, get_examples, *, pipeline=None, sgd=None):
+    def initialize(self, get_examples, *, pipeline=None, sgd=None):
         """Initialize the pipe for training, using a representative set
         of data examples.
 
@@ -142,7 +142,7 @@ class Morphologizer(Tagger):
             create_optimizer if it doesn't exist.
         RETURNS (thinc.api.Optimizer): The optimizer.
 
-        DOCS: https://nightly.spacy.io/api/morphologizer#begin_training
+        DOCS: https://nightly.spacy.io/api/morphologizer#initialize
         """
         self._ensure_examples(get_examples)
         # First, fetch all labels from the data

@@ -334,7 +334,7 @@ class TextCategorizer(Pipe):
         self.labels = tuple(list(self.labels) + [label])
         return 1
 
-    def begin_training(
+    def initialize(
         self,
         get_examples: Callable[[], Iterable[Example]],
         *,
@@ -353,7 +353,7 @@ class TextCategorizer(Pipe):
             create_optimizer if it doesn't exist.
         RETURNS (thinc.api.Optimizer): The optimizer.
 
-        DOCS: https://nightly.spacy.io/api/textcategorizer#begin_training
+        DOCS: https://nightly.spacy.io/api/textcategorizer#initialize
         """
         self._ensure_examples(get_examples)
         subbatch = []  # Select a subbatch of examples to initialize the model

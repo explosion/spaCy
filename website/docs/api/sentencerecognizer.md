@@ -114,7 +114,7 @@ and [`pipe`](/api/sentencerecognizer#pipe) delegate to the
 | `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
 | **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
-## SentenceRecognizer.begin_training {#begin_training tag="method"}
+## SentenceRecognizer.initialize {#initialize tag="method"}
 
 Initialize the component for training and return an
 [`Optimizer`](https://thinc.ai/docs/api-optimizers). `get_examples` should be a
@@ -129,7 +129,7 @@ setting up the label scheme based on the data.
 >
 > ```python
 > senter = nlp.add_pipe("senter")
-> optimizer = senter.begin_training(lambda: [], pipeline=nlp.pipeline)
+> optimizer = senter.initialize(lambda: [], pipeline=nlp.pipeline)
 > ```
 
 | Name           | Description                                                                                                                           |
@@ -185,7 +185,7 @@ Delegates to [`predict`](/api/sentencerecognizer#predict) and
 >
 > ```python
 > senter = nlp.add_pipe("senter")
-> optimizer = nlp.begin_training()
+> optimizer = nlp.initialize()
 > losses = senter.update(examples, sgd=optimizer)
 > ```
 

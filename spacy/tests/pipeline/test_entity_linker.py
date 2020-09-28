@@ -134,7 +134,7 @@ def test_kb_undefined(nlp):
     """Test that the EL can't train without defining a KB"""
     entity_linker = nlp.add_pipe("entity_linker", config={})
     with pytest.raises(ValueError):
-        entity_linker.begin_training(lambda: [])
+        entity_linker.initialize(lambda: [])
 
 
 def test_kb_empty(nlp):
@@ -143,7 +143,7 @@ def test_kb_empty(nlp):
     entity_linker = nlp.add_pipe("entity_linker", config=config)
     assert len(entity_linker.kb) == 0
     with pytest.raises(ValueError):
-        entity_linker.begin_training(lambda: [])
+        entity_linker.initialize(lambda: [])
 
 
 def test_kb_serialize(nlp):
@@ -360,7 +360,7 @@ def test_preserving_links_asdoc(nlp):
     ruler.add_patterns(patterns)
     el_config = {"kb_loader": {"@misc": "myLocationsKB.v1"}, "incl_prior": False}
     entity_linker = nlp.add_pipe("entity_linker", config=el_config, last=True)
-    nlp.begin_training()
+    nlp.initialize()
     assert entity_linker.model.get_dim("nO") == vector_length
 
     # test whether the entity links are preserved by the `as_doc()` function
@@ -463,7 +463,7 @@ def test_overfitting_IO():
     )
 
     # train the NEL pipe
-    optimizer = nlp.begin_training(get_examples=lambda: train_examples)
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
     assert entity_linker.model.get_dim("nO") == vector_length
     assert entity_linker.model.get_dim("nO") == entity_linker.kb.entity_vector_length
 

@@ -117,7 +117,7 @@ applied to the `Doc` in order. Both [`__call__`](/api/morphologizer#call) and
 | `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
 | **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
-## Morphologizer.begin_training {#begin_training tag="method"}
+## Morphologizer.initialize {#initialize tag="method"}
 
 Initialize the component for training and return an
 [`Optimizer`](https://thinc.ai/docs/api-optimizers). `get_examples` should be a
@@ -133,7 +133,7 @@ setting up the label scheme based on the data.
 > ```python
 > morphologizer = nlp.add_pipe("morphologizer")
 > nlp.pipeline.append(morphologizer)
-> optimizer = morphologizer.begin_training(lambda: [], pipeline=nlp.pipeline)
+> optimizer = morphologizer.initialize(lambda: [], pipeline=nlp.pipeline)
 > ```
 
 | Name           | Description                                                                                                                           |
@@ -189,7 +189,7 @@ Delegates to [`predict`](/api/morphologizer#predict) and
 >
 > ```python
 > morphologizer = nlp.add_pipe("morphologizer")
-> optimizer = nlp.begin_training()
+> optimizer = nlp.initialize()
 > losses = morphologizer.update(examples, sgd=optimizer)
 > ```
 
@@ -259,12 +259,11 @@ context, the original parameters are restored.
 Add a new label to the pipe. If the `Morphologizer` should set annotations for
 both `pos` and `morph`, the label should include the UPOS as the feature `POS`.
 Raises an error if the output dimension is already set, or if the model has
-already been fully [initialized](#begin_training). Note that you don't have to
-call this method if you provide a **representative data sample** to the
-[`begin_training`](#begin_training) method. In this case, all labels found in
-the sample will be automatically added to the model, and the output dimension
-will be [inferred](/usage/layers-architectures#thinc-shape-inference)
-automatically.
+already been fully [initialized](#initialize). Note that you don't have to call
+this method if you provide a **representative data sample** to the
+[`initialize`](#initialize) method. In this case, all labels found in the sample
+will be automatically added to the model, and the output dimension will be
+[inferred](/usage/layers-architectures#thinc-shape-inference) automatically.
 
 > #### Example
 >

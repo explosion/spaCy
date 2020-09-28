@@ -103,12 +103,12 @@ def debug_model(
     with data_validation(False):
         try:
             train_corpus = dot_to_object(config, config["training"]["train_corpus"])
-            nlp.begin_training(lambda: train_corpus(nlp))
+            nlp.initialize(lambda: train_corpus(nlp))
             msg.info("Initialized the model with the training corpus.")
         except ValueError:
             try:
                 _set_output_dim(nO=7, model=model)
-                nlp.begin_training(lambda: [Example.from_dict(x, {}) for x in X])
+                nlp.initialize(lambda: [Example.from_dict(x, {}) for x in X])
                 msg.info("Initialized the model with dummy data.")
             except Exception:
                 msg.fail(

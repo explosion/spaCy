@@ -140,7 +140,7 @@ class EntityLinker(Pipe):
         if len(self.kb) == 0:
             raise ValueError(Errors.E139.format(name=self.name))
 
-    def begin_training(
+    def initialize(
         self,
         get_examples: Callable[[], Iterable[Example]],
         *,
@@ -159,7 +159,7 @@ class EntityLinker(Pipe):
             create_optimizer if it doesn't exist.
         RETURNS (thinc.api.Optimizer): The optimizer.
 
-        DOCS: https://nightly.spacy.io/api/entitylinker#begin_training
+        DOCS: https://nightly.spacy.io/api/entitylinker#initialize
         """
         self._ensure_examples(get_examples)
         self._require_kb()

@@ -139,7 +139,7 @@ applied to the `Doc` in order. Both [`__call__`](/api/entitylinker#call) and
 | `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
 | **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
-## EntityLinker.begin_training {#begin_training tag="method"}
+## EntityLinker.initialize {#initialize tag="method"}
 
 Initialize the component for training and return an
 [`Optimizer`](https://thinc.ai/docs/api-optimizers). `get_examples` should be a
@@ -150,11 +150,17 @@ validating the network,
 [inferring missing shapes](https://thinc.ai/docs/usage-models#validation) and
 setting up the label scheme based on the data.
 
+<Infobox variant="warning" title="Changed in v3.0" id="begin_training">
+
+This method was previously called `begin_training`.
+
+</Infobox>
+
 > #### Example
 >
 > ```python
 > entity_linker = nlp.add_pipe("entity_linker", last=True)
-> optimizer = entity_linker.begin_training(lambda: [], pipeline=nlp.pipeline)
+> optimizer = entity_linker.initialize(lambda: [], pipeline=nlp.pipeline)
 > ```
 
 | Name           | Description                                                                                                                           |
@@ -211,7 +217,7 @@ pipe's entity linking model and context encoder. Delegates to
 >
 > ```python
 > entity_linker = nlp.add_pipe("entity_linker")
-> optimizer = nlp.begin_training()
+> optimizer = nlp.initialize()
 > losses = entity_linker.update(examples, sgd=optimizer)
 > ```
 

@@ -123,7 +123,7 @@ and [`set_annotations`](/api/tok2vec#set_annotations) methods.
 | `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
 | **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
-## Tok2Vec.begin_training {#begin_training tag="method"}
+## Tok2Vec.initialize {#initialize tag="method"}
 
 Initialize the component for training and return an
 [`Optimizer`](https://thinc.ai/docs/api-optimizers). `get_examples` should be a
@@ -138,7 +138,7 @@ setting up the label scheme based on the data.
 >
 > ```python
 > tok2vec = nlp.add_pipe("tok2vec")
-> optimizer = tok2vec.begin_training(lambda: [], pipeline=nlp.pipeline)
+> optimizer = tok2vec.initialize(lambda: [], pipeline=nlp.pipeline)
 > ```
 
 | Name           | Description                                                                                                                           |
@@ -193,7 +193,7 @@ Delegates to [`predict`](/api/tok2vec#predict).
 >
 > ```python
 > tok2vec = nlp.add_pipe("tok2vec")
-> optimizer = nlp.begin_training()
+> optimizer = nlp.initialize()
 > losses = tok2vec.update(examples, sgd=optimizer)
 > ```
 

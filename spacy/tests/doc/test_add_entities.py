@@ -26,7 +26,7 @@ def test_doc_add_entities_set_ents_iob(en_vocab):
     cfg = {"model": DEFAULT_NER_MODEL}
     model = registry.resolve(cfg, validate=True)["model"]
     ner = EntityRecognizer(en_vocab, model, **config)
-    ner.begin_training(lambda: [_ner_example(ner)])
+    ner.initialize(lambda: [_ner_example(ner)])
     ner(doc)
 
     doc.ents = [("ANIMAL", 3, 4)]
@@ -48,7 +48,7 @@ def test_ents_reset(en_vocab):
     cfg = {"model": DEFAULT_NER_MODEL}
     model = registry.resolve(cfg, validate=True)["model"]
     ner = EntityRecognizer(en_vocab, model, **config)
-    ner.begin_training(lambda: [_ner_example(ner)])
+    ner.initialize(lambda: [_ner_example(ner)])
     ner(doc)
     orig_iobs = [t.ent_iob_ for t in doc]
     doc.ents = list(doc.ents)

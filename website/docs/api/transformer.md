@@ -158,7 +158,7 @@ applied to the `Doc` in order. Both [`__call__`](/api/transformer#call) and
 | `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
 | **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
-## Transformer.begin_training {#begin_training tag="method"}
+## Transformer.initialize {#initialize tag="method"}
 
 Initialize the component for training and return an
 [`Optimizer`](https://thinc.ai/docs/api-optimizers). `get_examples` should be a
@@ -173,7 +173,7 @@ setting up the label scheme based on the data.
 >
 > ```python
 > trf = nlp.add_pipe("transformer")
-> optimizer = trf.begin_training(lambda: [], pipeline=nlp.pipeline)
+> optimizer = trf.initialize(lambda: [], pipeline=nlp.pipeline)
 > ```
 
 | Name           | Description                                                                                                                           |
@@ -241,7 +241,7 @@ and call the optimizer, while the others simply increment the gradients.
 >
 > ```python
 > trf = nlp.add_pipe("transformer")
-> optimizer = nlp.begin_training()
+> optimizer = nlp.initialize()
 > losses = trf.update(examples, sgd=optimizer)
 > ```
 

@@ -405,7 +405,7 @@ cdef class Parser(Pipe):
     def set_output(self, nO):
         self.model.attrs["resize_output"](self.model, nO)
 
-    def begin_training(self, get_examples, pipeline=None, sgd=None, **kwargs):
+    def initialize(self, get_examples, pipeline=None, sgd=None, **kwargs):
         self._ensure_examples(get_examples)
         self.cfg.update(kwargs)
         lexeme_norms = self.vocab.lookups.get_table("lexeme_norm", {})

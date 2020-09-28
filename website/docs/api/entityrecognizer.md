@@ -129,7 +129,7 @@ applied to the `Doc` in order. Both [`__call__`](/api/entityrecognizer#call) and
 | `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
 | **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
-## EntityRecognizer.begin_training {#begin_training tag="method"}
+## EntityRecognizer.initialize {#initialize tag="method"}
 
 Initialize the component for training and return an
 [`Optimizer`](https://thinc.ai/docs/api-optimizers). `get_examples` should be a
@@ -140,11 +140,17 @@ validating the network,
 [inferring missing shapes](https://thinc.ai/docs/usage-models#validation) and
 setting up the label scheme based on the data.
 
+<Infobox variant="warning" title="Changed in v3.0" id="begin_training">
+
+This method was previously called `begin_training`.
+
+</Infobox>
+
 > #### Example
 >
 > ```python
 > ner = nlp.add_pipe("ner")
-> optimizer = ner.begin_training(lambda: [], pipeline=nlp.pipeline)
+> optimizer = ner.initialize(lambda: [], pipeline=nlp.pipeline)
 > ```
 
 | Name           | Description                                                                                                                           |
@@ -199,7 +205,7 @@ model. Delegates to [`predict`](/api/entityrecognizer#predict) and
 >
 > ```python
 > ner = nlp.add_pipe("ner")
-> optimizer = nlp.begin_training()
+> optimizer = nlp.initialize()
 > losses = ner.update(examples, sgd=optimizer)
 > ```
 
@@ -282,11 +288,10 @@ context, the original parameters are restored.
 ## EntityRecognizer.add_label {#add_label tag="method"}
 
 Add a new label to the pipe. Note that you don't have to call this method if you
-provide a **representative data sample** to the
-[`begin_training`](#begin_training) method. In this case, all labels found in
-the sample will be automatically added to the model, and the output dimension
-will be [inferred](/usage/layers-architectures#thinc-shape-inference)
-automatically.
+provide a **representative data sample** to the [`initialize`](#initialize)
+method. In this case, all labels found in the sample will be automatically added
+to the model, and the output dimension will be
+[inferred](/usage/layers-architectures#thinc-shape-inference) automatically.
 
 > #### Example
 >

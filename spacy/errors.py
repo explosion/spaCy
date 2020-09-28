@@ -85,6 +85,7 @@ class Warnings:
             "attribute or operator.")
 
     # TODO: fix numbering after merging develop into master
+    W089 = ("The nlp.begin_training method has been renamed to nlp.initialize.")
     W090 = ("Could not locate any {format} files in path '{path}'.")
     W091 = ("Could not clean/remove the temp directory at {dir}: {msg}.")
     W092 = ("Ignoring annotations for sentence starts, as dependency heads are set.")
@@ -306,7 +307,7 @@ class Errors:
             "settings: {opts}")
     E107 = ("Value of doc._.{attr} is not JSON-serializable: {value}")
     E109 = ("Component '{name}' could not be run. Did you forget to "
-            "call begin_training()?")
+            "call initialize()?")
     E110 = ("Invalid displaCy render wrapper. Expected callable, got: {obj}")
     E111 = ("Pickling a token is not supported, because tokens are only views "
             "of the parent Doc and can't exist on their own. A pickled token "
@@ -376,7 +377,7 @@ class Errors:
             "provided {found}.")
     E143 = ("Labels for component '{name}' not initialized. This can be fixed "
             "by calling add_label, or by providing a representative batch of "
-            "examples to the component's begin_training method.")
+            "examples to the component's initialize method.")
     E145 = ("Error reading `{param}` from input file.")
     E146 = ("Could not access `{path}`.")
     E147 = ("Unexpected error in the {method} functionality of the "
@@ -517,7 +518,7 @@ class Errors:
             "but the provided argument {loc} points to a file.")
     E929 = ("A 'KnowledgeBase' could not be read from {loc} - the path does "
             "not seem to exist.")
-    E930 = ("Received invalid get_examples callback in {name}.begin_training. "
+    E930 = ("Received invalid get_examples callback in {name}.initialize. "
             "Expected function that returns an iterable of Example objects but "
             "got: {obj}")
     E931 = ("Encountered Pipe subclass without Pipe.{method} method in component "

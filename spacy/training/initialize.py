@@ -49,9 +49,9 @@ def init_nlp(config: Config, *, use_gpu: int = -1, silent: bool = True) -> Langu
             msg.info(f"Resuming training for: {resume_components}")
             nlp.resume_training(sgd=optimizer)
     with nlp.select_pipes(disable=[*frozen_components, *resume_components]):
-        nlp.begin_training(lambda: train_corpus(nlp), sgd=optimizer)
+        nlp.initialize(lambda: train_corpus(nlp), sgd=optimizer)
         msg.good(f"Initialized pipeline components")
-    # Verify the config after calling 'begin_training' to ensure labels
+    # Verify the config after calling 'initialize' to ensure labels
     # are properly initialized
     verify_config(nlp)
     if "pretraining" in config and config["pretraining"]:

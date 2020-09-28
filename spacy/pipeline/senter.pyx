@@ -124,7 +124,7 @@ class SentenceRecognizer(Tagger):
             raise ValueError("nan value when computing loss")
         return float(loss), d_scores
 
-    def begin_training(self, get_examples, *, pipeline=None, sgd=None):
+    def initialize(self, get_examples, *, pipeline=None, sgd=None):
         """Initialize the pipe for training, using a representative set
         of data examples.
 
@@ -137,7 +137,7 @@ class SentenceRecognizer(Tagger):
             create_optimizer if it doesn't exist.
         RETURNS (thinc.api.Optimizer): The optimizer.
 
-        DOCS: https://nightly.spacy.io/api/sentencerecognizer#begin_training
+        DOCS: https://nightly.spacy.io/api/sentencerecognizer#initialize
         """
         self._ensure_examples(get_examples)
         doc_sample = []

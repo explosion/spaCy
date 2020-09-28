@@ -183,7 +183,7 @@ cdef class Pipe:
         """
         return util.create_default_optimizer()
 
-    def begin_training(self, get_examples, *, pipeline=None, sgd=None):
+    def initialize(self, get_examples, *, pipeline=None, sgd=None):
         """Initialize the pipe for training, using data examples if available.
         This method needs to be implemented by each Pipe component,
         ensuring the internal model (if available) is initialized properly
@@ -198,7 +198,7 @@ cdef class Pipe:
             create_optimizer if it doesn't exist.
         RETURNS (thinc.api.Optimizer): The optimizer.
 
-        DOCS: https://nightly.spacy.io/api/pipe#begin_training
+        DOCS: https://nightly.spacy.io/api/pipe#initialize
         """
         raise NotImplementedError(Errors.E931.format(method="add_label", name=self.name))
 

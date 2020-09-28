@@ -203,7 +203,7 @@ class Tok2Vec(Pipe):
     def get_loss(self, examples, scores) -> None:
         pass
 
-    def begin_training(
+    def initialize(
         self,
         get_examples: Callable[[], Iterable[Example]],
         *,
@@ -222,7 +222,7 @@ class Tok2Vec(Pipe):
             create_optimizer if it doesn't exist.
         RETURNS (thinc.api.Optimizer): The optimizer.
 
-        DOCS: https://nightly.spacy.io/api/tok2vec#begin_training
+        DOCS: https://nightly.spacy.io/api/tok2vec#initialize
         """
         self._ensure_examples(get_examples)
         doc_sample = []

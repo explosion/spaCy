@@ -47,7 +47,7 @@ def test_readers():
     )
     optimizer = T["optimizer"]
     # simulate a training loop
-    nlp.begin_training(lambda: train_corpus(nlp), sgd=optimizer)
+    nlp.initialize(lambda: train_corpus(nlp), sgd=optimizer)
     for example in train_corpus(nlp):
         nlp.update([example], sgd=optimizer)
     scores = nlp.evaluate(list(dev_corpus(nlp)))
@@ -99,7 +99,7 @@ def test_cat_readers(reader, additional_config):
     )
     optimizer = T["optimizer"]
     # simulate a training loop
-    nlp.begin_training(lambda: train_corpus(nlp), sgd=optimizer)
+    nlp.initialize(lambda: train_corpus(nlp), sgd=optimizer)
     for example in train_corpus(nlp):
         assert example.y.cats
         # this shouldn't fail if each training example has at least one positive label

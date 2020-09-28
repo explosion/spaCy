@@ -88,7 +88,7 @@ def test_init_tok2vec():
     nlp = English()
     tok2vec = nlp.add_pipe("tok2vec")
     assert tok2vec.listeners == []
-    nlp.begin_training()
+    nlp.initialize()
     assert tok2vec.model.get_dim("nO")
 
 
@@ -154,7 +154,7 @@ def test_tok2vec_listener():
 
     # Check that the Tok2Vec component finds it listeners
     assert tok2vec.listeners == []
-    optimizer = nlp.begin_training(lambda: train_examples)
+    optimizer = nlp.initialize(lambda: train_examples)
     assert tok2vec.listeners == [tagger_tok2vec]
 
     for i in range(5):

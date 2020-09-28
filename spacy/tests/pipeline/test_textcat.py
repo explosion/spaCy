@@ -26,7 +26,7 @@ def test_simple_train():
     nlp = Language()
     textcat = nlp.add_pipe("textcat")
     textcat.add_label("answer")
-    nlp.begin_training()
+    nlp.initialize()
     for i in range(5):
         for text, answer in [
             ("aaaa", 1.0),
@@ -56,7 +56,7 @@ def test_textcat_learns_multilabel():
     textcat = TextCategorizer(nlp.vocab, width=8)
     for letter in letters:
         textcat.add_label(letter)
-    optimizer = textcat.begin_training(lambda: [])
+    optimizer = textcat.initialize(lambda: [])
     for i in range(30):
         losses = {}
         examples = [Example.from_dict(doc, {"cats": cats}) for doc, cat in docs]
@@ -86,7 +86,7 @@ def test_no_label():
     nlp = Language()
     nlp.add_pipe("textcat")
     with pytest.raises(ValueError):
-        nlp.begin_training()
+        nlp.initialize()
 
 
 def test_implicit_label():
@@ -95,7 +95,7 @@ def test_implicit_label():
     train_examples = []
     for t in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
-    nlp.begin_training(get_examples=lambda: train_examples)
+    nlp.initialize(get_examples=lambda: train_examples)
 
 
 def test_no_resize():
@@ -103,14 +103,14 @@ def test_no_resize():
     textcat = nlp.add_pipe("textcat")
     textcat.add_label("POSITIVE")
     textcat.add_label("NEGATIVE")
-    nlp.begin_training()
+    nlp.initialize()
     assert textcat.model.get_dim("nO") == 2
     # this throws an error because the textcat can't be resized after initialization
     with pytest.raises(ValueError):
         textcat.add_label("NEUTRAL")
 
 
-def test_begin_training_examples():
+def test_initialize_examples():
     nlp = Language()
     textcat = nlp.add_pipe("textcat")
     train_examples = []
@@ -119,12 +119,12 @@ def test_begin_training_examples():
         for label, value in annotations.get("cats").items():
             textcat.add_label(label)
     # you shouldn't really call this more than once, but for testing it should be fine
-    nlp.begin_training()
-    nlp.begin_training(get_examples=lambda: train_examples)
+    nlp.initialize()
+    nlp.initialize(get_examples=lambda: train_examples)
     with pytest.raises(TypeError):
-        nlp.begin_training(get_examples=lambda: None)
+        nlp.initialize(get_examples=lambda: None)
     with pytest.raises(ValueError):
-        nlp.begin_training(get_examples=train_examples)
+        nlp.initialize(get_examples=train_examples)
 
 
 def test_overfitting_IO():
@@ -139,7 +139,7 @@ def test_overfitting_IO():
     train_examples = []
     for text, annotations in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
-    optimizer = nlp.begin_training(get_examples=lambda: train_examples)
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
     assert textcat.model.get_dim("nO") == 2
 
     for i in range(50):
@@ -195,7 +195,7 @@ def test_textcat_configs(textcat_config):
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
         for label, value in annotations.get("cats").items():
             textcat.add_label(label)
-    optimizer = nlp.begin_training()
+    optimizer = nlp.initialize()
     for i in range(5):
         losses = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)

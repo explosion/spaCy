@@ -81,7 +81,7 @@ class MultitaskObjective(Tagger):
     def set_annotations(self, docs, dep_ids):
         pass
 
-    def begin_training(self, get_examples, pipeline=None, sgd=None):
+    def initialize(self, get_examples, pipeline=None, sgd=None):
         if not hasattr(get_examples, "__call__"):
             err = Errors.E930.format(name="MultitaskObjective", obj=type(get_examples))
             raise ValueError(err)
@@ -177,10 +177,10 @@ class ClozeMultitask(Pipe):
     def set_annotations(self, docs, dep_ids):
         pass
 
-    def begin_training(self, get_examples, pipeline=None, sgd=None):
+    def initialize(self, get_examples, pipeline=None, sgd=None):
         self.model.initialize()  # TODO: fix initialization by defining X and Y
         X = self.model.ops.alloc((5, self.model.get_ref("tok2vec").get_dim("nO")))
-        self.model.output_layer.begin_training(X)
+        self.model.output_layer.initialize(X)
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
