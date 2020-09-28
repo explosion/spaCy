@@ -18,7 +18,7 @@ from .. import util
 from ..training.example import Example
 from ..training.initialize import must_initialize, init_pipeline
 from ..errors import Errors
-from ..util import dot_to_object
+from ..util import resolve_dot_names
 
 
 @app.command(
@@ -361,27 +361,6 @@ def update_meta(
             nlp.meta["performance"][metric] = info["other_scores"].get(metric, 0.0)
     for pipe_name in nlp.pipe_names:
         nlp.meta["performance"][f"{pipe_name}_loss"] = info["losses"][pipe_name]
-
-
-def load_from_paths(
-    config: Config,
-) -> Tuple[List[Dict[str, str]], Dict[str, dict], bytes]:
-    # TODO: separate checks from loading
-    raw_text = util.ensure_path(config["training"]["raw_text"])
-    if raw_text is not None:
-        if not raw_text.exists():
-            msg.fail("Can't find raw text", raw_text, exits=1)
-        raw_text = list(srsly.read_jsonl(config["training"]["raw_text"]))
-    tag_map = {}
-    morph_rules = {}
-    weights_data = None
-    init_tok2vec = util.ensure_path(config["training"]["init_tok2vec"])
-    if init_tok2vec is not None:
-        if not init_tok2vec.exists():
-            msg.fail("Can't find pretrained tok2vec", init_tok2vec, exits=1)
-        with init_tok2vec.open("rb") as file_:
-            weights_data = file_.read()
-    return raw_text, tag_map, morph_rules, weights_data
 
 
 def verify_cli_args(config_path: Path, output_path: Optional[Path] = None) -> None:
