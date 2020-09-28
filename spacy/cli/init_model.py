@@ -12,16 +12,17 @@ import srsly
 import warnings
 from wasabi import msg, Printer
 import typer
+from ._util import init_cli, Arg, Opt, parse_config_overrides, show_validation_error
 
 DEFAULT_OOV_PROB = -20
 
 
-@init_cli.command("vocab")
-@app.command(
-    "init-model",
-    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
-    hidden=True,  # hide this from main CLI help but still allow it to work with warning
-)
+#@init_cli.command("vocab")
+#@app.command(
+#    "init-model",
+#    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+#    hidden=True,  # hide this from main CLI help but still allow it to work with warning
+#)
 def init_model_cli(
     # fmt: off
     ctx: typer.Context,  # This is only used to read additional arguments

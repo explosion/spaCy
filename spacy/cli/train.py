@@ -16,7 +16,6 @@ from ._util import import_code, get_sourced_components
 from ..language import Language
 from .. import util
 from ..training.example import Example
-from ..training.initialize import must_initialize, init_pipeline
 from ..errors import Errors
 from ..util import resolve_dot_names
 
@@ -79,7 +78,7 @@ def train(nlp: Language, output_path: Optional[Path]=None) -> None:
     T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
     dot_names = [T["train_corpus"], T["dev_corpus"], T["raw_text"]]
     train_corpus, dev_corpus, raw_text = resolve_dot_names(config, dot_names)
-    optimizer T["optimizer"]
+    optimizer = T["optimizer"]
     score_weights = T["score_weights"]
     batcher = T["batcher"]
     train_logger = T["logger"]
