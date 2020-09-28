@@ -3,7 +3,6 @@ from typing import Iterable, TypeVar, TYPE_CHECKING
 from enum import Enum
 from pydantic import BaseModel, Field, ValidationError, validator
 from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool
-from pydantic import root_validator
 from thinc.config import Promise
 from collections import defaultdict
 from thinc.api import Optimizer
@@ -205,8 +204,6 @@ class ModelMetaSchema(BaseModel):
 
 class ConfigSchemaTraining(BaseModel):
     # fmt: off
-    vectors: Optional[StrictStr] = Field(..., title="Path to vectors")
-    lookups: Optional[Lookups] = Field(..., title="Vocab lookups")
     dev_corpus: StrictStr = Field(..., title="Path in the config to the dev data")
     train_corpus: StrictStr = Field(..., title="Path in the config to the training data")
     batcher: Batcher = Field(..., title="Batcher for the training data")
@@ -219,8 +216,6 @@ class ConfigSchemaTraining(BaseModel):
     gpu_allocator: Optional[StrictStr] = Field(..., title="Memory allocator when running on GPU")
     accumulate_gradient: StrictInt = Field(..., title="Whether to divide the batch up into substeps")
     score_weights: Dict[StrictStr, Optional[Union[StrictFloat, StrictInt]]] = Field(..., title="Scores to report and their weights for selecting final model")
-    init_tok2vec: Optional[StrictStr] = Field(..., title="Path to pretrained tok2vec weights")
-    raw_text: Optional[StrictStr] = Field(default=None, title="Raw text")
     optimizer: Optimizer = Field(..., title="The optimizer to use")
     logger: Logger = Field(..., title="The logger to track training progress")
     frozen_components: List[str] = Field(..., title="Pipeline components that shouldn't be updated during training")
@@ -275,11 +270,10 @@ class ConfigSchemaPretrain(BaseModel):
 
 class ConfigSchemaInitVocab(BaseModel):
     # fmt: off
-    data: Optional[str] = Field(..., title="Path to JSON-formatted vocabulary file")
+    data: Optional[StrictStr] = Field(..., title="Path to JSON-formatted vocabulary file")
     lookups: Optional[Lookups] = Field(..., title="Vocabulary lookups, e.g. lexeme normalization")
     vectors: Optional[StrictStr] = Field(..., title="Path to vectors")
     init_tok2vec: Optional[StrictStr] = Field(..., title="Path to pretrained tok2vec weights")
-    raw_text: Optional[StrictStr] = Field(default=None, title="Raw text")
     # fmt: on
 
     class Config:
@@ -290,7 +284,7 @@ class ConfigSchemaInitVocab(BaseModel):
 class ConfigSchemaInit(BaseModel):
     vocab: ConfigSchemaInitVocab
     tokenizer: Any
-    components: Dict[str, Any]
+    components: Dict[StrictStr, Any]
 
     class Config:
         extra = "forbid"

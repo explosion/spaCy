@@ -72,14 +72,15 @@ def init_pipeline(config: Config, use_gpu: int = -1) -> Language:
     config = nlp.config.interpolate()
     # Resolve all training-relevant sections using the filled nlp config
     T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
-    dot_names = [T["train_corpus"], T["dev_corpus"], T["raw_text"]]
-    train_corpus, dev_corpus, raw_text = resolve_dot_names(config, dot_names)
+    dot_names = [T["train_corpus"], T["dev_corpus"]]
+    train_corpus, dev_corpus = resolve_dot_names(config, dot_names)
     I = registry.resolve(config["initialize"], schema=ConfigSchemaInit)
-    init_vocab(nlp, data=I["vocab"]["data"], lookups=I["vocab"]["lookups"])
+    V = I["vocab"]
+    init_vocab(nlp, data=V["data"], lookups=V["lookups"])
     msg.good("Created vocabulary")
-    if T["vectors"] is not None:
-        add_vectors(nlp, T["vectors"])
-        msg.good(f"Added vectors: {T['vectors']}")
+    if V["vectors"] is not None:
+        add_vectors(nlp, V["vectors"])
+        msg.good(f"Added vectors: {V['vectors']}")
     optimizer = T["optimizer"]
     before_to_disk = create_before_to_disk_callback(T["before_to_disk"])
     # Components that shouldn't be updated during training
@@ -130,20 +131,15 @@ def init_vocab(
 
 
 def add_tok2vec_weights(
-    nlp: Language, pretrain_config: Dict[str, Any], init_config: Dict[str, Any]
+    nlp: Language, pretrain_config: Dict[str, Any], vocab_config: Dict[str, Any]
 ) -> None:
     # Load pretrained tok2vec weights - cf. CLI command 'pretrain'
     P = pretrain_config
-    I = init_config
-    raw_text = util.ensure_path(I["vocab"]["raw_text"])
-    if raw_text is not None:
-        if not raw_text.exists():
-            msg.fail("Can't find raw text", raw_text, exits=1)
-        raw_text = list(srsly.read_jsonl(raw_text))
+    V = vocab_config
     weights_data = None
-    init_tok2vec = util.ensure_path(I["vocab"]["init_tok2vec"])
+    init_tok2vec = util.ensure_path(V["init_tok2vec"])
     if init_tok2vec is not None:
-        if P["objective"].get("type") == "vectors" and not I["vectors"]:
+        if P["objective"].get("type") == "vectors" and not V["vectors"]:
             err = "Need initialize.vectors if pretraining.objective.type is vectors"
             msg.fail(err, exits=1)
         if not init_tok2vec.exists():
