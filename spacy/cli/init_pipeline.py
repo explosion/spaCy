@@ -15,8 +15,7 @@ from ._util import import_code, get_sourced_components, load_from_paths
 
 
 @init_cli.command(
-    "pipeline",
-    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+    "nlp", context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
 )
 def init_pipeline_cli(
     # fmt: off
