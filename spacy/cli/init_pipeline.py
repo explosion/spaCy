@@ -8,12 +8,12 @@ import srsly
 
 from .. import util
 from ..util import registry, resolve_dot_names, OOV_RANK
-from ..schemas import ConfigSchemaTraining, ConfigSchemaPretrain
+from ..schemas import ConfigSchemaTraining, ConfigSchemaPretrain, ConfigSchemaInit
 from ..language import Language
 from ..lookups import Lookups
 from ..errors import Errors
 from ._util import init_cli, Arg, Opt, parse_config_overrides, show_validation_error
-from ._util import import_code, get_sourced_components, load_from_paths
+from ._util import import_code, get_sourced_components
 
 
 DEFAULT_OOV_PROB = -20
@@ -67,14 +67,15 @@ def init_pipeline(config: Config, use_gpu: int = -1) -> Language:
     # Use original config here before it's resolved to functions
     sourced_components = get_sourced_components(config)
     with show_validation_error():
-        nlp = util.load_model_from_config(raw_config)
+        nlp = util.load_model_from_config(raw_config, auto_fill=True)
     msg.good("Set up nlp object from config")
+    config = nlp.config.interpolate()
     # Resolve all training-relevant sections using the filled nlp config
     T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
     dot_names = [T["train_corpus"], T["dev_corpus"], T["raw_text"]]
     train_corpus, dev_corpus, raw_text = resolve_dot_names(config, dot_names)
-    # TODO: move lookups to [initialize], add vocab data
-    init_vocab(nlp, lookups=T["lookups"])
+    I = registry.resolve(config["initialize"], schema=ConfigSchemaInit)
+    init_vocab(nlp, data=I["vocab"]["data"], lookups=I["vocab"]["lookups"])
     msg.good("Created vocabulary")
     if T["vectors"] is not None:
         add_vectors(nlp, T["vectors"])
@@ -98,22 +99,19 @@ def init_pipeline(config: Config, use_gpu: int = -1) -> Language:
     verify_config(nlp)
     if "pretraining" in config and config["pretraining"]:
         P = registry.resolve(config["pretraining"], schema=ConfigSchemaPretrain)
-        add_tok2vec_weights({"training": T, "pretraining": P}, nlp)
+        add_tok2vec_weights(nlp, P, I)
     # TODO: this should be handled better?
     nlp = before_to_disk(nlp)
     return nlp
 
 
 def init_vocab(
-    nlp: Language,
-    *,
-    vocab_data: Optional[Path] = None,
-    lookups: Optional[Lookups] = None,
+    nlp: Language, *, data: Optional[Path] = None, lookups: Optional[Lookups] = None,
 ) -> Language:
     if lookups:
         nlp.vocab.lookups = lookups
         msg.good(f"Added vocab lookups: {', '.join(lookups.tables)}")
-    data_path = util.ensure_path(vocab_data)
+    data_path = util.ensure_path(data)
     if data_path is not None:
         lex_attrs = srsly.read_jsonl(data_path)
         for lexeme in nlp.vocab:
@@ -131,11 +129,29 @@ def init_vocab(
         msg.good(f"Added {len(nlp.vocab)} lexical entries to the vocab")
 
 
-def add_tok2vec_weights(config: Config, nlp: Language) -> None:
+def add_tok2vec_weights(
+    nlp: Language, pretrain_config: Dict[str, Any], init_config: Dict[str, Any]
+) -> None:
     # Load pretrained tok2vec weights - cf. CLI command 'pretrain'
-    weights_data = load_from_paths(config)
+    P = pretrain_config
+    I = init_config
+    raw_text = util.ensure_path(I["vocab"]["raw_text"])
+    if raw_text is not None:
+        if not raw_text.exists():
+            msg.fail("Can't find raw text", raw_text, exits=1)
+        raw_text = list(srsly.read_jsonl(raw_text))
+    weights_data = None
+    init_tok2vec = util.ensure_path(I["vocab"]["init_tok2vec"])
+    if init_tok2vec is not None:
+        if P["objective"].get("type") == "vectors" and not I["vectors"]:
+            err = "Need initialize.vectors if pretraining.objective.type is vectors"
+            msg.fail(err, exits=1)
+        if not init_tok2vec.exists():
+            msg.fail("Can't find pretrained tok2vec", init_tok2vec, exits=1)
+        with init_tok2vec.open("rb") as file_:
+            weights_data = file_.read()
     if weights_data is not None:
-        tok2vec_component = config["pretraining"]["component"]
+        tok2vec_component = P["component"]
         if tok2vec_component is None:
             msg.fail(
                 f"To use pretrained tok2vec weights, [pretraining.component] "
@@ -143,9 +159,8 @@ def add_tok2vec_weights(config: Config, nlp: Language) -> None:
                 exits=1,
             )
         layer = nlp.get_pipe(tok2vec_component).model
-        tok2vec_layer = config["pretraining"]["layer"]
-        if tok2vec_layer:
-            layer = layer.get_ref(tok2vec_layer)
+        if P["layer"]:
+            layer = layer.get_ref(P["layer"])
         layer.from_bytes(weights_data)
         msg.good(f"Loaded pretrained weights into component '{tok2vec_component}'")
 

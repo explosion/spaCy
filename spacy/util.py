@@ -61,7 +61,7 @@ LEXEME_NORM_LANGS = ["da", "de", "el", "en", "id", "lb", "pt", "ru", "sr", "ta",
 # Default order of sections in the config.cfg. Not all sections needs to exist,
 # and additional sections are added at the end, in alphabetical order.
 # fmt: off
-CONFIG_SECTION_ORDER = ["paths", "variables", "system", "nlp", "components", "corpora", "training", "pretraining"]
+CONFIG_SECTION_ORDER = ["paths", "variables", "system", "nlp", "components", "corpora", "training", "pretraining", "initialize"]
 # fmt: on
 
 

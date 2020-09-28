@@ -273,22 +273,37 @@ class ConfigSchemaPretrain(BaseModel):
         arbitrary_types_allowed = True
 
 
+class ConfigSchemaInitVocab(BaseModel):
+    # fmt: off
+    data: Optional[str] = Field(..., title="Path to JSON-formatted vocabulary file")
+    lookups: Optional[Lookups] = Field(..., title="Vocabulary lookups, e.g. lexeme normalization")
+    vectors: Optional[StrictStr] = Field(..., title="Path to vectors")
+    init_tok2vec: Optional[StrictStr] = Field(..., title="Path to pretrained tok2vec weights")
+    raw_text: Optional[StrictStr] = Field(default=None, title="Raw text")
+    # fmt: on
+
+    class Config:
+        extra = "forbid"
+        arbitrary_types_allowed = True
+
+
+class ConfigSchemaInit(BaseModel):
+    vocab: ConfigSchemaInitVocab
+    tokenizer: Any
+    components: Dict[str, Any]
+
+    class Config:
+        extra = "forbid"
+        arbitrary_types_allowed = True
+
+
 class ConfigSchema(BaseModel):
     training: ConfigSchemaTraining
     nlp: ConfigSchemaNlp
     pretraining: Union[ConfigSchemaPretrain, ConfigSchemaPretrainEmpty] = {}
     components: Dict[str, Dict[str, Any]]
     corpora: Dict[str, Reader]
-
-    @root_validator(allow_reuse=True)
-    def validate_config(cls, values):
-        """Perform additional validation for settings with dependencies."""
-        pt = values.get("pretraining")
-        if pt and not isinstance(pt, ConfigSchemaPretrainEmpty):
-            if pt.objective.get("type") == "vectors" and not values["nlp"].vectors:
-                err = "Need nlp.vectors if pretraining.objective.type is vectors"
-                raise ValueError(err)
-        return values
+    initialize: ConfigSchemaInit
 
     class Config:
         extra = "allow"

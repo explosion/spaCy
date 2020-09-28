@@ -14,7 +14,6 @@ from .init_pipeline import init_pipeline, must_initialize
 from .init_pipeline import create_before_to_disk_callback
 from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
 from ._util import import_code
-from ._util import load_from_paths  # noqa: F401 (needed for Ray extension for now)
 from ..language import Language
 from .. import util
 from ..training.example import Example
@@ -381,3 +380,26 @@ def verify_cli_args(config_path: Path, output_path: Optional[Path] = None) -> No
         if not output_path.exists():
             output_path.mkdir()
             msg.good(f"Created output directory: {output_path}")
+
+
+# TODO: this is currently imported by the ray extension and not used otherwise
+def load_from_paths(
+    config: Config,
+) -> Tuple[List[Dict[str, str]], Dict[str, dict], bytes]:
+    import srsly
+    # TODO: separate checks from loading
+    raw_text = util.ensure_path(config["training"]["raw_text"])
+    if raw_text is not None:
+        if not raw_text.exists():
+            msg.fail("Can't find raw text", raw_text, exits=1)
+        raw_text = list(srsly.read_jsonl(config["training"]["raw_text"]))
+    tag_map = {}
+    morph_rules = {}
+    weights_data = None
+    init_tok2vec = util.ensure_path(config["training"]["init_tok2vec"])
+    if init_tok2vec is not None:
+        if not init_tok2vec.exists():
+            msg.fail("Can't find pretrained tok2vec", init_tok2vec, exits=1)
+        with init_tok2vec.open("rb") as file_:
+            weights_data = file_.read()
+    return raw_text, tag_map, morph_rules, weights_data
