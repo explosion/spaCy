@@ -16,7 +16,7 @@ def create_orth_variants_augmenter(level: float, lower: float) -> Callable:
     """Create a data augmentation callback that uses orth-variant replacement.
     The callback can be added to a corpus or other data iterator during training.
     """
-    return partial(orth_variants_augmenter, level=level)
+    return partial(orth_variants_augmenter, level=level, lower=lower)
 
 
 def dont_augment(nlp, example):
