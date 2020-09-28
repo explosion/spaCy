@@ -7,7 +7,7 @@ import typer
 from .. import util
 from ..training.initialize import init_nlp
 from ._util import init_cli, Arg, Opt, parse_config_overrides, show_validation_error
-from ._util import import_code, CliLogger, setup_gpu
+from ._util import import_code, setup_gpu
 
 
 @init_cli.command(
@@ -32,6 +32,6 @@ def init_pipeline_cli(
     with show_validation_error(config_path):
         config = util.load_config(config_path, overrides=overrides)
     with show_validation_error(hint_fill=False):
-        nlp = init_nlp(config, use_gpu=use_gpu, logger=CliLogger, on_succcess=msg.good)
+        nlp = init_nlp(config, use_gpu=use_gpu, silent=False)
     nlp.to_disk(output_path)
     msg.good(f"Saved initialized pipeline to {output_path}")

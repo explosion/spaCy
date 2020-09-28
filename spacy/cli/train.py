@@ -6,7 +6,7 @@ import typer
 import logging
 
 from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
-from ._util import import_code, CliLogger, setup_gpu
+from ._util import import_code, setup_gpu
 from ..language import Language
 from ..training.loop import train
 from ..training.initialize import init_nlp, must_reinitialize
@@ -50,15 +50,13 @@ def train_cli(
     msg.divider("Initializing pipeline")
     nlp = init_pipeline(config, output_path, use_gpu=use_gpu)
     msg.divider("Training pipeline")
-    final_path = train(nlp, output_path, use_gpu=use_gpu, logger=CliLogger)
-    if final_path:
-        msg.good(f"Saved pipeline to output directory", final_path)
+    train(nlp, output_path, use_gpu=use_gpu, silent=False)
 
 
 def init_pipeline(
     config: Config, output_path: Optional[Path], *, use_gpu: int = -1
 ) -> Language:
-    init_kwargs = {"use_gpu": use_gpu, "logger": CliLogger, "on_success": msg.good}
+    init_kwargs = {"use_gpu": use_gpu, "silent": False}
     if output_path is not None:
         init_path = output_path / "model-initial"
         if not init_path.exists():

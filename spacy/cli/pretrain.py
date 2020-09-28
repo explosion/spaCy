@@ -5,7 +5,7 @@ import typer
 import re
 
 from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
-from ._util import import_code, setup_gpu, CliLogger
+from ._util import import_code, setup_gpu
 from ..training.pretrain import pretrain
 from ..util import load_config
 
@@ -73,7 +73,7 @@ def pretrain_cli(
         resume_path=resume_path,
         epoch_resume=epoch_resume,
         use_gpu=use_gpu,
-        logger=CliLogger,
+        silent=False,
     )
     msg.good("Successfully finished pretrain")
 

@@ -5,12 +5,13 @@ from timeit import default_timer as timer
 from thinc.api import Optimizer, Config, constant, fix_random_seed, set_gpu_allocator
 import random
 import tqdm
+from wasabi import Printer
 
 from .example import Example
 from ..schemas import ConfigSchemaTraining
 from ..language import Language
 from ..errors import Errors
-from ..util import resolve_dot_names, registry, logger
+from ..util import resolve_dot_names, registry
 
 
 def train(
@@ -18,8 +19,8 @@ def train(
     output_path: Optional[Path] = None,
     *,
     use_gpu: int = -1,
-    logger: Callable[[Any], Any] = logger,
-) -> Optional[Path]:
+    silent: bool = False,
+) -> None:
     """Train a pipeline.
 
     nlp (Language): The initialized nlp object with the full config.
@@ -31,7 +32,7 @@ def train(
         swapped for CLI logger.
     RETURNS (Path / None): The path to the final exported model.
     """
-
+    msg = Printer(no_print=silent)
     # Create iterator, which yields out info after each optimization step.
     config = nlp.config.interpolate()
     if config["training"]["seed"] is not None:
@@ -62,10 +63,10 @@ def train(
         eval_frequency=T["eval_frequency"],
         exclude=frozen_components,
     )
-    logger.info(f"Pipeline: {nlp.pipe_names}")
+    msg.info(f"Pipeline: {nlp.pipe_names}")
     if frozen_components:
-        logger.info(f"Frozen components: {frozen_components}")
-    logger.info(f"Initial learn rate: {optimizer.learn_rate}")
+        msg.info(f"Frozen components: {frozen_components}")
+    msg.info(f"Initial learn rate: {optimizer.learn_rate}")
     with nlp.select_pipes(disable=frozen_components):
         print_row, finalize_logger = train_logger(nlp)
     try:
@@ -89,7 +90,7 @@ def train(
         if output_path is not None:
             # We don't want to swallow the traceback if we don't have a
             # specific error.
-            logger.warn(
+            msg.warn(
                 f"Aborting and saving the final best model. "
                 f"Encountered exception: {str(e)}"
             )
@@ -105,7 +106,7 @@ def train(
                     nlp.to_disk(final_model_path)
             else:
                 nlp.to_disk(final_model_path)
-            return final_model_path
+            msg.good(f"Saved pipeline to output directory", final_model_path)
 
 
 def train_while_improving(

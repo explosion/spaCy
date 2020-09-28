@@ -448,19 +448,8 @@ def string_to_list(value: str, intify: bool = False) -> Union[List[str], List[in
     return result
 
 
-class CliLogger:
-    """Helper mocking up the most commonly used logger methods. Can be passed
-    into functions like train() to make them output pretty-printed messages
-    on the CLI and regular logging if used from within Python.
-    """
-
-    debug = msg.text
-    info = msg.info
-    warn = msg.info
-    error = msg.fail
-
-
-def setup_gpu(use_gpu: int):
+def setup_gpu(use_gpu: int) -> None:
+    """Configure the GPU and log info."""
     if use_gpu >= 0:
         msg.info(f"Using GPU: {use_gpu}")
         require_gpu(use_gpu)

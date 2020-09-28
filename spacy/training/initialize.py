@@ -1,7 +1,8 @@
-from typing import Union, Dict, Optional, Any, List, Callable
+from typing import Union, Dict, Optional, Any, List
 from thinc.api import Config, fix_random_seed, set_gpu_allocator
 from thinc.api import ConfigValidationError
 from pathlib import Path
+from wasabi import Printer
 import srsly
 
 from .loop import create_before_to_disk_callback
@@ -10,16 +11,11 @@ from ..lookups import Lookups
 from ..errors import Errors
 from ..schemas import ConfigSchemaTraining, ConfigSchemaInit, ConfigSchemaPretrain
 from ..util import registry, load_model_from_config, resolve_dot_names
-from ..util import load_model, ensure_path, logger, OOV_RANK, DEFAULT_OOV_PROB
+from ..util import load_model, ensure_path, OOV_RANK, DEFAULT_OOV_PROB
 
 
-def init_nlp(
-    config: Config,
-    *,
-    use_gpu: int = -1,
-    logger: Callable[[Any], Any] = logger,
-    on_success: Callable[[str], None] = lambda x: None,
-) -> Language:
+def init_nlp(config: Config, *, use_gpu: int = -1, silent: bool = True) -> Language:
+    msg = Printer(no_print=silent)
     raw_config = config
     config = raw_config.interpolate()
     if config["training"]["seed"] is not None:
@@ -30,7 +26,7 @@ def init_nlp(
     # Use original config here before it's resolved to functions
     sourced_components = get_sourced_components(config)
     nlp = load_model_from_config(raw_config, auto_fill=True)
-    on_success("Set up nlp object from config")
+    msg.good("Set up nlp object from config")
     config = nlp.config.interpolate()
     # Resolve all training-relevant sections using the filled nlp config
     T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
@@ -38,29 +34,31 @@ def init_nlp(
     train_corpus, dev_corpus = resolve_dot_names(config, dot_names)
     I = registry.resolve(config["initialize"], schema=ConfigSchemaInit)
     V = I["vocab"]
-    init_vocab(nlp, data=V["data"], lookups=V["lookups"], vectors=V["vectors"])
+    init_vocab(
+        nlp, data=V["data"], lookups=V["lookups"], vectors=V["vectors"], silent=silent
+    )
     optimizer = T["optimizer"]
     before_to_disk = create_before_to_disk_callback(T["before_to_disk"])
     # Components that shouldn't be updated during training
     frozen_components = T["frozen_components"]
     # Sourced components that require resume_training
     resume_components = [p for p in sourced_components if p not in frozen_components]
-    logger.info(f"Pipeline: {nlp.pipe_names}")
+    msg.info(f"Pipeline: {nlp.pipe_names}")
     if resume_components:
         with nlp.select_pipes(enable=resume_components):
-            logger.info(f"Resuming training for: {resume_components}")
+            msg.info(f"Resuming training for: {resume_components}")
             nlp.resume_training(sgd=optimizer)
     with nlp.select_pipes(disable=[*frozen_components, *resume_components]):
         nlp.begin_training(lambda: train_corpus(nlp), sgd=optimizer)
-        on_success(f"Initialized pipeline components")
+        msg.good(f"Initialized pipeline components")
     # Verify the config after calling 'begin_training' to ensure labels
     # are properly initialized
     verify_config(nlp)
     if "pretraining" in config and config["pretraining"]:
         P = registry.resolve(config["pretraining"], schema=ConfigSchemaPretrain)
-        loaded = add_tok2vec_weights(nlp, P, I)
+        loaded = add_tok2vec_weights(nlp, P, V)
         if loaded and P["component"]:
-            on_success(f"Loaded pretrained weights into component '{P['component']}'")
+            msg.good(f"Loaded pretrained weights into component '{P['component']}'")
     nlp = before_to_disk(nlp)
     return nlp
 
@@ -76,11 +74,12 @@ def init_vocab(
     data: Optional[Path] = None,
     lookups: Optional[Lookups] = None,
     vectors: Optional[str] = None,
-    on_success: Callable[[str], None] = lambda x: None,
+    silent: bool = True,
 ) -> Language:
+    msg = Printer(no_print=silent)
     if lookups:
         nlp.vocab.lookups = lookups
-        on_success(f"Added vocab lookups: {', '.join(lookups.tables)}")
+        msg.good(f"Added vocab lookups: {', '.join(lookups.tables)}")
     data_path = ensure_path(data)
     if data_path is not None:
         lex_attrs = srsly.read_jsonl(data_path)
@@ -96,11 +95,11 @@ def init_vocab(
         else:
             oov_prob = DEFAULT_OOV_PROB
         nlp.vocab.cfg.update({"oov_prob": oov_prob})
-        on_success(f"Added {len(nlp.vocab)} lexical entries to the vocab")
-    on_success("Created vocabulary")
+        msg.good(f"Added {len(nlp.vocab)} lexical entries to the vocab")
+    msg.good("Created vocabulary")
     if vectors is not None:
         load_vectors_into_model(nlp, vectors)
-        on_success(f"Added vectors: {vectors}")
+        msg.good(f"Added vectors: {vectors}")
 
 
 def load_vectors_into_model(
@@ -137,8 +136,8 @@ def add_tok2vec_weights(
     init_tok2vec = ensure_path(V["init_tok2vec"])
     if init_tok2vec is not None:
         if P["objective"].get("type") == "vectors" and not V["vectors"]:
-            err = 'need initialize.vectors if pretraining.objective.type is "vectors"'
-            errors = [{"loc": ["initialize", "vectors"], "msg": err}]
+            err = 'need initialize.vocab.vectors if pretraining.objective.type is "vectors"'
+            errors = [{"loc": ["initialize", "vocab"], "msg": err}]
             raise ConfigValidationError(config=nlp.config, errors=errors)
         if not init_tok2vec.exists():
             err = f"can't find pretrained tok2vec: {init_tok2vec}"
