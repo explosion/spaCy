@@ -1,30 +1,50 @@
+from typing import Callable
 import random
 import itertools
+import copy
+from functools import partial
+from ..util import registry
 
 
-def make_orth_variants_example(nlp, example, orth_variant_level=0.0):  # TODO: naming
-    raw_text = example.text
-    orig_dict = example.to_dict()
-    variant_text, variant_token_annot = make_orth_variants(
-        nlp, raw_text, orig_dict["token_annotation"], orth_variant_level
-    )
-    doc = nlp.make_doc(variant_text)
-    orig_dict["token_annotation"] = variant_token_annot
-    return example.from_dict(doc, orig_dict)
+@registry.augmenters("spacy.dont_augment.v1")
+def create_null_augmenter():
+    return dont_augment
 
 
-def make_orth_variants(nlp, raw_text, orig_token_dict, orth_variant_level=0.0):
-    if random.random() >= orth_variant_level:
-        return raw_text, orig_token_dict
-    if not orig_token_dict:
-        return raw_text, orig_token_dict
-    raw = raw_text
-    token_dict = orig_token_dict
-    lower = False
-    if random.random() >= 0.5:
-        lower = True
-        if raw is not None:
-            raw = raw.lower()
+@registry.augmenters("spacy.orth_variants.v1")
+def create_orth_variants_augmenter(level: float, lower: float) -> Callable:
+    """Create a data augmentation callback that uses orth-variant replacement.
+    The callback can be added to a corpus or other data iterator during training.
+    """
+    return partial(orth_variants_augmenter, level=level, lower=lower)
+
+
+def dont_augment(nlp, example):
+    yield example
+
+
+def orth_variants_augmenter(nlp, example, *, level: float = 0.0, lower: float=0.0):
+    if random.random() >= level:
+        yield example
+    else:
+        raw_text = example.text
+        orig_dict = example.to_dict()
+        if not orig_dict["token_annotation"]:
+            yield example
+        else:
+            variant_text, variant_token_annot = make_orth_variants(
+                nlp,
+                raw_text,
+                orig_dict["token_annotation"],
+                lower=raw_text is not None and random.random() < lower
+            )
+            doc = nlp.make_doc(variant_text)
+            orig_dict["token_annotation"] = variant_token_annot
+            yield example.from_dict(doc, orig_dict)
+
+
+def make_orth_variants(nlp, raw, token_dict, *, lower: bool=False):
+    orig_token_dict = copy.deepcopy(token_dict)
     orth_variants = nlp.vocab.lookups.get_table("orth_variants", {})
     ndsv = orth_variants.get("single", [])
     ndpv = orth_variants.get("paired", [])
@@ -103,7 +123,7 @@ def make_orth_variants(nlp, raw_text, orig_token_dict, orth_variant_level=0.0):
             # something went wrong, abort
             # (add a warning message?)
             if not match_found:
-                return raw_text, orig_token_dict
+                return raw, orig_token_dict
             # add following whitespace
             while raw_idx < len(raw) and raw[raw_idx].isspace():
                 variant_raw += raw[raw_idx]

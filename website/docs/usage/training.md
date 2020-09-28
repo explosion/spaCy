@@ -6,6 +6,7 @@ menu:
   - ['Introduction', 'basics']
   - ['Quickstart', 'quickstart']
   - ['Config System', 'config']
+  <!-- - ['Data Utilities', 'data'] -->
   - ['Custom Functions', 'custom-functions']
   - ['Parallel Training', 'parallel-training']
   - ['Internal API', 'api']
@@ -504,6 +505,16 @@ impossible for the model to predict 50% of your entities, your NER F-score might
 still look good.
 
 </Accordion>
+
+<!--
+## Data Utilities {#data-utilities}
+
+* spacy convert
+* The [corpora] block
+* Custom corpus class
+* Minibatching
+* Data augmentation
+-->
 
 ## Custom Functions {#custom-functions}
 
