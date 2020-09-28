@@ -4,14 +4,19 @@ from pathlib import Path
 from wasabi import msg
 import typer
 from thinc.api import Config, fix_random_seed, set_gpu_allocator
+import srsly
 
 from .. import util
-from ..util import registry, resolve_dot_names
+from ..util import registry, resolve_dot_names, OOV_RANK
 from ..schemas import ConfigSchemaTraining, ConfigSchemaPretrain
 from ..language import Language
+from ..lookups import Lookups
 from ..errors import Errors
 from ._util import init_cli, Arg, Opt, parse_config_overrides, show_validation_error
 from ._util import import_code, get_sourced_components, load_from_paths
+
+
+DEFAULT_OOV_PROB = -20
 
 
 @init_cli.command(
@@ -68,7 +73,8 @@ def init_pipeline(config: Config, use_gpu: int = -1) -> Language:
     T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
     dot_names = [T["train_corpus"], T["dev_corpus"], T["raw_text"]]
     train_corpus, dev_corpus, raw_text = resolve_dot_names(config, dot_names)
-    util.load_vocab_data_into_model(nlp, lookups=T["lookups"])
+    # TODO: move lookups to [initialize], add vocab data
+    init_vocab(nlp, lookups=T["lookups"])
     msg.good("Created vocabulary")
     if T["vectors"] is not None:
         add_vectors(nlp, T["vectors"])
@@ -96,6 +102,33 @@ def init_pipeline(config: Config, use_gpu: int = -1) -> Language:
     # TODO: this should be handled better?
     nlp = before_to_disk(nlp)
     return nlp
+
+
+def init_vocab(
+    nlp: Language,
+    *,
+    vocab_data: Optional[Path] = None,
+    lookups: Optional[Lookups] = None,
+) -> Language:
+    if lookups:
+        nlp.vocab.lookups = lookups
+        msg.good(f"Added vocab lookups: {', '.join(lookups.tables)}")
+    data_path = util.ensure_path(vocab_data)
+    if data_path is not None:
+        lex_attrs = srsly.read_jsonl(data_path)
+        for lexeme in nlp.vocab:
+            lexeme.rank = OOV_RANK
+        for attrs in lex_attrs:
+            if "settings" in attrs:
+                continue
+            lexeme = nlp.vocab[attrs["orth"]]
+            lexeme.set_attrs(**attrs)
+        if len(nlp.vocab):
+            oov_prob = min(lex.prob for lex in nlp.vocab) - 1
+        else:
+            oov_prob = DEFAULT_OOV_PROB
+        nlp.vocab.cfg.update({"oov_prob": oov_prob})
+        msg.good(f"Added {len(nlp.vocab)} lexical entries to the vocab")
 
 
 def add_tok2vec_weights(config: Config, nlp: Language) -> None:
@@ -128,6 +161,7 @@ def add_vectors(nlp: Language, vectors: str) -> None:
         title=title, desc=desc, hint_fill=False, show_config=False
     ):
         util.load_vectors_into_model(nlp, vectors)
+        msg(f"Added {len(nlp.vocab.vectors)} vectors from {vectors}")
 
 
 def verify_config(nlp: Language) -> None:

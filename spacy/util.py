@@ -253,14 +253,6 @@ def load_vectors_into_model(
                 nlp.vocab.strings.add(vectors_nlp.vocab.strings[key])
 
 
-def load_vocab_data_into_model(
-    nlp: "Language", *, lookups: Optional["Lookups"] = None
-) -> None:
-    """Load vocab data."""
-    if lookups:
-        nlp.vocab.lookups = lookups
-
-
 def load_model(
     name: Union[str, Path],
     *,
@@ -422,11 +414,13 @@ def resolve_training_config(
     return registry.resolve(config, validate=validate)
 
 
-def resolve_dot_names(config: Config, dot_names: List[Optional[str]]) -> List[Optional[Callable]]:
-    """Resolve one or more "dot notation" names, e.g. corpora.train. 
+def resolve_dot_names(
+    config: Config, dot_names: List[Optional[str]]
+) -> List[Optional[Callable]]:
+    """Resolve one or more "dot notation" names, e.g. corpora.train.
     The paths could point anywhere into the config, so we don't know which
     top-level section we'll be looking within.
-    
+
     We resolve the whole top-level section, although we could resolve less --
     we could find the lowest part of the tree.
     """
