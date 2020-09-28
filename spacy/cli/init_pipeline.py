@@ -42,20 +42,6 @@ def init_pipeline_cli(
     msg.good(f"Saved initialized pipeline to {output_path}")
 
 
-def must_initialize(init_path: Path, config_path: Path, overrides: Dict) -> bool:
-    config = util.load_config(config_path, overrides=overrides)
-    if not init_path.exists():
-        return True
-    elif not (init_path / "config.cfg").exists():
-        return True
-    else:
-        init_cfg = util.load_config(init_path / "config.cfg", interpolate=True)
-        if config.to_str() != init_cfg.to_str():
-            return True
-        else:
-            return False
-
-
 def init_pipeline(config: Config, use_gpu: int = -1) -> Language:
     raw_config = config
     config = raw_config.interpolate()

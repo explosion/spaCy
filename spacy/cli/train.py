@@ -10,13 +10,12 @@ import random
 import typer
 import logging
 
-from .init_pipeline import init_pipeline, must_initialize
+from .init_pipeline import init_pipeline
 from .init_pipeline import create_before_to_disk_callback
 from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
 from ._util import import_code
 from ..language import Language
 from .. import util
-from ..training.example import Example
 from ..errors import Errors
 from ..util import resolve_dot_names, registry
 from ..schemas import ConfigSchemaTraining
@@ -69,24 +68,39 @@ def train_cli(
 def init_nlp(
     config: Config, output_path: Optional[Path], init_path: Optional[Path]
 ) -> None:
-
     if init_path is not None:
         nlp = util.load_model(init_path)
-        # TODO: how to handle provided pipeline that needs to be reinitialized?
+        if must_reinitialize(config, nlp.config):
+            msg.fail(
+                f"Config has changed: can't use initialized pipeline from "
+                f"{init_path}. Please re-run 'spacy init nlp'.",
+                exits=1,
+            )
         msg.good(f"Loaded initialized pipeline from {init_path}")
         return nlp
     if output_path is not None:
         output_init_path = output_path / "model-initial"
-        if must_initialize(config, output_init_path):
-            msg.warn("TODO:")
+        if not output_init_path.exists():
+            msg.info(f"Initializing the pipeline in {output_init_path}")
             nlp = init_pipeline(config)
-            nlp.to_disk(init_path)
+            nlp.to_disk(output_init_path)
             msg.good(f"Saved initialized pipeline to {output_init_path}")
         else:
             nlp = util.load_model(output_init_path)
-            msg.good(f"Loaded initialized pipeline from {output_init_path}")
+            if must_reinitialize(config, nlp.config):
+                msg.warn("Config has changed: need to re-initialize pipeline")
+                nlp = init_pipeline(config)
+                nlp.to_disk(output_init_path)
+                msg.good(f"Re-initialized pipeline in {output_init_path}")
+            else:
+                msg.good(f"Loaded initialized pipeline from {output_init_path}")
         return nlp
-    msg.warn("TODO:")
+    msg.warn(
+        "Not saving initialized model: no output directory specified. "
+        "To speed up training, spaCy can save the initialized nlp object with "
+        "the vocabulary, vectors and label scheme. To take advantage of this, "
+        "provide an output directory or use the 'spacy init nlp' command."
+    )
     return init_pipeline(config)
 
 
@@ -101,8 +115,8 @@ def train(
     if use_gpu >= 0 and allocator:
         set_gpu_allocator(allocator)
     T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
-    dot_names = [T["train_corpus"], T["dev_corpus"], T["raw_text"]]
-    train_corpus, dev_corpus, raw_text = resolve_dot_names(config, dot_names)
+    dot_names = [T["train_corpus"], T["dev_corpus"]]
+    train_corpus, dev_corpus = resolve_dot_names(config, dot_names)
     optimizer = T["optimizer"]
     score_weights = T["score_weights"]
     batcher = T["batcher"]
@@ -121,7 +135,6 @@ def train(
         patience=T["patience"],
         max_steps=T["max_steps"],
         eval_frequency=T["eval_frequency"],
-        raw_text=raw_text,
         exclude=frozen_components,
     )
     msg.info(f"Pipeline: {nlp.pipe_names}")
@@ -169,6 +182,11 @@ def train(
             else:
                 nlp.to_disk(final_model_path)
             msg.good(f"Saved pipeline to output directory {final_model_path}")
+
+
+def must_reinitialize(train_config: Config, init_config: Config) -> bool:
+    # TODO: do this better and more fine-grained
+    return train_config.interpolate().to_str() == init_config.interpolate().to_str()
 
 
 def add_vectors(nlp: Language, vectors: str) -> None:
@@ -235,7 +253,6 @@ def train_while_improving(
     accumulate_gradient: int,
     patience: int,
     max_steps: int,
-    raw_text: List[Dict[str, str]],
     exclude: List[str],
 ):
     """Train until an evaluation stops improving. Works as a generator,
@@ -282,27 +299,14 @@ def train_while_improving(
         dropouts = dropout
     results = []
     losses = {}
-    if raw_text:
-        random.shuffle(raw_text)
-        raw_examples = [
-            Example.from_dict(nlp.make_doc(rt["text"]), {}) for rt in raw_text
-        ]
-        raw_batches = util.minibatch(raw_examples, size=8)
-
     words_seen = 0
     start_time = timer()
     for step, (epoch, batch) in enumerate(train_data):
         dropout = next(dropouts)
         for subbatch in subdivide_batch(batch, accumulate_gradient):
-
             nlp.update(
                 subbatch, drop=dropout, losses=losses, sgd=False, exclude=exclude
             )
-            if raw_text:
-                # If raw text is available, perform 'rehearsal' updates,
-                # which use unlabelled data to reduce overfitting.
-                raw_batch = list(next(raw_batches))
-                nlp.rehearse(raw_batch, sgd=optimizer, losses=losses, exclude=exclude)
         # TODO: refactor this so we don't have to run it separately in here
         for name, proc in nlp.pipeline:
             if (
@@ -386,15 +390,6 @@ def verify_cli_args(config_path: Path, output_path: Optional[Path] = None) -> No
 def load_from_paths(
     config: Config,
 ) -> Tuple[List[Dict[str, str]], Dict[str, dict], bytes]:
-    import srsly
-    # TODO: separate checks from loading
-    raw_text = util.ensure_path(config["training"]["raw_text"])
-    if raw_text is not None:
-        if not raw_text.exists():
-            msg.fail("Can't find raw text", raw_text, exits=1)
-        raw_text = list(srsly.read_jsonl(config["training"]["raw_text"]))
-    tag_map = {}
-    morph_rules = {}
     weights_data = None
     init_tok2vec = util.ensure_path(config["training"]["init_tok2vec"])
     if init_tok2vec is not None:
@@ -402,4 +397,4 @@ def load_from_paths(
             msg.fail("Can't find pretrained tok2vec", init_tok2vec, exits=1)
         with init_tok2vec.open("rb") as file_:
             weights_data = file_.read()
-    return raw_text, tag_map, morph_rules, weights_data
+    return None, {}, {}, weights_data
