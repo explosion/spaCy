@@ -1,5 +1,5 @@
 from typing import List, Callable, Tuple, Dict, Iterable, Iterator, Union, Any
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from pathlib import Path
 from timeit import default_timer as timer
 from thinc.api import Optimizer, Config, constant, fix_random_seed, set_gpu_allocator
@@ -9,13 +9,15 @@ from wasabi import Printer
 
 from .example import Example
 from ..schemas import ConfigSchemaTraining
-from ..language import Language
 from ..errors import Errors
 from ..util import resolve_dot_names, registry
 
+if TYPE_CHECKING:
+    from ..language import Language  # noqa: F401
+
 
 def train(
-    nlp: Language,
+    nlp: "Language",
     output_path: Optional[Path] = None,
     *,
     use_gpu: int = -1,
@@ -110,7 +112,7 @@ def train(
 
 
 def train_while_improving(
-    nlp: Language,
+    nlp: "Language",
     optimizer: Optimizer,
     train_data,
     evaluate,
@@ -233,7 +235,7 @@ def subdivide_batch(batch, accumulate_gradient):
 
 
 def create_evaluation_callback(
-    nlp: Language, dev_corpus: Callable, weights: Dict[str, float]
+    nlp: "Language", dev_corpus: Callable, weights: Dict[str, float]
 ) -> Callable[[], Tuple[float, Dict[str, float]]]:
     weights = {key: value for key, value in weights.items() if value is not None}
 
@@ -277,7 +279,7 @@ def create_train_batches(
 
 
 def update_meta(
-    training: Union[Dict[str, Any], Config], nlp: Language, info: Dict[str, Any]
+    training: Union[Dict[str, Any], Config], nlp: "Language", info: Dict[str, Any]
 ) -> None:
     nlp.meta["performance"] = {}
     for metric in training["score_weights"]:
@@ -288,8 +290,10 @@ def update_meta(
 
 
 def create_before_to_disk_callback(
-    callback: Optional[Callable[[Language], Language]]
-) -> Callable[[Language], Language]:
+    callback: Optional[Callable[["Language"], "Language"]]
+) -> Callable[["Language"], "Language"]:
+    from ..language import Language  # noqa: F811
+
     def before_to_disk(nlp: Language) -> Language:
         if not callback:
             return nlp

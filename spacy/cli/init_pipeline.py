@@ -19,13 +19,18 @@ def init_vectors_cli(
     prune: int = Opt(-1, "--prune", "-p", help="Optional number of vectors to prune to"),
     truncate: int = Opt(0, "--truncate", "-t", help="Optional number of vectors to truncate to when reading in vectors file"),
     name: Optional[str] = Opt(None, "--name", "-n", help="Optional name for the word vectors, e.g. en_core_web_lg.vectors"),
+    verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
     # fmt: on
 ):
+    """Convert word vectors for use with spaCy. Will export an nlp object that
+    you can use in the [initialize.vocab] block of your config to initialize
+    a model with vectors.
+    """
+    util.logger.setLevel(logging.DEBUG if verbose else logging.ERROR)
     msg.info(f"Creating blank nlp object for language '{lang}'")
     nlp = util.get_lang_class(lang)()
-    convert_vectors(
-        nlp, vectors_loc, truncate=truncate, prune=prune, name=name, silent=False
-    )
+    convert_vectors(nlp, vectors_loc, truncate=truncate, prune=prune, name=name)
+    msg.good(f"Successfully converted {len(nlp.vocab.vectors)} vectors")
     nlp.to_disk(output_dir)
     msg.good(
         "Saved nlp object with vectors to output directory. You can now use the "

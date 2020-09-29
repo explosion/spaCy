@@ -1,8 +1,7 @@
-from typing import Union, Dict, Optional, Any, List, IO
+from typing import Union, Dict, Optional, Any, List, IO, TYPE_CHECKING
 from thinc.api import Config, fix_random_seed, set_gpu_allocator
 from thinc.api import ConfigValidationError
 from pathlib import Path
-from wasabi import Printer
 import srsly
 import numpy
 import tarfile
@@ -11,17 +10,18 @@ import zipfile
 import tqdm
 
 from .loop import create_before_to_disk_callback
-from ..language import Language
 from ..lookups import Lookups
 from ..vectors import Vectors
 from ..errors import Errors
-from ..schemas import ConfigSchemaTraining, ConfigSchemaInit, ConfigSchemaPretrain
-from ..util import registry, load_model_from_config, resolve_dot_names
+from ..schemas import ConfigSchemaTraining
+from ..util import registry, load_model_from_config, resolve_dot_names, logger
 from ..util import load_model, ensure_path, OOV_RANK, DEFAULT_OOV_PROB
 
+if TYPE_CHECKING:
+    from ..language import Language  # noqa: F401
 
-def init_nlp(config: Config, *, use_gpu: int = -1, silent: bool = True) -> Language:
-    msg = Printer(no_print=silent)
+
+def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
     raw_config = config
     config = raw_config.interpolate()
     if config["training"]["seed"] is not None:
@@ -32,39 +32,29 @@ def init_nlp(config: Config, *, use_gpu: int = -1, silent: bool = True) -> Langu
     # Use original config here before it's resolved to functions
     sourced_components = get_sourced_components(config)
     nlp = load_model_from_config(raw_config, auto_fill=True)
-    msg.good("Set up nlp object from config")
+    logger.info("Set up nlp object from config")
     config = nlp.config.interpolate()
     # Resolve all training-relevant sections using the filled nlp config
     T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
     dot_names = [T["train_corpus"], T["dev_corpus"]]
     train_corpus, dev_corpus = resolve_dot_names(config, dot_names)
-    I = registry.resolve(config["initialize"], schema=ConfigSchemaInit)
-    V = I["vocab"]
-    init_vocab(
-        nlp, data=V["data"], lookups=V["lookups"], vectors=V["vectors"], silent=silent
-    )
     optimizer = T["optimizer"]
     before_to_disk = create_before_to_disk_callback(T["before_to_disk"])
     # Components that shouldn't be updated during training
     frozen_components = T["frozen_components"]
     # Sourced components that require resume_training
     resume_components = [p for p in sourced_components if p not in frozen_components]
-    msg.info(f"Pipeline: {nlp.pipe_names}")
+    logger.info(f"Pipeline: {nlp.pipe_names}")
     if resume_components:
         with nlp.select_pipes(enable=resume_components):
-            msg.info(f"Resuming training for: {resume_components}")
+            logger.info(f"Resuming training for: {resume_components}")
             nlp.resume_training(sgd=optimizer)
     with nlp.select_pipes(disable=[*frozen_components, *resume_components]):
-        nlp.initialize(lambda: train_corpus(nlp), sgd=optimizer, settings=I)
-        msg.good("Initialized pipeline components")
+        nlp.initialize(lambda: train_corpus(nlp), sgd=optimizer)
+        logger.info("Initialized pipeline components")
     # Verify the config after calling 'initialize' to ensure labels
     # are properly initialized
     verify_config(nlp)
-    if "pretraining" in config and config["pretraining"]:
-        P = registry.resolve(config["pretraining"], schema=ConfigSchemaPretrain)
-        loaded = add_tok2vec_weights(nlp, P, V)
-        if loaded and P["component"]:
-            msg.good(f"Loaded pretrained weights into component '{P['component']}'")
     nlp = before_to_disk(nlp)
     return nlp
 
@@ -75,17 +65,15 @@ def must_reinitialize(train_config: Config, init_config: Config) -> bool:
 
 
 def init_vocab(
-    nlp: Language,
+    nlp: "Language",
     *,
     data: Optional[Path] = None,
     lookups: Optional[Lookups] = None,
     vectors: Optional[str] = None,
-    silent: bool = True,
-) -> Language:
-    msg = Printer(no_print=silent)
+) -> "Language":
     if lookups:
         nlp.vocab.lookups = lookups
-        msg.good(f"Added vocab lookups: {', '.join(lookups.tables)}")
+        logger.info(f"Added vocab lookups: {', '.join(lookups.tables)}")
     data_path = ensure_path(data)
     if data_path is not None:
         lex_attrs = srsly.read_jsonl(data_path)
@@ -101,15 +89,15 @@ def init_vocab(
         else:
             oov_prob = DEFAULT_OOV_PROB
         nlp.vocab.cfg.update({"oov_prob": oov_prob})
-        msg.good(f"Added {len(nlp.vocab)} lexical entries to the vocab")
-    msg.good("Created vocabulary")
+        logger.info(f"Added {len(nlp.vocab)} lexical entries to the vocab")
+    logger.info("Created vocabulary")
     if vectors is not None:
         load_vectors_into_model(nlp, vectors)
-        msg.good(f"Added vectors: {vectors}")
+        logger.info(f"Added vectors: {vectors}")
 
 
 def load_vectors_into_model(
-    nlp: Language, name: Union[str, Path], *, add_strings: bool = True
+    nlp: "Language", name: Union[str, Path], *, add_strings: bool = True
 ) -> None:
     """Load word vectors from an installed model or path into a model instance."""
     try:
@@ -132,8 +120,8 @@ def load_vectors_into_model(
                 nlp.vocab.strings.add(vectors_nlp.vocab.strings[key])
 
 
-def add_tok2vec_weights(
-    nlp: Language, pretrain_config: Dict[str, Any], vocab_config: Dict[str, Any]
+def init_tok2vec(
+    nlp: "Language", pretrain_config: Dict[str, Any], vocab_config: Dict[str, Any]
 ) -> bool:
     # Load pretrained tok2vec weights - cf. CLI command 'pretrain'
     P = pretrain_config
@@ -171,7 +159,7 @@ def add_tok2vec_weights(
     return False
 
 
-def verify_config(nlp: Language) -> None:
+def verify_config(nlp: "Language") -> None:
     """Perform additional checks based on the config, loaded nlp object and training data."""
     # TODO: maybe we should validate based on the actual components, the list
     # in config["nlp"]["pipeline"] instead?
@@ -182,7 +170,7 @@ def verify_config(nlp: Language) -> None:
             verify_textcat_config(nlp, pipe_config)
 
 
-def verify_textcat_config(nlp: Language, pipe_config: Dict[str, Any]) -> None:
+def verify_textcat_config(nlp: "Language", pipe_config: Dict[str, Any]) -> None:
     # if 'positive_label' is provided: double check whether it's in the data and
     # the task is binary
     if pipe_config.get("positive_label"):
@@ -211,15 +199,13 @@ def get_sourced_components(config: Union[Dict[str, Any], Config]) -> List[str]:
 
 
 def convert_vectors(
-    nlp: Language,
+    nlp: "Language",
     vectors_loc: Optional[Path],
     *,
     truncate: int,
     prune: int,
     name: Optional[str] = None,
-    silent: bool = True,
 ) -> None:
-    msg = Printer(no_print=silent)
     vectors_loc = ensure_path(vectors_loc)
     if vectors_loc and vectors_loc.parts[-1].endswith(".npz"):
         nlp.vocab.vectors = Vectors(data=numpy.load(vectors_loc.open("rb")))
@@ -228,9 +214,9 @@ def convert_vectors(
                 nlp.vocab.vectors.add(lex.orth, row=lex.rank)
     else:
         if vectors_loc:
-            with msg.loading(f"Reading vectors from {vectors_loc}"):
-                vectors_data, vector_keys = read_vectors(vectors_loc, truncate)
-            msg.good(f"Loaded vectors from {vectors_loc}")
+            logger.info(f"Reading vectors from {vectors_loc}")
+            vectors_data, vector_keys = read_vectors(vectors_loc, truncate)
+            logger.info(f"Loaded vectors from {vectors_loc}")
         else:
             vectors_data, vector_keys = (None, None)
         if vector_keys is not None:
@@ -247,7 +233,6 @@ def convert_vectors(
     nlp.meta["vectors"]["name"] = nlp.vocab.vectors.name
     if prune >= 1:
         nlp.vocab.prune_vectors(prune)
-    msg.good(f"Successfully converted {len(nlp.vocab.vectors)} vectors")
 
 
 def read_vectors(vectors_loc: Path, truncate_vectors: int):
