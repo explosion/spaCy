@@ -40,7 +40,7 @@ def train_cli(
 
     DOCS: https://nightly.spacy.io/api/cli#train
     """
-    util.logger.setLevel(logging.DEBUG if verbose else logging.ERROR)
+    util.logger.setLevel(logging.DEBUG if verbose else logging.INFO)
     verify_cli_args(config_path, output_path)
     overrides = parse_config_overrides(ctx.args)
     import_code(code_path)
