@@ -436,6 +436,7 @@ $ python -m spacy debug data [config_path] [--code] [--ignore-warnings] [--verbo
 ```
 =========================== Data format validation ===========================
 ✔ Corpus is loadable
+✔ Pipeline can be initialized with data
 
 =============================== Training stats ===============================
 Training pipeline: tagger, parser, ner
@@ -465,7 +466,7 @@ New: 'ORG' (23860), 'PERSON' (21395), 'GPE' (21193), 'DATE' (18080), 'CARDINAL'
 ✔ No entities consisting of or starting/ending with whitespace
 
 =========================== Part-of-speech Tagging ===========================
-ℹ 49 labels in data (57 labels in tag map)
+ℹ 49 labels in data
 'NN' (266331), 'IN' (227365), 'DT' (185600), 'NNP' (164404), 'JJ' (119830),
 'NNS' (110957), '.' (101482), ',' (92476), 'RB' (90090), 'PRP' (90081), 'VB'
 (74538), 'VBD' (68199), 'CC' (62862), 'VBZ' (50712), 'VBP' (43420), 'VBN'
@@ -476,7 +477,6 @@ New: 'ORG' (23860), 'PERSON' (21395), 'GPE' (21193), 'DATE' (18080), 'CARDINAL'
 '-RRB-' (2825), '-LRB-' (2788), 'PDT' (2078), 'XX' (1316), 'RBS' (1142), 'FW'
 (794), 'NFP' (557), 'SYM' (440), 'WP$' (294), 'LS' (293), 'ADD' (191), 'AFX'
 (24)
-✔ All labels present in tag map for language 'en'
 
 ============================= Dependency Parsing =============================
 ℹ Found 111703 sentences with an average length of 18.6 words.
