@@ -7,7 +7,7 @@ from thinc.api import fix_random_seed
 
 from ..training import Corpus
 from ..tokens import Doc
-from ._util import app, Arg, Opt, setup_gpu
+from ._util import app, Arg, Opt, setup_gpu, import_code
 from ..scorer import Scorer
 from .. import util
 from .. import displacy
@@ -19,6 +19,7 @@ def evaluate_cli(
     model: str = Arg(..., help="Model name or path"),
     data_path: Path = Arg(..., help="Location of binary evaluation data in .spacy format", exists=True),
     output: Optional[Path] = Opt(None, "--output", "-o", help="Output JSON file for metrics", dir_okay=False),
+    code_path: Optional[Path] = Opt(None, "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU"),
     gold_preproc: bool = Opt(False, "--gold-preproc", "-G", help="Use gold preprocessing"),
     displacy_path: Optional[Path] = Opt(None, "--displacy-path", "-dp", help="Directory to output rendered parses as HTML", exists=True, file_okay=False),
@@ -37,6 +38,7 @@ def evaluate_cli(
 
     DOCS: https://nightly.spacy.io/api/cli#evaluate
     """
+    import_code(code_path)
     evaluate(
         model,
         data_path,

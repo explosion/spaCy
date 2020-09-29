@@ -81,9 +81,9 @@ $ python -m spacy info [model] [--markdown] [--silent]
 Find all trained pipeline packages installed in the current environment and
 check whether they are compatible with the currently installed version of spaCy.
 Should be run after upgrading spaCy via `pip install -U spacy` to ensure that
-all installed packages can be used with the new version. It will show a list
-of packages and their installed versions. If any package is out of date, the
-latest compatible versions and command for updating are shown.
+all installed packages can be used with the new version. It will show a list of
+packages and their installed versions. If any package is out of date, the latest
+compatible versions and command for updating are shown.
 
 > #### Automated validation
 >
@@ -826,17 +826,18 @@ skew. To render a sample of dependency parses in a HTML file using the
 $ python -m spacy evaluate [model] [data_path] [--output] [--gold-preproc] [--gpu-id] [--displacy-path] [--displacy-limit]
 ```
 
-| Name                      | Description                                                                                                                                                               |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `model`                   | Pipeline to evaluate. Can be a package or a path to a data directory. ~~str (positional)~~                                                                                |
-| `data_path`               | Location of evaluation data in spaCy's [binary format](/api/data-formats#training). ~~Path (positional)~~                                                                 |
-| `--output`, `-o`          | Output JSON file for metrics. If not set, no metrics will be exported. ~~Optional[Path] \(option)~~                                                                       |
-| `--gold-preproc`, `-G`    | Use gold preprocessing. ~~bool (flag)~~                                                                                                                                   |
-| `--gpu-id`, `-g`          | GPU to use, if any. Defaults to `-1` for CPU. ~~int (option)~~                                                                                                            |
-| `--displacy-path`, `-dp`  | Directory to output rendered parses as HTML. If not set, no visualizations will be generated. ~~Optional[Path] \(option)~~                                                |
-| `--displacy-limit`, `-dl` | Number of parses to generate per file. Defaults to `25`. Keep in mind that a significantly higher number might cause the `.html` files to render slowly. ~~int (option)~~ |
-| `--help`, `-h`            | Show help message and available arguments. ~~bool (flag)~~                                                                                                                |
-| **CREATES**               | Training results and optional metrics and visualizations.                                                                                                                 |
+| Name                      | Description                                                                                                                                                                          |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `model`                   | Pipeline to evaluate. Can be a package or a path to a data directory. ~~str (positional)~~                                                                                           |
+| `data_path`               | Location of evaluation data in spaCy's [binary format](/api/data-formats#training). ~~Path (positional)~~                                                                            |
+| `--output`, `-o`          | Output JSON file for metrics. If not set, no metrics will be exported. ~~Optional[Path] \(option)~~                                                                                  |
+| `--code-path`, `-c`       | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~ |
+| `--gold-preproc`, `-G`    | Use gold preprocessing. ~~bool (flag)~~                                                                                                                                              |
+| `--gpu-id`, `-g`          | GPU to use, if any. Defaults to `-1` for CPU. ~~int (option)~~                                                                                                                       |
+| `--displacy-path`, `-dp`  | Directory to output rendered parses as HTML. If not set, no visualizations will be generated. ~~Optional[Path] \(option)~~                                                           |
+| `--displacy-limit`, `-dl` | Number of parses to generate per file. Defaults to `25`. Keep in mind that a significantly higher number might cause the `.html` files to render slowly. ~~int (option)~~            |
+| `--help`, `-h`            | Show help message and available arguments. ~~bool (flag)~~                                                                                                                           |
+| **CREATES**               | Training results and optional metrics and visualizations.                                                                                                                            |
 
 ## package {#package tag="command"}
 
