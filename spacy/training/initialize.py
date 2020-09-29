@@ -94,6 +94,7 @@ def init_vocab(
     if vectors is not None:
         load_vectors_into_model(nlp, vectors)
         logger.info(f"Added vectors: {vectors}")
+    logger.info("Finished initializing nlp object")
 
 
 def load_vectors_into_model(
