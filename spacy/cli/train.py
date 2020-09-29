@@ -56,7 +56,7 @@ def train_cli(
 def init_pipeline(
     config: Config, output_path: Optional[Path], *, use_gpu: int = -1
 ) -> Language:
-    init_kwargs = {"use_gpu": use_gpu, "silent": False}
+    init_kwargs = {"use_gpu": use_gpu}
     if output_path is not None:
         init_path = output_path / "model-initial"
         if not init_path.exists():
