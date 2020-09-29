@@ -4,6 +4,7 @@ import itertools
 import copy
 from functools import partial
 from ..util import registry
+from ..tokens import Doc
 
 
 @registry.augmenters("spacy.dont_augment.v1")
@@ -38,10 +39,12 @@ def orth_variants_augmenter(nlp, example, *, level: float = 0.0, lower: float = 
                 orig_dict["token_annotation"],
                 lower=raw_text is not None and random.random() < lower,
             )
-            if variant_text is None:
-                doc = Doc(nlp.vocab, words=variant_token_annot["words"])
-            else:
+            if variant_text:
                 doc = nlp.make_doc(variant_text)
+            else:
+                doc = Doc(nlp.vocab, words=variant_token_annot["ORTH"])
+                variant_token_annot["ORTH"] = [w.text for w in doc]
+                variant_token_annot["SPACY"] = [w.whitespace_ for w in doc]
             orig_dict["token_annotation"] = variant_token_annot
             yield example.from_dict(doc, orig_dict)
 
