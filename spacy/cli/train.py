@@ -50,6 +50,7 @@ def train_cli(
     msg.divider("Initializing pipeline")
     with show_validation_error(config_path, hint_fill=False):
         nlp = init_nlp(config, use_gpu=use_gpu)
+    msg.good("Initialized pipeline")
     msg.divider("Training pipeline")
     train(nlp, output_path, use_gpu=use_gpu, silent=False)
 
