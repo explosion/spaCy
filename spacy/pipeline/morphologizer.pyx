@@ -103,7 +103,7 @@ class Morphologizer(Tagger):
 
     @property
     def label_data(self) -> Dict[str, Dict[str, Union[str, float, int, None]]]:
-        """RETURNS (Dict): A dictionary with all labels data."""
+        """A dictionary with all labels data."""
         return {"morph": self.cfg["labels_morph"], "pos": self.cfg["labels_pos"]}
 
     def add_label(self, label):

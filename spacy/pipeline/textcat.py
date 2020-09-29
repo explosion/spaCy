@@ -161,10 +161,7 @@ class TextCategorizer(Pipe):
 
     @property
     def label_data(self) -> List[str]:
-        """RETURNS (List[str]): Information about the component's labels.
-
-        DOCS: https://nightly.spacy.io/api/textcategorizer#labels
-        """
+        """RETURNS (List[str]): Information about the component's labels."""
         return self.labels
 
     def pipe(self, stream: Iterable[Doc], *, batch_size: int = 128) -> Iterator[Doc]:
