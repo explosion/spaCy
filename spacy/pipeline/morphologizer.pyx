@@ -1,5 +1,5 @@
 # cython: infer_types=True, profile=True, binding=True
-from typing import Optional
+from typing import Optional, Union, Dict
 import srsly
 from thinc.api import SequenceCategoricalCrossentropy, Model, Config
 from itertools import islice
@@ -100,6 +100,11 @@ class Morphologizer(Tagger):
     def labels(self):
         """RETURNS (Tuple[str]): The labels currently added to the component."""
         return tuple(self.cfg["labels_morph"].keys())
+
+    @property
+    def label_data(self) -> Dict[str, Dict[str, Union[str, float, int, None]]]:
+        """RETURNS (Dict): A dictionary with all labels data."""
+        return {"morph": self.cfg["labels_morph"], "pos": self.cfg["labels_pos"]}
 
     def add_label(self, label):
         """Add a new label to the pipe.

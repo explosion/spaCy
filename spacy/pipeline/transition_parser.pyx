@@ -96,6 +96,10 @@ cdef class Parser(Pipe):
         return class_names
 
     @property
+    def label_data(self):
+        return self.moves.labels
+
+    @property
     def tok2vec(self):
         """Return the embedding and convolutional layer of the model."""
         return self.model.get_ref("tok2vec")

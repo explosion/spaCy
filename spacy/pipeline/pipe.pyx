@@ -1,4 +1,5 @@
 # cython: infer_types=True, profile=True
+from typing import Optional, Tuple
 import srsly
 from thinc.api import set_dropout_rate, Model
 
@@ -31,6 +32,20 @@ cdef class Pipe:
         self.model = model
         self.name = name
         self.cfg = dict(cfg)
+
+    @property
+    def labels(self) -> Optional[Tuple[str]]:
+        if "labels" in self.cfg:
+            return tuple(self.cfg["labels"])
+        else:
+            return None
+    
+    @property
+    def label_data(self):
+        """Optional JSON-serializable data that would be sufficient to recreate
+        the label set if provided to the `pipe.initialize()` method.
+        """
+        return None
 
     def __call__(self, Doc doc):
         """Apply the pipe to one document. The document is modified in place,

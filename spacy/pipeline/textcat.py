@@ -154,7 +154,22 @@ class TextCategorizer(Pipe):
 
     @labels.setter
     def labels(self, value: List[str]) -> None:
+        # TODO: This really shouldn't be here. I had a look and I added it when
+        # I added the labels property, but it's pretty nasty to have this, and
+        # will lead to problems.
         self.cfg["labels"] = tuple(value)
+
+    @property
+    def label_data(self) -> Dict:
+        """RETURNS (Dict): Information about the component's labels.
+
+        DOCS: https://nightly.spacy.io/api/textcategorizer#labels
+        """
+        return {
+            "labels": self.labels,
+            "positive": self.cfg["positive_label"],
+            "threshold": self.cfg["threshold"]
+        }
 
     def pipe(self, stream: Iterable[Doc], *, batch_size: int = 128) -> Iterator[Doc]:
         """Apply the pipe to a stream of documents. This usually happens under
