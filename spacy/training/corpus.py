@@ -30,6 +30,11 @@ def create_jsonl_reader(
     return JsonlTexts(path, min_length=min_length, max_length=max_length, limit=limit)
 
 
+@util.registry.readers("srsly.read_json.v1")
+def _read_json(loc: Path):
+    return srsly.read_json(loc)
+
+
 def walk_corpus(path: Union[str, Path], file_type) -> List[Path]:
     path = util.ensure_path(path)
     if not path.is_dir() and path.parts[-1].endswith(file_type):
