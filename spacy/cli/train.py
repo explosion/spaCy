@@ -66,7 +66,7 @@ def init_pipeline(
             nlp.to_disk(init_path)
             msg.good(f"Saved initialized pipeline to {init_path}")
         else:
-            nlp = util.load_model(init_path).from_config(config)
+            nlp = util.load_model(init_path)
             if must_reinitialize(config, nlp.config):
                 msg.warn("Config has changed: need to re-initialize pipeline")
                 nlp = init_nlp(config, **init_kwargs)
