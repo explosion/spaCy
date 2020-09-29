@@ -1301,12 +1301,14 @@ def minibatch(items, size):
 def is_cython_func(func: Callable) -> bool:
     """Slightly hacky check for whether a callable is implemented in Cython.
     Can be used to implement slightly different behaviors, especially around
-    inspecting and parameter annotations.
+    inspecting and parameter annotations. Note that this will only return True
+    for actual cdef functions and methods, not regular Python functions defined
+    in Python modules.
 
     func (Callable): The callable to check.
     RETURNS (bool): Whether the callable is Cython (probably).
     """
-    attr = "__reduce_cython__"
+    attr = "__pyx_vtable__"
     if hasattr(func, attr):  # function or class instance
         return True
     # https://stackoverflow.com/a/55767059
