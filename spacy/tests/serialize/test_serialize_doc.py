@@ -92,9 +92,9 @@ def test_serialize_doc_bin_unknown_spaces(en_vocab):
 
 
 @pytest.mark.parametrize(
-    "writer_flag,reader_value", [(True, "bar"), (False, "nothing")]
+    "writer_flag,reader_flag,reader_value", [(True, True, "bar"), (True, False, "nothing"), (False, True, "nothing"), (False, False, "nothing")]
 )
-def test_serialize_custom_extension(en_vocab, writer_flag, reader_value):
+def test_serialize_custom_extension(en_vocab, writer_flag, reader_flag, reader_value):
     """Test that custom extensions are correctly serialized in DocBin."""
     Doc.set_extension("foo_1", default="nothing")
     doc = Doc(en_vocab, words=["hello", "world"])
@@ -102,10 +102,7 @@ def test_serialize_custom_extension(en_vocab, writer_flag, reader_value):
     doc_bin = DocBin(store_user_data=writer_flag)
     doc_bin.add(doc)
     doc_bin_bytes = doc_bin.to_bytes()
-    doc_bin_with_user = DocBin(store_user_data=True).from_bytes(doc_bin_bytes)
-    new_doc_with_user = list(doc_bin_with_user.get_docs(en_vocab))[0]
-    assert new_doc_with_user._.foo_1 == reader_value
-    doc_bin_without_user = DocBin(store_user_data=False).from_bytes(doc_bin_bytes)
-    new_doc_without_user = list(doc_bin_without_user.get_docs(en_vocab))[0]
-    assert new_doc_without_user._.foo_1 == "nothing"
+    new_doc_bin = DocBin(store_user_data=reader_flag).from_bytes(doc_bin_bytes)
+    new_doc = list(new_doc_bin.get_docs(en_vocab))[0]
+    assert new_doc._.foo_1 == reader_value
     Underscore.doc_extensions = {}
