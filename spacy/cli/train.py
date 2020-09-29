@@ -48,7 +48,8 @@ def train_cli(
     with show_validation_error(config_path):
         config = util.load_config(config_path, overrides=overrides, interpolate=False)
     msg.divider("Initializing pipeline")
-    nlp = init_pipeline(config, output_path, use_gpu=use_gpu)
+    with show_validation_error(config_path, hint_fill=False):
+        nlp = init_pipeline(config, output_path, use_gpu=use_gpu)
     msg.divider("Training pipeline")
     train(nlp, output_path, use_gpu=use_gpu, silent=False)
 
