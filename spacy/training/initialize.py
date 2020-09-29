@@ -51,7 +51,7 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
             nlp.resume_training(sgd=optimizer)
     with nlp.select_pipes(disable=[*frozen_components, *resume_components]):
         nlp.initialize(lambda: train_corpus(nlp), sgd=optimizer)
-        logger.good("Initialized pipeline components")
+        logger.info("Initialized pipeline components")
     # Verify the config after calling 'initialize' to ensure labels
     # are properly initialized
     verify_config(nlp)
@@ -89,11 +89,11 @@ def init_vocab(
         else:
             oov_prob = DEFAULT_OOV_PROB
         nlp.vocab.cfg.update({"oov_prob": oov_prob})
-        logger.good(f"Added {len(nlp.vocab)} lexical entries to the vocab")
-    logger.good("Created vocabulary")
+        logger.info(f"Added {len(nlp.vocab)} lexical entries to the vocab")
+    logger.info("Created vocabulary")
     if vectors is not None:
         load_vectors_into_model(nlp, vectors)
-        logger.good(f"Added vectors: {vectors}")
+        logger.info(f"Added vectors: {vectors}")
 
 
 def load_vectors_into_model(
