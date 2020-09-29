@@ -17,8 +17,10 @@ from .stop_words import STOP_WORDS
 from ... import util
 
 
+# fmt: off
 _PKUSEG_INSTALL_MSG = "install pkuseg and pickle5 with `pip install pkuseg==0.0.25 pickle5`"
 _PKUSEG_PICKLE_WARNING = "Failed to force pkuseg model to use pickle protocol 4. If you're saving this model with python 3.8, it may not work with python 3.6-3.7."
+# fmt: on
 
 DEFAULT_CONFIG = """
 [nlp]
@@ -177,7 +179,7 @@ class ChineseTokenizer(DummyTokenizer):
                     with open(tempdir / "features.pkl", "wb") as fileh:
                         pickle5.dump(features, fileh, protocol=4)
                 except ImportError as e:
-                    raise(e)
+                    raise e
                 except Exception:
                     warnings.warn(_PKUSEG_PICKLE_WARNING)
                 with open(tempdir / "features.pkl", "rb") as fileh:
@@ -261,7 +263,7 @@ class ChineseTokenizer(DummyTokenizer):
                     with open(path / "features.pkl", "wb") as fileh:
                         pickle5.dump(features, fileh, protocol=4)
                 except ImportError as e:
-                    raise(e)
+                    raise e
                 except Exception:
                     warnings.warn(_PKUSEG_PICKLE_WARNING)
 
@@ -349,7 +351,9 @@ def try_jieba_import(segmenter: str) -> None:
             raise ImportError(msg) from None
 
 
-def try_pkuseg_import(segmenter: str, pkuseg_model: Optional[str], pkuseg_user_dict: str) -> None:
+def try_pkuseg_import(
+    segmenter: str, pkuseg_model: Optional[str], pkuseg_user_dict: str
+) -> None:
     try:
         import pkuseg
 
