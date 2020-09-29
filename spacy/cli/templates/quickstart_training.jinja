@@ -314,8 +314,6 @@ compound = 1.001
 {% endif %}
 
 [initialize]
-
-[initialize.vocab]
 {% if use_transformer or optimize == "efficiency" or not word_vectors -%}
 vectors = null
 {% else -%}
