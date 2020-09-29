@@ -1203,14 +1203,13 @@ class Language:
         config = self.config.interpolate()
         # These are the settings provided in the [initialize] block in the config
         I = registry.resolve(config["initialize"], schema=ConfigSchemaInit)
-        V = I["vocab"]
         init_vocab(
-            self, data=V["data"], lookups=V["lookups"], vectors=V["vectors"],
+            self, data=I["vocab_data"], lookups=I["lookups"], vectors=I["vectors"],
         )
         pretrain_cfg = config.get("pretraining")
         if pretrain_cfg:
             P = registry.resolve(pretrain_cfg, schema=ConfigSchemaPretrain)
-            init_tok2vec(self, P, V)
+            init_tok2vec(self, P, I)
         if self.vocab.vectors.data.shape[1] >= 1:
             ops = get_current_ops()
             self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
