@@ -256,16 +256,13 @@ class Tagger(Pipe):
             raise ValueError("nan value when computing loss")
         return float(loss), d_scores
 
-    def initialize(self, get_examples, *, pipeline=None):
+    def initialize(self, get_examples, *, nlp=None):
         """Initialize the pipe for training, using a representative set
         of data examples.
 
         get_examples (Callable[[], Iterable[Example]]): Function that
             returns a representative sample of gold-standard Example objects..
-        pipeline (List[Tuple[str, Callable]]): Optional list of pipeline
-            components that this component is part of. Corresponds to
-            nlp.pipeline.
-        RETURNS (thinc.api.Optimizer): The optimizer.
+        nlp (Language): The current nlp object the component is part of.
 
         DOCS: https://nightly.spacy.io/api/tagger#initialize
         """

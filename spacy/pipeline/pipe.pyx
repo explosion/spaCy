@@ -183,7 +183,7 @@ cdef class Pipe:
         """
         return util.create_default_optimizer()
 
-    def initialize(self, get_examples, *, pipeline=None):
+    def initialize(self, get_examples, *, nlp=None):
         """Initialize the pipe for training, using data examples if available.
         This method needs to be implemented by each Pipe component,
         ensuring the internal model (if available) is initialized properly
@@ -191,14 +191,11 @@ cdef class Pipe:
 
         get_examples (Callable[[], Iterable[Example]]): Function that
             returns a representative sample of gold-standard Example objects.
-        pipeline (List[Tuple[str, Callable]]): Optional list of pipeline
-            components that this component is part of. Corresponds to
-            nlp.pipeline.
-        RETURNS (thinc.api.Optimizer): The optimizer.
+        nlp (Language): The current nlp object the component is part of.
 
         DOCS: https://nightly.spacy.io/api/pipe#initialize
         """
-        raise NotImplementedError(Errors.E931.format(method="add_label", name=self.name))
+        raise NotImplementedError(Errors.E931.format(method="initialize", name=self.name))
 
     def _ensure_examples(self, get_examples):
         if get_examples is None or not hasattr(get_examples, "__call__"):

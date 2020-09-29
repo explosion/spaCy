@@ -405,7 +405,7 @@ cdef class Parser(Pipe):
     def set_output(self, nO):
         self.model.attrs["resize_output"](self.model, nO)
 
-    def initialize(self, get_examples, pipeline=None, settings=None):
+    def initialize(self, get_examples, nlp=None):
         self._ensure_examples(get_examples)
         lexeme_norms = self.vocab.lookups.get_table("lexeme_norm", {})
         if len(lexeme_norms) == 0 and self.vocab.lang in util.LEXEME_NORM_LANGS:
@@ -425,8 +425,8 @@ cdef class Parser(Pipe):
         # make sure we resize so we have an appropriate upper layer
         self._resize()
         doc_sample = []
-        if pipeline is not None:
-            for name, component in pipeline:
+        if nlp is not None:
+            for name, component in nlp.pipeline:
                 if component is self:
                     break
                 if hasattr(component, "pipe"):
@@ -438,8 +438,8 @@ cdef class Parser(Pipe):
                 doc_sample.append(example.predicted)
         assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(doc_sample)
-        if pipeline is not None:
-            self.init_multitask_objectives(get_examples, pipeline)
+        if nlp is not None:
+            self.init_multitask_objectives(get_examples, nlp.pipeline)
 
     def to_disk(self, path, exclude=tuple()):
         serializers = {

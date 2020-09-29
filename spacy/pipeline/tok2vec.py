@@ -1,4 +1,4 @@
-from typing import Iterator, Sequence, Iterable, Optional, Dict, Callable, List, Tuple
+from typing import Iterator, Sequence, Iterable, Optional, Dict, Callable, List
 from thinc.api import Model, set_dropout_rate, Optimizer, Config
 from itertools import islice
 
@@ -207,20 +207,14 @@ class Tok2Vec(Pipe):
         self,
         get_examples: Callable[[], Iterable[Example]],
         *,
-        pipeline: Optional[List[Tuple[str, Callable[[Doc], Doc]]]] = None,
-        sgd: Optional[Optimizer] = None,
+        nlp: Optional[Language] = None,
     ):
         """Initialize the pipe for training, using a representative set
         of data examples.
 
         get_examples (Callable[[], Iterable[Example]]): Function that
             returns a representative sample of gold-standard Example objects.
-        pipeline (List[Tuple[str, Callable]]): Optional list of pipeline
-            components that this component is part of. Corresponds to
-            nlp.pipeline.
-        sgd (thinc.api.Optimizer): Optional optimizer. Will be created with
-            create_optimizer if it doesn't exist.
-        RETURNS (thinc.api.Optimizer): The optimizer.
+        nlp (Language): The current nlp object the component is part of.
 
         DOCS: https://nightly.spacy.io/api/tok2vec#initialize
         """
