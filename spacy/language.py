@@ -18,6 +18,7 @@ from .tokens.underscore import Underscore
 from .vocab import Vocab, create_vocab
 from .pipe_analysis import validate_attrs, analyze_pipes, print_pipe_analysis
 from .training import Example, validate_examples
+from .training.initialize import init_vocab, init_tok2vec
 from .scorer import Scorer
 from .util import registry, SimpleFrozenList
 from .util import SimpleFrozenDict, combine_score_weights, CONFIG_SECTION_ORDER
@@ -27,7 +28,8 @@ from .lang.punctuation import TOKENIZER_INFIXES
 from .tokens import Doc
 from .tokenizer import Tokenizer
 from .errors import Errors, Warnings
-from .schemas import ConfigSchema, ConfigSchemaNlp, validate_init_settings
+from .schemas import ConfigSchema, ConfigSchemaNlp, ConfigSchemaInit
+from .schemas import ConfigSchemaPretrain, validate_init_settings
 from .git_info import GIT_VERSION
 from . import util
 from . import about
@@ -1161,7 +1163,6 @@ class Language:
         self,
         get_examples: Optional[Callable[[], Iterable[Example]]] = None,
         *,
-        settings: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
         sgd: Optional[Optimizer] = None,
     ) -> Optimizer:
         """Initialize the pipe for training, using data examples if available.
@@ -1198,28 +1199,38 @@ class Language:
         if not valid_examples:
             err = Errors.E930.format(name="Language", obj="empty list")
             raise ValueError(err)
+        # Make sure the config is interpolated so we can resolve subsections
+        config = self.config.interpolate()
+        # These are the settings provided in the [initialize] block in the config
+        I = registry.resolve(config["initialize"], schema=ConfigSchemaInit)
+        V = I["vocab"]
+        init_vocab(
+            self, data=V["data"], lookups=V["lookups"], vectors=V["vectors"],
+        )
+        pretrain_cfg = config.get("pretraining")
+        if pretrain_cfg:
+            P = registry.resolve(pretrain_cfg, schema=ConfigSchemaPretrain)
+            init_tok2vec(self, P, V)
         if self.vocab.vectors.data.shape[1] >= 1:
             ops = get_current_ops()
             self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
-        self._optimizer = sgd
         if hasattr(self.tokenizer, "initialize"):
-            tok_settings = settings.get("tokenizer", {})
             tok_settings = validate_init_settings(
                 self.tokenizer.initialize,
-                tok_settings,
+                I["tokenizer"],
                 section="tokenizer",
                 name="tokenizer",
             )
             self.tokenizer.initialize(get_examples, nlp=self, **tok_settings)
-        proc_settings = settings.get("components", {})
         for name, proc in self.pipeline:
             if hasattr(proc, "initialize"):
-                p_settings = proc_settings.get(name, {})
+                p_settings = I["components"].get(name, {})
                 p_settings = validate_init_settings(
                     proc.initialize, p_settings, section="components", name=name
                 )
                 proc.initialize(get_examples, nlp=self, **p_settings)
         self._link_components()
+        self._optimizer = sgd
         if sgd is not None:
             self._optimizer = sgd
         elif self._optimizer is None:

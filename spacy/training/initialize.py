@@ -1,4 +1,4 @@
-from typing import Union, Dict, Optional, Any, List, IO
+from typing import Union, Dict, Optional, Any, List, IO, TYPE_CHECKING
 from thinc.api import Config, fix_random_seed, set_gpu_allocator
 from thinc.api import ConfigValidationError
 from pathlib import Path
@@ -11,16 +11,18 @@ import zipfile
 import tqdm
 
 from .loop import create_before_to_disk_callback
-from ..language import Language
 from ..lookups import Lookups
 from ..vectors import Vectors
 from ..errors import Errors
-from ..schemas import ConfigSchemaTraining, ConfigSchemaInit, ConfigSchemaPretrain
+from ..schemas import ConfigSchemaTraining, ConfigSchemaPretrain
 from ..util import registry, load_model_from_config, resolve_dot_names
 from ..util import load_model, ensure_path, OOV_RANK, DEFAULT_OOV_PROB
 
+if TYPE_CHECKING:
+    from ..language import Language  # noqa: F401
 
-def init_nlp(config: Config, *, use_gpu: int = -1, silent: bool = True) -> Language:
+
+def init_nlp(config: Config, *, use_gpu: int = -1, silent: bool = True) -> "Language":
     msg = Printer(no_print=silent)
     raw_config = config
     config = raw_config.interpolate()
@@ -38,11 +40,6 @@ def init_nlp(config: Config, *, use_gpu: int = -1, silent: bool = True) -> Langu
     T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
     dot_names = [T["train_corpus"], T["dev_corpus"]]
     train_corpus, dev_corpus = resolve_dot_names(config, dot_names)
-    I = registry.resolve(config["initialize"], schema=ConfigSchemaInit)
-    V = I["vocab"]
-    init_vocab(
-        nlp, data=V["data"], lookups=V["lookups"], vectors=V["vectors"], silent=silent
-    )
     optimizer = T["optimizer"]
     before_to_disk = create_before_to_disk_callback(T["before_to_disk"])
     # Components that shouldn't be updated during training
@@ -55,16 +52,11 @@ def init_nlp(config: Config, *, use_gpu: int = -1, silent: bool = True) -> Langu
             msg.info(f"Resuming training for: {resume_components}")
             nlp.resume_training(sgd=optimizer)
     with nlp.select_pipes(disable=[*frozen_components, *resume_components]):
-        nlp.initialize(lambda: train_corpus(nlp), sgd=optimizer, settings=I)
+        nlp.initialize(lambda: train_corpus(nlp), sgd=optimizer)
         msg.good("Initialized pipeline components")
     # Verify the config after calling 'initialize' to ensure labels
     # are properly initialized
     verify_config(nlp)
-    if "pretraining" in config and config["pretraining"]:
-        P = registry.resolve(config["pretraining"], schema=ConfigSchemaPretrain)
-        loaded = add_tok2vec_weights(nlp, P, V)
-        if loaded and P["component"]:
-            msg.good(f"Loaded pretrained weights into component '{P['component']}'")
     nlp = before_to_disk(nlp)
     return nlp
 
@@ -75,13 +67,13 @@ def must_reinitialize(train_config: Config, init_config: Config) -> bool:
 
 
 def init_vocab(
-    nlp: Language,
+    nlp: "Language",
     *,
     data: Optional[Path] = None,
     lookups: Optional[Lookups] = None,
     vectors: Optional[str] = None,
     silent: bool = True,
-) -> Language:
+) -> "Language":
     msg = Printer(no_print=silent)
     if lookups:
         nlp.vocab.lookups = lookups
@@ -109,7 +101,7 @@ def init_vocab(
 
 
 def load_vectors_into_model(
-    nlp: Language, name: Union[str, Path], *, add_strings: bool = True
+    nlp: "Language", name: Union[str, Path], *, add_strings: bool = True
 ) -> None:
     """Load word vectors from an installed model or path into a model instance."""
     try:
@@ -132,8 +124,8 @@ def load_vectors_into_model(
                 nlp.vocab.strings.add(vectors_nlp.vocab.strings[key])
 
 
-def add_tok2vec_weights(
-    nlp: Language, pretrain_config: Dict[str, Any], vocab_config: Dict[str, Any]
+def init_tok2vec(
+    nlp: "Language", pretrain_config: Dict[str, Any], vocab_config: Dict[str, Any]
 ) -> bool:
     # Load pretrained tok2vec weights - cf. CLI command 'pretrain'
     P = pretrain_config
@@ -171,7 +163,7 @@ def add_tok2vec_weights(
     return False
 
 
-def verify_config(nlp: Language) -> None:
+def verify_config(nlp: "Language") -> None:
     """Perform additional checks based on the config, loaded nlp object and training data."""
     # TODO: maybe we should validate based on the actual components, the list
     # in config["nlp"]["pipeline"] instead?
@@ -182,7 +174,7 @@ def verify_config(nlp: Language) -> None:
             verify_textcat_config(nlp, pipe_config)
 
 
-def verify_textcat_config(nlp: Language, pipe_config: Dict[str, Any]) -> None:
+def verify_textcat_config(nlp: "Language", pipe_config: Dict[str, Any]) -> None:
     # if 'positive_label' is provided: double check whether it's in the data and
     # the task is binary
     if pipe_config.get("positive_label"):
@@ -211,7 +203,7 @@ def get_sourced_components(config: Union[Dict[str, Any], Config]) -> List[str]:
 
 
 def convert_vectors(
-    nlp: Language,
+    nlp: "Language",
     vectors_loc: Optional[Path],
     *,
     truncate: int,

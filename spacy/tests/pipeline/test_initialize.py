@@ -37,30 +37,33 @@ def test_initialize_arguments():
     get_examples = lambda: [example]
     nlp.add_pipe(name)
     # The settings here will typically come from the [initialize] block
+    init_cfg = {"tokenizer": {"custom": 1}, "components": {name: {}}}
+    nlp.config["initialize"].update(init_cfg)
     with pytest.raises(ConfigValidationError) as e:
-        # Empty settings, no required custom1 argument
-        settings = {"tokenizer": {"custom": 1}, "components": {name: {}}}
-        nlp.initialize(get_examples, settings=settings)
+        # Empty config for component, no required custom1 argument
+        nlp.initialize(get_examples)
     errors = e.value.errors
     assert len(errors) == 1
     assert errors[0]["loc"] == ("custom1",)
     assert errors[0]["type"] == "value_error.missing"
+    init_cfg = {
+        "tokenizer": {"custom": 1},
+        "components": {name: {"custom1": "x", "custom2": 1}},
+    }
+    nlp.config["initialize"].update(init_cfg)
     with pytest.raises(ConfigValidationError) as e:
-        # Wrong type
-        settings = {
-            "tokenizer": {"custom": 1},
-            "components": {name: {"custom1": "x", "custom2": 1}},
-        }
-        nlp.initialize(get_examples, settings=settings)
+        # Wrong type of custom 2
+        nlp.initialize(get_examples)
     errors = e.value.errors
     assert len(errors) == 1
     assert errors[0]["loc"] == ("custom2",)
     assert errors[0]["type"] == "value_error.strictbool"
-    settings = {
+    init_cfg = {
         "tokenizer": {"custom": 1},
         "components": {name: {"custom1": "x", "custom2": True}},
     }
-    nlp.initialize(get_examples, settings=settings)
+    nlp.config["initialize"].update(init_cfg)
+    nlp.initialize(get_examples)
     assert nlp.tokenizer.from_initialize == 1
     pipe = nlp.get_pipe(name)
     assert pipe.from_initialize == ("x", True)
