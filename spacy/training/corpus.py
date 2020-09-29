@@ -7,7 +7,7 @@ import srsly
 from .. import util
 from .augment import dont_augment
 from .example import Example
-from ..errors import Warnings
+from ..errors import Warnings, Errors
 from ..tokens import DocBin, Doc
 from ..vocab import Vocab
 
@@ -20,12 +20,14 @@ FILE_TYPE = ".spacy"
 
 @util.registry.readers("spacy.Corpus.v1")
 def create_docbin_reader(
-    path: Path,
+    path: Optional[Path],
     gold_preproc: bool,
     max_length: int = 0,
     limit: int = 0,
     augmenter: Optional[Callable] = None,
 ) -> Callable[["Language"], Iterable[Example]]:
+    if path is None:
+        raise ValueError(Errors.E913)
     return Corpus(
         path,
         gold_preproc=gold_preproc,
