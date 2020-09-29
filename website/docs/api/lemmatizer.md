@@ -38,7 +38,7 @@ The default config is defined by the pipeline component factory and describes
 how the component should be configured. You can override its settings via the
 `config` argument on [`nlp.add_pipe`](/api/language#add_pipe) or in your
 [`config.cfg` for training](/usage/training#config). For examples of the lookups
-data formats used by the lookup and rule-based lemmatizers, see
+data format used by the lookup and rule-based lemmatizers, see
 [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data).
 
 > #### Example

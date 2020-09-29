@@ -61,7 +61,7 @@ matched:
 | `!` | Negate the pattern, by requiring it to match exactly 0 times.    |
 | `?` | Make the pattern optional, by allowing it to match 0 or 1 times. |
 | `+` | Require the pattern to match 1 or more times.                    |
-| `*` | Allow the pattern to match zero or more times.                   |
+| `*` | Allow the pattern to match 0 or more times.                   |
 
 Token patterns can also map to a **dictionary of properties** instead of a
 single value to indicate whether the expected value is a member of a list or how

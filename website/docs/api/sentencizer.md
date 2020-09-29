@@ -8,7 +8,7 @@ api_string_name: sentencizer
 api_trainable: false
 ---
 
-A simple pipeline component, to allow custom sentence boundary detection logic
+A simple pipeline component to allow custom sentence boundary detection logic
 that doesn't require the dependency parse. By default, sentence segmentation is
 performed by the [`DependencyParser`](/api/dependencyparser), so the
 `Sentencizer` lets you implement a simpler, rule-based strategy that doesn't
@@ -130,7 +130,7 @@ Score a batch of examples.
 
 ## Sentencizer.to_disk {#to_disk tag="method"}
 
-Save the sentencizer settings (punctuation characters) a directory. Will create
+Save the sentencizer settings (punctuation characters) to a directory. Will create
 a file `sentencizer.json`. This also happens automatically when you save an
 `nlp` object with a sentencizer added to its pipeline.
 

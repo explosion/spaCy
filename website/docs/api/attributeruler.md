@@ -71,7 +71,7 @@ pattern_dicts = [
 
 ## AttributeRuler.\_\_call\_\_ {#call tag="method"}
 
-Apply the attribute ruler to a Doc, setting token attributes for tokens matched
+Apply the attribute ruler to a `Doc`, setting token attributes for tokens matched
 by the provided patterns.
 
 | Name        | Description                      |
@@ -256,6 +256,6 @@ serialization by passing in the string names via the `exclude` argument.
 | Name       | Description                                                    |
 | ---------- | -------------------------------------------------------------- |
 | `vocab`    | The shared [`Vocab`](/api/vocab).                              |
-| `patterns` | The Matcher patterns. You usually don't want to exclude this.  |
+| `patterns` | The `Matcher` patterns. You usually don't want to exclude this.  |
 | `attrs`    | The attributes to set. You usually don't want to exclude this. |
 | `indices`  | The token indices. You usually don't want to exclude this.     |

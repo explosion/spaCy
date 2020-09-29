@@ -81,7 +81,7 @@ $ python -m spacy info [model] [--markdown] [--silent]
 Find all trained pipeline packages installed in the current environment and
 check whether they are compatible with the currently installed version of spaCy.
 Should be run after upgrading spaCy via `pip install -U spacy` to ensure that
-all installed packages are can be used with the new version. It will show a list
+all installed packages can be used with the new version. It will show a list
 of packages and their installed versions. If any package is out of date, the
 latest compatible versions and command for updating are shown.
 
@@ -408,7 +408,7 @@ File       /path/to/thinc/thinc/schedules.py (line 91)
 
 ### debug data {#debug-data tag="command"}
 
-Analyze, debug, and validate your training and development data. Get useful
+Analyze, debug and validate your training and development data. Get useful
 stats, and find problems like invalid entity annotations, cyclic dependencies,
 low data labels and more.
 

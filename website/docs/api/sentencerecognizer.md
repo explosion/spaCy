@@ -202,7 +202,7 @@ Delegates to [`predict`](/api/sentencerecognizer#predict) and
 ## SentenceRecognizer.rehearse {#rehearse tag="method,experimental" new="3"}
 
 Perform a "rehearsal" update from a batch of data. Rehearsal updates teach the
-current model to make predictions similar to an initial model, to try to address
+current model to make predictions similar to an initial model to try to address
 the "catastrophic forgetting" problem. This feature is experimental.
 
 > #### Example

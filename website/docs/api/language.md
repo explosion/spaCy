@@ -46,10 +46,11 @@ information in [`Language.meta`](/api/language#meta) and not to configure the
 ## Language.from_config {#from_config tag="classmethod" new="3"}
 
 Create a `Language` object from a loaded config. Will set up the tokenizer and
-language data, add pipeline components based on the pipeline and components
-define in the config and validate the results. If no config is provided, the
-default config of the given language is used. This is also how spaCy loads a
-model under the hood based on its [`config.cfg`](/api/data-formats#config).
+language data, add pipeline components based on the pipeline and add pipeline
+components based on the definitions specified in the config. If no config is
+provided, the default config of the given language is used. This is also how
+spaCy loads a model under the hood based on its
+[`config.cfg`](/api/data-formats#config).
 
 > #### Example
 >
@@ -107,7 +108,7 @@ decorator. For more details and examples, see the
 | `assigns`      | `Doc` or `Token` attributes assigned by this component, e.g. `["token.ent_id"]`. Used for [pipe analysis](/usage/processing-pipelines#analysis). ~~Iterable[str]~~ |
 | `requires`     | `Doc` or `Token` attributes required by this component, e.g. `["token.ent_id"]`. Used for [pipe analysis](/usage/processing-pipelines#analysis). ~~Iterable[str]~~ |
 | `retokenizes`  | Whether the component changes tokenization. Used for [pipe analysis](/usage/processing-pipelines#analysis). ~~bool~~                                               |
-| `func`         | Optional function if not used a a decorator. ~~Optional[Callable[[Doc], Doc]]~~                                                                                    |
+| `func`         | Optional function if not used as a decorator. ~~Optional[Callable[[Doc], Doc]]~~                                                                                   |
 
 ## Language.factory {#factory tag="classmethod"}
 
@@ -154,7 +155,7 @@ examples, see the
 | `requires`              | `Doc` or `Token` attributes required by this component, e.g. `["token.ent_id"]`. Used for [pipe analysis](/usage/processing-pipelines#analysis). ~~Iterable[str]~~                                                                                                                                                                 |
 | `retokenizes`           | Whether the component changes tokenization. Used for [pipe analysis](/usage/processing-pipelines#analysis). ~~bool~~                                                                                                                                                                                                               |
 | `default_score_weights` | The scores to report during training, and their default weight towards the final score used to select the best model. Weights should sum to `1.0` per component and will be combined and normalized for the whole pipeline. If a weight is set to `None`, the score will not be logged or weighted. ~~Dict[str, Optional[float]]~~ |
-| `func`                  | Optional function if not used a a decorator. ~~Optional[Callable[[...], Callable[[Doc], Doc]]]~~                                                                                                                                                                                                                                   |
+| `func`                  | Optional function if not used as a decorator. ~~Optional[Callable[[...], Callable[[Doc], Doc]]]~~                                                                                                                                                                                                                                  |
 
 ## Language.\_\_call\_\_ {#call tag="method"}
 
@@ -601,7 +602,7 @@ does nothing.
 
 ## Language.enable_pipe {#enable_pipe tag="method" new="3"}
 
-Enable a previously disable component (e.g. via
+Enable a previously disabled component (e.g. via
 [`Language.disable_pipes`](/api/language#disable_pipes)) so it's run as part of
 the pipeline, [`nlp.pipeline`](/api/language#pipeline). If the component is
 already enabled, this method does nothing.
@@ -628,7 +629,7 @@ pipeline will be restored to the initial state at the end of the block.
 Otherwise, a `DisabledPipes` object is returned, that has a `.restore()` method
 you can use to undo your changes. You can specify either `disable` (as a list or
 string), or `enable`. In the latter case, all components not in the `enable`
-list, will be disabled. Under the hood, this method calls into
+list will be disabled. Under the hood, this method calls into
 [`disable_pipe`](/api/language#disable_pipe) and
 [`enable_pipe`](/api/language#enable_pipe).
 
@@ -661,7 +662,7 @@ As of spaCy v3.0, the `disable_pipes` method has been renamed to `select_pipes`:
 | -------------- | ------------------------------------------------------------------------------------------------------ |
 | _keyword-only_ |                                                                                                        |
 | `disable`      | Name(s) of pipeline components to disable. ~~Optional[Union[str, Iterable[str]]]~~                     |
-| `enable`       | Names(s) of pipeline components that will not be disabled. ~~Optional[Union[str, Iterable[str]]]~~     |
+| `enable`       | Name(s) of pipeline components that will not be disabled. ~~Optional[Union[str, Iterable[str]]]~~      |
 | **RETURNS**    | The disabled pipes that can be restored by calling the object's `.restore()` method. ~~DisabledPipes~~ |
 
 ## Language.get_factory_meta {#get_factory_meta tag="classmethod" new="3"}
@@ -873,10 +874,10 @@ Loads state from a directory, including all data that was saved with the
 
 <Infobox variant="warning" title="Important note">
 
-Keep in mind that this method **only loads serialized state** and doesn't set up
-the `nlp` object. This means that it requires the correct language class to be
-initialized and all pipeline components to be added to the pipeline. If you want
-to load a serialized pipeline from a directory, you should use
+Keep in mind that this method **only loads the serialized state** and doesn't
+set up the `nlp` object. This means that it requires the correct language class
+to be initialized and all pipeline components to be added to the pipeline. If
+you want to load a serialized pipeline from a directory, you should use
 [`spacy.load`](/api/top-level#spacy.load), which will set everything up for you.
 
 </Infobox>
