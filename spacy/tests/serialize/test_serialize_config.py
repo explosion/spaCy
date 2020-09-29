@@ -14,8 +14,8 @@ from ..util import make_tempdir
 
 nlp_config_string = """
 [paths]
-train = ""
-dev = ""
+train = null
+dev = null
 
 [corpora]
 
@@ -309,7 +309,7 @@ def test_config_interpolation():
     config = Config().from_str(nlp_config_string, interpolate=False)
     assert config["corpora"]["train"]["path"] == "${paths.train}"
     interpolated = config.interpolate()
-    assert interpolated["corpora"]["train"]["path"] == ""
+    assert interpolated["corpora"]["train"]["path"] is None
     nlp = English.from_config(config)
     assert nlp.config["corpora"]["train"]["path"] == "${paths.train}"
     # Ensure that variables are preserved in nlp config
@@ -317,10 +317,10 @@ def test_config_interpolation():
     assert config["components"]["tagger"]["model"]["tok2vec"]["width"] == width
     assert nlp.config["components"]["tagger"]["model"]["tok2vec"]["width"] == width
     interpolated2 = nlp.config.interpolate()
-    assert interpolated2["corpora"]["train"]["path"] == ""
+    assert interpolated2["corpora"]["train"]["path"] is None
     assert interpolated2["components"]["tagger"]["model"]["tok2vec"]["width"] == 342
     nlp2 = English.from_config(interpolated)
-    assert nlp2.config["corpora"]["train"]["path"] == ""
+    assert nlp2.config["corpora"]["train"]["path"] is None
     assert nlp2.config["components"]["tagger"]["model"]["tok2vec"]["width"] == 342
 
 
