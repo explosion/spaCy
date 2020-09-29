@@ -43,7 +43,7 @@ architectures and their arguments and hyperparameters.
 
 | Setting                       | Description                                                                                                                                                                                                                                         |
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `moves`                       | A list of transition names. Inferred from the data if not provided. Defaults to `None`. ~~Optional[List[str]]                                                                                                                                       |
+| `moves`                       | A list of transition names. Inferred from the data if not provided. Defaults to `None`. ~~Optional[List[str]]~~                                                                                                                                       |
 | `update_with_oracle_cut_size` | During training, cut long sequences into shorter segments by creating intermediate states based on the gold-standard history. The model is not very sensitive to this parameter, so you usually won't need to change it. Defaults to `100`. ~~int~~ |
 | `model`                       | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. Defaults to [TransitionBasedParser](/api/architectures#TransitionBasedParser). ~~Model[List[Doc], List[Floats2d]]~~                                                 |
 
@@ -83,7 +83,7 @@ shortcut for this and instantiate the component using its string name and
 
 ## EntityRecognizer.\_\_call\_\_ {#call tag="method"}
 
-Apply the pipe to one document. The document is modified in place, and returned.
+Apply the pipe to one document. The document is modified in place and returned.
 This usually happens under the hood when the `nlp` object is called on a text
 and all pipeline components are applied to the `Doc` in order. Both
 [`__call__`](/api/entityrecognizer#call) and

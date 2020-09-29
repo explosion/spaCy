@@ -29,7 +29,7 @@ Create the vocabulary.
 | `oov_prob`                                  | The default OOV probability. Defaults to `-20.0`. ~~float~~                                                                                             |
 | `vectors_name` <Tag variant="new">2.2</Tag> | A name to identify the vectors table. ~~str~~                                                                                                           |
 | `writing_system`                            | A dictionary describing the language's writing system. Typically provided by [`Language.Defaults`](/api/language#defaults). ~~Dict[str, Any]~~          |
-| `get_noun_chunks`                           | A function that yields base noun phrases, used for [`Doc.noun_chunks`](/ap/doc#noun_chunks). ~~Optional[Callable[[Union[Doc, Span], Iterator[Span]]]]~~ |
+| `get_noun_chunks`                           | A function that yields base noun phrases used for [`Doc.noun_chunks`](/ap/doc#noun_chunks). ~~Optional[Callable[[Union[Doc, Span], Iterator[Span]]]]~~ |
 
 ## Vocab.\_\_len\_\_ {#len tag="method"}
 
@@ -150,7 +150,7 @@ rows, we would discard the vectors for "feline" and "reclined". These words
 would then be remapped to the closest remaining vector – so "feline" would have
 the same vector as "cat", and "reclined" would have the same vector as "sat".
 The similarities are judged by cosine. The original vectors may be large, so the
-cosines are calculated in minibatches, to reduce memory usage.
+cosines are calculated in minibatches to reduce memory usage.
 
 > #### Example
 >
@@ -170,7 +170,7 @@ cosines are calculated in minibatches, to reduce memory usage.
 Retrieve a vector for a word in the vocabulary. Words can be looked up by string
 or hash value. If no vectors data is loaded, a `ValueError` is raised. If `minn`
 is defined, then the resulting vector uses [FastText](https://fasttext.cc/)'s
-subword features by average over ngrams of `orth` (introduced in spaCy `v2.1`).
+subword features by average over n-grams of `orth` (introduced in spaCy `v2.1`).
 
 > #### Example
 >
@@ -182,13 +182,13 @@ subword features by average over ngrams of `orth` (introduced in spaCy `v2.1`).
 | Name                                | Description                                                                                                            |
 | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | `orth`                              | The hash value of a word, or its unicode string. ~~Union[int, str]~~                                                   |
-| `minn` <Tag variant="new">2.1</Tag> | Minimum n-gram length used for FastText's ngram computation. Defaults to the length of `orth`. ~~int~~                 |
-| `maxn` <Tag variant="new">2.1</Tag> | Maximum n-gram length used for FastText's ngram computation. Defaults to the length of `orth`. ~~int~~                 |
+| `minn` <Tag variant="new">2.1</Tag> | Minimum n-gram length used for FastText's n-gram computation. Defaults to the length of `orth`. ~~int~~                 |
+| `maxn` <Tag variant="new">2.1</Tag> | Maximum n-gram length used for FastText's n-gram computation. Defaults to the length of `orth`. ~~int~~                 |
 | **RETURNS**                         | A word vector. Size and shape are determined by the `Vocab.vectors` instance. ~~numpy.ndarray[ndim=1, dtype=float32]~~ |
 
 ## Vocab.set_vector {#set_vector tag="method" new="2"}
 
-Set a vector for a word in the vocabulary. Words can be referenced by by string
+Set a vector for a word in the vocabulary. Words can be referenced by string
 or hash value.
 
 > #### Example

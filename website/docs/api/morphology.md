@@ -12,7 +12,7 @@ container storing a single morphological analysis.
 
 ## Morphology.\_\_init\_\_ {#init tag="method"}
 
-Create a Morphology object.
+Create a `Morphology` object.
 
 > #### Example
 >
@@ -101,7 +101,7 @@ representation.
 | Name         | Description                                                                                                                                             |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `feats_dict` | The morphological features as a dictionary. ~~Dict[str, str]~~                                                                                          |
-| **RETURNS**  | The morphological features as in Universal Dependencies [FEATS](https://universaldependencies.org/format.html#morphological-annotation) format. ~~str~~ |
+| **RETURNS**  | The morphological features in Universal Dependencies [FEATS](https://universaldependencies.org/format.html#morphological-annotation) format. ~~str~~ |
 
 ## Attributes {#attributes}
 

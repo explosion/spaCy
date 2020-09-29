@@ -8,7 +8,7 @@ A slice from a [`Doc`](/api/doc) object.
 
 ## Span.\_\_init\_\_ {#init tag="method"}
 
-Create a Span object from the slice `doc[start : end]`.
+Create a `Span` object from the slice `doc[start : end]`.
 
 > #### Example
 >
@@ -187,7 +187,7 @@ the character indices don't map to a valid span.
 | Name                                 | Description                                                                               |
 | ------------------------------------ | ----------------------------------------------------------------------------------------- |
 | `start`                              | The index of the first character of the span. ~~int~~                                     |
-| `end`                                | The index of the last character after the span. ~int~~                                    |
+| `end`                                | The index of the last character after the span. ~~int~~                                    |
 | `label`                              | A label to attach to the span, e.g. for named entities. ~~Union[int, str]~~               |
 | `kb_id` <Tag variant="new">2.2</Tag> | An ID from a knowledge base to capture the meaning of a named entity. ~~Union[int, str]~~ |
 | `vector`                             | A meaning representation of the span. ~~numpy.ndarray[ndim=1, dtype=float32]~~            |

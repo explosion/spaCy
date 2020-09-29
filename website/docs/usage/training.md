@@ -6,6 +6,7 @@ menu:
   - ['Introduction', 'basics']
   - ['Quickstart', 'quickstart']
   - ['Config System', 'config']
+  <!-- - ['Data Utilities', 'data'] -->
   - ['Custom Functions', 'custom-functions']
   - ['Parallel Training', 'parallel-training']
   - ['Internal API', 'api']
@@ -505,6 +506,16 @@ still look good.
 
 </Accordion>
 
+<!--
+## Data Utilities {#data-utilities}
+
+* spacy convert
+* The [corpora] block
+* Custom corpus class
+* Minibatching
+* Data augmentation
+-->
+
 ## Custom Functions {#custom-functions}
 
 Registered functions in the training config files can refer to built-in
@@ -689,7 +700,7 @@ from pathlib import Path
 @spacy.registry.loggers("my_custom_logger.v1")
 def custom_logger(log_path):
     def setup_logger(nlp: "Language") -> Tuple[Callable, Callable]:
-        with Path(log_path).open("w") as file_:
+        with Path(log_path).open("w", encoding="utf8") as file_:
             file_.write("step\\t")
             file_.write("score\\t")
             for pipe in nlp.pipe_names:

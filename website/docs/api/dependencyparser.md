@@ -21,8 +21,7 @@ non-projective parses.
 The parser is trained using an **imitation learning objective**. It follows the
 actions predicted by the current weights, and at each state, determines which
 actions are compatible with the optimal parse that could be reached from the
-current state. The weights such that the scores assigned to the set of optimal
-actions is increased, while scores assigned to other actions are decreased. Note
+current state. The weights are updated such that the scores assigned to the set of optimal actions is increased, while scores assigned to other actions are decreased. Note
 that more than one action may be optimal for a given state.
 
 ## Config and implementation {#config}

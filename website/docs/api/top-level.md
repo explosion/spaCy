@@ -198,7 +198,7 @@ browser. Will run a simple web server.
 | `page`    | Render markup as full HTML page. Defaults to `True`. ~~bool~~                                                                                                      |
 | `minify`  | Minify HTML markup. Defaults to `False`. ~~bool~~                                                                                                                  |
 | `options` | [Visualizer-specific options](#displacy_options), e.g. colors. ~~Dict[str, Any]~~                                                                                  |
-| `manual`  | Don't parse `Doc` and instead, expect a dict or list of dicts. [See here](/usage/visualizers#manual-usage) for formats and examples. Defaults to `False`. ~~bool~~ |
+| `manual`  | Don't parse `Doc` and instead expect a dict or list of dicts. [See here](/usage/visualizers#manual-usage) for formats and examples. Defaults to `False`. ~~bool~~ |
 | `port`    | Port to serve visualization. Defaults to `5000`. ~~int~~                                                                                                           |
 | `host`    | Host to serve visualization. Defaults to `"0.0.0.0"`. ~~str~~                                                                                                      |
 
@@ -223,7 +223,7 @@ Render a dependency parse tree or named entity visualization.
 | `page`      | Render markup as full HTML page. Defaults to `True`. ~~bool~~                                                                                                                          |
 | `minify`    | Minify HTML markup. Defaults to `False`. ~~bool~~                                                                                                                                      |
 | `options`   | [Visualizer-specific options](#displacy_options), e.g. colors. ~~Dict[str, Any]~~                                                                                                      |
-| `manual`    | Don't parse `Doc` and instead, expect a dict or list of dicts. [See here](/usage/visualizers#manual-usage) for formats and examples. Defaults to `False`. ~~bool~~                     |
+| `manual`    | Don't parse `Doc` and instead expect a dict or list of dicts. [See here](/usage/visualizers#manual-usage) for formats and examples. Defaults to `False`. ~~bool~~                     |
 | `jupyter`   | Explicitly enable or disable "[Jupyter](http://jupyter.org/) mode" to return markup ready to be rendered in a notebook. Detected automatically if `None` (default). ~~Optional[bool]~~ |
 | **RETURNS** | The rendered HTML markup. ~~str~~                                                                                                                                                      |
 
@@ -244,7 +244,7 @@ If a setting is not present in the options, the default value will be used.
 | Name                                       | Description                                                                                                                                  |
 | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | `fine_grained`                             | Use fine-grained part-of-speech tags (`Token.tag_`) instead of coarse-grained tags (`Token.pos_`). Defaults to `False`. ~~bool~~             |
-| `add_lemma` <Tag variant="new">2.2.4</Tag> | Print the lemma's in a separate row below the token texts. Defaults to `False`. ~~bool~~                                                     |
+| `add_lemma` <Tag variant="new">2.2.4</Tag> | Print the lemmas in a separate row below the token texts. Defaults to `False`. ~~bool~~                                                     |
 | `collapse_punct`                           | Attach punctuation to tokens. Can make the parse more readable, as it prevents long arcs to attach punctuation. Defaults to `True`. ~~bool~~ |
 | `collapse_phrases`                         | Merge noun phrases into one token. Defaults to `False`. ~~bool~~                                                                             |
 | `compact`                                  | "Compact mode" with square arrows that takes up less space. Defaults to `False`. ~~bool~~                                                    |
@@ -623,7 +623,7 @@ sequences in the batch.
 
 Encode labelled spans into per-token tags, using the
 [BILUO scheme](/usage/linguistic-features#accessing-ner) (Begin, In, Last, Unit,
-Out). Returns a list of strings, describing the tags. Each tag string will be of
+Out). Returns a list of strings, describing the tags. Each tag string will be in
 the form of either `""`, `"O"` or `"{action}-{label}"`, where action is one of
 `"B"`, `"I"`, `"L"`, `"U"`. The string `"-"` is used where the entity offsets
 don't align with the tokenization in the `Doc` object. The training algorithm
@@ -747,7 +747,7 @@ decorator.
 ### util.lang_class_is_loaded {#util.lang_class_is_loaded tag="function" new="2.1"}
 
 Check whether a `Language` subclass is already loaded. `Language` subclasses are
-loaded lazily, to avoid expensive setup code associated with the language data.
+loaded lazily to avoid expensive setup code associated with the language data.
 
 > #### Example
 >
@@ -935,7 +935,7 @@ Compile a sequence of prefix rules into a regex object.
 | Name        | Description                                                                                                                                 |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | `entries`   | The prefix rules, e.g. [`lang.punctuation.TOKENIZER_PREFIXES`](%%GITHUB_SPACY/spacy/lang/punctuation.py). ~~Iterable[Union[str, Pattern]]~~ |
-| **RETURNS** | The regex object. to be used for [`Tokenizer.prefix_search`](/api/tokenizer#attributes). ~~Pattern~~                                        |
+| **RETURNS** | The regex object to be used for [`Tokenizer.prefix_search`](/api/tokenizer#attributes). ~~Pattern~~                                        |
 
 ### util.compile_suffix_regex {#util.compile_suffix_regex tag="function"}
 
@@ -952,7 +952,7 @@ Compile a sequence of suffix rules into a regex object.
 | Name        | Description                                                                                                                                 |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | `entries`   | The suffix rules, e.g. [`lang.punctuation.TOKENIZER_SUFFIXES`](%%GITHUB_SPACY/spacy/lang/punctuation.py). ~~Iterable[Union[str, Pattern]]~~ |
-| **RETURNS** | The regex object. to be used for [`Tokenizer.suffix_search`](/api/tokenizer#attributes). ~~Pattern~~                                        |
+| **RETURNS** | The regex object to be used for [`Tokenizer.suffix_search`](/api/tokenizer#attributes). ~~Pattern~~                                        |
 
 ### util.compile_infix_regex {#util.compile_infix_regex tag="function"}
 
@@ -969,7 +969,7 @@ Compile a sequence of infix rules into a regex object.
 | Name        | Description                                                                                                                               |
 | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | `entries`   | The infix rules, e.g. [`lang.punctuation.TOKENIZER_INFIXES`](%%GITHUB_SPACY/spacy/lang/punctuation.py). ~~Iterable[Union[str, Pattern]]~~ |
-| **RETURNS** | The regex object. to be used for [`Tokenizer.infix_finditer`](/api/tokenizer#attributes). ~~Pattern~~                                     |
+| **RETURNS** | The regex object to be used for [`Tokenizer.infix_finditer`](/api/tokenizer#attributes). ~~Pattern~~                                     |
 
 ### util.minibatch {#util.minibatch tag="function" new="2"}
 

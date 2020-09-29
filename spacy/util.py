@@ -83,6 +83,7 @@ class registry(thinc.registry):
     callbacks = catalogue.create("spacy", "callbacks")
     batchers = catalogue.create("spacy", "batchers", entry_points=True)
     readers = catalogue.create("spacy", "readers", entry_points=True)
+    augmenters = catalogue.create("spacy", "augmenters", entry_points=True)
     loggers = catalogue.create("spacy", "loggers", entry_points=True)
     # These are factories registered via third-party packages and the
     # spacy_factories entry point. This registry only exists so we can easily

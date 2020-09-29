@@ -157,7 +157,7 @@ This method was previously called `begin_training`.
 
 ## TextCategorizer.predict {#predict tag="method"}
 
-Apply the component's model to a batch of [`Doc`](/api/doc) objects, without
+Apply the component's model to a batch of [`Doc`](/api/doc) objects without
 modifying them.
 
 > #### Example
@@ -174,7 +174,7 @@ modifying them.
 
 ## TextCategorizer.set_annotations {#set_annotations tag="method"}
 
-Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
+Modify a batch of [`Doc`](/api/doc) objects using pre-computed scores.
 
 > #### Example
 >
@@ -217,7 +217,7 @@ Delegates to [`predict`](/api/textcategorizer#predict) and
 ## TextCategorizer.rehearse {#rehearse tag="method,experimental" new="3"}
 
 Perform a "rehearsal" update from a batch of data. Rehearsal updates teach the
-current model to make predictions similar to an initial model, to try to address
+current model to make predictions similar to an initial model to try to address
 the "catastrophic forgetting" problem. This feature is experimental.
 
 > #### Example
@@ -290,7 +290,7 @@ Create an optimizer for the pipeline component.
 
 ## TextCategorizer.use_params {#use_params tag="method, contextmanager"}
 
-Modify the pipe's model, to use the given parameter values.
+Modify the pipe's model to use the given parameter values.
 
 > #### Example
 >

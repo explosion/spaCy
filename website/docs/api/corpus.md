@@ -74,6 +74,7 @@ train/test skew.
 |  `gold_preproc` | Whether to set up the Example object with gold-standard sentences and tokens for the predictions. Defaults to `False`. ~~bool~~                     |
 | `max_length`    | Maximum document length. Longer documents will be split into sentences, if sentence boundaries are available. Defaults to `0` for no limit. ~~int~~ |
 | `limit`         | Limit corpus to a subset of examples, e.g. for debugging. Defaults to `0` for no limit. ~~int~~                                                     |
+| `augmenter`     | Optional data augmentation callback. ~~Callable[[Language, Example], Iterable[Example]]~~
 
 ## Corpus.\_\_call\_\_ {#call tag="method"}
 
