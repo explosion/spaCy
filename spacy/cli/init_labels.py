@@ -34,7 +34,7 @@ def init_labels_cli(
     with show_validation_error(config_path):
         config = util.load_config(config_path, overrides=overrides)
     with show_validation_error(hint_fill=False):
-        nlp = init_nlp(config, use_gpu=use_gpu, silent=False)
+        nlp = init_nlp(config, use_gpu=use_gpu)
     for name, component in nlp.pipeline:
         if getattr(component, "label_data", None) is not None:
             srsly.write_json(output_path / f"{name}.json", component.label_data)
