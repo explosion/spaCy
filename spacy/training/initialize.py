@@ -121,15 +121,15 @@ def load_vectors_into_model(
 
 
 def init_tok2vec(
-    nlp: "Language", pretrain_config: Dict[str, Any], vocab_config: Dict[str, Any]
+    nlp: "Language", pretrain_config: Dict[str, Any], init_config: Dict[str, Any]
 ) -> bool:
     # Load pretrained tok2vec weights - cf. CLI command 'pretrain'
     P = pretrain_config
-    V = vocab_config
+    I = init_config
     weights_data = None
-    init_tok2vec = ensure_path(V["init_tok2vec"])
+    init_tok2vec = ensure_path(I["init_tok2vec"])
     if init_tok2vec is not None:
-        if P["objective"].get("type") == "vectors" and not V["vectors"]:
+        if P["objective"].get("type") == "vectors" and not I["vectors"]:
             err = 'need initialize.vocab.vectors if pretraining.objective.type is "vectors"'
             errors = [{"loc": ["initialize", "vocab"], "msg": err}]
             raise ConfigValidationError(config=nlp.config, errors=errors)
