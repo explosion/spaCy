@@ -11,6 +11,7 @@ import inspect
 
 from .attrs import NAMES
 from .lookups import Lookups
+from .util import is_cython_func
 
 if TYPE_CHECKING:
     # This lets us add type hints for mypy etc. without causing circular imports
@@ -93,8 +94,11 @@ def get_arg_model(
             continue
         # If no annotation is specified assume it's anything
         annotation = param.annotation if param.annotation != param.empty else Any
-        # If no default value is specified assume that it's required
-        default = param.default if param.default != param.empty else ...
+        # If no default value is specified assume that it's required. Cython
+        # functions/methods will have param.empty for default value None so we
+        # need to treat them differently
+        default_empty = None if is_cython_func(func) else ...
+        default = param.default if param.default != param.empty else default_empty
         sig_args[param.name] = (annotation, default)
     is_strict = strict and not has_variable
     sig_args["__config__"] = ArgSchemaConfig if is_strict else ArgSchemaConfigExtra
