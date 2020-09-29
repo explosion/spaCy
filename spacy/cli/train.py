@@ -49,33 +49,9 @@ def train_cli(
         config = util.load_config(config_path, overrides=overrides, interpolate=False)
     msg.divider("Initializing pipeline")
     with show_validation_error(config_path, hint_fill=False):
-        nlp = init_pipeline(config, output_path, use_gpu=use_gpu)
+        nlp = init_nlp(config, use_gpu=use_gpu)
     msg.divider("Training pipeline")
     train(nlp, output_path, use_gpu=use_gpu, silent=False)
-
-
-def init_pipeline(
-    config: Config, output_path: Optional[Path], *, use_gpu: int = -1
-) -> Language:
-    init_kwargs = {"use_gpu": use_gpu}
-    if output_path is not None:
-        init_path = output_path / "model-initial"
-        if not init_path.exists():
-            msg.info(f"Initializing the pipeline in {init_path}")
-            nlp = init_nlp(config, **init_kwargs)
-            nlp.to_disk(init_path)
-            msg.good(f"Saved initialized pipeline to {init_path}")
-        else:
-            nlp = util.load_model(init_path)
-            if must_reinitialize(config, nlp.config):
-                msg.warn("Config has changed: need to re-initialize pipeline")
-                nlp = init_nlp(config, **init_kwargs)
-                nlp.to_disk(init_path)
-                msg.good(f"Re-initialized pipeline in {init_path}")
-            else:
-                msg.good(f"Loaded initialized pipeline from {init_path}")
-        return nlp
-    return init_nlp(config, **init_kwargs)
 
 
 def verify_cli_args(config_path: Path, output_path: Optional[Path] = None) -> None:
