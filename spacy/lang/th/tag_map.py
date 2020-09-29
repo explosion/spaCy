@@ -42,7 +42,7 @@ TAG_MAP = {
     "AV": {POS: ADV},
     # INTJ
     "INT": {POS: INTJ},
-    "IJ": {POS: INTJ}
+    "IJ": {POS: INTJ},
     # PRON
     "PROPN": {POS: PROPN},
     "PPRS": {POS: PROPN},
