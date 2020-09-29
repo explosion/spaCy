@@ -2,7 +2,6 @@ from typing import Union, Dict, Optional, Any, List, IO, TYPE_CHECKING
 from thinc.api import Config, fix_random_seed, set_gpu_allocator
 from thinc.api import ConfigValidationError
 from pathlib import Path
-from wasabi import Printer
 import srsly
 import numpy
 import tarfile
@@ -14,16 +13,15 @@ from .loop import create_before_to_disk_callback
 from ..lookups import Lookups
 from ..vectors import Vectors
 from ..errors import Errors
-from ..schemas import ConfigSchemaTraining, ConfigSchemaPretrain
-from ..util import registry, load_model_from_config, resolve_dot_names
+from ..schemas import ConfigSchemaTraining
+from ..util import registry, load_model_from_config, resolve_dot_names, logger
 from ..util import load_model, ensure_path, OOV_RANK, DEFAULT_OOV_PROB
 
 if TYPE_CHECKING:
     from ..language import Language  # noqa: F401
 
 
-def init_nlp(config: Config, *, use_gpu: int = -1, silent: bool = True) -> "Language":
-    msg = Printer(no_print=silent)
+def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
     raw_config = config
     config = raw_config.interpolate()
     if config["training"]["seed"] is not None:
@@ -34,7 +32,7 @@ def init_nlp(config: Config, *, use_gpu: int = -1, silent: bool = True) -> "Lang
     # Use original config here before it's resolved to functions
     sourced_components = get_sourced_components(config)
     nlp = load_model_from_config(raw_config, auto_fill=True)
-    msg.good("Set up nlp object from config")
+    logger.info("Set up nlp object from config")
     config = nlp.config.interpolate()
     # Resolve all training-relevant sections using the filled nlp config
     T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
@@ -46,14 +44,14 @@ def init_nlp(config: Config, *, use_gpu: int = -1, silent: bool = True) -> "Lang
     frozen_components = T["frozen_components"]
     # Sourced components that require resume_training
     resume_components = [p for p in sourced_components if p not in frozen_components]
-    msg.info(f"Pipeline: {nlp.pipe_names}")
+    logger.info(f"Pipeline: {nlp.pipe_names}")
     if resume_components:
         with nlp.select_pipes(enable=resume_components):
-            msg.info(f"Resuming training for: {resume_components}")
+            logger.info(f"Resuming training for: {resume_components}")
             nlp.resume_training(sgd=optimizer)
     with nlp.select_pipes(disable=[*frozen_components, *resume_components]):
         nlp.initialize(lambda: train_corpus(nlp), sgd=optimizer)
-        msg.good("Initialized pipeline components")
+        logger.good("Initialized pipeline components")
     # Verify the config after calling 'initialize' to ensure labels
     # are properly initialized
     verify_config(nlp)
@@ -72,12 +70,10 @@ def init_vocab(
     data: Optional[Path] = None,
     lookups: Optional[Lookups] = None,
     vectors: Optional[str] = None,
-    silent: bool = True,
 ) -> "Language":
-    msg = Printer(no_print=silent)
     if lookups:
         nlp.vocab.lookups = lookups
-        msg.good(f"Added vocab lookups: {', '.join(lookups.tables)}")
+        logger.info(f"Added vocab lookups: {', '.join(lookups.tables)}")
     data_path = ensure_path(data)
     if data_path is not None:
         lex_attrs = srsly.read_jsonl(data_path)
@@ -93,11 +89,11 @@ def init_vocab(
         else:
             oov_prob = DEFAULT_OOV_PROB
         nlp.vocab.cfg.update({"oov_prob": oov_prob})
-        msg.good(f"Added {len(nlp.vocab)} lexical entries to the vocab")
-    msg.good("Created vocabulary")
+        logger.good(f"Added {len(nlp.vocab)} lexical entries to the vocab")
+    logger.good("Created vocabulary")
     if vectors is not None:
         load_vectors_into_model(nlp, vectors)
-        msg.good(f"Added vectors: {vectors}")
+        logger.good(f"Added vectors: {vectors}")
 
 
 def load_vectors_into_model(
@@ -209,9 +205,7 @@ def convert_vectors(
     truncate: int,
     prune: int,
     name: Optional[str] = None,
-    silent: bool = True,
 ) -> None:
-    msg = Printer(no_print=silent)
     vectors_loc = ensure_path(vectors_loc)
     if vectors_loc and vectors_loc.parts[-1].endswith(".npz"):
         nlp.vocab.vectors = Vectors(data=numpy.load(vectors_loc.open("rb")))
@@ -220,9 +214,9 @@ def convert_vectors(
                 nlp.vocab.vectors.add(lex.orth, row=lex.rank)
     else:
         if vectors_loc:
-            with msg.loading(f"Reading vectors from {vectors_loc}"):
-                vectors_data, vector_keys = read_vectors(vectors_loc, truncate)
-            msg.good(f"Loaded vectors from {vectors_loc}")
+            logger.info(f"Reading vectors from {vectors_loc}")
+            vectors_data, vector_keys = read_vectors(vectors_loc, truncate)
+            logger.info(f"Loaded vectors from {vectors_loc}")
         else:
             vectors_data, vector_keys = (None, None)
         if vector_keys is not None:
@@ -239,7 +233,6 @@ def convert_vectors(
     nlp.meta["vectors"]["name"] = nlp.vocab.vectors.name
     if prune >= 1:
         nlp.vocab.prune_vectors(prune)
-    msg.good(f"Successfully converted {len(nlp.vocab.vectors)} vectors")
 
 
 def read_vectors(vectors_loc: Path, truncate_vectors: int):
