@@ -1218,11 +1218,7 @@ class Language:
                 p_settings = validate_init_settings(
                     proc.initialize, p_settings, section="components", name=name
                 )
-                proc.initialize(
-                    get_examples,
-                    pipeline=self.pipeline,
-                    **p_settings,
-                )
+                proc.initialize(get_examples, nlp=self, **p_settings)
         self._link_components()
         if sgd is not None:
             self._optimizer = sgd
