@@ -354,7 +354,7 @@ cdef class Parser(Pipe):
             # If all weights for an output are 0 in the original model, don't
             # supervise that output. This allows us to add classes.
             loss += (d_scores**2).sum()
-            backprop(d_scores, sgd=sgd)
+            backprop(d_scores)
             # Follow the predicted action
             self.transition_states(states, guesses)
             states = [state for state in states if not state.is_final()]
@@ -405,9 +405,8 @@ cdef class Parser(Pipe):
     def set_output(self, nO):
         self.model.attrs["resize_output"](self.model, nO)
 
-    def initialize(self, get_examples, pipeline=None, sgd=None, **kwargs):
+    def initialize(self, get_examples, pipeline=None, settings=None):
         self._ensure_examples(get_examples)
-        self.cfg.update(kwargs)
         lexeme_norms = self.vocab.lookups.get_table("lexeme_norm", {})
         if len(lexeme_norms) == 0 and self.vocab.lang in util.LEXEME_NORM_LANGS:
             langs = ", ".join(util.LEXEME_NORM_LANGS)
@@ -425,8 +424,6 @@ cdef class Parser(Pipe):
         self.moves.initialize_actions(actions)
         # make sure we resize so we have an appropriate upper layer
         self._resize()
-        if sgd is None:
-            sgd = self.create_optimizer()
         doc_sample = []
         if pipeline is not None:
             for name, component in pipeline:
@@ -442,7 +439,7 @@ cdef class Parser(Pipe):
         assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(doc_sample)
         if pipeline is not None:
-            self.init_multitask_objectives(get_examples, pipeline, sgd=sgd, **self.cfg)
+            self.init_multitask_objectives(get_examples, pipeline)
         return sgd
 
     def to_disk(self, path, exclude=tuple()):

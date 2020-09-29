@@ -183,7 +183,7 @@ cdef class Pipe:
         """
         return util.create_default_optimizer()
 
-    def initialize(self, get_examples, *, pipeline=None, sgd=None):
+    def initialize(self, get_examples, *, pipeline=None):
         """Initialize the pipe for training, using data examples if available.
         This method needs to be implemented by each Pipe component,
         ensuring the internal model (if available) is initialized properly
@@ -194,8 +194,6 @@ cdef class Pipe:
         pipeline (List[Tuple[str, Callable]]): Optional list of pipeline
             components that this component is part of. Corresponds to
             nlp.pipeline.
-        sgd (thinc.api.Optimizer): Optional optimizer. Will be created with
-            create_optimizer if it doesn't exist.
         RETURNS (thinc.api.Optimizer): The optimizer.
 
         DOCS: https://nightly.spacy.io/api/pipe#initialize

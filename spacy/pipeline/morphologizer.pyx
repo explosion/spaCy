@@ -129,7 +129,7 @@ class Morphologizer(Tagger):
             self.cfg["labels_pos"][norm_label] = POS_IDS[pos]
         return 1
 
-    def initialize(self, get_examples, *, pipeline=None, sgd=None):
+    def initialize(self, get_examples, *, pipeline=None):
         """Initialize the pipe for training, using a representative set
         of data examples.
 
@@ -138,8 +138,6 @@ class Morphologizer(Tagger):
         pipeline (List[Tuple[str, Callable]]): Optional list of pipeline
             components that this component is part of. Corresponds to
             nlp.pipeline.
-        sgd (thinc.api.Optimizer): Optional optimizer. Will be created with
-            create_optimizer if it doesn't exist.
         RETURNS (thinc.api.Optimizer): The optimizer.
 
         DOCS: https://nightly.spacy.io/api/morphologizer#initialize
@@ -178,9 +176,6 @@ class Morphologizer(Tagger):
         assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
         assert len(label_sample) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(X=doc_sample, Y=label_sample)
-        if sgd is None:
-            sgd = self.create_optimizer()
-        return sgd
 
     def set_annotations(self, docs, batch_tag_ids):
         """Modify a batch of documents, using pre-computed scores.

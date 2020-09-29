@@ -338,8 +338,7 @@ class TextCategorizer(Pipe):
         self,
         get_examples: Callable[[], Iterable[Example]],
         *,
-        pipeline: Optional[List[Tuple[str, Callable[[Doc], Doc]]]] = None,
-        sgd: Optional[Optimizer] = None,
+        pipeline: Optional[List[Tuple[str, Callable[[Doc], Doc]]]] = None
     ) -> Optimizer:
         """Initialize the pipe for training, using a representative set
         of data examples.
