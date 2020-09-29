@@ -149,9 +149,6 @@ class SentenceRecognizer(Tagger):
         assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
         assert len(label_sample) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(X=doc_sample, Y=label_sample)
-        if sgd is None:
-            sgd = self.create_optimizer()
-        return sgd
 
     def add_label(self, label, values=None):
         raise NotImplementedError

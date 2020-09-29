@@ -1298,7 +1298,8 @@ class Language:
     
     def create_optimizer(self):
         """Create an optimizer, usually using the [training.optimizer] config."""
-        return registry.resolve(self.config["training"]["optimizer"])
+        subconfig = {"optimizer": self.config["training"]["optimizer"]}
+        return registry.resolve(subconfig)["optimizer"]
 
     @contextmanager
     def use_params(self, params: Optional[dict]):

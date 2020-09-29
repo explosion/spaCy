@@ -440,7 +440,6 @@ cdef class Parser(Pipe):
         self.model.initialize(doc_sample)
         if pipeline is not None:
             self.init_multitask_objectives(get_examples, pipeline)
-        return sgd
 
     def to_disk(self, path, exclude=tuple()):
         serializers = {

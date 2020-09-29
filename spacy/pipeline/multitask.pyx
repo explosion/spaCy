@@ -91,9 +91,6 @@ class MultitaskObjective(Tagger):
                 if label is not None and label not in self.labels:
                     self.labels[label] = len(self.labels)
         self.model.initialize()   # TODO: fix initialization by defining X and Y
-        if sgd is None:
-            sgd = self.create_optimizer()
-        return sgd
 
     def predict(self, docs):
         tokvecs = self.model.get_ref("tok2vec")(docs)
@@ -181,9 +178,6 @@ class ClozeMultitask(Pipe):
         self.model.initialize()  # TODO: fix initialization by defining X and Y
         X = self.model.ops.alloc((5, self.model.get_ref("tok2vec").get_dim("nO")))
         self.model.output_layer.initialize(X)
-        if sgd is None:
-            sgd = self.create_optimizer()
-        return sgd
 
     def predict(self, docs):
         tokvecs = self.model.get_ref("tok2vec")(docs)
