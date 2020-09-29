@@ -74,12 +74,6 @@ def init_pipeline(
             else:
                 msg.good(f"Loaded initialized pipeline from {init_path}")
         return nlp
-    msg.warn(
-        "Not saving initialized model: no output directory specified. "
-        "To speed up training, spaCy can save the initialized nlp object with "
-        "the vocabulary, vectors and label scheme. To take advantage of this, "
-        "provide an output directory."
-    )
     return init_nlp(config, **init_kwargs)
 
 
