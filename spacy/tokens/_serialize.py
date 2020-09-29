@@ -130,7 +130,10 @@ class DocBin:
             doc = doc.from_array(self.attrs, tokens)
             doc.cats = self.cats[i]
             if self.store_user_data:
-                user_data = srsly.msgpack_loads(self.user_data[i], use_list=False)
+                try:
+                    user_data = srsly.msgpack_loads(self.user_data[i], use_list=False)
+                except IndexError:
+                    raise ValueError(Errors.E913)
                 doc.user_data.update(user_data)
             yield doc
 

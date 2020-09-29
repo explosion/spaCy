@@ -1,3 +1,5 @@
+import pytest
+
 import spacy
 from spacy.lang.en import English
 from spacy.tokens import Doc, DocBin
@@ -86,3 +88,27 @@ def test_serialize_doc_bin_unknown_spaces(en_vocab):
     assert re_doc1.text == "that 's "
     assert not re_doc2.has_unknown_spaces
     assert re_doc2.text == "that's"
+
+
+def test_serialize_custom_extension(en_vocab):
+    """Test that custom extensions are correctly serialized in DocBin."""
+    Doc.set_extension("foo_1", default="nothing")
+    doc = Doc(en_vocab, words=["hello", "world"])
+    doc._.foo_1 = "bar"
+    doc_bin = DocBin(store_user_data=True)
+    doc_bin.add(doc)
+    doc_bin_bytes = doc_bin.to_bytes()
+    new_doc_bin = DocBin(store_user_data=True).from_bytes(doc_bin_bytes)
+    new_doc = list(new_doc_bin.get_docs(en_vocab))[0]
+    assert new_doc._.foo_1 == "bar"
+
+
+def test_serialize_custom_extension_invalid(en_vocab):
+    """Custom extension can not be read in if store_user_data was originally False."""
+    doc = Doc(en_vocab, words=["hello", "world"])
+    doc_bin = DocBin(store_user_data=False)
+    doc_bin.add(doc)
+    doc_bin_bytes = doc_bin.to_bytes()
+    new_doc_bin = DocBin(store_user_data=True).from_bytes(doc_bin_bytes)
+    with pytest.raises(ValueError) as e:
+        new_doc = list(new_doc_bin.get_docs(en_vocab))[0]

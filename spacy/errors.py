@@ -477,6 +477,8 @@ class Errors:
     E201 = ("Span index out of range.")
 
     # TODO: fix numbering after merging develop into master
+    E913 = ("Error reading 'user_data' from a DocBin. Make sure that 'store_user_data' "
+            "is set to True both when reading and writing a DocBin.")
     E914 = ("Executing {name} callback failed. Expected the function to "
             "return the nlp object but got: {value}. Maybe you forgot to return "
             "the modified object in your function?")
