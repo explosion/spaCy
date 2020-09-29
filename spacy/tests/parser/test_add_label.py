@@ -35,7 +35,7 @@ def test_init_parser(parser):
 def _train_parser(parser):
     fix_random_seed(1)
     parser.add_label("left")
-    parser.initialize(lambda: [_parser_example(parser)], **parser.cfg)
+    parser.initialize(lambda: [_parser_example(parser)])
     sgd = Adam(0.001)
 
     for i in range(5):
