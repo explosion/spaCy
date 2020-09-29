@@ -32,7 +32,7 @@ TAG_MAP = {
     "NONM": {POS: ADJ},
     "VATT": {POS: ADJ},
     "DONM": {POS: ADJ},
-    "AJ": {POS: ADJ}
+    "AJ": {POS: ADJ},
     # ADV
     "ADV": {POS: ADV},
     "ADVN": {POS: ADV},
