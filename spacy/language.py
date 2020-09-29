@@ -1217,9 +1217,10 @@ class Language:
                 name="tokenizer",
             )
             self.tokenizer.initialize(get_examples, nlp=self, **tok_settings)
+        proc_settings = settings.get("components", {})
         for name, proc in self.pipeline:
             if hasattr(proc, "initialize"):
-                p_settings = settings.get(name, {})
+                p_settings = proc_settings.get(name, {})
                 p_settings = validate_init_settings(
                     proc.initialize, p_settings, section="components", name=name
                 )
