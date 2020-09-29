@@ -114,6 +114,6 @@ def project_document(
                 content = f"{before}{content}{after}"
             else:
                 msg.warn("Replacing existing file")
-        with output_file.open("w") as f:
+        with output_file.open("w", encoding="utf8") as f:
             f.write(content)
         msg.good("Saved project documentation", output_file)
