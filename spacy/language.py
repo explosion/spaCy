@@ -27,7 +27,7 @@ from .lang.punctuation import TOKENIZER_INFIXES
 from .tokens import Doc
 from .tokenizer import Tokenizer
 from .errors import Errors, Warnings
-from .schemas import ConfigSchema, ConfigSchemaNlp
+from .schemas import ConfigSchema, ConfigSchemaNlp, validate_init_settings
 from .git_info import GIT_VERSION
 from . import util
 from . import about
@@ -1161,8 +1161,10 @@ class Language:
     def initialize(
         self,
         get_examples: Optional[Callable[[], Iterable[Example]]] = None,
-        sgd: Optional[Optimizer]=None
-    ) -> None:
+        *,
+        settings: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
+        sgd: Optional[Optimizer] = None,
+    ) -> Optimizer:
         """Initialize the pipe for training, using data examples if available.
 
         get_examples (Callable[[], Iterable[Example]]): Optional function that
@@ -1200,10 +1202,28 @@ class Language:
         if self.vocab.vectors.data.shape[1] >= 1:
             ops = get_current_ops()
             self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
+        self._optimizer = sgd
+        if hasattr(self.tokenizer, "initialize"):
+            tok_settings = settings.get("tokenizer", {})
+            tok_settings = validate_init_settings(
+                self.tokenizer.initialize,
+                tok_settings,
+                section="tokenizer",
+                name="tokenizer",
+            )
+            self.tokenizer.initialize(get_examples, nlp=self, **tok_settings)
+        proc_settings = settings.get("components", {})
         for name, proc in self.pipeline:
             if hasattr(proc, "initialize"):
+                p_settings = proc_settings.get(name, {})
+                p_settings = validate_init_settings(
+                    proc.initialize, p_settings, section="components", name=name
+                )
                 proc.initialize(
                     get_examples, pipeline=self.pipeline
+                    get_examples,
+                    pipeline=self.pipeline,
+                    **p_settings,
                 )
         self._link_components()
         if sgd is not None:

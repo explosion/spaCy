@@ -1,13 +1,19 @@
-from typing import Union, Dict, Optional, Any, List
+from typing import Union, Dict, Optional, Any, List, IO
 from thinc.api import Config, fix_random_seed, set_gpu_allocator
 from thinc.api import ConfigValidationError
 from pathlib import Path
 from wasabi import Printer
 import srsly
+import numpy
+import tarfile
+import gzip
+import zipfile
+import tqdm
 
 from .loop import create_before_to_disk_callback
 from ..language import Language
 from ..lookups import Lookups
+from ..vectors import Vectors
 from ..errors import Errors
 from ..schemas import ConfigSchemaTraining, ConfigSchemaInit, ConfigSchemaPretrain
 from ..util import registry, load_model_from_config, resolve_dot_names
@@ -49,8 +55,8 @@ def init_nlp(config: Config, *, use_gpu: int = -1, silent: bool = True) -> Langu
             msg.info(f"Resuming training for: {resume_components}")
             nlp.resume_training(sgd=optimizer)
     with nlp.select_pipes(disable=[*frozen_components, *resume_components]):
-        nlp.initialize(lambda: train_corpus(nlp), sgd=optimizer)
-        msg.good(f"Initialized pipeline components")
+        nlp.initialize(lambda: train_corpus(nlp), sgd=optimizer, settings=I)
+        msg.good("Initialized pipeline components")
     # Verify the config after calling 'initialize' to ensure labels
     # are properly initialized
     verify_config(nlp)
@@ -103,7 +109,7 @@ def init_vocab(
 
 
 def load_vectors_into_model(
-    nlp: "Language", name: Union[str, Path], *, add_strings: bool = True
+    nlp: Language, name: Union[str, Path], *, add_strings: bool = True
 ) -> None:
     """Load word vectors from an installed model or path into a model instance."""
     try:
@@ -202,3 +208,104 @@ def get_sourced_components(config: Union[Dict[str, Any], Config]) -> List[str]:
         for name, cfg in config.get("components", {}).items()
         if "factory" not in cfg and "source" in cfg
     ]
+
+
+def convert_vectors(
+    nlp: Language,
+    vectors_loc: Optional[Path],
+    *,
+    truncate: int,
+    prune: int,
+    name: Optional[str] = None,
+    silent: bool = True,
+) -> None:
+    msg = Printer(no_print=silent)
+    vectors_loc = ensure_path(vectors_loc)
+    if vectors_loc and vectors_loc.parts[-1].endswith(".npz"):
+        nlp.vocab.vectors = Vectors(data=numpy.load(vectors_loc.open("rb")))
+        for lex in nlp.vocab:
+            if lex.rank and lex.rank != OOV_RANK:
+                nlp.vocab.vectors.add(lex.orth, row=lex.rank)
+    else:
+        if vectors_loc:
+            with msg.loading(f"Reading vectors from {vectors_loc}"):
+                vectors_data, vector_keys = read_vectors(vectors_loc, truncate)
+            msg.good(f"Loaded vectors from {vectors_loc}")
+        else:
+            vectors_data, vector_keys = (None, None)
+        if vector_keys is not None:
+            for word in vector_keys:
+                if word not in nlp.vocab:
+                    nlp.vocab[word]
+        if vectors_data is not None:
+            nlp.vocab.vectors = Vectors(data=vectors_data, keys=vector_keys)
+    if name is None:
+        # TODO: Is this correct? Does this matter?
+        nlp.vocab.vectors.name = f"{nlp.meta['lang']}_{nlp.meta['name']}.vectors"
+    else:
+        nlp.vocab.vectors.name = name
+    nlp.meta["vectors"]["name"] = nlp.vocab.vectors.name
+    if prune >= 1:
+        nlp.vocab.prune_vectors(prune)
+    msg.good(f"Successfully converted {len(nlp.vocab.vectors)} vectors")
+
+
+def read_vectors(vectors_loc: Path, truncate_vectors: int):
+    f = open_file(vectors_loc)
+    f = ensure_shape(f)
+    shape = tuple(int(size) for size in next(f).split())
+    if truncate_vectors >= 1:
+        shape = (truncate_vectors, shape[1])
+    vectors_data = numpy.zeros(shape=shape, dtype="f")
+    vectors_keys = []
+    for i, line in enumerate(tqdm.tqdm(f)):
+        line = line.rstrip()
+        pieces = line.rsplit(" ", vectors_data.shape[1])
+        word = pieces.pop(0)
+        if len(pieces) != vectors_data.shape[1]:
+            raise ValueError(Errors.E094.format(line_num=i, loc=vectors_loc))
+        vectors_data[i] = numpy.asarray(pieces, dtype="f")
+        vectors_keys.append(word)
+        if i == truncate_vectors - 1:
+            break
+    return vectors_data, vectors_keys
+
+
+def open_file(loc: Union[str, Path]) -> IO:
+    """Handle .gz, .tar.gz or unzipped files"""
+    loc = ensure_path(loc)
+    if tarfile.is_tarfile(str(loc)):
+        return tarfile.open(str(loc), "r:gz")
+    elif loc.parts[-1].endswith("gz"):
+        return (line.decode("utf8") for line in gzip.open(str(loc), "r"))
+    elif loc.parts[-1].endswith("zip"):
+        zip_file = zipfile.ZipFile(str(loc))
+        names = zip_file.namelist()
+        file_ = zip_file.open(names[0])
+        return (line.decode("utf8") for line in file_)
+    else:
+        return loc.open("r", encoding="utf8")
+
+
+def ensure_shape(lines):
+    """Ensure that the first line of the data is the vectors shape.
+    If it's not, we read in the data and output the shape as the first result,
+    so that the reader doesn't have to deal with the problem.
+    """
+    first_line = next(lines)
+    try:
+        shape = tuple(int(size) for size in first_line.split())
+    except ValueError:
+        shape = None
+    if shape is not None:
+        # All good, give the data
+        yield first_line
+        yield from lines
+    else:
+        # Figure out the shape, make it the first value, and then give the
+        # rest of the data.
+        width = len(first_line.split()) - 1
+        captured = [first_line] + list(lines)
+        length = len(captured)
+        yield f"{length} {width}"
+        yield from captured
