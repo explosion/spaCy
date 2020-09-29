@@ -6,8 +6,7 @@ from pathlib import Path
 from wasabi import msg
 import thinc
 import thinc.schedules
-from thinc.api import use_pytorch_for_gpu_memory, require_gpu, fix_random_seed
-from thinc.api import Config, Optimizer
+from thinc.api import Config, Optimizer, require_gpu, fix_random_seed, set_gpu_allocator
 import random
 import typer
 import logging
@@ -18,6 +17,7 @@ from ..language import Language
 from .. import util
 from ..training.example import Example
 from ..errors import Errors
+from ..util import dot_to_object
 
 
 @app.command(
@@ -28,7 +28,7 @@ def train_cli(
     ctx: typer.Context,  # This is only used to read additional arguments
     config_path: Path = Arg(..., help="Path to config file", exists=True),
     output_path: Optional[Path] = Opt(None, "--output", "--output-path", "-o", help="Output directory to store trained pipeline in"),
-    code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
+    code_path: Optional[Path] = Opt(None, "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
     use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU"),
     resume: bool = Opt(False, "--resume", "-R", help="Resume training"),
@@ -78,22 +78,23 @@ def train(
         config = util.load_config(
             config_path, overrides=config_overrides, interpolate=True
         )
-    if config.get("training", {}).get("seed") is not None:
+    if config["training"]["seed"] is not None:
         fix_random_seed(config["training"]["seed"])
-    if config.get("system", {}).get("use_pytorch_for_gpu_memory"):
-        # It feels kind of weird to not have a default for this.
-        use_pytorch_for_gpu_memory()
+    allocator = config["training"]["gpu_allocator"]
+    if use_gpu >= 0 and allocator:
+        set_gpu_allocator(allocator)
     # Use original config here before it's resolved to functions
     sourced_components = get_sourced_components(config)
     with show_validation_error(config_path):
         nlp, config = util.load_model_from_config(config)
+    util.load_vocab_data_into_model(nlp, lookups=config["training"]["lookups"])
     if config["training"]["vectors"] is not None:
         util.load_vectors_into_model(nlp, config["training"]["vectors"])
     raw_text, tag_map, morph_rules, weights_data = load_from_paths(config)
     T_cfg = config["training"]
     optimizer = T_cfg["optimizer"]
-    train_corpus = T_cfg["train_corpus"]
-    dev_corpus = T_cfg["dev_corpus"]
+    train_corpus = dot_to_object(config, T_cfg["train_corpus"])
+    dev_corpus = dot_to_object(config, T_cfg["dev_corpus"])
     batcher = T_cfg["batcher"]
     train_logger = T_cfg["logger"]
     # Components that shouldn't be updated during training
@@ -151,7 +152,8 @@ def train(
         exclude=frozen_components,
     )
     msg.info(f"Training. Initial learn rate: {optimizer.learn_rate}")
-    print_row, finalize_logger = train_logger(nlp)
+    with nlp.select_pipes(disable=frozen_components):
+        print_row, finalize_logger = train_logger(nlp)
 
     try:
         progress = tqdm.tqdm(total=T_cfg["eval_frequency"], leave=False)
@@ -162,7 +164,8 @@ def train(
                 progress.close()
                 print_row(info)
                 if is_best_checkpoint and output_path is not None:
-                    update_meta(T_cfg, nlp, info)
+                    with nlp.select_pipes(disable=frozen_components):
+                        update_meta(T_cfg, nlp, info)
                     with nlp.use_params(optimizer.averages):
                         nlp.to_disk(output_path / "model-best")
                 progress = tqdm.tqdm(total=T_cfg["eval_frequency"], leave=False)
@@ -206,10 +209,17 @@ def create_train_batches(iterator, batcher, max_epochs: int):
 def create_evaluation_callback(
     nlp: Language, dev_corpus: Callable, weights: Dict[str, float]
 ) -> Callable[[], Tuple[float, Dict[str, float]]]:
+    weights = {key: value for key, value in weights.items() if value is not None}
+
     def evaluate() -> Tuple[float, Dict[str, float]]:
         dev_examples = list(dev_corpus(nlp))
         scores = nlp.evaluate(dev_examples)
-        # Calculate a weighted sum based on score_weights for the main score
+        # Calculate a weighted sum based on score_weights for the main score.
+        # We can only consider scores that are ints/floats, not dicts like
+        # entity scores per type etc.
+        for key, value in scores.items():
+            if key in weights and not isinstance(value, (int, float)):
+                raise ValueError(Errors.E915.format(name=key, score_type=type(value)))
         try:
             weighted_score = sum(
                 scores.get(s, 0.0) * weights.get(s, 0.0) for s in weights
@@ -365,7 +375,8 @@ def update_meta(
 ) -> None:
     nlp.meta["performance"] = {}
     for metric in training["score_weights"]:
-        nlp.meta["performance"][metric] = info["other_scores"].get(metric, 0.0)
+        if metric is not None:
+            nlp.meta["performance"][metric] = info["other_scores"].get(metric, 0.0)
     for pipe_name in nlp.pipe_names:
         nlp.meta["performance"][f"{pipe_name}_loss"] = info["losses"][pipe_name]
 

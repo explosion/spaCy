@@ -24,6 +24,7 @@ const branch = isNightly ? 'develop' : 'master'
 // Those variables are going to be replaced in the Markdown, e.g. %%GITHUB_SPACY
 const replacements = {
     GITHUB_SPACY: `https://github.com/explosion/spaCy/tree/${branch}`,
+    GITHUB_PROJECTS: `https://github.com/${site.projectsRepo}`,
 }
 
 /**

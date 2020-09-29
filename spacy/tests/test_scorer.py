@@ -2,10 +2,9 @@ from numpy.testing import assert_almost_equal, assert_array_almost_equal
 import pytest
 from pytest import approx
 from spacy.training import Example
-from spacy.training.iob_utils import biluo_tags_from_offsets
+from spacy.training.iob_utils import offsets_to_biluo_tags
 from spacy.scorer import Scorer, ROCAUCScore
 from spacy.scorer import _roc_auc_score, _roc_curve
-from .util import get_doc
 from spacy.lang.en import English
 from spacy.tokens import Doc
 
@@ -80,7 +79,6 @@ def tagged_doc():
         doc[i].morph_ = morphs[i]
         if i > 0:
             doc[i].is_sent_start = False
-    doc.is_tagged = True
     return doc
 
 
@@ -138,11 +136,8 @@ def test_las_per_type(en_vocab):
     scorer = Scorer()
     examples = []
     for input_, annot in test_las_apple:
-        doc = get_doc(
-            en_vocab,
-            words=input_.split(" "),
-            heads=([h - i for i, h in enumerate(annot["heads"])]),
-            deps=annot["deps"],
+        doc = Doc(
+            en_vocab, words=input_.split(" "), heads=annot["heads"], deps=annot["deps"],
         )
         gold = {"heads": annot["heads"], "deps": annot["deps"]}
         example = Example.from_dict(doc, gold)
@@ -162,11 +157,8 @@ def test_las_per_type(en_vocab):
     scorer = Scorer()
     examples = []
     for input_, annot in test_las_apple:
-        doc = get_doc(
-            en_vocab,
-            words=input_.split(" "),
-            heads=([h - i for i, h in enumerate(annot["heads"])]),
-            deps=annot["deps"],
+        doc = Doc(
+            en_vocab, words=input_.split(" "), heads=annot["heads"], deps=annot["deps"],
         )
         gold = {"heads": annot["heads"], "deps": annot["deps"]}
         doc[0].dep_ = "compound"
@@ -189,12 +181,12 @@ def test_ner_per_type(en_vocab):
     scorer = Scorer()
     examples = []
     for input_, annot in test_ner_cardinal:
-        doc = get_doc(
+        doc = Doc(
             en_vocab,
             words=input_.split(" "),
-            ents=[[0, 1, "CARDINAL"], [2, 3, "CARDINAL"]],
+            ents=[("CARDINAL", 0, 1), ("CARDINAL", 2, 3)],
         )
-        entities = biluo_tags_from_offsets(doc, annot["entities"])
+        entities = offsets_to_biluo_tags(doc, annot["entities"])
         example = Example.from_dict(doc, {"entities": entities})
         # a hack for sentence boundaries
         example.predicted[1].is_sent_start = False
@@ -214,12 +206,12 @@ def test_ner_per_type(en_vocab):
     scorer = Scorer()
     examples = []
     for input_, annot in test_ner_apple:
-        doc = get_doc(
+        doc = Doc(
             en_vocab,
             words=input_.split(" "),
-            ents=[[0, 1, "ORG"], [5, 6, "GPE"], [6, 7, "ORG"]],
+            ents=[("ORG", 0, 1), ("GPE", 5, 6), ("ORG", 6, 7)],
         )
-        entities = biluo_tags_from_offsets(doc, annot["entities"])
+        entities = offsets_to_biluo_tags(doc, annot["entities"])
         example = Example.from_dict(doc, {"entities": entities})
         # a hack for sentence boundaries
         example.predicted[1].is_sent_start = False

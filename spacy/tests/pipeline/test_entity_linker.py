@@ -144,6 +144,29 @@ def test_kb_empty(nlp):
         entity_linker.begin_training(lambda: [])
 
 
+def test_kb_serialize(nlp):
+    """Test serialization of the KB"""
+    mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
+    with make_tempdir() as d:
+        # normal read-write behaviour
+        mykb.to_disk(d / "kb")
+        mykb.from_disk(d / "kb")
+        mykb.to_disk(d / "kb.file")
+        mykb.from_disk(d / "kb.file")
+        mykb.to_disk(d / "new" / "kb")
+        mykb.from_disk(d / "new" / "kb")
+        # allow overwriting an existing file
+        mykb.to_disk(d / "kb.file")
+        with pytest.raises(ValueError):
+            # can not write to a directory
+            mykb.to_disk(d)
+        with pytest.raises(ValueError):
+            # can not read from a directory
+            mykb.from_disk(d)
+        with pytest.raises(ValueError):
+            # can not read from an unknown file
+            mykb.from_disk(d / "unknown" / "kb")
+
 def test_candidate_generation(nlp):
     """Test correct candidate generation"""
     mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)

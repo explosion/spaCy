@@ -205,9 +205,10 @@ acquired from [WordNet](https://wordnet.princeton.edu/).
 spaCy features a fast and accurate syntactic dependency parser, and has a rich
 API for navigating the tree. The parser also powers the sentence boundary
 detection, and lets you iterate over base noun phrases, or "chunks". You can
-check whether a [`Doc`](/api/doc) object has been parsed with the
-`doc.is_parsed` attribute, which returns a boolean value. If this attribute is
-`False`, the default sentence iterator will raise an exception.
+check whether a [`Doc`](/api/doc) object has been parsed by calling
+`doc.has_annotation("DEP")`, which checks whether the attribute `Token.dep` has
+been set returns a boolean value. If the result is `False`, the default sentence
+iterator will raise an exception.
 
 <Infobox title="Dependency label scheme" emoji="📖">
 
@@ -1653,9 +1654,12 @@ The [`SentenceRecognizer`](/api/sentencerecognizer) is a simple statistical
 component that only provides sentence boundaries. Along with being faster and
 smaller than the parser, its primary advantage is that it's easier to train
 because it only requires annotated sentence boundaries rather than full
-dependency parses.
-
-<!-- TODO: update/confirm usage once we have final models trained -->
+dependency parses. spaCy's [trained pipelines](/models) include both a parser
+and a trained sentence segmenter, which is
+[disabled](/usage/processing-pipelines#disabling) by default. If you only need
+sentence boundaries and no parser, you can use the `enable` and `disable`
+arguments on [`spacy.load`](/api/top-level#spacy.load) to enable the senter and
+disable the parser.
 
 > #### senter vs. parser
 >
@@ -1705,9 +1709,10 @@ and can still be overwritten by the parser.
 <Infobox title="Important note" variant="warning">
 
 To prevent inconsistent state, you can only set boundaries **before** a document
-is parsed (and `doc.is_parsed` is `False`). To ensure that your component is
-added in the right place, you can set `before='parser'` or `first=True` when
-adding it to the pipeline using [`nlp.add_pipe`](/api/language#add_pipe).
+is parsed (and `doc.has_annotation("DEP")` is `False`). To ensure that your
+component is added in the right place, you can set `before='parser'` or
+`first=True` when adding it to the pipeline using
+[`nlp.add_pipe`](/api/language#add_pipe).
 
 </Infobox>
 

@@ -4,25 +4,30 @@ import CopyInput from '../components/copy'
 import Infobox from '../components/infobox'
 import Link from '../components/link'
 import { InlineCode } from '../components/code'
+import { projectsRepo } from '../components/util'
 
-// TODO: move to meta?
-const DEFAULT_REPO = 'https://github.com/explosion/projects/tree/v3'
 const COMMAND = 'python -m spacy project clone'
 
-export default function Project({ id, repo, children }) {
+export default function Project({
+    title = 'Get started with a project template',
+    id,
+    repo,
+    children,
+}) {
     const repoArg = repo ? ` --repo ${repo}` : ''
     const text = `${COMMAND} ${id}${repoArg}`
-    const url = `${repo || DEFAULT_REPO}/${id}`
-    const title = (
+    const defaultRepo = `https://github.com/${projectsRepo}`
+    const url = `${repo || defaultRepo}/${id}`
+    const header = (
         <>
-            Get started with a project template:{' '}
+            {title}:{' '}
             <Link to={url}>
                 <InlineCode>{id}</InlineCode>
             </Link>
         </>
     )
     return (
-        <Infobox title={title} emoji="🪐">
+        <Infobox title={header} emoji="🪐">
             {children}
             <CopyInput text={text} prefix="$" />
         </Infobox>

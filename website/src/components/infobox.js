@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { Fragment } from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
 
@@ -14,30 +14,34 @@ export default function Infobox({
     className,
     children,
 }) {
+    const Wrapper = id ? 'div' : Fragment
     const infoboxClassNames = classNames(classes.root, className, {
         [classes.list]: !!list,
         [classes.warning]: variant === 'warning',
         [classes.danger]: variant === 'danger',
     })
     return (
-        <aside className={infoboxClassNames} id={id}>
-            {title && (
-                <h4 className={classes.title}>
-                    {variant !== 'default' && !emoji && (
-                        <Icon width={18} name={variant} inline className={classes.icon} />
-                    )}
-                    <span className={classes.titleText}>
-                        {emoji && (
-                            <span className={classes.emoji} aria-hidden="true">
-                                {emoji}
-                            </span>
+        <Wrapper>
+            {id && <a id={id} />}
+            <aside className={infoboxClassNames}>
+                {title && (
+                    <h4 className={classes.title}>
+                        {variant !== 'default' && !emoji && (
+                            <Icon width={18} name={variant} inline className={classes.icon} />
                         )}
-                        {title}
-                    </span>
-                </h4>
-            )}
-            {children}
-        </aside>
+                        <span className={classes.titleText}>
+                            {emoji && (
+                                <span className={classes.emoji} aria-hidden="true">
+                                    {emoji}
+                                </span>
+                            )}
+                            {title}
+                        </span>
+                    </h4>
+                )}
+                {children}
+            </aside>
+        </Wrapper>
     )
 }
 

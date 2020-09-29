@@ -57,7 +57,10 @@ class Warnings:
             "incorrect. Modify PhraseMatcher._terminal_hash to fix.")
     W024 = ("Entity '{entity}' - Alias '{alias}' combination already exists in "
             "the Knowledge Base.")
-    W026 = ("Unable to set all sentence boundaries from dependency parses.")
+    W026 = ("Unable to set all sentence boundaries from dependency parses. If "
+            "you are constructing a parse tree incrementally by setting "
+            "token.head values, you can probably ignore this warning. Consider "
+            "using Doc(words, ..., heads=heads, deps=deps) instead.")
     W027 = ("Found a large training file of {size} bytes. Note that it may "
             "be more efficient to split your training data into multiple "
             "smaller JSON files instead.")
@@ -66,7 +69,7 @@ class Warnings:
             "in problems with the vocab further on in the pipeline.")
     W030 = ("Some entities could not be aligned in the text \"{text}\" with "
             "entities \"{entities}\". Use "
-            "`spacy.training.biluo_tags_from_offsets(nlp.make_doc(text), entities)`"
+            "`spacy.training.offsets_to_biluo_tags(nlp.make_doc(text), entities)`"
             " to check the alignment. Misaligned entities ('-') will be "
             "ignored during training.")
     W033 = ("Training a new {model} using a model with no lexeme normalization "
@@ -119,6 +122,8 @@ class Warnings:
     W105 = ("As of spaCy v3.0, the {matcher}.pipe method is deprecated. If you "
             "need to match on a stream of documents, you can use nlp.pipe and "
             "call the {matcher} on each Doc object.")
+    W107 = ("The property Doc.{prop} is deprecated. Use "
+            "Doc.has_annotation(\"{attr}\") instead.")
 
 
 @add_codes
@@ -192,11 +197,6 @@ class Errors:
             "Alternatively, add the dependency parser, or set sentence "
             "boundaries by setting doc[i].is_sent_start.")
     E031 = ("Invalid token: empty string ('') at position {i}.")
-    E032 = ("Conflicting attributes specified in doc.from_array(): "
-            "(HEAD, SENT_START). The HEAD attribute currently sets sentence "
-            "boundaries implicitly, based on the tree structure. This means "
-            "the HEAD attribute would potentially override the sentence "
-            "boundaries set by SENT_START.")
     E033 = ("Cannot load into non-empty Doc of length {length}.")
     E035 = ("Error creating span with start {start} and end {end} for Doc of "
             "length {length}.")
@@ -397,8 +397,8 @@ class Errors:
     E154 = ("One of the attributes or values is not supported for token "
             "patterns. Please use the option validate=True with Matcher, "
             "PhraseMatcher, or EntityRuler for more details.")
-    E155 = ("The pipeline needs to include a tagger in order to use "
-            "Matcher or PhraseMatcher with the attributes POS, TAG, or LEMMA. "
+    E155 = ("The pipeline needs to include a {pipe} in order to use "
+            "Matcher or PhraseMatcher with the attribute {attr}. "
             "Try using nlp() instead of nlp.make_doc() or list(nlp.pipe()) "
             "instead of list(nlp.tokenizer.pipe()).")
     E156 = ("The pipeline needs to include a parser in order to use "
@@ -455,7 +455,7 @@ class Errors:
             "{obj}.{attr}\nAttribute '{attr}' does not exist on {obj}.")
     E186 = ("'{tok_a}' and '{tok_b}' are different texts.")
     E187 = ("Only unicode strings are supported as labels.")
-    E189 = ("Each argument to `get_doc` should be of equal length.")
+    E189 = ("Each argument to Doc.__init__ should be of equal length.")
     E190 = ("Token head out of range in `Doc.from_array()` for token index "
             "'{index}' with value '{value}' (equivalent to relative head "
             "index: '{rel_head_index}'). The head indices should be relative "
@@ -480,6 +480,13 @@ class Errors:
     E201 = ("Span index out of range.")
 
     # TODO: fix numbering after merging develop into master
+    E915 = ("Can't use score '{name}' to calculate final weighted score. Expected "
+            "float or int but got: {score_type}. To exclude the score from the "
+            "final score, set its weight to null in the [training.score_weights] "
+            "section of your training config.")
+    E916 = ("Can't log score for '{name}' in table: not a valid score ({score_type})")
+    E917 = ("Received invalid value {value} for 'state_type' in "
+            "TransitionBasedParser: only 'parser' or 'ner' are valid options.")
     E918 = ("Received invalid value for vocab: {vocab} ({vocab_type}). Valid "
             "values are an instance of spacy.vocab.Vocab or True to create one"
             " (default).")
@@ -545,7 +552,8 @@ class Errors:
     E949 = ("Can only create an alignment when the texts are the same.")
     E952 = ("The section '{name}' is not a valid section in the provided config.")
     E953 = ("Mismatched IDs received by the Tok2Vec listener: {id1} vs. {id2}")
-    E954 = ("The Tok2Vec listener did not receive a valid input.")
+    E954 = ("The Tok2Vec listener did not receive any valid input from an upstream "
+            "component.")
     E955 = ("Can't find table(s) '{table}' for language '{lang}' in spacy-lookups-data.")
     E956 = ("Can't find component '{name}' in [components] block in the config. "
             "Available components: {opts}")

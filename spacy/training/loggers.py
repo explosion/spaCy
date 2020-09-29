@@ -11,9 +11,12 @@ def console_logger():
     def setup_printer(
         nlp: "Language",
     ) -> Tuple[Callable[[Dict[str, Any]], None], Callable]:
-        score_cols = list(nlp.config["training"]["score_weights"])
+        # we assume here that only components are enabled that should be trained & logged
+        logged_pipes = nlp.pipe_names
+        score_weights = nlp.config["training"]["score_weights"]
+        score_cols = [col for col, value in score_weights.items() if value is not None]
         score_widths = [max(len(col), 6) for col in score_cols]
-        loss_cols = [f"Loss {pipe}" for pipe in nlp.pipe_names]
+        loss_cols = [f"Loss {pipe}" for pipe in logged_pipes]
         loss_widths = [max(len(col), 8) for col in loss_cols]
         table_header = ["E", "#"] + loss_cols + score_cols + ["Score"]
         table_header = [col.upper() for col in table_header]
@@ -26,7 +29,7 @@ def console_logger():
             try:
                 losses = [
                     "{0:.2f}".format(float(info["losses"][pipe_name]))
-                    for pipe_name in nlp.pipe_names
+                    for pipe_name in logged_pipes
                 ]
             except KeyError as e:
                 raise KeyError(
@@ -38,10 +41,15 @@ def console_logger():
                 ) from None
             scores = []
             for col in score_cols:
-                score = float(info["other_scores"].get(col, 0.0))
-                if col != "speed":
-                    score *= 100
-                scores.append("{0:.2f}".format(score))
+                score = info["other_scores"].get(col, 0.0)
+                try:
+                    score = float(score)
+                    if col != "speed":
+                        score *= 100
+                    scores.append("{0:.2f}".format(score))
+                except TypeError:
+                    err = Errors.E916.format(name=col, score_type=type(score))
+                    raise ValueError(err) from None
             data = (
                 [info["epoch"], info["step"]]
                 + losses

@@ -1,21 +1,21 @@
 import pytest
 from click import NoSuchOption
-
-from spacy.training import docs_to_json, biluo_tags_from_offsets
-from spacy.training.converters import iob2docs, conll_ner2docs, conllu2docs
-from spacy.lang.en import English
+from spacy.training import docs_to_json, offsets_to_biluo_tags
+from spacy.training.converters import iob_to_docs, conll_ner_to_docs, conllu_to_docs
 from spacy.schemas import ProjectConfigSchema, RecommendationSchema, validate
 from spacy.cli.init_config import init_config, RECOMMENDATIONS
 from spacy.cli._util import validate_project_commands, parse_config_overrides
 from spacy.cli._util import load_project_config, substitute_project_variables
-from spacy.cli._util import string_to_list
-from thinc.config import ConfigValidationError
+from spacy.cli._util import string_to_list, OVERRIDES_ENV_VAR
+from spacy.cli.debug_config import check_section_refs
+from thinc.config import ConfigValidationError, Config
 import srsly
+import os
 
 from .util import make_tempdir
 
 
-def test_cli_converters_conllu2json():
+def test_cli_converters_conllu_to_docs():
     # from NorNE: https://github.com/ltgoslo/norne/blob/3d23274965f513f23aa48455b28b1878dad23c05/ud/nob/no_bokmaal-ud-dev.conllu
     lines = [
         "1\tDommer\tdommer\tNOUN\t_\tDefinite=Ind|Gender=Masc|Number=Sing\t2\tappos\t_\tO",
@@ -24,7 +24,7 @@ def test_cli_converters_conllu2json():
         "4\tavstår\tavstå\tVERB\t_\tMood=Ind|Tense=Pres|VerbForm=Fin\t0\troot\t_\tO",
     ]
     input_data = "\n".join(lines)
-    converted_docs = conllu2docs(input_data, n_sents=1)
+    converted_docs = conllu_to_docs(input_data, n_sents=1)
     assert len(converted_docs) == 1
     converted = [docs_to_json(converted_docs)]
     assert converted[0]["id"] == 0
@@ -40,7 +40,7 @@ def test_cli_converters_conllu2json():
     ent_offsets = [
         (e[0], e[1], e[2]) for e in converted[0]["paragraphs"][0]["entities"]
     ]
-    biluo_tags = biluo_tags_from_offsets(converted_docs[0], ent_offsets, missing="O")
+    biluo_tags = offsets_to_biluo_tags(converted_docs[0], ent_offsets, missing="O")
     assert biluo_tags == ["O", "B-PER", "L-PER", "O"]
 
 
@@ -63,9 +63,9 @@ def test_cli_converters_conllu2json():
         ),
     ],
 )
-def test_cli_converters_conllu2json_name_ner_map(lines):
+def test_cli_converters_conllu_to_docs_name_ner_map(lines):
     input_data = "\n".join(lines)
-    converted_docs = conllu2docs(
+    converted_docs = conllu_to_docs(
         input_data, n_sents=1, ner_map={"PER": "PERSON", "BAD": ""}
     )
     assert len(converted_docs) == 1
@@ -84,11 +84,11 @@ def test_cli_converters_conllu2json_name_ner_map(lines):
     ent_offsets = [
         (e[0], e[1], e[2]) for e in converted[0]["paragraphs"][0]["entities"]
     ]
-    biluo_tags = biluo_tags_from_offsets(converted_docs[0], ent_offsets, missing="O")
+    biluo_tags = offsets_to_biluo_tags(converted_docs[0], ent_offsets, missing="O")
     assert biluo_tags == ["O", "B-PERSON", "L-PERSON", "O", "O"]
 
 
-def test_cli_converters_conllu2json_subtokens():
+def test_cli_converters_conllu_to_docs_subtokens():
     # https://raw.githubusercontent.com/ohenrik/nb_news_ud_sm/master/original_data/no-ud-dev-ner.conllu
     lines = [
         "1\tDommer\tdommer\tNOUN\t_\tDefinite=Ind|Gender=Masc|Number=Sing\t2\tappos\t_\tname=O",
@@ -99,7 +99,7 @@ def test_cli_converters_conllu2json_subtokens():
         "5\t.\t$.\tPUNCT\t_\t_\t4\tpunct\t_\tname=O",
     ]
     input_data = "\n".join(lines)
-    converted_docs = conllu2docs(
+    converted_docs = conllu_to_docs(
         input_data, n_sents=1, merge_subtokens=True, append_morphology=True
     )
     assert len(converted_docs) == 1
@@ -133,11 +133,11 @@ def test_cli_converters_conllu2json_subtokens():
     ent_offsets = [
         (e[0], e[1], e[2]) for e in converted[0]["paragraphs"][0]["entities"]
     ]
-    biluo_tags = biluo_tags_from_offsets(converted_docs[0], ent_offsets, missing="O")
+    biluo_tags = offsets_to_biluo_tags(converted_docs[0], ent_offsets, missing="O")
     assert biluo_tags == ["O", "U-PER", "O", "O"]
 
 
-def test_cli_converters_iob2json():
+def test_cli_converters_iob_to_docs():
     lines = [
         "I|O like|O London|I-GPE and|O New|B-GPE York|I-GPE City|I-GPE .|O",
         "I|O like|O London|B-GPE and|O New|B-GPE York|I-GPE City|I-GPE .|O",
@@ -145,7 +145,7 @@ def test_cli_converters_iob2json():
         "I|PRP|O like|VBP|O London|NNP|B-GPE and|CC|O New|NNP|B-GPE York|NNP|I-GPE City|NNP|I-GPE .|.|O",
     ]
     input_data = "\n".join(lines)
-    converted_docs = iob2docs(input_data, n_sents=10)
+    converted_docs = iob_to_docs(input_data, n_sents=10)
     assert len(converted_docs) == 1
     converted = docs_to_json(converted_docs)
     assert converted["id"] == 0
@@ -162,7 +162,7 @@ def test_cli_converters_iob2json():
         assert ent.text in ["New York City", "London"]
 
 
-def test_cli_converters_conll_ner2json():
+def test_cli_converters_conll_ner_to_docs():
     lines = [
         "-DOCSTART- -X- O O",
         "",
@@ -212,7 +212,7 @@ def test_cli_converters_conll_ner2json():
         ".\t.\t_\tO",
     ]
     input_data = "\n".join(lines)
-    converted_docs = conll_ner2docs(input_data, n_sents=10)
+    converted_docs = conll_ner_to_docs(input_data, n_sents=10)
     assert len(converted_docs) == 1
     converted = docs_to_json(converted_docs)
     assert converted["id"] == 0
@@ -342,6 +342,24 @@ def test_parse_config_overrides_invalid_2(args):
         parse_config_overrides(args)
 
 
+def test_parse_cli_overrides():
+    os.environ[OVERRIDES_ENV_VAR] = "--x.foo bar --x.bar=12 --x.baz false --y.foo=hello"
+    result = parse_config_overrides([])
+    assert len(result) == 4
+    assert result["x.foo"] == "bar"
+    assert result["x.bar"] == 12
+    assert result["x.baz"] is False
+    assert result["y.foo"] == "hello"
+    os.environ[OVERRIDES_ENV_VAR] = "--x"
+    assert parse_config_overrides([], env_var=None) == {}
+    with pytest.raises(SystemExit):
+        parse_config_overrides([])
+    os.environ[OVERRIDES_ENV_VAR] = "hello world"
+    with pytest.raises(SystemExit):
+        parse_config_overrides([])
+    del os.environ[OVERRIDES_ENV_VAR]
+
+
 @pytest.mark.parametrize("lang", ["en", "nl"])
 @pytest.mark.parametrize(
     "pipeline", [["tagger", "parser", "ner"], [], ["ner", "textcat", "sentencizer"]]
@@ -396,3 +414,15 @@ def test_string_to_list(value):
 def test_string_to_list_intify(value):
     assert string_to_list(value, intify=False) == ["1", "2", "3"]
     assert string_to_list(value, intify=True) == [1, 2, 3]
+
+
+def test_check_section_refs():
+    config = {"a": {"b": {"c": "a.d.e"}, "d": {"e": 1}}, "f": {"g": "d.f"}}
+    config = Config(config)
+    # Valid section reference
+    check_section_refs(config, ["a.b.c"])
+    # Section that doesn't exist in this config
+    check_section_refs(config, ["x.y.z"])
+    # Invalid section reference
+    with pytest.raises(ConfigValidationError):
+        check_section_refs(config, ["a.b.c", "f.g"])

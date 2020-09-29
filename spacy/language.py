@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from copy import deepcopy
 from pathlib import Path
 import warnings
-from thinc.api import get_current_ops, Config, require_gpu, Optimizer
+from thinc.api import Model, get_current_ops, Config, require_gpu, Optimizer
 import srsly
 import multiprocessing as mp
 from itertools import chain, cycle
@@ -31,6 +31,7 @@ from .schemas import ConfigSchema
 from .git_info import GIT_VERSION
 from . import util
 from . import about
+from .lookups import load_lookups
 
 
 # This is the base config will all settings (training etc.)
@@ -84,6 +85,13 @@ def create_tokenizer() -> Callable[["Language"], Tokenizer]:
         )
 
     return tokenizer_factory
+
+
+@registry.misc("spacy.LookupsDataLoader.v1")
+def load_lookups_data(lang, tables):
+    util.logger.debug(f"Loading lookups from spacy-lookups-data: {tables}")
+    lookups = load_lookups(lang=lang, tables=tables)
+    return lookups
 
 
 class Language:
@@ -148,12 +156,7 @@ class Language:
             raise ValueError(Errors.E918.format(vocab=vocab, vocab_type=type(Vocab)))
         if vocab is True:
             vectors_name = meta.get("vectors", {}).get("name")
-            vocab = create_vocab(
-                self.lang,
-                self.Defaults,
-                vectors_name=vectors_name,
-                load_data=self._config["nlp"]["load_vocab_data"],
-            )
+            vocab = create_vocab(self.lang, self.Defaults, vectors_name=vectors_name)
         else:
             if (self.lang and vocab.lang) and (self.lang != vocab.lang):
                 raise ValueError(Errors.E150.format(nlp=self.lang, vocab=vocab.lang))
@@ -245,9 +248,12 @@ class Language:
         self._config["nlp"]["pipeline"] = list(self.component_names)
         self._config["nlp"]["disabled"] = list(self.disabled)
         self._config["components"] = pipeline
-        if not self._config["training"].get("score_weights"):
-            combined_score_weights = combine_score_weights(score_weights)
-            self._config["training"]["score_weights"] = combined_score_weights
+        # We're merging the existing score weights back into the combined
+        # weights to make sure we're preserving custom settings in the config
+        # but also reflect updates (e.g. new components added)
+        prev_weights = self._config["training"].get("score_weights", {})
+        combined_score_weights = combine_score_weights(score_weights, prev_weights)
+        self._config["training"]["score_weights"] = combined_score_weights
         if not srsly.is_json_serializable(self._config):
             raise ValueError(Errors.E961.format(config=self._config))
         return self._config
@@ -409,7 +415,6 @@ class Language:
         assigns: Iterable[str] = SimpleFrozenList(),
         requires: Iterable[str] = SimpleFrozenList(),
         retokenizes: bool = False,
-        scores: Iterable[str] = SimpleFrozenList(),
         default_score_weights: Dict[str, float] = SimpleFrozenDict(),
         func: Optional[Callable] = None,
     ) -> Callable:
@@ -427,12 +432,11 @@ class Language:
             e.g. "token.ent_id". Used for pipeline analyis.
         retokenizes (bool): Whether the component changes the tokenization.
             Used for pipeline analysis.
-        scores (Iterable[str]): All scores set by the component if it's trainable,
-            e.g. ["ents_f", "ents_r", "ents_p"].
         default_score_weights (Dict[str, float]): The scores to report during
             training, and their default weight towards the final score used to
             select the best model. Weights should sum to 1.0 per component and
-            will be combined and normalized for the whole pipeline.
+            will be combined and normalized for the whole pipeline. If None,
+            the score won't be shown in the logs or be weighted.
         func (Optional[Callable]): Factory function if not used as a decorator.
 
         DOCS: https://nightly.spacy.io/api/language#factory
@@ -472,7 +476,7 @@ class Language:
                 default_config=default_config,
                 assigns=validate_attrs(assigns),
                 requires=validate_attrs(requires),
-                scores=scores,
+                scores=list(default_score_weights.keys()),
                 default_score_weights=default_score_weights,
                 retokenizes=retokenizes,
             )
@@ -1448,10 +1452,15 @@ class Language:
         """Register 'listeners' within pipeline components, to allow them to
         effectively share weights.
         """
+        # I had though, "Why do we do this inside the Language object? Shouldn't
+        # it be the tok2vec/transformer/etc's job?
+        # The problem is we need to do it during deserialization...And the
+        # components don't receive the pipeline then. So this does have to be
+        # here :(
         for i, (name1, proc1) in enumerate(self.pipeline):
             if hasattr(proc1, "find_listeners"):
-                for name2, proc2 in self.pipeline[i:]:
-                    if hasattr(proc2, "model"):
+                for name2, proc2 in self.pipeline[i + 1 :]:
+                    if isinstance(getattr(proc2, "model", None), Model):
                         proc1.find_listeners(proc2.model)
 
     @classmethod

@@ -121,18 +121,19 @@ customize those settings in your config file later.
 > ```
 
 ```cli
-$ python -m spacy init config [output_file] [--lang] [--pipeline] [--optimize] [--cpu]
+$ python -m spacy init config [output_file] [--lang] [--pipeline] [--optimize] [--cpu] [--pretraining]
 ```
 
-| Name               | Description                                                                                                                                                                                                                                                                                                                        |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `output_file`      | Path to output `.cfg` file or `-` to write the config to stdout (so you can pipe it forward to a file). Note that if you're writing to stdout, no additional logging info is printed. ~~Path (positional)~~                                                                                                                        |
-| `--lang`, `-l`     | Optional code of the [language](/usage/models#languages) to use. Defaults to `"en"`. ~~str (option)~~                                                                                                                                                                                                                              |
-| `--pipeline`, `-p` | Comma-separated list of trainable [pipeline components](/usage/processing-pipelines#built-in) to include. Defaults to `"tagger,parser,ner"`. ~~str (option)~~                                                                                                                                                                      |
-| `--optimize`, `-o` | `"efficiency"` or `"accuracy"`. Whether to optimize for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger and slower model). This will impact the choice of architecture, pretrained weights and related hyperparameters. Defaults to `"efficiency"`. ~~str (option)~~ |
-| `--cpu`, `-C`      | Whether the model needs to run on CPU. This will impact the choice of architecture, pretrained weights and related hyperparameters. ~~bool (flag)~~                                                                                                                                                                                |
-| `--help`, `-h`     | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                                                                                                                                         |
-| **CREATES**        | The config file for training.                                                                                                                                                                                                                                                                                                      |
+| Name                   | Description                                                                                                                                                                                                                                                                                                                        |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `output_file`          | Path to output `.cfg` file or `-` to write the config to stdout (so you can pipe it forward to a file). Note that if you're writing to stdout, no additional logging info is printed. ~~Path (positional)~~                                                                                                                        |
+| `--lang`, `-l`         | Optional code of the [language](/usage/models#languages) to use. Defaults to `"en"`. ~~str (option)~~                                                                                                                                                                                                                              |
+| `--pipeline`, `-p`     | Comma-separated list of trainable [pipeline components](/usage/processing-pipelines#built-in) to include. Defaults to `"tagger,parser,ner"`. ~~str (option)~~                                                                                                                                                                      |
+| `--optimize`, `-o`     | `"efficiency"` or `"accuracy"`. Whether to optimize for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger and slower model). This will impact the choice of architecture, pretrained weights and related hyperparameters. Defaults to `"efficiency"`. ~~str (option)~~ |
+| `--cpu`, `-C`          | Whether the model needs to run on CPU. This will impact the choice of architecture, pretrained weights and related hyperparameters. ~~bool (flag)~~                                                                                                                                                                                |
+| `--pretraining`, `-pt` | Include config for pretraining (with [`spacy pretrain`](/api/cli#pretrain)). Defaults to `False`. ~~bool (flag)~~                                                                                                                                                                                                                  |
+| `--help`, `-h`         | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                                                                                                                                         |
+| **CREATES**            | The config file for training.                                                                                                                                                                                                                                                                                                      |
 
 ### init fill-config {#init-fill-config new="3"}
 
@@ -160,13 +161,14 @@ validation error with more details.
 $ python -m spacy init fill-config [base_path] [output_file] [--diff]
 ```
 
-| Name           | Description                                                                                                                         |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `base_path`    | Path to base config to fill, e.g. generated by the [quickstart widget](/usage/training#quickstart). ~~Path (positional)~~           |
-| `output_file`  | Path to output `.cfg` file. If not set, the config is written to stdout so you can pipe it forward to a file. ~~Path (positional)~~ |
-| `--diff`, `-D` | Print a visual diff highlighting the changes. ~~bool (flag)~~                                                                       |
-| `--help`, `-h` | Show help message and available arguments. ~~bool (flag)~~                                                                          |
-| **CREATES**    | Complete and auto-filled config file for training.                                                                                  |
+| Name                   | Description                                                                                                                         |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `base_path`            | Path to base config to fill, e.g. generated by the [quickstart widget](/usage/training#quickstart). ~~Path (positional)~~           |
+| `output_file`          | Path to output `.cfg` file. If not set, the config is written to stdout so you can pipe it forward to a file. ~~Path (positional)~~ |
+| `--pretraining`, `-pt` | Include config for pretraining (with [`spacy pretrain`](/api/cli#pretrain)). Defaults to `False`. ~~bool (flag)~~                   |
+| `--diff`, `-D`         | Print a visual diff highlighting the changes. ~~bool (flag)~~                                                                       |
+| `--help`, `-h`         | Show help message and available arguments. ~~bool (flag)~~                                                                          |
+| **CREATES**            | Complete and auto-filled config file for training.                                                                                  |
 
 ### init vocab {#init-vocab new="3" tag="command"}
 
@@ -272,7 +274,7 @@ training -> dropout     field required
 training -> optimizer   field required
 training -> optimize    extra fields not permitted
 
-{'vectors': 'en_vectors_web_lg', 'seed': 0, 'accumulate_gradient': 1, 'init_tok2vec': None, 'raw_text': None, 'patience': 1600, 'max_epochs': 0, 'max_steps': 20000, 'eval_frequency': 200, 'frozen_components': [], 'optimize': None, 'batcher': {'@batchers': 'spacy.batch_by_words.v1', 'discard_oversize': False, 'tolerance': 0.2, 'get_length': None, 'size': {'@schedules': 'compounding.v1', 'start': 100, 'stop': 1000, 'compound': 1.001, 't': 0.0}}, 'dev_corpus': {'@readers': 'spacy.Corpus.v1', 'path': '', 'max_length': 0, 'gold_preproc': False, 'limit': 0}, 'score_weights': {'tag_acc': 0.5, 'dep_uas': 0.25, 'dep_las': 0.25, 'sents_f': 0.0}, 'train_corpus': {'@readers': 'spacy.Corpus.v1', 'path': '', 'max_length': 0, 'gold_preproc': False, 'limit': 0}}
+{'vectors': 'en_vectors_web_lg', 'seed': 0, 'accumulate_gradient': 1, 'init_tok2vec': None, 'raw_text': None, 'patience': 1600, 'max_epochs': 0, 'max_steps': 20000, 'eval_frequency': 200, 'frozen_components': [], 'optimize': None, 'batcher': {'@batchers': 'spacy.batch_by_words.v1', 'discard_oversize': False, 'tolerance': 0.2, 'get_length': None, 'size': {'@schedules': 'compounding.v1', 'start': 100, 'stop': 1000, 'compound': 1.001, 't': 0.0}}, 'corpus': {'train': {'@readers': 'spacy.Corpus.v1', 'path': '', 'max_length': 0, 'gold_preproc': False, 'limit': 0}, 'dev': {'@readers': 'spacy.Corpus.v1', 'path': '', 'max_length': 0, 'gold_preproc': False, 'limit': 0}} 'score_weights': {'tag_acc': 0.5, 'dep_uas': 0.25, 'dep_las': 0.25, 'sents_f': 0.0}}
 
 If your config contains missing values, you can run the 'init fill-config'
 command to fill in all the defaults, if possible:
@@ -355,6 +357,16 @@ Registry   @architectures
 Name       spacy.MaxoutWindowEncoder.v1
 Module     spacy.ml.models.tok2vec
 File       /path/to/spacy/ml/models/tok2vec.py (line 207)
+ℹ [corpora.dev]
+Registry   @readers
+Name       spacy.Corpus.v1
+Module     spacy.training.corpus
+File       /path/to/spacy/training/corpus.py (line 18)
+ℹ [corpora.train]
+Registry   @readers
+Name       spacy.Corpus.v1
+Module     spacy.training.corpus
+File       /path/to/spacy/training/corpus.py (line 18)
 ℹ [training.logger]
 Registry   @loggers
 Name       spacy.ConsoleLogger.v1
@@ -370,11 +382,6 @@ Registry   @schedules
 Name       compounding.v1
 Module     thinc.schedules
 File       /path/to/thinc/thinc/schedules.py (line 43)
-ℹ [training.dev_corpus]
-Registry   @readers
-Name       spacy.Corpus.v1
-Module     spacy.training.corpus
-File       /path/to/spacy/training/corpus.py (line 18)
 ℹ [training.optimizer]
 Registry   @optimizers
 Name       Adam.v1
@@ -385,11 +392,6 @@ Registry   @schedules
 Name       warmup_linear.v1
 Module     thinc.schedules
 File       /path/to/thinc/thinc/schedules.py (line 91)
-ℹ [training.train_corpus]
-Registry   @readers
-Name       spacy.Corpus.v1
-Module     spacy.training.corpus
-File       /path/to/spacy/training/corpus.py (line 18)
 ```
 
 </Accordion>
@@ -761,6 +763,7 @@ $ python -m spacy train [config_path] [--output] [--code] [--verbose] [overrides
 | `--output`, `-o`  | Directory to store trained pipeline in. Will be created if it doesn't exist. ~~Optional[Path] \(positional)~~                                                                              |
 | `--code`, `-c`    | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~       |
 | `--verbose`, `-V` | Show more detailed messages during training. ~~bool (flag)~~                                                                                                                               |
+| `--gpu-id`, `-g`  | GPU ID or `-1` for CPU. Defaults to `-1`. ~~int (option)~~                                                                                                                                 |
 | `--help`, `-h`    | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                 |
 | overrides         | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~ |
 | **CREATES**       | The final trained pipeline and the best trained pipeline.                                                                                                                                  |
@@ -796,11 +799,12 @@ $ python -m spacy pretrain [config_path] [output_dir] [--code] [--resume-path] [
 
 | Name                    | Description                                                                                                                                                                           |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `output_dir`            | Directory to save binary weights to on each epoch. ~~Path (positional)~~                                                                                                              |
 | `config_path`           | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. ~~Path (positional)~~                                                           |
+| `output_dir`            | Directory to save binary weights to on each epoch. ~~Path (positional)~~                                                                                                              |
 | `--code`, `-c`          | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~  |
 | `--resume-path`, `-r`   | Path to pretrained weights from which to resume pretraining. ~~Optional[Path] \(option)~~                                                                                             |
 | `--epoch-resume`, `-er` | The epoch to resume counting from when using `--resume-path`. Prevents unintended overwriting of existing weight files. ~~Optional[int] \(option)~~                                   |
+| `--gpu-id`, `-g`        | GPU ID or `-1` for CPU. Defaults to `-1`. ~~int (option)~~                                                                                                                            |
 | `--help`, `-h`          | Show help message and available arguments. ~~bool (flag)~~                                                                                                                            |
 | overrides               | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--training.dropout 0.2`. ~~Any (option/flag)~~ |
 | **CREATES**             | The pretrained weights that can be used to initialize `spacy train`.                                                                                                                  |
@@ -891,8 +895,6 @@ what you need. By default, spaCy's
 can provide any other repo (public or private) that you have access to using the
 `--repo` option.
 
-<!-- TODO: update example once we've decided on repo structure -->
-
 ```cli
 $ python -m spacy project clone [name] [dest] [--repo] [--branch] [--sparse]
 ```
@@ -900,7 +902,7 @@ $ python -m spacy project clone [name] [dest] [--repo] [--branch] [--sparse]
 > #### Example
 >
 > ```cli
-> $ python -m spacy project clone some_example
+> $ python -m spacy project clone pipelines/ner_wikiner
 > ```
 >
 > Clone from custom repo:

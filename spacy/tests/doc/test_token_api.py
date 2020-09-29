@@ -5,31 +5,24 @@ from spacy.symbols import VERB
 from spacy.vocab import Vocab
 from spacy.tokens import Doc
 
-from ..util import get_doc
-
 
 @pytest.fixture
-def doc(en_tokenizer):
+def doc(en_vocab):
     # fmt: off
-    text = "This is a sentence. This is another sentence. And a third."
-    heads = [1, 0, 1, -2, -3, 1, 0, 1, -2, -3, 0, 1, -2, -1]
+    words = ["This", "is", "a", "sentence", ".", "This", "is", "another", "sentence", ".", "And", "a", "third", "."]
+    heads = [1, 1, 3, 1, 1, 6, 6, 8, 6, 6, 10, 12, 10, 12]
     deps = ["nsubj", "ROOT", "det", "attr", "punct", "nsubj", "ROOT", "det",
             "attr", "punct", "ROOT", "det", "npadvmod", "punct"]
     # fmt: on
-    tokens = en_tokenizer(text)
-    return get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
+    return Doc(en_vocab, words=words, heads=heads, deps=deps)
 
 
-def test_doc_token_api_strings(en_tokenizer):
-    text = "Give it back! He pleaded."
+def test_doc_token_api_strings(en_vocab):
+    words = ["Give", "it", "back", "!", "He", "pleaded", "."]
     pos = ["VERB", "PRON", "PART", "PUNCT", "PRON", "VERB", "PUNCT"]
-    heads = [0, -1, -2, -3, 1, 0, -1]
+    heads = [0, 0, 0, 0, 5, 5, 5]
     deps = ["ROOT", "dobj", "prt", "punct", "nsubj", "ROOT", "punct"]
-
-    tokens = en_tokenizer(text)
-    doc = get_doc(
-        tokens.vocab, words=[t.text for t in tokens], pos=pos, heads=heads, deps=deps
-    )
+    doc = Doc(en_vocab, words=words, pos=pos, heads=heads, deps=deps)
     assert doc[0].orth_ == "Give"
     assert doc[0].text == "Give"
     assert doc[0].text_with_ws == "Give "
@@ -97,77 +90,91 @@ def test_doc_token_api_vectors():
     assert doc[0].similarity(doc[1]) == cosine
 
 
-def test_doc_token_api_ancestors(en_tokenizer):
+def test_doc_token_api_ancestors(en_vocab):
     # the structure of this sentence depends on the English annotation scheme
-    text = "Yesterday I saw a dog that barked loudly."
-    heads = [2, 1, 0, 1, -2, 1, -2, -1, -6]
-    tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
+    words = ["Yesterday", "I", "saw", "a", "dog", "that", "barked", "loudly", "."]
+    heads = [2, 2, 2, 4, 2, 6, 4, 6, 2]
+    doc = Doc(en_vocab, words=words, heads=heads)
     assert [t.text for t in doc[6].ancestors] == ["dog", "saw"]
     assert [t.text for t in doc[1].ancestors] == ["saw"]
     assert [t.text for t in doc[2].ancestors] == []
-
     assert doc[2].is_ancestor(doc[7])
     assert not doc[6].is_ancestor(doc[2])
 
 
-def test_doc_token_api_head_setter(en_tokenizer):
-    # the structure of this sentence depends on the English annotation scheme
-    text = "Yesterday I saw a dog that barked loudly."
-    heads = [2, 1, 0, 1, -2, 1, -2, -1, -6]
-    tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
-
+def test_doc_token_api_head_setter(en_vocab):
+    words = ["Yesterday", "I", "saw", "a", "dog", "that", "barked", "loudly", "."]
+    heads = [2, 2, 2, 4, 2, 6, 4, 6, 2]
+    deps = ["dep"] * len(heads)
+    doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
     assert doc[6].n_lefts == 1
     assert doc[6].n_rights == 1
     assert doc[6].left_edge.i == 5
     assert doc[6].right_edge.i == 7
-
     assert doc[4].n_lefts == 1
     assert doc[4].n_rights == 1
     assert doc[4].left_edge.i == 3
     assert doc[4].right_edge.i == 7
-
     assert doc[3].n_lefts == 0
     assert doc[3].n_rights == 0
     assert doc[3].left_edge.i == 3
     assert doc[3].right_edge.i == 3
-
     assert doc[2].left_edge.i == 0
     assert doc[2].right_edge.i == 8
 
     doc[6].head = doc[3]
-
     assert doc[6].n_lefts == 1
     assert doc[6].n_rights == 1
     assert doc[6].left_edge.i == 5
     assert doc[6].right_edge.i == 7
-
     assert doc[3].n_lefts == 0
     assert doc[3].n_rights == 1
     assert doc[3].left_edge.i == 3
     assert doc[3].right_edge.i == 7
-
     assert doc[4].n_lefts == 1
     assert doc[4].n_rights == 0
     assert doc[4].left_edge.i == 3
     assert doc[4].right_edge.i == 7
-
     assert doc[2].left_edge.i == 0
     assert doc[2].right_edge.i == 8
 
     doc[0].head = doc[5]
-
     assert doc[5].left_edge.i == 0
     assert doc[6].left_edge.i == 0
     assert doc[3].left_edge.i == 0
     assert doc[4].left_edge.i == 0
     assert doc[2].left_edge.i == 0
-
     # head token must be from the same document
-    doc2 = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
+    doc2 = Doc(en_vocab, words=words, heads=heads)
     with pytest.raises(ValueError):
         doc[0].head = doc2[0]
+    # test sentence starts when two sentences are joined
+    # fmt: off
+    words = ["This", "is", "one", "sentence", ".", "This", "is", "another", "sentence", "."]
+    heads = [0, 0, 0, 0, 0, 5, 5, 5, 5, 5]
+    # fmt: on
+    doc = Doc(en_vocab, words=words, heads=heads, deps=["dep"] * len(heads))
+    # initially two sentences
+    assert doc[0].is_sent_start
+    assert doc[5].is_sent_start
+    assert doc[0].left_edge == doc[0]
+    assert doc[0].right_edge == doc[4]
+    assert doc[5].left_edge == doc[5]
+    assert doc[5].right_edge == doc[9]
+    # modifying with a sentence doesn't change sent starts
+    doc[2].head = doc[3]
+    assert doc[0].is_sent_start
+    assert doc[5].is_sent_start
+    assert doc[0].left_edge == doc[0]
+    assert doc[0].right_edge == doc[4]
+    assert doc[5].left_edge == doc[5]
+    assert doc[5].right_edge == doc[9]
+    # attach the second sentence to the first, resulting in one sentence
+    doc[5].head = doc[0]
+    assert doc[0].is_sent_start
+    assert not doc[5].is_sent_start
+    assert doc[0].left_edge == doc[0]
+    assert doc[0].right_edge == doc[9]
 
 
 def test_is_sent_start(en_tokenizer):
@@ -175,7 +182,6 @@ def test_is_sent_start(en_tokenizer):
     assert doc[5].is_sent_start is None
     doc[5].is_sent_start = True
     assert doc[5].is_sent_start is True
-    doc.is_parsed = True
     assert len(list(doc.sents)) == 2
 
 
@@ -184,7 +190,6 @@ def test_is_sent_end(en_tokenizer):
     assert doc[4].is_sent_end is None
     doc[5].is_sent_start = True
     assert doc[4].is_sent_end is True
-    doc.is_parsed = True
     assert len(list(doc.sents)) == 2
 
 
@@ -209,39 +214,39 @@ def test_token0_has_sent_start_true():
     doc = Doc(Vocab(), words=["hello", "world"])
     assert doc[0].is_sent_start is True
     assert doc[1].is_sent_start is None
-    assert not doc.is_sentenced
+    assert not doc.has_annotation("SENT_START")
 
 
 def test_tokenlast_has_sent_end_true():
     doc = Doc(Vocab(), words=["hello", "world"])
     assert doc[0].is_sent_end is None
     assert doc[1].is_sent_end is True
-    assert not doc.is_sentenced
+    assert not doc.has_annotation("SENT_START")
 
 
 def test_token_api_conjuncts_chain(en_vocab):
-    words = "The boy and the girl and the man went .".split()
-    heads = [1, 7, -1, 1, -3, -1, 1, -3, 0, -1]
+    words = ["The", "boy", "and", "the", "girl", "and", "the", "man", "went", "."]
+    heads = [1, 8, 1, 4, 1, 4, 7, 4, 8, 8]
     deps = ["det", "nsubj", "cc", "det", "conj", "cc", "det", "conj", "ROOT", "punct"]
-    doc = get_doc(en_vocab, words=words, heads=heads, deps=deps)
+    doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
     assert [w.text for w in doc[1].conjuncts] == ["girl", "man"]
     assert [w.text for w in doc[4].conjuncts] == ["boy", "man"]
     assert [w.text for w in doc[7].conjuncts] == ["boy", "girl"]
 
 
 def test_token_api_conjuncts_simple(en_vocab):
-    words = "They came and went .".split()
-    heads = [1, 0, -1, -2, -1]
+    words = ["They", "came", "and", "went", "."]
+    heads = [1, 1, 1, 1, 3]
     deps = ["nsubj", "ROOT", "cc", "conj", "dep"]
-    doc = get_doc(en_vocab, words=words, heads=heads, deps=deps)
+    doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
     assert [w.text for w in doc[1].conjuncts] == ["went"]
     assert [w.text for w in doc[3].conjuncts] == ["came"]
 
 
 def test_token_api_non_conjuncts(en_vocab):
-    words = "They came .".split()
-    heads = [1, 0, -1]
+    words = ["They", "came", "."]
+    heads = [1, 1, 1]
     deps = ["nsubj", "ROOT", "punct"]
-    doc = get_doc(en_vocab, words=words, heads=heads, deps=deps)
+    doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
     assert [w.text for w in doc[0].conjuncts] == []
     assert [w.text for w in doc[1].conjuncts] == []
