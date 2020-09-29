@@ -1181,23 +1181,8 @@ class Language:
             )
             doc = Doc(self.vocab, words=["x", "y", "z"])
             get_examples = lambda: [Example.from_dict(doc, {})]
-        # Populate vocab
         if not hasattr(get_examples, "__call__"):
             err = Errors.E930.format(name="Language", obj=type(get_examples))
-            raise ValueError(err)
-        valid_examples = False
-        for example in get_examples():
-            if not isinstance(example, Example):
-                err = Errors.E978.format(
-                    name="Language.initialize", types=type(example)
-                )
-                raise ValueError(err)
-            else:
-                valid_examples = True
-            for word in [t.text for t in example.reference]:
-                _ = self.vocab[word]  # noqa: F841
-        if not valid_examples:
-            err = Errors.E930.format(name="Language", obj="empty list")
             raise ValueError(err)
         # Make sure the config is interpolated so we can resolve subsections
         config = self.config.interpolate()
