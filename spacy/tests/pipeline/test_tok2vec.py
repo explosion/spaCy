@@ -73,8 +73,7 @@ def test_tok2vec_configs(width, embed_arch, embed_config, encode_arch, encode_co
     encode_config["width"] = width
     docs = get_batch(3)
     tok2vec = build_Tok2Vec_model(
-        embed_arch(**embed_config),
-        encode_arch(**encode_config)
+        embed_arch(**embed_config), encode_arch(**encode_config)
     )
     tok2vec.initialize(docs)
     vectors, backprop = tok2vec.begin_update(docs)

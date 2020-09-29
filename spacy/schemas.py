@@ -132,7 +132,7 @@ def validate_init_settings(
         block = "initialize" if not section else f"initialize.{section}"
         title = f"Error validating initialization settings in [{block}]"
         raise ConfigValidationError(
-            title=title, errors=e.errors(), config=settings, parent=name,
+            title=title, errors=e.errors(), config=settings, parent=name
         ) from None
 
 

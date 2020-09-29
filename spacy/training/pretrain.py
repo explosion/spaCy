@@ -94,7 +94,7 @@ def ensure_docs(examples_or_docs: Iterable[Union[Doc, Example]]) -> List[Doc]:
 
 
 def _resume_model(
-    model: Model, resume_path: Path, epoch_resume: int, silent: bool = True,
+    model: Model, resume_path: Path, epoch_resume: int, silent: bool = True
 ) -> None:
     msg = Printer(no_print=silent)
     msg.info(f"Resume training tok2vec from: {resume_path}")

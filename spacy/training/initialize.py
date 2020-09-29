@@ -188,8 +188,8 @@ def verify_textcat_config(nlp: "Language", pipe_config: Dict[str, Any]) -> None:
 
 def get_sourced_components(config: Union[Dict[str, Any], Config]) -> List[str]:
     """RETURNS (List[str]): All sourced components in the original config,
-        e.g. {"source": "en_core_web_sm"}. If the config contains a key
-        "factory", we assume it refers to a component factory.
+    e.g. {"source": "en_core_web_sm"}. If the config contains a key
+    "factory", we assume it refers to a component factory.
     """
     return [
         name

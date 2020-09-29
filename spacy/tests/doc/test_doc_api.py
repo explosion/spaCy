@@ -19,7 +19,7 @@ def test_doc_api_init(en_vocab):
     assert [t.is_sent_start for t in doc] == [True, False, True, False]
     # heads override sent_starts
     doc = Doc(
-        en_vocab, words=words, sent_starts=[True] * 4, heads=heads, deps=["dep"] * 4,
+        en_vocab, words=words, sent_starts=[True] * 4, heads=heads, deps=["dep"] * 4
     )
     assert [t.is_sent_start for t in doc] == [True, False, True, False]
 

@@ -488,7 +488,7 @@ def load_config_from_str(
     RETURNS (Config): The loaded config.
     """
     return Config(section_order=CONFIG_SECTION_ORDER).from_str(
-        text, overrides=overrides, interpolate=interpolate,
+        text, overrides=overrides, interpolate=interpolate
     )
 
 

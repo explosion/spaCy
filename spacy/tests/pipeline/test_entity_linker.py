@@ -254,14 +254,12 @@ def test_vocab_serialization(nlp):
     mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
 
     # adding entities
-    q1_hash = mykb.add_entity(entity="Q1", freq=27, entity_vector=[1])
+    mykb.add_entity(entity="Q1", freq=27, entity_vector=[1])
     q2_hash = mykb.add_entity(entity="Q2", freq=12, entity_vector=[2])
-    q3_hash = mykb.add_entity(entity="Q3", freq=5, entity_vector=[3])
+    mykb.add_entity(entity="Q3", freq=5, entity_vector=[3])
 
     # adding aliases
-    douglas_hash = mykb.add_alias(
-        alias="douglas", entities=["Q2", "Q3"], probabilities=[0.4, 0.1]
-    )
+    mykb.add_alias(alias="douglas", entities=["Q2", "Q3"], probabilities=[0.4, 0.1])
     adam_hash = mykb.add_alias(alias="adam", entities=["Q2"], probabilities=[0.9])
 
     candidates = mykb.get_alias_candidates("adam")

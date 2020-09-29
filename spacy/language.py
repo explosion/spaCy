@@ -1189,7 +1189,7 @@ class Language:
         # These are the settings provided in the [initialize] block in the config
         I = registry.resolve(config["initialize"], schema=ConfigSchemaInit)
         init_vocab(
-            self, data=I["vocab_data"], lookups=I["lookups"], vectors=I["vectors"],
+            self, data=I["vocab_data"], lookups=I["lookups"], vectors=I["vectors"]
         )
         pretrain_cfg = config.get("pretraining")
         if pretrain_cfg:

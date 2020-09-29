@@ -229,9 +229,7 @@ def test_issue3611():
             batches = minibatch(train_data, size=compounding(4.0, 32.0, 1.001))
 
             for batch in batches:
-                nlp.update(
-                    examples=batch, sgd=optimizer, drop=0.1, losses=losses,
-                )
+                nlp.update(examples=batch, sgd=optimizer, drop=0.1, losses=losses)
 
 
 def test_issue3625():
@@ -390,7 +388,7 @@ def test_issue3959():
 
 
 def test_issue3962(en_vocab):
-    """ Ensure that as_doc does not result in out-of-bound access of tokens.
+    """Ensure that as_doc does not result in out-of-bound access of tokens.
     This is achieved by setting the head to itself if it would lie out of the span otherwise."""
     # fmt: off
     words = ["He", "jests", "at", "scars", ",", "that", "never", "felt", "a", "wound", "."]
@@ -428,7 +426,7 @@ def test_issue3962(en_vocab):
 
 
 def test_issue3962_long(en_vocab):
-    """ Ensure that as_doc does not result in out-of-bound access of tokens.
+    """Ensure that as_doc does not result in out-of-bound access of tokens.
     This is achieved by setting the head to itself if it would lie out of the span otherwise."""
     # fmt: off
     words = ["He", "jests", "at", "scars", ".", "They", "never", "felt", "a", "wound", "."]
@@ -463,8 +461,7 @@ def test_issue3962_long(en_vocab):
 
 
 def test_issue3972(en_vocab):
-    """Test that the PhraseMatcher returns duplicates for duplicate match IDs.
-    """
+    """Test that the PhraseMatcher returns duplicates for duplicate match IDs."""
     matcher = PhraseMatcher(en_vocab)
     matcher.add("A", [Doc(en_vocab, words=["New", "York"])])
     matcher.add("B", [Doc(en_vocab, words=["New", "York"])])

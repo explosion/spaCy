@@ -78,7 +78,7 @@ def get_attr_info(nlp: "Language", attr: str) -> Dict[str, List[str]]:
 
 
 def analyze_pipes(
-    nlp: "Language", *, keys: List[str] = DEFAULT_KEYS,
+    nlp: "Language", *, keys: List[str] = DEFAULT_KEYS
 ) -> Dict[str, Union[List[str], Dict[str, List[str]]]]:
     """Print a formatted summary for the current nlp object's pipeline. Shows
     a table with the pipeline components and why they assign and require, as

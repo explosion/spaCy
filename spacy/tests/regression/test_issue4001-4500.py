@@ -19,8 +19,7 @@ from ..util import make_tempdir
 
 
 def test_issue4002(en_vocab):
-    """Test that the PhraseMatcher can match on overwritten NORM attributes.
-    """
+    """Test that the PhraseMatcher can match on overwritten NORM attributes."""
     matcher = PhraseMatcher(en_vocab, attr="NORM")
     pattern1 = Doc(en_vocab, words=["c", "d"])
     assert [t.norm_ for t in pattern1] == ["c", "d"]
@@ -72,9 +71,7 @@ def test_issue4030():
             batches = minibatch(train_data, size=compounding(4.0, 32.0, 1.001))
 
             for batch in batches:
-                nlp.update(
-                    examples=batch, sgd=optimizer, drop=0.1, losses=losses,
-                )
+                nlp.update(examples=batch, sgd=optimizer, drop=0.1, losses=losses)
     # processing of an empty doc should result in 0.0 for all categories
     doc = nlp("")
     assert doc.cats["offensive"] == 0.0

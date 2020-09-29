@@ -226,6 +226,7 @@ def test_positive_class_not_binary():
     with pytest.raises(ValueError):
         verify_textcat_config(nlp, pipe_config)
 
+
 def test_textcat_evaluation():
     train_examples = []
     nlp = English()
@@ -241,15 +242,17 @@ def test_textcat_evaluation():
     pred2.cats = {"winter": 1.0, "summer": 0.0, "spring": 0.0, "autumn": 1.0}
     train_examples.append(Example(pred2, ref2))
 
-    scores = Scorer().score_cats(train_examples, "cats", labels=["winter", "summer", "spring", "autumn"])
-    assert scores["cats_f_per_type"]["winter"]["p"] == 1/2
-    assert scores["cats_f_per_type"]["winter"]["r"] == 1/1
+    scores = Scorer().score_cats(
+        train_examples, "cats", labels=["winter", "summer", "spring", "autumn"]
+    )
+    assert scores["cats_f_per_type"]["winter"]["p"] == 1 / 2
+    assert scores["cats_f_per_type"]["winter"]["r"] == 1 / 1
     assert scores["cats_f_per_type"]["summer"]["p"] == 0
-    assert scores["cats_f_per_type"]["summer"]["r"] == 0/1
-    assert scores["cats_f_per_type"]["spring"]["p"] == 1/1
-    assert scores["cats_f_per_type"]["spring"]["r"] == 1/2
-    assert scores["cats_f_per_type"]["autumn"]["p"] == 2/2
-    assert scores["cats_f_per_type"]["autumn"]["r"] == 2/2
+    assert scores["cats_f_per_type"]["summer"]["r"] == 0 / 1
+    assert scores["cats_f_per_type"]["spring"]["p"] == 1 / 1
+    assert scores["cats_f_per_type"]["spring"]["r"] == 1 / 2
+    assert scores["cats_f_per_type"]["autumn"]["p"] == 2 / 2
+    assert scores["cats_f_per_type"]["autumn"]["r"] == 2 / 2
 
-    assert scores["cats_micro_p"] == 4/5
-    assert scores["cats_micro_r"] == 4/6
+    assert scores["cats_micro_p"] == 4 / 5
+    assert scores["cats_micro_r"] == 4 / 6

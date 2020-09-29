@@ -137,7 +137,7 @@ def test_las_per_type(en_vocab):
     examples = []
     for input_, annot in test_las_apple:
         doc = Doc(
-            en_vocab, words=input_.split(" "), heads=annot["heads"], deps=annot["deps"],
+            en_vocab, words=input_.split(" "), heads=annot["heads"], deps=annot["deps"]
         )
         gold = {"heads": annot["heads"], "deps": annot["deps"]}
         example = Example.from_dict(doc, gold)

@@ -64,7 +64,7 @@ def get_tok2vec_kwargs():
             width=32, rows=500, also_embed_subwords=True, also_use_static_vectors=False
         ),
         "encode": MaxoutWindowEncoder(
-            width=32, depth=2, maxout_pieces=2, window_size=1,
+            width=32, depth=2, maxout_pieces=2, window_size=1
         ),
     }
 

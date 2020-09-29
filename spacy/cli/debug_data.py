@@ -27,7 +27,7 @@ BLANK_MODEL_THRESHOLD = 2000
 
 
 @debug_cli.command(
-    "data", context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+    "data", context_settings={"allow_extra_args": True, "ignore_unknown_options": True}
 )
 @app.command(
     "debug-data",
