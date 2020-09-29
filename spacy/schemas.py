@@ -107,7 +107,7 @@ def validate_init_settings(
     *,
     section: Optional[str] = None,
     name: str = "",
-    exclude: Iterable[str] = ("get_examples", "nlp", "pipeline", "sgd"),
+    exclude: Iterable[str] = ("get_examples", "nlp", "pipeline"),
 ) -> Dict[str, Any]:
     """Validate initialization settings against the expected arguments in
     the method signature. Will parse values if possible (e.g. int to string)

@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from copy import deepcopy
 from pathlib import Path
 import warnings
-from thinc.api import Model, get_current_ops, Config, require_gpu, Optimizer
+from thinc.api import Model, get_current_ops, Config, Optimizer
 import srsly
 import multiprocessing as mp
 from itertools import chain, cycle
@@ -1153,10 +1153,9 @@ class Language:
         get_examples: Optional[Callable[[], Iterable[Example]]] = None,
         *,
         sgd: Optional[Optimizer] = None,
-        device: int = -1,
     ) -> Optimizer:
         warnings.warn(Warnings.W089, DeprecationWarning)
-        return self.initialize(get_examples, sgd=sgd, device=device)
+        return self.initialize(get_examples, sgd=sgd)
 
     def initialize(
         self,
@@ -1169,7 +1168,7 @@ class Language:
 
         get_examples (Callable[[], Iterable[Example]]): Optional function that
             returns gold-standard Example objects.
-        sgd (Optional[Optimizer]): An optimizer to use for updates. If not 
+        sgd (Optional[Optimizer]): An optimizer to use for updates. If not
             provided, will be created using the .create_optimizer() method.
         RETURNS (thinc.api.Optimizer): The optimizer.
 
@@ -1220,7 +1219,6 @@ class Language:
                     proc.initialize, p_settings, section="components", name=name
                 )
                 proc.initialize(
-                    get_examples, pipeline=self.pipeline
                     get_examples,
                     pipeline=self.pipeline,
                     **p_settings,
@@ -1315,7 +1313,7 @@ class Language:
         n_words = sum(len(doc) for doc in docs)
         results["speed"] = n_words / (end_time - start_time)
         return results
-    
+
     def create_optimizer(self):
         """Create an optimizer, usually using the [training.optimizer] config."""
         subconfig = {"optimizer": self.config["training"]["optimizer"]}
