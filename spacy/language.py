@@ -27,7 +27,7 @@ from .lang.punctuation import TOKENIZER_INFIXES
 from .tokens import Doc
 from .tokenizer import Tokenizer
 from .errors import Errors, Warnings
-from .schemas import ConfigSchema, ConfigSchemaNlp
+from .schemas import ConfigSchema, ConfigSchemaNlp, validate_init_settings
 from .git_info import GIT_VERSION
 from . import util
 from . import about
@@ -1162,6 +1162,7 @@ class Language:
         self,
         get_examples: Optional[Callable[[], Iterable[Example]]] = None,
         *,
+        settings: Dict[str, Dict[str, Any]] = SimpleFrozenDict(),
         sgd: Optional[Optimizer] = None,
         device: int = -1,
     ) -> Optimizer:
@@ -1207,10 +1208,26 @@ class Language:
         if sgd is None:
             sgd = create_default_optimizer()
         self._optimizer = sgd
+        if hasattr(self.tokenizer, "initialize"):
+            tok_settings = settings.get("tokenizer", {})
+            tok_settings = validate_init_settings(
+                self.tokenizer.initialize,
+                tok_settings,
+                section="tokenizer",
+                name="tokenizer",
+            )
+            self.tokenizer.initialize(get_examples, nlp=self, **tok_settings)
         for name, proc in self.pipeline:
             if hasattr(proc, "initialize"):
+                p_settings = settings.get(name, {})
+                p_settings = validate_init_settings(
+                    proc.initialize, p_settings, section="components", name=name
+                )
                 proc.initialize(
-                    get_examples, pipeline=self.pipeline, sgd=self._optimizer
+                    get_examples,
+                    pipeline=self.pipeline,
+                    sgd=self._optimizer,
+                    **p_settings,
                 )
         self._link_components()
         return self._optimizer

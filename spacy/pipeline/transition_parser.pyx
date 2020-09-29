@@ -1,4 +1,4 @@
-# cython: infer_types=True, cdivision=True, boundscheck=False
+# cython: infer_types=True, cdivision=True, boundscheck=False, binding=True
 from __future__ import print_function
 from cymem.cymem cimport Pool
 cimport numpy as np
