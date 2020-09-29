@@ -29,9 +29,7 @@ def train(
     output_path (Path): Optional output path to save trained model to.
     use_gpu (int): Whether to train on GPU. Make sure to call require_gpu
         before calling this function.
-    logger (Callable[[Any], Any]): Optional logger exposing the methods info,
-        error, debug and  warn. Defaults to regular spaCy logger but can be
-        swapped for CLI logger.
+    silent (bool): Whether to pretty-print outputs.
     RETURNS (Path / None): The path to the final exported model.
     """
     msg = Printer(no_print=silent)

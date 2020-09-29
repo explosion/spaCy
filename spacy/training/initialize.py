@@ -130,12 +130,12 @@ def init_tok2vec(
     init_tok2vec = ensure_path(I["init_tok2vec"])
     if init_tok2vec is not None:
         if P["objective"].get("type") == "vectors" and not I["vectors"]:
-            err = 'need initialize.vocab.vectors if pretraining.objective.type is "vectors"'
-            errors = [{"loc": ["initialize", "vocab"], "msg": err}]
+            err = 'need initialize.vectors if pretraining.objective.type is "vectors"'
+            errors = [{"loc": ["initialize"], "msg": err}]
             raise ConfigValidationError(config=nlp.config, errors=errors)
         if not init_tok2vec.exists():
             err = f"can't find pretrained tok2vec: {init_tok2vec}"
-            errors = [{"loc": ["initialize", "vocab", "init_tok2vec"], "msg": err}]
+            errors = [{"loc": ["initialize", "init_tok2vec"], "msg": err}]
             raise ConfigValidationError(config=nlp.config, errors=errors)
         with init_tok2vec.open("rb") as file_:
             weights_data = file_.read()

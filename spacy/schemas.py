@@ -389,14 +389,12 @@ class ConfigSchema(BaseModel):
         arbitrary_types_allowed = True
 
 
-class TrainingSchema(BaseModel):
-    training: ConfigSchemaTraining
-    pretraining: Union[ConfigSchemaPretrain, ConfigSchemaPretrainEmpty] = {}
-    corpora: Dict[str, Reader]
-
-    class Config:
-        extra = "allow"
-        arbitrary_types_allowed = True
+CONFIG_SCHEMAS = {
+    "nlp": ConfigSchemaNlp,
+    "training": ConfigSchemaTraining,
+    "pretraining": ConfigSchemaPretrain,
+    "initialize": ConfigSchemaInit,
+}
 
 
 # Project config Schema

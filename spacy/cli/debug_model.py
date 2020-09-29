@@ -2,7 +2,7 @@ from typing import Dict, Any, Optional, Iterable
 from pathlib import Path
 
 from spacy.training import Example
-from spacy.util import dot_to_object
+from spacy.util import resolve_dot_names
 from wasabi import msg
 from thinc.api import fix_random_seed, set_dropout_rate, Adam
 from thinc.api import Model, data_validation, set_gpu_allocator
@@ -15,7 +15,10 @@ from ..util import registry
 from .. import util
 
 
-@debug_cli.command("model")
+@debug_cli.command(
+    "model",
+    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+)
 def debug_model_cli(
     # fmt: off
     ctx: typer.Context,  # This is only used to read additional arguments
@@ -57,15 +60,14 @@ def debug_model_cli(
         raw_config = util.load_config(
             config_path, overrides=config_overrides, interpolate=False
         )
-    config = raw_config.iterpolate()
+    config = raw_config.interpolate()
     allocator = config["training"]["gpu_allocator"]
     if use_gpu >= 0 and allocator:
         set_gpu_allocator(allocator)
     with show_validation_error(config_path):
         nlp = util.load_model_from_config(raw_config)
-        T = registry.resolve(
-            nlp.config.interpolate()["training"], schema=ConfigSchemaTraining
-        )
+        config = nlp.config.interpolate()
+        T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
     seed = T["seed"]
     if seed is not None:
         msg.info(f"Fixing random seed: {seed}")
@@ -77,11 +79,16 @@ def debug_model_cli(
             exits=1,
         )
     model = pipe.model
-    debug_model(T, nlp, model, print_settings=print_settings)
+    debug_model(config, T, nlp, model, print_settings=print_settings)
 
 
 def debug_model(
-    config, nlp, model: Model, *, print_settings: Optional[Dict[str, Any]] = None
+    config,
+    resolved_train_config,
+    nlp,
+    model: Model,
+    *,
+    print_settings: Optional[Dict[str, Any]] = None,
 ):
     if not isinstance(model, Model):
         msg.fail(
@@ -102,13 +109,16 @@ def debug_model(
     # The output vector might differ from the official type of the output layer
     with data_validation(False):
         try:
-            train_corpus = dot_to_object(config, config["training"]["train_corpus"])
-            nlp.initialize(lambda: train_corpus(nlp))
+            dot_names = [resolved_train_config["train_corpus"]]
+            with show_validation_error():
+                (train_corpus,) = resolve_dot_names(config, dot_names)
+                nlp.initialize(lambda: train_corpus(nlp))
             msg.info("Initialized the model with the training corpus.")
         except ValueError:
             try:
                 _set_output_dim(nO=7, model=model)
-                nlp.initialize(lambda: [Example.from_dict(x, {}) for x in X])
+                with show_validation_error():
+                    nlp.initialize(lambda: [Example.from_dict(x, {}) for x in X])
                 msg.info("Initialized the model with dummy data.")
             except Exception:
                 msg.fail(

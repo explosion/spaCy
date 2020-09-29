@@ -128,10 +128,10 @@ def test_resolve_dot_names():
         "training": {"optimizer": {"@optimizers": "Adam.v1"}},
         "foo": {"bar": "training.optimizer", "baz": "training.xyz"},
     }
-    result = util.resolve_dot_names(config, ["foo.bar"])
+    result = util.resolve_dot_names(config, ["training.optimizer"])
     assert isinstance(result[0], Optimizer)
     with pytest.raises(ConfigValidationError) as e:
-        util.resolve_dot_names(config, ["foo.baz", "foo.bar"])
+        util.resolve_dot_names(config, ["training.xyz", "training.optimizer"])
     errors = e.value.errors
     assert len(errors) == 1
     assert errors[0]["loc"] == ["training", "xyz"]

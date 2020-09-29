@@ -392,7 +392,6 @@ def resolve_dot_names(config: Config, dot_names: List[Optional[str]]) -> Tuple[A
     we could find the lowest part of the tree.
     """
     # TODO: include schema?
-    # TODO: clean this up and avoid duplication
     resolved = {}
     output = []
     errors = []
@@ -403,34 +402,20 @@ def resolve_dot_names(config: Config, dot_names: List[Optional[str]]) -> Tuple[A
             section = name.split(".")[0]
             # We want to avoid resolving the same thing twice
             if section not in resolved:
-                resolved[section] = registry.resolve(config[section])
+                if registry.is_promise(config[section]):
+                    # Otherwise we can't resolve [corpus] if it's a promise
+                    result = registry.resolve({"config": config[section]})["config"]
+                else:
+                    result = registry.resolve(config[section])
+                resolved[section] = result
             try:
                 output.append(dot_to_object(resolved, name))
             except KeyError:
                 msg = f"not a valid section reference: {name}"
                 errors.append({"loc": name.split("."), "msg": msg})
-    objects = []
-    for ref in output:
-        if not isinstance(ref, str):
-            objects.append(ref)
-            continue
-        section = ref.split(".")[0]
-        # We want to avoid resolving the same thing twice
-        if section not in resolved:
-            if registry.is_promise(config[section]):
-                # Otherwise we can't resolve [corpus] if it's a promise
-                result = registry.resolve({"config": config[section]})["config"]
-            else:
-                result = registry.resolve(config[section])
-            resolved[section] = result
-        try:
-            objects.append(dot_to_object(resolved, ref))
-        except KeyError:
-            msg = f"not a valid section reference: {name}"
-            errors.append({"loc": ref.split("."), "msg": msg})
     if errors:
         raise ConfigValidationError(config=config, errors=errors)
-    return tuple(objects)
+    return tuple(output)
 
 
 def load_model_from_init_py(
