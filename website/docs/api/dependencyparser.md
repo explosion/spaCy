@@ -139,31 +139,35 @@ applied to the `Doc` in order. Both [`__call__`](/api/dependencyparser#call) and
 | `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
 | **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
-## DependencyParser.begin_training {#begin_training tag="method"}
+## DependencyParser.initialize {#initialize tag="method"}
 
-Initialize the component for training and return an
-[`Optimizer`](https://thinc.ai/docs/api-optimizers). `get_examples` should be a
-function that returns an iterable of [`Example`](/api/example) objects. The data
-examples are used to **initialize the model** of the component and can either be
-the full training data or a representative sample. Initialization includes
-validating the network,
+Initialize the component for training. `get_examples` should be a function that
+returns an iterable of [`Example`](/api/example) objects. The data examples are
+used to **initialize the model** of the component and can either be the full
+training data or a representative sample. Initialization includes validating the
+network,
 [inferring missing shapes](https://thinc.ai/docs/usage-models#validation) and
-setting up the label scheme based on the data.
+setting up the label scheme based on the data. This method is typically called
+by [`Language.initialize`](/api/language#initialize).
+
+<Infobox variant="warning" title="Changed in v3.0" id="begin_training">
+
+This method was previously called `begin_training`.
+
+</Infobox>
 
 > #### Example
 >
 > ```python
 > parser = nlp.add_pipe("parser")
-> optimizer = parser.begin_training(lambda: [], pipeline=nlp.pipeline)
+> parser.initialize(lambda: [], nlp=nlp)
 > ```
 
 | Name           | Description                                                                                                                           |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. ~~Callable[[], Iterable[Example]]~~ |
 | _keyword-only_ |                                                                                                                                       |
-| `pipeline`     | Optional list of pipeline components that this component is part of. ~~Optional[List[Tuple[str, Callable[[Doc], Doc]]]]~~             |
-| `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                         |
-| **RETURNS**    | The optimizer. ~~Optimizer~~                                                                                                          |
+| `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                  |
 
 ## DependencyParser.predict {#predict tag="method"}
 
@@ -209,7 +213,7 @@ model. Delegates to [`predict`](/api/dependencyparser#predict) and
 >
 > ```python
 > parser = nlp.add_pipe("parser")
-> optimizer = nlp.begin_training()
+> optimizer = nlp.initialize()
 > losses = parser.update(examples, sgd=optimizer)
 > ```
 
@@ -293,11 +297,10 @@ context, the original parameters are restored.
 ## DependencyParser.add_label {#add_label tag="method"}
 
 Add a new label to the pipe. Note that you don't have to call this method if you
-provide a **representative data sample** to the
-[`begin_training`](#begin_training) method. In this case, all labels found in
-the sample will be automatically added to the model, and the output dimension
-will be [inferred](/usage/layers-architectures#thinc-shape-inference)
-automatically.
+provide a **representative data sample** to the [`initialize`](#initialize)
+method. In this case, all labels found in the sample will be automatically added
+to the model, and the output dimension will be
+[inferred](/usage/layers-architectures#thinc-shape-inference) automatically.
 
 > #### Example
 >

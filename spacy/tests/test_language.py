@@ -18,7 +18,7 @@ def nlp():
     textcat = nlp.add_pipe("textcat")
     for label in ("POSITIVE", "NEGATIVE"):
         textcat.add_label(label)
-    nlp.begin_training()
+    nlp.initialize()
     return nlp
 
 

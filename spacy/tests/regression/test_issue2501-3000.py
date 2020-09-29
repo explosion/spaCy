@@ -18,7 +18,7 @@ def test_issue2564():
     nlp = Language()
     tagger = nlp.add_pipe("tagger")
     tagger.add_label("A")
-    nlp.begin_training()
+    nlp.initialize()
     doc = nlp("hello world")
     assert doc.has_annotation("TAG")
     docs = nlp.pipe(["hello", "world"])
@@ -149,7 +149,7 @@ def test_issue2800():
     ner = nlp.add_pipe("ner")
     for entity_type in list(entity_types):
         ner.add_label(entity_type)
-    optimizer = nlp.begin_training()
+    optimizer = nlp.initialize()
     for i in range(20):
         losses = {}
         random.shuffle(train_data)

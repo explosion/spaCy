@@ -599,7 +599,7 @@ def _train_tuples(train_data):
     train_examples = []
     for t in train_data:
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
-    optimizer = nlp.begin_training()
+    optimizer = nlp.initialize()
     for i in range(5):
         losses = {}
         batches = minibatch(train_examples, size=compounding(4.0, 32.0, 1.001))

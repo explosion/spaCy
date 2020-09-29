@@ -223,7 +223,7 @@ def test_issue3611():
         textcat.add_label(label)
     # training the network
     with nlp.select_pipes(enable="textcat"):
-        optimizer = nlp.begin_training()
+        optimizer = nlp.initialize()
         for i in range(3):
             losses = {}
             batches = minibatch(train_data, size=compounding(4.0, 32.0, 1.001))
@@ -268,7 +268,7 @@ def test_issue3830_no_subtok():
     parser = DependencyParser(Vocab(), model, **config)
     parser.add_label("nsubj")
     assert "subtok" not in parser.labels
-    parser.begin_training(lambda: [_parser_example(parser)])
+    parser.initialize(lambda: [_parser_example(parser)])
     assert "subtok" not in parser.labels
 
 
@@ -283,7 +283,7 @@ def test_issue3830_with_subtok():
     parser = DependencyParser(Vocab(), model, **config)
     parser.add_label("nsubj")
     assert "subtok" not in parser.labels
-    parser.begin_training(lambda: [_parser_example(parser)])
+    parser.initialize(lambda: [_parser_example(parser)])
     assert "subtok" in parser.labels
 
 
@@ -342,7 +342,7 @@ def test_issue3880():
     nlp.add_pipe("parser").add_label("dep")
     nlp.add_pipe("ner").add_label("PERSON")
     nlp.add_pipe("tagger").add_label("NN")
-    nlp.begin_training()
+    nlp.initialize()
     for doc in nlp.pipe(texts):
         pass
 

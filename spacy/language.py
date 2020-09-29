@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from copy import deepcopy
 from pathlib import Path
 import warnings
-from thinc.api import Model, get_current_ops, Config, require_gpu, Optimizer
+from thinc.api import Model, get_current_ops, Config, Optimizer
 import srsly
 import multiprocessing as mp
 from itertools import chain, cycle
@@ -18,8 +18,9 @@ from .tokens.underscore import Underscore
 from .vocab import Vocab, create_vocab
 from .pipe_analysis import validate_attrs, analyze_pipes, print_pipe_analysis
 from .training import Example, validate_examples
+from .training.initialize import init_vocab, init_tok2vec
 from .scorer import Scorer
-from .util import create_default_optimizer, registry, SimpleFrozenList
+from .util import registry, SimpleFrozenList
 from .util import SimpleFrozenDict, combine_score_weights, CONFIG_SECTION_ORDER
 from .lang.tokenizer_exceptions import URL_MATCH, BASE_EXCEPTIONS
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
@@ -27,7 +28,8 @@ from .lang.punctuation import TOKENIZER_INFIXES
 from .tokens import Doc
 from .tokenizer import Tokenizer
 from .errors import Errors, Warnings
-from .schemas import ConfigSchema, ConfigSchemaNlp
+from .schemas import ConfigSchema, ConfigSchemaNlp, ConfigSchemaInit
+from .schemas import ConfigSchemaPretrain, validate_init_settings
 from .git_info import GIT_VERSION
 from . import util
 from . import about
@@ -1065,7 +1067,7 @@ class Language:
         validate_examples(examples, "Language.update")
         if sgd is None:
             if self._optimizer is None:
-                self._optimizer = create_default_optimizer()
+                self._optimizer = self.create_optimizer()
             sgd = self._optimizer
         if component_cfg is None:
             component_cfg = {}
@@ -1123,7 +1125,7 @@ class Language:
         validate_examples(examples, "Language.rehearse")
         if sgd is None:
             if self._optimizer is None:
-                self._optimizer = create_default_optimizer()
+                self._optimizer = self.create_optimizer()
             sgd = self._optimizer
         pipes = list(self.pipeline)
         random.shuffle(pipes)
@@ -1153,61 +1155,73 @@ class Language:
         get_examples: Optional[Callable[[], Iterable[Example]]] = None,
         *,
         sgd: Optional[Optimizer] = None,
-        device: int = -1,
+    ) -> Optimizer:
+        warnings.warn(Warnings.W089, DeprecationWarning)
+        return self.initialize(get_examples, sgd=sgd)
+
+    def initialize(
+        self,
+        get_examples: Optional[Callable[[], Iterable[Example]]] = None,
+        *,
+        sgd: Optional[Optimizer] = None,
     ) -> Optimizer:
         """Initialize the pipe for training, using data examples if available.
 
         get_examples (Callable[[], Iterable[Example]]): Optional function that
             returns gold-standard Example objects.
-        sgd (thinc.api.Optimizer): Optional optimizer. Will be created with
-            create_optimizer if it doesn't exist.
+        sgd (Optional[Optimizer]): An optimizer to use for updates. If not
+            provided, will be created using the .create_optimizer() method.
         RETURNS (thinc.api.Optimizer): The optimizer.
 
-        DOCS: https://nightly.spacy.io/api/language#begin_training
+        DOCS: https://nightly.spacy.io/api/language#initialize
         """
         if get_examples is None:
             util.logger.debug(
-                "No 'get_examples' callback provided to 'Language.begin_training', creating dummy examples"
+                "No 'get_examples' callback provided to 'Language.initialize', creating dummy examples"
             )
             doc = Doc(self.vocab, words=["x", "y", "z"])
             get_examples = lambda: [Example.from_dict(doc, {})]
-        # Populate vocab
         if not hasattr(get_examples, "__call__"):
             err = Errors.E930.format(name="Language", obj=type(get_examples))
             raise ValueError(err)
-        valid_examples = False
-        for example in get_examples():
-            if not isinstance(example, Example):
-                err = Errors.E978.format(
-                    name="Language.begin_training", types=type(example)
-                )
-                raise ValueError(err)
-            else:
-                valid_examples = True
-            for word in [t.text for t in example.reference]:
-                _ = self.vocab[word]  # noqa: F841
-        if not valid_examples:
-            err = Errors.E930.format(name="Language", obj="empty list")
-            raise ValueError(err)
-        if device >= 0:  # TODO: do we need this here?
-            require_gpu(device)
-            if self.vocab.vectors.data.shape[1] >= 1:
-                ops = get_current_ops()
-                self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
-        if sgd is None:
-            sgd = create_default_optimizer()
-        self._optimizer = sgd
+        # Make sure the config is interpolated so we can resolve subsections
+        config = self.config.interpolate()
+        # These are the settings provided in the [initialize] block in the config
+        I = registry.resolve(config["initialize"], schema=ConfigSchemaInit)
+        init_vocab(
+            self, data=I["vocab_data"], lookups=I["lookups"], vectors=I["vectors"],
+        )
+        pretrain_cfg = config.get("pretraining")
+        if pretrain_cfg:
+            P = registry.resolve(pretrain_cfg, schema=ConfigSchemaPretrain)
+            init_tok2vec(self, P, I)
+        if self.vocab.vectors.data.shape[1] >= 1:
+            ops = get_current_ops()
+            self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
+        if hasattr(self.tokenizer, "initialize"):
+            tok_settings = validate_init_settings(
+                self.tokenizer.initialize,
+                I["tokenizer"],
+                section="tokenizer",
+                name="tokenizer",
+            )
+            self.tokenizer.initialize(get_examples, nlp=self, **tok_settings)
         for name, proc in self.pipeline:
-            if hasattr(proc, "begin_training"):
-                proc.begin_training(
-                    get_examples, pipeline=self.pipeline, sgd=self._optimizer
+            if hasattr(proc, "initialize"):
+                p_settings = I["components"].get(name, {})
+                p_settings = validate_init_settings(
+                    proc.initialize, p_settings, section="components", name=name
                 )
+                proc.initialize(get_examples, nlp=self, **p_settings)
         self._link_components()
+        self._optimizer = sgd
+        if sgd is not None:
+            self._optimizer = sgd
+        elif self._optimizer is None:
+            self._optimizer = self.create_optimizer()
         return self._optimizer
 
-    def resume_training(
-        self, *, sgd: Optional[Optimizer] = None, device: int = -1
-    ) -> Optimizer:
+    def resume_training(self, *, sgd: Optional[Optimizer] = None) -> Optimizer:
         """Continue training a pretrained model.
 
         Create and return an optimizer, and initialize "rehearsal" for any pipeline
@@ -1216,22 +1230,20 @@ class Language:
         rehearsal, collect samples of text you want the models to retain performance
         on, and call nlp.rehearse() with a batch of Example objects.
 
-        sgd (Optional[Optimizer]): An optimizer.
         RETURNS (Optimizer): The optimizer.
 
         DOCS: https://nightly.spacy.io/api/language#resume_training
         """
-        if device >= 0:  # TODO: do we need this here?
-            require_gpu(device)
-            ops = get_current_ops()
-            if self.vocab.vectors.data.shape[1] >= 1:
-                self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
-        if sgd is None:
-            sgd = create_default_optimizer()
-        self._optimizer = sgd
+        ops = get_current_ops()
+        if self.vocab.vectors.data.shape[1] >= 1:
+            self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
         for name, proc in self.pipeline:
             if hasattr(proc, "_rehearsal_model"):
                 proc._rehearsal_model = deepcopy(proc.model)
+        if sgd is not None:
+            self._optimizer = sgd
+        elif self._optimizer is None:
+            self._optimizer = self.create_optimizer()
         return self._optimizer
 
     def evaluate(
@@ -1292,6 +1304,11 @@ class Language:
         n_words = sum(len(doc) for doc in docs)
         results["speed"] = n_words / (end_time - start_time)
         return results
+
+    def create_optimizer(self):
+        """Create an optimizer, usually using the [training.optimizer] config."""
+        subconfig = {"optimizer": self.config["training"]["optimizer"]}
+        return registry.resolve(subconfig)["optimizer"]
 
     @contextmanager
     def use_params(self, params: Optional[dict]):

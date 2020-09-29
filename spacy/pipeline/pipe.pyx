@@ -1,4 +1,5 @@
 # cython: infer_types=True, profile=True
+from typing import Optional, Tuple
 import srsly
 from thinc.api import set_dropout_rate, Model
 
@@ -31,6 +32,17 @@ cdef class Pipe:
         self.model = model
         self.name = name
         self.cfg = dict(cfg)
+
+    @property
+    def labels(self) -> Optional[Tuple[str]]:
+        return []
+    
+    @property
+    def label_data(self):
+        """Optional JSON-serializable data that would be sufficient to recreate
+        the label set if provided to the `pipe.initialize()` method.
+        """
+        return None
 
     def __call__(self, Doc doc):
         """Apply the pipe to one document. The document is modified in place,
@@ -183,7 +195,7 @@ cdef class Pipe:
         """
         return util.create_default_optimizer()
 
-    def begin_training(self, get_examples, *, pipeline=None, sgd=None):
+    def initialize(self, get_examples, *, nlp=None):
         """Initialize the pipe for training, using data examples if available.
         This method needs to be implemented by each Pipe component,
         ensuring the internal model (if available) is initialized properly
@@ -191,16 +203,11 @@ cdef class Pipe:
 
         get_examples (Callable[[], Iterable[Example]]): Function that
             returns a representative sample of gold-standard Example objects.
-        pipeline (List[Tuple[str, Callable]]): Optional list of pipeline
-            components that this component is part of. Corresponds to
-            nlp.pipeline.
-        sgd (thinc.api.Optimizer): Optional optimizer. Will be created with
-            create_optimizer if it doesn't exist.
-        RETURNS (thinc.api.Optimizer): The optimizer.
+        nlp (Language): The current nlp object the component is part of.
 
-        DOCS: https://nightly.spacy.io/api/pipe#begin_training
+        DOCS: https://nightly.spacy.io/api/pipe#initialize
         """
-        raise NotImplementedError(Errors.E931.format(method="add_label", name=self.name))
+        raise NotImplementedError(Errors.E931.format(method="initialize", name=self.name))
 
     def _ensure_examples(self, get_examples):
         if get_examples is None or not hasattr(get_examples, "__call__"):

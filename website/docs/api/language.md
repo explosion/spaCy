@@ -202,30 +202,38 @@ more efficient than processing texts one-by-one.
 | `n_process` <Tag variant="new">2.2.2</Tag> | Number of processors to use. Defaults to `1`. ~~int~~                                                                                                               |
 | **YIELDS**                                 | Documents in the order of the original text. ~~Doc~~                                                                                                                |
 
-## Language.begin_training {#begin_training tag="method"}
+## Language.initialize {#initialize tag="method"}
 
 Initialize the pipeline for training and return an
-[`Optimizer`](https://thinc.ai/docs/api-optimizers). `get_examples` should be a
-function that returns an iterable of [`Example`](/api/example) objects. The data
-examples can either be the full training data or a representative sample. They
-are used to **initialize the models** of trainable pipeline components and are
-passed each component's [`begin_training`](/api/pipe#begin_training) method, if
-available. Initialization includes validating the network,
+[`Optimizer`](https://thinc.ai/docs/api-optimizers). Under the hood, it uses the
+settings defined in the [`[initialize]`](/api/data-formats#config-initialize)
+config block to set up the vocabulary, load in vectors and tok2vec weights and
+pass optional arguments to the `initialize` methods implemented by pipeline
+components or the tokenizer. This method is typically called automatically when
+you run [`spacy train`](/api/cli#train).
+
+`get_examples` should be a function that returns an iterable of
+[`Example`](/api/example) objects. The data examples can either be the full
+training data or a representative sample. They are used to **initialize the
+models** of trainable pipeline components and are passed each component's
+[`initialize`](/api/pipe#initialize) method, if available. Initialization
+includes validating the network,
 [inferring missing shapes](/usage/layers-architectures#thinc-shape-inference)
 and setting up the label scheme based on the data.
 
-If no `get_examples` function is provided when calling `nlp.begin_training`, the
+If no `get_examples` function is provided when calling `nlp.initialize`, the
 pipeline components will be initialized with generic data. In this case, it is
 crucial that the output dimension of each component has already been defined
 either in the [config](/usage/training#config), or by calling
 [`pipe.add_label`](/api/pipe#add_label) for each possible output label (e.g. for
 the tagger or textcat).
 
-<Infobox variant="warning" title="Changed in v3.0">
+<Infobox variant="warning" title="Changed in v3.0" id="begin_training">
 
-The `Language.update` method now takes a **function** that is called with no
-arguments and returns a sequence of [`Example`](/api/example) objects instead of
-tuples of `Doc` and `GoldParse` objects.
+This method was previously called `begin_training`. It now also takes a
+**function** that is called with no arguments and returns a sequence of
+[`Example`](/api/example) objects instead of tuples of `Doc` and `GoldParse`
+objects.
 
 </Infobox>
 
@@ -233,7 +241,7 @@ tuples of `Doc` and `GoldParse` objects.
 >
 > ```python
 > get_examples = lambda: examples
-> optimizer = nlp.begin_training(get_examples)
+> optimizer = nlp.initialize(get_examples)
 > ```
 
 | Name           | Description                                                                                                                                              |
@@ -637,13 +645,13 @@ list will be disabled. Under the hood, this method calls into
 >
 > ```python
 > with nlp.select_pipes(disable=["tagger", "parser"]):
->    nlp.begin_training()
+>    nlp.initialize()
 >
 > with nlp.select_pipes(enable="ner"):
->     nlp.begin_training()
+>     nlp.initialize()
 >
 > disabled = nlp.select_pipes(disable=["tagger", "parser"])
-> nlp.begin_training()
+> nlp.initialize()
 > disabled.restore()
 > ```
 

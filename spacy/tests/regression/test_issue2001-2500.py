@@ -30,7 +30,7 @@ def test_issue2179():
     nlp = Italian()
     ner = nlp.add_pipe("ner")
     ner.add_label("CITIZENSHIP")
-    nlp.begin_training()
+    nlp.initialize()
     nlp2 = Italian()
     nlp2.add_pipe("ner")
     assert len(nlp2.get_pipe("ner").labels) == 0

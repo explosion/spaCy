@@ -1056,8 +1056,8 @@ of being dropped.
 
 > - [`nlp`](/api/language): The `nlp` object with the pipeline components and
 >   their models.
-> - [`nlp.begin_training`](/api/language#begin_training): Start the training and
->   return an optimizer to update the component model weights.
+> - [`nlp.initialize`](/api/language#initialize): Start the training and return
+>   an optimizer to update the component model weights.
 > - [`Optimizer`](https://thinc.ai/docs/api-optimizers): Function that holds
 >   state between updates.
 > - [`nlp.update`](/api/language#update): Update component models with examples.
@@ -1068,7 +1068,7 @@ of being dropped.
 
 ```python
 ### Example training loop
-optimizer = nlp.begin_training()
+optimizer = nlp.initialize()
 for itn in range(100):
     random.shuffle(train_data)
     for raw_text, entity_offsets in train_data:

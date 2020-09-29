@@ -1,5 +1,5 @@
 from itertools import islice
-from typing import Optional, Iterable, Callable, Dict, Iterator, Union, List, Tuple
+from typing import Optional, Iterable, Callable, Dict, Iterator, Union, List
 from pathlib import Path
 import srsly
 import random
@@ -140,26 +140,20 @@ class EntityLinker(Pipe):
         if len(self.kb) == 0:
             raise ValueError(Errors.E139.format(name=self.name))
 
-    def begin_training(
+    def initialize(
         self,
         get_examples: Callable[[], Iterable[Example]],
         *,
-        pipeline: Optional[List[Tuple[str, Callable[[Doc], Doc]]]] = None,
-        sgd: Optional[Optimizer] = None,
-    ) -> Optimizer:
+        nlp: Optional[Language] = None,
+    ):
         """Initialize the pipe for training, using a representative set
         of data examples.
 
         get_examples (Callable[[], Iterable[Example]]): Function that
             returns a representative sample of gold-standard Example objects.
-        pipeline (List[Tuple[str, Callable]]): Optional list of pipeline
-            components that this component is part of. Corresponds to
-            nlp.pipeline.
-        sgd (thinc.api.Optimizer): Optional optimizer. Will be created with
-            create_optimizer if it doesn't exist.
-        RETURNS (thinc.api.Optimizer): The optimizer.
+        nlp (Language): The current nlp object the component is part of.
 
-        DOCS: https://nightly.spacy.io/api/entitylinker#begin_training
+        DOCS: https://nightly.spacy.io/api/entitylinker#initialize
         """
         self._ensure_examples(get_examples)
         self._require_kb()
@@ -174,9 +168,6 @@ class EntityLinker(Pipe):
         self.model.initialize(
             X=doc_sample, Y=self.model.ops.asarray(vector_sample, dtype="float32")
         )
-        if sgd is None:
-            sgd = self.create_optimizer()
-        return sgd
 
     def update(
         self,

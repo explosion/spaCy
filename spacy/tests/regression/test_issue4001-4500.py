@@ -66,7 +66,7 @@ def test_issue4030():
         textcat.add_label(label)
     # training the network
     with nlp.select_pipes(enable="textcat"):
-        optimizer = nlp.begin_training()
+        optimizer = nlp.initialize()
         for i in range(3):
             losses = {}
             batches = minibatch(train_data, size=compounding(4.0, 32.0, 1.001))
@@ -87,7 +87,7 @@ def test_issue4042():
     # add ner pipe
     ner = nlp.add_pipe("ner")
     ner.add_label("SOME_LABEL")
-    nlp.begin_training()
+    nlp.initialize()
     # Add entity ruler
     patterns = [
         {"label": "MY_ORG", "pattern": "Apple"},
@@ -118,7 +118,7 @@ def test_issue4042_bug2():
     # add ner pipe
     ner1 = nlp1.add_pipe("ner")
     ner1.add_label("SOME_LABEL")
-    nlp1.begin_training()
+    nlp1.initialize()
     # add a new label to the doc
     doc1 = nlp1("What do you think about Apple ?")
     assert len(ner1.labels) == 1
@@ -244,7 +244,7 @@ def test_issue4267():
     nlp = English()
     ner = nlp.add_pipe("ner")
     ner.add_label("PEOPLE")
-    nlp.begin_training()
+    nlp.initialize()
     assert "ner" in nlp.pipe_names
     # assert that we have correct IOB annotations
     doc1 = nlp("hi")
@@ -299,7 +299,7 @@ def test_issue4313():
     config = {}
     ner = nlp.create_pipe("ner", config=config)
     ner.add_label("SOME_LABEL")
-    ner.begin_training(lambda: [])
+    ner.initialize(lambda: [])
     # add a new label to the doc
     doc = nlp("What do you think about Apple ?")
     assert len(ner.labels) == 1
@@ -327,7 +327,7 @@ def test_issue4348():
     TRAIN_DATA = [example, example]
     tagger = nlp.add_pipe("tagger")
     tagger.add_label("A")
-    optimizer = nlp.begin_training()
+    optimizer = nlp.initialize()
     for i in range(5):
         losses = {}
         batches = minibatch(TRAIN_DATA, size=compounding(4.0, 32.0, 1.001))

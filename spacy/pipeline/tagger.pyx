@@ -90,6 +90,11 @@ class Tagger(Pipe):
         """
         return tuple(self.cfg["labels"])
 
+    @property
+    def label_data(self):
+        """Data about the labels currently added to the component."""
+        return tuple(self.cfg["labels"])
+
     def __call__(self, doc):
         """Apply the pipe to a Doc.
 
@@ -256,31 +261,30 @@ class Tagger(Pipe):
             raise ValueError("nan value when computing loss")
         return float(loss), d_scores
 
-    def begin_training(self, get_examples, *, pipeline=None, sgd=None):
+    def initialize(self, get_examples, *, nlp=None, labels=None):
         """Initialize the pipe for training, using a representative set
         of data examples.
 
         get_examples (Callable[[], Iterable[Example]]): Function that
             returns a representative sample of gold-standard Example objects..
-        pipeline (List[Tuple[str, Callable]]): Optional list of pipeline
-            components that this component is part of. Corresponds to
-            nlp.pipeline.
-        sgd (thinc.api.Optimizer): Optional optimizer. Will be created with
-            create_optimizer if it doesn't exist.
-        RETURNS (thinc.api.Optimizer): The optimizer.
+        nlp (Language): The current nlp object the component is part of.
 
-        DOCS: https://nightly.spacy.io/api/tagger#begin_training
+        DOCS: https://nightly.spacy.io/api/tagger#initialize
         """
         self._ensure_examples(get_examples)
+        if labels is not None:
+            for tag in labels:
+                self.add_label(tag)
+        else:
+            tags = set()
+            for example in get_examples():
+                for token in example.y:
+                    if token.tag_:
+                        tags.add(token.tag_)
+            for tag in sorted(tags):
+                self.add_label(tag)
         doc_sample = []
         label_sample = []
-        tags = set()
-        for example in get_examples():
-            for token in example.y:
-                if token.tag_:
-                    tags.add(token.tag_)
-        for tag in sorted(tags):
-            self.add_label(tag)
         for example in islice(get_examples(), 10):
             doc_sample.append(example.x)
             gold_tags = example.get_aligned("TAG", as_string=True)
@@ -289,9 +293,6 @@ class Tagger(Pipe):
         assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
         assert len(label_sample) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(X=doc_sample, Y=label_sample)
-        if sgd is None:
-            sgd = self.create_optimizer()
-        return sgd
 
     def add_label(self, label):
         """Add a new label to the pipe.

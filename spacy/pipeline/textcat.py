@@ -154,7 +154,15 @@ class TextCategorizer(Pipe):
 
     @labels.setter
     def labels(self, value: List[str]) -> None:
+        # TODO: This really shouldn't be here. I had a look and I added it when
+        # I added the labels property, but it's pretty nasty to have this, and
+        # will lead to problems.
         self.cfg["labels"] = tuple(value)
+
+    @property
+    def label_data(self) -> List[str]:
+        """RETURNS (List[str]): Information about the component's labels."""
+        return self.labels
 
     def pipe(self, stream: Iterable[Doc], *, batch_size: int = 128) -> Iterator[Doc]:
         """Apply the pipe to a stream of documents. This usually happens under
@@ -334,43 +342,37 @@ class TextCategorizer(Pipe):
         self.labels = tuple(list(self.labels) + [label])
         return 1
 
-    def begin_training(
+    def initialize(
         self,
         get_examples: Callable[[], Iterable[Example]],
         *,
-        pipeline: Optional[List[Tuple[str, Callable[[Doc], Doc]]]] = None,
-        sgd: Optional[Optimizer] = None,
-    ) -> Optimizer:
+        nlp: Optional[Language] = None,
+        labels: Optional[Dict] = None
+    ):
         """Initialize the pipe for training, using a representative set
         of data examples.
 
         get_examples (Callable[[], Iterable[Example]]): Function that
             returns a representative sample of gold-standard Example objects.
-        pipeline (List[Tuple[str, Callable]]): Optional list of pipeline
-            components that this component is part of. Corresponds to
-            nlp.pipeline.
-        sgd (thinc.api.Optimizer): Optional optimizer. Will be created with
-            create_optimizer if it doesn't exist.
-        RETURNS (thinc.api.Optimizer): The optimizer.
+        nlp (Language): The current nlp object the component is part of.
 
-        DOCS: https://nightly.spacy.io/api/textcategorizer#begin_training
+        DOCS: https://nightly.spacy.io/api/textcategorizer#initialize
         """
         self._ensure_examples(get_examples)
-        subbatch = []  # Select a subbatch of examples to initialize the model
-        for example in islice(get_examples(), 10):
-            if len(subbatch) < 2:
-                subbatch.append(example)
-            for cat in example.y.cats:
-                self.add_label(cat)
+        if labels is None:
+            for example in get_examples():
+                for cat in example.y.cats:
+                    self.add_label(cat)
+        else:
+            for label in labels:
+                self.add_label(label)
+        subbatch = list(islice(get_examples(), 10))
         doc_sample = [eg.reference for eg in subbatch]
         label_sample, _ = self._examples_to_truth(subbatch)
         self._require_labels()
         assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
         assert len(label_sample) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(X=doc_sample, Y=label_sample)
-        if sgd is None:
-            sgd = self.create_optimizer()
-        return sgd
 
     def score(self, examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
         """Score a batch of examples.

@@ -250,7 +250,7 @@ def test_issue1915():
     ner = nlp.add_pipe("ner")
     ner.add_label("answer")
     with pytest.raises(ValueError):
-        nlp.begin_training(**cfg)
+        nlp.initialize(**cfg)
 
 
 def test_issue1945():

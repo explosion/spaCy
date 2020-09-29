@@ -158,7 +158,7 @@ applied to the `Doc` in order. Both [`__call__`](/api/transformer#call) and
 | `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
 | **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
-## Transformer.begin_training {#begin_training tag="method"}
+## Transformer.initialize {#initialize tag="method"}
 
 Initialize the component for training and return an
 [`Optimizer`](https://thinc.ai/docs/api-optimizers). `get_examples` should be a
@@ -167,22 +167,21 @@ examples are used to **initialize the model** of the component and can either be
 the full training data or a representative sample. Initialization includes
 validating the network,
 [inferring missing shapes](https://thinc.ai/docs/usage-models#validation) and
-setting up the label scheme based on the data.
+setting up the label scheme based on the data. This method is typically called
+by [`Language.initialize`](/api/language#initialize).
 
 > #### Example
 >
 > ```python
 > trf = nlp.add_pipe("transformer")
-> optimizer = trf.begin_training(lambda: [], pipeline=nlp.pipeline)
+> trf.initialize(lambda: [], nlp=nlp)
 > ```
 
 | Name           | Description                                                                                                                           |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. ~~Callable[[], Iterable[Example]]~~ |
 | _keyword-only_ |                                                                                                                                       |
-| `pipeline`     | Optional list of pipeline components that this component is part of. ~~Optional[List[Tuple[str, Callable[[Doc], Doc]]]]~~             |
-| `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                         |
-| **RETURNS**    | The optimizer. ~~Optimizer~~                                                                                                          |
+| `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                  |
 
 ## Transformer.predict {#predict tag="method"}
 
@@ -241,7 +240,7 @@ and call the optimizer, while the others simply increment the gradients.
 >
 > ```python
 > trf = nlp.add_pipe("transformer")
-> optimizer = nlp.begin_training()
+> optimizer = nlp.initialize()
 > losses = trf.update(examples, sgd=optimizer)
 > ```
 

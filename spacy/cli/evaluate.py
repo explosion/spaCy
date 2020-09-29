@@ -3,11 +3,11 @@ from wasabi import Printer
 from pathlib import Path
 import re
 import srsly
-from thinc.api import require_gpu, fix_random_seed
+from thinc.api import fix_random_seed
 
 from ..training import Corpus
 from ..tokens import Doc
-from ._util import app, Arg, Opt
+from ._util import app, Arg, Opt, setup_gpu
 from ..scorer import Scorer
 from .. import util
 from .. import displacy
@@ -61,8 +61,7 @@ def evaluate(
 ) -> Scorer:
     msg = Printer(no_print=silent, pretty=not silent)
     fix_random_seed()
-    if use_gpu >= 0:
-        require_gpu(use_gpu)
+    setup_gpu(use_gpu)
     data_path = util.ensure_path(data_path)
     output_path = util.ensure_path(output)
     displacy_path = util.ensure_path(displacy_path)

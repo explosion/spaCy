@@ -25,7 +25,7 @@ def test_issue5551():
         pipe = nlp.add_pipe(component, config=pipe_cfg, last=True)
         for label in set(example[1]["cats"]):
             pipe.add_label(label)
-        nlp.begin_training()
+        nlp.initialize()
 
         # Store the result of each iteration
         result = pipe.model.predict([nlp.make_doc(example[0])])

@@ -8,6 +8,7 @@ import re
 from pathlib import Path
 import thinc
 from thinc.api import NumpyOps, get_current_ops, Adam, Config, Optimizer
+from thinc.api import ConfigValidationError
 import functools
 import itertools
 import numpy.random
@@ -56,12 +57,13 @@ if TYPE_CHECKING:
 
 
 OOV_RANK = numpy.iinfo(numpy.uint64).max
+DEFAULT_OOV_PROB = -20
 LEXEME_NORM_LANGS = ["da", "de", "el", "en", "id", "lb", "pt", "ru", "sr", "ta", "th"]
 
 # Default order of sections in the config.cfg. Not all sections needs to exist,
 # and additional sections are added at the end, in alphabetical order.
 # fmt: off
-CONFIG_SECTION_ORDER = ["paths", "variables", "system", "nlp", "components", "corpora", "training", "pretraining"]
+CONFIG_SECTION_ORDER = ["paths", "variables", "system", "nlp", "components", "corpora", "training", "pretraining", "initialize"]
 # fmt: on
 
 
@@ -95,6 +97,10 @@ class registry(thinc.registry):
     # themselves via entry points.
     models = catalogue.create("spacy", "models", entry_points=True)
     cli = catalogue.create("spacy", "cli", entry_points=True)
+
+
+# We want json loading in the registry, so manually register srsly.read_json.
+registry.readers("srsly.read_json.v0", srsly.read_json)
 
 
 class SimpleFrozenDict(dict):
@@ -240,28 +246,6 @@ def get_module_path(module: ModuleType) -> Path:
     return Path(sys.modules[module.__module__].__file__).parent
 
 
-def load_vectors_into_model(
-    nlp: "Language", name: Union[str, Path], *, add_strings=True
-) -> None:
-    """Load word vectors from an installed model or path into a model instance."""
-    vectors_nlp = load_model(name)
-    nlp.vocab.vectors = vectors_nlp.vocab.vectors
-    if add_strings:
-        # I guess we should add the strings from the vectors_nlp model?
-        # E.g. if someone does a similarity query, they might expect the strings.
-        for key in nlp.vocab.vectors.key2row:
-            if key in vectors_nlp.vocab.strings:
-                nlp.vocab.strings.add(vectors_nlp.vocab.strings[key])
-
-
-def load_vocab_data_into_model(
-    nlp: "Language", *, lookups: Optional["Lookups"] = None
-) -> None:
-    """Load vocab data."""
-    if lookups:
-        nlp.vocab.lookups = lookups
-
-
 def load_model(
     name: Union[str, Path],
     *,
@@ -400,27 +384,39 @@ def load_model_from_config(
     return nlp
 
 
-def resolve_training_config(
-    config: Config,
-    exclude: Iterable[str] = ("nlp", "components"),
-    validate: bool = True,
-) -> Dict[str, Any]:
-    """Resolve the config sections relevant for trainig and create all objects.
-    Mostly used in the CLI to separate training config (not resolved by default
-    because not runtime-relevant – an nlp object should load fine even if it's
-    [training] block refers to functions that are not available etc.).
+def resolve_dot_names(config: Config, dot_names: List[Optional[str]]) -> Tuple[Any]:
+    """Resolve one or more "dot notation" names, e.g. corpora.train.
+    The paths could point anywhere into the config, so we don't know which
+    top-level section we'll be looking within.
 
-    config (Config): The config to resolve.
-    exclude (Iterable[str]): The config blocks to exclude. Those blocks won't
-        be available in the final resolved config.
-    validate (bool): Whether to validate the config.
-    RETURNS (Dict[str, Any]): The resolved config.
+    We resolve the whole top-level section, although we could resolve less --
+    we could find the lowest part of the tree.
     """
-    config = config.copy()
-    for key in exclude:
-        if key in config:
-            config.pop(key)
-    return registry.resolve(config, validate=validate)
+    # TODO: include schema?
+    resolved = {}
+    output = []
+    errors = []
+    for name in dot_names:
+        if name is None:
+            output.append(name)
+        else:
+            section = name.split(".")[0]
+            # We want to avoid resolving the same thing twice
+            if section not in resolved:
+                if registry.is_promise(config[section]):
+                    # Otherwise we can't resolve [corpus] if it's a promise
+                    result = registry.resolve({"config": config[section]})["config"]
+                else:
+                    result = registry.resolve(config[section])
+                resolved[section] = result
+            try:
+                output.append(dot_to_object(resolved, name))
+            except KeyError:
+                msg = f"not a valid section reference: {name}"
+                errors.append({"loc": name.split("."), "msg": msg})
+    if errors:
+        raise ConfigValidationError(config=config, errors=errors)
+    return tuple(output)
 
 
 def load_model_from_init_py(
@@ -1300,3 +1296,21 @@ def minibatch(items, size):
         if len(batch) == 0:
             break
         yield list(batch)
+
+
+def is_cython_func(func: Callable) -> bool:
+    """Slightly hacky check for whether a callable is implemented in Cython.
+    Can be used to implement slightly different behaviors, especially around
+    inspecting and parameter annotations.
+
+    func (Callable): The callable to check.
+    RETURNS (bool): Whether the callable is Cython (probably).
+    """
+    attr = "__reduce_cython__"
+    if hasattr(func, attr):  # function or class instance
+        return True
+    # https://stackoverflow.com/a/55767059
+    if hasattr(func, "__qualname__") and hasattr(func, "__module__"):  # method
+        cls_func = vars(sys.modules[func.__module__])[func.__qualname__.split(".")[0]]
+        return hasattr(cls_func, attr)
+    return False

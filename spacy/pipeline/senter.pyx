@@ -71,6 +71,10 @@ class SentenceRecognizer(Tagger):
         # are 0
         return tuple(["I", "S"])
 
+    @property
+    def label_data(self):
+        return self.labels
+
     def set_annotations(self, docs, batch_tag_ids):
         """Modify a batch of documents, using pre-computed scores.
 
@@ -124,20 +128,15 @@ class SentenceRecognizer(Tagger):
             raise ValueError("nan value when computing loss")
         return float(loss), d_scores
 
-    def begin_training(self, get_examples, *, pipeline=None, sgd=None):
+    def initialize(self, get_examples, *, nlp=None):
         """Initialize the pipe for training, using a representative set
         of data examples.
 
         get_examples (Callable[[], Iterable[Example]]): Function that
             returns a representative sample of gold-standard Example objects.
-        pipeline (List[Tuple[str, Callable]]): Optional list of pipeline
-            components that this component is part of. Corresponds to
-            nlp.pipeline.
-        sgd (thinc.api.Optimizer): Optional optimizer. Will be created with
-            create_optimizer if it doesn't exist.
-        RETURNS (thinc.api.Optimizer): The optimizer.
+        nlp (Language): The current nlp object the component is part of.
 
-        DOCS: https://nightly.spacy.io/api/sentencerecognizer#begin_training
+        DOCS: https://nightly.spacy.io/api/sentencerecognizer#initialize
         """
         self._ensure_examples(get_examples)
         doc_sample = []
@@ -151,9 +150,6 @@ class SentenceRecognizer(Tagger):
         assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
         assert len(label_sample) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(X=doc_sample, Y=label_sample)
-        if sgd is None:
-            sgd = self.create_optimizer()
-        return sgd
 
     def add_label(self, label, values=None):
         raise NotImplementedError
