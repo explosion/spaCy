@@ -1518,7 +1518,7 @@ class Language:
             ).merge(config)
         if "nlp" not in config:
             raise ValueError(Errors.E985.format(config=config))
-        config_lang = config["nlp"]["lang"]
+        config_lang = config["nlp"].get("lang")
         if config_lang is not None and config_lang != cls.lang:
             raise ValueError(
                 Errors.E958.format(
