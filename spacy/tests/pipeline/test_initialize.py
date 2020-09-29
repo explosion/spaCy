@@ -60,10 +60,10 @@ def test_initialize_arguments():
     assert errors[0]["type"] == "value_error.strictbool"
     init_cfg = {
         "tokenizer": {"custom": 1},
-        "components": {name: {"custom1": "x", "custom2": True}},
+        "components": {name: {"custom1": "x"}},
     }
     nlp.config["initialize"].update(init_cfg)
     nlp.initialize(get_examples)
     assert nlp.tokenizer.from_initialize == 1
     pipe = nlp.get_pipe(name)
-    assert pipe.from_initialize == ("x", True)
+    assert pipe.from_initialize == ("x", False)
