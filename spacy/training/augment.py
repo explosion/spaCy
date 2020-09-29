@@ -38,7 +38,10 @@ def orth_variants_augmenter(nlp, example, *, level: float = 0.0, lower: float = 
                 orig_dict["token_annotation"],
                 lower=raw_text is not None and random.random() < lower,
             )
-            doc = nlp.make_doc(variant_text)
+            if variant_text is None:
+                doc = Doc(nlp.vocab, words=variant_token_annot["words"])
+            else:
+                doc = nlp.make_doc(variant_text)
             orig_dict["token_annotation"] = variant_token_annot
             yield example.from_dict(doc, orig_dict)
 
