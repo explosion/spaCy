@@ -21,6 +21,7 @@ def init_vectors_cli(
     truncate: int = Opt(0, "--truncate", "-t", help="Optional number of vectors to truncate to when reading in vectors file"),
     name: Optional[str] = Opt(None, "--name", "-n", help="Optional name for the word vectors, e.g. en_core_web_lg.vectors"),
     verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
+    jsonl_loc: Optional[Path]=Opt(None, "--lexemes-jsonl", "-j", help="Location of JSONL-formatted attributes file")
     # fmt: on
 ):
     """Convert word vectors for use with spaCy. Will export an nlp object that
@@ -30,6 +31,13 @@ def init_vectors_cli(
     util.logger.setLevel(logging.DEBUG if verbose else logging.INFO)
     msg.info(f"Creating blank nlp object for language '{lang}'")
     nlp = util.get_lang_class(lang)()
+    if jsonl_loc is not None:
+        lex_attrs = srsly.read_jsonl(jsonl_loc)
+        for attrs in lex_attrs:
+            if "settings" in attrs:
+                continue
+            lexeme = nlp.vocab[attrs["orth"]]
+            lexeme.set_attrs(**attrs)
     convert_vectors(nlp, vectors_loc, truncate=truncate, prune=prune, name=name)
     msg.good(f"Successfully converted {len(nlp.vocab.vectors)} vectors")
     nlp.to_disk(output_dir)
