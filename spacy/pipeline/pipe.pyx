@@ -35,10 +35,7 @@ cdef class Pipe:
 
     @property
     def labels(self) -> Optional[Tuple[str]]:
-        if "labels" in self.cfg:
-            return tuple(self.cfg["labels"])
-        else:
-            return None
+        return []
     
     @property
     def label_data(self):

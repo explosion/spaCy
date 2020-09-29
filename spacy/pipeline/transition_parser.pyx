@@ -409,17 +409,20 @@ cdef class Parser(Pipe):
     def set_output(self, nO):
         self.model.attrs["resize_output"](self.model, nO)
 
-    def initialize(self, get_examples, nlp=None):
+    def initialize(self, get_examples, *, nlp=None, labels=None):
         self._ensure_examples(get_examples)
         lexeme_norms = self.vocab.lookups.get_table("lexeme_norm", {})
         if len(lexeme_norms) == 0 and self.vocab.lang in util.LEXEME_NORM_LANGS:
             langs = ", ".join(util.LEXEME_NORM_LANGS)
             util.logger.debug(Warnings.W033.format(model="parser or NER", langs=langs))
-        actions = self.moves.get_actions(
-            examples=get_examples(),
-            min_freq=self.cfg['min_action_freq'],
-            learn_tokens=self.cfg["learn_tokens"]
-        )
+        if labels is not None:
+            actions = dict(labels)
+        else:
+            actions = self.moves.get_actions(
+                examples=get_examples(),
+                min_freq=self.cfg['min_action_freq'],
+                learn_tokens=self.cfg["learn_tokens"]
+            )
         for action, labels in self.moves.labels.items():
             actions.setdefault(action, {})
             for label, freq in labels.items():

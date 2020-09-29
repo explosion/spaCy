@@ -160,16 +160,12 @@ class TextCategorizer(Pipe):
         self.cfg["labels"] = tuple(value)
 
     @property
-    def label_data(self) -> Dict:
-        """RETURNS (Dict): Information about the component's labels.
+    def label_data(self) -> List[str]:
+        """RETURNS (List[str]): Information about the component's labels.
 
         DOCS: https://nightly.spacy.io/api/textcategorizer#labels
         """
-        return {
-            "labels": self.labels,
-            "positive": self.cfg["positive_label"],
-            "threshold": self.cfg["threshold"]
-        }
+        return self.labels
 
     def pipe(self, stream: Iterable[Doc], *, batch_size: int = 128) -> Iterator[Doc]:
         """Apply the pipe to a stream of documents. This usually happens under
@@ -354,6 +350,7 @@ class TextCategorizer(Pipe):
         get_examples: Callable[[], Iterable[Example]],
         *,
         nlp: Optional[Language] = None,
+        labels: Optional[Dict] = None
     ):
         """Initialize the pipe for training, using a representative set
         of data examples.
@@ -365,12 +362,14 @@ class TextCategorizer(Pipe):
         DOCS: https://nightly.spacy.io/api/textcategorizer#initialize
         """
         self._ensure_examples(get_examples)
-        subbatch = []  # Select a subbatch of examples to initialize the model
-        for example in islice(get_examples(), 10):
-            if len(subbatch) < 2:
-                subbatch.append(example)
-            for cat in example.y.cats:
-                self.add_label(cat)
+        if labels is None:
+            for example in get_examples():
+                for cat in example.y.cats:
+                    self.add_label(cat)
+        else:
+            for label in labels:
+                self.add_label(label)
+        subbatch = list(islice(get_examples(), 10))
         doc_sample = [eg.reference for eg in subbatch]
         label_sample, _ = self._examples_to_truth(subbatch)
         self._require_labels()
