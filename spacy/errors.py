@@ -419,7 +419,7 @@ class Errors:
     E164 = ("x is neither increasing nor decreasing: {}.")
     E165 = ("Only one class present in y_true. ROC AUC score is not defined in "
             "that case.")
-    E166 = ("Can only merge DocBins with the same pre-defined attributes.\n"
+    E166 = ("Can only merge DocBins with the same value for '{param}'.\n"
             "Current DocBin: {current}\nOther DocBin: {other}")
     E169 = ("Can't find module: {module}")
     E170 = ("Cannot apply transition {name}: invalid for the current state.")
@@ -477,8 +477,6 @@ class Errors:
     E201 = ("Span index out of range.")
 
     # TODO: fix numbering after merging develop into master
-    E913 = ("Error reading 'user_data' from a DocBin. Make sure that 'store_user_data' "
-            "is set to True both when reading and writing a DocBin.")
     E914 = ("Executing {name} callback failed. Expected the function to "
             "return the nlp object but got: {value}. Maybe you forgot to return "
             "the modified object in your function?")

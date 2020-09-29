@@ -1,4 +1,5 @@
 import pytest
+from spacy.tokens.doc import Underscore
 
 import spacy
 from spacy.lang.en import English
@@ -90,25 +91,21 @@ def test_serialize_doc_bin_unknown_spaces(en_vocab):
     assert re_doc2.text == "that's"
 
 
-def test_serialize_custom_extension(en_vocab):
+@pytest.mark.parametrize(
+    "writer_flag,reader_value", [(True, "bar"), (False, "nothing")]
+)
+def test_serialize_custom_extension(en_vocab, writer_flag, reader_value):
     """Test that custom extensions are correctly serialized in DocBin."""
     Doc.set_extension("foo_1", default="nothing")
     doc = Doc(en_vocab, words=["hello", "world"])
     doc._.foo_1 = "bar"
-    doc_bin = DocBin(store_user_data=True)
+    doc_bin = DocBin(store_user_data=writer_flag)
     doc_bin.add(doc)
     doc_bin_bytes = doc_bin.to_bytes()
-    new_doc_bin = DocBin(store_user_data=True).from_bytes(doc_bin_bytes)
-    new_doc = list(new_doc_bin.get_docs(en_vocab))[0]
-    assert new_doc._.foo_1 == "bar"
-
-
-def test_serialize_custom_extension_invalid(en_vocab):
-    """Custom extension can not be read in if store_user_data was originally False."""
-    doc = Doc(en_vocab, words=["hello", "world"])
-    doc_bin = DocBin(store_user_data=False)
-    doc_bin.add(doc)
-    doc_bin_bytes = doc_bin.to_bytes()
-    new_doc_bin = DocBin(store_user_data=True).from_bytes(doc_bin_bytes)
-    with pytest.raises(ValueError) as e:
-        new_doc = list(new_doc_bin.get_docs(en_vocab))[0]
+    doc_bin_with_user = DocBin(store_user_data=True).from_bytes(doc_bin_bytes)
+    new_doc_with_user = list(doc_bin_with_user.get_docs(en_vocab))[0]
+    assert new_doc_with_user._.foo_1 == reader_value
+    doc_bin_without_user = DocBin(store_user_data=False).from_bytes(doc_bin_bytes)
+    new_doc_without_user = list(doc_bin_without_user.get_docs(en_vocab))[0]
+    assert new_doc_without_user._.foo_1 == "nothing"
+    Underscore.doc_extensions = {}

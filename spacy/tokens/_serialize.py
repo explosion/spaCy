@@ -129,25 +129,25 @@ class DocBin:
             doc = Doc(vocab, words=tokens[:, orth_col], spaces=spaces)
             doc = doc.from_array(self.attrs, tokens)
             doc.cats = self.cats[i]
-            if self.store_user_data:
-                try:
-                    user_data = srsly.msgpack_loads(self.user_data[i], use_list=False)
-                except IndexError:
-                    raise ValueError(Errors.E913)
+            if i in range(len(self.user_data)):
+                user_data = srsly.msgpack_loads(self.user_data[i], use_list=False)
                 doc.user_data.update(user_data)
             yield doc
 
     def merge(self, other: "DocBin") -> None:
         """Extend the annotations of this DocBin with the annotations from
         another. Will raise an error if the pre-defined attrs of the two
-        DocBins don't match.
+        DocBins don't match, or if they differ in whether or not to store
+        user data.
 
         other (DocBin): The DocBin to merge into the current bin.
 
         DOCS: https://nightly.spacy.io/api/docbin#merge
         """
         if self.attrs != other.attrs:
-            raise ValueError(Errors.E166.format(current=self.attrs, other=other.attrs))
+            raise ValueError(Errors.E166.format(param="attrs", current=self.attrs, other=other.attrs))
+        if self.store_user_data != other.store_user_data:
+            raise ValueError(Errors.E166.format(param="store_user_data", current=self.store_user_data, other=other.store_user_data))
         self.tokens.extend(other.tokens)
         self.spaces.extend(other.spaces)
         self.strings.update(other.strings)
