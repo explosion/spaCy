@@ -90,6 +90,16 @@ class Tagger(Pipe):
         """
         return tuple(self.cfg["labels"])
 
+    @property
+    def label_data(self):
+        """Data about the labels currently added to the component.
+
+        RETURNS (Dict): The labels data.
+
+        DOCS: https://nightly.spacy.io/api/tagger#labels
+        """
+        return tuple(self.cfg["labels"])
+
     def __call__(self, doc):
         """Apply the pipe to a Doc.
 

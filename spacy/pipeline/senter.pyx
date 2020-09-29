@@ -71,6 +71,10 @@ class SentenceRecognizer(Tagger):
         # are 0
         return tuple(["I", "S"])
 
+    @property
+    def label_data(self):
+        return self.labels
+
     def set_annotations(self, docs, batch_tag_ids):
         """Modify a batch of documents, using pre-computed scores.
 
