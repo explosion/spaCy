@@ -17,7 +17,8 @@ from .stop_words import STOP_WORDS
 from ... import util
 
 
-_PKUSEG_INSTALL_MSG = "install it with `pip install pkuseg==0.0.25` or from https://github.com/lancopku/pkuseg-python"
+_PKUSEG_INSTALL_MSG = "install pkuseg and pickle5 with `pip install pkuseg==0.0.25 pickle5`"
+_PKUSEG_PICKLE_WARNING = "Failed to force pkuseg model to use pickle protocol 4. If you're saving this model with python 3.8, it may not work with python 3.6-3.7."
 
 DEFAULT_CONFIG = """
 [nlp]
@@ -66,7 +67,7 @@ class ChineseTokenizer(DummyTokenizer):
         pkuseg_user_dict: Optional[str] = None,
     ):
         self.vocab = nlp.vocab
-        if isinstance(segmenter, Segmenter):  # we might have the Enum here
+        if isinstance(segmenter, Segmenter):
             segmenter = segmenter.value
         self.segmenter = segmenter
         self.pkuseg_model = pkuseg_model
@@ -163,6 +164,22 @@ class ChineseTokenizer(DummyTokenizer):
                 self.pkuseg_seg.feature_extractor.save(tempdir)
                 self.pkuseg_seg.model.save(tempdir)
                 tempdir = Path(tempdir)
+                # pkuseg saves features.pkl with pickle.HIGHEST_PROTOCOL, which
+                # means that it will be saved with pickle protocol 5 with
+                # python 3.8, which can't be reloaded with python 3.6-3.7.
+                # To try to make the model compatible with python 3.6+, reload
+                # the data with pickle5 and convert it back to protocol 4.
+                try:
+                    import pickle5
+
+                    with open(tempdir / "features.pkl", "rb") as fileh:
+                        features = pickle5.load(fileh)
+                    with open(tempdir / "features.pkl", "wb") as fileh:
+                        pickle5.dump(features, fileh, protocol=4)
+                except ImportError as e:
+                    raise(e)
+                except Exception:
+                    warnings.warn(_PKUSEG_PICKLE_WARNING)
                 with open(tempdir / "features.pkl", "rb") as fileh:
                     pkuseg_features_b = fileh.read()
                 with open(tempdir / "weights.npz", "rb") as fileh:
@@ -235,6 +252,18 @@ class ChineseTokenizer(DummyTokenizer):
                     path.mkdir(parents=True)
                 self.pkuseg_seg.model.save(path)
                 self.pkuseg_seg.feature_extractor.save(path)
+                # try to convert features.pkl to pickle protocol 4
+                try:
+                    import pickle5
+
+                    with open(path / "features.pkl", "rb") as fileh:
+                        features = pickle5.load(fileh)
+                    with open(path / "features.pkl", "wb") as fileh:
+                        pickle5.dump(features, fileh, protocol=4)
+                except ImportError as e:
+                    raise(e)
+                except Exception:
+                    warnings.warn(_PKUSEG_PICKLE_WARNING)
 
         def save_pkuseg_processors(path):
             if self.pkuseg_seg:
@@ -320,21 +349,14 @@ def try_jieba_import(segmenter: str) -> None:
             raise ImportError(msg) from None
 
 
-def try_pkuseg_import(segmenter: str, pkuseg_model: str, pkuseg_user_dict: str) -> None:
+def try_pkuseg_import(segmenter: str, pkuseg_model: Optional[str], pkuseg_user_dict: str) -> None:
     try:
         import pkuseg
 
-        if pkuseg_model:
+        if pkuseg_model is None:
+            return None
+        else:
             return pkuseg.pkuseg(pkuseg_model, pkuseg_user_dict)
-        elif segmenter == Segmenter.pkuseg:
-            msg = (
-                "The Chinese word segmenter is 'pkuseg' but no pkuseg model "
-                "was specified. Please provide the name of a pretrained model "
-                "or the path to a model with:\n"
-                'cfg = {"nlp": {"tokenizer": {"segmenter": "pkuseg", "pkuseg_model": name_or_path }}\n'
-                "nlp = Chinese.from_config(cfg)"
-            )
-            raise ValueError(msg)
     except ImportError:
         if segmenter == Segmenter.pkuseg:
             msg = "pkuseg not installed. To use pkuseg, " + _PKUSEG_INSTALL_MSG

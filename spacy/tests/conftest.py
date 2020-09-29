@@ -282,6 +282,7 @@ def zh_tokenizer_jieba():
 @pytest.fixture(scope="session")
 def zh_tokenizer_pkuseg():
     pytest.importorskip("pkuseg")
+    pytest.importorskip("pickle5")
     config = {
         "@tokenizers": "spacy.zh.ChineseTokenizer",
         "segmenter": "pkuseg",
