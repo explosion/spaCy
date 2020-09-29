@@ -204,12 +204,19 @@ more efficient than processing texts one-by-one.
 ## Language.initialize {#initialize tag="method"}
 
 Initialize the pipeline for training and return an
-[`Optimizer`](https://thinc.ai/docs/api-optimizers). `get_examples` should be a
-function that returns an iterable of [`Example`](/api/example) objects. The data
-examples can either be the full training data or a representative sample. They
-are used to **initialize the models** of trainable pipeline components and are
-passed each component's [`initialize`](/api/pipe#initialize) method, if
-available. Initialization includes validating the network,
+[`Optimizer`](https://thinc.ai/docs/api-optimizers). Under the hood, it uses the
+settings defined in the [`[initialize]`](/api/data-formats#config-initialize)
+config block to set up the vocabulary, load in vectors and tok2vec weights and
+pass optional arguments to the `initialize` methods implemented by pipeline
+components or the tokenizer. This method is typically called automatically when
+you run [`spacy train`](/api/cli#train).
+
+`get_examples` should be a function that returns an iterable of
+[`Example`](/api/example) objects. The data examples can either be the full
+training data or a representative sample. They are used to **initialize the
+models** of trainable pipeline components and are passed each component's
+[`initialize`](/api/pipe#initialize) method, if available. Initialization
+includes validating the network,
 [inferring missing shapes](/usage/layers-architectures#thinc-shape-inference)
 and setting up the label scheme based on the data.
 
