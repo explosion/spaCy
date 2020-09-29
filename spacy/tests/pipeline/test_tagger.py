@@ -74,7 +74,7 @@ def test_initialize_examples():
     # you shouldn't really call this more than once, but for testing it should be fine
     nlp.initialize()
     nlp.initialize(get_examples=lambda: train_examples)
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         nlp.initialize(get_examples=lambda: None)
     with pytest.raises(TypeError):
         nlp.initialize(get_examples=lambda: train_examples[0])
