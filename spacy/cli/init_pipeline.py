@@ -36,7 +36,7 @@ def init_vectors_cli(
     msg.good(
         "Saved nlp object with vectors to output directory. You can now use the "
         "path to it in your config as the 'vectors' setting in [initialize.vocab].",
-        output_dir,
+        output_dir.resolve(),
     )
 
 
