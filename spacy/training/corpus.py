@@ -26,6 +26,7 @@ def create_docbin_reader(
     limit: int = 0,
     augmenter: Optional[Callable] = None,
 ) -> Callable[["Language"], Iterable[Example]]:
+    util.logger.debug(f"Loading corpus from path: {path}")
     return Corpus(
         path,
         gold_preproc=gold_preproc,
