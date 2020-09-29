@@ -36,7 +36,7 @@ cdef class Pipe:
     @property
     def labels(self) -> Optional[Tuple[str]]:
         return []
-    
+
     @property
     def label_data(self):
         """Optional JSON-serializable data that would be sufficient to recreate
@@ -207,7 +207,7 @@ cdef class Pipe:
 
         DOCS: https://nightly.spacy.io/api/pipe#initialize
         """
-        raise NotImplementedError(Errors.E931.format(method="initialize", name=self.name))
+        pass
 
     def _ensure_examples(self, get_examples):
         if get_examples is None or not hasattr(get_examples, "__call__"):
