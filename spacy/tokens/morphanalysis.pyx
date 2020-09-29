@@ -24,6 +24,8 @@ cdef class MorphAnalysis:
         """Create a morphological analysis from a given ID."""
         cdef MorphAnalysis morph = MorphAnalysis.__new__(MorphAnalysis, vocab)
         morph.vocab = vocab
+        if key == 0:
+            key = vocab.strings[Morphology.EMPTY_MORPH]
         morph.key = key
         analysis = <const MorphAnalysisC*>vocab.morphology.tags.get(key)
         if analysis is not NULL:

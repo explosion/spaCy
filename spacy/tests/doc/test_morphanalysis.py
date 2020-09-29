@@ -94,3 +94,25 @@ def test_morph_property(tokenizer):
     tokenizer.vocab.strings.add("Feat=Val")
     doc[0].morph = tokenizer.vocab.strings.add("Feat=Val")
     assert doc[0].morph_ == "Feat=Val"
+
+
+def test_unset_equals_empty(en_tokenizer):
+    # one unset, one set to empty
+    doc1 = en_tokenizer("a b")
+    doc1[1].morph_ = ""
+
+    # both set to empty
+    doc2 = en_tokenizer("a b")
+    doc2[1].morph_ = ""
+    doc2[1].morph_ = ""
+
+    assert [t.morph for t in doc1] == [t.morph for t in doc2]
+    assert [t.morph_ for t in doc1] == [t.morph_ for t in doc2]
+
+    # both set to empty in different versions
+    doc2 = en_tokenizer("a b")
+    doc2[1].morph_ = "_"
+    doc2[1].morph_ = {}
+
+    assert [t.morph for t in doc1] == [t.morph for t in doc2]
+    assert [t.morph_ for t in doc1] == [t.morph_ for t in doc2]

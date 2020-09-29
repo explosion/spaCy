@@ -29,8 +29,8 @@ cdef class Morphology:
     FEATURE_SEP = "|"
     FIELD_SEP = "="
     VALUE_SEP = ","
-    # not an empty string so that the PreshMap key is not 0
-    EMPTY_MORPH = symbols.NAMES[symbols._]
+    EMPTY_MORPH = "_" # should be defined as a symbol so it's not missing from
+                      # an empty stringstore
 
     def __init__(self, StringStore strings):
         self.mem = Pool()
