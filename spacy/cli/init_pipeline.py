@@ -27,7 +27,7 @@ def init_vectors_cli(
     you can use in the [initialize.vocab] block of your config to initialize
     a model with vectors.
     """
-    util.logger.setLevel(logging.DEBUG if verbose else logging.ERROR)
+    util.logger.setLevel(logging.DEBUG if verbose else logging.INFO)
     msg.info(f"Creating blank nlp object for language '{lang}'")
     nlp = util.get_lang_class(lang)()
     convert_vectors(nlp, vectors_loc, truncate=truncate, prune=prune, name=name)
@@ -55,14 +55,14 @@ def init_pipeline_cli(
     use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU")
     # fmt: on
 ):
-    util.logger.setLevel(logging.DEBUG if verbose else logging.ERROR)
+    util.logger.setLevel(logging.DEBUG if verbose else logging.INFO)
     overrides = parse_config_overrides(ctx.args)
     import_code(code_path)
     setup_gpu(use_gpu)
     with show_validation_error(config_path):
         config = util.load_config(config_path, overrides=overrides)
     with show_validation_error(hint_fill=False):
-        nlp = init_nlp(config, use_gpu=use_gpu, silent=False)
+        nlp = init_nlp(config, use_gpu=use_gpu)
     nlp.to_disk(output_path)
     msg.good(f"Saved initialized pipeline to {output_path}")
 
@@ -81,9 +81,12 @@ def init_labels_cli(
     use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU")
     # fmt: on
 ):
+    """Generate a JSON file for labels in the data. This helps speed up the
+    training process, since spaCy won't have to preprocess the data to
+    extract the labels."""
+    util.logger.setLevel(logging.DEBUG if verbose else logging.INFO)
     if not output_path.exists():
         output_path.mkdir()
-    util.logger.setLevel(logging.DEBUG if verbose else logging.ERROR)
     overrides = parse_config_overrides(ctx.args)
     import_code(code_path)
     setup_gpu(use_gpu)
@@ -93,7 +96,8 @@ def init_labels_cli(
         nlp = init_nlp(config, use_gpu=use_gpu)
     for name, component in nlp.pipeline:
         if getattr(component, "label_data", None) is not None:
-            srsly.write_json(output_path / f"{name}.json", component.label_data)
-            msg.good(f"Saving {name} labels to {output_path}/{name}.json")
+            output_file = output_path / f"{name}.json"
+            srsly.write_json(output_file, component.label_data)
+            msg.good(f"Saving {name} labels to {output_file}")
         else:
             msg.info(f"No labels found for {name}")

@@ -3,10 +3,11 @@ from click import NoSuchOption
 from spacy.training import docs_to_json, offsets_to_biluo_tags
 from spacy.training.converters import iob_to_docs, conll_ner_to_docs, conllu_to_docs
 from spacy.schemas import ProjectConfigSchema, RecommendationSchema, validate
+from spacy.util import ENV_VARS
 from spacy.cli.init_config import init_config, RECOMMENDATIONS
 from spacy.cli._util import validate_project_commands, parse_config_overrides
 from spacy.cli._util import load_project_config, substitute_project_variables
-from spacy.cli._util import string_to_list, OVERRIDES_ENV_VAR
+from spacy.cli._util import string_to_list
 from thinc.api import ConfigValidationError
 import srsly
 import os
@@ -342,21 +343,22 @@ def test_parse_config_overrides_invalid_2(args):
 
 
 def test_parse_cli_overrides():
-    os.environ[OVERRIDES_ENV_VAR] = "--x.foo bar --x.bar=12 --x.baz false --y.foo=hello"
+    overrides = "--x.foo bar --x.bar=12 --x.baz false --y.foo=hello"
+    os.environ[ENV_VARS.CONFIG_OVERRIDES] = overrides
     result = parse_config_overrides([])
     assert len(result) == 4
     assert result["x.foo"] == "bar"
     assert result["x.bar"] == 12
     assert result["x.baz"] is False
     assert result["y.foo"] == "hello"
-    os.environ[OVERRIDES_ENV_VAR] = "--x"
+    os.environ[ENV_VARS.CONFIG_OVERRIDES] = "--x"
     assert parse_config_overrides([], env_var=None) == {}
     with pytest.raises(SystemExit):
         parse_config_overrides([])
-    os.environ[OVERRIDES_ENV_VAR] = "hello world"
+    os.environ[ENV_VARS.CONFIG_OVERRIDES] = "hello world"
     with pytest.raises(SystemExit):
         parse_config_overrides([])
-    del os.environ[OVERRIDES_ENV_VAR]
+    del os.environ[ENV_VARS.CONFIG_OVERRIDES]
 
 
 @pytest.mark.parametrize("lang", ["en", "nl"])

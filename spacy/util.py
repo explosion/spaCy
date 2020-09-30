@@ -67,8 +67,12 @@ CONFIG_SECTION_ORDER = ["paths", "variables", "system", "nlp", "components", "co
 # fmt: on
 
 
-logging.basicConfig()
+logging.basicConfig(format="%(message)s")
 logger = logging.getLogger("spacy")
+
+
+class ENV_VARS:
+    CONFIG_OVERRIDES = "SPACY_CONFIG_OVERRIDES"
 
 
 class registry(thinc.registry):

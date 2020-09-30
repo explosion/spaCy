@@ -477,6 +477,8 @@ class Errors:
     E201 = ("Span index out of range.")
 
     # TODO: fix numbering after merging develop into master
+    E913 = ("Corpus path can't be None. Maybe you forgot to define it in your "
+            "config.cfg or override it on the CLI?")
     E914 = ("Executing {name} callback failed. Expected the function to "
             "return the nlp object but got: {value}. Maybe you forgot to return "
             "the modified object in your function?")
