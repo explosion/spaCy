@@ -43,6 +43,15 @@ def create_jsonl_reader(
     return JsonlTexts(path, min_length=min_length, max_length=max_length, limit=limit)
 
 
+@util.registry.readers("spacy.read_labels.v1")
+def read_labels(path: Path, *, require: bool=False):
+    # I decided not to give this a generic name, because I don't want people to
+    # use it for arbitrary stuff, as I want this require arg with default False.
+    if not require and not path.exists():
+        return None
+    return srsly.read_json(path)
+
+
 def walk_corpus(path: Union[str, Path], file_type) -> List[Path]:
     path = util.ensure_path(path)
     if not path.is_dir() and path.parts[-1].endswith(file_type):
