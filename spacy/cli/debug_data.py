@@ -67,7 +67,6 @@ def debug_data(
         lang_cls = get_lang_class(lang)
         nlp = lang_cls()
 
-    tag_map = {}
     if tag_map_path is not None:
         tag_map = srsly.read_json(tag_map_path)
         # Replace tag map with provided mapping
