@@ -71,6 +71,10 @@ logging.basicConfig(format="%(message)s")
 logger = logging.getLogger("spacy")
 
 
+class ENV_VARS:
+    CONFIG_OVERRIDES = "SPACY_CONFIG_OVERRIDES"
+
+
 class registry(thinc.registry):
     languages = catalogue.create("spacy", "languages", entry_points=True)
     architectures = catalogue.create("spacy", "architectures", entry_points=True)

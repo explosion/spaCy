@@ -16,6 +16,7 @@ import os
 
 from ..schemas import ProjectConfigSchema, validate
 from ..util import import_file, run_command, make_tempdir, registry, logger
+from ..util import ENV_VARS
 
 if TYPE_CHECKING:
     from pathy import Pathy  # noqa: F401
@@ -39,7 +40,6 @@ commands to check and validate your config files, training and evaluation data,
 and custom model implementations.
 """
 INIT_HELP = """Commands for initializing configs and pipeline packages."""
-OVERRIDES_ENV_VAR = "SPACY_CONFIG_OVERRIDES"
 
 # Wrappers for Typer's annotations. Initially created to set defaults and to
 # keep the names short, but not needed at the moment.
@@ -65,7 +65,7 @@ def setup_cli() -> None:
 
 
 def parse_config_overrides(
-    args: List[str], env_var: Optional[str] = OVERRIDES_ENV_VAR
+    args: List[str], env_var: Optional[str] = ENV_VARS.CONFIG_OVERRIDES
 ) -> Dict[str, Any]:
     """Generate a dictionary of config overrides based on the extra arguments
     provided on the CLI, e.g. --training.batch_size to override
