@@ -7,9 +7,11 @@ new: 3
 ---
 
 This class manages annotated corpora and can be used for training and
-development datasets in the [DocBin](/api/docbin) (`.spacy`) format. To
+development datasets in the [`DocBin`](/api/docbin) (`.spacy`) format. To
 customize the data loading during training, you can register your own
-[data readers and batchers](/usage/training#custom-code-readers-batchers).
+[data readers and batchers](/usage/training#custom-code-readers-batchers). Also
+see the usage guide on [data utilities](/usage/training#data) for more details
+and examples.
 
 ## Config and implementation {#config}
 

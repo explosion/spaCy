@@ -805,14 +805,29 @@ def MyModel(output_width: int) -> Model[List[Doc], List[Floats2d]]:
 
 ## Data utilities {#data}
 
-spaCy includes various features and utilities to make it easy to train from your
-own data. If you have training data in a standard format like `.conll` or
-`.conllu`, the easiest way to convert it for use with spaCy is to run
-[`spacy convert`](/api/cli#convert) and pass it a file and an output directory:
+spaCy includes various features and utilities to make it easy to train models
+using your own data, manage training and evaluation corpora, convert existing
+annotations and configure data augmentation strategies for more robust models.
+
+### Converting existing corpora and annotations {#data-convert}
+
+If you have training data in a standard format like `.conll` or `.conllu`, the
+easiest way to convert it for use with spaCy is to run
+[`spacy convert`](/api/cli#convert) and pass it a file and an output directory.
+By default, the command will pick the converter based on the file extension.
 
 ```cli
 $ python -m spacy convert ./train.gold.conll ./corpus
 ```
+
+> #### 💡 Tip: Converting from Prodigy
+>
+> If you're using the [Prodigy](https://prodi.gy) annotation tool to create
+> training data, you can run the
+> [`data-to-spacy` command](https://prodi.gy/docs/recipes#data-to-spacy) to
+> merge and export multiple datasets for use with
+> [`spacy train`](/api/cli#train). Different types of annotations on the same
+> text will be combined, giving you one corpus to train multiple components.
 
 <Infobox title="Tip: Manage multi-step workflows with projects" emoji="💡">
 
@@ -822,6 +837,27 @@ all the way to packaging and deploying the trained model.
 data assets, track changes and share your end-to-end processes with your team.
 
 </Infobox>
+
+The binary `.spacy` format is a serialized [`DocBin`](/api/docbin) containing
+one or more [`Doc`](/api/doc) objects. It's is extremely **efficient in
+storage**, especially when packing multiple documents together. You can also
+create `Doc` objects manually, so you can write your own custom logic to convert
+and store existing annotations for use in spaCy.
+
+```python
+### Training data from Doc objects {highlight="6-9"}
+import spacy
+from spacy.tokens import Doc, DocBin
+
+nlp = spacy.blank("en")
+docbin = DocBin(nlp.vocab)
+words = ["Apple", "is", "looking", "at", "buying", "U.K.", "startup", "."]
+spaces = [True, True, True, True, True, True, True, False]
+ents = [("ORG", 0, 1), ("GPE", 5, 6)]
+doc = Doc(nlp.vocab, words=words, spaces=spaces, ents=ents)
+docbin.add(doc)
+docbin.to_disk("./train.spacy")
+```
 
 ### Working with corpora {#data-corpora}
 

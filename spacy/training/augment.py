@@ -1,30 +1,50 @@
-from typing import Callable
+from typing import Callable, Iterator, Dict, List, Tuple, Optional, TYPE_CHECKING
 import random
 import itertools
 import copy
 from functools import partial
-from ..util import registry
+
+from ..util import registry, logger
 from ..tokens import Doc
+from .example import Example
+from ..lookups import Lookups
+from ..errors import Errors
 
-
-@registry.augmenters("spacy.dont_augment.v1")
-def create_null_augmenter():
-    return dont_augment
+if TYPE_CHECKING:
+    from ..language import Language  # noqa: F401
 
 
 @registry.augmenters("spacy.orth_variants.v1")
-def create_orth_variants_augmenter(level: float, lower: float) -> Callable:
+def create_orth_variants_augmenter(
+    level: float, lower: float, lookups: Optional[Lookups] = None,
+) -> Callable[["Language", Example], Iterator[Example]]:
     """Create a data augmentation callback that uses orth-variant replacement.
     The callback can be added to a corpus or other data iterator during training.
     """
-    return partial(orth_variants_augmenter, level=level, lower=lower)
+    return partial(orth_variants_augmenter, level=level, lower=lower, lookups=lookups)
 
 
-def dont_augment(nlp, example):
+def dont_augment(nlp: "Language", example: Example) -> Iterator[Example]:
     yield example
 
 
-def orth_variants_augmenter(nlp, example, *, level: float = 0.0, lower: float = 0.0):
+def orth_variants_augmenter(
+    nlp: "Language",
+    example: Example,
+    *,
+    level: float = 0.0,
+    lower: float = 0.0,
+    lookups: Optional[Lookups] = None,
+) -> Iterator[Example]:
+    table_name = "orth_variants"
+    if lookups is not None:
+        orth_variants = lookups.get_table(table_name, {})
+        logger.debug("Using data augmentation orth variants from provided lookups")
+    else:
+        orth_variants = nlp.vocab.lookups.get_table(table_name, {})
+        logger.debug("Using data augmentation orth variants from default vocab lookups")
+        if not orth_variants:
+            raise ValueError(Errors.E912.format(lang=nlp.lang))
     if random.random() >= level:
         yield example
     else:
@@ -37,6 +57,7 @@ def orth_variants_augmenter(nlp, example, *, level: float = 0.0, lower: float = 
                 nlp,
                 raw_text,
                 orig_dict["token_annotation"],
+                orth_variants,
                 lower=raw_text is not None and random.random() < lower,
             )
             if variant_text:
@@ -49,9 +70,15 @@ def orth_variants_augmenter(nlp, example, *, level: float = 0.0, lower: float = 
             yield example.from_dict(doc, orig_dict)
 
 
-def make_orth_variants(nlp, raw, token_dict, *, lower: bool = False):
+def make_orth_variants(
+    nlp: "Language",
+    raw: str,
+    token_dict: Dict[str, List[str]],
+    orth_variants: Dict[str, list],
+    *,
+    lower: bool = False,
+) -> Tuple[str, Dict[str, List[str]]]:
     orig_token_dict = copy.deepcopy(token_dict)
-    orth_variants = nlp.vocab.lookups.get_table("orth_variants", {})
     ndsv = orth_variants.get("single", [])
     ndpv = orth_variants.get("paired", [])
     words = token_dict.get("words", [])

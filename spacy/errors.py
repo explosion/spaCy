@@ -477,6 +477,12 @@ class Errors:
     E201 = ("Span index out of range.")
 
     # TODO: fix numbering after merging develop into master
+    E912 = ("No orth_variants lookups table for data augmentation available for "
+            "language '{lang}'. If orth_variants are available in "
+            "spacy-lookups-data, make sure the package is installed and the "
+            "table is loaded in the [initialize.lookups] block of your config. "
+            "Alternatively, you can provide your own Lookups object with a "
+            "table orth_variants as the argument 'lookuos' of the augmenter.")
     E913 = ("Corpus path can't be None. Maybe you forgot to define it in your "
             "config.cfg or override it on the CLI?")
     E914 = ("Executing {name} callback failed. Expected the function to "

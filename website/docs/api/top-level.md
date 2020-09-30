@@ -7,7 +7,8 @@ menu:
   - ['Loggers', 'loggers']
   - ['Readers', 'readers']
   - ['Batchers', 'batchers']
-  - ['Data & Alignment', 'gold']
+  - ['Augmenters', 'augmenters']
+  - ['Training & Alignment', 'gold']
   - ['Utility Functions', 'util']
 ---
 
@@ -313,6 +314,7 @@ factories.
 | Registry name     | Description                                                                                                                                                                                                                                        |
 | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `architectures`   | Registry for functions that create [model architectures](/api/architectures). Can be used to register custom model architectures and reference them in the `config.cfg`.                                                                           |
+| `augmenters`      | Registry for functions that create [data augmentation](#augmenters) callbacks for corpora and other training data iterators.                                                                                                                       |
 | `batchers`        | Registry for training and evaluation [data batchers](#batchers).                                                                                                                                                                                   |
 | `callbacks`       | Registry for custom callbacks to [modify the `nlp` object](/usage/training#custom-code-nlp-callbacks) before training.                                                                                                                             |
 | `displacy_colors` | Registry for custom color scheme for the [`displacy` NER visualizer](/usage/visualizers). Automatically reads from [entry points](/usage/saving-loading#entry-points).                                                                             |
@@ -617,6 +619,34 @@ sequences in the batch.
 | `buffer`           | The number of sequences to accumulate before sorting by length. A larger buffer will result in more even sizing, but if the buffer is very large, the iteration order will be less random, which can result in suboptimal training. ~~int~~ |
 | `discard_oversize` | Whether to discard sequences that are by themselves longer than the largest padded batch size. ~~bool~~                                                                                                                                     |
 | `get_length`       | Optional function that receives a sequence item and returns its length. Defaults to the built-in `len()` if not set. ~~Optional[Callable[[Any], int]]~~                                                                                     |
+
+## Augmenters {#augmenters source="spacy/training/augment.py" new="3"}
+
+<!-- TODO: intro, explain data augmentation concept -->
+
+### orth_variants {#orth_variants tag="registered function"}
+
+> #### Example config
+>
+> ```ini
+> [corpora.train.augmenter]
+> @augmenters = "spacy.orth_variants.v1"
+> level = 0.0
+> lower = 0.0
+> lookups = null
+> ```
+
+Create a data augmentation callback that uses orth-variant replacement. The
+callback can be added to a corpus or other data iterator during training. This
+is especially useful for punctuation and case replacement, to help generalize
+beyond corpora that don't have smart quotes, or only have smart quotes etc.
+
+| Name        | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `level`     | ~~float~~                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `lower`     | ~~float~~                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `lookups`   | Lookups table containing the orth variants to use. See [`orth_variants.json`](https://github.com/explosion/spacy-lookups-data/blob/master/spacy_lookups_data/data/en_orth_variants.json) for an example. If not set, tables from [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) are used if available and added in the [`[initialize]`](/api/data-formats#config-initialize) block of the config. If no orth variants are found, spaCy will raise an error. Defaults to `None`. ~~Optional[Lookups]~~ |
+| **RETURNS** | A function that takes the current `nlp` object and an [`Example`](/api/example) and yields augmented `Example` objects. ~~Callable[[Language, Example], Iterator[Example]]~~                                                                                                                                                                                                                                                                                                                                                   |
 
 ## Training data and alignment {#gold source="spacy/training"}
 
