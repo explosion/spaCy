@@ -554,7 +554,10 @@ class Errors:
     E953 = ("Mismatched IDs received by the Tok2Vec listener: {id1} vs. {id2}")
     E954 = ("The Tok2Vec listener did not receive any valid input from an upstream "
             "component.")
-    E955 = ("Can't find table(s) '{table}' for language '{lang}' in spacy-lookups-data.")
+    E955 = ("Can't find table(s) '{table}' for language '{lang}' in "
+            "spacy-lookups-data. If you want to initialize a blank nlp object, "
+            "make sure you have the spacy-lookups-data package installed or "
+            "remove the [initialize.lookups] block from your config.")
     E956 = ("Can't find component '{name}' in [components] block in the config. "
             "Available components: {opts}")
     E957 = ("Writing directly to Language.factories isn't needed anymore in "
@@ -674,20 +677,7 @@ class Errors:
     E1000 = ("The Chinese word segmenter is pkuseg but no pkuseg model was "
              "loaded. Provide the name of a pretrained model or the path to "
              "a model and initialize the pipeline:\n\n"
-             'config = {\n'
-             '    "nlp": {\n'
-             '        "tokenizer": {\n'
-             '            "@tokenizers": "spacy.zh.ChineseTokenizer",\n'
-             '            "segmenter": "pkuseg",\n'
-             '        }\n'
-             '    },\n'
-             '    "initialize": {"tokenizer": {\n'
-             '            "pkuseg_model": "default", # or /path/to/model\n'
-             '        }\n'
-             '    },\n'
-             '}\n'
-             'nlp = Chinese.from_config(config)\n'
-             'nlp.initialize()')
+             'nlp.tokenizer.initialize(pkuseg_model="default")')
     E1001 = ("Target token outside of matched span for match with tokens "
              "'{span}' and offset '{index}' matched by patterns '{patterns}'.")
     E1002 = ("Span index out of range.")
