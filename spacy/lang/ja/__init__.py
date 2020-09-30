@@ -2,7 +2,6 @@ from typing import Optional, Union, Dict, Any
 from pathlib import Path
 import srsly
 from collections import namedtuple
-from thinc.api import Config
 
 from .stop_words import STOP_WORDS
 from .syntax_iterators import SYNTAX_ITERATORS
@@ -16,7 +15,7 @@ from ...scorer import Scorer
 from ...symbols import POS
 from ...tokens import Doc
 from ...training import validate_examples
-from ...util import DummyTokenizer, registry
+from ...util import DummyTokenizer, registry, load_config_from_str
 from ... import util
 
 
@@ -166,7 +165,7 @@ class JapaneseTokenizer(DummyTokenizer):
 
 
 class JapaneseDefaults(Language.Defaults):
-    config = Config().from_str(DEFAULT_CONFIG)
+    config = load_config_from_str(DEFAULT_CONFIG)
     stop_words = STOP_WORDS
     syntax_iterators = SYNTAX_ITERATORS
     writing_system = {"direction": "ltr", "has_case": False, "has_letters": False}

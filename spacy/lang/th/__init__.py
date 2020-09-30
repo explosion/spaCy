@@ -1,10 +1,8 @@
-from thinc.api import Config
-
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from ...language import Language
 from ...tokens import Doc
-from ...util import DummyTokenizer, registry
+from ...util import DummyTokenizer, registry, load_config_from_str
 
 
 DEFAULT_CONFIG = """
@@ -12,6 +10,13 @@ DEFAULT_CONFIG = """
 
 [nlp.tokenizer]
 @tokenizers = "spacy.th.ThaiTokenizer"
+
+[initialize]
+
+[initialize.lookups]
+@misc = "spacy.LookupsDataLoader.v1"
+lang = ${nlp.lang}
+tables = ["lexeme_norm"]
 """
 
 
@@ -42,7 +47,7 @@ class ThaiTokenizer(DummyTokenizer):
 
 
 class ThaiDefaults(Language.Defaults):
-    config = Config().from_str(DEFAULT_CONFIG)
+    config = load_config_from_str(DEFAULT_CONFIG)
     lex_attr_getters = LEX_ATTRS
     stop_words = STOP_WORDS
 

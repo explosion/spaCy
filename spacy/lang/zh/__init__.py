@@ -4,14 +4,13 @@ import tempfile
 import srsly
 import warnings
 from pathlib import Path
-from thinc.api import Config
 
 from ...errors import Warnings, Errors
 from ...language import Language
 from ...scorer import Scorer
 from ...tokens import Doc
 from ...training import validate_examples, Example
-from ...util import DummyTokenizer, registry
+from ...util import DummyTokenizer, registry, load_config_from_str
 from .lex_attrs import LEX_ATTRS
 from .stop_words import STOP_WORDS
 from ... import util
@@ -329,7 +328,7 @@ class ChineseTokenizer(DummyTokenizer):
 
 
 class ChineseDefaults(Language.Defaults):
-    config = Config().from_str(DEFAULT_CONFIG)
+    config = load_config_from_str(DEFAULT_CONFIG)
     lex_attr_getters = LEX_ATTRS
     stop_words = STOP_WORDS
     writing_system = {"direction": "ltr", "has_case": False, "has_letters": False}

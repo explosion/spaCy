@@ -1,5 +1,4 @@
 from typing import Optional
-
 from thinc.api import Model
 
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
@@ -10,9 +9,21 @@ from .punctuation import TOKENIZER_INFIXES
 from .lemmatizer import EnglishLemmatizer
 from ...language import Language
 from ...lookups import Lookups
+from ...util import load_config_from_str
+
+
+DEFAULT_CONFIG = """
+[initialize]
+
+[initialize.lookups]
+@misc = "spacy.LookupsDataLoader.v1"
+lang = ${nlp.lang}
+tables = ["lexeme_norm"]
+"""
 
 
 class EnglishDefaults(Language.Defaults):
+    config = load_config_from_str(DEFAULT_CONFIG)
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     infixes = TOKENIZER_INFIXES
     lex_attr_getters = LEX_ATTRS
