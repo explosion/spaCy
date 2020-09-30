@@ -44,7 +44,7 @@ in the [models directory](/models).
 
 Inflectional morphology is the process by which a root form of a word is
 modified by adding prefixes or suffixes that specify its grammatical function
-but do not changes its part-of-speech. We say that a **lemma** (root form) is
+but do not change its part-of-speech. We say that a **lemma** (root form) is
 **inflected** (modified/combined) with one or more **morphological features** to
 create a surface form. Here are some examples:
 
@@ -290,7 +290,7 @@ import DisplaCyLong2Html from 'images/displacy-long2.html'
 Because the syntactic relations form a tree, every word has **exactly one
 head**. You can therefore iterate over the arcs in the tree by iterating over
 the words in the sentence. This is usually the best way to match an arc of
-interest — from below:
+interest – from below:
 
 ```python
 ### {executable="true"}
@@ -399,7 +399,7 @@ for descendant in subject.subtree:
 Finally, the `.left_edge` and `.right_edge` attributes can be especially useful,
 because they give you the first and last token of the subtree. This is the
 easiest way to create a `Span` object for a syntactic phrase. Note that
-`.right_edge` gives a token **within** the subtree — so if you use it as the
+`.right_edge` gives a token **within** the subtree – so if you use it as the
 end-point of a range, don't forget to `+1`!
 
 ```python
