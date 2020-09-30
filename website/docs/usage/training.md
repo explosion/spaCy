@@ -6,7 +6,7 @@ menu:
   - ['Introduction', 'basics']
   - ['Quickstart', 'quickstart']
   - ['Config System', 'config']
-  <!-- - ['Data Utilities', 'data'] -->
+  # - ['Data Utilities', 'data']
   - ['Custom Functions', 'custom-functions']
   - ['Parallel Training', 'parallel-training']
   - ['Internal API', 'api']
