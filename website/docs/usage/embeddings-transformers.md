@@ -585,8 +585,9 @@ vectors, but combines them via summation with a smaller table of learned
 embeddings.
 
 ```python
-from thinc.api import add, chain, remap_ids, Embed, FeatureExtractor
+from thinc.api import add, chain, remap_ids, Embed
 from spacy.ml.staticvectors import StaticVectors
+from spacy.ml.featureextractor import FeatureExtractor
 from spacy.util import registry
 
 @registry.architectures("my_example.MyEmbedding.v1")

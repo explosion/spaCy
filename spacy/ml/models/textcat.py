@@ -3,12 +3,13 @@ from thinc.api import Model, reduce_mean, Linear, list2ragged, Logistic
 from thinc.api import chain, concatenate, clone, Dropout, ParametricAttention
 from thinc.api import SparseLinear, Softmax, softmax_activation, Maxout, reduce_sum
 from thinc.api import HashEmbed, with_array, with_cpu, uniqued
-from thinc.api import Relu, residual, expand_window, FeatureExtractor
+from thinc.api import Relu, residual, expand_window
 
 from ...attrs import ID, ORTH, PREFIX, SUFFIX, SHAPE, LOWER
 from ...util import registry
 from ..extract_ngrams import extract_ngrams
 from ..staticvectors import StaticVectors
+from ..featureextractor import FeatureExtractor
 
 
 @registry.architectures.register("spacy.TextCatCNN.v1")
