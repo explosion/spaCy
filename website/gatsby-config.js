@@ -1,6 +1,11 @@
 const autoprefixer = require('autoprefixer')
 const path = require('path')
 
+// https://florian.ec/blog/gatsby-build-netlify-segmentation-fault/
+const sharp = require('sharp')
+sharp.cache(false)
+sharp.simd(false)
+
 // Markdown plugins
 const wrapSectionPlugin = require('./src/plugins/remark-wrap-section.js')
 const customAttrsPlugin = require('./src/plugins/remark-custom-attrs.js')
