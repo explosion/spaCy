@@ -319,15 +319,13 @@ def test_doc_from_array_morph(en_vocab):
     words = ["I", "live", "in", "New", "York", "."]
     morphs = ["Feat1=A", "Feat1=B", "Feat1=C", "Feat1=A|Feat2=D", "Feat2=E", "Feat3=F"]
     # fmt: on
-    doc = Doc(en_vocab, words=words)
-    for i, morph in enumerate(morphs):
-        doc[i].morph_ = morph
+    doc = Doc(en_vocab, words=words, morphs=morphs)
     attrs = [MORPH]
     arr = doc.to_array(attrs)
     new_doc = Doc(en_vocab, words=words)
     new_doc.from_array(attrs, arr)
-    assert [t.morph_ for t in new_doc] == morphs
-    assert [t.morph_ for t in doc] == [t.morph_ for t in new_doc]
+    assert [str(t.morph) for t in new_doc] == morphs
+    assert [str(t.morph) for t in doc] == [str(t.morph) for t in new_doc]
 
 
 def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
@@ -423,7 +421,7 @@ def test_has_annotation(en_vocab):
 
     doc[0].tag_ = "A"
     doc[0].pos_ = "X"
-    doc[0].morph_ = "Feat=Val"
+    doc[0].set_morph("Feat=Val")
     doc[0].lemma_ = "a"
     doc[0].dep_ = "dep"
     doc[0].head = doc[1]
@@ -435,7 +433,7 @@ def test_has_annotation(en_vocab):
 
     doc[1].tag_ = "A"
     doc[1].pos_ = "X"
-    doc[1].morph_ = ""
+    doc[1].set_morph("")
     doc[1].lemma_ = "a"
     doc[1].dep_ = "dep"
     doc.ents = [Span(doc, 0, 2, label="HELLO")]
@@ -536,6 +534,32 @@ def test_doc_ents_setter():
     ents = ["B-HELLO", "I-HELLO", "O", "B-WORLD", "I-WORLD"]
     doc = Doc(vocab, words=words, ents=ents)
     assert [e.label_ for e in doc.ents] == ["HELLO", "WORLD"]
+
+
+def test_doc_morph_setter(en_tokenizer, de_tokenizer):
+    doc1 = en_tokenizer("a b")
+    doc1b = en_tokenizer("c d")
+    doc2 = de_tokenizer("a b")
+
+    # unset values can be copied
+    doc1[0].morph = doc1[1].morph
+    assert doc1[0].morph.key == 0
+    assert doc1[1].morph.key == 0
+
+    # morph values from the same vocab can be copied
+    doc1[0].set_morph("Feat=Val")
+    doc1[1].morph = doc1[0].morph
+    assert doc1[0].morph == doc1[1].morph
+
+    # ... also across docs
+    doc1b[0].morph = doc1[0].morph
+    assert doc1[0].morph == doc1b[0].morph
+
+    doc2[0].set_morph("Feat2=Val2")
+
+    # the morph value must come from the same vocab
+    with pytest.raises(ValueError):
+        doc1[0].morph = doc2[0].morph
 
 
 def test_doc_init_iob():

@@ -76,7 +76,7 @@ def tagged_doc():
     for i in range(len(tags)):
         doc[i].tag_ = tags[i]
         doc[i].pos_ = pos[i]
-        doc[i].morph_ = morphs[i]
+        doc[i].set_morph(morphs[i])
         if i > 0:
             doc[i].is_sent_start = False
     return doc
@@ -242,7 +242,7 @@ def test_tag_score(tagged_doc):
     gold = {
         "tags": [t.tag_ for t in tagged_doc],
         "pos": [t.pos_ for t in tagged_doc],
-        "morphs": [t.morph_ for t in tagged_doc],
+        "morphs": [str(t.morph) for t in tagged_doc],
         "sent_starts": [1 if t.is_sent_start else -1 for t in tagged_doc],
     }
     example = Example.from_dict(tagged_doc, gold)
@@ -259,7 +259,7 @@ def test_tag_score(tagged_doc):
     tags[0] = "NN"
     pos = [t.pos_ for t in tagged_doc]
     pos[1] = "X"
-    morphs = [t.morph_ for t in tagged_doc]
+    morphs = [str(t.morph) for t in tagged_doc]
     morphs[1] = "Number=sing"
     morphs[2] = "Number=plur"
     gold = {

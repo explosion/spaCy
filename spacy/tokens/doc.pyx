@@ -1248,7 +1248,7 @@ cdef class Doc:
         for token in self:
             strings.add(token.tag_)
             strings.add(token.lemma_)
-            strings.add(token.morph_)
+            strings.add(str(token.morph))
             strings.add(token.dep_)
             strings.add(token.ent_type_)
             strings.add(token.ent_kb_id_)

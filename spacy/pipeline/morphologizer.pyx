@@ -149,7 +149,7 @@ class Morphologizer(Tagger):
         for example in get_examples():
             for i, token in enumerate(example.reference):
                 pos = token.pos_
-                morph = token.morph_
+                morph = str(token.morph)
                 # create and add the combined morph+POS label
                 morph_dict = Morphology.feats_to_dict(morph)
                 if pos:
@@ -167,7 +167,7 @@ class Morphologizer(Tagger):
             gold_array = []
             for i, token in enumerate(example.reference):
                 pos = token.pos_
-                morph = token.morph_
+                morph = str(token.morph)
                 morph_dict = Morphology.feats_to_dict(morph)
                 if pos:
                     morph_dict[self.POS_FEAT] = pos

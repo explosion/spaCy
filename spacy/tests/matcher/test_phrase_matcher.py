@@ -190,7 +190,7 @@ def test_phrase_matcher_validation(en_vocab):
     doc2 = Doc(en_vocab, words=["Test"])
     doc2[0].tag_ = "TAG"
     doc2[0].pos_ = "X"
-    doc2[0].morph_ = "Feat=Val"
+    doc2[0].set_morph("Feat=Val")
     doc3 = Doc(en_vocab, words=["Test"])
     matcher = PhraseMatcher(en_vocab, validate=True)
     with pytest.warns(UserWarning):
@@ -217,7 +217,7 @@ def test_attr_pipeline_checks(en_vocab):
     doc2 = Doc(en_vocab, words=["Test"])
     doc2[0].tag_ = "TAG"
     doc2[0].pos_ = "X"
-    doc2[0].morph_ = "Feat=Val"
+    doc2[0].set_morph("Feat=Val")
     doc2[0].lemma_ = "LEMMA"
     doc3 = Doc(en_vocab, words=["Test"])
     # DEP requires DEP
