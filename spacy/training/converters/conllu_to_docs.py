@@ -207,6 +207,7 @@ def conllu_sentence_to_doc(
         pos=poses,
         deps=deps,
         lemmas=lemmas,
+        morphs=morphs,
         heads=heads,
     )
     for i in range(len(doc)):
