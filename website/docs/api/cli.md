@@ -256,7 +256,7 @@ fixed. To auto-fill a partial config and save the result, you can use the
 [`init fill-config`](/api/cli#init-fill-config) command.
 
 ```cli
-$ python -m spacy debug config [config_path] [--code-path] [--show-functions] [--show-variables] [overrides]
+$ python -m spacy debug config [config_path] [--code] [--show-functions] [--show-variables] [overrides]
 ```
 
 > #### Example
@@ -399,7 +399,7 @@ File       /path/to/thinc/thinc/schedules.py (line 91)
 | Name                     | Description                                                                                                                                                                                                                    |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `config_path`            | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. ~~Path (positional)~~                                                                                                    |
-| `--code-path`, `-c`      | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~                                           |
+| `--code`, `-c`           | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~                                           |
 | `--show-functions`, `-F` | Show an overview of all registered function blocks used in the config and where those functions come from, including the module name, Python file and line number. ~~bool (flag)~~                                             |
 | `--show-variables`, `-V` | Show an overview of all variables referenced in the config, e.g. `${paths.train}` and their values that will be used. This also reflects any config overrides provided on the CLI, e.g. `--paths.train /path`. ~~bool (flag)~~ |
 | `--help`, `-h`           | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                                     |
@@ -1162,7 +1162,7 @@ examples, see the usage guide on
 [integration](/usage/projects#ray).
 
 ```cli
-$ python -m spacy ray train [config_path] [--code-path] [--output] [--n-workers] [--address] [--gpu-id] [--verbose] [overrides]
+$ python -m spacy ray train [config_path] [--code] [--output] [--n-workers] [--address] [--gpu-id] [--verbose] [overrides]
 ```
 
 > #### Example
