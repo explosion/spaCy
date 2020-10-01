@@ -7,21 +7,9 @@ from .lex_attrs import LEX_ATTRS
 from .lemmatizer import RussianLemmatizer
 from ...language import Language
 from ...lookups import Lookups
-from ...util import load_config_from_str
-
-
-DEFAULT_CONFIG = """
-[initialize]
-
-[initialize.lookups]
-@misc = "spacy.LookupsDataLoader.v1"
-lang = ${nlp.lang}
-tables = ["lexeme_norm"]
-"""
 
 
 class RussianDefaults(Language.Defaults):
-    config = load_config_from_str(DEFAULT_CONFIG)
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     lex_attr_getters = LEX_ATTRS
     stop_words = STOP_WORDS
