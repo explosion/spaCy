@@ -9,7 +9,6 @@ import gzip
 import zipfile
 import tqdm
 
-from .loop import create_before_to_disk_callback
 from ..lookups import Lookups
 from ..vectors import Vectors
 from ..errors import Errors
@@ -39,7 +38,6 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
     dot_names = [T["train_corpus"], T["dev_corpus"]]
     train_corpus, dev_corpus = resolve_dot_names(config, dot_names)
     optimizer = T["optimizer"]
-    before_to_disk = create_before_to_disk_callback(T["before_to_disk"])
     # Components that shouldn't be updated during training
     frozen_components = T["frozen_components"]
     # Sourced components that require resume_training
@@ -55,13 +53,7 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
     # Verify the config after calling 'initialize' to ensure labels
     # are properly initialized
     verify_config(nlp)
-    nlp = before_to_disk(nlp)
     return nlp
-
-
-def must_reinitialize(train_config: Config, init_config: Config) -> bool:
-    # TODO: do this better and more fine-grained
-    return train_config.interpolate().to_str() == init_config.interpolate().to_str()
 
 
 def init_vocab(

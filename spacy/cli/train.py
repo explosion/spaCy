@@ -1,15 +1,13 @@
 from typing import Optional
 from pathlib import Path
 from wasabi import msg
-from thinc.api import Config
 import typer
 import logging
 
 from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
 from ._util import import_code, setup_gpu
-from ..language import Language
 from ..training.loop import train
-from ..training.initialize import init_nlp, must_reinitialize
+from ..training.initialize import init_nlp
 from .. import util
 
 
