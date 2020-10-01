@@ -170,38 +170,37 @@ $ python -m spacy init fill-config [base_path] [output_file] [--diff]
 | `--help`, `-h`         | Show help message and available arguments. ~~bool (flag)~~                                                                          |
 | **CREATES**            | Complete and auto-filled config file for training.                                                                                  |
 
-### init vocab {#init-vocab new="3" tag="command"}
+### init vectors {#init-vectors new="3" tag="command"}
 
-Create a blank pipeline directory from raw data, like word frequencies, Brown
-clusters and word vectors. Note that in order to populate the vocabulary, you
-need to pass in a JSONL-formatted
-[vocabulary file](/api/data-formats#vocab-jsonl) as `--jsonl-loc` with optional
-`id` values that correspond to the vectors table. Just loading in vectors will
-not automatically populate the vocab.
+Convert [word vectors](/usage/linguistic-features#vectors-similarity) for use
+with spaCy. Will export an `nlp` object that you can use in the
+[`[initialize]`](/api/data-formats#config-initialize) block of your config to
+initialize a model with vectors. See the usage guide on
+[static vectors](/usage/embeddings-transformers#static-vectors) for details on
+how to use vectors in your model.
 
 <Infobox title="New in v3.0" variant="warning" id="init-model">
 
-This command was previously called `init-model`.
+This functionality was previously available as part of the command `init-model`.
 
 </Infobox>
 
 ```cli
-$ python -m spacy init vocab [lang] [output_dir] [--jsonl-loc] [--vectors-loc] [--prune-vectors] [--vectors-name] [--meta-name] [--base]
+$ python -m spacy init vectors [lang] [vectors_loc] [output_dir] [--prune] [--truncate] [--name] [--lexemes-jsonl] [--verbose]
 ```
 
-| Name                                                    | Description                                                                                                                                                                                                                                                                         |
-| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `lang`                                                  | Pipeline language [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes), e.g. `en`. ~~str (positional)~~                                                                                                                                                                |
-| `output_dir`                                            | Pipeline output directory. Will be created if it doesn't exist. ~~Path (positional)~~                                                                                                                                                                                               |
-| `--jsonl-loc`, `-j`                                     | Optional location of JSONL-formatted [vocabulary file](/api/data-formats#vocab-jsonl) with lexical attributes. ~~Optional[Path] \(option)~~                                                                                                                                         |
-| `--vectors-loc`, `-v`                                   | Optional location of vectors. Should be a file where the first row contains the dimensions of the vectors, followed by a space-separated Word2Vec table. File can be provided in `.txt` format or as a zipped text file in `.zip` or `.tar.gz` format. ~~Optional[Path] \(option)~~ |
-| `--truncate-vectors`, `-t` <Tag variant="new">2.3</Tag> | Number of vectors to truncate to when reading in vectors file. Defaults to `0` for no truncation. ~~int (option)~~                                                                                                                                                                  |
-| `--prune-vectors`, `-V`                                 | Number of vectors to prune the vocabulary to. Defaults to `-1` for no pruning. ~~int (option)~~                                                                                                                                                                                     |
-| `--vectors-name`, `-vn`                                 | Name to assign to the word vectors in the `meta.json`, e.g. `en_core_web_md.vectors`. ~~Optional[str] \(option)~~                                                                                                                                                                   |
-| `--meta-name`, `-mn`                                    | Optional name of the package for the pipeline meta. ~~Optional[str] \(option)~~                                                                                                                                                                                                     |
-| `--base`, `-b`                                          | Optional name of or path to base pipeline to start with (mostly relevant for pipelines with custom tokenizers). ~~Optional[str] \(option)~~                                                                                                                                         |
-| `--help`, `-h`                                          | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                                                                                          |
-| **CREATES**                                             | A spaCy pipeline directory containing the vocab and vectors.                                                                                                                                                                                                                        |
+| Name                    | Description                                                                                                                                                                                                                                                         |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lang`                  | Pipeline language [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes), e.g. `en`. ~~str (positional)~~                                                                                                                                                |
+| `vectors_loc`           | Location of vectors. Should be a file where the first row contains the dimensions of the vectors, followed by a space-separated Word2Vec table. File can be provided in `.txt` format or as a zipped text file in `.zip` or `.tar.gz` format. ~~Path (positional)~~ |
+| `output_dir`            | Pipeline output directory. Will be created if it doesn't exist. ~~Path (positional)~~                                                                                                                                                                               |
+| `--lexemes-jsonl`, `-j` | Optional location of JSONL-formatted [vocabulary file](/api/data-formats#vocab-jsonl) with lexical attributes. ~~Optional[Path] \(option)~~                                                                                                                         |
+| `--truncate`, `-t`      | Number of vectors to truncate to when reading in vectors file. Defaults to `0` for no truncation. ~~int (option)~~                                                                                                                                                  |
+| `--prune`, `-p`         | Number of vectors to prune the vocabulary to. Defaults to `-1` for no pruning. ~~int (option)~~                                                                                                                                                                     |
+| `--name`, `-n`          | Name to assign to the word vectors in the `meta.json`, e.g. `en_core_web_md.vectors`. ~~Optional[str] \(option)~~                                                                                                                                                   |
+| `--verbose`, `-V`       | Print additional information and explanations. ~~bool (flag)~~                                                                                                                                                                                                      |
+| `--help`, `-h`          | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                                                                          |
+| **CREATES**             | A spaCy pipeline directory containing the vocab and vectors.                                                                                                                                                                                                        |
 
 ## convert {#convert tag="command"}
 

@@ -246,7 +246,7 @@ without requiring them at runtime when you load the trained pipeline back in.
 | `init_tok2vec` | Optional path to pretrained tok2vec weights created with [`spacy pretrain`](/api/cli#pretrain). Defaults to variable `${paths.init_tok2vec}`. ~~Optional[str]~~                                                                                                                                                                                                                                                |
 | `lookups`      | Additional lexeme and vocab data from [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data). Defaults to `null`. ~~Optional[Lookups]~~                                                                                                                                                                                                                                                       |
 | `tokenizer`    | Additional arguments passed to the `initialize` method of the specified tokenizer. Can be used for languages like Chinese that depend on dictionaries or trained models for tokenization. If type annotations are available on the method, the config will be validated against them. The `initialize` method will always receive the `get_examples` callback and the current `nlp` object. ~~Dict[str, Any]~~ |
-| `vectors`      | Name or path of pipeline containing pretrained word vectors to use, e.g. created with [`init vocab`](/api/cli#init-vocab). Defaults to `null`. ~~Optional[str]~~                                                                                                                                                                                                                                               |
+| `vectors`      | Name or path of pipeline containing pretrained word vectors to use, e.g. created with [`init vectors`](/api/cli#init-vectors). Defaults to `null`. ~~Optional[str]~~                                                                                                                                                                                                                                           |
 | `vocab_data`   | Path to JSONL-formatted [vocabulary file](/api/data-formats#vocab-jsonl) to initialize vocabulary. ~~Optional[str]~~                                                                                                                                                                                                                                                                                           |
 
 ## Training data {#training}
@@ -274,8 +274,8 @@ Typically, the extension for these binary files is `.spacy`, and they are used
 as input format for specifying a [training corpus](/api/corpus) and for spaCy's
 CLI [`train`](/api/cli#train) command. The built-in
 [`convert`](/api/cli#convert) command helps you convert spaCy's previous
-[JSON format](#json-input) to the new binary format. It also supports
-conversion of the `.conllu` format used by the
+[JSON format](#json-input) to the new binary format. It also supports conversion
+of the `.conllu` format used by the
 [Universal Dependencies corpora](https://github.com/UniversalDependencies).
 
 ### JSON training format {#json-input tag="deprecated"}
@@ -455,7 +455,7 @@ example = Example.from_dict(doc, gold_dict)
 ## Lexical data for vocabulary {#vocab-jsonl new="2"}
 
 To populate a pipeline's vocabulary, you can use the
-[`spacy init vocab`](/api/cli#init-vocab) command and load in a
+[`spacy init vectors`](/api/cli#init-vectors) command and load in a
 [newline-delimited JSON](http://jsonlines.org/) (JSONL) file containing one
 lexical entry per line via the `--jsonl-loc` option. The first line defines the
 language and vocabulary settings. All other lines are expected to be JSON

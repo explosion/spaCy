@@ -496,7 +496,7 @@ algorithms for learning word vector tables. You can train a word vectors table
 using tools such as [Gensim](https://radimrehurek.com/gensim/),
 [FastText](https://fasttext.cc/) or
 [GloVe](https://nlp.stanford.edu/projects/glove/), or download existing
-pretrained vectors. The [`init vocab`](/api/cli#init-vocab) command lets you
+pretrained vectors. The [`init vectors`](/api/cli#init-vectors) command lets you
 convert vectors for use with spaCy and will give you a directory you can load or
 refer to in your [training configs](/usage/training#config).
 

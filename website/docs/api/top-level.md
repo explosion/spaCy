@@ -372,7 +372,7 @@ results to a [Weights & Biases](https://www.wandb.com/) dashboard. Instead of
 using one of the built-in loggers listed here, you can also
 [implement your own](/usage/training#custom-logging).
 
-#### ConsoleLogger {#ConsoleLogger tag="registered function"}
+#### spacy.ConsoleLogger.v1 {#ConsoleLogger tag="registered function"}
 
 > #### Example config
 >
@@ -418,7 +418,7 @@ start decreasing across epochs.
 
  </Accordion>
 
-#### WandbLogger {#WandbLogger tag="registered function"}
+#### spacy.WandbLogger.v1 {#WandbLogger tag="registered function"}
 
 > #### Installation
 >
@@ -480,7 +480,7 @@ with your own registered function in the
 [`@readers` registry](/api/top-level#registry) to customize the data loading and
 streaming.
 
-### Corpus {#corpus}
+### spacy.Corpus.v1 {#corpus tag="registered function"}
 
 The `Corpus` reader manages annotated corpora and can be used for training and
 development datasets in the [DocBin](/api/docbin) (`.spacy`) format. Also see
@@ -507,8 +507,9 @@ the [`Corpus`](/api/corpus) class.
 | `max_length`    | Maximum document length. Longer documents will be split into sentences, if sentence boundaries are available. Defaults to `0` for no limit. ~~int~~                                                                                                                                      |
 | `limit`         | Limit corpus to a subset of examples, e.g. for debugging. Defaults to `0` for no limit. ~~int~~                                                                                                                                                                                          |
 | `augmenter`     | Apply some simply data augmentation, where we replace tokens with variations. This is especially useful for punctuation and case replacement, to help generalize beyond corpora that don't have smart-quotes, or only have smart quotes, etc. Defaults to `None`. ~~Optional[Callable]~~ |
+| **CREATES**     | The corpus reader. ~~Corpus~~                                                                                                                                                                                                                                                            |
 
-### JsonlReader {#jsonlreader}
+### spacy.JsonlReader.v1 {#jsonlreader tag="registered function"}
 
 Create [`Example`](/api/example) objects from a JSONL (newline-delimited JSON)
 file of texts keyed by `"text"`. Can be used to read the raw text corpus for
@@ -535,6 +536,7 @@ JSONL file. Also see the [`JsonlReader`](/api/corpus#jsonlreader) class.
 | `min_length` | Minimum document length (in tokens). Shorter documents will be skipped. Defaults to `0`, which indicates no limit. ~~int~~       |
 | `max_length` | Maximum document length (in tokens). Longer documents will be skipped. Defaults to `0`, which indicates no limit. ~~int~~        |
 | `limit`      | Limit corpus to a subset of examples, e.g. for debugging. Defaults to `0` for no limit. ~~int~~                                  |
+| **CREATES**  | The corpus reader. ~~JsonlTexts~~                                                                                                |
 
 ## Batchers {#batchers source="spacy/training/batchers.py" new="3"}
 
@@ -550,7 +552,7 @@ Instead of using one of the built-in batchers listed here, you can also
 [implement your own](/usage/training#custom-code-readers-batchers), which may or
 may not use a custom schedule.
 
-### batch_by_words {#batch_by_words tag="registered function"}
+### spacy.batch_by_words.v1 {#batch_by_words tag="registered function"}
 
 Create minibatches of roughly a given number of words. If any examples are
 longer than the specified batch length, they will appear in a batch by
@@ -576,8 +578,9 @@ themselves, or be discarded if `discard_oversize` is set to `True`. The argument
 | `tolerance`        | What percentage of the size to allow batches to exceed. ~~float~~                                                                                                                       |
 | `discard_oversize` | Whether to discard sequences that by themselves exceed the tolerated size. ~~bool~~                                                                                                     |
 | `get_length`       | Optional function that receives a sequence item and returns its length. Defaults to the built-in `len()` if not set. ~~Optional[Callable[[Any], int]]~~                                 |
+| **CREATES**        | The batcher that takes an iterable of items and returns batches. ~~Callable[[Iterable[Any]], Iterable[List[Any]]]~~                                                                     |
 
-### batch_by_sequence {#batch_by_sequence tag="registered function"}
+### spacy.batch_by_sequence.v1 {#batch_by_sequence tag="registered function"}
 
 > #### Example config
 >
@@ -594,8 +597,9 @@ Create a batcher that creates batches of the specified size.
 | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `size`       | The target number of items per batch. Can also be a block referencing a schedule, e.g. [`compounding`](https://thinc.ai/docs/api-schedules/#compounding). ~~Union[int, Sequence[int]]~~ |
 | `get_length` | Optional function that receives a sequence item and returns its length. Defaults to the built-in `len()` if not set. ~~Optional[Callable[[Any], int]]~~                                 |
+| **CREATES**  | The batcher that takes an iterable of items and returns batches. ~~Callable[[Iterable[Any]], Iterable[List[Any]]]~~                                                                     |
 
-### batch_by_padded {#batch_by_padded tag="registered function"}
+### spacy.batch_by_padded.v1 {#batch_by_padded tag="registered function"}
 
 > #### Example config
 >
@@ -619,20 +623,21 @@ sequences in the batch.
 | `buffer`           | The number of sequences to accumulate before sorting by length. A larger buffer will result in more even sizing, but if the buffer is very large, the iteration order will be less random, which can result in suboptimal training. ~~int~~ |
 | `discard_oversize` | Whether to discard sequences that are by themselves longer than the largest padded batch size. ~~bool~~                                                                                                                                     |
 | `get_length`       | Optional function that receives a sequence item and returns its length. Defaults to the built-in `len()` if not set. ~~Optional[Callable[[Any], int]]~~                                                                                     |
+| **CREATES**        | The batcher that takes an iterable of items and returns batches. ~~Callable[[Iterable[Any]], Iterable[List[Any]]]~~                                                                                                                         |
 
 ## Augmenters {#augmenters source="spacy/training/augment.py" new="3"}
 
 <!-- TODO: intro, explain data augmentation concept -->
 
-### orth_variants {#orth_variants tag="registered function"}
+### spacy.orth_variants.v1 {#orth_variants tag="registered function"}
 
 > #### Example config
 >
 > ```ini
 > [corpora.train.augmenter]
 > @augmenters = "spacy.orth_variants.v1"
-> level = 0.0
-> lower = 0.0
+> level = 0.1
+> lower = 0.5
 > lookups = null
 > ```
 
@@ -643,10 +648,10 @@ beyond corpora that don't have smart quotes, or only have smart quotes etc.
 
 | Name        | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `level`     | ~~float~~                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `lower`     | ~~float~~                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `level`     | The percentage of texts that will be augmented. ~~float~~                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `lower`     | The percentage of texts that will be lowercased. ~~float~~                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `lookups`   | Lookups table containing the orth variants to use. See [`orth_variants.json`](https://github.com/explosion/spacy-lookups-data/blob/master/spacy_lookups_data/data/en_orth_variants.json) for an example. If not set, tables from [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) are used if available and added in the [`[initialize]`](/api/data-formats#config-initialize) block of the config. If no orth variants are found, spaCy will raise an error. Defaults to `None`. ~~Optional[Lookups]~~ |
-| **RETURNS** | A function that takes the current `nlp` object and an [`Example`](/api/example) and yields augmented `Example` objects. ~~Callable[[Language, Example], Iterator[Example]]~~                                                                                                                                                                                                                                                                                                                                                   |
+| **CREATES** | A function that takes the current `nlp` object and an [`Example`](/api/example) and yields augmented `Example` objects. ~~Callable[[Language, Example], Iterator[Example]]~~                                                                                                                                                                                                                                                                                                                                                   |
 
 ## Training data and alignment {#gold source="spacy/training"}
 
