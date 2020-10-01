@@ -1,5 +1,4 @@
 from typing import Optional, Any, Dict
-from thinc.api import Config
 
 from .stop_words import STOP_WORDS
 from .tag_map import TAG_MAP
@@ -10,7 +9,7 @@ from ...compat import copy_reg
 from ...scorer import Scorer
 from ...symbols import POS
 from ...training import validate_examples
-from ...util import DummyTokenizer, registry
+from ...util import DummyTokenizer, registry, load_config_from_str
 
 
 DEFAULT_CONFIG = """
@@ -70,7 +69,7 @@ class KoreanTokenizer(DummyTokenizer):
 
 
 class KoreanDefaults(Language.Defaults):
-    config = Config().from_str(DEFAULT_CONFIG)
+    config = load_config_from_str(DEFAULT_CONFIG)
     lex_attr_getters = LEX_ATTRS
     stop_words = STOP_WORDS
     writing_system = {"direction": "ltr", "has_case": False, "has_letters": False}
