@@ -553,6 +553,16 @@ def test_doc_init_iob():
     doc = Doc(Vocab(), words=words, ents=ents)
     assert len(doc.ents) == 3
 
+    # None is missing
+    ents = ["B-PERSON", "I-PERSON", "O", None, "I-GPE"]
+    doc = Doc(Vocab(), words=words, ents=ents)
+    assert len(doc.ents) == 2
+
+    # empty tag is missing
+    ents = ["", "B-PERSON", "O", "B-PERSON", "I-PERSON"]
+    doc = Doc(Vocab(), words=words, ents=ents)
+    assert len(doc.ents) == 2
+
     # invalid IOB
     ents = ["Q-PERSON", "I-PERSON", "O", "I-PERSON", "I-GPE"]
     with pytest.raises(ValueError):
@@ -563,12 +573,12 @@ def test_doc_init_iob():
     with pytest.raises(ValueError):
         doc = Doc(Vocab(), words=words, ents=ents)
 
-    # empty tag
-    ents = ["", "B-", "O", "I-PERSON", "I-GPE"]
+    # no ent type
+    ents = ["O", "B-", "O", "I-PERSON", "I-GPE"]
     with pytest.raises(ValueError):
         doc = Doc(Vocab(), words=words, ents=ents)
 
-    # no ent type
-    ents = ["O", "B-", "O", "I-PERSON", "I-GPE"]
+    # not strings or None
+    ents = [0, "B-", "O", "I-PERSON", "I-GPE"]
     with pytest.raises(ValueError):
         doc = Doc(Vocab(), words=words, ents=ents)

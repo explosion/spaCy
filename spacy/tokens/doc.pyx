@@ -282,19 +282,28 @@ cdef class Doc:
             iob_strings = Token.iob_strings()
             # make valid IOB2 out of IOB1 or IOB2
             for i, ent in enumerate(ents):
+                if ent is "":
+                    ents[i] = None
+                elif ent is not None and not isinstance(ent, str):
+                    raise ValueError(Errors.E177.format(tag=ent))
                 if i < len(ents) - 1:
                     # OI -> OB
-                    if ent.startswith("O") and ents[i+1].startswith("I"):
+                    if (ent is None or ent.startswith("O")) and \
+                            (ents[i+1] is not None and ents[i+1].startswith("I")):
                         ents[i+1] = "B" + ents[i+1][1:]
                     # B-TYPE1 I-TYPE2 or I-TYPE1 I-TYPE2 -> B/I-TYPE1 B-TYPE2
-                    if (ent.startswith("B") or ent.startswith("I")) and \
+                    if ent is not None and ents[i+1] is not None and \
+                            (ent.startswith("B") or ent.startswith("I")) and \
                             ents[i+1].startswith("I") and \
                             ent[1:] != ents[i+1][1:]:
                         ents[i+1] = "B" + ents[i+1][1:]
             ent_iobs = []
             ent_types = []
             for ent in ents:
-                if ent == "O":
+                if ent is None:
+                    ent_iobs.append(iob_strings.index(""))
+                    ent_types.append("")
+                elif ent == "O":
                     ent_iobs.append(iob_strings.index(ent))
                     ent_types.append("")
                 else:
