@@ -93,7 +93,7 @@ def build_Tok2Vec_model(
 @registry.architectures.register("spacy.MultiHashEmbed.v1")
 def MultiHashEmbed(
     width: int, rows: int, also_embed_subwords: bool, also_use_static_vectors: bool
-):
+) -> Model[List[Doc], List[Floats2d]]:
     """Construct an embedding layer that separately embeds a number of lexical
     attributes using hash embedding, concatenates the results, and passes it
     through a feed-forward subnetwork to build a mixed representations.
@@ -166,7 +166,7 @@ def MultiHashEmbed(
 @registry.architectures.register("spacy.CharacterEmbed.v1")
 def CharacterEmbed(
     width: int, rows: int, nM: int, nC: int, also_use_static_vectors: bool
-):
+) -> Model[List[Doc], List[Floats2d]]:
     """Construct an embedded representation based on character embeddings, using
     a feed-forward network. A fixed number of UTF-8 byte characters are used for
     each word, taken from the beginning and end of the word equally. Padding is
