@@ -319,15 +319,13 @@ def test_doc_from_array_morph(en_vocab):
     words = ["I", "live", "in", "New", "York", "."]
     morphs = ["Feat1=A", "Feat1=B", "Feat1=C", "Feat1=A|Feat2=D", "Feat2=E", "Feat3=F"]
     # fmt: on
-    doc = Doc(en_vocab, words=words)
-    for i, morph in enumerate(morphs):
-        doc[i].morph_ = morph
+    doc = Doc(en_vocab, words=words, morphs=morphs)
     attrs = [MORPH]
     arr = doc.to_array(attrs)
     new_doc = Doc(en_vocab, words=words)
     new_doc.from_array(attrs, arr)
-    assert [t.morph_ for t in new_doc] == morphs
-    assert [t.morph_ for t in doc] == [t.morph_ for t in new_doc]
+    assert [str(t.morph) for t in new_doc] == morphs
+    assert [str(t.morph) for t in doc] == [str(t.morph) for t in new_doc]
 
 
 def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
@@ -423,7 +421,7 @@ def test_has_annotation(en_vocab):
 
     doc[0].tag_ = "A"
     doc[0].pos_ = "X"
-    doc[0].morph_ = "Feat=Val"
+    doc[0].set_morph("Feat=Val")
     doc[0].lemma_ = "a"
     doc[0].dep_ = "dep"
     doc[0].head = doc[1]
@@ -435,7 +433,7 @@ def test_has_annotation(en_vocab):
 
     doc[1].tag_ = "A"
     doc[1].pos_ = "X"
-    doc[1].morph_ = ""
+    doc[1].set_morph("")
     doc[1].lemma_ = "a"
     doc[1].dep_ = "dep"
     doc.ents = [Span(doc, 0, 2, label="HELLO")]

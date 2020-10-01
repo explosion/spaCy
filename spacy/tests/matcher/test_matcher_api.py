@@ -236,13 +236,13 @@ def test_matcher_subset_value_operator(en_vocab):
     matcher.add("M", [pattern])
     doc = Doc(en_vocab, words=["a", "b", "c"])
     assert len(matcher(doc)) == 3
-    doc[0].morph_ = "Feat=Val"
+    doc[0].set_morph("Feat=Val")
     assert len(matcher(doc)) == 3
-    doc[0].morph_ = "Feat=Val|Feat2=Val2"
+    doc[0].set_morph("Feat=Val|Feat2=Val2")
     assert len(matcher(doc)) == 3
-    doc[0].morph_ = "Feat=Val|Feat2=Val2|Feat3=Val3"
+    doc[0].set_morph("Feat=Val|Feat2=Val2|Feat3=Val3")
     assert len(matcher(doc)) == 2
-    doc[0].morph_ = "Feat=Val|Feat2=Val2|Feat3=Val3|Feat4=Val4"
+    doc[0].set_morph("Feat=Val|Feat2=Val2|Feat3=Val3|Feat4=Val4")
     assert len(matcher(doc)) == 2
 
     # IS_SUBSET acts like "IN" for attrs other than MORPH
@@ -268,11 +268,11 @@ def test_matcher_superset_value_operator(en_vocab):
     matcher.add("M", [pattern])
     doc = Doc(en_vocab, words=["a", "b", "c"])
     assert len(matcher(doc)) == 0
-    doc[0].morph_ = "Feat=Val|Feat2=Val2"
+    doc[0].set_morph("Feat=Val|Feat2=Val2")
     assert len(matcher(doc)) == 0
-    doc[0].morph_ = "Feat=Val|Feat2=Val2|Feat3=Val3"
+    doc[0].set_morph("Feat=Val|Feat2=Val2|Feat3=Val3")
     assert len(matcher(doc)) == 1
-    doc[0].morph_ = "Feat=Val|Feat2=Val2|Feat3=Val3|Feat4=Val4"
+    doc[0].set_morph("Feat=Val|Feat2=Val2|Feat3=Val3|Feat4=Val4")
     assert len(matcher(doc)) == 1
 
     # IS_SUPERSET with more than one value only matches for MORPH
@@ -310,9 +310,9 @@ def test_matcher_morph_handling(en_vocab):
     doc = Doc(en_vocab, words=["a", "b", "c"])
     assert len(matcher(doc)) == 0
 
-    doc[0].morph_ = "Feat2=Val2|Feat1=Val1"
+    doc[0].set_morph("Feat2=Val2|Feat1=Val1")
     assert len(matcher(doc)) == 2
-    doc[0].morph_ = "Feat1=Val1|Feat2=Val2"
+    doc[0].set_morph("Feat1=Val1|Feat2=Val2")
     assert len(matcher(doc)) == 2
 
     # multiple values are split
@@ -324,9 +324,9 @@ def test_matcher_morph_handling(en_vocab):
     doc = Doc(en_vocab, words=["a", "b", "c"])
     assert len(matcher(doc)) == 0
 
-    doc[0].morph_ = "Feat2=Val2,Val3|Feat1=Val1"
+    doc[0].set_morph("Feat2=Val2,Val3|Feat1=Val1")
     assert len(matcher(doc)) == 1
-    doc[0].morph_ = "Feat1=Val1,Val3|Feat2=Val2"
+    doc[0].set_morph("Feat1=Val1,Val3|Feat2=Val2")
     assert len(matcher(doc)) == 2
 
 
@@ -405,7 +405,7 @@ def test_attr_pipeline_checks(en_vocab):
     doc2 = Doc(en_vocab, words=["Test"])
     doc2[0].tag_ = "TAG"
     doc2[0].pos_ = "X"
-    doc2[0].morph_ = "Feat=Val"
+    doc2[0].set_morph("Feat=Val")
     doc2[0].lemma_ = "LEMMA"
     doc3 = Doc(en_vocab, words=["Test"])
     # DEP requires DEP

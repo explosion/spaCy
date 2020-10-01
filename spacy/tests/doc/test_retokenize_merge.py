@@ -21,11 +21,11 @@ def test_doc_retokenize_merge(en_tokenizer):
     assert doc[4].text == "the beach boys"
     assert doc[4].text_with_ws == "the beach boys "
     assert doc[4].tag_ == "NAMED"
-    assert doc[4].morph_ == "Number=Plur"
+    assert str(doc[4].morph) == "Number=Plur"
     assert doc[5].text == "all night"
     assert doc[5].text_with_ws == "all night"
     assert doc[5].tag_ == "NAMED"
-    assert doc[5].morph_ == "Number=Plur"
+    assert str(doc[5].morph) == "Number=Plur"
 
 
 def test_doc_retokenize_merge_children(en_tokenizer):
