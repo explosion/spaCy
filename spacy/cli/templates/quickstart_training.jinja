@@ -4,8 +4,8 @@ can help generate the best possible configuration, given a user's requirements. 
 {%- set use_transformer = (transformer_data and hardware != "cpu") -%}
 {%- set transformer = transformer_data[optimize] if use_transformer else {} -%}
 [paths]
-train = ""
-dev = ""
+train = null
+dev = null
 
 [system]
 {% if use_transformer -%}
@@ -277,11 +277,6 @@ path = ${paths.dev}
 max_length = 0
 
 [training]
-{% if use_transformer or optimize == "efficiency" or not word_vectors -%}
-vectors = null
-{% else -%}
-vectors = "{{ word_vectors }}"
-{% endif -%}
 {% if use_transformer -%}
 accumulate_gradient = {{ transformer["size_factor"] }}
 {% endif -%}
@@ -317,3 +312,10 @@ start = 100
 stop = 1000
 compound = 1.001
 {% endif %}
+
+[initialize]
+{% if use_transformer or optimize == "efficiency" or not word_vectors -%}
+vectors = null
+{% else -%}
+vectors = "{{ word_vectors }}"
+{% endif -%}

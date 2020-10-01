@@ -32,9 +32,7 @@ class PRFScore:
 
     def __add__(self, other):
         return PRFScore(
-            tp=self.tp+other.tp,
-            fp=self.fp+other.fp,
-            fn=self.fn+other.fn
+            tp=self.tp + other.tp, fp=self.fp + other.fp, fn=self.fn + other.fn
         )
 
     def score_set(self, cand: set, gold: set) -> None:
@@ -485,7 +483,7 @@ class Scorer:
                     (pred_ent.start_char, pred_ent.end_char), None
                 )
                 label = gold_span.label_
-                if not label in f_per_type:
+                if label not in f_per_type:
                     f_per_type[label] = PRFScore()
                 gold = gold_span.kb_id_
                 # only evaluating entities that overlap between gold and pred,
@@ -632,7 +630,6 @@ def get_ner_prf(examples: Iterable[Example]) -> Dict[str, PRFScore]:
             continue
         golds = {(e.label_, e.start, e.end) for e in eg.y.ents}
         align_x2y = eg.alignment.x2y
-        preds = set()
         for pred_ent in eg.x.ents:
             if pred_ent.label_ not in scores:
                 scores[pred_ent.label_] = PRFScore()

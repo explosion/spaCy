@@ -191,7 +191,7 @@ def test_overfitting_IO():
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
         for dep in annotations.get("deps", []):
             parser.add_label(dep)
-    optimizer = nlp.begin_training()
+    optimizer = nlp.initialize()
     for i in range(100):
         losses = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)

@@ -6,7 +6,9 @@ menu:
   - ['Introduction', 'basics']
   - ['Quickstart', 'quickstart']
   - ['Config System', 'config']
+  - ['Custom Training', 'config-custom']
   - ['Custom Functions', 'custom-functions']
+  - ['Data Utilities', 'data']
   - ['Parallel Training', 'parallel-training']
   - ['Internal API', 'api']
 ---
@@ -121,7 +123,7 @@ treebank.
 
 </Project>
 
-## Training config {#config}
+## Training config system {#config}
 
 Training config files include all **settings and hyperparameters** for training
 your pipeline. Instead of providing lots of arguments on the command line, you
@@ -176,6 +178,7 @@ sections of a config file are:
 | `system`      | Settings related to system and hardware. Re-used across the config as variables, e.g. `${system.seed}`, and can be [overwritten](#config-overrides) on the CLI. |
 | `training`    | Settings and controls for the training and evaluation process.                                                                                                  |
 | `pretraining` | Optional settings and controls for the [language model pretraining](/usage/embeddings-transformers#pretraining).                                                |
+| `initialize`  | Data resources and arguments passed to components when [`nlp.initialize`](/api/language#initialize) is called before training (but not at runtime).             |
 
 <Infobox title="Config format and settings" emoji="📖">
 
@@ -188,6 +191,32 @@ available for the different architectures are documented with the
 [schedules](https://thinc.ai/docs/api-schedules).
 
 </Infobox>
+
+### Config lifecycle at runtime and training {#config-lifecycle}
+
+A pipeline's `config.cfg` is considered the "single source of truth", both at
+**training** and **runtime**. Under the hood,
+[`Language.from_config`](/api/language#from_config) takes care of constructing
+the `nlp` object using the settings defined in the config. An `nlp` object's
+config is available as [`nlp.config`](/api/language#config) and it includes all
+information about the pipeline, as well as the settings used to train and
+initialize it.
+
+![Illustration of pipeline lifecycle](../images/lifecycle.svg)
+
+At runtime spaCy will only use the `[nlp]` and `[components]` blocks of the
+config and load all data, including tokenization rules, model weights and other
+resources from the pipeline directory. The `[training]` block contains the
+settings for training the model and is only used during training. Similarly, the
+`[initialize]` block defines how the initial `nlp` object should be set up
+before training and whether it should be initialized with vectors or pretrained
+tok2vec weights, or any other data needed by the components.
+
+The initialization settings are only loaded and used when
+[`nlp.initialize`](/api/language#initialize) is called (typically right before
+training). This allows you to set up your pipeline using local data resources
+and custom functions, and preserve the information in your config – but without
+requiring it to be available at runtime
 
 ### Overwriting config settings on the command line {#config-overrides}
 
@@ -231,6 +260,61 @@ defined in the config file.
 ```cli
 $ SPACY_CONFIG_OVERRIDES="--system.gpu_allocator pytorch --training.batch_size 128" ./your_script.sh
 ```
+
+### Using variable interpolation {#config-interpolation}
+
+Another very useful feature of the config system is that it supports variable
+interpolation for both **values and sections**. This means that you only need to
+define a setting once and can reference it across your config using the
+`${section.value}` syntax. In this example, the value of `seed` is reused within
+the `[training]` block, and the whole block of `[training.optimizer]` is reused
+in `[pretraining]` and will become `pretraining.optimizer`.
+
+```ini
+### config.cfg (excerpt) {highlight="5,18"}
+[system]
+seed = 0
+
+[training]
+seed = ${system.seed}
+
+[training.optimizer]
+@optimizers = "Adam.v1"
+beta1 = 0.9
+beta2 = 0.999
+L2_is_weight_decay = true
+L2 = 0.01
+grad_clip = 1.0
+use_averages = false
+eps = 1e-8
+
+[pretraining]
+optimizer = ${training.optimizer}
+```
+
+You can also use variables inside strings. In that case, it works just like
+f-strings in Python. If the value of a variable is not a string, it's converted
+to a string.
+
+```ini
+[paths]
+version = 5
+root = "/Users/you/data"
+train = "${paths.root}/train_${paths.version}.spacy"
+# Result: /Users/you/data/train_5.spacy
+```
+
+<Infobox title="Tip: Override variables on the CLI" emoji="💡">
+
+If you need to change certain values between training runs, you can define them
+once, reference them as variables and then [override](#config-overrides) them on
+the CLI. For example, `--paths.root /other/root` will change the value of `root`
+in the block `[paths]` and the change will be reflected across all other values
+that reference this variable.
+
+</Infobox>
+
+## Customizing the pipeline and training {#config-custom}
 
 ### Defining pipeline components {#config-components}
 
@@ -352,59 +436,6 @@ stop = 1000
 compound = 1.001
 ```
 
-### Using variable interpolation {#config-interpolation}
-
-Another very useful feature of the config system is that it supports variable
-interpolation for both **values and sections**. This means that you only need to
-define a setting once and can reference it across your config using the
-`${section.value}` syntax. In this example, the value of `seed` is reused within
-the `[training]` block, and the whole block of `[training.optimizer]` is reused
-in `[pretraining]` and will become `pretraining.optimizer`.
-
-```ini
-### config.cfg (excerpt) {highlight="5,18"}
-[system]
-seed = 0
-
-[training]
-seed = ${system.seed}
-
-[training.optimizer]
-@optimizers = "Adam.v1"
-beta1 = 0.9
-beta2 = 0.999
-L2_is_weight_decay = true
-L2 = 0.01
-grad_clip = 1.0
-use_averages = false
-eps = 1e-8
-
-[pretraining]
-optimizer = ${training.optimizer}
-```
-
-You can also use variables inside strings. In that case, it works just like
-f-strings in Python. If the value of a variable is not a string, it's converted
-to a string.
-
-```ini
-[paths]
-version = 5
-root = "/Users/you/data"
-train = "${paths.root}/train_${paths.version}.spacy"
-# Result: /Users/you/data/train_5.spacy
-```
-
-<Infobox title="Tip: Override variables on the CLI" emoji="💡">
-
-If you need to change certain values between training runs, you can define them
-once, reference them as variables and then [override](#config-overrides) them on
-the CLI. For example, `--paths.root /other/root` will change the value of `root`
-in the block `[paths]` and the change will be reflected across all other values
-that reference this variable.
-
-</Infobox>
-
 ### Model architectures {#model-architectures}
 
 > #### 💡 Model type annotations
@@ -505,7 +536,7 @@ still look good.
 
 </Accordion>
 
-## Custom Functions {#custom-functions}
+## Custom functions {#custom-functions}
 
 Registered functions in the training config files can refer to built-in
 implementations, but you can also plug in fully **custom implementations**. All
@@ -689,7 +720,7 @@ from pathlib import Path
 @spacy.registry.loggers("my_custom_logger.v1")
 def custom_logger(log_path):
     def setup_logger(nlp: "Language") -> Tuple[Callable, Callable]:
-        with Path(log_path).open("w") as file_:
+        with Path(log_path).open("w", encoding="utf8") as file_:
             file_.write("step\\t")
             file_.write("score\\t")
             for pipe in nlp.pipe_names:
@@ -752,7 +783,136 @@ start = 2
 factor = 1.005
 ```
 
-#### Example: Custom data reading and batching {#custom-code-readers-batchers}
+### Defining custom architectures {#custom-architectures}
+
+Built-in pipeline components such as the tagger or named entity recognizer are
+constructed with default neural network [models](/api/architectures). You can
+change the model architecture entirely by implementing your own custom models
+and providing those in the config when creating the pipeline component. See the
+documentation on [layers and model architectures](/usage/layers-architectures)
+for more details.
+
+> ```ini
+> ### config.cfg
+> [components.tagger]
+> factory = "tagger"
+>
+> [components.tagger.model]
+> @architectures = "custom_neural_network.v1"
+> output_width = 512
+> ```
+
+```python
+### functions.py
+from typing import List
+from thinc.types import Floats2d
+from thinc.api import Model
+import spacy
+from spacy.tokens import Doc
+
+@spacy.registry.architectures("custom_neural_network.v1")
+def MyModel(output_width: int) -> Model[List[Doc], List[Floats2d]]:
+    return create_model(output_width)
+```
+
+<!-- TODO:
+### Customizing the initialization {#initialization}
+-->
+
+## Data utilities {#data}
+
+spaCy includes various features and utilities to make it easy to train models
+using your own data, manage training and evaluation corpora, convert existing
+annotations and configure data augmentation strategies for more robust models.
+
+### Converting existing corpora and annotations {#data-convert}
+
+If you have training data in a standard format like `.conll` or `.conllu`, the
+easiest way to convert it for use with spaCy is to run
+[`spacy convert`](/api/cli#convert) and pass it a file and an output directory.
+By default, the command will pick the converter based on the file extension.
+
+```cli
+$ python -m spacy convert ./train.gold.conll ./corpus
+```
+
+> #### 💡 Tip: Converting from Prodigy
+>
+> If you're using the [Prodigy](https://prodi.gy) annotation tool to create
+> training data, you can run the
+> [`data-to-spacy` command](https://prodi.gy/docs/recipes#data-to-spacy) to
+> merge and export multiple datasets for use with
+> [`spacy train`](/api/cli#train). Different types of annotations on the same
+> text will be combined, giving you one corpus to train multiple components.
+
+<Infobox title="Tip: Manage multi-step workflows with projects" emoji="💡">
+
+Training workflows often consist of multiple steps, from preprocessing the data
+all the way to packaging and deploying the trained model.
+[spaCy projects](/usage/projects) let you define all steps in one file, manage
+data assets, track changes and share your end-to-end processes with your team.
+
+</Infobox>
+
+The binary `.spacy` format is a serialized [`DocBin`](/api/docbin) containing
+one or more [`Doc`](/api/doc) objects. It's is extremely **efficient in
+storage**, especially when packing multiple documents together. You can also
+create `Doc` objects manually, so you can write your own custom logic to convert
+and store existing annotations for use in spaCy.
+
+```python
+### Training data from Doc objects {highlight="6-9"}
+import spacy
+from spacy.tokens import Doc, DocBin
+
+nlp = spacy.blank("en")
+docbin = DocBin(nlp.vocab)
+words = ["Apple", "is", "looking", "at", "buying", "U.K.", "startup", "."]
+spaces = [True, True, True, True, True, True, True, False]
+ents = ["B-ORG", "O", "O", "O", "O", "B-GPE", "O", "O"]
+doc = Doc(nlp.vocab, words=words, spaces=spaces, ents=ents)
+docbin.add(doc)
+docbin.to_disk("./train.spacy")
+```
+
+### Working with corpora {#data-corpora}
+
+> #### Example
+>
+> ```ini
+> [corpora]
+>
+> [corpora.train]
+> @readers = "spacy.Corpus.v1"
+> path = ${paths.train}
+> gold_preproc = false
+> max_length = 0
+> limit = 0
+> augmenter = null
+>
+> [training]
+> train_corpus = "corpora.train"
+> ```
+
+The [`[corpora]`](/api/data-formats#config-corpora) block in your config lets
+you define **data resources** to use for training, evaluation, pretraining or
+any other custom workflows. `corpora.train` and `corpora.dev` are used as
+conventions within spaCy's default configs, but you can also define any other
+custom blocks. Each section in the corpora config should resolve to a
+[`Corpus`](/api/corpus) – for example, using spaCy's built-in
+[corpus reader](/api/top-level#readers) that takes a path to a binary `.spacy`
+file. The `train_corpus` and `dev_corpus` fields in the
+[`[training]`](/api/data-formats#config-training) block specify where to find
+the corpus in your config. This makes it easy to **swap out** different corpora
+by only changing a single config setting.
+
+Instead of making `[corpora]` a block with multiple subsections for each portion
+of the data, you can also use a single function that returns a dictionary of
+corpora, keyed by corpus name, e.g. `"train"` and `"dev"`. This can be
+especially useful if you need to split a single file into corpora for training
+and evaluation, without loading the same file twice.
+
+### Custom data reading and batching {#custom-code-readers-batchers}
 
 Some use-cases require **streaming in data** or manipulating datasets on the
 fly, rather than generating all data beforehand and storing it to file. Instead
@@ -848,37 +1008,11 @@ def filter_batch(size: int) -> Callable[[Iterable[Example]], Iterator[List[Examp
     return create_filtered_batches
 ```
 
-### Defining custom architectures {#custom-architectures}
-
-Built-in pipeline components such as the tagger or named entity recognizer are
-constructed with default neural network [models](/api/architectures). You can
-change the model architecture entirely by implementing your own custom models
-and providing those in the config when creating the pipeline component. See the
-documentation on [layers and model architectures](/usage/layers-architectures)
-for more details.
-
-> ```ini
-> ### config.cfg
-> [components.tagger]
-> factory = "tagger"
->
-> [components.tagger.model]
-> @architectures = "custom_neural_network.v1"
-> output_width = 512
-> ```
-
-```python
-### functions.py
-from typing import List
-from thinc.types import Floats2d
-from thinc.api import Model
-import spacy
-from spacy.tokens import Doc
-
-@spacy.registry.architectures("custom_neural_network.v1")
-def MyModel(output_width: int) -> Model[List[Doc], List[Floats2d]]:
-    return create_model(output_width)
-```
+<!-- TODO:
+* Custom corpus class
+* Minibatching
+* Data augmentation
+-->
 
 ## Parallel & distributed training with Ray {#parallel-training}
 
@@ -1045,8 +1179,8 @@ of being dropped.
 
 > - [`nlp`](/api/language): The `nlp` object with the pipeline components and
 >   their models.
-> - [`nlp.begin_training`](/api/language#begin_training): Start the training and
->   return an optimizer to update the component model weights.
+> - [`nlp.initialize`](/api/language#initialize): Start the training and return
+>   an optimizer to update the component model weights.
 > - [`Optimizer`](https://thinc.ai/docs/api-optimizers): Function that holds
 >   state between updates.
 > - [`nlp.update`](/api/language#update): Update component models with examples.
@@ -1057,7 +1191,7 @@ of being dropped.
 
 ```python
 ### Example training loop
-optimizer = nlp.begin_training()
+optimizer = nlp.initialize()
 for itn in range(100):
     random.shuffle(train_data)
     for raw_text, entity_offsets in train_data:

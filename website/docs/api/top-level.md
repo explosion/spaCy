@@ -7,7 +7,8 @@ menu:
   - ['Loggers', 'loggers']
   - ['Readers', 'readers']
   - ['Batchers', 'batchers']
-  - ['Data & Alignment', 'gold']
+  - ['Augmenters', 'augmenters']
+  - ['Training & Alignment', 'gold']
   - ['Utility Functions', 'util']
 ---
 
@@ -191,16 +192,16 @@ browser. Will run a simple web server.
 > displacy.serve([doc1, doc2], style="dep")
 > ```
 
-| Name      | Description                                                                                                                                                        |
-| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `docs`    | Document(s) or span(s) to visualize. ~~Union[Iterable[Union[Doc, Span]], Doc, Span]~~                                                                              |
-| `style`   | Visualization style, `"dep"` or `"ent"`. Defaults to `"dep"`. ~~str~~                                                                                              |
-| `page`    | Render markup as full HTML page. Defaults to `True`. ~~bool~~                                                                                                      |
-| `minify`  | Minify HTML markup. Defaults to `False`. ~~bool~~                                                                                                                  |
-| `options` | [Visualizer-specific options](#displacy_options), e.g. colors. ~~Dict[str, Any]~~                                                                                  |
-| `manual`  | Don't parse `Doc` and instead, expect a dict or list of dicts. [See here](/usage/visualizers#manual-usage) for formats and examples. Defaults to `False`. ~~bool~~ |
-| `port`    | Port to serve visualization. Defaults to `5000`. ~~int~~                                                                                                           |
-| `host`    | Host to serve visualization. Defaults to `"0.0.0.0"`. ~~str~~                                                                                                      |
+| Name      | Description                                                                                                                                                       |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `docs`    | Document(s) or span(s) to visualize. ~~Union[Iterable[Union[Doc, Span]], Doc, Span]~~                                                                             |
+| `style`   | Visualization style, `"dep"` or `"ent"`. Defaults to `"dep"`. ~~str~~                                                                                             |
+| `page`    | Render markup as full HTML page. Defaults to `True`. ~~bool~~                                                                                                     |
+| `minify`  | Minify HTML markup. Defaults to `False`. ~~bool~~                                                                                                                 |
+| `options` | [Visualizer-specific options](#displacy_options), e.g. colors. ~~Dict[str, Any]~~                                                                                 |
+| `manual`  | Don't parse `Doc` and instead expect a dict or list of dicts. [See here](/usage/visualizers#manual-usage) for formats and examples. Defaults to `False`. ~~bool~~ |
+| `port`    | Port to serve visualization. Defaults to `5000`. ~~int~~                                                                                                          |
+| `host`    | Host to serve visualization. Defaults to `"0.0.0.0"`. ~~str~~                                                                                                     |
 
 ### displacy.render {#displacy.render tag="method" new="2"}
 
@@ -223,7 +224,7 @@ Render a dependency parse tree or named entity visualization.
 | `page`      | Render markup as full HTML page. Defaults to `True`. ~~bool~~                                                                                                                          |
 | `minify`    | Minify HTML markup. Defaults to `False`. ~~bool~~                                                                                                                                      |
 | `options`   | [Visualizer-specific options](#displacy_options), e.g. colors. ~~Dict[str, Any]~~                                                                                                      |
-| `manual`    | Don't parse `Doc` and instead, expect a dict or list of dicts. [See here](/usage/visualizers#manual-usage) for formats and examples. Defaults to `False`. ~~bool~~                     |
+| `manual`    | Don't parse `Doc` and instead expect a dict or list of dicts. [See here](/usage/visualizers#manual-usage) for formats and examples. Defaults to `False`. ~~bool~~                      |
 | `jupyter`   | Explicitly enable or disable "[Jupyter](http://jupyter.org/) mode" to return markup ready to be rendered in a notebook. Detected automatically if `None` (default). ~~Optional[bool]~~ |
 | **RETURNS** | The rendered HTML markup. ~~str~~                                                                                                                                                      |
 
@@ -244,7 +245,7 @@ If a setting is not present in the options, the default value will be used.
 | Name                                       | Description                                                                                                                                  |
 | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | `fine_grained`                             | Use fine-grained part-of-speech tags (`Token.tag_`) instead of coarse-grained tags (`Token.pos_`). Defaults to `False`. ~~bool~~             |
-| `add_lemma` <Tag variant="new">2.2.4</Tag> | Print the lemma's in a separate row below the token texts. Defaults to `False`. ~~bool~~                                                     |
+| `add_lemma` <Tag variant="new">2.2.4</Tag> | Print the lemmas in a separate row below the token texts. Defaults to `False`. ~~bool~~                                                      |
 | `collapse_punct`                           | Attach punctuation to tokens. Can make the parse more readable, as it prevents long arcs to attach punctuation. Defaults to `True`. ~~bool~~ |
 | `collapse_phrases`                         | Merge noun phrases into one token. Defaults to `False`. ~~bool~~                                                                             |
 | `compact`                                  | "Compact mode" with square arrows that takes up less space. Defaults to `False`. ~~bool~~                                                    |
@@ -313,6 +314,7 @@ factories.
 | Registry name     | Description                                                                                                                                                                                                                                        |
 | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `architectures`   | Registry for functions that create [model architectures](/api/architectures). Can be used to register custom model architectures and reference them in the `config.cfg`.                                                                           |
+| `augmenters`      | Registry for functions that create [data augmentation](#augmenters) callbacks for corpora and other training data iterators.                                                                                                                       |
 | `batchers`        | Registry for training and evaluation [data batchers](#batchers).                                                                                                                                                                                   |
 | `callbacks`       | Registry for custom callbacks to [modify the `nlp` object](/usage/training#custom-code-nlp-callbacks) before training.                                                                                                                             |
 | `displacy_colors` | Registry for custom color scheme for the [`displacy` NER visualizer](/usage/visualizers). Automatically reads from [entry points](/usage/saving-loading#entry-points).                                                                             |
@@ -370,7 +372,7 @@ results to a [Weights & Biases](https://www.wandb.com/) dashboard. Instead of
 using one of the built-in loggers listed here, you can also
 [implement your own](/usage/training#custom-logging).
 
-#### ConsoleLogger {#ConsoleLogger tag="registered function"}
+#### spacy.ConsoleLogger.v1 {#ConsoleLogger tag="registered function"}
 
 > #### Example config
 >
@@ -416,7 +418,7 @@ start decreasing across epochs.
 
  </Accordion>
 
-#### WandbLogger {#WandbLogger tag="registered function"}
+#### spacy.WandbLogger.v1 {#WandbLogger tag="registered function"}
 
 > #### Installation
 >
@@ -478,7 +480,7 @@ with your own registered function in the
 [`@readers` registry](/api/top-level#registry) to customize the data loading and
 streaming.
 
-### Corpus {#corpus}
+### spacy.Corpus.v1 {#corpus tag="registered function"}
 
 The `Corpus` reader manages annotated corpora and can be used for training and
 development datasets in the [DocBin](/api/docbin) (`.spacy`) format. Also see
@@ -498,14 +500,16 @@ the [`Corpus`](/api/corpus) class.
 > limit = 0
 > ```
 
-| Name            | Description                                                                                                                                              |
-| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `path`          | The directory or filename to read from. Expects data in spaCy's binary [`.spacy` format](/api/data-formats#binary-training). ~~Union[str, Path]~~        |
-|  `gold_preproc` | Whether to set up the Example object with gold-standard sentences and tokens for the predictions. See [`Corpus`](/api/corpus#init) for details. ~~bool~~ |
-| `max_length`    | Maximum document length. Longer documents will be split into sentences, if sentence boundaries are available. Defaults to `0` for no limit. ~~int~~      |
-| `limit`         | Limit corpus to a subset of examples, e.g. for debugging. Defaults to `0` for no limit. ~~int~~                                                          |
+| Name            | Description                                                                                                                                                                                                                                                                              |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `path`          | The directory or filename to read from. Expects data in spaCy's binary [`.spacy` format](/api/data-formats#binary-training). ~~Union[str, Path]~~                                                                                                                                        |
+|  `gold_preproc` | Whether to set up the Example object with gold-standard sentences and tokens for the predictions. See [`Corpus`](/api/corpus#init) for details. ~~bool~~                                                                                                                                 |
+| `max_length`    | Maximum document length. Longer documents will be split into sentences, if sentence boundaries are available. Defaults to `0` for no limit. ~~int~~                                                                                                                                      |
+| `limit`         | Limit corpus to a subset of examples, e.g. for debugging. Defaults to `0` for no limit. ~~int~~                                                                                                                                                                                          |
+| `augmenter`     | Apply some simply data augmentation, where we replace tokens with variations. This is especially useful for punctuation and case replacement, to help generalize beyond corpora that don't have smart-quotes, or only have smart quotes, etc. Defaults to `None`. ~~Optional[Callable]~~ |
+| **CREATES**     | The corpus reader. ~~Corpus~~                                                                                                                                                                                                                                                            |
 
-### JsonlReader {#jsonlreader}
+### spacy.JsonlReader.v1 {#jsonlreader tag="registered function"}
 
 Create [`Example`](/api/example) objects from a JSONL (newline-delimited JSON)
 file of texts keyed by `"text"`. Can be used to read the raw text corpus for
@@ -532,6 +536,33 @@ JSONL file. Also see the [`JsonlReader`](/api/corpus#jsonlreader) class.
 | `min_length` | Minimum document length (in tokens). Shorter documents will be skipped. Defaults to `0`, which indicates no limit. ~~int~~       |
 | `max_length` | Maximum document length (in tokens). Longer documents will be skipped. Defaults to `0`, which indicates no limit. ~~int~~        |
 | `limit`      | Limit corpus to a subset of examples, e.g. for debugging. Defaults to `0` for no limit. ~~int~~                                  |
+| **CREATES**  | The corpus reader. ~~JsonlTexts~~                                                                                                |
+
+### spacy.read_labels.v1 {#read_labels tag="registered function"}
+
+Read a JSON-formatted labels file generated with
+[`init labels`](/api/cli#init-labels). Typically used in the
+[`[initialize]`](/api/data-formats#config-initialize) block of the training
+config to speed up the model initialization process and provide pre-generated
+label sets.
+
+> #### Example config
+>
+> ```ini
+> [initialize.components]
+>
+> [initialize.components.ner]
+>
+> [initialize.components.ner.labels]
+> @readers = "spacy.read_labels.v1"
+> path = "corpus/labels/ner.json"
+> ```
+
+| Name        | Description                                                                                                                                                                                                               |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `path`      | The path to the labels file generated with [`init labels`](/api/cli#init-labels). ~~Path~~                                                                                                                                |
+| `require`   | Whether to require the file to exist. If set to `False` and the labels file doesn't exist, the loader will return `None` and the `initialize` method will extract the labels from the data. Defaults to `False`. ~~bool~~ |
+| **CREATES** | The                                                                                                                                                                                                                       |
 
 ## Batchers {#batchers source="spacy/training/batchers.py" new="3"}
 
@@ -547,7 +578,7 @@ Instead of using one of the built-in batchers listed here, you can also
 [implement your own](/usage/training#custom-code-readers-batchers), which may or
 may not use a custom schedule.
 
-### batch_by_words {#batch_by_words tag="registered function"}
+### spacy.batch_by_words.v1 {#batch_by_words tag="registered function"}
 
 Create minibatches of roughly a given number of words. If any examples are
 longer than the specified batch length, they will appear in a batch by
@@ -573,8 +604,9 @@ themselves, or be discarded if `discard_oversize` is set to `True`. The argument
 | `tolerance`        | What percentage of the size to allow batches to exceed. ~~float~~                                                                                                                       |
 | `discard_oversize` | Whether to discard sequences that by themselves exceed the tolerated size. ~~bool~~                                                                                                     |
 | `get_length`       | Optional function that receives a sequence item and returns its length. Defaults to the built-in `len()` if not set. ~~Optional[Callable[[Any], int]]~~                                 |
+| **CREATES**        | The batcher that takes an iterable of items and returns batches. ~~Callable[[Iterable[Any]], Iterable[List[Any]]]~~                                                                     |
 
-### batch_by_sequence {#batch_by_sequence tag="registered function"}
+### spacy.batch_by_sequence.v1 {#batch_by_sequence tag="registered function"}
 
 > #### Example config
 >
@@ -591,8 +623,9 @@ Create a batcher that creates batches of the specified size.
 | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `size`       | The target number of items per batch. Can also be a block referencing a schedule, e.g. [`compounding`](https://thinc.ai/docs/api-schedules/#compounding). ~~Union[int, Sequence[int]]~~ |
 | `get_length` | Optional function that receives a sequence item and returns its length. Defaults to the built-in `len()` if not set. ~~Optional[Callable[[Any], int]]~~                                 |
+| **CREATES**  | The batcher that takes an iterable of items and returns batches. ~~Callable[[Iterable[Any]], Iterable[List[Any]]]~~                                                                     |
 
-### batch_by_padded {#batch_by_padded tag="registered function"}
+### spacy.batch_by_padded.v1 {#batch_by_padded tag="registered function"}
 
 > #### Example config
 >
@@ -616,6 +649,35 @@ sequences in the batch.
 | `buffer`           | The number of sequences to accumulate before sorting by length. A larger buffer will result in more even sizing, but if the buffer is very large, the iteration order will be less random, which can result in suboptimal training. ~~int~~ |
 | `discard_oversize` | Whether to discard sequences that are by themselves longer than the largest padded batch size. ~~bool~~                                                                                                                                     |
 | `get_length`       | Optional function that receives a sequence item and returns its length. Defaults to the built-in `len()` if not set. ~~Optional[Callable[[Any], int]]~~                                                                                     |
+| **CREATES**        | The batcher that takes an iterable of items and returns batches. ~~Callable[[Iterable[Any]], Iterable[List[Any]]]~~                                                                                                                         |
+
+## Augmenters {#augmenters source="spacy/training/augment.py" new="3"}
+
+<!-- TODO: intro, explain data augmentation concept -->
+
+### spacy.orth_variants.v1 {#orth_variants tag="registered function"}
+
+> #### Example config
+>
+> ```ini
+> [corpora.train.augmenter]
+> @augmenters = "spacy.orth_variants.v1"
+> level = 0.1
+> lower = 0.5
+> lookups = null
+> ```
+
+Create a data augmentation callback that uses orth-variant replacement. The
+callback can be added to a corpus or other data iterator during training. This
+is especially useful for punctuation and case replacement, to help generalize
+beyond corpora that don't have smart quotes, or only have smart quotes etc.
+
+| Name        | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `level`     | The percentage of texts that will be augmented. ~~float~~                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `lower`     | The percentage of texts that will be lowercased. ~~float~~                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `lookups`   | Lookups table containing the orth variants to use. See [`orth_variants.json`](https://github.com/explosion/spacy-lookups-data/blob/master/spacy_lookups_data/data/en_orth_variants.json) for an example. If not set, tables from [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) are used if available and added in the [`[initialize]`](/api/data-formats#config-initialize) block of the config. If no orth variants are found, spaCy will raise an error. Defaults to `None`. ~~Optional[Lookups]~~ |
+| **CREATES** | A function that takes the current `nlp` object and an [`Example`](/api/example) and yields augmented `Example` objects. ~~Callable[[Language, Example], Iterator[Example]]~~                                                                                                                                                                                                                                                                                                                                                   |
 
 ## Training data and alignment {#gold source="spacy/training"}
 
@@ -623,7 +685,7 @@ sequences in the batch.
 
 Encode labelled spans into per-token tags, using the
 [BILUO scheme](/usage/linguistic-features#accessing-ner) (Begin, In, Last, Unit,
-Out). Returns a list of strings, describing the tags. Each tag string will be of
+Out). Returns a list of strings, describing the tags. Each tag string will be in
 the form of either `""`, `"O"` or `"{action}-{label}"`, where action is one of
 `"B"`, `"I"`, `"L"`, `"U"`. The string `"-"` is used where the entity offsets
 don't align with the tokenization in the `Doc` object. The training algorithm
@@ -747,7 +809,7 @@ decorator.
 ### util.lang_class_is_loaded {#util.lang_class_is_loaded tag="function" new="2.1"}
 
 Check whether a `Language` subclass is already loaded. `Language` subclasses are
-loaded lazily, to avoid expensive setup code associated with the language data.
+loaded lazily to avoid expensive setup code associated with the language data.
 
 > #### Example
 >
@@ -935,7 +997,7 @@ Compile a sequence of prefix rules into a regex object.
 | Name        | Description                                                                                                                                 |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | `entries`   | The prefix rules, e.g. [`lang.punctuation.TOKENIZER_PREFIXES`](%%GITHUB_SPACY/spacy/lang/punctuation.py). ~~Iterable[Union[str, Pattern]]~~ |
-| **RETURNS** | The regex object. to be used for [`Tokenizer.prefix_search`](/api/tokenizer#attributes). ~~Pattern~~                                        |
+| **RETURNS** | The regex object to be used for [`Tokenizer.prefix_search`](/api/tokenizer#attributes). ~~Pattern~~                                         |
 
 ### util.compile_suffix_regex {#util.compile_suffix_regex tag="function"}
 
@@ -952,7 +1014,7 @@ Compile a sequence of suffix rules into a regex object.
 | Name        | Description                                                                                                                                 |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | `entries`   | The suffix rules, e.g. [`lang.punctuation.TOKENIZER_SUFFIXES`](%%GITHUB_SPACY/spacy/lang/punctuation.py). ~~Iterable[Union[str, Pattern]]~~ |
-| **RETURNS** | The regex object. to be used for [`Tokenizer.suffix_search`](/api/tokenizer#attributes). ~~Pattern~~                                        |
+| **RETURNS** | The regex object to be used for [`Tokenizer.suffix_search`](/api/tokenizer#attributes). ~~Pattern~~                                         |
 
 ### util.compile_infix_regex {#util.compile_infix_regex tag="function"}
 
@@ -969,7 +1031,7 @@ Compile a sequence of infix rules into a regex object.
 | Name        | Description                                                                                                                               |
 | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | `entries`   | The infix rules, e.g. [`lang.punctuation.TOKENIZER_INFIXES`](%%GITHUB_SPACY/spacy/lang/punctuation.py). ~~Iterable[Union[str, Pattern]]~~ |
-| **RETURNS** | The regex object. to be used for [`Tokenizer.infix_finditer`](/api/tokenizer#attributes). ~~Pattern~~                                     |
+| **RETURNS** | The regex object to be used for [`Tokenizer.infix_finditer`](/api/tokenizer#attributes). ~~Pattern~~                                      |
 
 ### util.minibatch {#util.minibatch tag="function" new="2"}
 

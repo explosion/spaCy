@@ -1,4 +1,4 @@
-from collections import Iterable as IterableInstance
+from collections.abc import Iterable as IterableInstance
 import warnings
 import numpy
 from murmurhash.mrmr cimport hash64

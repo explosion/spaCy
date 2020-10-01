@@ -67,7 +67,7 @@ class Lemmatizer(Pipe):
         return {}
 
     @classmethod
-    def load_lookups(cls, lang: str, mode: str, lookups: Optional[Lookups],) -> Lookups:
+    def load_lookups(cls, lang: str, mode: str, lookups: Optional[Lookups]) -> Lookups:
         """Load and validate lookups tables. If the provided lookups is None,
         load the default lookups tables according to the language and mode
         settings. Confirm that all required tables for the language and mode

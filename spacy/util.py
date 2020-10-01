@@ -8,6 +8,7 @@ import re
 from pathlib import Path
 import thinc
 from thinc.api import NumpyOps, get_current_ops, Adam, Config, Optimizer
+from thinc.api import ConfigValidationError
 import functools
 import itertools
 import numpy.random
@@ -56,17 +57,22 @@ if TYPE_CHECKING:
 
 
 OOV_RANK = numpy.iinfo(numpy.uint64).max
+DEFAULT_OOV_PROB = -20
 LEXEME_NORM_LANGS = ["da", "de", "el", "en", "id", "lb", "pt", "ru", "sr", "ta", "th"]
 
 # Default order of sections in the config.cfg. Not all sections needs to exist,
 # and additional sections are added at the end, in alphabetical order.
 # fmt: off
-CONFIG_SECTION_ORDER = ["paths", "variables", "system", "nlp", "components", "corpora", "training", "pretraining"]
+CONFIG_SECTION_ORDER = ["paths", "variables", "system", "nlp", "components", "corpora", "training", "pretraining", "initialize"]
 # fmt: on
 
 
-logging.basicConfig()
+logging.basicConfig(format="%(message)s")
 logger = logging.getLogger("spacy")
+
+
+class ENV_VARS:
+    CONFIG_OVERRIDES = "SPACY_CONFIG_OVERRIDES"
 
 
 class registry(thinc.registry):
@@ -81,12 +87,13 @@ class registry(thinc.registry):
     callbacks = catalogue.create("spacy", "callbacks")
     batchers = catalogue.create("spacy", "batchers", entry_points=True)
     readers = catalogue.create("spacy", "readers", entry_points=True)
+    augmenters = catalogue.create("spacy", "augmenters", entry_points=True)
     loggers = catalogue.create("spacy", "loggers", entry_points=True)
     # These are factories registered via third-party packages and the
     # spacy_factories entry point. This registry only exists so we can easily
     # load them via the entry points. The "true" factories are added via the
     # Language.factory decorator (in the spaCy code base and user code) and those
-    # are the factories used to initialize components via registry.make_from_config.
+    # are the factories used to initialize components via registry.resolve.
     _entry_point_factories = catalogue.create("spacy", "factories", entry_points=True)
     factories = catalogue.create("spacy", "internal_factories")
     # This is mostly used to get a list of all installed models in the current
@@ -94,6 +101,10 @@ class registry(thinc.registry):
     # themselves via entry points.
     models = catalogue.create("spacy", "models", entry_points=True)
     cli = catalogue.create("spacy", "cli", entry_points=True)
+
+
+# We want json loading in the registry, so manually register srsly.read_json.
+registry.readers("srsly.read_json.v0", srsly.read_json)
 
 
 class SimpleFrozenDict(dict):
@@ -239,28 +250,6 @@ def get_module_path(module: ModuleType) -> Path:
     return Path(sys.modules[module.__module__].__file__).parent
 
 
-def load_vectors_into_model(
-    nlp: "Language", name: Union[str, Path], *, add_strings=True
-) -> None:
-    """Load word vectors from an installed model or path into a model instance."""
-    vectors_nlp = load_model(name)
-    nlp.vocab.vectors = vectors_nlp.vocab.vectors
-    if add_strings:
-        # I guess we should add the strings from the vectors_nlp model?
-        # E.g. if someone does a similarity query, they might expect the strings.
-        for key in nlp.vocab.vectors.key2row:
-            if key in vectors_nlp.vocab.strings:
-                nlp.vocab.strings.add(vectors_nlp.vocab.strings[key])
-
-
-def load_vocab_data_into_model(
-    nlp: "Language", *, lookups: Optional["Lookups"] = None
-) -> None:
-    """Load vocab data."""
-    if lookups:
-        nlp.vocab.lookups = lookups
-
-
 def load_model(
     name: Union[str, Path],
     *,
@@ -351,9 +340,7 @@ def load_model_from_path(
         meta = get_model_meta(model_path)
     config_path = model_path / "config.cfg"
     config = load_config(config_path, overrides=dict_to_dot(config))
-    nlp, _ = load_model_from_config(
-        config, vocab=vocab, disable=disable, exclude=exclude
-    )
+    nlp = load_model_from_config(config, vocab=vocab, disable=disable, exclude=exclude)
     return nlp.from_disk(model_path, exclude=exclude)
 
 
@@ -365,7 +352,7 @@ def load_model_from_config(
     exclude: Iterable[str] = SimpleFrozenList(),
     auto_fill: bool = False,
     validate: bool = True,
-) -> Tuple["Language", Config]:
+) -> "Language":
     """Create an nlp object from a config. Expects the full config file including
     a section "nlp" containing the settings for the nlp object.
 
@@ -398,7 +385,42 @@ def load_model_from_config(
         auto_fill=auto_fill,
         validate=validate,
     )
-    return nlp, nlp.resolved
+    return nlp
+
+
+def resolve_dot_names(config: Config, dot_names: List[Optional[str]]) -> Tuple[Any]:
+    """Resolve one or more "dot notation" names, e.g. corpora.train.
+    The paths could point anywhere into the config, so we don't know which
+    top-level section we'll be looking within.
+
+    We resolve the whole top-level section, although we could resolve less --
+    we could find the lowest part of the tree.
+    """
+    # TODO: include schema?
+    resolved = {}
+    output = []
+    errors = []
+    for name in dot_names:
+        if name is None:
+            output.append(name)
+        else:
+            section = name.split(".")[0]
+            # We want to avoid resolving the same thing twice
+            if section not in resolved:
+                if registry.is_promise(config[section]):
+                    # Otherwise we can't resolve [corpus] if it's a promise
+                    result = registry.resolve({"config": config[section]})["config"]
+                else:
+                    result = registry.resolve(config[section])
+                resolved[section] = result
+            try:
+                output.append(dot_to_object(resolved, name))
+            except KeyError:
+                msg = f"not a valid section reference: {name}"
+                errors.append({"loc": name.split("."), "msg": msg})
+    if errors:
+        raise ConfigValidationError(config=config, errors=errors)
+    return tuple(output)
 
 
 def load_model_from_init_py(
@@ -470,7 +492,7 @@ def load_config_from_str(
     RETURNS (Config): The loaded config.
     """
     return Config(section_order=CONFIG_SECTION_ORDER).from_str(
-        text, overrides=overrides, interpolate=interpolate,
+        text, overrides=overrides, interpolate=interpolate
     )
 
 
@@ -1278,3 +1300,23 @@ def minibatch(items, size):
         if len(batch) == 0:
             break
         yield list(batch)
+
+
+def is_cython_func(func: Callable) -> bool:
+    """Slightly hacky check for whether a callable is implemented in Cython.
+    Can be used to implement slightly different behaviors, especially around
+    inspecting and parameter annotations. Note that this will only return True
+    for actual cdef functions and methods, not regular Python functions defined
+    in Python modules.
+
+    func (Callable): The callable to check.
+    RETURNS (bool): Whether the callable is Cython (probably).
+    """
+    attr = "__pyx_vtable__"
+    if hasattr(func, attr):  # function or class instance
+        return True
+    # https://stackoverflow.com/a/55767059
+    if hasattr(func, "__qualname__") and hasattr(func, "__module__"):  # method
+        cls_func = vars(sys.modules[func.__module__])[func.__qualname__.split(".")[0]]
+        return hasattr(cls_func, attr)
+    return False

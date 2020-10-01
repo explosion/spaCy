@@ -1,10 +1,8 @@
-from thinc.api import Config
-
+from .stop_words import STOP_WORDS
+from .lex_attrs import LEX_ATTRS
 from ...language import Language
 from ...tokens import Doc
-from .stop_words import STOP_WORDS
-from ...util import DummyTokenizer, registry
-from .lex_attrs import LEX_ATTRS
+from ...util import DummyTokenizer, registry, load_config_from_str
 
 
 DEFAULT_CONFIG = """
@@ -17,7 +15,7 @@ use_pyvi = true
 
 
 @registry.tokenizers("spacy.vi.VietnameseTokenizer")
-def create_vietnamese_tokenizer(use_pyvi: bool = True,):
+def create_vietnamese_tokenizer(use_pyvi: bool = True):
     def vietnamese_tokenizer_factory(nlp):
         return VietnameseTokenizer(nlp, use_pyvi=use_pyvi)
 
@@ -55,7 +53,7 @@ class VietnameseTokenizer(DummyTokenizer):
 
 
 class VietnameseDefaults(Language.Defaults):
-    config = Config().from_str(DEFAULT_CONFIG)
+    config = load_config_from_str(DEFAULT_CONFIG)
     lex_attr_getters = LEX_ATTRS
     stop_words = STOP_WORDS
 

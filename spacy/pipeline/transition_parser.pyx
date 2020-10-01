@@ -1,4 +1,4 @@
-# cython: infer_types=True, cdivision=True, boundscheck=False
+# cython: infer_types=True, cdivision=True, boundscheck=False, binding=True
 from __future__ import print_function
 from cymem.cymem cimport Pool
 cimport numpy as np
@@ -7,6 +7,7 @@ from libcpp.vector cimport vector
 from libc.string cimport memset
 from libc.stdlib cimport calloc, free
 import random
+from typing import Optional
 
 import srsly
 from thinc.api import set_dropout_rate
@@ -94,6 +95,10 @@ cdef class Parser(Pipe):
     def labels(self):
         class_names = [self.moves.get_class_name(i) for i in range(self.moves.n_moves)]
         return class_names
+
+    @property
+    def label_data(self):
+        return self.moves.labels
 
     @property
     def tok2vec(self):
@@ -354,7 +359,7 @@ cdef class Parser(Pipe):
             # If all weights for an output are 0 in the original model, don't
             # supervise that output. This allows us to add classes.
             loss += (d_scores**2).sum()
-            backprop(d_scores, sgd=sgd)
+            backprop(d_scores)
             # Follow the predicted action
             self.transition_states(states, guesses)
             states = [state for state in states if not state.is_final()]
@@ -405,18 +410,20 @@ cdef class Parser(Pipe):
     def set_output(self, nO):
         self.model.attrs["resize_output"](self.model, nO)
 
-    def begin_training(self, get_examples, pipeline=None, sgd=None, **kwargs):
+    def initialize(self, get_examples, nlp=None, labels=None):
         self._ensure_examples(get_examples)
-        self.cfg.update(kwargs)
         lexeme_norms = self.vocab.lookups.get_table("lexeme_norm", {})
         if len(lexeme_norms) == 0 and self.vocab.lang in util.LEXEME_NORM_LANGS:
             langs = ", ".join(util.LEXEME_NORM_LANGS)
             util.logger.debug(Warnings.W033.format(model="parser or NER", langs=langs))
-        actions = self.moves.get_actions(
-            examples=get_examples(),
-            min_freq=self.cfg['min_action_freq'],
-            learn_tokens=self.cfg["learn_tokens"]
-        )
+        if labels is not None:
+            actions = dict(labels)
+        else:
+            actions = self.moves.get_actions(
+                examples=get_examples(),
+                min_freq=self.cfg['min_action_freq'],
+                learn_tokens=self.cfg["learn_tokens"]
+            )
         for action, labels in self.moves.labels.items():
             actions.setdefault(action, {})
             for label, freq in labels.items():
@@ -425,11 +432,9 @@ cdef class Parser(Pipe):
         self.moves.initialize_actions(actions)
         # make sure we resize so we have an appropriate upper layer
         self._resize()
-        if sgd is None:
-            sgd = self.create_optimizer()
         doc_sample = []
-        if pipeline is not None:
-            for name, component in pipeline:
+        if nlp is not None:
+            for name, component in nlp.pipeline:
                 if component is self:
                     break
                 if hasattr(component, "pipe"):
@@ -441,9 +446,8 @@ cdef class Parser(Pipe):
                 doc_sample.append(example.predicted)
         assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(doc_sample)
-        if pipeline is not None:
-            self.init_multitask_objectives(get_examples, pipeline, sgd=sgd, **self.cfg)
-        return sgd
+        if nlp is not None:
+            self.init_multitask_objectives(get_examples, nlp.pipeline)
 
     def to_disk(self, path, exclude=tuple()):
         serializers = {

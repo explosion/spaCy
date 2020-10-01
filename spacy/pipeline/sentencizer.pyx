@@ -58,7 +58,7 @@ class Sentencizer(Pipe):
         else:
             self.punct_chars = set(self.default_punct_chars)
 
-    def begin_training(self, get_examples, pipeline=None, sgd=None):
+    def initialize(self, get_examples, nlp=None):
         pass
 
     def __call__(self, doc):

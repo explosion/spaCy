@@ -1,31 +1,84 @@
+from typing import Callable, Iterator, Dict, List, Tuple, Optional, TYPE_CHECKING
 import random
 import itertools
+import copy
+from functools import partial
+
+from ..util import registry, logger
+from ..tokens import Doc
+from .example import Example
+from ..lookups import Lookups
+from ..errors import Errors
+
+if TYPE_CHECKING:
+    from ..language import Language  # noqa: F401
 
 
-def make_orth_variants_example(nlp, example, orth_variant_level=0.0):  # TODO: naming
-    raw_text = example.text
-    orig_dict = example.to_dict()
-    variant_text, variant_token_annot = make_orth_variants(
-        nlp, raw_text, orig_dict["token_annotation"], orth_variant_level
-    )
-    doc = nlp.make_doc(variant_text)
-    orig_dict["token_annotation"] = variant_token_annot
-    return example.from_dict(doc, orig_dict)
+@registry.augmenters("spacy.orth_variants.v1")
+def create_orth_variants_augmenter(
+    level: float, lower: float, lookups: Optional[Lookups] = None,
+) -> Callable[["Language", Example], Iterator[Example]]:
+    """Create a data augmentation callback that uses orth-variant replacement.
+    The callback can be added to a corpus or other data iterator during training.
+    """
+    return partial(orth_variants_augmenter, level=level, lower=lower, lookups=lookups)
 
 
-def make_orth_variants(nlp, raw_text, orig_token_dict, orth_variant_level=0.0):
-    if random.random() >= orth_variant_level:
-        return raw_text, orig_token_dict
-    if not orig_token_dict:
-        return raw_text, orig_token_dict
-    raw = raw_text
-    token_dict = orig_token_dict
-    lower = False
-    if random.random() >= 0.5:
-        lower = True
-        if raw is not None:
-            raw = raw.lower()
-    orth_variants = nlp.vocab.lookups.get_table("orth_variants", {})
+def dont_augment(nlp: "Language", example: Example) -> Iterator[Example]:
+    yield example
+
+
+def orth_variants_augmenter(
+    nlp: "Language",
+    example: Example,
+    *,
+    level: float = 0.0,
+    lower: float = 0.0,
+    lookups: Optional[Lookups] = None,
+) -> Iterator[Example]:
+    table_name = "orth_variants"
+    if lookups is not None:
+        orth_variants = lookups.get_table(table_name, {})
+        logger.debug("Using data augmentation orth variants from provided lookups")
+    else:
+        orth_variants = nlp.vocab.lookups.get_table(table_name, {})
+        logger.debug("Using data augmentation orth variants from default vocab lookups")
+        if not orth_variants:
+            raise ValueError(Errors.E912.format(lang=nlp.lang))
+    if random.random() >= level:
+        yield example
+    else:
+        raw_text = example.text
+        orig_dict = example.to_dict()
+        if not orig_dict["token_annotation"]:
+            yield example
+        else:
+            variant_text, variant_token_annot = make_orth_variants(
+                nlp,
+                raw_text,
+                orig_dict["token_annotation"],
+                orth_variants,
+                lower=raw_text is not None and random.random() < lower,
+            )
+            if variant_text:
+                doc = nlp.make_doc(variant_text)
+            else:
+                doc = Doc(nlp.vocab, words=variant_token_annot["ORTH"])
+                variant_token_annot["ORTH"] = [w.text for w in doc]
+                variant_token_annot["SPACY"] = [w.whitespace_ for w in doc]
+            orig_dict["token_annotation"] = variant_token_annot
+            yield example.from_dict(doc, orig_dict)
+
+
+def make_orth_variants(
+    nlp: "Language",
+    raw: str,
+    token_dict: Dict[str, List[str]],
+    orth_variants: Dict[str, list],
+    *,
+    lower: bool = False,
+) -> Tuple[str, Dict[str, List[str]]]:
+    orig_token_dict = copy.deepcopy(token_dict)
     ndsv = orth_variants.get("single", [])
     ndpv = orth_variants.get("paired", [])
     words = token_dict.get("words", [])
@@ -103,7 +156,7 @@ def make_orth_variants(nlp, raw_text, orig_token_dict, orth_variant_level=0.0):
             # something went wrong, abort
             # (add a warning message?)
             if not match_found:
-                return raw_text, orig_token_dict
+                return raw, orig_token_dict
             # add following whitespace
             while raw_idx < len(raw) and raw[raw_idx].isspace():
                 variant_raw += raw[raw_idx]

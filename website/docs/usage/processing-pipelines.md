@@ -167,8 +167,8 @@ the binary data:
 ```python
 ### spacy.load under the hood
 lang = "en"
-pipeline = ["tagger", "parser", "ner"]
-data_path = "path/to/en_core_web_sm/en_core_web_sm-2.0.0"
+pipeline = ["tok2vec", "tagger", "parser", "ner"]
+data_path = "path/to/en_core_web_sm/en_core_web_sm-3.0.0"
 
 cls = spacy.util.get_lang_class(lang)  # 1. Get Language class, e.g. English
 nlp = cls()                            # 2. Initialize it
@@ -197,9 +197,9 @@ list of human-readable component names.
 
 ```python
 print(nlp.pipeline)
-# [('tagger', <spacy.pipeline.Tagger>), ('parser', <spacy.pipeline.DependencyParser>), ('ner', <spacy.pipeline.EntityRecognizer>)]
+# [('tok2vec', <spacy.pipeline.Tok2Vec>), ('tagger', <spacy.pipeline.Tagger>), ('parser', <spacy.pipeline.DependencyParser>), ('ner', <spacy.pipeline.EntityRecognizer>)]
 print(nlp.pipe_names)
-# ['tagger', 'parser', 'ner']
+# ['tok2vec', 'tagger', 'parser', 'ner']
 ```
 
 ### Built-in pipeline components {#built-in}
@@ -1126,12 +1126,12 @@ For some use cases, it makes sense to also overwrite additional methods to
 customize how the model is updated from examples, how it's initialized, how the
 loss is calculated and to add evaluation scores to the training output.
 
-| Name                                         | Description                                                                                                                                                                                                                                                                                                        |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [`update`](/api/pipe#update)                 | Learn from a batch of [`Example`](/api/example) objects containing the predictions and gold-standard annotations, and update the component's model.                                                                                                                                                                |
-| [`begin_training`](/api/pipe#begin_training) | Initialize the model. Typically calls into [`Model.initialize`](https://thinc.ai/docs/api-model#initialize) and [`Pipe.create_optimizer`](/api/pipe#create_optimizer) if no optimizer is provided.                                                                                                                 |
-| [`get_loss`](/api/pipe#get_loss)             | Return a tuple of the loss and the gradient for a batch of [`Example`](/api/example) objects.                                                                                                                                                                                                                      |
-| [`score`](/api/pipe#score)                   | Score a batch of [`Example`](/api/example) objects and return a dictionary of scores. The [`@Language.factory`](/api/language#factory) decorator can define the `default_socre_weights` of the component to decide which keys of the scores to display during training and how they count towards the final score. |
+| Name                                 | Description                                                                                                                                                                                                                                                                                                                                   |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`update`](/api/pipe#update)         | Learn from a batch of [`Example`](/api/example) objects containing the predictions and gold-standard annotations, and update the component's model.                                                                                                                                                                                           |
+| [`initialize`](/api/pipe#initialize) | Initialize the model. Typically calls into [`Model.initialize`](https://thinc.ai/docs/api-model#initialize) and can be passed custom arguments via the [`[initialize]`](/api/data-formats#config-initialize) config block that are only loaded during training or when you call [`nlp.initialize`](/api/language#initialize), not at runtime. |
+| [`get_loss`](/api/pipe#get_loss)     | Return a tuple of the loss and the gradient for a batch of [`Example`](/api/example) objects.                                                                                                                                                                                                                                                 |
+| [`score`](/api/pipe#score)           | Score a batch of [`Example`](/api/example) objects and return a dictionary of scores. The [`@Language.factory`](/api/language#factory) decorator can define the `default_socre_weights` of the component to decide which keys of the scores to display during training and how they count towards the final score.                            |
 
 <Infobox title="Custom trainable components and models" emoji="📖">
 

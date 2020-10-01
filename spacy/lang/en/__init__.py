@@ -1,5 +1,4 @@
 from typing import Optional
-
 from thinc.api import Model
 
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS

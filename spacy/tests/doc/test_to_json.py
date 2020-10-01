@@ -9,7 +9,7 @@ def doc(en_vocab):
     tags = ["VBP", "NN", "NN"]
     heads = [0, 0, 0]
     deps = ["ROOT", "dobj", "dobj"]
-    ents = [("ORG", 1, 2)]
+    ents = ["O", "B-ORG", "O"]
     return Doc(
         en_vocab, words=words, pos=pos, tags=tags, heads=heads, deps=deps, ents=ents
     )

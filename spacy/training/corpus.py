@@ -1,11 +1,13 @@
 import warnings
 from typing import Union, List, Iterable, Iterator, TYPE_CHECKING, Callable
+from typing import Optional
 from pathlib import Path
 import srsly
 
 from .. import util
+from .augment import dont_augment
 from .example import Example
-from ..errors import Warnings
+from ..errors import Warnings, Errors
 from ..tokens import DocBin, Doc
 from ..vocab import Vocab
 
@@ -18,9 +20,22 @@ FILE_TYPE = ".spacy"
 
 @util.registry.readers("spacy.Corpus.v1")
 def create_docbin_reader(
-    path: Path, gold_preproc: bool, max_length: int = 0, limit: int = 0
+    path: Optional[Path],
+    gold_preproc: bool,
+    max_length: int = 0,
+    limit: int = 0,
+    augmenter: Optional[Callable] = None,
 ) -> Callable[["Language"], Iterable[Example]]:
-    return Corpus(path, gold_preproc=gold_preproc, max_length=max_length, limit=limit)
+    if path is None:
+        raise ValueError(Errors.E913)
+    util.logger.debug(f"Loading corpus from path: {path}")
+    return Corpus(
+        path,
+        gold_preproc=gold_preproc,
+        max_length=max_length,
+        limit=limit,
+        augmenter=augmenter,
+    )
 
 
 @util.registry.readers("spacy.JsonlReader.v1")
@@ -28,6 +43,15 @@ def create_jsonl_reader(
     path: Path, min_length: int = 0, max_length: int = 0, limit: int = 0
 ) -> Callable[["Language"], Iterable[Doc]]:
     return JsonlTexts(path, min_length=min_length, max_length=max_length, limit=limit)
+
+
+@util.registry.readers("spacy.read_labels.v1")
+def read_labels(path: Path, *, require: bool = False):
+    # I decided not to give this a generic name, because I don't want people to
+    # use it for arbitrary stuff, as I want this require arg with default False.
+    if not require and not path.exists():
+        return None
+    return srsly.read_json(path)
 
 
 def walk_corpus(path: Union[str, Path], file_type) -> List[Path]:
@@ -70,6 +94,8 @@ class Corpus:
         0, which indicates no limit.
     limit (int): Limit corpus to a subset of examples, e.g. for debugging.
         Defaults to 0, which indicates no limit.
+    augment (Callable[Example, Iterable[Example]]): Optional data augmentation
+        function, to extrapolate additional examples from your annotations.
 
     DOCS: https://nightly.spacy.io/api/corpus
     """
@@ -81,11 +107,13 @@ class Corpus:
         limit: int = 0,
         gold_preproc: bool = False,
         max_length: int = 0,
+        augmenter: Optional[Callable] = None,
     ) -> None:
         self.path = util.ensure_path(path)
         self.gold_preproc = gold_preproc
         self.max_length = max_length
         self.limit = limit
+        self.augmenter = augmenter if augmenter is not None else dont_augment
 
     def __call__(self, nlp: "Language") -> Iterator[Example]:
         """Yield examples from the data.
@@ -100,7 +128,9 @@ class Corpus:
             examples = self.make_examples_gold_preproc(nlp, ref_docs)
         else:
             examples = self.make_examples(nlp, ref_docs)
-        yield from examples
+        for real_eg in examples:
+            for augmented_eg in self.augmenter(nlp, real_eg):
+                yield augmented_eg
 
     def _make_example(
         self, nlp: "Language", reference: Doc, gold_preproc: bool

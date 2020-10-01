@@ -134,7 +134,7 @@ def test_kb_undefined(nlp):
     """Test that the EL can't train without defining a KB"""
     entity_linker = nlp.add_pipe("entity_linker", config={})
     with pytest.raises(ValueError):
-        entity_linker.begin_training(lambda: [])
+        entity_linker.initialize(lambda: [])
 
 
 def test_kb_empty(nlp):
@@ -143,7 +143,7 @@ def test_kb_empty(nlp):
     entity_linker = nlp.add_pipe("entity_linker", config=config)
     assert len(entity_linker.kb) == 0
     with pytest.raises(ValueError):
-        entity_linker.begin_training(lambda: [])
+        entity_linker.initialize(lambda: [])
 
 
 def test_kb_serialize(nlp):
@@ -254,14 +254,12 @@ def test_vocab_serialization(nlp):
     mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
 
     # adding entities
-    q1_hash = mykb.add_entity(entity="Q1", freq=27, entity_vector=[1])
+    mykb.add_entity(entity="Q1", freq=27, entity_vector=[1])
     q2_hash = mykb.add_entity(entity="Q2", freq=12, entity_vector=[2])
-    q3_hash = mykb.add_entity(entity="Q3", freq=5, entity_vector=[3])
+    mykb.add_entity(entity="Q3", freq=5, entity_vector=[3])
 
     # adding aliases
-    douglas_hash = mykb.add_alias(
-        alias="douglas", entities=["Q2", "Q3"], probabilities=[0.4, 0.1]
-    )
+    mykb.add_alias(alias="douglas", entities=["Q2", "Q3"], probabilities=[0.4, 0.1])
     adam_hash = mykb.add_alias(alias="adam", entities=["Q2"], probabilities=[0.9])
 
     candidates = mykb.get_alias_candidates("adam")
@@ -360,7 +358,7 @@ def test_preserving_links_asdoc(nlp):
     ruler.add_patterns(patterns)
     el_config = {"kb_loader": {"@misc": "myLocationsKB.v1"}, "incl_prior": False}
     entity_linker = nlp.add_pipe("entity_linker", config=el_config, last=True)
-    nlp.begin_training()
+    nlp.initialize()
     assert entity_linker.model.get_dim("nO") == vector_length
 
     # test whether the entity links are preserved by the `as_doc()` function
@@ -463,7 +461,7 @@ def test_overfitting_IO():
     )
 
     # train the NEL pipe
-    optimizer = nlp.begin_training(get_examples=lambda: train_examples)
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
     assert entity_linker.model.get_dim("nO") == vector_length
     assert entity_linker.model.get_dim("nO") == entity_linker.kb.entity_vector_length
 

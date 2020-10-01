@@ -4,9 +4,10 @@ from spacy.training import biluo_tags_to_spans, iob_to_biluo
 from spacy.training import Corpus, docs_to_json
 from spacy.training.example import Example
 from spacy.training.converters import json_to_docs
-from spacy.training.augment import make_orth_variants_example
+from spacy.training.augment import create_orth_variants_augmenter
 from spacy.lang.en import English
 from spacy.tokens import Doc, DocBin
+from spacy.lookups import Lookups
 from spacy.util import get_words_and_spaces, minibatch
 from thinc.api import compounding
 import pytest
@@ -29,7 +30,12 @@ def doc(en_vocab):
     heads = [2, 0, 3, 3, 3, 6, 4, 3, 7, 5]
     deps = ["poss", "case", "nsubj", "ROOT", "prep", "compound", "pobj", "prep", "pobj", "punct"]
     lemmas = ["Sarah", "'s", "sister", "fly", "to", "Silicon", "Valley", "via", "London", "."]
-    ents = (("PERSON", 0, 2), ("LOC", 5, 7), ("GPE", 8, 9))
+    ents = ["O"] * len(words)
+    ents[0] = "B-PERSON"
+    ents[1] = "I-PERSON"
+    ents[5] = "B-LOC"
+    ents[6] = "I-LOC"
+    ents[8] = "B-GPE"
     cats = {"TRAVEL": 1.0, "BAKING": 0.0}
     # fmt: on
     doc = Doc(
@@ -492,13 +498,21 @@ def test_roundtrip_docs_to_docbin(doc):
 @pytest.mark.filterwarnings("ignore::UserWarning")
 def test_make_orth_variants(doc):
     nlp = English()
+    orth_variants = {
+        "single": [
+            {"tags": ["NFP"], "variants": ["…", "..."]},
+            {"tags": [":"], "variants": ["-", "—", "–", "--", "---", "——"]},
+        ]
+    }
+    lookups = Lookups()
+    lookups.add_table("orth_variants", orth_variants)
+    augmenter = create_orth_variants_augmenter(level=0.2, lower=0.5, lookups=lookups)
     with make_tempdir() as tmpdir:
         output_file = tmpdir / "roundtrip.spacy"
         DocBin(docs=[doc]).to_disk(output_file)
         # due to randomness, test only that this runs with no errors for now
-        reader = Corpus(output_file)
-        train_example = next(reader(nlp))
-    make_orth_variants_example(nlp, train_example, orth_variant_level=0.2)
+        reader = Corpus(output_file, augmenter=augmenter)
+        list(reader(nlp))
 
 
 @pytest.mark.skip("Outdated")
@@ -600,7 +614,7 @@ def _train_tuples(train_data):
     train_examples = []
     for t in train_data:
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
-    optimizer = nlp.begin_training()
+    optimizer = nlp.initialize()
     for i in range(5):
         losses = {}
         batches = minibatch(train_examples, size=compounding(4.0, 32.0, 1.001))

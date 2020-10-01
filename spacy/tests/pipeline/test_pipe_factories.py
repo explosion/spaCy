@@ -4,8 +4,7 @@ from spacy.lang.en import English
 from spacy.lang.de import German
 from spacy.tokens import Doc
 from spacy.util import registry, SimpleFrozenDict, combine_score_weights
-from thinc.api import Model, Linear
-from thinc.config import ConfigValidationError
+from thinc.api import Model, Linear, ConfigValidationError
 from pydantic import StrictInt, StrictStr
 
 from ..util import make_tempdir

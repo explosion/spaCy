@@ -41,8 +41,8 @@ transformers is that word vectors model **lexical types**, rather than _tokens_.
 If you have a list of terms with no context around them, a transformer model
 like BERT can't really help you. BERT is designed to understand language **in
 context**, which isn't what you have. A word vectors table will be a much better
-fit for your task. However, if you do have words in context — whole sentences or
-paragraphs of running text — word vectors will only provide a very rough
+fit for your task. However, if you do have words in context – whole sentences or
+paragraphs of running text – word vectors will only provide a very rough
 approximation of what the text is about.
 
 Word vectors are also very computationally efficient, as they map a word to a
@@ -256,7 +256,7 @@ for doc in nlp.pipe(["some text", "some other text"]):
 ```
 
 You can also customize how the [`Transformer`](/api/transformer) component sets
-annotations onto the [`Doc`](/api/doc), by specifying a custom
+annotations onto the [`Doc`](/api/doc) by specifying a custom
 `set_extra_annotations` function. This callback will be called with the raw
 input and output data for the whole batch, along with the batch of `Doc`
 objects, allowing you to implement whatever you need. The annotation setter is
@@ -496,7 +496,7 @@ algorithms for learning word vector tables. You can train a word vectors table
 using tools such as [Gensim](https://radimrehurek.com/gensim/),
 [FastText](https://fasttext.cc/) or
 [GloVe](https://nlp.stanford.edu/projects/glove/), or download existing
-pretrained vectors. The [`init vocab`](/api/cli#init-vocab) command lets you
+pretrained vectors. The [`init vectors`](/api/cli#init-vectors) command lets you
 convert vectors for use with spaCy and will give you a directory you can load or
 refer to in your [training configs](/usage/training#config).
 
@@ -585,8 +585,9 @@ vectors, but combines them via summation with a smaller table of learned
 embeddings.
 
 ```python
-from thinc.api import add, chain, remap_ids, Embed, FeatureExtractor
+from thinc.api import add, chain, remap_ids, Embed
 from spacy.ml.staticvectors import StaticVectors
+from spacy.ml.featureextractor import FeatureExtractor
 from spacy.util import registry
 
 @registry.architectures("my_example.MyEmbedding.v1")
@@ -675,7 +676,7 @@ given you a 10% error reduction, pretraining with spaCy might give you another
 
 The [`spacy pretrain`](/api/cli#pretrain) command will take a **specific
 subnetwork** within one of your components, and add additional layers to build a
-network for a temporary task, that forces the model to learn something about
+network for a temporary task that forces the model to learn something about
 sentence structure and word cooccurrence statistics. Pretraining produces a
 **binary weights file** that can be loaded back in at the start of training. The
 weights file specifies an initial set of weights. Training then proceeds as

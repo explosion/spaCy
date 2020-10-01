@@ -223,15 +223,13 @@ def test_issue3611():
         textcat.add_label(label)
     # training the network
     with nlp.select_pipes(enable="textcat"):
-        optimizer = nlp.begin_training()
+        optimizer = nlp.initialize()
         for i in range(3):
             losses = {}
             batches = minibatch(train_data, size=compounding(4.0, 32.0, 1.001))
 
             for batch in batches:
-                nlp.update(
-                    examples=batch, sgd=optimizer, drop=0.1, losses=losses,
-                )
+                nlp.update(examples=batch, sgd=optimizer, drop=0.1, losses=losses)
 
 
 def test_issue3625():
@@ -264,13 +262,11 @@ def test_issue3830_no_subtok():
         "min_action_freq": 30,
         "update_with_oracle_cut_size": 100,
     }
-    model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)[
-        "model"
-    ]
+    model = registry.resolve({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
     parser = DependencyParser(Vocab(), model, **config)
     parser.add_label("nsubj")
     assert "subtok" not in parser.labels
-    parser.begin_training(lambda: [_parser_example(parser)])
+    parser.initialize(lambda: [_parser_example(parser)])
     assert "subtok" not in parser.labels
 
 
@@ -281,13 +277,11 @@ def test_issue3830_with_subtok():
         "min_action_freq": 30,
         "update_with_oracle_cut_size": 100,
     }
-    model = registry.make_from_config({"model": DEFAULT_PARSER_MODEL}, validate=True)[
-        "model"
-    ]
+    model = registry.resolve({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
     parser = DependencyParser(Vocab(), model, **config)
     parser.add_label("nsubj")
     assert "subtok" not in parser.labels
-    parser.begin_training(lambda: [_parser_example(parser)])
+    parser.initialize(lambda: [_parser_example(parser)])
     assert "subtok" in parser.labels
 
 
@@ -346,7 +340,7 @@ def test_issue3880():
     nlp.add_pipe("parser").add_label("dep")
     nlp.add_pipe("ner").add_label("PERSON")
     nlp.add_pipe("tagger").add_label("NN")
-    nlp.begin_training()
+    nlp.initialize()
     for doc in nlp.pipe(texts):
         pass
 
@@ -394,7 +388,7 @@ def test_issue3959():
 
 
 def test_issue3962(en_vocab):
-    """ Ensure that as_doc does not result in out-of-bound access of tokens.
+    """Ensure that as_doc does not result in out-of-bound access of tokens.
     This is achieved by setting the head to itself if it would lie out of the span otherwise."""
     # fmt: off
     words = ["He", "jests", "at", "scars", ",", "that", "never", "felt", "a", "wound", "."]
@@ -432,7 +426,7 @@ def test_issue3962(en_vocab):
 
 
 def test_issue3962_long(en_vocab):
-    """ Ensure that as_doc does not result in out-of-bound access of tokens.
+    """Ensure that as_doc does not result in out-of-bound access of tokens.
     This is achieved by setting the head to itself if it would lie out of the span otherwise."""
     # fmt: off
     words = ["He", "jests", "at", "scars", ".", "They", "never", "felt", "a", "wound", "."]
@@ -467,8 +461,7 @@ def test_issue3962_long(en_vocab):
 
 
 def test_issue3972(en_vocab):
-    """Test that the PhraseMatcher returns duplicates for duplicate match IDs.
-    """
+    """Test that the PhraseMatcher returns duplicates for duplicate match IDs."""
     matcher = PhraseMatcher(en_vocab)
     matcher.add("A", [Doc(en_vocab, words=["New", "York"])])
     matcher.add("B", [Doc(en_vocab, words=["New", "York"])])

@@ -1256,7 +1256,7 @@ def main(template_path, output=None, data_path=None):
     data_str = f"export const DATA = {data}"
     result = compiler.get_output()
     if output is not None:
-        with output.open("w") as f:
+        with output.open("w", encoding="utf8") as f:
             f.write(f"{header}\n{result}\n{data_str}")
         print(f"Updated {output.parts[-1]}")
     else:

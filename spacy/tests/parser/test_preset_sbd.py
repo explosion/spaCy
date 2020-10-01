@@ -28,13 +28,13 @@ def parser(vocab):
         "update_with_oracle_cut_size": 100,
     }
     cfg = {"model": DEFAULT_PARSER_MODEL}
-    model = registry.make_from_config(cfg, validate=True)["model"]
+    model = registry.resolve(cfg, validate=True)["model"]
     parser = DependencyParser(vocab, model, **config)
     parser.cfg["token_vector_width"] = 4
     parser.cfg["hidden_width"] = 32
     # parser.add_label('right')
     parser.add_label("left")
-    parser.begin_training(lambda: [_parser_example(parser)], **parser.cfg)
+    parser.initialize(lambda: [_parser_example(parser)])
     sgd = Adam(0.001)
 
     for i in range(10):

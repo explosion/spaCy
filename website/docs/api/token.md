@@ -243,7 +243,7 @@ A sequence of the token's immediate syntactic children.
 
 ## Token.lefts {#lefts tag="property" model="parser"}
 
-The leftward immediate children of the word, in the syntactic dependency parse.
+The leftward immediate children of the word in the syntactic dependency parse.
 
 > #### Example
 >
@@ -259,7 +259,7 @@ The leftward immediate children of the word, in the syntactic dependency parse.
 
 ## Token.rights {#rights tag="property" model="parser"}
 
-The rightward immediate children of the word, in the syntactic dependency parse.
+The rightward immediate children of the word in the syntactic dependency parse.
 
 > #### Example
 >
@@ -275,7 +275,7 @@ The rightward immediate children of the word, in the syntactic dependency parse.
 
 ## Token.n_lefts {#n_lefts tag="property" model="parser"}
 
-The number of leftward immediate children of the word, in the syntactic
+The number of leftward immediate children of the word in the syntactic
 dependency parse.
 
 > #### Example
@@ -291,7 +291,7 @@ dependency parse.
 
 ## Token.n_rights {#n_rights tag="property" model="parser"}
 
-The number of rightward immediate children of the word, in the syntactic
+The number of rightward immediate children of the word in the syntactic
 dependency parse.
 
 > #### Example
@@ -422,8 +422,8 @@ The L2 norm of the token's vector representation.
 | `norm_`                                      | The token's norm, i.e. a normalized form of the token text. Can be set in the language's [tokenizer exceptions](/usage/adding-languages#tokenizer-exceptions). ~~str~~                                                                                                 |
 | `lower`                                      | Lowercase form of the token. ~~int~~                                                                                                                                                                                                                                   |
 | `lower_`                                     | Lowercase form of the token text. Equivalent to `Token.text.lower()`. ~~str~~                                                                                                                                                                                          |
-| `shape`                                      | Transform of the tokens's string, to show orthographic features. Alphabetic characters are replaced by `x` or `X`, and numeric characters are replaced by `d`, and sequences of the same character are truncated after length 4. For example,`"Xxxx"`or`"dd"`. ~~int~~ |
-| `shape_`                                     | Transform of the tokens's string, to show orthographic features. Alphabetic characters are replaced by `x` or `X`, and numeric characters are replaced by `d`, and sequences of the same character are truncated after length 4. For example,`"Xxxx"`or`"dd"`. ~~str~~ |
+| `shape`                                      | Transform of the tokens's string to show orthographic features. Alphabetic characters are replaced by `x` or `X`, and numeric characters are replaced by `d`, and sequences of the same character are truncated after length 4. For example,`"Xxxx"`or`"dd"`. ~~int~~ |
+| `shape_`                                     | Transform of the tokens's string to show orthographic features. Alphabetic characters are replaced by `x` or `X`, and numeric characters are replaced by `d`, and sequences of the same character are truncated after length 4. For example,`"Xxxx"`or`"dd"`. ~~str~~ |
 | `prefix`                                     | Hash value of a length-N substring from the start of the token. Defaults to `N=1`. ~~int~~                                                                                                                                                                             |
 | `prefix_`                                    | A length-N substring from the start of the token. Defaults to `N=1`. ~~str~~                                                                                                                                                                                           |
 | `suffix`                                     | Hash value of a length-N substring from the end of the token. Defaults to `N=3`. ~~int~~                                                                                                                                                                               |
@@ -451,7 +451,7 @@ The L2 norm of the token's vector representation.
 | `tag`                                        | Fine-grained part-of-speech. ~~int~~                                                                                                                                                                                                                                   |
 | `tag_`                                       | Fine-grained part-of-speech. ~~str~~                                                                                                                                                                                                                                   |
 | `morph` <Tag variant="new">3</Tag>           | Morphological analysis. ~~MorphAnalysis~~                                                                                                                                                                                                                              |
-| `morph_` <Tag variant="new">3</Tag>          | Morphological analysis in the Universal Dependencies [FEATS]https://universaldependencies.org/format.html#morphological-annotation format. ~~str~~                                                                                                                     |
+| `morph_` <Tag variant="new">3</Tag>          | Morphological analysis in the Universal Dependencies [FEATS](https://universaldependencies.org/format.html#morphological-annotation) format. ~~str~~                                                                                                                     |
 | `dep`                                        | Syntactic dependency relation. ~~int~~                                                                                                                                                                                                                                 |
 | `dep_`                                       | Syntactic dependency relation. ~~str~~                                                                                                                                                                                                                                 |
 | `lang`                                       | Language of the parent document's vocabulary. ~~int~~                                                                                                                                                                                                                  |

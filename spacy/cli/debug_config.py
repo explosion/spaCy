@@ -2,11 +2,13 @@ from typing import Optional, Dict, Any, Union, List
 from pathlib import Path
 from wasabi import msg, table
 from thinc.api import Config
-from thinc.config import VARIABLE_RE, ConfigValidationError
+from thinc.config import VARIABLE_RE
 import typer
 
 from ._util import Arg, Opt, show_validation_error, parse_config_overrides
 from ._util import import_code, debug_cli
+from ..schemas import ConfigSchemaTraining
+from ..util import registry
 from .. import util
 
 
@@ -51,10 +53,11 @@ def debug_config(
     msg.divider("Config validation")
     with show_validation_error(config_path):
         config = util.load_config(config_path, overrides=overrides)
-        nlp, resolved = util.load_model_from_config(config)
-        # Use the resolved config here in case user has one function returning
-        # a dict of corpora etc.
-        check_section_refs(resolved, ["training.dev_corpus", "training.train_corpus"])
+        nlp = util.load_model_from_config(config)
+        config = nlp.config.interpolate()
+        T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
+        dot_names = [T["train_corpus"], T["dev_corpus"]]
+        util.resolve_dot_names(config, dot_names)
     msg.good("Config is valid")
     if show_vars:
         variables = get_variables(config)
@@ -96,23 +99,3 @@ def get_variables(config: Config) -> Dict[str, Any]:
         value = util.dot_to_object(config, path)
         result[variable] = repr(value)
     return result
-
-
-def check_section_refs(config: Config, fields: List[str]) -> None:
-    """Validate fields in the config that refer to other sections or values
-    (e.g. in the corpora) and make sure that those references exist.
-    """
-    errors = []
-    for field in fields:
-        # If the field doesn't exist in the config, we ignore it
-        try:
-            value = util.dot_to_object(config, field)
-        except KeyError:
-            continue
-        try:
-            util.dot_to_object(config, value)
-        except KeyError:
-            msg = f"not a valid section reference: {value}"
-            errors.append({"loc": field.split("."), "msg": msg})
-    if errors:
-        raise ConfigValidationError(config, errors)
