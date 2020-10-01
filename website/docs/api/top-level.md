@@ -538,6 +538,32 @@ JSONL file. Also see the [`JsonlReader`](/api/corpus#jsonlreader) class.
 | `limit`      | Limit corpus to a subset of examples, e.g. for debugging. Defaults to `0` for no limit. ~~int~~                                  |
 | **CREATES**  | The corpus reader. ~~JsonlTexts~~                                                                                                |
 
+### spacy.read_labels.v1 {#read_labels tag="registered function"}
+
+Read a JSON-formatted labels file generated with
+[`init labels`](/api/cli#init-labels). Typically used in the
+[`[initialize]`](/api/data-formats#config-initialize) block of the training
+config to speed up the model initialization process and provide pre-generated
+label sets.
+
+> #### Example config
+>
+> ```ini
+> [initialize.components]
+>
+> [initialize.components.ner]
+>
+> [initialize.components.ner.labels]
+> @readers = "spacy.read_labels.v1"
+> path = "corpus/labels/ner.json"
+> ```
+
+| Name        | Description                                                                                                                                                                                                               |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `path`      | The path to the labels file generated with [`init labels`](/api/cli#init-labels). ~~Path~~                                                                                                                                |
+| `require`   | Whether to require the file to exist. If set to `False` and the labels file doesn't exist, the loader will return `None` and the `initialize` method will extract the labels from the data. Defaults to `False`. ~~bool~~ |
+| **CREATES** | The                                                                                                                                                                                                                       |
+
 ## Batchers {#batchers source="spacy/training/batchers.py" new="3"}
 
 A data batcher implements a batching strategy that essentially turns a stream of

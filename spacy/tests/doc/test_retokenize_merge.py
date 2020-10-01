@@ -201,6 +201,12 @@ def test_doc_retokenize_spans_entity_merge(en_tokenizer):
     heads = [1, 2, 2, 4, 6, 4, 2, 8, 6, 8, 9, 8, 8, 14, 12, 2, 15]
     tags = ["NNP", "NNP", "VBZ", "DT", "VB", "RP", "NN", "WP", "VBZ", "IN", "NNP", "CC", "VBZ", "NNP", "NNP", ".", "SP"]
     ents = [("PERSON", 0, 2), ("GPE", 10, 11), ("PERSON", 13, 15)]
+    ents = ["O"] * len(heads)
+    ents[0] = "B-PERSON"
+    ents[1] = "I-PERSON"
+    ents[10] = "B-GPE"
+    ents[13] = "B-PERSON"
+    ents[14] = "I-PERSON"
     # fmt: on
     tokens = en_tokenizer(text)
     doc = Doc(
@@ -269,7 +275,11 @@ def test_doc_retokenize_spans_entity_merge_iob(en_vocab):
     # if there is a parse, span.root provides default values
     words = ["a", "b", "c", "d", "e", "f", "g", "h", "i"]
     heads = [0, 0, 3, 0, 0, 0, 5, 0, 0]
-    ents = [("ent-de", 3, 5), ("ent-fg", 5, 7)]
+    ents = ["O"] * len(words)
+    ents[3] = "B-ent-de"
+    ents[4] = "I-ent-de"
+    ents[5] = "B-ent-fg"
+    ents[6] = "I-ent-fg"
     deps = ["dep"] * len(words)
     en_vocab.strings.add("ent-de")
     en_vocab.strings.add("ent-fg")
@@ -292,7 +302,11 @@ def test_doc_retokenize_spans_entity_merge_iob(en_vocab):
     # check that B is preserved if span[start] is B
     words = ["a", "b", "c", "d", "e", "f", "g", "h", "i"]
     heads = [0, 0, 3, 4, 0, 0, 5, 0, 0]
-    ents = [("ent-de", 3, 5), ("ent-de", 5, 7)]
+    ents = ["O"] * len(words)
+    ents[3] = "B-ent-de"
+    ents[4] = "I-ent-de"
+    ents[5] = "B-ent-de"
+    ents[6] = "I-ent-de"
     deps = ["dep"] * len(words)
     doc = Doc(en_vocab, words=words, heads=heads, deps=deps, ents=ents)
     with doc.retokenize() as retokenizer:

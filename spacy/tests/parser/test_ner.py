@@ -339,7 +339,6 @@ def test_ner_warns_no_lookups(caplog):
     nlp.vocab.lookups = Lookups()
     assert not len(nlp.vocab.lookups)
     nlp.add_pipe("ner")
-    nlp.config["initialize"]["lookups"] = None
     with caplog.at_level(logging.DEBUG):
         nlp.initialize()
         assert "W033" in caplog.text

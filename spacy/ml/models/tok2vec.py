@@ -1,14 +1,14 @@
 from typing import Optional, List, Union
-from thinc.api import chain, clone, concatenate, with_array, with_padded
-from thinc.api import Model, noop, list2ragged, ragged2list
-from thinc.api import FeatureExtractor, HashEmbed
-from thinc.api import expand_window, residual, Maxout, Mish, PyTorchLSTM
 from thinc.types import Floats2d
+from thinc.api import chain, clone, concatenate, with_array, with_padded
+from thinc.api import Model, noop, list2ragged, ragged2list, HashEmbed
+from thinc.api import expand_window, residual, Maxout, Mish, PyTorchLSTM
 
 from ...tokens import Doc
 from ...util import registry
 from ...ml import _character_embed
 from ..staticvectors import StaticVectors
+from ..featureextractor import FeatureExtractor
 from ...pipeline.tok2vec import Tok2VecListener
 from ...attrs import ORTH, NORM, PREFIX, SUFFIX, SHAPE
 

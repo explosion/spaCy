@@ -59,7 +59,7 @@ def test_issue3012(en_vocab):
     words = ["This", "is", "10", "%", "."]
     tags = ["DT", "VBZ", "CD", "NN", "."]
     pos = ["DET", "VERB", "NUM", "NOUN", "PUNCT"]
-    ents = [("PERCENT", 2, 4)]
+    ents = ["O", "O", "B-PERCENT", "I-PERCENT", "O"]
     doc = Doc(en_vocab, words=words, tags=tags, pos=pos, ents=ents)
     assert doc.has_annotation("TAG")
     expected = ("10", "NUM", "CD", "PERCENT")
