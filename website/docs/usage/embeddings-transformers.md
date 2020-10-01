@@ -622,7 +622,7 @@ that are familiar from the training block: the `[pretraining.batcher]`,
 `[pretraining.optimizer]` and `[pretraining.corpus]` all work the same way and
 expect the same types of objects, although for pretraining your corpus does not
 need to have any annotations, so you will often use a different reader, such as
-the [`JsonlReader`](/api/top-level#jsonlreader).
+the [`JsonlCorpus`](/api/top-level#jsonlcorpus).
 
 > #### Raw text format
 >

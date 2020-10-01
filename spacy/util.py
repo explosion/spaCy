@@ -103,10 +103,6 @@ class registry(thinc.registry):
     cli = catalogue.create("spacy", "cli", entry_points=True)
 
 
-# We want json loading in the registry, so manually register srsly.read_json.
-registry.readers("srsly.read_json.v0", srsly.read_json)
-
-
 class SimpleFrozenDict(dict):
     """Simplified implementation of a frozen dict, mainly used as default
     function or method argument (for arguments that should default to empty

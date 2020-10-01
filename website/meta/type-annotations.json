@@ -24,7 +24,7 @@
     "TransformerData": "/api/transformer#transformerdata",
     "FullTransformerBatch": "/api/transformer#fulltransformerbatch",
     "Corpus": "/api/corpus",
-    "JsonlTexts": "/api/corpus#jsonltexts",
+    "JsonlCorpus": "/api/corpus#jsonlcorpus",
     "LexemeC": "/api/cython-structs#lexemec",
     "TokenC": "/api/cython-structs#tokenc",
     "Config": "https://thinc.ai/docs/api-config#config",
