@@ -30,7 +30,12 @@ def doc(en_vocab):
     heads = [2, 0, 3, 3, 3, 6, 4, 3, 7, 5]
     deps = ["poss", "case", "nsubj", "ROOT", "prep", "compound", "pobj", "prep", "pobj", "punct"]
     lemmas = ["Sarah", "'s", "sister", "fly", "to", "Silicon", "Valley", "via", "London", "."]
-    ents = (("PERSON", 0, 2), ("LOC", 5, 7), ("GPE", 8, 9))
+    ents = ["O"] * len(words)
+    ents[0] = "B-PERSON"
+    ents[1] = "I-PERSON"
+    ents[5] = "B-LOC"
+    ents[6] = "I-LOC"
+    ents[8] = "B-GPE"
     cats = {"TRAVEL": 1.0, "BAKING": 0.0}
     # fmt: on
     doc = Doc(

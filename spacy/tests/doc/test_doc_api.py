@@ -533,5 +533,52 @@ def test_doc_ents_setter():
     assert [e.label_ for e in doc.ents] == ["HELLO", "WORLD"]
     vocab = Vocab()
     ents = [("HELLO", 0, 2), (vocab.strings.add("WORLD"), 3, 5)]
+    ents = ["B-HELLO", "I-HELLO", "O", "B-WORLD", "I-WORLD"]
     doc = Doc(vocab, words=words, ents=ents)
     assert [e.label_ for e in doc.ents] == ["HELLO", "WORLD"]
+
+
+def test_doc_init_iob():
+    """Test ents validation/normalization in Doc.__init__"""
+    words = ["a", "b", "c", "d", "e"]
+    ents = ["O"] * len(words)
+    doc = Doc(Vocab(), words=words, ents=ents)
+    assert doc.ents == ()
+
+    ents = ["B-PERSON", "I-PERSON", "O", "I-PERSON", "I-PERSON"]
+    doc = Doc(Vocab(), words=words, ents=ents)
+    assert len(doc.ents) == 2
+
+    ents = ["B-PERSON", "I-PERSON", "O", "I-PERSON", "I-GPE"]
+    doc = Doc(Vocab(), words=words, ents=ents)
+    assert len(doc.ents) == 3
+
+    # None is missing
+    ents = ["B-PERSON", "I-PERSON", "O", None, "I-GPE"]
+    doc = Doc(Vocab(), words=words, ents=ents)
+    assert len(doc.ents) == 2
+
+    # empty tag is missing
+    ents = ["", "B-PERSON", "O", "B-PERSON", "I-PERSON"]
+    doc = Doc(Vocab(), words=words, ents=ents)
+    assert len(doc.ents) == 2
+
+    # invalid IOB
+    ents = ["Q-PERSON", "I-PERSON", "O", "I-PERSON", "I-GPE"]
+    with pytest.raises(ValueError):
+        doc = Doc(Vocab(), words=words, ents=ents)
+
+    # no dash
+    ents = ["OPERSON", "I-PERSON", "O", "I-PERSON", "I-GPE"]
+    with pytest.raises(ValueError):
+        doc = Doc(Vocab(), words=words, ents=ents)
+
+    # no ent type
+    ents = ["O", "B-", "O", "I-PERSON", "I-GPE"]
+    with pytest.raises(ValueError):
+        doc = Doc(Vocab(), words=words, ents=ents)
+
+    # not strings or None
+    ents = [0, "B-", "O", "I-PERSON", "I-GPE"]
+    with pytest.raises(ValueError):
+        doc = Doc(Vocab(), words=words, ents=ents)
