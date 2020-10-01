@@ -184,7 +184,7 @@ def test_ner_per_type(en_vocab):
         doc = Doc(
             en_vocab,
             words=input_.split(" "),
-            ents=[("CARDINAL", 0, 1), ("CARDINAL", 2, 3)],
+            ents=["B-CARDINAL", "O", "B-CARDINAL"],
         )
         entities = offsets_to_biluo_tags(doc, annot["entities"])
         example = Example.from_dict(doc, {"entities": entities})
@@ -209,7 +209,7 @@ def test_ner_per_type(en_vocab):
         doc = Doc(
             en_vocab,
             words=input_.split(" "),
-            ents=[("ORG", 0, 1), ("GPE", 5, 6), ("ORG", 6, 7)],
+            ents=["B-ORG", "O", "O", "O", "O", "B-GPE", "B-ORG", "O", "O", "O"],
         )
         entities = offsets_to_biluo_tags(doc, annot["entities"])
         example = Example.from_dict(doc, {"entities": entities})
