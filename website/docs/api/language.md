@@ -202,7 +202,7 @@ more efficient than processing texts one-by-one.
 | `n_process` <Tag variant="new">2.2.2</Tag> | Number of processors to use. Defaults to `1`. ~~int~~                                                                                                               |
 | **YIELDS**                                 | Documents in the order of the original text. ~~Doc~~                                                                                                                |
 
-## Language.initialize {#initialize tag="method"}
+## Language.initialize {#initialize tag="method" new="3"}
 
 Initialize the pipeline for training and return an
 [`Optimizer`](https://thinc.ai/docs/api-optimizers). Under the hood, it uses the

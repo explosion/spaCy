@@ -238,8 +238,6 @@ without requiring them at runtime when you load the trained pipeline back in.
 > data_path = "/path/to/component_data"
 > ```
 
-<!-- TODO: -->
-
 | Name           | Description                                                                                                                                                                                                                                                                                                                                                                                                    |
 | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `components`   | Additional arguments passed to the `initialize` method of a pipeline component, keyed by component name. If type annotations are available on the method, the config will be validated against them. The `initialize` methods will always receive the `get_examples` callback and the current `nlp` object. ~~Dict[str, Dict[str, Any]]~~                                                                      |
@@ -454,15 +452,20 @@ example = Example.from_dict(doc, gold_dict)
 
 ## Lexical data for vocabulary {#vocab-jsonl new="2"}
 
-To populate a pipeline's vocabulary, you can use the
-[`spacy init vectors`](/api/cli#init-vectors) command and load in a
-[newline-delimited JSON](http://jsonlines.org/) (JSONL) file containing one
-lexical entry per line via the `--jsonl-loc` option. The first line defines the
-language and vocabulary settings. All other lines are expected to be JSON
-objects describing an individual lexeme. The lexical attributes will be then set
-as attributes on spaCy's [`Lexeme`](/api/lexeme#attributes) object. The `vocab`
-command outputs a ready-to-use spaCy pipeline with a `Vocab` containing the
-lexical data.
+This data file can be provided via the `vocab_data` setting in the
+`[initialize]` block of the training config to pre-define the lexical data to
+initialize the `nlp` object's vocabulary with. The file should contain one
+lexical entry per line. The first line defines the language and vocabulary
+settings. All other lines are expected to be JSON objects describing an
+individual lexeme. The lexical attributes will be then set as attributes on
+spaCy's [`Lexeme`](/api/lexeme#attributes) object.
+
+> #### Example config
+>
+> ```ini
+> [initialize]
+> vocab_data = "/path/to/vocab-data.jsonl"
+> ```
 
 ```python
 ### First line

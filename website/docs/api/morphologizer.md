@@ -126,7 +126,10 @@ training data or a representative sample. Initialization includes validating the
 network,
 [inferring missing shapes](https://thinc.ai/docs/usage-models#validation) and
 setting up the label scheme based on the data. This method is typically called
-by [`Language.initialize`](/api/language#initialize).
+by [`Language.initialize`](/api/language#initialize) and lets you customize
+arguments it receives via the
+[`[initialize.components]`](/api/data-formats#config-initialize) block in the
+config.
 
 > #### Example
 >
@@ -134,12 +137,22 @@ by [`Language.initialize`](/api/language#initialize).
 > morphologizer = nlp.add_pipe("morphologizer")
 > morphologizer.initialize(lambda: [], nlp=nlp)
 > ```
+>
+> ```ini
+> ### config.cfg
+> [initialize.components.morphologizer]
+>
+> [initialize.components.morphologizer.labels]
+> @readers = "spacy.read_labels.v1"
+> path = "corpus/labels/morphologizer.json
+> ```
 
-| Name           | Description                                                                                                                           |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. ~~Callable[[], Iterable[Example]]~~ |
-| _keyword-only_ |                                                                                                                                       |
-| `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                  |
+| Name           | Description                                                                                                                                                                                                                                                                                                         |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. ~~Callable[[], Iterable[Example]]~~                                                                                                                                                                               |
+| _keyword-only_ |                                                                                                                                                                                                                                                                                                                     |
+| `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                                                                                                                                                                                |
+| `labels`       | The label information to add to the component. To generate a reusable JSON file from your data, you should run the [`init labels`](/api/cli#init-labels) command. If no labels are provided, the `get_examples` callback is used to extract the labels from the data, which may be a lot slower. ~~Optional[dict]~~ |
 
 ## Morphologizer.predict {#predict tag="method"}
 

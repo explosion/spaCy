@@ -98,7 +98,7 @@ applied to the `Doc` in order. Both [`__call__`](/api/pipe#call) and
 | `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
 | **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
-## Pipe.initialize {#initialize tag="method"}
+## Pipe.initialize {#initialize tag="method" new="3"}
 
 Initialize the component for training. `get_examples` should be a function that
 returns an iterable of [`Example`](/api/example) objects. The data examples are

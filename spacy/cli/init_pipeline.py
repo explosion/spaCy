@@ -95,7 +95,7 @@ def init_labels_cli(
     use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU")
     # fmt: on
 ):
-    """Generate a JSON file for labels in the data. This helps speed up the
+    """Generate JSON files for the labels in the data. This helps speed up the
     training process, since spaCy won't have to preprocess the data to
     extract the labels."""
     util.logger.setLevel(logging.DEBUG if verbose else logging.INFO)
