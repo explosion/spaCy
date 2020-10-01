@@ -144,9 +144,9 @@ argument that connects to the shared `tok2vec` component in the pipeline.
 Construct an embedding layer that separately embeds a number of lexical
 attributes using hash embedding, concatenates the results, and passes it through
 a feed-forward subnetwork to build mixed representations. The features used are
-the `NORM`, `PREFIX`, `SUFFIX` and `SHAPE`, which can have varying definitions
-depending on the `Vocab` of the `Doc` object passed in. Vectors from pretrained
-static vectors can also be incorporated into the concatenated representation.
+the `NORM`, `PREFIX`, `SUFFIX` and `SHAPE`, and they are extracted with a
+[FeatureExtractor](/api/architectures#FeatureExtractor) layer. Vectors from pretrained static
+vectors can also be incorporated into the concatenated representation.
 
 | Name                      | Description                                                                                                                                                                                                       |
 | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -290,6 +290,24 @@ on [static vectors](/usage/embeddings-transformers#static-vectors) for details.
 | `init_W`    | The [initialization function](https://thinc.ai/docs/api-initializers). Defaults to [`glorot_uniform_init`](https://thinc.ai/docs/api-initializers#glorot_uniform_init). ~~Callable[[Ops, Tuple[int, ...]]], FloatsXd]~~ |
 | `key_attr`  | Defaults to `"ORTH"`. ~~str~~                                                                                                                                                                                           |
 | **CREATES** | The model using the architecture. ~~Model[List[Doc], Ragged]~~                                                                                                                                                          |
+
+### spacy.FeatureExtractor.v1 {#FeatureExtractor}
+
+> #### Example config
+>
+> ```ini
+> [model]
+> @architectures = "spacy.FeatureExtractor.v1"
+> columns = ["NORM", "PREFIX", "SUFFIX", "SHAPE", "ORTH"]
+> ```
+
+Extract arrays of input features from [`Doc`](/api/doc) objects. Expects a list
+of feature names to extract, which should refer to token attributes.
+
+| Name        |  Description                                                             |
+| ----------- | ------------------------------------------------------------------------ |
+| `columns`   | The token attributes to extract. ~~List[Union[int, str]]~~               |
+| **CREATES** | The created feature extraction layer. ~~Model[List[Doc], List[Ints2d]]~~ |
 
 ## Transformer architectures {#transformers source="github.com/explosion/spacy-transformers/blob/master/spacy_transformers/architectures.py"}
 
