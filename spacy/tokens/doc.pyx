@@ -298,7 +298,7 @@ cdef class Doc:
                     ent_iobs.append(iob_strings.index(ent))
                     ent_types.append("")
                 else:
-                    if ent[1] != "-" or len(ent) < 3:
+                    if len(ent) < 3 or ent[1] != "-":
                         raise ValueError(Errors.E177.format(tag=ent))
                     ent_iob, ent_type = ent.split("-", 1) 
                     if ent_iob not in iob_strings:
