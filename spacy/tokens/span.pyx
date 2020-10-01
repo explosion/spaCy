@@ -391,8 +391,6 @@ cdef class Span:
         """RETURNS (Span): The sentence span that the span is a part of."""
         if "sent" in self.doc.user_span_hooks:
             return self.doc.user_span_hooks["sent"](self)
-        # This should raise if not parsed / no custom sentence boundaries
-        self.doc.sents
         # Use `sent_start` token attribute to find sentence boundaries
         cdef int n = 0
         if self.doc.is_sentenced:
