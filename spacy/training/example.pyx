@@ -1,4 +1,4 @@
-from collections import Iterable as IterableInstance
+from collections.abc import Iterable as IterableInstance
 import warnings
 import numpy
 from murmurhash.mrmr cimport hash64
@@ -226,7 +226,7 @@ cdef class Example:
                 "TAG": [t.tag_ for t in self.reference],
                 "LEMMA": [t.lemma_ for t in self.reference],
                 "POS": [t.pos_ for t in self.reference],
-                "MORPH": [t.morph_ for t in self.reference],
+                "MORPH": [str(t.morph) for t in self.reference],
                 "HEAD": [t.head.i for t in self.reference],
                 "DEP": [t.dep_ for t in self.reference],
                 "SENT_START": [int(bool(t.is_sent_start)) for t in self.reference]

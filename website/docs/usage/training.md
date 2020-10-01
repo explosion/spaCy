@@ -204,7 +204,19 @@ initialize it.
 
 ![Illustration of pipeline lifecycle](../images/lifecycle.svg)
 
-<!-- TODO: explain lifecycle and initialization -->
+At runtime spaCy will only use the `[nlp]` and `[components]` blocks of the
+config and load all data, including tokenization rules, model weights and other
+resources from the pipeline directory. The `[training]` block contains the
+settings for training the model and is only used during training. Similarly, the
+`[initialize]` block defines how the initial `nlp` object should be set up
+before training and whether it should be initialized with vectors or pretrained
+tok2vec weights, or any other data needed by the components.
+
+The initialization settings are only loaded and used when
+[`nlp.initialize`](/api/language#initialize) is called (typically right before
+training). This allows you to set up your pipeline using local data resources
+and custom functions, and preserve the information in your config – but without
+requiring it to be available at runtime
 
 ### Overwriting config settings on the command line {#config-overrides}
 
@@ -803,6 +815,10 @@ def MyModel(output_width: int) -> Model[List[Doc], List[Floats2d]]:
     return create_model(output_width)
 ```
 
+<!-- TODO:
+### Customizing the initialization {#initialization}
+-->
+
 ## Data utilities {#data}
 
 spaCy includes various features and utilities to make it easy to train models
@@ -853,7 +869,7 @@ nlp = spacy.blank("en")
 docbin = DocBin(nlp.vocab)
 words = ["Apple", "is", "looking", "at", "buying", "U.K.", "startup", "."]
 spaces = [True, True, True, True, True, True, True, False]
-ents = [("ORG", 0, 1), ("GPE", 5, 6)]
+ents = ["B-ORG", "O", "O", "O", "O", "B-GPE", "O", "O"]
 doc = Doc(nlp.vocab, words=words, spaces=spaces, ents=ents)
 docbin.add(doc)
 docbin.to_disk("./train.spacy")

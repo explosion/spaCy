@@ -30,7 +30,12 @@ def doc(en_vocab):
     heads = [2, 0, 3, 3, 3, 6, 4, 3, 7, 5]
     deps = ["poss", "case", "nsubj", "ROOT", "prep", "compound", "pobj", "prep", "pobj", "punct"]
     lemmas = ["Sarah", "'s", "sister", "fly", "to", "Silicon", "Valley", "via", "London", "."]
-    ents = (("PERSON", 0, 2), ("LOC", 5, 7), ("GPE", 8, 9))
+    ents = ["O"] * len(words)
+    ents[0] = "B-PERSON"
+    ents[1] = "I-PERSON"
+    ents[5] = "B-LOC"
+    ents[6] = "I-LOC"
+    ents[8] = "B-GPE"
     cats = {"TRAVEL": 1.0, "BAKING": 0.0}
     # fmt: on
     doc = Doc(
@@ -455,7 +460,7 @@ def test_roundtrip_docs_to_docbin(doc):
     idx = [t.idx for t in doc]
     tags = [t.tag_ for t in doc]
     pos = [t.pos_ for t in doc]
-    morphs = [t.morph_ for t in doc]
+    morphs = [str(t.morph) for t in doc]
     lemmas = [t.lemma_ for t in doc]
     deps = [t.dep_ for t in doc]
     heads = [t.head.i for t in doc]
@@ -477,7 +482,7 @@ def test_roundtrip_docs_to_docbin(doc):
     assert idx == [t.idx for t in reloaded_example.reference]
     assert tags == [t.tag_ for t in reloaded_example.reference]
     assert pos == [t.pos_ for t in reloaded_example.reference]
-    assert morphs == [t.morph_ for t in reloaded_example.reference]
+    assert morphs == [str(t.morph) for t in reloaded_example.reference]
     assert lemmas == [t.lemma_ for t in reloaded_example.reference]
     assert deps == [t.dep_ for t in reloaded_example.reference]
     assert heads == [t.head.i for t in reloaded_example.reference]
