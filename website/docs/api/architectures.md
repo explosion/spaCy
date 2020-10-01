@@ -298,7 +298,7 @@ on [static vectors](/usage/embeddings-transformers#static-vectors) for details.
 > ```ini
 > [model]
 > @architectures = "spacy.FeatureExtractor.v1"
-> columns = [NORM, PREFIX, SUFFIX, SHAPE, ORTH]
+> columns = ["NORM", "PREFIX", "SUFFIX", "SHAPE", "ORTH"]
 > ```
 
 Extract arrays of input features from [`Doc`](/api/doc) objects. Expects a list
