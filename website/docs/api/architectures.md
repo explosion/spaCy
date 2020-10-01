@@ -145,7 +145,7 @@ Construct an embedding layer that separately embeds a number of lexical
 attributes using hash embedding, concatenates the results, and passes it through
 a feed-forward subnetwork to build mixed representations. The features used are
 the `NORM`, `PREFIX`, `SUFFIX` and `SHAPE`, and they are extracted with a
-[FeatureExtractor](#FeatureExtractor) layer. Vectors from pretrained static
+[FeatureExtractor](/api/architectures#FeatureExtractor) layer. Vectors from pretrained static
 vectors can also be incorporated into the concatenated representation.
 
 | Name                      | Description                                                                                                                                                                                                       |
