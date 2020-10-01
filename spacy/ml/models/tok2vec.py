@@ -10,7 +10,7 @@ from ...util import registry
 from ...ml import _character_embed
 from ..staticvectors import StaticVectors
 from ...pipeline.tok2vec import Tok2VecListener
-from ...attrs import ORTH, NORM, PREFIX, SUFFIX, SHAPE
+from ...attrs import ORTH, NORM, PREFIX, SUFFIX, SHAPE, intify_attr
 
 
 @registry.architectures.register("spacy.Tok2VecListener.v1")
