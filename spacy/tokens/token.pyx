@@ -215,6 +215,12 @@ cdef class Token:
         def __get__(self):
             return MorphAnalysis.from_id(self.vocab, self.c.morph)
 
+        def __set__(self, MorphAnalysis morph):
+            # Check that the morph has the same vocab
+            if self.vocab != morph.vocab:
+                raise ValueError(Errors.E1013)
+            self.c.morph = morph.c.key
+
     def set_morph(self, features):
         cdef hash_t key
         if features is 0:

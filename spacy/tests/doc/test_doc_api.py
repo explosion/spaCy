@@ -533,3 +533,30 @@ def test_doc_ents_setter():
     ents = [("HELLO", 0, 2), (vocab.strings.add("WORLD"), 3, 5)]
     doc = Doc(vocab, words=words, ents=ents)
     assert [e.label_ for e in doc.ents] == ["HELLO", "WORLD"]
+
+
+def test_doc_morph_setter(en_tokenizer, de_tokenizer):
+    doc1 = en_tokenizer("a b")
+    doc1b = en_tokenizer("c d")
+    doc2 = de_tokenizer("a b")
+
+    # unset values can be copied
+    doc1[0].morph = doc1[1].morph
+    assert doc1[0].morph.key == 0
+    assert doc1[1].morph.key == 0
+
+    # morph values from the same vocab can be copied
+    doc1[0].set_morph("Feat=Val")
+    doc1[1].morph = doc1[0].morph
+    assert doc1[0].morph == doc1[1].morph
+
+    # ... also across docs
+    doc1b[0].morph = doc1[0].morph
+    assert doc1[0].morph == doc1b[0].morph
+
+    doc2[0].set_morph("Feat2=Val2")
+
+    # the morph value must come from the same vocab
+    with pytest.raises(ValueError):
+        doc1[0].morph = doc2[0].morph
+
