@@ -10,13 +10,6 @@ DEFAULT_CONFIG = """
 
 [nlp.tokenizer]
 @tokenizers = "spacy.th.ThaiTokenizer"
-
-[initialize]
-
-[initialize.lookups]
-@misc = "spacy.LookupsDataLoader.v1"
-lang = ${nlp.lang}
-tables = ["lexeme_norm"]
 """
 
 
