@@ -687,8 +687,8 @@ During training, the results of each step are passed to a logger function. By
 default, these results are written to the console with the
 [`ConsoleLogger`](/api/top-level#ConsoleLogger). There is also built-in support
 for writing the log files to [Weights & Biases](https://www.wandb.com/) with the
-[`WandbLogger`](/api/top-level#WandbLogger). The logger function receives a
-**dictionary** with the following keys:
+[`WandbLogger`](/api/top-level#WandbLogger). On each step, the logger function
+receives a **dictionary** with the following keys:
 
 | Key            | Value                                                                                          |
 | -------------- | ---------------------------------------------------------------------------------------------- |
@@ -727,13 +727,14 @@ def custom_logger(log_path):
                 file_.write(f"loss_{pipe}\\t")
             file_.write("\\n")
 
-        def log_step(info: Dict[str, Any]):
-            with Path(log_path).open("a") as file_:
-                file_.write(f"{info['step']}\\t")
-                file_.write(f"{info['score']}\\t")
-                for pipe in nlp.pipe_names:
-                    file_.write(f"{info['losses'][pipe]}\\t")
-                file_.write("\\n")
+        def log_step(info: Optional[Dict[str, Any]]):
+            if info:
+                with Path(log_path).open("a") as file_:
+                    file_.write(f"{info['step']}\\t")
+                    file_.write(f"{info['score']}\\t")
+                    for pipe in nlp.pipe_names:
+                        file_.write(f"{info['losses'][pipe]}\\t")
+                    file_.write("\\n")
 
         def finalize():
             pass
