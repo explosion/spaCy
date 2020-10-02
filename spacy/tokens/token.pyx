@@ -225,6 +225,8 @@ cdef class Token:
         cdef hash_t key
         if features is None:
             self.c.morph = 0
+        elif isinstance(features, MorphAnalysis):
+            self.morph = features
         else:
             if isinstance(features, int):
                 features = self.vocab.strings[features]
