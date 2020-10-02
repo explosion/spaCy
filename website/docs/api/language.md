@@ -8,8 +8,8 @@ source: spacy/language.py
 Usually you'll load this once per process as `nlp` and pass the instance around
 your application. The `Language` class is created when you call
 [`spacy.load`](/api/top-level#spacy.load) and contains the shared vocabulary and
-[language data](/usage/adding-languages), optional binary weights, e.g. provided
-by a [trained pipeline](/models), and the
+[language data](/usage/linguistic-features#language-data), optional binary
+weights, e.g. provided by a [trained pipeline](/models), and the
 [processing pipeline](/usage/processing-pipelines) containing components like
 the tagger or parser that are called on a document in order. You can also add
 your own processing pipeline components that take a `Doc` object, modify it and
@@ -210,7 +210,9 @@ settings defined in the [`[initialize]`](/api/data-formats#config-initialize)
 config block to set up the vocabulary, load in vectors and tok2vec weights and
 pass optional arguments to the `initialize` methods implemented by pipeline
 components or the tokenizer. This method is typically called automatically when
-you run [`spacy train`](/api/cli#train).
+you run [`spacy train`](/api/cli#train). See the usage guide on the
+[config lifecycle](/usage/training#config-lifecycle) and
+[initialization](/usage/training#initialization) for details.
 
 `get_examples` should be a function that returns an iterable of
 [`Example`](/api/example) objects. The data examples can either be the full
@@ -928,7 +930,7 @@ Serialize the current state to a binary string.
 
 Load state from a binary string. Note that this method is commonly used via the
 subclasses like `English` or `German` to make language-specific functionality
-like the [lexical attribute getters](/usage/adding-languages#lex-attrs)
+like the [lexical attribute getters](/usage/linguistic-features#language-data)
 available to the loaded object.
 
 > #### Example

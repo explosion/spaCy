@@ -827,7 +827,7 @@ utilities.
 ### util.get_lang_class {#util.get_lang_class tag="function"}
 
 Import and load a `Language` class. Allows lazy-loading
-[language data](/usage/adding-languages) and importing languages using the
+[language data](/usage/linguistic-features#language-data) and importing languages using the
 two-letter language code. To add a language code for a custom language class,
 you can register it using the [`@registry.languages`](/api/top-level#registry)
 decorator.

@@ -895,6 +895,10 @@ the name. Registered functions can also take **arguments** by the way that can
 be defined in the config as well – you can read more about this in the docs on
 [training with custom code](/usage/training#custom-code).
 
+### Initializing components with data {#initialization}
+
+<!-- TODO: -->
+
 ### Python type hints and pydantic validation {#type-hints new="3"}
 
 spaCy's configs are powered by our machine learning library Thinc's
