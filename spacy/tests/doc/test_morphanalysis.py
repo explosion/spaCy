@@ -77,7 +77,7 @@ def test_morph_property(tokenizer):
     assert doc.to_array(["MORPH"])[0] != 0
 
     # unset with token.morph
-    doc[0].set_morph(0)
+    doc[0].set_morph(None)
     assert doc.to_array(["MORPH"])[0] == 0
 
     # empty morph is equivalent to "_"
