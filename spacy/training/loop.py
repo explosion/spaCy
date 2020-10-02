@@ -4,7 +4,6 @@ from pathlib import Path
 from timeit import default_timer as timer
 from thinc.api import Optimizer, Config, constant, fix_random_seed, set_gpu_allocator
 import random
-import tqdm
 import wasabi
 
 from .example import Example
@@ -99,7 +98,7 @@ def train(
             else:
                 nlp.to_disk(final_model_path)
     # This will only run if we don't hit an error
-    msg.good(f"Saved pipeline to output directory", final_model_path)
+    msg.good("Saved pipeline to output directory", final_model_path)
 
 
 def train_while_improving(

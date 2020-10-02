@@ -13,7 +13,7 @@ def console_logger(progress_bar: bool=False):
         nlp: "Language",
         printer: Optional[wasabi.Printer]=wasabi.Printer()
     ) -> Tuple[Callable[[Dict[str, Any]], None], Callable]:
-        msg = printer if printer is not None else Printer(no_print=True)
+        msg = printer if printer is not None else wasabi.Printer(no_print=True)
         # we assume here that only components are enabled that should be trained & logged
         logged_pipes = nlp.pipe_names
         eval_frequency = nlp.config["training"]["eval_frequency"]

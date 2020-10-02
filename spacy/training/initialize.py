@@ -95,7 +95,7 @@ def load_vectors_into_model(
     """Load word vectors from an installed model or path into a model instance."""
     try:
         vectors_nlp = load_model(name)
-    except ConfigValidationError as e:
+    except ConfigValidationError:
         title = f"Config validation error for vectors {name}"
         desc = (
             "This typically means that there's a problem in the config.cfg included "
