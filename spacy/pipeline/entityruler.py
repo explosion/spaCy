@@ -24,6 +24,7 @@ PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
         "validate": False,
         "overwrite_ents": False,
         "ent_id_sep": DEFAULT_ENT_ID_SEP,
+        "patterns_loc": None,
     },
     default_score_weights={
         "ents_f": 1.0,
@@ -39,7 +40,11 @@ def make_entity_ruler(
     validate: bool,
     overwrite_ents: bool,
     ent_id_sep: str,
+    patterns_loc: Optional[Path]
 ):
+    patterns = None
+    if patterns_loc:
+        patterns = srsly.read_jsonl(patterns_loc)
     return EntityRuler(
         nlp,
         name,
@@ -47,6 +52,7 @@ def make_entity_ruler(
         validate=validate,
         overwrite_ents=overwrite_ents,
         ent_id_sep=ent_id_sep,
+        patterns=patterns,
     )
 
 
