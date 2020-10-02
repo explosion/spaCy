@@ -95,14 +95,14 @@ def load_vectors_into_model(
     """Load word vectors from an installed model or path into a model instance."""
     try:
         vectors_nlp = load_model(name)
-    except ConfigValidationError:
+    except ConfigValidationError as e:
         title = f"Config validation error for vectors {name}"
         desc = (
             "This typically means that there's a problem in the config.cfg included "
             "with the packaged vectors. Make sure that the vectors package you're "
             "loading is compatible with the current version of spaCy."
         )
-        err = ConfigValidationError.from_error(config=None, title=title, desc=desc)
+        err = ConfigValidationError.from_error(e, config=None, title=title, desc=desc)
         raise err from None
     nlp.vocab.vectors = vectors_nlp.vocab.vectors
     if add_strings:
