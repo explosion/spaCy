@@ -1207,7 +1207,11 @@ class Language:
             )
             self.tokenizer.initialize(get_examples, nlp=self, **tok_settings)
         for name, proc in self.pipeline:
-            if hasattr(proc, "initialize"):
+            # backwards compatibility for older components
+            if hasattr(proc, "begin_training"):
+                warnings.warn(Warnings.W089, DeprecationWarning)
+                proc.begin_training(get_examples, pipeline=self.pipeline, sgd=self._optimizer)
+            elif hasattr(proc, "initialize"):
                 p_settings = I["components"].get(name, {})
                 p_settings = validate_init_settings(
                     proc.initialize, p_settings, section="components", name=name

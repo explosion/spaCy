@@ -85,7 +85,9 @@ class Warnings:
             "attribute or operator.")
 
     # TODO: fix numbering after merging develop into master
-    W089 = ("The nlp.begin_training method has been renamed to nlp.initialize.")
+    W089 = ("The 'begin_training' method has been renamed to 'initialize', "
+            "for calls to 'nlp' as well as for the individual pipeline "
+            "components.")
     W090 = ("Could not locate any {format} files in path '{path}'.")
     W091 = ("Could not clean/remove the temp directory at {dir}: {msg}.")
     W092 = ("Ignoring annotations for sentence starts, as dependency heads are set.")
