@@ -216,7 +216,9 @@ The initialization settings are only loaded and used when
 [`nlp.initialize`](/api/language#initialize) is called (typically right before
 training). This allows you to set up your pipeline using local data resources
 and custom functions, and preserve the information in your config – but without
-requiring it to be available at runtime
+requiring it to be available at runtime. You can also use this mechanism to
+provide data paths to custom pipeline components and custom tokenizers – see the
+section on [custom initialization](#initialization) for details.
 
 ### Overwriting config settings on the command line {#config-overrides}
 
@@ -815,9 +817,9 @@ def MyModel(output_width: int) -> Model[List[Doc], List[Floats2d]]:
     return create_model(output_width)
 ```
 
-<!-- TODO:
 ### Customizing the initialization {#initialization}
--->
+
+<!-- TODO: -->
 
 ## Data utilities {#data}
 
@@ -1135,7 +1137,11 @@ An easy way to create modified `Example` objects is to use the
 capitalization changes, so only the `ORTH` values of the tokens will be
 different between the original and augmented examples.
 
-<!-- TODO: mention alignment -->
+Note that if your data augmentation strategy involves changing the tokenization
+(for instance, removing or adding tokens) and your training examples include
+token-based annotations like the dependency parse or entity labels, you'll need
+to take care to adjust the `Example` object so its annotations match and remain
+valid.
 
 ## Parallel & distributed training with Ray {#parallel-training}
 

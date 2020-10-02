@@ -130,8 +130,7 @@ applied to the `Doc` in order.
 ## Lemmatizer.lookup_lemmatize {#lookup_lemmatize tag="method"}
 
 Lemmatize a token using a lookup-based approach. If no lemma is found, the
-original string is returned. Languages can provide a
-[lookup table](/usage/adding-languages#lemmatizer) via the `Lookups`.
+original string is returned.
 
 | Name        | Description                                         |
 | ----------- | --------------------------------------------------- |
