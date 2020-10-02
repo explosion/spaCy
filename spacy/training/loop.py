@@ -5,7 +5,7 @@ from timeit import default_timer as timer
 from thinc.api import Optimizer, Config, constant, fix_random_seed, set_gpu_allocator
 import random
 import tqdm
-from wasabi import Printer
+import wasabi
 
 from .example import Example
 from ..schemas import ConfigSchemaTraining
@@ -21,7 +21,7 @@ def train(
     output_path: Optional[Path] = None,
     *,
     use_gpu: int = -1,
-    silent: bool = False,
+    printer: Optional[wasabi.Printer]=wasabi.Printer()
 ) -> None:
     """Train a pipeline.
 
@@ -29,10 +29,11 @@ def train(
     output_path (Path): Optional output path to save trained model to.
     use_gpu (int): Whether to train on GPU. Make sure to call require_gpu
         before calling this function.
-    silent (bool): Whether to pretty-print outputs.
+    printer (type / None): A wasabi.Printer instance for logging.
+        If None, no messages are printed.
     RETURNS (Path / None): The path to the final exported model.
     """
-    msg = Printer(no_print=silent)
+    msg = printer if printer is not None else wasabi.Printer(no_print=True)
     # Create iterator, which yields out info after each optimization step.
     config = nlp.config.interpolate()
     if config["training"]["seed"] is not None:
@@ -68,45 +69,37 @@ def train(
         msg.info(f"Frozen components: {frozen_components}")
     msg.info(f"Initial learn rate: {optimizer.learn_rate}")
     with nlp.select_pipes(disable=frozen_components):
-        print_row, finalize_logger = train_logger(nlp)
+        log_step, finalize_logger = train_logger(nlp, printer=msg)
     try:
-        progress = tqdm.tqdm(total=T["eval_frequency"], leave=False)
-        progress.set_description(f"Epoch 1")
         for batch, info, is_best_checkpoint in training_step_iterator:
-            progress.update(1)
-            if is_best_checkpoint is not None:
-                progress.close()
-                print_row(info)
-                if is_best_checkpoint and output_path is not None:
-                    with nlp.select_pipes(disable=frozen_components):
-                        update_meta(T, nlp, info)
-                    with nlp.use_params(optimizer.averages):
-                        nlp = before_to_disk(nlp)
-                        nlp.to_disk(output_path / "model-best")
-                progress = tqdm.tqdm(total=T["eval_frequency"], leave=False)
-                progress.set_description(f"Epoch {info['epoch']}")
+            log_step(info if is_best_checkpoint else None)
+            if is_best_checkpoint is not None and output_path is not None:
+                with nlp.select_pipes(disable=frozen_components):
+                    update_meta(T, nlp, info)
+                with nlp.use_params(optimizer.averages):
+                    nlp = before_to_disk(nlp)
+                    nlp.to_disk(output_path / "model-best")
     except Exception as e:
-        finalize_logger()
         if output_path is not None:
             # We don't want to swallow the traceback if we don't have a
-            # specific error.
+            # specific error, but we do want to warn that we're trying
+            # to do something here.
             msg.warn(
                 f"Aborting and saving the final best model. "
                 f"Encountered exception: {str(e)}"
             )
-            nlp = before_to_disk(nlp)
-            nlp.to_disk(output_path / "model-final")
         raise e
     finally:
         finalize_logger()
         if output_path is not None:
-            final_model_path = output_path / "model-final"
+            final_model_path = output_path / "model-last"
             if optimizer.averages:
                 with nlp.use_params(optimizer.averages):
                     nlp.to_disk(final_model_path)
             else:
                 nlp.to_disk(final_model_path)
-            msg.good(f"Saved pipeline to output directory", final_model_path)
+    # This will only run if we don't hit an error
+    msg.good(f"Saved pipeline to output directory", final_model_path)
 
 
 def train_while_improving(

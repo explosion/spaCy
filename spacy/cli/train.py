@@ -50,7 +50,7 @@ def train_cli(
         nlp = init_nlp(config, use_gpu=use_gpu)
     msg.good("Initialized pipeline")
     msg.divider("Training pipeline")
-    train(nlp, output_path, use_gpu=use_gpu, silent=False)
+    train(nlp, output_path, use_gpu=use_gpu, printer=msg)
 
 
 def verify_cli_args(config_path: Path, output_path: Optional[Path] = None) -> None:
