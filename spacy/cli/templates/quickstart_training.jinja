@@ -4,8 +4,8 @@ can help generate the best possible configuration, given a user's requirements. 
 {%- set use_transformer = (transformer_data and hardware != "cpu") -%}
 {%- set transformer = transformer_data[optimize] if use_transformer else {} -%}
 [paths]
-train = ""
-dev = ""
+train = null
+dev = null
 
 [system]
 {% if use_transformer -%}
@@ -36,6 +36,22 @@ tokenizer_config = {"use_fast": true}
 @span_getters = "spacy-transformers.strided_spans.v1"
 window = 128
 stride = 96
+
+{% if "morphologizer" in components %}
+[components.morphologizer]
+factory = "morphologizer"
+
+[components.morphologizer.model]
+@architectures = "spacy.Tagger.v1"
+nO = null
+
+[components.morphologizer.model.tok2vec]
+@architectures = "spacy-transformers.TransformerListener.v1"
+grad_factor = 1.0
+
+[components.morphologizer.model.tok2vec.pooling]
+@layers = "reduce_mean.v1"
+{%- endif %}
 
 {% if "tagger" in components %}
 [components.tagger]
@@ -166,6 +182,19 @@ depth = {{ 4 if optimize == "efficiency" else 8 }}
 window_size = 1
 maxout_pieces = 3
 
+{% if "morphologizer" in components %}
+[components.morphologizer]
+factory = "morphologizer"
+
+[components.morphologizer.model]
+@architectures = "spacy.Tagger.v1"
+nO = null
+
+[components.morphologizer.model.tok2vec]
+@architectures = "spacy.Tok2VecListener.v1"
+width = ${components.tok2vec.model.encode.width}
+{%- endif %}
+
 {% if "tagger" in components %}
 [components.tagger]
 factory = "tagger"
@@ -257,7 +286,7 @@ no_output_layer = false
 {% endif %}
 
 {% for pipe in components %}
-{% if pipe not in ["tagger", "parser", "ner", "textcat", "entity_linker"] %}
+{% if pipe not in ["tagger", "morphologizer", "parser", "ner", "textcat", "entity_linker"] %}
 {# Other components defined by the user: we just assume they're factories #}
 [components.{{ pipe }}]
 factory = "{{ pipe }}"
@@ -270,7 +299,6 @@ factory = "{{ pipe }}"
 @readers = "spacy.Corpus.v1"
 path = ${paths.train}
 max_length = {{ 500 if hardware == "gpu" else 2000 }}
-augmenter = {"@augmenters": "spacy.orth_variants.v1", "level": 0.1, "lower": 0.5}
 
 [corpora.dev]
 @readers = "spacy.Corpus.v1"
@@ -278,11 +306,6 @@ path = ${paths.dev}
 max_length = 0
 
 [training]
-{% if use_transformer or optimize == "efficiency" or not word_vectors -%}
-vectors = null
-{% else -%}
-vectors = "{{ word_vectors }}"
-{% endif -%}
 {% if use_transformer -%}
 accumulate_gradient = {{ transformer["size_factor"] }}
 {% endif -%}
@@ -318,3 +341,10 @@ start = 100
 stop = 1000
 compound = 1.001
 {% endif %}
+
+[initialize]
+{% if use_transformer or optimize == "efficiency" or not word_vectors -%}
+vectors = null
+{% else -%}
+vectors = "{{ word_vectors }}"
+{% endif -%}

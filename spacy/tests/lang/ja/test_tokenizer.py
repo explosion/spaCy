@@ -112,7 +112,7 @@ def test_ja_tokenizer_split_modes(ja_tokenizer, text, len_a, len_b, len_c):
 
 
 @pytest.mark.parametrize(
-    "text,sub_tokens_list_a,sub_tokens_list_b,sub_tokens_list_c", SUB_TOKEN_TESTS,
+    "text,sub_tokens_list_a,sub_tokens_list_b,sub_tokens_list_c", SUB_TOKEN_TESTS
 )
 def test_ja_tokenizer_sub_tokens(
     ja_tokenizer, text, sub_tokens_list_a, sub_tokens_list_b, sub_tokens_list_c

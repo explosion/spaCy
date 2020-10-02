@@ -215,20 +215,22 @@ cdef class Token:
         def __get__(self):
             return MorphAnalysis.from_id(self.vocab, self.c.morph)
 
-        def __set__(self, attr_t morph):
-            if morph == 0:
-                self.c.morph = morph
-            elif morph in self.vocab.strings:
-                self.morph_ = self.vocab.strings[morph]
-            else:
-                raise ValueError(Errors.E1009.format(val=morph))
+        def __set__(self, MorphAnalysis morph):
+            # Check that the morph has the same vocab
+            if self.vocab != morph.vocab:
+                raise ValueError(Errors.E1013)
+            self.c.morph = morph.c.key
 
-    property morph_:
-        def __get__(self):
-            return str(MorphAnalysis.from_id(self.vocab, self.c.morph))
-
-        def __set__(self, features):
-            cdef hash_t key = self.vocab.morphology.add(features)
+    def set_morph(self, features):
+        cdef hash_t key
+        if features is None:
+            self.c.morph = 0
+        elif isinstance(features, MorphAnalysis):
+            self.morph = features
+        else:
+            if isinstance(features, int):
+                features = self.vocab.strings[features]
+            key = self.vocab.morphology.add(features)
             self.c.morph = key
 
     @property

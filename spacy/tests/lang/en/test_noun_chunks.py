@@ -7,8 +7,7 @@ import pytest
 
 
 def test_noun_chunks_is_parsed(en_tokenizer):
-    """Test that noun_chunks raises Value Error for 'en' language if Doc is not parsed.
-    """
+    """Test that noun_chunks raises Value Error for 'en' language if Doc is not parsed."""
     doc = en_tokenizer("This is a sentence")
     with pytest.raises(ValueError):
         list(doc.noun_chunks)

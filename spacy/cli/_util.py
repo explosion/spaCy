@@ -10,12 +10,13 @@ from click import NoSuchOption
 from click.parser import split_arg_string
 from typer.main import get_command
 from contextlib import contextmanager
-from thinc.api import Config, ConfigValidationError
+from thinc.api import Config, ConfigValidationError, require_gpu
 from configparser import InterpolationError
 import os
 
 from ..schemas import ProjectConfigSchema, validate
 from ..util import import_file, run_command, make_tempdir, registry, logger
+from ..util import ENV_VARS
 
 if TYPE_CHECKING:
     from pathy import Pathy  # noqa: F401
@@ -39,7 +40,6 @@ commands to check and validate your config files, training and evaluation data,
 and custom model implementations.
 """
 INIT_HELP = """Commands for initializing configs and pipeline packages."""
-OVERRIDES_ENV_VAR = "SPACY_CONFIG_OVERRIDES"
 
 # Wrappers for Typer's annotations. Initially created to set defaults and to
 # keep the names short, but not needed at the moment.
@@ -65,7 +65,7 @@ def setup_cli() -> None:
 
 
 def parse_config_overrides(
-    args: List[str], env_var: Optional[str] = OVERRIDES_ENV_VAR
+    args: List[str], env_var: Optional[str] = ENV_VARS.CONFIG_OVERRIDES
 ) -> Dict[str, Any]:
     """Generate a dictionary of config overrides based on the extra arguments
     provided on the CLI, e.g. --training.batch_size to override
@@ -275,18 +275,6 @@ def import_code(code_path: Optional[Union[Path, str]]) -> None:
             msg.fail(f"Couldn't load Python code: {code_path}", e, exits=1)
 
 
-def get_sourced_components(config: Union[Dict[str, Any], Config]) -> List[str]:
-    """RETURNS (List[str]): All sourced components in the original config,
-        e.g. {"source": "en_core_web_sm"}. If the config contains a key
-        "factory", we assume it refers to a component factory.
-    """
-    return [
-        name
-        for name, cfg in config.get("components", {}).items()
-        if "factory" not in cfg and "source" in cfg
-    ]
-
-
 def upload_file(src: Path, dest: Union[str, "Pathy"]) -> None:
     """Upload a file.
 
@@ -458,3 +446,12 @@ def string_to_list(value: str, intify: bool = False) -> Union[List[str], List[in
             p = int(p)
         result.append(p)
     return result
+
+
+def setup_gpu(use_gpu: int) -> None:
+    """Configure the GPU and log info."""
+    if use_gpu >= 0:
+        msg.info(f"Using GPU: {use_gpu}")
+        require_gpu(use_gpu)
+    else:
+        msg.info("Using CPU")

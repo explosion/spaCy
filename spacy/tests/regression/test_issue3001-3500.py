@@ -59,7 +59,7 @@ def test_issue3012(en_vocab):
     words = ["This", "is", "10", "%", "."]
     tags = ["DT", "VBZ", "CD", "NN", "."]
     pos = ["DET", "VERB", "NUM", "NOUN", "PUNCT"]
-    ents = [("PERCENT", 2, 4)]
+    ents = ["O", "O", "B-PERCENT", "I-PERCENT", "O"]
     doc = Doc(en_vocab, words=words, tags=tags, pos=pos, ents=ents)
     assert doc.has_annotation("TAG")
     expected = ("10", "NUM", "CD", "PERCENT")
@@ -92,7 +92,7 @@ def test_issue3209():
     nlp = English()
     ner = nlp.add_pipe("ner")
     ner.add_label("ANIMAL")
-    nlp.begin_training()
+    nlp.initialize()
     move_names = ["O", "B-ANIMAL", "I-ANIMAL", "L-ANIMAL", "U-ANIMAL"]
     assert ner.move_names == move_names
     nlp2 = English()
@@ -239,7 +239,7 @@ def test_issue3456():
     nlp = English()
     tagger = nlp.add_pipe("tagger")
     tagger.add_label("A")
-    nlp.begin_training()
+    nlp.initialize()
     list(nlp.pipe(["hi", ""]))
 
 

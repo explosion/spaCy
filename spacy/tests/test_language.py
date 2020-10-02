@@ -18,7 +18,7 @@ def nlp():
     textcat = nlp.add_pipe("textcat")
     for label in ("POSITIVE", "NEGATIVE"):
         textcat.add_label(label)
-    nlp.begin_training()
+    nlp.initialize()
     return nlp
 
 
@@ -290,9 +290,7 @@ def test_spacy_blank():
     assert nlp.meta["name"] == "my_custom_model"
 
 
-@pytest.mark.parametrize(
-    "value", [False, None, ["x", "y"], Language, Vocab],
-)
+@pytest.mark.parametrize("value", [False, None, ["x", "y"], Language, Vocab])
 def test_language_init_invalid_vocab(value):
     err_fragment = "invalid value"
     with pytest.raises(ValueError) as e:

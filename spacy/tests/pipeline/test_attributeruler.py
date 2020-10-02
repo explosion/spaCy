@@ -69,9 +69,9 @@ def test_attributeruler_init(nlp, pattern_dicts):
         a.add(**p)
     doc = nlp("This is a test.")
     assert doc[2].lemma_ == "the"
-    assert doc[2].morph_ == "Case=Nom|Number=Plur"
+    assert str(doc[2].morph) == "Case=Nom|Number=Plur"
     assert doc[3].lemma_ == "cat"
-    assert doc[3].morph_ == "Case=Nom|Number=Sing"
+    assert str(doc[3].morph) == "Case=Nom|Number=Sing"
     assert doc.has_annotation("LEMMA")
     assert doc.has_annotation("MORPH")
 
@@ -81,9 +81,9 @@ def test_attributeruler_init_patterns(nlp, pattern_dicts):
     nlp.add_pipe("attribute_ruler", config={"pattern_dicts": pattern_dicts})
     doc = nlp("This is a test.")
     assert doc[2].lemma_ == "the"
-    assert doc[2].morph_ == "Case=Nom|Number=Plur"
+    assert str(doc[2].morph) == "Case=Nom|Number=Plur"
     assert doc[3].lemma_ == "cat"
-    assert doc[3].morph_ == "Case=Nom|Number=Sing"
+    assert str(doc[3].morph) == "Case=Nom|Number=Sing"
     assert doc.has_annotation("LEMMA")
     assert doc.has_annotation("MORPH")
     nlp.remove_pipe("attribute_ruler")
@@ -94,9 +94,9 @@ def test_attributeruler_init_patterns(nlp, pattern_dicts):
     )
     doc = nlp("This is a test.")
     assert doc[2].lemma_ == "the"
-    assert doc[2].morph_ == "Case=Nom|Number=Plur"
+    assert str(doc[2].morph) == "Case=Nom|Number=Plur"
     assert doc[3].lemma_ == "cat"
-    assert doc[3].morph_ == "Case=Nom|Number=Sing"
+    assert str(doc[3].morph) == "Case=Nom|Number=Sing"
     assert doc.has_annotation("LEMMA")
     assert doc.has_annotation("MORPH")
 
@@ -106,9 +106,9 @@ def test_attributeruler_score(nlp, pattern_dicts):
     nlp.add_pipe("attribute_ruler", config={"pattern_dicts": pattern_dicts})
     doc = nlp("This is a test.")
     assert doc[2].lemma_ == "the"
-    assert doc[2].morph_ == "Case=Nom|Number=Plur"
+    assert str(doc[2].morph) == "Case=Nom|Number=Plur"
     assert doc[3].lemma_ == "cat"
-    assert doc[3].morph_ == "Case=Nom|Number=Sing"
+    assert str(doc[3].morph) == "Case=Nom|Number=Sing"
 
     dev_examples = [
         Example.from_dict(
@@ -150,10 +150,10 @@ def test_attributeruler_tag_map(nlp, tag_map):
     for i in range(len(doc)):
         if i == 4:
             assert doc[i].pos_ == "PUNCT"
-            assert doc[i].morph_ == "PunctType=peri"
+            assert str(doc[i].morph) == "PunctType=peri"
         else:
             assert doc[i].pos_ == ""
-            assert doc[i].morph_ == ""
+            assert str(doc[i].morph) == ""
 
 
 def test_attributeruler_morph_rules(nlp, morph_rules):
@@ -168,11 +168,11 @@ def test_attributeruler_morph_rules(nlp, morph_rules):
     for i in range(len(doc)):
         if i != 2:
             assert doc[i].pos_ == ""
-            assert doc[i].morph_ == ""
+            assert str(doc[i].morph) == ""
         else:
             assert doc[2].pos_ == "DET"
             assert doc[2].lemma_ == "a"
-            assert doc[2].morph_ == "Case=Nom"
+            assert str(doc[2].morph) == "Case=Nom"
 
 
 def test_attributeruler_indices(nlp):
@@ -194,14 +194,14 @@ def test_attributeruler_indices(nlp):
     for i in range(len(doc)):
         if i == 1:
             assert doc[i].lemma_ == "was"
-            assert doc[i].morph_ == "Case=Nom|Number=Sing"
+            assert str(doc[i].morph) == "Case=Nom|Number=Sing"
         elif i == 2:
             assert doc[i].lemma_ == "the"
-            assert doc[i].morph_ == "Case=Nom|Number=Plur"
+            assert str(doc[i].morph) == "Case=Nom|Number=Plur"
         elif i == 3:
             assert doc[i].lemma_ == "cat"
         else:
-            assert doc[i].morph_ == ""
+            assert str(doc[i].morph) == ""
     # raises an error when trying to modify a token outside of the match
     a.add([[{"ORTH": "a"}, {"ORTH": "test"}]], {"LEMMA": "cat"}, index=2)
     with pytest.raises(ValueError):

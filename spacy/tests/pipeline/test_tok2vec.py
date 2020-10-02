@@ -73,8 +73,7 @@ def test_tok2vec_configs(width, embed_arch, embed_config, encode_arch, encode_co
     encode_config["width"] = width
     docs = get_batch(3)
     tok2vec = build_Tok2Vec_model(
-        embed_arch(**embed_config),
-        encode_arch(**encode_config)
+        embed_arch(**embed_config), encode_arch(**encode_config)
     )
     tok2vec.initialize(docs)
     vectors, backprop = tok2vec.begin_update(docs)
@@ -88,7 +87,7 @@ def test_init_tok2vec():
     nlp = English()
     tok2vec = nlp.add_pipe("tok2vec")
     assert tok2vec.listeners == []
-    nlp.begin_training()
+    nlp.initialize()
     assert tok2vec.model.get_dim("nO")
 
 
@@ -154,7 +153,7 @@ def test_tok2vec_listener():
 
     # Check that the Tok2Vec component finds it listeners
     assert tok2vec.listeners == []
-    optimizer = nlp.begin_training(lambda: train_examples)
+    optimizer = nlp.initialize(lambda: train_examples)
     assert tok2vec.listeners == [tagger_tok2vec]
 
     for i in range(5):

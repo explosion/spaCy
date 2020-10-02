@@ -14,8 +14,8 @@ from ..util import make_tempdir
 
 nlp_config_string = """
 [paths]
-train = ""
-dev = ""
+train = null
+dev = null
 
 [corpora]
 
@@ -152,7 +152,7 @@ def test_serialize_nlp():
     nlp_config = Config().from_str(nlp_config_string)
     nlp = load_model_from_config(nlp_config, auto_fill=True)
     nlp.get_pipe("tagger").add_label("A")
-    nlp.begin_training()
+    nlp.initialize()
     assert "tok2vec" in nlp.pipe_names
     assert "tagger" in nlp.pipe_names
     assert "parser" not in nlp.pipe_names
@@ -173,7 +173,7 @@ def test_serialize_custom_nlp():
     parser_cfg = dict()
     parser_cfg["model"] = {"@architectures": "my_test_parser"}
     nlp.add_pipe("parser", config=parser_cfg)
-    nlp.begin_training()
+    nlp.initialize()
 
     with make_tempdir() as d:
         nlp.to_disk(d)
@@ -191,7 +191,7 @@ def test_serialize_parser():
     model_config = Config().from_str(parser_config_string)
     parser = nlp.add_pipe("parser", config=model_config)
     parser.add_label("nsubj")
-    nlp.begin_training()
+    nlp.initialize()
 
     with make_tempdir() as d:
         nlp.to_disk(d)
@@ -309,7 +309,7 @@ def test_config_interpolation():
     config = Config().from_str(nlp_config_string, interpolate=False)
     assert config["corpora"]["train"]["path"] == "${paths.train}"
     interpolated = config.interpolate()
-    assert interpolated["corpora"]["train"]["path"] == ""
+    assert interpolated["corpora"]["train"]["path"] is None
     nlp = English.from_config(config)
     assert nlp.config["corpora"]["train"]["path"] == "${paths.train}"
     # Ensure that variables are preserved in nlp config
@@ -317,10 +317,10 @@ def test_config_interpolation():
     assert config["components"]["tagger"]["model"]["tok2vec"]["width"] == width
     assert nlp.config["components"]["tagger"]["model"]["tok2vec"]["width"] == width
     interpolated2 = nlp.config.interpolate()
-    assert interpolated2["corpora"]["train"]["path"] == ""
+    assert interpolated2["corpora"]["train"]["path"] is None
     assert interpolated2["components"]["tagger"]["model"]["tok2vec"]["width"] == 342
     nlp2 = English.from_config(interpolated)
-    assert nlp2.config["corpora"]["train"]["path"] == ""
+    assert nlp2.config["corpora"]["train"]["path"] is None
     assert nlp2.config["components"]["tagger"]["model"]["tok2vec"]["width"] == 342
 
 

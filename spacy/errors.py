@@ -85,6 +85,7 @@ class Warnings:
             "attribute or operator.")
 
     # TODO: fix numbering after merging develop into master
+    W089 = ("The nlp.begin_training method has been renamed to nlp.initialize.")
     W090 = ("Could not locate any {format} files in path '{path}'.")
     W091 = ("Could not clean/remove the temp directory at {dir}: {msg}.")
     W092 = ("Ignoring annotations for sentence starts, as dependency heads are set.")
@@ -306,7 +307,7 @@ class Errors:
             "settings: {opts}")
     E107 = ("Value of doc._.{attr} is not JSON-serializable: {value}")
     E109 = ("Component '{name}' could not be run. Did you forget to "
-            "call begin_training()?")
+            "call initialize()?")
     E110 = ("Invalid displaCy render wrapper. Expected callable, got: {obj}")
     E111 = ("Pickling a token is not supported, because tokens are only views "
             "of the parent Doc and can't exist on their own. A pickled token "
@@ -376,7 +377,7 @@ class Errors:
             "provided {found}.")
     E143 = ("Labels for component '{name}' not initialized. This can be fixed "
             "by calling add_label, or by providing a representative batch of "
-            "examples to the component's begin_training method.")
+            "examples to the component's initialize method.")
     E145 = ("Error reading `{param}` from input file.")
     E146 = ("Could not access `{path}`.")
     E147 = ("Unexpected error in the {method} functionality of the "
@@ -418,7 +419,7 @@ class Errors:
     E164 = ("x is neither increasing nor decreasing: {}.")
     E165 = ("Only one class present in y_true. ROC AUC score is not defined in "
             "that case.")
-    E166 = ("Can only merge DocBins with the same pre-defined attributes.\n"
+    E166 = ("Can only merge DocBins with the same value for '{param}'.\n"
             "Current DocBin: {current}\nOther DocBin: {other}")
     E169 = ("Can't find module: {module}")
     E170 = ("Cannot apply transition {name}: invalid for the current state.")
@@ -476,6 +477,10 @@ class Errors:
     E201 = ("Span index out of range.")
 
     # TODO: fix numbering after merging develop into master
+    E912 = ("Failed to initialize lemmatizer. Missing lemmatizer table(s) found "
+            "for mode '{mode}'. Required tables: {tables}. Found: {found}.")
+    E913 = ("Corpus path can't be None. Maybe you forgot to define it in your "
+            "config.cfg or override it on the CLI?")
     E914 = ("Executing {name} callback failed. Expected the function to "
             "return the nlp object but got: {value}. Maybe you forgot to return "
             "the modified object in your function?")
@@ -517,7 +522,7 @@ class Errors:
             "but the provided argument {loc} points to a file.")
     E929 = ("A 'KnowledgeBase' could not be read from {loc} - the path does "
             "not seem to exist.")
-    E930 = ("Received invalid get_examples callback in {name}.begin_training. "
+    E930 = ("Received invalid get_examples callback in {name}.initialize. "
             "Expected function that returns an iterable of Example objects but "
             "got: {obj}")
     E931 = ("Encountered Pipe subclass without Pipe.{method} method in component "
@@ -553,7 +558,10 @@ class Errors:
     E953 = ("Mismatched IDs received by the Tok2Vec listener: {id1} vs. {id2}")
     E954 = ("The Tok2Vec listener did not receive any valid input from an upstream "
             "component.")
-    E955 = ("Can't find table(s) '{table}' for language '{lang}' in spacy-lookups-data.")
+    E955 = ("Can't find table(s) {table} for language '{lang}' in "
+            "spacy-lookups-data. Make sure you have the package installed or "
+            "provide your own lookup tables if no default lookups are available "
+            "for your language.")
     E956 = ("Can't find component '{name}' in [components] block in the config. "
             "Available components: {opts}")
     E957 = ("Writing directly to Language.factories isn't needed anymore in "
@@ -670,18 +678,17 @@ class Errors:
             "'{token_attrs}'.")
     E999 = ("Unable to merge the `Doc` objects because they do not all share "
             "the same `Vocab`.")
-    E1000 = ("No pkuseg model available. Provide a pkuseg model when "
-             "initializing the pipeline:\n"
-             'cfg = {"tokenizer": {"segmenter": "pkuseg", "pkuseg_model": name_or_path}}\n'
-             'nlp = Chinese(config=cfg)')
+    E1000 = ("The Chinese word segmenter is pkuseg but no pkuseg model was "
+             "loaded. Provide the name of a pretrained model or the path to "
+             "a model and initialize the pipeline:\n\n"
+             'nlp.tokenizer.initialize(pkuseg_model="default")')
     E1001 = ("Target token outside of matched span for match with tokens "
              "'{span}' and offset '{index}' matched by patterns '{patterns}'.")
     E1002 = ("Span index out of range.")
     E1003 = ("Unsupported lemmatizer mode '{mode}'.")
     E1004 = ("Missing lemmatizer table(s) found for lemmatizer mode '{mode}'. "
-             "Required tables '{tables}', found '{found}'. If you are not "
-             "providing custom lookups, make sure you have the package "
-             "spacy-lookups-data installed.")
+             "Required tables: {tables}. Found: {found}. Maybe you forgot to "
+             "call nlp.initialize() to load in the data?")
     E1005 = ("Unable to set attribute '{attr}' in tokenizer exception for "
              "'{chunk}'. Tokenizer exceptions are only allowed to specify "
              "`ORTH` and `NORM`.")
@@ -698,6 +705,9 @@ class Errors:
              "options: {modes}")
     E1012 = ("Entity spans and blocked/missing/outside spans should be "
              "provided to doc.set_ents as lists of `Span` objects.")
+    E1013 = ("Invalid morph: the MorphAnalysis must have the same vocab as the "
+             "token itself. To set the morph from this MorphAnalysis, set from "
+             "the string value with: `token.set_morph(str(other_morph))`.")
 
 
 @add_codes

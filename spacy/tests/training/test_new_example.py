@@ -113,7 +113,7 @@ def test_Example_from_dict_with_morphology(annots):
     predicted = Doc(vocab, words=annots["words"])
     example = Example.from_dict(predicted, annots)
     for i, token in enumerate(example.reference):
-        assert token.morph_ == annots["morphs"][i]
+        assert str(token.morph) == annots["morphs"][i]
 
 
 @pytest.mark.parametrize(

@@ -125,35 +125,52 @@ applied to the `Doc` in order. Both [`__call__`](/api/textcategorizer#call) and
 | `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
 | **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
-## TextCategorizer.begin_training {#begin_training tag="method"}
+## TextCategorizer.initialize {#initialize tag="method" new="3"}
 
-Initialize the component for training and return an
-[`Optimizer`](https://thinc.ai/docs/api-optimizers). `get_examples` should be a
-function that returns an iterable of [`Example`](/api/example) objects. The data
-examples are used to **initialize the model** of the component and can either be
-the full training data or a representative sample. Initialization includes
-validating the network,
+Initialize the component for training. `get_examples` should be a function that
+returns an iterable of [`Example`](/api/example) objects. The data examples are
+used to **initialize the model** of the component and can either be the full
+training data or a representative sample. Initialization includes validating the
+network,
 [inferring missing shapes](https://thinc.ai/docs/usage-models#validation) and
-setting up the label scheme based on the data.
+setting up the label scheme based on the data. This method is typically called
+by [`Language.initialize`](/api/language#initialize) and lets you customize
+arguments it receives via the
+[`[initialize.components]`](/api/data-formats#config-initialize) block in the
+config.
+
+<Infobox variant="warning" title="Changed in v3.0" id="begin_training">
+
+This method was previously called `begin_training`.
+
+</Infobox>
 
 > #### Example
 >
 > ```python
 > textcat = nlp.add_pipe("textcat")
-> optimizer = textcat.begin_training(lambda: [], pipeline=nlp.pipeline)
+> textcat.initialize(lambda: [], nlp=nlp)
+> ```
+>
+> ```ini
+> ### config.cfg
+> [initialize.components.textcat]
+>
+> [initialize.components.textcat.labels]
+> @readers = "spacy.read_labels.v1"
+> path = "corpus/labels/textcat.json
 > ```
 
-| Name           | Description                                                                                                                           |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. ~~Callable[[], Iterable[Example]]~~ |
-| _keyword-only_ |                                                                                                                                       |
-| `pipeline`     | Optional list of pipeline components that this component is part of. ~~Optional[List[Tuple[str, Callable[[Doc], Doc]]]]~~             |
-| `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                         |
-| **RETURNS**    | The optimizer. ~~Optimizer~~                                                                                                          |
+| Name           | Description                                                                                                                                                                                                                                                                                                         |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. ~~Callable[[], Iterable[Example]]~~                                                                                                                                                                               |
+| _keyword-only_ |                                                                                                                                                                                                                                                                                                                     |
+| `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                                                                                                                                                                                |
+| `labels`       | The label information to add to the component. To generate a reusable JSON file from your data, you should run the [`init labels`](/api/cli#init-labels) command. If no labels are provided, the `get_examples` callback is used to extract the labels from the data, which may be a lot slower. ~~Optional[dict]~~ |
 
 ## TextCategorizer.predict {#predict tag="method"}
 
-Apply the component's model to a batch of [`Doc`](/api/doc) objects, without
+Apply the component's model to a batch of [`Doc`](/api/doc) objects without
 modifying them.
 
 > #### Example
@@ -170,7 +187,7 @@ modifying them.
 
 ## TextCategorizer.set_annotations {#set_annotations tag="method"}
 
-Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
+Modify a batch of [`Doc`](/api/doc) objects using pre-computed scores.
 
 > #### Example
 >
@@ -196,14 +213,14 @@ Delegates to [`predict`](/api/textcategorizer#predict) and
 >
 > ```python
 > textcat = nlp.add_pipe("textcat")
-> optimizer = nlp.begin_training()
+> optimizer = nlp.initialize()
 > losses = textcat.update(examples, sgd=optimizer)
 > ```
 
 | Name              | Description                                                                                                                        |
 | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | `examples`        | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                                  |
-| _keyword-only_    |                                                                                                                                    | 
+| _keyword-only_    |                                                                                                                                    |
 | `drop`            | The dropout rate. ~~float~~                                                                                                        |
 | `set_annotations` | Whether or not to update the `Example` objects with the predictions, delegating to [`set_annotations`](#set_annotations). ~~bool~~ |
 | `sgd`             | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                      |
@@ -213,7 +230,7 @@ Delegates to [`predict`](/api/textcategorizer#predict) and
 ## TextCategorizer.rehearse {#rehearse tag="method,experimental" new="3"}
 
 Perform a "rehearsal" update from a batch of data. Rehearsal updates teach the
-current model to make predictions similar to an initial model, to try to address
+current model to make predictions similar to an initial model to try to address
 the "catastrophic forgetting" problem. This feature is experimental.
 
 > #### Example
@@ -227,7 +244,7 @@ the "catastrophic forgetting" problem. This feature is experimental.
 | Name           | Description                                                                                                              |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | `examples`     | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                        |
-| _keyword-only_ |                                                                                                                          | 
+| _keyword-only_ |                                                                                                                          |
 | `drop`         | The dropout rate. ~~float~~                                                                                              |
 | `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~            |
 | `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
@@ -286,7 +303,7 @@ Create an optimizer for the pipeline component.
 
 ## TextCategorizer.use_params {#use_params tag="method, contextmanager"}
 
-Modify the pipe's model, to use the given parameter values.
+Modify the pipe's model to use the given parameter values.
 
 > #### Example
 >
@@ -303,12 +320,12 @@ Modify the pipe's model, to use the given parameter values.
 ## TextCategorizer.add_label {#add_label tag="method"}
 
 Add a new label to the pipe. Raises an error if the output dimension is already
-set, or if the model has already been fully [initialized](#begin_training). Note
+set, or if the model has already been fully [initialized](#initialize). Note
 that you don't have to call this method if you provide a **representative data
-sample** to the [`begin_training`](#begin_training) method. In this case, all
-labels found in the sample will be automatically added to the model, and the
-output dimension will be
-[inferred](/usage/layers-architectures#thinc-shape-inference) automatically.
+sample** to the [`initialize`](#initialize) method. In this case, all labels
+found in the sample will be automatically added to the model, and the output
+dimension will be [inferred](/usage/layers-architectures#thinc-shape-inference)
+automatically.
 
 > #### Example
 >

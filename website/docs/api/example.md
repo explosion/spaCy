@@ -33,8 +33,8 @@ both documents.
 
 | Name           | Description                                                                                                              |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `predicted`    | The document containing (partial) predictions. Can not be `None`. ~~Doc~~                                                |
-| `reference`    | The document containing gold-standard annotations. Can not be `None`. ~~Doc~~                                            |
+| `predicted`    | The document containing (partial) predictions. Cannot be `None`. ~~Doc~~                                                |
+| `reference`    | The document containing gold-standard annotations. Cannot be `None`. ~~Doc~~                                            |
 | _keyword-only_ |                                                                                                                          |
 | `alignment`    | An object holding the alignment between the tokens of the `predicted` and `reference` documents. ~~Optional[Alignment]~~ |
 
@@ -58,8 +58,8 @@ see the [training format documentation](/api/data-formats#dict-input).
 
 | Name           | Description                                                               |
 | -------------- | ------------------------------------------------------------------------- |
-| `predicted`    | The document containing (partial) predictions. Can not be `None`. ~~Doc~~ |
-| `example_dict` | `Dict[str, obj]`                                                          | The gold-standard annotations as a dictionary. Can not be `None`. ~~Dict[str, Any]~~ |
+| `predicted`    | The document containing (partial) predictions. Cannot be `None`. ~~Doc~~ |
+| `example_dict` | `Dict[str, obj]`                                                          | The gold-standard annotations as a dictionary. Cannot be `None`. ~~Dict[str, Any]~~ |
 | **RETURNS**    | The newly constructed object. ~~Example~~                                 |
 
 ## Example.text {#text tag="property"}

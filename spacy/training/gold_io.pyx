@@ -44,7 +44,7 @@ def docs_to_json(docs, doc_id=0, ner_missing_tag="O"):
                 if include_annotation["POS"]:
                     json_token["pos"] = token.pos_
                 if include_annotation["MORPH"]:
-                    json_token["morph"] = token.morph_
+                    json_token["morph"] = str(token.morph)
                 if include_annotation["LEMMA"]:
                     json_token["lemma"] = token.lemma_
                 if include_annotation["DEP"]:

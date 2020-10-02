@@ -213,8 +213,9 @@ cdef class Doc:
         sent_starts (Optional[List[Union[bool, None]]]): A list of values, of
             the same length as words, to assign as token.is_sent_start. Will be
             overridden by heads if heads is provided. Defaults to None.
-        ents (Optional[List[Tuple[Union[str, int], int, int]]]): A list of
-            (label, start, end) tuples to assign as doc.ents. Defaults to None.
+        ents (Optional[List[str]]): A list of unicode strings, of the same
+            length as words, as IOB tags to assign as token.ent_iob and
+            token.ent_type. Defaults to None.
 
         DOCS: https://nightly.spacy.io/api/doc#init
         """
@@ -275,16 +276,55 @@ cdef class Doc:
                     sent_starts[i] = -1
                 elif sent_starts[i] is None or sent_starts[i] not in [-1, 0, 1]:
                     sent_starts[i] = 0
+        ent_iobs = None
+        ent_types = None
+        if ents is not None:
+            iob_strings = Token.iob_strings()
+            # make valid IOB2 out of IOB1 or IOB2
+            for i, ent in enumerate(ents):
+                if ent is "":
+                    ents[i] = None
+                elif ent is not None and not isinstance(ent, str):
+                    raise ValueError(Errors.E177.format(tag=ent))
+                if i < len(ents) - 1:
+                    # OI -> OB
+                    if (ent is None or ent.startswith("O")) and \
+                            (ents[i+1] is not None and ents[i+1].startswith("I")):
+                        ents[i+1] = "B" + ents[i+1][1:]
+                    # B-TYPE1 I-TYPE2 or I-TYPE1 I-TYPE2 -> B/I-TYPE1 B-TYPE2
+                    if ent is not None and ents[i+1] is not None and \
+                            (ent.startswith("B") or ent.startswith("I")) and \
+                            ents[i+1].startswith("I") and \
+                            ent[1:] != ents[i+1][1:]:
+                        ents[i+1] = "B" + ents[i+1][1:]
+            ent_iobs = []
+            ent_types = []
+            for ent in ents:
+                if ent is None:
+                    ent_iobs.append(iob_strings.index(""))
+                    ent_types.append("")
+                elif ent == "O":
+                    ent_iobs.append(iob_strings.index(ent))
+                    ent_types.append("")
+                else:
+                    if len(ent) < 3 or ent[1] != "-":
+                        raise ValueError(Errors.E177.format(tag=ent))
+                    ent_iob, ent_type = ent.split("-", 1) 
+                    if ent_iob not in iob_strings:
+                        raise ValueError(Errors.E177.format(tag=ent))
+                    ent_iob = iob_strings.index(ent_iob)
+                    ent_iobs.append(ent_iob)
+                    ent_types.append(ent_type)
         headings = []
         values = []
-        annotations = [pos, heads, deps, lemmas, tags, morphs, sent_starts]
-        possible_headings = [POS, HEAD, DEP, LEMMA, TAG, MORPH, SENT_START]
+        annotations = [pos, heads, deps, lemmas, tags, morphs, sent_starts, ent_iobs, ent_types]
+        possible_headings = [POS, HEAD, DEP, LEMMA, TAG, MORPH, SENT_START, ENT_IOB, ENT_TYPE]
         for a, annot in enumerate(annotations):
             if annot is not None:
                 if len(annot) != len(words):
                     raise ValueError(Errors.E189)
                 headings.append(possible_headings[a])
-                if annot is not heads and annot is not sent_starts:
+                if annot is not heads and annot is not sent_starts and annot is not ent_iobs:
                     values.extend(annot)
         for value in values:
             self.vocab.strings.add(value)
@@ -296,7 +336,7 @@ cdef class Doc:
             j = 0
             for annot in annotations:
                 if annot:
-                    if annot is heads or annot is sent_starts:
+                    if annot is heads or annot is sent_starts or annot is ent_iobs:
                         for i in range(len(words)):
                             if attrs.ndim == 1:
                                 attrs[i] = annot[i]
@@ -317,8 +357,6 @@ cdef class Doc:
                                 attrs[i, j] = self.vocab.strings[annot[i]]
                     j += 1
             self.from_array(headings, attrs)
-        if ents is not None:
-            self.ents = ents
 
     @property
     def _(self):
@@ -1210,7 +1248,7 @@ cdef class Doc:
         for token in self:
             strings.add(token.tag_)
             strings.add(token.lemma_)
-            strings.add(token.morph_)
+            strings.add(str(token.morph))
             strings.add(token.dep_)
             strings.add(token.ent_type_)
             strings.add(token.ent_kb_id_)

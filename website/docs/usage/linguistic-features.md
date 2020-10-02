@@ -56,16 +56,13 @@ create a surface form. Here are some examples:
 
 Morphological features are stored in the [`MorphAnalysis`](/api/morphanalysis)
 under `Token.morph`, which allows you to access individual morphological
-features. The attribute `Token.morph_` provides the morphological analysis in
-the Universal Dependencies
-[FEATS](https://universaldependencies.org/format.html#morphological-annotation)
-format.
+features.
 
 > #### 📝 Things to try
 >
 > 1. Change "I" to "She". You should see that the morphological features change
 >    and express that it's a pronoun in the third person.
-> 2. Inspect `token.morph_` for the other tokens.
+> 2. Inspect `token.morph` for the other tokens.
 
 ```python
 ### {executable="true"}
@@ -75,7 +72,7 @@ nlp = spacy.load("en_core_web_sm")
 print("Pipeline:", nlp.pipe_names)
 doc = nlp("I was reading the paper.")
 token = doc[0]  # 'I'
-print(token.morph_)  # 'Case=Nom|Number=Sing|Person=1|PronType=Prs'
+print(token.morph)  # 'Case=Nom|Number=Sing|Person=1|PronType=Prs'
 print(token.morph.get("PronType"))  # ['Prs']
 ```
 
@@ -91,7 +88,7 @@ import spacy
 
 nlp = spacy.load("de_core_news_sm")
 doc = nlp("Wo bist du?") # English: 'Where are you?'
-print(doc[2].morph_)  # 'Case=Nom|Number=Sing|Person=2|PronType=Prs'
+print(doc[2].morph)  # 'Case=Nom|Number=Sing|Person=2|PronType=Prs'
 print(doc[2].pos_) # 'PRON'
 ```
 
@@ -117,7 +114,7 @@ import spacy
 
 nlp = spacy.load("en_core_web_sm")
 doc = nlp("Where are you?")
-print(doc[2].morph_)  # 'Case=Nom|Person=2|PronType=Prs'
+print(doc[2].morph)  # 'Case=Nom|Person=2|PronType=Prs'
 print(doc[2].pos_)  # 'PRON'
 ```
 
@@ -1834,10 +1831,12 @@ word vector libraries output an easy-to-read text-based format, where each line
 consists of the word followed by its vector. For everyday use, we want to
 convert the vectors into a binary format that loads faster and takes up less
 space on disk. The easiest way to do this is the
-[`init vocab`](/api/cli#init-vocab) command-line utility. This will output a
+[`init vectors`](/api/cli#init-vectors) command-line utility. This will output a
 blank spaCy pipeline in the directory `/tmp/la_vectors_wiki_lg`, giving you
 access to some nice Latin vectors. You can then pass the directory path to
-[`spacy.load`](/api/top-level#spacy.load).
+[`spacy.load`](/api/top-level#spacy.load) or use it in the
+[`[initialize]`](/api/data-formats#config-initialize) of your config when you
+[train](/usage/training) a model.
 
 > #### Usage example
 >
@@ -1850,7 +1849,7 @@ access to some nice Latin vectors. You can then pass the directory path to
 
 ```cli
 $ wget https://s3-us-west-1.amazonaws.com/fasttext-vectors/word-vectors-v2/cc.la.300.vec.gz
-$ python -m spacy init vocab en /tmp/la_vectors_wiki_lg --vectors-loc cc.la.300.vec.gz
+$ python -m spacy init vectors en cc.la.300.vec.gz /tmp/la_vectors_wiki_lg
 ```
 
 <Accordion title="How to optimize vector coverage" id="custom-vectors-coverage" spaced>
@@ -1858,9 +1857,9 @@ $ python -m spacy init vocab en /tmp/la_vectors_wiki_lg --vectors-loc cc.la.300.
 To help you strike a good balance between coverage and memory usage, spaCy's
 [`Vectors`](/api/vectors) class lets you map **multiple keys** to the **same
 row** of the table. If you're using the
-[`spacy init vocab`](/api/cli#init-vocab) command to create a vocabulary,
-pruning the vectors will be taken care of automatically if you set the
-`--prune-vectors` flag. You can also do it manually in the following steps:
+[`spacy init vectors`](/api/cli#init-vectors) command to create a vocabulary,
+pruning the vectors will be taken care of automatically if you set the `--prune`
+flag. You can also do it manually in the following steps:
 
 1. Start with a **word vectors package** that covers a huge vocabulary. For
    instance, the [`en_vectors_web_lg`](/models/en-starters#en_vectors_web_lg)
@@ -1905,12 +1904,12 @@ the two words.
 In the example above, the vector for "Shore" was removed and remapped to the
 vector of "coast", which is deemed about 73% similar. "Leaving" was remapped to
 the vector of "leaving", which is identical. If you're using the
-[`init vocab`](/api/cli#init-vocab) command, you can set the `--prune-vectors`
+[`init vectors`](/api/cli#init-vectors) command, you can set the `--prune`
 option to easily reduce the size of the vectors as you add them to a spaCy
 pipeline:
 
 ```cli
-$ python -m spacy init vocab en /tmp/la_vectors_web_md --vectors-loc la.300d.vec.tgz --prune-vectors 10000
+$ python -m spacy init vectors en la.300d.vec.tgz /tmp/la_vectors_web_md --prune 10000
 ```
 
 This will create a blank spaCy pipeline with vectors for the first 10,000 words

@@ -58,7 +58,7 @@ def noun_bounds(
                 doc, token, np_left_deps, np_right_deps, stop_deps
             )
             filter_func = lambda t: is_verb_token(t) or t.dep in stop_deps
-            if list(filter(filter_func, doc[left_bound.i : right.i],)):
+            if list(filter(filter_func, doc[left_bound.i : right.i])):
                 break
             else:
                 right_bound = right

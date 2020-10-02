@@ -1,6 +1,6 @@
 ---
 title: Tokenizer
-teaser: Segment text into words, punctuations marks etc.
+teaser: Segment text into words, punctuations marks, etc.
 tag: class
 source: spacy/tokenizer.pyx
 ---
@@ -15,16 +15,15 @@ source: spacy/tokenizer.pyx
 Segment text, and create `Doc` objects with the discovered segment boundaries.
 For a deeper understanding, see the docs on
 [how spaCy's tokenizer works](/usage/linguistic-features#how-tokenizer-works).
-The tokenizer is typically created automatically when the a
+The tokenizer is typically created automatically when a
 [`Language`](/api/language) subclass is initialized and it reads its settings
 like punctuation and special case rules from the
 [`Language.Defaults`](/api/language#defaults) provided by the language subclass.
 
 ## Tokenizer.\_\_init\_\_ {#init tag="method"}
 
-Create a `Tokenizer`, to create `Doc` objects given unicode text. For examples
-of how to construct a custom tokenizer with different tokenization rules, see
-the
+Create a `Tokenizer` to create `Doc` objects given unicode text. For examples of
+how to construct a custom tokenizer with different tokenization rules, see the
 [usage documentation](https://spacy.io/usage/linguistic-features#native-tokenizers).
 
 > #### Example
@@ -87,7 +86,7 @@ Tokenize a stream of texts.
 | ------------ | ------------------------------------------------------------------------------------ |
 | `texts`      | A sequence of unicode texts. ~~Iterable[str]~~                                       |
 | `batch_size` | The number of texts to accumulate in an internal buffer. Defaults to `1000`. ~~int~~ |
-| **YIELDS**   | The tokenized Doc objects, in order. ~~Doc~~                                         |
+| **YIELDS**   | The tokenized `Doc` objects, in order. ~~Doc~~                                       |
 
 ## Tokenizer.find_infix {#find_infix tag="method"}
 
@@ -121,10 +120,10 @@ if no suffix rules match.
 ## Tokenizer.add_special_case {#add_special_case tag="method"}
 
 Add a special-case tokenization rule. This mechanism is also used to add custom
-tokenizer exceptions to the language data. See the usage guide on
-[adding languages](/usage/adding-languages#tokenizer-exceptions) and
-[linguistic features](/usage/linguistic-features#special-cases) for more details
-and examples.
+tokenizer exceptions to the language data. See the usage guide on the
+[languages data](/usage/linguistic-features#language-data) and
+[tokenizer special cases](/usage/linguistic-features#special-cases) for more
+details and examples.
 
 > #### Example
 >

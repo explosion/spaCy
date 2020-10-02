@@ -134,7 +134,7 @@ def update_dvc_config(
 
 
 def run_dvc_commands(
-    commands: Iterable[str] = SimpleFrozenList(), flags: Dict[str, bool] = {},
+    commands: Iterable[str] = SimpleFrozenList(), flags: Dict[str, bool] = {}
 ) -> None:
     """Run a sequence of DVC commands in a subprocess, in order.
 

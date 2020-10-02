@@ -1,29 +1,57 @@
-from typing import Callable
+from typing import Callable, Iterator, Dict, List, Tuple, TYPE_CHECKING
 import random
 import itertools
 import copy
 from functools import partial
-from ..util import registry
+from pydantic import BaseModel, StrictStr
+
+from ..util import registry, logger
+from ..tokens import Doc
+from .example import Example
+
+if TYPE_CHECKING:
+    from ..language import Language  # noqa: F401
 
 
-@registry.augmenters("spacy.dont_augment.v1")
-def create_null_augmenter():
-    return dont_augment
+class OrthVariantsSingle(BaseModel):
+    tags: List[StrictStr]
+    variants: List[StrictStr]
+
+
+class OrthVariantsPaired(BaseModel):
+    tags: List[StrictStr]
+    variants: List[List[StrictStr]]
+
+
+class OrthVariants(BaseModel):
+    paired: List[OrthVariantsPaired] = {}
+    single: List[OrthVariantsSingle] = {}
 
 
 @registry.augmenters("spacy.orth_variants.v1")
-def create_orth_variants_augmenter(level: float, lower: float) -> Callable:
+def create_orth_variants_augmenter(
+    level: float, lower: float, orth_variants: OrthVariants,
+) -> Callable[["Language", Example], Iterator[Example]]:
     """Create a data augmentation callback that uses orth-variant replacement.
     The callback can be added to a corpus or other data iterator during training.
     """
-    return partial(orth_variants_augmenter, level=level, lower=lower)
+    return partial(
+        orth_variants_augmenter, orth_variants=orth_variants, level=level, lower=lower
+    )
 
 
-def dont_augment(nlp, example):
+def dont_augment(nlp: "Language", example: Example) -> Iterator[Example]:
     yield example
 
 
-def orth_variants_augmenter(nlp, example, *, level: float = 0.0, lower: float=0.0):
+def orth_variants_augmenter(
+    nlp: "Language",
+    example: Example,
+    orth_variants: dict,
+    *,
+    level: float = 0.0,
+    lower: float = 0.0,
+) -> Iterator[Example]:
     if random.random() >= level:
         yield example
     else:
@@ -36,18 +64,31 @@ def orth_variants_augmenter(nlp, example, *, level: float = 0.0, lower: float=0.
                 nlp,
                 raw_text,
                 orig_dict["token_annotation"],
-                lower=raw_text is not None and random.random() < lower
+                orth_variants,
+                lower=raw_text is not None and random.random() < lower,
             )
-            doc = nlp.make_doc(variant_text)
+            if variant_text:
+                doc = nlp.make_doc(variant_text)
+            else:
+                doc = Doc(nlp.vocab, words=variant_token_annot["ORTH"])
+                variant_token_annot["ORTH"] = [w.text for w in doc]
+                variant_token_annot["SPACY"] = [w.whitespace_ for w in doc]
             orig_dict["token_annotation"] = variant_token_annot
             yield example.from_dict(doc, orig_dict)
 
 
-def make_orth_variants(nlp, raw, token_dict, *, lower: bool=False):
+def make_orth_variants(
+    nlp: "Language",
+    raw: str,
+    token_dict: Dict[str, List[str]],
+    orth_variants: Dict[str, List[Dict[str, List[str]]]],
+    *,
+    lower: bool = False,
+) -> Tuple[str, Dict[str, List[str]]]:
     orig_token_dict = copy.deepcopy(token_dict)
-    orth_variants = nlp.vocab.lookups.get_table("orth_variants", {})
     ndsv = orth_variants.get("single", [])
     ndpv = orth_variants.get("paired", [])
+    logger.debug(f"Data augmentation: {len(ndsv)} single / {len(ndpv)} paired variants")
     words = token_dict.get("words", [])
     tags = token_dict.get("tags", [])
     # keep unmodified if words or tags are not defined

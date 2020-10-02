@@ -2,8 +2,8 @@ from typing import Dict, Iterable, Callable
 import pytest
 from thinc.api import Config
 from spacy import Language
-from spacy.util import load_model_from_config, registry, dot_to_object
-from spacy.util import resolve_training_config
+from spacy.util import load_model_from_config, registry, resolve_dot_names
+from spacy.schemas import ConfigSchemaTraining
 from spacy.training import Example
 
 
@@ -39,21 +39,24 @@ def test_readers():
 
     config = Config().from_str(config_string)
     nlp = load_model_from_config(config, auto_fill=True)
-    resolved = resolve_training_config(nlp.config)
-    train_corpus = dot_to_object(resolved, resolved["training"]["train_corpus"])
+    T = registry.resolve(
+        nlp.config.interpolate()["training"], schema=ConfigSchemaTraining
+    )
+    dot_names = [T["train_corpus"], T["dev_corpus"]]
+    train_corpus, dev_corpus = resolve_dot_names(nlp.config, dot_names)
     assert isinstance(train_corpus, Callable)
-    optimizer = resolved["training"]["optimizer"]
+    optimizer = T["optimizer"]
     # simulate a training loop
-    nlp.begin_training(lambda: train_corpus(nlp), sgd=optimizer)
+    nlp.initialize(lambda: train_corpus(nlp), sgd=optimizer)
     for example in train_corpus(nlp):
         nlp.update([example], sgd=optimizer)
-    dev_corpus = dot_to_object(resolved, resolved["training"]["dev_corpus"])
     scores = nlp.evaluate(list(dev_corpus(nlp)))
     assert scores["cats_score"]
     # ensure the pipeline runs
     doc = nlp("Quick test")
     assert doc.cats
-    extra_corpus = resolved["corpora"]["extra"]
+    corpora = {"corpora": nlp.config.interpolate()["corpora"]}
+    extra_corpus = registry.resolve(corpora)["corpora"]["extra"]
     assert isinstance(extra_corpus, Callable)
 
 
@@ -89,18 +92,20 @@ def test_cat_readers(reader, additional_config):
     config["corpora"]["@readers"] = reader
     config["corpora"].update(additional_config)
     nlp = load_model_from_config(config, auto_fill=True)
-    resolved = resolve_training_config(nlp.config)
-    train_corpus = dot_to_object(resolved, resolved["training"]["train_corpus"])
-    optimizer = resolved["training"]["optimizer"]
+    T = registry.resolve(
+        nlp.config["training"].interpolate(), schema=ConfigSchemaTraining
+    )
+    dot_names = [T["train_corpus"], T["dev_corpus"]]
+    train_corpus, dev_corpus = resolve_dot_names(nlp.config, dot_names)
+    optimizer = T["optimizer"]
     # simulate a training loop
-    nlp.begin_training(lambda: train_corpus(nlp), sgd=optimizer)
+    nlp.initialize(lambda: train_corpus(nlp), sgd=optimizer)
     for example in train_corpus(nlp):
         assert example.y.cats
         # this shouldn't fail if each training example has at least one positive label
         assert sorted(list(set(example.y.cats.values()))) == [0.0, 1.0]
         nlp.update([example], sgd=optimizer)
     # simulate performance benchmark on dev corpus
-    dev_corpus = dot_to_object(resolved, resolved["training"]["dev_corpus"])
     dev_examples = list(dev_corpus(nlp))
     for example in dev_examples:
         # this shouldn't fail if each dev example has at least one positive label
