@@ -85,7 +85,8 @@ import the `MultiLanguage` class directly, or call
 
 ### Chinese language support {#chinese new=2.3}
 
-The Chinese language class supports three word segmentation options:
+The Chinese language class supports three word segmentation options, `char`,
+`jieba` and `pkuseg`:
 
 > ```python
 > from spacy.lang.zh import Chinese
@@ -95,11 +96,12 @@ The Chinese language class supports three word segmentation options:
 >
 > # Jieba
 > cfg = {"segmenter": "jieba"}
-> nlp = Chinese(meta={"tokenizer": {"config": cfg}})
+> nlp = Chinese.from_config({"nlp": {"tokenizer": cfg}})
 >
 > # PKUSeg with "default" model provided by pkuseg
-> cfg = {"segmenter": "pkuseg", "pkuseg_model": "default"}
-> nlp = Chinese(meta={"tokenizer": {"config": cfg}})
+> cfg = {"segmenter": "pkuseg"}
+> nlp = Chinese.from_config({"nlp": {"tokenizer": cfg}})
+> nlp.tokenizer.initialize(pkuseg_model="default")
 > ```
 
 1. **Character segmentation:** Character segmentation is the default
@@ -116,41 +118,34 @@ The Chinese language class supports three word segmentation options:
 <Infobox variant="warning">
 
 In spaCy v3.0, the default Chinese word segmenter has switched from Jieba to
-character segmentation. Also note that
-[`pkuseg`](https://github.com/lancopku/pkuseg-python) doesn't yet ship with
-pre-compiled wheels for Python 3.8. If you're running Python 3.8, you can
-install it from our fork and compile it locally:
-
-```bash
-$ pip install https://github.com/honnibal/pkuseg-python/archive/master.zip
-```
+character segmentation.
 
 </Infobox>
 
 <Accordion title="Details on spaCy's Chinese API">
 
-The `meta` argument of the `Chinese` language class supports the following
-following tokenizer config settings:
+The `initialize` method for the Chinese tokenizer class supports the following
+config settings for loading pkuseg models:
 
-| Name               | Description                                                                                                     |
-| ------------------ | --------------------------------------------------------------------------------------------------------------- |
-| `segmenter`        | Word segmenter: `char`, `jieba` or `pkuseg`. Defaults to `char`. ~~str~~                                        |
-| `pkuseg_model`     | **Required for `pkuseg`:** Name of a model provided by `pkuseg` or the path to a local model directory. ~~str~~ |
-| `pkuseg_user_dict` | Optional path to a file with one word per line which overrides the default `pkuseg` user dictionary. ~~str~~    |
+| Name               | Description                                                                                                                           |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `pkuseg_model`     | Name of a model provided by `pkuseg` or the path to a local model directory. ~~str~~                                                  |
+| `pkuseg_user_dict` | Optional path to a file with one word per line which overrides the default `pkuseg` user dictionary. Defaults to `"default"`. ~~str~~ |
 
 ```python
 ### Examples
+# Initialize the pkuseg tokenizer
+cfg = {"segmenter": "pkuseg"}
+nlp = Chinese.from_config({"nlp": {"tokenizer": cfg}})
+
 # Load "default" model
-cfg = {"segmenter": "pkuseg", "pkuseg_model": "default"}
-nlp = Chinese(config={"tokenizer": {"config": cfg}})
+nlp.tokenizer.initialize(pkuseg_model="default")
 
 # Load local model
-cfg = {"segmenter": "pkuseg", "pkuseg_model": "/path/to/pkuseg_model"}
-nlp = Chinese(config={"tokenizer": {"config": cfg}})
+nlp.tokenizer.initialize(pkuseg_model="/path/to/pkuseg_model")
 
 # Override the user directory
-cfg = {"segmenter": "pkuseg", "pkuseg_model": "default", "pkuseg_user_dict": "/path"}
-nlp = Chinese(config={"tokenizer": {"config": cfg}})
+nlp.tokenizer.initialize(pkuseg_model="default", pkuseg_user_dict="/path/to/user_dict")
 ```
 
 You can also modify the user dictionary on-the-fly:
@@ -185,8 +180,11 @@ from spacy.lang.zh import Chinese
 
 # Train pkuseg model
 pkuseg.train("train.utf8", "test.utf8", "/path/to/pkuseg_model")
+
 # Load pkuseg model in spaCy Chinese tokenizer
-nlp = Chinese(meta={"tokenizer": {"config": {"pkuseg_model": "/path/to/pkuseg_model", "require_pkuseg": True}}})
+cfg = {"segmenter": "pkuseg"}
+nlp = Chinese.from_config({"nlp": {"tokenizer": cfg}})
+nlp.tokenizer.initialize(pkuseg_model="/path/to/pkuseg_model")
 ```
 
 </Accordion>
@@ -201,20 +199,19 @@ nlp = Chinese(meta={"tokenizer": {"config": {"pkuseg_model": "/path/to/pkuseg_mo
 >
 > # Load SudachiPy with split mode B
 > cfg = {"split_mode": "B"}
-> nlp = Japanese(meta={"tokenizer": {"config": cfg}})
+> nlp = Japanese.from_config({"nlp": {"tokenizer": cfg}})
 > ```
 
 The Japanese language class uses
 [SudachiPy](https://github.com/WorksApplications/SudachiPy) for word
 segmentation and part-of-speech tagging. The default Japanese language class and
-the provided Japanese pipelines use SudachiPy split mode `A`. The `meta`
-argument of the `Japanese` language class can be used to configure the split
-mode to `A`, `B` or `C`.
+the provided Japanese pipelines use SudachiPy split mode `A`. The tokenizer
+config can be used to configure the split mode to `A`, `B` or `C`.
 
 <Infobox variant="warning">
 
 If you run into errors related to `sudachipy`, which is currently under active
-development, we suggest downgrading to `sudachipy==0.4.5`, which is the version
+development, we suggest downgrading to `sudachipy==0.4.9`, which is the version
 used for training the current [Japanese pipelines](/models/ja).
 
 </Infobox>
