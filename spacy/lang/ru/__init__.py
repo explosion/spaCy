@@ -6,7 +6,6 @@ from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .lex_attrs import LEX_ATTRS
 from .lemmatizer import RussianLemmatizer
 from ...language import Language
-from ...lookups import Lookups
 
 
 class RussianDefaults(Language.Defaults):
@@ -23,17 +22,11 @@ class Russian(Language):
 @Russian.factory(
     "lemmatizer",
     assigns=["token.lemma"],
-    default_config={"model": None, "mode": "pymorphy2", "lookups": None},
+    default_config={"model": None, "mode": "pymorphy2"},
     default_score_weights={"lemma_acc": 1.0},
 )
-def make_lemmatizer(
-    nlp: Language,
-    model: Optional[Model],
-    name: str,
-    mode: str,
-    lookups: Optional[Lookups],
-):
-    return RussianLemmatizer(nlp.vocab, model, name, mode=mode, lookups=lookups)
+def make_lemmatizer(nlp: Language, model: Optional[Model], name: str, mode: str):
+    return RussianLemmatizer(nlp.vocab, model, name, mode=mode)
 
 
 __all__ = ["Russian"]
