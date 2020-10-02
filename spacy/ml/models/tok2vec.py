@@ -186,11 +186,7 @@ def CharacterEmbed(
 
     feature (int or str): An attribute to embed, to concatenate with the characters.
     width (int): The width of the output vector and the feature embedding.
-<<<<<<< HEAD
-    rows (int): The number of rows in the NORM hash embedding table.
-=======
     rows (int): The number of rows in the LOWER hash embedding table.
->>>>>>> 300e5a9928fd226dfddbf7d5c22558f696bfa1af
     nM (int): The dimensionality of the character embeddings. Recommended values
         are between 16 and 64.
     nC (int): The number of UTF-8 bytes to embed per word. Recommended values

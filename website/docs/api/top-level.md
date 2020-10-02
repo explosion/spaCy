@@ -327,7 +327,7 @@ factories.
 | `losses`          | Registry for functions that create [losses](https://thinc.ai/docs/api-loss).                                                                                                                                                                       |
 | `misc`            | Registry for miscellaneous functions that return data assets, knowledge bases or anything else you may need.                                                                                                                                       |
 | `optimizers`      | Registry for functions that create [optimizers](https://thinc.ai/docs/api-optimizers).                                                                                                                                                             |
-| `readers`         | Registry for training and evaluation data readers like [`Corpus`](/api/corpus).                                                                                                                                                                    |
+| `readers`         | Registry for file and data readers, including training and evaluation data readers like [`Corpus`](/api/corpus).                                                                                                                                   |
 | `schedules`       | Registry for functions that create [schedules](https://thinc.ai/docs/api-schedules).                                                                                                                                                               |
 | `tokenizers`      | Registry for tokenizer factories. Registered functions should return a callback that receives the `nlp` object and returns a [`Tokenizer`](/api/tokenizer) or a custom callable.                                                                   |
 
@@ -470,7 +470,65 @@ logging the results.
 
 </Project>
 
-## Readers {#readers source="spacy/training/corpus.py" new="3"}
+## Readers {#readers}
+
+### File readers {#file-readers source="github.com/explosion/srsly" new="3"}
+
+The following file readers are provided by our serialization library
+[`srsly`](https://github.com/explosion/srsly). All registered functions take one
+argument `path`, pointing to the file path to load.
+
+> #### Example config
+>
+> ```ini
+> [corpora.train.augmenter.orth_variants]
+> @readers = "srsly.read_json.v1"
+> path = "corpus/en_orth_variants.json"
+> ```
+
+| Name                    | Description                                           |
+| ----------------------- | ----------------------------------------------------- |
+| `srsly.read_json.v1`    | Read data from a JSON file.                           |
+| `srsly.read_jsonl.v1`   | Read data from a JSONL (newline-delimited JSON) file. |
+| `srsly.read_yaml.v1`    | Read data from a YAML file.                           |
+| `srsly.read_msgpack.v1` | Read data from a binary MessagePack file.             |
+
+<Infobox title="Important note" variant="warning">
+
+Since the file readers expect a local path, you should only use them in config
+blocks that are **not executed at runtime** – for example, in `[training]` and
+`[corpora]` (to load data or resources like data augmentation tables) or in
+`[initialize]` (to pass data to pipeline components).
+
+</Infobox>
+
+#### spacy.read_labels.v1 {#read_labels tag="registered function"}
+
+Read a JSON-formatted labels file generated with
+[`init labels`](/api/cli#init-labels). Typically used in the
+[`[initialize]`](/api/data-formats#config-initialize) block of the training
+config to speed up the model initialization process and provide pre-generated
+label sets.
+
+> #### Example config
+>
+> ```ini
+> [initialize.components]
+>
+> [initialize.components.ner]
+>
+> [initialize.components.ner.labels]
+> @readers = "spacy.read_labels.v1"
+> path = "corpus/labels/ner.json"
+> ```
+
+| Name        | Description                                                                                                                                                                                                               |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `path`      | The path to the labels file generated with [`init labels`](/api/cli#init-labels). ~~Path~~                                                                                                                                |
+| `require`   | Whether to require the file to exist. If set to `False` and the labels file doesn't exist, the loader will return `None` and the `initialize` method will extract the labels from the data. Defaults to `False`. ~~bool~~ |
+| **CREATES** | The                                                                                                                                                                                                                       |
+
+### Corpus readers {#corpus-readers source="spacy/training/corpus.py" new="3"}
 
 Corpus readers are registered functions that load data and return a function
 that takes the current `nlp` object and yields [`Example`](/api/example) objects
@@ -480,7 +538,7 @@ with your own registered function in the
 [`@readers` registry](/api/top-level#registry) to customize the data loading and
 streaming.
 
-### spacy.Corpus.v1 {#corpus tag="registered function"}
+#### spacy.Corpus.v1 {#corpus tag="registered function"}
 
 The `Corpus` reader manages annotated corpora and can be used for training and
 development datasets in the [DocBin](/api/docbin) (`.spacy`) format. Also see
@@ -509,12 +567,12 @@ the [`Corpus`](/api/corpus) class.
 | `augmenter`     | Apply some simply data augmentation, where we replace tokens with variations. This is especially useful for punctuation and case replacement, to help generalize beyond corpora that don't have smart-quotes, or only have smart quotes, etc. Defaults to `None`. ~~Optional[Callable]~~ |
 | **CREATES**     | The corpus reader. ~~Corpus~~                                                                                                                                                                                                                                                            |
 
-### spacy.JsonlReader.v1 {#jsonlreader tag="registered function"}
+#### spacy.JsonlCorpus.v1 {#jsonlcorpus tag="registered function"}
 
 Create [`Example`](/api/example) objects from a JSONL (newline-delimited JSON)
 file of texts keyed by `"text"`. Can be used to read the raw text corpus for
 language model [pretraining](/usage/embeddings-transformers#pretraining) from a
-JSONL file. Also see the [`JsonlReader`](/api/corpus#jsonlreader) class.
+JSONL file. Also see the [`JsonlCorpus`](/api/corpus#jsonlcorpus) class.
 
 > #### Example config
 >
@@ -523,7 +581,7 @@ JSONL file. Also see the [`JsonlReader`](/api/corpus#jsonlreader) class.
 > pretrain = "corpus/raw_text.jsonl"
 >
 > [corpora.pretrain]
-> @readers = "spacy.JsonlReader.v1"
+> @readers = "spacy.JsonlCorpus.v1"
 > path = ${paths.pretrain}
 > min_length = 0
 > max_length = 0
@@ -536,33 +594,7 @@ JSONL file. Also see the [`JsonlReader`](/api/corpus#jsonlreader) class.
 | `min_length` | Minimum document length (in tokens). Shorter documents will be skipped. Defaults to `0`, which indicates no limit. ~~int~~       |
 | `max_length` | Maximum document length (in tokens). Longer documents will be skipped. Defaults to `0`, which indicates no limit. ~~int~~        |
 | `limit`      | Limit corpus to a subset of examples, e.g. for debugging. Defaults to `0` for no limit. ~~int~~                                  |
-| **CREATES**  | The corpus reader. ~~JsonlTexts~~                                                                                                |
-
-### spacy.read_labels.v1 {#read_labels tag="registered function"}
-
-Read a JSON-formatted labels file generated with
-[`init labels`](/api/cli#init-labels). Typically used in the
-[`[initialize]`](/api/data-formats#config-initialize) block of the training
-config to speed up the model initialization process and provide pre-generated
-label sets.
-
-> #### Example config
->
-> ```ini
-> [initialize.components]
->
-> [initialize.components.ner]
->
-> [initialize.components.ner.labels]
-> @readers = "spacy.read_labels.v1"
-> path = "corpus/labels/ner.json"
-> ```
-
-| Name        | Description                                                                                                                                                                                                               |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `path`      | The path to the labels file generated with [`init labels`](/api/cli#init-labels). ~~Path~~                                                                                                                                |
-| `require`   | Whether to require the file to exist. If set to `False` and the labels file doesn't exist, the loader will return `None` and the `initialize` method will extract the labels from the data. Defaults to `False`. ~~bool~~ |
-| **CREATES** | The                                                                                                                                                                                                                       |
+| **CREATES**  | The corpus reader. ~~JsonlCorpus~~                                                                                               |
 
 ## Batchers {#batchers source="spacy/training/batchers.py" new="3"}
 
@@ -653,7 +685,11 @@ sequences in the batch.
 
 ## Augmenters {#augmenters source="spacy/training/augment.py" new="3"}
 
-<!-- TODO: intro, explain data augmentation concept -->
+Data augmentation is the process of applying small modifications to the training
+data. It can be especially useful for punctuation and case replacement – for
+example, if your corpus only uses smart quotes and you want to include
+variations using regular quotes, or to make the model less sensitive to
+capitalization by including a mix of capitalized and lowercase examples. See the [usage guide](/usage/training#data-augmentation) for details and examples.
 
 ### spacy.orth_variants.v1 {#orth_variants tag="registered function"}
 
@@ -664,7 +700,10 @@ sequences in the batch.
 > @augmenters = "spacy.orth_variants.v1"
 > level = 0.1
 > lower = 0.5
-> lookups = null
+>
+> [corpora.train.augmenter.orth_variants]
+> @readers = "srsly.read_json.v1"
+> path = "corpus/en_orth_variants.json"
 > ```
 
 Create a data augmentation callback that uses orth-variant replacement. The
@@ -672,12 +711,12 @@ callback can be added to a corpus or other data iterator during training. This
 is especially useful for punctuation and case replacement, to help generalize
 beyond corpora that don't have smart quotes, or only have smart quotes etc.
 
-| Name        | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `level`     | The percentage of texts that will be augmented. ~~float~~                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `lower`     | The percentage of texts that will be lowercased. ~~float~~                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| `lookups`   | Lookups table containing the orth variants to use. See [`orth_variants.json`](https://github.com/explosion/spacy-lookups-data/blob/master/spacy_lookups_data/data/en_orth_variants.json) for an example. If not set, tables from [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) are used if available and added in the [`[initialize]`](/api/data-formats#config-initialize) block of the config. If no orth variants are found, spaCy will raise an error. Defaults to `None`. ~~Optional[Lookups]~~ |
-| **CREATES** | A function that takes the current `nlp` object and an [`Example`](/api/example) and yields augmented `Example` objects. ~~Callable[[Language, Example], Iterator[Example]]~~                                                                                                                                                                                                                                                                                                                                                   |
+| Name            | Description                                                                                                                                                                                                                                                                                               |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `level`         | The percentage of texts that will be augmented. ~~float~~                                                                                                                                                                                                                                                 |
+| `lower`         | The percentage of texts that will be lowercased. ~~float~~                                                                                                                                                                                                                                                |
+| `orth_variants` | A dictionary containing the single and paired orth variants. Typically loaded from a JSON file. See [`en_orth_variants.json`](https://github.com/explosion/spacy-lookups-data/blob/master/spacy_lookups_data/data/en_orth_variants.json) for an example. ~~Dict[str, Dict[List[Union[str, List[str]]]]]~~ |
+| **CREATES**     | A function that takes the current `nlp` object and an [`Example`](/api/example) and yields augmented `Example` objects. ~~Callable[[Language, Example], Iterator[Example]]~~                                                                                                                              |
 
 ## Training data and alignment {#gold source="spacy/training"}
 
@@ -788,7 +827,7 @@ utilities.
 ### util.get_lang_class {#util.get_lang_class tag="function"}
 
 Import and load a `Language` class. Allows lazy-loading
-[language data](/usage/adding-languages) and importing languages using the
+[language data](/usage/linguistic-features#language-data) and importing languages using the
 two-letter language code. To add a language code for a custom language class,
 you can register it using the [`@registry.languages`](/api/top-level#registry)
 decorator.
