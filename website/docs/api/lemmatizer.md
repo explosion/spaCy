@@ -48,12 +48,11 @@ data format used by the lookup and rule-based lemmatizers, see
 > nlp.add_pipe("lemmatizer", config=config)
 > ```
 
-| Setting     | Description                                                                                                                                                                                                                                                                         |
-| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `mode`      | The lemmatizer mode, e.g. `"lookup"` or `"rule"`. Defaults to `"lookup"`. ~~str~~                                                                                                                                                                                                   |
-| `lookups`   | The lookups object containing the tables such as `"lemma_rules"`, `"lemma_index"`, `"lemma_exc"` and `"lemma_lookup"`. If `None`, default tables are loaded from [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data). Defaults to `None`. ~~Optional[Lookups]~~ |
-| `overwrite` | Whether to overwrite existing lemmas. Defaults to `False`. ~~bool~~                                                                                                                                                                                                                 |
-| `model`     | **Not yet implemented:** the model to use. ~~Model~~                                                                                                                                                                                                                                |
+| Setting     | Description                                                                       |
+| ----------- | --------------------------------------------------------------------------------- |
+| `mode`      | The lemmatizer mode, e.g. `"lookup"` or `"rule"`. Defaults to `"lookup"`. ~~str~~ |
+| `overwrite` | Whether to overwrite existing lemmas. Defaults to `False`. ~~bool~~               |
+| `model`     | **Not yet implemented:** the model to use. ~~Model~~                              |
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/lemmatizer.py
@@ -76,15 +75,14 @@ Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
 [`nlp.add_pipe`](/api/language#add_pipe).
 
-| Name           | Description                                                                                                                                                    |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`        | The shared vocabulary. ~~Vocab~~                                                                                                                               |
-| `model`        | **Not yet implemented:** The model to use. ~~Model~~                                                                                                           |
-| `name`         | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                                                            |
-| _keyword-only_ |                                                                                                                                                                |
-| mode           | The lemmatizer mode, e.g. `"lookup"` or `"rule"`. Defaults to `"lookup"`. ~~str~~                                                                              |
-| lookups        | A lookups object containing the tables such as `"lemma_rules"`, `"lemma_index"`, `"lemma_exc"` and `"lemma_lookup"`. Defaults to `None`. ~~Optional[Lookups]~~ |
-| overwrite      | Whether to overwrite existing lemmas. ~~bool~                                                                                                                  |
+| Name           | Description                                                                                         |
+| -------------- | --------------------------------------------------------------------------------------------------- |
+| `vocab`        | The shared vocabulary. ~~Vocab~~                                                                    |
+| `model`        | **Not yet implemented:** The model to use. ~~Model~~                                                |
+| `name`         | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~ |
+| _keyword-only_ |                                                                                                     |
+| mode           | The lemmatizer mode, e.g. `"lookup"` or `"rule"`. Defaults to `"lookup"`. ~~str~~                   |
+| overwrite      | Whether to overwrite existing lemmas. ~~bool~                                                       |
 
 ## Lemmatizer.\_\_call\_\_ {#call tag="method"}
 
@@ -126,6 +124,37 @@ applied to the `Doc` in order.
 | _keyword-only_ |                                                               |
 | `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
 | **YIELDS**     | The processed documents in order. ~~Doc~~                     |
+
+## Lemmatizer.initialize {#initialize tag="method"}
+
+Initialize the lemmatizer and load any data resources. This method is typically
+called by [`Language.initialize`](/api/language#initialize) and lets you
+customize arguments it receives via the
+[`[initialize.components]`](/api/data-formats#config-initialize) block in the
+config. The loading only happens during initialization, typically before
+training. At runtime, all data is loaded from disk.
+
+> #### Example
+>
+> ```python
+> lemmatizer = nlp.add_pipe("lemmatizer")
+> lemmatizer.initialize(lookups=lookups)
+> ```
+>
+> ```ini
+> ### config.cfg
+> [initialize.components.lemmatizer]
+>
+> [initialize.components.lemmatizer.lookups]
+> @misc = "load_my_lookups.v1"
+> ```
+
+| Name           | Description                                                                                                                                                                                                                                                                         |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. Defaults to `None`. ~~Optional[Callable[[], Iterable[Example]]]~~                                                                                                                 |
+| _keyword-only_ |                                                                                                                                                                                                                                                                                     |
+| `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                                                                                                                                                |
+| `lookups`      | The lookups object containing the tables such as `"lemma_rules"`, `"lemma_index"`, `"lemma_exc"` and `"lemma_lookup"`. If `None`, default tables are loaded from [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data). Defaults to `None`. ~~Optional[Lookups]~~ |
 
 ## Lemmatizer.lookup_lemmatize {#lookup_lemmatize tag="method"}
 
