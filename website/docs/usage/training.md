@@ -1124,17 +1124,6 @@ a dictionary with keyword arguments specifying the annotations, like `tags` or
 annotations, the model can be updated to learn a sentence of three words with
 their assigned part-of-speech tags.
 
-> #### About the tag map
->
-> The tag map is part of the vocabulary and defines the annotation scheme. If
-> you're training a new pipeline, this will let you map the tags present in the
-> treebank you train on to spaCy's tag scheme:
->
-> ```python
-> tag_map = {"N": {"pos": "NOUN"}, "V": {"pos": "VERB"}}
-> vocab = Vocab(tag_map=tag_map)
-> ```
-
 ```python
 words = ["I", "like", "stuff"]
 tags = ["NOUN", "VERB", "NOUN"]
