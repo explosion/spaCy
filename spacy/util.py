@@ -1070,7 +1070,7 @@ def import_file(name: str, loc: Union[str, Path]) -> ModuleType:
     RETURNS: The loaded module.
     """
     loc = str(loc)
-    spec = importlib.util.spec_from_file_location(name, str(loc))
+    spec = importlib.util.spec_from_file_location(name, loc)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
