@@ -504,9 +504,9 @@ def test_make_orth_variants(doc):
             {"tags": [":"], "variants": ["-", "—", "–", "--", "---", "——"]},
         ]
     }
-    lookups = Lookups()
-    lookups.add_table("orth_variants", orth_variants)
-    augmenter = create_orth_variants_augmenter(level=0.2, lower=0.5, lookups=lookups)
+    augmenter = create_orth_variants_augmenter(
+        level=0.2, lower=0.5, orth_variants=orth_variants
+    )
     with make_tempdir() as tmpdir:
         output_file = tmpdir / "roundtrip.spacy"
         DocBin(docs=[doc]).to_disk(output_file)

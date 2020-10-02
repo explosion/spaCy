@@ -135,7 +135,7 @@ $ python -m spacy train config.cfg --paths.train ./corpus/train.spacy
 > path = ${paths:dev}
 >
 > [corpora.pretrain]
-> @readers = "spacy.JsonlReader.v1"
+> @readers = "spacy.JsonlCorpus.v1"
 > path = ${paths.raw}
 >
 > [corpora.my_custom_data]
@@ -146,7 +146,7 @@ This section defines a **dictionary** mapping of string keys to functions. Each
 function takes an `nlp` object and yields [`Example`](/api/example) objects. By
 default, the two keys `train` and `dev` are specified and each refer to a
 [`Corpus`](/api/top-level#Corpus). When pretraining, an additional `pretrain`
-section is added that defaults to a [`JsonlReader`](/api/top-level#JsonlReader).
+section is added that defaults to a [`JsonlCorpus`](/api/top-level#JsonlCorpus).
 You can also register custom functions that return a callable.
 
 | Name       | Description                                                                                                                                                                 |
