@@ -685,7 +685,11 @@ sequences in the batch.
 
 ## Augmenters {#augmenters source="spacy/training/augment.py" new="3"}
 
-<!-- TODO: intro, explain data augmentation concept -->
+Data augmentation is the process of applying small modifications to the training
+data. It can be especially useful for punctuation and case replacement – for
+example, if your corpus only uses smart quotes and you want to include
+variations using regular quotes, or to make the model less sensitive to
+capitalization by including a mix of capitalized and lowercase examples. See the [usage guide](/usage/training#data-augmentation) for details and examples.
 
 ### spacy.orth_variants.v1 {#orth_variants tag="registered function"}
 

@@ -1011,8 +1011,131 @@ def filter_batch(size: int) -> Callable[[Iterable[Example]], Iterator[List[Examp
 <!-- TODO:
 * Custom corpus class
 * Minibatching
-* Data augmentation
 -->
+
+### Data augmentation {#data-augmentation}
+
+Data augmentation is the process of applying small **modifications** to the
+training data. It can be especially useful for punctuation and case replacement
+– for example, if your corpus only uses smart quotes and you want to include
+variations using regular quotes, or to make the model less sensitive to
+capitalization by including a mix of capitalized and lowercase examples.
+
+The easiest way to use data augmentation during training is to provide an
+`augmenter` to the training corpus, e.g. in the `[corpora.train]` section of
+your config. The built-in [`orth_variants`](/api/top-level#orth_variants)
+augmenter creates a data augmentation callback that uses orth-variant
+replacement.
+
+```ini
+### config.cfg (excerpt) {highlight="8,14"}
+[corpora.train]
+@readers = "spacy.Corpus.v1"
+path = ${paths.train}
+gold_preproc = false
+max_length = 0
+limit = 0
+
+[corpora.train.augmenter]
+@augmenters = "spacy.orth_variants.v1"
+# Percentage of texts that will be augmented / lowercased
+level = 0.1
+lower = 0.5
+
+[corpora.train.augmenter.orth_variants]
+@readers = "srsly.read_json.v1"
+path = "corpus/orth_variants.json"
+```
+
+The `orth_variants` argument lets you pass in a dictionary of replacement rules,
+typically loaded from a JSON file. There are two types of orth variant rules:
+`"single"` for single tokens that should be replaced (e.g. hyphens) and
+`"paired"` for pairs of tokens (e.g. quotes).
+
+<!-- prettier-ignore -->
+```json
+### orth_variants.json
+{
+  "single": [{ "tags": ["NFP"], "variants": ["…", "..."] }],
+  "paired": [{ "tags": ["``", "''"], "variants": [["'", "'"], ["‘", "’"]] }]
+}
+```
+
+<Accordion title="Full examples for English and German" spaced>
+
+```json
+https://github.com/explosion/spacy-lookups-data/blob/master/spacy_lookups_data/data/en_orth_variants.json
+```
+
+```json
+https://github.com/explosion/spacy-lookups-data/blob/master/spacy_lookups_data/data/de_orth_variants.json
+```
+
+</Accordion>
+
+<Infobox title="Important note" variant="warning">
+
+When adding data augmentation, keep in mind that it typically only makes sense
+to apply it to the **training corpus**, not the development data.
+
+</Infobox>
+
+#### Writing custom data augmenters {#data-augmentation-custom}
+
+Using the [`@spacy.augmenters`](/api/top-level#registry) registry, you can also
+register your own data augmentation callbacks. The callback should be a function
+that takes the current `nlp` object and a training [`Example`](/api/example) and
+yields `Example` objects. Keep in mind that the augmenter should yield **all
+examples** you want to use in your corpus, not only the augmented examples
+(unless you want to augment all examples).
+
+Here'a an example of a custom augmentation callback that produces text variants
+in ["SpOnGeBoB cAsE"](https://knowyourmeme.com/memes/mocking-spongebob). The
+registered function takes one argument `randomize` that can be set via the
+config and decides whether the uppercase/lowercase transformation is applied
+randomly or not. The augmenter yields two `Example` objects: the original
+example and the augmented example.
+
+> #### config.cfg
+>
+> ```ini
+> [corpora.train.augmenter]
+> @augmenters = "spongebob_augmenter.v1"
+> randomize = false
+> ```
+
+```python
+import spacy
+import random
+
+@spacy.registry.augmenters("spongebob_augmenter.v1")
+def create_augmenter(randomize: bool = False):
+    def augment(nlp, example):
+        text = example.text
+        if randomize:
+            # Randomly uppercase/lowercase characters
+            chars = [c.lower() if random.random() < 0.5 else c.upper() for c in text]
+        else:
+            # Uppercase followed by lowercase
+            chars = [c.lower() if i % 2 else c.upper() for i, c in enumerate(text)]
+        # Create augmented training example
+        example_dict = example.to_dict()
+        doc = nlp.make_doc("".join(chars))
+        example_dict["token_annotation"]["ORTH"] = [t.text for t in doc]
+        # Original example followed by augmented example
+        yield example
+        yield example.from_dict(doc, example_dict)
+
+    return augment
+```
+
+An easy way to create modified `Example` objects is to use the
+[`Example.from_dict`](/api/example#from_dict) method with a new reference
+[`Doc`](/api/doc) created from the modified text. In this case, only the
+capitalization changes, so only the `ORTH` values of the tokens will be
+different between the original and augmented examples.
+
+<!-- TODO: mention alignment -->
 
 ## Parallel & distributed training with Ray {#parallel-training}
 
