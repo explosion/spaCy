@@ -199,20 +199,19 @@ nlp.tokenizer.initialize(pkuseg_model="/path/to/pkuseg_model")
 >
 > # Load SudachiPy with split mode B
 > cfg = {"split_mode": "B"}
-> nlp = Japanese(meta={"tokenizer": {"config": cfg}})
+> nlp = Japanese.from_config({"nlp": {"tokenizer": cfg}})
 > ```
 
 The Japanese language class uses
 [SudachiPy](https://github.com/WorksApplications/SudachiPy) for word
 segmentation and part-of-speech tagging. The default Japanese language class and
-the provided Japanese pipelines use SudachiPy split mode `A`. The `meta`
-argument of the `Japanese` language class can be used to configure the split
-mode to `A`, `B` or `C`.
+the provided Japanese pipelines use SudachiPy split mode `A`. The tokenizer
+config can be used to configure the split mode to `A`, `B` or `C`.
 
 <Infobox variant="warning">
 
 If you run into errors related to `sudachipy`, which is currently under active
-development, we suggest downgrading to `sudachipy==0.4.5`, which is the version
+development, we suggest downgrading to `sudachipy==0.4.9`, which is the version
 used for training the current [Japanese pipelines](/models/ja).
 
 </Infobox>
