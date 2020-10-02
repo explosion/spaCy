@@ -29,6 +29,8 @@ def test_lemmatizer_init(nlp):
     assert isinstance(lemmatizer.lookups, Lookups)
     assert not lemmatizer.lookups.tables
     assert lemmatizer.mode == "lookup"
+    with pytest.raises(ValueError):
+        nlp("test")
     nlp.initialize()
     assert lemmatizer.lookups.tables
     assert nlp("cope")[0].lemma_ == "cope"

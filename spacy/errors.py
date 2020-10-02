@@ -477,6 +477,8 @@ class Errors:
     E201 = ("Span index out of range.")
 
     # TODO: fix numbering after merging develop into master
+    E912 = ("Failed to initialize lemmatizer. Missing lemmatizer table(s) found "
+            "for mode '{mode}'. Required tables: {tables}. Found: {found}.")
     E913 = ("Corpus path can't be None. Maybe you forgot to define it in your "
             "config.cfg or override it on the CLI?")
     E914 = ("Executing {name} callback failed. Expected the function to "
@@ -556,10 +558,10 @@ class Errors:
     E953 = ("Mismatched IDs received by the Tok2Vec listener: {id1} vs. {id2}")
     E954 = ("The Tok2Vec listener did not receive any valid input from an upstream "
             "component.")
-    E955 = ("Can't find table(s) '{table}' for language '{lang}' in "
-            "spacy-lookups-data. If you want to initialize a blank nlp object, "
-            "make sure you have the spacy-lookups-data package installed or "
-            "remove the [initialize.lookups] block from your config.")
+    E955 = ("Can't find table(s) {table} for language '{lang}' in "
+            "spacy-lookups-data. Make sure you have the package installed or "
+            "provide your own lookup tables if no default lookups are available "
+            "for your language.")
     E956 = ("Can't find component '{name}' in [components] block in the config. "
             "Available components: {opts}")
     E957 = ("Writing directly to Language.factories isn't needed anymore in "
@@ -685,9 +687,8 @@ class Errors:
     E1002 = ("Span index out of range.")
     E1003 = ("Unsupported lemmatizer mode '{mode}'.")
     E1004 = ("Missing lemmatizer table(s) found for lemmatizer mode '{mode}'. "
-             "Required tables '{tables}', found '{found}'. If you are not "
-             "providing custom lookups, make sure you have the package "
-             "spacy-lookups-data installed.")
+             "Required tables: {tables}. Found: {found}. Maybe you forgot to "
+             "call nlp.initialize() to load in the data?")
     E1005 = ("Unable to set attribute '{attr}' in tokenizer exception for "
              "'{chunk}'. Tokenizer exceptions are only allowed to specify "
              "`ORTH` and `NORM`.")

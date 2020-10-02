@@ -1,4 +1,5 @@
 from typing import Optional, List, Dict, Any, Callable, Iterable, Iterator, Union
+from typing import Tuple
 from thinc.api import Model
 from pathlib import Path
 
@@ -40,25 +41,19 @@ class Lemmatizer(Pipe):
     """
 
     @classmethod
-    def get_lookups_config(cls, mode: str) -> Dict:
+    def get_lookups_config(cls, mode: str) -> Tuple[List[str], List[str]]:
         """Returns the lookups configuration settings for a given mode for use
         in Lemmatizer.load_lookups.
 
         mode (str): The lemmatizer mode.
-        RETURNS (dict): The lookups configuration settings for this mode.
-
-        DOCS: https://nightly.spacy.io/api/lemmatizer#get_lookups_config
+        RETURNS (Tuple[List[str], List[str]]): The required and optional
+            lookup tables for this mode.
         """
         if mode == "lookup":
-            return {
-                "required_tables": ["lemma_lookup"],
-            }
+            return (["lemma_lookup"], [])
         elif mode == "rule":
-            return {
-                "required_tables": ["lemma_rules"],
-                "optional_tables": ["lemma_exc", "lemma_index"],
-            }
-        return {}
+            return (["lemma_rules"], ["lemma_exc", "lemma_index"])
+        return ([], [])
 
     def __init__(
         self,
@@ -86,6 +81,7 @@ class Lemmatizer(Pipe):
         self._mode = mode
         self.lookups = Lookups()
         self.overwrite = overwrite
+        self._validated = False
         if self.mode == "lookup":
             self.lemmatize = self.lookup_lemmatize
         elif self.mode == "rule":
@@ -109,6 +105,8 @@ class Lemmatizer(Pipe):
 
         DOCS: https://nightly.spacy.io/api/lemmatizer#call
         """
+        if not self._validated:
+            self._validate_tables(Errors.E1004)
         for token in doc:
             if self.overwrite or token.lemma == 0:
                 token.lemma_ = self.lemmatize(token)[0]
@@ -130,9 +128,7 @@ class Lemmatizer(Pipe):
             such as "lemma_rules", "lemma_index", "lemma_exc" and
             "lemma_lookup". Defaults to None.
         """
-        config = self.get_lookups_config(self.mode)
-        required_tables = config.get("required_tables", [])
-        optional_tables = config.get("optional_tables", [])
+        required_tables, optional_tables = self.get_lookups_config(self.mode)
         if lookups is None:
             logger.debug("Lemmatizer: loading tables from spacy-lookups-data")
             lookups = load_lookups(lang=self.vocab.lang, tables=required_tables)
@@ -141,14 +137,22 @@ class Lemmatizer(Pipe):
             )
             for table in optional_lookups.tables:
                 lookups.set_table(table, optional_lookups.get_table(table))
+        self.lookups = lookups
+        self._validate_tables(Errors.E1004)
+
+    def _validate_tables(self, error_message: str = Errors.E912) -> None:
+        """Check that the lookups are correct for the current mode."""
+        required_tables, optional_tables = self.get_lookups_config(self.mode)
         for table in required_tables:
-            if table not in lookups:
+            if table not in self.lookups:
                 raise ValueError(
-                    Errors.E1004.format(
-                        mode=self.mode, tables=required_tables, found=lookups.tables
+                    error_message.format(
+                        mode=self.mode,
+                        tables=required_tables,
+                        found=self.lookups.tables,
                     )
                 )
-        self.lookups = lookups
+        self._validated = True
 
     def pipe(self, stream: Iterable[Doc], *, batch_size: int = 128) -> Iterator[Doc]:
         """Apply the pipe to a stream of documents. This usually happens under
@@ -296,6 +300,7 @@ class Lemmatizer(Pipe):
         deserialize["vocab"] = lambda p: self.vocab.from_disk(p)
         deserialize["lookups"] = lambda p: self.lookups.from_disk(p)
         util.from_disk(path, deserialize, exclude)
+        self._validate_tables()
         return self
 
     def to_bytes(self, *, exclude: Iterable[str] = SimpleFrozenList()) -> bytes:
@@ -326,4 +331,5 @@ class Lemmatizer(Pipe):
         deserialize["vocab"] = lambda b: self.vocab.from_bytes(b)
         deserialize["lookups"] = lambda b: self.lookups.from_bytes(b)
         util.from_bytes(bytes_data, deserialize, exclude)
+        self._validate_tables()
         return self

@@ -30,6 +30,8 @@ def test_lemmatizer_initialize(lang, capfd):
     nlp.config["initialize"]["components"]["lemmatizer"] = {
         "lookups": {"@misc": "lemmatizer_init_lookups"}
     }
+    with pytest.raises(ValueError):
+        nlp("x")
     nlp.initialize()
     assert lemmatizer.lookups.tables
     doc = nlp("x")
