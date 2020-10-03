@@ -29,8 +29,8 @@ def console_logger(progress_bar: bool = False):
         table_header = [col.upper() for col in table_header]
         table_widths = [3, 6] + loss_widths + score_widths + [6]
         table_aligns = ["r" for _ in table_widths]
-        stdout.write(msg.row(table_header, widths=table_widths))
-        stdout.write(msg.row(["-" * width for width in table_widths]))
+        stdout.write(msg.row(table_header, widths=table_widths) + "\n")
+        stdout.write(msg.row(["-" * width for width in table_widths]) + "\n")
         progress = None
 
         def log_step(info: Optional[Dict[str, Any]]) -> None:
@@ -75,7 +75,9 @@ def console_logger(progress_bar: bool = False):
             )
             if progress is not None:
                 progress.close()
-            stdout.write(msg.row(data, widths=table_widths, aligns=table_aligns))
+            stdout.write(
+                msg.row(data, widths=table_widths, aligns=table_aligns) + "\n"
+            )
             if progress_bar:
                 # Set disable=None, so that it disables on non-TTY
                 progress = tqdm.tqdm(

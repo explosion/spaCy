@@ -69,10 +69,10 @@ def train(
         eval_frequency=T["eval_frequency"],
         exclude=frozen_components,
     )
-    stdout.write(msg.info(f"Pipeline: {nlp.pipe_names}"))
+    stdout.write(msg.info(f"Pipeline: {nlp.pipe_names}") + "\n")
     if frozen_components:
-        stdout.write(msg.info(f"Frozen components: {frozen_components}"))
-    stdout.write(msg.info(f"Initial learn rate: {optimizer.learn_rate}"))
+        stdout.write(msg.info(f"Frozen components: {frozen_components}") + "\n")
+    stdout.write(msg.info(f"Initial learn rate: {optimizer.learn_rate}") + "\n")
     with nlp.select_pipes(disable=frozen_components):
         log_step, finalize_logger = train_logger(nlp, stdout, stderr)
     try:
@@ -93,7 +93,7 @@ def train(
                 msg.warn(
                     f"Aborting and saving the final best model. "
                     f"Encountered exception: {str(e)}"
-                )
+                ) + "\n"
             )
         raise e
     finally:
@@ -106,7 +106,9 @@ def train(
             else:
                 nlp.to_disk(final_model_path)
     # This will only run if we don't hit an error
-    stdout.write(msg.good("Saved pipeline to output directory", final_model_path))
+    stdout.write(
+        msg.good("Saved pipeline to output directory", final_model_path) + "\n"
+    )
 
 
 def train_while_improving(
