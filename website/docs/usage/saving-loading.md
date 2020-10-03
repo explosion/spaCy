@@ -2,6 +2,7 @@
 title: Saving and Loading
 menu:
   - ['Basics', 'basics']
+  - ['Serializing Docs', 'docs']
   - ['Serialization Methods', 'serialization-methods']
   - ['Entry Points', 'entry-points']
   - ['Trained Pipelines', 'models']
@@ -52,7 +53,7 @@ defined [factories](/usage/processing-pipeline#custom-components-factories) and
 _then_ loads in the binary data. You can read more about this process
 [here](/usage/processing-pipelines#pipelines).
 
-### Serializing Doc objects efficiently {#docs new="2.2"}
+## Serializing Doc objects efficiently {#docs new="2.2"}
 
 If you're working with lots of data, you'll probably need to pass analyses
 between machines, either to use something like [Dask](https://dask.org) or
@@ -179,9 +180,20 @@ example, model weights or terminology lists – you can take advantage of spaCy'
 built-in component serialization by making your custom component expose its own
 `to_disk` and `from_disk` or `to_bytes` and `from_bytes` methods. When an `nlp`
 object with the component in its pipeline is saved or loaded, the component will
-then be able to serialize and deserialize itself. The following example shows a
-custom component that keeps arbitrary JSON-serializable data, allows the user to
-add to that data and saves and loads the data to and from a JSON file.
+then be able to serialize and deserialize itself.
+
+<Infobox title="Custom components and data" emoji="📖">
+
+For more details on how to work with pipeline components that depend on data
+resources and manage data loading and initialization at training and runtime,
+see the usage guide on initializing and serializing
+[component data](/usage/processing-pipelines#component-data).
+
+</Infobox>
+
+The following example shows a custom component that keeps arbitrary
+JSON-serializable data, allows the user to add to that data and saves and loads
+the data to and from a JSON file.
 
 > #### Real-world example
 >
@@ -208,13 +220,13 @@ class CustomComponent:
         # Add something to the component's data
         self.data.append(data)
 
-    def to_disk(self, path, **kwargs):
+    def to_disk(self, path, exclude=tuple()):
         # This will receive the directory path + /my_component
         data_path = path / "data.json"
         with data_path.open("w", encoding="utf8") as f:
             f.write(json.dumps(self.data))
 
-    def from_disk(self, path, **cfg):
+    def from_disk(self, path, exclude=tuple()):
         # This will receive the directory path + /my_component
         data_path = path / "data.json"
         with data_path.open("r", encoding="utf8") as f:
@@ -275,6 +287,8 @@ use [entry points](#entry-points) to make your extension package expose your
 custom components to spaCy automatically.
 
 </Infobox>
+
+<!-- ## Initializing components with data {#initialization new="3"} -->
 
 ## Using entry points {#entry-points new="2.1"}
 
