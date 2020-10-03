@@ -52,6 +52,16 @@ def test_tr_noun_chunks_determiner_simple(tr_vocab):
     chunks = [chunk.text for chunk in doc.noun_chunks]
     assert chunks == ["O kedi"]
 
+def test_tr_noun_chunks_nmod_amod(tr_vocab):
+    words = ["okulun", "eski", "müdürü"]
+    heads = [2, 1, 0]
+    deps = ["nmod", "amod", "ROOT"]
+    pos = ["NOUN", "ADJ", "NOUN"]
+    doc = get_doc(tr_vocab, words=words, pos=pos, heads=heads, deps=deps)
+    doc.noun_chunks_iterator = SYNTAX_ITERATORS["noun_chunks"]
+    chunks = [chunk.text for chunk in doc.noun_chunks]
+    assert chunks == ["okulun eski müdürü"]
+
 def test_tr_noun_chunks_one_det_one_adj_simple(tr_vocab):
     words = ["O", "sarı", "kedi"]
     heads = [2, 1, 0]
@@ -103,6 +113,16 @@ def test_tr_noun_chunks_nmod_three(tr_vocab):
     chunks = [chunk.text for chunk in doc.noun_chunks]
     assert chunks == ["güney Afrika ülkelerinden Mozambik"]
 
+def test_tr_noun_chunks_det_amod_nmod(tr_vocab):
+    words = ["bazı", "eski", "oyun", "kuralları"]
+    heads = [3, 2, 1, 0]
+    deps = ["det", "nmod", "nmod", "ROOT"]
+    pos = ["DET", "ADJ", "NOUN", "NOUN"]
+    doc = get_doc(tr_vocab, words=words, pos=pos, heads=heads, deps=deps)
+    doc.noun_chunks_iterator = SYNTAX_ITERATORS["noun_chunks"]
+    chunks = [chunk.text for chunk in doc.noun_chunks]
+    assert chunks == ["bazı eski oyun kuralları"]
+
 def test_tr_noun_chunks_acl_simple(tr_vocab):
     words = ["bahçesi", "olan", "okul"]
     heads = [2, -1, 0]
@@ -112,6 +132,26 @@ def test_tr_noun_chunks_acl_simple(tr_vocab):
     doc.noun_chunks_iterator = SYNTAX_ITERATORS["noun_chunks"]
     chunks = [chunk.text for chunk in doc.noun_chunks]
     assert chunks == ["bahçesi olan okul"]
+
+def test_tr_noun_chunks_acl_verb(tr_vocab):
+    words = ["sevdiğim", "sanatçılar"]
+    heads = [1,  0]
+    deps = ["acl", "ROOT"]
+    pos = ["VERB", "NOUN"]
+    doc = get_doc(tr_vocab, words=words, pos=pos, heads=heads, deps=deps)
+    doc.noun_chunks_iterator = SYNTAX_ITERATORS["noun_chunks"]
+    chunks = [chunk.text for chunk in doc.noun_chunks]
+    assert chunks == ["sevdiğim sanatçılar"]
+
+def test_tr_noun_chunks_acil_nmod(tr_vocab):
+    words = ["en", "sevdiğim", "ses", "sanatçısı"]
+    heads = [1, 2, 1, 0]
+    deps = ["advmod", "acl", "nmod", "ROOT"]
+    pos = ["ADV", "VERB", "NOUN", "NOUN"]
+    doc = get_doc(tr_vocab, words=words, pos=pos, heads=heads, deps=deps)
+    doc.noun_chunks_iterator = SYNTAX_ITERATORS["noun_chunks"]
+    chunks = [chunk.text for chunk in doc.noun_chunks]
+    assert chunks == ["en sevdiğim ses sanatçısı"]
 
 def test_tr_noun_chunks_np_recursive(tr_vocab):
     pass
