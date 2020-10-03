@@ -16,7 +16,7 @@ from .errors import Errors
 from .attrs import intify_attrs, NORM, IS_STOP
 from .vectors import Vectors
 from .util import registry
-from .lookups import Lookups, load_lookups
+from .lookups import Lookups
 from . import util
 from .lang.norm_exceptions import BASE_NORMS
 from .lang.lex_attrs import LEX_ATTRS, is_stop, get_lang

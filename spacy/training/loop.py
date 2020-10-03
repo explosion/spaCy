@@ -21,8 +21,8 @@ def train(
     output_path: Optional[Path] = None,
     *,
     use_gpu: int = -1,
-    stdout: IO=sys.stdout,
-    stderr: IO=sys.stderr
+    stdout: IO = sys.stdout,
+    stderr: IO = sys.stderr,
 ) -> None:
     """Train a pipeline.
 
@@ -34,7 +34,7 @@ def train(
         printing, set to io.StringIO.
     stderr (file): A second file-like object to write output messages. To disable
         printing, set to io.StringIO.
- 
+
     RETURNS (Path / None): The path to the final exported model.
     """
     # We use no_print here so we can respect the stdout/stderr options.

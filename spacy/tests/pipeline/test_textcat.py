@@ -139,7 +139,8 @@ def test_overfitting_IO():
     nlp = English()
     nlp.config["initialize"]["components"]["textcat"] = {"positive_label": "POSITIVE"}
     # Set exclusive labels
-    textcat = nlp.add_pipe("textcat", config={"model": {"exclusive_classes": True}},)
+    config = {"model": {"exclusive_classes": True}}
+    textcat = nlp.add_pipe("textcat", config=config)
     train_examples = []
     for text, annotations in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
@@ -226,7 +227,9 @@ def test_positive_class_not_binary():
     textcat = nlp.add_pipe("textcat")
     get_examples = make_get_examples(nlp)
     with pytest.raises(ValueError):
-        textcat.initialize(get_examples, labels=["SOME", "THING", "POS"], positive_label="POS")
+        textcat.initialize(
+            get_examples, labels=["SOME", "THING", "POS"], positive_label="POS"
+        )
 
 
 def test_textcat_evaluation():

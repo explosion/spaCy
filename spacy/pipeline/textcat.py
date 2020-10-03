@@ -70,7 +70,7 @@ subword_features = true
     },
 )
 def make_textcat(
-    nlp: Language, name: str, model: Model[List[Doc], List[Floats2d]], threshold: float,
+    nlp: Language, name: str, model: Model[List[Doc], List[Floats2d]], threshold: float
 ) -> "TextCategorizer":
     """Create a TextCategorizer compoment. The text categorizer predicts categories
     over a whole document. It can learn one or more labels, and the labels can

@@ -30,7 +30,7 @@ class OrthVariants(BaseModel):
 
 @registry.augmenters("spacy.orth_variants.v1")
 def create_orth_variants_augmenter(
-    level: float, lower: float, orth_variants: OrthVariants,
+    level: float, lower: float, orth_variants: OrthVariants
 ) -> Callable[["Language", Example], Iterator[Example]]:
     """Create a data augmentation callback that uses orth-variant replacement.
     The callback can be added to a corpus or other data iterator during training.
