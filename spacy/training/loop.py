@@ -93,7 +93,8 @@ def train(
                 msg.warn(
                     f"Aborting and saving the final best model. "
                     f"Encountered exception: {str(e)}"
-                ) + "\n"
+                )
+                + "\n"
             )
         raise e
     finally:

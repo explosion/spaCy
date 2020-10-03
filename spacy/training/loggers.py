@@ -75,9 +75,7 @@ def console_logger(progress_bar: bool = False):
             )
             if progress is not None:
                 progress.close()
-            stdout.write(
-                msg.row(data, widths=table_widths, aligns=table_aligns) + "\n"
-            )
+            stdout.write(msg.row(data, widths=table_widths, aligns=table_aligns) + "\n")
             if progress_bar:
                 # Set disable=None, so that it disables on non-TTY
                 progress = tqdm.tqdm(
