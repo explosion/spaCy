@@ -973,8 +973,8 @@ class Language:
             try:
                 doc = proc(doc, **component_cfg.get(name, {}))
             except KeyError as e:
-                warnings.warn(str(e))
-                raise ValueError(Errors.E109.format(name=name)) from None
+                # This typically happens if a component is not initialized
+                raise ValueError(Errors.E109.format(name=name)) from e
             if doc is None:
                 raise ValueError(Errors.E005.format(name=name))
         return doc
