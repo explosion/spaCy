@@ -1,4 +1,4 @@
-from typing import Dict, Any, Tuple, Callable, List, Optional, IO
+from typing import TYPE_CHECKING, Dict, Any, Tuple, Callable, List, Optional, IO
 import wasabi
 import tqdm
 import sys
@@ -8,13 +8,17 @@ from .. import util
 from ..errors import Errors
 
 
+if TYPE_CHECKING:
+    from ..language import Language  # noqa: F401
+
+
 @registry.loggers("spacy.ConsoleLogger.v1")
 def console_logger(progress_bar: bool=False):
     def setup_printer(
-        nlp: "Language",
+        nlp: Language,
         stdout: IO=sys.stdout,
         stderr: IO=sys.stderr
-    ) -> Tuple[Callable[[Dict[str, Any]], None], Callable]:
+    ) -> Tuple[Callable[[Optional[Dict[str, Any]]], None], Callable]:
         msg = wasabi.Printer(no_print=True)
         # we assume here that only components are enabled that should be trained & logged
         logged_pipes = nlp.pipe_names
