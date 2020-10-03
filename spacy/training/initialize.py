@@ -50,9 +50,6 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
     with nlp.select_pipes(disable=[*frozen_components, *resume_components]):
         nlp.initialize(lambda: train_corpus(nlp), sgd=optimizer)
         logger.info("Initialized pipeline components")
-    # Verify the config after calling 'initialize' to ensure labels
-    # are properly initialized
-    verify_config(nlp)
     return nlp
 
 
@@ -150,33 +147,6 @@ def init_tok2vec(
         layer.from_bytes(weights_data)
         return True
     return False
-
-
-def verify_config(nlp: "Language") -> None:
-    """Perform additional checks based on the config, loaded nlp object and training data."""
-    # TODO: maybe we should validate based on the actual components, the list
-    # in config["nlp"]["pipeline"] instead?
-    for pipe_config in nlp.config["components"].values():
-        # We can't assume that the component name == the factory
-        factory = pipe_config["factory"]
-        if factory == "textcat":
-            verify_textcat_config(nlp, pipe_config)
-
-
-def verify_textcat_config(nlp: "Language", pipe_config: Dict[str, Any]) -> None:
-    # if 'positive_label' is provided: double check whether it's in the data and
-    # the task is binary
-    if pipe_config.get("positive_label"):
-        textcat_labels = nlp.get_pipe("textcat").labels
-        pos_label = pipe_config.get("positive_label")
-        if pos_label not in textcat_labels:
-            raise ValueError(
-                Errors.E920.format(pos_label=pos_label, labels=textcat_labels)
-            )
-        if len(list(textcat_labels)) != 2:
-            raise ValueError(
-                Errors.E919.format(pos_label=pos_label, labels=textcat_labels)
-            )
 
 
 def get_sourced_components(config: Union[Dict[str, Any], Config]) -> List[str]:
