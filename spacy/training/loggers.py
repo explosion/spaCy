@@ -8,14 +8,10 @@ from .. import util
 from ..errors import Errors
 
 
-if TYPE_CHECKING:
-    from ..language import Language  # noqa: F401
-
-
 @registry.loggers("spacy.ConsoleLogger.v1")
 def console_logger(progress_bar: bool=False):
     def setup_printer(
-        nlp: Language,
+        nlp: "Language",
         stdout: IO=sys.stdout,
         stderr: IO=sys.stderr
     ) -> Tuple[Callable[[Optional[Dict[str, Any]]], None], Callable]:
