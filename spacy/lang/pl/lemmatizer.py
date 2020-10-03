@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 from ...pipeline import Lemmatizer
 from ...tokens import Token
@@ -11,21 +11,16 @@ class PolishLemmatizer(Lemmatizer):
     # lemmatization, as well as case-sensitive lemmatization for nouns.
 
     @classmethod
-    def get_lookups_config(cls, mode: str) -> Dict:
+    def get_lookups_config(cls, mode: str) -> Tuple[List[str], List[str]]:
         if mode == "pos_lookup":
-            return {
-                "required_tables": [
-                    "lemma_lookup_adj",
-                    "lemma_lookup_adp",
-                    "lemma_lookup_adv",
-                    "lemma_lookup_aux",
-                    "lemma_lookup_noun",
-                    "lemma_lookup_num",
-                    "lemma_lookup_part",
-                    "lemma_lookup_pron",
-                    "lemma_lookup_verb",
-                ]
-            }
+            # fmt: off
+            required = [
+                "lemma_lookup_adj", "lemma_lookup_adp", "lemma_lookup_adv",
+                "lemma_lookup_aux", "lemma_lookup_noun", "lemma_lookup_num",
+                "lemma_lookup_part", "lemma_lookup_pron", "lemma_lookup_verb"
+            ]
+            # fmt: on
+            return (required, [])
         else:
             return super().get_lookups_config(mode)
 
