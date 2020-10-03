@@ -355,7 +355,7 @@ def test_pipe_methods_frozen():
         "parser",
         "ner",
         "textcat",
-        pytest.param("morphologizer", marks=pytest.mark.xfail),
+        "morphologizer"
     ],
 )
 def test_pipe_label_data_exports_labels(pipe):
