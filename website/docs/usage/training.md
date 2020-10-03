@@ -216,7 +216,9 @@ The initialization settings are only loaded and used when
 [`nlp.initialize`](/api/language#initialize) is called (typically right before
 training). This allows you to set up your pipeline using local data resources
 and custom functions, and preserve the information in your config – but without
-requiring it to be available at runtime
+requiring it to be available at runtime. You can also use this mechanism to
+provide data paths to custom pipeline components and custom tokenizers – see the
+section on [custom initialization](#initialization) for details.
 
 ### Overwriting config settings on the command line {#config-overrides}
 
@@ -815,9 +817,9 @@ def MyModel(output_width: int) -> Model[List[Doc], List[Floats2d]]:
     return create_model(output_width)
 ```
 
-<!-- TODO:
 ### Customizing the initialization {#initialization}
--->
+
+<!-- TODO: -->
 
 ## Data utilities {#data}
 
@@ -1011,8 +1013,135 @@ def filter_batch(size: int) -> Callable[[Iterable[Example]], Iterator[List[Examp
 <!-- TODO:
 * Custom corpus class
 * Minibatching
-* Data augmentation
 -->
+
+### Data augmentation {#data-augmentation}
+
+Data augmentation is the process of applying small **modifications** to the
+training data. It can be especially useful for punctuation and case replacement
+– for example, if your corpus only uses smart quotes and you want to include
+variations using regular quotes, or to make the model less sensitive to
+capitalization by including a mix of capitalized and lowercase examples.
+
+The easiest way to use data augmentation during training is to provide an
+`augmenter` to the training corpus, e.g. in the `[corpora.train]` section of
+your config. The built-in [`orth_variants`](/api/top-level#orth_variants)
+augmenter creates a data augmentation callback that uses orth-variant
+replacement.
+
+```ini
+### config.cfg (excerpt) {highlight="8,14"}
+[corpora.train]
+@readers = "spacy.Corpus.v1"
+path = ${paths.train}
+gold_preproc = false
+max_length = 0
+limit = 0
+
+[corpora.train.augmenter]
+@augmenters = "spacy.orth_variants.v1"
+# Percentage of texts that will be augmented / lowercased
+level = 0.1
+lower = 0.5
+
+[corpora.train.augmenter.orth_variants]
+@readers = "srsly.read_json.v1"
+path = "corpus/orth_variants.json"
+```
+
+The `orth_variants` argument lets you pass in a dictionary of replacement rules,
+typically loaded from a JSON file. There are two types of orth variant rules:
+`"single"` for single tokens that should be replaced (e.g. hyphens) and
+`"paired"` for pairs of tokens (e.g. quotes).
+
+<!-- prettier-ignore -->
+```json
+### orth_variants.json
+{
+  "single": [{ "tags": ["NFP"], "variants": ["…", "..."] }],
+  "paired": [{ "tags": ["``", "''"], "variants": [["'", "'"], ["‘", "’"]] }]
+}
+```
+
+<Accordion title="Full examples for English and German" spaced>
+
+```json
+https://github.com/explosion/spacy-lookups-data/blob/master/spacy_lookups_data/data/en_orth_variants.json
+```
+
+```json
+https://github.com/explosion/spacy-lookups-data/blob/master/spacy_lookups_data/data/de_orth_variants.json
+```
+
+</Accordion>
+
+<Infobox title="Important note" variant="warning">
+
+When adding data augmentation, keep in mind that it typically only makes sense
+to apply it to the **training corpus**, not the development data.
+
+</Infobox>
+
+#### Writing custom data augmenters {#data-augmentation-custom}
+
+Using the [`@spacy.augmenters`](/api/top-level#registry) registry, you can also
+register your own data augmentation callbacks. The callback should be a function
+that takes the current `nlp` object and a training [`Example`](/api/example) and
+yields `Example` objects. Keep in mind that the augmenter should yield **all
+examples** you want to use in your corpus, not only the augmented examples
+(unless you want to augment all examples).
+
+Here'a an example of a custom augmentation callback that produces text variants
+in ["SpOnGeBoB cAsE"](https://knowyourmeme.com/memes/mocking-spongebob). The
+registered function takes one argument `randomize` that can be set via the
+config and decides whether the uppercase/lowercase transformation is applied
+randomly or not. The augmenter yields two `Example` objects: the original
+example and the augmented example.
+
+> #### config.cfg
+>
+> ```ini
+> [corpora.train.augmenter]
+> @augmenters = "spongebob_augmenter.v1"
+> randomize = false
+> ```
+
+```python
+import spacy
+import random
+
+@spacy.registry.augmenters("spongebob_augmenter.v1")
+def create_augmenter(randomize: bool = False):
+    def augment(nlp, example):
+        text = example.text
+        if randomize:
+            # Randomly uppercase/lowercase characters
+            chars = [c.lower() if random.random() < 0.5 else c.upper() for c in text]
+        else:
+            # Uppercase followed by lowercase
+            chars = [c.lower() if i % 2 else c.upper() for i, c in enumerate(text)]
+        # Create augmented training example
+        example_dict = example.to_dict()
+        doc = nlp.make_doc("".join(chars))
+        example_dict["token_annotation"]["ORTH"] = [t.text for t in doc]
+        # Original example followed by augmented example
+        yield example
+        yield example.from_dict(doc, example_dict)
+
+    return augment
+```
+
+An easy way to create modified `Example` objects is to use the
+[`Example.from_dict`](/api/example#from_dict) method with a new reference
+[`Doc`](/api/doc) created from the modified text. In this case, only the
+capitalization changes, so only the `ORTH` values of the tokens will be
+different between the original and augmented examples.
+
+Note that if your data augmentation strategy involves changing the tokenization
+(for instance, removing or adding tokens) and your training examples include
+token-based annotations like the dependency parse or entity labels, you'll need
+to take care to adjust the `Example` object so its annotations match and remain
+valid.
 
 ## Parallel & distributed training with Ray {#parallel-training}
 
@@ -1123,17 +1252,6 @@ a dictionary with keyword arguments specifying the annotations, like `tags` or
 `entities`. Using the resulting `Example` object and its gold-standard
 annotations, the model can be updated to learn a sentence of three words with
 their assigned part-of-speech tags.
-
-> #### About the tag map
->
-> The tag map is part of the vocabulary and defines the annotation scheme. If
-> you're training a new pipeline, this will let you map the tags present in the
-> treebank you train on to spaCy's tag scheme:
->
-> ```python
-> tag_map = {"N": {"pos": "NOUN"}, "V": {"pos": "VERB"}}
-> vocab = Vocab(tag_map=tag_map)
-> ```
 
 ```python
 words = ["I", "like", "stuff"]

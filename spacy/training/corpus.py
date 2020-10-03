@@ -38,11 +38,11 @@ def create_docbin_reader(
     )
 
 
-@util.registry.readers("spacy.JsonlReader.v1")
+@util.registry.readers("spacy.JsonlCorpus.v1")
 def create_jsonl_reader(
     path: Path, min_length: int = 0, max_length: int = 0, limit: int = 0
 ) -> Callable[["Language"], Iterable[Doc]]:
-    return JsonlTexts(path, min_length=min_length, max_length=max_length, limit=limit)
+    return JsonlCorpus(path, min_length=min_length, max_length=max_length, limit=limit)
 
 
 @util.registry.readers("spacy.read_labels.v1")
@@ -193,7 +193,7 @@ class Corpus:
                             break
 
 
-class JsonlTexts:
+class JsonlCorpus:
     """Iterate Doc objects from a file or directory of jsonl
     formatted raw text files.
 
@@ -206,7 +206,7 @@ class JsonlTexts:
     limit (int): Limit corpus to a subset of examples, e.g. for debugging.
         Defaults to 0, which indicates no limit.
 
-    DOCS: https://nightly.spacy.io/api/corpus#jsonltexts
+    DOCS: https://nightly.spacy.io/api/corpus#jsonlcorpus
     """
 
     file_type = "jsonl"
@@ -230,7 +230,7 @@ class JsonlTexts:
         nlp (Language): The current nlp object.
         YIELDS (Example): The example objects.
 
-        DOCS: https://nightly.spacy.io/api/corpus#jsonltexts-call
+        DOCS: https://nightly.spacy.io/api/corpus#jsonlcorpus-call
         """
         for loc in walk_corpus(self.path, ".jsonl"):
             records = srsly.read_jsonl(loc)

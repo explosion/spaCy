@@ -200,7 +200,7 @@ import Tokenization101 from 'usage/101/\_tokenization.md'
 To learn more about how spaCy's tokenization rules work in detail, how to
 **customize and replace** the default tokenizer and how to **add
 language-specific data**, see the usage guides on
-[adding languages](/usage/adding-languages) and
+[language data](/usage/linguistic-features#language-data) and
 [customizing the tokenizer](/usage/linguistic-features#tokenization).
 
 </Infobox>
@@ -479,7 +479,7 @@ find a "Suggest edits" link at the bottom of each page that points you to the
 source.
 
 Another way of getting involved is to help us improve the
-[language data](/usage/adding-languages#language-data) – especially if you
+[language data](/usage/linguistic-features#language-data) – especially if you
 happen to speak one of the languages currently in
 [alpha support](/usage/models#languages). Even adding simple tokenizer
 exceptions, stop words or lemmatizer data can make a big difference. It will

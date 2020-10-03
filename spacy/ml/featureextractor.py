@@ -1,7 +1,8 @@
 from typing import List, Union, Callable, Tuple
-from thinc.types import Ints2d, Doc
+from thinc.types import Ints2d
 from thinc.api import Model, registry
 
+from ..tokens import Doc
 
 
 @registry.layers("spacy.FeatureExtractor.v1")
@@ -9,7 +10,9 @@ def FeatureExtractor(columns: List[Union[int, str]]) -> Model[List[Doc], List[In
     return Model("extract_features", forward, attrs={"columns": columns})
 
 
-def forward(model: Model[List[Doc], List[Ints2d]], docs, is_train: bool) -> Tuple[List[Ints2d], Callable]:
+def forward(
+    model: Model[List[Doc], List[Ints2d]], docs, is_train: bool
+) -> Tuple[List[Ints2d], Callable]:
     columns = model.attrs["columns"]
     features: List[Ints2d] = []
     for doc in docs:

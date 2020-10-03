@@ -56,16 +56,13 @@ create a surface form. Here are some examples:
 
 Morphological features are stored in the [`MorphAnalysis`](/api/morphanalysis)
 under `Token.morph`, which allows you to access individual morphological
-features. The attribute `Token.morph_` provides the morphological analysis in
-the Universal Dependencies
-[FEATS](https://universaldependencies.org/format.html#morphological-annotation)
-format.
+features.
 
 > #### 📝 Things to try
 >
 > 1. Change "I" to "She". You should see that the morphological features change
 >    and express that it's a pronoun in the third person.
-> 2. Inspect `token.morph_` for the other tokens.
+> 2. Inspect `token.morph` for the other tokens.
 
 ```python
 ### {executable="true"}
@@ -75,7 +72,7 @@ nlp = spacy.load("en_core_web_sm")
 print("Pipeline:", nlp.pipe_names)
 doc = nlp("I was reading the paper.")
 token = doc[0]  # 'I'
-print(token.morph_)  # 'Case=Nom|Number=Sing|Person=1|PronType=Prs'
+print(token.morph)  # 'Case=Nom|Number=Sing|Person=1|PronType=Prs'
 print(token.morph.get("PronType"))  # ['Prs']
 ```
 
@@ -91,7 +88,7 @@ import spacy
 
 nlp = spacy.load("de_core_news_sm")
 doc = nlp("Wo bist du?") # English: 'Where are you?'
-print(doc[2].morph_)  # 'Case=Nom|Number=Sing|Person=2|PronType=Prs'
+print(doc[2].morph)  # 'Case=Nom|Number=Sing|Person=2|PronType=Prs'
 print(doc[2].pos_) # 'PRON'
 ```
 
@@ -117,7 +114,7 @@ import spacy
 
 nlp = spacy.load("en_core_web_sm")
 doc = nlp("Where are you?")
-print(doc[2].morph_)  # 'Case=Nom|Person=2|PronType=Prs'
+print(doc[2].morph)  # 'Case=Nom|Person=2|PronType=Prs'
 print(doc[2].pos_)  # 'PRON'
 ```
 

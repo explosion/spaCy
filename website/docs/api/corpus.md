@@ -100,7 +100,7 @@ Yield examples from the data.
 | `nlp`      | The current `nlp` object. ~~Language~~ |
 | **YIELDS** | The examples. ~~Example~~              |
 
-## JsonlTexts {#jsonltexts tag="class"}
+## JsonlCorpus {#jsonlcorpus tag="class"}
 
 Iterate Doc objects from a file or directory of JSONL (newline-delimited JSON)
 formatted raw text files. Can be used to read the raw text corpus for language
@@ -126,22 +126,22 @@ file.
 {"text": "My cynical view on this is that it will never be free to the public. Reason: what would be the draw of joining the military? Right now their selling point is free Healthcare and Education. Ironically both are run horribly and most, that I've talked to, come out wishing they never went in."}
 ```
 
-### JsonlTexts.\_\init\_\_ {#jsonltexts-init tag="method"}
+### JsonlCorpus.\_\init\_\_ {#jsonlcorpus tag="method"}
 
 Initialize the reader.
 
 > #### Example
 >
 > ```python
-> from spacy.training import JsonlTexts
+> from spacy.training import JsonlCorpus
 >
-> corpus = JsonlTexts("./data/texts.jsonl")
+> corpus = JsonlCorpus("./data/texts.jsonl")
 > ```
 >
 > ```ini
 > ### Example config
 > [corpora.pretrain]
-> @readers = "spacy.JsonlReader.v1"
+> @readers = "spacy.JsonlCorpus.v1"
 > path = "corpus/raw_text.jsonl"
 > min_length = 0
 > max_length = 0
@@ -156,17 +156,17 @@ Initialize the reader.
 | `max_length`   | Maximum document length (in tokens). Longer documents will be skipped. Defaults to `0`, which indicates no limit. ~~int~~        |
 | `limit`        | Limit corpus to a subset of examples, e.g. for debugging. Defaults to `0` for no limit. ~~int~~                                  |
 
-### JsonlTexts.\_\_call\_\_ {#jsonltexts-call tag="method"}
+### JsonlCorpus.\_\_call\_\_ {#jsonlcorpus-call tag="method"}
 
 Yield examples from the data.
 
 > #### Example
 >
 > ```python
-> from spacy.training import JsonlTexts
+> from spacy.training import JsonlCorpus
 > import spacy
 >
-> corpus = JsonlTexts("./texts.jsonl")
+> corpus = JsonlCorpus("./texts.jsonl")
 > nlp = spacy.blank("en")
 > data = corpus(nlp)
 > ```
