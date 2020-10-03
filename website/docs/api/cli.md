@@ -232,7 +232,7 @@ $ python -m spacy init labels [config_path] [output_path] [--code] [--verbose] [
 | `--gpu-id`, `-g`  | GPU ID or `-1` for CPU. Defaults to `-1`. ~~int (option)~~                                                                                                                                 |
 | `--help`, `-h`    | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                 |
 | overrides         | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~ |
-| **CREATES**       | The final trained pipeline and the best trained pipeline.                                                                                                                                  |
+| **CREATES**       | The best trained pipeline and the final checkpoint (if training is terminated).                                                                                                            |
 
 ## convert {#convert tag="command"}
 
