@@ -689,8 +689,8 @@ During training, the results of each step are passed to a logger function. By
 default, these results are written to the console with the
 [`ConsoleLogger`](/api/top-level#ConsoleLogger). There is also built-in support
 for writing the log files to [Weights & Biases](https://www.wandb.com/) with the
-[`WandbLogger`](/api/top-level#WandbLogger). The logger function receives a
-**dictionary** with the following keys:
+[`WandbLogger`](/api/top-level#WandbLogger). On each step, the logger function
+receives a **dictionary** with the following keys:
 
 | Key            | Value                                                                                                 |
 | -------------- | ----------------------------------------------------------------------------------------------------- |
@@ -715,30 +715,37 @@ tabular results to a file:
 
 ```python
 ### functions.py
-from typing import Tuple, Callable, Dict, Any
+import sys
+from typing import IO, Tuple, Callable, Dict, Any
 import spacy
+from spacy import Language
 from pathlib import Path
 
 @spacy.registry.loggers("my_custom_logger.v1")
 def custom_logger(log_path):
-    def setup_logger(nlp: "Language") -> Tuple[Callable, Callable]:
-        with Path(log_path).open("w", encoding="utf8") as file_:
-            file_.write("step\\t")
-            file_.write("score\\t")
-            for pipe in nlp.pipe_names:
-                file_.write(f"loss_{pipe}\\t")
-            file_.write("\\n")
+    def setup_logger(
+        nlp: Language,
+        stdout: IO=sys.stdout,
+        stderr: IO=sys.stderr
+    ) -> Tuple[Callable, Callable]:
+        stdout.write(f"Logging to {log_path}\n")
+        log_file = Path(log_path).open("w", encoding="utf8")
+        log_file.write("step\\t")
+        log_file.write("score\\t")
+        for pipe in nlp.pipe_names:
+            log_file.write(f"loss_{pipe}\\t")
+        log_file.write("\\n")
 
-        def log_step(info: Dict[str, Any]):
-            with Path(log_path).open("a") as file_:
-                file_.write(f"{info['step']}\\t")
-                file_.write(f"{info['score']}\\t")
+        def log_step(info: Optional[Dict[str, Any]]):
+            if info:
+                log_file.write(f"{info['step']}\\t")
+                log_file.write(f"{info['score']}\\t")
                 for pipe in nlp.pipe_names:
-                    file_.write(f"{info['losses'][pipe]}\\t")
-                file_.write("\\n")
+                    log_file.write(f"{info['losses'][pipe]}\\t")
+                log_file.write("\\n")
 
         def finalize():
-            pass
+            log_file.close()
 
         return log_step, finalize
 
