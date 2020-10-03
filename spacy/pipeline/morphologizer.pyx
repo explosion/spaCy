@@ -146,8 +146,8 @@ class Morphologizer(Tagger):
         """
         self._ensure_examples(get_examples)
         if labels is not None:
-            self.cfg["labels_morph"] = labels["labels_morph"]
-            self.cfg["labels_pos"] = labels["labels_pos"]
+            self.cfg["labels_morph"] = labels["morph"]
+            self.cfg["labels_pos"] = labels["pos"]
         else:
             # First, fetch all labels from the data
             for example in get_examples():
