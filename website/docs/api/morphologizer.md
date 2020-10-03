@@ -147,12 +147,12 @@ config.
 > path = "corpus/labels/morphologizer.json
 > ```
 
-| Name           | Description                                                                                                                                                                                                                                                                                                         |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. ~~Callable[[], Iterable[Example]]~~                                                                                                                                                                               |
-| _keyword-only_ |                                                                                                                                                                                                                                                                                                                     |
-| `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                                                                                                                                                                                |
-| `labels`       | The label information to add to the component. To generate a reusable JSON file from your data, you should run the [`init labels`](/api/cli#init-labels) command. If no labels are provided, the `get_examples` callback is used to extract the labels from the data, which may be a lot slower. ~~Optional[dict]~~ |
+| Name           | Description                                                                                                                                                                                                                                                                                                                                                                                       |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. ~~Callable[[], Iterable[Example]]~~                                                                                                                                                                                                                                                             |
+| _keyword-only_ |                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                                                                                                                                                                                                                                                              |
+| `labels`       | The label information to add to the component, as provided by the [`label_data`](#label_data) property after initialization. To generate a reusable JSON file from your data, you should run the [`init labels`](/api/cli#init-labels) command. If no labels are provided, the `get_examples` callback is used to extract the labels from the data, which may be a lot slower. ~~Optional[dict]~~ |
 
 ## Morphologizer.predict {#predict tag="method"}
 
@@ -376,6 +376,24 @@ coarse-grained POS as the feature `POS`.
 | Name        | Description                                            |
 | ----------- | ------------------------------------------------------ |
 | **RETURNS** | The labels added to the component. ~~Tuple[str, ...]~~ |
+
+## Morphologizer.label_data {#label_data tag="property" new="3"}
+
+The labels currently added to the component and their internal meta information.
+This is the data generated by [`init labels`](/api/cli#init-labels) and used by
+[`Morphologizer.initialize`](/api/morphologizer#initialize) to initialize the
+model with a pre-defined label set.
+
+> #### Example
+>
+> ```python
+> labels = morphologizer.label_data
+> morphologizer.initialize(lambda: [], nlp=nlp, labels=labels)
+> ```
+
+| Name        | Description                                     |
+| ----------- | ----------------------------------------------- |
+| **RETURNS** | The label data added to the component. ~~dict~~ |
 
 ## Serialization fields {#serialization-fields}
 

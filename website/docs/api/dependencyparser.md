@@ -176,12 +176,12 @@ This method was previously called `begin_training`.
 > path = "corpus/labels/parser.json
 > ```
 
-| Name           | Description                                                                                                                                                                                                                                                                                                         |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. ~~Callable[[], Iterable[Example]]~~                                                                                                                                                                               |
-| _keyword-only_ |                                                                                                                                                                                                                                                                                                                     |
-| `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                                                                                                                                                                                |
-| `labels`       | The label information to add to the component. To generate a reusable JSON file from your data, you should run the [`init labels`](/api/cli#init-labels) command. If no labels are provided, the `get_examples` callback is used to extract the labels from the data, which may be a lot slower. ~~Optional[dict]~~ |
+| Name           | Description                                                                                                                                                                                                                                                                                                                                                                                                            |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. ~~Callable[[], Iterable[Example]]~~                                                                                                                                                                                                                                                                                  |
+| _keyword-only_ |                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                                                                                                                                                                                                                                                                                   |
+| `labels`       | The label information to add to the component, as provided by the [`label_data`](#label_data) property after initialization. To generate a reusable JSON file from your data, you should run the [`init labels`](/api/cli#init-labels) command. If no labels are provided, the `get_examples` callback is used to extract the labels from the data, which may be a lot slower. ~~Optional[Dict[str, Dict[str, int]]]~~ |
 
 ## DependencyParser.predict {#predict tag="method"}
 
@@ -432,6 +432,24 @@ The labels currently added to the component.
 | Name        | Description                                            |
 | ----------- | ------------------------------------------------------ |
 | **RETURNS** | The labels added to the component. ~~Tuple[str, ...]~~ |
+
+## DependencyParser.label_data {#label_data tag="property" new="3"}
+
+The labels currently added to the component and their internal meta information.
+This is the data generated by [`init labels`](/api/cli#init-labels) and used by
+[`DependencyParser.initialize`](/api/dependencyparser#initialize) to initialize
+the model with a pre-defined label set.
+
+> #### Example
+>
+> ```python
+> labels = parser.label_data
+> parser.initialize(lambda: [], nlp=nlp, labels=labels)
+> ```
+
+| Name        | Description                                                                     |
+| ----------- | ------------------------------------------------------------------------------- |
+| **RETURNS** | The label data added to the component. ~~Dict[str, Dict[str, Dict[str, int]]]~~ |
 
 ## Serialization fields {#serialization-fields}
 

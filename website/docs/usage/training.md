@@ -692,14 +692,14 @@ for writing the log files to [Weights & Biases](https://www.wandb.com/) with the
 [`WandbLogger`](/api/top-level#WandbLogger). The logger function receives a
 **dictionary** with the following keys:
 
-| Key            | Value                                                                                          |
-| -------------- | ---------------------------------------------------------------------------------------------- |
-| `epoch`        | How many passes over the data have been completed. ~~int~~                                     |
-| `step`         | How many steps have been completed. ~~int~~                                                    |
-| `score`        | The main score from the last evaluation, measured on the dev set. ~~float~~                    |
-| `other_scores` | The other scores from the last evaluation, measured on the dev set. ~~Dict[str, Any]~~         |
-| `losses`       | The accumulated training losses, keyed by component name. ~~Dict[str, float]~~                 |
-| `checkpoints`  | A list of previous results, where each result is a (score, step, epoch) tuple. ~~List[Tuple]~~ |
+| Key            | Value                                                                                                 |
+| -------------- | ----------------------------------------------------------------------------------------------------- |
+| `epoch`        | How many passes over the data have been completed. ~~int~~                                            |
+| `step`         | How many steps have been completed. ~~int~~                                                           |
+| `score`        | The main score from the last evaluation, measured on the dev set. ~~float~~                           |
+| `other_scores` | The other scores from the last evaluation, measured on the dev set. ~~Dict[str, Any]~~                |
+| `losses`       | The accumulated training losses, keyed by component name. ~~Dict[str, float]~~                        |
+| `checkpoints`  | A list of previous results, where each result is a `(score, step)` tuple. ~~List[Tuple[float, int]]~~ |
 
 You can easily implement and plug in your own logger that records the training
 results in a custom way, or sends them to an experiment management tracker of
@@ -819,7 +819,84 @@ def MyModel(output_width: int) -> Model[List[Doc], List[Floats2d]]:
 
 ### Customizing the initialization {#initialization}
 
-<Infobox title="This section is still under construction" emoji="🚧" variant="warning">
+When you start training a new model from scratch,
+[`spacy train`](/api/cli#train) will call
+[`nlp.initialize`](/api/language#initialize) to initialize the pipeline for
+training. This process typically includes the following:
+
+> #### config.cfg (excerpt)
+>
+> ```ini
+> [initialize]
+> vectors = ${paths.vectors}
+> init_tok2vec = ${paths.init_tok2vec}
+>
+> [initialize.components]
+> # Settings for components
+> ```
+
+1. Load in **data resources** defined in the `[initialize]` config, including
+   **word vectors** and
+   [pretrained](/usage/embeddings-transformers/#pretraining) **tok2vec
+   weights**.
+2. Call the `initialize` methods of the tokenizer (if implemented, e.g. for
+   [Chinese](/usage/models#chinese)) and pipeline components with a callback to
+   access the training data, the current `nlp` object and any **custom
+   arguments** defined in the `[initialize]` config.
+3. In **pipeline components**: if needed, use the data to
+   [infer missing shapes](/usage/layers-architectures#thinc-shape-inference) and
+   set up the label scheme if no labels are provided. Components may also load
+   other data like lookup tables or dictionaries.
+
+The initialization step allows the config to define **all settings** required
+for the pipeline, while keeping a separation between settings and functions that
+should only be used **before training** to set up the initial pipeline, and
+logic and configuration that needs to be available **at runtime**. Without that
+separation, TODO:
+
+![Illustration of pipeline lifecycle](../images/lifecycle.svg)
+
+#### Initializing labels {#initialization-labels}
+
+Built-in pipeline components like the
+[`EntityRecognizer`](/api/entityrecognizer) or
+[`DependencyParser`](/api/dependencyparser) need to know their available labels
+and associated internal meta information to initialize their model weights.
+Using the `get_examples` callback provided on initialization, they're able to
+**read the labels off the training data** automatically, which is very
+convenient – but it can also slow down the training process to compute this
+information on every run.
+
+The [`init labels`](/api/cli#init-labels) command lets you auto-generate JSON
+files containing the label data for all supported components. You can then pass
+in the labels in the `[initialize]` settings for the respective components to
+allow them to initialize faster.
+
+> #### config.cfg
+>
+> ```ini
+> [initialize.components.ner]
+>
+> [initialize.components.ner.labels]
+> @readers = "spacy.read_labels.v1"
+> path = "corpus/labels/ner.json
+> ```
+
+```cli
+$ python -m spacy init labels config.cfg ./corpus --paths.train ./corpus/train.spacy
+```
+
+Under the hood, the command delegates to the `label_data` property of the
+pipeline components, for instance
+[`EntityRecognizer.label_data`](/api/entityrecognizer#label_data).
+
+<Infobox variant="warning" title="Important note">
+
+The JSON format differs for each component and some components need additional
+meta information about their labels. The format exported by
+[`init labels`](/api/cli#init-labels) matches what the components need, so you
+should always let spaCy **auto-generate the labels** for you.
+
 </Infobox>
 
 ## Data utilities {#data}
@@ -1298,8 +1375,8 @@ of being dropped.
 
 > - [`nlp`](/api/language): The `nlp` object with the pipeline components and
 >   their models.
-> - [`nlp.initialize`](/api/language#initialize): Start the training and return
->   an optimizer to update the component model weights.
+> - [`nlp.initialize`](/api/language#initialize): Initialize the pipeline and
+>   return an optimizer to update the component model weights.
 > - [`Optimizer`](https://thinc.ai/docs/api-optimizers): Function that holds
 >   state between updates.
 > - [`nlp.update`](/api/language#update): Update component models with examples.
