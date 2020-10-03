@@ -489,51 +489,80 @@ with Model.define_operators({">>": chain}):
 In addition to [swapping out](#swap-architectures) default models in built-in
 components, you can also implement an entirely new,
 [trainable pipeline component](usage/processing-pipelines#trainable-components)
-from scratch. This can be done by creating a new class inheriting from [`Pipe`](/api/pipe), 
-and linking it up to your custom model implementation.
+from scratch. This can be done by creating a new class inheriting from
+[`Pipe`](/api/pipe), and linking it up to your custom model implementation.
 
 ### Example: Pipeline component for relation extraction {#component-rel}
 
-This section will run through an example of implementing a novel relation extraction 
-component from scratch. As a first step, we need a method that will generate pairs of
-entities that we want to classify as being related or not. These candidate pairs are 
-typically formed within one document, which means we'll have a function that takes a 
-`Doc` as input and outputs a `List` of `Span` tuples. In this example, we will focus 
-on binary relation extraction, i.e. the tuple will be of length 2.
-
-We register this function in the 'misc' register so we can easily refer to it from the config, 
-and allow swapping it out for any candidate 
-generation function. For instance, a very straightforward implementation would be to just 
-take any two entities from the same document:
+This section will run through an example of implementing a novel relation
+extraction component from scratch. As a first step, we need a method that will
+generate pairs of entities that we want to classify as being related or not.
+These candidate pairs are typically formed within one document, which means
+we'll have a function that takes a `Doc` as input and outputs a `List` of `Span`
+tuples. In this example, we will focus on binary relation extraction, i.e. the
+tuple will be of length 2. For instance, a very straightforward implementation
+would be to just take any two entities from the same document:
 
 ```python
-@registry.misc.register("rel_cand_generator.v1")
-def create_candidate_indices() -> Callable[[Doc], List[Tuple[Span, Span]]]:
-    def get_candidate_indices(doc: "Doc"):
-        indices = []
-        for ent1 in doc.ents:
-            for ent2 in doc.ents:
-                indices.append((ent1, ent2))
-        return indices
-    return get_candidate_indices
+def get_candidates(doc: "Doc") -> List[Tuple[Span, Span]]:
+    candidates = []
+    for ent1 in doc.ents:
+        for ent2 in doc.ents:
+            candidates.append((ent1, ent2))
+    return candidates
 ```
 
-But we could also refine this further by excluding relations of an entity with itself, 
-and posing a maximum distance (in number of tokens) between two entities:
+But we could also refine this further by excluding relations of an entity with
+itself, and posing a maximum distance (in number of tokens) between two
+entities. We'll also register this function in the
+[`@misc` registry](/api/top-level#registry) so we can refer to it from the
+config, and easily swap it out for any other candidate generation function.
+
+> ```
+> [get_candidates]
+> @misc = "rel_cand_generator.v2"
+> max_length = 6
+> ```
 
 ```python
 ### {highlight="1,2,7,8"}
 @registry.misc.register("rel_cand_generator.v2")
 def create_candidate_indices(max_length: int) -> Callable[[Doc], List[Tuple[Span, Span]]]:
-    def get_candidate_indices(doc: "Doc"):
-        indices = []
+    def get_candidates(doc: "Doc") -> List[Tuple[Span, Span]]:
+        candidates = []
         for ent1 in doc.ents:
             for ent2 in doc.ents:
                 if ent1 != ent2:
                     if max_length and abs(ent2.start - ent1.start) <= max_length:
-                        indices.append((ent1, ent2))
-        return indices
-    return get_candidate_indices
+                        candidates.append((ent1, ent2))
+        return candidates
+    return get_candidates
+```
+
+> ```
+> [tok2vec]
+> @architectures = "spacy.HashEmbedCNN.v1"
+> pretrained_vectors = null
+> width = 96
+> depth = 2
+> embed_size = 300
+> window_size = 1
+> maxout_pieces = 3
+> subword_features = true
+> ```
+
+Next, we'll assume we have access to an
+[embedding layer](/usage/embeddings-transformers) such as a
+[`Tok2Vec`](/api/tok2vec) component or [`Transformer`](/api/transformer). This
+layer is assumed to be of type `Model[List["Doc"], List[Floats2d]]` as it
+transforms a list of documents into a list of 2D vectors. Further, this
+`tok2vec` component will be trainable, which means that, following the Thinc
+paradigm, we'll apply it to some input, and receive the predicted results as
+well as a callback to perform backpropagation:
+
+```python
+tok2vec = model.get_ref("tok2vec")
+tokvecs, bp_tokvecs = tok2vec(docs, is_train=True)
 ```
 
 
