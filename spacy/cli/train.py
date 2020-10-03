@@ -3,6 +3,7 @@ from pathlib import Path
 from wasabi import msg
 import typer
 import logging
+import sys
 
 from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
 from ._util import import_code, setup_gpu
@@ -39,7 +40,12 @@ def train_cli(
     DOCS: https://nightly.spacy.io/api/cli#train
     """
     util.logger.setLevel(logging.DEBUG if verbose else logging.INFO)
-    verify_cli_args(config_path, output_path)
+    # Make sure all files and paths exists if they are needed
+    if not config_path or not config_path.exists():
+        msg.fail("Config file not found", config_path, exits=1)
+    if output_path is not None and not output_path.exists():
+        output_path.mkdir()
+        msg.good(f"Created output directory: {output_path}")
     overrides = parse_config_overrides(ctx.args)
     import_code(code_path)
     setup_gpu(use_gpu)
@@ -50,14 +56,4 @@ def train_cli(
         nlp = init_nlp(config, use_gpu=use_gpu)
     msg.good("Initialized pipeline")
     msg.divider("Training pipeline")
-    train(nlp, output_path, use_gpu=use_gpu, printer=msg)
-
-
-def verify_cli_args(config_path: Path, output_path: Optional[Path] = None) -> None:
-    # Make sure all files and paths exists if they are needed
-    if not config_path or not config_path.exists():
-        msg.fail("Config file not found", config_path, exits=1)
-    if output_path is not None:
-        if not output_path.exists():
-            output_path.mkdir()
-            msg.good(f"Created output directory: {output_path}")
+    train(nlp, output_path, use_gpu=use_gpu, stdout=sys.stdout, stderr=sys.stderr)

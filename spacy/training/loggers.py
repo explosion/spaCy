@@ -1,6 +1,7 @@
-from typing import Dict, Any, Tuple, Callable, List, Optional
+from typing import Dict, Any, Tuple, Callable, List, Optional, IO
 import wasabi
 import tqdm
+import sys
 
 from ..util import registry
 from .. import util
@@ -11,9 +12,10 @@ from ..errors import Errors
 def console_logger(progress_bar: bool=False):
     def setup_printer(
         nlp: "Language",
-        printer: Optional[wasabi.Printer]=wasabi.Printer()
+        stdout: IO=sys.stdout,
+        stderr: IO=sys.stderr
     ) -> Tuple[Callable[[Dict[str, Any]], None], Callable]:
-        msg = printer if printer is not None else wasabi.Printer(no_print=True)
+        msg = wasabi.Printer(no_print=True)
         # we assume here that only components are enabled that should be trained & logged
         logged_pipes = nlp.pipe_names
         eval_frequency = nlp.config["training"]["eval_frequency"]
@@ -26,8 +28,8 @@ def console_logger(progress_bar: bool=False):
         table_header = [col.upper() for col in table_header]
         table_widths = [3, 6] + loss_widths + score_widths + [6]
         table_aligns = ["r" for _ in table_widths]
-        msg.row(table_header, widths=table_widths)
-        msg.row(["-" * width for width in table_widths])
+        stdout.write(msg.row(table_header, widths=table_widths))
+        stdout.write(msg.row(["-" * width for width in table_widths]))
         progress = None
 
         def log_step(info: Optional[Dict[str, Any]]):
@@ -72,10 +74,16 @@ def console_logger(progress_bar: bool=False):
             )
             if progress is not None:
                 progress.close()
-            msg.row(data, widths=table_widths, aligns=table_aligns)
+            stdout.write(msg.row(data, widths=table_widths, aligns=table_aligns))
             if progress_bar:
-                progress = create_tqdm_progress(info["epoch"] + 1, eval_frequency)
-
+                # Set disable=None, so that it disables on non-TTY
+                progress = tqdm.tqdm(
+                    total=eval_frequency,
+                    disable=None,
+                    leave=False,
+                    file=stderr
+                )
+                progress.set_description(f"Epoch {info['epoch']+1}")
 
         def finalize():
             pass
@@ -93,7 +101,8 @@ def wandb_logger(project_name: str, remove_config_values: List[str] = []):
 
     def setup_logger(
         nlp: "Language",
-        printer: Optional[wasabi.Printer]=wasabi.Printer()
+        stdout: IO=sys.stdout,
+        stderr: IO=sys.stderr
     ) -> Tuple[Callable[[Dict[str, Any]], None], Callable]:
         config = nlp.config.interpolate()
         config_dot = util.dict_to_dot(config)
@@ -101,7 +110,7 @@ def wandb_logger(project_name: str, remove_config_values: List[str] = []):
             del config_dot[field]
         config = util.dot_to_dict(config_dot)
         wandb.init(project=project_name, config=config, reinit=True)
-        console_log_step, console_finalize = console(nlp, printer)
+        console_log_step, console_finalize = console(nlp, stdout, stderr)
 
         def log_step(info: Optional[Dict[str, Any]]):
             console_log_step(info)
@@ -122,10 +131,3 @@ def wandb_logger(project_name: str, remove_config_values: List[str] = []):
         return log_step, finalize
 
     return setup_logger
-
-
-def create_tqdm_progress(epoch: int, eval_frequency: int):
-    # Set disable=None, so that it disables on non-TTY
-    progress = tqdm.tqdm(total=eval_frequency, disable=None, leave=False)
-    progress.set_description(f"Epoch {epoch}")
-    return progress

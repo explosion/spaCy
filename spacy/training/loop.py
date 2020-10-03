@@ -1,10 +1,11 @@
-from typing import List, Callable, Tuple, Dict, Iterable, Iterator, Union, Any
+from typing import List, Callable, Tuple, Dict, Iterable, Iterator, Union, Any, IO
 from typing import Optional, TYPE_CHECKING
 from pathlib import Path
 from timeit import default_timer as timer
 from thinc.api import Optimizer, Config, constant, fix_random_seed, set_gpu_allocator
 import random
 import wasabi
+import sys
 
 from .example import Example
 from ..schemas import ConfigSchemaTraining
@@ -20,7 +21,8 @@ def train(
     output_path: Optional[Path] = None,
     *,
     use_gpu: int = -1,
-    printer: Optional[wasabi.Printer]=wasabi.Printer()
+    stdout: IO=sys.stdout,
+    stderr: IO=sys.stderr
 ) -> None:
     """Train a pipeline.
 
@@ -28,11 +30,15 @@ def train(
     output_path (Path): Optional output path to save trained model to.
     use_gpu (int): Whether to train on GPU. Make sure to call require_gpu
         before calling this function.
-    printer (type / None): A wasabi.Printer instance for logging.
-        If None, no messages are printed.
+    stdout (file): A file-like object to write output messages. To disable
+        printing, set to io.StringIO.
+    stderr (file): A second file-like object to write output messages. To disable
+        printing, set to io.StringIO.
+ 
     RETURNS (Path / None): The path to the final exported model.
     """
-    msg = printer if printer is not None else wasabi.Printer(no_print=True)
+    # We use no_print here so we can respect the stdout/stderr options.
+    msg = wasabi.Printer(no_print=True)
     # Create iterator, which yields out info after each optimization step.
     config = nlp.config.interpolate()
     if config["training"]["seed"] is not None:
@@ -63,12 +69,12 @@ def train(
         eval_frequency=T["eval_frequency"],
         exclude=frozen_components,
     )
-    msg.info(f"Pipeline: {nlp.pipe_names}")
+    stdout.write(msg.info(f"Pipeline: {nlp.pipe_names}"))
     if frozen_components:
-        msg.info(f"Frozen components: {frozen_components}")
-    msg.info(f"Initial learn rate: {optimizer.learn_rate}")
+        stdout.write(msg.info(f"Frozen components: {frozen_components}"))
+    stdout.write(msg.info(f"Initial learn rate: {optimizer.learn_rate}"))
     with nlp.select_pipes(disable=frozen_components):
-        log_step, finalize_logger = train_logger(nlp, printer=msg)
+        log_step, finalize_logger = train_logger(nlp, stdout, stderr)
     try:
         for batch, info, is_best_checkpoint in training_step_iterator:
             log_step(info if is_best_checkpoint else None)
@@ -83,9 +89,11 @@ def train(
             # We don't want to swallow the traceback if we don't have a
             # specific error, but we do want to warn that we're trying
             # to do something here.
-            msg.warn(
-                f"Aborting and saving the final best model. "
-                f"Encountered exception: {str(e)}"
+            stdout.write(
+                msg.warn(
+                    f"Aborting and saving the final best model. "
+                    f"Encountered exception: {str(e)}"
+                )
             )
         raise e
     finally:
@@ -98,7 +106,7 @@ def train(
             else:
                 nlp.to_disk(final_model_path)
     # This will only run if we don't hit an error
-    msg.good("Saved pipeline to output directory", final_model_path)
+    stdout.write(msg.good("Saved pipeline to output directory", final_model_path))
 
 
 def train_while_improving(
