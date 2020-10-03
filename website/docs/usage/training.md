@@ -819,7 +819,8 @@ def MyModel(output_width: int) -> Model[List[Doc], List[Floats2d]]:
 
 ### Customizing the initialization {#initialization}
 
-<!-- TODO: -->
+<Infobox title="This section is still under construction" emoji="🚧" variant="warning">
+</Infobox>
 
 ## Data utilities {#data}
 
