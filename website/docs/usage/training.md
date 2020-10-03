@@ -723,13 +723,11 @@ from pathlib import Path
 
 @spacy.registry.loggers("my_custom_logger.v1")
 def custom_logger(log_path):
-    log_file = None
     def setup_logger(
         nlp: Language,
         stdout: IO=sys.stdout,
         stderr: IO=sys.stderr
     ) -> Tuple[Callable, Callable]:
-        nonlocal log_file
         stdout.write(f"Logging to {log_path}\n")
         log_file = Path(log_path).open("w", encoding="utf8")
         log_file.write("step\\t")
