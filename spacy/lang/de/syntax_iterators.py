@@ -22,8 +22,12 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
     np_deps = set(doc.vocab.strings.add(label) for label in labels)
     close_app = doc.vocab.strings.add("nk")
     rbracket = 0
+    prev_end = -1
     for i, word in enumerate(doclike):
         if i < rbracket:
+            continue
+        # Prevent nested chunks from being produced
+        if word.left_edge.i <= prev_end:
             continue
         if word.pos in (NOUN, PROPN, PRON) and word.dep in np_deps:
             rbracket = word.i + 1
@@ -32,6 +36,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
             for rdep in doc[word.i].rights:
                 if rdep.pos in (NOUN, PROPN) and rdep.dep == close_app:
                     rbracket = rdep.i + 1
+            prev_end = rbracket - 1
             yield word.left_edge.i, rbracket, np_label
 
 

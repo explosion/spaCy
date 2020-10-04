@@ -336,6 +336,7 @@ def _split(Doc doc, int token_index, orths, heads, attrs):
         lex = doc.vocab.get(doc.mem, orth)
         token.lex = lex
         token.lemma = 0  # reset lemma
+        token.norm = 0  # reset norm
         if to_process_tensor:
             # setting the tensors of the split tokens to array of zeros
             doc.tensor[token_index + i] = xp.zeros((1,doc.tensor.shape[1]), dtype="float32")
