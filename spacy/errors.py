@@ -85,8 +85,11 @@ class Warnings:
             "attribute or operator.")
 
     # TODO: fix numbering after merging develop into master
-    W088 = ("This component implements a 'begin_training' method, "
-            "which should probably be renamed to 'initialize'.")
+    W088 = ("The pipeline component {name} implements a 'begin_training' "
+            "method, which won't be called by spaCy. As of v3.0, 'begin_training' "
+            "has been renamed to 'initialize' so you likely want to rename the "
+            "component method. See the documentation for details: "
+            "https://nightly.spacy.io/api/language#initialize")
     W089 = ("The nlp.begin_training method has been renamed to nlp.initialize.")
     W090 = ("Could not locate any {format} files in path '{path}'.")
     W091 = ("Could not clean/remove the temp directory at {dir}: {msg}.")

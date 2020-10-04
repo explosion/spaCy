@@ -39,7 +39,7 @@ cdef class Pipe:
         """Raise a warning if an inheriting class implements 'begin_training'
          (from v2) instead of the new 'initialize' method (from v3)"""
         if hasattr(cls, "begin_training"):
-            warnings.warn(Warnings.W088)
+            warnings.warn(Warnings.W088.format(name=cls.__name__))
 
     @property
     def labels(self) -> Optional[Tuple[str]]:
