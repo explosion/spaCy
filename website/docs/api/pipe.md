@@ -226,6 +226,12 @@ the "catastrophic forgetting" problem. This feature is experimental.
 Find the loss and gradient of loss for the batch of documents and their
 predicted scores.
 
+<Infobox variant="danger">
+
+This method needs to be overwritten with your own custom `get_loss` method.
+
+</Infobox>
+
 > #### Example
 >
 > ```python
