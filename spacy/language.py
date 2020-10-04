@@ -896,6 +896,10 @@ class Language:
         self._components[i] = (new_name, self._components[i][1])
         self._pipe_meta[new_name] = self._pipe_meta.pop(old_name)
         self._pipe_configs[new_name] = self._pipe_configs.pop(old_name)
+        # Make sure [initialize] config is adjusted
+        if old_name in self._config["initialize"]["components"]:
+            init_cfg = self._config["initialize"]["components"].pop(old_name)
+            self._config["initialize"]["components"][new_name] = init_cfg
 
     def remove_pipe(self, name: str) -> Tuple[str, Callable[[Doc], Doc]]:
         """Remove a component from the pipeline.
@@ -912,6 +916,9 @@ class Language:
         # because factory may be used for something else
         self._pipe_meta.pop(name)
         self._pipe_configs.pop(name)
+        # Make sure name is removed from the [initialize] config
+        if name in self._config["initialize"]["components"]:
+            self._config["initialize"]["components"].pop(name)
         # Make sure the name is also removed from the set of disabled components
         if name in self.disabled:
             self._disabled.remove(name)

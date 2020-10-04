@@ -382,3 +382,25 @@ def test_warning_pipe_begin_training():
 
             def begin_training(*args, **kwargs):
                 ...
+
+
+def test_pipe_methods_initialize():
+    """Test that the [initialize] config reflects the components correctly."""
+    nlp = Language()
+    nlp.add_pipe("tagger")
+    assert "tagger" not in nlp.config["initialize"]["components"]
+    nlp.config["initialize"]["components"]["tagger"] = {"labels": ["hello"]}
+    assert nlp.config["initialize"]["components"]["tagger"] == {"labels": ["hello"]}
+    nlp.remove_pipe("tagger")
+    assert "tagger" not in nlp.config["initialize"]["components"]
+    nlp.add_pipe("tagger")
+    assert "tagger" not in nlp.config["initialize"]["components"]
+    nlp.config["initialize"]["components"]["tagger"] = {"labels": ["hello"]}
+    nlp.rename_pipe("tagger", "my_tagger")
+    assert "tagger" not in nlp.config["initialize"]["components"]
+    assert nlp.config["initialize"]["components"]["my_tagger"] == {"labels": ["hello"]}
+    nlp.config["initialize"]["components"]["test"] = {"foo": "bar"}
+    nlp.add_pipe("ner", name="test")
+    assert "test" in nlp.config["initialize"]["components"]
+    nlp.remove_pipe("test")
+    assert "test" not in nlp.config["initialize"]["components"]
