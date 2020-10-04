@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from ...attrs import LIKE_NUM
 
 _num_words = [
@@ -73,6 +70,7 @@ _ordinal_words = [
     "עשירי",
 ]
 
+
 def like_num(text):
     if text.startswith(("+", "-", "±", "~")):
         text = text[1:]
@@ -84,7 +82,7 @@ def like_num(text):
         num, denom = text.split("/")
         if num.isdigit() and denom.isdigit():
             return True
-    
+
     if text in _num_words:
         return True
 

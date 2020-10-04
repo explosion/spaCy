@@ -1,8 +1,4 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from ...attrs import LIKE_NUM
-
 
 # reference 1: https://en.wikibooks.org/wiki/Sanskrit/Numbers
 
@@ -106,26 +102,26 @@ _num_words = [
     "सप्तनवतिः",
     "अष्टनवतिः",
     "एकोनशतम्",
-    "शतम्"
+    "शतम्",
 ]
 
 
 def like_num(text):
-   """
-   Check if text resembles a number
-   """
-   if text.startswith(("+", "-", "±", "~")):
-       text = text[1:]
-   text = text.replace(",", "").replace(".", "")
-   if text.isdigit():
-       return True
-   if text.count("/") == 1:
-       num, denom = text.split("/")
-       if num.isdigit() and denom.isdigit():
-           return True
-   if text in _num_words:
-       return True
-   return False
+    """
+    Check if text resembles a number
+    """
+    if text.startswith(("+", "-", "±", "~")):
+        text = text[1:]
+    text = text.replace(",", "").replace(".", "")
+    if text.isdigit():
+        return True
+    if text.count("/") == 1:
+        num, denom = text.split("/")
+        if num.isdigit() and denom.isdigit():
+            return True
+    if text in _num_words:
+        return True
+    return False
 
 
 LEX_ATTRS = {LIKE_NUM: like_num}

@@ -1,15 +1,13 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from spacy.lang.en import English
 from spacy.tokens import Span
 from spacy import displacy
 
-SAMPLE_TEXT = '''First line
+
+SAMPLE_TEXT = """First line
 Second line, with ent
 Third line
 Fourth line
-'''
+"""
 
 
 def test_issue5838():
@@ -18,8 +16,8 @@ def test_issue5838():
 
     nlp = English()
     doc = nlp(SAMPLE_TEXT)
-    doc.ents = [Span(doc, 7, 8, label='test')]
+    doc.ents = [Span(doc, 7, 8, label="test")]
 
-    html = displacy.render(doc, style='ent')
-    found = html.count('</br>')
+    html = displacy.render(doc, style="ent")
+    found = html.count("</br>")
     assert found == 4

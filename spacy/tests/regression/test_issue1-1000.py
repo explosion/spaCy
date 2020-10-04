@@ -1,19 +1,15 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 import random
+from spacy import util
+from spacy.training import Example
 from spacy.matcher import Matcher
 from spacy.attrs import IS_PUNCT, ORTH, LOWER
-from spacy.symbols import POS, VERB, VerbForm_inf
 from spacy.vocab import Vocab
-from spacy.language import Language
-from spacy.lemmatizer import Lemmatizer
+from spacy.lang.en import English
 from spacy.lookups import Lookups
 from spacy.tokens import Doc, Span
-from spacy.lang.en import EnglishDefaults
 
-from ..util import get_doc, make_tempdir
+from ..util import make_tempdir
 
 
 @pytest.mark.parametrize(
@@ -92,13 +88,9 @@ def test_issue242(en_tokenizer):
         doc.ents += tuple(matches)
 
 
-def test_issue309(en_tokenizer):
+def test_issue309(en_vocab):
     """Test Issue #309: SBD fails on empty string"""
-    tokens = en_tokenizer(" ")
-    doc = get_doc(
-        tokens.vocab, words=[t.text for t in tokens], heads=[0], deps=["ROOT"]
-    )
-    doc.is_parsed = True
+    doc = Doc(en_vocab, words=[" "], heads=[0], deps=["ROOT"])
     assert len(doc) == 1
     sents = list(doc.sents)
     assert len(sents) == 1
@@ -145,14 +137,6 @@ def test_issue588(en_vocab):
         matcher.add("TEST", [[]])
 
 
-@pytest.mark.xfail
-def test_issue589():
-    vocab = Vocab()
-    vocab.strings.set_frozen(True)
-    doc = Doc(vocab, words=["whata"])
-    assert doc
-
-
 def test_issue590(en_vocab):
     """Test overlapping matches"""
     doc = Doc(en_vocab, words=["n", "=", "1", ";", "a", ":", "5", "%"])
@@ -165,16 +149,15 @@ def test_issue590(en_vocab):
     assert len(matches) == 2
 
 
+@pytest.mark.skip(reason="Old vocab-based lemmatization")
 def test_issue595():
     """Test lemmatization of base forms"""
     words = ["Do", "n't", "feed", "the", "dog"]
-    tag_map = {"VB": {POS: VERB, VerbForm_inf: True}}
     lookups = Lookups()
     lookups.add_table("lemma_rules", {"verb": [["ed", "e"]]})
     lookups.add_table("lemma_index", {"verb": {}})
     lookups.add_table("lemma_exc", {"verb": {}})
-    lemmatizer = Lemmatizer(lookups, is_base_form=EnglishDefaults.is_base_form)
-    vocab = Vocab(lemmatizer=lemmatizer, tag_map=tag_map)
+    vocab = Vocab()
     doc = Doc(vocab, words=words)
     doc[2].tag_ = "VB"
     assert doc[2].text == "feed"
@@ -183,11 +166,9 @@ def test_issue595():
 
 def test_issue599(en_vocab):
     doc = Doc(en_vocab)
-    doc.is_tagged = True
-    doc.is_parsed = True
     doc2 = Doc(doc.vocab)
     doc2.from_bytes(doc.to_bytes())
-    assert doc2.is_parsed
+    assert doc2.has_annotation("DEP")
 
 
 def test_issue600():
@@ -289,7 +270,9 @@ def test_control_issue792(en_tokenizer, text):
     assert "".join([token.text_with_ws for token in doc]) == text
 
 
-@pytest.mark.xfail
+@pytest.mark.skip(
+    reason="Can not be fixed unless with variable-width lookbehinds, cf. PR #3218"
+)
 @pytest.mark.parametrize(
     "text,tokens",
     [
@@ -395,6 +378,7 @@ def test_issue891(en_tokenizer, text):
     assert tokens[1].text == "/"
 
 
+@pytest.mark.skip(reason="Old vocab-based lemmatization")
 @pytest.mark.parametrize(
     "text,tag,lemma",
     [("anus", "NN", "anus"), ("princess", "NN", "princess"), ("inner", "JJ", "inner")],
@@ -421,8 +405,7 @@ def test_issue957(en_tokenizer):
         assert doc
 
 
-@pytest.mark.xfail
-def test_issue999(train_data):
+def test_issue999():
     """Test that adding entities and resuming training works passably OK.
     There are two issues here:
     1) We have to re-add labels. This isn't very nice.
@@ -436,27 +419,27 @@ def test_issue999(train_data):
         ["hello", []],
         ["hi", []],
         ["i'm looking for a place to eat", []],
-        ["i'm looking for a place in the north of town", [[31, 36, "LOCATION"]]],
-        ["show me chinese restaurants", [[8, 15, "CUISINE"]]],
-        ["show me chines restaurants", [[8, 14, "CUISINE"]]],
+        ["i'm looking for a place in the north of town", [(31, 36, "LOCATION")]],
+        ["show me chinese restaurants", [(8, 15, "CUISINE")]],
+        ["show me chines restaurants", [(8, 14, "CUISINE")]],
     ]
-
-    nlp = Language()
-    ner = nlp.create_pipe("ner")
-    nlp.add_pipe(ner)
+    nlp = English()
+    ner = nlp.add_pipe("ner")
     for _, offsets in TRAIN_DATA:
         for start, end, label in offsets:
             ner.add_label(label)
-    nlp.begin_training()
-    ner.model.learn_rate = 0.001
-    for itn in range(100):
+    nlp.initialize()
+    for itn in range(20):
         random.shuffle(TRAIN_DATA)
         for raw_text, entity_offsets in TRAIN_DATA:
-            nlp.update([raw_text], [{"entities": entity_offsets}])
+            example = Example.from_dict(
+                nlp.make_doc(raw_text), {"entities": entity_offsets}
+            )
+            nlp.update([example])
 
     with make_tempdir() as model_dir:
         nlp.to_disk(model_dir)
-        nlp2 = Language().from_disk(model_dir)
+        nlp2 = util.load_model_from_path(model_dir)
 
     for raw_text, entity_offsets in TRAIN_DATA:
         doc = nlp2(raw_text)
@@ -465,6 +448,6 @@ def test_issue999(train_data):
             if (start, end) in ents:
                 assert ents[(start, end)] == label
                 break
-        else:
-            if entity_offsets:
-                raise Exception(ents)
+            else:
+                if entity_offsets:
+                    raise Exception(ents)

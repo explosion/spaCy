@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 
 from ...tokenizer.test_naughty_strings import NAUGHTY_STRINGS
@@ -24,18 +21,36 @@ TAG_TESTS = [
 ]
 
 POS_TESTS = [
-    ('日本語だよ', ['fish', 'NOUN', 'AUX', 'PART']),
-    ('東京タワーの近くに住んでいます。', ['PROPN', 'NOUN', 'ADP', 'NOUN', 'ADP', 'VERB', 'SCONJ', 'VERB', 'AUX', 'PUNCT']),
-    ('吾輩は猫である。', ['PRON', 'ADP', 'NOUN', 'AUX', 'VERB', 'PUNCT']),
+    ('日本語だよ', ['PROPN', 'NOUN', 'AUX', 'PART']),
+    ('東京タワーの近くに住んでいます。', ['PROPN', 'NOUN', 'ADP', 'NOUN', 'ADP', 'VERB', 'SCONJ', 'AUX', 'AUX', 'PUNCT']),
+    ('吾輩は猫である。', ['PRON', 'ADP', 'NOUN', 'AUX', 'AUX', 'PUNCT']),
     ('月に代わって、お仕置きよ!', ['NOUN', 'ADP', 'VERB', 'SCONJ', 'PUNCT', 'NOUN', 'NOUN', 'PART', 'PUNCT']),
     ('すもももももももものうち', ['NOUN', 'ADP', 'NOUN', 'ADP', 'NOUN', 'ADP', 'NOUN'])
 ]
 
 SENTENCE_TESTS = [
-        ('あれ。これ。', ['あれ。', 'これ。']),
-        ('「伝染るんです。」という漫画があります。', 
-            ['「伝染るんです。」という漫画があります。']),
-        ]
+    ("あれ。これ。", ["あれ。", "これ。"]),
+    ("「伝染るんです。」という漫画があります。", ["「伝染るんです。」という漫画があります。"]),
+]
+
+tokens1 = [
+    DetailedToken(surface="委員", tag="名詞-普通名詞-一般", inf="", lemma="委員", reading="イイン", sub_tokens=None),
+    DetailedToken(surface="会", tag="名詞-普通名詞-一般", inf="", lemma="会", reading="カイ", sub_tokens=None),
+]
+tokens2 = [
+    DetailedToken(surface="選挙", tag="名詞-普通名詞-サ変可能", inf="", lemma="選挙", reading="センキョ", sub_tokens=None),
+    DetailedToken(surface="管理", tag="名詞-普通名詞-サ変可能", inf="", lemma="管理", reading="カンリ", sub_tokens=None),
+    DetailedToken(surface="委員", tag="名詞-普通名詞-一般", inf="", lemma="委員", reading="イイン", sub_tokens=None),
+    DetailedToken(surface="会", tag="名詞-普通名詞-一般", inf="", lemma="会", reading="カイ", sub_tokens=None),
+]
+tokens3 = [
+    DetailedToken(surface="選挙", tag="名詞-普通名詞-サ変可能", inf="", lemma="選挙", reading="センキョ", sub_tokens=None),
+    DetailedToken(surface="管理", tag="名詞-普通名詞-サ変可能", inf="", lemma="管理", reading="カンリ", sub_tokens=None),
+    DetailedToken(surface="委員会", tag="名詞-普通名詞-一般", inf="", lemma="委員会", reading="イインカイ", sub_tokens=None),
+]
+SUB_TOKEN_TESTS = [
+    ("選挙管理委員会", [None, None, None, None], [None, None, [tokens1]], [[tokens2, tokens3]])
+]
 # fmt: on
 
 
@@ -51,7 +66,6 @@ def test_ja_tokenizer_tags(ja_tokenizer, text, expected_tags):
     assert tags == expected_tags
 
 
-#XXX This isn't working? Always passes
 @pytest.mark.parametrize("text,expected_pos", POS_TESTS)
 def test_ja_tokenizer_pos(ja_tokenizer, text, expected_pos):
     pos = [token.pos_ for token in ja_tokenizer(text)]
@@ -60,7 +74,7 @@ def test_ja_tokenizer_pos(ja_tokenizer, text, expected_pos):
 
 @pytest.mark.skip(reason="sentence segmentation in tokenizer is buggy")
 @pytest.mark.parametrize("text,expected_sents", SENTENCE_TESTS)
-def test_ja_tokenizer_pos(ja_tokenizer, text, expected_sents):
+def test_ja_tokenizer_sents(ja_tokenizer, text, expected_sents):
     sents = [str(sent) for sent in ja_tokenizer(text).sents]
     assert sents == expected_sents
 
@@ -77,18 +91,19 @@ def test_ja_tokenizer_naughty_strings(ja_tokenizer, text):
     assert tokens.text_with_ws == text
 
 
-@pytest.mark.parametrize("text,len_a,len_b,len_c",
+@pytest.mark.parametrize(
+    "text,len_a,len_b,len_c",
     [
         ("選挙管理委員会", 4, 3, 1),
         ("客室乗務員", 3, 2, 1),
         ("労働者協同組合", 4, 3, 1),
         ("機能性食品", 3, 2, 1),
-    ]
+    ],
 )
 def test_ja_tokenizer_split_modes(ja_tokenizer, text, len_a, len_b, len_c):
-    nlp_a = Japanese(meta={"tokenizer": {"config": {"split_mode": "A"}}})
-    nlp_b = Japanese(meta={"tokenizer": {"config": {"split_mode": "B"}}})
-    nlp_c = Japanese(meta={"tokenizer": {"config": {"split_mode": "C"}}})
+    nlp_a = Japanese.from_config({"nlp": {"tokenizer": {"split_mode": "A"}}})
+    nlp_b = Japanese.from_config({"nlp": {"tokenizer": {"split_mode": "B"}}})
+    nlp_c = Japanese.from_config({"nlp": {"tokenizer": {"split_mode": "C"}}})
 
     assert len(ja_tokenizer(text)) == len_a
     assert len(nlp_a(text)) == len_a
@@ -96,36 +111,15 @@ def test_ja_tokenizer_split_modes(ja_tokenizer, text, len_a, len_b, len_c):
     assert len(nlp_c(text)) == len_c
 
 
-@pytest.mark.parametrize("text,sub_tokens_list_a,sub_tokens_list_b,sub_tokens_list_c",
-    [
-        (
-            "選挙管理委員会",
-            [None, None, None, None],
-            [None, None, [
-                [
-                    DetailedToken(surface='委員', tag='名詞-普通名詞-一般', inf='', lemma='委員', reading='イイン', sub_tokens=None),
-                    DetailedToken(surface='会', tag='名詞-普通名詞-一般', inf='', lemma='会', reading='カイ', sub_tokens=None),
-                ]
-            ]],
-            [[
-                [
-                    DetailedToken(surface='選挙', tag='名詞-普通名詞-サ変可能', inf='', lemma='選挙', reading='センキョ', sub_tokens=None),
-                    DetailedToken(surface='管理', tag='名詞-普通名詞-サ変可能', inf='', lemma='管理', reading='カンリ', sub_tokens=None),
-                    DetailedToken(surface='委員', tag='名詞-普通名詞-一般', inf='', lemma='委員', reading='イイン', sub_tokens=None),
-                    DetailedToken(surface='会', tag='名詞-普通名詞-一般', inf='', lemma='会', reading='カイ', sub_tokens=None),
-                ], [
-                    DetailedToken(surface='選挙', tag='名詞-普通名詞-サ変可能', inf='', lemma='選挙', reading='センキョ', sub_tokens=None),
-                    DetailedToken(surface='管理', tag='名詞-普通名詞-サ変可能', inf='', lemma='管理', reading='カンリ', sub_tokens=None),
-                    DetailedToken(surface='委員会', tag='名詞-普通名詞-一般', inf='', lemma='委員会', reading='イインカイ', sub_tokens=None),
-                ]
-            ]]
-        ),
-    ]
+@pytest.mark.parametrize(
+    "text,sub_tokens_list_a,sub_tokens_list_b,sub_tokens_list_c", SUB_TOKEN_TESTS
 )
-def test_ja_tokenizer_sub_tokens(ja_tokenizer, text, sub_tokens_list_a, sub_tokens_list_b, sub_tokens_list_c):
-    nlp_a = Japanese(meta={"tokenizer": {"config": {"split_mode": "A"}}})
-    nlp_b = Japanese(meta={"tokenizer": {"config": {"split_mode": "B"}}})
-    nlp_c = Japanese(meta={"tokenizer": {"config": {"split_mode": "C"}}})
+def test_ja_tokenizer_sub_tokens(
+    ja_tokenizer, text, sub_tokens_list_a, sub_tokens_list_b, sub_tokens_list_c
+):
+    nlp_a = Japanese.from_config({"nlp": {"tokenizer": {"split_mode": "A"}}})
+    nlp_b = Japanese.from_config({"nlp": {"tokenizer": {"split_mode": "B"}}})
+    nlp_c = Japanese.from_config({"nlp": {"tokenizer": {"split_mode": "C"}}})
 
     assert ja_tokenizer(text).user_data["sub_tokens"] == sub_tokens_list_a
     assert nlp_a(text).user_data["sub_tokens"] == sub_tokens_list_a
@@ -133,16 +127,19 @@ def test_ja_tokenizer_sub_tokens(ja_tokenizer, text, sub_tokens_list_a, sub_toke
     assert nlp_c(text).user_data["sub_tokens"] == sub_tokens_list_c
 
 
-@pytest.mark.parametrize("text,inflections,reading_forms",
+@pytest.mark.parametrize(
+    "text,inflections,reading_forms",
     [
         (
             "取ってつけた",
             ("五段-ラ行,連用形-促音便", "", "下一段-カ行,連用形-一般", "助動詞-タ,終止形-一般"),
             ("トッ", "テ", "ツケ", "タ"),
         ),
-    ]
+    ],
 )
-def test_ja_tokenizer_inflections_reading_forms(ja_tokenizer, text, inflections, reading_forms):
+def test_ja_tokenizer_inflections_reading_forms(
+    ja_tokenizer, text, inflections, reading_forms
+):
     assert ja_tokenizer(text).user_data["inflections"] == inflections
     assert ja_tokenizer(text).user_data["reading_forms"] == reading_forms
 

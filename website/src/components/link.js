@@ -5,44 +5,51 @@ import classNames from 'classnames'
 
 import Icon from './icon'
 import classes from '../styles/link.module.sass'
-import { isString } from './util'
+import { isString, isImage } from './util'
 
-const internalRegex = /(http(s?)):\/\/(prodi.gy|spacy.io|irl.spacy.io)/gi
+const internalRegex = /(http(s?)):\/\/(prodi.gy|spacy.io|irl.spacy.io|explosion.ai|course.spacy.io)/gi
 
 const Whitespace = ({ children }) => (
     // Ensure that links are always wrapped in spaces
     <> {children} </>
 )
 
-const Link = ({
+function getIcon(dest) {
+    if (/(github.com)/.test(dest)) return 'code'
+    if (/^\/?api\/architectures#/.test(dest)) return 'network'
+    if (/^\/?api/.test(dest)) return 'docs'
+    if (/^\/?models\/(.+)/.test(dest)) return 'package'
+    return null
+}
+
+export default function Link({
     children,
     to,
     href,
     onClick,
     activeClassName,
-    hidden,
-    hideIcon,
-    ws,
-    forceExternal,
+    hidden = false,
+    hideIcon = false,
+    ws = false,
+    forceExternal = false,
     className,
     ...other
-}) => {
+}) {
     const dest = to || href
     const external = forceExternal || /(http(s?)):\/\//gi.test(dest)
-    const isApi = !external && !hidden && !hideIcon && /^\/?api/.test(dest)
-    const isSource = external && !hidden && !hideIcon && /(github.com)/.test(dest)
-    const sourceWithText = (isSource || isApi) && isString(children)
+    const icon = getIcon(dest)
+    const withIcon = !hidden && !hideIcon && !!icon && !isImage(children)
+    const sourceWithText = withIcon && isString(children)
     const linkClassNames = classNames(classes.root, className, {
         [classes.hidden]: hidden,
-        [classes.nowrap]: (isApi || isSource) && !sourceWithText,
-        [classes.withIcon]: isApi || isSource,
+        [classes.nowrap]: (withIcon && !sourceWithText) || icon === 'network',
+        [classes.withIcon]: withIcon,
     })
     const Wrapper = ws ? Whitespace : Fragment
     const content = (
         <>
             {sourceWithText ? <span className={classes.sourceText}>{children}</span> : children}
-            {isApi && <Icon name="docs" width={16} inline className={classes.icon} />}
-            {isSource && <Icon name="code" width={16} inline className={classes.icon} />}
+            {withIcon && <Icon name={icon} width={16} inline className={classes.icon} />}
         </>
     )
 
@@ -80,11 +87,15 @@ const Link = ({
     )
 }
 
-Link.defaultProps = {
-    hidden: false,
-    hideIcon: false,
-    ws: false,
-    forceExternal: false,
+export const OptionalLink = ({ to, href, children, ...props }) => {
+    const dest = to || href
+    return dest ? (
+        <Link to={dest} {...props}>
+            {children}
+        </Link>
+    ) : (
+        children || null
+    )
 }
 
 Link.propTypes = {
@@ -98,5 +109,3 @@ Link.propTypes = {
     ws: PropTypes.bool,
     className: PropTypes.string,
 }
-
-export default Link

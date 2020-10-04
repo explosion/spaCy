@@ -1,7 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-
 STOP_WORDS = set(
     """
 a abban ahhoz ahogy ahol aki akik akkor akár alatt amely amelyek amelyekben

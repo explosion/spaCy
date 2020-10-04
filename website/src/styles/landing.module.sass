@@ -76,7 +76,7 @@
 .banner
     background: var(--color-theme)
     color: var(--color-back)
-    padding: 5rem
+    padding: 1rem 5rem
     margin-bottom: var(--spacing-md)
     background-size: cover
 
@@ -128,14 +128,17 @@
         padding-right: 2rem
 
 @include breakpoint(max, md)
+    .banner
+        padding: 1rem 3rem
+
     .banner-content
         display: block
 
     .banner-text
         padding-top: 0
 
-    .col
-        grid-column: 1 / span 2
+    .grid
+        grid-template-columns: 1fr !important
 
 .banner-button
     margin-bottom: var(--spacing-sm)
@@ -143,21 +146,3 @@
 
 .banner-button-element
     background: var(--color-theme)
-
-.logos
-    text-align: center
-    padding-bottom: 1rem
-
-    & + &
-        padding-bottom: 7.5rem
-
-.logos-content
-    display: flex
-    justify-content: center
-    align-items: center
-    flex-flow: row wrap
-    margin-bottom: 0
-
-.logo
-    display: inline-block
-    padding: 1.8rem

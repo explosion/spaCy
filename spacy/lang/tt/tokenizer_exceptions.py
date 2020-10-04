@@ -1,41 +1,41 @@
-# coding: utf8
-from __future__ import unicode_literals
+from ..tokenizer_exceptions import BASE_EXCEPTIONS
+from ...symbols import ORTH, NORM
+from ...util import update_exc
 
-from ...symbols import ORTH, LEMMA, NORM
 
 _exc = {}
 
 _abbrev_exc = [
     # Weekdays abbreviations
-    {ORTH: "дш", LEMMA: "дүшәмбе"},
-    {ORTH: "сш", LEMMA: "сишәмбе"},
-    {ORTH: "чш", LEMMA: "чәршәмбе"},
-    {ORTH: "пш", LEMMA: "пәнҗешәмбе"},
-    {ORTH: "җм", LEMMA: "җомга"},
-    {ORTH: "шб", LEMMA: "шимбә"},
-    {ORTH: "яш", LEMMA: "якшәмбе"},
+    {ORTH: "дш", NORM: "дүшәмбе"},
+    {ORTH: "сш", NORM: "сишәмбе"},
+    {ORTH: "чш", NORM: "чәршәмбе"},
+    {ORTH: "пш", NORM: "пәнҗешәмбе"},
+    {ORTH: "җм", NORM: "җомга"},
+    {ORTH: "шб", NORM: "шимбә"},
+    {ORTH: "яш", NORM: "якшәмбе"},
     # Months abbreviations
-    {ORTH: "гый", LEMMA: "гыйнвар"},
-    {ORTH: "фев", LEMMA: "февраль"},
-    {ORTH: "мар", LEMMA: "март"},
-    {ORTH: "мар", LEMMA: "март"},
-    {ORTH: "апр", LEMMA: "апрель"},
-    {ORTH: "июн", LEMMA: "июнь"},
-    {ORTH: "июл", LEMMA: "июль"},
-    {ORTH: "авг", LEMMA: "август"},
-    {ORTH: "сен", LEMMA: "сентябрь"},
-    {ORTH: "окт", LEMMA: "октябрь"},
-    {ORTH: "ноя", LEMMA: "ноябрь"},
-    {ORTH: "дек", LEMMA: "декабрь"},
+    {ORTH: "гый", NORM: "гыйнвар"},
+    {ORTH: "фев", NORM: "февраль"},
+    {ORTH: "мар", NORM: "март"},
+    {ORTH: "мар", NORM: "март"},
+    {ORTH: "апр", NORM: "апрель"},
+    {ORTH: "июн", NORM: "июнь"},
+    {ORTH: "июл", NORM: "июль"},
+    {ORTH: "авг", NORM: "август"},
+    {ORTH: "сен", NORM: "сентябрь"},
+    {ORTH: "окт", NORM: "октябрь"},
+    {ORTH: "ноя", NORM: "ноябрь"},
+    {ORTH: "дек", NORM: "декабрь"},
     # Number abbreviations
-    {ORTH: "млрд", LEMMA: "миллиард"},
-    {ORTH: "млн", LEMMA: "миллион"},
+    {ORTH: "млрд", NORM: "миллиард"},
+    {ORTH: "млн", NORM: "миллион"},
 ]
 
 for abbr in _abbrev_exc:
     for orth in (abbr[ORTH], abbr[ORTH].capitalize(), abbr[ORTH].upper()):
-        _exc[orth] = [{ORTH: orth, LEMMA: abbr[LEMMA], NORM: abbr[LEMMA]}]
-        _exc[orth + "."] = [{ORTH: orth + ".", LEMMA: abbr[LEMMA], NORM: abbr[LEMMA]}]
+        _exc[orth] = [{ORTH: orth, NORM: abbr[NORM]}]
+        _exc[orth + "."] = [{ORTH: orth + ".", NORM: abbr[NORM]}]
 
 for exc_data in [  # "etc." abbreviations
     {ORTH: "һ.б.ш.", NORM: "һәм башка шундыйлар"},
@@ -43,7 +43,6 @@ for exc_data in [  # "etc." abbreviations
     {ORTH: "б.э.к.", NORM: "безнең эрага кадәр"},
     {ORTH: "б.э.", NORM: "безнең эра"},
 ]:
-    exc_data[LEMMA] = exc_data[NORM]
     _exc[exc_data[ORTH]] = [exc_data]
 
-TOKENIZER_EXCEPTIONS = _exc
+TOKENIZER_EXCEPTIONS = update_exc(BASE_EXCEPTIONS, _exc)

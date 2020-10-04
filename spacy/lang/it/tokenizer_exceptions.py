@@ -1,6 +1,7 @@
-# coding: utf8
-from __future__ import unicode_literals
-from ...symbols import ORTH, LEMMA
+from ..tokenizer_exceptions import BASE_EXCEPTIONS
+from ...symbols import ORTH
+from ...util import update_exc
+
 
 _exc = {
     "all'art.": [{ORTH: "all'"}, {ORTH: "art."}],
@@ -9,7 +10,7 @@ _exc = {
     "L'art.": [{ORTH: "L'"}, {ORTH: "art."}],
     "l'art.": [{ORTH: "l'"}, {ORTH: "art."}],
     "nell'art.": [{ORTH: "nell'"}, {ORTH: "art."}],
-    "po'": [{ORTH: "po'", LEMMA: "poco"}],
+    "po'": [{ORTH: "po'"}],
     "sett..": [{ORTH: "sett."}, {ORTH: "."}],
 }
 
@@ -54,4 +55,4 @@ for orth in [
 ]:
     _exc[orth] = [{ORTH: orth}]
 
-TOKENIZER_EXCEPTIONS = _exc
+TOKENIZER_EXCEPTIONS = update_exc(BASE_EXCEPTIONS, _exc)

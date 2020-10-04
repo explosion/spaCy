@@ -1,7 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-
 # Source: https://github.com/stopwords-iso/stopwords-et
 
 STOP_WORDS = set(

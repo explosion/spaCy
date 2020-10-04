@@ -1,5 +1,4 @@
 from libcpp.vector cimport vector
-
 from preshed.maps cimport PreshMap
 from cymem.cymem cimport Pool
 from murmurhash.mrmr cimport hash64
@@ -29,8 +28,9 @@ cdef class Vocab:
     cpdef readonly StringStore strings
     cpdef public Morphology morphology
     cpdef public object vectors
-    cpdef public object lookups
-    cpdef public object lookups_extra
+    cpdef public object _lookups
+    cpdef public object writing_system
+    cpdef public object get_noun_chunks
     cdef readonly int length
     cdef public object data_dir
     cdef public object lex_attr_getters

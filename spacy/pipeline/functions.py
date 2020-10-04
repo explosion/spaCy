@@ -1,25 +1,23 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-from ..language import component
+from ..language import Language
 from ..matcher import Matcher
+from ..tokens import Doc
 from ..util import filter_spans
 
 
-@component(
+@Language.component(
     "merge_noun_chunks",
     requires=["token.dep", "token.tag", "token.pos"],
     retokenizes=True,
 )
-def merge_noun_chunks(doc):
+def merge_noun_chunks(doc: Doc) -> Doc:
     """Merge noun chunks into a single token.
 
     doc (Doc): The Doc object.
     RETURNS (Doc): The Doc object with merged noun chunks.
 
-    DOCS: https://spacy.io/api/pipeline-functions#merge_noun_chunks
+    DOCS: https://nightly.spacy.io/api/pipeline-functions#merge_noun_chunks
     """
-    if not doc.is_parsed:
+    if not doc.has_annotation("DEP"):
         return doc
     with doc.retokenize() as retokenizer:
         for np in doc.noun_chunks:
@@ -28,18 +26,18 @@ def merge_noun_chunks(doc):
     return doc
 
 
-@component(
+@Language.component(
     "merge_entities",
     requires=["doc.ents", "token.ent_iob", "token.ent_type"],
     retokenizes=True,
 )
-def merge_entities(doc):
+def merge_entities(doc: Doc):
     """Merge entities into a single token.
 
     doc (Doc): The Doc object.
     RETURNS (Doc): The Doc object with merged entities.
 
-    DOCS: https://spacy.io/api/pipeline-functions#merge_entities
+    DOCS: https://nightly.spacy.io/api/pipeline-functions#merge_entities
     """
     with doc.retokenize() as retokenizer:
         for ent in doc.ents:
@@ -48,18 +46,19 @@ def merge_entities(doc):
     return doc
 
 
-@component("merge_subtokens", requires=["token.dep"], retokenizes=True)
-def merge_subtokens(doc, label="subtok"):
+@Language.component("merge_subtokens", requires=["token.dep"], retokenizes=True)
+def merge_subtokens(doc: Doc, label: str = "subtok") -> Doc:
     """Merge subtokens into a single token.
 
     doc (Doc): The Doc object.
-    label (unicode): The subtoken dependency label.
+    label (str): The subtoken dependency label.
     RETURNS (Doc): The Doc object with merged subtokens.
 
-    DOCS: https://spacy.io/api/pipeline-functions#merge_subtokens
+    DOCS: https://nightly.spacy.io/api/pipeline-functions#merge_subtokens
     """
+    # TODO: make stateful component with "label" config
     merger = Matcher(doc.vocab)
-    merger.add("SUBTOK", None, [{"DEP": label, "op": "+"}])
+    merger.add("SUBTOK", [[{"DEP": label, "op": "+"}]])
     matches = merger(doc)
     spans = filter_spans([doc[start : end + 1] for _, start, end in matches])
     with doc.retokenize() as retokenizer:

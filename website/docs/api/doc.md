@@ -25,17 +25,27 @@ Construct a `Doc` object. The most common way to get a `Doc` object is via the
 >
 > # Construction 2
 > from spacy.tokens import Doc
+>
 > words = ["hello", "world", "!"]
 > spaces = [True, False, False]
 > doc = Doc(nlp.vocab, words=words, spaces=spaces)
 > ```
 
-| Name        | Type     | Description                                                                                                                                                         |
-| ----------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`     | `Vocab`  | A storage container for lexical types.                                                                                                                              |
-| `words`     | iterable | A list of strings to add to the container.                                                                                                                          |
-| `spaces`    | iterable | A list of boolean values indicating whether each word has a subsequent space. Must have the same length as `words`, if specified. Defaults to a sequence of `True`. |
-| **RETURNS** | `Doc`    | The newly constructed object.                                                                                                                                       |
+| Name                                     | Description                                                                                                                                                                                        |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`                                  | A storage container for lexical types. ~~Vocab~~                                                                                                                                                   |
+| `words`                                  | A list of strings to add to the container. ~~Optional[List[str]]~~                                                                                                                                 |
+| `spaces`                                 | A list of boolean values indicating whether each word has a subsequent space. Must have the same length as `words`, if specified. Defaults to a sequence of `True`. ~~Optional[List[bool]]~~       |
+| _keyword-only_                           |                                                                                                                                                                                                    |
+| `user\_data`                             | Optional extra data to attach to the Doc. ~~Dict~~                                                                                                                                                 |
+| `tags` <Tag variant="new">3</Tag>        | A list of strings, of the same length as `words`, to assign as `token.tag` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                              |
+| `pos` <Tag variant="new">3</Tag>         | A list of strings, of the same length as `words`, to assign as `token.pos` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                              |
+| `morphs` <Tag variant="new">3</Tag>      | A list of strings, of the same length as `words`, to assign as `token.morph` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                            |
+| `lemmas` <Tag variant="new">3</Tag>      | A list of strings, of the same length as `words`, to assign as `token.lemma` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                            |
+| `heads` <Tag variant="new">3</Tag>       | A list of values, of the same length as `words`, to assign as the head for each word. Head indices are the absolute position of the head in the `Doc`. Defaults to `None`. ~~Optional[List[int]]~~ |
+| `deps` <Tag variant="new">3</Tag>        | A list of strings, of the same length as `words`, to assign as `token.dep` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                              |
+| `sent_starts` <Tag variant="new">3</Tag> | A list of values, of the same length as `words`, to assign as `token.is_sent_start`. Will be overridden by heads if `heads` is provided. Defaults to `None`. ~~Optional[List[Union[bool, None]]~~  |
+| `ents` <Tag variant="new">3</Tag>        | A list of strings, of the same length of `words`, to assign the token-based IOB tag. Defaults to `None`. ~~Optional[List[str]]~~                                                                   |
 
 ## Doc.\_\_getitem\_\_ {#getitem tag="method"}
 
@@ -53,10 +63,10 @@ Negative indexing is supported, and follows the usual Python semantics, i.e.
 > assert span.text == "it back"
 > ```
 
-| Name        | Type    | Description             |
-| ----------- | ------- | ----------------------- |
-| `i`         | int     | The index of the token. |
-| **RETURNS** | `Token` | The token at `doc[i]`.  |
+| Name        | Description                      |
+| ----------- | -------------------------------- |
+| `i`         | The index of the token. ~~int~~  |
+| **RETURNS** | The token at `doc[i]`. ~~Token~~ |
 
 Get a [`Span`](/api/span) object, starting at position `start` (token index) and
 ending at position `end` (token index). For instance, `doc[2:5]` produces a span
@@ -65,10 +75,10 @@ are not supported, as `Span` objects must be contiguous (cannot have gaps). You
 can use negative indices and open-ended ranges, which have their normal Python
 semantics.
 
-| Name        | Type   | Description                       |
-| ----------- | ------ | --------------------------------- |
-| `start_end` | tuple  | The slice of the document to get. |
-| **RETURNS** | `Span` | The span at `doc[start:end]`.     |
+| Name        | Description                                           |
+| ----------- | ----------------------------------------------------- |
+| `start_end` | The slice of the document to get. ~~Tuple[int, int]~~ |
+| **RETURNS** | The span at `doc[start:end]`. ~~Span~~                |
 
 ## Doc.\_\_iter\_\_ {#iter tag="method"}
 
@@ -86,9 +96,9 @@ main way annotations are accessed from Python. If faster-than-Python speeds are
 required, you can instead access the annotations as a numpy array, or access the
 underlying C data directly from Cython.
 
-| Name       | Type    | Description       |
-| ---------- | ------- | ----------------- |
-| **YIELDS** | `Token` | A `Token` object. |
+| Name       | Description                 |
+| ---------- | --------------------------- |
+| **YIELDS** | A `Token` object. ~~Token~~ |
 
 ## Doc.\_\_len\_\_ {#len tag="method"}
 
@@ -101,9 +111,9 @@ Get the number of tokens in the document.
 > assert len(doc) == 7
 > ```
 
-| Name        | Type | Description                           |
-| ----------- | ---- | ------------------------------------- |
-| **RETURNS** | int  | The number of tokens in the document. |
+| Name        | Description                                   |
+| ----------- | --------------------------------------------- |
+| **RETURNS** | The number of tokens in the document. ~~int~~ |
 
 ## Doc.set_extension {#set_extension tag="classmethod" new="2"}
 
@@ -121,14 +131,14 @@ details, see the documentation on
 > assert doc._.has_city
 > ```
 
-| Name      | Type     | Description                                                                                                                         |
-| --------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `name`    | unicode  | Name of the attribute to set by the extension. For example, `'my_attr'` will be available as `doc._.my_attr`.                       |
-| `default` | -        | Optional default value of the attribute if no getter or method is defined.                                                          |
-| `method`  | callable | Set a custom method on the object, for example `doc._.compare(other_doc)`.                                                          |
-| `getter`  | callable | Getter function that takes the object and returns an attribute value. Is called when the user accesses the `._` attribute.          |
-| `setter`  | callable | Setter function that takes the `Doc` and a value, and modifies the object. Is called when the user writes to the `Doc._` attribute. |
-| `force`   | bool     | Force overwriting existing attribute.                                                                                               |
+| Name      | Description                                                                                                                                                                  |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`    | Name of the attribute to set by the extension. For example, `"my_attr"` will be available as `doc._.my_attr`. ~~str~~                                                        |
+| `default` | Optional default value of the attribute if no getter or method is defined. ~~Optional[Any]~~                                                                                 |
+| `method`  | Set a custom method on the object, for example `doc._.compare(other_doc)`. ~~Optional[Callable[[Doc, ...], Any]]~~                                                           |
+| `getter`  | Getter function that takes the object and returns an attribute value. Is called when the user accesses the `._` attribute. ~~Optional[Callable[[Doc], Any]]~~                |
+| `setter`  | Setter function that takes the `Doc` and a value, and modifies the object. Is called when the user writes to the `Doc._` attribute. ~~Optional[Callable[[Doc, Any], None]]~~ |
+| `force`   | Force overwriting existing attribute. ~~bool~~                                                                                                                               |
 
 ## Doc.get_extension {#get_extension tag="classmethod" new="2"}
 
@@ -140,15 +150,15 @@ Look up a previously registered extension by name. Returns a 4-tuple
 >
 > ```python
 > from spacy.tokens import Doc
-> Doc.set_extension('has_city', default=False)
-> extension = Doc.get_extension('has_city')
+> Doc.set_extension("has_city", default=False)
+> extension = Doc.get_extension("has_city")
 > assert extension == (False, None, None, None)
 > ```
 
-| Name        | Type    | Description                                                   |
-| ----------- | ------- | ------------------------------------------------------------- |
-| `name`      | unicode | Name of the extension.                                        |
-| **RETURNS** | tuple   | A `(default, method, getter, setter)` tuple of the extension. |
+| Name        | Description                                                                                                                                        |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`      | Name of the extension. ~~str~~                                                                                                                     |
+| **RETURNS** | A `(default, method, getter, setter)` tuple of the extension. ~~Tuple[Optional[Any], Optional[Callable], Optional[Callable], Optional[Callable]]~~ |
 
 ## Doc.has_extension {#has_extension tag="classmethod" new="2"}
 
@@ -158,14 +168,14 @@ Check whether an extension has been registered on the `Doc` class.
 >
 > ```python
 > from spacy.tokens import Doc
-> Doc.set_extension('has_city', default=False)
-> assert Doc.has_extension('has_city')
+> Doc.set_extension("has_city", default=False)
+> assert Doc.has_extension("has_city")
 > ```
 
-| Name        | Type    | Description                                |
-| ----------- | ------- | ------------------------------------------ |
-| `name`      | unicode | Name of the extension to check.            |
-| **RETURNS** | bool    | Whether the extension has been registered. |
+| Name        | Description                                         |
+| ----------- | --------------------------------------------------- |
+| `name`      | Name of the extension to check. ~~str~~             |
+| **RETURNS** | Whether the extension has been registered. ~~bool~~ |
 
 ## Doc.remove_extension {#remove_extension tag="classmethod" new="2.0.12"}
 
@@ -175,21 +185,21 @@ Remove a previously registered extension.
 >
 > ```python
 > from spacy.tokens import Doc
-> Doc.set_extension('has_city', default=False)
-> removed = Doc.remove_extension('has_city')
-> assert not Doc.has_extension('has_city')
+> Doc.set_extension("has_city", default=False)
+> removed = Doc.remove_extension("has_city")
+> assert not Doc.has_extension("has_city")
 > ```
 
-| Name        | Type    | Description                                                           |
-| ----------- | ------- | --------------------------------------------------------------------- |
-| `name`      | unicode | Name of the extension.                                                |
-| **RETURNS** | tuple   | A `(default, method, getter, setter)` tuple of the removed extension. |
+| Name        | Description                                                                                                                                                |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`      | Name of the extension. ~~str~~                                                                                                                             |
+| **RETURNS** | A `(default, method, getter, setter)` tuple of the removed extension. ~~Tuple[Optional[Any], Optional[Callable], Optional[Callable], Optional[Callable]]~~ |
 
 ## Doc.char_span {#char_span tag="method" new="2"}
 
 Create a `Span` object from the slice `doc.text[start_idx:end_idx]`. Returns
-`None` if the character indices don't map to a valid span using the default mode
-`"strict".
+`None` if the character indices don't map to a valid span using the default
+alignment mode `"strict".
 
 > #### Example
 >
@@ -199,15 +209,39 @@ Create a `Span` object from the slice `doc.text[start_idx:end_idx]`. Returns
 > assert span.text == "New York"
 > ```
 
-| Name                                 | Type                                     | Description                                                                                                                                                                                                                                                 |
-| ------------------------------------ | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `start_idx`                          | int                                      | The index of the first character of the span.                                                                                                                                                                                                               |
-| `end_idx`                            | int                                      | The index of the last character after the span.                                                                                                                                                                                                             |
-| `label`                              | uint64 / unicode                         | A label to attach to the span, e.g. for named entities.                                                                                                                                                                                                     |
-| `kb_id` <Tag variant="new">2.2</Tag> | uint64 / unicode                         | An ID from a knowledge base to capture the meaning of a named entity.                                                                                                                                                                                       |
-| `vector`                             | `numpy.ndarray[ndim=1, dtype='float32']` | A meaning representation of the span.                                                                                                                                                                                                                       |
-| `mode`                               | `str`                                    | How character indices snap to token boundaries. Options: "strict" (no snapping), "inside" (span of all tokens completely within the character span), "outside" (span of all tokens at least partially covered by the character span). Defaults to "strict". |
-| **RETURNS**                          | `Span`                                   | The newly constructed object or `None`.                                                                                                                                                                                                                     |
+| Name                                 | Description                                                                                                                                                                                                                                                                  |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `start`                              | The index of the first character of the span. ~~int~~                                                                                                                                                                                                                        |
+| `end`                                | The index of the last character after the span. ~int~~                                                                                                                                                                                                                       |
+| `label`                              | A label to attach to the span, e.g. for named entities. ~~Union[int, str]~~                                                                                                                                                                                                  |
+| `kb_id` <Tag variant="new">2.2</Tag> | An ID from a knowledge base to capture the meaning of a named entity. ~~Union[int, str]~~                                                                                                                                                                                    |
+| `vector`                             | A meaning representation of the span. ~~numpy.ndarray[ndim=1, dtype=float32]~~                                                                                                                                                                                               |
+| `alignment_mode`                     | How character indices snap to token boundaries. Options: `"strict"` (no snapping), `"contract"` (span of all tokens completely within the character span), `"expand"` (span of all tokens at least partially covered by the character span). Defaults to `"strict"`. ~~str~~ |
+| **RETURNS**                          | The newly constructed object or `None`. ~~Optional[Span]~~                                                                                                                                                                                                                   |
+
+## Doc.set_ents {#ents tag="method" new="3"}
+
+Set the named entities in the document.
+
+> #### Example
+>
+> ```python
+> from spacy.tokens import Span
+> doc = nlp("Mr. Best flew to New York on Saturday morning.")
+> doc.set_ents([Span(doc, 0, 2, "PERSON")])
+> ents = list(doc.ents)
+> assert ents[0].label_ == "PERSON"
+> assert ents[0].text == "Mr. Best"
+> ```
+
+| Name           | Description                                                                                                                                                                               |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| entities       | Spans with labels to set as entities. ~~List[Span]~~                                                                                                                                      |
+| _keyword-only_ |                                                                                                                                                                                           |
+| blocked        | Spans to set as "blocked" (never an entity) for spacy's built-in NER component. Other components may ignore this setting. ~~Optional[List[Span]]~~                                        |
+| missing        | Spans with missing/unknown entity information. ~~Optional[List[Span]]~~                                                                                                                   |
+| outside        | Spans outside of entities (O in IOB). ~~Optional[List[Span]]~~                                                                                                                            |
+| default        | How to set entity annotation for tokens outside of any provided spans. Options: "blocked", "missing", "outside" and "unmodified" (preserve current state). Defaults to "outside". ~~str~~ |
 
 ## Doc.similarity {#similarity tag="method" model="vectors"}
 
@@ -224,10 +258,10 @@ using an average of word vectors.
 > assert apples_oranges == oranges_apples
 > ```
 
-| Name        | Type  | Description                                                                                  |
-| ----------- | ----- | -------------------------------------------------------------------------------------------- |
-| `other`     | -     | The object to compare with. By default, accepts `Doc`, `Span`, `Token` and `Lexeme` objects. |
-| **RETURNS** | float | A scalar similarity score. Higher is more similar.                                           |
+| Name        | Description                                                                                                                      |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `other`     | The object to compare with. By default, accepts `Doc`, `Span`, `Token` and `Lexeme` objects. ~~Union[Doc, Span, Token, Lexeme]~~ |
+| **RETURNS** | A scalar similarity score. Higher is more similar. ~~float~~                                                                     |
 
 ## Doc.count_by {#count_by tag="method"}
 
@@ -240,15 +274,15 @@ attribute ID.
 > ```python
 > from spacy.attrs import ORTH
 > doc = nlp("apple apple orange banana")
-> assert doc.count_by(ORTH) == {7024L: 1, 119552L: 1, 2087L: 2}
+> assert doc.count_by(ORTH) == {7024: 1, 119552: 1, 2087: 2}
 > doc.to_array([ORTH])
 > # array([[11880], [11880], [7561], [12800]])
 > ```
 
-| Name        | Type | Description                                        |
-| ----------- | ---- | -------------------------------------------------- |
-| `attr_id`   | int  | The attribute ID                                   |
-| **RETURNS** | dict | A dictionary mapping attributes to integer counts. |
+| Name        | Description                                                           |
+| ----------- | --------------------------------------------------------------------- |
+| `attr_id`   | The attribute ID. ~~int~~                                             |
+| **RETURNS** | A dictionary mapping attributes to integer counts. ~~Dict[int, int]~~ |
 
 ## Doc.get_lca_matrix {#get_lca_matrix tag="method"}
 
@@ -264,49 +298,33 @@ ancestor is found, e.g. if span excludes a necessary ancestor.
 > # array([[0, 1, 1, 1], [1, 1, 1, 1], [1, 1, 2, 3], [1, 1, 3, 3]], dtype=int32)
 > ```
 
-| Name        | Type                                   | Description                                     |
-| ----------- | -------------------------------------- | ----------------------------------------------- |
-| **RETURNS** | `numpy.ndarray[ndim=2, dtype='int32']` | The lowest common ancestor matrix of the `Doc`. |
+| Name        | Description                                                                            |
+| ----------- | -------------------------------------------------------------------------------------- |
+| **RETURNS** | The lowest common ancestor matrix of the `Doc`. ~~numpy.ndarray[ndim=2, dtype=int32]~~ |
 
-## Doc.to_json {#to_json tag="method" new="2.1"}
+## Doc.has_annotation {#has_annotation tag="method"}
 
-Convert a Doc to JSON. The format it produces will be the new format for the
-[`spacy train`](/api/cli#train) command (not implemented yet). If custom
-underscore attributes are specified, their values need to be JSON-serializable.
-They'll be added to an `"_"` key in the data, e.g. `"_": {"foo": "bar"}`.
+Check whether the doc contains annotation on a token attribute.
 
-> #### Example
->
-> ```python
-> doc = nlp("Hello")
-> json_doc = doc.to_json()
-> ```
->
-> #### Result
->
-> ```python
-> {
->   "text": "Hello",
->   "ents": [],
->   "sents": [{"start": 0, "end": 5}],
->   "tokens": [{"id": 0, "start": 0, "end": 5, "pos": "INTJ", "tag": "UH", "dep": "ROOT", "head": 0}
->   ]
-> }
-> ```
+<Infobox title="Changed in v3.0" variant="warning">
 
-| Name         | Type | Description                                                                    |
-| ------------ | ---- | ------------------------------------------------------------------------------ |
-| `underscore` | list | Optional list of string names of custom JSON-serializable `doc._.` attributes. |
-| **RETURNS**  | dict | The JSON-formatted data.                                                       |
+This method replaces the previous boolean attributes like `Doc.is_tagged`,
+`Doc.is_parsed` or `Doc.is_sentenced`.
 
-<Infobox title="Deprecation note" variant="warning">
-
-spaCy previously implemented a `Doc.print_tree` method that returned a similar
-JSON-formatted representation of a `Doc`. As of v2.1, this method is deprecated
-in favor of `Doc.to_json`. If you need more complex nested representations, you
-might want to write your own function to extract the data.
+```diff
+doc = nlp("This is a text")
+- assert doc.is_parsed
++ assert doc.has_annotation("DEP")
+```
 
 </Infobox>
+
+| Name               | Description                                                                                         |
+| ------------------ | --------------------------------------------------------------------------------------------------- |
+| `attr`             | The attribute string name or int ID. ~~Union[int, str]~~                                            |
+| _keyword-only_     |                                                                                                     |
+| `require_complete` | Whether to check that the attribute is set on every token in the doc. Defaults to `False`. ~~bool~~ |
+| **RETURNS**        | Whether specified annotation is present in the doc. ~~bool~~                                        |
 
 ## Doc.to_array {#to_array tag="method"}
 
@@ -314,7 +332,7 @@ Export given token attributes to a numpy `ndarray`. If `attr_ids` is a sequence
 of `M` attributes, the output array will be of shape `(N, M)`, where `N` is the
 length of the `Doc` (in tokens). If `attr_ids` is a single attribute, the output
 shape will be `(N,)`. You can specify attributes by integer ID (e.g.
-`spacy.attrs.LEMMA`) or string name (e.g. 'LEMMA' or 'lemma'). The values will
+`spacy.attrs.LEMMA`) or string name (e.g. "LEMMA" or "lemma"). The values will
 be 64-bit integers.
 
 Returns a 2D array with one row per token and one column per attribute (when
@@ -331,10 +349,10 @@ Returns a 2D array with one row per token and one column per attribute (when
 > np_array = doc.to_array("POS")
 > ```
 
-| Name        | Type                                                                               | Description                                                                                  |
-| ----------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `attr_ids`  | list or int or string                                                              | A list of attributes (int IDs or string names) or a single attribute (int ID or string name) |
-| **RETURNS** | `numpy.ndarray[ndim=2, dtype='uint64']` or `numpy.ndarray[ndim=1, dtype='uint64']` | The exported attributes as a numpy array.                                                    |
+| Name        | Description                                                                                                                              |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `attr_ids`  | A list of attributes (int IDs or string names) or a single attribute (int ID or string name). ~~Union[int, str, List[Union[int, str]]]~~ |
+| **RETURNS** | The exported attributes as a numpy array. ~~Union[numpy.ndarray[ndim=2, dtype=uint64], numpy.ndarray[ndim=1, dtype=uint64]]~~            |
 
 ## Doc.from_array {#from_array tag="method"}
 
@@ -353,12 +371,39 @@ array of attributes.
 > assert doc[0].pos_ == doc2[0].pos_
 > ```
 
-| Name        | Type                                   | Description                                                               |
-| ----------- | -------------------------------------- | ------------------------------------------------------------------------- |
-| `attrs`     | list                                   | A list of attribute ID ints.                                              |
-| `array`     | `numpy.ndarray[ndim=2, dtype='int32']` | The attribute values to load.                                             |
-| `exclude`   | list                                   | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS** | `Doc`                                  | Itself.                                                                   |
+| Name        | Description                                                                                 |
+| ----------- | ------------------------------------------------------------------------------------------- |
+| `attrs`     | A list of attribute ID ints. ~~List[int]~~                                                  |
+| `array`     | The attribute values to load. ~~numpy.ndarray[ndim=2, dtype=int32]~~                        |
+| `exclude`   | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
+| **RETURNS** | The `Doc` itself. ~~Doc~~                                                                   |
+
+## Doc.from_docs {#from_docs tag="staticmethod" new="3"}
+
+Concatenate multiple `Doc` objects to form a new one. Raises an error if the
+`Doc` objects do not all share the same `Vocab`.
+
+> #### Example
+>
+> ```python
+> from spacy.tokens import Doc
+> texts = ["London is the capital of the United Kingdom.",
+>          "The River Thames flows through London.",
+>          "The famous Tower Bridge crosses the River Thames."]
+> docs = list(nlp.pipe(texts))
+> c_doc = Doc.from_docs(docs)
+> assert str(c_doc) == " ".join(texts)
+> assert len(list(c_doc.sents)) == len(docs)
+> assert [str(ent) for ent in c_doc.ents] == \
+>        [str(ent) for doc in docs for ent in doc.ents]
+> ```
+
+| Name                | Description                                                                                                       |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `docs`              | A list of `Doc` objects. ~~List[Doc]~~                                                                            |
+| `ensure_whitespace` | Insert a space between two adjacent docs whenever the first doc does not end in whitespace. ~~bool~~              |
+| `attrs`             | Optional list of attribute ID ints or attribute name strings. ~~Optional[List[Union[str, int]]]~~                 |
+| **RETURNS**         | The new `Doc` object that is containing the other docs or `None`, if `docs` is empty or `None`. ~~Optional[Doc]~~ |
 
 ## Doc.to_disk {#to_disk tag="method" new="2"}
 
@@ -370,10 +415,11 @@ Save the current state to a directory.
 > doc.to_disk("/path/to/doc")
 > ```
 
-| Name      | Type             | Description                                                                                                           |
-| --------- | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path`    | unicode / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
-| `exclude` | list             | String names of [serialization fields](#serialization-fields) to exclude.                                             |
+| Name           | Description                                                                                                                                |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `path`         | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+| _keyword-only_ |                                                                                                                                            |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~                                                |
 
 ## Doc.from_disk {#from_disk tag="method" new="2"}
 
@@ -387,11 +433,12 @@ Loads state from a directory. Modifies the object in place and returns it.
 > doc = Doc(Vocab()).from_disk("/path/to/doc")
 > ```
 
-| Name        | Type             | Description                                                                |
-| ----------- | ---------------- | -------------------------------------------------------------------------- |
-| `path`      | unicode / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| `exclude`   | list             | String names of [serialization fields](#serialization-fields) to exclude.  |
-| **RETURNS** | `Doc`            | The modified `Doc` object.                                                 |
+| Name           | Description                                                                                     |
+| -------------- | ----------------------------------------------------------------------------------------------- |
+| `path`         | A path to a directory. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+| _keyword-only_ |                                                                                                 |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~     |
+| **RETURNS**    | The modified `Doc` object. ~~Doc~~                                                              |
 
 ## Doc.to_bytes {#to_bytes tag="method"}
 
@@ -404,10 +451,11 @@ Serialize, i.e. export the document contents to a binary string.
 > doc_bytes = doc.to_bytes()
 > ```
 
-| Name        | Type  | Description                                                               |
-| ----------- | ----- | ------------------------------------------------------------------------- |
-| `exclude`   | list  | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS** | bytes | A losslessly serialized copy of the `Doc`, including all annotations.     |
+| Name           | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| _keyword-only_ |                                                                                             |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
+| **RETURNS**    | A losslessly serialized copy of the `Doc`, including all annotations. ~~bytes~~             |
 
 ## Doc.from_bytes {#from_bytes tag="method"}
 
@@ -423,11 +471,12 @@ Deserialize, i.e. import the document contents from a binary string.
 > assert doc.text == doc2.text
 > ```
 
-| Name        | Type  | Description                                                               |
-| ----------- | ----- | ------------------------------------------------------------------------- |
-| `data`      | bytes | The string to load from.                                                  |
-| `exclude`   | list  | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS** | `Doc` | The `Doc` object.                                                         |
+| Name           | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| `data`         | The string to load from. ~~bytes~~                                                          |
+| _keyword-only_ |                                                                                             |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
+| **RETURNS**    | The `Doc` object. ~~Doc~~                                                                   |
 
 ## Doc.retokenize {#retokenize tag="contextmanager" new="2.1"}
 
@@ -445,17 +494,18 @@ invalidated, although they may accidentally continue to work.
 >     retokenizer.merge(doc[0:2])
 > ```
 
-| Name        | Type          | Description      |
-| ----------- | ------------- | ---------------- |
-| **RETURNS** | `Retokenizer` | The retokenizer. |
+| Name        | Description                      |
+| ----------- | -------------------------------- |
+| **RETURNS** | The retokenizer. ~~Retokenizer~~ |
 
 ### Retokenizer.merge {#retokenizer.merge tag="method"}
 
 Mark a span for merging. The `attrs` will be applied to the resulting token (if
 they're context-dependent token attributes like `LEMMA` or `DEP`) or to the
 underlying lexeme (if they're context-independent lexical attributes like
-`LOWER` or `IS_STOP`). Writable custom extension attributes can be provided as a
-dictionary mapping attribute names to values as the `"_"` key.
+`LOWER` or `IS_STOP`). Writable custom extension attributes can be provided
+using the `"_"` key and specifying a dictionary that maps attribute names to
+values.
 
 > #### Example
 >
@@ -466,10 +516,10 @@ dictionary mapping attribute names to values as the `"_"` key.
 >     retokenizer.merge(doc[2:4], attrs=attrs)
 > ```
 
-| Name    | Type   | Description                            |
-| ------- | ------ | -------------------------------------- |
-| `span`  | `Span` | The span to merge.                     |
-| `attrs` | dict   | Attributes to set on the merged token. |
+| Name    | Description                                                           |
+| ------- | --------------------------------------------------------------------- |
+| `span`  | The span to merge. ~~Span~~                                           |
+| `attrs` | Attributes to set on the merged token. ~~Dict[Union[str, int], Any]~~ |
 
 ### Retokenizer.split {#retokenizer.split tag="method"}
 
@@ -500,41 +550,12 @@ underlying lexeme (if they're context-independent lexical attributes like
 >     retokenizer.split(doc[3], ["New", "York"], heads=heads, attrs=attrs)
 > ```
 
-| Name    | Type    | Description                                                                                                 |
-| ------- | ------- | ----------------------------------------------------------------------------------------------------------- |
-| `token` | `Token` | The token to split.                                                                                         |
-| `orths` | list    | The verbatim text of the split tokens. Needs to match the text of the original token.                       |
-| `heads` | list    | List of `token` or `(token, subtoken)` tuples specifying the tokens to attach the newly split subtokens to. |
-| `attrs` | dict    | Attributes to set on all split tokens. Attribute names mapped to list of per-token attribute values.        |
-
-## Doc.merge {#merge tag="method"}
-
-<Infobox title="Deprecation note" variant="danger">
-
-As of v2.1.0, `Doc.merge` still works but is considered deprecated. You should
-use the new and less error-prone [`Doc.retokenize`](/api/doc#retokenize)
-instead.
-
-</Infobox>
-
-Retokenize the document, such that the span at `doc.text[start_idx : end_idx]`
-is merged into a single token. If `start_idx` and `end_idx` do not mark start
-and end token boundaries, the document remains unchanged.
-
-> #### Example
->
-> ```python
-> doc = nlp("Los Angeles start.")
-> doc.merge(0, len("Los Angeles"), "NNP", "Los Angeles", "GPE")
-> assert [t.text for t in doc] == ["Los Angeles", "start", "."]
-> ```
-
-| Name           | Type    | Description                                                                                                               |
-| -------------- | ------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `start_idx`    | int     | The character index of the start of the slice to merge.                                                                   |
-| `end_idx`      | int     | The character index after the end of the slice to merge.                                                                  |
-| `**attributes` | -       | Attributes to assign to the merged token. By default, attributes are inherited from the syntactic root token of the span. |
-| **RETURNS**    | `Token` | The newly merged token, or `None` if the start and end indices did not fall at token boundaries                           |
+| Name    | Description                                                                                                                                           |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `token` | The token to split. ~~Token~~                                                                                                                         |
+| `orths` | The verbatim text of the split tokens. Needs to match the text of the original token. ~~List[str]~~                                                   |
+| `heads` | List of `token` or `(token, subtoken)` tuples specifying the tokens to attach the newly split subtokens to. ~~List[Union[Token, Tuple[Token, int]]]~~ |
+| `attrs` | Attributes to set on all split tokens. Attribute names mapped to list of per-token attribute values. ~~Dict[Union[str, int], List[Any]]~~             |
 
 ## Doc.ents {#ents tag="property" model="NER"}
 
@@ -546,14 +567,13 @@ objects, if the entity recognizer has been applied.
 > ```python
 > doc = nlp("Mr. Best flew to New York on Saturday morning.")
 > ents = list(doc.ents)
-> assert ents[0].label == 346
 > assert ents[0].label_ == "PERSON"
 > assert ents[0].text == "Mr. Best"
 > ```
 
-| Name        | Type  | Description                                      |
-| ----------- | ----- | ------------------------------------------------ |
-| **RETURNS** | tuple | Entities in the document, one `Span` per entity. |
+| Name        | Description                                                           |
+| ----------- | --------------------------------------------------------------------- |
+| **RETURNS** | Entities in the document, one `Span` per entity. ~~Tuple[Span, ...]~~ |
 
 ## Doc.noun_chunks {#noun_chunks tag="property" model="parser"}
 
@@ -572,9 +592,9 @@ relative clauses.
 > assert chunks[1].text == "another phrase"
 > ```
 
-| Name       | Type   | Description                  |
-| ---------- | ------ | ---------------------------- |
-| **YIELDS** | `Span` | Noun chunks in the document. |
+| Name       | Description                           |
+| ---------- | ------------------------------------- |
+| **YIELDS** | Noun chunks in the document. ~~Span~~ |
 
 ## Doc.sents {#sents tag="property" model="parser"}
 
@@ -592,9 +612,9 @@ will be unavailable.
 > assert [s.root.text for s in sents] == ["is", "'s"]
 > ```
 
-| Name       | Type   | Description                |
-| ---------- | ------ | -------------------------- |
-| **YIELDS** | `Span` | Sentences in the document. |
+| Name       | Description                         |
+| ---------- | ----------------------------------- |
+| **YIELDS** | Sentences in the document. ~~Span~~ |
 
 ## Doc.has_vector {#has_vector tag="property" model="vectors"}
 
@@ -607,9 +627,9 @@ A boolean value indicating whether a word vector is associated with the object.
 > assert doc.has_vector
 > ```
 
-| Name        | Type | Description                                      |
-| ----------- | ---- | ------------------------------------------------ |
-| **RETURNS** | bool | Whether the document has a vector data attached. |
+| Name        | Description                                               |
+| ----------- | --------------------------------------------------------- |
+| **RETURNS** | Whether the document has a vector data attached. ~~bool~~ |
 
 ## Doc.vector {#vector tag="property" model="vectors"}
 
@@ -624,9 +644,9 @@ vectors.
 > assert doc.vector.shape == (300,)
 > ```
 
-| Name        | Type                                     | Description                                             |
-| ----------- | ---------------------------------------- | ------------------------------------------------------- |
-| **RETURNS** | `numpy.ndarray[ndim=1, dtype='float32']` | A 1D numpy array representing the document's semantics. |
+| Name        | Description                                                                                        |
+| ----------- | -------------------------------------------------------------------------------------------------- |
+| **RETURNS** | A 1-dimensional array representing the document's vector. ~~numpy.ndarray[ndim=1, dtype=float32]~~ |
 
 ## Doc.vector_norm {#vector_norm tag="property" model="vectors"}
 
@@ -642,32 +662,28 @@ The L2 norm of the document's vector representation.
 > assert doc1.vector_norm != doc2.vector_norm
 > ```
 
-| Name        | Type  | Description                               |
-| ----------- | ----- | ----------------------------------------- |
-| **RETURNS** | float | The L2 norm of the vector representation. |
+| Name        | Description                                         |
+| ----------- | --------------------------------------------------- |
+| **RETURNS** | The L2 norm of the vector representation. ~~float~~ |
 
 ## Attributes {#attributes}
 
-| Name                                    | Type         | Description                                                                                                                                                                     |
-| --------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `text`                                  | unicode      | A unicode representation of the document text.                                                                                                                                  |
-| `text_with_ws`                          | unicode      | An alias of `Doc.text`, provided for duck-type compatibility with `Span` and `Token`.                                                                                           |
-| `mem`                                   | `Pool`       | The document's local memory heap, for all C data it owns.                                                                                                                       |
-| `vocab`                                 | `Vocab`      | The store of lexical types.                                                                                                                                                     |
-| `tensor` <Tag variant="new">2</Tag>     | `ndarray`    | Container for dense vector representations.                                                                                                                                     |
-| `cats` <Tag variant="new">2</Tag>       | dict         | Maps a label to a score for categories applied to the document. The label is a string and the score should be a float.                                                          |
-| `user_data`                             | -            | A generic storage area, for user custom data.                                                                                                                                   |
-| `lang` <Tag variant="new">2.1</Tag>     | int          | Language of the document's vocabulary.                                                                                                                                          |
-| `lang_` <Tag variant="new">2.1</Tag>    | unicode      | Language of the document's vocabulary.                                                                                                                                          |
-| `is_tagged`                             | bool         | A flag indicating that the document has been part-of-speech tagged. Returns `True` if the `Doc` is empty.                                                                       |
-| `is_parsed`                             | bool         | A flag indicating that the document has been syntactically parsed. Returns `True` if the `Doc` is empty.                                                                        |
-| `is_sentenced`                          | bool         | A flag indicating that sentence boundaries have been applied to the document. Returns `True` if the `Doc` is empty.                                                             |
-| `is_nered` <Tag variant="new">2.1</Tag> | bool         | A flag indicating that named entities have been set. Will return `True` if the `Doc` is empty, or if _any_ of the tokens has an entity tag set, even if the others are unknown. |
-| `sentiment`                             | float        | The document's positivity/negativity score, if available.                                                                                                                       |
-| `user_hooks`                            | dict         | A dictionary that allows customization of the `Doc`'s properties.                                                                                                               |
-| `user_token_hooks`                      | dict         | A dictionary that allows customization of properties of `Token` children.                                                                                                       |
-| `user_span_hooks`                       | dict         | A dictionary that allows customization of properties of `Span` children.                                                                                                        |
-| `_`                                     | `Underscore` | User space for adding custom [attribute extensions](/usage/processing-pipelines#custom-components-attributes).                                                                  |
+| Name                                 | Description                                                                                                                                 |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `text`                               | A string representation of the document text. ~~str~~                                                                                       |
+| `text_with_ws`                       | An alias of `Doc.text`, provided for duck-type compatibility with `Span` and `Token`. ~~str~~                                               |
+| `mem`                                | The document's local memory heap, for all C data it owns. ~~cymem.Pool~~                                                                    |
+| `vocab`                              | The store of lexical types. ~~Vocab~~                                                                                                       |
+| `tensor` <Tag variant="new">2</Tag>  | Container for dense vector representations. ~~numpy.ndarray~~                                                                               |
+| `cats` <Tag variant="new">2</Tag>    | Maps a label to a score for categories applied to the document. The label is a string and the score should be a float. ~~Dict[str, float]~~ |
+| `user_data`                          | A generic storage area, for user custom data. ~~Dict[str, Any]~~                                                                            |
+| `lang` <Tag variant="new">2.1</Tag>  | Language of the document's vocabulary. ~~int~~                                                                                              |
+| `lang_` <Tag variant="new">2.1</Tag> | Language of the document's vocabulary. ~~str~~                                                                                              |
+| `sentiment`                          | The document's positivity/negativity score, if available. ~~float~~                                                                         |
+| `user_hooks`                         | A dictionary that allows customization of the `Doc`'s properties. ~~Dict[str, Callable]~~                                                   |
+| `user_token_hooks`                   | A dictionary that allows customization of properties of `Token` children. ~~Dict[str, Callable]~~                                           |
+| `user_span_hooks`                    | A dictionary that allows customization of properties of `Span` children. ~~Dict[str, Callable]~~                                            |
+| `_`                                  | User space for adding custom [attribute extensions](/usage/processing-pipelines#custom-components-attributes). ~~Underscore~~               |
 
 ## Serialization fields {#serialization-fields}
 

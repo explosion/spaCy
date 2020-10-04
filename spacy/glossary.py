@@ -1,12 +1,8 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-
 def explain(term):
     """Get a description for a given POS tag, dependency label or entity type.
 
-    term (unicode): The term to explain.
-    RETURNS (unicode): The explanation, or `None` if not found in the glossary.
+    term (str): The term to explain.
+    RETURNS (str): The explanation, or `None` if not found in the glossary.
 
     EXAMPLE:
         >>> spacy.explain(u'NORP')

@@ -1,10 +1,9 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import re
 
+from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..punctuation import ALPHA_LOWER, CURRENCY
 from ...symbols import ORTH
+from ...util import update_exc
 
 
 _exc = {}
@@ -647,5 +646,5 @@ _nums = r"(({ne})|({t})|({on})|({c}))({s})?".format(
 )
 
 
-TOKENIZER_EXCEPTIONS = _exc
+TOKENIZER_EXCEPTIONS = update_exc(BASE_EXCEPTIONS, _exc)
 TOKEN_MATCH = re.compile(r"^{n}$".format(n=_nums)).match

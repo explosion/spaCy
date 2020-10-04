@@ -1,19 +1,18 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import pytest
 import numpy
 from spacy.tokens import Doc
 from spacy.matcher import Matcher
 from spacy.displacy import render
-from spacy.gold import iob_to_biluo
+from spacy.training import iob_to_biluo
 from spacy.lang.it import Italian
 from spacy.lang.en import English
 
-from ..util import add_vecs_to_vocab, get_doc
+from ..util import add_vecs_to_vocab
 
 
-@pytest.mark.xfail
+@pytest.mark.skip(
+    reason="Can not be fixed without iterative looping between prefix/suffix and infix"
+)
 def test_issue2070():
     """Test that checks that a dot followed by a quote is handled
     appropriately.
@@ -29,12 +28,14 @@ def test_issue2070():
 def test_issue2179():
     """Test that spurious 'extra_labels' aren't created when initializing NER."""
     nlp = Italian()
-    ner = nlp.create_pipe("ner")
+    ner = nlp.add_pipe("ner")
     ner.add_label("CITIZENSHIP")
-    nlp.add_pipe(ner)
-    nlp.begin_training()
+    nlp.initialize()
     nlp2 = Italian()
-    nlp2.add_pipe(nlp2.create_pipe("ner"))
+    nlp2.add_pipe("ner")
+    assert len(nlp2.get_pipe("ner").labels) == 0
+    model = nlp2.get_pipe("ner").model
+    model.attrs["resize_output"](model, nlp.get_pipe("ner").moves.n_moves)
     nlp2.from_bytes(nlp.to_bytes())
     assert "extra_labels" not in nlp2.get_pipe("ner").cfg
     assert nlp2.get_pipe("ner").labels == ("CITIZENSHIP",)
@@ -68,11 +69,10 @@ def test_issue2219(en_vocab):
     assert doc[0].similarity(doc[1]) == doc[1].similarity(doc[0])
 
 
-def test_issue2361(de_tokenizer):
+def test_issue2361(de_vocab):
     chars = ("&lt;", "&gt;", "&amp;", "&quot;")
-    doc = de_tokenizer('< > & " ')
-    doc.is_parsed = True
-    doc.is_tagged = True
+    words = ["<", ">", "&", '"']
+    doc = Doc(de_vocab, words=words, deps=["dep"] * len(words))
     html = render(doc)
     for char in chars:
         assert char in html
@@ -106,7 +106,8 @@ def test_issue2385_biluo(tags):
 
 def test_issue2396(en_vocab):
     words = ["She", "created", "a", "test", "for", "spacy"]
-    heads = [1, 0, 1, -2, -1, -1]
+    heads = [1, 1, 3, 1, 3, 4]
+    deps = ["dep"] * len(heads)
     matrix = numpy.array(
         [
             [0, 1, 1, 1, 1, 1],
@@ -118,7 +119,7 @@ def test_issue2396(en_vocab):
         ],
         dtype=numpy.int32,
     )
-    doc = get_doc(en_vocab, words=words, heads=heads)
+    doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
     span = doc[:]
     assert (doc.get_lca_matrix() == matrix).all()
     assert (span.get_lca_matrix() == matrix).all()
@@ -136,6 +137,6 @@ def test_issue2464(en_vocab):
 def test_issue2482():
     """Test we can serialize and deserialize a blank NER or parser model."""
     nlp = Italian()
-    nlp.add_pipe(nlp.create_pipe("ner"))
+    nlp.add_pipe("ner")
     b = nlp.to_bytes()
     Italian().from_bytes(b)
