@@ -8,6 +8,7 @@ menu:
   - ['Config System', 'config']
   - ['Custom Training', 'config-custom']
   - ['Custom Functions', 'custom-functions']
+  - ['Initialization', 'initialization']
   - ['Data Utilities', 'data']
   - ['Parallel Training', 'parallel-training']
   - ['Internal API', 'api']
@@ -824,12 +825,15 @@ def MyModel(output_width: int) -> Model[List[Doc], List[Floats2d]]:
     return create_model(output_width)
 ```
 
-### Customizing the initialization {#initialization}
+## Customizing the initialization {#initialization}
 
 When you start training a new model from scratch,
 [`spacy train`](/api/cli#train) will call
-[`nlp.initialize`](/api/language#initialize) to initialize the pipeline for
-training. This process typically includes the following:
+[`nlp.initialize`](/api/language#initialize) to initialize the pipeline and load
+the required data. All settings for this are defined in the
+[`[initialize]`](/api/data-formats#config-initialize) block of the config, so
+you can keep track of how the initial `nlp` object was created. The
+initialization process typically includes the following:
 
 > #### config.cfg (excerpt)
 >
@@ -859,9 +863,21 @@ The initialization step allows the config to define **all settings** required
 for the pipeline, while keeping a separation between settings and functions that
 should only be used **before training** to set up the initial pipeline, and
 logic and configuration that needs to be available **at runtime**. Without that
-separation, TODO:
+separation, it would be very difficult to use the came, reproducible config file
+because the component settings required for training (load data from an external
+file) wouldn't match the component settings required at runtime (load what's
+included with the saved `nlp` object and don't depend on external file).
 
 ![Illustration of pipeline lifecycle](../images/lifecycle.svg)
+
+<Infobox title="How components save and load data" emoji="📖">
+
+For details and examples of how pipeline components can **save and load data
+assets** like model weights or lookup tables, and how the component
+initialization is implemented under the hood, see the usage guide on
+[serializing and initializing component data](/usage/processing-pipelines#component-data-initialization).
+
+</Infobox>
 
 #### Initializing labels {#initialization-labels}
 
