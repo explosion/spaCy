@@ -6,6 +6,7 @@ from functools import partial
 from pydantic import BaseModel, StrictStr
 
 from ..util import registry, logger
+from ..matcher import Matcher
 from ..tokens import Doc
 from .example import Example
 
@@ -59,6 +60,18 @@ def create_lower_casing_augmenter(
     return partial(lower_casing_augmenter, level=level)
 
 
+@registry.augmenters("spacy.remove_punct.v1")
+def create_remove_punct_augmenter(
+    level: float, token_level: float, punct_tokens: List[str] = [".", ",", ";"],
+) -> Callable[["Language", Example], Iterator[Example]]:
+    return partial(
+        remove_punct_augmenter,
+        level=level,
+        token_level=token_level,
+        punct_tokens=punct_tokens,
+    )
+
+
 def dont_augment(nlp: "Language", example: Example) -> Iterator[Example]:
     yield example
 
@@ -73,6 +86,40 @@ def lower_casing_augmenter(
         doc = nlp.make_doc(example.text.lower())
         example_dict["token_annotation"]["ORTH"] = [t.lower_ for t in doc]
         yield example.from_dict(doc, example_dict)
+
+
+def remove_punct_augmenter(
+    nlp: "Language",
+    example: Example,
+    *,
+    level: float,
+    token_level: float,
+    punct_tokens: List[str],
+) -> Iterator[Example]:
+    # Token plus one or more punctuation characters
+    pattern = [{"ORTH": {"IN": punct_tokens}, "OP": "+"}]
+    if random.random() >= level:
+        yield example
+    else:
+        doc = example.reference
+        # This is a bit unfortunate but we need the nlp.vocab in oder to
+        # create the matcher
+        matcher = Matcher(nlp.vocab)
+        matcher.add("PUNCT", [pattern], greedy="LONGEST")
+        matches = matcher(doc)
+        with doc.retokenize() as retokenizer:
+            for _, start, end in matches:
+                # Don't merge if the first token is punctuation
+                if start > 0 and random.random() < token_level:
+                    prev_idx = start - 1
+                    span = doc[prev_idx:end]
+                    retokenizer.merge(span, attrs={"NORM": doc[prev_idx].text})
+        example_dict = example.to_dict()
+        words = [t.norm_ for t in doc]
+        spaces = [bool(t.whitespace_) for t in doc]
+        example_dict["token_annotation"]["ORTH"] = words
+        new_doc = Doc(nlp.vocab, words=words, spaces=spaces)
+        yield example.from_dict(new_doc, example_dict)
 
 
 def orth_variants_augmenter(

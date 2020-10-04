@@ -2,6 +2,7 @@ import pytest
 from spacy.training import Corpus
 from spacy.training.augment import create_orth_variants_augmenter
 from spacy.training.augment import create_lower_casing_augmenter
+from spacy.training.augment import create_remove_punct_augmenter
 from spacy.lang.en import English
 from spacy.tokens import DocBin, Doc
 from contextlib import contextmanager
@@ -65,6 +66,33 @@ def test_lowercase_augmenter(nlp, doc):
     for ref_ent, orig_ent in zip(eg.reference.ents, doc.ents):
         assert ref_ent.text == orig_ent.text.lower()
     assert [t.pos_ for t in eg.reference] == [t.pos_ for t in doc]
+
+
+def test_remove_punct_augmenter(nlp):
+    doc1 = Doc(
+        nlp.vocab,
+        words=["hello", ",", "world", ".", "."],
+        spaces=[False, True, False, False, True],
+        pos=["X", "PUNCT", "X", "PUNCT", "PUNCT"],
+    )
+    doc2 = Doc(
+        nlp.vocab,
+        words=[";", ".", "yo", "."],
+        spaces=[False, True, False, False],
+        pos=["PUNCT", "PUNCT", "X", "PUNCT"],
+    )
+    augmenter = create_remove_punct_augmenter(level=1.0, token_level=1.0)
+    with make_docbin([doc1, doc2]) as output_file:
+        reader = Corpus(output_file, augmenter=augmenter)
+        corpus = list(reader(nlp))
+    eg1 = corpus[0]
+    assert [t.text for t in eg1.reference] == ["hello", "world"]
+    assert [t.text for t in eg1.predicted] == ["hello", "world"]
+    assert [t.pos_ for t in eg1.reference] == ["X", "X"]
+    eg2 = corpus[1]
+    assert [t.text for t in eg2.reference] == [";", ".", "yo"]
+    assert [t.text for t in eg2.predicted] == [";", ".", "yo"]
+    assert [t.pos_ for t in eg2.reference] == ["PUNCT", "PUNCT", "X"]
 
 
 @pytest.mark.filterwarnings("ignore::UserWarning")
