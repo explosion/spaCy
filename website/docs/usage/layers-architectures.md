@@ -373,7 +373,7 @@ gpu_allocator = "pytorch"
 Of course it's also possible to define the `Model` from the previous section
 entirely in Thinc. The Thinc documentation provides details on the
 [various layers](https://thinc.ai/docs/api-layers) and helper functions
-available. Combinators can also be used to
+available. Combinators can be used to
 [overload operators](https://thinc.ai/docs/usage-models#operators) and a common
 usage pattern is to bind `chain` to `>>`. The "native" Thinc version of our
 simple neural network would then become:
@@ -494,13 +494,34 @@ from scratch. This can be done by creating a new class inheriting from
 
 ### Example: Pipeline component for relation extraction {#component-rel}
 
-This section will run through an example of implementing a novel relation
-extraction component from scratch. As a first step, we need a method that will
+This section outlines an example use-case of implementing a novel relation
+extraction component from scratch. We assume we want to implement a binary 
+relation extraction method that determines whether two entities in a document 
+are related or not, and if so, with what type of relation. We'll allow multiple 
+types of relations between two such entities - i.e. it is a multi-label setting.
+
+We'll need to implement a [`Model`](https://thinc.ai/docs/api-model) that takes 
+a list of documents as input, and outputs a two-dimensional matrix of scores:
+
+```python
+@registry.architectures.register("rel_model.v1")
+def create_relation_model(...) -> Model[List[Doc], Floats2d]:
+    model = _create_my_model()
+    return model
+```
+
+The first layer in this model will typically be an
+[embedding layer](/usage/embeddings-transformers) such as a
+[`Tok2Vec`](/api/tok2vec) component or [`Transformer`](/api/transformer). This
+layer is assumed to be of type `Model[List["Doc"], List[Floats2d]]` as it
+transforms each document into a list of tokens, with each token being 
+represented by its embedding in the vector space.
+
+Next, we need a method that will
 generate pairs of entities that we want to classify as being related or not.
 These candidate pairs are typically formed within one document, which means
 we'll have a function that takes a `Doc` as input and outputs a `List` of `Span`
-tuples. In this example, we will focus on binary relation extraction, i.e. the
-tuple will be of length 2. For instance, a very straightforward implementation
+tuples. For instance, a very straightforward implementation
 would be to just take any two entities from the same document:
 
 ```python
@@ -512,17 +533,23 @@ def get_candidates(doc: "Doc") -> List[Tuple[Span, Span]]:
     return candidates
 ```
 
-But we could also refine this further by excluding relations of an entity with
-itself, and posing a maximum distance (in number of tokens) between two
-entities. We'll also register this function in the
-[`@misc` registry](/api/top-level#registry) so we can refer to it from the
-config, and easily swap it out for any other candidate generation function.
-
 > ```
-> [get_candidates]
+> [model]
+> @architectures = "rel_model.v1"
+> 
+> [model.tok2vec]
+> ...
+> 
+> [model.get_candidates]
 > @misc = "rel_cand_generator.v2"
 > max_length = 6
 > ```
+
+But we could also refine this further by excluding relations of an entity with
+itself, and posing a maximum distance (in number of tokens) between two
+entities. We'll register this function in the
+[`@misc` registry](/api/top-level#registry) so we can refer to it from the
+config, and easily swap it out for any other candidate generation function.
 
 ```python
 ### {highlight="1,2,7,8"}
@@ -539,32 +566,33 @@ def create_candidate_indices(max_length: int) -> Callable[[Doc], List[Tuple[Span
     return get_candidates
 ```
 
+Finally, we'll require a method that transforms the candidate pairs of entities into 
+a 2D tensor using the specified Tok2Vec function, and this `Floats2d` object will then be 
+processed by a final `output_layer` of the network. Taking all this together, we can define 
+our relation model like this in the config:
+
 > ```
-> [tok2vec]
-> @architectures = "spacy.HashEmbedCNN.v1"
-> pretrained_vectors = null
-> width = 96
-> depth = 2
-> embed_size = 300
-> window_size = 1
-> maxout_pieces = 3
-> subword_features = true
+> [model]
+> @architectures = "rel_model.v1"
+> nO = null
+> 
+> [model.tok2vec]
+> ...
+> 
+> [model.get_candidates]
+> @misc = "rel_cand_generator.v2"
+> max_length = 6
+> 
+> [components.relation_extractor.model.create_candidate_tensor]
+> @misc = "rel_cand_tensor.v1"
+> 
+> [components.relation_extractor.model.output_layer]
+> @architectures = "rel_output_layer.v1"
+> nI = null
+> nO = null
 > ```
 
-Next, we'll assume we have access to an
-[embedding layer](/usage/embeddings-transformers) such as a
-[`Tok2Vec`](/api/tok2vec) component or [`Transformer`](/api/transformer). This
-layer is assumed to be of type `Model[List["Doc"], List[Floats2d]]` as it
-transforms a list of documents into a list of 2D vectors. Further, this
-`tok2vec` component will be trainable, which means that, following the Thinc
-paradigm, we'll apply it to some input, and receive the predicted results as
-well as a callback to perform backpropagation:
-
-```python
-tok2vec = model.get_ref("tok2vec")
-tokvecs, bp_tokvecs = tok2vec(docs, is_train=True)
-```
-
+<!-- Link to project for implementation details -->
 
 
 
