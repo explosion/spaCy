@@ -349,14 +349,7 @@ def test_pipe_methods_frozen():
 
 
 @pytest.mark.parametrize(
-    "pipe",
-    [
-        "tagger",
-        "parser",
-        "ner",
-        "textcat",
-        "morphologizer"
-    ],
+    "pipe", ["tagger", "parser", "ner", "textcat", "morphologizer"],
 )
 def test_pipe_label_data_exports_labels(pipe):
     nlp = Language()
