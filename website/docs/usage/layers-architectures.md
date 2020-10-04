@@ -495,12 +495,19 @@ from scratch. This can be done by creating a new class inheriting from
 ### Example: Pipeline component for relation extraction {#component-rel}
 
 This section outlines an example use-case of implementing a novel relation
-extraction component from scratch. We assume we want to implement a binary 
-relation extraction method that determines whether two entities in a document 
-are related or not, and if so, with what type of relation. We'll allow multiple 
+extraction component from scratch. We assume we want to implement a binary
+relation extraction method that determines whether two entities in a document
+are related or not, and if so, with what type of relation. We'll allow multiple
 types of relations between two such entities - i.e. it is a multi-label setting.
 
-We'll need to implement a [`Model`](https://thinc.ai/docs/api-model) that takes 
+There are two major steps required: first, we need to
+[implement a machine learning model](#component-rel-model) specific to this
+task, and then we'll use this model to
+[implement a custom pipeline component](#component-rel-pipe).
+
+#### Step 1: Implementing the Model {#component-rel-model}
+
+We'll need to implement a [`Model`](https://thinc.ai/docs/api-model) that takes
 a list of documents as input, and outputs a two-dimensional matrix of scores:
 
 ```python
@@ -514,15 +521,15 @@ The first layer in this model will typically be an
 [embedding layer](/usage/embeddings-transformers) such as a
 [`Tok2Vec`](/api/tok2vec) component or [`Transformer`](/api/transformer). This
 layer is assumed to be of type `Model[List["Doc"], List[Floats2d]]` as it
-transforms each document into a list of tokens, with each token being 
+transforms each document into a list of tokens, with each token being
 represented by its embedding in the vector space.
 
-Next, we need a method that will
-generate pairs of entities that we want to classify as being related or not.
-These candidate pairs are typically formed within one document, which means
-we'll have a function that takes a `Doc` as input and outputs a `List` of `Span`
-tuples. For instance, a very straightforward implementation
-would be to just take any two entities from the same document:
+Next, we need a method that will generate pairs of entities that we want to
+classify as being related or not. These candidate pairs are typically formed
+within one document, which means we'll have a function that takes a `Doc` as
+input and outputs a `List` of `Span` tuples. For instance, a very
+straightforward implementation would be to just take any two entities from the
+same document:
 
 ```python
 def get_candidates(doc: "Doc") -> List[Tuple[Span, Span]]:
@@ -536,10 +543,10 @@ def get_candidates(doc: "Doc") -> List[Tuple[Span, Span]]:
 > ```
 > [model]
 > @architectures = "rel_model.v1"
-> 
+>
 > [model.tok2vec]
 > ...
-> 
+>
 > [model.get_candidates]
 > @misc = "rel_cand_generator.v2"
 > max_length = 6
@@ -566,33 +573,76 @@ def create_candidate_indices(max_length: int) -> Callable[[Doc], List[Tuple[Span
     return get_candidates
 ```
 
-Finally, we'll require a method that transforms the candidate pairs of entities into 
-a 2D tensor using the specified Tok2Vec function, and this `Floats2d` object will then be 
-processed by a final `output_layer` of the network. Taking all this together, we can define 
-our relation model like this in the config:
+Finally, we'll require a method that transforms the candidate pairs of entities
+into a 2D tensor using the specified Tok2Vec function, and this `Floats2d`
+object will then be processed by a final `output_layer` of the network. Taking
+all this together, we can define our relation model like this in the config:
 
-> ```
-> [model]
-> @architectures = "rel_model.v1"
-> nO = null
-> 
-> [model.tok2vec]
-> ...
-> 
-> [model.get_candidates]
-> @misc = "rel_cand_generator.v2"
-> max_length = 6
-> 
-> [components.relation_extractor.model.create_candidate_tensor]
-> @misc = "rel_cand_tensor.v1"
-> 
-> [components.relation_extractor.model.output_layer]
-> @architectures = "rel_output_layer.v1"
-> nI = null
-> nO = null
-> ```
+```
+[model]
+@architectures = "rel_model.v1"
+...
 
-<!-- Link to project for implementation details -->
+[model.tok2vec]
+...
+
+[model.get_candidates]
+@misc = "rel_cand_generator.v2"
+max_length = 6
+
+[model.create_candidate_tensor]
+@misc = "rel_cand_tensor.v1"
+
+[model.output_layer]
+@architectures = "rel_output_layer.v1"
+...
+```
+
+<!-- TODO: Link to project for implementation details -->
+
+When creating this model, we'll store the custom functions as
+[attributes](https://thinc.ai/docs/api-model#properties) and the sublayers as
+references, so we can access them easily:
+
+```python
+tok2vec_layer = model.get_ref("tok2vec")
+output_layer = model.get_ref("output_layer")
+create_candidate_tensor = model.attrs["create_candidate_tensor"]
+get_candidates = model.attrs["get_candidates"]
+```
+
+#### Step 2: Implementing the pipeline component {#component-rel-pipe}
+
+To use our new relation extraction model as part of a custom component, we 
+create a subclass of [`Pipe`](/api/pipe) that will hold the model:
+
+```python
+from spacy.pipeline import Pipe
+from spacy.language import Language
+
+class RelationExtractor(Pipe):
+     def __init__(self, vocab, model, name="rel", labels=[]):
+        ...
+
+    def predict(self, docs):
+        ...
+
+    def set_annotations(self, docs, scores):
+         ...
+
+@Language.factory("relation_extractor")
+def make_relation_extractor(nlp, name, model, labels):
+    return RelationExtractor(nlp.vocab, model, name, labels=labels)
+```
+
+The [`predict`](/api/pipe#predict ) function needs to be implemented for each subclass. 
+In our case, we can simply delegate to the internal model's 
+[predict](https://thinc.ai/docs/api-model#predict) function:
+```python
+def predict(self, docs: Iterable[Doc]) -> Floats2d:
+    scores = self.model.predict(docs)
+    return self.model.ops.asarray(scores)
+```
 
 
 
