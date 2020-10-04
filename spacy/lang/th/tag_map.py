@@ -72,11 +72,11 @@ TAG_MAP = {
     "XVMM": {POS: AUX},
     "XVBB": {POS: AUX},
     "XVAE": {POS: AUX},
-    "AX": {POS: AX},
+    "AX": {POS: AUX},
     # ADP
     "ADP": {POS: ADP},
     "RPRE": {POS: ADP},
-    "PS": {POS: PS},
+    "PS": {POS: ADP},
     # CCONJ
     "CCONJ": {POS: CCONJ},
     "JCRG": {POS: CCONJ},
