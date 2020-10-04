@@ -85,6 +85,8 @@ class Warnings:
             "attribute or operator.")
 
     # TODO: fix numbering after merging develop into master
+    W088 = ("This component implements a 'begin_training' method, "
+            "which should probably be renamed to 'initialize'.")
     W089 = ("The nlp.begin_training method has been renamed to nlp.initialize.")
     W090 = ("Could not locate any {format} files in path '{path}'.")
     W091 = ("Could not clean/remove the temp directory at {dir}: {msg}.")
