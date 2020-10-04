@@ -18,15 +18,16 @@ from .. import util
 
 MatcherPatternType = List[Dict[Union[int, str], Any]]
 AttributeRulerPatternType = Dict[str, Union[MatcherPatternType, Dict, int]]
+TagMapType = Dict[str, Dict[Union[int, str], Union[int, str]]]
+MorphRulesType = Dict[str, Dict[str, Dict[Union[int, str], Union[int, str]]]]
 
 
 @Language.factory(
-    "attribute_ruler", default_config={"pattern_dicts": None, "validate": False}
+    "attribute_ruler", default_config={"validate": False}
 )
 def make_attribute_ruler(
     nlp: Language,
     name: str,
-    pattern_dicts: Optional[Iterable[AttributeRulerPatternType]],
     validate: bool,
 ):
     return AttributeRuler(
@@ -49,14 +50,14 @@ class AttributeRuler(Pipe):
         pattern_dicts: Optional[Iterable[AttributeRulerPatternType]] = None,
         validate: bool = False,
     ) -> None:
-        """Initialize the AttributeRuler.
+        """Create the AttributeRuler. After creation, you can add patterns
+        with the `.initialize()` or `.add_patterns()` methods, or load patterns
+        with `.from_bytes()` or `.from_disk()`. Loading patterns will remove
+        any patterns you've added previously.
 
         vocab (Vocab): The vocab.
         name (str): The pipe name. Defaults to "attribute_ruler".
-        pattern_dicts (Iterable[Dict]): A list of pattern dicts with the keys as
-        the arguments to AttributeRuler.add (`patterns`/`attrs`/`index`) to add
-        as patterns.
-
+        
         RETURNS (AttributeRuler): The AttributeRuler component.
 
         DOCS: https://nightly.spacy.io/api/attributeruler#init
@@ -68,8 +69,27 @@ class AttributeRuler(Pipe):
         self._attrs_unnormed = []  # store for reference
         self.indices = []
 
-        if pattern_dicts:
-            self.add_patterns(pattern_dicts)
+    def initialize(
+        self,
+        get_examples: Optional[Callable[[], Iterable[Example]]] = None,
+        *,
+        nlp: Optional[Language] = None,
+        patterns: Optional[Iterable[AttributeRulerPatternType]] = None,
+        tag_map: Optional[TagMapType]=None,
+        morph_rules: Optional[MorphRulesType]=None
+    ):
+        """Initialize the attribute ruler by adding zero or more patterns.
+        
+        Rules can be specified as a sequence of dicts using the `patterns`
+        keyword argument. You can also provide rules using the "tag map" or
+        "morph rules" formats supported by spaCy prior to v3.
+        """
+        if patterns:
+            self.add_patterns(patterns)
+        if tag_map:
+            self.load_from_tag_map(tag_map)
+        if morph_rules:
+            self.load_from_morph_rules(morph_rules)
 
     def __call__(self, doc: Doc) -> Doc:
         """Apply the AttributeRuler to a Doc and set all attribute exceptions.
