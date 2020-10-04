@@ -185,8 +185,8 @@ class Errors:
             "the documentation:\nhttps://nightly.spacy.io/usage/models")
     E030 = ("Sentence boundaries unset. You can add the 'sentencizer' "
             "component to the pipeline with: `nlp.add_pipe('sentencizer')`. "
-            "Alternatively, add the dependency parser, or set sentence "
-            "boundaries by setting `doc[i].is_sent_start`.")
+            "Alternatively, add the dependency parser or sentence recognizer, "
+            "or set sentence boundaries by setting `doc[i].is_sent_start`.")
     E031 = ("Invalid token: empty string ('') at position {i}.")
     E033 = ("Cannot load into non-empty Doc of length {length}.")
     E035 = ("Error creating span with start {start} and end {end} for Doc of "
