@@ -288,7 +288,7 @@ those parts of the network.
 
 To use our custom model including the PyTorch subnetwork, all we need to do is
 register the architecture using the
-[`architectures` registry](/api/top-level#registry). This will assign the
+[`architectures` registry](/api/top-level#registry). This assigns the
 architecture a name so spaCy knows how to find it, and allows passing in
 arguments like hyperparameters via the [config](/usage/training#config). The
 full example then becomes:
@@ -488,27 +488,27 @@ with Model.define_operators({">>": chain}):
 
 In addition to [swapping out](#swap-architectures) default models in built-in
 components, you can also implement an entirely new,
-[trainable pipeline component](usage/processing-pipelines#trainable-components)
+[trainable pipeline component](/usage/processing-pipelines#trainable-components)
 from scratch. This can be done by creating a new class inheriting from
 [`Pipe`](/api/pipe), and linking it up to your custom model implementation.
 
 ### Example: Pipeline component for relation extraction {#component-rel}
 
 This section outlines an example use-case of implementing a novel relation
-extraction component from scratch. We assume we want to implement a binary
-relation extraction method that determines whether two entities in a document
-are related or not, and if so, with what type of relation. We'll allow multiple
-types of relations between two such entities - i.e. it is a multi-label setting.
+extraction component from scratch. We'll implement a binary relation extraction
+method that determines whether or not two entities in a document are related,
+and if so, what type of relation. We'll allow multiple types of relations
+between two such entities (multi-label setting).
 
 There are two major steps required: first, we need to
 [implement a machine learning model](#component-rel-model) specific to this
-task, and then we'll use this model to
+task, and subsequently we use this model to
 [implement a custom pipeline component](#component-rel-pipe).
 
 #### Step 1: Implementing the Model {#component-rel-model}
 
-We'll need to implement a [`Model`](https://thinc.ai/docs/api-model) that takes
-a list of documents as input, and outputs a two-dimensional matrix of scores:
+We need to implement a [`Model`](https://thinc.ai/docs/api-model) that takes a
+list of documents as input, and outputs a two-dimensional matrix of predictions:
 
 ```python
 @registry.architectures.register("rel_model.v1")
@@ -519,17 +519,16 @@ def create_relation_model(...) -> Model[List[Doc], Floats2d]:
 
 The first layer in this model will typically be an
 [embedding layer](/usage/embeddings-transformers) such as a
-[`Tok2Vec`](/api/tok2vec) component or [`Transformer`](/api/transformer). This
-layer is assumed to be of type `Model[List["Doc"], List[Floats2d]]` as it
+[`Tok2Vec`](/api/tok2vec) component or a [`Transformer`](/api/transformer). This
+layer is assumed to be of type ~~Model[List[Doc], List[Floats2d]]~~ as it
 transforms each document into a list of tokens, with each token being
 represented by its embedding in the vector space.
 
-Next, we need a method that will generate pairs of entities that we want to
-classify as being related or not. These candidate pairs are typically formed
-within one document, which means we'll have a function that takes a `Doc` as
-input and outputs a `List` of `Span` tuples. For instance, a very
-straightforward implementation would be to just take any two entities from the
-same document:
+Next, we need a method that generates pairs of entities that we want to classify
+as being related or not. As these candidate pairs are typically formed within
+one document, this function takes a `Doc` as input and outputs a `List` of
+`Span` tuples. For instance, a very straightforward implementation would be to
+just take any two entities from the same document:
 
 ```python
 def get_candidates(doc: "Doc") -> List[Tuple[Span, Span]]:
@@ -549,12 +548,12 @@ def get_candidates(doc: "Doc") -> List[Tuple[Span, Span]]:
 >
 > [model.get_candidates]
 > @misc = "rel_cand_generator.v2"
-> max_length = 6
+> max_length = 20
 > ```
 
 But we could also refine this further by excluding relations of an entity with
 itself, and posing a maximum distance (in number of tokens) between two
-entities. We'll register this function in the
+entities. We register this function in the
 [`@misc` registry](/api/top-level#registry) so we can refer to it from the
 config, and easily swap it out for any other candidate generation function.
 
@@ -573,10 +572,10 @@ def create_candidate_indices(max_length: int) -> Callable[[Doc], List[Tuple[Span
     return get_candidates
 ```
 
-Finally, we'll require a method that transforms the candidate pairs of entities
-into a 2D tensor using the specified Tok2Vec function, and this `Floats2d`
-object will then be processed by a final `output_layer` of the network. Taking
-all this together, we can define our relation model like this in the config:
+Finally, we require a method that transforms the candidate entity pairs into a
+2D tensor using the specified `Tok2Vec` function. The resulting `Floats2d`
+object will then be processed by a final `output_layer` of the network. Putting
+all this together, we can define our relation model in a config file as such:
 
 ```
 [model]
@@ -588,7 +587,7 @@ all this together, we can define our relation model like this in the config:
 
 [model.get_candidates]
 @misc = "rel_cand_generator.v2"
-max_length = 6
+max_length = 20
 
 [model.create_candidate_tensor]
 @misc = "rel_cand_tensor.v1"
@@ -600,7 +599,7 @@ max_length = 6
 
 <!-- TODO: Link to project for implementation details -->
 
-When creating this model, we'll store the custom functions as
+When creating this model, we store the custom functions as
 [attributes](https://thinc.ai/docs/api-model#properties) and the sublayers as
 references, so we can access them easily:
 
@@ -614,7 +613,7 @@ get_candidates = model.attrs["get_candidates"]
 #### Step 2: Implementing the pipeline component {#component-rel-pipe}
 
 To use our new relation extraction model as part of a custom component, we
-create a subclass of [`Pipe`](/api/pipe) that will hold the model:
+create a subclass of [`Pipe`](/api/pipe) that holds the model:
 
 ```python
 from spacy.pipeline import Pipe
@@ -624,6 +623,9 @@ class RelationExtractor(Pipe):
         self.model = model
         ...
 
+    def update(self, examples, ...):
+        ...
+
     def predict(self, docs):
         ...
 
@@ -631,18 +633,19 @@ class RelationExtractor(Pipe):
          ...
 ```
 
-Before the model can be used however, it needs to be 
-[initialized](/api/pipe#initialize). This function recieves either the full 
-training data set, or a representative sample. The training data can be used 
-to deduce all relevant labels. Alternatively, a list of labels can be provided, 
-or a script can call `rel_component.add_label()` to add each label separately.
+Before the model can be used, it needs to be
+[initialized](/api/pipe#initialize). This function receives either the full
+training data set, or a representative sample. This data set can be used to
+deduce all relevant labels. Alternatively, a list of labels can be provided, or
+a script can call `rel_component.add_label()` directly.
 
-The number of labels will define the output dimensionality of the network, 
-and will be used to do 
-[shape inference](https://thinc.ai/docs/usage-models#validation) throughout 
-the layers of the neural network. This is triggerd by calling `model.initialize`.
+The number of labels defines the output dimensionality of the network, and will
+be used to do [shape inference](https://thinc.ai/docs/usage-models#validation)
+throughout the layers of the neural network. This is triggered by calling
+`model.initialize`.
 
 ```python
+### {highlight="12,18,22"}
 from itertools import islice
 
 def initialize(
@@ -666,18 +669,21 @@ def initialize(
     label_sample = self._examples_to_truth(subbatch)
     self.model.initialize(X=doc_sample, Y=label_sample)
 ```
- 
-The `initialize` method will be triggered whenever this component is part of an 
-`nlp` pipeline, and `nlp.initialize()` is invoked. After doing so, the pipeline 
-component and its internal model can be trained and used to make predictions.
 
-During training the function [`update`](/api/pipe#update) is invoked which delegates to 
-[`self.model.begin_update`](https://thinc.ai/docs/api-model#begin_update) and 
-needs a function [`get_loss`](/api/pipe#get_loss) that will calculate the 
-loss for a batch of examples, as well as the gradient of loss that will be used to update 
-the weights of the model layers.
+The `initialize` method is triggered whenever this component is part of an `nlp`
+pipeline, and [`nlp.initialize()`](/api/language#initialize) is invoked. After
+doing so, the pipeline component and its internal model can be trained and used
+to make predictions.
+
+During training, the function [`update`](/api/pipe#update) is invoked which
+delegates to
+[`self.model.begin_update`](https://thinc.ai/docs/api-model#begin_update) and a
+[`get_loss`](/api/pipe#get_loss) function that calculate the loss for a batch of
+examples, as well as the gradient of loss that will be used to update the
+weights of the model layers.
 
 ```python
+### {highlight="12-14"}
 def update(
     self,
     examples: Iterable[Example],
@@ -697,13 +703,13 @@ def update(
     return losses
 ```
 
-Thinc provides some [loss functions](https://thinc.ai/docs/api-loss) that can be used 
-for the implementation of the `get_loss` function.
+Thinc provides several [loss functions](https://thinc.ai/docs/api-loss) that can
+be used for the implementation of the `get_loss` function.
 
-When the internal model is trained, the component can be used to make novel predictions. 
-The [`predict`](/api/pipe#predict) function needs to be implemented for each
-subclass of `Pipe`. In our case, we can simply delegate to the internal model's
-[predict](https://thinc.ai/docs/api-model#predict) function:
+When the internal model is trained, the component can be used to make novel
+predictions. The [`predict`](/api/pipe#predict) function needs to be implemented
+for each subclass of `Pipe`. In our case, we can simply delegate to the internal
+model's [predict](https://thinc.ai/docs/api-model#predict) function:
 
 ```python
 def predict(self, docs: Iterable[Doc]) -> Floats2d:
@@ -711,24 +717,24 @@ def predict(self, docs: Iterable[Doc]) -> Floats2d:
     return self.model.ops.asarray(predictions)
 ```
 
-The other method that needs to be implemented, is
-[`set_annotations`](/api/pipe#set_annotations). It takes the predicted scores,
-and modifies the given `Doc` object in place to hold the predictions. For our
-relation extraction component, we'll store the data as a dictionary in a custom
+The final method that needs to be implemented, is
+[`set_annotations`](/api/pipe#set_annotations). This function takes the
+predictions, and modifies the given `Doc` object in place to store them. For our
+relation extraction component, we store the data as a dictionary in a custom
 extension attribute `doc._.rel`. As keys, we represent the candidate pair by the
 start offsets of each entity, as this defines an entity pair uniquely within one
 document.
 
-To interpret the scores predicted by the REL model correctly, we need to 
-refer to the model's `get_candidates` function that originally defined which 
-pairs of entities would be run through the model, so that the scores can be 
-related to those exact entities:
+To interpret the scores predicted by the REL model correctly, we need to refer
+to the model's `get_candidates` function that defined which pairs of entities
+were relevant candidates, so that the predictions can be linked to those exact
+entities:
 
 > #### Example output
 >
 > ```python
 > doc = nlp("Amsterdam is the capital of the Netherlands.")
-> print(f"spans: {[(e.start, e.text, e.label_) for e in doc.ents]}")
+> print(f"spans: [(e.start, e.text, e.label_) for e in doc.ents]")
 > for value, rel_dict in doc._.rel.items():
 >     print(f"{value}: {rel_dict}")
 > ```
@@ -740,6 +746,7 @@ related to those exact entities:
 > ```
 
 ```python
+###  {highlight="5-6,10"}
 def set_annotations(self, docs: Iterable[Doc], predictions: Floats2d):
     c = 0
     get_candidates = self.model.attrs["get_candidates"]
@@ -753,8 +760,8 @@ def set_annotations(self, docs: Iterable[Doc], predictions: Floats2d):
             c += 1
 ```
 
-Under the hood, when the pipe is applied to a document, it will delegate to these 
-two methods: 
+Under the hood, when the pipe is applied to a document, it delegates to the
+`predict` and `set_annotations` functions:
 
 ```python
 def __call__(self, Doc doc):
@@ -763,18 +770,17 @@ def __call__(self, Doc doc):
     return doc
 ```
 
-Once our `Pipe` subclass is fully implemented, we can 
-[register](http://localhost:8000/usage/processing-pipelines#custom-components-factories) 
-the component with the 
-`Language.factory` decorator. This will enable the creation of the component with 
-`nlp.add_pipe`, or via the config.
+Once our `Pipe` subclass is fully implemented, we can
+[register](http://localhost:8000/usage/processing-pipelines#custom-components-factories)
+the component with the `Language.factory` decorator. This enables the creation
+of the component with `nlp.add_pipe`, or via the config.
 
 > ```
-> 
+>
 > [components.relation_extractor]
 > factory = "relation_extractor"
 > labels = []
-> 
+>
 > [components.relation_extractor.model]
 > @architectures = "rel_model.v1"
 > ...
