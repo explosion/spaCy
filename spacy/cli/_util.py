@@ -322,8 +322,7 @@ def git_checkout(
     if dest.exists():
         msg.fail("Destination of checkout must not exist", exits=1)
     if not dest.parent.exists():
-        raise IOError("Parent of destination of checkout must exist")
-
+        msg.fail("Parent of destination of checkout must exist", exits=1)
     if sparse and git_version >= (2, 22):
         return git_sparse_checkout(repo, subpath, dest, branch)
     elif sparse:

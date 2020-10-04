@@ -905,7 +905,7 @@ def _auc(x, y):
         if np.all(dx <= 0):
             direction = -1
         else:
-            raise ValueError(Errors.E164.format(x))
+            raise ValueError(Errors.E164.format(x=x))
 
     area = direction * np.trapz(y, x)
     if isinstance(area, np.memmap):

@@ -238,7 +238,7 @@ class Morphologizer(Tagger):
             truths.append(eg_truths)
         d_scores, loss = loss_func(scores, truths)
         if self.model.ops.xp.isnan(loss):
-            raise ValueError("nan value when computing loss")
+            raise ValueError(Errors.E910.format(name=self.name))
         return float(loss), d_scores
 
     def score(self, examples, **kwargs):

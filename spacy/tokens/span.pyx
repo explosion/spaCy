@@ -17,7 +17,7 @@ from ..lexeme cimport Lexeme
 from ..symbols cimport dep
 
 from ..util import normalize_slice
-from ..errors import Errors, TempErrors, Warnings
+from ..errors import Errors, Warnings
 from .underscore import Underscore, get_ext_args
 
 
@@ -652,7 +652,7 @@ cdef class Span:
             return self.root.ent_id
 
         def __set__(self, hash_t key):
-            raise NotImplementedError(TempErrors.T007.format(attr="ent_id"))
+            raise NotImplementedError(Errors.E200.format(attr="ent_id"))
 
     property ent_id_:
         """RETURNS (str): The (string) entity ID."""
@@ -660,7 +660,7 @@ cdef class Span:
             return self.root.ent_id_
 
         def __set__(self, hash_t key):
-            raise NotImplementedError(TempErrors.T007.format(attr="ent_id_"))
+            raise NotImplementedError(Errors.E200.format(attr="ent_id_"))
 
     @property
     def orth_(self):

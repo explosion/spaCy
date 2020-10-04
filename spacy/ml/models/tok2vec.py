@@ -6,6 +6,7 @@ from thinc.api import expand_window, residual, Maxout, Mish, PyTorchLSTM
 
 from ...tokens import Doc
 from ...util import registry
+from ...errors import Errors
 from ...ml import _character_embed
 from ..staticvectors import StaticVectors
 from ..featureextractor import FeatureExtractor
@@ -201,7 +202,7 @@ def CharacterEmbed(
     """
     feature = intify_attr(feature)
     if feature is None:
-        raise ValueError("Invalid feature: Must be a token attribute.")
+        raise ValueError(Errors.E911(feat=feature))
     if also_use_static_vectors:
         model = chain(
             concatenate(
