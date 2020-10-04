@@ -116,6 +116,48 @@ def test_tr_noun_chunks_nmod_two(tr_tokenizer):
     assert chunks[0].text_with_ws == "kızın saçının rengi "
 
 
+def test_tr_noun_chunks_chain_nmod_with_adj(tr_tokenizer):
+    text = "ev sahibinin tatlı köpeği"
+    heads = [1, 2, 1, 0]
+    deps = ["nmod", "nmod", "amod", "ROOT"]
+    tags = ["NOUN", "NOUN", "ADJ", "NOUN"]
+    tokens = tr_tokenizer(text)
+    doc = get_doc(
+        tokens.vocab, words=[t.text for t in tokens], tags=tags, heads=heads, deps=deps
+    )
+    chunks = list(doc.noun_chunks)
+    assert len(chunks) == 1
+    assert chunks[0].text_with_ws == "ev sahibinin tatlı köpeği "
+
+
+def test_tr_noun_chunks_chain_nmod_with_acl(tr_tokenizer):
+    text = "ev sahibinin gelen köpeği"
+    heads = [1, 2, 1, 0]
+    deps = ["nmod", "nmod", "acl", "ROOT"]
+    tags = ["NOUN", "NOUN", "VERB", "NOUN"]
+    tokens = tr_tokenizer(text)
+    doc = get_doc(
+        tokens.vocab, words=[t.text for t in tokens], tags=tags, heads=heads, deps=deps
+    )
+    chunks = list(doc.noun_chunks)
+    assert len(chunks) == 1
+    assert chunks[0].text_with_ws == "ev sahibinin gelen köpeği "
+
+
+def test_tr_noun_chunks_chain_nmod_head_with_amod_acl(tr_tokenizer):
+    text = "arabanın kırdığım sol aynası"
+    heads = [3, 2, 1, 0]
+    deps = ["nmod", "acl", "amod", "ROOT"]
+    tags = ["NOUN", "VERB", "ADJ", "NOUN"]
+    tokens = tr_tokenizer(text)
+    doc = get_doc(
+        tokens.vocab, words=[t.text for t in tokens], tags=tags, heads=heads, deps=deps
+    )
+    chunks = list(doc.noun_chunks)
+    assert len(chunks) == 1
+    assert chunks[0].text_with_ws == "arabanın kırdığım sol aynası "
+
+
 def test_tr_noun_chunks_nmod_three(tr_tokenizer):
     text = "güney Afrika ülkelerinden Mozambik"
     heads = [1, 1, 1, 0]
@@ -296,3 +338,30 @@ def test_tr_noun_chunks_np_recursive_long_two_acls(tr_tokenizer):
     chunks = list(doc.noun_chunks)
     assert len(chunks) == 1
     assert chunks[0].text_with_ws == "içine Simge'nin bahçesinden toplanmış birkaç çiçeğin konmuş olduğu bir vazo "
+
+
+def test_tr_noun_chunks_two_nouns_in_nmod(tr_tokenizer):
+    text = "kız ve erkek çocuklar"
+    heads = [3, 1, -2, 0]
+    deps = ["nmod", "cc", "conj", "ROOT"]
+    tags = ["NOUN", "CCONJ", "NOUN", "NOUN"]
+    tokens = tr_tokenizer(text)
+    doc = get_doc(
+        tokens.vocab, words=[t.text for t in tokens], tags=tags, heads=heads, deps=deps
+    )
+    chunks = list(doc.noun_chunks)
+    assert len(chunks) == 1
+    assert chunks[0].text_with_ws == "kız ve erkek çocuklar "
+
+def test_tr_noun_chunks_two_nouns_in_nmod(tr_tokenizer):
+    text = "tatlı ve gürbüz çocuklar"
+    heads = [3, 1, -2, 0]
+    deps = ["amod", "cc", "conj", "ROOT"]
+    tags = ["ADJ", "CCONJ", "NOUN", "NOUN"]
+    tokens = tr_tokenizer(text)
+    doc = get_doc(
+        tokens.vocab, words=[t.text for t in tokens], tags=tags, heads=heads, deps=deps
+    )
+    chunks = list(doc.noun_chunks)
+    assert len(chunks) == 1
+    assert chunks[0].text_with_ws == "tatlı ve gürbüz çocuklar "
