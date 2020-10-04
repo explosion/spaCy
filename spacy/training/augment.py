@@ -34,14 +34,45 @@ def create_orth_variants_augmenter(
 ) -> Callable[["Language", Example], Iterator[Example]]:
     """Create a data augmentation callback that uses orth-variant replacement.
     The callback can be added to a corpus or other data iterator during training.
+
+    level (float): The percentage of texts that will be augmented.
+    lower (float): The percentage of texts that will be lowercased.
+    orth_variants (Dict[str, dict]): A dictionary containing the single and
+        paired orth variants. Typically loaded from a JSON file.
+    RETURNS (Callable[[Language, Example], Iterator[Example]]): The augmenter.
     """
     return partial(
         orth_variants_augmenter, orth_variants=orth_variants, level=level, lower=lower
     )
 
 
+@registry.augmenters("spacy.lower_case.v1")
+def create_lower_casing_augmenter(
+    level: float,
+) -> Callable[["Language", Example], Iterator[Example]]:
+    """Create a data augmentation callback that converts documents to lowercase.
+    The callback can be added to a corpus or other data iterator during training.
+
+    level (float): The percentage of texts that will be augmented.
+    RETURNS (Callable[[Language, Example], Iterator[Example]]): The augmenter.
+    """
+    return partial(lower_casing_augmenter, level=level)
+
+
 def dont_augment(nlp: "Language", example: Example) -> Iterator[Example]:
     yield example
+
+
+def lower_casing_augmenter(
+    nlp: "Language", example: Example, *, level: float,
+) -> Iterator[Example]:
+    if random.random() >= level:
+        yield example
+    else:
+        example_dict = example.to_dict()
+        doc = nlp.make_doc(example.text.lower())
+        example_dict["token_annotation"]["ORTH"] = [t.lower_ for t in doc]
+        yield example.from_dict(doc, example_dict)
 
 
 def orth_variants_augmenter(
