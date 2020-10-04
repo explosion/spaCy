@@ -1,10 +1,11 @@
+from typing import List, Dict, Union, Iterable, Any, Optional, Callable, Iterator
+from typing import Tuple
 import srsly
-from typing import List, Dict, Union, Iterable, Any, Optional
 from pathlib import Path
 
 from .pipe import Pipe
 from ..errors import Errors
-from ..training import validate_examples
+from ..training import validate_examples, Example
 from ..language import Language
 from ..matcher import Matcher
 from ..scorer import Scorer
@@ -22,17 +23,9 @@ TagMapType = Dict[str, Dict[Union[int, str], Union[int, str]]]
 MorphRulesType = Dict[str, Dict[str, Dict[Union[int, str], Union[int, str]]]]
 
 
-@Language.factory(
-    "attribute_ruler", default_config={"validate": False}
-)
-def make_attribute_ruler(
-    nlp: Language,
-    name: str,
-    validate: bool,
-):
-    return AttributeRuler(
-        nlp.vocab, name, pattern_dicts=pattern_dicts, validate=validate
-    )
+@Language.factory("attribute_ruler", default_config={"validate": False})
+def make_attribute_ruler(nlp: Language, name: str, validate: bool):
+    return AttributeRuler(nlp.vocab, name, validate=validate)
 
 
 class AttributeRuler(Pipe):
@@ -43,12 +36,7 @@ class AttributeRuler(Pipe):
     """
 
     def __init__(
-        self,
-        vocab: Vocab,
-        name: str = "attribute_ruler",
-        *,
-        pattern_dicts: Optional[Iterable[AttributeRulerPatternType]] = None,
-        validate: bool = False,
+        self, vocab: Vocab, name: str = "attribute_ruler", *, validate: bool = False
     ) -> None:
         """Create the AttributeRuler. After creation, you can add patterns
         with the `.initialize()` or `.add_patterns()` methods, or load patterns
@@ -57,7 +45,7 @@ class AttributeRuler(Pipe):
 
         vocab (Vocab): The vocab.
         name (str): The pipe name. Defaults to "attribute_ruler".
-        
+
         RETURNS (AttributeRuler): The AttributeRuler component.
 
         DOCS: https://nightly.spacy.io/api/attributeruler#init
@@ -71,15 +59,15 @@ class AttributeRuler(Pipe):
 
     def initialize(
         self,
-        get_examples: Optional[Callable[[], Iterable[Example]]] = None,
+        get_examples: Optional[Callable[[], Iterable[Example]]],
         *,
         nlp: Optional[Language] = None,
         patterns: Optional[Iterable[AttributeRulerPatternType]] = None,
-        tag_map: Optional[TagMapType]=None,
-        morph_rules: Optional[MorphRulesType]=None
+        tag_map: Optional[TagMapType] = None,
+        morph_rules: Optional[MorphRulesType] = None,
     ):
         """Initialize the attribute ruler by adding zero or more patterns.
-        
+
         Rules can be specified as a sequence of dicts using the `patterns`
         keyword argument. You can also provide rules using the "tag map" or
         "morph rules" formats supported by spaCy prior to v3.
@@ -126,7 +114,7 @@ class AttributeRuler(Pipe):
             set_token_attrs(span[index], attrs)
         return doc
 
-    def pipe(self, stream, *, batch_size=128):
+    def pipe(self, stream: Iterable[Doc], *, batch_size: int = 128) -> Iterator[Doc]:
         """Apply the pipe to a stream of documents. This usually happens under
         the hood when the nlp object is called on a text and all components are
         applied to the Doc.
@@ -210,16 +198,16 @@ class AttributeRuler(Pipe):
         self.attrs.append(attrs)
         self.indices.append(index)
 
-    def add_patterns(self, pattern_dicts: Iterable[AttributeRulerPatternType]) -> None:
+    def add_patterns(self, patterns: Iterable[AttributeRulerPatternType]) -> None:
         """Add patterns from a list of pattern dicts with the keys as the
         arguments to AttributeRuler.add.
-        pattern_dicts (Iterable[dict]): A list of pattern dicts with the keys
+        patterns (Iterable[dict]): A list of pattern dicts with the keys
             as the arguments to AttributeRuler.add (patterns/attrs/index) to
             add as patterns.
 
         DOCS: https://nightly.spacy.io/api/attributeruler#add_patterns
         """
-        for p in pattern_dicts:
+        for p in patterns:
             self.add(**p)
 
     @property
@@ -234,7 +222,7 @@ class AttributeRuler(Pipe):
             all_patterns.append(p)
         return all_patterns
 
-    def score(self, examples, **kwargs):
+    def score(self, examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
         """Score a batch of examples.
 
         examples (Iterable[Example]): The examples to score.
@@ -275,7 +263,7 @@ class AttributeRuler(Pipe):
 
     def from_bytes(
         self, bytes_data: bytes, exclude: Iterable[str] = SimpleFrozenList()
-    ):
+    ) -> "AttributeRuler":
         """Load the AttributeRuler from a bytestring.
 
         bytes_data (bytes): The data to load.
@@ -293,7 +281,6 @@ class AttributeRuler(Pipe):
             "patterns": load_patterns,
         }
         util.from_bytes(bytes_data, deserialize, exclude)
-
         return self
 
     def to_disk(
@@ -303,6 +290,7 @@ class AttributeRuler(Pipe):
 
         path (Union[Path, str]): A path to a directory.
         exclude (Iterable[str]): String names of serialization fields to exclude.
+
         DOCS: https://nightly.spacy.io/api/attributeruler#to_disk
         """
         serialize = {
@@ -313,11 +301,13 @@ class AttributeRuler(Pipe):
 
     def from_disk(
         self, path: Union[Path, str], exclude: Iterable[str] = SimpleFrozenList()
-    ) -> None:
+    ) -> "AttributeRuler":
         """Load the AttributeRuler from disk.
 
         path (Union[Path, str]): A path to a directory.
         exclude (Iterable[str]): String names of serialization fields to exclude.
+        RETURNS (AttributeRuler): The loaded object.
+
         DOCS: https://nightly.spacy.io/api/attributeruler#from_disk
         """
 
@@ -329,11 +319,10 @@ class AttributeRuler(Pipe):
             "patterns": load_patterns,
         }
         util.from_disk(path, deserialize, exclude)
-
         return self
 
 
-def _split_morph_attrs(attrs):
+def _split_morph_attrs(attrs: dict) -> Tuple[dict, dict]:
     """Split entries from a tag map or morph rules dict into to two dicts, one
     with the token-level features (POS, LEMMA) and one with the remaining
     features, which are presumed to be individual MORPH features."""
