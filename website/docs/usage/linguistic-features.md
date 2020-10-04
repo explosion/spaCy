@@ -1801,17 +1801,7 @@ print(doc2[5].tag_, doc2[5].pos_)  # WP PRON
 
 <Infobox variant="warning" title="Migrating from spaCy v2.x">
 
-For easy migration from from spaCy v2 to v3, the
-[`AttributeRuler`](/api/attributeruler) can import a **tag map and morph rules**
-in the v2 format with the methods
-[`load_from_tag_map`](/api/attributeruler#load_from_tag_map) and
-[`load_from_morph_rules`](/api/attributeruler#load_from_morph_rules).
-
-```diff
-nlp = spacy.blank("en")
-+ ruler = nlp.add_pipe("attribute_ruler")
-+ ruler.load_from_tag_map(YOUR_TAG_MAP)
-```
+The [`AttributeRuler`](/api/attributeruler) can import a **tag map and morph rules** in the v2.x format via its built-in methods or when the component is initialized before training. See the [migration guide](/usage/v3#migrating-training-mappings-exceptions) for details.
 
 </Infobox>
 

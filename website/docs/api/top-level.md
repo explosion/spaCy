@@ -689,7 +689,8 @@ Data augmentation is the process of applying small modifications to the training
 data. It can be especially useful for punctuation and case replacement – for
 example, if your corpus only uses smart quotes and you want to include
 variations using regular quotes, or to make the model less sensitive to
-capitalization by including a mix of capitalized and lowercase examples. See the [usage guide](/usage/training#data-augmentation) for details and examples.
+capitalization by including a mix of capitalized and lowercase examples. See the
+[usage guide](/usage/training#data-augmentation) for details and examples.
 
 ### spacy.orth_variants.v1 {#orth_variants tag="registered function"}
 
@@ -707,7 +708,7 @@ capitalization by including a mix of capitalized and lowercase examples. See the
 > ```
 
 Create a data augmentation callback that uses orth-variant replacement. The
-callback can be added to a corpus or other data iterator during training. This
+callback can be added to a corpus or other data iterator during training. It's
 is especially useful for punctuation and case replacement, to help generalize
 beyond corpora that don't have smart quotes, or only have smart quotes etc.
 
@@ -717,6 +718,25 @@ beyond corpora that don't have smart quotes, or only have smart quotes etc.
 | `lower`         | The percentage of texts that will be lowercased. ~~float~~                                                                                                                                                                                                                                                |
 | `orth_variants` | A dictionary containing the single and paired orth variants. Typically loaded from a JSON file. See [`en_orth_variants.json`](https://github.com/explosion/spacy-lookups-data/blob/master/spacy_lookups_data/data/en_orth_variants.json) for an example. ~~Dict[str, Dict[List[Union[str, List[str]]]]]~~ |
 | **CREATES**     | A function that takes the current `nlp` object and an [`Example`](/api/example) and yields augmented `Example` objects. ~~Callable[[Language, Example], Iterator[Example]]~~                                                                                                                              |
+
+### spacy.lower_case.v1 {#lower_case tag="registered function"}
+
+> #### Example config
+>
+> ```ini
+> [corpora.train.augmenter]
+> @augmenters = "spacy.lower_case.v1"
+> level = 0.3
+> ```
+
+Create a data augmentation callback that lowercases documents. The callback can
+be added to a corpus or other data iterator during training. It's especially
+useful for making the model less sensitive to capitalization.
+
+| Name        | Description                                                                                                                                                                  |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `level`     | The percentage of texts that will be augmented. ~~float~~                                                                                                                    |
+| **CREATES** | A function that takes the current `nlp` object and an [`Example`](/api/example) and yields augmented `Example` objects. ~~Callable[[Language, Example], Iterator[Example]]~~ |
 
 ## Training data and alignment {#gold source="spacy/training"}
 
@@ -827,10 +847,10 @@ utilities.
 ### util.get_lang_class {#util.get_lang_class tag="function"}
 
 Import and load a `Language` class. Allows lazy-loading
-[language data](/usage/linguistic-features#language-data) and importing languages using the
-two-letter language code. To add a language code for a custom language class,
-you can register it using the [`@registry.languages`](/api/top-level#registry)
-decorator.
+[language data](/usage/linguistic-features#language-data) and importing
+languages using the two-letter language code. To add a language code for a
+custom language class, you can register it using the
+[`@registry.languages`](/api/top-level#registry) decorator.
 
 > #### Example
 >

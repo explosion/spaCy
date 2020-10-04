@@ -8,6 +8,7 @@ menu:
   - ['Config System', 'config']
   - ['Custom Training', 'config-custom']
   - ['Custom Functions', 'custom-functions']
+  - ['Initialization', 'initialization']
   - ['Data Utilities', 'data']
   - ['Parallel Training', 'parallel-training']
   - ['Internal API', 'api']
@@ -689,17 +690,17 @@ During training, the results of each step are passed to a logger function. By
 default, these results are written to the console with the
 [`ConsoleLogger`](/api/top-level#ConsoleLogger). There is also built-in support
 for writing the log files to [Weights & Biases](https://www.wandb.com/) with the
-[`WandbLogger`](/api/top-level#WandbLogger). The logger function receives a
-**dictionary** with the following keys:
+[`WandbLogger`](/api/top-level#WandbLogger). On each step, the logger function
+receives a **dictionary** with the following keys:
 
-| Key            | Value                                                                                          |
-| -------------- | ---------------------------------------------------------------------------------------------- |
-| `epoch`        | How many passes over the data have been completed. ~~int~~                                     |
-| `step`         | How many steps have been completed. ~~int~~                                                    |
-| `score`        | The main score from the last evaluation, measured on the dev set. ~~float~~                    |
-| `other_scores` | The other scores from the last evaluation, measured on the dev set. ~~Dict[str, Any]~~         |
-| `losses`       | The accumulated training losses, keyed by component name. ~~Dict[str, float]~~                 |
-| `checkpoints`  | A list of previous results, where each result is a (score, step, epoch) tuple. ~~List[Tuple]~~ |
+| Key            | Value                                                                                                 |
+| -------------- | ----------------------------------------------------------------------------------------------------- |
+| `epoch`        | How many passes over the data have been completed. ~~int~~                                            |
+| `step`         | How many steps have been completed. ~~int~~                                                           |
+| `score`        | The main score from the last evaluation, measured on the dev set. ~~float~~                           |
+| `other_scores` | The other scores from the last evaluation, measured on the dev set. ~~Dict[str, Any]~~                |
+| `losses`       | The accumulated training losses, keyed by component name. ~~Dict[str, float]~~                        |
+| `checkpoints`  | A list of previous results, where each result is a `(score, step)` tuple. ~~List[Tuple[float, int]]~~ |
 
 You can easily implement and plug in your own logger that records the training
 results in a custom way, or sends them to an experiment management tracker of
@@ -715,30 +716,37 @@ tabular results to a file:
 
 ```python
 ### functions.py
-from typing import Tuple, Callable, Dict, Any
+import sys
+from typing import IO, Tuple, Callable, Dict, Any
 import spacy
+from spacy import Language
 from pathlib import Path
 
 @spacy.registry.loggers("my_custom_logger.v1")
 def custom_logger(log_path):
-    def setup_logger(nlp: "Language") -> Tuple[Callable, Callable]:
-        with Path(log_path).open("w", encoding="utf8") as file_:
-            file_.write("step\\t")
-            file_.write("score\\t")
-            for pipe in nlp.pipe_names:
-                file_.write(f"loss_{pipe}\\t")
-            file_.write("\\n")
+    def setup_logger(
+        nlp: Language,
+        stdout: IO=sys.stdout,
+        stderr: IO=sys.stderr
+    ) -> Tuple[Callable, Callable]:
+        stdout.write(f"Logging to {log_path}\n")
+        log_file = Path(log_path).open("w", encoding="utf8")
+        log_file.write("step\\t")
+        log_file.write("score\\t")
+        for pipe in nlp.pipe_names:
+            log_file.write(f"loss_{pipe}\\t")
+        log_file.write("\\n")
 
-        def log_step(info: Dict[str, Any]):
-            with Path(log_path).open("a") as file_:
-                file_.write(f"{info['step']}\\t")
-                file_.write(f"{info['score']}\\t")
+        def log_step(info: Optional[Dict[str, Any]]):
+            if info:
+                log_file.write(f"{info['step']}\\t")
+                log_file.write(f"{info['score']}\\t")
                 for pipe in nlp.pipe_names:
-                    file_.write(f"{info['losses'][pipe]}\\t")
-                file_.write("\\n")
+                    log_file.write(f"{info['losses'][pipe]}\\t")
+                log_file.write("\\n")
 
         def finalize():
-            pass
+            log_file.close()
 
         return log_step, finalize
 
@@ -817,9 +825,101 @@ def MyModel(output_width: int) -> Model[List[Doc], List[Floats2d]]:
     return create_model(output_width)
 ```
 
-### Customizing the initialization {#initialization}
+## Customizing the initialization {#initialization}
 
-<Infobox title="This section is still under construction" emoji="🚧" variant="warning">
+When you start training a new model from scratch,
+[`spacy train`](/api/cli#train) will call
+[`nlp.initialize`](/api/language#initialize) to initialize the pipeline and load
+the required data. All settings for this are defined in the
+[`[initialize]`](/api/data-formats#config-initialize) block of the config, so
+you can keep track of how the initial `nlp` object was created. The
+initialization process typically includes the following:
+
+> #### config.cfg (excerpt)
+>
+> ```ini
+> [initialize]
+> vectors = ${paths.vectors}
+> init_tok2vec = ${paths.init_tok2vec}
+>
+> [initialize.components]
+> # Settings for components
+> ```
+
+1. Load in **data resources** defined in the `[initialize]` config, including
+   **word vectors** and
+   [pretrained](/usage/embeddings-transformers/#pretraining) **tok2vec
+   weights**.
+2. Call the `initialize` methods of the tokenizer (if implemented, e.g. for
+   [Chinese](/usage/models#chinese)) and pipeline components with a callback to
+   access the training data, the current `nlp` object and any **custom
+   arguments** defined in the `[initialize]` config.
+3. In **pipeline components**: if needed, use the data to
+   [infer missing shapes](/usage/layers-architectures#thinc-shape-inference) and
+   set up the label scheme if no labels are provided. Components may also load
+   other data like lookup tables or dictionaries.
+
+The initialization step allows the config to define **all settings** required
+for the pipeline, while keeping a separation between settings and functions that
+should only be used **before training** to set up the initial pipeline, and
+logic and configuration that needs to be available **at runtime**. Without that
+separation, it would be very difficult to use the came, reproducible config file
+because the component settings required for training (load data from an external
+file) wouldn't match the component settings required at runtime (load what's
+included with the saved `nlp` object and don't depend on external file).
+
+![Illustration of pipeline lifecycle](../images/lifecycle.svg)
+
+<Infobox title="How components save and load data" emoji="📖">
+
+For details and examples of how pipeline components can **save and load data
+assets** like model weights or lookup tables, and how the component
+initialization is implemented under the hood, see the usage guide on
+[serializing and initializing component data](/usage/processing-pipelines#component-data-initialization).
+
+</Infobox>
+
+#### Initializing labels {#initialization-labels}
+
+Built-in pipeline components like the
+[`EntityRecognizer`](/api/entityrecognizer) or
+[`DependencyParser`](/api/dependencyparser) need to know their available labels
+and associated internal meta information to initialize their model weights.
+Using the `get_examples` callback provided on initialization, they're able to
+**read the labels off the training data** automatically, which is very
+convenient – but it can also slow down the training process to compute this
+information on every run.
+
+The [`init labels`](/api/cli#init-labels) command lets you auto-generate JSON
+files containing the label data for all supported components. You can then pass
+in the labels in the `[initialize]` settings for the respective components to
+allow them to initialize faster.
+
+> #### config.cfg
+>
+> ```ini
+> [initialize.components.ner]
+>
+> [initialize.components.ner.labels]
+> @readers = "spacy.read_labels.v1"
+> path = "corpus/labels/ner.json
+> ```
+
+```cli
+$ python -m spacy init labels config.cfg ./corpus --paths.train ./corpus/train.spacy
+```
+
+Under the hood, the command delegates to the `label_data` property of the
+pipeline components, for instance
+[`EntityRecognizer.label_data`](/api/entityrecognizer#label_data).
+
+<Infobox variant="warning" title="Important note">
+
+The JSON format differs for each component and some components need additional
+meta information about their labels. The format exported by
+[`init labels`](/api/cli#init-labels) matches what the components need, so you
+should always let spaCy **auto-generate the labels** for you.
+
 </Infobox>
 
 ## Data utilities {#data}
@@ -1298,8 +1398,8 @@ of being dropped.
 
 > - [`nlp`](/api/language): The `nlp` object with the pipeline components and
 >   their models.
-> - [`nlp.initialize`](/api/language#initialize): Start the training and return
->   an optimizer to update the component model weights.
+> - [`nlp.initialize`](/api/language#initialize): Initialize the pipeline and
+>   return an optimizer to update the component model weights.
 > - [`Optimizer`](https://thinc.ai/docs/api-optimizers): Function that holds
 >   state between updates.
 > - [`nlp.update`](/api/language#update): Update component models with examples.

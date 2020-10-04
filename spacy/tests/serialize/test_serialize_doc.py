@@ -92,7 +92,13 @@ def test_serialize_doc_bin_unknown_spaces(en_vocab):
 
 
 @pytest.mark.parametrize(
-    "writer_flag,reader_flag,reader_value", [(True, True, "bar"), (True, False, "bar"), (False, True, "nothing"), (False, False, "nothing")]
+    "writer_flag,reader_flag,reader_value",
+    [
+        (True, True, "bar"),
+        (True, False, "bar"),
+        (False, True, "nothing"),
+        (False, False, "nothing"),
+    ],
 )
 def test_serialize_custom_extension(en_vocab, writer_flag, reader_flag, reader_value):
     """Test that custom extensions are correctly serialized in DocBin."""

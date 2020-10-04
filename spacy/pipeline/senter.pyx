@@ -73,7 +73,7 @@ class SentenceRecognizer(Tagger):
 
     @property
     def label_data(self):
-        return self.labels
+        return None
 
     def set_annotations(self, docs, batch_tag_ids):
         """Modify a batch of documents, using pre-computed scores.
@@ -125,7 +125,7 @@ class SentenceRecognizer(Tagger):
             truths.append(eg_truth)
         d_scores, loss = loss_func(scores, truths)
         if self.model.ops.xp.isnan(loss):
-            raise ValueError("nan value when computing loss")
+            raise ValueError(Errors.E910.format(name=self.name))
         return float(loss), d_scores
 
     def initialize(self, get_examples, *, nlp=None):

@@ -23,8 +23,9 @@ def test_lemmatizer_initialize(lang, capfd):
         lookups.add_table("lemma_rules", {"verb": [["ing", ""]]})
         return lookups
 
+    lang_cls = get_lang_class(lang)
     # Test that languages can be initialized
-    nlp = get_lang_class(lang)()
+    nlp = lang_cls()
     lemmatizer = nlp.add_pipe("lemmatizer", config={"mode": "lookup"})
     assert not lemmatizer.lookups.tables
     nlp.config["initialize"]["components"]["lemmatizer"] = {
@@ -41,7 +42,13 @@ def test_lemmatizer_initialize(lang, capfd):
     assert doc[0].lemma_ == "y"
 
     # Test initialization by calling .initialize() directly
-    nlp = get_lang_class(lang)()
+    nlp = lang_cls()
     lemmatizer = nlp.add_pipe("lemmatizer", config={"mode": "lookup"})
     lemmatizer.initialize(lookups=lemmatizer_init_lookups())
     assert nlp("x")[0].lemma_ == "y"
+
+    # Test lookups config format
+    for mode in ("rule", "lookup", "pos_lookup"):
+        required, optional = lemmatizer.get_lookups_config(mode)
+        assert isinstance(required, list)
+        assert isinstance(optional, list)

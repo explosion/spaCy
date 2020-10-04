@@ -56,12 +56,7 @@ subword_features = true
 @Language.factory(
     "textcat",
     assigns=["doc.cats"],
-    default_config={
-        "labels": [],
-        "threshold": 0.5,
-        "positive_label": None,
-        "model": DEFAULT_TEXTCAT_MODEL,
-    },
+    default_config={"threshold": 0.5, "model": DEFAULT_TEXTCAT_MODEL},
     default_score_weights={
         "cats_score": 1.0,
         "cats_score_desc": None,
@@ -75,12 +70,7 @@ subword_features = true
     },
 )
 def make_textcat(
-    nlp: Language,
-    name: str,
-    model: Model[List[Doc], List[Floats2d]],
-    labels: List[str],
-    threshold: float,
-    positive_label: Optional[str],
+    nlp: Language, name: str, model: Model[List[Doc], List[Floats2d]], threshold: float
 ) -> "TextCategorizer":
     """Create a TextCategorizer compoment. The text categorizer predicts categories
     over a whole document. It can learn one or more labels, and the labels can
@@ -90,19 +80,9 @@ def make_textcat(
 
     model (Model[List[Doc], List[Floats2d]]): A model instance that predicts
         scores for each category.
-    labels (list): A list of categories to learn. If empty, the model infers the
-        categories from the data.
     threshold (float): Cutoff to consider a prediction "positive".
-    positive_label (Optional[str]): The positive label for a binary task with exclusive classes, None otherwise.
     """
-    return TextCategorizer(
-        nlp.vocab,
-        model,
-        name,
-        labels=labels,
-        threshold=threshold,
-        positive_label=positive_label,
-    )
+    return TextCategorizer(nlp.vocab, model, name, threshold=threshold)
 
 
 class TextCategorizer(Pipe):
@@ -112,14 +92,7 @@ class TextCategorizer(Pipe):
     """
 
     def __init__(
-        self,
-        vocab: Vocab,
-        model: Model,
-        name: str = "textcat",
-        *,
-        labels: List[str],
-        threshold: float,
-        positive_label: Optional[str],
+        self, vocab: Vocab, model: Model, name: str = "textcat", *, threshold: float
     ) -> None:
         """Initialize a text categorizer.
 
@@ -127,9 +100,7 @@ class TextCategorizer(Pipe):
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
         name (str): The component instance name, used to add entries to the
             losses during training.
-        labels (List[str]): The labels to use.
         threshold (float): Cutoff to consider a prediction "positive".
-        positive_label (Optional[str]): The positive label for a binary task with exclusive classes, None otherwise.
 
         DOCS: https://nightly.spacy.io/api/textcategorizer#init
         """
@@ -137,11 +108,7 @@ class TextCategorizer(Pipe):
         self.model = model
         self.name = name
         self._rehearsal_model = None
-        cfg = {
-            "labels": labels,
-            "threshold": threshold,
-            "positive_label": positive_label,
-        }
+        cfg = {"labels": [], "threshold": threshold, "positive_label": None}
         self.cfg = dict(cfg)
 
     @property
@@ -348,6 +315,7 @@ class TextCategorizer(Pipe):
         *,
         nlp: Optional[Language] = None,
         labels: Optional[Dict] = None,
+        positive_label: Optional[str] = None,
     ):
         """Initialize the pipe for training, using a representative set
         of data examples.
@@ -369,6 +337,14 @@ class TextCategorizer(Pipe):
         else:
             for label in labels:
                 self.add_label(label)
+        if positive_label is not None:
+            if positive_label not in self.labels:
+                err = Errors.E920.format(pos_label=positive_label, labels=self.labels)
+                raise ValueError(err)
+            if len(self.labels) != 2:
+                err = Errors.E919.format(pos_label=positive_label, labels=self.labels)
+                raise ValueError(err)
+        self.cfg["positive_label"] = positive_label
         subbatch = list(islice(get_examples(), 10))
         doc_sample = [eg.reference for eg in subbatch]
         label_sample, _ = self._examples_to_truth(subbatch)

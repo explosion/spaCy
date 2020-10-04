@@ -1,6 +1,7 @@
 import pytest
 from spacy.language import Language
-from spacy.util import SimpleFrozenList
+from spacy.pipeline import Pipe
+from spacy.util import SimpleFrozenList, get_arg_names
 
 
 @pytest.fixture
@@ -346,3 +347,60 @@ def test_pipe_methods_frozen():
         nlp.components.sort()
     with pytest.raises(NotImplementedError):
         nlp.component_names.clear()
+
+
+@pytest.mark.parametrize(
+    "pipe", ["tagger", "parser", "ner", "textcat", "morphologizer"],
+)
+def test_pipe_label_data_exports_labels(pipe):
+    nlp = Language()
+    pipe = nlp.add_pipe(pipe)
+    # Make sure pipe has pipe labels
+    assert getattr(pipe, "label_data", None) is not None
+    # Make sure pipe can be initialized with labels
+    initialize = getattr(pipe, "initialize", None)
+    assert initialize is not None
+    assert "labels" in get_arg_names(initialize)
+
+
+@pytest.mark.parametrize("pipe", ["senter", "entity_linker"])
+def test_pipe_label_data_no_labels(pipe):
+    nlp = Language()
+    pipe = nlp.add_pipe(pipe)
+    assert getattr(pipe, "label_data", None) is None
+    initialize = getattr(pipe, "initialize", None)
+    if initialize is not None:
+        assert "labels" not in get_arg_names(initialize)
+
+
+def test_warning_pipe_begin_training():
+    with pytest.warns(UserWarning, match="begin_training"):
+
+        class IncompatPipe(Pipe):
+            def __init__(self):
+                ...
+
+            def begin_training(*args, **kwargs):
+                ...
+
+
+def test_pipe_methods_initialize():
+    """Test that the [initialize] config reflects the components correctly."""
+    nlp = Language()
+    nlp.add_pipe("tagger")
+    assert "tagger" not in nlp.config["initialize"]["components"]
+    nlp.config["initialize"]["components"]["tagger"] = {"labels": ["hello"]}
+    assert nlp.config["initialize"]["components"]["tagger"] == {"labels": ["hello"]}
+    nlp.remove_pipe("tagger")
+    assert "tagger" not in nlp.config["initialize"]["components"]
+    nlp.add_pipe("tagger")
+    assert "tagger" not in nlp.config["initialize"]["components"]
+    nlp.config["initialize"]["components"]["tagger"] = {"labels": ["hello"]}
+    nlp.rename_pipe("tagger", "my_tagger")
+    assert "tagger" not in nlp.config["initialize"]["components"]
+    assert nlp.config["initialize"]["components"]["my_tagger"] == {"labels": ["hello"]}
+    nlp.config["initialize"]["components"]["test"] = {"foo": "bar"}
+    nlp.add_pipe("ner", name="test")
+    assert "test" in nlp.config["initialize"]["components"]
+    nlp.remove_pipe("test")
+    assert "test" not in nlp.config["initialize"]["components"]

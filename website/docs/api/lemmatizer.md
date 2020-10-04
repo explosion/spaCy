@@ -190,23 +190,10 @@ lemmatization entirely.
 Returns the lookups configuration settings for a given mode for use in
 [`Lemmatizer.load_lookups`](/api/lemmatizer#load_lookups).
 
-| Name        | Description                                                                                                                                                                       |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `mode`      | The lemmatizer mode. ~~str~~                                                                                                                                                      |
-| **RETURNS** | The lookups configuration settings for this mode. Includes the keys `"required_tables"` and `"optional_tables"`, mapped to a list of table string names. ~~Dict[str, List[str]]~~ |
-
-## Lemmatizer.load_lookups {#load_lookups tag="classmethod"}
-
-Load and validate lookups tables. If the provided lookups is `None`, load the
-default lookups tables according to the language and mode settings. Confirm that
-all required tables for the language and mode are present.
-
-| Name        | Description                                                                                        |
-| ----------- | -------------------------------------------------------------------------------------------------- |
-| `lang`      | The language. ~~str~~                                                                              |
-| `mode`      | The lemmatizer mode. ~~str~~                                                                       |
-| `lookups`   | The provided lookups, may be `None` if the default lookups should be loaded. ~~Optional[Lookups]~~ |
-| **RETURNS** | The lookups. ~~Lookups~~                                                                           |
+| Name        | Description                                                                            |
+| ----------- | -------------------------------------------------------------------------------------- |
+| `mode`      | The lemmatizer mode. ~~str~~                                                           |
+| **RETURNS** | The required table names and the optional table names. ~~Tuple[List[str], List[str]]~~ |
 
 ## Lemmatizer.to_disk {#to_disk tag="method"}
 

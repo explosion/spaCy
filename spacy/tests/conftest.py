@@ -294,7 +294,8 @@ def zh_tokenizer_pkuseg():
                 "segmenter": "pkuseg",
             }
         },
-        "initialize": {"tokenizer": {
+        "initialize": {
+            "tokenizer": {
                 "pkuseg_model": "default",
             }
         },

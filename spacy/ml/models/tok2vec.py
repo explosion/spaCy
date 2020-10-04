@@ -6,6 +6,7 @@ from thinc.api import expand_window, residual, Maxout, Mish, PyTorchLSTM
 
 from ...tokens import Doc
 from ...util import registry
+from ...errors import Errors
 from ...ml import _character_embed
 from ..staticvectors import StaticVectors
 from ..featureextractor import FeatureExtractor
@@ -165,8 +166,12 @@ def MultiHashEmbed(
 
 @registry.architectures.register("spacy.CharacterEmbed.v1")
 def CharacterEmbed(
-    width: int, rows: int, nM: int, nC: int, also_use_static_vectors: bool,
-    feature: Union[int, str]="LOWER"
+    width: int,
+    rows: int,
+    nM: int,
+    nC: int,
+    also_use_static_vectors: bool,
+    feature: Union[int, str] = "LOWER",
 ) -> Model[List[Doc], List[Floats2d]]:
     """Construct an embedded representation based on character embeddings, using
     a feed-forward network. A fixed number of UTF-8 byte characters are used for
@@ -197,7 +202,7 @@ def CharacterEmbed(
     """
     feature = intify_attr(feature)
     if feature is None:
-        raise ValueError("Invalid feature: Must be a token attribute.")
+        raise ValueError(Errors.E911(feat=feature))
     if also_use_static_vectors:
         model = chain(
             concatenate(

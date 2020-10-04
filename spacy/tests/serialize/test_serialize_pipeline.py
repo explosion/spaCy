@@ -136,13 +136,7 @@ def test_serialize_textcat_empty(en_vocab):
     # See issue #1105
     cfg = {"model": DEFAULT_TEXTCAT_MODEL}
     model = registry.resolve(cfg, validate=True)["model"]
-    textcat = TextCategorizer(
-        en_vocab,
-        model,
-        labels=["ENTITY", "ACTION", "MODIFIER"],
-        threshold=0.5,
-        positive_label=None,
-    )
+    textcat = TextCategorizer(en_vocab, model, threshold=0.5)
     textcat.to_bytes(exclude=["vocab"])
 
 

@@ -17,7 +17,7 @@ from ..lexeme cimport Lexeme
 from ..symbols cimport dep
 
 from ..util import normalize_slice
-from ..errors import Errors, TempErrors, Warnings
+from ..errors import Errors, Warnings
 from .underscore import Underscore, get_ext_args
 
 
@@ -362,8 +362,6 @@ cdef class Span:
         """RETURNS (Span): The sentence span that the span is a part of."""
         if "sent" in self.doc.user_span_hooks:
             return self.doc.user_span_hooks["sent"](self)
-        # This should raise if not parsed / no custom sentence boundaries
-        self.doc.sents
         # Use `sent_start` token attribute to find sentence boundaries
         cdef int n = 0
         if self.doc.has_annotation("SENT_START"):
@@ -373,13 +371,14 @@ cdef class Span:
                 start += -1
             # Find end of the sentence
             end = self.end
-            n = 0
             while end < self.doc.length and self.doc.c[end].sent_start != 1:
                 end += 1
                 n += 1
                 if n >= self.doc.length:
                     break
             return self.doc[start:end]
+        else:
+            raise ValueError(Errors.E030)
 
     @property
     def ents(self):
@@ -652,7 +651,7 @@ cdef class Span:
             return self.root.ent_id
 
         def __set__(self, hash_t key):
-            raise NotImplementedError(TempErrors.T007.format(attr="ent_id"))
+            raise NotImplementedError(Errors.E200.format(attr="ent_id"))
 
     property ent_id_:
         """RETURNS (str): The (string) entity ID."""
@@ -660,7 +659,7 @@ cdef class Span:
             return self.root.ent_id_
 
         def __set__(self, hash_t key):
-            raise NotImplementedError(TempErrors.T007.format(attr="ent_id_"))
+            raise NotImplementedError(Errors.E200.format(attr="ent_id_"))
 
     @property
     def orth_(self):

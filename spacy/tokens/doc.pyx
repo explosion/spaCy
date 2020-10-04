@@ -245,7 +245,7 @@ cdef class Doc:
         self.noun_chunks_iterator = self.vocab.get_noun_chunks
         cdef bint has_space
         if words is None and spaces is not None:
-            raise ValueError("words must be set if spaces is set")
+            raise ValueError(Errors.E908)
         elif spaces is None and words is not None:
             self.has_unknown_spaces = True
         else:
@@ -309,7 +309,7 @@ cdef class Doc:
                 else:
                     if len(ent) < 3 or ent[1] != "-":
                         raise ValueError(Errors.E177.format(tag=ent))
-                    ent_iob, ent_type = ent.split("-", 1) 
+                    ent_iob, ent_type = ent.split("-", 1)
                     if ent_iob not in iob_strings:
                         raise ValueError(Errors.E177.format(tag=ent))
                     ent_iob = iob_strings.index(ent_iob)

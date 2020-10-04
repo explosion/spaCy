@@ -134,7 +134,7 @@ class Morphologizer(Tagger):
             self.cfg["labels_pos"][norm_label] = POS_IDS[pos]
         return 1
 
-    def initialize(self, get_examples, *, nlp=None):
+    def initialize(self, get_examples, *, nlp=None, labels=None):
         """Initialize the pipe for training, using a representative set
         of data examples.
 
@@ -145,20 +145,24 @@ class Morphologizer(Tagger):
         DOCS: https://nightly.spacy.io/api/morphologizer#initialize
         """
         self._ensure_examples(get_examples)
-        # First, fetch all labels from the data
-        for example in get_examples():
-            for i, token in enumerate(example.reference):
-                pos = token.pos_
-                morph = str(token.morph)
-                # create and add the combined morph+POS label
-                morph_dict = Morphology.feats_to_dict(morph)
-                if pos:
-                    morph_dict[self.POS_FEAT] = pos
-                norm_label = self.vocab.strings[self.vocab.morphology.add(morph_dict)]
-                # add label->morph and label->POS mappings
-                if norm_label not in self.cfg["labels_morph"]:
-                    self.cfg["labels_morph"][norm_label] = morph
-                    self.cfg["labels_pos"][norm_label] = POS_IDS[pos]
+        if labels is not None:
+            self.cfg["labels_morph"] = labels["morph"]
+            self.cfg["labels_pos"] = labels["pos"]
+        else:
+            # First, fetch all labels from the data
+            for example in get_examples():
+                for i, token in enumerate(example.reference):
+                    pos = token.pos_
+                    morph = str(token.morph)
+                    # create and add the combined morph+POS label
+                    morph_dict = Morphology.feats_to_dict(morph)
+                    if pos:
+                        morph_dict[self.POS_FEAT] = pos
+                    norm_label = self.vocab.strings[self.vocab.morphology.add(morph_dict)]
+                    # add label->morph and label->POS mappings
+                    if norm_label not in self.cfg["labels_morph"]:
+                        self.cfg["labels_morph"][norm_label] = morph
+                        self.cfg["labels_pos"][norm_label] = POS_IDS[pos]
         if len(self.labels) <= 1:
             raise ValueError(Errors.E143.format(name=self.name))
         doc_sample = []
@@ -234,7 +238,7 @@ class Morphologizer(Tagger):
             truths.append(eg_truths)
         d_scores, loss = loss_func(scores, truths)
         if self.model.ops.xp.isnan(loss):
-            raise ValueError("nan value when computing loss")
+            raise ValueError(Errors.E910.format(name=self.name))
         return float(loss), d_scores
 
     def score(self, examples, **kwargs):

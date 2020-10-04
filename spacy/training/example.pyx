@@ -12,6 +12,7 @@ from .iob_utils import biluo_to_iob, offsets_to_biluo_tags, doc_to_biluo_tags
 from .iob_utils import biluo_tags_to_spans
 from ..errors import Errors, Warnings
 from ..pipeline._parser_internals import nonproj
+from ..util import logger
 
 
 cpdef Doc annotations_to_doc(vocab, tok_annot, doc_annot):
@@ -390,7 +391,7 @@ def _fix_legacy_dict_data(example_dict):
     if "HEAD" in token_dict and "SENT_START" in token_dict:
         # If heads are set, we don't also redundantly specify SENT_START.
         token_dict.pop("SENT_START")
-        warnings.warn(Warnings.W092)
+        logger.debug(Warnings.W092)
     return {
         "token_annotation": token_dict,
         "doc_annotation": doc_dict

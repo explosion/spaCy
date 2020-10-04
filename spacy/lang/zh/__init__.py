@@ -47,7 +47,7 @@ class Segmenter(str, Enum):
 
 
 @registry.tokenizers("spacy.zh.ChineseTokenizer")
-def create_chinese_tokenizer(segmenter: Segmenter = Segmenter.char,):
+def create_chinese_tokenizer(segmenter: Segmenter = Segmenter.char):
     def chinese_tokenizer_factory(nlp):
         return ChineseTokenizer(nlp, segmenter=segmenter)
 

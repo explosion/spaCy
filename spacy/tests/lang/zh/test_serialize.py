@@ -34,7 +34,8 @@ def test_zh_tokenizer_serialize_pkuseg_with_processors(zh_tokenizer_pkuseg):
                 "segmenter": "pkuseg",
             }
         },
-        "initialize": {"tokenizer": {
+        "initialize": {
+            "tokenizer": {
                 "pkuseg_model": "medicine",
             }
         },
