@@ -456,3 +456,59 @@ def test_tr_noun_chunks_conj_subject(tr_tokenizer):
     assert len(chunks) == 2
     assert chunks[0].text_with_ws == "ben "
     assert chunks[1].text_with_ws == "Sen "
+
+
+def test_tr_noun_chunks_flat_simple(tr_tokenizer):
+    text = "New York"
+    heads = [0, -1]
+    deps = ["ROOT", "flat"]
+    tags = ["PROPN", "PROPN"]
+    tokens = tr_tokenizer(text)
+    doc = get_doc(
+        tokens.vocab, words=[t.text for t in tokens], tags=tags, heads=heads, deps=deps
+    )
+    chunks = list(doc.noun_chunks)
+    assert len(chunks) == 1
+    assert chunks[0].text_with_ws == "New York "
+
+
+def test_tr_noun_chunks_flat_names_and_title(tr_tokenizer):
+    text = "Gazi Mustafa Kemal"
+    heads = [1, 0, -1]
+    deps = ["nmod", "ROOT", "flat"]
+    tags = ["PROPN", "PROPN", "PROPN"]
+    tokens = tr_tokenizer(text)
+    doc = get_doc(
+        tokens.vocab, words=[t.text for t in tokens], tags=tags, heads=heads, deps=deps
+    )
+    chunks = list(doc.noun_chunks)
+    assert len(chunks) == 1
+    assert chunks[0].text_with_ws == "Gazi Mustafa Kemal "
+
+
+def test_tr_noun_chunks_flat_names_and_title(tr_tokenizer):
+    text = "Ahmet Vefik Paşa"
+    heads = [2, -1, 0]
+    deps = ["nmod", "flat", "ROOT"]
+    tags = ["PROPN", "PROPN", "PROPN"]
+    tokens = tr_tokenizer(text)
+    doc = get_doc(
+        tokens.vocab, words=[t.text for t in tokens], tags=tags, heads=heads, deps=deps
+    )
+    chunks = list(doc.noun_chunks)
+    assert len(chunks) == 1
+    assert chunks[0].text_with_ws == "Ahmet Vefik Paşa "
+
+
+def test_tr_noun_chunks_flat_name_lastname_and_title(tr_tokenizer):
+    text = "Cumhurbaşkanı Ahmet Necdet Sezer"
+    heads = [1, 0, -1, -2]
+    deps = ["nmod", "ROOT", "flat", "flat"]
+    tags = ["NOUN", "PROPN", "PROPN", "PROPN"]
+    tokens = tr_tokenizer(text)
+    doc = get_doc(
+        tokens.vocab, words=[t.text for t in tokens], tags=tags, heads=heads, deps=deps
+    )
+    chunks = list(doc.noun_chunks)
+    assert len(chunks) == 1
+    assert chunks[0].text_with_ws == "Cumhurbaşkanı Ahmet Necdet Sezer "
