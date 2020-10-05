@@ -181,7 +181,8 @@ def train_while_improving(
         for name, proc in nlp.pipeline:
             if (
                 name not in exclude
-                and hasattr(proc, "model")
+                and hasattr(proc, "is_trainable")
+                and proc.is_trainable()
                 and proc.model not in (True, False, None)
             ):
                 proc.finish_update(optimizer)

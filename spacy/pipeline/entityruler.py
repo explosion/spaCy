@@ -2,8 +2,9 @@ from typing import Optional, Union, List, Dict, Tuple, Iterable, Any, Callable
 from collections import defaultdict
 from pathlib import Path
 import srsly
-from spacy.training import Example
 
+from .pipe import Pipe
+from ..training import Example
 from ..language import Language
 from ..errors import Errors
 from ..util import ensure_path, to_disk, from_disk, SimpleFrozenList
@@ -51,7 +52,7 @@ def make_entity_ruler(
     )
 
 
-class EntityRuler:
+class EntityRuler(Pipe):
     """The EntityRuler lets you add spans to the `Doc.ents` using token-based
     rules or exact phrase matches. It can be combined with the statistical
     `EntityRecognizer` to boost accuracy, or used on its own to implement a
@@ -134,7 +135,6 @@ class EntityRuler:
 
         DOCS: https://nightly.spacy.io/api/entityruler#call
         """
-        self._require_patterns()
         matches = list(self.matcher(doc)) + list(self.phrase_matcher(doc))
         matches = set(
             [(m_id, start, end) for m_id, start, end in matches if start != end]
@@ -315,11 +315,6 @@ class EntityRuler:
         self.phrase_patterns = defaultdict(list)
         self._ent_ids = defaultdict(dict)
 
-    def _require_patterns(self) -> None:
-        """Raise an error if the component has no patterns."""
-        if not self.patterns or list(self.patterns) == [""]:
-            raise ValueError(Errors.E900.format(name=self.name))
-
     def _split_label(self, label: str) -> Tuple[str, str]:
         """Split Entity label into ent_label and ent_id if it contains self.ent_id_sep
 
@@ -347,6 +342,12 @@ class EntityRuler:
     def score(self, examples, **kwargs):
         validate_examples(examples, "EntityRuler.score")
         return Scorer.score_spans(examples, "ents", **kwargs)
+
+    def predict(self, docs):
+        pass
+
+    def set_annotations(self, docs, scores):
+        pass
 
     def from_bytes(
         self, patterns_bytes: bytes, *, exclude: Iterable[str] = SimpleFrozenList()

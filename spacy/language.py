@@ -1091,7 +1091,8 @@ class Language:
             for name, proc in self.pipeline:
                 if (
                     name not in exclude
-                    and hasattr(proc, "model")
+                    and hasattr(proc, "is_trainable")
+                    and proc.is_trainable()
                     and proc.model not in (True, False, None)
                 ):
                     proc.finish_update(sgd)
@@ -1297,7 +1298,9 @@ class Language:
         for name, pipe in self.pipeline:
             kwargs = component_cfg.get(name, {})
             kwargs.setdefault("batch_size", batch_size)
-            if not hasattr(pipe, "pipe"):
+            # non-trainable components may have a pipe() implementation that refers to dummy
+            # predict and set_annotations methods
+            if not hasattr(pipe, "pipe") or not hasattr(pipe, "is_trainable") or not pipe.is_trainable():
                 docs = _pipe(docs, pipe, kwargs)
             else:
                 docs = pipe.pipe(docs, **kwargs)

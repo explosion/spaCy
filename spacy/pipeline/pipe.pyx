@@ -228,6 +228,9 @@ cdef class Pipe:
     def is_resizable(self):
         return hasattr(self, "model") and "resize_output" in self.model.attrs
 
+    def is_trainable(self):
+        return hasattr(self, "model") and isinstance(self.model, Model)
+
     def set_output(self, nO):
         if self.is_resizable():
             self.model.attrs["resize_output"](self.model, nO)
