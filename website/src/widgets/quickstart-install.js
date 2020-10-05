@@ -4,6 +4,8 @@ import { StaticQuery, graphql } from 'gatsby'
 import { Quickstart, QS } from '../components/quickstart'
 import { repo } from '../components/util'
 
+const DEFAULT_MODELS = ['en']
+const DEFAULT_OPT = 'efficiency'
 const DEFAULT_HARDWARE = 'cpu'
 const DEFAULT_CUDA = 'cuda100'
 const CUDA = {
@@ -68,9 +70,13 @@ const QuickstartInstall = ({ id, title }) => {
     const [train, setTrain] = useState(false)
     const [hardware, setHardware] = useState(DEFAULT_HARDWARE)
     const [cuda, setCuda] = useState(DEFAULT_CUDA)
+    const [selectedModels, setModels] = useState(DEFAULT_MODELS)
+    const [efficiency, setEfficiency] = useState(DEFAULT_OPT === 'efficiency')
     const setters = {
         hardware: v => (Array.isArray(v) ? setHardware(v[0]) : setCuda(v)),
         config: v => setTrain(v.includes('train')),
+        models: setModels,
+        optimize: v => setEfficiency(v.includes('efficiency')),
     }
     const showDropdown = {
         hardware: () => hardware === 'gpu',
@@ -89,13 +95,37 @@ const QuickstartInstall = ({ id, title }) => {
                     ...DATA,
                     {
                         id: 'models',
-                        title: 'Trained Pipelines',
+                        title: 'Trained pipelines',
                         multiple: true,
                         options: models
                             .sort((a, b) => a.name.localeCompare(b.name))
-                            .map(({ code, name }) => ({ id: code, title: name })),
+                            .map(({ code, name }) => ({
+                                id: code,
+                                title: name,
+                                checked: DEFAULT_MODELS.includes(code),
+                            })),
                     },
                 ]
+                if (selectedModels.length) {
+                    data.push({
+                        id: 'optimize',
+                        title: 'Select pipeline for',
+                        options: [
+                            {
+                                id: 'efficiency',
+                                title: 'efficiency',
+                                checked: DEFAULT_OPT === 'efficiency',
+                                help: 'Faster and smaller pipeline, but less accurate',
+                            },
+                            {
+                                id: 'accuracy',
+                                title: 'accuracy',
+                                checked: DEFAULT_OPT === 'accuracy',
+                                help: 'Larger and slower pipeline, but more accurate',
+                            },
+                        ],
+                    })
+                }
                 return (
                     <Quickstart
                         data={data}
@@ -149,11 +179,14 @@ const QuickstartInstall = ({ id, title }) => {
                             conda install -c conda-forge spacy-lookups-data
                         </QS>
 
-                        {models.map(({ code, models: modelOptions }) => (
-                            <QS models={code} key={code}>
-                                python -m spacy download {modelOptions[0]}
-                            </QS>
-                        ))}
+                        {models.map(({ code, models: modelOptions }) => {
+                            const pkg = modelOptions[efficiency ? 0 : modelOptions.length - 1]
+                            return (
+                                <QS models={code} key={code}>
+                                    python -m spacy download {pkg}
+                                </QS>
+                            )
+                        })}
                     </Quickstart>
                 )
             }}
