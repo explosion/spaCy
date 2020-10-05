@@ -104,7 +104,7 @@ class SentenceRecognizer(Tagger):
 
         examples (Iterable[Examples]): The batch of examples.
         scores: Scores representing the model's predictions.
-        RETUTNRS (Tuple[float, float]): The loss and the gradient.
+        RETURNS (Tuple[float, float]): The loss and the gradient.
 
         DOCS: https://nightly.spacy.io/api/sentencerecognizer#get_loss
         """
