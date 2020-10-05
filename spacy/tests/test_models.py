@@ -63,7 +63,7 @@ def get_tok2vec_kwargs():
     return {
         "embed": MultiHashEmbed(
             width=32,
-            rows=500,
+            rows=[500, 500, 500],
             attrs=["NORM", "PREFIX", "SHAPE"],
             include_static_vectors=False
         ),
@@ -80,7 +80,7 @@ def test_tok2vec():
 def test_multi_hash_embed():
     embed = MultiHashEmbed(
         width=32,
-        rows=500,
+        rows=[500, 500, 500],
         attrs=["NORM", "PREFIX", "SHAPE"],
         include_static_vectors=False
     )
@@ -95,8 +95,8 @@ def test_multi_hash_embed():
     # Now try with different row factors
     embed = MultiHashEmbed(
         width=32,
-        rows=500,
-        attrs={"NORM": 2.0, "PREFIX": 0.1, "SHAPE": 0.5},
+        rows=[1000, 50, 250],
+        attrs=["NORM", "PREFIX", "SHAPE"],
         include_static_vectors=False
     )
     hash_embeds = [node for node in embed.walk() if node.name == "hashembed"]
