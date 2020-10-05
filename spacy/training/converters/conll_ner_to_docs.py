@@ -103,7 +103,7 @@ def conll_ner_to_docs(
             lines = [line.strip() for line in conll_sent.split("\n") if line.strip()]
             cols = list(zip(*[line.split() for line in lines]))
             if len(cols) < 2:
-                raise ValueError(Errors.E093)
+                raise ValueError(Errors.E903)
             length = len(cols[0])
             words.extend(cols[0])
             sent_starts.extend([True] + [False] * (length - 1))

@@ -17,8 +17,7 @@ from ... import util
 
 
 # fmt: off
-_PKUSEG_INSTALL_MSG = "install pkuseg and pickle5 with `pip install pkuseg==0.0.25 pickle5`"
-_PKUSEG_PICKLE_WARNING = "Failed to force pkuseg model to use pickle protocol 4. If you're saving this model with python 3.8, it may not work with python 3.6-3.7."
+_PKUSEG_INSTALL_MSG = "install spacy-pkuseg with `pip install spacy-pkuseg==0.0.26`"
 # fmt: on
 
 DEFAULT_CONFIG = """
@@ -55,9 +54,7 @@ def create_chinese_tokenizer(segmenter: Segmenter = Segmenter.char):
 
 
 class ChineseTokenizer(DummyTokenizer):
-    def __init__(
-        self, nlp: Language, segmenter: Segmenter = Segmenter.char,
-    ):
+    def __init__(self, nlp: Language, segmenter: Segmenter = Segmenter.char):
         self.vocab = nlp.vocab
         if isinstance(segmenter, Segmenter):
             segmenter = segmenter.value
@@ -82,11 +79,13 @@ class ChineseTokenizer(DummyTokenizer):
         *,
         nlp: Optional[Language] = None,
         pkuseg_model: Optional[str] = None,
-        pkuseg_user_dict: str = "default",
+        pkuseg_user_dict: Optional[str] = "default",
     ):
         if self.segmenter == Segmenter.pkuseg:
+            if pkuseg_user_dict is None:
+                pkuseg_user_dict = pkuseg_model
             self.pkuseg_seg = try_pkuseg_import(
-                pkuseg_model=pkuseg_model, pkuseg_user_dict=pkuseg_user_dict,
+                pkuseg_model=pkuseg_model, pkuseg_user_dict=pkuseg_user_dict
             )
 
     def __call__(self, text: str) -> Doc:
@@ -120,12 +119,12 @@ class ChineseTokenizer(DummyTokenizer):
         if self.segmenter == Segmenter.pkuseg:
             if reset:
                 try:
-                    import pkuseg
+                    import spacy_pkuseg
 
-                    self.pkuseg_seg.preprocesser = pkuseg.Preprocesser(None)
+                    self.pkuseg_seg.preprocesser = spacy_pkuseg.Preprocesser(None)
                 except ImportError:
                     msg = (
-                        "pkuseg not installed: unable to reset pkuseg "
+                        "spacy_pkuseg not installed: unable to reset pkuseg "
                         "user dict. Please " + _PKUSEG_INSTALL_MSG
                     )
                     raise ImportError(msg) from None
@@ -156,23 +155,7 @@ class ChineseTokenizer(DummyTokenizer):
                 self.pkuseg_seg.feature_extractor.save(tempdir)
                 self.pkuseg_seg.model.save(tempdir)
                 tempdir = Path(tempdir)
-                # pkuseg saves features.pkl with pickle.HIGHEST_PROTOCOL, which
-                # means that it will be saved with pickle protocol 5 with
-                # python 3.8, which can't be reloaded with python 3.6-3.7.
-                # To try to make the model compatible with python 3.6+, reload
-                # the data with pickle5 and convert it back to protocol 4.
-                try:
-                    import pickle5
-
-                    with open(tempdir / "features.pkl", "rb") as fileh:
-                        features = pickle5.load(fileh)
-                    with open(tempdir / "features.pkl", "wb") as fileh:
-                        pickle5.dump(features, fileh, protocol=4)
-                except ImportError as e:
-                    raise e
-                except Exception:
-                    warnings.warn(_PKUSEG_PICKLE_WARNING)
-                with open(tempdir / "features.pkl", "rb") as fileh:
+                with open(tempdir / "features.msgpack", "rb") as fileh:
                     pkuseg_features_b = fileh.read()
                 with open(tempdir / "weights.npz", "rb") as fileh:
                     pkuseg_weights_b = fileh.read()
@@ -213,22 +196,22 @@ class ChineseTokenizer(DummyTokenizer):
         if pkuseg_data["features_b"] and pkuseg_data["weights_b"]:
             with tempfile.TemporaryDirectory() as tempdir:
                 tempdir = Path(tempdir)
-                with open(tempdir / "features.pkl", "wb") as fileh:
+                with open(tempdir / "features.msgpack", "wb") as fileh:
                     fileh.write(pkuseg_data["features_b"])
                 with open(tempdir / "weights.npz", "wb") as fileh:
                     fileh.write(pkuseg_data["weights_b"])
                 try:
-                    import pkuseg
+                    import spacy_pkuseg
                 except ImportError:
                     raise ImportError(
-                        "pkuseg not installed. To use this model, "
+                        "spacy-pkuseg not installed. To use this model, "
                         + _PKUSEG_INSTALL_MSG
                     ) from None
-                self.pkuseg_seg = pkuseg.pkuseg(str(tempdir))
+                self.pkuseg_seg = spacy_pkuseg.pkuseg(str(tempdir))
             if pkuseg_data["processors_data"]:
                 processors_data = pkuseg_data["processors_data"]
                 (user_dict, do_process, common_words, other_words) = processors_data
-                self.pkuseg_seg.preprocesser = pkuseg.Preprocesser(user_dict)
+                self.pkuseg_seg.preprocesser = spacy_pkuseg.Preprocesser(user_dict)
                 self.pkuseg_seg.postprocesser.do_process = do_process
                 self.pkuseg_seg.postprocesser.common_words = set(common_words)
                 self.pkuseg_seg.postprocesser.other_words = set(other_words)
@@ -244,18 +227,6 @@ class ChineseTokenizer(DummyTokenizer):
                     path.mkdir(parents=True)
                 self.pkuseg_seg.model.save(path)
                 self.pkuseg_seg.feature_extractor.save(path)
-                # try to convert features.pkl to pickle protocol 4
-                try:
-                    import pickle5
-
-                    with open(path / "features.pkl", "rb") as fileh:
-                        features = pickle5.load(fileh)
-                    with open(path / "features.pkl", "wb") as fileh:
-                        pickle5.dump(features, fileh, protocol=4)
-                except ImportError as e:
-                    raise e
-                except Exception:
-                    warnings.warn(_PKUSEG_PICKLE_WARNING)
 
         def save_pkuseg_processors(path):
             if self.pkuseg_seg:
@@ -279,26 +250,26 @@ class ChineseTokenizer(DummyTokenizer):
 
         def load_pkuseg_model(path):
             try:
-                import pkuseg
+                import spacy_pkuseg
             except ImportError:
                 if self.segmenter == Segmenter.pkuseg:
                     raise ImportError(
-                        "pkuseg not installed. To use this model, "
+                        "spacy-pkuseg not installed. To use this model, "
                         + _PKUSEG_INSTALL_MSG
                     ) from None
             if path.exists():
-                self.pkuseg_seg = pkuseg.pkuseg(path)
+                self.pkuseg_seg = spacy_pkuseg.pkuseg(path)
 
         def load_pkuseg_processors(path):
             try:
-                import pkuseg
+                import spacy_pkuseg
             except ImportError:
                 if self.segmenter == Segmenter.pkuseg:
                     raise ImportError(self._pkuseg_install_msg) from None
             if self.segmenter == Segmenter.pkuseg:
                 data = srsly.read_msgpack(path)
                 (user_dict, do_process, common_words, other_words) = data
-                self.pkuseg_seg.preprocesser = pkuseg.Preprocesser(user_dict)
+                self.pkuseg_seg.preprocesser = spacy_pkuseg.Preprocesser(user_dict)
                 self.pkuseg_seg.postprocesser.do_process = do_process
                 self.pkuseg_seg.postprocesser.common_words = set(common_words)
                 self.pkuseg_seg.postprocesser.other_words = set(other_words)
@@ -341,12 +312,13 @@ def try_jieba_import() -> None:
 
 def try_pkuseg_import(pkuseg_model: str, pkuseg_user_dict: str) -> None:
     try:
-        import pkuseg
+        import spacy_pkuseg
 
-        return pkuseg.pkuseg(pkuseg_model, pkuseg_user_dict)
     except ImportError:
-        msg = "pkuseg not installed. To use pkuseg, " + _PKUSEG_INSTALL_MSG
+        msg = "spacy-pkuseg not installed. To use pkuseg, " + _PKUSEG_INSTALL_MSG
         raise ImportError(msg) from None
+    try:
+        return spacy_pkuseg.pkuseg(pkuseg_model, pkuseg_user_dict)
     except FileNotFoundError:
         msg = "Unable to load pkuseg model from: " + pkuseg_model
         raise FileNotFoundError(msg) from None

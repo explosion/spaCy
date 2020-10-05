@@ -445,9 +445,9 @@ cdef class Vocab:
         setters = ["strings", "vectors"]
         if "strings" not in exclude:
             self.strings.to_disk(path / "strings.json")
-        if "vectors" not in "exclude" and self.vectors is not None:
+        if "vectors" not in "exclude":
             self.vectors.to_disk(path)
-        if "lookups" not in "exclude" and self.lookups is not None:
+        if "lookups" not in "exclude":
             self.lookups.to_disk(path)
 
     def from_disk(self, path, *, exclude=tuple()):

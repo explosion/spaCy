@@ -24,9 +24,9 @@ def test_empty_doc():
     tok2vec = build_Tok2Vec_model(
         MultiHashEmbed(
             width=width,
-            rows=embed_size,
-            also_use_static_vectors=False,
-            also_embed_subwords=True,
+            rows=[embed_size, embed_size, embed_size, embed_size],
+            include_static_vectors=False,
+            attrs=["NORM", "PREFIX", "SUFFIX", "SHAPE"],
         ),
         MaxoutWindowEncoder(width=width, depth=4, window_size=1, maxout_pieces=3),
     )
@@ -44,9 +44,9 @@ def test_tok2vec_batch_sizes(batch_size, width, embed_size):
     tok2vec = build_Tok2Vec_model(
         MultiHashEmbed(
             width=width,
-            rows=embed_size,
-            also_use_static_vectors=False,
-            also_embed_subwords=True,
+            rows=[embed_size] * 4,
+            include_static_vectors=False,
+            attrs=["NORM", "PREFIX", "SUFFIX", "SHAPE"],
         ),
         MaxoutWindowEncoder(width=width, depth=4, window_size=1, maxout_pieces=3),
     )
@@ -61,8 +61,8 @@ def test_tok2vec_batch_sizes(batch_size, width, embed_size):
 @pytest.mark.parametrize(
     "width,embed_arch,embed_config,encode_arch,encode_config",
     [
-        (8, MultiHashEmbed, {"rows": 100, "also_embed_subwords": True, "also_use_static_vectors": False}, MaxoutWindowEncoder, {"window_size": 1, "maxout_pieces": 3, "depth": 2}),
-        (8, MultiHashEmbed, {"rows": 100, "also_embed_subwords": True, "also_use_static_vectors": False}, MishWindowEncoder, {"window_size": 1, "depth": 6}),
+        (8, MultiHashEmbed, {"rows": [100, 100], "attrs": ["SHAPE", "LOWER"], "include_static_vectors": False}, MaxoutWindowEncoder, {"window_size": 1, "maxout_pieces": 3, "depth": 2}),
+        (8, MultiHashEmbed, {"rows": [100, 20], "attrs": ["ORTH", "PREFIX"], "include_static_vectors": False}, MishWindowEncoder, {"window_size": 1, "depth": 6}),
         (8, CharacterEmbed, {"rows": 100, "nM": 64, "nC": 8, "also_use_static_vectors": False}, MaxoutWindowEncoder, {"window_size": 1, "maxout_pieces": 3, "depth": 3}),
         (8, CharacterEmbed, {"rows": 100, "nM": 16, "nC": 2, "also_use_static_vectors": False}, MishWindowEncoder, {"window_size": 1, "depth": 3}),
     ],
@@ -118,9 +118,9 @@ cfg_string = """
     [components.tok2vec.model.embed]
     @architectures = "spacy.MultiHashEmbed.v1"
     width = ${components.tok2vec.model.encode.width}
-    rows = 2000
-    also_embed_subwords = true
-    also_use_static_vectors = false
+    rows = [2000, 1000, 1000, 1000]
+    attrs = ["NORM", "PREFIX", "SUFFIX", "SHAPE"]
+    include_static_vectors = false
 
     [components.tok2vec.model.encode]
     @architectures = "spacy.MaxoutWindowEncoder.v1"

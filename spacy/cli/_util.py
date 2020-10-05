@@ -1,4 +1,4 @@
-from typing import Dict, Any, Union, List, Optional, Tuple, TYPE_CHECKING
+from typing import Dict, Any, Union, List, Optional, Tuple, Iterable, TYPE_CHECKING
 import sys
 import shutil
 from pathlib import Path
@@ -16,7 +16,8 @@ import os
 
 from ..schemas import ProjectConfigSchema, validate
 from ..util import import_file, run_command, make_tempdir, registry, logger
-from ..util import ENV_VARS
+from ..util import is_compatible_version, ENV_VARS
+from .. import about
 
 if TYPE_CHECKING:
     from pathy import Pathy  # noqa: F401
@@ -142,6 +143,7 @@ def load_project_config(path: Path, interpolate: bool = True) -> Dict[str, Any]:
         msg.fail(invalid_err)
         print("\n".join(errors))
         sys.exit(1)
+    validate_project_version(config)
     validate_project_commands(config)
     # Make sure directories defined in config exist
     for subdir in config.get("directories", []):
@@ -165,6 +167,23 @@ def substitute_project_variables(config: Dict[str, Any], overrides: Dict = {}):
     cfg = Config({"project": config, key: config[key]})
     interpolated = cfg.interpolate()
     return dict(interpolated["project"])
+
+
+def validate_project_version(config: Dict[str, Any]) -> None:
+    """If the project defines a compatible spaCy version range, chec that it's
+    compatible with the current version of spaCy.
+
+    config (Dict[str, Any]): The loaded config.
+    """
+    spacy_version = config.get("spacy_version", None)
+    if spacy_version and not is_compatible_version(about.__version__, spacy_version):
+        err = (
+            f"The {PROJECT_FILE} specifies a spaCy version range ({spacy_version}) "
+            f"that's not compatible with the version of spaCy you're running "
+            f"({about.__version__}). You can edit version requirement in the "
+            f"{PROJECT_FILE} to load it, but the project may not run as expected."
+        )
+        msg.fail(err, exits=1)
 
 
 def validate_project_commands(config: Dict[str, Any]) -> None:
@@ -193,12 +212,15 @@ def validate_project_commands(config: Dict[str, Any]) -> None:
                 )
 
 
-def get_hash(data) -> str:
+def get_hash(data, exclude: Iterable[str] = tuple()) -> str:
     """Get the hash for a JSON-serializable object.
 
     data: The data to hash.
+    exclude (Iterable[str]): Top-level keys to exclude if data is a dict.
     RETURNS (str): The hash.
     """
+    if isinstance(data, dict):
+        data = {k: v for k, v in data.items() if k not in exclude}
     data_str = srsly.json_dumps(data, sort_keys=True).encode("utf8")
     return hashlib.md5(data_str).hexdigest()
 

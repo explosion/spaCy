@@ -89,9 +89,9 @@ def my_parser():
     tok2vec = build_Tok2Vec_model(
         MultiHashEmbed(
             width=321,
-            rows=5432,
-            also_embed_subwords=True,
-            also_use_static_vectors=False,
+            attrs=["LOWER", "SHAPE"],
+            rows=[5432, 5432],
+            include_static_vectors=False,
         ),
         MaxoutWindowEncoder(width=321, window_size=3, maxout_pieces=4, depth=2),
     )
