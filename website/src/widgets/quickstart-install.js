@@ -17,6 +17,7 @@ const CUDA = {
     '10.1': 'cuda101',
     '10.2': 'cuda102',
 }
+const LANG_EXTRAS = ['zh', 'ja'] // only for languages with models
 const DATA = [
     {
         id: 'os',
@@ -81,7 +82,13 @@ const QuickstartInstall = ({ id, title }) => {
     const showDropdown = {
         hardware: () => hardware === 'gpu',
     }
-    const pipExtras = [hardware === 'gpu' && cuda, train && 'transformers', train && 'lookups']
+    const modelExtras = train ? selectedModels.filter(m => LANG_EXTRAS.includes(m)) : []
+    const pipExtras = [
+        hardware === 'gpu' && cuda,
+        train && 'transformers',
+        train && 'lookups',
+        ...modelExtras,
+    ]
         .filter(e => e)
         .join(',')
     return (
