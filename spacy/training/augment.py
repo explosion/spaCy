@@ -138,7 +138,7 @@ def make_orth_variants(
         punct_choices = [random.choice(x["variants"]) for x in ndpv]
         for word_idx in range(len(words)):
             for punct_idx in range(len(ndpv)):
-                if tags[word_idx] in ndpv[punct_idx]["TAG"] and words[
+                if tags[word_idx] in ndpv[punct_idx]["tags"] and words[
                     word_idx
                 ] in itertools.chain.from_iterable(ndpv[punct_idx]["variants"]):
                     # backup option: random left vs. right from pair
