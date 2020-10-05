@@ -144,8 +144,8 @@ def make_orth_variants(
                     # backup option: random left vs. right from pair
                     pair_idx = random.choice([0, 1])
                     # best option: rely on paired POS tags like `` / ''
-                    if len(ndpv[punct_idx]["TAG"]) == 2:
-                        pair_idx = ndpv[punct_idx]["TAG"].index(tags[word_idx])
+                    if len(ndpv[punct_idx]["tags"]) == 2:
+                        pair_idx = ndpv[punct_idx]["tags"].index(tags[word_idx])
                     # next best option: rely on position in variants
                     # (may not be unambiguous, so order of variants matters)
                     else:
