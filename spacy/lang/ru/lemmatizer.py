@@ -2,7 +2,6 @@ from typing import Optional, List, Dict, Tuple
 
 from thinc.api import Model
 
-from ...lookups import Lookups
 from ...pipeline import Lemmatizer
 from ...symbols import POS
 from ...tokens import Token
@@ -22,9 +21,9 @@ class RussianLemmatizer(Lemmatizer):
         name: str = "lemmatizer",
         *,
         mode: str = "pymorphy2",
-        lookups: Optional[Lookups] = None,
+        overwrite: bool = False,
     ) -> None:
-        super().__init__(vocab, model, name, mode=mode, lookups=lookups)
+        super().__init__(vocab, model, name, mode=mode, overwrite=overwrite)
 
         try:
             from pymorphy2 import MorphAnalyzer
