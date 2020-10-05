@@ -150,6 +150,21 @@ def test_is_unconstrained_version(constraint, expected):
 
 
 @pytest.mark.parametrize(
+    "a1,a2,b1,b2,is_match",
+    [
+        ("3.0.0", "3.0", "3.0.1", "3.0", True),
+        ("3.1.0", "3.1", "3.2.1", "3.2", False),
+        ("xxx", None, "1.2.3.dev0", "1.2", False),
+    ],
+)
+def test_minor_version(a1, a2, b1, b2, is_match):
+    assert util.get_minor_version(a1) == a2
+    assert util.get_minor_version(b1) == b2
+    assert util.is_minor_version_match(a1, b1) is is_match
+    assert util.is_minor_version_match(a2, b2) is is_match
+
+
+@pytest.mark.parametrize(
     "dot_notation,expected",
     [
         (
