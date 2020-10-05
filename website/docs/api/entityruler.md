@@ -74,6 +74,30 @@ be a token pattern (list) or a phrase pattern (string). For example:
 | `ent_id_sep`                      | Separator used internally for entity IDs. Defaults to `"||"`. ~~str~~                                                                                                                                                                 |
 | `patterns`                        | Optional patterns to load in on initialization. ~~Optional[List[Dict[str, Union[str, List[dict]]]]]~~                                                                                                                                 |
 
+## EntityRuler.initialize {#initialize tag="method" new="3"}
+
+Initialize the component with patterns from a file.
+
+> #### Example
+>
+> ```python
+> entity_ruler = nlp.add_pipe("entity_ruler")
+> entity_ruler.initialize(lambda: [], nlp=nlp, patterns_path=patterns_path)
+> ```
+>
+> ```ini
+> ### config.cfg
+> [initialize.components.entity_ruler]
+> patterns_path = "data/patterns/patterns.jsonl"
+> ```
+
+| Name           | Description                                                                                                                                                          |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. Not used by the `EntityRuler`. ~~Callable[[], Iterable[Example]]~~ |
+| _keyword-only_ |                                                                                                                                                                      |
+| `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                                 |
+| `labels`       | Path to the .json file holding the serialized patterns. ~~Path~~                                                                                                     |
+
 ## EntityRuler.\_\len\_\_ {#len tag="method"}
 
 The number of all patterns added to the entity ruler.
@@ -256,6 +280,6 @@ Get all patterns that were added to the entity ruler.
 | Name              | Description                                                                                                           |
 | ----------------- | --------------------------------------------------------------------------------------------------------------------- |
 | `matcher`         | The underlying matcher used to process token patterns. ~~Matcher~~                                                    |
-| `phrase_matcher`  | The underlying phrase matcher used to process phrase patterns. ~~PhraseMatcher~~                                     |
+| `phrase_matcher`  | The underlying phrase matcher used to process phrase patterns. ~~PhraseMatcher~~                                      |
 | `token_patterns`  | The token patterns present in the entity ruler, keyed by label. ~~Dict[str, List[Dict[str, Union[str, List[dict]]]]~~ |
 | `phrase_patterns` | The phrase patterns present in the entity ruler, keyed by label. ~~Dict[str, List[Doc]]~~                             |

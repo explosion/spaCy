@@ -199,7 +199,7 @@ class EntityRuler(Pipe):
         nlp (Language): The current nlp object the component is part of.
         patterns_path: Path to serialized patterns.
 
-        DOCS (TODO): https://nightly.spacy.io/api/entityruler#initialize
+        DOCS: https://nightly.spacy.io/api/entityruler#initialize
         """
         if patterns_path:
             patterns = srsly.read_jsonl(patterns_path)
