@@ -25,8 +25,8 @@ def test_empty_doc():
         MultiHashEmbed(
             width=width,
             rows=embed_size,
-            also_use_static_vectors=False,
-            also_embed_subwords=True,
+            include_static_vectors=False,
+            attrs=["NORM", "PREFIX", "SUFFIX", "SHAPE"],
         ),
         MaxoutWindowEncoder(width=width, depth=4, window_size=1, maxout_pieces=3),
     )
