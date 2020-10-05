@@ -648,7 +648,7 @@ def filter_spans(spans):
         # Check for end - 1 here because boundaries are inclusive
         if span.start not in seen_tokens and span.end - 1 not in seen_tokens:
             result.append(span)
-        seen_tokens.update(range(span.start, span.end))
+            seen_tokens.update(range(span.start, span.end))
     result = sorted(result, key=lambda span: span.start)
     return result
 
