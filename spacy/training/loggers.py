@@ -41,19 +41,10 @@ def console_logger(progress_bar: bool = False):
                 if progress is not None:
                     progress.update(1)
                 return
-            try:
-                losses = [
-                    "{0:.2f}".format(float(info["losses"][pipe_name]))
-                    for pipe_name in logged_pipes
-                ]
-            except KeyError as e:
-                raise KeyError(
-                    Errors.E983.format(
-                        dict="scores (losses)",
-                        key=str(e),
-                        keys=list(info["losses"].keys()),
-                    )
-                ) from None
+            losses = [
+                "{0:.2f}".format(float(info["losses"][pipe_name]))
+                for pipe_name in logged_pipes if pipe_name in info["losses"]
+            ]
 
             scores = []
             for col in score_cols:
