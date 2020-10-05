@@ -6,7 +6,6 @@ from numpy.testing import assert_array_equal
 import numpy
 
 from spacy.ml.models import build_Tok2Vec_model, MultiHashEmbed, MaxoutWindowEncoder
-from spacy.ml.models import MultiHashEmbed_v1
 from spacy.ml.models import build_text_classifier, build_simple_cnn_text_classifier
 from spacy.lang.en import English
 from spacy.lang.en.examples import sentences as EN_SENTENCES
