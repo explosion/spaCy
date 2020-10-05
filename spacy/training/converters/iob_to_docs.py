@@ -46,7 +46,7 @@ def read_iob(raw_sents, vocab, n_sents):
                 sent_words, sent_iob = zip(*sent_tokens)
                 sent_tags = ["-"] * len(sent_words)
             else:
-                raise ValueError(Errors.E092)
+                raise ValueError(Errors.E902)
             words.extend(sent_words)
             tags.extend(sent_tags)
             iob.extend(sent_iob)

@@ -1,6 +1,5 @@
 from spacy.lang.en import English
 from spacy.pipeline import merge_entities
-import pytest
 
 
 def test_issue5918():

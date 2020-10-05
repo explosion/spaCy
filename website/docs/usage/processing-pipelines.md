@@ -1176,7 +1176,7 @@ plug fully custom machine learning components into your pipeline. You'll need
 the following:
 
 1. **Model:** A Thinc [`Model`](https://thinc.ai/docs/api-model) instance. This
-   can be a model using implemented in
+   can be a model implemented in
    [Thinc](/usage/layers-architectures#thinc), or a
    [wrapped model](/usage/layers-architectures#frameworks) implemented in
    PyTorch, TensorFlow, MXNet or a fully custom solution. The model must take a
