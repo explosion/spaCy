@@ -110,12 +110,12 @@ def MultiHashEmbed(
 
     The features used can be configured with the 'attrs' argument. The suggested
     attributes are NORM, PREFIX, SUFFIX and SHAPE. This lets the model take into
-    account some subword information, without contruction a fully character-based
+    account some subword information, without construction a fully character-based
     representation. If pretrained vectors are available, they can be included in
     the representation as well, with the vectors table will be kept static
     (i.e. it's not updated).
 
-    The `width` parameter specifices the output width of the layer and the widths
+    The `width` parameter specifies the output width of the layer and the widths
     of all embedding tables. If static vectors are included, a learned linear
     layer is used to map the vectors to the specified width before concatenating
     it with the other embedding outputs. A single Maxout layer is then used to
