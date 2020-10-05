@@ -81,9 +81,11 @@ class ChineseTokenizer(DummyTokenizer):
         *,
         nlp: Optional[Language] = None,
         pkuseg_model: Optional[str] = None,
-        pkuseg_user_dict: str = "default",
+        pkuseg_user_dict: Optional[str] = "default",
     ):
         if self.segmenter == Segmenter.pkuseg:
+            if pkuseg_user_dict is None:
+                pkuseg_user_dict = pkuseg_model
             self.pkuseg_seg = try_pkuseg_import(
                 pkuseg_model=pkuseg_model, pkuseg_user_dict=pkuseg_user_dict,
             )
