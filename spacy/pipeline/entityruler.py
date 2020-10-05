@@ -1,4 +1,4 @@
-from typing import Optional, Union, List, Dict, Tuple, Iterable, Any, Callable
+from typing import Optional, Union, List, Dict, Tuple, Iterable, Any, Callable, Sequence
 from collections import defaultdict
 from pathlib import Path
 import srsly
@@ -190,19 +190,18 @@ class EntityRuler(Pipe):
         get_examples: Callable[[], Iterable[Example]],
         *,
         nlp: Optional[Language] = None,
-        patterns_path: Optional[Path] = None
+        patterns: Optional[Sequence[PatternType]] = None,
     ):
         """Initialize the pipe for training.
 
         get_examples (Callable[[], Iterable[Example]]): Function that
             returns a representative sample of gold-standard Example objects.
         nlp (Language): The current nlp object the component is part of.
-        patterns_path: Path to serialized patterns.
+        patterns Optional[Iterable[PatternType]]: The list of patterns.
 
         DOCS: https://nightly.spacy.io/api/entityruler#initialize
         """
-        if patterns_path:
-            patterns = srsly.read_jsonl(patterns_path)
+        if patterns:
             self.add_patterns(patterns)
 
 

@@ -82,13 +82,16 @@ Initialize the component with patterns from a file.
 >
 > ```python
 > entity_ruler = nlp.add_pipe("entity_ruler")
-> entity_ruler.initialize(lambda: [], nlp=nlp, patterns_path=patterns_path)
+> entity_ruler.initialize(lambda: [], nlp=nlp, patterns=patterns)
 > ```
 >
 > ```ini
 > ### config.cfg
 > [initialize.components.entity_ruler]
-> patterns_path = "data/patterns/patterns.jsonl"
+>
+> [initialize.components.entity_ruler.patterns]
+> @readers = "srsly.read_jsonl.v1"
+> path = "corpus/entity_ruler_patterns.jsonl
 > ```
 
 | Name           | Description                                                                                                                                                          |
@@ -96,7 +99,7 @@ Initialize the component with patterns from a file.
 | `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. Not used by the `EntityRuler`. ~~Callable[[], Iterable[Example]]~~ |
 | _keyword-only_ |                                                                                                                                                                      |
 | `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                                 |
-| `labels`       | Path to the .json file holding the serialized patterns. ~~Path~~                                                                                                     |
+| `patterns`     | The list of patterns. Defaults to `None`. ~~Optional[Sequence[Dict[str, Union[str, List[Dict[str, Any]]]]]]~~                                                        |
 
 ## EntityRuler.\_\len\_\_ {#len tag="method"}
 

@@ -119,7 +119,7 @@ def validate_init_settings(
     if types don't match or required values are missing.
 
     func (Callable): The initialize method of a given component etc.
-    settings (Dict[str, Any]): The settings from the repsective [initialize] block.
+    settings (Dict[str, Any]): The settings from the respective [initialize] block.
     section (str): Initialize section, for error message.
     name (str): Name of the block in the section.
     exclude (Iterable[str]): Parameter names to exclude from schema.

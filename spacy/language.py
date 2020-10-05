@@ -1410,7 +1410,9 @@ class Language:
             kwargs = component_cfg.get(name, {})
             # Allow component_cfg to overwrite the top-level kwargs.
             kwargs.setdefault("batch_size", batch_size)
-            if hasattr(proc, "pipe"):
+            # non-trainable components may have a pipe() implementation that refers to dummy
+            # predict and set_annotations methods
+            if hasattr(proc, "pipe") and hasattr(proc, "is_trainable") and proc.is_trainable():
                 f = functools.partial(proc.pipe, **kwargs)
             else:
                 # Apply the function, but yield the doc

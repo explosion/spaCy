@@ -1,4 +1,6 @@
 import pytest
+
+from spacy import registry
 from spacy.tokens import Span
 from spacy.language import Language
 from spacy.pipeline import EntityRuler
@@ -11,6 +13,7 @@ def nlp():
 
 
 @pytest.fixture
+@registry.misc("entity_ruler_patterns")
 def patterns():
     return [
         {"label": "HELLO", "pattern": "hello world"},
@@ -38,6 +41,29 @@ def test_entity_ruler_init(nlp, patterns):
     ruler.add_patterns(patterns)
     doc = nlp("hello world bye bye")
     assert len(doc.ents) == 2
+    assert doc.ents[0].label_ == "HELLO"
+    assert doc.ents[1].label_ == "BYE"
+
+
+def test_entity_ruler_init_patterns(nlp, patterns):
+    # initialize with patterns
+    ruler = nlp.add_pipe("entity_ruler")
+    assert len(ruler.labels) == 0
+    ruler.initialize(lambda: [], patterns=patterns)
+    assert len(ruler.labels) == 4
+    doc = nlp("hello world bye bye")
+    assert doc.ents[0].label_ == "HELLO"
+    assert doc.ents[1].label_ == "BYE"
+    nlp.remove_pipe("entity_ruler")
+    # initialize with patterns from misc registry
+    nlp.config["initialize"]["components"]["entity_ruler"] = {
+        "patterns": {"@misc": "entity_ruler_patterns"}
+    }
+    ruler = nlp.add_pipe("entity_ruler")
+    assert len(ruler.labels) == 0
+    nlp.initialize()
+    assert len(ruler.labels) == 4
+    doc = nlp("hello world bye bye")
     assert doc.ents[0].label_ == "HELLO"
     assert doc.ents[1].label_ == "BYE"
 
