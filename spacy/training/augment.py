@@ -5,7 +5,7 @@ import copy
 from functools import partial
 from pydantic import BaseModel, StrictStr
 
-from ..util import registry, logger
+from ..util import registry
 from ..tokens import Doc
 from .example import Example
 
