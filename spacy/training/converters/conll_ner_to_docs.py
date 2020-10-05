@@ -5,6 +5,7 @@ from ...training import iob_to_biluo
 from ...lang.xx import MultiLanguage
 from ...tokens import Doc, Span
 from ...util import load_model
+from ...errors import Errors
 
 
 def conll_ner_to_docs(
@@ -103,11 +104,7 @@ def conll_ner_to_docs(
             lines = [line.strip() for line in conll_sent.split("\n") if line.strip()]
             cols = list(zip(*[line.split() for line in lines]))
             if len(cols) < 2:
-                raise ValueError(
-                    "The token-per-line NER file is not formatted correctly. "
-                    "Try checking whitespace and delimiters. See "
-                    "https://nightly.spacy.io/api/cli#convert"
-                )
+                raise ValueError(Errors.E093)
             length = len(cols[0])
             words.extend(cols[0])
             sent_starts.extend([True] + [False] * (length - 1))

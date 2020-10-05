@@ -139,6 +139,7 @@ class EntityRuler:
 
         DOCS: https://nightly.spacy.io/api/entityruler#call
         """
+        self._require_patterns()
         matches = list(self.matcher(doc)) + list(self.phrase_matcher(doc))
         matches = set(
             [(m_id, start, end) for m_id, start, end in matches if start != end]
@@ -231,6 +232,11 @@ class EntityRuler:
                     p["id"] = ent_id
                 all_patterns.append(p)
         return all_patterns
+
+    def _require_patterns(self) -> None:
+        """Raise an error if the component has no patterns."""
+        if not self.patterns or list(self.patterns) == [""]:
+            raise ValueError(Errors.E900.format(name=self.name))
 
     def add_patterns(self, patterns: List[PatternType]) -> None:
         """Add patterns to the entity ruler. A pattern can either be a token

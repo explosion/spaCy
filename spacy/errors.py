@@ -477,6 +477,26 @@ class Errors:
     E201 = ("Span index out of range.")
 
     # TODO: fix numbering after merging develop into master
+    E900 = ("Patterns for component '{name}' not initialized. This can be fixed "
+            "by calling add_patterns.")
+    E902 = ("The sentence-per-line IOB/IOB2 file is not formatted correctly. "
+            "Try checking whitespace and delimiters. See "
+            "https://nightly.spacy.io/api/cli#convert")
+    E903 = ("The token-per-line NER file is not formatted correctly. Try checking "
+            "whitespace and delimiters. See https://nightly.spacy.io/api/cli#convert")
+    E904 = ("Cannot initialize StaticVectors layer: nO dimension unset. This "
+            "dimension refers to the output width, after the linear projection "
+            "has been applied.")
+    E905 = ("Cannot initialize StaticVectors layer: nM dimension unset. This "
+            "dimension refers to the width of the vectors table.")
+    E906 = ("Unexpected `loss` value in pretraining objective: {loss_type}")
+    E907 = ("Unexpected `objective_type` value in pretraining objective: {objective_type}")
+    E908 = ("Can't set `spaces` without `words` in `Doc.__init__`.")
+    E909 = ("Expected {name} in parser internals. This is likely a bug in spaCy.")
+    E910 = ("Encountered NaN value when computing loss for component '{name}'.")
+    E911 = ("Invalid feature: {feat}. Must be a token attribute.")
+    E912 = ("Failed to initialize lemmatizer. Missing lemmatizer table(s) found "
+            "for mode '{mode}'. Required tables: {tables}. Found: {found}.")
     E913 = ("Corpus path can't be None. Maybe you forgot to define it in your "
             "config.cfg or override it on the CLI?")
     E914 = ("Executing {name} callback failed. Expected the function to "
