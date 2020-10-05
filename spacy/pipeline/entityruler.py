@@ -1,7 +1,8 @@
-from typing import Optional, Union, List, Dict, Tuple, Iterable, Any
+from typing import Optional, Union, List, Dict, Tuple, Iterable, Any, Callable
 from collections import defaultdict
 from pathlib import Path
 import srsly
+from spacy.training import Example
 
 from ..language import Language
 from ..errors import Errors
@@ -133,6 +134,7 @@ class EntityRuler:
 
         DOCS: https://nightly.spacy.io/api/entityruler#call
         """
+        self._require_patterns()
         matches = list(self.matcher(doc)) + list(self.phrase_matcher(doc))
         matches = set(
             [(m_id, start, end) for m_id, start, end in matches if start != end]
@@ -182,6 +184,27 @@ class EntityRuler:
             else:
                 all_labels.add(l)
         return tuple(all_labels)
+
+    def initialize(
+        self,
+        get_examples: Callable[[], Iterable[Example]],
+        *,
+        nlp: Optional[Language] = None,
+        patterns_path: Optional[Path] = None
+    ):
+        """Initialize the pipe for training.
+
+        get_examples (Callable[[], Iterable[Example]]): Function that
+            returns a representative sample of gold-standard Example objects.
+        nlp (Language): The current nlp object the component is part of.
+        patterns_path: Path to serialized patterns.
+
+        DOCS (TODO): https://nightly.spacy.io/api/entityruler#initialize
+        """
+        if patterns_path:
+            patterns = srsly.read_jsonl(patterns_path)
+            self.add_patterns(patterns)
+
 
     @property
     def ent_ids(self) -> Tuple[str, ...]:
@@ -291,6 +314,11 @@ class EntityRuler:
         self.token_patterns = defaultdict(list)
         self.phrase_patterns = defaultdict(list)
         self._ent_ids = defaultdict(dict)
+
+    def _require_patterns(self) -> None:
+        """Raise an error if the component has no patterns."""
+        if not self.patterns or list(self.patterns) == [""]:
+            raise ValueError(Errors.E900.format(name=self.name))
 
     def _split_label(self, label: str) -> Tuple[str, str]:
         """Split Entity label into ent_label and ent_id if it contains self.ent_id_sep

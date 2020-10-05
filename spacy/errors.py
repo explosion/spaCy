@@ -456,6 +456,8 @@ class Errors:
             "issue tracker: http://github.com/explosion/spaCy/issues")
 
     # TODO: fix numbering after merging develop into master
+    E900 = ("Patterns for component '{name}' not initialized. This can be fixed "
+            "by calling 'add_patterns' or 'initialize'.")
     E092 = ("The sentence-per-line IOB/IOB2 file is not formatted correctly. "
             "Try checking whitespace and delimiters. See "
             "https://nightly.spacy.io/api/cli#convert")
