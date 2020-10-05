@@ -4,8 +4,8 @@ from .conll_ner_to_docs import n_sents_info
 from ...vocab import Vocab
 from ...training import iob_to_biluo, tags_to_entities
 from ...tokens import Doc, Span
-from ...util import minibatch
 from ...errors import Errors
+from ...util import minibatch
 
 
 def iob_to_docs(input_data, n_sents=10, no_print=False, *args, **kwargs):

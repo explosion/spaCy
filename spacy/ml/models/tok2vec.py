@@ -6,6 +6,7 @@ from thinc.api import expand_window, residual, Maxout, Mish, PyTorchLSTM
 
 from ...tokens import Doc
 from ...util import registry
+from ...errors import Errors
 from ...ml import _character_embed
 from ..staticvectors import StaticVectors
 from ..featureextractor import FeatureExtractor
@@ -93,7 +94,7 @@ def build_Tok2Vec_model(
 @registry.architectures.register("spacy.MultiHashEmbed.v1")
 def MultiHashEmbed(
     width: int, rows: int, also_embed_subwords: bool, also_use_static_vectors: bool
-):
+) -> Model[List[Doc], List[Floats2d]]:
     """Construct an embedding layer that separately embeds a number of lexical
     attributes using hash embedding, concatenates the results, and passes it
     through a feed-forward subnetwork to build a mixed representations.
@@ -165,9 +166,13 @@ def MultiHashEmbed(
 
 @registry.architectures.register("spacy.CharacterEmbed.v1")
 def CharacterEmbed(
-    width: int, rows: int, nM: int, nC: int, also_use_static_vectors: bool,
-    feature: Union[int, str]="LOWER"
-):
+    width: int,
+    rows: int,
+    nM: int,
+    nC: int,
+    also_use_static_vectors: bool,
+    feature: Union[int, str] = "LOWER",
+) -> Model[List[Doc], List[Floats2d]]:
     """Construct an embedded representation based on character embeddings, using
     a feed-forward network. A fixed number of UTF-8 byte characters are used for
     each word, taken from the beginning and end of the word equally. Padding is
@@ -186,11 +191,7 @@ def CharacterEmbed(
 
     feature (int or str): An attribute to embed, to concatenate with the characters.
     width (int): The width of the output vector and the feature embedding.
-<<<<<<< HEAD
-    rows (int): The number of rows in the NORM hash embedding table.
-=======
     rows (int): The number of rows in the LOWER hash embedding table.
->>>>>>> 300e5a9928fd226dfddbf7d5c22558f696bfa1af
     nM (int): The dimensionality of the character embeddings. Recommended values
         are between 16 and 64.
     nC (int): The number of UTF-8 bytes to embed per word. Recommended values
@@ -201,7 +202,7 @@ def CharacterEmbed(
     """
     feature = intify_attr(feature)
     if feature is None:
-        raise ValueError("Invalid feature: Must be a token attribute.")
+        raise ValueError(Errors.E911(feat=feature))
     if also_use_static_vectors:
         model = chain(
             concatenate(

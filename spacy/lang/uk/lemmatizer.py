@@ -3,7 +3,6 @@ from typing import Optional
 from thinc.api import Model
 
 from ..ru.lemmatizer import RussianLemmatizer
-from ...lookups import Lookups
 from ...vocab import Vocab
 
 
@@ -15,9 +14,9 @@ class UkrainianLemmatizer(RussianLemmatizer):
         name: str = "lemmatizer",
         *,
         mode: str = "pymorphy2",
-        lookups: Optional[Lookups] = None,
+        overwrite: bool = False,
     ) -> None:
-        super().__init__(vocab, model, name, mode=mode, lookups=lookups)
+        super().__init__(vocab, model, name, mode=mode, overwrite=overwrite)
         try:
             from pymorphy2 import MorphAnalyzer
         except ImportError:

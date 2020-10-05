@@ -2,10 +2,9 @@ from wasabi import Printer
 
 from .. import tags_to_entities
 from ...training import iob_to_biluo
-from ...lang.xx import MultiLanguage
 from ...tokens import Doc, Span
-from ...util import load_model
 from ...errors import Errors
+from ...util import load_model, get_lang_class
 
 
 def conll_ner_to_docs(
@@ -87,7 +86,7 @@ def conll_ner_to_docs(
     if model:
         nlp = load_model(model)
     else:
-        nlp = MultiLanguage()
+        nlp = get_lang_class("xx")()
     output_docs = []
     for conll_doc in input_data.strip().split(doc_delimiter):
         conll_doc = conll_doc.strip()
@@ -104,7 +103,7 @@ def conll_ner_to_docs(
             lines = [line.strip() for line in conll_sent.split("\n") if line.strip()]
             cols = list(zip(*[line.split() for line in lines]))
             if len(cols) < 2:
-                raise ValueError(Errors.E093)
+                raise ValueError(Errors.E903)
             length = len(cols[0])
             words.extend(cols[0])
             sent_starts.extend([True] + [False] * (length - 1))
@@ -133,7 +132,7 @@ def segment_sents_and_docs(doc, n_sents, doc_delimiter, model=None, msg=None):
             "Segmenting sentences with sentencizer. (Use `-b model` for "
             "improved parser-based sentence segmentation.)"
         )
-        nlp = MultiLanguage()
+        nlp = get_lang_class("xx")()
         sentencizer = nlp.create_pipe("sentencizer")
     lines = doc.strip().split("\n")
     words = [line.strip().split()[0] for line in lines]

@@ -1,4 +1,5 @@
 # cython: infer_types=True, profile=True
+import warnings
 from typing import Optional, Tuple
 import srsly
 from thinc.api import set_dropout_rate, Model
@@ -6,7 +7,7 @@ from thinc.api import set_dropout_rate, Model
 from ..tokens.doc cimport Doc
 
 from ..training import validate_examples
-from ..errors import Errors
+from ..errors import Errors, Warnings
 from .. import util
 
 
@@ -32,6 +33,13 @@ cdef class Pipe:
         self.model = model
         self.name = name
         self.cfg = dict(cfg)
+
+    @classmethod
+    def __init_subclass__(cls, **kwargs):
+        """Raise a warning if an inheriting class implements 'begin_training'
+         (from v2) instead of the new 'initialize' method (from v3)"""
+        if hasattr(cls, "begin_training"):
+            warnings.warn(Warnings.W088.format(name=cls.__name__))
 
     @property
     def labels(self) -> Optional[Tuple[str]]:

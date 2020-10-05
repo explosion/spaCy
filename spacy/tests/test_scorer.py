@@ -158,7 +158,7 @@ def test_las_per_type(en_vocab):
     examples = []
     for input_, annot in test_las_apple:
         doc = Doc(
-            en_vocab, words=input_.split(" "), heads=annot["heads"], deps=annot["deps"],
+            en_vocab, words=input_.split(" "), heads=annot["heads"], deps=annot["deps"]
         )
         gold = {"heads": annot["heads"], "deps": annot["deps"]}
         doc[0].dep_ = "compound"
@@ -182,9 +182,7 @@ def test_ner_per_type(en_vocab):
     examples = []
     for input_, annot in test_ner_cardinal:
         doc = Doc(
-            en_vocab,
-            words=input_.split(" "),
-            ents=["B-CARDINAL", "O", "B-CARDINAL"],
+            en_vocab, words=input_.split(" "), ents=["B-CARDINAL", "O", "B-CARDINAL"]
         )
         entities = offsets_to_biluo_tags(doc, annot["entities"])
         example = Example.from_dict(doc, {"entities": entities})

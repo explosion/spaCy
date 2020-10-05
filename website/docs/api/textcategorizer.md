@@ -29,19 +29,16 @@ architectures and their arguments and hyperparameters.
 > ```python
 > from spacy.pipeline.textcat import DEFAULT_TEXTCAT_MODEL
 > config = {
->    "labels": [],
 >    "threshold": 0.5,
 >    "model": DEFAULT_TEXTCAT_MODEL,
 > }
 > nlp.add_pipe("textcat", config=config)
 > ```
 
-| Setting          | Description                                                                                                                                                      |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `labels`         | A list of categories to learn. If empty, the model infers the categories from the data. Defaults to `[]`. ~~Iterable[str]~~                                      |
-| `threshold`      | Cutoff to consider a prediction "positive", relevant when printing accuracy results. ~~float~~                                                                   |
-| `positive_label` | The positive label for a binary task with exclusive classes, None otherwise and by default. ~~Optional[str]~~                                                    |
-| `model`          | A model instance that predicts scores for each category. Defaults to [TextCatEnsemble](/api/architectures#TextCatEnsemble). ~~Model[List[Doc], List[Floats2d]]~~ |
+| Setting     | Description                                                                                                                                                      |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `threshold` | Cutoff to consider a prediction "positive", relevant when printing accuracy results. ~~float~~                                                                   |
+| `model`     | A model instance that predicts scores for each category. Defaults to [TextCatEnsemble](/api/architectures#TextCatEnsemble). ~~Model[List[Doc], List[Floats2d]]~~ |
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/textcat.py
@@ -61,22 +58,20 @@ architectures and their arguments and hyperparameters.
 >
 > # Construction from class
 > from spacy.pipeline import TextCategorizer
-> textcat = TextCategorizer(nlp.vocab, model, labels=[], threshold=0.5, positive_label="POS")
+> textcat = TextCategorizer(nlp.vocab, model, threshold=0.5)
 > ```
 
 Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
 [`nlp.add_pipe`](/api/language#create_pipe).
 
-| Name             | Description                                                                                                                |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`          | The shared vocabulary. ~~Vocab~~                                                                                           |
-| `model`          | The Thinc [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model[List[Doc], List[Floats2d]]~~ |
-| `name`           | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                        |
-| _keyword-only_   |                                                                                                                            |
-| `labels`         | The labels to use. ~~Iterable[str]~~                                                                                       |
-| `threshold`      | Cutoff to consider a prediction "positive", relevant when printing accuracy results. ~~float~~                             |
-| `positive_label` | The positive label for a binary task with exclusive classes, None otherwise. ~~Optional[str]~~                             |
+| Name           | Description                                                                                                                |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`        | The shared vocabulary. ~~Vocab~~                                                                                           |
+| `model`        | The Thinc [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model[List[Doc], List[Floats2d]]~~ |
+| `name`         | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                        |
+| _keyword-only_ |                                                                                                                            |
+| `threshold`    | Cutoff to consider a prediction "positive", relevant when printing accuracy results. ~~float~~                             |
 
 ## TextCategorizer.\_\_call\_\_ {#call tag="method"}
 
@@ -155,18 +150,20 @@ This method was previously called `begin_training`.
 > ```ini
 > ### config.cfg
 > [initialize.components.textcat]
+> positive_label = "POS"
 >
 > [initialize.components.textcat.labels]
 > @readers = "spacy.read_labels.v1"
 > path = "corpus/labels/textcat.json
 > ```
 
-| Name           | Description                                                                                                                                                                                                                                                                                                         |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. ~~Callable[[], Iterable[Example]]~~                                                                                                                                                                               |
-| _keyword-only_ |                                                                                                                                                                                                                                                                                                                     |
-| `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                                                                                                                                                                                |
-| `labels`       | The label information to add to the component. To generate a reusable JSON file from your data, you should run the [`init labels`](/api/cli#init-labels) command. If no labels are provided, the `get_examples` callback is used to extract the labels from the data, which may be a lot slower. ~~Optional[dict]~~ |
+| Name             | Description                                                                                                                                                                                                                                                                                                                                                                                                |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `get_examples`   | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. ~~Callable[[], Iterable[Example]]~~                                                                                                                                                                                                                                                                      |
+| _keyword-only_   |                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `nlp`            | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                                                                                                                                                                                                                                                                       |
+| `labels`         | The label information to add to the component, as provided by the [`label_data`](#label_data) property after initialization. To generate a reusable JSON file from your data, you should run the [`init labels`](/api/cli#init-labels) command. If no labels are provided, the `get_examples` callback is used to extract the labels from the data, which may be a lot slower. ~~Optional[Iterable[str]]~~ |
+| `positive_label` | The positive label for a binary task with exclusive classes, None otherwise and by default. ~~Optional[str]~~                                                                                                                                                                                                                                                                                              |
 
 ## TextCategorizer.predict {#predict tag="method"}
 
@@ -424,6 +421,24 @@ The labels currently added to the component.
 | Name        | Description                                            |
 | ----------- | ------------------------------------------------------ |
 | **RETURNS** | The labels added to the component. ~~Tuple[str, ...]~~ |
+
+## TextCategorizer.label_data {#label_data tag="property" new="3"}
+
+The labels currently added to the component and their internal meta information.
+This is the data generated by [`init labels`](/api/cli#init-labels) and used by
+[`TextCategorizer.initialize`](/api/textcategorizer#initialize) to initialize
+the model with a pre-defined label set.
+
+> #### Example
+>
+> ```python
+> labels = textcat.label_data
+> textcat.initialize(lambda: [], nlp=nlp, labels=labels)
+> ```
+
+| Name        | Description                                                |
+| ----------- | ---------------------------------------------------------- |
+| **RETURNS** | The label data added to the component. ~~Tuple[str, ...]~~ |
 
 ## Serialization fields {#serialization-fields}
 

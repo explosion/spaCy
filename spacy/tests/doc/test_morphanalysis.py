@@ -5,12 +5,14 @@ import pytest
 def i_has(en_tokenizer):
     doc = en_tokenizer("I has")
     doc[0].set_morph({"PronType": "prs"})
-    doc[1].set_morph({
-        "VerbForm": "fin",
-        "Tense": "pres",
-        "Number": "sing",
-        "Person": "three",
-    })
+    doc[1].set_morph(
+        {
+            "VerbForm": "fin",
+            "Tense": "pres",
+            "Number": "sing",
+            "Person": "three",
+        }
+    )
 
     return doc
 
@@ -77,7 +79,7 @@ def test_morph_property(tokenizer):
     assert doc.to_array(["MORPH"])[0] != 0
 
     # unset with token.morph
-    doc[0].set_morph(0)
+    doc[0].set_morph(None)
     assert doc.to_array(["MORPH"])[0] == 0
 
     # empty morph is equivalent to "_"

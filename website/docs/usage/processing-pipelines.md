@@ -3,8 +3,11 @@ title: Language Processing Pipelines
 next: /usage/embeddings-transformers
 menu:
   - ['Processing Text', 'processing']
-  - ['How Pipelines Work', 'pipelines']
+  - ['Pipelines & Components', 'pipelines']
   - ['Custom Components', 'custom-components']
+  - ['Component Data', 'component-data']
+  - ['Type Hints & Validation', 'type-hints']
+  - ['Trainable Components', 'trainable-components']
   - ['Extension Attributes', 'custom-components-attributes']
   - ['Plugins & Wrappers', 'plugins']
 ---
@@ -89,26 +92,27 @@ have to call `list()` on it first:
 
 </Infobox>
 
-## How pipelines work {#pipelines}
+## Pipelines and built-in components {#pipelines}
 
 spaCy makes it very easy to create your own pipelines consisting of reusable
 components – this includes spaCy's default tagger, parser and entity recognizer,
 but also your own custom processing functions. A pipeline component can be added
-to an already existing `nlp` object, specified when initializing a `Language`
-class, or defined within a [pipeline package](/usage/saving-loading#models).
+to an already existing `nlp` object, specified when initializing a
+[`Language`](/api/language) class, or defined within a
+[pipeline package](/usage/saving-loading#models).
 
 > #### config.cfg (excerpt)
 >
 > ```ini
 >  [nlp]
 >  lang = "en"
->  pipeline = ["tagger", "parser"]
+>  pipeline = ["tok2vec", "parser"]
 >
 > [components]
 >
-> [components.tagger]
-> factory = "tagger"
-> # Settings for the tagger component
+> [components.tok2vec]
+> factory = "tok2vec"
+> # Settings for the tok2vec component
 >
 > [components.parser]
 > factory = "parser"
@@ -140,7 +144,7 @@ nlp = spacy.load("en_core_web_sm")
 ```
 
 ... the pipeline's `config.cfg` tells spaCy to use the language `"en"` and the
-pipeline `["tagger", "parser", "ner"]`. spaCy will then initialize
+pipeline `["tok2vec", "tagger", "parser", "ner"]`. spaCy will then initialize
 `spacy.lang.en.English`, and create each pipeline component and add it to the
 processing pipeline. It'll then load in the model data from the data directory
 and return the modified `Language` class for you to use as the `nlp` object.
@@ -739,6 +743,64 @@ make your factory a separate function. That's also how spaCy does it internally.
 
 </Accordion>
 
+### Language-specific factories {#factories-language new="3"}
+
+There are many use case where you might want your pipeline components to be
+language-specific. Sometimes this requires entirely different implementation per
+language, sometimes the only difference is in the settings or data. spaCy allows
+you to register factories of the **same name** on both the `Language` base
+class, as well as its **subclasses** like `English` or `German`. Factories are
+resolved starting with the specific subclass. If the subclass doesn't define a
+component of that name, spaCy will check the `Language` base class.
+
+Here's an example of a pipeline component that overwrites the normalized form of
+a token, the `Token.norm_` with an entry from a language-specific lookup table.
+It's registered twice under the name `"token_normalizer"` – once using
+`@English.factory` and once using `@German.factory`:
+
+```python
+### {executable="true"}
+from spacy.lang.en import English
+from spacy.lang.de import German
+
+class TokenNormalizer:
+    def __init__(self, norm_table):
+        self.norm_table = norm_table
+
+    def __call__(self, doc):
+        for token in doc:
+            # Overwrite the token.norm_ if there's an entry in the data
+            token.norm_ = self.norm_table.get(token.text, token.norm_)
+        return doc
+
+@English.factory("token_normalizer")
+def create_en_normalizer(nlp, name):
+    return TokenNormalizer({"realise": "realize", "colour": "color"})
+
+@German.factory("token_normalizer")
+def create_de_normalizer(nlp, name):
+    return TokenNormalizer({"daß": "dass", "wußte": "wusste"})
+
+nlp_en = English()
+nlp_en.add_pipe("token_normalizer")  # uses the English factory
+print([token.norm_ for token in nlp_en("realise colour daß wußte")])
+
+nlp_de = German()
+nlp_de.add_pipe("token_normalizer")  # uses the German factory
+print([token.norm_ for token in nlp_de("realise colour daß wußte")])
+```
+
+<Infobox title="Implementation details">
+
+Under the hood, language-specific factories are added to the
+[`factories` registry](/api/top-level#registry) prefixed with the language code,
+e.g. `"en.token_normalizer"`. When resolving the factory in
+[`nlp.add_pipe`](/api/language#add_pipe), spaCy first checks for a
+language-specific version of the factory using `nlp.lang` and if none is
+available, falls back to looking up the regular factory name.
+
+</Infobox>
+
 ### Example: Stateful component with settings {#example-stateful-components}
 
 This example shows a **stateful** pipeline component for handling acronyms:
@@ -808,34 +870,47 @@ doc = nlp("LOL, be right back")
 print(doc._.acronyms)
 ```
 
+## Initializing and serializing component data {#component-data}
+
 Many stateful components depend on **data resources** like dictionaries and
 lookup tables that should ideally be **configurable**. For example, it makes
-sense to make the `DICTIONARY` and argument of the registered function, so the
-`AcronymComponent` can be re-used with different data. One logical solution
-would be to make it an argument of the component factory, and allow it to be
-initialized with different dictionaries.
+sense to make the `DICTIONARY` in the above example an argument of the
+registered function, so the `AcronymComponent` can be re-used with different
+data. One logical solution would be to make it an argument of the component
+factory, and allow it to be initialized with different dictionaries.
 
-> #### Example
->
-> Making the data an argument of the registered function would result in output
-> like this in your `config.cfg`, which is typically not what you want (and only
-> works for JSON-serializable data).
+> #### config.cfg
 >
 > ```ini
-> [components.acronyms.dictionary]
+> [components.acronyms.data]
+> # 🚨 Problem: you don't want the data in the config
 > lol = "laugh out loud"
 > brb = "be right back"
 > ```
 
+```python
+@Language.factory("acronyms", default_config={"data": {}, "case_sensitive": False})
+def create_acronym_component(nlp: Language, name: str, data: Dict[str, str], case_sensitive: bool):
+    # 🚨 Problem: data ends up in the config file
+    return AcronymComponent(nlp, data, case_sensitive)
+```
+
 However, passing in the dictionary directly is problematic, because it means
 that if a component saves out its config and settings, the
 [`config.cfg`](/usage/training#config) will include a dump of the entire data,
-since that's the config the component was created with.
+since that's the config the component was created with. It will also fail if the
+data is not JSON-serializable.
 
-```diff
-DICTIONARY = {"lol": "laughing out loud", "brb": "be right back"}
-- default_config = {"dictionary:" DICTIONARY}
-```
+### Option 1: Using a registered function {#component-data-function}
+
+<Infobox>
+
+- ✅ **Pros:** can load anything in Python, easy to add to and configure via
+  config
+- ❌ **Cons:** requires the function and its dependencies to be available at
+  runtime
+
+</Infobox>
 
 If what you're passing in isn't JSON-serializable – e.g. a custom object like a
 [model](#trainable-components) – saving out the component config becomes
@@ -877,7 +952,7 @@ result of the registered function is passed in as the key `"dictionary"`.
 > [components.acronyms]
 > factory = "acronyms"
 >
-> [components.acronyms.dictionary]
+> [components.acronyms.data]
 > @misc = "acronyms.slang_dict.v1"
 > ```
 
@@ -895,7 +970,135 @@ the name. Registered functions can also take **arguments** by the way that can
 be defined in the config as well – you can read more about this in the docs on
 [training with custom code](/usage/training#custom-code).
 
-### Python type hints and pydantic validation {#type-hints new="3"}
+### Option 2: Save data with the pipeline and load it in once on initialization {#component-data-initialization}
+
+<Infobox>
+
+- ✅ **Pros:** lets components save and load their own data and reflect user
+  changes, load in data assets before training without depending on them at
+  runtime
+- ❌ **Cons:** requires more component methods, more complex config and data
+  flow
+
+</Infobox>
+
+Just like models save out their binary weights when you call
+[`nlp.to_disk`](/api/language#to_disk), components can also **serialize** any
+other data assets – for instance, an acronym dictionary. If a pipeline component
+implements its own `to_disk` and `from_disk` methods, those will be called
+automatically by `nlp.to_disk` and will receive the path to the directory to
+save to or load from. The component can then perform any custom saving or
+loading. If a user makes changes to the component data, they will be reflected
+when the `nlp` object is saved. For more examples of this, see the usage guide
+on [serialization methods](/usage/saving-loading/#serialization-methods).
+
+> #### About the data path
+>
+> The `path` argument spaCy passes to the serialization methods consists of the
+> path provided by the user, plus a directory of the component name. This means
+> that when you call `nlp.to_disk("/path")`, the `acronyms` component will
+> receive the directory path `/path/acronyms` and can then create files in this
+> directory.
+
+```python
+### Custom serialization methods {highlight="6-7,9-11"}
+import srsly
+
+class AcronymComponent:
+    # other methods here...
+
+    def to_disk(self, path, exclude=tuple()):
+        srsly.write_json(path / "data.json", self.data)
+
+    def from_disk(self, path, exclude=tuple()):
+        self.data = srsly.read_json(path / "data.json")
+        return self
+```
+
+Now the component can save to and load from a directory. The only remaining
+question: How do you **load in the initial data**? In Python, you could just
+call the pipe's `from_disk` method yourself. But if you're adding the component
+to your [training config](/usage/training#config), spaCy will need to know how
+to set it up, from start to finish, including the data to initialize it with.
+
+While you could use a registered function or a file loader like
+[`srsly.read_json.v1`](/api/top-level#file_readers) as an argument of the
+component factory, this approach is problematic: the component factory runs
+**every time the component is created**. This means it will run when creating
+the `nlp` object before training, but also every a user loads your pipeline. So
+your runtime pipeline would either depend on a local path on your file system,
+or it's loaded twice: once when the component is created, and then again when
+the data is by `from_disk`.
+
+> ```ini
+> ### config.cfg
+> [components.acronyms.data]
+> # 🚨 Problem: Runtime pipeline depends on local path
+> @readers = "srsly.read_json.v1"
+> path = "/path/to/slang_dict.json"
+> ```
+>
+> ```ini
+> ### config.cfg
+> [components.acronyms.data]
+> # 🚨 Problem: this always runs
+> @misc = "acronyms.slang_dict.v1"
+> ```
+
+```python
+@Language.factory("acronyms", default_config={"data": {}, "case_sensitive": False})
+def create_acronym_component(nlp: Language, name: str, data: Dict[str, str], case_sensitive: bool):
+    # 🚨 Problem: data will be loaded every time component is created
+    return AcronymComponent(nlp, data, case_sensitive)
+```
+
+To solve this, your component can implement a separate method, `initialize`,
+which will be called by [`nlp.initialize`](/api/language#initialize) if
+available. This typically happens before training, but not at runtime when the
+pipeline is loaded. For more background on this, see the usage guides on the
+[config lifecycle](/usage/training#config-lifecycle) and
+[custom initialization](/usage/training#initialization).
+
+![Illustration of pipeline lifecycle](../images/lifecycle.svg)
+
+A component's `initialize` method needs to take at least **two named
+arguments**: a `get_examples` callback that gives it access to the training
+examples, and the current `nlp` object. This is mostly used by trainable
+components so they can initialize their models and label schemes from the data,
+so we can ignore those arguments here. All **other arguments** on the method can
+be defined via the config – in this case a dictionary `data`.
+
+> #### config.cfg
+>
+> ```ini
+> [initialize.components.my_component]
+>
+> [initialize.components.my_component.data]
+> # ✅ This only runs on initialization
+> @readers = "srsly.read_json.v1"
+> path = "/path/to/slang_dict.json"
+> ```
+
+```python
+### Custom initialize method {highlight="5-6"}
+class AcronymComponent:
+    def __init__(self):
+        self.data = {}
+
+    def initialize(self, get_examples=None, nlp=None, data={}):
+        self.data = data
+```
+
+When [`nlp.initialize`](/api/language#initialize) runs before training (or when
+you call it in your own code), the
+[`[initialize]`](/api/data-formats#config-initialize) block of the config is
+loaded and used to construct the `nlp` object. The custom acronym component will
+then be passed the data loaded from the JSON file. After training, the `nlp`
+object is saved to disk, which will run the component's `to_disk` method. When
+the pipeline is loaded back into spaCy later to use it, the `from_disk` method
+will load the data back in.
+
+## Python type hints and validation {#type-hints new="3"}
 
 spaCy's configs are powered by our machine learning library Thinc's
 [configuration system](https://thinc.ai/docs/usage-config), which supports
@@ -964,65 +1167,7 @@ nlp.add_pipe("debug", config={"log_level": "DEBUG"})
 doc = nlp("This is a text...")
 ```
 
-### Language-specific factories {#factories-language new="3"}
-
-There are many use case where you might want your pipeline components to be
-language-specific. Sometimes this requires entirely different implementation per
-language, sometimes the only difference is in the settings or data. spaCy allows
-you to register factories of the **same name** on both the `Language` base
-class, as well as its **subclasses** like `English` or `German`. Factories are
-resolved starting with the specific subclass. If the subclass doesn't define a
-component of that name, spaCy will check the `Language` base class.
-
-Here's an example of a pipeline component that overwrites the normalized form of
-a token, the `Token.norm_` with an entry from a language-specific lookup table.
-It's registered twice under the name `"token_normalizer"` – once using
-`@English.factory` and once using `@German.factory`:
-
-```python
-### {executable="true"}
-from spacy.lang.en import English
-from spacy.lang.de import German
-
-class TokenNormalizer:
-    def __init__(self, norm_table):
-        self.norm_table = norm_table
-
-    def __call__(self, doc):
-        for token in doc:
-            # Overwrite the token.norm_ if there's an entry in the data
-            token.norm_ = self.norm_table.get(token.text, token.norm_)
-        return doc
-
-@English.factory("token_normalizer")
-def create_en_normalizer(nlp, name):
-    return TokenNormalizer({"realise": "realize", "colour": "color"})
-
-@German.factory("token_normalizer")
-def create_de_normalizer(nlp, name):
-    return TokenNormalizer({"daß": "dass", "wußte": "wusste"})
-
-nlp_en = English()
-nlp_en.add_pipe("token_normalizer")  # uses the English factory
-print([token.norm_ for token in nlp_en("realise colour daß wußte")])
-
-nlp_de = German()
-nlp_de.add_pipe("token_normalizer")  # uses the German factory
-print([token.norm_ for token in nlp_de("realise colour daß wußte")])
-```
-
-<Infobox title="Implementation details">
-
-Under the hood, language-specific factories are added to the
-[`factories` registry](/api/top-level#registry) prefixed with the language code,
-e.g. `"en.token_normalizer"`. When resolving the factory in
-[`nlp.add_pipe`](/api/language#add_pipe), spaCy first checks for a
-language-specific version of the factory using `nlp.lang` and if none is
-available, falls back to looking up the regular factory name.
-
-</Infobox>
-
-### Trainable components {#trainable-components new="3"}
+## Trainable components {#trainable-components new="3"}
 
 spaCy's [`Pipe`](/api/pipe) class helps you implement your own trainable
 components that have their own model instance, make predictions over `Doc`
@@ -1031,7 +1176,7 @@ plug fully custom machine learning components into your pipeline. You'll need
 the following:
 
 1. **Model:** A Thinc [`Model`](https://thinc.ai/docs/api-model) instance. This
-   can be a model using implemented in
+   can be a model implemented in
    [Thinc](/usage/layers-architectures#thinc), or a
    [wrapped model](/usage/layers-architectures#frameworks) implemented in
    PyTorch, TensorFlow, MXNet or a fully custom solution. The model must take a

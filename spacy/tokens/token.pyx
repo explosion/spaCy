@@ -223,8 +223,10 @@ cdef class Token:
 
     def set_morph(self, features):
         cdef hash_t key
-        if features is 0:
+        if features is None:
             self.c.morph = 0
+        elif isinstance(features, MorphAnalysis):
+            self.morph = features
         else:
             if isinstance(features, int):
                 features = self.vocab.strings[features]

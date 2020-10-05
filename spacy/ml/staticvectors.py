@@ -1,11 +1,11 @@
 from typing import List, Tuple, Callable, Optional, cast
-
 from thinc.initializers import glorot_uniform_init
 from thinc.util import partial
 from thinc.types import Ragged, Floats2d, Floats1d
 from thinc.api import Model, Ops, registry
 
 from ..tokens import Doc
+from ..errors import Errors
 
 
 @registry.layers("spacy.StaticVectors.v1")
@@ -76,16 +76,9 @@ def init(
         nO = Y.data.shape[1]
 
     if nM is None:
-        raise ValueError(
-            "Cannot initialize StaticVectors layer: nM dimension unset. "
-            "This dimension refers to the width of the vectors table."
-        )
+        raise ValueError(Errors.E905)
     if nO is None:
-        raise ValueError(
-            "Cannot initialize StaticVectors layer: nO dimension unset. "
-            "This dimension refers to the output width, after the linear  "
-            "projection has been applied."
-        )
+        raise ValueError(Errors.E904)
     model.set_dim("nM", nM)
     model.set_dim("nO", nO)
     model.set_param("W", init_W(model.ops, (nO, nM)))

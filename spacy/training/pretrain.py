@@ -16,6 +16,7 @@ from ..attrs import ID
 from ..ml.models.multi_task import build_cloze_multi_task_model
 from ..ml.models.multi_task import build_cloze_characters_multi_task_model
 from ..schemas import ConfigSchemaTraining, ConfigSchemaPretrain
+from ..errors import Errors
 from ..util import registry, load_model_from_config, dot_to_object
 
 
@@ -151,9 +152,9 @@ def create_objective(config: Config):
             distance = L2Distance(normalize=True, ignore_zeros=True)
             return partial(get_vectors_loss, distance=distance)
         else:
-            raise ValueError("Unexpected loss type", config["loss"])
+            raise ValueError(Errors.E906.format(loss_type=config["loss"]))
     else:
-        raise ValueError("Unexpected objective_type", objective_type)
+        raise ValueError(Errors.E907.format(objective_type=objective_type))
 
 
 def get_vectors_loss(ops, docs, prediction, distance):

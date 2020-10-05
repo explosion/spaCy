@@ -4,7 +4,6 @@ from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
 from .stop_words import STOP_WORDS
 from ...language import Language
-from ...lookups import Lookups
 from ...pipeline import Lemmatizer
 
 
@@ -24,18 +23,11 @@ class Bengali(Language):
 @Bengali.factory(
     "lemmatizer",
     assigns=["token.lemma"],
-    default_config={"model": None, "mode": "rule", "lookups": None},
+    default_config={"model": None, "mode": "rule"},
     default_score_weights={"lemma_acc": 1.0},
 )
-def make_lemmatizer(
-    nlp: Language,
-    model: Optional[Model],
-    name: str,
-    mode: str,
-    lookups: Optional[Lookups],
-):
-    lookups = Lemmatizer.load_lookups(nlp.lang, mode, lookups)
-    return Lemmatizer(nlp.vocab, model, name, mode=mode, lookups=lookups)
+def make_lemmatizer(nlp: Language, model: Optional[Model], name: str, mode: str):
+    return Lemmatizer(nlp.vocab, model, name, mode=mode)
 
 
 __all__ = ["Bengali"]

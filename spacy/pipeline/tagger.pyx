@@ -15,7 +15,7 @@ from .pipe import Pipe, deserialize_config
 from ..language import Language
 from ..attrs import POS, ID
 from ..parts_of_speech import X
-from ..errors import Errors, TempErrors, Warnings
+from ..errors import Errors, Warnings
 from ..scorer import Scorer
 from ..training import validate_examples
 from .. import util
@@ -258,7 +258,7 @@ class Tagger(Pipe):
         truths = [eg.get_aligned("TAG", as_string=True) for eg in examples]
         d_scores, loss = loss_func(scores, truths)
         if self.model.ops.xp.isnan(loss):
-            raise ValueError("nan value when computing loss")
+            raise ValueError(Errors.E910.format(name=self.name))
         return float(loss), d_scores
 
     def initialize(self, get_examples, *, nlp=None, labels=None):
