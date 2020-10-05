@@ -176,6 +176,7 @@ def validate_subcommand(
 def check_rerun(
     project_dir: Path,
     command: Dict[str, Any],
+    *,
     check_spacy_version: bool = True,
     check_spacy_commit: bool = False,
 ) -> bool:
