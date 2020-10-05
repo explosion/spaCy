@@ -98,20 +98,6 @@ def build_Tok2Vec_model(
 
 
 @registry.architectures.register("spacy.MultiHashEmbed.v1")
-def MultiHashEmbed_v1(
-    width: int, rows: int, also_embed_subwords: bool, also_use_static_vectors: bool
-) -> Model[List[Doc], List[Floats2d]]:
-    """Previous interface for MultiHashEmbed. This should be removed, it's only
-    here as a temporary compatibility."""
-    return MultiHashEmbed(
-        width=width,
-        rows=[rows, rows//2, rows//2, rows//2] if also_embed_subwords else [rows],
-        attrs=[NORM, PREFIX, SUFFIX, SHAPE] if also_embed_subwords else [NORM],
-        include_static_vectors=also_use_static_vectors,
-    )
-
-
-@registry.architectures.register("spacy.MultiHashEmbed.v2")
 def MultiHashEmbed(
     width: int,
     attrs: List[Union[str, int]],
