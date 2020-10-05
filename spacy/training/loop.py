@@ -3,17 +3,22 @@ from typing import Optional, TYPE_CHECKING
 from pathlib import Path
 from timeit import default_timer as timer
 from thinc.api import Optimizer, Config, constant, fix_random_seed, set_gpu_allocator
+from wasabi import Printer
 import random
-import wasabi
 import sys
+import shutil
 
 from .example import Example
 from ..schemas import ConfigSchemaTraining
-from ..errors import Errors
-from ..util import resolve_dot_names, registry
+from ..errors import Errors, Warnings
+from ..util import resolve_dot_names, registry, logger
 
 if TYPE_CHECKING:
     from ..language import Language  # noqa: F401
+
+
+DIR_MODEL_BEST = "model-best"
+DIR_MODEL_LAST = "model-last"
 
 
 def train(
@@ -38,7 +43,7 @@ def train(
     RETURNS (Path / None): The path to the final exported model.
     """
     # We use no_print here so we can respect the stdout/stderr options.
-    msg = wasabi.Printer(no_print=True)
+    msg = Printer(no_print=True)
     # Create iterator, which yields out info after each optimization step.
     config = nlp.config.interpolate()
     if config["training"]["seed"] is not None:
@@ -69,6 +74,7 @@ def train(
         eval_frequency=T["eval_frequency"],
         exclude=frozen_components,
     )
+    clean_output_dir(output_path, msg=msg, stdout=stdout)
     stdout.write(msg.info(f"Pipeline: {nlp.pipe_names}") + "\n")
     if frozen_components:
         stdout.write(msg.info(f"Frozen components: {frozen_components}") + "\n")
@@ -83,7 +89,7 @@ def train(
                     update_meta(T, nlp, info)
                 with nlp.use_params(optimizer.averages):
                     nlp = before_to_disk(nlp)
-                    nlp.to_disk(output_path / "model-best")
+                    nlp.to_disk(output_path / DIR_MODEL_BEST)
     except Exception as e:
         if output_path is not None:
             # We don't want to swallow the traceback if we don't have a
@@ -100,7 +106,7 @@ def train(
     finally:
         finalize_logger()
         if output_path is not None:
-            final_model_path = output_path / "model-last"
+            final_model_path = output_path / DIR_MODEL_LAST
             if optimizer.averages:
                 with nlp.use_params(optimizer.averages):
                     nlp.to_disk(final_model_path)
@@ -305,3 +311,20 @@ def create_before_to_disk_callback(
         return modified_nlp
 
     return before_to_disk
+
+
+def clean_output_dir(path: Union[str, Path], *, msg: Printer, stdout: IO) -> None:
+    """Remove an existing output directory. Typically used to ensure that that
+    a directory like model-best and its contents aren't just being overwritten
+    by nlp.to_disk, which could preserve existing subdirectories (e.g.
+    components that don't exist anymore).
+    """
+    if path is not None and path.exists():
+        for subdir in [path / DIR_MODEL_BEST, path / DIR_MODEL_LAST]:
+            if subdir.exists():
+                try:
+                    shutil.rmtree(str(subdir))
+                    logger.debug(f"Removed existing output directory: {subdir}")
+                except Exception as e:
+                    err = Warnings.W087.format(path=subdir, err=e)
+                    stdout.write(msg.warn(err) + "\n")
