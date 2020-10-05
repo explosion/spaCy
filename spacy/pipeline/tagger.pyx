@@ -203,7 +203,7 @@ class Tagger(Pipe):
         loss, d_tag_scores = self.get_loss(examples, tag_scores)
         bp_tag_scores(d_tag_scores)
         if sgd not in (None, False):
-            self.model.finish_update(sgd)
+            self.finish_update(sgd)
 
         losses[self.name] += loss
         if set_annotations:
@@ -238,7 +238,7 @@ class Tagger(Pipe):
         target = self._rehearsal_model(examples)
         gradient = guesses - target
         backprop(gradient)
-        self.model.finish_update(sgd)
+        self.finish_update(sgd)
         if losses is not None:
             losses.setdefault(self.name, 0.0)
             losses[self.name] += (gradient**2).sum()

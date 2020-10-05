@@ -132,7 +132,7 @@ cdef class Pipe:
         loss, d_scores = self.get_loss(examples, scores)
         bp_scores(d_scores)
         if sgd not in (None, False):
-            self.model.finish_update(sgd)
+            self.finish_update(sgd)
         losses[self.name] += loss
         if set_annotations:
             docs = [eg.predicted for eg in examples]
@@ -244,6 +244,17 @@ cdef class Pipe:
         """
         with self.model.use_params(params):
             yield
+
+    def finish_update(self, sgd):
+        """Update parameters using the current parameter gradients.
+        The Optimizer instance contains the functionality to perform
+        the stochastic gradient descent.
+
+        sgd (thinc.api.Optimizer): The optimizer.
+
+        DOCS: https://nightly.spacy.io/api/pipe#finish_update
+        """
+        self.model.finish_update(sgd)
 
     def score(self, examples, **kwargs):
         """Score a batch of examples.

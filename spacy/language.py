@@ -1094,7 +1094,7 @@ class Language:
                     and hasattr(proc, "model")
                     and proc.model not in (True, False, None)
                 ):
-                    proc.model.finish_update(sgd)
+                    proc.finish_update(sgd)
         return losses
 
     def rehearse(

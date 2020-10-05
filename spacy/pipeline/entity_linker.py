@@ -238,7 +238,7 @@ class EntityLinker(Pipe):
         )
         bp_context(d_scores)
         if sgd is not None:
-            self.model.finish_update(sgd)
+            self.finish_update(sgd)
         losses[self.name] += loss
         if set_annotations:
             self.set_annotations(docs, predictions)

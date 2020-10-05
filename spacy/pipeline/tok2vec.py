@@ -188,7 +188,7 @@ class Tok2Vec(Pipe):
             accumulate_gradient(one_d_tokvecs)
             d_docs = bp_tokvecs(d_tokvecs)
             if sgd is not None:
-                self.model.finish_update(sgd)
+                self.finish_update(sgd)
             return d_docs
 
         batch_id = Tok2VecListener.get_batch_id(docs)
