@@ -43,8 +43,9 @@ def noun_chunks(doclike):
                 head = head.head
             # If the head is an NP, and we're coordinated to it, we're an NP
             if head.dep in np_deps:
-                prev_end = word.left_edge.i
-                yield word.left_edge.i, word.i + 1, np_label
+                cc_token = word.left_edge  # shave off cc tokens from the NP
+                prev_end = cc_token.i
+                yield cc_token.right_edge.i + 1, word.i + 1, np_label
 
 
 SYNTAX_ITERATORS = {"noun_chunks": noun_chunks}
