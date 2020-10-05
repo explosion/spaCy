@@ -116,7 +116,7 @@ cfg_string = """
     @architectures = "spacy.Tok2Vec.v1"
 
     [components.tok2vec.model.embed]
-    @architectures = "spacy.MultiHashEmbed.v2"
+    @architectures = "spacy.MultiHashEmbed.v1"
     width = ${components.tok2vec.model.encode.width}
     rows = [2000, 1000, 1000, 1000]
     attrs = ["NORM", "PREFIX", "SUFFIX", "SHAPE"]
