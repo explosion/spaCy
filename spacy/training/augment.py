@@ -130,7 +130,7 @@ def make_orth_variants(
         for word_idx in range(len(words)):
             for punct_idx in range(len(ndsv)):
                 if (
-                    tags[word_idx] in ndsv[punct_idx]["TAG"]
+                    tags[word_idx] in ndsv[punct_idx]["tags"]
                     and words[word_idx] in ndsv[punct_idx]["variants"]
                 ):
                     words[word_idx] = punct_choices[punct_idx]
