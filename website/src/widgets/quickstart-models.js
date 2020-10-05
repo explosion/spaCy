@@ -31,25 +31,33 @@ const data = [
     },
     {
         id: 'optimize',
-        title: 'Optimize for',
-        help:
-            'Optimize for efficiency (faster & smaller model) or higher accuracy (larger & slower model)',
+        title: 'Select for',
         options: [
-            { id: 'efficiency', title: 'efficiency', checked: DEFAULT_OPT === 'efficiency' },
-            { id: 'accuracy', title: 'accuracy', checked: DEFAULT_OPT === 'accuracy' },
+            {
+                id: 'efficiency',
+                title: 'efficiency',
+                checked: DEFAULT_OPT === 'efficiency',
+                help: 'Faster and smaller pipeline, but less accurate',
+            },
+            {
+                id: 'accuracy',
+                title: 'accuracy',
+                checked: DEFAULT_OPT === 'accuracy',
+                help: 'Larger and slower pipeline, but more accurate',
+            },
         ],
     },
     {
         id: 'config',
         title: 'Options',
         multiple: true,
-        options: [{ id: 'example', title: 'Show usage example' }],
+        options: [{ id: 'example', title: 'Show text example' }],
     },
 ]
 
 const QuickstartInstall = ({ id, title, description, children }) => {
     const [lang, setLang] = useState(DEFAULT_LANG)
-    const [efficiency, setEfficiency] = useState(DEFAULT_OPT)
+    const [efficiency, setEfficiency] = useState(DEFAULT_OPT === 'efficiency')
     const setters = {
         lang: setLang,
         optimize: v => setEfficiency(v.includes('efficiency')),

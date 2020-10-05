@@ -456,10 +456,14 @@ class Errors:
             "issue tracker: http://github.com/explosion/spaCy/issues")
 
     # TODO: fix numbering after merging develop into master
-    E092 = ("The sentence-per-line IOB/IOB2 file is not formatted correctly. "
+    E901 = ("Failed to remove existing output directory: {path}. If your "
+            "config and the components you train change between runs, a "
+            "non-empty output directory can lead to stale pipeline data. To "
+            "solve this, remove the existing directories in the output directory.")
+    E902 = ("The sentence-per-line IOB/IOB2 file is not formatted correctly. "
             "Try checking whitespace and delimiters. See "
             "https://nightly.spacy.io/api/cli#convert")
-    E093 = ("The token-per-line NER file is not formatted correctly. Try checking "
+    E903 = ("The token-per-line NER file is not formatted correctly. Try checking "
             "whitespace and delimiters. See https://nightly.spacy.io/api/cli#convert")
     E904 = ("Cannot initialize StaticVectors layer: nO dimension unset. This "
             "dimension refers to the output width, after the linear projection "
