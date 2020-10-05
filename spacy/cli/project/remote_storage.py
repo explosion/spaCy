@@ -7,7 +7,9 @@ import tarfile
 from pathlib import Path
 
 from .._util import get_hash, get_checksum, download_file, ensure_pathy
-from ...util import make_tempdir
+from ...util import make_tempdir, get_minor_version, ENV_VARS, check_bool_env_var
+from ...git_info import GIT_VERSION
+from ... import about
 
 if TYPE_CHECKING:
     from pathy import Pathy  # noqa: F401
@@ -129,7 +131,10 @@ def get_command_hash(
     currently installed packages, whatever environment variables have been marked
     as relevant, and the command.
     """
-    hashes = [site_hash, env_hash] + [get_checksum(dep) for dep in sorted(deps)]
+    check_commit = check_bool_env_var(ENV_VARS.PROJECT_USE_GIT_VERSION)
+    spacy_v = GIT_VERSION if check_commit else get_minor_version(about.__version__)
+    dep_checksums = [get_checksum(dep) for dep in sorted(deps)]
+    hashes = [spacy_v, site_hash, env_hash] + dep_checksums
     hashes.extend(cmd)
     creation_bytes = "".join(hashes).encode("utf8")
     return hashlib.md5(creation_bytes).hexdigest()
