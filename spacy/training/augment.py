@@ -5,7 +5,7 @@ import copy
 from functools import partial
 from pydantic import BaseModel, StrictStr
 
-from ..util import registry, logger
+from ..util import registry
 from ..tokens import Doc
 from .example import Example
 
@@ -119,7 +119,6 @@ def make_orth_variants(
     orig_token_dict = copy.deepcopy(token_dict)
     ndsv = orth_variants.get("single", [])
     ndpv = orth_variants.get("paired", [])
-    logger.debug(f"Data augmentation: {len(ndsv)} single / {len(ndpv)} paired variants")
     words = token_dict.get("ORTH", [])
     tags = token_dict.get("TAG", [])
     # keep unmodified if words or tags are not defined
@@ -139,7 +138,7 @@ def make_orth_variants(
         punct_choices = [random.choice(x["variants"]) for x in ndpv]
         for word_idx in range(len(words)):
             for punct_idx in range(len(ndpv)):
-                if tags[word_idx] in ndpv[punct_idx]["TAG"] and words[
+                if tags[word_idx] in ndpv[punct_idx]["tags"] and words[
                     word_idx
                 ] in itertools.chain.from_iterable(ndpv[punct_idx]["variants"]):
                     # backup option: random left vs. right from pair
