@@ -5,7 +5,7 @@ import copy
 from functools import partial
 from pydantic import BaseModel, StrictStr
 
-from ..util import registry, logger
+from ..util import registry
 from ..tokens import Doc
 from .example import Example
 
@@ -119,7 +119,6 @@ def make_orth_variants(
     orig_token_dict = copy.deepcopy(token_dict)
     ndsv = orth_variants.get("single", [])
     ndpv = orth_variants.get("paired", [])
-    logger.debug(f"Data augmentation: {len(ndsv)} single / {len(ndpv)} paired variants")
     words = token_dict.get("words", [])
     tags = token_dict.get("tags", [])
     # keep unmodified if words or tags are not defined
