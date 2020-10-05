@@ -285,8 +285,7 @@ def zh_tokenizer_jieba():
 
 @pytest.fixture(scope="session")
 def zh_tokenizer_pkuseg():
-    pytest.importorskip("pkuseg")
-    pytest.importorskip("pickle5")
+    pytest.importorskip("spacy_pkuseg")
     config = {
         "nlp": {
             "tokenizer": {
@@ -296,7 +295,7 @@ def zh_tokenizer_pkuseg():
         },
         "initialize": {
             "tokenizer": {
-                "pkuseg_model": "default",
+                "pkuseg_model": "web",
             }
         },
     }
