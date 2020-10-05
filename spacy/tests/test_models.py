@@ -6,6 +6,7 @@ from numpy.testing import assert_array_equal
 import numpy
 
 from spacy.ml.models import build_Tok2Vec_model, MultiHashEmbed, MaxoutWindowEncoder
+from spacy.ml.models import MultiHashEmbed_v1
 from spacy.ml.models import build_text_classifier, build_simple_cnn_text_classifier
 from spacy.lang.en import English
 from spacy.lang.en.examples import sentences as EN_SENTENCES
@@ -61,7 +62,10 @@ def get_tok2vec_kwargs():
     # This actually creates models, so seems best to put it in a function.
     return {
         "embed": MultiHashEmbed(
-            width=32, rows=500, also_embed_subwords=True, also_use_static_vectors=False
+            width=32,
+            rows=500,
+            attrs=["NORM", "PREFIX", "SHAPE"],
+            include_static_vectors=False
         ),
         "encode": MaxoutWindowEncoder(
             width=32, depth=2, maxout_pieces=2, window_size=1
@@ -72,6 +76,32 @@ def get_tok2vec_kwargs():
 def test_tok2vec():
     return build_Tok2Vec_model(**get_tok2vec_kwargs())
 
+
+def test_multi_hash_embed():
+    embed = MultiHashEmbed(
+        width=32,
+        rows=500,
+        attrs=["NORM", "PREFIX", "SHAPE"],
+        include_static_vectors=False
+    )
+    hash_embeds = [node for node in embed.walk() if node.name == "hashembed"]
+    assert len(hash_embeds) == 3
+    # Check they look at different columns.
+    assert list(sorted(he.attrs["column"] for he in hash_embeds)) == [0, 1, 2]
+    # Check they use different seeds
+    assert len(set(he.attrs["seed"] for he in hash_embeds)) == 3
+    # Check they all have the same number of rows
+    assert [he.get_dim("nV") for he in hash_embeds] == [500, 500, 500]
+    # Now try with different row factors
+    embed = MultiHashEmbed(
+        width=32,
+        rows=500,
+        attrs={"NORM": 2.0, "PREFIX": 0.1, "SHAPE": 0.5},
+        include_static_vectors=False
+    )
+    hash_embeds = [node for node in embed.walk() if node.name == "hashembed"]
+    assert [he.get_dim("nV") for he in hash_embeds] == [1000, 50, 250]
+ 
 
 @pytest.mark.parametrize(
     "seed,model_func,kwargs",
