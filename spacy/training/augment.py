@@ -119,7 +119,6 @@ def make_orth_variants(
     orig_token_dict = copy.deepcopy(token_dict)
     ndsv = orth_variants.get("single", [])
     ndpv = orth_variants.get("paired", [])
-    logger.debug(f"Data augmentation: {len(ndsv)} single / {len(ndpv)} paired variants")
     words = token_dict.get("ORTH", [])
     tags = token_dict.get("TAG", [])
     # keep unmodified if words or tags are not defined
