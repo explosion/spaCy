@@ -26,7 +26,9 @@ class Ukrainian(Language):
     default_config={"model": None, "mode": "pymorphy2"},
     default_score_weights={"lemma_acc": 1.0},
 )
-def make_lemmatizer(nlp: Language, model: Optional[Model], name: str, mode: str, overwrite: bool = False,):
+def make_lemmatizer(
+    nlp: Language, model: Optional[Model], name: str, mode: str, overwrite: bool = False
+):
     return UkrainianLemmatizer(nlp.vocab, model, name, mode=mode, overwrite=overwrite)
 
 

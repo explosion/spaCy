@@ -54,9 +54,7 @@ def create_chinese_tokenizer(segmenter: Segmenter = Segmenter.char):
 
 
 class ChineseTokenizer(DummyTokenizer):
-    def __init__(
-        self, nlp: Language, segmenter: Segmenter = Segmenter.char,
-    ):
+    def __init__(self, nlp: Language, segmenter: Segmenter = Segmenter.char):
         self.vocab = nlp.vocab
         if isinstance(segmenter, Segmenter):
             segmenter = segmenter.value
@@ -87,7 +85,7 @@ class ChineseTokenizer(DummyTokenizer):
             if pkuseg_user_dict is None:
                 pkuseg_user_dict = pkuseg_model
             self.pkuseg_seg = try_pkuseg_import(
-                pkuseg_model=pkuseg_model, pkuseg_user_dict=pkuseg_user_dict,
+                pkuseg_model=pkuseg_model, pkuseg_user_dict=pkuseg_user_dict
             )
 
     def __call__(self, text: str) -> Doc:

@@ -64,7 +64,7 @@ def get_tok2vec_kwargs():
             width=32,
             rows=[500, 500, 500],
             attrs=["NORM", "PREFIX", "SHAPE"],
-            include_static_vectors=False
+            include_static_vectors=False,
         ),
         "encode": MaxoutWindowEncoder(
             width=32, depth=2, maxout_pieces=2, window_size=1
@@ -81,7 +81,7 @@ def test_multi_hash_embed():
         width=32,
         rows=[500, 500, 500],
         attrs=["NORM", "PREFIX", "SHAPE"],
-        include_static_vectors=False
+        include_static_vectors=False,
     )
     hash_embeds = [node for node in embed.walk() if node.name == "hashembed"]
     assert len(hash_embeds) == 3
@@ -96,11 +96,11 @@ def test_multi_hash_embed():
         width=32,
         rows=[1000, 50, 250],
         attrs=["NORM", "PREFIX", "SHAPE"],
-        include_static_vectors=False
+        include_static_vectors=False,
     )
     hash_embeds = [node for node in embed.walk() if node.name == "hashembed"]
     assert [he.get_dim("nV") for he in hash_embeds] == [1000, 50, 250]
- 
+
 
 @pytest.mark.parametrize(
     "seed,model_func,kwargs",

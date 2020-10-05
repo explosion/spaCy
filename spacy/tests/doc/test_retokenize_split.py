@@ -209,9 +209,13 @@ def test_doc_retokenizer_split_norm(en_vocab):
     # Retokenize to split out the words in the token at doc[2].
     token = doc[2]
     with doc.retokenize() as retokenizer:
-      retokenizer.split(token, ["brown", "fox", "jumps", "over", "the"], heads=[(token, idx) for idx in range(5)])
+        retokenizer.split(
+            token,
+            ["brown", "fox", "jumps", "over", "the"],
+            heads=[(token, idx) for idx in range(5)],
+        )
 
-    assert doc[9].text  == "w/"
+    assert doc[9].text == "w/"
     assert doc[9].norm_ == "with"
-    assert doc[5].text  == "over"
+    assert doc[5].text == "over"
     assert doc[5].norm_ == "over"

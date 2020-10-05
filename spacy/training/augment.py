@@ -64,7 +64,7 @@ def dont_augment(nlp: "Language", example: Example) -> Iterator[Example]:
 
 
 def lower_casing_augmenter(
-    nlp: "Language", example: Example, *, level: float,
+    nlp: "Language", example: Example, *, level: float
 ) -> Iterator[Example]:
     if random.random() >= level:
         yield example
