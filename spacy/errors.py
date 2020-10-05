@@ -79,9 +79,6 @@ class Warnings:
             "attribute or operator.")
 
     # TODO: fix numbering after merging develop into master
-    W087 = ("Failed to remove existing output directory {path}: {err}. If your "
-            "config and the components you train change between runs, this may "
-            "lead to stale pipeline data.")
     W088 = ("The pipeline component {name} implements a `begin_training` "
             "method, which won't be called by spaCy. As of v3.0, `begin_training` "
             "has been renamed to `initialize`, so you likely want to rename the "
@@ -459,6 +456,10 @@ class Errors:
             "issue tracker: http://github.com/explosion/spaCy/issues")
 
     # TODO: fix numbering after merging develop into master
+    E901 = ("Failed to remove existing output directory: {path}. If your "
+            "config and the components you train change between runs, a "
+            "non-empty output directory can lead to stale pipeline data. To "
+            "solve this, remove the existing directories in the output directory.")
     E902 = ("The sentence-per-line IOB/IOB2 file is not formatted correctly. "
             "Try checking whitespace and delimiters. See "
             "https://nightly.spacy.io/api/cli#convert")

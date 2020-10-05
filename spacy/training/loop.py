@@ -10,7 +10,7 @@ import shutil
 
 from .example import Example
 from ..schemas import ConfigSchemaTraining
-from ..errors import Errors, Warnings
+from ..errors import Errors
 from ..util import resolve_dot_names, registry, logger
 
 if TYPE_CHECKING:
@@ -74,7 +74,7 @@ def train(
         eval_frequency=T["eval_frequency"],
         exclude=frozen_components,
     )
-    clean_output_dir(output_path, msg=msg, stdout=stdout)
+    clean_output_dir(output_path)
     stdout.write(msg.info(f"Pipeline: {nlp.pipe_names}") + "\n")
     if frozen_components:
         stdout.write(msg.info(f"Frozen components: {frozen_components}") + "\n")
@@ -313,7 +313,7 @@ def create_before_to_disk_callback(
     return before_to_disk
 
 
-def clean_output_dir(path: Union[str, Path], *, msg: Printer, stdout: IO) -> None:
+def clean_output_dir(path: Union[str, Path]) -> None:
     """Remove an existing output directory. Typically used to ensure that that
     a directory like model-best and its contents aren't just being overwritten
     by nlp.to_disk, which could preserve existing subdirectories (e.g.
@@ -326,5 +326,4 @@ def clean_output_dir(path: Union[str, Path], *, msg: Printer, stdout: IO) -> Non
                     shutil.rmtree(str(subdir))
                     logger.debug(f"Removed existing output directory: {subdir}")
                 except Exception as e:
-                    err = Warnings.W087.format(path=subdir, err=e)
-                    stdout.write(msg.warn(err) + "\n")
+                    raise IOError(Errors.E901.format(path=path)) from e
