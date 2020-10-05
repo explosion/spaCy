@@ -379,7 +379,7 @@ def test_tr_noun_chunks_conj_simple(tr_tokenizer):
     chunks = list(doc.noun_chunks)
     assert len(chunks) == 2
     assert chunks[0].text_with_ws == "ben "
-    assert chunks[1].text_with_ws == "sen "
+    assert chunks[1].text_with_ws == "Sen "
 
 def test_tr_noun_chunks_conj_three(tr_tokenizer):
     text = "sen, ben ve ondan"
@@ -394,7 +394,54 @@ def test_tr_noun_chunks_conj_three(tr_tokenizer):
     assert len(chunks) == 3
     assert chunks[0].text_with_ws == "ondan "
     assert chunks[1].text_with_ws == "ben "
+    assert chunks[2].text_with_ws == "sen "
+
+
+def test_tr_noun_chunks_conj_three(tr_tokenizer):
+    text = "ben ya da sen ya da onlar"
+    heads = [0, 2, -1, -3, 2, -1, -3]
+    deps = ["ROOT", "cc", "fixed", "conj", "cc", "fixed", "conj"]
+    tags = ["PRON", "CCONJ", "CCONJ", "PRON", "CCONJ", "CCONJ", "PRON"]
+    tokens = tr_tokenizer(text)
+    doc = get_doc(
+        tokens.vocab, words=[t.text for t in tokens], tags=tags, heads=heads, deps=deps
+    )
+    chunks = list(doc.noun_chunks)
+    assert len(chunks) == 3
+    assert chunks[0].text_with_ws == "onlar "
     assert chunks[1].text_with_ws == "sen "
+    assert chunks[2].text_with_ws == "ben "
+
+
+def test_tr_noun_chunks_conj_and_adj_phrase(tr_tokenizer):
+    text = "ben ve akıllı çocuk"
+    heads = [0, 2, 1, -3]
+    deps = ["ROOT", "cc", "amod", "conj"]
+    tags = ["PRON", "CCONJ", "ADJ", "NOUN"]
+    tokens = tr_tokenizer(text)
+    doc = get_doc(
+        tokens.vocab, words=[t.text for t in tokens], tags=tags, heads=heads, deps=deps
+    )
+    chunks = list(doc.noun_chunks)
+    assert len(chunks) == 2
+    assert chunks[0].text_with_ws == "akıllı çocuk "
+    assert chunks[1].text_with_ws == "ben "
+
+
+def test_tr_noun_chunks_conj_fixed_adj_phrase(tr_tokenizer):
+    text = "ben ya da akıllı çocuk"
+    heads = [0, 3, -1, 1, -4]
+    deps = ["ROOT", "cc", "fixed", "amod", "conj"]
+    tags = ["PRON", "CCONJ", "CCONJ", "ADJ", "NOUN"]
+    tokens = tr_tokenizer(text)
+    doc = get_doc(
+        tokens.vocab, words=[t.text for t in tokens], tags=tags, heads=heads, deps=deps
+    )
+    chunks = list(doc.noun_chunks)
+    assert len(chunks) == 2
+    assert chunks[0].text_with_ws == "akıllı çocuk "
+    assert chunks[1].text_with_ws == "ben "
+
 
 def test_tr_noun_chunks_conj_subject(tr_tokenizer):
     text = "Sen ve ben iyi anlaşıyoruz"
@@ -408,4 +455,4 @@ def test_tr_noun_chunks_conj_subject(tr_tokenizer):
     chunks = list(doc.noun_chunks)
     assert len(chunks) == 2
     assert chunks[0].text_with_ws == "ben "
-    assert chunks[1].text_with_ws == "sen "
+    assert chunks[1].text_with_ws == "Sen "
