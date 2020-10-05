@@ -103,17 +103,18 @@ def MultiHashEmbed_v1(
     here as a temporary compatibility."""
     return MultiHashEmbed(
         width=width,
-        rows=rows, 
+        rows=rows,
         attrs=[NORM, PREFIX, SUFFIX, SHAPE] if also_embed_subwords else [NORM],
-        include_static_vectors=also_use_static_vectors
+        include_static_vectors=also_use_static_vectors,
     )
+
 
 @registry.architectures.register("spacy.MultiHashEmbed.v2")
 def MultiHashEmbed(
     width: int,
     rows: int,
     attrs: Union[List[Union[str, int]], Dict[Union[str, int], float]],
-    include_static_vectors: bool
+    include_static_vectors: bool,
 ) -> Model[List[Doc], List[Floats2d]]:
     """Construct an embedding layer that separately embeds a number of lexical
     attributes using hash embedding, concatenates the results, and passes it
