@@ -157,7 +157,7 @@ class ChineseTokenizer(DummyTokenizer):
                 self.pkuseg_seg.feature_extractor.save(tempdir)
                 self.pkuseg_seg.model.save(tempdir)
                 tempdir = Path(tempdir)
-                with open(tempdir / "features.pkl", "rb") as fileh:
+                with open(tempdir / "features.msgpack", "rb") as fileh:
                     pkuseg_features_b = fileh.read()
                 with open(tempdir / "weights.npz", "rb") as fileh:
                     pkuseg_weights_b = fileh.read()
@@ -198,7 +198,7 @@ class ChineseTokenizer(DummyTokenizer):
         if pkuseg_data["features_b"] and pkuseg_data["weights_b"]:
             with tempfile.TemporaryDirectory() as tempdir:
                 tempdir = Path(tempdir)
-                with open(tempdir / "features.pkl", "wb") as fileh:
+                with open(tempdir / "features.msgpack", "wb") as fileh:
                     fileh.write(pkuseg_data["features_b"])
                 with open(tempdir / "weights.npz", "wb") as fileh:
                     fileh.write(pkuseg_data["weights_b"])
