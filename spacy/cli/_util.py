@@ -1,4 +1,4 @@
-from typing import Dict, Any, Union, List, Optional, Tuple, TYPE_CHECKING
+from typing import Dict, Any, Union, List, Optional, Tuple, Iterable, TYPE_CHECKING
 import sys
 import shutil
 from pathlib import Path
@@ -193,12 +193,15 @@ def validate_project_commands(config: Dict[str, Any]) -> None:
                 )
 
 
-def get_hash(data) -> str:
+def get_hash(data, exclude: Iterable[str] = tuple()) -> str:
     """Get the hash for a JSON-serializable object.
 
     data: The data to hash.
+    exclude (Iterable[str]): Top-level keys to exclude if data is a dict.
     RETURNS (str): The hash.
     """
+    if isinstance(data, dict):
+        data = {k: v for k, v in data.items() if k not in exclude}
     data_str = srsly.json_dumps(data, sort_keys=True).encode("utf8")
     return hashlib.md5(data_str).hexdigest()
 
