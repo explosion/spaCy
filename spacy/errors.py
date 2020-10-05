@@ -458,10 +458,10 @@ class Errors:
     # TODO: fix numbering after merging develop into master
     E900 = ("Patterns for component '{name}' not initialized. This can be fixed "
             "by calling 'add_patterns' or 'initialize'.")
-    E092 = ("The sentence-per-line IOB/IOB2 file is not formatted correctly. "
+    E902 = ("The sentence-per-line IOB/IOB2 file is not formatted correctly. "
             "Try checking whitespace and delimiters. See "
             "https://nightly.spacy.io/api/cli#convert")
-    E093 = ("The token-per-line NER file is not formatted correctly. Try checking "
+    E903 = ("The token-per-line NER file is not formatted correctly. Try checking "
             "whitespace and delimiters. See https://nightly.spacy.io/api/cli#convert")
     E904 = ("Cannot initialize StaticVectors layer: nO dimension unset. This "
             "dimension refers to the output width, after the linear projection "

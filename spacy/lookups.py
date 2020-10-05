@@ -289,13 +289,12 @@ class Lookups:
 
         DOCS: https://nightly.spacy.io/api/lookups#to_disk
         """
-        if len(self._tables):
-            path = ensure_path(path)
-            if not path.exists():
-                path.mkdir()
-            filepath = path / filename
-            with filepath.open("wb") as file_:
-                file_.write(self.to_bytes())
+        path = ensure_path(path)
+        if not path.exists():
+            path.mkdir()
+        filepath = path / filename
+        with filepath.open("wb") as file_:
+            file_.write(self.to_bytes())
 
     def from_disk(
         self, path: Union[str, Path], filename: str = "lookups.bin", **kwargs
