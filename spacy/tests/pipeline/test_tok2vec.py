@@ -45,8 +45,8 @@ def test_tok2vec_batch_sizes(batch_size, width, embed_size):
         MultiHashEmbed(
             width=width,
             rows=embed_size,
-            also_use_static_vectors=False,
-            also_embed_subwords=True,
+            include_static_vectors=False,
+            attrs=["NORM", "PREFIX", "SUFFIX", "SHAPE"],
         ),
         MaxoutWindowEncoder(width=width, depth=4, window_size=1, maxout_pieces=3),
     )
@@ -61,8 +61,8 @@ def test_tok2vec_batch_sizes(batch_size, width, embed_size):
 @pytest.mark.parametrize(
     "width,embed_arch,embed_config,encode_arch,encode_config",
     [
-        (8, MultiHashEmbed, {"rows": 100, "also_embed_subwords": True, "also_use_static_vectors": False}, MaxoutWindowEncoder, {"window_size": 1, "maxout_pieces": 3, "depth": 2}),
-        (8, MultiHashEmbed, {"rows": 100, "also_embed_subwords": True, "also_use_static_vectors": False}, MishWindowEncoder, {"window_size": 1, "depth": 6}),
+        (8, MultiHashEmbed, {"rows": 100, "attrs": ["SHAPE", "LOWER"], "include_static_vectors": False}, MaxoutWindowEncoder, {"window_size": 1, "maxout_pieces": 3, "depth": 2}),
+        (8, MultiHashEmbed, {"rows": 100, "attrs": {"ORTH": 1.0, "PREFIX": 0.2}, "also_use_static_vectors": False}, MishWindowEncoder, {"window_size": 1, "depth": 6}),
         (8, CharacterEmbed, {"rows": 100, "nM": 64, "nC": 8, "also_use_static_vectors": False}, MaxoutWindowEncoder, {"window_size": 1, "maxout_pieces": 3, "depth": 3}),
         (8, CharacterEmbed, {"rows": 100, "nM": 16, "nC": 2, "also_use_static_vectors": False}, MishWindowEncoder, {"window_size": 1, "depth": 3}),
     ],
