@@ -73,6 +73,7 @@ logger = logging.getLogger("spacy")
 
 class ENV_VARS:
     CONFIG_OVERRIDES = "SPACY_CONFIG_OVERRIDES"
+    PROJECT_USE_GIT_VERSION = "SPACY_PROJECT_USE_GIT_VERSION"
 
 
 class registry(thinc.registry):
@@ -1342,3 +1343,16 @@ def is_cython_func(func: Callable) -> bool:
         cls_func = vars(sys.modules[func.__module__])[func.__qualname__.split(".")[0]]
         return hasattr(cls_func, attr)
     return False
+
+
+def check_bool_env_var(env_var: str) -> bool:
+    """Convert the value of an environment variable to a boolean. Add special
+    check for "0" (falsy) and consider everything else truthy, except unset.
+
+    env_var (str): The name of the environment variable to check.
+    RETURNS (bool): Its boolean value.
+    """
+    value = os.environ.get(env_var, False)
+    if value == "0":
+        return False
+    return bool(value)
