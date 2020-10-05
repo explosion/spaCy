@@ -458,6 +458,22 @@ def test_tr_noun_chunks_conj_subject(tr_tokenizer):
     assert chunks[1].text_with_ws == "Sen "
 
 
+def test_tr_noun_chunks_conj_noun_head_verb(tr_tokenizer):
+    text = "Simge babasını görmüyormuş, annesini değil"
+    heads = [2, 1, 0, 1, -2, -1]
+    deps = ["nsubj", "obj", "ROOT", "punct", "conj", "aux"]
+    tags = ["PROPN", "NOUN", "VERB", "PUNCT", "NOUN", "AUX"]
+    tokens = tr_tokenizer(text)
+    doc = get_doc(
+        tokens.vocab, words=[t.text for t in tokens], tags=tags, heads=heads, deps=deps
+    )
+    chunks = list(doc.noun_chunks)
+    assert len(chunks) == 3
+    assert chunks[0].text_with_ws == "annesini "
+    assert chunks[1].text_with_ws == "babasını "
+    assert chunks[2].text_with_ws == "Simge "
+
+
 def test_tr_noun_chunks_flat_simple(tr_tokenizer):
     text = "New York"
     heads = [0, -1]
@@ -540,3 +556,18 @@ def test_tr_noun_chunks_flat_and_chain_nmod(tr_tokenizer):
     chunks = list(doc.noun_chunks)
     assert len(chunks) == 1
     assert chunks[0].text_with_ws == "Batı Afrika ülkelerinden Sierra Leone "
+
+
+def test_tr_noun_chunks_two_flats_conjed(tr_tokenizer):
+    text = "New York ve Sierra Leone"
+    heads = [0, -1, 1, -3, -1]
+    deps = ["ROOT", "flat", "cc", "conj", "flat"]
+    tags = ["PROPN", "PROPN", "CCONJ", "PROPN", "PROPN"]
+    tokens = tr_tokenizer(text)
+    doc = get_doc(
+        tokens.vocab, words=[t.text for t in tokens], tags=tags, heads=heads, deps=deps
+    )
+    chunks = list(doc.noun_chunks)
+    assert len(chunks) == 2
+    assert chunks[0].text_with_ws == "Sierra Leone "
+    assert chunks[1].text_with_ws == "New York "
