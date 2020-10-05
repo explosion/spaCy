@@ -206,7 +206,7 @@ class ChineseTokenizer(DummyTokenizer):
                     import spacy_pkuseg
                 except ImportError:
                     raise ImportError(
-                        "spacy_pkuseg not installed. To use this model, "
+                        "spacy-pkuseg not installed. To use this model, "
                         + _PKUSEG_INSTALL_MSG
                     ) from None
                 self.pkuseg_seg = spacy_pkuseg.pkuseg(str(tempdir))
@@ -256,7 +256,7 @@ class ChineseTokenizer(DummyTokenizer):
             except ImportError:
                 if self.segmenter == Segmenter.pkuseg:
                     raise ImportError(
-                        "spacy_pkuseg not installed. To use this model, "
+                        "spacy-pkuseg not installed. To use this model, "
                         + _PKUSEG_INSTALL_MSG
                     ) from None
             if path.exists():
@@ -317,7 +317,7 @@ def try_pkuseg_import(pkuseg_model: str, pkuseg_user_dict: str) -> None:
         import spacy_pkuseg
 
     except ImportError:
-        msg = "spacy_pkuseg not installed. To use pkuseg, " + _PKUSEG_INSTALL_MSG
+        msg = "spacy-pkuseg not installed. To use pkuseg, " + _PKUSEG_INSTALL_MSG
         raise ImportError(msg) from None
     try:
         return spacy_pkuseg.pkuseg(pkuseg_model, pkuseg_user_dict)
