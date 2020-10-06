@@ -244,7 +244,7 @@ def test_tr_noun_chunks_acl_nmod(tr_tokenizer):
 
 def test_tr_noun_chunks_np_recursive_nsubj_to_root(tr_tokenizer):
     text = "Simge'nin okuduğu kitap"
-    heads = [2, 1, 0]
+    heads = [1, 1, 0]
     deps = ["nsubj", "acl", "ROOT"]
     tags = ["PROPN", "VERB", "NOUN"]
     tokens = tr_tokenizer(text)
@@ -258,7 +258,7 @@ def test_tr_noun_chunks_np_recursive_nsubj_to_root(tr_tokenizer):
 
 def test_tr_noun_chunks_np_recursive_nsubj_attached_to_pron_root(tr_tokenizer):
     text = "Simge'nin konuşabileceği birisi"
-    heads = [2, 1, 0]
+    heads = [1, 1, 0]
     deps = ["nsubj", "acl", "ROOT"]
     tags = ["PROPN", "VERB", "PRON"]
     tokens = tr_tokenizer(text)
