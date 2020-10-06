@@ -1,8 +1,10 @@
-from typing import Optional, Union, List, Dict, Tuple, Iterable, Any
+from typing import Optional, Union, List, Dict, Tuple, Iterable, Any, Callable, Sequence
 from collections import defaultdict
 from pathlib import Path
 import srsly
 
+from .pipe import Pipe
+from ..training import Example
 from ..language import Language
 from ..errors import Errors
 from ..util import ensure_path, to_disk, from_disk, SimpleFrozenList
@@ -50,7 +52,7 @@ def make_entity_ruler(
     )
 
 
-class EntityRuler:
+class EntityRuler(Pipe):
     """The EntityRuler lets you add spans to the `Doc.ents` using token-based
     rules or exact phrase matches. It can be combined with the statistical
     `EntityRecognizer` to boost accuracy, or used on its own to implement a
@@ -182,6 +184,26 @@ class EntityRuler:
             else:
                 all_labels.add(l)
         return tuple(all_labels)
+
+    def initialize(
+        self,
+        get_examples: Callable[[], Iterable[Example]],
+        *,
+        nlp: Optional[Language] = None,
+        patterns: Optional[Sequence[PatternType]] = None,
+    ):
+        """Initialize the pipe for training.
+
+        get_examples (Callable[[], Iterable[Example]]): Function that
+            returns a representative sample of gold-standard Example objects.
+        nlp (Language): The current nlp object the component is part of.
+        patterns Optional[Iterable[PatternType]]: The list of patterns.
+
+        DOCS: https://nightly.spacy.io/api/entityruler#initialize
+        """
+        if patterns:
+            self.add_patterns(patterns)
+
 
     @property
     def ent_ids(self) -> Tuple[str, ...]:
@@ -319,6 +341,12 @@ class EntityRuler:
     def score(self, examples, **kwargs):
         validate_examples(examples, "EntityRuler.score")
         return Scorer.score_spans(examples, "ents", **kwargs)
+
+    def predict(self, docs):
+        pass
+
+    def set_annotations(self, docs, scores):
+        pass
 
     def from_bytes(
         self, patterns_bytes: bytes, *, exclude: Iterable[str] = SimpleFrozenList()

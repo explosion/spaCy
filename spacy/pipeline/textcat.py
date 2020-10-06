@@ -212,7 +212,7 @@ class TextCategorizer(Pipe):
         loss, d_scores = self.get_loss(examples, scores)
         bp_scores(d_scores)
         if sgd is not None:
-            self.model.finish_update(sgd)
+            self.finish_update(sgd)
         losses[self.name] += loss
         if set_annotations:
             docs = [eg.predicted for eg in examples]
@@ -256,7 +256,7 @@ class TextCategorizer(Pipe):
         gradient = scores - target
         bp_scores(gradient)
         if sgd is not None:
-            self.model.finish_update(sgd)
+            self.finish_update(sgd)
         if losses is not None:
             losses[self.name] += (gradient ** 2).sum()
         return losses

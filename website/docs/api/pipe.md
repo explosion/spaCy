@@ -294,6 +294,24 @@ context, the original parameters are restored.
 | -------- | -------------------------------------------------- |
 | `params` | The parameter values to use in the model. ~~dict~~ |
 
+## Pipe.finish_update {#finish_update tag="method"}
+
+Update parameters using the current parameter gradients. Defaults to calling
+[`self.model.finish_update`](https://thinc.ai/docs/api-model#finish_update).
+
+> #### Example
+>
+> ```python
+> pipe = nlp.add_pipe("your_custom_pipe")
+> optimizer = nlp.initialize()
+> losses = pipe.update(examples, sgd=None)
+> pipe.finish_update(sgd)
+> ```
+
+| Name  | Description                           |
+| ----- | ------------------------------------- |
+| `sgd` | An optimizer. ~~Optional[Optimizer]~~ |
+
 ## Pipe.add_label {#add_label tag="method"}
 
 > #### Example

@@ -121,7 +121,7 @@ def test_attributeruler_init_patterns(nlp, pattern_dicts):
     assert doc.has_annotation("LEMMA")
     assert doc.has_annotation("MORPH")
     nlp.remove_pipe("attribute_ruler")
-    # initialize with patterns from asset
+    # initialize with patterns from misc registry
     nlp.config["initialize"]["components"]["attribute_ruler"] = {
         "patterns": {"@misc": "attribute_ruler_patterns"}
     }
