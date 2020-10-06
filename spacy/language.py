@@ -1300,7 +1300,7 @@ class Language:
             kwargs.setdefault("batch_size", batch_size)
             # non-trainable components may have a pipe() implementation that refers to dummy
             # predict and set_annotations methods
-            if not hasattr(pipe, "pipe") or not hasattr(pipe, "is_trainable") or not pipe.is_trainable():
+            if not hasattr(pipe, "pipe"):
                 docs = _pipe(docs, pipe, kwargs)
             else:
                 docs = pipe.pipe(docs, **kwargs)
@@ -1412,7 +1412,7 @@ class Language:
             kwargs.setdefault("batch_size", batch_size)
             # non-trainable components may have a pipe() implementation that refers to dummy
             # predict and set_annotations methods
-            if hasattr(proc, "pipe") and hasattr(proc, "is_trainable") and proc.is_trainable():
+            if hasattr(proc, "pipe"):
                 f = functools.partial(proc.pipe, **kwargs)
             else:
                 # Apply the function, but yield the doc
