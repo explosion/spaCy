@@ -128,8 +128,8 @@ Get all patterns that have been added to the attribute ruler in the
 
 ## AttributeRuler.initialize {#initialize tag="method"}
 
-Initialize the component with data. Typically called before training to load in
-rules from a file. This method is typically called by
+Initialize the component with data and used before training to load in rules
+from a file. This method is typically called by
 [`Language.initialize`](/api/language#initialize) and lets you customize
 arguments it receives via the
 [`[initialize.components]`](/api/data-formats#config-initialize) block in the

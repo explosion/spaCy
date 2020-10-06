@@ -76,7 +76,12 @@ be a token pattern (list) or a phrase pattern (string). For example:
 
 ## EntityRuler.initialize {#initialize tag="method" new="3"}
 
-Initialize the component with patterns from a file.
+Initialize the component with data and used before training to load in rules
+from a file. This method is typically called by
+[`Language.initialize`](/api/language#initialize) and lets you customize
+arguments it receives via the
+[`[initialize.components]`](/api/data-formats#config-initialize) block in the
+config.
 
 > #### Example
 >
@@ -204,7 +209,7 @@ only the patterns are saved as JSONL. If a directory name is provided, a
 
 ## EntityRuler.from_disk {#from_disk tag="method"}
 
-Load the entity ruler from a file. Expects either a file containing
+Load the entity ruler from a path. Expects either a file containing
 newline-delimited JSON (JSONL) with one entry per line, or a directory
 containing a `patterns.jsonl` file and a `cfg` file with the component
 configuration.

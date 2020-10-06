@@ -224,6 +224,9 @@ It's used by [`Language.initialize`](/api/language#initialize) and typically
 called right before training (but not at runtime). The section allows you to
 specify local file paths or custom functions to load data resources from,
 without requiring them at runtime when you load the trained pipeline back in.
+Also see the usage guides on the
+[config lifecycle](/usage/training#config-lifecycle) and
+[custom initialization](/usage/training#initialization).
 
 > #### Example
 >
