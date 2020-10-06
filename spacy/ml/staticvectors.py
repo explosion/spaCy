@@ -43,7 +43,6 @@ def forward(
     rows = model.ops.flatten(
         [doc.vocab.vectors.find(keys=doc.to_array(key_attr)) for doc in docs]
     )
-    print(rows)
     output = Ragged(
         model.ops.gemm(model.ops.as_contig(V[rows]), W, trans2=True),
         model.ops.asarray([len(doc) for doc in docs], dtype="i"),
