@@ -378,7 +378,7 @@ weights and [resume training](/api/language#resume_training).
 If you don't want a component to be updated, you can **freeze** it by adding it
 to the `frozen_components` list in the `[training]` block. Frozen components are
 **not updated** during training and are included in the final trained pipeline
-as-is.
+as-is. They are also excluded when calling `nlp.initialize()`.
 
 > #### Note on frozen components
 >
