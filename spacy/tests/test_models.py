@@ -188,7 +188,6 @@ def test_models_update_consistently(seed, dropout, model_func, kwargs, get_X):
     assert_array_equal(get_all_params(model1), get_all_params(model2))
 
 
-@pytest.mark.xfail
 @pytest.mark.parametrize(
     "model_func,kwargs",
     [
