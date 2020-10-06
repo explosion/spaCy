@@ -8,6 +8,8 @@ from ..tokens.doc cimport Doc
 from ..training import Example
 from ..errors import Errors, Warnings
 from .. import util
+from ..vocab import Vocab
+from ..language import Language
 
 cdef class Pipe:
     """This class is a base class and not instantiated directly. It provides
@@ -17,7 +19,7 @@ cdef class Pipe:
 
     DOCS: https://nightly.spacy.io/api/pipe
     """
-    def __init__(self, vocab: "Vocab", name: str, **cfg):
+    def __init__(self, vocab: Vocab, name: str, **cfg):
         """Initialize a pipeline component.
 
         vocab (Vocab): The shared vocabulary.
@@ -76,23 +78,10 @@ cdef class Pipe:
             doc = self(doc)
             yield doc
 
-    def add_label(self, label: str) -> int:
-        """Add an output label.
-        For TrainablePipe components, it is possible to
-        extend pretrained models with new labels, but care should be taken to
-        avoid the "catastrophic forgetting" problem.
-
-        label (str): The label to add.
-        RETURNS (int): 0 if label is already present, otherwise 1.
-
-        DOCS: https://nightly.spacy.io/api/pipe#add_label
-        """
-        raise NotImplementedError(Errors.E931.format(parent="Pipe", method="add_label", name=self.name))
-
-    def initialize(self, get_examples: Callable[[], Iterable[Example]], *, nlp: "Language"=None):
+    def initialize(self, get_examples: Callable[[], Iterable[Example]], *, nlp: Language=None):
         """Initialize the pipe. For non-trainable components, this method
-        is optional. For trainable components however, which should inherit
-        from the subclass Trainablepipe, the provided data examples
+        is optional. For trainable components, which should inherit
+        from the subclass TrainablePipe, the provided data examples
         should be used to ensure that the internal model is initialized
         properly and all input/output dimensions throughout the network are
         inferred.

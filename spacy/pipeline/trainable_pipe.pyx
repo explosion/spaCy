@@ -9,6 +9,9 @@ from ..training import validate_examples
 from ..errors import Errors
 from .pipe import Pipe, deserialize_config
 from .. import util
+from ..vocab import Vocab
+from ..language import Language
+from ..training import Example
 
 cdef class TrainablePipe(Pipe):
     """This class is a base class and not instantiated directly. Trainable
@@ -18,7 +21,7 @@ cdef class TrainablePipe(Pipe):
 
     DOCS: https://nightly.spacy.io/api/pipe
     """
-    def __init__(self, vocab: "Vocab", model: Model, name: str, **cfg):
+    def __init__(self, vocab: Vocab, model: Model, name: str, **cfg):
         """Initialize a pipeline component.
 
         vocab (Vocab): The shared vocabulary.
@@ -126,7 +129,7 @@ cdef class TrainablePipe(Pipe):
         return losses
 
     def rehearse(self,
-                 examples: Iterable["Example"],
+                 examples: Iterable[Example],
                  *,
                  sgd: Optimizer=None,
                  losses: Dict[str, float]=None,
@@ -146,7 +149,7 @@ cdef class TrainablePipe(Pipe):
         """
         pass
 
-    def get_loss(self, examples: Iterable["Example"], scores) -> Tuple[float, float]:
+    def get_loss(self, examples: Iterable[Example], scores) -> Tuple[float, float]:
         """Find the loss and gradient of loss for the batch of documents and
         their predicted scores.
 
@@ -167,7 +170,7 @@ cdef class TrainablePipe(Pipe):
         """
         return util.create_default_optimizer()
 
-    def initialize(self, get_examples: Callable[[], Iterable["Example"]], *, nlp: "Language"=None):
+    def initialize(self, get_examples: Callable[[], Iterable[Example]], *, nlp: Language=None):
         """Initialize the pipe for training, using data examples if available.
         This method needs to be implemented by each TrainablePipe component,
         ensuring the internal model (if available) is initialized properly
@@ -180,6 +183,19 @@ cdef class TrainablePipe(Pipe):
         DOCS: https://nightly.spacy.io/api/pipe#initialize
         """
         raise NotImplementedError(Errors.E931.format(parent="TrainablePipe", method="initialize", name=self.name))
+
+    def add_label(self, label: str) -> int:
+        """Add an output label.
+        For TrainablePipe components, it is possible to
+        extend pretrained models with new labels, but care should be taken to
+        avoid the "catastrophic forgetting" problem.
+
+        label (str): The label to add.
+        RETURNS (int): 0 if label is already present, otherwise 1.
+
+        DOCS: https://nightly.spacy.io/api/pipe#add_label
+        """
+        raise NotImplementedError(Errors.E931.format(parent="Pipe", method="add_label", name=self.name))
 
     def is_trainable(self) -> bool:
         return True

@@ -58,9 +58,6 @@ class Sentencizer(Pipe):
         else:
             self.punct_chars = set(self.default_punct_chars)
 
-    def initialize(self, get_examples, nlp=None):
-        pass
-
     def __call__(self, doc):
         """Apply the sentencizer to a Doc and set Token.is_sent_start.
 
@@ -204,9 +201,3 @@ class Sentencizer(Pipe):
         cfg = srsly.read_json(path)
         self.punct_chars = set(cfg.get("punct_chars", self.default_punct_chars))
         return self
-
-    def get_loss(self, examples, scores):
-        raise NotImplementedError
-
-    def add_label(self, label):
-        raise NotImplementedError
