@@ -1,4 +1,3 @@
-from abc import ABC
 from typing import List, Dict, Union, Iterable, Any, Optional, Callable, Iterator
 from typing import Tuple
 import srsly

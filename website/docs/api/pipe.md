@@ -12,7 +12,7 @@ spaCy pipeline. See the docs on
 [writing trainable components](/usage/processing-pipelines#trainable-components)
 for how to use the `TrainablePipe` base class to implement custom components.
 
-<!-- TODO: explain Pipe vs TrainablePipe --> 
+<!-- TODO: Pipe vs TrainablePipe, check methods below (all renamed to TrainablePipe for now) -->
 
 > #### Why is TrainablePipe implemented in Cython?
 >
@@ -47,12 +47,12 @@ Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
 [`nlp.add_pipe`](/api/language#create_pipe).
 
-| Name    | Description                                                                                                                              |
-| ------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab` | The shared vocabulary. ~~Vocab~~                                                                                                         |
-| `model` | The Thinc [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model[List[Doc], Any]~~                          |
-| `name`  | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                                      |
-| `**cfg` | Additional config parameters and settings. Will be available as the dictionary `TrainablePipe.cfg` and is serialized with the component. |
+| Name    | Description                                                                                                                |
+| ------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `vocab` | The shared vocabulary. ~~Vocab~~                                                                                           |
+| `model` | The Thinc [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model[List[Doc], Any]~~            |
+| `name`  | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                        |
+| `**cfg` | Additional config parameters and settings. Will be available as the dictionary `cfg` and is serialized with the component. |
 
 ## TrainablePipe.\_\_call\_\_ {#call tag="method"}
 

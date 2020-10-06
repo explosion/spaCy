@@ -168,7 +168,7 @@ cdef class Pipe:
 
         path (str / Path): Path to a directory.
         exclude (Iterable[str]): String names of serialization fields to exclude.
-        RETURNS (TrainablePipe): The loaded object.
+        RETURNS (Pipe): The loaded object.
 
         DOCS: https://nightly.spacy.io/api/pipe#from_disk
         """
