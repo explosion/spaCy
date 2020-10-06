@@ -1816,16 +1816,16 @@ class DisabledPipes(list):
 
 
 def _pipe(
-    examples: Iterable[Example], proc: Callable[[Doc], Doc], kwargs: Dict[str, Any]
-) -> Iterator[Example]:
+    docs: Iterable[Doc], proc: Callable[[Doc], Doc], kwargs: Dict[str, Any]
+) -> Iterator[Doc]:
     # We added some args for pipe that __call__ doesn't expect.
     kwargs = dict(kwargs)
     for arg in ["batch_size"]:
         if arg in kwargs:
             kwargs.pop(arg)
-    for eg in examples:
-        eg = proc(eg, **kwargs)
-        yield eg
+    for doc in docs:
+        doc = proc(doc, **kwargs)
+        yield doc
 
 
 def _apply_pipes(

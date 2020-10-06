@@ -1,5 +1,4 @@
-cdef class Pipe:
-    cdef public object vocab
+from .pipe cimport Pipe
+
+cdef class TrainablePipe(Pipe):
     cdef public object model
-    cdef public str name
-    cdef public object cfg

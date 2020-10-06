@@ -9,7 +9,8 @@ import warnings
 
 from ..kb import KnowledgeBase, Candidate
 from ..tokens import Doc
-from .trainable_pipe import TrainablePipe, deserialize_config
+from .pipe import deserialize_config
+from .trainable_pipe import TrainablePipe
 from ..language import Language
 from ..vocab import Vocab
 from ..training import Example, validate_examples

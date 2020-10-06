@@ -525,8 +525,8 @@ class Errors:
     E930 = ("Received invalid get_examples callback in `{name}.initialize`. "
             "Expected function that returns an iterable of Example objects but "
             "got: {obj}")
-    E931 = ("Encountered TrainablePipe subclass without `TrainablePipe.{method}` method in component "
-            "'{name}'. If you want to use this "
+    E931 = ("Encountered {parent} subclass without `{parent}.{method}` "
+            "method in component '{name}'. If you want to use this "
             "method, make sure it's overwritten on the subclass.")
     E940 = ("Found NaN values in scores.")
     E941 = ("Can't find model '{name}'. It looks like you're trying to load a "

@@ -12,7 +12,7 @@ from ..parts_of_speech import IDS as POS_IDS
 from ..symbols import POS
 from ..language import Language
 from ..errors import Errors
-from .trainable_pipe import deserialize_config
+from .pipe import deserialize_config
 from .tagger import Tagger
 from .. import util
 from ..scorer import Scorer

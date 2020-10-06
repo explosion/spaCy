@@ -1,17 +1,16 @@
 # cython: infer_types=True, profile=True
-import warnings
-from typing import Optional, Tuple
+from typing import Iterable, Iterator, Optional, Dict, Tuple, Callable
 import srsly
-from thinc.api import set_dropout_rate, Model
+from thinc.api import set_dropout_rate, Model, Optimizer
 
 from ..tokens.doc cimport Doc
 
 from ..training import validate_examples
-from ..errors import Errors, Warnings
+from ..errors import Errors
+from .pipe import Pipe, deserialize_config
 from .. import util
 
-
-cdef class TrainablePipe:
+cdef class TrainablePipe(Pipe):
     """This class is a base class and not instantiated directly. Trainable
     pipeline components like the EntityRecognizer or TextCategorizer inherit
     from it and it defines the interface that components should follow to
@@ -19,7 +18,7 @@ cdef class TrainablePipe:
 
     DOCS: https://nightly.spacy.io/api/pipe
     """
-    def __init__(self, vocab, model, name, **cfg):
+    def __init__(self, vocab: "Vocab", model: Model, name: str, **cfg):
         """Initialize a pipeline component.
 
         vocab (Vocab): The shared vocabulary.
@@ -34,25 +33,7 @@ cdef class TrainablePipe:
         self.name = name
         self.cfg = dict(cfg)
 
-    @classmethod
-    def __init_subclass__(cls, **kwargs):
-        """Raise a warning if an inheriting class implements 'begin_training'
-         (from v2) instead of the new 'initialize' method (from v3)"""
-        if hasattr(cls, "begin_training"):
-            warnings.warn(Warnings.W088.format(name=cls.__name__))
-
-    @property
-    def labels(self) -> Optional[Tuple[str]]:
-        return []
-
-    @property
-    def label_data(self):
-        """Optional JSON-serializable data that would be sufficient to recreate
-        the label set if provided to the `pipe.initialize()` method.
-        """
-        return None
-
-    def __call__(self, Doc doc):
+    def __call__(self, Doc doc) -> Doc:
         """Apply the pipe to one document. The document is modified in place,
         and returned. This usually happens under the hood when the nlp object
         is called on a text and all components are applied to the Doc.
@@ -66,7 +47,7 @@ cdef class TrainablePipe:
         self.set_annotations([doc], scores)
         return doc
 
-    def pipe(self, stream, *, batch_size=128):
+    def pipe(self, stream: Iterable[Doc], *, batch_size: int=128) -> Iterator[Doc]:
         """Apply the pipe to a stream of documents. This usually happens under
         the hood when the nlp object is called on a text and all components are
         applied to the Doc.
@@ -82,18 +63,18 @@ cdef class TrainablePipe:
             self.set_annotations(docs, scores)
             yield from docs
 
-    def predict(self, docs):
+    def predict(self, docs: Iterable[Doc]):
         """Apply the pipeline's model to a batch of docs, without modifying them.
         Returns a single tensor for a batch of documents.
 
         docs (Iterable[Doc]): The documents to predict.
-        RETURNS: Vector representations for each token in the documents.
+        RETURNS: Vector representations of the predictions.
 
         DOCS: https://nightly.spacy.io/api/pipe#predict
         """
-        raise NotImplementedError(Errors.E931.format(method="predict", name=self.name))
+        raise NotImplementedError(Errors.E931.format(parent="TrainablePipe", method="predict", name=self.name))
 
-    def set_annotations(self, docs, scores):
+    def set_annotations(self, docs: Iterable[Doc], scores):
         """Modify a batch of documents, using pre-computed scores.
 
         docs (Iterable[Doc]): The documents to modify.
@@ -101,9 +82,14 @@ cdef class TrainablePipe:
 
         DOCS: https://nightly.spacy.io/api/pipe#set_annotations
         """
-        raise NotImplementedError(Errors.E931.format(method="set_annotations", name=self.name))
+        raise NotImplementedError(Errors.E931.format(parent="TrainablePipe", method="set_annotations", name=self.name))
 
-    def update(self, examples, *, drop=0.0, set_annotations=False, sgd=None, losses=None):
+    def update(self,
+               examples: Iterable["Example"],
+               *, drop: float=0.0,
+               set_annotations: bool=False,
+               sgd: Optimizer=None,
+               losses: Optional[Dict[str, float]]=None) -> Dict[str, float]:
         """Learn from a batch of documents and gold-standard information,
         updating the pipe's model. Delegates to predict and get_loss.
 
@@ -139,14 +125,18 @@ cdef class TrainablePipe:
             self.set_annotations(docs, scores=scores)
         return losses
 
-    def rehearse(self, examples, *, sgd=None, losses=None, **config):
+    def rehearse(self,
+                 examples: Iterable["Example"],
+                 *,
+                 sgd: Optimizer=None,
+                 losses: Dict[str, float]=None,
+                 **config) -> Dict[str, float]:
         """Perform a "rehearsal" update from a batch of data. Rehearsal updates
         teach the current model to make predictions similar to an initial model,
         to try to address the "catastrophic forgetting" problem. This feature is
         experimental.
 
         examples (Iterable[Example]): A batch of Example objects.
-        drop (float): The dropout rate.
         sgd (thinc.api.Optimizer): The optimizer.
         losses (Dict[str, float]): Optional record of the loss during training.
             Updated using the component name as the key.
@@ -156,7 +146,7 @@ cdef class TrainablePipe:
         """
         pass
 
-    def get_loss(self, examples, scores):
+    def get_loss(self, examples: Iterable["Example"], scores) -> Tuple[float, float]:
         """Find the loss and gradient of loss for the batch of documents and
         their predicted scores.
 
@@ -166,35 +156,9 @@ cdef class TrainablePipe:
 
         DOCS: https://nightly.spacy.io/api/pipe#get_loss
         """
-        raise NotImplementedError(Errors.E931.format(method="get_loss", name=self.name))
+        raise NotImplementedError(Errors.E931.format(parent="TrainablePipe", method="get_loss", name=self.name))
 
-    def add_label(self, label):
-        """Add an output label, to be predicted by the model. It's possible to
-        extend pretrained models with new labels, but care should be taken to
-        avoid the "catastrophic forgetting" problem.
-
-        label (str): The label to add.
-        RETURNS (int): 0 if label is already present, otherwise 1.
-
-        DOCS: https://nightly.spacy.io/api/pipe#add_label
-        """
-        raise NotImplementedError(Errors.E931.format(method="add_label", name=self.name))
-
-
-    def _require_labels(self) -> None:
-        """Raise an error if the component's model has no labels defined."""
-        if not self.labels or list(self.labels) == [""]:
-            raise ValueError(Errors.E143.format(name=self.name))
-
-
-    def _allow_extra_label(self) -> None:
-        """Raise an error if the component can not add any more labels."""
-        if self.model.has_dim("nO") and self.model.get_dim("nO") == len(self.labels):
-            if not self.is_resizable():
-                raise ValueError(Errors.E922.format(name=self.name, nO=self.model.get_dim("nO")))
-
-
-    def create_optimizer(self):
+    def create_optimizer(self) -> Optimizer:
         """Create an optimizer for the pipeline component.
 
         RETURNS (thinc.api.Optimizer): The optimizer.
@@ -203,7 +167,7 @@ cdef class TrainablePipe:
         """
         return util.create_default_optimizer()
 
-    def initialize(self, get_examples, *, nlp=None):
+    def initialize(self, get_examples: Callable[[], Iterable["Example"]], *, nlp: "Language"=None):
         """Initialize the pipe for training, using data examples if available.
         This method needs to be implemented by each TrainablePipe component,
         ensuring the internal model (if available) is initialized properly
@@ -215,29 +179,27 @@ cdef class TrainablePipe:
 
         DOCS: https://nightly.spacy.io/api/pipe#initialize
         """
-        pass
+        raise NotImplementedError(Errors.E931.format(parent="TrainablePipe", method="initialize", name=self.name))
 
-    def _ensure_examples(self, get_examples):
-        if get_examples is None or not hasattr(get_examples, "__call__"):
-            err = Errors.E930.format(name=self.name, obj=type(get_examples))
-            raise ValueError(err)
-        if not get_examples():
-            err = Errors.E930.format(name=self.name, obj=get_examples())
-            raise ValueError(err)
+    def is_trainable(self) -> bool:
+        return True
 
-    def is_resizable(self):
+    def is_resizable(self) -> bool:
         return hasattr(self, "model") and "resize_output" in self.model.attrs
 
-    def is_trainable(self):
-        return hasattr(self, "model") and isinstance(self.model, Model)
+    def _allow_extra_label(self) -> None:
+        """Raise an error if the component can not add any more labels."""
+        if self.model.has_dim("nO") and self.model.get_dim("nO") == len(self.labels):
+            if not self.is_resizable():
+                raise ValueError(Errors.E922.format(name=self.name, nO=self.model.get_dim("nO")))
 
-    def set_output(self, nO):
+    def set_output(self, nO: int) -> None:
         if self.is_resizable():
             self.model.attrs["resize_output"](self.model, nO)
         else:
             raise NotImplementedError(Errors.E921)
 
-    def use_params(self, params):
+    def use_params(self, params: dict):
         """Modify the pipe's model, to use the given parameter values. At the
         end of the context, the original parameters are restored.
 
@@ -248,7 +210,7 @@ cdef class TrainablePipe:
         with self.model.use_params(params):
             yield
 
-    def finish_update(self, sgd):
+    def finish_update(self, sgd: Optimizer) -> None:
         """Update parameters using the current parameter gradients.
         The Optimizer instance contains the functionality to perform
         the stochastic gradient descent.
@@ -258,16 +220,6 @@ cdef class TrainablePipe:
         DOCS: https://nightly.spacy.io/api/pipe#finish_update
         """
         self.model.finish_update(sgd)
-
-    def score(self, examples, **kwargs):
-        """Score a batch of examples.
-
-        examples (Iterable[Example]): The examples to score.
-        RETURNS (Dict[str, Any]): The scores.
-
-        DOCS: https://nightly.spacy.io/api/pipe#score
-        """
-        return {}
 
     def to_bytes(self, *, exclude=tuple()):
         """Serialize the pipe to a bytestring.
@@ -343,10 +295,3 @@ cdef class TrainablePipe:
         deserialize["model"] = load_model
         util.from_disk(path, deserialize, exclude)
         return self
-
-
-def deserialize_config(path):
-    if path.exists():
-        return srsly.read_json(path)
-    else:
-        return {}

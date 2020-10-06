@@ -1,7 +1,7 @@
 from cymem.cymem cimport Pool
 
 from ..vocab cimport Vocab
-from .pipe cimport TrainablePipe
+from .trainable_pipe cimport TrainablePipe
 from ._parser_internals.transition_system cimport Transition, TransitionSystem
 from ._parser_internals._state cimport StateC
 from ..ml.parser_model cimport WeightsC, ActivationsC, SizesC

@@ -11,7 +11,8 @@ from ..tokens.doc cimport Doc
 from ..morphology cimport Morphology
 from ..vocab cimport Vocab
 
-from .trainable_pipe import TrainablePipe, deserialize_config
+from .trainable_pipe import TrainablePipe
+from .pipe import deserialize_config
 from ..language import Language
 from ..attrs import POS, ID
 from ..parts_of_speech import X

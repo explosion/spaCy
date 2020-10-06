@@ -5,6 +5,7 @@ from .ner import EntityRecognizer
 from .entityruler import EntityRuler
 from .lemmatizer import Lemmatizer
 from .morphologizer import Morphologizer
+from .pipe import Pipe
 from .trainable_pipe import TrainablePipe
 from .senter import SentenceRecognizer
 from .sentencizer import Sentencizer
@@ -22,6 +23,7 @@ __all__ = [
     "Morphologizer",
     "Lemmatizer",
     "TrainablePipe",
+    "Pipe",
     "SentenceRecognizer",
     "Sentencizer",
     "Tagger",

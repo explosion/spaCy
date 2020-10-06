@@ -12,6 +12,8 @@ spaCy pipeline. See the docs on
 [writing trainable components](/usage/processing-pipelines#trainable-components)
 for how to use the `TrainablePipe` base class to implement custom components.
 
+<!-- TODO: explain Pipe vs TrainablePipe --> 
+
 > #### Why is TrainablePipe implemented in Cython?
 >
 > The `TrainablePipe` class is implemented in a `.pyx` module, the extension
@@ -216,7 +218,6 @@ the "catastrophic forgetting" problem. This feature is experimental.
 | -------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | `examples`     | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                        |
 | _keyword-only_ |                                                                                                                          |
-| `drop`         | The dropout rate. ~~float~~                                                                                              |
 | `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~            |
 | `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
 | **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
