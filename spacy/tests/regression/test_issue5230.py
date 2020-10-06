@@ -7,7 +7,7 @@ from numpy import zeros
 from spacy.kb import KnowledgeBase, Writer
 from spacy.vectors import Vectors
 from spacy.language import Language
-from spacy.pipeline import Pipe
+from spacy.pipeline import TrainablePipe
 from spacy.util import registry
 
 from ..util import make_tempdir
@@ -45,7 +45,7 @@ def custom_pipe():
         def from_disk(self, path, exclude=tuple(), **kwargs):
             return self
 
-    class MyPipe(Pipe):
+    class MyPipe(TrainablePipe):
         def __init__(self, vocab, model=True, **cfg):
             if cfg:
                 self.cfg = cfg
