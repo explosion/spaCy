@@ -1,12 +1,11 @@
 # coding: utf8
+from __future__ import unicode_literals
 
-from spacy.lang.en import English
 from spacy.util import filter_spans
 
 
-def test_issue6207():
-    nlp = English()
-    doc = nlp("zero one two three four five six")
+def test_issue6207(en_tokenizer):
+    doc = en_tokenizer("zero one two three four five six")
 
     # Make spans
     s1 = doc[:4]
