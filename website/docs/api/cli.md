@@ -300,17 +300,16 @@ $ python -m spacy debug config [config_path] [--code] [--show-functions] [--show
 
 ```
 ✘ Config validation error
+dropout     field required
+optimizer   field required
+optimize    extra fields not permitted
 
-training -> dropout     field required
-training -> optimizer   field required
-training -> optimize    extra fields not permitted
-
-{'vectors': 'en_vectors_web_lg', 'seed': 0, 'accumulate_gradient': 1, 'init_tok2vec': None, 'raw_text': None, 'patience': 1600, 'max_epochs': 0, 'max_steps': 20000, 'eval_frequency': 200, 'frozen_components': [], 'optimize': None, 'batcher': {'@batchers': 'spacy.batch_by_words.v1', 'discard_oversize': False, 'tolerance': 0.2, 'get_length': None, 'size': {'@schedules': 'compounding.v1', 'start': 100, 'stop': 1000, 'compound': 1.001, 't': 0.0}}, 'corpus': {'train': {'@readers': 'spacy.Corpus.v1', 'path': '', 'max_length': 0, 'gold_preproc': False, 'limit': 0}, 'dev': {'@readers': 'spacy.Corpus.v1', 'path': '', 'max_length': 0, 'gold_preproc': False, 'limit': 0}} 'score_weights': {'tag_acc': 0.5, 'dep_uas': 0.25, 'dep_las': 0.25, 'sents_f': 0.0}}
+{'seed': 0, 'accumulate_gradient': 1, 'dev_corpus': 'corpora.dev', 'train_corpus': 'corpora.train', 'gpu_allocator': None, 'patience': 1600, 'max_epochs': 0, 'max_steps': 20000, 'eval_frequency': 200, 'frozen_components': [], 'optimize': None, 'before_to_disk': None, 'batcher': {'@batchers': 'spacy.batch_by_words.v1', 'discard_oversize': False, 'tolerance': 0.2, 'get_length': None, 'size': {'@schedules': 'compounding.v1', 'start': 100, 'stop': 1000, 'compound': 1.001, 't': 0.0}}, 'logger': {'@loggers': 'spacy.ConsoleLogger.v1', 'progress_bar': False}, 'score_weights': {'tag_acc': 0.5, 'dep_uas': 0.25, 'dep_las': 0.25, 'sents_f': 0.0}}
 
 If your config contains missing values, you can run the 'init fill-config'
 command to fill in all the defaults, if possible:
 
-python -m spacy init fill-config tmp/starter-config_invalid.cfg --base tmp/starter-config_invalid.cfg
+python -m spacy init fill-config tmp/starter-config_invalid.cfg tmp/starter-config_invalid.cfg
 ```
 
 </Accordion>

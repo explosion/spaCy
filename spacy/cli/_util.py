@@ -278,7 +278,7 @@ def show_validation_error(
                 "fill-config' command to fill in all the defaults, if possible:",
                 spaced=True,
             )
-            print(f"{COMMAND} init fill-config {config_path} --base {config_path}\n")
+            print(f"{COMMAND} init fill-config {config_path} {config_path} \n")
         sys.exit(1)
     except InterpolationError as e:
         msg.fail("Config validation error", e, exits=1)
