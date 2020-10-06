@@ -18,7 +18,7 @@ pydantic>=1.5.0,<2.0.0
 pytokenizations
 # Official Python utilities
 setuptools
-packaging
+packaging>=20.0
 importlib_metadata>=0.20; python_version < "3.8"
 typing_extensions>=3.7.4; python_version < "3.8"
 # Development dependencies
