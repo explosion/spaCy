@@ -57,7 +57,8 @@ components for different language processing tasks and also allows adding
 | [`Sentencizer`](/api/sentencizer)               | Implement rule-based sentence boundary detection that doesn't require the dependency parse. |
 | [`SentenceRecognizer`](/api/sentencerecognizer) | Predict sentence boundaries.                                                                |
 | [Other functions](/api/pipeline-functions)      | Automatically apply something to the `Doc`, e.g. to merge spans of tokens.                  |
-| [`Pipe`](/api/pipe)                             | Base class that all trainable pipeline components inherit from.                             |
+| [`Pipe`](/api/pipe)                             | Base class that pipeline components may inherit from.                                       |
+| [`TrainablePipe`](/api/pipe)                    | Class that all trainable pipeline components inherit from.                                  |
 
 ### Matchers {#architecture-matchers}
 

@@ -9,7 +9,7 @@ import warnings
 
 from ..kb import KnowledgeBase, Candidate
 from ..tokens import Doc
-from .pipe import Pipe, deserialize_config
+from .trainable_pipe import TrainablePipe, deserialize_config
 from ..language import Language
 from ..vocab import Vocab
 from ..training import Example, validate_examples
@@ -87,7 +87,7 @@ def make_entity_linker(
     )
 
 
-class EntityLinker(Pipe):
+class EntityLinker(TrainablePipe):
     """Pipeline component for named entity linking.
 
     DOCS: https://nightly.spacy.io/api/entitylinker

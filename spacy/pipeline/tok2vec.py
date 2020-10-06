@@ -2,7 +2,7 @@ from typing import Iterator, Sequence, Iterable, Optional, Dict, Callable, List
 from thinc.api import Model, set_dropout_rate, Optimizer, Config
 from itertools import islice
 
-from .pipe import Pipe
+from .trainable_pipe import TrainablePipe
 from ..training import Example, validate_examples
 from ..tokens import Doc
 from ..vocab import Vocab
@@ -32,7 +32,7 @@ def make_tok2vec(nlp: Language, name: str, model: Model) -> "Tok2Vec":
     return Tok2Vec(nlp.vocab, model, name)
 
 
-class Tok2Vec(Pipe):
+class Tok2Vec(TrainablePipe):
     """Apply a "token-to-vector" model and set its outputs in the doc.tensor
     attribute. This is mostly useful to share a single subnetwork between multiple
     components, e.g. to have one embedding and CNN network shared between a

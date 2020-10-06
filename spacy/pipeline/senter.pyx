@@ -6,7 +6,7 @@ from thinc.api import Model, SequenceCategoricalCrossentropy, Config
 
 from ..tokens.doc cimport Doc
 
-from .pipe import deserialize_config
+from .trainable_pipe import deserialize_config
 from .tagger import Tagger
 from ..language import Language
 from ..errors import Errors

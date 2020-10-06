@@ -11,7 +11,7 @@ from ..tokens.doc cimport Doc
 from ..morphology cimport Morphology
 from ..vocab cimport Vocab
 
-from .pipe import Pipe, deserialize_config
+from .trainable_pipe import TrainablePipe, deserialize_config
 from ..language import Language
 from ..attrs import POS, ID
 from ..parts_of_speech import X
@@ -55,7 +55,7 @@ def make_tagger(nlp: Language, name: str, model: Model):
     return Tagger(nlp.vocab, model, name)
 
 
-class Tagger(Pipe):
+class Tagger(TrainablePipe):
     """Pipeline component for part-of-speech tagging.
 
     DOCS: https://nightly.spacy.io/api/tagger

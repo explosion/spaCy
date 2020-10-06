@@ -4,7 +4,7 @@ from thinc.api import get_array_module, Model, Optimizer, set_dropout_rate, Conf
 from thinc.types import Floats2d
 import numpy
 
-from .pipe import Pipe
+from .trainable_pipe import TrainablePipe
 from ..language import Language
 from ..training import Example, validate_examples
 from ..errors import Errors
@@ -85,7 +85,7 @@ def make_textcat(
     return TextCategorizer(nlp.vocab, model, name, threshold=threshold)
 
 
-class TextCategorizer(Pipe):
+class TextCategorizer(TrainablePipe):
     """Pipeline component for text classification.
 
     DOCS: https://nightly.spacy.io/api/textcategorizer

@@ -6,7 +6,7 @@ from thinc.api import set_dropout_rate
 
 from ..tokens.doc cimport Doc
 
-from .pipe import Pipe
+from .trainable_pipe import TrainablePipe
 from .tagger import Tagger
 from ..training import validate_examples
 from ..language import Language
@@ -164,7 +164,7 @@ class MultitaskObjective(Tagger):
             return "I-SENT"
 
 
-class ClozeMultitask(Pipe):
+class ClozeMultitask(TrainablePipe):
     def __init__(self, vocab, model, **cfg):
         self.vocab = vocab
         self.model = model

@@ -11,7 +11,7 @@ from ..errors import Errors, Warnings
 from .. import util
 
 
-cdef class Pipe:
+cdef class TrainablePipe:
     """This class is a base class and not instantiated directly. Trainable
     pipeline components like the EntityRecognizer or TextCategorizer inherit
     from it and it defines the interface that components should follow to
@@ -123,7 +123,7 @@ cdef class Pipe:
         if not hasattr(self, "model") or self.model in (None, True, False):
             return losses
         losses.setdefault(self.name, 0.0)
-        validate_examples(examples, "Pipe.update")
+        validate_examples(examples, "TrainablePipe.update")
         if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
             # Handle cases where there are no tokens in any docs.
             return
@@ -205,7 +205,7 @@ cdef class Pipe:
 
     def initialize(self, get_examples, *, nlp=None):
         """Initialize the pipe for training, using data examples if available.
-        This method needs to be implemented by each Pipe component,
+        This method needs to be implemented by each TrainablePipe component,
         ensuring the internal model (if available) is initialized properly
         using the provided sample of Example objects.
 
@@ -288,7 +288,7 @@ cdef class Pipe:
         """Load the pipe from a bytestring.
 
         exclude (Iterable[str]): String names of serialization fields to exclude.
-        RETURNS (Pipe): The loaded object.
+        RETURNS (TrainablePipe): The loaded object.
 
         DOCS: https://nightly.spacy.io/api/pipe#from_bytes
         """
@@ -326,7 +326,7 @@ cdef class Pipe:
 
         path (str / Path): Path to a directory.
         exclude (Iterable[str]): String names of serialization fields to exclude.
-        RETURNS (Pipe): The loaded object.
+        RETURNS (TrainablePipe): The loaded object.
 
         DOCS: https://nightly.spacy.io/api/pipe#from_disk
         """

@@ -368,7 +368,7 @@ class ConfigSchemaInit(BaseModel):
     vectors: Optional[StrictStr] = Field(..., title="Path to vectors")
     init_tok2vec: Optional[StrictStr] = Field(..., title="Path to pretrained tok2vec weights")
     tokenizer: Dict[StrictStr, Any] = Field(..., help="Arguments to be passed into Tokenizer.initialize")
-    components: Dict[StrictStr, Dict[StrictStr, Any]] = Field(..., help="Arguments for Pipe.initialize methods of pipeline components, keyed by component")
+    components: Dict[StrictStr, Dict[StrictStr, Any]] = Field(..., help="Arguments for TrainablePipe.initialize methods of pipeline components, keyed by component")
     # fmt: on
 
     class Config:
