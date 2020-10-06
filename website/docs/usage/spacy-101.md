@@ -404,8 +404,73 @@ import Training101 from 'usage/101/\_training.md'
 <Infobox title="Training pipelines and models" emoji="📖">
 
 To learn more about **training and updating** pipelines, how to create training
-data and how to improve spaCy's named entity recognition models, see the usage
-guides on [training](/usage/training).
+data and how to improve spaCy's named models, see the usage guides on
+[training](/usage/training).
+
+</Infobox>
+
+### Training config and lifecycle {#training-config}
+
+Training config files include all **settings and hyperparameters** for training
+your pipeline. Instead of providing lots of arguments on the command line, you
+only need to pass your `config.cfg` file to [`spacy train`](/api/cli#train).
+This also makes it easy to integrate custom models and architectures, written in
+your framework of choice. A pipeline's `config.cfg` is considered the "single
+source of truth", both at **training** and **runtime**.
+
+> ```ini
+> ### config.cfg (excerpt)
+> [training]
+> accumulate_gradient = 3
+>
+> [training.optimizer]
+> @optimizers = "Adam.v1"
+>
+> [training.optimizer.learn_rate]
+> @schedules = "warmup_linear.v1"
+> warmup_steps = 250
+> total_steps = 20000
+> initial_rate = 0.01
+> ```
+
+![Illustration of pipeline lifecycle](../images/lifecycle.svg)
+
+<Infobox title="Training configuration system" emoji="📖">
+
+For more details on spaCy's **configuration system** and how to use it to
+customize your pipeline components, component models, training settings and
+hyperparameters, see the [training config](/usage/training#config) usage guide.
+
+</Infobox>
+
+### Trainable components {#training-components}
+
+spaCy's [`Pipe`](/api/pipe) class helps you implement your own trainable
+components that have their own model instance, make predictions over `Doc`
+objects and can be updated using [`spacy train`](/api/cli#train). This lets you
+plug fully custom machine learning components into your pipeline that can be
+configured via a single training config.
+
+> #### config.cfg (excerpt)
+>
+> ```ini
+> [components.my_component]
+> factory = "my_component"
+>
+> [components.my_component.model]
+> @architectures = "my_model.v1"
+> width = 128
+> ```
+
+![Illustration of Pipe methods](../images/trainable_component.svg)
+
+<Infobox title="Custom trainable components" emoji="📖">
+
+To learn more about how to implement your own **model architectures** and use
+them to power custom **trainable components**, see the usage guides on the
+[trainable component API](/usage/processing-pipelines#trainable-components) and
+implementing [layers and architectures](/usage/layers-architectures#components)
+for trainable components.
 
 </Infobox>
 
