@@ -34,7 +34,7 @@ def StaticVectors(
 def forward(
     model: Model[List[Doc], Ragged], docs: List[Doc], is_train: bool
 ) -> Tuple[Ragged, Callable]:
-    if not len(docs):
+    if not sum(len(doc) for doc in docs):
         return _handle_empty(model.ops, model.get_dim("nO"))
     key_attr = model.attrs["key_attr"]
     W = cast(Floats2d, model.ops.as_contig(model.get_param("W")))

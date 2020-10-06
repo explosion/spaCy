@@ -209,7 +209,7 @@ class ClozeMultitask(Pipe):
         loss, d_predictions = self.get_loss(examples, self.vocab.vectors.data, predictions)
         bp_predictions(d_predictions)
         if sgd is not None:
-            self.model.finish_update(sgd)
+            self.finish_update(sgd)
         if losses is not None:
             losses[self.name] += loss
         return losses

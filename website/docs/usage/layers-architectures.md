@@ -646,7 +646,9 @@ get_candidates = model.attrs["get_candidates"]
 
 To use our new relation extraction model as part of a custom
 [trainable component](/usage/processing-pipelines#trainable-components), we
-create a subclass of [`Pipe`](/api/pipe) that holds the model:
+create a subclass of [`Pipe`](/api/pipe) that holds the model.
+
+![Illustration of Pipe methods](../images/trainable_component.svg)
 
 ```python
 ### Pipeline component skeleton
@@ -826,7 +828,7 @@ def __call__(self, Doc doc):
 
 Once our `Pipe` subclass is fully implemented, we can
 [register](/usage/processing-pipelines#custom-components-factories) the
-component with the [`@Language.factory`](/api/lnguage#factory) decorator. This
+component with the [`@Language.factory`](/api/language#factory) decorator. This
 assigns it a name and lets you create the component with
 [`nlp.add_pipe`](/api/language#add_pipe) and via the
 [config](/usage/training#config).

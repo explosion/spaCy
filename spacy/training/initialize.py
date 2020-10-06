@@ -49,7 +49,7 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
             nlp.resume_training(sgd=optimizer)
     with nlp.select_pipes(disable=[*frozen_components, *resume_components]):
         nlp.initialize(lambda: train_corpus(nlp), sgd=optimizer)
-        logger.info("Initialized pipeline components")
+        logger.info(f"Initialized pipeline components: {nlp.pipe_names}")
     return nlp
 
 

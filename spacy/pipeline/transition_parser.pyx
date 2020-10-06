@@ -315,7 +315,7 @@ cdef class Parser(Pipe):
 
         backprop_tok2vec(golds)
         if sgd not in (None, False):
-            self.model.finish_update(sgd)
+            self.finish_update(sgd)
         if set_annotations:
             docs = [eg.predicted for eg in examples]
             self.set_annotations(docs, all_states)
@@ -367,7 +367,7 @@ cdef class Parser(Pipe):
         # Do the backprop
         backprop_tok2vec(docs)
         if sgd is not None:
-            self.model.finish_update(sgd)
+            self.finish_update(sgd)
         losses[self.name] += loss / n_scores
         del backprop
         del backprop_tok2vec
@@ -437,7 +437,9 @@ cdef class Parser(Pipe):
             for name, component in nlp.pipeline:
                 if component is self:
                     break
-                if hasattr(component, "pipe"):
+                # non-trainable components may have a pipe() implementation that refers to dummy
+                # predict and set_annotations methods
+                if hasattr(component, "pipe") and hasattr(component, "is_trainable") and component.is_trainable():
                     doc_sample = list(component.pipe(doc_sample, batch_size=8))
                 else:
                     doc_sample = [component(doc) for doc in doc_sample]

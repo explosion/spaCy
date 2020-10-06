@@ -180,24 +180,24 @@ single corpus once and then divide it up into `train` and `dev` partitions.
 This section defines settings and controls for the training and evaluation
 process that are used when you run [`spacy train`](/api/cli#train).
 
-| Name                  | Description                                                                                                                                                                                                                               |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `accumulate_gradient` | Whether to divide the batch up into substeps. Defaults to `1`. ~~int~~                                                                                                                                                                    |
-| `batcher`             | Callable that takes an iterator of [`Doc`](/api/doc) objects and yields batches of `Doc`s. Defaults to [`batch_by_words`](/api/top-level#batch_by_words). ~~Callable[[Iterator[Doc], Iterator[List[Doc]]]]~~                              |
-| `before_to_disk`      | Optional callback to modify `nlp` object right before it is saved to disk during and after training. Can be used to remove or reset config values or disable components. Defaults to `null`. ~~Optional[Callable[[Language], Language]]~~ |
-| `dev_corpus`          | Dot notation of the config location defining the dev corpus. Defaults to `corpora.dev`. ~~str~~                                                                                                                                           |
-| `dropout`             | The dropout rate. Defaults to `0.1`. ~~float~~                                                                                                                                                                                            |
-| `eval_frequency`      | How often to evaluate during training (steps). Defaults to `200`. ~~int~~                                                                                                                                                                 |
-| `frozen_components`   | Pipeline component names that are "frozen" and shouldn't be updated during training. See [here](/usage/training#config-components) for details. Defaults to `[]`. ~~List[str]~~                                                           |
-| `gpu_allocator`       | Library for cupy to route GPU memory allocation to. Can be `"pytorch"` or `"tensorflow"`. Defaults to variable `${system.gpu_allocator}`. ~~str~~                                                                                         |
-| `max_epochs`          | Maximum number of epochs to train for. Defaults to `0`. ~~int~~                                                                                                                                                                           |
-| `max_steps`           | Maximum number of update steps to train for. Defaults to `20000`. ~~int~~                                                                                                                                                                 |
-| `optimizer`           | The optimizer. The learning rate schedule and other settings can be configured as part of the optimizer. Defaults to [`Adam`](https://thinc.ai/docs/api-optimizers#adam). ~~Optimizer~~                                                   |
-| `patience`            | How many steps to continue without improvement in evaluation score. Defaults to `1600`. ~~int~~                                                                                                                                           |
-| `raw_text`            | Optional path to a jsonl file with unlabelled text documents for a [rehearsal](/api/language#rehearse) step. Defaults to variable `${paths.raw}`. ~~Optional[str]~~                                                                       |
-| `score_weights`       | Score names shown in metrics mapped to their weight towards the final weighted score. See [here](/usage/training#metrics) for details. Defaults to `{}`. ~~Dict[str, float]~~                                                             |
-| `seed`                | The random seed. Defaults to variable `${system.seed}`. ~~int~~                                                                                                                                                                           |
-| `train_corpus`        | Dot notation of the config location defining the train corpus. Defaults to `corpora.train`. ~~str~~                                                                                                                                       |
+| Name                  | Description                                                                                                                                                                                                                                                                                                                         |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `accumulate_gradient` | Whether to divide the batch up into substeps. Defaults to `1`. ~~int~~                                                                                                                                                                                                                                                              |
+| `batcher`             | Callable that takes an iterator of [`Doc`](/api/doc) objects and yields batches of `Doc`s. Defaults to [`batch_by_words`](/api/top-level#batch_by_words). ~~Callable[[Iterator[Doc], Iterator[List[Doc]]]]~~                                                                                                                        |
+| `before_to_disk`      | Optional callback to modify `nlp` object right before it is saved to disk during and after training. Can be used to remove or reset config values or disable components. Defaults to `null`. ~~Optional[Callable[[Language], Language]]~~                                                                                           |
+| `dev_corpus`          | Dot notation of the config location defining the dev corpus. Defaults to `corpora.dev`. ~~str~~                                                                                                                                                                                                                                     |
+| `dropout`             | The dropout rate. Defaults to `0.1`. ~~float~~                                                                                                                                                                                                                                                                                      |
+| `eval_frequency`      | How often to evaluate during training (steps). Defaults to `200`. ~~int~~                                                                                                                                                                                                                                                           |
+| `frozen_components`   | Pipeline component names that are "frozen" and shouldn't be initialized or updated during training. See [here](/usage/training#config-components) for details. Defaults to `[]`. ~~List[str]~~                                                                                                                                      |
+| `gpu_allocator`       | Library for cupy to route GPU memory allocation to. Can be `"pytorch"` or `"tensorflow"`. Defaults to variable `${system.gpu_allocator}`. ~~str~~                                                                                                                                                                                   |
+| `logger`              | Callable that takes the `nlp` and stdout and stderr `IO` objects, sets up the logger, and returns two new callables to log a training step and to finalize the logger. Defaults to [`ConsoleLogger`](/api/top-level#ConsoleLogger). ~~Callable[[Language, IO, IO], [Tuple[Callable[[Dict[str, Any]], None], Callable[[], None]]]]~~ |
+| `max_epochs`          | Maximum number of epochs to train for. Defaults to `0`. ~~int~~                                                                                                                                                                                                                                                                     |
+| `max_steps`           | Maximum number of update steps to train for. Defaults to `20000`. ~~int~~                                                                                                                                                                                                                                                           |
+| `optimizer`           | The optimizer. The learning rate schedule and other settings can be configured as part of the optimizer. Defaults to [`Adam`](https://thinc.ai/docs/api-optimizers#adam). ~~Optimizer~~                                                                                                                                             |
+| `patience`            | How many steps to continue without improvement in evaluation score. Defaults to `1600`. ~~int~~                                                                                                                                                                                                                                     |
+| `score_weights`       | Score names shown in metrics mapped to their weight towards the final weighted score. See [here](/usage/training#metrics) for details. Defaults to `{}`. ~~Dict[str, float]~~                                                                                                                                                       |
+| `seed`                | The random seed. Defaults to variable `${system.seed}`. ~~int~~                                                                                                                                                                                                                                                                     |
+| `train_corpus`        | Dot notation of the config location defining the train corpus. Defaults to `corpora.train`. ~~str~~                                                                                                                                                                                                                                 |
 
 ### pretraining {#config-pretraining tag="section,optional"}
 
@@ -205,17 +205,17 @@ This section is optional and defines settings and controls for
 [language model pretraining](/usage/embeddings-transformers#pretraining). It's
 used when you run [`spacy pretrain`](/api/cli#pretrain).
 
-| Name           | Description                                                                                            |
-| -------------- | ------------------------------------------------------------------------------------------------------ |
-| `max_epochs`   | Maximum number of epochs. Defaults to `1000`. ~~int~~                                                  |
-| `dropout`      | The dropout rate. Defaults to `0.2`. ~~float~~                                                         |
-| `n_save_every` | Saving frequency. Defaults to `null`. ~~Optional[int]~~                                                |
-| `objective`    | The pretraining objective. Defaults to `{"type": "characters", "n_characters": 4}`. ~~Dict[str, Any]~~ |
-| `optimizer`    | The optimizer. Defaults to [`Adam`](https://thinc.ai/docs/api-optimizers#adam). ~~Optimizer~~          |
-| `corpus`       | Dot notation of the config location defining the train corpus. Defaults to `corpora.pretrain`. ~~str~~ |
-| `batcher`      | Batcher for the training data. ~~Callable[[Iterator[Doc], Iterator[List[Doc]]]]~~                      |
-| `component`    | Component to find the layer to pretrain. Defaults to `"tok2vec"`. ~~str~~                              |
-| `layer`        | The layer to pretrain. If empty, the whole component model will be used. ~~str~~                       |
+| Name           | Description                                                                                                                                                                                                  |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `max_epochs`   | Maximum number of epochs. Defaults to `1000`. ~~int~~                                                                                                                                                        |
+| `dropout`      | The dropout rate. Defaults to `0.2`. ~~float~~                                                                                                                                                               |
+| `n_save_every` | Saving frequency. Defaults to `null`. ~~Optional[int]~~                                                                                                                                                      |
+| `objective`    | The pretraining objective. Defaults to `{"type": "characters", "n_characters": 4}`. ~~Dict[str, Any]~~                                                                                                       |
+| `optimizer`    | The optimizer. The learning rate schedule and other settings can be configured as part of the optimizer. Defaults to [`Adam`](https://thinc.ai/docs/api-optimizers#adam). ~~Optimizer~~                      |
+| `corpus`       | Dot notation of the config location defining the corpus with raw text. Defaults to `corpora.pretrain`. ~~str~~                                                                                               |
+| `batcher`      | Callable that takes an iterator of [`Doc`](/api/doc) objects and yields batches of `Doc`s. Defaults to [`batch_by_words`](/api/top-level#batch_by_words). ~~Callable[[Iterator[Doc], Iterator[List[Doc]]]]~~ |
+| `component`    | Component name to identify the layer with the model to pretrain. Defaults to `"tok2vec"`. ~~str~~                                                                                                            |
+| `layer`        | The specific layer of the model to pretrain. If empty, the whole model will be used. ~~str~~                                                                                                                 |
 
 ### initialize {#config-initialize tag="section"}
 
@@ -224,6 +224,9 @@ It's used by [`Language.initialize`](/api/language#initialize) and typically
 called right before training (but not at runtime). The section allows you to
 specify local file paths or custom functions to load data resources from,
 without requiring them at runtime when you load the trained pipeline back in.
+Also see the usage guides on the
+[config lifecycle](/usage/training#config-lifecycle) and
+[custom initialization](/usage/training#initialization).
 
 > #### Example
 >

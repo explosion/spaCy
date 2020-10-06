@@ -187,10 +187,11 @@ def train_while_improving(
         for name, proc in nlp.pipeline:
             if (
                 name not in exclude
-                and hasattr(proc, "model")
+                and hasattr(proc, "is_trainable")
+                and proc.is_trainable()
                 and proc.model not in (True, False, None)
             ):
-                proc.model.finish_update(optimizer)
+                proc.finish_update(optimizer)
         optimizer.step_schedules()
         if not (step % eval_frequency):
             if optimizer.averages:
@@ -293,7 +294,8 @@ def update_meta(
         if metric is not None:
             nlp.meta["performance"][metric] = info["other_scores"].get(metric, 0.0)
     for pipe_name in nlp.pipe_names:
-        nlp.meta["performance"][f"{pipe_name}_loss"] = info["losses"][pipe_name]
+        if pipe_name in info["losses"]:
+            nlp.meta["performance"][f"{pipe_name}_loss"] = info["losses"][pipe_name]
 
 
 def create_before_to_disk_callback(

@@ -17,8 +17,12 @@ def console_logger(progress_bar: bool = False):
         nlp: "Language", stdout: IO = sys.stdout, stderr: IO = sys.stderr
     ) -> Tuple[Callable[[Optional[Dict[str, Any]]], None], Callable[[], None]]:
         msg = Printer(no_print=True)
-        # we assume here that only components are enabled that should be trained & logged
-        logged_pipes = nlp.pipe_names
+        # ensure that only trainable components are logged
+        logged_pipes = [
+            name
+            for name, proc in nlp.pipeline
+            if hasattr(proc, "is_trainable") and proc.is_trainable()
+        ]
         eval_frequency = nlp.config["training"]["eval_frequency"]
         score_weights = nlp.config["training"]["score_weights"]
         score_cols = [col for col, value in score_weights.items() if value is not None]
@@ -41,19 +45,10 @@ def console_logger(progress_bar: bool = False):
                 if progress is not None:
                     progress.update(1)
                 return
-            try:
-                losses = [
-                    "{0:.2f}".format(float(info["losses"][pipe_name]))
-                    for pipe_name in logged_pipes
-                ]
-            except KeyError as e:
-                raise KeyError(
-                    Errors.E983.format(
-                        dict="scores (losses)",
-                        key=str(e),
-                        keys=list(info["losses"].keys()),
-                    )
-                ) from None
+            losses = [
+                "{0:.2f}".format(float(info["losses"][pipe_name]))
+                for pipe_name in logged_pipes
+            ]
 
             scores = []
             for col in score_cols:

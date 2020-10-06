@@ -98,10 +98,10 @@ The Chinese language class supports three word segmentation options, `char`,
 > # Jieba
 > cfg = {"segmenter": "jieba"}
 > nlp = Chinese.from_config({"nlp": {"tokenizer": cfg}})
-> # PKUSeg with "default" model provided by pkuseg
+> # PKUSeg with "mixed" model provided by pkuseg
 > cfg = {"segmenter": "pkuseg"}
 > nlp = Chinese.from_config({"nlp": {"tokenizer": cfg}})
-> nlp.tokenizer.initialize(pkuseg_model="default")
+> nlp.tokenizer.initialize(pkuseg_model="mixed")
 > ```
 
 ```ini
@@ -115,7 +115,7 @@ segmenter = "char"
 | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `char`    | **Character segmentation:** Character segmentation is the default segmentation option. It's enabled when you create a new `Chinese` language class or call `spacy.blank("zh")`.                                                                                                            |
 | `jieba`   | **Jieba:** to use [Jieba](https://github.com/fxsjy/jieba) for word segmentation, you can set the option `segmenter` to `"jieba"`.                                                                                                                                                          |
-| `pkuseg`  | **PKUSeg**: As of spaCy v2.3.0, support for [PKUSeg](https://github.com/lancopku/PKUSeg-python) has been added to support better segmentation for Chinese OntoNotes and the provided [Chinese pipelines](/models/zh). Enable PKUSeg by setting tokenizer option `segmenter` to `"pkuseg"`. |
+| `pkuseg`  | **PKUSeg**: As of spaCy v2.3.0, support for [PKUSeg](https://github.com/explosion/spacy-pkuseg) has been added to support better segmentation for Chinese OntoNotes and the provided [Chinese pipelines](/models/zh). Enable PKUSeg by setting tokenizer option `segmenter` to `"pkuseg"`. |
 
 <Infobox title="Changed in v3.0" variant="warning">
 
@@ -133,10 +133,10 @@ runtime.
 The `initialize` method for the Chinese tokenizer class supports the following
 config settings for loading `pkuseg` models:
 
-| Name               | Description                                                                                                                           |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `pkuseg_model`     | Name of a model provided by `pkuseg` or the path to a local model directory. ~~str~~                                                  |
-| `pkuseg_user_dict` | Optional path to a file with one word per line which overrides the default `pkuseg` user dictionary. Defaults to `"default"`. ~~str~~ |
+| Name               | Description                                                                                                                                                            |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pkuseg_model`     | Name of a model provided by `spacy-pkuseg` or the path to a local model directory. ~~str~~                                                                             |
+| `pkuseg_user_dict` | Optional path to a file with one word per line which overrides the default `pkuseg` user dictionary. Defaults to `"default"`, the default provided dictionary. ~~str~~ |
 
 The initialization settings are typically provided in the
 [training config](/usage/training#config) and the data is loaded in before
@@ -164,14 +164,17 @@ You can also initialize the tokenizer for a blank language class by calling its
 cfg = {"segmenter": "pkuseg"}
 nlp = Chinese.from_config({"nlp": {"tokenizer": cfg}})
 
-# Load "default" model
-nlp.tokenizer.initialize(pkuseg_model="default")
+# Load spaCy's OntoNotes model
+nlp.tokenizer.initialize(pkuseg_model="spacy_ontonotes")
+
+# Load pkuseg's "news" model
+nlp.tokenizer.initialize(pkuseg_model="news")
 
 # Load local model
 nlp.tokenizer.initialize(pkuseg_model="/path/to/pkuseg_model")
 
 # Override the user directory
-nlp.tokenizer.initialize(pkuseg_model="default", pkuseg_user_dict="/path/to/user_dict")
+nlp.tokenizer.initialize(pkuseg_model="spacy_ontonotes", pkuseg_user_dict="/path/to/user_dict")
 ```
 
 You can also modify the user dictionary on-the-fly:
@@ -195,13 +198,13 @@ The [Chinese pipelines](/models/zh) provided by spaCy include a custom `pkuseg`
 model trained only on
 [Chinese OntoNotes 5.0](https://catalog.ldc.upenn.edu/LDC2013T19), since the
 models provided by `pkuseg` include data restricted to research use. For
-research use, `pkuseg` provides models for several different domains
-(`"default"`, `"news"` `"web"`, `"medicine"`, `"tourism"`) and for other uses,
-`pkuseg` provides a simple
-[training API](https://github.com/lancopku/pkuseg-python/blob/master/readme/readme_english.md#usage):
+research use, `pkuseg` provides models for several different domains (`"mixed"`
+(equivalent to `"default"` from `pkuseg` packages), `"news"` `"web"`,
+`"medicine"`, `"tourism"`) and for other uses, `pkuseg` provides a simple
+[training API](https://github.com/explosion/spacy-pkuseg/blob/master/readme/readme_english.md#usage):
 
 ```python
-import pkuseg
+import spacy_pkuseg as pkuseg
 from spacy.lang.zh import Chinese
 
 # Train pkuseg model

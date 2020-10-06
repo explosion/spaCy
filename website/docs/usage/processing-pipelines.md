@@ -1172,13 +1172,15 @@ doc = nlp("This is a text...")
 spaCy's [`Pipe`](/api/pipe) class helps you implement your own trainable
 components that have their own model instance, make predictions over `Doc`
 objects and can be updated using [`spacy train`](/api/cli#train). This lets you
-plug fully custom machine learning components into your pipeline. You'll need
-the following:
+plug fully custom machine learning components into your pipeline.
+
+![Illustration of Pipe methods](../images/trainable_component.svg)
+
+You'll need the following:
 
 1. **Model:** A Thinc [`Model`](https://thinc.ai/docs/api-model) instance. This
-   can be a model implemented in
-   [Thinc](/usage/layers-architectures#thinc), or a
-   [wrapped model](/usage/layers-architectures#frameworks) implemented in
+   can be a model implemented in [Thinc](/usage/layers-architectures#thinc), or
+   a [wrapped model](/usage/layers-architectures#frameworks) implemented in
    PyTorch, TensorFlow, MXNet or a fully custom solution. The model must take a
    list of [`Doc`](/api/doc) objects as input and can have any type of output.
 2. **Pipe subclass:** A subclass of [`Pipe`](/api/pipe) that implements at least
@@ -1283,7 +1285,7 @@ loss is calculated and to add evaluation scores to the training output.
 For more details on how to implement your own trainable components and model
 architectures, and plug existing models implemented in PyTorch or TensorFlow
 into your spaCy pipeline, see the usage guide on
-[layers and model architectures](/usage/layers-architectures).
+[layers and model architectures](/usage/layers-architectures#components).
 
 </Infobox>
 

@@ -1091,10 +1091,11 @@ class Language:
             for name, proc in self.pipeline:
                 if (
                     name not in exclude
-                    and hasattr(proc, "model")
+                    and hasattr(proc, "is_trainable")
+                    and proc.is_trainable()
                     and proc.model not in (True, False, None)
                 ):
-                    proc.model.finish_update(sgd)
+                    proc.finish_update(sgd)
         return losses
 
     def rehearse(
@@ -1297,7 +1298,9 @@ class Language:
         for name, pipe in self.pipeline:
             kwargs = component_cfg.get(name, {})
             kwargs.setdefault("batch_size", batch_size)
-            if not hasattr(pipe, "pipe"):
+            # non-trainable components may have a pipe() implementation that refers to dummy
+            # predict and set_annotations methods
+            if not hasattr(pipe, "pipe") or not hasattr(pipe, "is_trainable") or not pipe.is_trainable():
                 docs = _pipe(docs, pipe, kwargs)
             else:
                 docs = pipe.pipe(docs, **kwargs)
@@ -1407,7 +1410,9 @@ class Language:
             kwargs = component_cfg.get(name, {})
             # Allow component_cfg to overwrite the top-level kwargs.
             kwargs.setdefault("batch_size", batch_size)
-            if hasattr(proc, "pipe"):
+            # non-trainable components may have a pipe() implementation that refers to dummy
+            # predict and set_annotations methods
+            if hasattr(proc, "pipe") and hasattr(proc, "is_trainable") and proc.is_trainable():
                 f = functools.partial(proc.pipe, **kwargs)
             else:
                 # Apply the function, but yield the doc
