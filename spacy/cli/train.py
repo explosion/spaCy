@@ -204,7 +204,7 @@ def train(
                     "positive_label": textcat_positive_label,
                 }
             if pipe not in nlp.pipe_names:
-                msg.text("Adding component to base model '{}'".format(pipe))
+                msg.text("Adding component to base model: '{}'".format(pipe))
                 nlp.add_pipe(nlp.create_pipe(pipe, config=pipe_cfg))
                 pipes_added = True
             elif replace_components:
@@ -574,6 +574,7 @@ def train(
         best_pipes = nlp.pipe_names
         if disabled_pipes:
             disabled_pipes.restore()
+            meta["pipeline"] = nlp.pipe_names
         with nlp.use_params(optimizer.averages):
             final_model_path = output_path / "model-final"
             nlp.to_disk(final_model_path)
