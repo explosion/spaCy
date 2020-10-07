@@ -42,16 +42,16 @@ def MultiHashEmbed(config):
     width = config["width"]
     rows = config["rows"]
 
-    norm = HashEmbed(width, rows, column=cols.index("NORM"), name="embed_norm")
+    norm = HashEmbed(width, rows, column=cols.index("NORM"), name="embed_norm", seed=1)
     if config["use_subwords"]:
         prefix = HashEmbed(
-            width, rows // 2, column=cols.index("PREFIX"), name="embed_prefix"
+            width, rows // 2, column=cols.index("PREFIX"), name="embed_prefix", seed=2
         )
         suffix = HashEmbed(
-            width, rows // 2, column=cols.index("SUFFIX"), name="embed_suffix"
+            width, rows // 2, column=cols.index("SUFFIX"), name="embed_suffix", seed=3
         )
         shape = HashEmbed(
-            width, rows // 2, column=cols.index("SHAPE"), name="embed_shape"
+            width, rows // 2, column=cols.index("SHAPE"), name="embed_shape", seed=4
         )
     if config.get("@pretrained_vectors"):
         glove = make_layer(config["@pretrained_vectors"])

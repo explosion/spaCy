@@ -654,10 +654,10 @@ def build_text_classifier(nr_class, width=64, **cfg):
             )
             return model
 
-        lower = HashEmbed(width, nr_vector, column=1)
-        prefix = HashEmbed(width // 2, nr_vector, column=2)
-        suffix = HashEmbed(width // 2, nr_vector, column=3)
-        shape = HashEmbed(width // 2, nr_vector, column=4)
+        lower = HashEmbed(width, nr_vector, column=1, seed=10)
+        prefix = HashEmbed(width // 2, nr_vector, column=2, seed=11)
+        suffix = HashEmbed(width // 2, nr_vector, column=3, seed=12)
+        shape = HashEmbed(width // 2, nr_vector, column=4, seed=13)
 
         trained_vectors = FeatureExtracter(
             [ORTH, LOWER, PREFIX, SUFFIX, SHAPE, ID]
