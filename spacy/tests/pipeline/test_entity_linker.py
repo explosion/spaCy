@@ -110,7 +110,7 @@ def test_kb_invalid_entity_vector(nlp):
 
 
 def test_kb_default(nlp):
-    """Test that the default (empty) KB is loaded when not providing a config"""
+    """Test that the default (empty) KB is loaded upon construction"""
     entity_linker = nlp.add_pipe("entity_linker", config={})
     assert len(entity_linker.kb) == 0
     assert entity_linker.kb.get_size_entities() == 0
@@ -122,7 +122,7 @@ def test_kb_default(nlp):
 def test_kb_custom_length(nlp):
     """Test that the default (empty) KB can be configured with a custom entity length"""
     entity_linker = nlp.add_pipe(
-        "entity_linker", config={"kb_loader": {"entity_vector_length": 35}}
+        "entity_linker", config={"entity_vector_length": 35}
     )
     assert len(entity_linker.kb) == 0
     assert entity_linker.kb.get_size_entities() == 0
@@ -140,7 +140,7 @@ def test_kb_undefined(nlp):
 def test_kb_empty(nlp):
     """Test that the EL can't train with an empty KB"""
     config = {"kb_loader": {"@misc": "spacy.EmptyKB.v1", "entity_vector_length": 342}}
-    entity_linker = nlp.add_pipe("entity_linker", config=config)
+    entity_linker = nlp.add_pipe("entity_linker", init_config=config)
     assert len(entity_linker.kb) == 0
     with pytest.raises(ValueError):
         entity_linker.initialize(lambda: [])
@@ -217,8 +217,10 @@ def test_el_pipe_configuration(nlp):
     # run an EL pipe without a trained context encoder, to check the candidate generation step only
     nlp.add_pipe(
         "entity_linker",
-        config={"kb_loader": {"@misc": "myAdamKB.v1"}, "incl_context": False},
+        config={"incl_context": False},
+        init_config={"kb_loader": {"@misc": "myAdamKB.v1"}},
     )
+    nlp.initialize()
     # With the default get_candidates function, matching is case-sensitive
     text = "Douglas and douglas are not the same."
     doc = nlp(text)
@@ -238,11 +240,14 @@ def test_el_pipe_configuration(nlp):
         "entity_linker",
         "entity_linker",
         config={
-            "kb_loader": {"@misc": "myAdamKB.v1"},
             "incl_context": False,
             "get_candidates": {"@misc": "spacy.LowercaseCandidateGenerator.v1"},
         },
+        init_config={
+            "kb_loader": {"@misc": "myAdamKB.v1"},
+        },
     )
+    nlp.initialize()
     doc = nlp(text)
     assert doc[0].ent_kb_id_ == "Q2"
     assert doc[1].ent_kb_id_ == ""
@@ -356,8 +361,9 @@ def test_preserving_links_asdoc(nlp):
     ]
     ruler = nlp.add_pipe("entity_ruler")
     ruler.add_patterns(patterns)
-    el_config = {"kb_loader": {"@misc": "myLocationsKB.v1"}, "incl_prior": False}
-    entity_linker = nlp.add_pipe("entity_linker", config=el_config, last=True)
+    config = {"incl_prior": False}
+    init_config = {"kb_loader": {"@misc": "myLocationsKB.v1"}}
+    entity_linker = nlp.add_pipe("entity_linker", config=config, init_config=init_config, last=True)
     nlp.initialize()
     assert entity_linker.model.get_dim("nO") == vector_length
 
@@ -456,7 +462,7 @@ def test_overfitting_IO():
     # Create the Entity Linker component and add it to the pipeline
     entity_linker = nlp.add_pipe(
         "entity_linker",
-        config={"kb_loader": {"@misc": "myOverfittingKB.v1"}},
+        init_config={"kb_loader": {"@misc": "myOverfittingKB.v1"}},
         last=True,
     )
 
