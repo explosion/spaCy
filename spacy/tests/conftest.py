@@ -124,6 +124,11 @@ def he_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def hi_tokenizer():
+    return get_lang_class("hi").Defaults.create_tokenizer()
+
+
+@pytest.fixture(scope="session")
 def hr_tokenizer():
     return get_lang_class("hr").Defaults.create_tokenizer()
 
