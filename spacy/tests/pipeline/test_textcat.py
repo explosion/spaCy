@@ -127,9 +127,9 @@ def test_initialize_examples():
     nlp.initialize()
     get_examples = make_get_examples(nlp)
     nlp.initialize(get_examples=get_examples)
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         nlp.initialize(get_examples=lambda: None)
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         nlp.initialize(get_examples=get_examples())
 
 

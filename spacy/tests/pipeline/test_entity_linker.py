@@ -133,7 +133,7 @@ def test_kb_custom_length(nlp):
 def test_kb_undefined(nlp):
     """Test that the EL can't train without defining a KB"""
     entity_linker = nlp.add_pipe("entity_linker", config={})
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         entity_linker.initialize(lambda: [])
 
 
@@ -142,7 +142,7 @@ def test_kb_empty(nlp):
     config = {"kb_loader": {"@misc": "spacy.EmptyKB.v1", "entity_vector_length": 342}}
     entity_linker = nlp.add_pipe("entity_linker", config=config)
     assert len(entity_linker.kb) == 0
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         entity_linker.initialize(lambda: [])
 
 

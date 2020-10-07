@@ -13,7 +13,7 @@ from .pipe import deserialize_config
 from .trainable_pipe import TrainablePipe
 from ..language import Language
 from ..vocab import Vocab
-from ..training import Example, validate_examples
+from ..training import Example, validate_examples, validate_get_examples
 from ..errors import Errors, Warnings
 from ..util import SimpleFrozenList
 from .. import util
@@ -156,7 +156,7 @@ class EntityLinker(TrainablePipe):
 
         DOCS: https://nightly.spacy.io/api/entitylinker#initialize
         """
-        self._ensure_examples(get_examples)
+        validate_get_examples(get_examples, "EntityLinker.initialize")
         self._require_kb()
         nO = self.kb.entity_vector_length
         doc_sample = []

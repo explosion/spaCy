@@ -3,7 +3,7 @@ from thinc.api import Model, set_dropout_rate, Optimizer, Config
 from itertools import islice
 
 from .trainable_pipe import TrainablePipe
-from ..training import Example, validate_examples
+from ..training import Example, validate_examples, validate_get_examples
 from ..tokens import Doc
 from ..vocab import Vocab
 from ..language import Language
@@ -218,7 +218,7 @@ class Tok2Vec(TrainablePipe):
 
         DOCS: https://nightly.spacy.io/api/tok2vec#initialize
         """
-        self._ensure_examples(get_examples)
+        validate_get_examples(get_examples, "Tok2Vec.initialize")
         doc_sample = []
         for example in islice(get_examples(), 10):
             doc_sample.append(example.x)

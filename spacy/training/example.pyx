@@ -44,6 +44,24 @@ def validate_examples(examples, method):
         raise TypeError(err)
 
 
+def validate_get_examples(get_examples, method):
+    """Check that a generator of a batch of examples received during processing is valid:
+    the callable produces a non-empty list of Example objects.
+    This function lives here to prevent circular imports.
+
+    get_examples (Callable[[], Iterable[Example]]): A function that produces a batch of examples.
+    method (str): The method name to show in error messages.
+    """
+    if get_examples is None or not hasattr(get_examples, "__call__"):
+        err = Errors.E930.format(method=method, obj=type(get_examples))
+        raise TypeError(err)
+    examples = get_examples()
+    if not examples:
+        err = Errors.E930.format(method=method, obj=examples)
+        raise TypeError(err)
+    validate_examples(examples, method)
+
+
 cdef class Example:
     def __init__(self, Doc predicted, Doc reference, *, alignment=None):
         if predicted is None:

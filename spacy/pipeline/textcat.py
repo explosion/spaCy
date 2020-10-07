@@ -6,7 +6,7 @@ import numpy
 
 from .trainable_pipe import TrainablePipe
 from ..language import Language
-from ..training import Example, validate_examples
+from ..training import Example, validate_examples, validate_get_examples
 from ..errors import Errors
 from ..scorer import Scorer
 from .. import util
@@ -329,7 +329,7 @@ class TextCategorizer(TrainablePipe):
 
         DOCS: https://nightly.spacy.io/api/textcategorizer#initialize
         """
-        self._ensure_examples(get_examples)
+        validate_get_examples(get_examples, "TextCategorizer.initialize")
         if labels is None:
             for example in get_examples():
                 for cat in example.y.cats:

@@ -23,7 +23,7 @@ from ..ml.parser_model cimport get_c_weights, get_c_sizes
 from ..tokens.doc cimport Doc
 from .trainable_pipe import TrainablePipe
 
-from ..training import validate_examples
+from ..training import validate_examples, validate_get_examples
 from ..errors import Errors, Warnings
 from .. import util
 
@@ -412,7 +412,7 @@ cdef class Parser(TrainablePipe):
         self.model.attrs["resize_output"](self.model, nO)
 
     def initialize(self, get_examples, nlp=None, labels=None):
-        self._ensure_examples(get_examples)
+        validate_get_examples(get_examples, "Parser.initialize")
         lexeme_norms = self.vocab.lookups.get_table("lexeme_norm", {})
         if len(lexeme_norms) == 0 and self.vocab.lang in util.LEXEME_NORM_LANGS:
             langs = ", ".join(util.LEXEME_NORM_LANGS)

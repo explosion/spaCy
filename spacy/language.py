@@ -1191,8 +1191,8 @@ class Language:
             doc = Doc(self.vocab, words=["x", "y", "z"])
             get_examples = lambda: [Example.from_dict(doc, {})]
         if not hasattr(get_examples, "__call__"):
-            err = Errors.E930.format(name="Language", obj=type(get_examples))
-            raise ValueError(err)
+            err = Errors.E930.format(method="Language.initialize", obj=type(get_examples))
+            raise TypeError(err)
         # Make sure the config is interpolated so we can resolve subsections
         config = self.config.interpolate()
         # These are the settings provided in the [initialize] block in the config

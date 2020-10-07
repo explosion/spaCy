@@ -18,7 +18,7 @@ from ..attrs import POS, ID
 from ..parts_of_speech import X
 from ..errors import Errors, Warnings
 from ..scorer import Scorer
-from ..training import validate_examples
+from ..training import validate_examples, validate_get_examples
 from .. import util
 
 
@@ -275,7 +275,7 @@ class Tagger(TrainablePipe):
 
         DOCS: https://nightly.spacy.io/api/tagger#initialize
         """
-        self._ensure_examples(get_examples)
+        validate_get_examples(get_examples, "Tagger.initialize")
         if labels is not None:
             for tag in labels:
                 self.add_label(tag)

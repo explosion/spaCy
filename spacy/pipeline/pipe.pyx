@@ -100,15 +100,6 @@ cdef class Pipe:
         if not self.labels or list(self.labels) == [""]:
             raise ValueError(Errors.E143.format(name=self.name))
 
-    def _ensure_examples(self, get_examples) -> None:
-        """Raise an error if the provided examples are not of the expected type."""
-        if get_examples is None or not hasattr(get_examples, "__call__"):
-            err = Errors.E930.format(name=self.name, obj=type(get_examples))
-            raise ValueError(err)
-        if not get_examples():
-            err = Errors.E930.format(name=self.name, obj=get_examples())
-            raise ValueError(err)
-
 def deserialize_config(path):
     if path.exists():
         return srsly.read_json(path)

@@ -16,7 +16,7 @@ from .pipe import deserialize_config
 from .tagger import Tagger
 from .. import util
 from ..scorer import Scorer
-from ..training import validate_examples
+from ..training import validate_examples, validate_get_examples
 
 
 default_model_config = """
@@ -144,7 +144,7 @@ class Morphologizer(Tagger):
 
         DOCS: https://nightly.spacy.io/api/morphologizer#initialize
         """
-        self._ensure_examples(get_examples)
+        validate_get_examples(get_examples, "Morphologizer.initialize")
         if labels is not None:
             self.cfg["labels_morph"] = labels["morph"]
             self.cfg["labels_pos"] = labels["pos"]
