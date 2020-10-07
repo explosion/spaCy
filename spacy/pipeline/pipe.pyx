@@ -7,18 +7,16 @@ from ..tokens.doc cimport Doc
 
 from ..training import Example
 from ..errors import Errors, Warnings
-from .. import util
 from ..language import Language
 
-"""This class is a base class and not instantiated directly. It provides
-an interface for pipeline components to implement.
-Trainable pipeline components like the EntityRecognizer or TextCategorizer
-should inherit from the subclass 'TrainablePipe'.
-
-DOCS: https://nightly.spacy.io/api/pipe
-"""
 cdef class Pipe:
+    """This class is a base class and not instantiated directly. It provides
+    an interface for pipeline components to implement.
+    Trainable pipeline components like the EntityRecognizer or TextCategorizer
+    should inherit from the subclass 'TrainablePipe'.
 
+    DOCS: https://nightly.spacy.io/api/pipe
+    """
 
     @classmethod
     def __init_subclass__(cls, **kwargs):
@@ -50,7 +48,6 @@ cdef class Pipe:
 
         DOCS: https://nightly.spacy.io/api/pipe#pipe
         """
-        # TODO: this implemention, or language._pipe() ?
         for doc in stream:
             doc = self(doc)
             yield doc
