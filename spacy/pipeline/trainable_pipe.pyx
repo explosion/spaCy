@@ -246,7 +246,8 @@ cdef class TrainablePipe(Pipe):
         DOCS: https://nightly.spacy.io/api/pipe#to_bytes
         """
         serialize = {}
-        serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
+        if hasattr(self, "cfg"):
+            serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
         serialize["model"] = self.model.to_bytes
         if hasattr(self, "vocab"):
             serialize["vocab"] = self.vocab.to_bytes
@@ -270,7 +271,8 @@ cdef class TrainablePipe(Pipe):
         deserialize = {}
         if hasattr(self, "vocab"):
             deserialize["vocab"] = lambda b: self.vocab.from_bytes(b)
-        deserialize["cfg"] = lambda b: self.cfg.update(srsly.json_loads(b))
+        if hasattr(self, "cfg"):
+            deserialize["cfg"] = lambda b: self.cfg.update(srsly.json_loads(b))
         deserialize["model"] = load_model
         util.from_bytes(bytes_data, deserialize, exclude)
         return self
@@ -284,8 +286,10 @@ cdef class TrainablePipe(Pipe):
         DOCS: https://nightly.spacy.io/api/pipe#to_disk
         """
         serialize = {}
-        serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
-        serialize["vocab"] = lambda p: self.vocab.to_disk(p)
+        if hasattr(self, "cfg"):
+            serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
+        if hasattr(self, "vocab"):
+            serialize["vocab"] = lambda p: self.vocab.to_disk(p)
         serialize["model"] = lambda p: self.model.to_disk(p)
         util.to_disk(path, serialize, exclude)
 
@@ -306,8 +310,10 @@ cdef class TrainablePipe(Pipe):
                 raise ValueError(Errors.E149) from None
 
         deserialize = {}
-        deserialize["vocab"] = lambda p: self.vocab.from_disk(p)
-        deserialize["cfg"] = lambda p: self.cfg.update(deserialize_config(p))
+        if hasattr(self, "vocab"):
+            deserialize["vocab"] = lambda p: self.vocab.from_disk(p)
+        if hasattr(self, "cfg"):
+            deserialize["cfg"] = lambda p: self.cfg.update(deserialize_config(p))
         deserialize["model"] = load_model
         util.from_disk(path, deserialize, exclude)
         return self
