@@ -80,8 +80,8 @@ def entity_linker():
 
         return create_kb
 
-    config = {"kb_loader": {"@misc": "TestIssue5230KB.v1"}}
-    entity_linker = nlp.add_pipe("entity_linker", config=config)
+    init_config = {"kb_loader": {"@misc": "TestIssue5230KB.v1"}}
+    entity_linker = nlp.add_pipe("entity_linker", init_config=init_config)
     # need to add model for two reasons:
     # 1. no model leads to error in serialization,
     # 2. the affected line is the one for model serialization
