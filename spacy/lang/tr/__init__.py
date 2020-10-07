@@ -3,8 +3,10 @@ from __future__ import unicode_literals
 
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
+from .syntax_iterators import SYNTAX_ITERATORS
 from .lex_attrs import LEX_ATTRS
 from .morph_rules import MORPH_RULES
+
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
@@ -22,6 +24,7 @@ class TurkishDefaults(Language.Defaults):
     )
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
+    syntax_iterators = SYNTAX_ITERATORS
     morph_rules = MORPH_RULES
 
 
