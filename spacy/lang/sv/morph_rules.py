@@ -35,6 +35,20 @@ MORPH_RULES = {
             "Number": "Sing",
             "Case": "Nom",
         },
+        "dig": {
+            LEMMA: PRON_LEMMA,
+            "PronType": "Prs",
+            "Person": "Two",
+            "Number": "Sing",
+            "Case": "Acc",
+        },
+        "dej": {
+            LEMMA: PRON_LEMMA,
+            "PronType": "Prs",
+            "Person": "Two",
+            "Number": "Sing",
+            "Case": "Acc",
+        },
         "han": {
             LEMMA: PRON_LEMMA,
             "PronType": "Prs",
