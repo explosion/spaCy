@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 from spacy.util import get_lang_class
 from spacy.tokenizer import Tokenizer
@@ -9,17 +6,24 @@ from ..util import make_tempdir, assert_packed_msg_equal
 
 
 def load_tokenizer(b):
-    tok = get_lang_class("en").Defaults.create_tokenizer()
+    tok = get_lang_class("en")().tokenizer
     tok.from_bytes(b)
     return tok
 
 
 def test_serialize_custom_tokenizer(en_vocab, en_tokenizer):
-    """Test that custom tokenizer with not all functions defined can be
-    serialized and deserialized correctly (see #2494)."""
+    """Test that custom tokenizer with not all functions defined or empty
+    properties can be serialized and deserialized correctly (see #2494,
+    #4991)."""
     tokenizer = Tokenizer(en_vocab, suffix_search=en_tokenizer.suffix_search)
     tokenizer_bytes = tokenizer.to_bytes()
     Tokenizer(en_vocab).from_bytes(tokenizer_bytes)
+
+    tokenizer = Tokenizer(en_vocab, rules={"ABC.": [{"ORTH": "ABC"}, {"ORTH": "."}]})
+    tokenizer.rules = {}
+    tokenizer_bytes = tokenizer.to_bytes()
+    tokenizer_reloaded = Tokenizer(en_vocab).from_bytes(tokenizer_bytes)
+    assert tokenizer_reloaded.rules == {}
 
 
 @pytest.mark.skip(reason="Currently unreliable across platforms")

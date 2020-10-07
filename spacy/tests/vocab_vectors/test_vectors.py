@@ -1,17 +1,13 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 import numpy
-from numpy.testing import assert_allclose
-from spacy._ml import cosine
+from numpy.testing import assert_allclose, assert_equal
 from spacy.vocab import Vocab
 from spacy.vectors import Vectors
 from spacy.tokenizer import Tokenizer
 from spacy.strings import hash_string
 from spacy.tokens import Doc
 
-from ..util import add_vecs_to_vocab
+from ..util import add_vecs_to_vocab, get_cosine, make_tempdir
 
 
 @pytest.fixture
@@ -60,6 +56,11 @@ def most_similar_vectors_data():
 
 
 @pytest.fixture
+def most_similar_vectors_keys():
+    return ["a", "b", "c", "d"]
+
+
+@pytest.fixture
 def resize_data():
     return numpy.asarray([[0.0, 1.0], [2.0, 3.0]], dtype="f")
 
@@ -89,17 +90,28 @@ def test_init_vectors_with_resize_data(data, resize_data):
     assert v.shape != data.shape
 
 
-def test_get_vector_resize(strings, data, resize_data):
-    v = Vectors(data=data)
-    v.resize(shape=resize_data.shape)
+def test_get_vector_resize(strings, data):
     strings = [hash_string(s) for s in strings]
+
+    # decrease vector dimension (truncate)
+    v = Vectors(data=data)
+    resized_dim = v.shape[1] - 1
+    v.resize(shape=(v.shape[0], resized_dim))
     for i, string in enumerate(strings):
         v.add(string, row=i)
 
-    assert list(v[strings[0]]) == list(resize_data[0])
-    assert list(v[strings[0]]) != list(resize_data[1])
-    assert list(v[strings[1]]) != list(resize_data[0])
-    assert list(v[strings[1]]) == list(resize_data[1])
+    assert list(v[strings[0]]) == list(data[0, :resized_dim])
+    assert list(v[strings[1]]) == list(data[1, :resized_dim])
+
+    # increase vector dimension (pad with zeros)
+    v = Vectors(data=data)
+    resized_dim = v.shape[1] + 1
+    v.resize(shape=(v.shape[0], resized_dim))
+    for i, string in enumerate(strings):
+        v.add(string, row=i)
+
+    assert list(v[strings[0]]) == list(data[0]) + [0]
+    assert list(v[strings[1]]) == list(data[1]) + [0]
 
 
 def test_init_vectors_with_data(strings, data):
@@ -135,10 +147,13 @@ def test_set_vector(strings, data):
     assert list(v[strings[0]]) != list(orig[0])
 
 
-def test_vectors_most_similar(most_similar_vectors_data):
-    v = Vectors(data=most_similar_vectors_data)
+def test_vectors_most_similar(most_similar_vectors_data, most_similar_vectors_keys):
+    v = Vectors(data=most_similar_vectors_data, keys=most_similar_vectors_keys)
     _, best_rows, _ = v.most_similar(v.data, batch_size=2, n=2, sort=True)
     assert all(row[0] == i for i, row in enumerate(best_rows))
+
+    with pytest.raises(ValueError):
+        v.most_similar(v.data, batch_size=2, n=10, sort=True)
 
 
 def test_vectors_most_similar_identical():
@@ -296,6 +311,9 @@ def test_vocab_add_vector():
     dog = vocab["dog"]
     assert list(dog.vector) == [2.0, 2.0, 2.0]
 
+    with pytest.raises(ValueError):
+        vocab.vectors.add(vocab["hamster"].orth, row=1000000)
+
 
 def test_vocab_prune_vectors():
     vocab = Vocab(vectors_name="test_vocab_prune_vectors")
@@ -314,4 +332,44 @@ def test_vocab_prune_vectors():
     assert list(remap.keys()) == ["kitten"]
     neighbour, similarity = list(remap.values())[0]
     assert neighbour == "cat", remap
-    assert_allclose(similarity, cosine(data[0], data[2]), atol=1e-4, rtol=1e-3)
+    assert_allclose(similarity, get_cosine(data[0], data[2]), atol=1e-4, rtol=1e-3)
+
+
+def test_vectors_serialize():
+    data = numpy.asarray([[4, 2, 2, 2], [4, 2, 2, 2], [1, 1, 1, 1]], dtype="f")
+    v = Vectors(data=data, keys=["A", "B", "C"])
+    b = v.to_bytes()
+    v_r = Vectors()
+    v_r.from_bytes(b)
+    assert_equal(v.data, v_r.data)
+    assert v.key2row == v_r.key2row
+    v.resize((5, 4))
+    v_r.resize((5, 4))
+    row = v.add("D", vector=numpy.asarray([1, 2, 3, 4], dtype="f"))
+    row_r = v_r.add("D", vector=numpy.asarray([1, 2, 3, 4], dtype="f"))
+    assert row == row_r
+    assert_equal(v.data, v_r.data)
+    assert v.is_full == v_r.is_full
+    with make_tempdir() as d:
+        v.to_disk(d)
+        v_r.from_disk(d)
+        assert_equal(v.data, v_r.data)
+        assert v.key2row == v_r.key2row
+        v.resize((5, 4))
+        v_r.resize((5, 4))
+        row = v.add("D", vector=numpy.asarray([10, 20, 30, 40], dtype="f"))
+        row_r = v_r.add("D", vector=numpy.asarray([10, 20, 30, 40], dtype="f"))
+        assert row == row_r
+        assert_equal(v.data, v_r.data)
+
+
+def test_vector_is_oov():
+    vocab = Vocab(vectors_name="test_vocab_is_oov")
+    data = numpy.ndarray((5, 3), dtype="f")
+    data[0] = 1.0
+    data[1] = 2.0
+    vocab.set_vector("cat", data[0])
+    vocab.set_vector("dog", data[1])
+    assert vocab["cat"].is_oov is False
+    assert vocab["dog"].is_oov is False
+    assert vocab["hamster"].is_oov is True

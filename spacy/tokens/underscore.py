@@ -1,13 +1,10 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import functools
 import copy
 
 from ..errors import Errors
 
 
-class Underscore(object):
+class Underscore:
     mutable_types = (dict, list, set)
     doc_extensions = {}
     span_extensions = {}
@@ -78,6 +75,14 @@ class Underscore(object):
 
     def _get_key(self, name):
         return ("._.", name, self._start, self._end)
+
+    @classmethod
+    def get_state(cls):
+        return cls.token_extensions, cls.span_extensions, cls.doc_extensions
+
+    @classmethod
+    def load_state(cls, state):
+        cls.token_extensions, cls.span_extensions, cls.doc_extensions = state
 
 
 def get_ext_args(**kwargs):

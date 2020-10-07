@@ -1,12 +1,9 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from .char_classes import LIST_PUNCT, LIST_ELLIPSES, LIST_QUOTES, LIST_CURRENCY
 from .char_classes import LIST_ICONS, HYPHENS, CURRENCY, UNITS
 from .char_classes import CONCAT_QUOTES, ALPHA_LOWER, ALPHA_UPPER, ALPHA, PUNCT
 
 
-_prefixes = (
+TOKENIZER_PREFIXES = (
     ["§", "%", "=", "—", "–", r"\+(?![0-9])"]
     + LIST_PUNCT
     + LIST_ELLIPSES
@@ -16,7 +13,7 @@ _prefixes = (
 )
 
 
-_suffixes = (
+TOKENIZER_SUFFIXES = (
     LIST_PUNCT
     + LIST_ELLIPSES
     + LIST_QUOTES
@@ -34,7 +31,7 @@ _suffixes = (
     ]
 )
 
-_infixes = (
+TOKENIZER_INFIXES = (
     LIST_ELLIPSES
     + LIST_ICONS
     + [
@@ -47,7 +44,3 @@ _infixes = (
         r"(?<=[{a}0-9])[:<>=/](?=[{a}])".format(a=ALPHA),
     ]
 )
-
-TOKENIZER_PREFIXES = _prefixes
-TOKENIZER_SUFFIXES = _suffixes
-TOKENIZER_INFIXES = _infixes

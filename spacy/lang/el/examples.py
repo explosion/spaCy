@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import unicode_literals
-
 """
 Example sentences to test spaCy and its language models.
 >>> from spacy.lang.el.examples import sentences

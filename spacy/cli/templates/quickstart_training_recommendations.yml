@@ -1,0 +1,103 @@
+# Recommended settings and available resources for each language, if available.
+# Not all languages have recommended word vectors or transformers and for some,
+# the recommended transformer for efficiency and accuracy may be the same.
+en:
+  word_vectors: en_vectors_web_lg
+  transformer:
+    efficiency:
+      name: roberta-base
+      size_factor: 3
+    accuracy:
+      name: roberta-base
+      size_factor: 3
+de:
+  word_vectors: null
+  transformer:
+    efficiency:
+      name: bert-base-german-cased
+      size_factor: 3
+    accuracy:
+      name: bert-base-german-cased
+      size_factor: 3
+fr:
+  word_vectors: null
+  transformer:
+    efficiency:
+      name: camembert-base
+      size_factor: 3
+    accuracy:
+      name: camembert-base
+      size_factor: 3
+es:
+  word_vectors: null
+  transformer:
+    efficiency:
+      name: mrm8488/RuPERTa-base
+      size_factor: 3
+    accuracy:
+      name: mrm8488/RuPERTa-base
+      size_factor: 3
+sv:
+  word_vectors: null
+  transformer:
+    efficiency:
+      name: KB/bert-base-swedish-cased
+      size_factor: 3
+    accuracy:
+      name: KB/bert-base-swedish-cased
+      size_factor: 3
+fi:
+  word_vectors: null
+  transformer:
+    efficiency:
+      name: TurkuNLP/bert-base-finnish-cased-v1
+      size_factor: 3
+    accuracy:
+      name: TurkuNLP/bert-base-finnish-cased-v1
+      size_factor: 3
+el:
+  word_vectors: null
+  transformer:
+    efficiency:
+      name: nlpaueb/bert-base-greek-uncased-v1
+      size_factor: 3
+    accuracy:
+      name: nlpaueb/bert-base-greek-uncased-v1
+      size_factor: 3
+tr:
+  word_vectors: null
+  transformer:
+    efficiency:
+      name: dbmdz/bert-base-turkish-cased
+      size_factor: 3
+    accuracy:
+      name: dbmdz/bert-base-turkish-cased
+      size_factor: 3
+zh:
+  word_vectors: null
+  transformer:
+    efficiency:
+      name: bert-base-chinese
+      size_factor: 3
+    accuracy:
+      name: bert-base-chinese
+      size_factor: 3
+  has_letters: false
+ar:
+  word_vectors: null
+  transformer:
+    efficiency:
+      name: asafaya/bert-base-arabic
+      size_factor: 3
+    accuracy:
+      name: asafaya/bert-base-arabic
+      size_factor: 3
+pl:
+  word_vectors: null
+  transformer:
+    efficiency:
+      name: dkleczek/bert-base-polish-cased-v1
+      size_factor: 3
+    accuracy:
+      name: dkleczek/bert-base-polish-cased-v1
+      size_factor: 3

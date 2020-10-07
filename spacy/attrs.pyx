@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 
 IDS = {
     "": NULL_ATTR,
@@ -16,7 +13,7 @@ IDS = {
     "LIKE_NUM": LIKE_NUM,
     "LIKE_EMAIL": LIKE_EMAIL,
     "IS_STOP": IS_STOP,
-    "IS_OOV": IS_OOV,
+    "IS_OOV_DEPRECATED": IS_OOV_DEPRECATED,
     "IS_BRACKET": IS_BRACKET,
     "IS_QUOTE": IS_QUOTE,
     "IS_LEFT_PUNCT": IS_LEFT_PUNCT,
@@ -84,12 +81,16 @@ IDS = {
     "DEP": DEP,
     "ENT_IOB": ENT_IOB,
     "ENT_TYPE": ENT_TYPE,
+    "ENT_ID": ENT_ID,
     "ENT_KB_ID": ENT_KB_ID,
     "HEAD": HEAD,
     "SENT_START": SENT_START,
+    "SENT_END": SENT_END,
     "SPACY": SPACY,
     "PROB": PROB,
     "LANG": LANG,
+    "MORPH": MORPH,
+    "IDX": IDX
 }
 
 

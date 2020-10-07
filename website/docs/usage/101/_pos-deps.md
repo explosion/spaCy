@@ -1,9 +1,9 @@
 After tokenization, spaCy can **parse** and **tag** a given `Doc`. This is where
-the statistical model comes in, which enables spaCy to **make a prediction** of
-which tag or label most likely applies in this context. A model consists of
-binary data and is produced by showing a system enough examples for it to make
-predictions that generalize across the language – for example, a word following
-"the" in English is most likely a noun.
+the trained pipeline and its statistical models come in, which enable spaCy to
+**make predictions** of which tag or label most likely applies in this context.
+A trained component includes binary data that is produced by showing a system
+enough examples for it to make predictions that generalize across the language –
+for example, a word following "the" in English is most likely a noun.
 
 Linguistic annotations are available as
 [`Token` attributes](/api/token#attributes). Like many NLP libraries, spaCy
@@ -25,7 +25,8 @@ for token in doc:
 
 > - **Text:** The original word text.
 > - **Lemma:** The base form of the word.
-> - **POS:** The simple part-of-speech tag.
+> - **POS:** The simple [UPOS](https://universaldependencies.org/docs/u/pos/)
+>   part-of-speech tag.
 > - **Tag:** The detailed part-of-speech tag.
 > - **Dep:** Syntactic dependency, i.e. the relation between tokens.
 > - **Shape:** The word shape – capitalization, punctuation, digits.
@@ -36,7 +37,7 @@ for token in doc:
 | Text    | Lemma   | POS     | Tag   | Dep        | Shape   | alpha   | stop    |
 | ------- | ------- | ------- | ----- | ---------- | ------- | ------- | ------- |
 | Apple   | apple   | `PROPN` | `NNP` | `nsubj`    | `Xxxxx` | `True`  | `False` |
-| is      | be      | `VERB`  | `VBZ` | `aux`      | `xx`    | `True`  | `True`  |
+| is      | be      | `AUX`   | `VBZ` | `aux`      | `xx`    | `True`  | `True`  |
 | looking | look    | `VERB`  | `VBG` | `ROOT`     | `xxxx`  | `True`  | `False` |
 | at      | at      | `ADP`   | `IN`  | `prep`     | `xx`    | `True`  | `True`  |
 | buying  | buy     | `VERB`  | `VBG` | `pcomp`    | `xxxx`  | `True`  | `False` |

@@ -1,39 +1,30 @@
-# coding: utf8
-from __future__ import unicode_literals
+from typing import Union, Iterator
 
 from ...symbols import NOUN, PROPN, PRON
+from ...errors import Errors
+from ...tokens import Doc, Span
 
 
-def noun_chunks(obj):
-    """
-    Detect base noun phrases from a dependency parse. Works on both Doc and Span.
-    """
-    labels = [
-        "nsubj",
-        "dobj",
-        "nsubjpass",
-        "pcomp",
-        "pobj",
-        "dative",
-        "appos",
-        "attr",
-        "ROOT",
-    ]
-    doc = obj.doc  # Ensure works on both Doc and Span.
+def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
+    """Detect base noun phrases from a dependency parse. Works on Doc and Span."""
+    # fmt: off
+    labels = ["nsubj", "dobj", "nsubjpass", "pcomp", "pobj", "dative", "appos", "attr", "ROOT"]
+    # fmt: on
+    doc = doclike.doc  # Ensure works on both Doc and Span.
+    if not doc.has_annotation("DEP"):
+        raise ValueError(Errors.E029)
     np_deps = [doc.vocab.strings.add(label) for label in labels]
     conj = doc.vocab.strings.add("conj")
     np_label = doc.vocab.strings.add("NP")
-    seen = set()
-    for i, word in enumerate(obj):
+    prev_end = -1
+    for i, word in enumerate(doclike):
         if word.pos not in (NOUN, PROPN, PRON):
             continue
         # Prevent nested chunks from being produced
-        if word.i in seen:
+        if word.left_edge.i <= prev_end:
             continue
         if word.dep in np_deps:
-            if any(w.i in seen for w in word.subtree):
-                continue
-            seen.update(j for j in range(word.left_edge.i, word.i + 1))
+            prev_end = word.i
             yield word.left_edge.i, word.i + 1, np_label
         elif word.dep == conj:
             head = word.head
@@ -41,9 +32,7 @@ def noun_chunks(obj):
                 head = head.head
             # If the head is an NP, and we're coordinated to it, we're an NP
             if head.dep in np_deps:
-                if any(w.i in seen for w in word.subtree):
-                    continue
-                seen.update(j for j in range(word.left_edge.i, word.i + 1))
+                prev_end = word.i
                 yield word.left_edge.i, word.i + 1, np_label
 
 

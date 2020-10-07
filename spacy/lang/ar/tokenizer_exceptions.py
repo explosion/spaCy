@@ -1,7 +1,6 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-from ...symbols import ORTH, LEMMA, NORM
+from ..tokenizer_exceptions import BASE_EXCEPTIONS
+from ...symbols import ORTH, NORM
+from ...util import update_exc
 
 
 _exc = {}
@@ -9,9 +8,9 @@ _exc = {}
 
 # Time
 for exc_data in [
-    {NORM: "قبل الميلاد", ORTH: ".ق.م"},
-    {NORM: "بعد الميلاد", ORTH: ".ب.م"},
-    {NORM: "هجري", ORTH: "هـ"},
+    {NORM: "قبل الميلاد", ORTH: "ق.م"},
+    {NORM: "بعد الميلاد", ORTH: "ب. م"},
+    {NORM: "هجري", ORTH: ".هـ"},
     {NORM: "توفي", ORTH: ".ت"},
 ]:
     _exc[exc_data[ORTH]] = [exc_data]
@@ -25,6 +24,8 @@ for exc_data in [
     {NORM: "إلى آخره", ORTH: "إلخ"},
     {NORM: "انتهى", ORTH: "اهـ"},
     {NORM: "حدّثنا", ORTH: "ثنا"},
+    {NORM: "حدثني", ORTH: "ثنى"},
+    {NORM: "أنبأنا", ORTH: "أنا"},
     {NORM: "أخبرنا", ORTH: "نا"},
     {NORM: "مصدر سابق", ORTH: "م. س"},
     {NORM: "مصدر نفسه", ORTH: "م. ن"},
@@ -44,4 +45,4 @@ for exc_data in [
 for exc_data in [{NORM: "تلفون", ORTH: "ت."}, {NORM: "صندوق بريد", ORTH: "ص.ب"}]:
     _exc[exc_data[ORTH]] = [exc_data]
 
-TOKENIZER_EXCEPTIONS = _exc
+TOKENIZER_EXCEPTIONS = update_exc(BASE_EXCEPTIONS, _exc)

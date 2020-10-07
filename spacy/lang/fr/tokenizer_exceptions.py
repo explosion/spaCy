@@ -1,12 +1,11 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import re
 
+from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from .punctuation import ELISION, HYPHENS
-from ..tokenizer_exceptions import URL_PATTERN
 from ..char_classes import ALPHA_LOWER, ALPHA
-from ...symbols import ORTH, LEMMA, TAG
+from ...symbols import ORTH
+from ...util import update_exc
+
 
 # not using the large _tokenizer_exceptions_list by default as it slows down the tokenizer
 # from ._tokenizer_exceptions_list import FR_BASE_EXCEPTIONS
@@ -29,70 +28,90 @@ def lower_first_letter(text):
     return text[0].lower() + text[1:]
 
 
-_exc = {"J.-C.": [{LEMMA: "Jésus", ORTH: "J."}, {LEMMA: "Christ", ORTH: "-C."}]}
+_exc = {"J.-C.": [{ORTH: "J."}, {ORTH: "-C."}]}
 
 
 for exc_data in [
-    {LEMMA: "avant", ORTH: "av."},
-    {LEMMA: "janvier", ORTH: "janv."},
-    {LEMMA: "février", ORTH: "févr."},
-    {LEMMA: "avril", ORTH: "avr."},
-    {LEMMA: "juillet", ORTH: "juill."},
-    {LEMMA: "septembre", ORTH: "sept."},
-    {LEMMA: "octobre", ORTH: "oct."},
-    {LEMMA: "novembre", ORTH: "nov."},
-    {LEMMA: "décembre", ORTH: "déc."},
-    {LEMMA: "après", ORTH: "apr."},
-    {LEMMA: "docteur", ORTH: "Dr."},
-    {LEMMA: "monsieur", ORTH: "M."},
-    {LEMMA: "monsieur", ORTH: "Mr."},
-    {LEMMA: "madame", ORTH: "Mme."},
-    {LEMMA: "mademoiselle", ORTH: "Mlle."},
-    {LEMMA: "numéro", ORTH: "n°"},
-    {LEMMA: "degrés", ORTH: "d°"},
-    {LEMMA: "saint", ORTH: "St."},
-    {LEMMA: "sainte", ORTH: "Ste."},
+    {ORTH: "av."},
+    {ORTH: "janv."},
+    {ORTH: "févr."},
+    {ORTH: "avr."},
+    {ORTH: "juill."},
+    {ORTH: "sept."},
+    {ORTH: "oct."},
+    {ORTH: "nov."},
+    {ORTH: "déc."},
+    {ORTH: "apr."},
+    {ORTH: "Dr."},
+    {ORTH: "M."},
+    {ORTH: "Mr."},
+    {ORTH: "Mme."},
+    {ORTH: "Mlle."},
+    {ORTH: "n°"},
+    {ORTH: "d°"},
+    {ORTH: "St."},
+    {ORTH: "Ste."},
 ]:
     _exc[exc_data[ORTH]] = [exc_data]
 
 
-for orth in ["etc."]:
+for orth in [
+    "après-midi",
+    "au-delà",
+    "au-dessus",
+    "celle-ci",
+    "celles-ci",
+    "celui-ci",
+    "cf.",
+    "ci-dessous",
+    "elle-même",
+    "en-dessous",
+    "etc.",
+    "jusque-là",
+    "lui-même",
+    "MM.",
+    "No.",
+    "peut-être",
+    "pp.",
+    "quelques-uns",
+    "rendez-vous",
+    "Vol.",
+]:
     _exc[orth] = [{ORTH: orth}]
 
 
-for verb, verb_lemma in [
-    ("a", "avoir"),
-    ("est", "être"),
-    ("semble", "sembler"),
-    ("indique", "indiquer"),
-    ("moque", "moquer"),
-    ("passe", "passer"),
+for verb in [
+    "a",
+    "est" "semble",
+    "indique",
+    "moque",
+    "passe",
 ]:
     for orth in [verb, verb.title()]:
         for pronoun in ["elle", "il", "on"]:
-            token = "{}-t-{}".format(orth, pronoun)
-            _exc[token] = [
-                {LEMMA: verb_lemma, ORTH: orth, TAG: "VERB"},
-                {LEMMA: "t", ORTH: "-t"},
-                {LEMMA: pronoun, ORTH: "-" + pronoun},
-            ]
+            token = f"{orth}-t-{pronoun}"
+            _exc[token] = [{ORTH: orth}, {ORTH: "-t"}, {ORTH: "-" + pronoun}]
 
-for verb, verb_lemma in [("est", "être")]:
+for verb in ["est"]:
     for orth in [verb, verb.title()]:
-        token = "{}-ce".format(orth)
-        _exc[token] = [
-            {LEMMA: verb_lemma, ORTH: orth, TAG: "VERB"},
-            {LEMMA: "ce", ORTH: "-ce"},
-        ]
+        _exc[f"{orth}-ce"] = [{ORTH: orth}, {ORTH: "-ce"}]
 
 
-for pre, pre_lemma in [("qu'", "que"), ("n'", "ne")]:
+for pre in ["qu'", "n'"]:
     for orth in [pre, pre.title()]:
-        _exc["%sest-ce" % orth] = [
-            {LEMMA: pre_lemma, ORTH: orth, TAG: "ADV"},
-            {LEMMA: "être", ORTH: "est", TAG: "VERB"},
-            {LEMMA: "ce", ORTH: "-ce"},
-        ]
+        _exc[f"{orth}est-ce"] = [{ORTH: orth}, {ORTH: "est"}, {ORTH: "-ce"}]
+
+
+for verb, pronoun in [("est", "il"), ("EST", "IL")]:
+    _exc[f"{verb}-{pronoun}"] = [{ORTH: verb}, {ORTH: "-" + pronoun}]
+
+
+for s, verb, pronoun in [("s", "est", "il"), ("S", "EST", "IL")]:
+    _exc[f"{s}'{verb}-{pronoun}"] = [
+        {ORTH: s + "'"},
+        {ORTH: verb},
+        {ORTH: "-" + pronoun},
+    ]
 
 
 _infixes_exc = []
@@ -417,11 +436,8 @@ _regular_exp += [
     for hc in _hyphen_combination
 ]
 
-# URLs
-_regular_exp.append(URL_PATTERN)
 
-
-TOKENIZER_EXCEPTIONS = _exc
+TOKENIZER_EXCEPTIONS = update_exc(BASE_EXCEPTIONS, _exc)
 TOKEN_MATCH = re.compile(
-    "|".join("(?:{})".format(m) for m in _regular_exp), re.IGNORECASE | re.UNICODE
+    "(?iu)" + "|".join("(?:{})".format(m) for m in _regular_exp)
 ).match

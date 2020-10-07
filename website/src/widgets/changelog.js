@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Fragment } from 'react'
 import { window } from 'browser-monads'
 
 import Link from '../components/link'
@@ -101,12 +101,12 @@ const Changelog = () => {
             </p>
 
             <p>
-                {prereleases.map(({ title, date, url, tag }) => (
-                    <>
+                {prereleases.map(({ title, date, url, tag }, i) => (
+                    <Fragment key={i}>
                         <Link to={url} hideIcon data-tooltip={`${date}: ${title}`}>
                             <InlineCode>{tag}</InlineCode>
                         </Link>{' '}
-                    </>
+                    </Fragment>
                 ))}
             </p>
         </>

@@ -1,9 +1,7 @@
 ---
-title: Architecture
-next: /api/annotation
+title: Library Architecture
+next: /api/architectures
 ---
-
-## Library architecture {#architecture}
 
 import Architecture101 from 'usage/101/\_architecture.md'
 

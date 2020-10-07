@@ -1,7 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
-
 import pytest
 
 
@@ -19,7 +15,7 @@ import pytest
         (",", False),
     ],
 )
-def test_lex_attrs_like_number(zh_tokenizer, text, match):
-    tokens = zh_tokenizer(text)
+def test_lex_attrs_like_number(zh_tokenizer_jieba, text, match):
+    tokens = zh_tokenizer_jieba(text)
     assert len(tokens) == 1
     assert tokens[0].like_num == match

@@ -1,10 +1,16 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 from mock import Mock
 from spacy.tokens import Doc, Span, Token
 from spacy.tokens.underscore import Underscore
+
+
+@pytest.fixture(scope="function", autouse=True)
+def clean_underscore():
+    # reset the Underscore object after the test, to avoid having state copied across tests
+    yield
+    Underscore.doc_extensions = {}
+    Underscore.span_extensions = {}
+    Underscore.token_extensions = {}
 
 
 def test_create_doc_underscore():

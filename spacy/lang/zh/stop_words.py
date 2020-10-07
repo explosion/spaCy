@@ -1,7 +1,3 @@
-# encoding: utf8
-from __future__ import unicode_literals
-
-
 # stop words as whitespace-separated list
 # Chinese stop words,maybe not enough
 STOP_WORDS = set(

@@ -1,33 +1,27 @@
-import React from 'react'
+import React, { Fragment } from 'react'
 import classNames from 'classnames'
 
-import Icon from './icon'
+import { replaceEmoji } from './icon'
 import { isString } from './util'
 import classes from '../styles/table.module.sass'
+
+const FOOT_ROW_REGEX = /^(RETURNS|YIELDS|CREATES|PRINTS|EXECUTES|UPLOADS|DOWNLOADS)/
 
 function isNum(children) {
     return isString(children) && /^\d+[.,]?[\dx]+?(|x|ms|mb|gb|k|m)?$/i.test(children)
 }
 
-function getCellContent(children) {
-    const icons = {
-        '✅': { name: 'yes', variant: 'success' },
-        '❌': { name: 'no', variant: 'error' },
+function isDividerRow(children) {
+    if (children.length && children[0].props && children[0].props.name == 'td') {
+        const tdChildren = children[0].props.children
+        if (tdChildren && !Array.isArray(tdChildren) && tdChildren.props) {
+            return tdChildren.props.name === 'em'
+        }
     }
-
-    if (isString(children) && icons[children.trim()]) {
-        const iconProps = icons[children.trim()]
-        return <Icon {...iconProps} />
-    }
-    // Work around prettier auto-escape
-    if (isString(children) && children.startsWith('\\')) {
-        return children.slice(1)
-    }
-    return children
+    return false
 }
 
 function isFootRow(children) {
-    const rowRegex = /^(RETURNS|YIELDS|CREATES|PRINTS)/
     if (children.length && children[0].props.name === 'td') {
         const cellChildren = children[0].props.children
         if (
@@ -36,7 +30,7 @@ function isFootRow(children) {
             cellChildren.props.children &&
             isString(cellChildren.props.children)
         ) {
-            return rowRegex.test(cellChildren.props.children)
+            return FOOT_ROW_REGEX.test(cellChildren.props.children)
         }
     }
     return false
@@ -49,13 +43,30 @@ export const Table = ({ fixed, className, ...props }) => {
     return <table className={tableClassNames} {...props} />
 }
 
-export const Th = props => <th className={classes.th} {...props} />
+export const Th = ({ children, ...props }) => {
+    const isRotated = children && !isString(children) && children.type && children.type.name == 'Tx'
+    const thClassNames = classNames(classes.th, { [classes.thRotated]: isRotated })
+    return (
+        <th className={thClassNames} {...props}>
+            {children}
+        </th>
+    )
+}
+
+// Rotated head, child of Th
+export const Tx = ({ children, ...props }) => (
+    <div className={classes.tx} {...props}>
+        <span>{children}</span>
+    </div>
+)
 
 export const Tr = ({ evenodd = true, children, ...props }) => {
     const foot = isFootRow(children)
+    const isDivider = isDividerRow(children)
     const trClasssNames = classNames({
         [classes.tr]: evenodd,
         [classes.footer]: foot,
+        [classes.divider]: isDivider,
         'table-footer': foot,
     })
 
@@ -67,7 +78,7 @@ export const Tr = ({ evenodd = true, children, ...props }) => {
 }
 
 export const Td = ({ num, nowrap, className, children, ...props }) => {
-    const content = getCellContent(children)
+    const { content } = replaceEmoji(children)
     const tdClassNames = classNames(classes.td, className, {
         [classes.num]: num || isNum(children),
         [classes.nowrap]: nowrap,

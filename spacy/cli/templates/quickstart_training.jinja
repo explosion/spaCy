@@ -1,0 +1,355 @@
+{# This is a template for training configs used for the quickstart widget in
+the docs and the init config command. It encodes various best practices and
+can help generate the best possible configuration, given a user's requirements. #}
+{%- set use_transformer = (transformer_data and hardware != "cpu") -%}
+{%- set transformer = transformer_data[optimize] if use_transformer else {} -%}
+[paths]
+train = null
+dev = null
+
+[system]
+{% if use_transformer -%}
+gpu_allocator = "pytorch"
+{% else -%}
+gpu_allocator = null
+{% endif %}
+
+[nlp]
+lang = "{{ lang }}"
+{%- set full_pipeline = ["transformer" if use_transformer else "tok2vec"] + components %}
+pipeline = {{ full_pipeline|pprint()|replace("'", '"')|safe }}
+tokenizer = {"@tokenizers": "spacy.Tokenizer.v1"}
+
+[components]
+
+{# TRANSFORMER PIPELINE #}
+{%- if use_transformer -%}
+[components.transformer]
+factory = "transformer"
+
+[components.transformer.model]
+@architectures = "spacy-transformers.TransformerModel.v1"
+name = "{{ transformer["name"] }}"
+tokenizer_config = {"use_fast": true}
+
+[components.transformer.model.get_spans]
+@span_getters = "spacy-transformers.strided_spans.v1"
+window = 128
+stride = 96
+
+{% if "morphologizer" in components %}
+[components.morphologizer]
+factory = "morphologizer"
+
+[components.morphologizer.model]
+@architectures = "spacy.Tagger.v1"
+nO = null
+
+[components.morphologizer.model.tok2vec]
+@architectures = "spacy-transformers.TransformerListener.v1"
+grad_factor = 1.0
+
+[components.morphologizer.model.tok2vec.pooling]
+@layers = "reduce_mean.v1"
+{%- endif %}
+
+{% if "tagger" in components %}
+[components.tagger]
+factory = "tagger"
+
+[components.tagger.model]
+@architectures = "spacy.Tagger.v1"
+nO = null
+
+[components.tagger.model.tok2vec]
+@architectures = "spacy-transformers.TransformerListener.v1"
+grad_factor = 1.0
+
+[components.tagger.model.tok2vec.pooling]
+@layers = "reduce_mean.v1"
+{%- endif %}
+
+{% if "parser" in components -%}
+[components.parser]
+factory = "parser"
+
+[components.parser.model]
+@architectures = "spacy.TransitionBasedParser.v1"
+state_type = "parser"
+extra_state_tokens = false
+hidden_width = 128
+maxout_pieces = 3
+use_upper = false
+nO = null
+
+[components.parser.model.tok2vec]
+@architectures = "spacy-transformers.TransformerListener.v1"
+grad_factor = 1.0
+
+[components.parser.model.tok2vec.pooling]
+@layers = "reduce_mean.v1"
+{%- endif %}
+
+{% if "ner" in components -%}
+[components.ner]
+factory = "ner"
+
+[components.ner.model]
+@architectures = "spacy.TransitionBasedParser.v1"
+state_type = "ner"
+extra_state_tokens = false
+hidden_width = 64
+maxout_pieces = 2
+use_upper = false
+nO = null
+
+[components.ner.model.tok2vec]
+@architectures = "spacy-transformers.TransformerListener.v1"
+grad_factor = 1.0
+
+[components.ner.model.tok2vec.pooling]
+@layers = "reduce_mean.v1"
+{% endif -%}
+
+{% if "entity_linker" in components -%}
+[components.entity_linker]
+factory = "entity_linker"
+get_candidates = {"@misc":"spacy.CandidateGenerator.v1"}
+incl_context = true
+incl_prior = true
+
+[components.entity_linker.model]
+@architectures = "spacy.EntityLinker.v1"
+nO = null
+
+[components.entity_linker.model.tok2vec]
+@architectures = "spacy-transformers.TransformerListener.v1"
+grad_factor = 1.0
+
+[components.entity_linker.model.tok2vec.pooling]
+@layers = "reduce_mean.v1"
+{% endif -%}
+
+{% if "textcat" in components %}
+[components.textcat]
+factory = "textcat"
+
+{% if optimize == "accuracy" %}
+[components.textcat.model]
+@architectures = "spacy.TextCatEnsemble.v1"
+exclusive_classes = false
+width = 64
+conv_depth = 2
+embed_size = 2000
+window_size = 1
+ngram_size = 1
+nO = null
+
+{% else -%}
+[components.textcat.model]
+@architectures = "spacy.TextCatBOW.v1"
+exclusive_classes = false
+ngram_size = 1
+no_output_layer = false
+{%- endif %}
+{%- endif %}
+
+{# NON-TRANSFORMER PIPELINE #}
+{% else -%}
+
+{%- if hardware == "gpu" -%}
+# There are no recommended transformer weights available for language '{{ lang }}'
+# yet, so the pipeline described here is not transformer-based.
+{%- endif %}
+
+[components.tok2vec]
+factory = "tok2vec"
+
+[components.tok2vec.model]
+@architectures = "spacy.Tok2Vec.v1"
+
+[components.tok2vec.model.embed]
+@architectures = "spacy.MultiHashEmbed.v1"
+width = ${components.tok2vec.model.encode.width}
+{% if has_letters -%}
+attrs = ["NORM", "PREFIX", "SUFFIX", "SHAPE"]
+rows = [5000, 2500, 2500, 2500]
+{% else -%}
+attrs = ["ORTH", "SHAPE"]
+rows = [5000, 2500]
+{% endif -%}
+include_static_vectors = {{ "true" if optimize == "accuracy" else "false" }}
+
+[components.tok2vec.model.encode]
+@architectures = "spacy.MaxoutWindowEncoder.v1"
+width = {{ 96 if optimize == "efficiency" else 256 }}
+depth = {{ 4 if optimize == "efficiency" else 8 }}
+window_size = 1
+maxout_pieces = 3
+
+{% if "morphologizer" in components %}
+[components.morphologizer]
+factory = "morphologizer"
+
+[components.morphologizer.model]
+@architectures = "spacy.Tagger.v1"
+nO = null
+
+[components.morphologizer.model.tok2vec]
+@architectures = "spacy.Tok2VecListener.v1"
+width = ${components.tok2vec.model.encode.width}
+{%- endif %}
+
+{% if "tagger" in components %}
+[components.tagger]
+factory = "tagger"
+
+[components.tagger.model]
+@architectures = "spacy.Tagger.v1"
+nO = null
+
+[components.tagger.model.tok2vec]
+@architectures = "spacy.Tok2VecListener.v1"
+width = ${components.tok2vec.model.encode.width}
+{%- endif %}
+
+{% if "parser" in components -%}
+[components.parser]
+factory = "parser"
+
+[components.parser.model]
+@architectures = "spacy.TransitionBasedParser.v1"
+state_type = "parser"
+extra_state_tokens = false
+hidden_width = 128
+maxout_pieces = 3
+use_upper = true
+nO = null
+
+[components.parser.model.tok2vec]
+@architectures = "spacy.Tok2VecListener.v1"
+width = ${components.tok2vec.model.encode.width}
+{%- endif %}
+
+{% if "ner" in components %}
+[components.ner]
+factory = "ner"
+
+[components.ner.model]
+@architectures = "spacy.TransitionBasedParser.v1"
+state_type = "ner"
+extra_state_tokens = false
+hidden_width = 64
+maxout_pieces = 2
+use_upper = true
+nO = null
+
+[components.ner.model.tok2vec]
+@architectures = "spacy.Tok2VecListener.v1"
+width = ${components.tok2vec.model.encode.width}
+{% endif %}
+
+{% if "entity_linker" in components -%}
+[components.entity_linker]
+factory = "entity_linker"
+get_candidates = {"@misc":"spacy.CandidateGenerator.v1"}
+incl_context = true
+incl_prior = true
+
+[components.entity_linker.model]
+@architectures = "spacy.EntityLinker.v1"
+nO = null
+
+[components.entity_linker.model.tok2vec]
+@architectures = "spacy.Tok2VecListener.v1"
+width = ${components.tok2vec.model.encode.width}
+{% endif %}
+
+{% if "textcat" in components %}
+[components.textcat]
+factory = "textcat"
+
+{% if optimize == "accuracy" %}
+[components.textcat.model]
+@architectures = "spacy.TextCatEnsemble.v1"
+exclusive_classes = false
+width = 64
+conv_depth = 2
+embed_size = 2000
+window_size = 1
+ngram_size = 1
+nO = null
+
+{% else -%}
+[components.textcat.model]
+@architectures = "spacy.TextCatBOW.v1"
+exclusive_classes = false
+ngram_size = 1
+no_output_layer = false
+{%- endif %}
+{%- endif %}
+{% endif %}
+
+{% for pipe in components %}
+{% if pipe not in ["tagger", "morphologizer", "parser", "ner", "textcat", "entity_linker"] %}
+{# Other components defined by the user: we just assume they're factories #}
+[components.{{ pipe }}]
+factory = "{{ pipe }}"
+{% endif %}
+{% endfor %}
+
+[corpora]
+
+[corpora.train]
+@readers = "spacy.Corpus.v1"
+path = ${paths.train}
+max_length = {{ 500 if hardware == "gpu" else 2000 }}
+
+[corpora.dev]
+@readers = "spacy.Corpus.v1"
+path = ${paths.dev}
+max_length = 0
+
+[training]
+{% if use_transformer -%}
+accumulate_gradient = {{ transformer["size_factor"] }}
+{% endif -%}
+dev_corpus = "corpora.dev"
+train_corpus = "corpora.train"
+
+[training.optimizer]
+@optimizers = "Adam.v1"
+
+{% if use_transformer -%}
+[training.optimizer.learn_rate]
+@schedules = "warmup_linear.v1"
+warmup_steps = 250
+total_steps = 20000
+initial_rate = 5e-5
+{% endif %}
+
+{% if use_transformer %}
+[training.batcher]
+@batchers = "spacy.batch_by_padded.v1"
+discard_oversize = true
+size = 2000
+buffer = 256
+{%- else %}
+[training.batcher]
+@batchers = "spacy.batch_by_words.v1"
+discard_oversize = false
+tolerance = 0.2
+
+[training.batcher.size]
+@schedules = "compounding.v1"
+start = 100
+stop = 1000
+compound = 1.001
+{% endif %}
+
+[initialize]
+{% if use_transformer or optimize == "efficiency" or not word_vectors -%}
+vectors = null
+{% else -%}
+vectors = "{{ word_vectors }}"
+{% endif -%}

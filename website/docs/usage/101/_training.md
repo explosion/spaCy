@@ -1,26 +1,30 @@
-spaCy's models are **statistical** and every "decision" they make – for example,
+spaCy's tagger, parser, text categorizer and many other components are powered
+by **statistical models**. Every "decision" these components make – for example,
 which part-of-speech tag to assign, or whether a word is a named entity – is a
-**prediction**. This prediction is based on the examples the model has seen
-during **training**. To train a model, you first need training data – examples
-of text, and the labels you want the model to predict. This could be a
-part-of-speech tag, a named entity or any other information.
+**prediction** based on the model's current **weight values**. The weight values
+are estimated based on examples the model has seen during **training**. To train
+a model, you first need training data – examples of text, and the labels you
+want the model to predict. This could be a part-of-speech tag, a named entity or
+any other information.
 
-The model is then shown the unlabelled text and will make a prediction. Because
-we know the correct answer, we can give the model feedback on its prediction in
-the form of an **error gradient** of the **loss function** that calculates the
-difference between the training example and the expected output. The greater the
-difference, the more significant the gradient and the updates to our model.
+Training is an iterative process in which the model's predictions are compared
+against the reference annotations in order to estimate the **gradient of the
+loss**. The gradient of the loss is then used to calculate the gradient of the
+weights through [backpropagation](https://thinc.ai/backprop101). The gradients
+indicate how the weight values should be changed so that the model's predictions
+become more similar to the reference labels over time.
 
 > - **Training data:** Examples and their annotations.
 > - **Text:** The input text the model should predict a label for.
 > - **Label:** The label the model should predict.
-> - **Gradient:** Gradient of the loss function calculating the difference
->   between input and expected output.
+> - **Gradient:** The direction and rate of change for a numeric value.
+>   Minimising the gradient of the weights should result in predictions that are
+>   closer to the reference labels on the training data.
 
 ![The training process](../../images/training.svg)
 
 When training a model, we don't just want it to memorize our examples – we want
-it to come up with a theory that can be **generalized across other examples**.
+it to come up with a theory that can be **generalized across unseen data**.
 After all, we don't just want the model to learn that this one instance of
 "Amazon" right here is a company – we want it to learn that "Amazon", in
 contexts _like this_, is most likely a company. That's why the training data
@@ -34,5 +38,4 @@ it's learning the right things, you don't only need **training data** – you'll
 also need **evaluation data**. If you only test the model with the data it was
 trained on, you'll have no idea how well it's generalizing. If you want to train
 a model from scratch, you usually need at least a few hundred examples for both
-training and evaluation. To update an existing model, you can already achieve
-decent results with very few examples – as long as they're representative.
+training and evaluation.

@@ -1,21 +1,21 @@
-# cython: infer_types=True
-# cython: profile=True
-# coding: utf8
-from spacy.errors import Errors, Warnings, user_warning
-
-from pathlib import Path
+# cython: infer_types=True, profile=True
+from typing import Iterator
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
-
 from cpython.exc cimport PyErr_SetFromErrno
-
 from libc.stdio cimport fopen, fclose, fread, fwrite, feof, fseek
 from libc.stdint cimport int32_t, int64_t
+from libcpp.vector cimport vector
+
+from pathlib import Path
+import warnings
+
+from spacy.strings import StringStore
+
+from spacy import util
 
 from .typedefs cimport hash_t
-
-from os import path
-from libcpp.vector cimport vector
+from .errors import Errors, Warnings
 
 
 cdef class Candidate:
@@ -24,7 +24,7 @@ cdef class Candidate:
     algorithm which will disambiguate the various candidates to the correct one.
     Each candidate (alias, entity) pair is assigned to a certain prior probability.
 
-    DOCS: https://spacy.io/api/kb/#candidate_init
+    DOCS: https://nightly.spacy.io/api/kb/#candidate_init
     """
 
     def __init__(self, KnowledgeBase kb, entity_hash, entity_freq, entity_vector, alias_hash, prior_prob):
@@ -42,7 +42,7 @@ cdef class Candidate:
 
     @property
     def entity_(self):
-        """RETURNS (unicode): ID/name of this entity in the KB"""
+        """RETURNS (str): ID/name of this entity in the KB"""
         return self.kb.vocab.strings[self.entity_hash]
 
     @property
@@ -52,7 +52,7 @@ cdef class Candidate:
 
     @property
     def alias_(self):
-        """RETURNS (unicode): ID of the original alias"""
+        """RETURNS (str): ID of the original alias"""
         return self.kb.vocab.strings[self.alias_hash]
 
     @property
@@ -68,21 +68,33 @@ cdef class Candidate:
         return self.prior_prob
 
 
+def get_candidates(KnowledgeBase kb, span) -> Iterator[Candidate]:
+    """
+    Return candidate entities for a given span by using the text of the span as the alias
+    and fetching appropriate entries from the index.
+    This particular function is optimized to work with the built-in KB functionality,
+    but any other custom candidate generation method can be used in combination with the KB as well.
+    """
+    return kb.get_alias_candidates(span.text)
+
+
 cdef class KnowledgeBase:
     """A `KnowledgeBase` instance stores unique identifiers for entities and their textual aliases,
     to support entity linking of named entities to real-world concepts.
 
-    DOCS: https://spacy.io/api/kb
+    DOCS: https://nightly.spacy.io/api/kb
     """
 
-    def __init__(self, Vocab vocab, entity_vector_length=64):
-        self.vocab = vocab
+    contents_loc = "contents"
+    strings_loc = "strings.json"
+
+    def __init__(self, Vocab vocab, entity_vector_length):
+        """Create a KnowledgeBase."""
         self.mem = Pool()
         self.entity_vector_length = entity_vector_length
-
         self._entry_index = PreshMap()
         self._alias_index = PreshMap()
-
+        self.vocab = vocab
         self.vocab.strings.add("")
         self._create_empty_vectors(dummy_hash=self.vocab.strings[""])
 
@@ -115,7 +127,7 @@ cdef class KnowledgeBase:
 
         # Return if this entity was added before
         if entity_hash in self._entry_index:
-            user_warning(Warnings.W018.format(entity=entity))
+            warnings.warn(Warnings.W018.format(entity=entity))
             return
 
         # Raise an error if the provided entity vector is not of the correct length
@@ -136,29 +148,34 @@ cdef class KnowledgeBase:
         if len(entity_list) != len(freq_list) or len(entity_list) != len(vector_list):
             raise ValueError(Errors.E140)
 
-        nr_entities = len(entity_list)
+        nr_entities = len(set(entity_list))
         self._entry_index = PreshMap(nr_entities+1)
         self._entries = entry_vec(nr_entities+1)
 
         i = 0
         cdef KBEntryC entry
         cdef hash_t entity_hash
-        while i < nr_entities:
-            entity_vector = vector_list[i]
-            if len(entity_vector) != self.entity_vector_length:
-                raise ValueError(Errors.E141.format(found=len(entity_vector), required=self.entity_vector_length))
-
+        while i < len(entity_list):
+            # only process this entity if its unique ID hadn't been added before
             entity_hash = self.vocab.strings.add(entity_list[i])
-            entry.entity_hash = entity_hash
-            entry.freq = freq_list[i]
+            if entity_hash in self._entry_index:
+                warnings.warn(Warnings.W018.format(entity=entity_list[i]))
 
-            vector_index = self.c_add_vector(entity_vector=vector_list[i])
-            entry.vector_index = vector_index
+            else:
+                entity_vector = vector_list[i]
+                if len(entity_vector) != self.entity_vector_length:
+                    raise ValueError(Errors.E141.format(found=len(entity_vector), required=self.entity_vector_length))
 
-            entry.feats_row = -1   # Features table currently not implemented
+                entry.entity_hash = entity_hash
+                entry.freq = freq_list[i]
 
-            self._entries[i+1] = entry
-            self._entry_index[entity_hash] = i+1
+                vector_index = self.c_add_vector(entity_vector=vector_list[i])
+                entry.vector_index = vector_index
+
+                entry.feats_row = -1   # Features table currently not implemented
+
+                self._entries[i+1] = entry
+                self._entry_index[entity_hash] = i+1
 
             i += 1
 
@@ -190,7 +207,7 @@ cdef class KnowledgeBase:
 
         # Check whether this alias was added before
         if alias_hash in self._alias_index:
-            user_warning(Warnings.W017.format(alias=alias))
+            warnings.warn(Warnings.W017.format(alias=alias))
             return
 
         cdef vector[int64_t] entry_indices
@@ -247,7 +264,7 @@ cdef class KnowledgeBase:
 
         if is_present:
             if not ignore_warnings:
-                user_warning(Warnings.W024.format(entity=entity, alias=alias))
+                warnings.warn(Warnings.W024.format(entity=entity, alias=alias))
         else:
             entry_indices.push_back(int(entry_index))
             alias_entry.entry_indices = entry_indices
@@ -257,8 +274,7 @@ cdef class KnowledgeBase:
             alias_entry.probs = probs
             self._aliases_table[alias_index] = alias_entry
 
-
-    def get_candidates(self, unicode alias):
+    def get_alias_candidates(self, unicode alias) -> Iterator[Candidate]:
         """
         Return candidate entities for an alias. Each candidate defines the entity, the original alias,
         and the prior probability of that alias resolving to that entity.
@@ -308,9 +324,29 @@ cdef class KnowledgeBase:
 
         return 0.0
 
+    def to_disk(self, path):
+        path = util.ensure_path(path)
+        if not path.exists():
+            path.mkdir(parents=True)
+        if not path.is_dir():
+            raise ValueError(Errors.E928.format(loc=path))
+        self.write_contents(path / self.contents_loc)
+        self.vocab.strings.to_disk(path / self.strings_loc)
 
-    def dump(self, loc):
-        cdef Writer writer = Writer(loc)
+    def from_disk(self, path):
+        path = util.ensure_path(path)
+        if not path.exists():
+            raise ValueError(Errors.E929.format(loc=path))
+        if not path.is_dir():
+            raise ValueError(Errors.E928.format(loc=path))
+        self.read_contents(path / self.contents_loc)
+        kb_strings = StringStore()
+        kb_strings.from_disk(path / self.strings_loc)
+        for string in kb_strings:
+            self.vocab.strings.add(string)
+
+    def write_contents(self, file_path):
+        cdef Writer writer = Writer(file_path)
         writer.write_header(self.get_size_entities(), self.entity_vector_length)
 
         # dumping the entity vectors in their original order
@@ -349,7 +385,7 @@ cdef class KnowledgeBase:
 
         writer.close()
 
-    cpdef load_bulk(self, loc):
+    def read_contents(self, file_path):
         cdef hash_t entity_hash
         cdef hash_t alias_hash
         cdef int64_t entry_index
@@ -359,7 +395,7 @@ cdef class KnowledgeBase:
         cdef AliasC alias
         cdef float vector_element
 
-        cdef Reader reader = Reader(loc)
+        cdef Reader reader = Reader(file_path)
 
         # STEP 0: load header and initialize KB
         cdef int64_t nr_entities
@@ -440,15 +476,13 @@ cdef class KnowledgeBase:
 
 
 cdef class Writer:
-    def __init__(self, object loc):
-        if path.exists(loc):
-            assert not path.isdir(loc), "%s is directory." % loc
-        if isinstance(loc, Path):
-            loc = bytes(loc)
-        cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
+    def __init__(self, path):
+        assert isinstance(path, Path)
+        content = bytes(path)
+        cdef bytes bytes_loc = content.encode('utf8') if type(content) == unicode else content
         self._fp = fopen(<char*>bytes_loc, 'wb')
         if not self._fp:
-            raise IOError(Errors.E146.format(path=loc))
+            raise IOError(Errors.E146.format(path=path))
         fseek(self._fp, 0, 0)
 
     def close(self):
@@ -485,12 +519,9 @@ cdef class Writer:
 
 
 cdef class Reader:
-    def __init__(self, object loc):
-        assert path.exists(loc)
-        assert not path.isdir(loc)
-        if isinstance(loc, Path):
-            loc = bytes(loc)
-        cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
+    def __init__(self, path):
+        content = bytes(path)
+        cdef bytes bytes_loc = content.encode('utf8') if type(content) == unicode else content
         self._fp = fopen(<char*>bytes_loc, 'rb')
         if not self._fp:
             PyErr_SetFromErrno(IOError)
@@ -579,5 +610,3 @@ cdef class Reader:
     cdef int _read(self, void* value, size_t size) except -1:
         status = fread(value, size, 1, self._fp)
         return status
-
-

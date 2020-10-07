@@ -1,14 +1,9 @@
-# coding: utf8
-# cython: infer_types=True
-# cython: bounds_check=False
-# cython: profile=True
-from __future__ import unicode_literals
-
+# cython: infer_types=True, bounds_check=False, profile=True
 from libc.string cimport memcpy, memset
 from libc.stdlib cimport malloc, free
 from cymem.cymem cimport Pool
-from thinc.neural.util import get_array_module
 
+from thinc.api import get_array_module
 import numpy
 
 from .doc cimport Doc, set_children_from_heads, token_by_start, token_by_end
@@ -16,7 +11,8 @@ from .span cimport Span
 from .token cimport Token
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..structs cimport LexemeC, TokenC
-from ..attrs cimport TAG
+from ..attrs cimport MORPH
+from ..vocab cimport Vocab
 
 from .underscore import is_writable_attr
 from ..attrs import intify_attrs
@@ -28,8 +24,8 @@ from ..strings import get_string_id
 cdef class Retokenizer:
     """Helper class for doc.retokenize() context manager.
 
-    DOCS: https://spacy.io/api/doc#retokenize
-    USAGE: https://spacy.io/usage/linguistic-features#retokenization
+    DOCS: https://nightly.spacy.io/api/doc#retokenize
+    USAGE: https://nightly.spacy.io/usage/linguistic-features#retokenization
     """
     cdef Doc doc
     cdef list merges
@@ -51,23 +47,18 @@ cdef class Retokenizer:
         span (Span): The span to merge.
         attrs (dict): Attributes to set on the merged token.
 
-        DOCS: https://spacy.io/api/doc#retokenizer.merge
+        DOCS: https://nightly.spacy.io/api/doc#retokenizer.merge
         """
         if (span.start, span.end) in self._spans_to_merge:
             return
+        if span.end - span.start <= 0:
+            raise ValueError(Errors.E199.format(start=span.start, end=span.end))
         for token in span:
             if token.i in self.tokens_to_merge:
                 raise ValueError(Errors.E102.format(token=repr(token)))
             self.tokens_to_merge.add(token.i)
         self._spans_to_merge.append((span.start, span.end))
-        if "_" in attrs:  # Extension attributes
-            extensions = attrs["_"]
-            _validate_extensions(extensions)
-            attrs = {key: value for key, value in attrs.items() if key != "_"}
-            attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
-            attrs["_"] = extensions
-        else:
-            attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
+        attrs = normalize_token_attrs(self.doc.vocab, attrs)
         self.merges.append((span, attrs))
 
     def split(self, Token token, orths, heads, attrs=SimpleFrozenDict()):
@@ -82,7 +73,7 @@ cdef class Retokenizer:
         attrs (dict): Attributes to set on all split tokens. Attribute names
             mapped to list of per-token attribute values.
 
-        DOCS: https://spacy.io/api/doc#retokenizer.split
+        DOCS: https://nightly.spacy.io/api/doc#retokenizer.split
         """
         if ''.join(orths) != token.text:
             raise ValueError(Errors.E117.format(new=''.join(orths), old=token.text))
@@ -99,6 +90,11 @@ cdef class Retokenizer:
             # NB: Since we support {"KEY": [value, value]} syntax here, this
             # will only "intify" the keys, not the values
             attrs = intify_attrs(attrs, strings_map=self.doc.vocab.strings)
+        if MORPH in attrs:
+            for i, morph in enumerate(attrs[MORPH]):
+                # add and set to normalized value
+                morph = self.doc.vocab.morphology.add(self.doc.vocab.strings.as_string(morph))
+                attrs[MORPH][i] = morph
         head_offsets = []
         for head in heads:
             if isinstance(head, Token):
@@ -173,6 +169,8 @@ def _merge(Doc doc, merges):
         spans.append(span)
         # House the new merged token where it starts
         token = &doc.c[start]
+        start_ent_iob = doc.c[start].ent_iob
+        start_ent_type = doc.c[start].ent_type
         # Initially set attributes to attributes of span root
         token.tag = doc.c[span.root.i].tag
         token.pos = doc.c[span.root.i].pos
@@ -185,8 +183,8 @@ def _merge(Doc doc, merges):
             merged_iob = 3
             # If start token is I-ENT and previous token is of the same
             # type, then I-ENT (could check I-ENT from start to span root)
-            if doc.c[start].ent_iob == 1 and start > 0 \
-                    and doc.c[start].ent_type == token.ent_type \
+            if start_ent_iob == 1 and start > 0 \
+                    and start_ent_type == token.ent_type \
                     and doc.c[start - 1].ent_type == token.ent_type:
                 merged_iob = 1
         token.ent_iob = merged_iob
@@ -213,26 +211,16 @@ def _merge(Doc doc, merges):
         new_orth = ''.join([t.text_with_ws for t in spans[token_index]])
         if spans[token_index][-1].whitespace_:
             new_orth = new_orth[:-len(spans[token_index][-1].whitespace_)]
+        # add the vector of the (merged) entity to the vocab
+        if not doc.vocab.get_vector(new_orth).any():
+            if doc.vocab.vectors_length > 0:
+                doc.vocab.set_vector(new_orth, span.vector)
         token = tokens[token_index]
         lex = doc.vocab.get(doc.mem, new_orth)
         token.lex = lex
         # We set trailing space here too
         token.spacy = doc.c[spans[token_index].end-1].spacy
-        py_token = span[0]
-        # Assign attributes
-        for attr_name, attr_value in attributes.items():
-            if attr_name == "_":  # Set extension attributes
-                for ext_attr_key, ext_attr_value in attr_value.items():
-                    py_token._.set(ext_attr_key, ext_attr_value)
-            elif attr_name == TAG:
-                doc.vocab.morphology.assign_tag(token, attr_value)
-            else:
-                # Set attributes on both token and lexeme to take care of token
-                # attribute vs. lexical attribute without having to enumerate
-                # them. If an attribute name is not valid, set_struct_attr will
-                # ignore it.
-                Token.set_struct_attr(token, attr_name, attr_value)
-                Lexeme.set_struct_attr(<LexemeC*>lex, attr_name, attr_value)
+        set_token_attrs(span[0], attributes)
     # Begin by setting all the head indices to absolute token positions
     # This is easier to work with for now than the offsets
     # Before thinking of something simpler, beware the case where a
@@ -286,7 +274,7 @@ def _merge(Doc doc, merges):
     for i in range(doc.length):
         doc.c[i].head -= i
     # Set the left/right children, left/right edges
-    set_children_from_heads(doc.c, doc.length)
+    set_children_from_heads(doc.c, 0, doc.length)
     # Make sure ent_iob remains consistent
     make_iob_consistent(doc.c, doc.length)
     # Return the merged Python object
@@ -306,6 +294,7 @@ def _split(Doc doc, int token_index, orths, heads, attrs):
     """Retokenize the document, such that the token at
     `doc[token_index]` is split into tokens with the orth 'orths'
     token_index(int): token index of the token to split.
+
     orths: IDs of the verbatim text content of the tokens to create
     **attributes: Attributes to assign to each of the newly created tokens. By default,
         attributes are inherited from the original token.
@@ -347,6 +336,7 @@ def _split(Doc doc, int token_index, orths, heads, attrs):
         lex = doc.vocab.get(doc.mem, orth)
         token.lex = lex
         token.lemma = 0  # reset lemma
+        token.norm = 0  # reset norm
         if to_process_tensor:
             # setting the tensors of the split tokens to array of zeros
             doc.tensor[token_index + i] = xp.zeros((1,doc.tensor.shape[1]), dtype="float32")
@@ -378,8 +368,6 @@ def _split(Doc doc, int token_index, orths, heads, attrs):
                     doc[token_index + i]._.set(ext_attr_key, ext_attr_value)
             # NB: We need to call get_string_id here because only the keys are
             # "intified" (since we support "KEY": [value, value] syntax here).
-            elif attr_name == TAG:
-                doc.vocab.morphology.assign_tag(token, get_string_id(attr_value))
             else:
                 # Set attributes on both token and lexeme to take care of token
                 # attribute vs. lexical attribute without having to enumerate
@@ -394,7 +382,7 @@ def _split(Doc doc, int token_index, orths, heads, attrs):
     for i in range(doc.length):
         doc.c[i].head -= i
     # set children from head
-    set_children_from_heads(doc.c, doc.length)
+    set_children_from_heads(doc.c, 0, doc.length)
 
 
 def _validate_extensions(extensions):
@@ -416,3 +404,37 @@ cdef make_iob_consistent(TokenC* tokens, int length):
     for i in range(1, length):
         if tokens[i].ent_iob == 1 and tokens[i - 1].ent_type != tokens[i].ent_type:
             tokens[i].ent_iob = 3
+
+
+def normalize_token_attrs(Vocab vocab, attrs):
+    if "_" in attrs:  # Extension attributes
+        extensions = attrs["_"]
+        _validate_extensions(extensions)
+        attrs = {key: value for key, value in attrs.items() if key != "_"}
+        attrs = intify_attrs(attrs, strings_map=vocab.strings)
+        attrs["_"] = extensions
+    else:
+        attrs = intify_attrs(attrs, strings_map=vocab.strings)
+    if MORPH in attrs:
+        # add and set to normalized value
+        morph = vocab.morphology.add(vocab.strings.as_string(attrs[MORPH]))
+        attrs[MORPH] = morph
+    return attrs
+
+
+def set_token_attrs(Token py_token, attrs):
+    cdef TokenC* token = py_token.c
+    cdef const LexemeC* lex = token.lex
+    cdef Doc doc = py_token.doc
+    # Assign attributes
+    for attr_name, attr_value in attrs.items():
+        if attr_name == "_":  # Set extension attributes
+            for ext_attr_key, ext_attr_value in attr_value.items():
+                py_token._.set(ext_attr_key, ext_attr_value)
+        else:
+            # Set attributes on both token and lexeme to take care of token
+            # attribute vs. lexical attribute without having to enumerate
+            # them. If an attribute name is not valid, set_struct_attr will
+            # ignore it.
+            Token.set_struct_attr(token, attr_name, attr_value)
+            Lexeme.set_struct_attr(<LexemeC*>lex, attr_name, attr_value)

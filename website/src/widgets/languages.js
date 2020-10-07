@@ -22,7 +22,7 @@ const Language = ({ name, code, models }) => (
         <Td>
             {models && models.length ? (
                 <Link to={`/models/${code}`}>
-                    {models.length} {models.length === 1 ? 'model' : 'models'}
+                    {models.length} {models.length === 1 ? 'package' : 'packages'}
                 </Link>
             ) : (
                 <em>none yet</em>
@@ -38,10 +38,10 @@ const Languages = () => (
             const langs = site.siteMetadata.languages
             const withModels = langs
                 .filter(({ models }) => models && !!models.length)
-                .sort((a, b) => a.code.localeCompare(b.code))
+                .sort((a, b) => a.name.localeCompare(b.name))
             const withoutModels = langs
                 .filter(({ models }) => !models || !models.length)
-                .sort((a, b) => a.code.localeCompare(b.code))
+                .sort((a, b) => a.name.localeCompare(b.name))
             const withDeps = langs.filter(({ dependencies }) => dependencies && dependencies.length)
             return (
                 <>
@@ -51,7 +51,7 @@ const Languages = () => (
                                 <Th>Language</Th>
                                 <Th>Code</Th>
                                 <Th>Language Data</Th>
-                                <Th>Models</Th>
+                                <Th>Pipelines</Th>
                             </Tr>
                         </thead>
                         <tbody>

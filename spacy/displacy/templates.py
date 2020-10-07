@@ -1,7 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-
 # Setting explicit height and max-width: none on the SVG is required for
 # Jupyter to render it properly in a cell
 
@@ -13,6 +9,15 @@ TPL_DEP_SVG = """
 TPL_DEP_WORDS = """
 <text class="displacy-token" fill="currentColor" text-anchor="middle" y="{y}">
     <tspan class="displacy-word" fill="currentColor" x="{x}">{text}</tspan>
+    <tspan class="displacy-tag" dy="2em" fill="currentColor" x="{x}">{tag}</tspan>
+</text>
+"""
+
+
+TPL_DEP_WORDS_LEMMA = """
+<text class="displacy-token" fill="currentColor" text-anchor="middle" y="{y}">
+    <tspan class="displacy-word" fill="currentColor" x="{x}">{text}</tspan>
+    <tspan class="displacy-lemma" dy="2em" fill="currentColor" x="{x}">{lemma}</tspan>
     <tspan class="displacy-tag" dy="2em" fill="currentColor" x="{x}">{tag}</tspan>
 </text>
 """
@@ -46,14 +51,14 @@ TPL_ENTS = """
 TPL_ENT = """
 <mark class="entity" style="background: {bg}; padding: 0.45em 0.6em; margin: 0 0.25em; line-height: 1; border-radius: 0.35em;">
     {text}
-    <span style="font-size: 0.8em; font-weight: bold; line-height: 1; border-radius: 0.35em; text-transform: uppercase; vertical-align: middle; margin-left: 0.5rem">{label}</span>
+    <span style="font-size: 0.8em; font-weight: bold; line-height: 1; border-radius: 0.35em; vertical-align: middle; margin-left: 0.5rem">{label}</span>
 </mark>
 """
 
 TPL_ENT_RTL = """
 <mark class="entity" style="background: {bg}; padding: 0.45em 0.6em; margin: 0 0.25em; line-height: 1; border-radius: 0.35em">
     {text}
-    <span style="font-size: 0.8em; font-weight: bold; line-height: 1; border-radius: 0.35em; text-transform: uppercase; vertical-align: middle; margin-right: 0.5rem">{label}</span>
+    <span style="font-size: 0.8em; font-weight: bold; line-height: 1; border-radius: 0.35em; vertical-align: middle; margin-right: 0.5rem">{label}</span>
 </mark>
 """
 
