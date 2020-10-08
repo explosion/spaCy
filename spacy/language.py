@@ -621,7 +621,6 @@ class Language:
         if not isinstance(config, dict):
             err = Errors.E962.format(style="config", name=name, cfg_type=type(config))
             raise ValueError(err)
-            raise ValueError(err)
         if not srsly.is_json_serializable(config):
             raise ValueError(Errors.E961.format(config=config))
         if not self.has_factory(factory_name):
