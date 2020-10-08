@@ -403,8 +403,8 @@ const Models = ({ pageContext, repo, children }) => {
                 <Section>
                     <p>
                         Starter packs are pretrained weights you can initialize your models with to
-                        achieve better accuracy. They can include word vectors (which will be used
-                        as features during training) or other pretrained representations like BERT.
+                        achieve better accuracy, like word vectors (which will be used as features
+                        during training).
                     </p>
                 </Section>
             )}

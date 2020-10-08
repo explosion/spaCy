@@ -1,13 +1,13 @@
 import { Help } from 'components/typography'; import Link from 'components/link'
 
-<!-- TODO: update numbers -->
+<!-- TODO: update numbers, add note on previous NER evaluation issues -->
 
 <figure>
 
 | Pipeline                                                   | Parser | Tagger |  NER | WPS<br />CPU <Help>words per second on CPU, higher is better</Help> | WPS<br/>GPU <Help>words per second on GPU, higher is better</Help> |
 | ---------------------------------------------------------- | -----: | -----: | ---: | ------------------------------------------------------------------: | -----------------------------------------------------------------: |
 | [`en_core_web_trf`](/models/en#en_core_web_trf) (spaCy v3) |        |        |      |                                                                     |                                                                 6k |
-| [`en_core_web_lg`](/models/en#en_core_web_lg) (spaCy v3)   |   92.1 |   97.4 | 87.0 |                                                                  7k |                                                                    |
+| [`en_core_web_lg`](/models/en#en_core_web_lg) (spaCy v3)   |   92.2 |   97.4 | 85.8 |                                                                  7k |                                                                    |
 | `en_core_web_lg` (spaCy v2)                                |   91.9 |   97.2 | 85.9 |                                                                 10k |                                                                    |
 
 <figcaption class="caption">
