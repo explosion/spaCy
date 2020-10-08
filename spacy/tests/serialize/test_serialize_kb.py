@@ -1,9 +1,9 @@
 from typing import Callable
 
 from spacy import util
-from spacy.lang.en import English
-from spacy.util import ensure_path, registry
+from spacy.util import ensure_path, registry, load_model_from_config
 from spacy.kb import KnowledgeBase
+from thinc.api import Config
 
 from ..util import make_tempdir
 from numpy import zeros
@@ -81,6 +81,28 @@ def _check_kb(kb):
 def test_serialize_subclassed_kb():
     """Check that IO of a custom KB works fine as part of an EL pipe."""
 
+    config_string = """
+    [nlp]
+    lang = "en"
+    pipeline = ["entity_linker"]
+
+    [components]
+
+    [components.entity_linker]
+    factory = "entity_linker"
+
+    [initialize]
+
+    [initialize.components]
+
+    [initialize.components.entity_linker]
+
+    [initialize.components.entity_linker.kb_loader]
+    @misc = "spacy.CustomKB.v1"
+    entity_vector_length = 342
+    custom_field = 666
+    """
+
     class SubKnowledgeBase(KnowledgeBase):
         def __init__(self, vocab, entity_vector_length, custom_field):
             super().__init__(vocab, entity_vector_length)
@@ -101,16 +123,11 @@ def test_serialize_subclassed_kb():
 
         return custom_kb_factory
 
-    nlp = English()
-    config = {
-        "kb_loader": {
-            "@misc": "spacy.CustomKB.v1",
-            "entity_vector_length": 342,
-            "custom_field": 666,
-        }
-    }
-    entity_linker = nlp.add_pipe("entity_linker", init_config=config)
+    config = Config().from_str(config_string)
+    nlp = load_model_from_config(config, auto_fill=True)
     nlp.initialize()
+
+    entity_linker = nlp.get_pipe("entity_linker")
     assert type(entity_linker.kb) == SubKnowledgeBase
     assert entity_linker.kb.entity_vector_length == 342
     assert entity_linker.kb.custom_field == 666

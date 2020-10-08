@@ -142,6 +142,12 @@ class EntityLinker(Pipe):
         # create an empty KB by default. If you want to load a predefined one, specify it in 'initialize'.
         self.kb = empty_kb(entity_vector_length)(self.vocab)
 
+    def set_kb(self, kb_loader: Callable[[Vocab], KnowledgeBase]):
+        """Define the KB of this pipe by providing a function that will
+        create it using this object's vocab."""
+        self.kb = kb_loader(self.vocab)
+        self.cfg["entity_vector_length"] = self.kb.entity_vector_length
+
     def validate_kb(self) -> None:
         # Raise an error if the knowledge base is not initialized.
         if len(self.kb) == 0:
@@ -168,8 +174,7 @@ class EntityLinker(Pipe):
         """
         self._ensure_examples(get_examples)
         if kb_loader is not None:
-            self.kb = kb_loader(self.vocab)
-            self.cfg["entity_vector_length"] = self.kb.entity_vector_length
+            self.set_kb(kb_loader)
         self.validate_kb()
         nO = self.kb.entity_vector_length
         doc_sample = []

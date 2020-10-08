@@ -130,18 +130,9 @@ def test_kb_custom_length(nlp):
     assert entity_linker.kb.entity_vector_length == 35
 
 
-def test_kb_undefined(nlp):
-    """Test that the EL can't train without defining a KB"""
-    entity_linker = nlp.add_pipe("entity_linker", config={})
-    with pytest.raises(ValueError):
-        entity_linker.initialize(lambda: [])
-
-
-def test_kb_empty(nlp):
-    """Test that the EL can't train with an empty KB"""
-    config = {"kb_loader": {"@misc": "spacy.EmptyKB.v1", "entity_vector_length": 342}}
-    entity_linker = nlp.add_pipe("entity_linker", init_config=config)
-    assert len(entity_linker.kb) == 0
+def test_kb_initialize_empty(nlp):
+    """Test that the EL can't initialize without examples"""
+    entity_linker = nlp.add_pipe("entity_linker")
     with pytest.raises(ValueError):
         entity_linker.initialize(lambda: [])
 
@@ -201,26 +192,21 @@ def test_el_pipe_configuration(nlp):
     ruler = nlp.add_pipe("entity_ruler")
     ruler.add_patterns([pattern])
 
-    @registry.misc.register("myAdamKB.v1")
-    def mykb() -> Callable[["Vocab"], KnowledgeBase]:
-        def create_kb(vocab):
-            kb = KnowledgeBase(vocab, entity_vector_length=1)
-            kb.add_entity(entity="Q2", freq=12, entity_vector=[2])
-            kb.add_entity(entity="Q3", freq=5, entity_vector=[3])
-            kb.add_alias(
-                alias="douglas", entities=["Q2", "Q3"], probabilities=[0.8, 0.1]
-            )
-            return kb
-
-        return create_kb
+    def create_kb(vocab):
+        kb = KnowledgeBase(vocab, entity_vector_length=1)
+        kb.add_entity(entity="Q2", freq=12, entity_vector=[2])
+        kb.add_entity(entity="Q3", freq=5, entity_vector=[3])
+        kb.add_alias(
+            alias="douglas", entities=["Q2", "Q3"], probabilities=[0.8, 0.1]
+        )
+        return kb
 
     # run an EL pipe without a trained context encoder, to check the candidate generation step only
-    nlp.add_pipe(
+    entity_linker = nlp.add_pipe(
         "entity_linker",
         config={"incl_context": False},
-        init_config={"kb_loader": {"@misc": "myAdamKB.v1"}},
     )
-    nlp.initialize()
+    entity_linker.set_kb(create_kb)
     # With the default get_candidates function, matching is case-sensitive
     text = "Douglas and douglas are not the same."
     doc = nlp(text)
@@ -236,18 +222,15 @@ def test_el_pipe_configuration(nlp):
         return get_lowercased_candidates
 
     # replace the pipe with a new one with with a different candidate generator
-    nlp.replace_pipe(
+    entity_linker = nlp.replace_pipe(
         "entity_linker",
         "entity_linker",
         config={
             "incl_context": False,
             "get_candidates": {"@misc": "spacy.LowercaseCandidateGenerator.v1"},
         },
-        init_config={
-            "kb_loader": {"@misc": "myAdamKB.v1"},
-        },
     )
-    nlp.initialize()
+    entity_linker.set_kb(create_kb)
     doc = nlp(text)
     assert doc[0].ent_kb_id_ == "Q2"
     assert doc[1].ent_kb_id_ == ""
@@ -339,19 +322,15 @@ def test_preserving_links_asdoc(nlp):
     """Test that Span.as_doc preserves the existing entity links"""
     vector_length = 1
 
-    @registry.misc.register("myLocationsKB.v1")
-    def dummy_kb() -> Callable[["Vocab"], KnowledgeBase]:
-        def create_kb(vocab):
-            mykb = KnowledgeBase(vocab, entity_vector_length=vector_length)
-            # adding entities
-            mykb.add_entity(entity="Q1", freq=19, entity_vector=[1])
-            mykb.add_entity(entity="Q2", freq=8, entity_vector=[1])
-            # adding aliases
-            mykb.add_alias(alias="Boston", entities=["Q1"], probabilities=[0.7])
-            mykb.add_alias(alias="Denver", entities=["Q2"], probabilities=[0.6])
-            return mykb
-
-        return create_kb
+    def create_kb(vocab):
+        mykb = KnowledgeBase(vocab, entity_vector_length=vector_length)
+        # adding entities
+        mykb.add_entity(entity="Q1", freq=19, entity_vector=[1])
+        mykb.add_entity(entity="Q2", freq=8, entity_vector=[1])
+        # adding aliases
+        mykb.add_alias(alias="Boston", entities=["Q1"], probabilities=[0.7])
+        mykb.add_alias(alias="Denver", entities=["Q2"], probabilities=[0.6])
+        return mykb
 
     # set up pipeline with NER (Entity Ruler) and NEL (prior probability only, model not trained)
     nlp.add_pipe("sentencizer")
@@ -362,8 +341,8 @@ def test_preserving_links_asdoc(nlp):
     ruler = nlp.add_pipe("entity_ruler")
     ruler.add_patterns(patterns)
     config = {"incl_prior": False}
-    init_config = {"kb_loader": {"@misc": "myLocationsKB.v1"}}
-    entity_linker = nlp.add_pipe("entity_linker", config=config, init_config=init_config, last=True)
+    entity_linker = nlp.add_pipe("entity_linker", config=config, last=True)
+    entity_linker.set_kb(create_kb)
     nlp.initialize()
     assert entity_linker.model.get_dim("nO") == vector_length
 
@@ -441,30 +420,26 @@ def test_overfitting_IO():
         doc = nlp(text)
         train_examples.append(Example.from_dict(doc, annotation))
 
-    @registry.misc.register("myOverfittingKB.v1")
-    def dummy_kb() -> Callable[["Vocab"], KnowledgeBase]:
-        def create_kb(vocab):
-            # create artificial KB - assign same prior weight to the two russ cochran's
-            # Q2146908 (Russ Cochran): American golfer
-            # Q7381115 (Russ Cochran): publisher
-            mykb = KnowledgeBase(vocab, entity_vector_length=vector_length)
-            mykb.add_entity(entity="Q2146908", freq=12, entity_vector=[6, -4, 3])
-            mykb.add_entity(entity="Q7381115", freq=12, entity_vector=[9, 1, -7])
-            mykb.add_alias(
-                alias="Russ Cochran",
-                entities=["Q2146908", "Q7381115"],
-                probabilities=[0.5, 0.5],
-            )
-            return mykb
-
-        return create_kb
+    def create_kb(vocab):
+        # create artificial KB - assign same prior weight to the two russ cochran's
+        # Q2146908 (Russ Cochran): American golfer
+        # Q7381115 (Russ Cochran): publisher
+        mykb = KnowledgeBase(vocab, entity_vector_length=vector_length)
+        mykb.add_entity(entity="Q2146908", freq=12, entity_vector=[6, -4, 3])
+        mykb.add_entity(entity="Q7381115", freq=12, entity_vector=[9, 1, -7])
+        mykb.add_alias(
+            alias="Russ Cochran",
+            entities=["Q2146908", "Q7381115"],
+            probabilities=[0.5, 0.5],
+        )
+        return mykb
 
     # Create the Entity Linker component and add it to the pipeline
     entity_linker = nlp.add_pipe(
         "entity_linker",
-        init_config={"kb_loader": {"@misc": "myOverfittingKB.v1"}},
         last=True,
     )
+    entity_linker.set_kb(create_kb)
 
     # train the NEL pipe
     optimizer = nlp.initialize(get_examples=lambda: train_examples)

@@ -600,7 +600,6 @@ class Language:
         *,
         config: Optional[Dict[str, Any]] = SimpleFrozenDict(),
         raw_config: Optional[Config] = None,
-        init_config: Optional[Dict[str, Any]] = SimpleFrozenDict(),
         validate: bool = True,
     ) -> Callable[[Doc], Doc]:
         """Create a pipeline component. Mostly used internally. To create and
@@ -612,9 +611,6 @@ class Language:
         config (Optional[Dict[str, Any]]): Config parameters to use for this
             component. Will be merged with default config, if available.
         raw_config (Optional[Config]): Internals: the non-interpolated config.
-        init_config (Optional[Dict[str, Any]]): Config parameters to use to
-            initialize this component. Will be used to update the internal
-            'initialize' config.
         validate (bool): Whether to validate the component config against the
             arguments and types expected by the factory.
         RETURNS (Callable[[Doc], Doc]): The pipeline component.
@@ -625,13 +621,9 @@ class Language:
         if not isinstance(config, dict):
             err = Errors.E962.format(style="config", name=name, cfg_type=type(config))
             raise ValueError(err)
-        if not isinstance(init_config, dict):
-            err = Errors.E962.format(style="init_config", name=name, cfg_type=type(init_config))
             raise ValueError(err)
         if not srsly.is_json_serializable(config):
             raise ValueError(Errors.E961.format(config=config))
-        if not srsly.is_json_serializable(init_config):
-            raise ValueError(Errors.E961.format(config=init_config))
         if not self.has_factory(factory_name):
             err = Errors.E002.format(
                 name=factory_name,
@@ -643,8 +635,6 @@ class Language:
             raise ValueError(err)
         pipe_meta = self.get_factory_meta(factory_name)
         config = config or {}
-        if init_config:
-            self._config["initialize"]["components"][name] = init_config
         # This is unideal, but the alternative would mean you always need to
         # specify the full config settings, which is not really viable.
         if pipe_meta.default_config:
@@ -719,7 +709,6 @@ class Language:
         source: Optional["Language"] = None,
         config: Optional[Dict[str, Any]] = SimpleFrozenDict(),
         raw_config: Optional[Config] = None,
-        init_config: Optional[Dict[str, Any]] = SimpleFrozenDict(),
         validate: bool = True,
     ) -> Callable[[Doc], Doc]:
         """Add a component to the processing pipeline. Valid components are
@@ -742,9 +731,6 @@ class Language:
         config (Optional[Dict[str, Any]]): Config parameters to use for this
             component. Will be merged with default config, if available.
         raw_config (Optional[Config]): Internals: the non-interpolated config.
-        init_config (Optional[Dict[str, Any]]): Config parameters to use to
-            initialize this component. Will be used to update the internal
-            'initialize' config.
         validate (bool): Whether to validate the component config against the
             arguments and types expected by the factory.
         RETURNS (Callable[[Doc], Doc]): The pipeline component.
@@ -778,7 +764,6 @@ class Language:
                 name=name,
                 config=config,
                 raw_config=raw_config,
-                init_config=init_config,
                 validate=validate,
             )
         pipe_index = self._get_pipe_index(before, after, first, last)
@@ -858,20 +843,17 @@ class Language:
         factory_name: str,
         *,
         config: Dict[str, Any] = SimpleFrozenDict(),
-        init_config: Dict[str, Any] = SimpleFrozenDict(),
         validate: bool = True,
-    ) -> None:
+    ) -> Callable[[Doc], Doc]:
         """Replace a component in the pipeline.
 
         name (str): Name of the component to replace.
         factory_name (str): Factory name of replacement component.
         config (Optional[Dict[str, Any]]): Config parameters to use for this
             component. Will be merged with default config, if available.
-        init_config (Optional[Dict[str, Any]]): Config parameters to use to
-            initialize this component. Will be used to update the internal
-            'initialize' config.
         validate (bool): Whether to validate the component config against the
             arguments and types expected by the factory.
+        RETURNS (Callable[[Doc], Doc]): The new pipeline component.
 
         DOCS: https://nightly.spacy.io/api/language#replace_pipe
         """
@@ -886,14 +868,15 @@ class Language:
         self.remove_pipe(name)
         if not len(self._components) or pipe_index == len(self._components):
             # we have no components to insert before/after, or we're replacing the last component
-            self.add_pipe(factory_name, name=name, config=config, init_config=init_config, validate=validate)
+            return self.add_pipe(
+                factory_name, name=name, config=config, validate=validate
+            )
         else:
-            self.add_pipe(
+            return self.add_pipe(
                 factory_name,
                 name=name,
                 before=pipe_index,
                 config=config,
-                init_config=init_config,
                 validate=validate,
             )
 
@@ -1321,7 +1304,11 @@ class Language:
             kwargs.setdefault("batch_size", batch_size)
             # non-trainable components may have a pipe() implementation that refers to dummy
             # predict and set_annotations methods
-            if not hasattr(pipe, "pipe") or not hasattr(pipe, "is_trainable") or not pipe.is_trainable():
+            if (
+                not hasattr(pipe, "pipe")
+                or not hasattr(pipe, "is_trainable")
+                or not pipe.is_trainable()
+            ):
                 docs = _pipe(docs, pipe, kwargs)
             else:
                 docs = pipe.pipe(docs, **kwargs)
@@ -1433,7 +1420,11 @@ class Language:
             kwargs.setdefault("batch_size", batch_size)
             # non-trainable components may have a pipe() implementation that refers to dummy
             # predict and set_annotations methods
-            if hasattr(proc, "pipe") and hasattr(proc, "is_trainable") and proc.is_trainable():
+            if (
+                hasattr(proc, "pipe")
+                and hasattr(proc, "is_trainable")
+                and proc.is_trainable()
+            ):
                 f = functools.partial(proc.pipe, **kwargs)
             else:
                 # Apply the function, but yield the doc

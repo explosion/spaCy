@@ -71,17 +71,13 @@ def tagger():
 def entity_linker():
     nlp = Language()
 
-    @registry.misc.register("TestIssue5230KB.v1")
-    def dummy_kb() -> Callable[["Vocab"], KnowledgeBase]:
-        def create_kb(vocab):
-            kb = KnowledgeBase(vocab, entity_vector_length=1)
-            kb.add_entity("test", 0.0, zeros((1, 1), dtype="f"))
-            return kb
+    def create_kb(vocab):
+        kb = KnowledgeBase(vocab, entity_vector_length=1)
+        kb.add_entity("test", 0.0, zeros((1, 1), dtype="f"))
+        return kb
 
-        return create_kb
-
-    init_config = {"kb_loader": {"@misc": "TestIssue5230KB.v1"}}
-    entity_linker = nlp.add_pipe("entity_linker", init_config=init_config)
+    entity_linker = nlp.add_pipe("entity_linker")
+    entity_linker.set_kb(create_kb)
     # need to add model for two reasons:
     # 1. no model leads to error in serialization,
     # 2. the affected line is the one for model serialization
