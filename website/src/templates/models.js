@@ -44,7 +44,7 @@ const MODEL_META = {
     las: 'Labelled dependencies',
     token_acc: 'Tokenization',
     tok: 'Tokenization',
-    lemma: 'Statistical lemmatization',
+    lemma: 'Lemmatization',
     morph: 'Morphological analysis',
     tags_acc: 'Part-of-speech tags (fine grained tags, Token.tag)',
     tag: 'Part-of-speech tags (fine grained tags, Token.tag)',
