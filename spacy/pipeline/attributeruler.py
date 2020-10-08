@@ -53,8 +53,16 @@ class AttributeRuler(Pipe):
         self.name = name
         self.vocab = vocab
         self.matcher = Matcher(self.vocab, validate=validate)
+        self.validate = validate
         self.attrs = []
         self._attrs_unnormed = []  # store for reference
+        self.indices = []
+
+    def clear(self) -> None:
+        """Reset all patterns."""
+        self.matcher = Matcher(self.vocab, validate=self.validate)
+        self.attrs = []
+        self._attrs_unnormed = []
         self.indices = []
 
     def initialize(
@@ -65,13 +73,14 @@ class AttributeRuler(Pipe):
         patterns: Optional[Iterable[AttributeRulerPatternType]] = None,
         tag_map: Optional[TagMapType] = None,
         morph_rules: Optional[MorphRulesType] = None,
-    ):
+    ) -> None:
         """Initialize the attribute ruler by adding zero or more patterns.
 
         Rules can be specified as a sequence of dicts using the `patterns`
         keyword argument. You can also provide rules using the "tag map" or
         "morph rules" formats supported by spaCy prior to v3.
         """
+        self.clear()
         if patterns:
             self.add_patterns(patterns)
         if tag_map:

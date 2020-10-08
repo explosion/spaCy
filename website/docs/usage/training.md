@@ -1249,7 +1249,7 @@ valid.
 > #### Installation
 >
 > ```cli
-> $ pip install spacy-ray
+> $ pip install -U %%SPACY_PKG_NAME[ray]%%SPACY_PKG_FLAGS
 > # Check that the CLI is registered
 > $ python -m spacy ray --help
 > ```

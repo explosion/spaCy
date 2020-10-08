@@ -843,7 +843,7 @@ class Language:
         *,
         config: Dict[str, Any] = SimpleFrozenDict(),
         validate: bool = True,
-    ) -> None:
+    ) -> Callable[[Doc], Doc]:
         """Replace a component in the pipeline.
 
         name (str): Name of the component to replace.
@@ -852,6 +852,7 @@ class Language:
             component. Will be merged with default config, if available.
         validate (bool): Whether to validate the component config against the
             arguments and types expected by the factory.
+        RETURNS (Callable[[Doc], Doc]): The new pipeline component.
 
         DOCS: https://nightly.spacy.io/api/language#replace_pipe
         """
@@ -866,9 +867,11 @@ class Language:
         self.remove_pipe(name)
         if not len(self._components) or pipe_index == len(self._components):
             # we have no components to insert before/after, or we're replacing the last component
-            self.add_pipe(factory_name, name=name, config=config, validate=validate)
+            return self.add_pipe(
+                factory_name, name=name, config=config, validate=validate
+            )
         else:
-            self.add_pipe(
+            return self.add_pipe(
                 factory_name,
                 name=name,
                 before=pipe_index,

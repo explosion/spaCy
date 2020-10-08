@@ -297,7 +297,7 @@ packages. This lets one application easily customize the behavior of another, by
 exposing an entry point in its `setup.py`. For a quick and fun intro to entry
 points in Python, check out
 [this excellent blog post](https://amir.rachum.com/blog/2017/07/28/python-entry-points/).
-spaCy can load custom function from several different entry points to add
+spaCy can load custom functions from several different entry points to add
 pipeline component factories, language classes and other settings. To make spaCy
 use your entry points, your package needs to expose them and it needs to be
 installed in the same environment – that's it.

@@ -216,8 +216,7 @@ in `/opt/nvidia/cuda`, you would run:
 ```bash
 ### Installation with CUDA
 $ export CUDA_PATH="/opt/nvidia/cuda"
-$ pip install cupy-cuda102
-$ pip install spacy-transformers
+$ pip install -U %%SPACY_PKG_NAME[cud102,transformers]%%SPACY_PKG_FLAGS
 ```
 
 ### Runtime usage {#transformers-runtime}

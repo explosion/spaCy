@@ -524,7 +524,7 @@ Get a pipeline component for a given component name.
 
 ## Language.replace_pipe {#replace_pipe tag="method" new="2"}
 
-Replace a component in the pipeline.
+Replace a component in the pipeline and return the new component.
 
 <Infobox title="Changed in v3.0" variant="warning">
 
@@ -538,7 +538,7 @@ and instead expects the **name of a component factory** registered using
 > #### Example
 >
 > ```python
-> nlp.replace_pipe("parser", my_custom_parser)
+> new_parser = nlp.replace_pipe("parser", "my_custom_parser")
 > ```
 
 | Name                                  | Description                                                                                                                                                        |
@@ -548,6 +548,7 @@ and instead expects the **name of a component factory** registered using
 | _keyword-only_                        |                                                                                                                                                                    |
 | `config` <Tag variant="new">3</Tag>   | Optional config parameters to use for the new component. Will be merged with the `default_config` specified by the component factory. ~~Optional[Dict[str, Any]]~~ |
 | `validate` <Tag variant="new">3</Tag> | Whether to validate the component config and arguments against the types expected by the factory. Defaults to `True`. ~~bool~~                                     |
+| **RETURNS**                           | The new pipeline component. ~~Callable[[Doc], Doc]~~                                                                                                               |
 
 ## Language.rename_pipe {#rename_pipe tag="method" new="2"}
 

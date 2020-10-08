@@ -166,7 +166,7 @@ lookup lemmatizer looks up the token surface form in the lookup table without
 reference to the token's part-of-speech or context.
 
 ```python
-# pip install spacy-lookups-data
+# pip install -U %%SPACY_PKG_NAME[lookups]%%SPACY_PKG_FLAGS
 import spacy
 
 nlp = spacy.blank("sv")
@@ -181,7 +181,7 @@ rule-based lemmatizer can be added using rule tables from
 [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data):
 
 ```python
-# pip install spacy-lookups-data
+# pip install -U %%SPACY_PKG_NAME[lookups]%%SPACY_PKG_FLAGS
 import spacy
 
 nlp = spacy.blank("de")
@@ -1801,7 +1801,10 @@ print(doc2[5].tag_, doc2[5].pos_)  # WP PRON
 
 <Infobox variant="warning" title="Migrating from spaCy v2.x">
 
-The [`AttributeRuler`](/api/attributeruler) can import a **tag map and morph rules** in the v2.x format via its built-in methods or when the component is initialized before training. See the [migration guide](/usage/v3#migrating-training-mappings-exceptions) for details.
+The [`AttributeRuler`](/api/attributeruler) can import a **tag map and morph
+rules** in the v2.x format via its built-in methods or when the component is
+initialized before training. See the
+[migration guide](/usage/v3#migrating-training-mappings-exceptions) for details.
 
 </Infobox>
 

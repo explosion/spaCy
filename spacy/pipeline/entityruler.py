@@ -201,9 +201,9 @@ class EntityRuler(Pipe):
 
         DOCS: https://nightly.spacy.io/api/entityruler#initialize
         """
+        self.clear()
         if patterns:
             self.add_patterns(patterns)
-
 
     @property
     def ent_ids(self) -> Tuple[str, ...]:
