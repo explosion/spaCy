@@ -101,3 +101,4 @@ def test_overfitting_IO():
         doc2 = nlp2(test_text)
         assert [str(t.morph) for t in doc2] == gold_morphs
         assert [t.pos_ for t in doc2] == gold_pos_tags
+        assert nlp.get_pipe("morphologizer")._added_strings == nlp2.get_pipe("morphologizer")._added_strings

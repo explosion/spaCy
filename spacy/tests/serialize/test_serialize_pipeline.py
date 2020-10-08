@@ -71,7 +71,7 @@ def test_serialize_parser_roundtrip_bytes(en_vocab, Parser):
 
 
 @pytest.mark.parametrize("Parser", test_parsers)
-def test_serialize_strings(Parser):
+def test_serialize_parser_strings(Parser):
     vocab1 = Vocab()
     label = "FunnyLabel"
     assert label not in vocab1.strings
@@ -156,7 +156,7 @@ def test_serialize_tagger_roundtrip_disk(en_vocab, taggers):
         assert tagger1_d.to_bytes() == tagger2_d.to_bytes()
 
 
-def test_serialize_tagger_vocab(en_vocab, de_vocab, taggers):
+def test_serialize_tagger_strings(en_vocab, de_vocab, taggers):
     label = "SomeWeirdLabel"
     assert label not in en_vocab.strings
     assert label not in de_vocab.strings
@@ -166,6 +166,7 @@ def test_serialize_tagger_vocab(en_vocab, de_vocab, taggers):
         # check that custom labels are serialized as part of the component's strings.jsonl
         tagger.add_label(label)
         assert label in tagger.vocab.strings
+        assert tagger._added_strings == {label}
         file_path = d / "tagger1"
         tagger.to_disk(file_path)
         strings = srsly.read_json(file_path / "strings.json")
@@ -175,6 +176,7 @@ def test_serialize_tagger_vocab(en_vocab, de_vocab, taggers):
         model = registry.resolve(cfg, validate=True)["model"]
         tagger2 = Tagger(de_vocab, model).from_disk(file_path)
         assert label in tagger2.vocab.strings
+        assert tagger2._added_strings == {label}
 
 
 def test_serialize_textcat_empty(en_vocab):

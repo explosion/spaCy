@@ -146,6 +146,7 @@ def test_overfitting_IO():
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
     optimizer = nlp.initialize(get_examples=lambda: train_examples)
     assert textcat.model.get_dim("nO") == 2
+    assert textcat._added_strings == {"NEGATIVE", "POSITIVE"}
 
     for i in range(50):
         losses = {}
@@ -167,6 +168,7 @@ def test_overfitting_IO():
         cats2 = doc2.cats
         assert cats2["POSITIVE"] > 0.9
         assert cats2["POSITIVE"] + cats2["NEGATIVE"] == pytest.approx(1.0, 0.001)
+        assert nlp2.get_pipe("textcat")._added_strings == {"NEGATIVE", "POSITIVE"}
 
     # Test scoring
     scores = nlp.evaluate(train_examples)

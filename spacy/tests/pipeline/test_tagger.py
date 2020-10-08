@@ -98,6 +98,7 @@ def test_overfitting_IO():
         losses = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)
     assert losses["tagger"] < 0.00001
+    assert tagger._added_strings == {"J", "N", "V"}
 
     # test the trained model
     test_text = "I like blue eggs"
@@ -116,6 +117,7 @@ def test_overfitting_IO():
         assert doc2[1].tag_ is "V"
         assert doc2[2].tag_ is "J"
         assert doc2[3].tag_ is "N"
+        assert nlp2.get_pipe("tagger")._added_strings == {"J", "N", "V"}
 
 
 def test_tagger_requires_labels():

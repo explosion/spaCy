@@ -80,3 +80,4 @@ def test_overfitting_IO():
         nlp2 = util.load_model_from_path(tmp_dir)
         doc2 = nlp2(test_text)
         assert [int(t.is_sent_start) for t in doc2] == gold_sent_starts
+        assert nlp.get_pipe("senter")._added_strings == nlp2.get_pipe("senter")._added_strings

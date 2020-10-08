@@ -459,6 +459,8 @@ def test_overfitting_IO():
     )
     entity_linker.set_kb(create_kb)
     assert "Q2146908" in entity_linker.vocab.strings
+    assert "Q2146908" in entity_linker.kb.vocab.strings
+    assert "Q2146908" in entity_linker.kb._added_strings
 
     # train the NEL pipe
     optimizer = nlp.initialize(get_examples=lambda: train_examples)
