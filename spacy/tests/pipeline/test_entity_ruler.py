@@ -68,6 +68,15 @@ def test_entity_ruler_init_patterns(nlp, patterns):
     assert doc.ents[1].label_ == "BYE"
 
 
+def test_entity_ruler_init_clear(nlp, patterns):
+    """Test that initialization clears patterns."""
+    ruler = nlp.add_pipe("entity_ruler")
+    ruler.add_patterns(patterns)
+    assert len(ruler.labels) == 4
+    ruler.initialize(lambda: [])
+    assert len(ruler.labels) == 0
+
+
 def test_entity_ruler_existing(nlp, patterns):
     ruler = nlp.add_pipe("entity_ruler")
     ruler.add_patterns(patterns)

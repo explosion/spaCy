@@ -141,6 +141,11 @@ const QuickstartInstall = ({ id, title }) => {
                         setters={setters}
                         showDropdown={showDropdown}
                     >
+                        {nightly && (
+                            <QS package="conda" comment prompt={false}>
+                                # 🚨 Nightly releases are currently only available via pip
+                            </QS>
+                        )}
                         <QS config="venv">python -m venv .env</QS>
                         <QS config="venv" os="mac">
                             source .env/bin/activate
@@ -175,9 +180,9 @@ const QuickstartInstall = ({ id, title }) => {
                         </QS>
                         <QS package="source">pip install -r requirements.txt</QS>
                         <QS package="source">python setup.py build_ext --inplace</QS>
-                        <QS package="source" config="train">
-                            pip install -e '.[{pipExtras}]'
-                        </QS>
+                        {(train || hardware == 'gpu') && (
+                            <QS package="source">pip install -e '.[{pipExtras}]'</QS>
+                        )}
 
                         <QS config="train" package="conda">
                             conda install -c conda-forge spacy-transformers

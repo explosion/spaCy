@@ -54,7 +54,7 @@ contribute to development.
 > separately in the same environment:
 >
 > ```bash
-> $ pip install spacy[lookups]
+> $ pip install -U %%SPACY_PKG_NAME[lookups]%%SPACY_PKG_FLAGS
 > ```
 
 import Languages from 'widgets/languages.js'
@@ -287,7 +287,7 @@ The download command will [install the package](/usage/models#download-pip) via
 pip and place the package in your `site-packages` directory.
 
 ```cli
-$ pip install -U spacy
+$ pip install -U %%SPACY_PKG_NAME%%SPACY_PKG_FLAGS
 $ python -m spacy download en_core_web_sm
 ```
 
