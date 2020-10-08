@@ -52,7 +52,6 @@ def custom_pipe():
             else:
                 self.cfg = None
             self.model = SerializableDummy()
-            self.vocab = SerializableDummy()
 
     return MyPipe(None)
 

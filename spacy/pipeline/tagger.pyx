@@ -78,6 +78,7 @@ class Tagger(TrainablePipe):
         self._rehearsal_model = None
         cfg = {"labels": labels or []}
         self.cfg = dict(sorted(cfg.items()))
+        self._added_strings = []
 
     @property
     def labels(self):
@@ -313,6 +314,7 @@ class Tagger(TrainablePipe):
         self._allow_extra_label()
         self.cfg["labels"].append(label)
         self.vocab.strings.add(label)
+        self.add_string(label)
         return 1
 
     def score(self, examples, **kwargs):
@@ -326,79 +328,3 @@ class Tagger(TrainablePipe):
         """
         validate_examples(examples, "Tagger.score")
         return Scorer.score_token_attr(examples, "tag", **kwargs)
-
-    def to_bytes(self, *, exclude=tuple()):
-        """Serialize the pipe to a bytestring.
-
-        exclude (Iterable[str]): String names of serialization fields to exclude.
-        RETURNS (bytes): The serialized object.
-
-        DOCS: https://nightly.spacy.io/api/tagger#to_bytes
-        """
-        serialize = {}
-        serialize["model"] = self.model.to_bytes
-        serialize["vocab"] = self.vocab.to_bytes
-        serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
-        return util.to_bytes(serialize, exclude)
-
-    def from_bytes(self, bytes_data, *, exclude=tuple()):
-        """Load the pipe from a bytestring.
-
-        bytes_data (bytes): The serialized pipe.
-        exclude (Iterable[str]): String names of serialization fields to exclude.
-        RETURNS (Tagger): The loaded Tagger.
-
-        DOCS: https://nightly.spacy.io/api/tagger#from_bytes
-        """
-        def load_model(b):
-            try:
-                self.model.from_bytes(b)
-            except AttributeError:
-                raise ValueError(Errors.E149) from None
-
-        deserialize = {
-            "vocab": lambda b: self.vocab.from_bytes(b),
-            "cfg": lambda b: self.cfg.update(srsly.json_loads(b)),
-            "model": lambda b: load_model(b),
-        }
-        util.from_bytes(bytes_data, deserialize, exclude)
-        return self
-
-    def to_disk(self, path, *, exclude=tuple()):
-        """Serialize the pipe to disk.
-
-        path (str / Path): Path to a directory.
-        exclude (Iterable[str]): String names of serialization fields to exclude.
-
-        DOCS: https://nightly.spacy.io/api/tagger#to_disk
-        """
-        serialize = {
-            "vocab": lambda p: self.vocab.to_disk(p),
-            "model": lambda p: self.model.to_disk(p),
-            "cfg": lambda p: srsly.write_json(p, self.cfg),
-        }
-        util.to_disk(path, serialize, exclude)
-
-    def from_disk(self, path, *, exclude=tuple()):
-        """Load the pipe from disk. Modifies the object in place and returns it.
-
-        path (str / Path): Path to a directory.
-        exclude (Iterable[str]): String names of serialization fields to exclude.
-        RETURNS (Tagger): The modified Tagger object.
-
-        DOCS: https://nightly.spacy.io/api/tagger#from_disk
-        """
-        def load_model(p):
-            with p.open("rb") as file_:
-                try:
-                    self.model.from_bytes(file_.read())
-                except AttributeError:
-                    raise ValueError(Errors.E149) from None
-
-        deserialize = {
-            "vocab": lambda p: self.vocab.from_disk(p),
-            "cfg": lambda p: self.cfg.update(deserialize_config(p)),
-            "model": load_model,
-        }
-        util.from_disk(path, deserialize, exclude)
-        return self

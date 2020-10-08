@@ -35,6 +35,7 @@ cdef class TrainablePipe(Pipe):
         self.model = model
         self.name = name
         self.cfg = dict(cfg)
+        self._added_strings = []
 
     def __call__(self, Doc doc) -> Doc:
         """Apply the pipe to one document. The document is modified in place,
@@ -197,6 +198,10 @@ cdef class TrainablePipe(Pipe):
         """
         raise NotImplementedError(Errors.E931.format(parent="Pipe", method="add_label", name=self.name))
 
+    def add_string(self, string: str):
+        if string not in self._added_strings:
+            self._added_strings.append(string)
+
     @property
     def is_trainable(self) -> bool:
         return True
@@ -251,8 +256,7 @@ cdef class TrainablePipe(Pipe):
         if hasattr(self, "cfg"):
             serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
         serialize["model"] = self.model.to_bytes
-        if hasattr(self, "vocab"):
-            serialize["vocab"] = self.vocab.to_bytes
+        serialize["strings"] = lambda: srsly.json_dumps(self._added_strings)
         return util.to_bytes(serialize, exclude)
 
     def from_bytes(self, bytes_data, *, exclude=tuple()):
@@ -271,12 +275,13 @@ cdef class TrainablePipe(Pipe):
                 raise ValueError(Errors.E149) from None
 
         deserialize = {}
-        if hasattr(self, "vocab"):
-            deserialize["vocab"] = lambda b: self.vocab.from_bytes(b)
+        deserialize["strings"] = lambda b: [self.add_string(s) for s in srsly.json_loads(b)]
         if hasattr(self, "cfg"):
             deserialize["cfg"] = lambda b: self.cfg.update(srsly.json_loads(b))
         deserialize["model"] = load_model
         util.from_bytes(bytes_data, deserialize, exclude)
+        for s in self._added_strings:
+            self.vocab.strings.add(s)
         return self
 
     def to_disk(self, path, *, exclude=tuple()):
@@ -290,8 +295,7 @@ cdef class TrainablePipe(Pipe):
         serialize = {}
         if hasattr(self, "cfg"):
             serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
-        if hasattr(self, "vocab"):
-            serialize["vocab"] = lambda p: self.vocab.to_disk(p)
+        serialize["strings.json"] = lambda p: srsly.write_json(p, self._added_strings)
         serialize["model"] = lambda p: self.model.to_disk(p)
         util.to_disk(path, serialize, exclude)
 
@@ -312,10 +316,11 @@ cdef class TrainablePipe(Pipe):
                 raise ValueError(Errors.E149) from None
 
         deserialize = {}
-        if hasattr(self, "vocab"):
-            deserialize["vocab"] = lambda p: self.vocab.from_disk(p)
+        deserialize["strings.json"] = lambda p: [self.add_string(s) for s in srsly.read_json(p)]
         if hasattr(self, "cfg"):
             deserialize["cfg"] = lambda p: self.cfg.update(deserialize_config(p))
         deserialize["model"] = load_model
         util.from_disk(path, deserialize, exclude)
+        for s in self._added_strings:
+            self.vocab.strings.add(s)
         return self

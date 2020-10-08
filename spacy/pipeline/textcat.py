@@ -110,6 +110,7 @@ class TextCategorizer(TrainablePipe):
         self._rehearsal_model = None
         cfg = {"labels": [], "threshold": threshold, "positive_label": None}
         self.cfg = dict(cfg)
+        self._added_strings = []
 
     @property
     def labels(self) -> Tuple[str]:
@@ -118,13 +119,6 @@ class TextCategorizer(TrainablePipe):
         DOCS: https://nightly.spacy.io/api/textcategorizer#labels
         """
         return tuple(self.cfg["labels"])
-
-    @labels.setter
-    def labels(self, value: List[str]) -> None:
-        # TODO: This really shouldn't be here. I had a look and I added it when
-        # I added the labels property, but it's pretty nasty to have this, and
-        # will lead to problems.
-        self.cfg["labels"] = tuple(value)
 
     @property
     def label_data(self) -> List[str]:
@@ -306,7 +300,9 @@ class TextCategorizer(TrainablePipe):
         if label in self.labels:
             return 0
         self._allow_extra_label()
-        self.labels = tuple(list(self.labels) + [label])
+        self.cfg["labels"].append(label)
+        self.vocab.strings.add(label)
+        self.add_string(label)
         return 1
 
     def initialize(

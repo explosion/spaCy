@@ -488,11 +488,10 @@ serialization by passing in the string names via the `exclude` argument.
 > #### Example
 >
 > ```python
-> data = pipe.to_disk("/path", exclude=["vocab"])
+> data = pipe.to_disk("/path")
 > ```
 
 | Name    | Description                                                    |
 | ------- | -------------------------------------------------------------- |
-| `vocab` | The shared [`Vocab`](/api/vocab).                              |
 | `cfg`   | The config file. You usually don't want to exclude this.       |
 | `model` | The binary model data. You usually don't want to exclude this. |

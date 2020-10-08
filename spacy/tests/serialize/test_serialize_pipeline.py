@@ -1,4 +1,5 @@
 import pytest
+import srsly
 from spacy import registry
 from spacy.pipeline import Tagger, DependencyParser, EntityRecognizer
 from spacy.pipeline import TextCategorizer, SentenceRecognizer
@@ -130,6 +131,27 @@ def test_serialize_tagger_roundtrip_disk(en_vocab, taggers):
         tagger1_d = Tagger(en_vocab, model).from_disk(file_path1)
         tagger2_d = Tagger(en_vocab, model).from_disk(file_path2)
         assert tagger1_d.to_bytes() == tagger2_d.to_bytes()
+
+
+def test_serialize_tagger_vocab(en_vocab, de_vocab, taggers):
+    label = "SomeWeirdLabel"
+    assert label not in en_vocab.strings
+    assert label not in de_vocab.strings
+    tagger = taggers[0]
+    assert label not in tagger.vocab.strings
+    with make_tempdir() as d:
+        # check that custom labels are serialized as part of the component's strings.jsonl
+        tagger.add_label(label)
+        assert label in tagger.vocab.strings
+        file_path = d / "tagger1"
+        tagger.to_disk(file_path)
+        strings = srsly.read_json(file_path / "strings.json")
+        assert strings == ["SomeWeirdLabel"]
+        # ensure that the custom strings are loaded back in when using the tagger in another pipeline
+        cfg = {"model": DEFAULT_TAGGER_MODEL}
+        model = registry.resolve(cfg, validate=True)["model"]
+        tagger2 = Tagger(de_vocab, model).from_disk(file_path)
+        assert label in tagger2.vocab.strings
 
 
 def test_serialize_textcat_empty(en_vocab):

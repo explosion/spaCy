@@ -1356,3 +1356,16 @@ def check_bool_env_var(env_var: str) -> bool:
     if value == "0":
         return False
     return bool(value)
+
+
+def _pipe(docs, proc, kwargs):
+    if hasattr(proc, "pipe"):
+        yield from proc.pipe(docs, **kwargs)
+    # We added some args for pipe that __call__ doesn't expect.
+    kwargs = dict(kwargs)
+    for arg in ["batch_size"]:
+        if arg in kwargs:
+            kwargs.pop(arg)
+    for doc in docs:
+        doc = proc(doc, **kwargs)
+        yield doc
