@@ -76,7 +76,7 @@ cdef class Parser(TrainablePipe):
             self.add_multitask_objective(multitask)
 
         self._rehearsal_model = None
-        self._added_strings = []
+        self._added_strings = set()
 
     def __getnewargs_ex__(self):
         """This allows pickling the Parser and its keyword-only init arguments"""
@@ -120,7 +120,6 @@ cdef class Parser(TrainablePipe):
                 resized = True
         if resized:
             self._resize()
-            self.vocab.strings.add(label)
             self.add_string(label)
             return 1
         return 0
@@ -486,7 +485,7 @@ cdef class Parser(TrainablePipe):
     def to_bytes(self, exclude=tuple()):
         serializers = {
             "model": lambda: (self.model.to_bytes()),
-            "strings.json": lambda: srsly.json_dumps(self._added_strings),
+            "strings.json": lambda: srsly.json_dumps(sorted(self._added_strings)),
             "moves": lambda: self.moves.to_bytes(exclude=["strings"]),
             "cfg": lambda: srsly.json_dumps(self.cfg, indent=2, sort_keys=True)
         }

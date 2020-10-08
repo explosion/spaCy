@@ -61,7 +61,7 @@ class SentenceRecognizer(Tagger):
         self.name = name
         self._rehearsal_model = None
         self.cfg = {}
-        self._added_strings = []
+        self._added_strings = set()
 
     @property
     def labels(self):

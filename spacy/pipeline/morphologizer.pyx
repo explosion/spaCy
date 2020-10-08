@@ -95,7 +95,7 @@ class Morphologizer(Tagger):
         # add mappings for empty morph
         self.cfg["labels_morph"][Morphology.EMPTY_MORPH] = Morphology.EMPTY_MORPH
         self.cfg["labels_pos"][Morphology.EMPTY_MORPH] = POS_IDS[""]
-        self._added_strings = []
+        self._added_strings = set()
 
     @property
     def labels(self):

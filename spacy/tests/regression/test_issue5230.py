@@ -1,4 +1,3 @@
-from typing import Callable
 import warnings
 from unittest import TestCase
 import pytest
@@ -8,7 +7,6 @@ from spacy.kb import KnowledgeBase, Writer
 from spacy.vectors import Vectors
 from spacy.language import Language
 from spacy.pipeline import TrainablePipe
-from spacy.util import registry
 
 from ..util import make_tempdir
 

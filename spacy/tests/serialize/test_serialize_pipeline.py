@@ -89,7 +89,7 @@ def test_serialize_strings(Parser):
     assert label not in vocab2.strings
     parser2 = Parser(vocab2, model, **config)
     parser2 = parser2.from_bytes(parser1.to_bytes(exclude=["vocab"]))
-    assert parser1._added_strings == parser2._added_strings == ["FunnyLabel"]
+    assert parser1._added_strings == parser2._added_strings == {"FunnyLabel"}
     assert label in parser2.vocab.strings
 
 

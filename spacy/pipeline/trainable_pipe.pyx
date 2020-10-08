@@ -35,7 +35,7 @@ cdef class TrainablePipe(Pipe):
         self.model = model
         self.name = name
         self.cfg = dict(cfg)
-        self._added_strings = []
+        self._added_strings = set()
 
     def __call__(self, Doc doc) -> Doc:
         """Apply the pipe to one document. The document is modified in place,
@@ -199,8 +199,8 @@ cdef class TrainablePipe(Pipe):
         raise NotImplementedError(Errors.E931.format(parent="Pipe", method="add_label", name=self.name))
 
     def add_string(self, string: str):
-        if string not in self._added_strings:
-            self._added_strings.append(string)
+        self._added_strings.add(string)
+        return self.vocab.strings.add(string)
 
     @property
     def is_trainable(self) -> bool:
@@ -208,7 +208,7 @@ cdef class TrainablePipe(Pipe):
 
     @property
     def is_resizable(self) -> bool:
-        return hasattr(self, "model") and "resize_output" in self.model.attrs
+        return getattr(self, "model", None) and "resize_output" in self.model.attrs
 
     def _allow_extra_label(self) -> None:
         """Raise an error if the component can not add any more labels."""
@@ -256,7 +256,7 @@ cdef class TrainablePipe(Pipe):
         if hasattr(self, "cfg"):
             serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
         serialize["model"] = self.model.to_bytes
-        serialize["strings.json"] = lambda: srsly.json_dumps(self._added_strings)
+        serialize["strings.json"] = lambda: srsly.json_dumps(sorted(self._added_strings))
         return util.to_bytes(serialize, exclude)
 
     def from_bytes(self, bytes_data, *, exclude=tuple()):
@@ -280,8 +280,6 @@ cdef class TrainablePipe(Pipe):
             deserialize["cfg"] = lambda b: self.cfg.update(srsly.json_loads(b))
         deserialize["model"] = load_model
         util.from_bytes(bytes_data, deserialize, exclude)
-        for s in self._added_strings:
-            self.vocab.strings.add(s)
         return self
 
     def to_disk(self, path, *, exclude=tuple()):
@@ -321,6 +319,4 @@ cdef class TrainablePipe(Pipe):
             deserialize["cfg"] = lambda p: self.cfg.update(deserialize_config(p))
         deserialize["model"] = load_model
         util.from_disk(path, deserialize, exclude)
-        for s in self._added_strings:
-            self.vocab.strings.add(s)
         return self

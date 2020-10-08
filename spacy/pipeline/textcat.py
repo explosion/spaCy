@@ -110,7 +110,7 @@ class TextCategorizer(TrainablePipe):
         self._rehearsal_model = None
         cfg = {"labels": [], "threshold": threshold, "positive_label": None}
         self.cfg = dict(cfg)
-        self._added_strings = []
+        self._added_strings = set()
 
     @property
     def labels(self) -> Tuple[str]:
@@ -301,7 +301,6 @@ class TextCategorizer(TrainablePipe):
             return 0
         self._allow_extra_label()
         self.cfg["labels"].append(label)
-        self.vocab.strings.add(label)
         self.add_string(label)
         return 1
 

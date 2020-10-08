@@ -57,7 +57,7 @@ class AttributeRuler(Pipe):
         self.attrs = []
         self._attrs_unnormed = []  # store for reference
         self.indices = []
-        self._added_strings = []
+        self._added_strings = set()
 
     def clear(self) -> None:
         """Reset all patterns."""
@@ -187,16 +187,15 @@ class AttributeRuler(Pipe):
         # We need to make a string here, because otherwise the ID we pass back
         # will be interpreted as the hash of a string, rather than an ordinal.
         key = str(len(self.attrs))
-        self.matcher.add(self.vocab.strings.add(key), patterns)
-        self.add_string(key)
+        self.matcher.add(self.add_string(key), patterns)
         self._attrs_unnormed.append(attrs)
         attrs = normalize_token_attrs(self.vocab, attrs)
         self.attrs.append(attrs)
         self.indices.append(index)
 
     def add_string(self, string: str):
-        if string not in self._added_strings:
-            self._added_strings.append(string)
+        self._added_strings.add(string)
+        return self.vocab.strings.add(string)
 
     def add_patterns(self, patterns: Iterable[AttributeRulerPatternType]) -> None:
         """Add patterns from a list of pattern dicts with the keys as the
@@ -258,7 +257,7 @@ class AttributeRuler(Pipe):
         """
         serialize = {}
         serialize["patterns"] = lambda: srsly.msgpack_dumps(self.patterns)
-        serialize["strings.json"] = lambda: srsly.json_dumps(self._added_strings)
+        serialize["strings.json"] = lambda: srsly.json_dumps(sorted(self._added_strings))
         return util.to_bytes(serialize, exclude)
 
     def from_bytes(

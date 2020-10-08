@@ -84,7 +84,7 @@ cdef class Pipe:
 
     @property
     def labels(self) -> Optional[Tuple[str]]:
-        return []
+        return tuple()
 
     @property
     def label_data(self):

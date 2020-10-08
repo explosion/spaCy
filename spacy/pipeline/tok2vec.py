@@ -64,7 +64,7 @@ class Tok2Vec(TrainablePipe):
         self.name = name
         self.listeners = []
         self.cfg = {}
-        self._added_strings = []
+        self._added_strings = set()
 
     def add_listener(self, listener: "Tok2VecListener") -> None:
         """Add a listener for a downstream component. Usually internals."""

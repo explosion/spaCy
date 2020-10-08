@@ -5,4 +5,4 @@ cdef class TrainablePipe(Pipe):
     cdef public Vocab vocab
     cdef public object model
     cdef public object cfg
-    cdef public list _added_strings
+    cdef public set _added_strings
