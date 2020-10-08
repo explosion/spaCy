@@ -256,7 +256,7 @@ cdef class TrainablePipe(Pipe):
         if hasattr(self, "cfg"):
             serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
         serialize["model"] = self.model.to_bytes
-        serialize["strings"] = lambda: srsly.json_dumps(self._added_strings)
+        serialize["strings.json"] = lambda: srsly.json_dumps(self._added_strings)
         return util.to_bytes(serialize, exclude)
 
     def from_bytes(self, bytes_data, *, exclude=tuple()):
@@ -275,7 +275,7 @@ cdef class TrainablePipe(Pipe):
                 raise ValueError(Errors.E149) from None
 
         deserialize = {}
-        deserialize["strings"] = lambda b: [self.add_string(s) for s in srsly.json_loads(b)]
+        deserialize["strings.json"] = lambda b: [self.add_string(s) for s in srsly.json_loads(b)]
         if hasattr(self, "cfg"):
             deserialize["cfg"] = lambda b: self.cfg.update(srsly.json_loads(b))
         deserialize["model"] = load_model

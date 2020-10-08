@@ -258,7 +258,7 @@ class AttributeRuler(Pipe):
         """
         serialize = {}
         serialize["patterns"] = lambda: srsly.msgpack_dumps(self.patterns)
-        serialize["strings"] = lambda: srsly.json_dumps(self._added_strings)
+        serialize["strings.json"] = lambda: srsly.json_dumps(self._added_strings)
         return util.to_bytes(serialize, exclude)
 
     def from_bytes(
