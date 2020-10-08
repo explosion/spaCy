@@ -970,8 +970,8 @@ import spacy
 from spacy.tokenizer import Tokenizer
 
 special_cases = {":)": [{"ORTH": ":)"}]}
-prefix_re = re.compile(r'''^[\[\("']''')
-suffix_re = re.compile(r'''[\]\)"']$''')
+prefix_re = re.compile(r'''^[\\[\\("']''')
+suffix_re = re.compile(r'''[\\]\\)"']$''')
 infix_re = re.compile(r'''[-~]''')
 simple_url_re = re.compile(r'''^https?://''')
 
@@ -1592,7 +1592,9 @@ print("After:", [(token.text, token._.is_musician) for token in doc])
 A [`Doc`](/api/doc) object's sentences are available via the `Doc.sents`
 property. To view a `Doc`'s sentences, you can iterate over the `Doc.sents`, a
 generator that yields [`Span`](/api/span) objects. You can check whether a `Doc`
-has sentence boundaries with the `doc.is_sentenced` attribute.
+has sentence boundaries by calling
+[`Doc.has_annotation`](/api/doc#has_annotation) with the attribute name
+`"SENT_START"`.
 
 ```python
 ### {executable="true"}
@@ -1600,7 +1602,7 @@ import spacy
 
 nlp = spacy.load("en_core_web_sm")
 doc = nlp("This is a sentence. This is another sentence.")
-assert doc.is_sentenced
+assert doc.has_annotation("SENT_START")
 for sent in doc.sents:
     print(sent.text)
 ```

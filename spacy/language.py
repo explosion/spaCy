@@ -20,7 +20,7 @@ from .pipe_analysis import validate_attrs, analyze_pipes, print_pipe_analysis
 from .training import Example, validate_examples
 from .training.initialize import init_vocab, init_tok2vec
 from .scorer import Scorer
-from .util import registry, SimpleFrozenList
+from .util import registry, SimpleFrozenList, _pipe
 from .util import SimpleFrozenDict, combine_score_weights, CONFIG_SECTION_ORDER
 from .lang.tokenizer_exceptions import URL_MATCH, BASE_EXCEPTIONS
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
@@ -1095,7 +1095,7 @@ class Language:
                 if (
                     name not in exclude
                     and hasattr(proc, "is_trainable")
-                    and proc.is_trainable()
+                    and proc.is_trainable
                     and proc.model not in (True, False, None)
                 ):
                     proc.finish_update(sgd)
@@ -1194,8 +1194,8 @@ class Language:
             doc = Doc(self.vocab, words=["x", "y", "z"])
             get_examples = lambda: [Example.from_dict(doc, {})]
         if not hasattr(get_examples, "__call__"):
-            err = Errors.E930.format(name="Language", obj=type(get_examples))
-            raise ValueError(err)
+            err = Errors.E930.format(method="Language.initialize", obj=type(get_examples))
+            raise TypeError(err)
         # Make sure the config is interpolated so we can resolve subsections
         config = self.config.interpolate()
         # These are the settings provided in the [initialize] block in the config
@@ -1301,16 +1301,7 @@ class Language:
         for name, pipe in self.pipeline:
             kwargs = component_cfg.get(name, {})
             kwargs.setdefault("batch_size", batch_size)
-            # non-trainable components may have a pipe() implementation that refers to dummy
-            # predict and set_annotations methods
-            if (
-                not hasattr(pipe, "pipe")
-                or not hasattr(pipe, "is_trainable")
-                or not pipe.is_trainable()
-            ):
-                docs = _pipe(docs, pipe, kwargs)
-            else:
-                docs = pipe.pipe(docs, **kwargs)
+            docs = _pipe(docs, pipe, kwargs)
         # iterate over the final generator
         if len(self.pipeline):
             docs = list(docs)
@@ -1417,17 +1408,7 @@ class Language:
             kwargs = component_cfg.get(name, {})
             # Allow component_cfg to overwrite the top-level kwargs.
             kwargs.setdefault("batch_size", batch_size)
-            # non-trainable components may have a pipe() implementation that refers to dummy
-            # predict and set_annotations methods
-            if (
-                hasattr(proc, "pipe")
-                and hasattr(proc, "is_trainable")
-                and proc.is_trainable()
-            ):
-                f = functools.partial(proc.pipe, **kwargs)
-            else:
-                # Apply the function, but yield the doc
-                f = functools.partial(_pipe, proc=proc, kwargs=kwargs)
+            f = functools.partial(_pipe, proc=proc, kwargs=kwargs)
             pipes.append(f)
 
         if n_process != 1:
@@ -1824,19 +1805,6 @@ class DisabledPipes(list):
                 raise ValueError(Errors.E008.format(name=name))
             self.nlp.enable_pipe(name)
         self[:] = []
-
-
-def _pipe(
-    examples: Iterable[Example], proc: Callable[[Doc], Doc], kwargs: Dict[str, Any]
-) -> Iterator[Example]:
-    # We added some args for pipe that __call__ doesn't expect.
-    kwargs = dict(kwargs)
-    for arg in ["batch_size"]:
-        if arg in kwargs:
-            kwargs.pop(arg)
-    for eg in examples:
-        eg = proc(eg, **kwargs)
-        yield eg
 
 
 def _apply_pipes(

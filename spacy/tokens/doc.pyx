@@ -1398,8 +1398,6 @@ cdef class Doc:
         attributes. Attribute values need to be JSON-serializable. Values will
         be added to an "_" key in the data, e.g. "_": {"foo": "bar"}.
         RETURNS (dict): The data in spaCy's JSON format.
-
-        DOCS: https://nightly.spacy.io/api/doc#to_json
         """
         data = {"text": self.text}
         if self.has_annotation("ENT_IOB"):
@@ -1421,7 +1419,7 @@ cdef class Doc:
             if include_annotation["POS"]:
                 token_data["pos"] = token.pos_
             if include_annotation["MORPH"]:
-                token_data["morph"] = token.morph_
+                token_data["morph"] = token.morph
             if include_annotation["LEMMA"]:
                 token_data["lemma"] = token.lemma_
             if include_annotation["DEP"]:

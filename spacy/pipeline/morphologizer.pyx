@@ -16,7 +16,7 @@ from .pipe import deserialize_config
 from .tagger import Tagger
 from .. import util
 from ..scorer import Scorer
-from ..training import validate_examples
+from ..training import validate_examples, validate_get_examples
 
 
 default_model_config = """
@@ -95,6 +95,7 @@ class Morphologizer(Tagger):
         # add mappings for empty morph
         self.cfg["labels_morph"][Morphology.EMPTY_MORPH] = Morphology.EMPTY_MORPH
         self.cfg["labels_pos"][Morphology.EMPTY_MORPH] = POS_IDS[""]
+        self._added_strings = set()
 
     @property
     def labels(self):
@@ -128,6 +129,7 @@ class Morphologizer(Tagger):
             label_dict.pop(self.POS_FEAT)
         # normalize morph string and add to morphology table
         norm_morph = self.vocab.strings[self.vocab.morphology.add(label_dict)]
+        self.add_string(norm_morph)
         # add label mappings
         if norm_label not in self.cfg["labels_morph"]:
             self.cfg["labels_morph"][norm_label] = norm_morph
@@ -144,7 +146,7 @@ class Morphologizer(Tagger):
 
         DOCS: https://nightly.spacy.io/api/morphologizer#initialize
         """
-        self._ensure_examples(get_examples)
+        validate_get_examples(get_examples, "Morphologizer.initialize")
         if labels is not None:
             self.cfg["labels_morph"] = labels["morph"]
             self.cfg["labels_pos"] = labels["pos"]
@@ -159,6 +161,7 @@ class Morphologizer(Tagger):
                     if pos:
                         morph_dict[self.POS_FEAT] = pos
                     norm_label = self.vocab.strings[self.vocab.morphology.add(morph_dict)]
+                    self.add_string(norm_label)
                     # add label->morph and label->POS mappings
                     if norm_label not in self.cfg["labels_morph"]:
                         self.cfg["labels_morph"][norm_label] = morph
@@ -176,6 +179,7 @@ class Morphologizer(Tagger):
                 if pos:
                     morph_dict[self.POS_FEAT] = pos
                 norm_label = self.vocab.strings[self.vocab.morphology.add(morph_dict)]
+                self.add_string(norm_label)
                 gold_array.append([1.0 if label == norm_label else 0.0 for label in self.labels])
             doc_sample.append(example.x)
             label_sample.append(self.model.ops.asarray(gold_array, dtype="float32"))
@@ -234,6 +238,7 @@ class Morphologizer(Tagger):
                 if pos:
                     label_dict[self.POS_FEAT] = pos
                 label = self.vocab.strings[self.vocab.morphology.add(label_dict)]
+                self.add_string(label)
                 eg_truths.append(label)
             truths.append(eg_truths)
         d_scores, loss = loss_func(scores, truths)

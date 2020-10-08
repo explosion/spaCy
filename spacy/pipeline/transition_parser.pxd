@@ -1,13 +1,13 @@
 from cymem.cymem cimport Pool
 
 from ..vocab cimport Vocab
-from .pipe cimport Pipe
+from .trainable_pipe cimport TrainablePipe
 from ._parser_internals.transition_system cimport Transition, TransitionSystem
 from ._parser_internals._state cimport StateC
 from ..ml.parser_model cimport WeightsC, ActivationsC, SizesC
 
 
-cdef class Parser(Pipe):
+cdef class Parser(TrainablePipe):
     cdef public object _rehearsal_model
     cdef readonly TransitionSystem moves
     cdef public object _multitasks

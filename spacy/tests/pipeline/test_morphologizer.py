@@ -66,9 +66,9 @@ def test_initialize_examples():
     # you shouldn't really call this more than once, but for testing it should be fine
     nlp.initialize()
     nlp.initialize(get_examples=lambda: train_examples)
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         nlp.initialize(get_examples=lambda: None)
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         nlp.initialize(get_examples=train_examples)
 
 
@@ -101,3 +101,4 @@ def test_overfitting_IO():
         doc2 = nlp2(test_text)
         assert [str(t.morph) for t in doc2] == gold_morphs
         assert [t.pos_ for t in doc2] == gold_pos_tags
+        assert nlp.get_pipe("morphologizer")._added_strings == nlp2.get_pipe("morphologizer")._added_strings

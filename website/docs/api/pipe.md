@@ -1,5 +1,5 @@
 ---
-title: Pipe
+title: TrainablePipe
 tag: class
 teaser: Base class for trainable pipeline components
 ---
@@ -10,30 +10,32 @@ components like the [`EntityRecognizer`](/api/entityrecognizer) or
 interface that components should follow to function as trainable components in a
 spaCy pipeline. See the docs on
 [writing trainable components](/usage/processing-pipelines#trainable-components)
-for how to use the `Pipe` base class to implement custom components.
+for how to use the `TrainablePipe` base class to implement custom components.
 
-> #### Why is Pipe implemented in Cython?
+<!-- TODO: Pipe vs TrainablePipe, check methods below (all renamed to TrainablePipe for now) -->
+
+> #### Why is TrainablePipe implemented in Cython?
 >
-> The `Pipe` class is implemented in a `.pyx` module, the extension used by
-> [Cython](/api/cython). This is needed so that **other** Cython classes, like
-> the [`EntityRecognizer`](/api/entityrecognizer) can inherit from it. But it
-> doesn't mean you have to implement trainable components in Cython – pure
-> Python components like the [`TextCategorizer`](/api/textcategorizer) can also
-> inherit from `Pipe`.
+> The `TrainablePipe` class is implemented in a `.pyx` module, the extension
+> used by [Cython](/api/cython). This is needed so that **other** Cython
+> classes, like the [`EntityRecognizer`](/api/entityrecognizer) can inherit from
+> it. But it doesn't mean you have to implement trainable components in Cython –
+> pure Python components like the [`TextCategorizer`](/api/textcategorizer) can
+> also inherit from `TrainablePipe`.
 
 ```python
-%%GITHUB_SPACY/spacy/pipeline/pipe.pyx
+%%GITHUB_SPACY/spacy/pipeline/trainable_pipe.pyx
 ```
 
-## Pipe.\_\_init\_\_ {#init tag="method"}
+## TrainablePipe.\_\_init\_\_ {#init tag="method"}
 
 > #### Example
 >
 > ```python
-> from spacy.pipeline import Pipe
+> from spacy.pipeline import TrainablePipe
 > from spacy.language import Language
 >
-> class CustomPipe(Pipe):
+> class CustomPipe(TrainablePipe):
 >     ...
 >
 > @Language.factory("your_custom_pipe", default_config={"model": MODEL})
@@ -45,14 +47,14 @@ Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
 [`nlp.add_pipe`](/api/language#create_pipe).
 
-| Name    | Description                                                                                                                     |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab` | The shared vocabulary. ~~Vocab~~                                                                                                |
-| `model` | The Thinc [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model[List[Doc], Any]~~                 |
-| `name`  | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                             |
-| `**cfg` | Additional config parameters and settings. Will be available as the dictionary `Pipe.cfg` and is serialized with the component. |
+| Name    | Description                                                                                                                |
+| ------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `vocab` | The shared vocabulary. ~~Vocab~~                                                                                           |
+| `model` | The Thinc [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model[List[Doc], Any]~~            |
+| `name`  | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                        |
+| `**cfg` | Additional config parameters and settings. Will be available as the dictionary `cfg` and is serialized with the component. |
 
-## Pipe.\_\_call\_\_ {#call tag="method"}
+## TrainablePipe.\_\_call\_\_ {#call tag="method"}
 
 Apply the pipe to one document. The document is modified in place, and returned.
 This usually happens under the hood when the `nlp` object is called on a text
@@ -75,7 +77,7 @@ and all pipeline components are applied to the `Doc` in order. Both
 | `doc`       | The document to process. ~~Doc~~ |
 | **RETURNS** | The processed document. ~~Doc~~  |
 
-## Pipe.pipe {#pipe tag="method"}
+## TrainablePipe.pipe {#pipe tag="method"}
 
 Apply the pipe to a stream of documents. This usually happens under the hood
 when the `nlp` object is called on a text and all pipeline components are
@@ -98,7 +100,7 @@ applied to the `Doc` in order. Both [`__call__`](/api/pipe#call) and
 | `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
 | **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
-## Pipe.initialize {#initialize tag="method" new="3"}
+## TrainablePipe.initialize {#initialize tag="method" new="3"}
 
 Initialize the component for training. `get_examples` should be a function that
 returns an iterable of [`Example`](/api/example) objects. The data examples are
@@ -128,7 +130,7 @@ This method was previously called `begin_training`.
 | _keyword-only_ |                                                                                                                                       |
 | `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                  |
 
-## Pipe.predict {#predict tag="method"}
+## TrainablePipe.predict {#predict tag="method"}
 
 Apply the component's model to a batch of [`Doc`](/api/doc) objects, without
 modifying them.
@@ -151,7 +153,7 @@ This method needs to be overwritten with your own custom `predict` method.
 | `docs`      | The documents to predict. ~~Iterable[Doc]~~ |
 | **RETURNS** | The model's prediction for each document.   |
 
-## Pipe.set_annotations {#set_annotations tag="method"}
+## TrainablePipe.set_annotations {#set_annotations tag="method"}
 
 Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 
@@ -175,7 +177,7 @@ method.
 | `docs`   | The documents to modify. ~~Iterable[Doc]~~       |
 | `scores` | The scores to set, produced by `Tagger.predict`. |
 
-## Pipe.update {#update tag="method"}
+## TrainablePipe.update {#update tag="method"}
 
 Learn from a batch of [`Example`](/api/example) objects containing the
 predictions and gold-standard annotations, and update the component's model.
@@ -198,7 +200,7 @@ predictions and gold-standard annotations, and update the component's model.
 | `losses`          | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~           |
 | **RETURNS**       | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                              |
 
-## Pipe.rehearse {#rehearse tag="method,experimental" new="3"}
+## TrainablePipe.rehearse {#rehearse tag="method,experimental" new="3"}
 
 Perform a "rehearsal" update from a batch of data. Rehearsal updates teach the
 current model to make predictions similar to an initial model, to try to address
@@ -216,12 +218,11 @@ the "catastrophic forgetting" problem. This feature is experimental.
 | -------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | `examples`     | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                        |
 | _keyword-only_ |                                                                                                                          |
-| `drop`         | The dropout rate. ~~float~~                                                                                              |
 | `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~            |
 | `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
 | **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
 
-## Pipe.get_loss {#get_loss tag="method"}
+## TrainablePipe.get_loss {#get_loss tag="method"}
 
 Find the loss and gradient of loss for the batch of documents and their
 predicted scores.
@@ -246,7 +247,7 @@ This method needs to be overwritten with your own custom `get_loss` method.
 | `scores`    | Scores representing the model's predictions.                                |
 | **RETURNS** | The loss and the gradient, i.e. `(loss, gradient)`. ~~Tuple[float, float]~~ |
 
-## Pipe.score {#score tag="method" new="3"}
+## TrainablePipe.score {#score tag="method" new="3"}
 
 Score a batch of examples.
 
@@ -261,7 +262,7 @@ Score a batch of examples.
 | `examples`  | The examples to score. ~~Iterable[Example]~~                                                            |
 | **RETURNS** | The scores, e.g. produced by the [`Scorer`](/api/scorer). ~~Dict[str, Union[float, Dict[str, float]]]~~ |
 
-## Pipe.create_optimizer {#create_optimizer tag="method"}
+## TrainablePipe.create_optimizer {#create_optimizer tag="method"}
 
 Create an optimizer for the pipeline component. Defaults to
 [`Adam`](https://thinc.ai/docs/api-optimizers#adam) with default settings.
@@ -277,7 +278,7 @@ Create an optimizer for the pipeline component. Defaults to
 | ----------- | ---------------------------- |
 | **RETURNS** | The optimizer. ~~Optimizer~~ |
 
-## Pipe.use_params {#use_params tag="method, contextmanager"}
+## TrainablePipe.use_params {#use_params tag="method, contextmanager"}
 
 Modify the pipe's model, to use the given parameter values. At the end of the
 context, the original parameters are restored.
@@ -294,7 +295,7 @@ context, the original parameters are restored.
 | -------- | -------------------------------------------------- |
 | `params` | The parameter values to use in the model. ~~dict~~ |
 
-## Pipe.finish_update {#finish_update tag="method"}
+## TrainablePipe.finish_update {#finish_update tag="method"}
 
 Update parameters using the current parameter gradients. Defaults to calling
 [`self.model.finish_update`](https://thinc.ai/docs/api-model#finish_update).
@@ -312,7 +313,7 @@ Update parameters using the current parameter gradients. Defaults to calling
 | ----- | ------------------------------------- |
 | `sgd` | An optimizer. ~~Optional[Optimizer]~~ |
 
-## Pipe.add_label {#add_label tag="method"}
+## TrainablePipe.add_label {#add_label tag="method"}
 
 > #### Example
 >
@@ -347,12 +348,12 @@ case, all labels found in the sample will be automatically added to the model,
 and the output dimension will be
 [inferred](/usage/layers-architectures#thinc-shape-inference) automatically.
 
-## Pipe.is_resizable {#is_resizable tag="method"}
+## TrainablePipe.is_resizable {#is_resizable tag="property"}
 
 > #### Example
 >
 > ```python
-> can_resize = pipe.is_resizable()
+> can_resize = pipe.is_resizable
 > ```
 >
 > With custom resizing implemented by a component:
@@ -378,7 +379,7 @@ as an attribute to the component's model.
 | ----------- | ---------------------------------------------------------------------------------------------- |
 | **RETURNS** | Whether or not the output dimension of the model can be changed after initialization. ~~bool~~ |
 
-## Pipe.set_output {#set_output tag="method"}
+## TrainablePipe.set_output {#set_output tag="method"}
 
 Change the output dimension of the component's model. If the component is not
 [resizable](#is_resizable), this method will raise a `NotImplementedError`. If a
@@ -390,7 +391,7 @@ care should be taken to avoid the "catastrophic forgetting" problem.
 > #### Example
 >
 > ```python
-> if pipe.is_resizable():
+> if pipe.is_resizable:
 >     pipe.set_output(512)
 > ```
 
@@ -398,7 +399,7 @@ care should be taken to avoid the "catastrophic forgetting" problem.
 | ---- | --------------------------------- |
 | `nO` | The new output dimension. ~~int~~ |
 
-## Pipe.to_disk {#to_disk tag="method"}
+## TrainablePipe.to_disk {#to_disk tag="method"}
 
 Serialize the pipe to disk.
 
@@ -415,7 +416,7 @@ Serialize the pipe to disk.
 | _keyword-only_ |                                                                                                                                            |
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~                                                |
 
-## Pipe.from_disk {#from_disk tag="method"}
+## TrainablePipe.from_disk {#from_disk tag="method"}
 
 Load the pipe from disk. Modifies the object in place and returns it.
 
@@ -431,9 +432,9 @@ Load the pipe from disk. Modifies the object in place and returns it.
 | `path`         | A path to a directory. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
 | _keyword-only_ |                                                                                                 |
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~     |
-| **RETURNS**    | The modified pipe. ~~Pipe~~                                                                     |
+| **RETURNS**    | The modified pipe. ~~TrainablePipe~~                                                            |
 
-## Pipe.to_bytes {#to_bytes tag="method"}
+## TrainablePipe.to_bytes {#to_bytes tag="method"}
 
 > #### Example
 >
@@ -450,7 +451,7 @@ Serialize the pipe to a bytestring.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
 | **RETURNS**    | The serialized form of the pipe. ~~bytes~~                                                  |
 
-## Pipe.from_bytes {#from_bytes tag="method"}
+## TrainablePipe.from_bytes {#from_bytes tag="method"}
 
 Load the pipe from a bytestring. Modifies the object in place and returns it.
 
@@ -467,16 +468,16 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 | `bytes_data`   | The data to load from. ~~bytes~~                                                            |
 | _keyword-only_ |                                                                                             |
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
-| **RETURNS**    | The pipe. ~~Pipe~~                                                                          |
+| **RETURNS**    | The pipe. ~~TrainablePipe~~                                                                 |
 
 ## Attributes {#attributes}
 
-| Name    | Description                                                                                                              |
-| ------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `vocab` | The shared vocabulary that's passed in on initialization. ~~Vocab~~                                                      |
-| `model` | The model powering the component. ~~Model[List[Doc], Any]~~                                                              |
-| `name`  | The name of the component instance in the pipeline. Can be used in the losses. ~~str~~                                   |
-| `cfg`   | Keyword arguments passed to [`Pipe.__init__`](/api/pipe#init). Will be serialized with the component. ~~Dict[str, Any]~~ |
+| Name    | Description                                                                                                                       |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab` | The shared vocabulary that's passed in on initialization. ~~Vocab~~                                                               |
+| `model` | The model powering the component. ~~Model[List[Doc], Any]~~                                                                       |
+| `name`  | The name of the component instance in the pipeline. Can be used in the losses. ~~str~~                                            |
+| `cfg`   | Keyword arguments passed to [`TrainablePipe.__init__`](/api/pipe#init). Will be serialized with the component. ~~Dict[str, Any]~~ |
 
 ## Serialization fields {#serialization-fields}
 
@@ -487,11 +488,10 @@ serialization by passing in the string names via the `exclude` argument.
 > #### Example
 >
 > ```python
-> data = pipe.to_disk("/path", exclude=["vocab"])
+> data = pipe.to_disk("/path")
 > ```
 
 | Name    | Description                                                    |
 | ------- | -------------------------------------------------------------- |
-| `vocab` | The shared [`Vocab`](/api/vocab).                              |
 | `cfg`   | The config file. You usually don't want to exclude this.       |
 | `model` | The binary model data. You usually don't want to exclude this. |
