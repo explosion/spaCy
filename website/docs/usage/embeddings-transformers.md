@@ -235,7 +235,7 @@ The `Transformer` component sets the
 which lets you access the transformers outputs at runtime.
 
 ```cli
-$ python -m spacy download en_core_trf_lg
+$ python -m spacy download en_core_web_trf
 ```
 
 ```python
@@ -249,7 +249,7 @@ from thinc.api import use_pytorch_for_gpu_memory, require_gpu
 use_pytorch_for_gpu_memory()
 require_gpu(0)
 
-nlp = spacy.load("en_core_trf_lg")
+nlp = spacy.load("en_core_web_trf")
 for doc in nlp.pipe(["some text", "some other text"]):
     tokvecs = doc._.trf_data.tensors[-1]
 ```
@@ -269,7 +269,7 @@ def custom_annotation_setter(docs, trf_data):
     for doc, data in zip(docs, doc_data):
         doc._.custom_attr = data
 
-nlp = spacy.load("en_core_trf_lg")
+nlp = spacy.load("en_core_web_trf")
 nlp.get_pipe("transformer").set_extra_annotations = custom_annotation_setter
 doc = nlp("This is a text")
 assert isinstance(doc._.custom_attr, TransformerData)
@@ -286,7 +286,7 @@ of objects by referring to creation functions, including functions you register
 yourself. For details on how to get started with training your own model, check
 out the [training quickstart](/usage/training#quickstart).
 
-<!-- TODO: <Project id="en_core_trf_lg">
+<!-- TODO: <Project id="pipelines/transformers">
 
 The easiest way to get started is to clone a transformers-based project
 template. Swap in your data, edit the settings and hyperparameters and train,
