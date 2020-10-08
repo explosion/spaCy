@@ -1092,7 +1092,7 @@ class Language:
                 if (
                     name not in exclude
                     and hasattr(proc, "is_trainable")
-                    and proc.is_trainable()
+                    and proc.is_trainable
                     and proc.model not in (True, False, None)
                 ):
                     proc.finish_update(sgd)

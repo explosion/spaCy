@@ -348,12 +348,12 @@ case, all labels found in the sample will be automatically added to the model,
 and the output dimension will be
 [inferred](/usage/layers-architectures#thinc-shape-inference) automatically.
 
-## TrainablePipe.is_resizable {#is_resizable tag="method"}
+## TrainablePipe.is_resizable {#is_resizable tag="property"}
 
 > #### Example
 >
 > ```python
-> can_resize = pipe.is_resizable()
+> can_resize = pipe.is_resizable
 > ```
 >
 > With custom resizing implemented by a component:
@@ -391,7 +391,7 @@ care should be taken to avoid the "catastrophic forgetting" problem.
 > #### Example
 >
 > ```python
-> if pipe.is_resizable():
+> if pipe.is_resizable:
 >     pipe.set_output(512)
 > ```
 

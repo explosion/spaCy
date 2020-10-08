@@ -197,20 +197,22 @@ cdef class TrainablePipe(Pipe):
         """
         raise NotImplementedError(Errors.E931.format(parent="Pipe", method="add_label", name=self.name))
 
+    @property
     def is_trainable(self) -> bool:
         return True
 
+    @property
     def is_resizable(self) -> bool:
         return hasattr(self, "model") and "resize_output" in self.model.attrs
 
     def _allow_extra_label(self) -> None:
         """Raise an error if the component can not add any more labels."""
         if self.model.has_dim("nO") and self.model.get_dim("nO") == len(self.labels):
-            if not self.is_resizable():
+            if not self.is_resizable:
                 raise ValueError(Errors.E922.format(name=self.name, nO=self.model.get_dim("nO")))
 
     def set_output(self, nO: int) -> None:
-        if self.is_resizable():
+        if self.is_resizable:
             self.model.attrs["resize_output"](self.model, nO)
         else:
             raise NotImplementedError(Errors.E921)
