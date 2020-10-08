@@ -133,7 +133,7 @@ def test_kb_custom_length(nlp):
 def test_kb_initialize_empty(nlp):
     """Test that the EL can't initialize without examples"""
     entity_linker = nlp.add_pipe("entity_linker")
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         entity_linker.initialize(lambda: [])
 
 
@@ -151,6 +151,23 @@ def test_kb_serialize(nlp):
         with pytest.raises(ValueError):
             # can not read from an unknown file
             mykb.from_disk(d / "unknown" / "kb")
+
+
+def test_kb_serialize_vocab(nlp):
+    """Test serialization of the KB and custom strings"""
+    entity = "MyFunnyID"
+    assert entity not in nlp.vocab.strings
+    mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
+    assert not mykb.contains_entity(entity)
+    mykb.add_entity(entity, freq=342, entity_vector=[3])
+    assert mykb.contains_entity(entity)
+    assert entity in mykb.vocab.strings
+    with make_tempdir() as d:
+        # normal read-write behaviour
+        mykb.to_disk(d / "kb")
+        mykb_new = KnowledgeBase(Vocab(), entity_vector_length=1)
+        mykb_new.from_disk(d / "kb")
+        assert entity in mykb_new.vocab.strings
 
 
 def test_candidate_generation(nlp):
@@ -413,6 +430,7 @@ def test_overfitting_IO():
     # Simple test to try and quickly overfit the NEL component - ensuring the ML models work correctly
     nlp = English()
     vector_length = 3
+    assert "Q2146908" not in nlp.vocab.strings
 
     # Convert the texts to docs to make sure we have doc.ents set for the training examples
     train_examples = []
@@ -440,6 +458,9 @@ def test_overfitting_IO():
         last=True,
     )
     entity_linker.set_kb(create_kb)
+    assert "Q2146908" in entity_linker.vocab.strings
+    assert "Q2146908" in entity_linker.kb.vocab.strings
+    assert "Q2146908" in entity_linker.kb._added_strings
 
     # train the NEL pipe
     optimizer = nlp.initialize(get_examples=lambda: train_examples)
@@ -474,6 +495,10 @@ def test_overfitting_IO():
         nlp.to_disk(tmp_dir)
         nlp2 = util.load_model_from_path(tmp_dir)
         assert nlp2.pipe_names == nlp.pipe_names
+        assert "Q2146908" in nlp2.vocab.strings
+        entity_linker2 = nlp2.get_pipe("entity_linker")
+        assert "Q2146908" in entity_linker2.vocab.strings
+        assert "Q2146908" in entity_linker2.kb.vocab.strings
         predictions = []
         for text, annotation in TRAIN_DATA:
             doc2 = nlp2(text)

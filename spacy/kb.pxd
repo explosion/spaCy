@@ -30,6 +30,7 @@ cdef class KnowledgeBase:
     cdef Pool mem
     cpdef readonly Vocab vocab
     cdef int64_t entity_vector_length
+    cdef public set _added_strings
 
     # This maps 64bit keys (hash of unique entity string)
     # to 64bit values (position of the _KBEntryC struct in the _entries vector).

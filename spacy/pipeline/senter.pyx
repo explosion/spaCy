@@ -6,12 +6,11 @@ from thinc.api import Model, SequenceCategoricalCrossentropy, Config
 
 from ..tokens.doc cimport Doc
 
-from .pipe import deserialize_config
 from .tagger import Tagger
 from ..language import Language
 from ..errors import Errors
 from ..scorer import Scorer
-from ..training import validate_examples
+from ..training import validate_examples, validate_get_examples
 from .. import util
 
 
@@ -62,6 +61,7 @@ class SentenceRecognizer(Tagger):
         self.name = name
         self._rehearsal_model = None
         self.cfg = {}
+        self._added_strings = set()
 
     @property
     def labels(self):
@@ -138,7 +138,7 @@ class SentenceRecognizer(Tagger):
 
         DOCS: https://nightly.spacy.io/api/sentencerecognizer#initialize
         """
-        self._ensure_examples(get_examples)
+        validate_get_examples(get_examples, "SentenceRecognizer.initialize")
         doc_sample = []
         label_sample = []
         assert self.labels, Errors.E924.format(name=self.name)

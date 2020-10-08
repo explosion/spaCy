@@ -522,14 +522,12 @@ class Errors:
     E928 = ("A KnowledgeBase can only be serialized to/from from a directory, "
             "but the provided argument {loc} points to a file.")
     E929 = ("Couldn't read KnowledgeBase from {loc}. The path does not seem to exist.")
-    E930 = ("Received invalid get_examples callback in `{name}.initialize`. "
+    E930 = ("Received invalid get_examples callback in `{method}`. "
             "Expected function that returns an iterable of Example objects but "
             "got: {obj}")
-    E931 = ("Encountered Pipe subclass without `Pipe.{method}` method in component "
-            "'{name}'. If the component is trainable and you want to use this "
-            "method, make sure it's overwritten on the subclass. If your "
-            "component isn't trainable, add a method that does nothing or "
-            "don't use the Pipe base class.")
+    E931 = ("Encountered {parent} subclass without `{parent}.{method}` "
+            "method in component '{name}'. If you want to use this "
+            "method, make sure it's overwritten on the subclass.")
     E940 = ("Found NaN values in scores.")
     E941 = ("Can't find model '{name}'. It looks like you're trying to load a "
             "model from a shortcut, which is deprecated as of spaCy v3.0. To "

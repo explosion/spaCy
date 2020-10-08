@@ -4,9 +4,9 @@ from thinc.api import get_array_module, Model, Optimizer, set_dropout_rate, Conf
 from thinc.types import Floats2d
 import numpy
 
-from .pipe import Pipe
+from .trainable_pipe import TrainablePipe
 from ..language import Language
-from ..training import Example, validate_examples
+from ..training import Example, validate_examples, validate_get_examples
 from ..errors import Errors
 from ..scorer import Scorer
 from .. import util
@@ -85,7 +85,7 @@ def make_textcat(
     return TextCategorizer(nlp.vocab, model, name, threshold=threshold)
 
 
-class TextCategorizer(Pipe):
+class TextCategorizer(TrainablePipe):
     """Pipeline component for text classification.
 
     DOCS: https://nightly.spacy.io/api/textcategorizer
@@ -110,6 +110,7 @@ class TextCategorizer(Pipe):
         self._rehearsal_model = None
         cfg = {"labels": [], "threshold": threshold, "positive_label": None}
         self.cfg = dict(cfg)
+        self._added_strings = set()
 
     @property
     def labels(self) -> Tuple[str]:
@@ -118,13 +119,6 @@ class TextCategorizer(Pipe):
         DOCS: https://nightly.spacy.io/api/textcategorizer#labels
         """
         return tuple(self.cfg["labels"])
-
-    @labels.setter
-    def labels(self, value: List[str]) -> None:
-        # TODO: This really shouldn't be here. I had a look and I added it when
-        # I added the labels property, but it's pretty nasty to have this, and
-        # will lead to problems.
-        self.cfg["labels"] = tuple(value)
 
     @property
     def label_data(self) -> List[str]:
@@ -306,7 +300,8 @@ class TextCategorizer(Pipe):
         if label in self.labels:
             return 0
         self._allow_extra_label()
-        self.labels = tuple(list(self.labels) + [label])
+        self.cfg["labels"].append(label)
+        self.add_string(label)
         return 1
 
     def initialize(
@@ -329,7 +324,7 @@ class TextCategorizer(Pipe):
 
         DOCS: https://nightly.spacy.io/api/textcategorizer#initialize
         """
-        self._ensure_examples(get_examples)
+        validate_get_examples(get_examples, "TextCategorizer.initialize")
         if labels is None:
             for example in get_examples():
                 for cat in example.y.cats:

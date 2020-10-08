@@ -342,12 +342,6 @@ class EntityRuler(Pipe):
         validate_examples(examples, "EntityRuler.score")
         return Scorer.score_spans(examples, "ents", **kwargs)
 
-    def predict(self, docs):
-        pass
-
-    def set_annotations(self, docs, scores):
-        pass
-
     def from_bytes(
         self, patterns_bytes: bytes, *, exclude: Iterable[str] = SimpleFrozenList()
     ) -> "EntityRuler":

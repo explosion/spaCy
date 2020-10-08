@@ -1,5 +1,5 @@
 import pytest
-from spacy.pipeline import Pipe
+from spacy.pipeline import TrainablePipe
 from spacy.matcher import PhraseMatcher, Matcher
 from spacy.tokens import Doc, Span, DocBin
 from spacy.training import Example, Corpus
@@ -271,7 +271,7 @@ def test_issue4272():
 
 
 def test_multiple_predictions():
-    class DummyPipe(Pipe):
+    class DummyPipe(TrainablePipe):
         def __init__(self):
             self.model = "dummy_model"
 

@@ -21,13 +21,14 @@ from ..ml.parser_model cimport predict_states, arg_max_if_valid
 from ..ml.parser_model cimport WeightsC, ActivationsC, SizesC, cpu_log_loss
 from ..ml.parser_model cimport get_c_weights, get_c_sizes
 from ..tokens.doc cimport Doc
+from .trainable_pipe import TrainablePipe
 
-from ..training import validate_examples
+from ..training import validate_examples, validate_get_examples
 from ..errors import Errors, Warnings
 from .. import util
 
 
-cdef class Parser(Pipe):
+cdef class Parser(TrainablePipe):
     """
     Base class of the DependencyParser and EntityRecognizer.
     """
@@ -75,6 +76,7 @@ cdef class Parser(Pipe):
             self.add_multitask_objective(multitask)
 
         self._rehearsal_model = None
+        self._added_strings = set()
 
     def __getnewargs_ex__(self):
         """This allows pickling the Parser and its keyword-only init arguments"""
@@ -118,6 +120,7 @@ cdef class Parser(Pipe):
                 resized = True
         if resized:
             self._resize()
+            self.add_string(label)
             return 1
         return 0
 
@@ -411,7 +414,7 @@ cdef class Parser(Pipe):
         self.model.attrs["resize_output"](self.model, nO)
 
     def initialize(self, get_examples, nlp=None, labels=None):
-        self._ensure_examples(get_examples)
+        validate_get_examples(get_examples, "Parser.initialize")
         lexeme_norms = self.vocab.lookups.get_table("lexeme_norm", {})
         if len(lexeme_norms) == 0 and self.vocab.lang in util.LEXEME_NORM_LANGS:
             langs = ", ".join(util.LEXEME_NORM_LANGS)
@@ -439,7 +442,7 @@ cdef class Parser(Pipe):
                     break
                 # non-trainable components may have a pipe() implementation that refers to dummy
                 # predict and set_annotations methods
-                if hasattr(component, "pipe") and hasattr(component, "is_trainable") and component.is_trainable():
+                if hasattr(component, "pipe"):
                     doc_sample = list(component.pipe(doc_sample, batch_size=8))
                 else:
                     doc_sample = [component(doc) for doc in doc_sample]
@@ -454,7 +457,7 @@ cdef class Parser(Pipe):
     def to_disk(self, path, exclude=tuple()):
         serializers = {
             'model': lambda p: (self.model.to_disk(p) if self.model is not True else True),
-            'vocab': lambda p: self.vocab.to_disk(p),
+            'strings.json': lambda p: srsly.write_json(p, self._added_strings),
             'moves': lambda p: self.moves.to_disk(p, exclude=["strings"]),
             'cfg': lambda p: srsly.write_json(p, self.cfg)
         }
@@ -462,7 +465,7 @@ cdef class Parser(Pipe):
 
     def from_disk(self, path, exclude=tuple()):
         deserializers = {
-            'vocab': lambda p: self.vocab.from_disk(p),
+            'strings.json': lambda p: [self.add_string(s) for s in srsly.read_json(p)],
             'moves': lambda p: self.moves.from_disk(p, exclude=["strings"]),
             'cfg': lambda p: self.cfg.update(srsly.read_json(p)),
             'model': lambda p: None,
@@ -482,7 +485,7 @@ cdef class Parser(Pipe):
     def to_bytes(self, exclude=tuple()):
         serializers = {
             "model": lambda: (self.model.to_bytes()),
-            "vocab": lambda: self.vocab.to_bytes(),
+            "strings.json": lambda: srsly.json_dumps(sorted(self._added_strings)),
             "moves": lambda: self.moves.to_bytes(exclude=["strings"]),
             "cfg": lambda: srsly.json_dumps(self.cfg, indent=2, sort_keys=True)
         }
@@ -490,7 +493,7 @@ cdef class Parser(Pipe):
 
     def from_bytes(self, bytes_data, exclude=tuple()):
         deserializers = {
-            "vocab": lambda b: self.vocab.from_bytes(b),
+            "strings.json": lambda b: [self.add_string(s) for s in  srsly.json_loads(b)],
             "moves": lambda b: self.moves.from_bytes(b, exclude=["strings"]),
             "cfg": lambda b: self.cfg.update(srsly.json_loads(b)),
             "model": lambda b: None,

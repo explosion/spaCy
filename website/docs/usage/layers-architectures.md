@@ -491,13 +491,14 @@ In addition to [swapping out](#swap-architectures) default models in built-in
 components, you can also implement an entirely new,
 [trainable](/usage/processing-pipelines#trainable-components) pipeline component
 from scratch. This can be done by creating a new class inheriting from
-[`Pipe`](/api/pipe), and linking it up to your custom model implementation.
+[`TrainablePipe`](/api/pipe), and linking it up to your custom model
+implementation.
 
 <Infobox title="Trainable component API" emoji="💡">
 
 For details on how to implement pipeline components, check out the usage guide
 on [custom components](/usage/processing-pipelines#custom-component) and the
-overview of the `Pipe` methods used by
+overview of the `TrainablePipe` methods used by
 [trainable components](/usage/processing-pipelines#trainable-components).
 
 </Infobox>
@@ -646,15 +647,15 @@ get_candidates = model.attrs["get_candidates"]
 
 To use our new relation extraction model as part of a custom
 [trainable component](/usage/processing-pipelines#trainable-components), we
-create a subclass of [`Pipe`](/api/pipe) that holds the model.
+create a subclass of [`TrainablePipe`](/api/pipe) that holds the model.
 
 ![Illustration of Pipe methods](../images/trainable_component.svg)
 
 ```python
 ### Pipeline component skeleton
-from spacy.pipeline import Pipe
+from spacy.pipeline import TrainablePipe
 
-class RelationExtractor(Pipe):
+class RelationExtractor(TrainablePipe):
      def __init__(self, vocab, model, name="rel"):
         """Create a component instance."""
         self.model = model
@@ -757,9 +758,10 @@ def update(
 
 When the internal model is trained, the component can be used to make novel
 **predictions**. The [`predict`](/api/pipe#predict) function needs to be
-implemented for each subclass of `Pipe`. In our case, we can simply delegate to
-the internal model's [predict](https://thinc.ai/docs/api-model#predict) function
-that takes a batch of `Doc` objects and returns a ~~Floats2d~~ array:
+implemented for each subclass of `TrainablePipe`. In our case, we can simply
+delegate to the internal model's
+[predict](https://thinc.ai/docs/api-model#predict) function that takes a batch
+of `Doc` objects and returns a ~~Floats2d~~ array:
 
 ```python
 ### The predict method
@@ -826,7 +828,7 @@ def __call__(self, Doc doc):
     return doc
 ```
 
-Once our `Pipe` subclass is fully implemented, we can
+Once our `TrainablePipe` subclass is fully implemented, we can
 [register](/usage/processing-pipelines#custom-components-factories) the
 component with the [`@Language.factory`](/api/language#factory) decorator. This
 assigns it a name and lets you create the component with
