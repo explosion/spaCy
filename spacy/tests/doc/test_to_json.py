@@ -10,8 +10,16 @@ def doc(en_vocab):
     heads = [0, 0, 0]
     deps = ["ROOT", "dobj", "dobj"]
     ents = ["O", "B-ORG", "O"]
+    morphs = ["Feat1=A", "Feat1=B", "Feat1=A|Feat2=D"]
     return Doc(
-        en_vocab, words=words, pos=pos, tags=tags, heads=heads, deps=deps, ents=ents
+        en_vocab,
+        words=words,
+        pos=pos,
+        tags=tags,
+        heads=heads,
+        deps=deps,
+        ents=ents,
+        morphs=morphs,
     )
 
 
