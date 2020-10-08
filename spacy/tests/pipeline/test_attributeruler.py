@@ -136,6 +136,16 @@ def test_attributeruler_init_patterns(nlp, pattern_dicts):
     assert doc.has_annotation("MORPH")
 
 
+def test_attributeruler_init_clear(nlp, pattern_dicts):
+    """Test that initialization clears patterns."""
+    ruler = nlp.add_pipe("attribute_ruler")
+    assert not len(ruler.matcher)
+    ruler.add_patterns(pattern_dicts)
+    assert len(ruler.matcher)
+    ruler.initialize(lambda: [])
+    assert not len(ruler.matcher)
+
+
 def test_attributeruler_score(nlp, pattern_dicts):
     # initialize with patterns
     ruler = nlp.add_pipe("attribute_ruler")
