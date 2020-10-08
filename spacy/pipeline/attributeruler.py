@@ -277,7 +277,7 @@ class AttributeRuler(Pipe):
             self.add_patterns(srsly.msgpack_loads(b))
 
         deserialize = {
-            "strings": lambda b: [self.add_string(s) for s in srsly.json_loads(b)],
+            "strings.json": lambda b: [self.add_string(s) for s in srsly.json_loads(b)],
             "patterns": load_patterns,
         }
         util.from_bytes(bytes_data, deserialize, exclude)

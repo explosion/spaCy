@@ -486,7 +486,7 @@ cdef class Parser(TrainablePipe):
     def to_bytes(self, exclude=tuple()):
         serializers = {
             "model": lambda: (self.model.to_bytes()),
-            "strings": lambda: srsly.json_dumps(self._added_strings),
+            "strings.json": lambda: srsly.json_dumps(self._added_strings),
             "moves": lambda: self.moves.to_bytes(exclude=["strings"]),
             "cfg": lambda: srsly.json_dumps(self.cfg, indent=2, sort_keys=True)
         }
@@ -494,7 +494,7 @@ cdef class Parser(TrainablePipe):
 
     def from_bytes(self, bytes_data, exclude=tuple()):
         deserializers = {
-            "strings": lambda b: [self.add_string(s) for s in  srsly.json_loads(b)],
+            "strings.json": lambda b: [self.add_string(s) for s in  srsly.json_loads(b)],
             "moves": lambda b: self.moves.from_bytes(b, exclude=["strings"]),
             "cfg": lambda b: self.cfg.update(srsly.json_loads(b)),
             "model": lambda b: None,
