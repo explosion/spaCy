@@ -1,6 +1,6 @@
 import pytest
 import srsly
-from spacy import registry
+from spacy import registry, Vocab
 from spacy.pipeline import Tagger, DependencyParser, EntityRecognizer
 from spacy.pipeline import TextCategorizer, SentenceRecognizer
 from spacy.pipeline.dep_parser import DEFAULT_PARSER_MODEL
@@ -68,6 +68,29 @@ def test_serialize_parser_roundtrip_bytes(en_vocab, Parser):
     bytes_3 = parser.to_bytes(exclude=["vocab"])
     assert len(bytes_2) == len(bytes_3)
     assert bytes_2 == bytes_3
+
+
+@pytest.mark.parametrize("Parser", test_parsers)
+def test_serialize_strings(Parser):
+    vocab1 = Vocab()
+    label = "FunnyLabel"
+    assert label not in vocab1.strings
+    config = {
+        "learn_tokens": False,
+        "min_action_freq": 0,
+        "update_with_oracle_cut_size": 100,
+    }
+    cfg = {"model": DEFAULT_PARSER_MODEL}
+    model = registry.resolve(cfg, validate=True)["model"]
+    parser1 = Parser(vocab1, model, **config)
+    parser1.add_label(label)
+    assert label in parser1.vocab.strings
+    vocab2 = Vocab()
+    assert label not in vocab2.strings
+    parser2 = Parser(vocab2, model, **config)
+    parser2 = parser2.from_bytes(parser1.to_bytes(exclude=["vocab"]))
+    assert parser1._added_strings == parser2._added_strings == ["FunnyLabel"]
+    assert label in parser2.vocab.strings
 
 
 @pytest.mark.parametrize("Parser", test_parsers)
