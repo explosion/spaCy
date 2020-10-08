@@ -30,6 +30,8 @@ const branch = isNightly ? 'develop' : 'master'
 const replacements = {
     GITHUB_SPACY: `https://github.com/explosion/spaCy/tree/${branch}`,
     GITHUB_PROJECTS: `https://github.com/${site.projectsRepo}`,
+    SPACY_PKG_NAME: isNightly ? 'spacy-nightly' : 'spacy',
+    SPACY_PKG_FLAGS: isNightly ? ' --pre' : '',
 }
 
 /**

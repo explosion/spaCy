@@ -47,7 +47,7 @@ Before you install spaCy and its dependencies, make sure that your `pip`,
 
 ```bash
 $ pip install -U pip setuptools wheel
-$ pip install -U spacy
+$ pip install -U %%SPACY_PKG_NAME%%SPACY_PKG_FLAGS
 ```
 
 When using pip it is generally recommended to install packages in a virtual
@@ -57,7 +57,7 @@ environment to avoid modifying system state:
 $ python -m venv .env
 $ source .env/bin/activate
 $ pip install -U pip setuptools wheel
-$ pip install spacy
+$ pip install -U %%SPACY_PKG_NAME%%SPACY_PKG_FLAGS
 ```
 
 spaCy also lets you install extra dependencies by specifying the following
@@ -68,15 +68,16 @@ spaCy's [`setup.cfg`](%%GITHUB_SPACY/setup.cfg) for details on what's included.
 > #### Example
 >
 > ```bash
-> $ pip install spacy[lookups,transformers]
+> $ pip install %%SPACY_PKG_NAME[lookups,transformers]%%SPACY_PKG_FLAGS
 > ```
 
-| Name             | Description                                                                                                                                                                                                                                                    |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `lookups`        | Install [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) for data tables for lemmatization and lexeme normalization. The data is serialized with trained pipelines, so you only need this package if you want to train your own models. |
-| `transformers`   | Install [`spacy-transformers`](https://github.com/explosion/spacy-transformers). The package will be installed automatically when you install a transformer-based pipeline.                                                                                    |
-| `cuda`, ...      | Install spaCy with GPU support provided by [CuPy](https://cupy.chainer.org) for your given CUDA version. See the GPU [installation instructions](#gpu) for details and options.                                                                                |
-| `ja`, `ko`, `th` | Install additional dependencies required for tokenization for the [languages](/usage/models#languages).                                                                                                                                                        |
+| Name                   | Description                                                                                                                                                                                                                                                    |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lookups`              | Install [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) for data tables for lemmatization and lexeme normalization. The data is serialized with trained pipelines, so you only need this package if you want to train your own models. |
+| `transformers`         | Install [`spacy-transformers`](https://github.com/explosion/spacy-transformers). The package will be installed automatically when you install a transformer-based pipeline.                                                                                    |
+| `ray`                  | Install [`spacy-ray`](https://github.com/explosion/spacy-ray) to add CLI commands for [parallel training](/usage/training#parallel-training).                                                                                                                  |
+| `cuda`, ...            | Install spaCy with GPU support provided by [CuPy](https://cupy.chainer.org) for your given CUDA version. See the GPU [installation instructions](#gpu) for details and options.                                                                                |
+| `ja`, `ko`, `th`, `zh` | Install additional dependencies required for tokenization for the [languages](/usage/models#languages).                                                                                                                                                        |
 
 ### conda {#conda}
 
@@ -88,8 +89,8 @@ $ conda install -c conda-forge spacy
 ```
 
 For the feedstock including the build recipe and configuration, check out
-[this repository](https://github.com/conda-forge/spacy-feedstock). Improvements
-and pull requests to the recipe and setup are always appreciated.
+[this repository](https://github.com/conda-forge/spacy-feedstock). Note that we
+currently don't publish any [pre-releases](#changelog-pre) on conda.
 
 ### Upgrading spaCy {#upgrading}
 
@@ -116,7 +117,7 @@ are printed. It's recommended to run the command with `python -m` to make sure
 you're executing the correct version of spaCy.
 
 ```cli
-$ pip install -U spacy
+$ pip install -U %%SPACY_PKG_NAME%%SPACY_PKG_FLAGS
 $ python -m spacy validate
 ```
 
@@ -134,7 +135,7 @@ specifier allows cupy to be installed via wheel, saving some compilation time.
 The specifiers should install [`cupy`](https://cupy.chainer.org).
 
 ```bash
-$ pip install -U spacy[cuda92]
+$ pip install -U %%SPACY_PKG_NAME[cuda92]%%SPACY_PKG_FLAGS
 ```
 
 Once you have a GPU-enabled installation, the best way to activate it is to call

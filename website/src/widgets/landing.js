@@ -28,7 +28,8 @@ import irlBackground from '../images/spacy-irl.jpg'
 
 import Benchmarks from 'usage/_benchmarks-models.md'
 
-const CODE_EXAMPLE = `# pip install spacy
+function getCodeExample(nightly) {
+    return `# pip install -U ${nightly ? 'spacy-nightly --pre' : 'spacy'}
 # python -m spacy download en_core_web_sm
 import spacy
 
@@ -52,9 +53,11 @@ print("Verbs:", [token.lemma_ for token in doc if token.pos_ == "VERB"])
 for entity in doc.ents:
     print(entity.text, entity.label_)
 `
+}
 
 const Landing = ({ data }) => {
-    const { counts } = data
+    const { counts, nightly } = data
+    const codeExample = getCodeExample(nightly)
     return (
         <>
             <LandingHeader nightly={data.nightly}>
@@ -91,7 +94,7 @@ const Landing = ({ data }) => {
             </LandingGrid>
 
             <LandingGrid>
-                <LandingDemo title="Edit the code & try spaCy">{CODE_EXAMPLE}</LandingDemo>
+                <LandingDemo title="Edit the code &amp; try spaCy">{codeExample}</LandingDemo>
 
                 <LandingCol>
                     <H2>Features</H2>

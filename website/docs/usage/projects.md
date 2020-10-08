@@ -813,7 +813,7 @@ full embedded visualizer, as well as individual components.
 > #### Installation
 >
 > ```bash
-> $ pip install "spacy-streamlit>=1.0.0a0"
+> $ pip install spacy-streamlit --pre
 > ```
 
 ![](../images/spacy-streamlit.png)
@@ -911,7 +911,7 @@ https://github.com/explosion/projects/blob/v3/integrations/fastapi/scripts/main.
 > #### Installation
 >
 > ```cli
-> $ pip install spacy-ray
+> $ pip install -U %%SPACY_PKG_NAME[ray]%%SPACY_PKG_FLAGS
 > # Check that the CLI is registered
 > $ python -m spacy ray --help
 > ```
