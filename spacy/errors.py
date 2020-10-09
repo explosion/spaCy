@@ -457,8 +457,7 @@ class Errors:
 
     # TODO: fix numbering after merging develop into master
     E900 = ("Could not run the full 'nlp' pipeline for evaluation. If you specified "
-            "frozen components, make sure they were already trained and initialized. "
-            "You can also consider moving them to the 'disabled' list instead.")
+            "frozen components, make sure they were already trained and initialized. ")
     E901 = ("Failed to remove existing output directory: {path}. If your "
             "config and the components you train change between runs, a "
             "non-empty output directory can lead to stale pipeline data. To "
