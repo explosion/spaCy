@@ -129,11 +129,25 @@ def test_enable_pipes_method(nlp, name):
 
 @pytest.mark.parametrize("name", ["my_component"])
 def test_disable_pipes_context(nlp, name):
+    """Test that an enabled component stays enabled after running the context manager."""
     nlp.add_pipe("new_pipe", name=name)
     assert nlp.has_pipe(name)
     with nlp.select_pipes(disable=name):
         assert not nlp.has_pipe(name)
     assert nlp.has_pipe(name)
+
+
+@pytest.mark.parametrize("name", ["my_component"])
+def test_disable_pipes_context_restore(nlp, name):
+    """Test that a disabled component stays disabled after running the context manager."""
+    nlp.add_pipe("new_pipe", name=name)
+    assert nlp.has_pipe(name)
+    nlp.disable_pipes(name)
+    assert not nlp.has_pipe(name)
+    with nlp.select_pipes(disable=name):
+        assert not nlp.has_pipe(name)
+    assert not nlp.has_pipe(name)
+
 
 
 def test_select_pipes_list_arg(nlp):
