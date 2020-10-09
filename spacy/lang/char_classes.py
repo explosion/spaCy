@@ -178,7 +178,7 @@ LATIN_UPPER = (
 
 # all latin classes
 LATIN_BASIC = (
-        _latin_standard + _latin_standard_fullwidth + _latin_supplement + _latin_extendedA
+    _latin_standard + _latin_standard_fullwidth + _latin_supplement + _latin_extendedA
 )
 LATIN = (
     LATIN_BASIC
