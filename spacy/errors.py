@@ -456,8 +456,9 @@ class Errors:
             "issue tracker: http://github.com/explosion/spaCy/issues")
 
     # TODO: fix numbering after merging develop into master
-    E900 = ("Could not run the full 'nlp' pipeline for evaluation. If you specified "
-            "frozen components, make sure they were already initialized and trained. ")
+    E900 = ("Could not run the full pipeline for evaluation. If you specified "
+            "frozen components, make sure they were already initialized and "
+            "trained. Full pipeline: {pipeline}")
     E901 = ("Failed to remove existing output directory: {path}. If your "
             "config and the components you train change between runs, a "
             "non-empty output directory can lead to stale pipeline data. To "

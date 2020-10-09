@@ -252,7 +252,7 @@ def create_evaluation_callback(
         try:
             scores = nlp.evaluate(dev_examples)
         except KeyError as e:
-            raise KeyError(Errors.E900) from e
+            raise KeyError(Errors.E900.format(pipeline=nlp.pipe_names)) from e
         # Calculate a weighted sum based on score_weights for the main score.
         # We can only consider scores that are ints/floats, not dicts like
         # entity scores per type etc.
