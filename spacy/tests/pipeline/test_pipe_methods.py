@@ -142,7 +142,7 @@ def test_disable_pipes_context_restore(nlp, name):
     """Test that a disabled component stays disabled after running the context manager."""
     nlp.add_pipe("new_pipe", name=name)
     assert nlp.has_pipe(name)
-    nlp.disable_pipes(name)
+    nlp.disable_pipe(name)
     assert not nlp.has_pipe(name)
     with nlp.select_pipes(disable=name):
         assert not nlp.has_pipe(name)
