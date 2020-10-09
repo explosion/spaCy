@@ -149,7 +149,6 @@ def test_disable_pipes_context_restore(nlp, name):
     assert not nlp.has_pipe(name)
 
 
-
 def test_select_pipes_list_arg(nlp):
     for name in ["c1", "c2", "c3"]:
         nlp.add_pipe("new_pipe", name=name)
