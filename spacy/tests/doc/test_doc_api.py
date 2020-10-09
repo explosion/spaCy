@@ -617,5 +617,5 @@ def test_doc_set_ents_spans(en_tokenizer):
             retokenizer.merge(span)
     # If this line is uncommented, it works:
     # print(spans)
-    doc.ents = list(doc.ents) + spans
-    print([ent.text for ent in doc.ents])
+    doc.ents = spans
+    assert [ent.text for ent in doc.ents] == ["Colombia", "Czech Republic"]
