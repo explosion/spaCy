@@ -202,8 +202,17 @@ def test_overfitting_IO():
     assert doc[0].dep_ == "nsubj"
     assert doc[2].dep_ == "dobj"
     assert doc[3].dep_ == "punct"
-    assert parser._added_strings == {"dep", "dobj", "cc", "nsubj", "compound", "punct", "conj", "nmod", "ROOT"}
-
+    assert parser._added_strings == {
+        "dep",
+        "dobj",
+        "cc",
+        "nsubj",
+        "compound",
+        "punct",
+        "conj",
+        "nmod",
+        "ROOT",
+    }
 
     # Also test the results are still the same after IO
     with make_tempdir() as tmp_dir:
@@ -214,4 +223,14 @@ def test_overfitting_IO():
         assert doc2[2].dep_ == "dobj"
         assert doc2[3].dep_ == "punct"
         parser2 = nlp2.get_pipe("parser")
-        assert parser2._added_strings == {"dep", "dobj", "cc", "nsubj", "compound", "punct", "conj", "nmod", "ROOT"}
+        assert parser2._added_strings == {
+            "dep",
+            "dobj",
+            "cc",
+            "nsubj",
+            "compound",
+            "punct",
+            "conj",
+            "nmod",
+            "ROOT",
+        }
