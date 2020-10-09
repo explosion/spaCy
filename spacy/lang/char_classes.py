@@ -146,34 +146,34 @@ _latin_diacritics = r"\u1E00-\u1EFF"
 
 # all lower latin classes
 LATIN_LOWER_BASIC = (
-        _latin_l_standard
-        + _latin_l_standard_fullwidth
-        + _latin_l_supplement
-        + _latin_l_extendedA
+    _latin_l_standard
+    + _latin_l_standard_fullwidth
+    + _latin_l_supplement
+    + _latin_l_extendedA
 )
 LATIN_LOWER = (
-        LATIN_LOWER_BASIC
-        + _latin_l_extendedB
-        + _latin_l_extendedC
-        + _latin_l_extendedD
-        + _latin_l_extendedE
-        + _latin_l_phonetic
-        + _latin_l_diacritics
+    LATIN_LOWER_BASIC
+    + _latin_l_extendedB
+    + _latin_l_extendedC
+    + _latin_l_extendedD
+    + _latin_l_extendedE
+    + _latin_l_phonetic
+    + _latin_l_diacritics
 )
 
 # all upper latin classes
 LATIN_UPPER_BASIC = (
-        _latin_u_standard
-        + _latin_u_standard_fullwidth
-        + _latin_u_supplement
-        + _latin_u_extendedA
+    _latin_u_standard
+    + _latin_u_standard_fullwidth
+    + _latin_u_supplement
+    + _latin_u_extendedA
 )
 LATIN_UPPER = (
-        LATIN_UPPER_BASIC
-        + _latin_u_extendedB
-        + _latin_u_extendedC
-        + _latin_u_extendedD
-        + _latin_u_diacritics
+    LATIN_UPPER_BASIC
+    + _latin_u_extendedB
+    + _latin_u_extendedC
+    + _latin_u_extendedD
+    + _latin_u_diacritics
 )
 
 # all latin classes
@@ -181,13 +181,13 @@ LATIN_BASIC = (
         _latin_standard + _latin_standard_fullwidth + _latin_supplement + _latin_extendedA
 )
 LATIN = (
-        LATIN_BASIC
-        + _latin_extendedB
-        + _latin_extendedC
-        + _latin_extendedD
-        + _latin_extendedE
-        + _latin_phonetic
-        + _latin_diacritics
+    LATIN_BASIC
+    + _latin_extendedB
+    + _latin_extendedC
+    + _latin_extendedD
+    + _latin_extendedE
+    + _latin_phonetic
+    + _latin_diacritics
 )
 
 _persian = (
@@ -221,16 +221,16 @@ _upper = LATIN_UPPER + _russian_upper + _tatar_upper + _greek_upper + _ukrainian
 _lower = LATIN_LOWER + _russian_lower + _tatar_lower + _greek_lower + _ukrainian_lower + _macedonian_lower
 
 _uncased = (
-        _bengali
-        + _hebrew
-        + _persian
-        + _sinhala
-        + _hindi
-        + _kannada
-        + _tamil
-        + _telugu
-        + _hangul
-        + _cjk
+    _bengali
+    + _hebrew
+    + _persian
+    + _sinhala
+    + _hindi
+    + _kannada
+    + _tamil
+    + _telugu
+    + _hangul
+    + _cjk
 )
 
 ALPHA = group_chars(LATIN + _russian + _tatar + _greek + _ukrainian + _uncased)
