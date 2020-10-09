@@ -516,7 +516,7 @@ Many neural network models are able to use word vector tables as additional
 features, which sometimes results in significant improvements in accuracy.
 spaCy's built-in embedding layer,
 [MultiHashEmbed](/api/architectures#MultiHashEmbed), can be configured to use
-word vector tables using the `also_use_static_vectors` flag. This setting is
+word vector tables using the `include_static_vectors` flag. This setting is
 also available on the [MultiHashEmbedCNN](/api/architectures#MultiHashEmbedCNN)
 layer, which builds the default token-to-vector encoding architecture.
 
@@ -524,9 +524,9 @@ layer, which builds the default token-to-vector encoding architecture.
 [tagger.model.tok2vec.embed]
 @architectures = "spacy.MultiHashEmbed.v1"
 width = 128
-rows = 7000
-also_embed_subwords = true
-also_use_static_vectors = true
+attrs = ["LOWER","PREFIX","SUFFIX","SHAPE"]
+rows = [5000,2500,2500,2500]
+include_static_vectors = true
 ```
 
 <Infobox title="How it works" emoji="💡">
