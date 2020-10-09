@@ -29,7 +29,7 @@ dist/$(SPACY_BIN) : $(WHEELHOUSE)/spacy-$(PYVER)-$(version).stamp
 		--disable-cache \
 		-o $@ \
 		$(package)==$(version) \
-		"$(SPACY_EXTRAS)"
+		$(SPACY_EXTRAS)
 	chmod a+rx $@
 	cp $@ dist/spacy.pex
 
