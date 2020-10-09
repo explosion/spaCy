@@ -94,13 +94,13 @@
                     { "text": "EntityRuler", "url": "/api/entityruler" },
                     { "text": "Lemmatizer", "url": "/api/lemmatizer" },
                     { "text": "Morphologizer", "url": "/api/morphologizer" },
-                    { "text": "Pipe", "url": "/api/pipe" },
                     { "text": "SentenceRecognizer", "url": "/api/sentencerecognizer" },
                     { "text": "Sentencizer", "url": "/api/sentencizer" },
                     { "text": "Tagger", "url": "/api/tagger" },
                     { "text": "TextCategorizer", "url": "/api/textcategorizer" },
                     { "text": "Tok2Vec", "url": "/api/tok2vec" },
                     { "text": "Tokenizer", "url": "/api/tokenizer" },
+                    { "text": "TrainablePipe", "url": "/api/pipe" },
                     { "text": "Transformer", "url": "/api/transformer" },
                     { "text": "Other Functions", "url": "/api/pipeline-functions" }
                 ]

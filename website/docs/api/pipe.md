@@ -14,7 +14,7 @@ for how to use the `TrainablePipe` base class to implement custom components.
 
 <!-- TODO: Pipe vs TrainablePipe, check methods below (all renamed to TrainablePipe for now) -->
 
-> #### Why is TrainablePipe implemented in Cython?
+> #### Why is it implemented in Cython?
 >
 > The `TrainablePipe` class is implemented in a `.pyx` module, the extension
 > used by [Cython](/api/cython). This is needed so that **other** Cython

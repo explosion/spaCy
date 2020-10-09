@@ -4,7 +4,6 @@ tag: class
 source: spacy/pipeline/attributeruler.py
 new: 3
 teaser: 'Pipeline component for rule-based token attribute assignment'
-api_base_class: /api/pipe
 api_string_name: attribute_ruler
 api_trainable: false
 ---

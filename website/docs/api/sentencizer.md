@@ -3,7 +3,6 @@ title: Sentencizer
 tag: class
 source: spacy/pipeline/sentencizer.pyx
 teaser: 'Pipeline component for rule-based sentence boundary detection'
-api_base_class: /api/pipe
 api_string_name: sentencizer
 api_trainable: false
 ---
@@ -130,9 +129,9 @@ Score a batch of examples.
 
 ## Sentencizer.to_disk {#to_disk tag="method"}
 
-Save the sentencizer settings (punctuation characters) to a directory. Will create
-a file `sentencizer.json`. This also happens automatically when you save an
-`nlp` object with a sentencizer added to its pipeline.
+Save the sentencizer settings (punctuation characters) to a directory. Will
+create a file `sentencizer.json`. This also happens automatically when you save
+an `nlp` object with a sentencizer added to its pipeline.
 
 > #### Example
 >
