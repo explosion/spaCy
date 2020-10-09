@@ -1159,7 +1159,8 @@ class DebugComponent:
         self.logger.info(f"Pipeline: {nlp.pipe_names}")
 
     def __call__(self, doc: Doc) -> Doc:
-        self.logger.debug(f"Doc: {len(doc)} tokens, is_tagged: {doc.is_tagged}")
+        is_tagged = doc.has_annotation("TAG")
+        self.logger.debug(f"Doc: {len(doc)} tokens, is tagged: {is_tagged}")
         return doc
 
 nlp = spacy.load("en_core_web_sm")

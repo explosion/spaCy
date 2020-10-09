@@ -167,6 +167,7 @@ rule-based matching are:
 |  `IS_ALPHA`, `IS_ASCII`, `IS_DIGIT`             | Token text consists of alphabetic characters, ASCII characters, digits. ~~bool~~                                          |
 |  `IS_LOWER`, `IS_UPPER`, `IS_TITLE`             | Token text is in lowercase, uppercase, titlecase. ~~bool~~                                                                |
 |  `IS_PUNCT`, `IS_SPACE`, `IS_STOP`              | Token is punctuation, whitespace, stop word. ~~bool~~                                                                     |
+|  `IS_SENT_START`                                | Token is start of sentence. ~~bool~~                                                                                      |
 |  `LIKE_NUM`, `LIKE_URL`, `LIKE_EMAIL`           | Token text resembles a number, URL, email. ~~bool~~                                                                       |
 |  `POS`, `TAG`, `MORPH`, `DEP`, `LEMMA`, `SHAPE` | The token's simple and extended part-of-speech tag, morphological analysis, dependency label, lemma, shape. ~~str~~       |
 | `ENT_TYPE`                                      | The token's entity label. ~~str~~                                                                                         |
@@ -837,7 +838,7 @@ nlp = spacy.load("en_core_web_sm")
 matcher = Matcher(nlp.vocab)
 
 # Add pattern for valid hashtag, i.e. '#' plus any ASCII token
-matcher.add("HASHTAG", None, [{"ORTH": "#"}, {"IS_ASCII": True}])
+matcher.add("HASHTAG", [[{"ORTH": "#"}, {"IS_ASCII": True}]])
 
 # Register token extension
 Token.set_extension("is_hashtag", default=False)

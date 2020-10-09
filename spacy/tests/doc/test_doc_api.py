@@ -606,3 +606,16 @@ def test_doc_init_iob():
     ents = [0, "B-", "O", "I-PERSON", "I-GPE"]
     with pytest.raises(ValueError):
         doc = Doc(Vocab(), words=words, ents=ents)
+
+
+@pytest.mark.xfail
+def test_doc_set_ents_spans(en_tokenizer):
+    doc = en_tokenizer("Some text about Colombia and the Czech Republic")
+    spans = [Span(doc, 3, 4, label="GPE"), Span(doc, 6, 8, label="GPE")]
+    with doc.retokenize() as retokenizer:
+        for span in spans:
+            retokenizer.merge(span)
+    # If this line is uncommented, it works:
+    # print(spans)
+    doc.ents = spans
+    assert [ent.text for ent in doc.ents] == ["Colombia", "Czech Republic"]

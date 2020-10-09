@@ -1656,9 +1656,10 @@ because it only requires annotated sentence boundaries rather than full
 dependency parses. spaCy's [trained pipelines](/models) include both a parser
 and a trained sentence segmenter, which is
 [disabled](/usage/processing-pipelines#disabling) by default. If you only need
-sentence boundaries and no parser, you can use the `enable` and `disable`
-arguments on [`spacy.load`](/api/top-level#spacy.load) to enable the senter and
-disable the parser.
+sentence boundaries and no parser, you can use the `exclude` or `disable`
+argument on [`spacy.load`](/api/top-level#spacy.load) to load the pipeline
+without the parser and then enable the sentence recognizer explicitly with
+[`nlp.enable_pipe`](/api/language#enable_pipe).
 
 > #### senter vs. parser
 >
@@ -1670,7 +1671,8 @@ disable the parser.
 ### {executable="true"}
 import spacy
 
-nlp = spacy.load("en_core_web_sm", enable=["senter"], disable=["parser"])
+nlp = spacy.load("en_core_web_sm", exclude=["parser"])
+nlp.enable_pipe("senter")
 doc = nlp("This is a sentence. This is another sentence.")
 for sent in doc.sents:
     print(sent.text)
@@ -1734,7 +1736,7 @@ nlp = spacy.load("en_core_web_sm")
 doc = nlp(text)
 print("Before:", [sent.text for sent in doc.sents])
 
-@Language.component("set_custom_coundaries")
+@Language.component("set_custom_boundaries")
 def set_custom_boundaries(doc):
     for token in doc[:-1]:
         if token.text == "...":
