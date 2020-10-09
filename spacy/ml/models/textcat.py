@@ -24,11 +24,11 @@ def build_simple_cnn_text_classifier(
     """
     with Model.define_operators({">>": chain}):
         if exclusive_classes:
-            output_layer = Softmax(nO=nO, nI=tok2vec.get_dim("nO"))
+            output_layer = Softmax(nO=nO, nI=tok2vec.maybe_get_dim("nO"))
             model = tok2vec >> list2ragged() >> reduce_mean() >> output_layer
             model.set_ref("output_layer", output_layer)
         else:
-            linear_layer = Linear(nO=nO, nI=tok2vec.get_dim("nO"))
+            linear_layer = Linear(nO=nO, nI=tok2vec.maybe_get_dim("nO"))
             model = (
                 tok2vec >> list2ragged() >> reduce_mean() >> linear_layer >> Logistic()
             )

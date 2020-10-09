@@ -622,7 +622,7 @@ def load_meta(path: Union[str, Path]) -> Dict[str, Any]:
     if not path.parent.exists():
         raise IOError(Errors.E052.format(path=path.parent))
     if not path.exists() or not path.is_file():
-        raise IOError(Errors.E053.format(path=path, name="meta.json"))
+        raise IOError(Errors.E053.format(path=path.parent, name="meta.json"))
     meta = srsly.read_json(path)
     for setting in ["lang", "name", "version"]:
         if setting not in meta or not meta[setting]:

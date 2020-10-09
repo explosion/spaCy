@@ -110,7 +110,7 @@ def MultiHashEmbed(
 
     The features used can be configured with the 'attrs' argument. The suggested
     attributes are NORM, PREFIX, SUFFIX and SHAPE. This lets the model take into
-    account some subword information, without construction a fully character-based
+    account some subword information, without constructing a fully character-based
     representation. If pretrained vectors are available, they can be included in
     the representation as well, with the vectors table will be kept static
     (i.e. it's not updated).
