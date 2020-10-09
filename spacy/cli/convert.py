@@ -253,7 +253,7 @@ def _get_converter(msg, converter, input_path):
     if converter == "auto":
         converter = input_path.suffix[1:]
     if converter == "ner" or converter == "iob":
-        with input_path.open() as file_:
+        with input_path.open(encoding="utf8") as file_:
             input_data = file_.read()
         converter_autodetect = autodetect_ner_format(input_data)
         if converter_autodetect == "ner":
