@@ -838,7 +838,7 @@ nlp = spacy.load("en_core_web_sm")
 matcher = Matcher(nlp.vocab)
 
 # Add pattern for valid hashtag, i.e. '#' plus any ASCII token
-matcher.add("HASHTAG", None, [{"ORTH": "#"}, {"IS_ASCII": True}])
+matcher.add("HASHTAG", [[{"ORTH": "#"}, {"IS_ASCII": True}]])
 
 # Register token extension
 Token.set_extension("is_hashtag", default=False)

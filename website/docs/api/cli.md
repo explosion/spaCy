@@ -643,7 +643,7 @@ Debug a Thinc [`Model`](https://thinc.ai/docs/api-model) by running it on a
 sample text and checking how it updates its internal weights and parameters.
 
 ```cli
-$ python -m spacy debug model [config_path] [component] [--layers] [-DIM] [-PAR] [-GRAD] [-ATTR] [-P0] [-P1] [-P2] [P3] [--gpu-id]
+$ python -m spacy debug model [config_path] [component] [--layers] [--dimensions] [--parameters] [--gradients] [--attributes] [--print-step0] [--print-step1] [--print-step2] [--print-step3] [--gpu-id]
 ```
 
 <Accordion title="Example outputs" spaced>
