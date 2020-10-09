@@ -522,9 +522,9 @@ word vector tables using the `include_static_vectors` flag.
 [tagger.model.tok2vec.embed]
 @architectures = "spacy.MultiHashEmbed.v1"
 width = 128
-attrs = ["NORM", "PREFIX", "SUFFIX", "SHAPE"]
-rows = [7000, 3500, 3500, 3500]
-also_use_static_vectors = true
+attrs = ["LOWER","PREFIX","SUFFIX","SHAPE"]
+rows = [5000,2500,2500,2500]
+include_static_vectors = true
 ```
 
 <Infobox title="How it works" emoji="💡">
