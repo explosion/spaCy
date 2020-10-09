@@ -1034,6 +1034,9 @@ class Language:
                     )
                 )
             disable = to_disable
+        # DisabledPipes will restore the pipes in 'disable' when it's done, so we need to exclude
+        # those pipes that were already disabled.
+        disable = [d for d in disable if d not in self._disabled]
         return DisabledPipes(self, disable)
 
     def make_doc(self, text: str) -> Doc:
