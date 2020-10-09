@@ -321,6 +321,7 @@ def test_overfitting_IO():
     assert len(ents) == 1
     assert ents[0].text == "London"
     assert ents[0].label_ == "LOC"
+    assert ner._added_strings == {"LOC", "PERSON"}
 
     # Also test the results are still the same after IO
     with make_tempdir() as tmp_dir:
@@ -331,6 +332,8 @@ def test_overfitting_IO():
         assert len(ents2) == 1
         assert ents2[0].text == "London"
         assert ents2[0].label_ == "LOC"
+        ner2 = nlp2.get_pipe("ner")
+        assert ner2._added_strings == {"LOC", "PERSON"}
 
 
 def test_ner_warns_no_lookups(caplog):

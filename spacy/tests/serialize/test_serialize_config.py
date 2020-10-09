@@ -35,7 +35,7 @@ size = 666
 
 [nlp]
 lang = "en"
-pipeline = ["tok2vec", "tagger"]
+pipeline = ["tok2vec", "tagger", "parser"]
 
 [components]
 
@@ -52,6 +52,9 @@ embed_size = 2000
 maxout_pieces = 3
 subword_features = true
 
+[components.parser]
+factory = "parser"
+
 [components.tagger]
 factory = "tagger"
 
@@ -61,6 +64,16 @@ factory = "tagger"
 [components.tagger.model.tok2vec]
 @architectures = "spacy.Tok2VecListener.v1"
 width = ${components.tok2vec.model.width}
+
+[initialize]
+
+[initialize.components]
+
+[initialize.components.tagger]
+labels = ["X", "Y"]
+
+[initialize.components.parser]
+labels = {"0": {"DATE":642}, "1": {"PERSON":498}}
 """
 
 
@@ -112,12 +125,12 @@ def test_create_nlp_from_config():
     nlp = load_model_from_config(config, auto_fill=True)
     assert nlp.config["training"]["batcher"]["size"] == 666
     assert len(nlp.config["training"]) > 1
-    assert nlp.pipe_names == ["tok2vec", "tagger"]
+    assert nlp.pipe_names == ["tok2vec", "tagger","parser"]
+    assert len(nlp.config["components"]) == 3
+    assert len(nlp.config["nlp"]["pipeline"]) == 3
+    nlp.remove_pipe("tagger")
     assert len(nlp.config["components"]) == 2
     assert len(nlp.config["nlp"]["pipeline"]) == 2
-    nlp.remove_pipe("tagger")
-    assert len(nlp.config["components"]) == 1
-    assert len(nlp.config["nlp"]["pipeline"]) == 1
     with pytest.raises(ValueError):
         bad_cfg = {"yolo": {}}
         load_model_from_config(Config(bad_cfg), auto_fill=True)
@@ -148,23 +161,33 @@ def test_create_nlp_from_config_multiple_instances():
 
 
 def test_serialize_nlp():
-    """ Create a custom nlp pipeline from config and ensure it serializes it correctly """
+    """ Create a custom nlp pipeline from config and ensure it serializes it correctly"""
     nlp_config = Config().from_str(nlp_config_string)
     nlp = load_model_from_config(nlp_config, auto_fill=True)
-    nlp.get_pipe("tagger").add_label("A")
+    parser = nlp.get_pipe("parser")
+    tagger = nlp.get_pipe("tagger")
+    tagger.add_label("A")
     nlp.initialize()
     assert "tok2vec" in nlp.pipe_names
     assert "tagger" in nlp.pipe_names
-    assert "parser" not in nlp.pipe_names
+    assert "parser" in nlp.pipe_names
+    assert "ner" not in nlp.pipe_names
     assert nlp.get_pipe("tagger").model.get_ref("tok2vec").get_dim("nO") == 342
+    assert parser._added_strings == {"DATE", "PERSON"}
+    assert tagger._added_strings == {"A", "X", "Y"}
 
     with make_tempdir() as d:
         nlp.to_disk(d)
         nlp2 = spacy.load(d)
         assert "tok2vec" in nlp2.pipe_names
         assert "tagger" in nlp2.pipe_names
-        assert "parser" not in nlp2.pipe_names
+        assert "parser" in nlp2.pipe_names
+        assert "ner" not in nlp2.pipe_names
         assert nlp2.get_pipe("tagger").model.get_ref("tok2vec").get_dim("nO") == 342
+        parser2 = nlp2.get_pipe("parser")
+        assert parser2._added_strings == {"DATE", "PERSON"}
+        tagger2 = nlp2.get_pipe("tagger")
+        assert tagger2._added_strings == {"A", "X", "Y"}
 
 
 def test_serialize_custom_nlp():
@@ -287,7 +310,7 @@ def test_config_overrides():
     base_config = Config().from_str(nlp_config_string)
     base_nlp = load_model_from_config(base_config, auto_fill=True)
     assert isinstance(base_nlp, English)
-    assert base_nlp.pipe_names == ["tok2vec", "tagger"]
+    assert base_nlp.pipe_names == ["tok2vec", "tagger", "parser"]
     with make_tempdir() as d:
         base_nlp.to_disk(d)
         nlp = spacy.load(d, config=overrides_nested)
@@ -302,7 +325,7 @@ def test_config_overrides():
         base_nlp.to_disk(d)
         nlp = spacy.load(d)
     assert isinstance(nlp, English)
-    assert nlp.pipe_names == ["tok2vec", "tagger"]
+    assert nlp.pipe_names == ["tok2vec", "tagger", "parser"]
 
 
 def test_config_interpolation():

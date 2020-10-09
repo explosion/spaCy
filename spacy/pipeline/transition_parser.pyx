@@ -120,7 +120,6 @@ cdef class Parser(TrainablePipe):
                 resized = True
         if resized:
             self._resize()
-            self.add_string(label)
             return 1
         return 0
 
@@ -130,6 +129,9 @@ cdef class Parser(TrainablePipe):
             self._rehearsal_model.attrs["resize_output"](
                 self._rehearsal_model, self.moves.n_moves
             )
+        self._added_strings = set()
+        for label in self.labels:
+            self.add_string(label)
 
     def add_multitask_objective(self, target):
         # Defined in subclasses, to avoid circular import
