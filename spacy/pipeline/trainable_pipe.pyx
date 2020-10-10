@@ -243,7 +243,7 @@ cdef class TrainablePipe(Pipe):
     def _validate_serialization_attrs(self):
         """Check that the pipe implements the required attributes. If a subclass
         implements a custom __init__ method but doesn't set these attributes,
-        the currently default to None, so we need to perform additonal checks.
+        they currently default to None, so we need to perform additonal checks.
         """
         if not hasattr(self, "vocab") or self.vocab is None:
             raise ValueError(Errors.E899.format(name=util.get_object_name(self)))
