@@ -78,7 +78,6 @@ class Tagger(TrainablePipe):
         self._rehearsal_model = None
         cfg = {"labels": labels or []}
         self.cfg = dict(sorted(cfg.items()))
-        self._added_strings = set()
 
     @property
     def labels(self):
@@ -313,7 +312,7 @@ class Tagger(TrainablePipe):
             return 0
         self._allow_extra_label()
         self.cfg["labels"].append(label)
-        self.add_string(label)
+        self.vocab.strings.add(label)
         return 1
 
     def score(self, examples, **kwargs):

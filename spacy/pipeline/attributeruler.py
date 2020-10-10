@@ -1,4 +1,4 @@
-from typing import List, Dict, Union, Iterable, Any, Optional, Callable, Iterator
+from typing import List, Dict, Union, Iterable, Any, Optional, Callable
 from typing import Tuple
 import srsly
 from pathlib import Path
@@ -57,7 +57,6 @@ class AttributeRuler(Pipe):
         self.attrs = []
         self._attrs_unnormed = []  # store for reference
         self.indices = []
-        self._added_strings = set()
 
     def clear(self) -> None:
         """Reset all patterns."""
@@ -187,15 +186,11 @@ class AttributeRuler(Pipe):
         # We need to make a string here, because otherwise the ID we pass back
         # will be interpreted as the hash of a string, rather than an ordinal.
         key = str(len(self.attrs))
-        self.matcher.add(self.add_string(key), patterns)
+        self.matcher.add(self.vocab.strings.add(key), patterns)
         self._attrs_unnormed.append(attrs)
         attrs = normalize_token_attrs(self.vocab, attrs)
         self.attrs.append(attrs)
         self.indices.append(index)
-
-    def add_string(self, string: str):
-        self._added_strings.add(string)
-        return self.vocab.strings.add(string)
 
     def add_patterns(self, patterns: Iterable[AttributeRulerPatternType]) -> None:
         """Add patterns from a list of pattern dicts with the keys as the
@@ -256,8 +251,8 @@ class AttributeRuler(Pipe):
         DOCS: https://nightly.spacy.io/api/attributeruler#to_bytes
         """
         serialize = {}
+        serialize["vocab"] = self.vocab.to_bytes
         serialize["patterns"] = lambda: srsly.msgpack_dumps(self.patterns)
-        serialize["strings.json"] = lambda: srsly.json_dumps(sorted(self._added_strings))
         return util.to_bytes(serialize, exclude)
 
     def from_bytes(
@@ -276,7 +271,7 @@ class AttributeRuler(Pipe):
             self.add_patterns(srsly.msgpack_loads(b))
 
         deserialize = {
-            "strings.json": lambda b: [self.add_string(s) for s in srsly.json_loads(b)],
+            "vocab": lambda b: self.vocab.from_bytes(b),
             "patterns": load_patterns,
         }
         util.from_bytes(bytes_data, deserialize, exclude)
@@ -293,7 +288,7 @@ class AttributeRuler(Pipe):
         DOCS: https://nightly.spacy.io/api/attributeruler#to_disk
         """
         serialize = {
-            "strings.json": lambda p: srsly.write_json(p, self._added_strings),
+            "vocab": lambda p: self.vocab.to_disk(p),
             "patterns": lambda p: srsly.write_msgpack(p, self.patterns),
         }
         util.to_disk(path, serialize, exclude)
@@ -314,7 +309,7 @@ class AttributeRuler(Pipe):
             self.add_patterns(srsly.read_msgpack(p))
 
         deserialize = {
-            "strings.json": lambda p: [self.add_string(s) for s in srsly.read_json(p)],
+            "vocab": lambda p: self.vocab.from_disk(p),
             "patterns": load_patterns,
         }
         util.from_disk(path, deserialize, exclude)

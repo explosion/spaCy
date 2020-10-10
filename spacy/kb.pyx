@@ -92,7 +92,6 @@ cdef class KnowledgeBase:
         self._alias_index = PreshMap()
         self.vocab = vocab
         self._create_empty_vectors(dummy_hash=self.vocab.strings[""])
-        self._added_strings = set()
 
     @property
     def entity_vector_length(self):
@@ -114,16 +113,12 @@ cdef class KnowledgeBase:
     def get_alias_strings(self):
         return [self.vocab.strings[x] for x in self._alias_index]
 
-    def add_string(self, string: str):
-        self._added_strings.add(string)
-        return self.vocab.strings.add(string)
-
     def add_entity(self, unicode entity, float freq, vector[float] entity_vector):
         """
         Add an entity to the KB, optionally specifying its log probability based on corpus frequency
         Return the hash of the entity ID/name at the end.
         """
-        cdef hash_t entity_hash = self.add_string(entity)
+        cdef hash_t entity_hash = self.vocab.strings.add(entity)
 
         # Return if this entity was added before
         if entity_hash in self._entry_index:
@@ -157,7 +152,7 @@ cdef class KnowledgeBase:
         cdef hash_t entity_hash
         while i < len(entity_list):
             # only process this entity if its unique ID hadn't been added before
-            entity_hash = self.add_string(entity_list[i])
+            entity_hash = self.vocab.strings.add(entity_list[i])
             if entity_hash in self._entry_index:
                 warnings.warn(Warnings.W018.format(entity=entity_list[i]))
 
@@ -203,7 +198,7 @@ cdef class KnowledgeBase:
         if prob_sum > 1.00001:
             raise ValueError(Errors.E133.format(alias=alias, sum=prob_sum))
 
-        cdef hash_t alias_hash = self.add_string(alias)
+        cdef hash_t alias_hash = self.vocab.strings.add(alias)
 
         # Check whether this alias was added before
         if alias_hash in self._alias_index:
@@ -332,7 +327,7 @@ cdef class KnowledgeBase:
             raise ValueError(Errors.E928.format(loc=path))
         serialize = {}
         serialize["contents"] = lambda p: self.write_contents(p)
-        serialize["strings.json"] = lambda p: srsly.write_json(p, self._added_strings)
+        serialize["strings.json"] = lambda p: self.vocab.strings.to_disk(p)
         util.to_disk(path, serialize, exclude)
 
     def from_disk(self, path, exclude: Iterable[str] = SimpleFrozenList()):
@@ -343,7 +338,7 @@ cdef class KnowledgeBase:
             raise ValueError(Errors.E928.format(loc=path))
         deserialize = {}
         deserialize["contents"] = lambda p: self.read_contents(p)
-        deserialize["strings.json"] = lambda p: [self.add_string(s) for s in srsly.read_json(p)]
+        deserialize["strings.json"] = lambda p: self.vocab.strings.from_disk(p)
         util.from_disk(path, deserialize, exclude)
 
     def write_contents(self, file_path):

@@ -1,13 +1,13 @@
 import pytest
-import srsly
 from spacy import registry, Vocab
 from spacy.pipeline import Tagger, DependencyParser, EntityRecognizer
-from spacy.pipeline import TextCategorizer, SentenceRecognizer
+from spacy.pipeline import TextCategorizer, SentenceRecognizer, TrainablePipe
 from spacy.pipeline.dep_parser import DEFAULT_PARSER_MODEL
 from spacy.pipeline.tagger import DEFAULT_TAGGER_MODEL
 from spacy.pipeline.textcat import DEFAULT_TEXTCAT_MODEL
 from spacy.pipeline.senter import DEFAULT_SENTER_MODEL
 from spacy.lang.en import English
+from thinc.api import Linear
 import spacy
 
 from ..util import make_tempdir
@@ -89,7 +89,6 @@ def test_serialize_parser_strings(Parser):
     assert label not in vocab2.strings
     parser2 = Parser(vocab2, model, **config)
     parser2 = parser2.from_bytes(parser1.to_bytes(exclude=["vocab"]))
-    assert parser1._added_strings == parser2._added_strings == {"FunnyLabel"}
     assert label in parser2.vocab.strings
 
 
@@ -166,17 +165,13 @@ def test_serialize_tagger_strings(en_vocab, de_vocab, taggers):
         # check that custom labels are serialized as part of the component's strings.jsonl
         tagger.add_label(label)
         assert label in tagger.vocab.strings
-        assert tagger._added_strings == {label}
         file_path = d / "tagger1"
         tagger.to_disk(file_path)
-        strings = srsly.read_json(file_path / "strings.json")
-        assert strings == ["SomeWeirdLabel"]
         # ensure that the custom strings are loaded back in when using the tagger in another pipeline
         cfg = {"model": DEFAULT_TAGGER_MODEL}
         model = registry.resolve(cfg, validate=True)["model"]
         tagger2 = Tagger(de_vocab, model).from_disk(file_path)
         assert label in tagger2.vocab.strings
-        assert tagger2._added_strings == {label}
 
 
 def test_serialize_textcat_empty(en_vocab):
@@ -253,3 +248,40 @@ def test_serialize_pipeline_disable_enable():
     assert nlp5.pipe_names == ["ner"]
     assert nlp5.component_names == ["ner"]
     assert nlp5.disabled == []
+
+
+def test_serialize_custom_trainable_pipe():
+    class BadCustomPipe1(TrainablePipe):
+        def __init__(self, vocab):
+            pass
+
+    class BadCustomPipe2(TrainablePipe):
+        def __init__(self, vocab):
+            self.vocab = vocab
+            self.model = None
+
+    class CustomPipe(TrainablePipe):
+        def __init__(self, vocab, model):
+            self.vocab = vocab
+            self.model = model
+
+    pipe = BadCustomPipe1(Vocab())
+    with pytest.raises(ValueError):
+        pipe.to_bytes()
+    with make_tempdir() as d:
+        with pytest.raises(ValueError):
+            pipe.to_disk(d)
+    pipe = BadCustomPipe2(Vocab())
+    with pytest.raises(ValueError):
+        pipe.to_bytes()
+    with make_tempdir() as d:
+        with pytest.raises(ValueError):
+            pipe.to_disk(d)
+    pipe = CustomPipe(Vocab(), Linear())
+    pipe_bytes = pipe.to_bytes()
+    new_pipe = CustomPipe(Vocab(), Linear()).from_bytes(pipe_bytes)
+    assert new_pipe.to_bytes() == pipe_bytes
+    with make_tempdir() as d:
+        pipe.to_disk(d)
+        new_pipe = CustomPipe(Vocab(), Linear()).from_disk(d)
+    assert new_pipe.to_bytes() == pipe_bytes
