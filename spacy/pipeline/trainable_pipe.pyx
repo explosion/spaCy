@@ -13,6 +13,7 @@ from ..vocab import Vocab
 from ..language import Language
 from ..training import Example
 
+
 cdef class TrainablePipe(Pipe):
     """This class is a base class and not instantiated directly. Trainable
     pipeline components like the EntityRecognizer or TextCategorizer inherit
@@ -35,7 +36,6 @@ cdef class TrainablePipe(Pipe):
         self.model = model
         self.name = name
         self.cfg = dict(cfg)
-        self._added_strings = set()
 
     def __call__(self, Doc doc) -> Doc:
         """Apply the pipe to one document. The document is modified in place,
@@ -198,10 +198,6 @@ cdef class TrainablePipe(Pipe):
         """
         raise NotImplementedError(Errors.E931.format(parent="Pipe", method="add_label", name=self.name))
 
-    def add_string(self, string: str):
-        self._added_strings.add(string)
-        return self.vocab.strings.add(string)
-
     @property
     def is_trainable(self) -> bool:
         return True
@@ -244,6 +240,16 @@ cdef class TrainablePipe(Pipe):
         """
         self.model.finish_update(sgd)
 
+    def _validate_serialization_attrs(self):
+        """Check that the pipe implements the required attributes. If a subclass
+        implements a custom __init__ method but doesn't set these attributes,
+        the currently default to None, so we need to perform additonal checks.
+        """
+        if not hasattr(self, "vocab") or self.vocab is None:
+            raise ValueError(Errors.E899.format(name=util.get_object_name(self)))
+        if not hasattr(self, "model") or self.model is None:
+            raise ValueError(Errors.E898.format(name=util.get_object_name(self)))
+
     def to_bytes(self, *, exclude=tuple()):
         """Serialize the pipe to a bytestring.
 
@@ -252,11 +258,12 @@ cdef class TrainablePipe(Pipe):
 
         DOCS: https://nightly.spacy.io/api/pipe#to_bytes
         """
+        self._validate_serialization_attrs()
         serialize = {}
-        if hasattr(self, "cfg"):
+        if hasattr(self, "cfg") and self.cfg is not None:
             serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
+        serialize["vocab"] = self.vocab.to_bytes
         serialize["model"] = self.model.to_bytes
-        serialize["strings.json"] = lambda: srsly.json_dumps(sorted(self._added_strings))
         return util.to_bytes(serialize, exclude)
 
     def from_bytes(self, bytes_data, *, exclude=tuple()):
@@ -267,6 +274,7 @@ cdef class TrainablePipe(Pipe):
 
         DOCS: https://nightly.spacy.io/api/pipe#from_bytes
         """
+        self._validate_serialization_attrs()
 
         def load_model(b):
             try:
@@ -275,9 +283,9 @@ cdef class TrainablePipe(Pipe):
                 raise ValueError(Errors.E149) from None
 
         deserialize = {}
-        deserialize["strings.json"] = lambda b: [self.add_string(s) for s in srsly.json_loads(b)]
-        if hasattr(self, "cfg"):
+        if hasattr(self, "cfg") and self.cfg is not None:
             deserialize["cfg"] = lambda b: self.cfg.update(srsly.json_loads(b))
+        deserialize["vocab"] = lambda b: self.vocab.from_bytes(b)
         deserialize["model"] = load_model
         util.from_bytes(bytes_data, deserialize, exclude)
         return self
@@ -290,10 +298,11 @@ cdef class TrainablePipe(Pipe):
 
         DOCS: https://nightly.spacy.io/api/pipe#to_disk
         """
+        self._validate_serialization_attrs()
         serialize = {}
-        if hasattr(self, "cfg"):
+        if hasattr(self, "cfg") and self.cfg is not None:
             serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
-        serialize["strings.json"] = lambda p: srsly.write_json(p, self._added_strings)
+        serialize["vocab"] = lambda p: self.vocab.to_disk(p)
         serialize["model"] = lambda p: self.model.to_disk(p)
         util.to_disk(path, serialize, exclude)
 
@@ -306,6 +315,7 @@ cdef class TrainablePipe(Pipe):
 
         DOCS: https://nightly.spacy.io/api/pipe#from_disk
         """
+        self._validate_serialization_attrs()
 
         def load_model(p):
             try:
@@ -314,9 +324,9 @@ cdef class TrainablePipe(Pipe):
                 raise ValueError(Errors.E149) from None
 
         deserialize = {}
-        deserialize["strings.json"] = lambda p: [self.add_string(s) for s in srsly.read_json(p)]
-        if hasattr(self, "cfg"):
+        if hasattr(self, "cfg") and self.cfg is not None:
             deserialize["cfg"] = lambda p: self.cfg.update(deserialize_config(p))
+        deserialize["vocab"] = lambda p: self.vocab.from_disk(p)
         deserialize["model"] = load_model
         util.from_disk(path, deserialize, exclude)
         return self

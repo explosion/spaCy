@@ -821,7 +821,7 @@ def get_object_name(obj: Any) -> str:
     obj (Any): The Python object, typically a function or class.
     RETURNS (str): A human-readable name.
     """
-    if hasattr(obj, "name"):
+    if hasattr(obj, "name") and obj.name is not None:
         return obj.name
     if hasattr(obj, "__name__"):
         return obj.__name__

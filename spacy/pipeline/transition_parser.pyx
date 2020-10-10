@@ -76,7 +76,6 @@ cdef class Parser(TrainablePipe):
             self.add_multitask_objective(multitask)
 
         self._rehearsal_model = None
-        self._added_strings = set()
 
     def __getnewargs_ex__(self):
         """This allows pickling the Parser and its keyword-only init arguments"""
@@ -120,7 +119,7 @@ cdef class Parser(TrainablePipe):
                 resized = True
         if resized:
             self._resize()
-            self.add_string(label)
+            self.vocab.strings.add(label)
             return 1
         return 0
 
@@ -456,24 +455,24 @@ cdef class Parser(TrainablePipe):
 
     def to_disk(self, path, exclude=tuple()):
         serializers = {
-            'model': lambda p: (self.model.to_disk(p) if self.model is not True else True),
-            'strings.json': lambda p: srsly.write_json(p, self._added_strings),
-            'moves': lambda p: self.moves.to_disk(p, exclude=["strings"]),
-            'cfg': lambda p: srsly.write_json(p, self.cfg)
+            "model": lambda p: (self.model.to_disk(p) if self.model is not True else True),
+            "vocab": lambda p: self.vocab.to_disk(p),
+            "moves": lambda p: self.moves.to_disk(p, exclude=["strings"]),
+            "cfg": lambda p: srsly.write_json(p, self.cfg)
         }
         util.to_disk(path, serializers, exclude)
 
     def from_disk(self, path, exclude=tuple()):
         deserializers = {
-            'strings.json': lambda p: [self.add_string(s) for s in srsly.read_json(p)],
-            'moves': lambda p: self.moves.from_disk(p, exclude=["strings"]),
-            'cfg': lambda p: self.cfg.update(srsly.read_json(p)),
-            'model': lambda p: None,
+            "vocab": lambda p: self.vocab.from_disk(p),
+            "moves": lambda p: self.moves.from_disk(p, exclude=["strings"]),
+            "cfg": lambda p: self.cfg.update(srsly.read_json(p)),
+            "model": lambda p: None,
         }
         util.from_disk(path, deserializers, exclude)
-        if 'model' not in exclude:
+        if "model" not in exclude:
             path = util.ensure_path(path)
-            with (path / 'model').open('rb') as file_:
+            with (path / "model").open("rb") as file_:
                 bytes_data = file_.read()
             try:
                 self._resize()
@@ -485,7 +484,7 @@ cdef class Parser(TrainablePipe):
     def to_bytes(self, exclude=tuple()):
         serializers = {
             "model": lambda: (self.model.to_bytes()),
-            "strings.json": lambda: srsly.json_dumps(sorted(self._added_strings)),
+            "vocab": lambda: self.vocab.to_bytes(),
             "moves": lambda: self.moves.to_bytes(exclude=["strings"]),
             "cfg": lambda: srsly.json_dumps(self.cfg, indent=2, sort_keys=True)
         }
@@ -493,7 +492,7 @@ cdef class Parser(TrainablePipe):
 
     def from_bytes(self, bytes_data, exclude=tuple()):
         deserializers = {
-            "strings.json": lambda b: [self.add_string(s) for s in  srsly.json_loads(b)],
+            "vocab": lambda b: self.vocab.from_bytes(b),
             "moves": lambda b: self.moves.from_bytes(b, exclude=["strings"]),
             "cfg": lambda b: self.cfg.update(srsly.json_loads(b)),
             "model": lambda b: None,
