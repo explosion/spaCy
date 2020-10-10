@@ -446,7 +446,7 @@ def test_overfitting_IO():
         return mykb
 
     # Create the Entity Linker component and add it to the pipeline
-    entity_linker = nlp.add_pipe("entity_linker", last=True,)
+    entity_linker = nlp.add_pipe("entity_linker", last=True)
     entity_linker.set_kb(create_kb)
     assert "Q2146908" in entity_linker.vocab.strings
     assert "Q2146908" in entity_linker.kb.vocab.strings

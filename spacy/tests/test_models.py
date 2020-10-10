@@ -1,10 +1,8 @@
 from typing import List
-
 import pytest
 from thinc.api import fix_random_seed, Adam, set_dropout_rate
 from numpy.testing import assert_array_equal
 import numpy
-
 from spacy.ml.models import build_Tok2Vec_model, MultiHashEmbed, MaxoutWindowEncoder
 from spacy.ml.models import build_text_classifier, build_simple_cnn_text_classifier
 from spacy.ml.staticvectors import StaticVectors
@@ -188,12 +186,7 @@ def test_models_update_consistently(seed, dropout, model_func, kwargs, get_X):
     assert_array_equal(get_all_params(model1), get_all_params(model2))
 
 
-@pytest.mark.parametrize(
-    "model_func,kwargs",
-    [
-        (StaticVectors, {"nO": 128, "nM": 300}),
-    ]
-)
+@pytest.mark.parametrize("model_func,kwargs", [(StaticVectors, {"nO": 128, "nM": 300})])
 def test_empty_docs(model_func, kwargs):
     nlp = English()
     model = model_func(**kwargs).initialize()
@@ -201,7 +194,7 @@ def test_empty_docs(model_func, kwargs):
     for n_docs in range(3):
         docs = [nlp("") for _ in range(n_docs)]
         # Test predict
-        _ = model.predict(docs)
+        model.predict(docs)
         # Test backprop
         output, backprop = model.begin_update(docs)
-        _ = backprop(output)
+        backprop(output)
