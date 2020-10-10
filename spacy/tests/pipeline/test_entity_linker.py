@@ -511,6 +511,7 @@ def test_kb_serialization():
         mykb.to_disk(kb_dir)
 
         nlp2 = English()
+        assert "RandomWord" not in nlp2.vocab.strings
         nlp2.vocab.strings.add("RandomWord")
         assert "RandomWord" in nlp2.vocab.strings
         assert "Q2146908" not in nlp2.vocab.strings
