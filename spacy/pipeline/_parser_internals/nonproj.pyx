@@ -4,6 +4,7 @@ for doing pseudo-projective parsing implementation uses the HEAD decoration
 scheme.
 """
 from copy import copy
+import json
 
 from ...tokens.doc cimport Doc, set_children_from_heads
 
@@ -112,13 +113,18 @@ cpdef deprojectivize(Doc doc):
     # Reattach arcs with decorated labels (following HEAD scheme). For each
     # decorated arc X||Y, search top-down, left-to-right, breadth-first until
     # hitting a Y then make this the new head.
+    new_heads = []
+    new_labels = []
     for i in range(doc.length):
         label = doc.vocab.strings[doc.c[i].dep]
         if DELIMITER in label:
             new_label, head_label = label.split(DELIMITER)
             new_head = _find_new_head(doc[i], head_label)
-            doc.c[i].head = new_head.i - i
-            doc.c[i].dep = doc.vocab.strings.add(new_label)
+            new_heads.append(new_head.i - i)
+            new_labels.append(doc.vocab.strings.add(new_label))
+    for i, (head, dep) in enumerate(zip(new_heads, new_labels)):
+        doc.c[i].head = head
+        doc.c[i].dep = dep
     set_children_from_heads(doc.c, 0, doc.length)
     return doc
 
@@ -166,13 +172,15 @@ def _find_new_head(token, headlabel):
     # if there is none, return the current head (no change)
     queue = [token.head]
     n_iter = 0
+    headlabel = token.vocab.strings.as_int(headlabel)
+    heads = token.doc.to_array(["HEAD"]).astype("int64")
+    labels = [w.dep_ for w in token.doc]
     while queue:
         n_iter += 1
         if n_iter >= len(token.doc):
-            print("Infinite loop")
-            print([(w.i, w.text, w.head.i, w.dep_) for w in token.doc])
-            with open("/tmp/doc.bytes", "wb") as file_:
-                file_.write(token.doc.to_bytes())
+            texts = [w.text for w in token.doc]
+            print(json.dumps(list(zip(range(len(token.doc)), texts, heads, labels)), indent=2))
+            raise ValueError("Infinite loop?")
         next_queue = []
         for qtoken in queue:
             for child in qtoken.children:
@@ -180,7 +188,7 @@ def _find_new_head(token, headlabel):
                     continue
                 if child == token:
                     continue
-                if child.dep_ == headlabel:
+                if child.dep == headlabel:
                     return child
                 next_queue.append(child)
         queue = next_queue
