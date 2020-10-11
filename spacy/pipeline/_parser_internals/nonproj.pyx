@@ -165,7 +165,14 @@ def _find_new_head(token, headlabel):
     # returns the id of the first descendant with the given label
     # if there is none, return the current head (no change)
     queue = [token.head]
+    n_iter = 0
     while queue:
+        n_iter += 1
+        if n_iter >= len(token.doc):
+            print("Infinite loop")
+            print([(w.i, w.text, w.head.i, w.dep_) for w in token.doc])
+            with open("/tmp/doc.bytes", "wb") as file_:
+                file_.write(token.doc.to_bytes())
         next_queue = []
         for qtoken in queue:
             for child in qtoken.children:
