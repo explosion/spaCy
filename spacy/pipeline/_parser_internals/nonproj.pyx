@@ -113,18 +113,13 @@ cpdef deprojectivize(Doc doc):
     # Reattach arcs with decorated labels (following HEAD scheme). For each
     # decorated arc X||Y, search top-down, left-to-right, breadth-first until
     # hitting a Y then make this the new head.
-    new_heads = []
-    new_labels = []
     for i in range(doc.length):
         label = doc.vocab.strings[doc.c[i].dep]
         if DELIMITER in label:
             new_label, head_label = label.split(DELIMITER)
             new_head = _find_new_head(doc[i], head_label)
-            new_heads.append(new_head.i - i)
-            new_labels.append(doc.vocab.strings.add(new_label))
-    for i, (head, dep) in enumerate(zip(new_heads, new_labels)):
-        doc.c[i].head = head
-        doc.c[i].dep = dep
+            doc.c[i].head = new_head.i - i
+            doc.c[i].dep = doc.vocab.strings.add(new_label)
     set_children_from_heads(doc.c, 0, doc.length)
     return doc
 
