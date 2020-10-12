@@ -112,12 +112,21 @@ cpdef deprojectivize(Doc doc):
     # Reattach arcs with decorated labels (following HEAD scheme). For each
     # decorated arc X||Y, search top-down, left-to-right, breadth-first until
     # hitting a Y then make this the new head.
+    orig_heads = [t.head.i for t in doc]
+    orig_deps = [t.dep_ for t in doc]
     for i in range(doc.length):
         label = doc.vocab.strings[doc.c[i].dep]
         if DELIMITER in label:
             new_label, head_label = label.split(DELIMITER)
             new_head = _find_new_head(doc[i], head_label)
-            doc.c[i].head = new_head.i - i
+            if new_head is not None:
+                doc.c[i].head = new_head.i - i
+            else:
+                print(i, doc.text, [t.text for t in doc], orig_heads, orig_deps)
+                if i == 0:
+                    doc.c[i].head = 0
+                else:
+                    doc.c[i].head = -1
             doc.c[i].dep = doc.vocab.strings.add(new_label)
     set_children_from_heads(doc.c, 0, doc.length)
     return doc
@@ -165,7 +174,11 @@ def _find_new_head(token, headlabel):
     # returns the id of the first descendant with the given label
     # if there is none, return the current head (no change)
     queue = [token.head]
+    n_iter = 0
     while queue:
+        if n_iter > len(token.doc):
+            return None
+        n_iter += 1
         next_queue = []
         for qtoken in queue:
             for child in qtoken.children:
