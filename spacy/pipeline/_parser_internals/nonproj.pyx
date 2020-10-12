@@ -4,6 +4,7 @@ for doing pseudo-projective parsing implementation uses the HEAD decoration
 scheme.
 """
 from copy import copy
+from pathlib import Path
 import json
 
 from ...tokens.doc cimport Doc, set_children_from_heads
