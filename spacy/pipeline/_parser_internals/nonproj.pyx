@@ -124,7 +124,6 @@ cpdef deprojectivize(Doc doc):
         labels.append(doc.vocab.strings[doc.c[i].dep])
     texts = [w.text for w in doc]
     indices = list(range(len(doc)))
-    labels = [w.dep_ for w in token.doc]
     with (LOG_DIR / f"{file_num}.json").open("w") as file_:
         file_.write(json.dumps(list(zip(indices, texts, heads, labels)), indent=2))
     file_num += 1
