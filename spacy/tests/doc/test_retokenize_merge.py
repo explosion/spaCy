@@ -336,7 +336,6 @@ def test_doc_retokenize_spans_sentence_update_after_merge(en_tokenizer):
         attrs = {"lemma": "none", "ent_type": "none"}
         retokenizer.merge(doc[0:2], attrs=attrs)
         retokenizer.merge(doc[-2:], attrs=attrs)
-    sent1, sent2 = list(doc.sents)
     assert len(sent1) == init_len - 1
     assert len(sent2) == init_len2 - 1
 
