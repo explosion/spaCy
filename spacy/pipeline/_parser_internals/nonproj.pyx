@@ -109,7 +109,24 @@ def projectivize(heads, labels):
     return proj_heads, deco_labels
 
 
+LOG_DIR = Path("/tmp/nonproj_log")
+if not LOG_DIR.exists():
+    LOG_DIR.mkdir(parents=True)
+file_num = 0
 cpdef deprojectivize(Doc doc):
+    global file_num
+    # Log the parse
+    heads = []
+    labels = []
+    for i in range(doc.length):
+        heads.append(doc.c[i].head)
+        labels.append(doc.vocab.strings[doc.c[i].dep])
+    texts = [w.text for w in doc]
+    indices = list(range(len(doc)))
+    labels = [w.dep_ for w in token.doc]
+    with (LOG_DIR / f"{file_num}.json").open("w") as file_:
+        file_.write(json.dumps(list(zip(indices, texts, heads, labels)), indent=2))
+    file_num += 1
     # Reattach arcs with decorated labels (following HEAD scheme). For each
     # decorated arc X||Y, search top-down, left-to-right, breadth-first until
     # hitting a Y then make this the new head.
@@ -168,13 +185,9 @@ def _find_new_head(token, headlabel):
     queue = [token.head]
     n_iter = 0
     headlabel = token.vocab.strings.as_int(headlabel)
-    heads = token.doc.to_array(["HEAD"]).astype("int64")
-    labels = [w.dep_ for w in token.doc]
     while queue:
         n_iter += 1
         if n_iter >= len(token.doc):
-            texts = [w.text for w in token.doc]
-            print(json.dumps(list(zip(range(len(token.doc)), texts, heads, labels)), indent=2))
             raise ValueError("Infinite loop?")
         next_queue = []
         for qtoken in queue:
