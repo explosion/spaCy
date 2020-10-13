@@ -637,13 +637,6 @@ into the "real world". This requires 3 main components:
 > window_size = 1
 > maxout_pieces = 3
 > subword_features = true
->
-> [kb_loader]
-> @misc = "spacy.EmptyKB.v1"
-> entity_vector_length = 64
->
-> [get_candidates]
-> @misc = "spacy.CandidateGenerator.v1"
 > ```
 
 The `EntityLinker` model architecture is a Thinc `Model` with a
@@ -657,12 +650,20 @@ The `EntityLinker` model architecture is a Thinc `Model` with a
 
 ### spacy.EmptyKB.v1 {#EmptyKB}
 
-A function that creates a default, empty `KnowledgeBase` from a
-[`Vocab`](/api/vocab) instance.
+A function that creates an empty `KnowledgeBase` from a [`Vocab`](/api/vocab)
+instance. This is the default when a new entity linker component is created.
 
 | Name                   | Description                                                                         |
 | ---------------------- | ----------------------------------------------------------------------------------- |
 | `entity_vector_length` | The length of the vectors encoding each entity in the KB. Defaults to `64`. ~~int~~ |
+
+### spacy.KBFromFile.v1 {#KBFromFile}
+
+A function that reads an existing `KnowledgeBase` from file.
+
+| Name      | Description                                              |
+| --------- | -------------------------------------------------------- |
+| `kb_path` | The location of the KB that was stored to file. ~~Path~~ |
 
 ### spacy.CandidateGenerator.v1 {#CandidateGenerator}
 
