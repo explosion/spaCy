@@ -116,7 +116,7 @@ _latin_l_extendedE = r"\uAB30-\uAB5A\uAB60-\uAB64"
 _latin_extendedE = _latin_l_extendedE
 
 # phonetic letters - Greek, Latin, Cyrillic
-_latin_l_phonetic = r"\u0250-\u02AF\u1D00-\u1D25\u1D6B-\u1D77\u1D79-\u1D9A\u0400-\u04FF"
+_latin_l_phonetic = r"\u0250-\u02AF\u1D00-\u1D25\u1D6B-\u1D77\u1D79-\u1D9A"
 _latin_phonetic = _latin_l_phonetic
 
 # letters with multiple diacritics - Vietnamese
@@ -213,9 +213,9 @@ _ukrainian_lower = r"а-щюяіїєґ"
 _ukrainian_upper = r"А-ЩЮЯІЇЄҐ"
 _ukrainian = r"а-щюяіїєґА-ЩЮЯІЇЄҐ"
 
-_macedonian_lower = r"ѓѕјњќѐѝа-ик-ш"
-_macedonian_upper = r"ЃЅЈЊЌЀЍА-ИК-Ш"
-_macedonian = r"ѓѕјњќѐѝа-ик-шЃЅЈЊЌЀЍА-ИК-Ш"
+_macedonian_lower = r"ѓѕјљњќѐѝ"
+_macedonian_upper = r"ЃЅЈЉЊЌЀЍ"
+_macedonian = r"ѓѕјљњќѐѝЃЅЈЉЊЌЀЍ"
 
 _upper = LATIN_UPPER + _russian_upper + _tatar_upper + _greek_upper + _ukrainian_upper + _macedonian_upper
 _lower = LATIN_LOWER + _russian_lower + _tatar_lower + _greek_lower + _ukrainian_lower + _macedonian_lower
@@ -233,7 +233,7 @@ _uncased = (
     + _cjk
 )
 
-ALPHA = group_chars(LATIN + _russian + _tatar + _greek + _ukrainian + _uncased)
+ALPHA = group_chars(LATIN + _russian + _tatar + _greek + _ukrainian + _macedonian + _uncased)
 ALPHA_LOWER = group_chars(_lower + _uncased)
 ALPHA_UPPER = group_chars(_upper + _uncased)
 
