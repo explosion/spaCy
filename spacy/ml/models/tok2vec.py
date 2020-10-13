@@ -110,7 +110,7 @@ def MultiHashEmbed(
 
     The features used can be configured with the 'attrs' argument. The suggested
     attributes are NORM, PREFIX, SUFFIX and SHAPE. This lets the model take into
-    account some subword information, without construction a fully character-based
+    account some subword information, without constructing a fully character-based
     representation. If pretrained vectors are available, they can be included in
     the representation as well, with the vectors table will be kept static
     (i.e. it's not updated).
@@ -177,7 +177,7 @@ def CharacterEmbed(
     rows: int,
     nM: int,
     nC: int,
-    also_use_static_vectors: bool,
+    include_static_vectors: bool,
     feature: Union[int, str] = "LOWER",
 ) -> Model[List[Doc], List[Floats2d]]:
     """Construct an embedded representation based on character embeddings, using
@@ -204,13 +204,13 @@ def CharacterEmbed(
     nC (int): The number of UTF-8 bytes to embed per word. Recommended values
         are between 3 and 8, although it may depend on the length of words in the
         language.
-    also_use_static_vectors (bool): Whether to also use static word vectors.
+    include_static_vectors (bool): Whether to also use static word vectors.
         Requires a vectors table to be loaded in the Doc objects' vocab.
     """
     feature = intify_attr(feature)
     if feature is None:
         raise ValueError(Errors.E911(feat=feature))
-    if also_use_static_vectors:
+    if include_static_vectors:
         model = chain(
             concatenate(
                 chain(_character_embed.CharacterEmbed(nM=nM, nC=nC), list2ragged()),

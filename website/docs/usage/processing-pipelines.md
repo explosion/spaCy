@@ -1403,9 +1403,9 @@ especially useful it you want to pass in a string instead of calling
 
 This example shows the implementation of a pipeline component that fetches
 country meta data via the [REST Countries API](https://restcountries.eu), sets
-entity annotations for countries, merges entities into one token and sets custom
-attributes on the `Doc`, `Span` and `Token` – for example, the capital,
-latitude/longitude coordinates and even the country flag.
+entity annotations for countries and sets custom attributes on the `Doc` and
+`Span` – for example, the capital, latitude/longitude coordinates and even the
+country flag.
 
 ```python
 ### {executable="true"}
@@ -1427,54 +1427,46 @@ class RESTCountriesComponent:
         # Set up the PhraseMatcher with Doc patterns for each country name
         self.matcher = PhraseMatcher(nlp.vocab)
         self.matcher.add("COUNTRIES", [nlp.make_doc(c) for c in self.countries.keys()])
-        # Register attribute on the Token. We'll be overwriting this based on
+        # Register attributes on the Span. We'll be overwriting this based on
         # the matches, so we're only setting a default value, not a getter.
-        Token.set_extension("is_country", default=False)
-        Token.set_extension("country_capital", default=False)
-        Token.set_extension("country_latlng", default=False)
-        Token.set_extension("country_flag", default=False)
-        # Register attributes on Doc and Span via a getter that checks if one of
-        # the contained tokens is set to is_country == True.
+        Span.set_extension("is_country", default=None)
+        Span.set_extension("country_capital", default=None)
+        Span.set_extension("country_latlng", default=None)
+        Span.set_extension("country_flag", default=None)
+        # Register attribute on Doc via a getter that checks if the Doc
+        # contains a country entity
         Doc.set_extension("has_country", getter=self.has_country)
-        Span.set_extension("has_country", getter=self.has_country)
 
     def __call__(self, doc):
         spans = []  # keep the spans for later so we can merge them afterwards
         for _, start, end in self.matcher(doc):
             # Generate Span representing the entity & set label
             entity = Span(doc, start, end, label=self.label)
+            # Set custom attributes on entity. Can be extended with other data
+            # returned by the API, like currencies, country code, calling code etc.
+            entity._.set("is_country", True)
+            entity._.set("country_capital", self.countries[entity.text]["capital"])
+            entity._.set("country_latlng", self.countries[entity.text]["latlng"])
+            entity._.set("country_flag", self.countries[entity.text]["flag"])
             spans.append(entity)
-            # Set custom attribute on each token of the entity
-            # Can be extended with other data returned by the API, like
-            # currencies, country code, flag, calling code etc.
-            for token in entity:
-                token._.set("is_country", True)
-                token._.set("country_capital", self.countries[entity.text]["capital"])
-                token._.set("country_latlng", self.countries[entity.text]["latlng"])
-                token._.set("country_flag", self.countries[entity.text]["flag"])
-        # Iterate over all spans and merge them into one token
-        with doc.retokenize() as retokenizer:
-            for span in spans:
-                retokenizer.merge(span)
         # Overwrite doc.ents and add entity – be careful not to replace!
         doc.ents = list(doc.ents) + spans
         return doc  # don't forget to return the Doc!
 
-    def has_country(self, tokens):
-        """Getter for Doc and Span attributes. Since the getter is only called
-        when we access the attribute, we can refer to the Token's 'is_country'
+    def has_country(self, doc):
+        """Getter for Doc attributes. Since the getter is only called
+        when we access the attribute, we can refer to the Span's 'is_country'
         attribute here, which is already set in the processing step."""
-        return any([t._.get("is_country") for t in tokens])
+        return any([entity._.get("is_country") for entity in doc.ents])
 
 nlp = English()
 nlp.add_pipe("rest_countries", config={"label": "GPE"})
 doc = nlp("Some text about Colombia and the Czech Republic")
 print("Pipeline", nlp.pipe_names)  # pipeline contains component name
 print("Doc has countries", doc._.has_country)  # Doc contains countries
-for token in doc:
-    if token._.is_country:
-        print(token.text, token._.country_capital, token._.country_latlng, token._.country_flag)
-print("Entities", [(e.text, e.label_) for e in doc.ents])
+for ent in doc.ents:
+    if ent._.is_country:
+        print(ent.text, ent.label_, ent._.country_capital, ent._.country_latlng, ent._.country_flag)
 ```
 
 In this case, all data can be fetched on initialization in one request. However,

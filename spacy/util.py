@@ -622,7 +622,7 @@ def load_meta(path: Union[str, Path]) -> Dict[str, Any]:
     if not path.parent.exists():
         raise IOError(Errors.E052.format(path=path.parent))
     if not path.exists() or not path.is_file():
-        raise IOError(Errors.E053.format(path=path, name="meta.json"))
+        raise IOError(Errors.E053.format(path=path.parent, name="meta.json"))
     meta = srsly.read_json(path)
     for setting in ["lang", "name", "version"]:
         if setting not in meta or not meta[setting]:
@@ -821,7 +821,7 @@ def get_object_name(obj: Any) -> str:
     obj (Any): The Python object, typically a function or class.
     RETURNS (str): A human-readable name.
     """
-    if hasattr(obj, "name"):
+    if hasattr(obj, "name") and obj.name is not None:
         return obj.name
     if hasattr(obj, "__name__"):
         return obj.__name__
@@ -1361,11 +1361,12 @@ def check_bool_env_var(env_var: str) -> bool:
 def _pipe(docs, proc, kwargs):
     if hasattr(proc, "pipe"):
         yield from proc.pipe(docs, **kwargs)
-    # We added some args for pipe that __call__ doesn't expect.
-    kwargs = dict(kwargs)
-    for arg in ["batch_size"]:
-        if arg in kwargs:
-            kwargs.pop(arg)
-    for doc in docs:
-        doc = proc(doc, **kwargs)
-        yield doc
+    else:
+        # We added some args for pipe that __call__ doesn't expect.
+        kwargs = dict(kwargs)
+        for arg in ["batch_size"]:
+            if arg in kwargs:
+                kwargs.pop(arg)
+        for doc in docs:
+            doc = proc(doc, **kwargs)
+            yield doc

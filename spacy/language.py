@@ -1,5 +1,5 @@
 from typing import Optional, Any, Dict, Callable, Iterable, Union, List, Pattern
-from typing import Tuple, Iterator
+from typing import Tuple
 from dataclasses import dataclass
 import random
 import itertools
@@ -1034,6 +1034,9 @@ class Language:
                     )
                 )
             disable = to_disable
+        # DisabledPipes will restore the pipes in 'disable' when it's done, so we need to exclude
+        # those pipes that were already disabled.
+        disable = [d for d in disable if d not in self._disabled]
         return DisabledPipes(self, disable)
 
     def make_doc(self, text: str) -> Doc:
@@ -1194,7 +1197,9 @@ class Language:
             doc = Doc(self.vocab, words=["x", "y", "z"])
             get_examples = lambda: [Example.from_dict(doc, {})]
         if not hasattr(get_examples, "__call__"):
-            err = Errors.E930.format(method="Language.initialize", obj=type(get_examples))
+            err = Errors.E930.format(
+                method="Language.initialize", obj=type(get_examples)
+            )
             raise TypeError(err)
         # Make sure the config is interpolated so we can resolve subsections
         config = self.config.interpolate()

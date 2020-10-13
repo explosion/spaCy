@@ -49,11 +49,10 @@ def noun_chunks(doclike):
             prev_end = word.left_edge.i
             yield word.left_edge.i, extend_right(word), np_label
         elif word.dep == conj:
-            cc_token = word.left_edge  
+            cc_token = word.left_edge
             prev_end = cc_token.i
-            yield cc_token.right_edge.i + 1, extend_right(word), np_label  # Shave off cc tokens from the NP
-
-
+            # Shave off cc tokens from the NP
+            yield cc_token.right_edge.i + 1, extend_right(word), np_label
 
 
 SYNTAX_ITERATORS = {"noun_chunks": noun_chunks}

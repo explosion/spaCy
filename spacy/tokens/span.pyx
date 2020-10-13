@@ -150,7 +150,6 @@ cdef class Span:
 
         DOCS: https://nightly.spacy.io/api/span#len
         """
-        self._recalculate_indices()
         if self.end < self.start:
             return 0
         return self.end - self.start
@@ -167,7 +166,6 @@ cdef class Span:
 
         DOCS: https://nightly.spacy.io/api/span#getitem
         """
-        self._recalculate_indices()
         if isinstance(i, slice):
             start, end = normalize_slice(len(self), i.start, i.stop, i.step)
             return Span(self.doc, start + self.start, end + self.start)
@@ -188,7 +186,6 @@ cdef class Span:
 
         DOCS: https://nightly.spacy.io/api/span#iter
         """
-        self._recalculate_indices()
         for i in range(self.start, self.end):
             yield self.doc[i]
 
@@ -338,19 +335,6 @@ cdef class Span:
             for j, feature in enumerate(attr_ids):
                 output[i-self.start, j] = get_token_attr(&self.doc.c[i], feature)
         return output
-
-    cpdef int _recalculate_indices(self) except -1:
-        if self.end > self.doc.length \
-        or self.doc.c[self.start].idx != self.start_char \
-        or (self.doc.c[self.end-1].idx + self.doc.c[self.end-1].lex.length) != self.end_char:
-            start = token_by_start(self.doc.c, self.doc.length, self.start_char)
-            if self.start == -1:
-                raise IndexError(Errors.E036.format(start=self.start_char))
-            end = token_by_end(self.doc.c, self.doc.length, self.end_char)
-            if end == -1:
-                raise IndexError(Errors.E037.format(end=self.end_char))
-            self.start = start
-            self.end = end + 1
 
     @property
     def vocab(self):
@@ -520,7 +504,6 @@ cdef class Span:
 
         DOCS: https://nightly.spacy.io/api/span#root
         """
-        self._recalculate_indices()
         if "root" in self.doc.user_span_hooks:
             return self.doc.user_span_hooks["root"](self)
         # This should probably be called 'head', and the other one called

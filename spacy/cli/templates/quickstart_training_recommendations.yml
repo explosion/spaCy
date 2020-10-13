@@ -32,10 +32,10 @@ es:
   word_vectors: null
   transformer:
     efficiency:
-      name: mrm8488/RuPERTa-base
+      name: dccuchile/bert-base-spanish-wwm-cased
       size_factor: 3
     accuracy:
-      name: mrm8488/RuPERTa-base
+      name: dccuchile/bert-base-spanish-wwm-cased
       size_factor: 3
 sv:
   word_vectors: null
@@ -100,4 +100,22 @@ pl:
       size_factor: 3
     accuracy:
       name: dkleczek/bert-base-polish-cased-v1
+      size_factor: 3
+nl:
+  word_vectors: null
+  transformer:
+    efficiency:
+      name: pdelobelle/robbert-v2-dutch-base
+      size_factor: 3
+    accuracy:
+      name: pdelobelle/robbert-v2-dutch-base
+      size_factor: 3
+pt:
+  word_vectors: null
+  transformer:
+    efficiency:
+      name: neuralmind/bert-base-portuguese-cased
+      size_factor: 3
+    accuracy:
+      name: neuralmind/bert-base-portuguese-cased
       size_factor: 3

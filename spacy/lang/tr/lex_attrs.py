@@ -62,6 +62,7 @@ _ordinal_words = [
 
 _ordinal_endings = ("inci", "ıncı", "nci", "ncı", "uncu", "üncü")
 
+
 def like_num(text):
     if text.startswith(("+", "-", "±", "~")):
         text = text[1:]
@@ -75,11 +76,11 @@ def like_num(text):
 
     text_lower = text.lower()
 
-    #Check cardinal number
+    # Check cardinal number
     if text_lower in _num_words:
         return True
 
-    #Check ordinal number
+    # Check ordinal number
     if text_lower in _ordinal_words:
         return True
     if text_lower.endswith(_ordinal_endings):

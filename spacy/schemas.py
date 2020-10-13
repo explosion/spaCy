@@ -282,7 +282,7 @@ class ModelMetaSchema(BaseModel):
     sources: Optional[Union[List[StrictStr], List[Dict[str, str]]]] = Field(None, title="Training data sources")
     vectors: Dict[str, Any] = Field({}, title="Included word vectors")
     labels: Dict[str, List[str]] = Field({}, title="Component labels, keyed by component name")
-    performance: Dict[str, Union[float, Dict[str, Union[float, dict]]]] = Field({}, title="Accuracy and speed numbers")
+    performance: Dict[str, Any] = Field({}, title="Accuracy and speed numbers")
     spacy_git_version: StrictStr = Field("", title="Commit of spaCy version used")
     # fmt: on
 

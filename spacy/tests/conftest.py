@@ -239,9 +239,11 @@ def th_tokenizer():
 def tr_tokenizer():
     return get_lang_class("tr")().tokenizer
 
+
 @pytest.fixture(scope="session")
 def tr_vocab():
     return get_lang_class("tr").Defaults.create_vocab()
+
 
 @pytest.fixture(scope="session")
 def tt_tokenizer():

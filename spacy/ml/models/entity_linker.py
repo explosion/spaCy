@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Optional, Callable, Iterable
 from thinc.api import chain, clone, list2ragged, reduce_mean, residual
 from thinc.api import Model, Maxout, Linear
@@ -25,7 +26,7 @@ def build_nel_encoder(tok2vec: Model, nO: Optional[int] = None) -> Model:
 
 
 @registry.misc.register("spacy.KBFromFile.v1")
-def load_kb(kb_path: str) -> Callable[[Vocab], KnowledgeBase]:
+def load_kb(kb_path: Path) -> Callable[[Vocab], KnowledgeBase]:
     def kb_from_file(vocab):
         kb = KnowledgeBase(vocab, entity_vector_length=1)
         kb.from_disk(kb_path)

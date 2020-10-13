@@ -39,7 +39,6 @@ def forward(
     key_attr = model.attrs["key_attr"]
     W = cast(Floats2d, model.ops.as_contig(model.get_param("W")))
     V = cast(Floats2d, docs[0].vocab.vectors.data)
-    mask = _get_drop_mask(model.ops, W.shape[0], model.attrs.get("dropout_rate"))
     rows = model.ops.flatten(
         [doc.vocab.vectors.find(keys=doc.to_array(key_attr)) for doc in docs]
     )
@@ -47,8 +46,11 @@ def forward(
         model.ops.gemm(model.ops.as_contig(V[rows]), W, trans2=True),
         model.ops.asarray([len(doc) for doc in docs], dtype="i"),
     )
-    if mask is not None:
-        output.data *= mask
+    mask = None
+    if is_train:
+        mask = _get_drop_mask(model.ops, W.shape[0], model.attrs.get("dropout_rate"))
+        if mask is not None:
+            output.data *= mask
 
     def backprop(d_output: Ragged) -> List[Doc]:
         if mask is not None:
