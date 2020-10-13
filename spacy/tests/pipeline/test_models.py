@@ -74,7 +74,6 @@ def test_layers_batching_all(model, in_data, out_data):
             util_batch_unbatch_docs_ragged(model, in_data, out_data)
 
 
-
 def util_batch_unbatch_docs_list(
     model: Model[List[Doc], List[Array2d]], in_data: List[Doc], out_data: List[Array2d]
 ):
