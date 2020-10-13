@@ -1419,7 +1419,7 @@ cdef class Doc:
             if include_annotation["POS"]:
                 token_data["pos"] = token.pos_
             if include_annotation["MORPH"]:
-                token_data["morph"] = token.morph
+                token_data["morph"] = token.morph.to_json()
             if include_annotation["LEMMA"]:
                 token_data["lemma"] = token.lemma_
             if include_annotation["DEP"]:
