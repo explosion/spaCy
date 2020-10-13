@@ -46,7 +46,6 @@ def test_components_batching_list(name):
 @pytest.mark.parametrize("name", ["textcat"])
 def test_components_batching_array(name):
     nlp = English()
-    in_data = [nlp(text) for text in texts]
     proc = nlp.create_pipe(name)
     util_batch_unbatch_docs_array(proc.model, get_docs(), array)
 
