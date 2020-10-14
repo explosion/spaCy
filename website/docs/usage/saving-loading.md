@@ -463,7 +463,7 @@ entry_points={
 }
 ```
 
-The factory can also implement other pipeline components like `to_disk` and
+The factory can also implement other pipeline component methods like `to_disk` and
 `from_disk` for serialization, or even `update` to make the component trainable.
 If a component exposes a `from_disk` method and is included in a pipeline, spaCy
 will call it on load. This lets you ship custom data with your pipeline package.

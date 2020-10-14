@@ -197,7 +197,7 @@ $ python -m spacy project push
 ```
 
 The `remotes` section in your `project.yml` lets you assign names to the
-different storages. To download a state from a remote storage, you can use the
+different storages. To download state from a remote storage, you can use the
 [`spacy project pull`](/api/cli#project-pull) command. For more details, see the
 docs on [remote storage](#remote).
 
@@ -502,7 +502,7 @@ commands:
 
 When your custom project is ready and you want to share it with others, you can
 use the [`spacy project document`](/api/cli#project-document) command to
-**auto-generate** a pretty, markdown-formatted `README` file based on your
+**auto-generate** a pretty, Markdown-formatted `README` file based on your
 project's `project.yml`. It will list all commands, workflows and assets defined
 in the project and include details on how to run the project, as well as links
 to the relevant spaCy documentation to make it easy for others to get started
