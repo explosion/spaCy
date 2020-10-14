@@ -37,7 +37,6 @@ exports.createPages = ({ graphql, actions }) => {
                                     code
                                     name
                                     models
-                                    starters
                                     example
                                     has_examples
                                 }

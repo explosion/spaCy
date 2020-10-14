@@ -22,12 +22,12 @@ import QuickstartModels from 'widgets/quickstart-models.js'
 ## Package naming conventions {#conventions}
 
 In general, spaCy expects all pipeline packages to follow the naming convention
-of `[lang`\_[name]]. For spaCy's pipelines, we also chose to divide the name
+of `[lang]\_[name]`. For spaCy's pipelines, we also chose to divide the name
 into three components:
 
 1. **Type:** Capabilities (e.g. `core` for general-purpose pipeline with
-   vocabulary, syntax, entities and word vectors, or `depent` for only vocab,
-   syntax and entities).
+   vocabulary, syntax, entities and word vectors, or `dep` for only vocab and
+   syntax).
 2. **Genre:** Type of text the pipeline is trained on, e.g. `web` or `news`.
 3. **Size:** Package size indicator, `sm`, `md` or `lg`.
 

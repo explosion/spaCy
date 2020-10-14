@@ -14,7 +14,7 @@ menu:
 >
 > To help you make the transition from v2.x to v3.0, we've uploaded the old
 > website to [**v2.spacy.io**](https://v2.spacy.io/docs). To see what's changed
-> and how to migrate, see the guide on [v3.0 guide](/usage/v3).
+> and how to migrate, see the [v3.0 guide](/usage/v3).
 
 import QuickstartInstall from 'widgets/quickstart-install.js'
 
@@ -187,7 +187,7 @@ to get the right commands for your platform and Python version.
   `sudo apt-get install build-essential python-dev git`
 - **macOS / OS X:** Install a recent version of
   [XCode](https://developer.apple.com/xcode/), including the so-called "Command
-  Line Tools". macOS and OS X ship with Python and git preinstalled.
+  Line Tools". macOS and OS X ship with Python and Git preinstalled.
 - **Windows:** Install a version of the
   [Visual C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
   or
@@ -380,7 +380,7 @@ This error may occur when running the `spacy` command from the command line.
 spaCy does not currently add an entry to your `PATH` environment variable, as
 this can lead to unexpected results, especially when using a virtual
 environment. Instead, spaCy adds an auto-alias that maps `spacy` to
-`python -m spacy]`. If this is not working as expected, run the command with
+`python -m spacy`. If this is not working as expected, run the command with
 `python -m`, yourself – for example `python -m spacy download en_core_web_sm`.
 For more info on this, see the [`download`](/api/cli#download) command.
 
@@ -427,8 +427,8 @@ disk has some binary files that should not go through this conversion. When they
 do, you get the error above. You can fix it by either changing your
 [`core.autocrlf`](https://git-scm.com/book/en/v2/Customizing-Git-Git-Configuration)
 setting to `"false"`, or by committing a
-[`.gitattributes`](https://git-scm.com/docs/gitattributes) file] to your
-repository to tell git on which files or folders it shouldn't do LF-to-CRLF
+[`.gitattributes`](https://git-scm.com/docs/gitattributes) file to your
+repository to tell Git on which files or folders it shouldn't do LF-to-CRLF
 conversion, with an entry like `path/to/spacy/model/** -text`. After you've done
 either of these, clone your repository again.
 

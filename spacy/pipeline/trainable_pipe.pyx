@@ -116,7 +116,7 @@ cdef class TrainablePipe(Pipe):
         validate_examples(examples, "TrainablePipe.update")
         if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
             # Handle cases where there are no tokens in any docs.
-            return
+            return losses
         set_dropout_rate(self.model, drop)
         scores, bp_scores = self.model.begin_update([eg.predicted for eg in examples])
         loss, d_scores = self.get_loss(examples, scores)

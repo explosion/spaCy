@@ -352,7 +352,7 @@ dropout = 0.2
 
 <Infobox variant="warning">
 
-Remember that it is best not to rely on any (hidden) default values, to ensure
+Remember that it is best not to rely on any (hidden) default values to ensure
 that training configs are complete and experiments fully reproducible.
 
 </Infobox>
@@ -503,7 +503,7 @@ overview of the `TrainablePipe` methods used by
 
 </Infobox>
 
-### Example: Entity elation extraction component {#component-rel}
+### Example: Entity relation extraction component {#component-rel}
 
 This section outlines an example use-case of implementing a **novel relation
 extraction component** from scratch. We'll implement a binary relation
@@ -618,7 +618,7 @@ we can define our relation model in a config file as such:
 # ...
 
 [model.get_candidates]
-@misc = "rel_cand_generator.v2"
+@misc = "rel_cand_generator.v1"
 max_length = 20
 
 [model.create_candidate_tensor]
@@ -687,8 +687,8 @@ Before the model can be used, it needs to be
 [initialized](/usage/training#initialization). This function receives a callback
 to access the full **training data set**, or a representative sample. This data
 set can be used to deduce all **relevant labels**. Alternatively, a list of
-labels can be provided to `initialize`, or you can call the
-`RelationExtractoradd_label` directly. The number of labels defines the output
+labels can be provided to `initialize`, or you can call 
+`RelationExtractor.add_label` directly. The number of labels defines the output
 dimensionality of the network, and will be used to do
 [shape inference](https://thinc.ai/docs/usage-models#validation) throughout the
 layers of the neural network. This is triggered by calling
@@ -729,7 +729,7 @@ and its internal model can be trained and used to make predictions.
 During training, the function [`update`](/api/pipe#update) is invoked which
 delegates to
 [`Model.begin_update`](https://thinc.ai/docs/api-model#begin_update) and a
-[`get_loss`](/api/pipe#get_loss) function that **calculate the loss** for a
+[`get_loss`](/api/pipe#get_loss) function that **calculates the loss** for a
 batch of examples, as well as the **gradient** of loss that will be used to
 update the weights of the model layers. Thinc provides several
 [loss functions](https://thinc.ai/docs/api-loss) that can be used for the
