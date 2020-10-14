@@ -1,7 +1,7 @@
 A named entity is a "real-world object" that's assigned a name – for example, a
 person, a country, a product or a book title. spaCy can **recognize various
 types of named entities in a document, by asking the model for a
-**prediction\*\*. Because models are statistical and strongly depend on the
+prediction**. Because models are statistical and strongly depend on the
 examples they were trained on, this doesn't always work _perfectly_ and might
 need some tuning later, depending on your use case.
 

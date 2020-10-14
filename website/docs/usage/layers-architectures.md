@@ -352,7 +352,7 @@ dropout = 0.2
 
 <Infobox variant="warning">
 
-Remember that it is best not to rely on any (hidden) default values, to ensure
+Remember that it is best not to rely on any (hidden) default values to ensure
 that training configs are complete and experiments fully reproducible.
 
 </Infobox>

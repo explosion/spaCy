@@ -55,7 +55,7 @@ abstract representations of the tokens you're looking for, using lexical
 attributes, linguistic features predicted by the model, operators, set
 membership and rich comparison. For example, you can find a noun, followed by a
 verb with the lemma "love" or "like", followed by an optional determiner and
-another token that's at least ten characters long.
+another token that's at least 10 characters long.
 
 </Accordion>
 
@@ -494,7 +494,7 @@ you prefer.
 | `matcher` | The matcher instance. ~~Matcher~~                                                                                                                  |
 | `doc`     | The document the matcher was used on. ~~Doc~~                                                                                                      |
 | `i`       | Index of the current match (`matches[i`]). ~~int~~                                                                                                 |
-| `matches` | A list of `(match_id, start, end)` tuples, describing the matches. A match tuple describes a span `doc[start:end`]. ~~ List[Tuple[int, int int]]~~ |
+| `matches` | A list of `(match_id, start, end)` tuples, describing the matches. A match tuple describes a span `doc[start:end`]. ~~List[Tuple[int, int int]]~~ |
 
 ### Creating spans from matches {#matcher-spans}
 
@@ -631,7 +631,7 @@ To get a quick overview of the results, you could collect all sentences
 containing a match and render them with the
 [displaCy visualizer](/usage/visualizers). In the callback function, you'll have
 access to the `start` and `end` of each match, as well as the parent `Doc`. This
-lets you determine the sentence containing the match, `doc[start : end`.sent],
+lets you determine the sentence containing the match, `doc[start:end].sent`,
 and calculate the start and end of the matched span within the sentence. Using
 displaCy in ["manual" mode](/usage/visualizers#manual-usage) lets you pass in a
 list of dictionaries containing the text and entities to render.
@@ -1454,7 +1454,7 @@ When using a trained
 extract information from your texts, you may find that the predicted span only
 includes parts of the entity you're looking for. Sometimes, this happens if
 statistical model predicts entities incorrectly. Other times, it happens if the
-way the entity type way defined in the original training corpus doesn't match
+way the entity type was defined in the original training corpus doesn't match
 what you need for your application.
 
 > #### Where corpora come from
@@ -1645,7 +1645,7 @@ affiliation is current, we can check the head's part-of-speech tag.
 ```python
 person_entities = [ent for ent in doc.ents if ent.label_ == "PERSON"]
 for ent in person_entities:
-    # Because the entity is a spans, we need to use its root token. The head
+    # Because the entity is a span, we need to use its root token. The head
     # is the syntactic governor of the person, e.g. the verb
     head = ent.root.head
     if head.lemma_ == "work":
