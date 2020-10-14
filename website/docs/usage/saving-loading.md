@@ -448,7 +448,7 @@ entry_points={
 }
 ```
 
-The factory can also implement other pipeline component like `to_disk` and
+The factory can also implement other pipeline components like `to_disk` and
 `from_disk` for serialization, or even `update` to make the component trainable.
 If a component exposes a `from_disk` method and is included in a pipeline, spaCy
 will call it on load. This lets you ship custom data with your pipeline package.
@@ -666,7 +666,7 @@ care of putting all this together and returning a `Language` object with the
 loaded pipeline and data. If your pipeline requires
 [custom components](/usage/processing-pipelines#custom-components) or a custom
 language class, you can also **ship the code with your package** and include it
-in the `__init__.py` – for example, to register component before the `nlp`
+in the `__init__.py` – for example, to register a component before the `nlp`
 object is created.
 
 <Infobox variant="warning" title="Important note on making manual edits">

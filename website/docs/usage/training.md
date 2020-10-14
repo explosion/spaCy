@@ -489,7 +489,7 @@ or TensorFlow, make **custom modifications** to the `nlp` object, create custom
 optimizers or schedules, or **stream in data** and preprocesses it on the fly
 while training.
 
-Each custom function can have any numbers of arguments that are passed in via
+Each custom function can have any number of arguments that are passed in via
 the [config](#config), just the built-in functions. If your function defines
 **default argument values**, spaCy is able to auto-fill your config when you run
 [`init fill-config`](/api/cli#init-fill-config). If you want to make sure that a

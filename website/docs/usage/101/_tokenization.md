@@ -45,6 +45,6 @@ marks.
 
 While punctuation rules are usually pretty general, tokenizer exceptions
 strongly depend on the specifics of the individual language. This is why each
-[available language](/usage/models#languages) has its own subclass like
+[available language](/usage/models#languages) has its own subclass, like
 `English` or `German`, that loads in lists of hard-coded data and exception
 rules.

@@ -128,7 +128,7 @@ should be created. spaCy will then do the following:
 2. Iterate over the **pipeline names** and look up each component name in the
    `[components]` block. The `factory` tells spaCy which
    [component factory](#custom-components-factories) to use for adding the
-   component with with [`add_pipe`](/api/language#add_pipe). The settings are
+   component with [`add_pipe`](/api/language#add_pipe). The settings are
    passed into the factory.
 3. Make the **model data** available to the `Language` class by calling
    [`from_disk`](/api/language#from_disk) with the path to the data directory.
@@ -325,7 +325,7 @@ to remove pipeline components from an existing pipeline, the
 [`rename_pipe`](/api/language#rename_pipe) method to rename them, or the
 [`replace_pipe`](/api/language#replace_pipe) method to replace them with a
 custom component entirely (more details on this in the section on
-[custom components](#custom-components).
+[custom components](#custom-components)).
 
 ```python
 nlp.remove_pipe("parser")
@@ -384,7 +384,7 @@ vectors available – otherwise, it won't be able to make the same predictions.
 >
 > Instead of providing a `factory`, component blocks in the training
 > [config](/usage/training#config) can also define a `source`. The string needs
-> to be a loadable spaCy pipeline package or path. The
+> to be a loadable spaCy pipeline package or path.
 >
 > ```ini
 > [components.ner]
@@ -417,7 +417,7 @@ print(nlp.pipe_names)
 ### Analyzing pipeline components {#analysis new="3"}
 
 The [`nlp.analyze_pipes`](/api/language#analyze_pipes) method analyzes the
-components in the current pipeline and outputs information about them, like the
+components in the current pipeline and outputs information about them like the
 attributes they set on the [`Doc`](/api/doc) and [`Token`](/api/token), whether
 they retokenize the `Doc` and which scores they produce during training. It will
 also show warnings if components require values that aren't set by previous
@@ -511,7 +511,7 @@ doesn't, the pipeline analysis won't catch that.
 ## Creating custom pipeline components {#custom-components}
 
 A pipeline component is a function that receives a `Doc` object, modifies it and
-returns it – – for example, by using the current weights to make a prediction
+returns it – for example, by using the current weights to make a prediction
 and set some annotation on the document. By adding a component to the pipeline,
 you'll get access to the `Doc` at any point **during processing** – instead of
 only being able to modify it afterwards.
@@ -702,7 +702,7 @@ nlp.add_pipe("my_component", config={"some_setting": False})
 <Accordion title="How is @Language.factory different from @Language.component?" id="factories-decorator-component">
 
 The [`@Language.component`](/api/language#component) decorator is essentially a
-**shortcut** for stateless pipeline component that don't need any settings. This
+**shortcut** for stateless pipeline components that don't need any settings. This
 means you don't have to always write a function that returns your function if
 there's no state to be passed through – spaCy can just take care of this for
 you. The following two code examples are equivalent:
@@ -888,7 +888,7 @@ components in pipelines that you [train](/usage/training). To make sure spaCy
 knows where to find your custom `@misc` function, you can pass in a Python file
 via the argument `--code`. If someone else is using your component, all they
 have to do to customize the data is to register their own function and swap out
-the name. Registered functions can also take **arguments** by the way that can
+the name. Registered functions can also take **arguments**, by the way, that can
 be defined in the config as well – you can read more about this in the docs on
 [training with custom code](/usage/training#custom-code).
 
@@ -963,7 +963,7 @@ doc = nlp("This is a text...")
 
 ### Language-specific factories {#factories-language new="3"}
 
-There are many use case where you might want your pipeline components to be
+There are many use cases where you might want your pipeline components to be
 language-specific. Sometimes this requires entirely different implementation per
 language, sometimes the only difference is in the settings or data. spaCy allows
 you to register factories of the **same name** on both the `Language` base
@@ -1028,8 +1028,8 @@ plug fully custom machine learning components into your pipeline. You'll need
 the following:
 
 1. **Model:** A Thinc [`Model`](https://thinc.ai/docs/api-model) instance. This
-   can be a model using implemented in
-   [Thinc](/usage/layers-architectures#thinc), or a
+   can be a model implemented in
+   [Thinc](/usage/layers-architectures#thinc) or a
    [wrapped model](/usage/layers-architectures#frameworks) implemented in
    PyTorch, TensorFlow, MXNet or a fully custom solution. The model must take a
    list of [`Doc`](/api/doc) objects as input and can have any type of output.
@@ -1354,7 +1354,7 @@ to `Doc.user_span_hooks` and `Doc.user_token_hooks`.
 >
 > The hooks live on the `Doc` object because the `Span` and `Token` objects are
 > created lazily, and don't own any data. They just proxy to their parent `Doc`.
-> This turns out to be convenient here — we only have to worry about installing
+> This turns out to be convenient here – we only have to worry about installing
 > hooks in one place.
 
 | Name               | Customizes                                                                                                                                                                                                              |
