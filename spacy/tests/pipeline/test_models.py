@@ -4,7 +4,7 @@ import numpy
 import pytest
 from numpy.testing import assert_almost_equal
 from spacy.vocab import Vocab
-from thinc.api import get_current_ops, Model, data_validation
+from thinc.api import NumpyOps, Model, data_validation
 from thinc.types import Array2d, Ragged
 
 from spacy.lang.en import English
@@ -12,7 +12,8 @@ from spacy.ml import FeatureExtractor, StaticVectors
 from spacy.ml._character_embed import CharacterEmbed
 from spacy.tokens import Doc
 
-OPS = get_current_ops()
+
+OPS = NumpyOps()
 
 texts = ["These are 4 words", "Here just three"]
 l0 = [[1, 2], [3, 4], [5, 6], [7, 8]]
