@@ -52,10 +52,6 @@
             {
                 "label": "Trained Pipelines",
                 "items": []
-            },
-            {
-                "label": "Starter Packages",
-                "items": []
             }
         ]
     },

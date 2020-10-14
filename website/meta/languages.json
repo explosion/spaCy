@@ -31,7 +31,6 @@
             "code": "en",
             "name": "English",
             "models": ["en_core_web_sm", "en_core_web_md", "en_core_web_lg", "en_core_web_trf"],
-            "starters": ["en_vectors_web_lg"],
             "example": "This is a sentence.",
             "has_examples": true
         },

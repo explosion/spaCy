@@ -336,9 +336,7 @@ const landingQuery = graphql`
                 counts {
                     langs
                     modelLangs
-                    starterLangs
                     models
-                    starters
                 }
             }
         }
