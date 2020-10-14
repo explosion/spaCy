@@ -144,7 +144,7 @@
         {
             "code": "pt",
             "name": "Portuguese",
-            "models": ["pt_core_news_sm", "pt_core_news_md", "pt_core_news_lg", "pt_dep_news_trf"],
+            "models": ["pt_core_news_sm", "pt_core_news_md", "pt_core_news_lg"],
             "example": "Esta é uma frase.",
             "has_examples": true
         },
