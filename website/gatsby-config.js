@@ -1,6 +1,11 @@
 const autoprefixer = require('autoprefixer')
 const path = require('path')
 
+// https://florian.ec/blog/gatsby-build-netlify-segmentation-fault/
+const sharp = require('sharp')
+sharp.cache(false)
+sharp.simd(false)
+
 // Markdown plugins
 const wrapSectionPlugin = require('./src/plugins/remark-wrap-section.js')
 const customAttrsPlugin = require('./src/plugins/remark-custom-attrs.js')
@@ -24,6 +29,9 @@ const branch = isNightly ? 'develop' : 'master'
 // Those variables are going to be replaced in the Markdown, e.g. %%GITHUB_SPACY
 const replacements = {
     GITHUB_SPACY: `https://github.com/explosion/spaCy/tree/${branch}`,
+    GITHUB_PROJECTS: `https://github.com/${site.projectsRepo}`,
+    SPACY_PKG_NAME: isNightly ? 'spacy-nightly' : 'spacy',
+    SPACY_PKG_FLAGS: isNightly ? ' --pre' : '',
 }
 
 /**

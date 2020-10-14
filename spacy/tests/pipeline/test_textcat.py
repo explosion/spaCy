@@ -8,10 +8,10 @@ from spacy.language import Language
 from spacy.pipeline import TextCategorizer
 from spacy.tokens import Doc
 from spacy.pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
+from spacy.scorer import Scorer
+from spacy.training import Example
 
 from ..util import make_tempdir
-from ...cli.train import verify_textcat_config
-from ...training import Example
 
 
 TRAIN_DATA = [
@@ -20,12 +20,23 @@ TRAIN_DATA = [
 ]
 
 
+def make_get_examples(nlp):
+    train_examples = []
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+
+    def get_examples():
+        return train_examples
+
+    return get_examples
+
+
 @pytest.mark.skip(reason="Test is flakey when run with others")
 def test_simple_train():
     nlp = Language()
     textcat = nlp.add_pipe("textcat")
     textcat.add_label("answer")
-    nlp.begin_training()
+    nlp.initialize()
     for i in range(5):
         for text, answer in [
             ("aaaa", 1.0),
@@ -55,7 +66,7 @@ def test_textcat_learns_multilabel():
     textcat = TextCategorizer(nlp.vocab, width=8)
     for letter in letters:
         textcat.add_label(letter)
-    optimizer = textcat.begin_training(lambda: [])
+    optimizer = textcat.initialize(lambda: [])
     for i in range(30):
         losses = {}
         examples = [Example.from_dict(doc, {"cats": cats}) for doc, cat in docs]
@@ -85,16 +96,13 @@ def test_no_label():
     nlp = Language()
     nlp.add_pipe("textcat")
     with pytest.raises(ValueError):
-        nlp.begin_training()
+        nlp.initialize()
 
 
 def test_implicit_label():
     nlp = Language()
     nlp.add_pipe("textcat")
-    train_examples = []
-    for t in TRAIN_DATA:
-        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
-    nlp.begin_training(get_examples=lambda: train_examples)
+    nlp.initialize(get_examples=make_get_examples(nlp))
 
 
 def test_no_resize():
@@ -102,43 +110,41 @@ def test_no_resize():
     textcat = nlp.add_pipe("textcat")
     textcat.add_label("POSITIVE")
     textcat.add_label("NEGATIVE")
-    nlp.begin_training()
+    nlp.initialize()
     assert textcat.model.get_dim("nO") == 2
     # this throws an error because the textcat can't be resized after initialization
     with pytest.raises(ValueError):
         textcat.add_label("NEUTRAL")
 
 
-def test_begin_training_examples():
+def test_initialize_examples():
     nlp = Language()
     textcat = nlp.add_pipe("textcat")
-    train_examples = []
     for text, annotations in TRAIN_DATA:
-        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
         for label, value in annotations.get("cats").items():
             textcat.add_label(label)
     # you shouldn't really call this more than once, but for testing it should be fine
-    nlp.begin_training()
-    nlp.begin_training(get_examples=lambda: train_examples)
+    nlp.initialize()
+    get_examples = make_get_examples(nlp)
+    nlp.initialize(get_examples=get_examples)
     with pytest.raises(TypeError):
-        nlp.begin_training(get_examples=lambda: None)
-    with pytest.raises(ValueError):
-        nlp.begin_training(get_examples=train_examples)
+        nlp.initialize(get_examples=lambda: None)
+    with pytest.raises(TypeError):
+        nlp.initialize(get_examples=get_examples())
 
 
 def test_overfitting_IO():
     # Simple test to try and quickly overfit the textcat component - ensuring the ML models work correctly
     fix_random_seed(0)
     nlp = English()
+    nlp.config["initialize"]["components"]["textcat"] = {"positive_label": "POSITIVE"}
     # Set exclusive labels
-    textcat = nlp.add_pipe(
-        "textcat",
-        config={"model": {"exclusive_classes": True}, "positive_label": "POSITIVE"},
-    )
+    config = {"model": {"exclusive_classes": True}}
+    textcat = nlp.add_pipe("textcat", config=config)
     train_examples = []
     for text, annotations in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
-    optimizer = nlp.begin_training(get_examples=lambda: train_examples)
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
     assert textcat.model.get_dim("nO") == 2
 
     for i in range(50):
@@ -194,7 +200,7 @@ def test_textcat_configs(textcat_config):
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
         for label, value in annotations.get("cats").items():
             textcat.add_label(label)
-    optimizer = nlp.begin_training()
+    optimizer = nlp.initialize()
     for i in range(5):
         losses = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)
@@ -202,25 +208,56 @@ def test_textcat_configs(textcat_config):
 
 def test_positive_class():
     nlp = English()
-    pipe_config = {"positive_label": "POS", "labels": ["POS", "NEG"]}
-    textcat = nlp.add_pipe("textcat", config=pipe_config)
+    textcat = nlp.add_pipe("textcat")
+    get_examples = make_get_examples(nlp)
+    textcat.initialize(get_examples, labels=["POS", "NEG"], positive_label="POS")
     assert textcat.labels == ("POS", "NEG")
-    verify_textcat_config(nlp, pipe_config)
 
 
 def test_positive_class_not_present():
     nlp = English()
-    pipe_config = {"positive_label": "POS", "labels": ["SOME", "THING"]}
-    textcat = nlp.add_pipe("textcat", config=pipe_config)
-    assert textcat.labels == ("SOME", "THING")
+    textcat = nlp.add_pipe("textcat")
+    get_examples = make_get_examples(nlp)
     with pytest.raises(ValueError):
-        verify_textcat_config(nlp, pipe_config)
+        textcat.initialize(get_examples, labels=["SOME", "THING"], positive_label="POS")
 
 
 def test_positive_class_not_binary():
     nlp = English()
-    pipe_config = {"positive_label": "POS", "labels": ["SOME", "THING", "POS"]}
-    textcat = nlp.add_pipe("textcat", config=pipe_config)
-    assert textcat.labels == ("SOME", "THING", "POS")
+    textcat = nlp.add_pipe("textcat")
+    get_examples = make_get_examples(nlp)
     with pytest.raises(ValueError):
-        verify_textcat_config(nlp, pipe_config)
+        textcat.initialize(
+            get_examples, labels=["SOME", "THING", "POS"], positive_label="POS"
+        )
+
+
+def test_textcat_evaluation():
+    train_examples = []
+    nlp = English()
+    ref1 = nlp("one")
+    ref1.cats = {"winter": 1.0, "summer": 1.0, "spring": 1.0, "autumn": 1.0}
+    pred1 = nlp("one")
+    pred1.cats = {"winter": 1.0, "summer": 0.0, "spring": 1.0, "autumn": 1.0}
+    train_examples.append(Example(pred1, ref1))
+
+    ref2 = nlp("two")
+    ref2.cats = {"winter": 0.0, "summer": 0.0, "spring": 1.0, "autumn": 1.0}
+    pred2 = nlp("two")
+    pred2.cats = {"winter": 1.0, "summer": 0.0, "spring": 0.0, "autumn": 1.0}
+    train_examples.append(Example(pred2, ref2))
+
+    scores = Scorer().score_cats(
+        train_examples, "cats", labels=["winter", "summer", "spring", "autumn"]
+    )
+    assert scores["cats_f_per_type"]["winter"]["p"] == 1 / 2
+    assert scores["cats_f_per_type"]["winter"]["r"] == 1 / 1
+    assert scores["cats_f_per_type"]["summer"]["p"] == 0
+    assert scores["cats_f_per_type"]["summer"]["r"] == 0 / 1
+    assert scores["cats_f_per_type"]["spring"]["p"] == 1 / 1
+    assert scores["cats_f_per_type"]["spring"]["r"] == 1 / 2
+    assert scores["cats_f_per_type"]["autumn"]["p"] == 2 / 2
+    assert scores["cats_f_per_type"]["autumn"]["r"] == 2 / 2
+
+    assert scores["cats_micro_p"] == 4 / 5
+    assert scores["cats_micro_r"] == 4 / 6

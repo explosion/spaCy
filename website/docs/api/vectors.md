@@ -290,7 +290,7 @@ If a table is full, it can be resized using
 ## Vectors.n_keys {#n_keys tag="property"}
 
 Get the number of keys in the table. Note that this is the number of _all_ keys,
-not just unique vectors. If several keys are mapped are mapped to the same
+not just unique vectors. If several keys are mapped to the same
 vectors, they will be counted individually.
 
 > #### Example
@@ -307,10 +307,10 @@ vectors, they will be counted individually.
 
 ## Vectors.most_similar {#most_similar tag="method"}
 
-For each of the given vectors, find the `n` most similar entries to it, by
+For each of the given vectors, find the `n` most similar entries to it by
 cosine. Queries are by vector. Results are returned as a
 `(keys, best_rows, scores)` tuple. If `queries` is large, the calculations are
-performed in chunks, to avoid consuming too much memory. You can set the
+performed in chunks to avoid consuming too much memory. You can set the
 `batch_size` to control the size/space trade-off during the calculations.
 
 > #### Example

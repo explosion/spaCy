@@ -1,16 +1,17 @@
-from typing import Optional, List
-from thinc.api import chain, clone, concatenate, with_array, with_padded
-from thinc.api import Model, noop, list2ragged, ragged2list
-from thinc.api import FeatureExtractor, HashEmbed
-from thinc.api import expand_window, residual, Maxout, Mish, PyTorchLSTM
+from typing import Optional, List, Union
 from thinc.types import Floats2d
+from thinc.api import chain, clone, concatenate, with_array, with_padded
+from thinc.api import Model, noop, list2ragged, ragged2list, HashEmbed
+from thinc.api import expand_window, residual, Maxout, Mish, PyTorchLSTM
 
 from ...tokens import Doc
 from ...util import registry
+from ...errors import Errors
 from ...ml import _character_embed
 from ..staticvectors import StaticVectors
+from ..featureextractor import FeatureExtractor
 from ...pipeline.tok2vec import Tok2VecListener
-from ...attrs import ORTH, NORM, PREFIX, SUFFIX, SHAPE
+from ...attrs import intify_attr
 
 
 @registry.architectures.register("spacy.Tok2VecListener.v1")
@@ -28,7 +29,7 @@ def build_hash_embed_cnn_tok2vec(
     window_size: int,
     maxout_pieces: int,
     subword_features: bool,
-    pretrained_vectors: Optional[bool]
+    pretrained_vectors: Optional[bool],
 ) -> Model[List[Doc], List[Floats2d]]:
     """Build spaCy's 'standard' tok2vec layer, which uses hash embedding
     with subword features and a CNN with layer-normalized maxout.
@@ -53,12 +54,18 @@ def build_hash_embed_cnn_tok2vec(
         a language such as Chinese.
     pretrained_vectors (bool): Whether to also use static vectors.
     """
+    if subword_features:
+        attrs = ["NORM", "PREFIX", "SUFFIX", "SHAPE"]
+        row_sizes = [embed_size, embed_size // 2, embed_size // 2, embed_size // 2]
+    else:
+        attrs = ["NORM"]
+        row_sizes = [embed_size]
     return build_Tok2Vec_model(
         embed=MultiHashEmbed(
             width=width,
-            rows=embed_size,
-            also_embed_subwords=subword_features,
-            also_use_static_vectors=bool(pretrained_vectors),
+            rows=row_sizes,
+            attrs=attrs,
+            include_static_vectors=bool(pretrained_vectors),
         ),
         encode=MaxoutWindowEncoder(
             width=width,
@@ -92,58 +99,59 @@ def build_Tok2Vec_model(
 
 @registry.architectures.register("spacy.MultiHashEmbed.v1")
 def MultiHashEmbed(
-    width: int, rows: int, also_embed_subwords: bool, also_use_static_vectors: bool
-):
+    width: int,
+    attrs: List[Union[str, int]],
+    rows: List[int],
+    include_static_vectors: bool,
+) -> Model[List[Doc], List[Floats2d]]:
     """Construct an embedding layer that separately embeds a number of lexical
     attributes using hash embedding, concatenates the results, and passes it
     through a feed-forward subnetwork to build a mixed representations.
 
-    The features used are the NORM, PREFIX, SUFFIX and SHAPE, which can have
-    varying definitions depending on the Vocab of the Doc object passed in.
-    Vectors from pretrained static vectors can also be incorporated into the
-    concatenated representation.
+    The features used can be configured with the 'attrs' argument. The suggested
+    attributes are NORM, PREFIX, SUFFIX and SHAPE. This lets the model take into
+    account some subword information, without constructing a fully character-based
+    representation. If pretrained vectors are available, they can be included in
+    the representation as well, with the vectors table will be kept static
+    (i.e. it's not updated).
+
+    The `width` parameter specifies the output width of the layer and the widths
+    of all embedding tables. If static vectors are included, a learned linear
+    layer is used to map the vectors to the specified width before concatenating
+    it with the other embedding outputs. A single Maxout layer is then used to
+    reduce the concatenated vectors to the final width.
+
+    The `rows` parameter controls the number of rows used by the `HashEmbed`
+    tables. The HashEmbed layer needs surprisingly few rows, due to its use of
+    the hashing trick. Generally between 2000 and 10000 rows is sufficient,
+    even for very large vocabularies. A number of rows must be specified for each
+    table, so the `rows` list must be of the same length as the `attrs` parameter.
 
     width (int): The output width. Also used as the width of the embedding tables.
         Recommended values are between 64 and 300.
-    rows (int): The number of rows for the embedding tables. Can be low, due
-        to the hashing trick. Embeddings for prefix, suffix and word shape
-        use half as many rows. Recommended values are between 2000 and 10000.
-    also_embed_subwords (bool): Whether to use the PREFIX, SUFFIX and SHAPE
-        features in the embeddings. If not using these, you may need more
-        rows in your hash embeddings, as there will be increased chance of
-        collisions.
-    also_use_static_vectors (bool): Whether to also use static word vectors.
+    attrs (list of attr IDs): The token attributes to embed. A separate
+        embedding table will be constructed for each attribute.
+    rows (List[int]): The number of rows in the embedding tables. Must have the
+        same length as attrs.
+    include_static_vectors (bool): Whether to also use static word vectors.
         Requires a vectors table to be loaded in the Doc objects' vocab.
     """
-    cols = [NORM, PREFIX, SUFFIX, SHAPE, ORTH]
+    if len(rows) != len(attrs):
+        raise ValueError(f"Mismatched lengths: {len(rows)} vs {len(attrs)}")
     seed = 7
 
-    def make_hash_embed(feature):
+    def make_hash_embed(index):
         nonlocal seed
         seed += 1
-        return HashEmbed(
-            width,
-            rows if feature == NORM else rows // 2,
-            column=cols.index(feature),
-            seed=seed,
-            dropout=0.0,
-        )
+        return HashEmbed(width, rows[index], column=index, seed=seed, dropout=0.0)
 
-    if also_embed_subwords:
-        embeddings = [
-            make_hash_embed(NORM),
-            make_hash_embed(PREFIX),
-            make_hash_embed(SUFFIX),
-            make_hash_embed(SHAPE),
-        ]
-    else:
-        embeddings = [make_hash_embed(NORM)]
-    concat_size = width * (len(embeddings) + also_use_static_vectors)
-    if also_use_static_vectors:
+    embeddings = [make_hash_embed(i) for i in range(len(attrs))]
+    concat_size = width * (len(embeddings) + include_static_vectors)
+    if include_static_vectors:
         model = chain(
             concatenate(
                 chain(
-                    FeatureExtractor(cols),
+                    FeatureExtractor(attrs),
                     list2ragged(),
                     with_array(concatenate(*embeddings)),
                 ),
@@ -154,7 +162,7 @@ def MultiHashEmbed(
         )
     else:
         model = chain(
-            FeatureExtractor(cols),
+            FeatureExtractor(list(attrs)),
             list2ragged(),
             with_array(concatenate(*embeddings)),
             with_array(Maxout(width, concat_size, nP=3, dropout=0.0, normalize=True)),
@@ -164,7 +172,14 @@ def MultiHashEmbed(
 
 
 @registry.architectures.register("spacy.CharacterEmbed.v1")
-def CharacterEmbed(width: int, rows: int, nM: int, nC: int):
+def CharacterEmbed(
+    width: int,
+    rows: int,
+    nM: int,
+    nC: int,
+    include_static_vectors: bool,
+    feature: Union[int, str] = "LOWER",
+) -> Model[List[Doc], List[Floats2d]]:
     """Construct an embedded representation based on character embeddings, using
     a feed-forward network. A fixed number of UTF-8 byte characters are used for
     each word, taken from the beginning and end of the word equally. Padding is
@@ -177,30 +192,55 @@ def CharacterEmbed(width: int, rows: int, nM: int, nC: int):
     of being in an arbitrary position depending on the word length.
 
     The characters are embedded in a embedding table with a given number of rows,
-    and the vectors concatenated. A hash-embedded vector of the NORM of the word is
+    and the vectors concatenated. A hash-embedded vector of the LOWER of the word is
     also concatenated on, and the result is then passed through a feed-forward
     network to construct a single vector to represent the information.
 
-    width (int): The width of the output vector and the NORM hash embedding.
-    rows (int): The number of rows in the NORM hash embedding table.
+    feature (int or str): An attribute to embed, to concatenate with the characters.
+    width (int): The width of the output vector and the feature embedding.
+    rows (int): The number of rows in the LOWER hash embedding table.
     nM (int): The dimensionality of the character embeddings. Recommended values
         are between 16 and 64.
     nC (int): The number of UTF-8 bytes to embed per word. Recommended values
         are between 3 and 8, although it may depend on the length of words in the
         language.
+    include_static_vectors (bool): Whether to also use static word vectors.
+        Requires a vectors table to be loaded in the Doc objects' vocab.
     """
-    model = chain(
-        concatenate(
-            chain(_character_embed.CharacterEmbed(nM=nM, nC=nC), list2ragged()),
-            chain(
-                FeatureExtractor([NORM]),
-                list2ragged(),
-                with_array(HashEmbed(nO=width, nV=rows, column=0, seed=5)),
+    feature = intify_attr(feature)
+    if feature is None:
+        raise ValueError(Errors.E911(feat=feature))
+    if include_static_vectors:
+        model = chain(
+            concatenate(
+                chain(_character_embed.CharacterEmbed(nM=nM, nC=nC), list2ragged()),
+                chain(
+                    FeatureExtractor([feature]),
+                    list2ragged(),
+                    with_array(HashEmbed(nO=width, nV=rows, column=0, seed=5)),
+                ),
+                StaticVectors(width, dropout=0.0),
             ),
-        ),
-        with_array(Maxout(width, nM * nC + width, nP=3, normalize=True, dropout=0.0)),
-        ragged2list(),
-    )
+            with_array(
+                Maxout(width, nM * nC + (2 * width), nP=3, normalize=True, dropout=0.0)
+            ),
+            ragged2list(),
+        )
+    else:
+        model = chain(
+            concatenate(
+                chain(_character_embed.CharacterEmbed(nM=nM, nC=nC), list2ragged()),
+                chain(
+                    FeatureExtractor([feature]),
+                    list2ragged(),
+                    with_array(HashEmbed(nO=width, nV=rows, column=0, seed=5)),
+                ),
+            ),
+            with_array(
+                Maxout(width, nM * nC + width, nP=3, normalize=True, dropout=0.0)
+            ),
+            ragged2list(),
+        )
     return model
 
 

@@ -1,5 +1,5 @@
 # cython: infer_types=True, profile=True, binding=True
-from typing import Optional
+from typing import Optional, Union, Dict
 import srsly
 from thinc.api import SequenceCategoricalCrossentropy, Model, Config
 from itertools import islice
@@ -16,7 +16,7 @@ from .pipe import deserialize_config
 from .tagger import Tagger
 from .. import util
 from ..scorer import Scorer
-from ..training import validate_examples
+from ..training import validate_examples, validate_get_examples
 
 
 default_model_config = """
@@ -32,6 +32,7 @@ width = 128
 rows = 7000
 nM = 64
 nC = 8
+include_static_vectors = false
 
 [model.tok2vec.encode]
 @architectures = "spacy.MaxoutWindowEncoder.v1"
@@ -48,8 +49,7 @@ DEFAULT_MORPH_MODEL = Config().from_str(default_model_config)["model"]
     "morphologizer",
     assigns=["token.morph", "token.pos"],
     default_config={"model": DEFAULT_MORPH_MODEL},
-    scores=["pos_acc", "morph_acc", "morph_per_feat"],
-    default_score_weights={"pos_acc": 0.5, "morph_acc": 0.5},
+    default_score_weights={"pos_acc": 0.5, "morph_acc": 0.5, "morph_per_feat": None},
 )
 def make_morphologizer(
     nlp: Language,
@@ -101,6 +101,11 @@ class Morphologizer(Tagger):
         """RETURNS (Tuple[str]): The labels currently added to the component."""
         return tuple(self.cfg["labels_morph"].keys())
 
+    @property
+    def label_data(self) -> Dict[str, Dict[str, Union[str, float, int, None]]]:
+        """A dictionary with all labels data."""
+        return {"morph": self.cfg["labels_morph"], "pos": self.cfg["labels_pos"]}
+
     def add_label(self, label):
         """Add a new label to the pipe.
 
@@ -129,36 +134,35 @@ class Morphologizer(Tagger):
             self.cfg["labels_pos"][norm_label] = POS_IDS[pos]
         return 1
 
-    def begin_training(self, get_examples, *, pipeline=None, sgd=None):
+    def initialize(self, get_examples, *, nlp=None, labels=None):
         """Initialize the pipe for training, using a representative set
         of data examples.
 
         get_examples (Callable[[], Iterable[Example]]): Function that
             returns a representative sample of gold-standard Example objects.
-        pipeline (List[Tuple[str, Callable]]): Optional list of pipeline
-            components that this component is part of. Corresponds to
-            nlp.pipeline.
-        sgd (thinc.api.Optimizer): Optional optimizer. Will be created with
-            create_optimizer if it doesn't exist.
-        RETURNS (thinc.api.Optimizer): The optimizer.
+        nlp (Language): The current nlp object the component is part of.
 
-        DOCS: https://nightly.spacy.io/api/morphologizer#begin_training
+        DOCS: https://nightly.spacy.io/api/morphologizer#initialize
         """
-        self._ensure_examples(get_examples)
-        # First, fetch all labels from the data
-        for example in get_examples():
-            for i, token in enumerate(example.reference):
-                pos = token.pos_
-                morph = token.morph_
-                # create and add the combined morph+POS label
-                morph_dict = Morphology.feats_to_dict(morph)
-                if pos:
-                    morph_dict[self.POS_FEAT] = pos
-                norm_label = self.vocab.strings[self.vocab.morphology.add(morph_dict)]
-                # add label->morph and label->POS mappings
-                if norm_label not in self.cfg["labels_morph"]:
-                    self.cfg["labels_morph"][norm_label] = morph
-                    self.cfg["labels_pos"][norm_label] = POS_IDS[pos]
+        validate_get_examples(get_examples, "Morphologizer.initialize")
+        if labels is not None:
+            self.cfg["labels_morph"] = labels["morph"]
+            self.cfg["labels_pos"] = labels["pos"]
+        else:
+            # First, fetch all labels from the data
+            for example in get_examples():
+                for i, token in enumerate(example.reference):
+                    pos = token.pos_
+                    morph = str(token.morph)
+                    # create and add the combined morph+POS label
+                    morph_dict = Morphology.feats_to_dict(morph)
+                    if pos:
+                        morph_dict[self.POS_FEAT] = pos
+                    norm_label = self.vocab.strings[self.vocab.morphology.add(morph_dict)]
+                    # add label->morph and label->POS mappings
+                    if norm_label not in self.cfg["labels_morph"]:
+                        self.cfg["labels_morph"][norm_label] = morph
+                        self.cfg["labels_pos"][norm_label] = POS_IDS[pos]
         if len(self.labels) <= 1:
             raise ValueError(Errors.E143.format(name=self.name))
         doc_sample = []
@@ -167,7 +171,7 @@ class Morphologizer(Tagger):
             gold_array = []
             for i, token in enumerate(example.reference):
                 pos = token.pos_
-                morph = token.morph_
+                morph = str(token.morph)
                 morph_dict = Morphology.feats_to_dict(morph)
                 if pos:
                     morph_dict[self.POS_FEAT] = pos
@@ -178,9 +182,6 @@ class Morphologizer(Tagger):
         assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
         assert len(label_sample) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(X=doc_sample, Y=label_sample)
-        if sgd is None:
-            sgd = self.create_optimizer()
-        return sgd
 
     def set_annotations(self, docs, batch_tag_ids):
         """Modify a batch of documents, using pre-computed scores.
@@ -203,15 +204,13 @@ class Morphologizer(Tagger):
                 doc.c[j].morph = self.vocab.morphology.add(self.cfg["labels_morph"][morph])
                 doc.c[j].pos = self.cfg["labels_pos"][morph]
 
-            doc.is_morphed = True
-
     def get_loss(self, examples, scores):
         """Find the loss and gradient of loss for the batch of documents and
         their predicted scores.
 
         examples (Iterable[Examples]): The batch of examples.
         scores: Scores representing the model's predictions.
-        RETUTNRS (Tuple[float, float]): The loss and the gradient.
+        RETURNS (Tuple[float, float]): The loss and the gradient.
 
         DOCS: https://nightly.spacy.io/api/morphologizer#get_loss
         """
@@ -239,7 +238,7 @@ class Morphologizer(Tagger):
             truths.append(eg_truths)
         d_scores, loss = loss_func(scores, truths)
         if self.model.ops.xp.isnan(loss):
-            raise ValueError("nan value when computing loss")
+            raise ValueError(Errors.E910.format(name=self.name))
         return float(loss), d_scores
 
     def score(self, examples, **kwargs):
@@ -259,79 +258,3 @@ class Morphologizer(Tagger):
         results.update(Scorer.score_token_attr_per_feat(examples,
             "morph", **kwargs))
         return results
-
-    def to_bytes(self, *, exclude=tuple()):
-        """Serialize the pipe to a bytestring.
-
-        exclude (Iterable[str]): String names of serialization fields to exclude.
-        RETURNS (bytes): The serialized object.
-
-        DOCS: https://nightly.spacy.io/api/morphologizer#to_bytes
-        """
-        serialize = {}
-        serialize["model"] = self.model.to_bytes
-        serialize["vocab"] = self.vocab.to_bytes
-        serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
-        return util.to_bytes(serialize, exclude)
-
-    def from_bytes(self, bytes_data, *, exclude=tuple()):
-        """Load the pipe from a bytestring.
-
-        bytes_data (bytes): The serialized pipe.
-        exclude (Iterable[str]): String names of serialization fields to exclude.
-        RETURNS (Morphologizer): The loaded Morphologizer.
-
-        DOCS: https://nightly.spacy.io/api/morphologizer#from_bytes
-        """
-        def load_model(b):
-            try:
-                self.model.from_bytes(b)
-            except AttributeError:
-                raise ValueError(Errors.E149) from None
-
-        deserialize = {
-            "vocab": lambda b: self.vocab.from_bytes(b),
-            "cfg": lambda b: self.cfg.update(srsly.json_loads(b)),
-            "model": lambda b: load_model(b),
-        }
-        util.from_bytes(bytes_data, deserialize, exclude)
-        return self
-
-    def to_disk(self, path, *, exclude=tuple()):
-        """Serialize the pipe to disk.
-
-        path (str / Path): Path to a directory.
-        exclude (Iterable[str]): String names of serialization fields to exclude.
-
-        DOCS: https://nightly.spacy.io/api/morphologizer#to_disk
-        """
-        serialize = {
-            "vocab": lambda p: self.vocab.to_disk(p),
-            "model": lambda p: p.open("wb").write(self.model.to_bytes()),
-            "cfg": lambda p: srsly.write_json(p, self.cfg),
-        }
-        util.to_disk(path, serialize, exclude)
-
-    def from_disk(self, path, *, exclude=tuple()):
-        """Load the pipe from disk. Modifies the object in place and returns it.
-
-        path (str / Path): Path to a directory.
-        exclude (Iterable[str]): String names of serialization fields to exclude.
-        RETURNS (Morphologizer): The modified Morphologizer object.
-
-        DOCS: https://nightly.spacy.io/api/morphologizer#from_disk
-        """
-        def load_model(p):
-            with p.open("rb") as file_:
-                try:
-                    self.model.from_bytes(file_.read())
-                except AttributeError:
-                    raise ValueError(Errors.E149) from None
-
-        deserialize = {
-            "vocab": lambda p: self.vocab.from_disk(p),
-            "cfg": lambda p: self.cfg.update(deserialize_config(p)),
-            "model": load_model,
-        }
-        util.from_disk(path, deserialize, exclude)
-        return self

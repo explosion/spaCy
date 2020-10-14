@@ -1,13 +1,14 @@
 from wasabi import Printer
 
-from .conll_ner2docs import n_sents_info
+from .conll_ner_to_docs import n_sents_info
 from ...vocab import Vocab
 from ...training import iob_to_biluo, tags_to_entities
 from ...tokens import Doc, Span
+from ...errors import Errors
 from ...util import minibatch
 
 
-def iob2docs(input_data, n_sents=10, no_print=False, *args, **kwargs):
+def iob_to_docs(input_data, n_sents=10, no_print=False, *args, **kwargs):
     """
     Convert IOB files with one sentence per line and tags separated with '|'
     into Doc objects so they can be saved. IOB and IOB2 are accepted.
@@ -45,9 +46,7 @@ def read_iob(raw_sents, vocab, n_sents):
                 sent_words, sent_iob = zip(*sent_tokens)
                 sent_tags = ["-"] * len(sent_words)
             else:
-                raise ValueError(
-                    "The sentence-per-line IOB/IOB2 file is not formatted correctly. Try checking whitespace and delimiters. See https://nightly.spacy.io/api/cli#convert"
-                )
+                raise ValueError(Errors.E902)
             words.extend(sent_words)
             tags.extend(sent_tags)
             iob.extend(sent_iob)

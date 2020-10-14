@@ -3,7 +3,7 @@ import srsly
 from .. import util
 from ..errors import Warnings
 from ..tokens import Doc
-from .iob_utils import biluo_tags_from_offsets, tags_to_entities
+from .iob_utils import offsets_to_biluo_tags, tags_to_entities
 import json
 
 
@@ -32,20 +32,26 @@ def docs_to_json(docs, doc_id=0, ner_missing_tag="O"):
             if ent.kb_id_:
                 link_dict = {(ent.start_char, ent.end_char): {ent.kb_id_: 1.0}}
                 json_para["links"].append(link_dict)
-        biluo_tags = biluo_tags_from_offsets(doc, json_para["entities"], missing=ner_missing_tag)
+        biluo_tags = offsets_to_biluo_tags(doc, json_para["entities"], missing=ner_missing_tag)
+        attrs = ("TAG", "POS", "MORPH", "LEMMA", "DEP", "ENT_IOB")
+        include_annotation = {attr: doc.has_annotation(attr) for attr in attrs}
         for j, sent in enumerate(doc.sents):
             json_sent = {"tokens": [], "brackets": []}
             for token in sent:
                 json_token = {"id": token.i, "orth": token.text, "space": token.whitespace_}
-                if doc.is_tagged:
+                if include_annotation["TAG"]:
                     json_token["tag"] = token.tag_
+                if include_annotation["POS"]:
                     json_token["pos"] = token.pos_
-                    json_token["morph"] = token.morph_
+                if include_annotation["MORPH"]:
+                    json_token["morph"] = str(token.morph)
+                if include_annotation["LEMMA"]:
                     json_token["lemma"] = token.lemma_
-                if doc.is_parsed:
+                if include_annotation["DEP"]:
                     json_token["head"] = token.head.i-token.i
                     json_token["dep"] = token.dep_
-                json_token["ner"] = biluo_tags[token.i]
+                if include_annotation["ENT_IOB"]:
+                    json_token["ner"] = biluo_tags[token.i]
                 json_sent["tokens"].append(json_token)
             json_para["sentences"].append(json_sent)
         json_doc["paragraphs"].append(json_para)
@@ -56,7 +62,7 @@ def read_json_file(loc, docs_filter=None, limit=None):
     """Read Example dictionaries from a json file or directory."""
     loc = util.ensure_path(loc)
     if loc.is_dir():
-        for filename in loc.iterdir():
+        for filename in sorted(loc.iterdir()):
             yield from read_json_file(loc / filename, limit=limit)
     else:
         with loc.open("rb") as file_:

@@ -9,9 +9,10 @@ from ...strings cimport hash_string
 from ...structs cimport TokenC
 from ...tokens.doc cimport Doc, set_children_from_heads
 from ...training.example cimport Example
-from ...errors import Errors
 from .stateclass cimport StateClass
 from ._state cimport StateC
+
+from ...errors import Errors
 
 # Calculate cost as gold/not gold. We don't use scalar value anyway.
 cdef int BINARY_COSTS = 1
@@ -86,7 +87,7 @@ cdef GoldParseStateC create_gold_state(Pool mem, StateClass stcls,
                 SENT_START_UNKNOWN,
                 0
             )
- 
+
         elif is_sent_start is None:
             gs.state_bits[i] = set_state_flag(
                 gs.state_bits[i],
@@ -109,7 +110,7 @@ cdef GoldParseStateC create_gold_state(Pool mem, StateClass stcls,
                 IS_SENT_START,
                 0
             )
- 
+
     for i, (head, label) in enumerate(zip(heads, labels)):
         if head is not None:
             gs.heads[i] = head
@@ -158,7 +159,7 @@ cdef void update_gold_state(GoldParseStateC* gs, StateClass stcls) nogil:
         )
         gs.n_kids_in_stack[i] = 0
         gs.n_kids_in_buffer[i] = 0
- 
+
     for i in range(stcls.stack_depth()):
         s_i = stcls.S(i)
         if not is_head_unknown(gs, s_i):
@@ -403,7 +404,7 @@ cdef class RightArc:
             return 0
         sent_start = st._sent[st.B_(0).l_edge].sent_start
         return sent_start != 1 and st.H(st.S(0)) != st.B(0)
-    
+
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
         st.add_arc(st.S(0), st.B(0), label)
@@ -679,8 +680,7 @@ cdef class ArcEager(TransitionSystem):
                 st._sent[i].dep = self.root_label
 
     def finalize_doc(self, Doc doc):
-        doc.is_parsed = True
-        set_children_from_heads(doc.c, doc.length)
+        set_children_from_heads(doc.c, 0, doc.length)
 
     def has_gold(self, Example eg, start=0, end=None):
         for word in eg.y[start:end]:
@@ -702,10 +702,10 @@ cdef class ArcEager(TransitionSystem):
                 output[i] = self.c[i].is_valid(st, self.c[i].label)
             else:
                 output[i] = is_valid[self.c[i].move]
-    
+
     def get_cost(self, StateClass stcls, gold, int i):
         if not isinstance(gold, ArcEagerGold):
-            raise TypeError("Expected ArcEagerGold")
+            raise TypeError(Errors.E909.format(name="ArcEagerGold"))
         cdef ArcEagerGold gold_ = gold
         gold_state = gold_.c
         n_gold = 0
@@ -718,7 +718,7 @@ cdef class ArcEager(TransitionSystem):
     cdef int set_costs(self, int* is_valid, weight_t* costs,
                        StateClass stcls, gold) except -1:
         if not isinstance(gold, ArcEagerGold):
-            raise TypeError("Expected ArcEagerGold")
+            raise TypeError(Errors.E909.format(name="ArcEagerGold"))
         cdef ArcEagerGold gold_ = gold
         gold_.update(stcls)
         gold_state = gold_.c

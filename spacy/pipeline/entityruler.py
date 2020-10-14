@@ -1,8 +1,10 @@
-from typing import Optional, Union, List, Dict, Tuple, Iterable, Any
+from typing import Optional, Union, List, Dict, Tuple, Iterable, Any, Callable, Sequence
 from collections import defaultdict
 from pathlib import Path
 import srsly
 
+from .pipe import Pipe
+from ..training import Example
 from ..language import Language
 from ..errors import Errors
 from ..util import ensure_path, to_disk, from_disk, SimpleFrozenList
@@ -25,8 +27,12 @@ PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
         "overwrite_ents": False,
         "ent_id_sep": DEFAULT_ENT_ID_SEP,
     },
-    scores=["ents_p", "ents_r", "ents_f", "ents_per_type"],
-    default_score_weights={"ents_f": 1.0, "ents_p": 0.0, "ents_r": 0.0},
+    default_score_weights={
+        "ents_f": 1.0,
+        "ents_p": 0.0,
+        "ents_r": 0.0,
+        "ents_per_type": None,
+    },
 )
 def make_entity_ruler(
     nlp: Language,
@@ -46,7 +52,7 @@ def make_entity_ruler(
     )
 
 
-class EntityRuler:
+class EntityRuler(Pipe):
     """The EntityRuler lets you add spans to the `Doc.ents` using token-based
     rules or exact phrase matches. It can be combined with the statistical
     `EntityRecognizer` to boost accuracy, or used on its own to implement a
@@ -178,6 +184,26 @@ class EntityRuler:
             else:
                 all_labels.add(l)
         return tuple(all_labels)
+
+    def initialize(
+        self,
+        get_examples: Callable[[], Iterable[Example]],
+        *,
+        nlp: Optional[Language] = None,
+        patterns: Optional[Sequence[PatternType]] = None,
+    ):
+        """Initialize the pipe for training.
+
+        get_examples (Callable[[], Iterable[Example]]): Function that
+            returns a representative sample of gold-standard Example objects.
+        nlp (Language): The current nlp object the component is part of.
+        patterns Optional[Iterable[PatternType]]: The list of patterns.
+
+        DOCS: https://nightly.spacy.io/api/entityruler#initialize
+        """
+        self.clear()
+        if patterns:
+            self.add_patterns(patterns)
 
     @property
     def ent_ids(self) -> Tuple[str, ...]:

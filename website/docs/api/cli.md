@@ -81,9 +81,9 @@ $ python -m spacy info [model] [--markdown] [--silent]
 Find all trained pipeline packages installed in the current environment and
 check whether they are compatible with the currently installed version of spaCy.
 Should be run after upgrading spaCy via `pip install -U spacy` to ensure that
-all installed packages are can be used with the new version. It will show a list
-of packages and their installed versions. If any package is out of date, the
-latest compatible versions and command for updating are shown.
+all installed packages can be used with the new version. It will show a list of
+packages and their installed versions. If any package is out of date, the latest
+compatible versions and command for updating are shown.
 
 > #### Automated validation
 >
@@ -121,18 +121,19 @@ customize those settings in your config file later.
 > ```
 
 ```cli
-$ python -m spacy init config [output_file] [--lang] [--pipeline] [--optimize] [--cpu]
+$ python -m spacy init config [output_file] [--lang] [--pipeline] [--optimize] [--cpu] [--pretraining]
 ```
 
-| Name               | Description                                                                                                                                                                                                                                                                                                                        |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `output_file`      | Path to output `.cfg` file or `-` to write the config to stdout (so you can pipe it forward to a file). Note that if you're writing to stdout, no additional logging info is printed. ~~Path (positional)~~                                                                                                                        |
-| `--lang`, `-l`     | Optional code of the [language](/usage/models#languages) to use. Defaults to `"en"`. ~~str (option)~~                                                                                                                                                                                                                              |
-| `--pipeline`, `-p` | Comma-separated list of trainable [pipeline components](/usage/processing-pipelines#built-in) to include. Defaults to `"tagger,parser,ner"`. ~~str (option)~~                                                                                                                                                                      |
-| `--optimize`, `-o` | `"efficiency"` or `"accuracy"`. Whether to optimize for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger and slower model). This will impact the choice of architecture, pretrained weights and related hyperparameters. Defaults to `"efficiency"`. ~~str (option)~~ |
-| `--cpu`, `-C`      | Whether the model needs to run on CPU. This will impact the choice of architecture, pretrained weights and related hyperparameters. ~~bool (flag)~~                                                                                                                                                                                |
-| `--help`, `-h`     | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                                                                                                                                         |
-| **CREATES**        | The config file for training.                                                                                                                                                                                                                                                                                                      |
+| Name                   | Description                                                                                                                                                                                                                                                                                                                        |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `output_file`          | Path to output `.cfg` file or `-` to write the config to stdout (so you can pipe it forward to a file). Note that if you're writing to stdout, no additional logging info is printed. ~~Path (positional)~~                                                                                                                        |
+| `--lang`, `-l`         | Optional code of the [language](/usage/models#languages) to use. Defaults to `"en"`. ~~str (option)~~                                                                                                                                                                                                                              |
+| `--pipeline`, `-p`     | Comma-separated list of trainable [pipeline components](/usage/processing-pipelines#built-in) to include. Defaults to `"tagger,parser,ner"`. ~~str (option)~~                                                                                                                                                                      |
+| `--optimize`, `-o`     | `"efficiency"` or `"accuracy"`. Whether to optimize for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger and slower model). This will impact the choice of architecture, pretrained weights and related hyperparameters. Defaults to `"efficiency"`. ~~str (option)~~ |
+| `--cpu`, `-C`          | Whether the model needs to run on CPU. This will impact the choice of architecture, pretrained weights and related hyperparameters. ~~bool (flag)~~                                                                                                                                                                                |
+| `--pretraining`, `-pt` | Include config for pretraining (with [`spacy pretrain`](/api/cli#pretrain)). Defaults to `False`. ~~bool (flag)~~                                                                                                                                                                                                                  |
+| `--help`, `-h`         | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                                                                                                                                         |
+| **CREATES**            | The config file for training.                                                                                                                                                                                                                                                                                                      |
 
 ### init fill-config {#init-fill-config new="3"}
 
@@ -160,46 +161,78 @@ validation error with more details.
 $ python -m spacy init fill-config [base_path] [output_file] [--diff]
 ```
 
-| Name           | Description                                                                                                                         |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `base_path`    | Path to base config to fill, e.g. generated by the [quickstart widget](/usage/training#quickstart). ~~Path (positional)~~           |
-| `output_file`  | Path to output `.cfg` file. If not set, the config is written to stdout so you can pipe it forward to a file. ~~Path (positional)~~ |
-| `--diff`, `-D` | Print a visual diff highlighting the changes. ~~bool (flag)~~                                                                       |
-| `--help`, `-h` | Show help message and available arguments. ~~bool (flag)~~                                                                          |
-| **CREATES**    | Complete and auto-filled config file for training.                                                                                  |
+| Name                   | Description                                                                                                                         |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `base_path`            | Path to base config to fill, e.g. generated by the [quickstart widget](/usage/training#quickstart). ~~Path (positional)~~           |
+| `output_file`          | Path to output `.cfg` file. If not set, the config is written to stdout so you can pipe it forward to a file. ~~Path (positional)~~ |
+| `--pretraining`, `-pt` | Include config for pretraining (with [`spacy pretrain`](/api/cli#pretrain)). Defaults to `False`. ~~bool (flag)~~                   |
+| `--diff`, `-D`         | Print a visual diff highlighting the changes. ~~bool (flag)~~                                                                       |
+| `--help`, `-h`         | Show help message and available arguments. ~~bool (flag)~~                                                                          |
+| **CREATES**            | Complete and auto-filled config file for training.                                                                                  |
 
-### init vocab {#init-vocab new="3" tag="command"}
+### init vectors {#init-vectors new="3" tag="command"}
 
-Create a blank pipeline directory from raw data, like word frequencies, Brown
-clusters and word vectors. Note that in order to populate the vocabulary, you
-need to pass in a JSONL-formatted
-[vocabulary file](/api/data-formats#vocab-jsonl) as `--jsonl-loc` with optional
-`id` values that correspond to the vectors table. Just loading in vectors will
-not automatically populate the vocab.
+Convert [word vectors](/usage/linguistic-features#vectors-similarity) for use
+with spaCy. Will export an `nlp` object that you can use in the
+[`[initialize]`](/api/data-formats#config-initialize) block of your config to
+initialize a model with vectors. See the usage guide on
+[static vectors](/usage/embeddings-transformers#static-vectors) for details on
+how to use vectors in your model.
 
 <Infobox title="New in v3.0" variant="warning" id="init-model">
 
-This command was previously called `init-model`.
+This functionality was previously available as part of the command `init-model`.
 
 </Infobox>
 
 ```cli
-$ python -m spacy init vocab [lang] [output_dir] [--jsonl-loc] [--vectors-loc] [--prune-vectors] [--vectors-name] [--meta-name] [--base]
+$ python -m spacy init vectors [lang] [vectors_loc] [output_dir] [--prune] [--truncate] [--name] [--verbose]
 ```
 
-| Name                                                    | Description                                                                                                                                                                                                                                                                         |
-| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `lang`                                                  | Pipeline language [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes), e.g. `en`. ~~str (positional)~~                                                                                                                                                                |
-| `output_dir`                                            | Pipeline output directory. Will be created if it doesn't exist. ~~Path (positional)~~                                                                                                                                                                                               |
-| `--jsonl-loc`, `-j`                                     | Optional location of JSONL-formatted [vocabulary file](/api/data-formats#vocab-jsonl) with lexical attributes. ~~Optional[Path] \(option)~~                                                                                                                                         |
-| `--vectors-loc`, `-v`                                   | Optional location of vectors. Should be a file where the first row contains the dimensions of the vectors, followed by a space-separated Word2Vec table. File can be provided in `.txt` format or as a zipped text file in `.zip` or `.tar.gz` format. ~~Optional[Path] \(option)~~ |
-| `--truncate-vectors`, `-t` <Tag variant="new">2.3</Tag> | Number of vectors to truncate to when reading in vectors file. Defaults to `0` for no truncation. ~~int (option)~~                                                                                                                                                                  |
-| `--prune-vectors`, `-V`                                 | Number of vectors to prune the vocabulary to. Defaults to `-1` for no pruning. ~~int (option)~~                                                                                                                                                                                     |
-| `--vectors-name`, `-vn`                                 | Name to assign to the word vectors in the `meta.json`, e.g. `en_core_web_md.vectors`. ~~Optional[str] \(option)~~                                                                                                                                                                   |
-| `--meta-name`, `-mn`                                    | Optional name of the package for the pipeline meta. ~~Optional[str] \(option)~~                                                                                                                                                                                                     |
-| `--base`, `-b`                                          | Optional name of or path to base pipeline to start with (mostly relevant for pipelines with custom tokenizers). ~~Optional[str] \(option)~~                                                                                                                                         |
-| `--help`, `-h`                                          | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                                                                                          |
-| **CREATES**                                             | A spaCy pipeline directory containing the vocab and vectors.                                                                                                                                                                                                                        |
+| Name               | Description                                                                                                                                                                                                                                                         |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lang`             | Pipeline language [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes), e.g. `en`. ~~str (positional)~~                                                                                                                                                |
+| `vectors_loc`      | Location of vectors. Should be a file where the first row contains the dimensions of the vectors, followed by a space-separated Word2Vec table. File can be provided in `.txt` format or as a zipped text file in `.zip` or `.tar.gz` format. ~~Path (positional)~~ |
+| `output_dir`       | Pipeline output directory. Will be created if it doesn't exist. ~~Path (positional)~~                                                                                                                                                                               |
+| `--truncate`, `-t` | Number of vectors to truncate to when reading in vectors file. Defaults to `0` for no truncation. ~~int (option)~~                                                                                                                                                  |
+| `--prune`, `-p`    | Number of vectors to prune the vocabulary to. Defaults to `-1` for no pruning. ~~int (option)~~                                                                                                                                                                     |
+| `--name`, `-n`     | Name to assign to the word vectors in the `meta.json`, e.g. `en_core_web_md.vectors`. ~~Optional[str] \(option)~~                                                                                                                                                   |
+| `--verbose`, `-V`  | Print additional information and explanations. ~~bool (flag)~~                                                                                                                                                                                                      |
+| `--help`, `-h`     | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                                                                          |
+| **CREATES**        | A spaCy pipeline directory containing the vocab and vectors.                                                                                                                                                                                                        |
+
+### init labels {#init-labels new="3" tag="command"}
+
+Generate JSON files for the labels in the data. This helps speed up the training
+process, since spaCy won't have to preprocess the data to extract the labels.
+After generating the labels, you can provide them to components that accept a
+`labels` argument on initialization via the
+[`[initialize]`](/api/data-formats#config-initialize) block of your config.
+
+> #### Example config
+>
+> ```ini
+> [initialize.components.ner]
+>
+> [initialize.components.ner.labels]
+> @readers = "spacy.read_labels.v1"
+> path = "corpus/labels/ner.json
+> ```
+
+```cli
+$ python -m spacy init labels [config_path] [output_path] [--code] [--verbose] [--gpu-id] [overrides]
+```
+
+| Name              | Description                                                                                                                                                                                |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `config_path`     | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. ~~Path (positional)~~                                                                |
+| `output_path`     | Output directory for the label files. Will create one JSON file per component. ~~Path (positional)~~                                                                                       |
+| `--code`, `-c`    | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~       |
+| `--verbose`, `-V` | Show more detailed messages during training. ~~bool (flag)~~                                                                                                                               |
+| `--gpu-id`, `-g`  | GPU ID or `-1` for CPU. Defaults to `-1`. ~~int (option)~~                                                                                                                                 |
+| `--help`, `-h`    | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                 |
+| overrides         | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~ |
+| **CREATES**       | The best trained pipeline and the final checkpoint (if training is terminated).                                                                                                            |
 
 ## convert {#convert tag="command"}
 
@@ -254,7 +287,7 @@ fixed. To auto-fill a partial config and save the result, you can use the
 [`init fill-config`](/api/cli#init-fill-config) command.
 
 ```cli
-$ python -m spacy debug config [config_path] [--code-path] [--show-functions] [--show-variables] [overrides]
+$ python -m spacy debug config [config_path] [--code] [--show-functions] [--show-variables] [overrides]
 ```
 
 > #### Example
@@ -267,17 +300,16 @@ $ python -m spacy debug config [config_path] [--code-path] [--show-functions] [-
 
 ```
 ✘ Config validation error
+dropout     field required
+optimizer   field required
+optimize    extra fields not permitted
 
-training -> dropout     field required
-training -> optimizer   field required
-training -> optimize    extra fields not permitted
-
-{'vectors': 'en_vectors_web_lg', 'seed': 0, 'accumulate_gradient': 1, 'init_tok2vec': None, 'raw_text': None, 'patience': 1600, 'max_epochs': 0, 'max_steps': 20000, 'eval_frequency': 200, 'frozen_components': [], 'optimize': None, 'batcher': {'@batchers': 'spacy.batch_by_words.v1', 'discard_oversize': False, 'tolerance': 0.2, 'get_length': None, 'size': {'@schedules': 'compounding.v1', 'start': 100, 'stop': 1000, 'compound': 1.001, 't': 0.0}}, 'dev_corpus': {'@readers': 'spacy.Corpus.v1', 'path': '', 'max_length': 0, 'gold_preproc': False, 'limit': 0}, 'score_weights': {'tag_acc': 0.5, 'dep_uas': 0.25, 'dep_las': 0.25, 'sents_f': 0.0}, 'train_corpus': {'@readers': 'spacy.Corpus.v1', 'path': '', 'max_length': 0, 'gold_preproc': False, 'limit': 0}}
+{'seed': 0, 'accumulate_gradient': 1, 'dev_corpus': 'corpora.dev', 'train_corpus': 'corpora.train', 'gpu_allocator': None, 'patience': 1600, 'max_epochs': 0, 'max_steps': 20000, 'eval_frequency': 200, 'frozen_components': [], 'optimize': None, 'before_to_disk': None, 'batcher': {'@batchers': 'spacy.batch_by_words.v1', 'discard_oversize': False, 'tolerance': 0.2, 'get_length': None, 'size': {'@schedules': 'compounding.v1', 'start': 100, 'stop': 1000, 'compound': 1.001, 't': 0.0}}, 'logger': {'@loggers': 'spacy.ConsoleLogger.v1', 'progress_bar': False}, 'score_weights': {'tag_acc': 0.5, 'dep_uas': 0.25, 'dep_las': 0.25, 'sents_f': 0.0}}
 
 If your config contains missing values, you can run the 'init fill-config'
 command to fill in all the defaults, if possible:
 
-python -m spacy init fill-config tmp/starter-config_invalid.cfg --base tmp/starter-config_invalid.cfg
+python -m spacy init fill-config tmp/starter-config_invalid.cfg tmp/starter-config_invalid.cfg
 ```
 
 </Accordion>
@@ -355,6 +387,16 @@ Registry   @architectures
 Name       spacy.MaxoutWindowEncoder.v1
 Module     spacy.ml.models.tok2vec
 File       /path/to/spacy/ml/models/tok2vec.py (line 207)
+ℹ [corpora.dev]
+Registry   @readers
+Name       spacy.Corpus.v1
+Module     spacy.training.corpus
+File       /path/to/spacy/training/corpus.py (line 18)
+ℹ [corpora.train]
+Registry   @readers
+Name       spacy.Corpus.v1
+Module     spacy.training.corpus
+File       /path/to/spacy/training/corpus.py (line 18)
 ℹ [training.logger]
 Registry   @loggers
 Name       spacy.ConsoleLogger.v1
@@ -370,11 +412,6 @@ Registry   @schedules
 Name       compounding.v1
 Module     thinc.schedules
 File       /path/to/thinc/thinc/schedules.py (line 43)
-ℹ [training.dev_corpus]
-Registry   @readers
-Name       spacy.Corpus.v1
-Module     spacy.training.corpus
-File       /path/to/spacy/training/corpus.py (line 18)
 ℹ [training.optimizer]
 Registry   @optimizers
 Name       Adam.v1
@@ -385,11 +422,6 @@ Registry   @schedules
 Name       warmup_linear.v1
 Module     thinc.schedules
 File       /path/to/thinc/thinc/schedules.py (line 91)
-ℹ [training.train_corpus]
-Registry   @readers
-Name       spacy.Corpus.v1
-Module     spacy.training.corpus
-File       /path/to/spacy/training/corpus.py (line 18)
 ```
 
 </Accordion>
@@ -397,7 +429,7 @@ File       /path/to/spacy/training/corpus.py (line 18)
 | Name                     | Description                                                                                                                                                                                                                    |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `config_path`            | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. ~~Path (positional)~~                                                                                                    |
-| `--code-path`, `-c`      | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~                                           |
+| `--code`, `-c`           | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~                                           |
 | `--show-functions`, `-F` | Show an overview of all registered function blocks used in the config and where those functions come from, including the module name, Python file and line number. ~~bool (flag)~~                                             |
 | `--show-variables`, `-V` | Show an overview of all variables referenced in the config, e.g. `${paths.train}` and their values that will be used. This also reflects any config overrides provided on the CLI, e.g. `--paths.train /path`. ~~bool (flag)~~ |
 | `--help`, `-h`           | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                                     |
@@ -406,7 +438,7 @@ File       /path/to/spacy/training/corpus.py (line 18)
 
 ### debug data {#debug-data tag="command"}
 
-Analyze, debug, and validate your training and development data. Get useful
+Analyze, debug and validate your training and development data. Get useful
 stats, and find problems like invalid entity annotations, cyclic dependencies,
 low data labels and more.
 
@@ -434,6 +466,7 @@ $ python -m spacy debug data [config_path] [--code] [--ignore-warnings] [--verbo
 ```
 =========================== Data format validation ===========================
 ✔ Corpus is loadable
+✔ Pipeline can be initialized with data
 
 =============================== Training stats ===============================
 Training pipeline: tagger, parser, ner
@@ -463,7 +496,7 @@ New: 'ORG' (23860), 'PERSON' (21395), 'GPE' (21193), 'DATE' (18080), 'CARDINAL'
 ✔ No entities consisting of or starting/ending with whitespace
 
 =========================== Part-of-speech Tagging ===========================
-ℹ 49 labels in data (57 labels in tag map)
+ℹ 49 labels in data
 'NN' (266331), 'IN' (227365), 'DT' (185600), 'NNP' (164404), 'JJ' (119830),
 'NNS' (110957), '.' (101482), ',' (92476), 'RB' (90090), 'PRP' (90081), 'VB'
 (74538), 'VBD' (68199), 'CC' (62862), 'VBZ' (50712), 'VBP' (43420), 'VBN'
@@ -474,7 +507,6 @@ New: 'ORG' (23860), 'PERSON' (21395), 'GPE' (21193), 'DATE' (18080), 'CARDINAL'
 '-RRB-' (2825), '-LRB-' (2788), 'PDT' (2078), 'XX' (1316), 'RBS' (1142), 'FW'
 (794), 'NFP' (557), 'SYM' (440), 'WP$' (294), 'LS' (293), 'ADD' (191), 'AFX'
 (24)
-✔ All labels present in tag map for language 'en'
 
 ============================= Dependency Parsing =============================
 ℹ Found 111703 sentences with an average length of 18.6 words.
@@ -611,7 +643,7 @@ Debug a Thinc [`Model`](https://thinc.ai/docs/api-model) by running it on a
 sample text and checking how it updates its internal weights and parameters.
 
 ```cli
-$ python -m spacy debug model [config_path] [component] [--layers] [-DIM] [-PAR] [-GRAD] [-ATTR] [-P0] [-P1] [-P2] [P3] [--gpu-id]
+$ python -m spacy debug model [config_path] [component] [--layers] [--dimensions] [--parameters] [--gradients] [--attributes] [--print-step0] [--print-step1] [--print-step2] [--print-step3] [--gpu-id]
 ```
 
 <Accordion title="Example outputs" spaced>
@@ -752,7 +784,7 @@ in the section `[paths]`.
 </Infobox>
 
 ```cli
-$ python -m spacy train [config_path] [--output] [--code] [--verbose] [overrides]
+$ python -m spacy train [config_path] [--output] [--code] [--verbose] [--gpu-id] [overrides]
 ```
 
 | Name              | Description                                                                                                                                                                                |
@@ -761,6 +793,7 @@ $ python -m spacy train [config_path] [--output] [--code] [--verbose] [overrides
 | `--output`, `-o`  | Directory to store trained pipeline in. Will be created if it doesn't exist. ~~Optional[Path] \(positional)~~                                                                              |
 | `--code`, `-c`    | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~       |
 | `--verbose`, `-V` | Show more detailed messages during training. ~~bool (flag)~~                                                                                                                               |
+| `--gpu-id`, `-g`  | GPU ID or `-1` for CPU. Defaults to `-1`. ~~int (option)~~                                                                                                                                 |
 | `--help`, `-h`    | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                 |
 | overrides         | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~ |
 | **CREATES**       | The final trained pipeline and the best trained pipeline.                                                                                                                                  |
@@ -775,8 +808,8 @@ pretrained ones. The weights are saved to a directory after each epoch. You can
 then include a **path to one of these pretrained weights files** in your
 [training config](/usage/training#config) as the `init_tok2vec` setting when you
 train your pipeline. This technique may be especially helpful if you have little
-labelled data. See the usage docs on [pretraining](/usage/training#pretraining)
-for more info.
+labelled data. See the usage docs on
+[pretraining](/usage/embeddings-transformers#pretraining) for more info.
 
 <Infobox title="Changed in v3.0" variant="warning">
 
@@ -791,16 +824,17 @@ auto-generated by setting `--pretraining` on
 </Infobox>
 
 ```cli
-$ python -m spacy pretrain [config_path] [output_dir] [--code] [--resume-path] [--epoch-resume] [overrides]
+$ python -m spacy pretrain [config_path] [output_dir] [--code] [--resume-path] [--epoch-resume] [--gpu-id] [overrides]
 ```
 
 | Name                    | Description                                                                                                                                                                           |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `output_dir`            | Directory to save binary weights to on each epoch. ~~Path (positional)~~                                                                                                              |
 | `config_path`           | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. ~~Path (positional)~~                                                           |
+| `output_dir`            | Directory to save binary weights to on each epoch. ~~Path (positional)~~                                                                                                              |
 | `--code`, `-c`          | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~  |
 | `--resume-path`, `-r`   | Path to pretrained weights from which to resume pretraining. ~~Optional[Path] \(option)~~                                                                                             |
 | `--epoch-resume`, `-er` | The epoch to resume counting from when using `--resume-path`. Prevents unintended overwriting of existing weight files. ~~Optional[int] \(option)~~                                   |
+| `--gpu-id`, `-g`        | GPU ID or `-1` for CPU. Defaults to `-1`. ~~int (option)~~                                                                                                                            |
 | `--help`, `-h`          | Show help message and available arguments. ~~bool (flag)~~                                                                                                                            |
 | overrides               | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--training.dropout 0.2`. ~~Any (option/flag)~~ |
 | **CREATES**             | The pretrained weights that can be used to initialize `spacy train`.                                                                                                                  |
@@ -822,17 +856,18 @@ skew. To render a sample of dependency parses in a HTML file using the
 $ python -m spacy evaluate [model] [data_path] [--output] [--gold-preproc] [--gpu-id] [--displacy-path] [--displacy-limit]
 ```
 
-| Name                      | Description                                                                                                                                                               |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `model`                   | Pipeline to evaluate. Can be a package or a path to a data directory. ~~str (positional)~~                                                                                |
-| `data_path`               | Location of evaluation data in spaCy's [binary format](/api/data-formats#training). ~~Path (positional)~~                                                                 |
-| `--output`, `-o`          | Output JSON file for metrics. If not set, no metrics will be exported. ~~Optional[Path] \(option)~~                                                                       |
-| `--gold-preproc`, `-G`    | Use gold preprocessing. ~~bool (flag)~~                                                                                                                                   |
-| `--gpu-id`, `-g`          | GPU to use, if any. Defaults to `-1` for CPU. ~~int (option)~~                                                                                                            |
-| `--displacy-path`, `-dp`  | Directory to output rendered parses as HTML. If not set, no visualizations will be generated. ~~Optional[Path] \(option)~~                                                |
-| `--displacy-limit`, `-dl` | Number of parses to generate per file. Defaults to `25`. Keep in mind that a significantly higher number might cause the `.html` files to render slowly. ~~int (option)~~ |
-| `--help`, `-h`            | Show help message and available arguments. ~~bool (flag)~~                                                                                                                |
-| **CREATES**               | Training results and optional metrics and visualizations.                                                                                                                 |
+| Name                      | Description                                                                                                                                                                          |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `model`                   | Pipeline to evaluate. Can be a package or a path to a data directory. ~~str (positional)~~                                                                                           |
+| `data_path`               | Location of evaluation data in spaCy's [binary format](/api/data-formats#training). ~~Path (positional)~~                                                                            |
+| `--output`, `-o`          | Output JSON file for metrics. If not set, no metrics will be exported. ~~Optional[Path] \(option)~~                                                                                  |
+| `--code-path`, `-c`       | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~ |
+| `--gold-preproc`, `-G`    | Use gold preprocessing. ~~bool (flag)~~                                                                                                                                              |
+| `--gpu-id`, `-g`          | GPU to use, if any. Defaults to `-1` for CPU. ~~int (option)~~                                                                                                                       |
+| `--displacy-path`, `-dp`  | Directory to output rendered parses as HTML. If not set, no visualizations will be generated. ~~Optional[Path] \(option)~~                                                           |
+| `--displacy-limit`, `-dl` | Number of parses to generate per file. Defaults to `25`. Keep in mind that a significantly higher number might cause the `.html` files to render slowly. ~~int (option)~~            |
+| `--help`, `-h`            | Show help message and available arguments. ~~bool (flag)~~                                                                                                                           |
+| **CREATES**               | Training results and optional metrics and visualizations.                                                                                                                            |
 
 ## package {#package tag="command"}
 
@@ -891,8 +926,6 @@ what you need. By default, spaCy's
 can provide any other repo (public or private) that you have access to using the
 `--repo` option.
 
-<!-- TODO: update example once we've decided on repo structure -->
-
 ```cli
 $ python -m spacy project clone [name] [dest] [--repo] [--branch] [--sparse]
 ```
@@ -900,7 +933,7 @@ $ python -m spacy project clone [name] [dest] [--repo] [--branch] [--sparse]
 > #### Example
 >
 > ```cli
-> $ python -m spacy project clone some_example
+> $ python -m spacy project clone pipelines/ner_wikiner
 > ```
 >
 > Clone from custom repo:
@@ -1160,7 +1193,7 @@ examples, see the usage guide on
 [integration](/usage/projects#ray).
 
 ```cli
-$ python -m spacy ray train [config_path] [--code-path] [--output] [--n-workers] [--address] [--gpu-id] [--verbose] [overrides]
+$ python -m spacy ray train [config_path] [--code] [--output] [--n-workers] [--address] [--gpu-id] [--verbose] [overrides]
 ```
 
 > #### Example

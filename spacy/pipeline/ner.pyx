@@ -6,14 +6,15 @@ from .transition_parser cimport Parser
 from ._parser_internals.ner cimport BiluoPushDown
 
 from ..language import Language
-from ..scorer import Scorer
+from ..scorer import get_ner_prf, PRFScore
 from ..training import validate_examples
 
 
 default_model_config = """
 [model]
 @architectures = "spacy.TransitionBasedParser.v1"
-nr_feature_tokens = 6
+state_type = "ner"
+extra_state_tokens = false
 hidden_width = 64
 maxout_pieces = 2
 
@@ -38,8 +39,7 @@ DEFAULT_NER_MODEL = Config().from_str(default_model_config)["model"]
         "update_with_oracle_cut_size": 100,
         "model": DEFAULT_NER_MODEL,
     },
-    scores=["ents_p", "ents_r", "ents_f", "ents_per_type"],
-    default_score_weights={"ents_f": 1.0, "ents_p": 0.0, "ents_r": 0.0},
+    default_score_weights={"ents_f": 1.0, "ents_p": 0.0, "ents_r": 0.0, "ents_per_type": None},
 
 )
 def make_ner(
@@ -96,14 +96,14 @@ cdef class EntityRecognizer(Parser):
         """Register another component as a multi-task objective. Experimental."""
         self._multitasks.append(mt_component)
 
-    def init_multitask_objectives(self, get_examples, pipeline, sgd=None, **cfg):
+    def init_multitask_objectives(self, get_examples, nlp=None, **cfg):
         """Setup multi-task objective components. Experimental and internal."""
         # TODO: transfer self.model.get_ref("tok2vec") to the multitask's model ?
         for labeller in self._multitasks:
             labeller.model.set_dim("nO", len(self.labels))
             if labeller.model.has_ref("output_layer"):
                 labeller.model.get_ref("output_layer").set_dim("nO", len(self.labels))
-            labeller.begin_training(get_examples, pipeline=pipeline)
+            labeller.initialize(get_examples, nlp=nlp)
 
     @property
     def labels(self):
@@ -117,9 +117,18 @@ cdef class EntityRecognizer(Parser):
         """Score a batch of examples.
 
         examples (Iterable[Example]): The examples to score.
-        RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_spans.
+        RETURNS (Dict[str, Any]): The NER precision, recall and f-scores.
 
         DOCS: https://nightly.spacy.io/api/entityrecognizer#score
         """
         validate_examples(examples, "EntityRecognizer.score")
-        return Scorer.score_spans(examples, "ents", **kwargs)
+        score_per_type = get_ner_prf(examples)
+        totals = PRFScore()
+        for prf in score_per_type.values():
+            totals += prf
+        return {
+            "ents_p": totals.precision,
+            "ents_r": totals.recall,
+            "ents_f": totals.fscore,
+            "ents_per_type": {k: v.to_dict() for k, v in score_per_type.items()},
+        }

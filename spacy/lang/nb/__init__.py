@@ -1,9 +1,12 @@
+from typing import Optional
+from thinc.api import Model
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_INFIXES
 from .punctuation import TOKENIZER_SUFFIXES
 from .stop_words import STOP_WORDS
 from .syntax_iterators import SYNTAX_ITERATORS
 from ...language import Language
+from ...pipeline import Lemmatizer
 
 
 class NorwegianDefaults(Language.Defaults):
@@ -18,6 +21,16 @@ class NorwegianDefaults(Language.Defaults):
 class Norwegian(Language):
     lang = "nb"
     Defaults = NorwegianDefaults
+
+
+@Norwegian.factory(
+    "lemmatizer",
+    assigns=["token.lemma"],
+    default_config={"model": None, "mode": "rule"},
+    default_score_weights={"lemma_acc": 1.0},
+)
+def make_lemmatizer(nlp: Language, model: Optional[Model], name: str, mode: str):
+    return Lemmatizer(nlp.vocab, model, name, mode=mode)
 
 
 __all__ = ["Norwegian"]

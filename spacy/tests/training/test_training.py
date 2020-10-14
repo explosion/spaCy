@@ -1,10 +1,8 @@
 import numpy
-from spacy.training import biluo_tags_from_offsets, offsets_from_biluo_tags, Alignment
-from spacy.training import spans_from_biluo_tags, iob_to_biluo
-from spacy.training import Corpus, docs_to_json
-from spacy.training.example import Example
-from spacy.training.converters import json2docs
-from spacy.training.augment import make_orth_variants_example
+from spacy.training import offsets_to_biluo_tags, biluo_tags_to_offsets, Alignment
+from spacy.training import biluo_tags_to_spans, iob_to_biluo
+from spacy.training import Corpus, docs_to_json, Example
+from spacy.training.converters import json_to_docs
 from spacy.lang.en import English
 from spacy.tokens import Doc, DocBin
 from spacy.util import get_words_and_spaces, minibatch
@@ -12,13 +10,14 @@ from thinc.api import compounding
 import pytest
 import srsly
 
-from .util import make_tempdir
+from ..util import make_tempdir
 
 
 @pytest.fixture
 def doc():
+    nlp = English()  # make sure we get a new vocab every time
     # fmt: off
-    text = "Sarah's sister flew to Silicon Valley via London."
+    words = ["Sarah", "'s", "sister", "flew", "to", "Silicon", "Valley", "via", "London", "."]
     tags = ["NNP", "POS", "NN", "VBD", "IN", "NNP", "NNP", "IN", "NNP", "."]
     pos = ["PROPN", "PART", "NOUN", "VERB", "ADP", "PROPN", "PROPN", "ADP", "PROPN", "PUNCT"]
     morphs = ["NounType=prop|Number=sing", "Poss=yes", "Number=sing", "Tense=past|VerbForm=fin",
@@ -28,22 +27,26 @@ def doc():
     heads = [2, 0, 3, 3, 3, 6, 4, 3, 7, 5]
     deps = ["poss", "case", "nsubj", "ROOT", "prep", "compound", "pobj", "prep", "pobj", "punct"]
     lemmas = ["Sarah", "'s", "sister", "fly", "to", "Silicon", "Valley", "via", "London", "."]
-    biluo_tags = ["U-PERSON", "O", "O", "O", "O", "B-LOC", "L-LOC", "O", "U-GPE", "O"]
+    ents = ["O"] * len(words)
+    ents[0] = "B-PERSON"
+    ents[1] = "I-PERSON"
+    ents[5] = "B-LOC"
+    ents[6] = "I-LOC"
+    ents[8] = "B-GPE"
     cats = {"TRAVEL": 1.0, "BAKING": 0.0}
     # fmt: on
-    nlp = English()
-    doc = nlp(text)
-    for i in range(len(tags)):
-        doc[i].tag_ = tags[i]
-        doc[i].pos_ = pos[i]
-        doc[i].morph_ = morphs[i]
-        doc[i].lemma_ = lemmas[i]
-        doc[i].dep_ = deps[i]
-        doc[i].head = doc[heads[i]]
-    doc.ents = spans_from_biluo_tags(doc, biluo_tags)
+    doc = Doc(
+        nlp.vocab,
+        words=words,
+        tags=tags,
+        pos=pos,
+        morphs=morphs,
+        heads=heads,
+        deps=deps,
+        lemmas=lemmas,
+        ents=ents,
+    )
     doc.cats = cats
-    doc.is_tagged = True
-    doc.is_parsed = True
     return doc
 
 
@@ -69,7 +72,7 @@ def test_gold_biluo_U(en_vocab):
     spaces = [True, True, True, False, True]
     doc = Doc(en_vocab, words=words, spaces=spaces)
     entities = [(len("I flew to "), len("I flew to London"), "LOC")]
-    tags = biluo_tags_from_offsets(doc, entities)
+    tags = offsets_to_biluo_tags(doc, entities)
     assert tags == ["O", "O", "O", "U-LOC", "O"]
 
 
@@ -78,7 +81,7 @@ def test_gold_biluo_BL(en_vocab):
     spaces = [True, True, True, True, False, True]
     doc = Doc(en_vocab, words=words, spaces=spaces)
     entities = [(len("I flew to "), len("I flew to San Francisco"), "LOC")]
-    tags = biluo_tags_from_offsets(doc, entities)
+    tags = offsets_to_biluo_tags(doc, entities)
     assert tags == ["O", "O", "O", "B-LOC", "L-LOC", "O"]
 
 
@@ -87,7 +90,7 @@ def test_gold_biluo_BIL(en_vocab):
     spaces = [True, True, True, True, True, False, True]
     doc = Doc(en_vocab, words=words, spaces=spaces)
     entities = [(len("I flew to "), len("I flew to San Francisco Valley"), "LOC")]
-    tags = biluo_tags_from_offsets(doc, entities)
+    tags = offsets_to_biluo_tags(doc, entities)
     assert tags == ["O", "O", "O", "B-LOC", "I-LOC", "L-LOC", "O"]
 
 
@@ -100,7 +103,7 @@ def test_gold_biluo_overlap(en_vocab):
         (len("I flew to "), len("I flew to San Francisco"), "LOC"),
     ]
     with pytest.raises(ValueError):
-        biluo_tags_from_offsets(doc, entities)
+        offsets_to_biluo_tags(doc, entities)
 
 
 def test_gold_biluo_misalign(en_vocab):
@@ -109,7 +112,7 @@ def test_gold_biluo_misalign(en_vocab):
     doc = Doc(en_vocab, words=words, spaces=spaces)
     entities = [(len("I flew to "), len("I flew to San Francisco Valley"), "LOC")]
     with pytest.warns(UserWarning):
-        tags = biluo_tags_from_offsets(doc, entities)
+        tags = offsets_to_biluo_tags(doc, entities)
     assert tags == ["O", "O", "O", "-", "-", "-"]
 
 
@@ -155,7 +158,7 @@ def test_example_from_dict_some_ner(en_vocab):
 
 
 @pytest.mark.filterwarnings("ignore::UserWarning")
-def test_json2docs_no_ner(en_vocab):
+def test_json_to_docs_no_ner(en_vocab):
     data = [
         {
             "id": 1,
@@ -191,10 +194,10 @@ def test_json2docs_no_ner(en_vocab):
             ],
         }
     ]
-    docs = json2docs(data)
+    docs = json_to_docs(data)
     assert len(docs) == 1
     for doc in docs:
-        assert not doc.is_nered
+        assert not doc.has_annotation("ENT_IOB")
     for token in doc:
         assert token.ent_iob == 0
     eg = Example(
@@ -210,41 +213,24 @@ def test_json2docs_no_ner(en_vocab):
 
 
 def test_split_sentences(en_vocab):
+    # fmt: off
     words = ["I", "flew", "to", "San Francisco Valley", "had", "loads of fun"]
-    doc = Doc(en_vocab, words=words)
-    gold_words = [
-        "I",
-        "flew",
-        "to",
-        "San",
-        "Francisco",
-        "Valley",
-        "had",
-        "loads",
-        "of",
-        "fun",
-    ]
+    gold_words = ["I", "flew", "to", "San", "Francisco", "Valley", "had", "loads", "of", "fun"]
     sent_starts = [True, False, False, False, False, False, True, False, False, False]
+    # fmt: on
+    doc = Doc(en_vocab, words=words)
     example = Example.from_dict(doc, {"words": gold_words, "sent_starts": sent_starts})
     assert example.text == "I flew to San Francisco Valley had loads of fun "
     split_examples = example.split_sents()
     assert len(split_examples) == 2
     assert split_examples[0].text == "I flew to San Francisco Valley "
     assert split_examples[1].text == "had loads of fun "
-
+    # fmt: off
     words = ["I", "flew", "to", "San", "Francisco", "Valley", "had", "loads", "of fun"]
-    doc = Doc(en_vocab, words=words)
-    gold_words = [
-        "I",
-        "flew",
-        "to",
-        "San Francisco",
-        "Valley",
-        "had",
-        "loads of",
-        "fun",
-    ]
+    gold_words = ["I", "flew", "to", "San Francisco", "Valley", "had", "loads of", "fun"]
     sent_starts = [True, False, False, False, False, True, False, False]
+    # fmt: on
+    doc = Doc(en_vocab, words=words)
     example = Example.from_dict(doc, {"words": gold_words, "sent_starts": sent_starts})
     assert example.text == "I flew to San Francisco Valley had loads of fun "
     split_examples = example.split_sents()
@@ -375,9 +361,9 @@ def test_roundtrip_offsets_biluo_conversion(en_tokenizer):
     biluo_tags = ["O", "O", "O", "B-LOC", "L-LOC", "O", "U-GPE", "O"]
     offsets = [(10, 24, "LOC"), (29, 35, "GPE")]
     doc = en_tokenizer(text)
-    biluo_tags_converted = biluo_tags_from_offsets(doc, offsets)
+    biluo_tags_converted = offsets_to_biluo_tags(doc, offsets)
     assert biluo_tags_converted == biluo_tags
-    offsets_converted = offsets_from_biluo_tags(doc, biluo_tags)
+    offsets_converted = biluo_tags_to_offsets(doc, biluo_tags)
     offsets_converted = [ent for ent in offsets if ent[2]]
     assert offsets_converted == offsets
 
@@ -385,7 +371,7 @@ def test_roundtrip_offsets_biluo_conversion(en_tokenizer):
 def test_biluo_spans(en_tokenizer):
     doc = en_tokenizer("I flew to Silicon Valley via London.")
     biluo_tags = ["O", "O", "O", "B-LOC", "L-LOC", "O", "U-GPE", "O"]
-    spans = spans_from_biluo_tags(doc, biluo_tags)
+    spans = biluo_tags_to_spans(doc, biluo_tags)
     spans = [span for span in spans if span.label_]
     assert len(spans) == 2
     assert spans[0].text == "Silicon Valley"
@@ -471,13 +457,12 @@ def test_roundtrip_docs_to_docbin(doc):
     idx = [t.idx for t in doc]
     tags = [t.tag_ for t in doc]
     pos = [t.pos_ for t in doc]
-    morphs = [t.morph_ for t in doc]
+    morphs = [str(t.morph) for t in doc]
     lemmas = [t.lemma_ for t in doc]
     deps = [t.dep_ for t in doc]
     heads = [t.head.i for t in doc]
     cats = doc.cats
     ents = [(e.start_char, e.end_char, e.label_) for e in doc.ents]
-
     # roundtrip to DocBin
     with make_tempdir() as tmpdir:
         # use a separate vocab to test that all labels are added
@@ -494,7 +479,7 @@ def test_roundtrip_docs_to_docbin(doc):
     assert idx == [t.idx for t in reloaded_example.reference]
     assert tags == [t.tag_ for t in reloaded_example.reference]
     assert pos == [t.pos_ for t in reloaded_example.reference]
-    assert morphs == [t.morph_ for t in reloaded_example.reference]
+    assert morphs == [str(t.morph) for t in reloaded_example.reference]
     assert lemmas == [t.lemma_ for t in reloaded_example.reference]
     assert deps == [t.dep_ for t in reloaded_example.reference]
     assert heads == [t.head.i for t in reloaded_example.reference]
@@ -505,18 +490,6 @@ def test_roundtrip_docs_to_docbin(doc):
     assert "BAKING" in reloaded_example.reference.cats
     assert cats["TRAVEL"] == reloaded_example.reference.cats["TRAVEL"]
     assert cats["BAKING"] == reloaded_example.reference.cats["BAKING"]
-
-
-@pytest.mark.filterwarnings("ignore::UserWarning")
-def test_make_orth_variants(doc):
-    nlp = English()
-    with make_tempdir() as tmpdir:
-        output_file = tmpdir / "roundtrip.spacy"
-        DocBin(docs=[doc]).to_disk(output_file)
-        # due to randomness, test only that this runs with no errors for now
-        reader = Corpus(output_file)
-        train_example = next(reader(nlp))
-    make_orth_variants_example(nlp, train_example, orth_variant_level=0.2)
 
 
 @pytest.mark.skip("Outdated")
@@ -598,7 +571,6 @@ def test_tuple_format_implicit():
 
 def test_tuple_format_implicit_invalid():
     """Test that an error is thrown for an implicit invalid field"""
-
     train_data = [
         ("Uber blew through $1 million a week", {"frumble": [(0, 4, "ORG")]}),
         (
@@ -607,7 +579,6 @@ def test_tuple_format_implicit_invalid():
         ),
         ("Google rebrands its business apps", {"entities": [(0, 6, "ORG")]}),
     ]
-
     with pytest.raises(KeyError):
         _train_tuples(train_data)
 
@@ -617,12 +588,10 @@ def _train_tuples(train_data):
     ner = nlp.add_pipe("ner")
     ner.add_label("ORG")
     ner.add_label("LOC")
-
     train_examples = []
     for t in train_data:
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
-
-    optimizer = nlp.begin_training()
+    optimizer = nlp.initialize()
     for i in range(5):
         losses = {}
         batches = minibatch(train_examples, size=compounding(4.0, 32.0, 1.001))
@@ -637,17 +606,14 @@ def test_split_sents(merged_dict):
         merged_dict,
     )
     assert example.text == "Hi there everyone It is just me"
-
     split_examples = example.split_sents()
     assert len(split_examples) == 2
     assert split_examples[0].text == "Hi there everyone "
     assert split_examples[1].text == "It is just me"
-
     token_annotation_1 = split_examples[0].to_dict()["token_annotation"]
     assert token_annotation_1["ORTH"] == ["Hi", "there", "everyone"]
     assert token_annotation_1["TAG"] == ["INTJ", "ADV", "PRON"]
     assert token_annotation_1["SENT_START"] == [1, 0, 0]
-
     token_annotation_2 = split_examples[1].to_dict()["token_annotation"]
     assert token_annotation_2["ORTH"] == ["It", "is", "just", "me"]
     assert token_annotation_2["TAG"] == ["PRON", "AUX", "ADV", "PRON"]

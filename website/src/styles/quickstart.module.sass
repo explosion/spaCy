@@ -36,21 +36,36 @@
 
 .label
     cursor: pointer
-    border: 1px solid var(--color-subtle)
-    border-radius: var(--border-radius)
     display: inline-block
-    padding: 0.65rem 1.25rem
-    margin: 0 0.5rem 0.75rem 0
+    padding: 0.35rem 0.5rem 0.25rem 0
+    margin: 0 1rem 0.5rem 0
     font-size: var(--font-size-xs)
     font-weight: bold
-    background: var(--color-back)
 
     &:hover
         background: var(--color-subtle-light)
 
-    .input:focus + &
+    .input:focus +
         border: 1px solid var(--color-theme)
         outline: none
+
+    .radio + &
+        margin: 0 0 0.75rem 0
+        border-radius: 0
+        border-width: 1px 0 1px 1px
+        border-style: solid
+        border-color: var(--color-subtle)
+        background: var(--color-back)
+        padding: 0.65rem 1.25rem
+
+        &:nth-child(2)  // first child is checkbox
+            border-top-left-radius: var(--border-radius)
+            border-bottom-left-radius: var(--border-radius)
+
+        &:nth-last-child(2)  // last child is additional container
+            border-top-right-radius: var(--border-radius)
+            border-bottom-right-radius: var(--border-radius)
+            border-right-width: 1px
 
     .radio:checked + &
         color: var(--color-back)
@@ -58,21 +73,28 @@
         background: var(--color-theme)
 
     .checkbox + &:before
+        $size: 18px
         content: ""
         display: inline-block
-        width: 20px
-        height: 20px
+        width: $size
+        height: $size
         border: 1px solid var(--color-subtle)
         vertical-align: middle
-        margin-right: 1rem
+        margin-right: 0.5rem
         cursor: pointer
-        border-radius: var(--border-radius)
+        border-radius: $size / 4
+        background: var(--color-back)
+        position: relative
+        top: -1px
 
     .checkbox:checked + &:before
         // Embed "check" icon here for simplicity
         background: var(--color-theme) url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij4gICAgPHBhdGggZmlsbD0iI2ZmZiIgZD0iTTkgMTYuMTcybDEwLjU5NC0xMC41OTQgMS40MDYgMS40MDYtMTIgMTItNS41NzgtNS41NzggMS40MDYtMS40MDZ6Ii8+PC9zdmc+);
         background-size: contain
         border-color: var(--color-theme)
+
+.field-extra:not(:empty):not(:first-child)
+    margin-left: 1rem
 
 .legend
     color: var(--color-dark)
@@ -92,6 +114,9 @@
     margin: 0 1rem 0.75rem 0
     font-size: var(--font-size-sm)
     background: var(--color-back)
+
+.select-hidden
+    display: none
 
 .text-input
     border: 1px solid var(--color-subtle)

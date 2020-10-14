@@ -9,7 +9,7 @@ from spacy.lang.en import English
 from spacy.lookups import Lookups
 from spacy.tokens import Doc, Span
 
-from ..util import get_doc, make_tempdir
+from ..util import make_tempdir
 
 
 @pytest.mark.parametrize(
@@ -88,13 +88,9 @@ def test_issue242(en_tokenizer):
         doc.ents += tuple(matches)
 
 
-def test_issue309(en_tokenizer):
+def test_issue309(en_vocab):
     """Test Issue #309: SBD fails on empty string"""
-    tokens = en_tokenizer(" ")
-    doc = get_doc(
-        tokens.vocab, words=[t.text for t in tokens], heads=[0], deps=["ROOT"]
-    )
-    doc.is_parsed = True
+    doc = Doc(en_vocab, words=[" "], heads=[0], deps=["ROOT"])
     assert len(doc) == 1
     sents = list(doc.sents)
     assert len(sents) == 1
@@ -170,11 +166,9 @@ def test_issue595():
 
 def test_issue599(en_vocab):
     doc = Doc(en_vocab)
-    doc.is_tagged = True
-    doc.is_parsed = True
     doc2 = Doc(doc.vocab)
     doc2.from_bytes(doc.to_bytes())
-    assert doc2.is_parsed
+    assert doc2.has_annotation("DEP")
 
 
 def test_issue600():
@@ -434,7 +428,7 @@ def test_issue999():
     for _, offsets in TRAIN_DATA:
         for start, end, label in offsets:
             ner.add_label(label)
-    nlp.begin_training()
+    nlp.initialize()
     for itn in range(20):
         random.shuffle(TRAIN_DATA)
         for raw_text, entity_offsets in TRAIN_DATA:

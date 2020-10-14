@@ -1,35 +1,126 @@
+from typing import Callable, Iterator, Dict, List, Tuple, TYPE_CHECKING
 import random
 import itertools
+import copy
+from functools import partial
+from pydantic import BaseModel, StrictStr
+
+from ..util import registry
+from ..tokens import Doc
+from .example import Example
+
+if TYPE_CHECKING:
+    from ..language import Language  # noqa: F401
 
 
-def make_orth_variants_example(nlp, example, orth_variant_level=0.0):  # TODO: naming
-    raw_text = example.text
-    orig_dict = example.to_dict()
-    variant_text, variant_token_annot = make_orth_variants(
-        nlp, raw_text, orig_dict["token_annotation"], orth_variant_level
+class OrthVariantsSingle(BaseModel):
+    tags: List[StrictStr]
+    variants: List[StrictStr]
+
+
+class OrthVariantsPaired(BaseModel):
+    tags: List[StrictStr]
+    variants: List[List[StrictStr]]
+
+
+class OrthVariants(BaseModel):
+    paired: List[OrthVariantsPaired] = {}
+    single: List[OrthVariantsSingle] = {}
+
+
+@registry.augmenters("spacy.orth_variants.v1")
+def create_orth_variants_augmenter(
+    level: float, lower: float, orth_variants: OrthVariants
+) -> Callable[["Language", Example], Iterator[Example]]:
+    """Create a data augmentation callback that uses orth-variant replacement.
+    The callback can be added to a corpus or other data iterator during training.
+
+    level (float): The percentage of texts that will be augmented.
+    lower (float): The percentage of texts that will be lowercased.
+    orth_variants (Dict[str, dict]): A dictionary containing the single and
+        paired orth variants. Typically loaded from a JSON file.
+    RETURNS (Callable[[Language, Example], Iterator[Example]]): The augmenter.
+    """
+    return partial(
+        orth_variants_augmenter, orth_variants=orth_variants, level=level, lower=lower
     )
-    doc = nlp.make_doc(variant_text)
-    orig_dict["token_annotation"] = variant_token_annot
-    return example.from_dict(doc, orig_dict)
 
 
-def make_orth_variants(nlp, raw_text, orig_token_dict, orth_variant_level=0.0):
-    if random.random() >= orth_variant_level:
-        return raw_text, orig_token_dict
-    if not orig_token_dict:
-        return raw_text, orig_token_dict
-    raw = raw_text
-    token_dict = orig_token_dict
-    lower = False
-    if random.random() >= 0.5:
-        lower = True
-        if raw is not None:
-            raw = raw.lower()
-    orth_variants = nlp.vocab.lookups.get_table("orth_variants", {})
+@registry.augmenters("spacy.lower_case.v1")
+def create_lower_casing_augmenter(
+    level: float,
+) -> Callable[["Language", Example], Iterator[Example]]:
+    """Create a data augmentation callback that converts documents to lowercase.
+    The callback can be added to a corpus or other data iterator during training.
+
+    level (float): The percentage of texts that will be augmented.
+    RETURNS (Callable[[Language, Example], Iterator[Example]]): The augmenter.
+    """
+    return partial(lower_casing_augmenter, level=level)
+
+
+def dont_augment(nlp: "Language", example: Example) -> Iterator[Example]:
+    yield example
+
+
+def lower_casing_augmenter(
+    nlp: "Language", example: Example, *, level: float
+) -> Iterator[Example]:
+    if random.random() >= level:
+        yield example
+    else:
+        example_dict = example.to_dict()
+        doc = nlp.make_doc(example.text.lower())
+        example_dict["token_annotation"]["ORTH"] = [t.lower_ for t in doc]
+        yield example.from_dict(doc, example_dict)
+
+
+def orth_variants_augmenter(
+    nlp: "Language",
+    example: Example,
+    orth_variants: dict,
+    *,
+    level: float = 0.0,
+    lower: float = 0.0,
+) -> Iterator[Example]:
+    if random.random() >= level:
+        yield example
+    else:
+        raw_text = example.text
+        orig_dict = example.to_dict()
+        if not orig_dict["token_annotation"]:
+            yield example
+        else:
+            variant_text, variant_token_annot = make_orth_variants(
+                nlp,
+                raw_text,
+                orig_dict["token_annotation"],
+                orth_variants,
+                lower=raw_text is not None and random.random() < lower,
+            )
+            if variant_text:
+                doc = nlp.make_doc(variant_text)
+            else:
+                doc = Doc(nlp.vocab, words=variant_token_annot["ORTH"])
+                variant_token_annot["ORTH"] = [w.text for w in doc]
+                variant_token_annot["SPACY"] = [w.whitespace_ for w in doc]
+            orig_dict["token_annotation"] = variant_token_annot
+            yield example.from_dict(doc, orig_dict)
+
+
+def make_orth_variants(
+    nlp: "Language",
+    raw: str,
+    token_dict: Dict[str, List[str]],
+    orth_variants: Dict[str, List[Dict[str, List[str]]]],
+    *,
+    lower: bool = False,
+) -> Tuple[str, Dict[str, List[str]]]:
+    orig_token_dict = copy.deepcopy(token_dict)
     ndsv = orth_variants.get("single", [])
     ndpv = orth_variants.get("paired", [])
-    words = token_dict.get("words", [])
-    tags = token_dict.get("tags", [])
+    words = token_dict.get("ORTH", [])
+    tags = token_dict.get("TAG", [])
     # keep unmodified if words or tags are not defined
     if words and tags:
         if lower:
@@ -62,8 +153,8 @@ def make_orth_variants(nlp, raw_text, orig_token_dict, orth_variant_level=0.0):
                             if words[word_idx] in pair:
                                 pair_idx = pair.index(words[word_idx])
                     words[word_idx] = punct_choices[punct_idx][pair_idx]
-        token_dict["words"] = words
-        token_dict["tags"] = tags
+        token_dict["ORTH"] = words
+        token_dict["TAG"] = tags
     # modify raw
     if raw is not None:
         variants = []
@@ -103,7 +194,7 @@ def make_orth_variants(nlp, raw_text, orig_token_dict, orth_variant_level=0.0):
             # something went wrong, abort
             # (add a warning message?)
             if not match_found:
-                return raw_text, orig_token_dict
+                return raw, orig_token_dict
             # add following whitespace
             while raw_idx < len(raw) and raw[raw_idx].isspace():
                 variant_raw += raw[raw_idx]

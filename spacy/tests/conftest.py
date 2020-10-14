@@ -60,6 +60,11 @@ def de_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def de_vocab():
+    return get_lang_class("de")().vocab
+
+
+@pytest.fixture(scope="session")
 def el_tokenizer():
     return get_lang_class("el")().tokenizer
 
@@ -236,6 +241,11 @@ def tr_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def tr_vocab():
+    return get_lang_class("tr").Defaults.create_vocab()
+
+
+@pytest.fixture(scope="session")
 def tt_tokenizer():
     return get_lang_class("tt")().tokenizer
 
@@ -243,7 +253,6 @@ def tt_tokenizer():
 @pytest.fixture(scope="session")
 def uk_tokenizer():
     pytest.importorskip("pymorphy2")
-    pytest.importorskip("pymorphy2.lang")
     return get_lang_class("uk")().tokenizer
 
 
@@ -267,22 +276,35 @@ def zh_tokenizer_char():
 def zh_tokenizer_jieba():
     pytest.importorskip("jieba")
     config = {
-        "@tokenizers": "spacy.zh.ChineseTokenizer",
-        "segmenter": "jieba",
+        "nlp": {
+            "tokenizer": {
+                "@tokenizers": "spacy.zh.ChineseTokenizer",
+                "segmenter": "jieba",
+            }
+        }
     }
-    nlp = get_lang_class("zh").from_config({"nlp": {"tokenizer": config}})
+    nlp = get_lang_class("zh").from_config(config)
     return nlp.tokenizer
 
 
 @pytest.fixture(scope="session")
 def zh_tokenizer_pkuseg():
-    pytest.importorskip("pkuseg")
+    pytest.importorskip("spacy_pkuseg")
     config = {
-        "@tokenizers": "spacy.zh.ChineseTokenizer",
-        "segmenter": "pkuseg",
-        "pkuseg_model": "default",
+        "nlp": {
+            "tokenizer": {
+                "@tokenizers": "spacy.zh.ChineseTokenizer",
+                "segmenter": "pkuseg",
+            }
+        },
+        "initialize": {
+            "tokenizer": {
+                "pkuseg_model": "web",
+            }
+        },
     }
-    nlp = get_lang_class("zh").from_config({"nlp": {"tokenizer": config}})
+    nlp = get_lang_class("zh").from_config(config)
+    nlp.initialize()
     return nlp.tokenizer
 
 

@@ -4,13 +4,15 @@ import pytest
 @pytest.fixture
 def i_has(en_tokenizer):
     doc = en_tokenizer("I has")
-    doc[0].morph_ = {"PronType": "prs"}
-    doc[1].morph_ = {
-        "VerbForm": "fin",
-        "Tense": "pres",
-        "Number": "sing",
-        "Person": "three",
-    }
+    doc[0].set_morph({"PronType": "prs"})
+    doc[1].set_morph(
+        {
+            "VerbForm": "fin",
+            "Tense": "pres",
+            "Number": "sing",
+            "Person": "three",
+        }
+    )
 
     return doc
 
@@ -47,20 +49,20 @@ def test_morph_get(i_has):
 def test_morph_set(i_has):
     assert i_has[0].morph.get("PronType") == ["prs"]
     # set by string
-    i_has[0].morph_ = "PronType=unk"
+    i_has[0].set_morph("PronType=unk")
     assert i_has[0].morph.get("PronType") == ["unk"]
     # set by string, fields are alphabetized
-    i_has[0].morph_ = "PronType=123|NounType=unk"
-    assert i_has[0].morph_ == "NounType=unk|PronType=123"
+    i_has[0].set_morph("PronType=123|NounType=unk")
+    assert str(i_has[0].morph) == "NounType=unk|PronType=123"
     # set by dict
-    i_has[0].morph_ = {"AType": "123", "BType": "unk"}
-    assert i_has[0].morph_ == "AType=123|BType=unk"
+    i_has[0].set_morph({"AType": "123", "BType": "unk"})
+    assert str(i_has[0].morph) == "AType=123|BType=unk"
     # set by string with multiple values, fields and values are alphabetized
-    i_has[0].morph_ = "BType=c|AType=b,a"
-    assert i_has[0].morph_ == "AType=a,b|BType=c"
+    i_has[0].set_morph("BType=c|AType=b,a")
+    assert str(i_has[0].morph) == "AType=a,b|BType=c"
     # set by dict with multiple values, fields and values are alphabetized
-    i_has[0].morph_ = {"AType": "b,a", "BType": "c"}
-    assert i_has[0].morph_ == "AType=a,b|BType=c"
+    i_has[0].set_morph({"AType": "b,a", "BType": "c"})
+    assert str(i_has[0].morph) == "AType=a,b|BType=c"
 
 
 def test_morph_str(i_has):
@@ -72,25 +74,25 @@ def test_morph_property(tokenizer):
     doc = tokenizer("a dog")
 
     # set through token.morph_
-    doc[0].morph_ = "PronType=prs"
-    assert doc[0].morph_ == "PronType=prs"
+    doc[0].set_morph("PronType=prs")
+    assert str(doc[0].morph) == "PronType=prs"
     assert doc.to_array(["MORPH"])[0] != 0
 
     # unset with token.morph
-    doc[0].morph = 0
+    doc[0].set_morph(None)
     assert doc.to_array(["MORPH"])[0] == 0
 
     # empty morph is equivalent to "_"
-    doc[0].morph_ = ""
-    assert doc[0].morph_ == ""
+    doc[0].set_morph("")
+    assert str(doc[0].morph) == ""
     assert doc.to_array(["MORPH"])[0] == tokenizer.vocab.strings["_"]
 
     # "_" morph is also equivalent to empty morph
-    doc[0].morph_ = "_"
-    assert doc[0].morph_ == ""
+    doc[0].set_morph("_")
+    assert str(doc[0].morph) == ""
     assert doc.to_array(["MORPH"])[0] == tokenizer.vocab.strings["_"]
 
     # set through existing hash with token.morph
     tokenizer.vocab.strings.add("Feat=Val")
-    doc[0].morph = tokenizer.vocab.strings.add("Feat=Val")
-    assert doc[0].morph_ == "Feat=Val"
+    doc[0].set_morph(tokenizer.vocab.strings.add("Feat=Val"))
+    assert str(doc[0].morph) == "Feat=Val"

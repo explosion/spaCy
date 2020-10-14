@@ -97,7 +97,10 @@ const Changelog = () => {
             <p>
                 Pre-releases include alpha and beta versions, as well as release candidates. They
                 are not intended for production use. You can download spaCy pre-releases via the{' '}
-                <InlineCode>spacy-nightly</InlineCode> package on pip.
+                <Link to="https://pypi.org/packages/spacy-nightly">
+                    <InlineCode>spacy-nightly</InlineCode>
+                </Link>{' '}
+                package on pip.
             </p>
 
             <p>

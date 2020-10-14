@@ -3,8 +3,7 @@ from ...tokens import Token
 
 
 class EnglishLemmatizer(Lemmatizer):
-    """English lemmatizer. Only overrides is_base_form.
-    """
+    """English lemmatizer. Only overrides is_base_form."""
 
     def is_base_form(self, token: Token) -> bool:
         """

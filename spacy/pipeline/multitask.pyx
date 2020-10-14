@@ -6,7 +6,7 @@ from thinc.api import set_dropout_rate
 
 from ..tokens.doc cimport Doc
 
-from .pipe import Pipe
+from .trainable_pipe import TrainablePipe
 from .tagger import Tagger
 from ..training import validate_examples
 from ..language import Language
@@ -81,7 +81,7 @@ class MultitaskObjective(Tagger):
     def set_annotations(self, docs, dep_ids):
         pass
 
-    def begin_training(self, get_examples, pipeline=None, sgd=None):
+    def initialize(self, get_examples, nlp=None):
         if not hasattr(get_examples, "__call__"):
             err = Errors.E930.format(name="MultitaskObjective", obj=type(get_examples))
             raise ValueError(err)
@@ -91,9 +91,6 @@ class MultitaskObjective(Tagger):
                 if label is not None and label not in self.labels:
                     self.labels[label] = len(self.labels)
         self.model.initialize()   # TODO: fix initialization by defining X and Y
-        if sgd is None:
-            sgd = self.create_optimizer()
-        return sgd
 
     def predict(self, docs):
         tokvecs = self.model.get_ref("tok2vec")(docs)
@@ -167,7 +164,7 @@ class MultitaskObjective(Tagger):
             return "I-SENT"
 
 
-class ClozeMultitask(Pipe):
+class ClozeMultitask(TrainablePipe):
     def __init__(self, vocab, model, **cfg):
         self.vocab = vocab
         self.model = model
@@ -177,13 +174,10 @@ class ClozeMultitask(Pipe):
     def set_annotations(self, docs, dep_ids):
         pass
 
-    def begin_training(self, get_examples, pipeline=None, sgd=None):
+    def initialize(self, get_examples, nlp=None):
         self.model.initialize()  # TODO: fix initialization by defining X and Y
         X = self.model.ops.alloc((5, self.model.get_ref("tok2vec").get_dim("nO")))
-        self.model.output_layer.begin_training(X)
-        if sgd is None:
-            sgd = self.create_optimizer()
-        return sgd
+        self.model.output_layer.initialize(X)
 
     def predict(self, docs):
         tokvecs = self.model.get_ref("tok2vec")(docs)
@@ -215,7 +209,7 @@ class ClozeMultitask(Pipe):
         loss, d_predictions = self.get_loss(examples, self.vocab.vectors.data, predictions)
         bp_predictions(d_predictions)
         if sgd is not None:
-            self.model.finish_update(sgd)
+            self.finish_update(sgd)
         if losses is not None:
             losses[self.name] += loss
         return losses

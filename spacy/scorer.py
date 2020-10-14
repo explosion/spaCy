@@ -1,5 +1,6 @@
 from typing import Optional, Iterable, Dict, Any, Callable, TYPE_CHECKING
 import numpy as np
+from collections import defaultdict
 
 from .training import Example
 from .tokens import Token, Doc, Span
@@ -22,6 +23,17 @@ class PRFScore:
         self.tp = 0
         self.fp = 0
         self.fn = 0
+
+    def __iadd__(self, other):
+        self.tp += other.tp
+        self.fp += other.fp
+        self.fn += other.fn
+        return self
+
+    def __add__(self, other):
+        return PRFScore(
+            tp=self.tp + other.tp, fp=self.fp + other.fp, fn=self.fn + other.fn
+        )
 
     def score_set(self, cand: set, gold: set) -> None:
         self.tp += len(cand.intersection(gold))
@@ -240,7 +252,7 @@ class Scorer:
                             pred_per_feat[field].add((gold_i, feat))
             for field in per_feat:
                 per_feat[field].score_set(
-                    pred_per_feat.get(field, set()), gold_per_feat.get(field, set()),
+                    pred_per_feat.get(field, set()), gold_per_feat.get(field, set())
                 )
         result = {k: v.to_dict() for k, v in per_feat.items()}
         return {f"{attr}_per_feat": result}
@@ -270,6 +282,18 @@ class Scorer:
         for example in examples:
             pred_doc = example.predicted
             gold_doc = example.reference
+            # TODO
+            # This is a temporary hack to work around the problem that the scorer
+            # fails if you have examples that are not fully annotated for all
+            # the tasks in your pipeline. For instance, you might have a corpus
+            # of NER annotations that does not set sentence boundaries, but the
+            # pipeline includes a parser or senter, and then the score_weights
+            # are used to evaluate that component. When the scorer attempts
+            # to read the sentences from the gold document, it fails.
+            try:
+                list(getter(gold_doc, attr))
+            except ValueError:
+                continue
             # Find all labels in gold and doc
             labels = set(
                 [k.label_ for k in getter(gold_doc, attr)]
@@ -283,12 +307,6 @@ class Scorer:
             # Find all predidate labels, for all and per type
             gold_spans = set()
             pred_spans = set()
-            # Special case for ents:
-            # If we have missing values in the gold, we can't easily tell
-            # whether our NER predictions are true.
-            # It seems bad but it's what we've always done.
-            if attr == "ents" and not all(token.ent_iob != 0 for token in gold_doc):
-                continue
             for span in getter(gold_doc, attr):
                 gold_span = (span.label_, span.start, span.end - 1)
                 gold_spans.add(gold_span)
@@ -406,9 +424,9 @@ class Scorer:
                     f_per_type[pred_label].fp += 1
         micro_prf = PRFScore()
         for label_prf in f_per_type.values():
-            micro_prf.tp = label_prf.tp
-            micro_prf.fn = label_prf.fn
-            micro_prf.fp = label_prf.fp
+            micro_prf.tp += label_prf.tp
+            micro_prf.fn += label_prf.fn
+            micro_prf.fp += label_prf.fp
         n_cats = len(f_per_type) + 1e-100
         macro_p = sum(prf.precision for prf in f_per_type.values()) / n_cats
         macro_r = sum(prf.recall for prf in f_per_type.values()) / n_cats
@@ -437,6 +455,74 @@ class Scorer:
         else:
             results[f"{attr}_score"] = results[f"{attr}_macro_auc"]
             results[f"{attr}_score_desc"] = "macro AUC"
+        return results
+
+    @staticmethod
+    def score_links(
+        examples: Iterable[Example], *, negative_labels: Iterable[str]
+    ) -> Dict[str, Any]:
+        """Returns PRF for predicted links on the entity level.
+        To disentangle the performance of the NEL from the NER,
+        this method only evaluates NEL links for entities that overlap
+        between the gold reference and the predictions.
+
+        examples (Iterable[Example]): Examples to score
+        negative_labels (Iterable[str]): The string values that refer to no annotation (e.g. "NIL")
+        RETURNS (Dict[str, Any]): A dictionary containing the scores.
+
+        DOCS (TODO): https://nightly.spacy.io/api/scorer#score_links
+        """
+        f_per_type = {}
+        for example in examples:
+            gold_ent_by_offset = {}
+            for gold_ent in example.reference.ents:
+                gold_ent_by_offset[(gold_ent.start_char, gold_ent.end_char)] = gold_ent
+
+            for pred_ent in example.predicted.ents:
+                gold_span = gold_ent_by_offset.get(
+                    (pred_ent.start_char, pred_ent.end_char), None
+                )
+                label = gold_span.label_
+                if label not in f_per_type:
+                    f_per_type[label] = PRFScore()
+                gold = gold_span.kb_id_
+                # only evaluating entities that overlap between gold and pred,
+                # to disentangle the performance of the NEL from the NER
+                if gold is not None:
+                    pred = pred_ent.kb_id_
+                    if gold in negative_labels and pred in negative_labels:
+                        # ignore true negatives
+                        pass
+                    elif gold == pred:
+                        f_per_type[label].tp += 1
+                    elif gold in negative_labels:
+                        f_per_type[label].fp += 1
+                    elif pred in negative_labels:
+                        f_per_type[label].fn += 1
+                    else:
+                        # a wrong prediction (e.g. Q42 != Q3) counts as both a FP as well as a FN
+                        f_per_type[label].fp += 1
+                        f_per_type[label].fn += 1
+        micro_prf = PRFScore()
+        for label_prf in f_per_type.values():
+            micro_prf.tp += label_prf.tp
+            micro_prf.fn += label_prf.fn
+            micro_prf.fp += label_prf.fp
+        n_labels = len(f_per_type) + 1e-100
+        macro_p = sum(prf.precision for prf in f_per_type.values()) / n_labels
+        macro_r = sum(prf.recall for prf in f_per_type.values()) / n_labels
+        macro_f = sum(prf.fscore for prf in f_per_type.values()) / n_labels
+        results = {
+            f"nel_score": micro_prf.fscore,
+            f"nel_score_desc": "micro F",
+            f"nel_micro_p": micro_prf.precision,
+            f"nel_micro_r": micro_prf.recall,
+            f"nel_micro_f": micro_prf.fscore,
+            f"nel_macro_p": macro_p,
+            f"nel_macro_r": macro_r,
+            f"nel_macro_f": macro_f,
+            f"nel_f_per_type": {k: v.to_dict() for k, v in f_per_type.items()},
+        }
         return results
 
     @staticmethod
@@ -531,6 +617,38 @@ class Scorer:
                 k: v.to_dict() for k, v in labelled_per_dep.items()
             },
         }
+
+
+def get_ner_prf(examples: Iterable[Example]) -> Dict[str, PRFScore]:
+    """Compute per-entity PRFScore objects for a sequence of examples. The
+    results are returned as a dictionary keyed by the entity type. You can
+    add the PRFScore objects to get micro-averaged total.
+    """
+    scores = defaultdict(PRFScore)
+    for eg in examples:
+        if not eg.y.has_annotation("ENT_IOB"):
+            continue
+        golds = {(e.label_, e.start, e.end) for e in eg.y.ents}
+        align_x2y = eg.alignment.x2y
+        for pred_ent in eg.x.ents:
+            if pred_ent.label_ not in scores:
+                scores[pred_ent.label_] = PRFScore()
+            indices = align_x2y[pred_ent.start : pred_ent.end].dataXd.ravel()
+            if len(indices):
+                g_span = eg.y[indices[0] : indices[-1] + 1]
+                # Check we aren't missing annotation on this span. If so,
+                # our prediction is neither right nor wrong, we just
+                # ignore it.
+                if all(token.ent_iob != 0 for token in g_span):
+                    key = (pred_ent.label_, indices[0], indices[-1] + 1)
+                    if key in golds:
+                        scores[pred_ent.label_].tp += 1
+                        golds.remove(key)
+                    else:
+                        scores[pred_ent.label_].fp += 1
+        for label, start, end in golds:
+            scores[label].fn += 1
+    return scores
 
 
 #############################################################################
@@ -787,7 +905,7 @@ def _auc(x, y):
         if np.all(dx <= 0):
             direction = -1
         else:
-            raise ValueError(Errors.E164.format(x))
+            raise ValueError(Errors.E164.format(x=x))
 
     area = direction * np.trapz(y, x)
     if isinstance(area, np.memmap):

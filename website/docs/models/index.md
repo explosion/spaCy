@@ -6,32 +6,18 @@ menu:
   - ['Conventions', 'conventions']
 ---
 
-<!-- Update page, refer to new /api/architectures and training docs -->
-
-This directory includes two types of packages:
-
-1. **Trained pipelines:** General-purpose spaCy pipelines to predict named
-   entities, part-of-speech tags and syntactic dependencies. Can be used
-   out-of-the-box and fine-tuned on more specific data.
-2. **Starters:** Transfer learning starter packs with pretrained weights you can
-   initialize your pipeline models with to achieve better accuracy. They can
-   include word vectors (which will be used as features during training) or
-   other pretrained representations like BERT. These packages don't include
-   components for specific tasks like NER or text classification and are
-   intended to be used as base models when training your own models.
+<!-- TODO: include interactive demo -->
 
 ### Quickstart {hidden="true"}
 
+> #### 📖 Installation and usage
+>
+> For more details on how to use trained pipelines with spaCy, see the
+> [usage guide](/usage/models).
+
 import QuickstartModels from 'widgets/quickstart-models.js'
 
-<QuickstartModels title="Quickstart" id="quickstart" description="Install a default model, get the code to load it from within spaCy and test it." />
-
-<Infobox title="Installation and usage" emoji="📖">
-
-For more details on how to use trained pipelines with spaCy, see the
-[usage guide](/usage/models).
-
-</Infobox>
+<QuickstartModels id="quickstart" />
 
 ## Package naming conventions {#conventions}
 

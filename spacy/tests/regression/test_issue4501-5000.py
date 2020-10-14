@@ -1,7 +1,7 @@
 import pytest
 from spacy.tokens import Doc, Span, DocBin
 from spacy.training import Example
-from spacy.training.converters.conllu2docs import conllu2docs
+from spacy.training.converters.conllu_to_docs import conllu_to_docs
 from spacy.lang.en import English
 from spacy.kb import KnowledgeBase
 from spacy.vocab import Vocab
@@ -82,7 +82,7 @@ def test_issue4651_without_phrase_matcher_attr():
 
 def test_issue4665():
     """
-    conllu2json should not raise an exception if the HEAD column contains an
+    conllu_to_docs should not raise an exception if the HEAD column contains an
     underscore
     """
     input_data = """
@@ -105,7 +105,7 @@ def test_issue4665():
 17	.	_	PUNCT	.	_	_	punct	_	_
 18	]	_	PUNCT	-RRB-	_	_	punct	_	_
 """
-    conllu2docs(input_data)
+    conllu_to_docs(input_data)
 
 
 def test_issue4674():
@@ -180,7 +180,7 @@ def test_issue4725_2():
     vocab.set_vector("dog", data[1])
     nlp = English(vocab=vocab)
     nlp.add_pipe("ner")
-    nlp.begin_training()
+    nlp.initialize()
     docs = ["Kurt is in London."] * 10
     for _ in nlp.pipe(docs, batch_size=2, n_process=2):
         pass

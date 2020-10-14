@@ -28,9 +28,9 @@ import irlBackground from '../images/spacy-irl.jpg'
 
 import Benchmarks from 'usage/_benchmarks-models.md'
 
-const CODE_EXAMPLE = `# pip install spacy
+function getCodeExample(nightly) {
+    return `# pip install -U ${nightly ? 'spacy-nightly --pre' : 'spacy'}
 # python -m spacy download en_core_web_sm
-
 import spacy
 
 # Load English tokenizer, tagger, parser and NER
@@ -53,9 +53,11 @@ print("Verbs:", [token.lemma_ for token in doc if token.pos_ == "VERB"])
 for entity in doc.ents:
     print(entity.text, entity.label_)
 `
+}
 
 const Landing = ({ data }) => {
-    const { counts } = data
+    const { counts, nightly } = data
+    const codeExample = getCodeExample(nightly)
     return (
         <>
             <LandingHeader nightly={data.nightly}>
@@ -92,7 +94,7 @@ const Landing = ({ data }) => {
             </LandingGrid>
 
             <LandingGrid>
-                <LandingDemo title="Edit the code & try spaCy">{CODE_EXAMPLE}</LandingDemo>
+                <LandingDemo title="Edit the code &amp; try spaCy">{codeExample}</LandingDemo>
 
                 <LandingCol>
                     <H2>Features</H2>
@@ -120,7 +122,7 @@ const Landing = ({ data }) => {
                         </Li>
                         <Li>
                             ✅ Components for <strong>named entity</strong> recognition,
-                            part-of-speech-tagging, dependency parsing, sentence segmentation,{' '}
+                            part-of-speech tagging, dependency parsing, sentence segmentation,{' '}
                             <strong>text classification</strong>, lemmatization, morphological
                             analysis, entity linking and more
                         </Li>
@@ -223,10 +225,11 @@ const Landing = ({ data }) => {
                     <br />
                     <br />
                     <br />
-                    {/** TODO: update with actual example */}
-                    <Project id="some_example">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus interdum
-                        sodales lectus.
+                    <Project id="pipelines/tagger_parser_ud" title="Get started">
+                        The easiest way to get started is to clone a project template and run it
+                        – for example, this template for training a{' '}
+                        <strong>part-of-speech tagger</strong> and{' '}
+                        <strong>dependency parser</strong> on a Universal Dependencies treebank.
                     </Project>
                 </LandingCol>
                 <LandingCol>
@@ -297,7 +300,7 @@ const Landing = ({ data }) => {
                         to run.
                     </p>
                     <p>
-                        <Button to="/usage/facts-figures#benchmarks">See details</Button>
+                        <Button to="/usage/facts-figures#benchmarks">More results</Button>
                     </p>
                 </LandingCol>
 

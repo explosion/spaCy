@@ -1,15 +1,17 @@
-from collections import Counter
 from libc.stdint cimport int32_t
 from cymem.cymem cimport Pool
+
+from collections import Counter
 
 from ...typedefs cimport weight_t, attr_t
 from ...lexeme cimport Lexeme
 from ...attrs cimport IS_SPACE
 from ...training.example cimport Example
-from ...errors import Errors
 from .stateclass cimport StateClass
 from ._state cimport StateC
 from .transition_system cimport Transition, do_func_t
+
+from ...errors import Errors
 
 
 cdef enum:
@@ -248,7 +250,7 @@ cdef class BiluoPushDown(TransitionSystem):
 
     def get_cost(self, StateClass stcls, gold, int i):
         if not isinstance(gold, BiluoGold):
-            raise TypeError("Expected BiluoGold")
+            raise TypeError(Errors.E909.format(name="BiluoGold"))
         cdef BiluoGold gold_ = gold
         gold_state = gold_.c
         n_gold = 0
@@ -261,7 +263,7 @@ cdef class BiluoPushDown(TransitionSystem):
     cdef int set_costs(self, int* is_valid, weight_t* costs,
                        StateClass stcls, gold) except -1:
         if not isinstance(gold, BiluoGold):
-            raise TypeError("Expected BiluoGold")
+            raise TypeError(Errors.E909.format(name="BiluoGold"))
         cdef BiluoGold gold_ = gold
         gold_.update(stcls)
         gold_state = gold_.c

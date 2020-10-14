@@ -1,27 +1,25 @@
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Callable, Iterable, Iterator, Union
+from typing import Tuple
 from thinc.api import Model
+from pathlib import Path
 
 from .pipe import Pipe
 from ..errors import Errors
 from ..language import Language
+from ..training import Example
 from ..lookups import Lookups, load_lookups
 from ..scorer import Scorer
 from ..tokens import Doc, Token
 from ..vocab import Vocab
 from ..training import validate_examples
+from ..util import logger, SimpleFrozenList
 from .. import util
 
 
 @Language.factory(
     "lemmatizer",
     assigns=["token.lemma"],
-    default_config={
-        "model": None,
-        "mode": "lookup",
-        "lookups": None,
-        "overwrite": False,
-    },
-    scores=["lemma_acc"],
+    default_config={"model": None, "mode": "lookup", "overwrite": False},
     default_score_weights={"lemma_acc": 1.0},
 )
 def make_lemmatizer(
@@ -29,13 +27,9 @@ def make_lemmatizer(
     model: Optional[Model],
     name: str,
     mode: str,
-    lookups: Optional[Lookups],
     overwrite: bool = False,
 ):
-    lookups = Lemmatizer.load_lookups(nlp.lang, mode, lookups)
-    return Lemmatizer(
-        nlp.vocab, model, name, mode=mode, lookups=lookups, overwrite=overwrite
-    )
+    return Lemmatizer(nlp.vocab, model, name, mode=mode, overwrite=overwrite)
 
 
 class Lemmatizer(Pipe):
@@ -47,59 +41,19 @@ class Lemmatizer(Pipe):
     """
 
     @classmethod
-    def get_lookups_config(cls, mode: str) -> Dict:
+    def get_lookups_config(cls, mode: str) -> Tuple[List[str], List[str]]:
         """Returns the lookups configuration settings for a given mode for use
         in Lemmatizer.load_lookups.
 
         mode (str): The lemmatizer mode.
-        RETURNS (dict): The lookups configuration settings for this mode.
-
-        DOCS: https://nightly.spacy.io/api/lemmatizer#get_lookups_config
+        RETURNS (Tuple[List[str], List[str]]): The required and optional
+            lookup tables for this mode.
         """
         if mode == "lookup":
-            return {
-                "required_tables": ["lemma_lookup"],
-            }
+            return (["lemma_lookup"], [])
         elif mode == "rule":
-            return {
-                "required_tables": ["lemma_rules"],
-                "optional_tables": ["lemma_exc", "lemma_index"],
-            }
-        return {}
-
-    @classmethod
-    def load_lookups(cls, lang: str, mode: str, lookups: Optional[Lookups],) -> Lookups:
-        """Load and validate lookups tables. If the provided lookups is None,
-        load the default lookups tables according to the language and mode
-        settings. Confirm that all required tables for the language and mode
-        are present.
-
-        lang (str): The language code.
-        mode (str): The lemmatizer mode.
-        lookups (Lookups): The provided lookups, may be None if the default
-            lookups should be loaded.
-        RETURNS (Lookups): The Lookups object.
-
-        DOCS: https://nightly.spacy.io/api/lemmatizer#get_lookups_config
-        """
-        config = cls.get_lookups_config(mode)
-        required_tables = config.get("required_tables", [])
-        optional_tables = config.get("optional_tables", [])
-        if lookups is None:
-            lookups = load_lookups(lang=lang, tables=required_tables)
-            optional_lookups = load_lookups(
-                lang=lang, tables=optional_tables, strict=False
-            )
-            for table in optional_lookups.tables:
-                lookups.set_table(table, optional_lookups.get_table(table))
-        for table in required_tables:
-            if table not in lookups:
-                raise ValueError(
-                    Errors.E1004.format(
-                        mode=mode, tables=required_tables, found=lookups.tables
-                    )
-                )
-        return lookups
+            return (["lemma_rules"], ["lemma_exc", "lemma_index"])
+        return ([], [])
 
     def __init__(
         self,
@@ -108,7 +62,6 @@ class Lemmatizer(Pipe):
         name: str = "lemmatizer",
         *,
         mode: str = "lookup",
-        lookups: Optional[Lookups] = None,
         overwrite: bool = False,
     ) -> None:
         """Initialize a Lemmatizer.
@@ -117,9 +70,6 @@ class Lemmatizer(Pipe):
         model (Model): A model (not yet implemented).
         name (str): The component name. Defaults to "lemmatizer".
         mode (str): The lemmatizer mode: "lookup", "rule". Defaults to "lookup".
-        lookups (Lookups): The lookups object containing the (optional) tables
-            such as "lemma_rules", "lemma_index", "lemma_exc" and
-            "lemma_lookup". Defaults to None
         overwrite (bool): Whether to overwrite existing lemmas. Defaults to
             `False`.
 
@@ -129,8 +79,9 @@ class Lemmatizer(Pipe):
         self.model = model
         self.name = name
         self._mode = mode
-        self.lookups = lookups if lookups is not None else Lookups()
+        self.lookups = Lookups()
         self.overwrite = overwrite
+        self._validated = False
         if self.mode == "lookup":
             self.lemmatize = self.lookup_lemmatize
         elif self.mode == "rule":
@@ -154,12 +105,56 @@ class Lemmatizer(Pipe):
 
         DOCS: https://nightly.spacy.io/api/lemmatizer#call
         """
+        if not self._validated:
+            self._validate_tables(Errors.E1004)
         for token in doc:
             if self.overwrite or token.lemma == 0:
                 token.lemma_ = self.lemmatize(token)[0]
         return doc
 
-    def pipe(self, stream, *, batch_size=128):
+    def initialize(
+        self,
+        get_examples: Optional[Callable[[], Iterable[Example]]] = None,
+        *,
+        nlp: Optional[Language] = None,
+        lookups: Optional[Lookups] = None,
+    ):
+        """Initialize the lemmatizer and load in data.
+
+        get_examples (Callable[[], Iterable[Example]]): Function that
+            returns a representative sample of gold-standard Example objects.
+        nlp (Language): The current nlp object the component is part of.
+        lookups (Lookups): The lookups object containing the (optional) tables
+            such as "lemma_rules", "lemma_index", "lemma_exc" and
+            "lemma_lookup". Defaults to None.
+        """
+        required_tables, optional_tables = self.get_lookups_config(self.mode)
+        if lookups is None:
+            logger.debug("Lemmatizer: loading tables from spacy-lookups-data")
+            lookups = load_lookups(lang=self.vocab.lang, tables=required_tables)
+            optional_lookups = load_lookups(
+                lang=self.vocab.lang, tables=optional_tables, strict=False
+            )
+            for table in optional_lookups.tables:
+                lookups.set_table(table, optional_lookups.get_table(table))
+        self.lookups = lookups
+        self._validate_tables(Errors.E1004)
+
+    def _validate_tables(self, error_message: str = Errors.E912) -> None:
+        """Check that the lookups are correct for the current mode."""
+        required_tables, optional_tables = self.get_lookups_config(self.mode)
+        for table in required_tables:
+            if table not in self.lookups:
+                raise ValueError(
+                    error_message.format(
+                        mode=self.mode,
+                        tables=required_tables,
+                        found=self.lookups.tables,
+                    )
+                )
+        self._validated = True
+
+    def pipe(self, stream: Iterable[Doc], *, batch_size: int = 128) -> Iterator[Doc]:
         """Apply the pipe to a stream of documents. This usually happens under
         the hood when the nlp object is called on a text and all components are
         applied to the Doc.
@@ -264,7 +259,7 @@ class Lemmatizer(Pipe):
         """
         return False
 
-    def score(self, examples, **kwargs) -> Dict[str, Any]:
+    def score(self, examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
         """Score a batch of examples.
 
         examples (Iterable[Example]): The examples to score.
@@ -275,58 +270,66 @@ class Lemmatizer(Pipe):
         validate_examples(examples, "Lemmatizer.score")
         return Scorer.score_token_attr(examples, "lemma", **kwargs)
 
-    def to_disk(self, path, *, exclude=tuple()):
-        """Save the current state to a directory.
+    def to_disk(
+        self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList()
+    ):
+        """Serialize the pipe to disk.
 
-        path (unicode or Path): A path to a directory, which will be created if
-            it doesn't exist.
-        exclude (list): String names of serialization fields to exclude.
+        path (str / Path): Path to a directory.
+        exclude (Iterable[str]): String names of serialization fields to exclude.
 
-        DOCS: https://nightly.spacy.io/api/vocab#to_disk
+        DOCS: https://nightly.spacy.io/api/lemmatizer#to_disk
         """
         serialize = {}
         serialize["vocab"] = lambda p: self.vocab.to_disk(p)
         serialize["lookups"] = lambda p: self.lookups.to_disk(p)
         util.to_disk(path, serialize, exclude)
 
-    def from_disk(self, path, *, exclude=tuple()):
-        """Loads state from a directory. Modifies the object in place and
-        returns it.
+    def from_disk(
+        self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList()
+    ) -> "Lemmatizer":
+        """Load the pipe from disk. Modifies the object in place and returns it.
 
-        path (unicode or Path): A path to a directory.
-        exclude (list): String names of serialization fields to exclude.
-        RETURNS (Vocab): The modified `Vocab` object.
+        path (str / Path): Path to a directory.
+        exclude (Iterable[str]): String names of serialization fields to exclude.
+        RETURNS (Lemmatizer): The modified Lemmatizer object.
 
-        DOCS: https://nightly.spacy.io/api/vocab#to_disk
+        DOCS: https://nightly.spacy.io/api/lemmatizer#from_disk
         """
         deserialize = {}
         deserialize["vocab"] = lambda p: self.vocab.from_disk(p)
         deserialize["lookups"] = lambda p: self.lookups.from_disk(p)
         util.from_disk(path, deserialize, exclude)
+        self._validate_tables()
+        return self
 
-    def to_bytes(self, *, exclude=tuple()) -> bytes:
-        """Serialize the current state to a binary string.
+    def to_bytes(self, *, exclude: Iterable[str] = SimpleFrozenList()) -> bytes:
+        """Serialize the pipe to a bytestring.
 
-        exclude (list): String names of serialization fields to exclude.
-        RETURNS (bytes): The serialized form of the `Vocab` object.
+        exclude (Iterable[str]): String names of serialization fields to exclude.
+        RETURNS (bytes): The serialized object.
 
-        DOCS: https://nightly.spacy.io/api/vocab#to_bytes
+        DOCS: https://nightly.spacy.io/api/lemmatizer#to_bytes
         """
         serialize = {}
         serialize["vocab"] = self.vocab.to_bytes
         serialize["lookups"] = self.lookups.to_bytes
         return util.to_bytes(serialize, exclude)
 
-    def from_bytes(self, bytes_data: bytes, *, exclude=tuple()):
-        """Load state from a binary string.
+    def from_bytes(
+        self, bytes_data: bytes, *, exclude: Iterable[str] = SimpleFrozenList()
+    ) -> "Lemmatizer":
+        """Load the pipe from a bytestring.
 
-        bytes_data (bytes): The data to load from.
-        exclude (list): String names of serialization fields to exclude.
-        RETURNS (Vocab): The `Vocab` object.
+        bytes_data (bytes): The serialized pipe.
+        exclude (Iterable[str]): String names of serialization fields to exclude.
+        RETURNS (Lemmatizer): The loaded Lemmatizer.
 
-        DOCS: https://nightly.spacy.io/api/vocab#from_bytes
+        DOCS: https://nightly.spacy.io/api/lemmatizer#from_bytes
         """
         deserialize = {}
         deserialize["vocab"] = lambda b: self.vocab.from_bytes(b)
         deserialize["lookups"] = lambda b: self.lookups.from_bytes(b)
         util.from_bytes(bytes_data, deserialize, exclude)
+        self._validate_tables()
+        return self

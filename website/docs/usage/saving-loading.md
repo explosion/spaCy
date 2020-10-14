@@ -2,6 +2,7 @@
 title: Saving and Loading
 menu:
   - ['Basics', 'basics']
+  - ['Serializing Docs', 'docs']
   - ['Serialization Methods', 'serialization-methods']
   - ['Entry Points', 'entry-points']
   - ['Trained Pipelines', 'models']
@@ -52,7 +53,7 @@ defined [factories](/usage/processing-pipeline#custom-components-factories) and
 _then_ loads in the binary data. You can read more about this process
 [here](/usage/processing-pipelines#pipelines).
 
-### Serializing Doc objects efficiently {#docs new="2.2"}
+## Serializing Doc objects efficiently {#docs new="2.2"}
 
 If you're working with lots of data, you'll probably need to pass analyses
 between machines, either to use something like [Dask](https://dask.org) or
@@ -179,9 +180,20 @@ example, model weights or terminology lists – you can take advantage of spaCy'
 built-in component serialization by making your custom component expose its own
 `to_disk` and `from_disk` or `to_bytes` and `from_bytes` methods. When an `nlp`
 object with the component in its pipeline is saved or loaded, the component will
-then be able to serialize and deserialize itself. The following example shows a
-custom component that keeps arbitrary JSON-serializable data, allows the user to
-add to that data and saves and loads the data to and from a JSON file.
+then be able to serialize and deserialize itself.
+
+<Infobox title="Custom components and data" emoji="📖">
+
+For more details on how to work with pipeline components that depend on data
+resources and manage data loading and initialization at training and runtime,
+see the usage guide on initializing and serializing
+[component data](/usage/processing-pipelines#component-data).
+
+</Infobox>
+
+The following example shows a custom component that keeps arbitrary
+JSON-serializable data, allows the user to add to that data and saves and loads
+the data to and from a JSON file.
 
 > #### Real-world example
 >
@@ -208,13 +220,13 @@ class CustomComponent:
         # Add something to the component's data
         self.data.append(data)
 
-    def to_disk(self, path, **kwargs):
+    def to_disk(self, path, exclude=tuple()):
         # This will receive the directory path + /my_component
         data_path = path / "data.json"
         with data_path.open("w", encoding="utf8") as f:
             f.write(json.dumps(self.data))
 
-    def from_disk(self, path, **cfg):
+    def from_disk(self, path, exclude=tuple()):
         # This will receive the directory path + /my_component
         data_path = path / "data.json"
         with data_path.open("r", encoding="utf8") as f:
@@ -276,6 +288,8 @@ custom components to spaCy automatically.
 
 </Infobox>
 
+<!-- ## Initializing components with data {#initialization new="3"} -->
+
 ## Using entry points {#entry-points new="2.1"}
 
 Entry points let you expose parts of a Python package you write to other Python
@@ -283,7 +297,7 @@ packages. This lets one application easily customize the behavior of another, by
 exposing an entry point in its `setup.py`. For a quick and fun intro to entry
 points in Python, check out
 [this excellent blog post](https://amir.rachum.com/blog/2017/07/28/python-entry-points/).
-spaCy can load custom function from several different entry points to add
+spaCy can load custom functions from several different entry points to add
 pipeline component factories, language classes and other settings. To make spaCy
 use your entry points, your package needs to expose them and it needs to be
 installed in the same environment – that's it.
@@ -291,7 +305,7 @@ installed in the same environment – that's it.
 | Entry point                                                                    | Description                                                                                                                                                                                                                                              |
 | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`spacy_factories`](#entry-points-components)                                  | Group of entry points for pipeline component factories, keyed by component name. Can be used to expose custom components defined by another package.                                                                                                     |
-| [`spacy_languages`](#entry-points-languages)                                   | Group of entry points for custom [`Language` subclasses](/usage/adding-languages), keyed by language shortcut.                                                                                                                                           |
+| [`spacy_languages`](#entry-points-languages)                                   | Group of entry points for custom [`Language` subclasses](/usage/linguistic-features#language-data), keyed by language shortcut.                                                                                                                          |
 | `spacy_lookups` <Tag variant="new">2.2</Tag>                                   | Group of entry points for custom [`Lookups`](/api/lookups), including lemmatizer data. Used by spaCy's [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) package.                                                                  |
 | [`spacy_displacy_colors`](#entry-points-displacy) <Tag variant="new">2.2</Tag> | Group of entry points of custom label colors for the [displaCy visualizer](/usage/visualizers#ent). The key name doesn't matter, but it should point to a dict of labels and color values. Useful for custom models that predict different entity types. |
 
@@ -299,9 +313,10 @@ installed in the same environment – that's it.
 
 When you load a pipeline, spaCy will generally use its `config.cfg` to set up
 the language class and construct the pipeline. The pipeline is specified as a
-list of strings, e.g. `pipeline = ["tagger", "paser", "ner"]`. For each of those
-strings, spaCy will call `nlp.add_pipe` and look up the name in all factories
-defined by the decorators [`@Language.component`](/api/language#component) and
+list of strings, e.g. `pipeline = ["tagger", "parser", "ner"]`. For each of
+those strings, spaCy will call `nlp.add_pipe` and look up the name in all
+factories defined by the decorators
+[`@Language.component`](/api/language#component) and
 [`@Language.factory`](/api/language#factory). This means that you have to import
 your custom components _before_ loading the pipeline.
 
@@ -574,7 +589,7 @@ The directory will be created if it doesn't exist, and the whole pipeline data,
 meta and configuration will be written out. To make the pipeline more convenient
 to deploy, we recommend wrapping it as a [Python package](/api/cli#package).
 
-<Accordion title="What’s the difference between the config.cfg and meta.json?" spaced id="models-meta-vs-config">
+<Accordion title="What’s the difference between the config.cfg and meta.json?" spaced id="models-meta-vs-config" spaced>
 
 When you save a pipeline in spaCy v3.0+, two files will be exported: a
 [`config.cfg`](/api/data-formats#config) based on
@@ -595,6 +610,15 @@ based on [`nlp.meta`](/api/language#meta).
   no impact on the functionality of the `nlp` object.
 
 </Accordion>
+
+<Project id="pipelines/tagger_parser_ud">
+
+The easiest way to get started with an end-to-end workflow is to clone a
+[project template](/usage/projects) and run it – for example, this template that
+lets you train a **part-of-speech tagger** and **dependency parser** on a
+Universal Dependencies treebank and generates an installable Python package.
+
+</Project>
 
 ### Generating a pipeline package {#models-generating}
 
@@ -699,5 +723,3 @@ class and call [`from_disk`](/api/language#from_disk) instead.
 ```python
 nlp = spacy.blank("en").from_disk("/path/to/data")
 ```
-
-<!-- TODO: point to spaCy projects? -->

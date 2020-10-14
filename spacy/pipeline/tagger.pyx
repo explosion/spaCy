@@ -11,13 +11,14 @@ from ..tokens.doc cimport Doc
 from ..morphology cimport Morphology
 from ..vocab cimport Vocab
 
-from .pipe import Pipe, deserialize_config
+from .trainable_pipe import TrainablePipe
+from .pipe import deserialize_config
 from ..language import Language
 from ..attrs import POS, ID
 from ..parts_of_speech import X
-from ..errors import Errors, TempErrors, Warnings
+from ..errors import Errors, Warnings
 from ..scorer import Scorer
-from ..training import validate_examples
+from ..training import validate_examples, validate_get_examples
 from .. import util
 
 
@@ -42,7 +43,6 @@ DEFAULT_TAGGER_MODEL = Config().from_str(default_model_config)["model"]
     "tagger",
     assigns=["token.tag"],
     default_config={"model": DEFAULT_TAGGER_MODEL},
-    scores=["tag_acc"],
     default_score_weights={"tag_acc": 1.0},
 )
 def make_tagger(nlp: Language, name: str, model: Model):
@@ -56,7 +56,7 @@ def make_tagger(nlp: Language, name: str, model: Model):
     return Tagger(nlp.vocab, model, name)
 
 
-class Tagger(Pipe):
+class Tagger(TrainablePipe):
     """Pipeline component for part-of-speech tagging.
 
     DOCS: https://nightly.spacy.io/api/tagger
@@ -89,6 +89,11 @@ class Tagger(Pipe):
 
         DOCS: https://nightly.spacy.io/api/tagger#labels
         """
+        return tuple(self.cfg["labels"])
+
+    @property
+    def label_data(self):
+        """Data about the labels currently added to the component."""
         return tuple(self.cfg["labels"])
 
     def __call__(self, doc):
@@ -168,7 +173,6 @@ class Tagger(Pipe):
                 # Don't clobber preset POS tags
                 if doc.c[j].tag == 0:
                     doc.c[j].tag = self.vocab.strings[self.labels[tag_id]]
-            doc.is_tagged = True
 
     def update(self, examples, *, drop=0., sgd=None, losses=None, set_annotations=False):
         """Learn from a batch of documents and gold-standard information,
@@ -191,7 +195,7 @@ class Tagger(Pipe):
         validate_examples(examples, "Tagger.update")
         if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
             # Handle cases where there are no tokens in any docs.
-            return
+            return losses
         set_dropout_rate(self.model, drop)
         tag_scores, bp_tag_scores = self.model.begin_update([eg.predicted for eg in examples])
         for sc in tag_scores:
@@ -200,7 +204,7 @@ class Tagger(Pipe):
         loss, d_tag_scores = self.get_loss(examples, tag_scores)
         bp_tag_scores(d_tag_scores)
         if sgd not in (None, False):
-            self.model.finish_update(sgd)
+            self.finish_update(sgd)
 
         losses[self.name] += loss
         if set_annotations:
@@ -223,22 +227,24 @@ class Tagger(Pipe):
 
         DOCS: https://nightly.spacy.io/api/tagger#rehearse
         """
+        if losses is None:
+            losses = {}
+        losses.setdefault(self.name, 0.0)
         validate_examples(examples, "Tagger.rehearse")
         docs = [eg.predicted for eg in examples]
         if self._rehearsal_model is None:
-            return
+            return losses
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
-            return
+            return losses
         set_dropout_rate(self.model, drop)
         guesses, backprop = self.model.begin_update(docs)
         target = self._rehearsal_model(examples)
         gradient = guesses - target
         backprop(gradient)
-        self.model.finish_update(sgd)
-        if losses is not None:
-            losses.setdefault(self.name, 0.0)
-            losses[self.name] += (gradient**2).sum()
+        self.finish_update(sgd)
+        losses[self.name] += (gradient**2).sum()
+        return losses
 
     def get_loss(self, examples, scores):
         """Find the loss and gradient of loss for the batch of documents and
@@ -246,7 +252,7 @@ class Tagger(Pipe):
 
         examples (Iterable[Examples]): The batch of examples.
         scores: Scores representing the model's predictions.
-        RETUTNRS (Tuple[float, float]): The loss and the gradient.
+        RETURNS (Tuple[float, float]): The loss and the gradient.
 
         DOCS: https://nightly.spacy.io/api/tagger#get_loss
         """
@@ -255,34 +261,36 @@ class Tagger(Pipe):
         truths = [eg.get_aligned("TAG", as_string=True) for eg in examples]
         d_scores, loss = loss_func(scores, truths)
         if self.model.ops.xp.isnan(loss):
-            raise ValueError("nan value when computing loss")
+            raise ValueError(Errors.E910.format(name=self.name))
         return float(loss), d_scores
 
-    def begin_training(self, get_examples, *, pipeline=None, sgd=None):
+    def initialize(self, get_examples, *, nlp=None, labels=None):
         """Initialize the pipe for training, using a representative set
         of data examples.
 
         get_examples (Callable[[], Iterable[Example]]): Function that
             returns a representative sample of gold-standard Example objects..
-        pipeline (List[Tuple[str, Callable]]): Optional list of pipeline
-            components that this component is part of. Corresponds to
-            nlp.pipeline.
-        sgd (thinc.api.Optimizer): Optional optimizer. Will be created with
-            create_optimizer if it doesn't exist.
-        RETURNS (thinc.api.Optimizer): The optimizer.
+        nlp (Language): The current nlp object the component is part of.
+        labels: The labels to add to the component, typically generated by the
+            `init labels` command. If no labels are provided, the get_examples
+            callback is used to extract the labels from the data.
 
-        DOCS: https://nightly.spacy.io/api/tagger#begin_training
+        DOCS: https://nightly.spacy.io/api/tagger#initialize
         """
-        self._ensure_examples(get_examples)
+        validate_get_examples(get_examples, "Tagger.initialize")
+        if labels is not None:
+            for tag in labels:
+                self.add_label(tag)
+        else:
+            tags = set()
+            for example in get_examples():
+                for token in example.y:
+                    if token.tag_:
+                        tags.add(token.tag_)
+            for tag in sorted(tags):
+                self.add_label(tag)
         doc_sample = []
         label_sample = []
-        tags = set()
-        for example in get_examples():
-            for token in example.y:
-                if token.tag_:
-                    tags.add(token.tag_)
-        for tag in sorted(tags):
-            self.add_label(tag)
         for example in islice(get_examples(), 10):
             doc_sample.append(example.x)
             gold_tags = example.get_aligned("TAG", as_string=True)
@@ -291,9 +299,6 @@ class Tagger(Pipe):
         assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
         assert len(label_sample) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(X=doc_sample, Y=label_sample)
-        if sgd is None:
-            sgd = self.create_optimizer()
-        return sgd
 
     def add_label(self, label):
         """Add a new label to the pipe.
@@ -323,79 +328,3 @@ class Tagger(Pipe):
         """
         validate_examples(examples, "Tagger.score")
         return Scorer.score_token_attr(examples, "tag", **kwargs)
-
-    def to_bytes(self, *, exclude=tuple()):
-        """Serialize the pipe to a bytestring.
-
-        exclude (Iterable[str]): String names of serialization fields to exclude.
-        RETURNS (bytes): The serialized object.
-
-        DOCS: https://nightly.spacy.io/api/tagger#to_bytes
-        """
-        serialize = {}
-        serialize["model"] = self.model.to_bytes
-        serialize["vocab"] = self.vocab.to_bytes
-        serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
-        return util.to_bytes(serialize, exclude)
-
-    def from_bytes(self, bytes_data, *, exclude=tuple()):
-        """Load the pipe from a bytestring.
-
-        bytes_data (bytes): The serialized pipe.
-        exclude (Iterable[str]): String names of serialization fields to exclude.
-        RETURNS (Tagger): The loaded Tagger.
-
-        DOCS: https://nightly.spacy.io/api/tagger#from_bytes
-        """
-        def load_model(b):
-            try:
-                self.model.from_bytes(b)
-            except AttributeError:
-                raise ValueError(Errors.E149) from None
-
-        deserialize = {
-            "vocab": lambda b: self.vocab.from_bytes(b),
-            "cfg": lambda b: self.cfg.update(srsly.json_loads(b)),
-            "model": lambda b: load_model(b),
-        }
-        util.from_bytes(bytes_data, deserialize, exclude)
-        return self
-
-    def to_disk(self, path, *, exclude=tuple()):
-        """Serialize the pipe to disk.
-
-        path (str / Path): Path to a directory.
-        exclude (Iterable[str]): String names of serialization fields to exclude.
-
-        DOCS: https://nightly.spacy.io/api/tagger#to_disk
-        """
-        serialize = {
-            "vocab": lambda p: self.vocab.to_disk(p),
-            "model": lambda p: self.model.to_disk(p),
-            "cfg": lambda p: srsly.write_json(p, self.cfg),
-        }
-        util.to_disk(path, serialize, exclude)
-
-    def from_disk(self, path, *, exclude=tuple()):
-        """Load the pipe from disk. Modifies the object in place and returns it.
-
-        path (str / Path): Path to a directory.
-        exclude (Iterable[str]): String names of serialization fields to exclude.
-        RETURNS (Tagger): The modified Tagger object.
-
-        DOCS: https://nightly.spacy.io/api/tagger#from_disk
-        """
-        def load_model(p):
-            with p.open("rb") as file_:
-                try:
-                    self.model.from_bytes(file_.read())
-                except AttributeError:
-                    raise ValueError(Errors.E149) from None
-
-        deserialize = {
-            "vocab": lambda p: self.vocab.from_disk(p),
-            "cfg": lambda p: self.cfg.update(deserialize_config(p)),
-            "model": load_model,
-        }
-        util.from_disk(path, deserialize, exclude)
-        return self

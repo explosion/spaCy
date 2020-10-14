@@ -1,6 +1,5 @@
 import pytest
-
-from ...util import get_doc
+from spacy.tokens import Doc
 
 
 def test_ru_doc_lemmatization(ru_lemmatizer):
@@ -11,7 +10,7 @@ def test_ru_doc_lemmatization(ru_lemmatizer):
         "Aspect=Imp|Gender=Fem|Mood=Ind|Number=Sing|Tense=Past|VerbForm=Fin|Voice=Act",
         "Animacy=Anim|Case=Acc|Gender=Fem|Number=Sing",
     ]
-    doc = get_doc(ru_lemmatizer.vocab, words=words, pos=pos, morphs=morphs)
+    doc = Doc(ru_lemmatizer.vocab, words=words, pos=pos, morphs=morphs)
     doc = ru_lemmatizer(doc)
     lemmas = [token.lemma_ for token in doc]
     assert lemmas == ["мама", "мыть", "рама"]
@@ -28,7 +27,7 @@ def test_ru_doc_lemmatization(ru_lemmatizer):
     ],
 )
 def test_ru_lemmatizer_noun_lemmas(ru_lemmatizer, text, lemmas):
-    doc = get_doc(ru_lemmatizer.vocab, words=[text], pos=["NOUN"])
+    doc = Doc(ru_lemmatizer.vocab, words=[text], pos=["NOUN"])
     result_lemmas = ru_lemmatizer.pymorphy2_lemmatize(doc[0])
     assert sorted(result_lemmas) == lemmas
 
@@ -51,7 +50,7 @@ def test_ru_lemmatizer_noun_lemmas(ru_lemmatizer, text, lemmas):
 def test_ru_lemmatizer_works_with_different_pos_homonyms(
     ru_lemmatizer, text, pos, morph, lemma
 ):
-    doc = get_doc(ru_lemmatizer.vocab, words=[text], pos=[pos], morphs=[morph])
+    doc = Doc(ru_lemmatizer.vocab, words=[text], pos=[pos], morphs=[morph])
     result_lemmas = ru_lemmatizer.pymorphy2_lemmatize(doc[0])
     assert result_lemmas == [lemma]
 
@@ -66,13 +65,13 @@ def test_ru_lemmatizer_works_with_different_pos_homonyms(
     ],
 )
 def test_ru_lemmatizer_works_with_noun_homonyms(ru_lemmatizer, text, morph, lemma):
-    doc = get_doc(ru_lemmatizer.vocab, words=[text], pos=["NOUN"], morphs=[morph])
+    doc = Doc(ru_lemmatizer.vocab, words=[text], pos=["NOUN"], morphs=[morph])
     result_lemmas = ru_lemmatizer.pymorphy2_lemmatize(doc[0])
     assert result_lemmas == [lemma]
 
 
 def test_ru_lemmatizer_punct(ru_lemmatizer):
-    doc = get_doc(ru_lemmatizer.vocab, words=["«"], pos=["PUNCT"])
+    doc = Doc(ru_lemmatizer.vocab, words=["«"], pos=["PUNCT"])
     assert ru_lemmatizer.pymorphy2_lemmatize(doc[0]) == ['"']
-    doc = get_doc(ru_lemmatizer.vocab, words=["»"], pos=["PUNCT"])
+    doc = Doc(ru_lemmatizer.vocab, words=["»"], pos=["PUNCT"])
     assert ru_lemmatizer.pymorphy2_lemmatize(doc[0]) == ['"']

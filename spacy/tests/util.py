@@ -2,11 +2,7 @@ import numpy
 import tempfile
 import contextlib
 import srsly
-
-from spacy import Errors
-from spacy.tokens import Doc, Span
-from spacy.attrs import POS, TAG, HEAD, DEP, LEMMA, MORPH
-
+from spacy.tokens import Doc
 from spacy.vocab import Vocab
 from spacy.util import make_tempdir  # noqa: F401
 
@@ -16,74 +12,6 @@ def make_tempfile(mode="r"):
     f = tempfile.TemporaryFile(mode=mode)
     yield f
     f.close()
-
-
-def get_doc(
-    vocab,
-    words=[],
-    pos=None,
-    heads=None,
-    deps=None,
-    tags=None,
-    ents=None,
-    lemmas=None,
-    morphs=None,
-):
-    """Create Doc object from given vocab, words and annotations."""
-    if deps and not heads:
-        heads = [0] * len(deps)
-    headings = []
-    values = []
-    annotations = [pos, heads, deps, lemmas, tags, morphs]
-    possible_headings = [POS, HEAD, DEP, LEMMA, TAG, MORPH]
-    for a, annot in enumerate(annotations):
-        if annot is not None:
-            if len(annot) != len(words):
-                raise ValueError(Errors.E189)
-            headings.append(possible_headings[a])
-            if annot is not heads:
-                values.extend(annot)
-    for value in values:
-        vocab.strings.add(value)
-
-    doc = Doc(vocab, words=words)
-
-    # if there are any other annotations, set them
-    if headings:
-        attrs = doc.to_array(headings)
-
-        j = 0
-        for annot in annotations:
-            if annot:
-                if annot is heads:
-                    for i in range(len(words)):
-                        if attrs.ndim == 1:
-                            attrs[i] = heads[i]
-                        else:
-                            attrs[i, j] = heads[i]
-                elif annot is morphs:
-                    for i in range(len(words)):
-                        morph_key = vocab.morphology.add(morphs[i])
-                        if attrs.ndim == 1:
-                            attrs[i] = morph_key
-                        else:
-                            attrs[i, j] = morph_key
-                else:
-                    for i in range(len(words)):
-                        if attrs.ndim == 1:
-                            attrs[i] = doc.vocab.strings[annot[i]]
-                        else:
-                            attrs[i, j] = doc.vocab.strings[annot[i]]
-                j += 1
-        doc.from_array(headings, attrs)
-
-    # finally, set the entities
-    if ents:
-        doc.ents = [
-            Span(doc, start, end, label=doc.vocab.strings[label])
-            for start, end, label in ents
-        ]
-    return doc
 
 
 def get_batch(batch_size):

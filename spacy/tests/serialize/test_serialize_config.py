@@ -1,5 +1,5 @@
 import pytest
-from thinc.config import Config, ConfigValidationError
+from thinc.api import Config, ConfigValidationError
 import spacy
 from spacy.lang.en import English
 from spacy.lang.de import German
@@ -14,18 +14,20 @@ from ..util import make_tempdir
 
 nlp_config_string = """
 [paths]
-train = ""
-dev = ""
+train = null
+dev = null
 
-[training]
+[corpora]
 
-[training.train_corpus]
+[corpora.train]
 @readers = "spacy.Corpus.v1"
 path = ${paths.train}
 
-[training.dev_corpus]
+[corpora.dev]
 @readers = "spacy.Corpus.v1"
 path = ${paths.dev}
+
+[training]
 
 [training.batcher]
 @batchers = "spacy.batch_by_words.v1"
@@ -65,7 +67,8 @@ width = ${components.tok2vec.model.width}
 parser_config_string = """
 [model]
 @architectures = "spacy.TransitionBasedParser.v1"
-nr_feature_tokens = 99
+state_type = "parser"
+extra_state_tokens = false
 hidden_width = 66
 maxout_pieces = 2
 
@@ -86,14 +89,18 @@ def my_parser():
     tok2vec = build_Tok2Vec_model(
         MultiHashEmbed(
             width=321,
-            rows=5432,
-            also_embed_subwords=True,
-            also_use_static_vectors=False,
+            attrs=["LOWER", "SHAPE"],
+            rows=[5432, 5432],
+            include_static_vectors=False,
         ),
         MaxoutWindowEncoder(width=321, window_size=3, maxout_pieces=4, depth=2),
     )
     parser = build_tb_parser_model(
-        tok2vec=tok2vec, nr_feature_tokens=7, hidden_width=65, maxout_pieces=5
+        tok2vec=tok2vec,
+        state_type="parser",
+        extra_state_tokens=True,
+        hidden_width=65,
+        maxout_pieces=5,
     )
     return parser
 
@@ -101,8 +108,8 @@ def my_parser():
 def test_create_nlp_from_config():
     config = Config().from_str(nlp_config_string)
     with pytest.raises(ConfigValidationError):
-        nlp, _ = load_model_from_config(config, auto_fill=False)
-    nlp, resolved = load_model_from_config(config, auto_fill=True)
+        load_model_from_config(config, auto_fill=False)
+    nlp = load_model_from_config(config, auto_fill=True)
     assert nlp.config["training"]["batcher"]["size"] == 666
     assert len(nlp.config["training"]) > 1
     assert nlp.pipe_names == ["tok2vec", "tagger"]
@@ -129,7 +136,7 @@ def test_create_nlp_from_config_multiple_instances():
         "tagger2": config["components"]["tagger"],
     }
     config["nlp"]["pipeline"] = list(config["components"].keys())
-    nlp, _ = load_model_from_config(config, auto_fill=True)
+    nlp = load_model_from_config(config, auto_fill=True)
     assert nlp.pipe_names == ["t2v", "tagger1", "tagger2"]
     assert nlp.get_pipe_meta("t2v").factory == "tok2vec"
     assert nlp.get_pipe_meta("tagger1").factory == "tagger"
@@ -143,9 +150,9 @@ def test_create_nlp_from_config_multiple_instances():
 def test_serialize_nlp():
     """ Create a custom nlp pipeline from config and ensure it serializes it correctly """
     nlp_config = Config().from_str(nlp_config_string)
-    nlp, _ = load_model_from_config(nlp_config, auto_fill=True)
+    nlp = load_model_from_config(nlp_config, auto_fill=True)
     nlp.get_pipe("tagger").add_label("A")
-    nlp.begin_training()
+    nlp.initialize()
     assert "tok2vec" in nlp.pipe_names
     assert "tagger" in nlp.pipe_names
     assert "parser" not in nlp.pipe_names
@@ -166,7 +173,7 @@ def test_serialize_custom_nlp():
     parser_cfg = dict()
     parser_cfg["model"] = {"@architectures": "my_test_parser"}
     nlp.add_pipe("parser", config=parser_cfg)
-    nlp.begin_training()
+    nlp.initialize()
 
     with make_tempdir() as d:
         nlp.to_disk(d)
@@ -184,7 +191,7 @@ def test_serialize_parser():
     model_config = Config().from_str(parser_config_string)
     parser = nlp.add_pipe("parser", config=model_config)
     parser.add_label("nsubj")
-    nlp.begin_training()
+    nlp.initialize()
 
     with make_tempdir() as d:
         nlp.to_disk(d)
@@ -202,7 +209,7 @@ def test_config_nlp_roundtrip():
     nlp = English()
     nlp.add_pipe("entity_ruler")
     nlp.add_pipe("ner")
-    new_nlp, new_config = load_model_from_config(nlp.config, auto_fill=False)
+    new_nlp = load_model_from_config(nlp.config, auto_fill=False)
     assert new_nlp.config == nlp.config
     assert new_nlp.pipe_names == nlp.pipe_names
     assert new_nlp._pipe_configs == nlp._pipe_configs
@@ -273,12 +280,12 @@ def test_config_overrides():
     overrides_dot = {"nlp.lang": "de", "nlp.pipeline": ["tagger"]}
     # load_model from config with overrides passed directly to Config
     config = Config().from_str(nlp_config_string, overrides=overrides_dot)
-    nlp, _ = load_model_from_config(config, auto_fill=True)
+    nlp = load_model_from_config(config, auto_fill=True)
     assert isinstance(nlp, German)
     assert nlp.pipe_names == ["tagger"]
     # Serialized roundtrip with config passed in
     base_config = Config().from_str(nlp_config_string)
-    base_nlp, _ = load_model_from_config(base_config, auto_fill=True)
+    base_nlp = load_model_from_config(base_config, auto_fill=True)
     assert isinstance(base_nlp, English)
     assert base_nlp.pipe_names == ["tok2vec", "tagger"]
     with make_tempdir() as d:
@@ -300,20 +307,20 @@ def test_config_overrides():
 
 def test_config_interpolation():
     config = Config().from_str(nlp_config_string, interpolate=False)
-    assert config["training"]["train_corpus"]["path"] == "${paths.train}"
+    assert config["corpora"]["train"]["path"] == "${paths.train}"
     interpolated = config.interpolate()
-    assert interpolated["training"]["train_corpus"]["path"] == ""
+    assert interpolated["corpora"]["train"]["path"] is None
     nlp = English.from_config(config)
-    assert nlp.config["training"]["train_corpus"]["path"] == "${paths.train}"
+    assert nlp.config["corpora"]["train"]["path"] == "${paths.train}"
     # Ensure that variables are preserved in nlp config
     width = "${components.tok2vec.model.width}"
     assert config["components"]["tagger"]["model"]["tok2vec"]["width"] == width
     assert nlp.config["components"]["tagger"]["model"]["tok2vec"]["width"] == width
     interpolated2 = nlp.config.interpolate()
-    assert interpolated2["training"]["train_corpus"]["path"] == ""
+    assert interpolated2["corpora"]["train"]["path"] is None
     assert interpolated2["components"]["tagger"]["model"]["tok2vec"]["width"] == 342
     nlp2 = English.from_config(interpolated)
-    assert nlp2.config["training"]["train_corpus"]["path"] == ""
+    assert nlp2.config["corpora"]["train"]["path"] is None
     assert nlp2.config["components"]["tagger"]["model"]["tok2vec"]["width"] == 342
 
 
@@ -321,7 +328,7 @@ def test_config_optional_sections():
     config = Config().from_str(nlp_config_string)
     config = DEFAULT_CONFIG.merge(config)
     assert "pretraining" not in config
-    filled = registry.fill_config(config, schema=ConfigSchema, validate=False)
+    filled = registry.fill(config, schema=ConfigSchema, validate=False)
     # Make sure that optional "pretraining" block doesn't default to None,
     # which would (rightly) cause error because it'd result in a top-level
     # key that's not a section (dict). Note that the following roundtrip is
@@ -334,7 +341,17 @@ def test_config_auto_fill_extra_fields():
     config = Config({"nlp": {"lang": "en"}, "training": {}})
     assert load_model_from_config(config, auto_fill=True)
     config = Config({"nlp": {"lang": "en"}, "training": {"extra": "hello"}})
-    nlp, _ = load_model_from_config(config, auto_fill=True, validate=False)
+    nlp = load_model_from_config(config, auto_fill=True, validate=False)
     assert "extra" not in nlp.config["training"]
     # Make sure the config generated is valid
     load_model_from_config(nlp.config)
+
+
+def test_config_validate_literal():
+    nlp = English()
+    config = Config().from_str(parser_config_string)
+    config["model"]["state_type"] = "nonsense"
+    with pytest.raises(ConfigValidationError):
+        nlp.add_pipe("parser", config=config)
+    config["model"]["state_type"] = "ner"
+    nlp.add_pipe("parser", config=config)

@@ -1,19 +1,21 @@
-from collections import Iterable as IterableInstance
+from collections.abc import Iterable as IterableInstance
 import warnings
 import numpy
+from murmurhash.mrmr cimport hash64
 
 from ..tokens.doc cimport Doc
 from ..tokens.span cimport Span
 from ..tokens.span import Span
 from ..attrs import IDS
 from .align import Alignment
-from .iob_utils import biluo_to_iob, biluo_tags_from_offsets, biluo_tags_from_doc
-from .iob_utils import spans_from_biluo_tags
+from .iob_utils import biluo_to_iob, offsets_to_biluo_tags, doc_to_biluo_tags
+from .iob_utils import biluo_tags_to_spans
 from ..errors import Errors, Warnings
 from ..pipeline._parser_internals import nonproj
+from ..util import logger
 
 
-cpdef Doc annotations2doc(vocab, tok_annot, doc_annot):
+cpdef Doc annotations_to_doc(vocab, tok_annot, doc_annot):
     """ Create a Doc from dictionaries with token and doc annotations. """
     attrs, array = _annot2array(vocab, tok_annot, doc_annot)
     output = Doc(vocab, words=tok_annot["ORTH"], spaces=tok_annot["SPACY"])
@@ -40,6 +42,24 @@ def validate_examples(examples, method):
     if wrong:
         err = Errors.E978.format(name=method, types=wrong)
         raise TypeError(err)
+
+
+def validate_get_examples(get_examples, method):
+    """Check that a generator of a batch of examples received during processing is valid:
+    the callable produces a non-empty list of Example objects.
+    This function lives here to prevent circular imports.
+
+    get_examples (Callable[[], Iterable[Example]]): A function that produces a batch of examples.
+    method (str): The method name to show in error messages.
+    """
+    if get_examples is None or not hasattr(get_examples, "__call__"):
+        err = Errors.E930.format(method=method, obj=type(get_examples))
+        raise TypeError(err)
+    examples = get_examples()
+    if not examples:
+        err = Errors.E930.format(method=method, obj=examples)
+        raise TypeError(err)
+    validate_examples(examples, method)
 
 
 cdef class Example:
@@ -92,20 +112,41 @@ cdef class Example:
             tok_dict["SPACY"] = [tok.whitespace_ for tok in predicted]
         return Example(
             predicted,
-            annotations2doc(predicted.vocab, tok_dict, doc_dict)
+            annotations_to_doc(predicted.vocab, tok_dict, doc_dict)
         )
 
     @property
     def alignment(self):
-        words_x = [token.text for token in self.x]
-        words_y = [token.text for token in self.y]
-        if self._cached_alignment is None or \
-                words_x != self._cached_words_x or \
-                words_y != self._cached_words_y:
-            self._cached_alignment = Alignment.from_strings(words_x, words_y)
+        x_sig = hash64(self.x.c, sizeof(self.x.c[0]) * self.x.length, 0)
+        y_sig = hash64(self.y.c, sizeof(self.y.c[0]) * self.y.length, 0)
+        if self._cached_alignment is None:
+            words_x = [token.text for token in self.x]
+            words_y = [token.text for token in self.y]
+            self._x_sig = x_sig
+            self._y_sig = y_sig
             self._cached_words_x = words_x
             self._cached_words_y = words_y
-        return self._cached_alignment
+            self._cached_alignment = Alignment.from_strings(words_x, words_y)
+            return self._cached_alignment
+        elif self._x_sig == x_sig and self._y_sig == y_sig:
+            # If we have a cached alignment, check whether the cache is invalid
+            # due to retokenization. To make this check fast in loops, we first
+            # check a hash of the TokenC arrays.
+            return self._cached_alignment
+        else:
+            words_x = [token.text for token in self.x]
+            words_y = [token.text for token in self.y]
+            if words_x == self._cached_words_x and words_y == self._cached_words_y:
+                self._x_sig = x_sig
+                self._y_sig = y_sig
+                return self._cached_alignment
+            else:
+                self._cached_alignment = Alignment.from_strings(words_x, words_y)
+                self._cached_words_x = words_x
+                self._cached_words_y = words_y
+                self._x_sig = x_sig
+                self._y_sig = y_sig
+                return self._cached_alignment
 
     def get_aligned(self, field, as_string=False):
         """Return an aligned array for a token attribute."""
@@ -172,11 +213,11 @@ cdef class Example:
         return output
 
     def get_aligned_ner(self):
-        if not self.y.is_nered:
+        if not self.y.has_annotation("ENT_IOB"):
             return [None] * len(self.x)  # should this be 'missing' instead of 'None' ?
         x_ents = self.get_aligned_spans_y2x(self.y.ents)
         # Default to 'None' for missing values
-        x_tags = biluo_tags_from_offsets(
+        x_tags = offsets_to_biluo_tags(
             self.x,
             [(e.start_char, e.end_char, e.label_) for e in x_ents],
             missing=None
@@ -195,7 +236,7 @@ cdef class Example:
         return {
             "doc_annotation": {
                 "cats": dict(self.reference.cats),
-                "entities": biluo_tags_from_doc(self.reference),
+                "entities": doc_to_biluo_tags(self.reference),
                 "links": self._links_to_dict()
             },
             "token_annotation": {
@@ -204,7 +245,7 @@ cdef class Example:
                 "TAG": [t.tag_ for t in self.reference],
                 "LEMMA": [t.lemma_ for t in self.reference],
                 "POS": [t.pos_ for t in self.reference],
-                "MORPH": [t.morph_ for t in self.reference],
+                "MORPH": [str(t.morph) for t in self.reference],
                 "HEAD": [t.head.i for t in self.reference],
                 "DEP": [t.dep_ for t in self.reference],
                 "SENT_START": [int(bool(t.is_sent_start)) for t in self.reference]
@@ -221,7 +262,7 @@ cdef class Example:
     def split_sents(self):
         """ Split the token annotations into multiple Examples based on
         sent_starts and return a list of the new Examples"""
-        if not self.reference.is_sentenced:
+        if not self.reference.has_annotation("SENT_START"):
             return [self]
 
         align = self.alignment.y2x
@@ -295,17 +336,22 @@ def _add_entities_to_doc(doc, ner_data):
     elif isinstance(ner_data[0], tuple):
         return _add_entities_to_doc(
             doc,
-            biluo_tags_from_offsets(doc, ner_data)
+            offsets_to_biluo_tags(doc, ner_data)
         )
     elif isinstance(ner_data[0], str) or ner_data[0] is None:
         return _add_entities_to_doc(
             doc,
-            spans_from_biluo_tags(doc, ner_data)
+            biluo_tags_to_spans(doc, ner_data)
         )
     elif isinstance(ner_data[0], Span):
-        # Ugh, this is super messy. Really hard to set O entities
-        doc.ents = ner_data
-        doc.ents = [span for span in ner_data if span.label_]
+        entities = []
+        missing = []
+        for span in ner_data:
+            if span.label:
+                entities.append(span)
+            else:
+                missing.append(span)
+        doc.set_ents(entities, missing=missing)
     else:
         raise ValueError(Errors.E973)
 
@@ -363,7 +409,7 @@ def _fix_legacy_dict_data(example_dict):
     if "HEAD" in token_dict and "SENT_START" in token_dict:
         # If heads are set, we don't also redundantly specify SENT_START.
         token_dict.pop("SENT_START")
-        warnings.warn(Warnings.W092)
+        logger.debug(Warnings.W092)
     return {
         "token_annotation": token_dict,
         "doc_annotation": doc_dict
@@ -388,7 +434,7 @@ def _parse_ner_tags(biluo_or_offsets, vocab, words, spaces):
         # This is annoying but to convert the offsets we need a Doc
         # that has the target tokenization.
         reference = Doc(vocab, words=words, spaces=spaces)
-        biluo = biluo_tags_from_offsets(reference, biluo_or_offsets)
+        biluo = offsets_to_biluo_tags(reference, biluo_or_offsets)
     else:
         biluo = biluo_or_offsets
     ent_iobs = []

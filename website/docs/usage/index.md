@@ -8,10 +8,7 @@ menu:
   - ['Changelog', 'changelog']
 ---
 
-spaCy is compatible with **64-bit CPython 3.6+** and runs on **Unix/Linux**,
-**macOS/OS X** and **Windows**. The latest spaCy releases are available over
-[pip](https://pypi.python.org/pypi/spacy) and
-[conda](https://anaconda.org/conda-forge/spacy).
+## Quickstart {hidden="true"}
 
 > #### 📖 Looking for the old docs?
 >
@@ -19,21 +16,22 @@ spaCy is compatible with **64-bit CPython 3.6+** and runs on **Unix/Linux**,
 > website to [**v2.spacy.io**](https://v2.spacy.io/docs). To see what's changed
 > and how to migrate, see the [v3.0 guide](/usage/v3).
 
-## Quickstart {hidden="true"}
-
 import QuickstartInstall from 'widgets/quickstart-install.js'
 
-<QuickstartInstall title="Quickstart" id="quickstart" />
+<QuickstartInstall id="quickstart" />
 
 ## Installation instructions {#installation}
+
+spaCy is compatible with **64-bit CPython 3.6+** and runs on **Unix/Linux**,
+**macOS/OS X** and **Windows**. The latest spaCy releases are available over
+[pip](https://pypi.python.org/pypi/spacy) and
+[conda](https://anaconda.org/conda-forge/spacy).
 
 ### pip {#pip}
 
 Using pip, spaCy releases are available as source packages and binary wheels.
-
-```bash
-$ pip install -U spacy
-```
+Before you install spaCy and its dependencies, make sure that your `pip`,
+`setuptools` and `wheel` are up to date.
 
 > #### Download pipelines
 >
@@ -47,16 +45,10 @@ $ pip install -U spacy
 > >>> nlp = spacy.load("en_core_web_sm")
 > ```
 
-<Infobox variant="warning">
-
-To install additional data tables for lemmatization you can run
-`pip install spacy[lookups]` or install
-[`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data)
-separately. The lookups package is needed to provide normalization and
-lemmatization data for new models and to lemmatize in languages that don't yet
-come with trained pipelines and aren't powered by third-party libraries.
-
-</Infobox>
+```bash
+$ pip install -U pip setuptools wheel
+$ pip install -U %%SPACY_PKG_NAME%%SPACY_PKG_FLAGS
+```
 
 When using pip it is generally recommended to install packages in a virtual
 environment to avoid modifying system state:
@@ -64,8 +56,28 @@ environment to avoid modifying system state:
 ```bash
 $ python -m venv .env
 $ source .env/bin/activate
-$ pip install spacy
+$ pip install -U pip setuptools wheel
+$ pip install -U %%SPACY_PKG_NAME%%SPACY_PKG_FLAGS
 ```
+
+spaCy also lets you install extra dependencies by specifying the following
+keywords in brackets, e.g. `spacy[ja]` or `spacy[lookups,transformers]` (with
+multiple comma-separated extras). See the `[options.extras_require]` section in
+spaCy's [`setup.cfg`](%%GITHUB_SPACY/setup.cfg) for details on what's included.
+
+> #### Example
+>
+> ```bash
+> $ pip install %%SPACY_PKG_NAME[lookups,transformers]%%SPACY_PKG_FLAGS
+> ```
+
+| Name                   | Description                                                                                                                                                                                                                                                    |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lookups`              | Install [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) for data tables for lemmatization and lexeme normalization. The data is serialized with trained pipelines, so you only need this package if you want to train your own models. |
+| `transformers`         | Install [`spacy-transformers`](https://github.com/explosion/spacy-transformers). The package will be installed automatically when you install a transformer-based pipeline.                                                                                    |
+| `ray`                  | Install [`spacy-ray`](https://github.com/explosion/spacy-ray) to add CLI commands for [parallel training](/usage/training#parallel-training).                                                                                                                  |
+| `cuda`, ...            | Install spaCy with GPU support provided by [CuPy](https://cupy.chainer.org) for your given CUDA version. See the GPU [installation instructions](#gpu) for details and options.                                                                                |
+| `ja`, `ko`, `th`, `zh` | Install additional dependencies required for tokenization for the [languages](/usage/models#languages).                                                                                                                                                        |
 
 ### conda {#conda}
 
@@ -77,8 +89,8 @@ $ conda install -c conda-forge spacy
 ```
 
 For the feedstock including the build recipe and configuration, check out
-[this repository](https://github.com/conda-forge/spacy-feedstock). Improvements
-and pull requests to the recipe and setup are always appreciated.
+[this repository](https://github.com/conda-forge/spacy-feedstock). Note that we
+currently don't publish any [pre-releases](#changelog-pre) on conda.
 
 ### Upgrading spaCy {#upgrading}
 
@@ -105,17 +117,16 @@ are printed. It's recommended to run the command with `python -m` to make sure
 you're executing the correct version of spaCy.
 
 ```cli
-$ pip install -U spacy
+$ pip install -U %%SPACY_PKG_NAME%%SPACY_PKG_FLAGS
 $ python -m spacy validate
 ```
 
 ### Run spaCy with GPU {#gpu new="2.0.14"}
 
 As of v2.0, spaCy comes with neural network models that are implemented in our
-machine learning library, [Thinc](https://github.com/explosion/thinc). For GPU
-support, we've been grateful to use the work of Chainer's
-[CuPy](https://cupy.chainer.org) module, which provides a numpy-compatible
-interface for GPU arrays.
+machine learning library, [Thinc](https://thinc.ai). For GPU support, we've been
+grateful to use the work of Chainer's [CuPy](https://cupy.chainer.org) module,
+which provides a numpy-compatible interface for GPU arrays.
 
 spaCy can be installed on GPU by specifying `spacy[cuda]`, `spacy[cuda90]`,
 `spacy[cuda91]`, `spacy[cuda92]`, `spacy[cuda100]`, `spacy[cuda101]` or
@@ -124,7 +135,7 @@ specifier allows cupy to be installed via wheel, saving some compilation time.
 The specifiers should install [`cupy`](https://cupy.chainer.org).
 
 ```bash
-$ pip install -U spacy[cuda92]
+$ pip install -U %%SPACY_PKG_NAME[cuda92]%%SPACY_PKG_FLAGS
 ```
 
 Once you have a GPU-enabled installation, the best way to activate it is to call

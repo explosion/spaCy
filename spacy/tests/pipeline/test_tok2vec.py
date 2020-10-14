@@ -9,7 +9,7 @@ from spacy.tokens import Doc
 from spacy.training import Example
 from spacy import util
 from spacy.lang.en import English
-from .util import get_batch
+from ..util import get_batch
 
 from thinc.api import Config
 
@@ -24,9 +24,9 @@ def test_empty_doc():
     tok2vec = build_Tok2Vec_model(
         MultiHashEmbed(
             width=width,
-            rows=embed_size,
-            also_use_static_vectors=False,
-            also_embed_subwords=True,
+            rows=[embed_size, embed_size, embed_size, embed_size],
+            include_static_vectors=False,
+            attrs=["NORM", "PREFIX", "SUFFIX", "SHAPE"],
         ),
         MaxoutWindowEncoder(width=width, depth=4, window_size=1, maxout_pieces=3),
     )
@@ -44,9 +44,9 @@ def test_tok2vec_batch_sizes(batch_size, width, embed_size):
     tok2vec = build_Tok2Vec_model(
         MultiHashEmbed(
             width=width,
-            rows=embed_size,
-            also_use_static_vectors=False,
-            also_embed_subwords=True,
+            rows=[embed_size] * 4,
+            include_static_vectors=False,
+            attrs=["NORM", "PREFIX", "SUFFIX", "SHAPE"],
         ),
         MaxoutWindowEncoder(width=width, depth=4, window_size=1, maxout_pieces=3),
     )
@@ -61,10 +61,10 @@ def test_tok2vec_batch_sizes(batch_size, width, embed_size):
 @pytest.mark.parametrize(
     "width,embed_arch,embed_config,encode_arch,encode_config",
     [
-        (8, MultiHashEmbed, {"rows": 100, "also_embed_subwords": True, "also_use_static_vectors": False}, MaxoutWindowEncoder, {"window_size": 1, "maxout_pieces": 3, "depth": 2}),
-        (8, MultiHashEmbed, {"rows": 100, "also_embed_subwords": True, "also_use_static_vectors": False}, MishWindowEncoder, {"window_size": 1, "depth": 6}),
-        (8, CharacterEmbed, {"rows": 100, "nM": 64, "nC": 8}, MaxoutWindowEncoder, {"window_size": 1, "maxout_pieces": 3, "depth": 3}),
-        (8, CharacterEmbed, {"rows": 100, "nM": 16, "nC": 2}, MishWindowEncoder, {"window_size": 1, "depth": 3}),
+        (8, MultiHashEmbed, {"rows": [100, 100], "attrs": ["SHAPE", "LOWER"], "include_static_vectors": False}, MaxoutWindowEncoder, {"window_size": 1, "maxout_pieces": 3, "depth": 2}),
+        (8, MultiHashEmbed, {"rows": [100, 20], "attrs": ["ORTH", "PREFIX"], "include_static_vectors": False}, MishWindowEncoder, {"window_size": 1, "depth": 6}),
+        (8, CharacterEmbed, {"rows": 100, "nM": 64, "nC": 8, "include_static_vectors": False}, MaxoutWindowEncoder, {"window_size": 1, "maxout_pieces": 3, "depth": 3}),
+        (8, CharacterEmbed, {"rows": 100, "nM": 16, "nC": 2, "include_static_vectors": False}, MishWindowEncoder, {"window_size": 1, "depth": 3}),
     ],
 )
 # fmt: on
@@ -73,8 +73,7 @@ def test_tok2vec_configs(width, embed_arch, embed_config, encode_arch, encode_co
     encode_config["width"] = width
     docs = get_batch(3)
     tok2vec = build_Tok2Vec_model(
-        embed_arch(**embed_config),
-        encode_arch(**encode_config)
+        embed_arch(**embed_config), encode_arch(**encode_config)
     )
     tok2vec.initialize(docs)
     vectors, backprop = tok2vec.begin_update(docs)
@@ -88,7 +87,7 @@ def test_init_tok2vec():
     nlp = English()
     tok2vec = nlp.add_pipe("tok2vec")
     assert tok2vec.listeners == []
-    nlp.begin_training()
+    nlp.initialize()
     assert tok2vec.model.get_dim("nO")
 
 
@@ -119,9 +118,9 @@ cfg_string = """
     [components.tok2vec.model.embed]
     @architectures = "spacy.MultiHashEmbed.v1"
     width = ${components.tok2vec.model.encode.width}
-    rows = 2000
-    also_embed_subwords = true
-    also_use_static_vectors = false
+    rows = [2000, 1000, 1000, 1000]
+    attrs = ["NORM", "PREFIX", "SUFFIX", "SHAPE"]
+    include_static_vectors = false
 
     [components.tok2vec.model.encode]
     @architectures = "spacy.MaxoutWindowEncoder.v1"
@@ -139,7 +138,7 @@ TRAIN_DATA = [
 
 def test_tok2vec_listener():
     orig_config = Config().from_str(cfg_string)
-    nlp, config = util.load_model_from_config(orig_config, auto_fill=True, validate=True)
+    nlp = util.load_model_from_config(orig_config, auto_fill=True, validate=True)
     assert nlp.pipe_names == ["tok2vec", "tagger"]
     tagger = nlp.get_pipe("tagger")
     tok2vec = nlp.get_pipe("tok2vec")
@@ -154,7 +153,7 @@ def test_tok2vec_listener():
 
     # Check that the Tok2Vec component finds it listeners
     assert tok2vec.listeners == []
-    optimizer = nlp.begin_training(lambda: train_examples)
+    optimizer = nlp.initialize(lambda: train_examples)
     assert tok2vec.listeners == [tagger_tok2vec]
 
     for i in range(5):
@@ -169,3 +168,22 @@ def test_tok2vec_listener():
     nlp.select_pipes(disable="tok2vec")
     assert nlp.pipe_names == ["tagger"]
     nlp("Running the pipeline with the Tok2Vec component disabled.")
+
+
+def test_tok2vec_listener_callback():
+    orig_config = Config().from_str(cfg_string)
+    nlp = util.load_model_from_config(orig_config, auto_fill=True, validate=True)
+    assert nlp.pipe_names == ["tok2vec", "tagger"]
+    tagger = nlp.get_pipe("tagger")
+    tok2vec = nlp.get_pipe("tok2vec")
+    nlp._link_components()
+    docs = [nlp.make_doc("A random sentence")]
+    tok2vec.model.initialize(X=docs)
+    gold_array = [[1.0 for tag in ["V", "Z"]] for word in docs]
+    label_sample = [tagger.model.ops.asarray(gold_array, dtype="float32")]
+    tagger.model.initialize(X=docs, Y=label_sample)
+    docs = [nlp.make_doc("Another entirely random sentence")]
+    tok2vec.update([Example.from_dict(x, {}) for x in docs])
+    Y, get_dX = tagger.model.begin_update(docs)
+    # assure that the backprop call works (and doesn't hit a 'None' callback)
+    assert get_dX(Y) is not None

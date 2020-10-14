@@ -1,3 +1,6 @@
+import pytest
+from spacy.tokens.doc import Underscore
+
 import spacy
 from spacy.lang.en import English
 from spacy.tokens import Doc, DocBin
@@ -86,3 +89,26 @@ def test_serialize_doc_bin_unknown_spaces(en_vocab):
     assert re_doc1.text == "that 's "
     assert not re_doc2.has_unknown_spaces
     assert re_doc2.text == "that's"
+
+
+@pytest.mark.parametrize(
+    "writer_flag,reader_flag,reader_value",
+    [
+        (True, True, "bar"),
+        (True, False, "bar"),
+        (False, True, "nothing"),
+        (False, False, "nothing"),
+    ],
+)
+def test_serialize_custom_extension(en_vocab, writer_flag, reader_flag, reader_value):
+    """Test that custom extensions are correctly serialized in DocBin."""
+    Doc.set_extension("foo", default="nothing")
+    doc = Doc(en_vocab, words=["hello", "world"])
+    doc._.foo = "bar"
+    doc_bin_1 = DocBin(store_user_data=writer_flag)
+    doc_bin_1.add(doc)
+    doc_bin_bytes = doc_bin_1.to_bytes()
+    doc_bin_2 = DocBin(store_user_data=reader_flag).from_bytes(doc_bin_bytes)
+    doc_2 = list(doc_bin_2.get_docs(en_vocab))[0]
+    assert doc_2._.foo == reader_value
+    Underscore.doc_extensions = {}

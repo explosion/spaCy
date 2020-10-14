@@ -1,4 +1,4 @@
-from typing import Dict, Any, Union, List, Optional, Tuple, TYPE_CHECKING
+from typing import Dict, Any, Union, List, Optional, Tuple, Iterable, TYPE_CHECKING
 import sys
 import shutil
 from pathlib import Path
@@ -6,15 +6,18 @@ from wasabi import msg
 import srsly
 import hashlib
 import typer
-import subprocess
 from click import NoSuchOption
+from click.parser import split_arg_string
 from typer.main import get_command
 from contextlib import contextmanager
-from thinc.config import Config, ConfigValidationError
+from thinc.api import Config, ConfigValidationError, require_gpu
 from configparser import InterpolationError
+import os
 
 from ..schemas import ProjectConfigSchema, validate
-from ..util import import_file, run_command, make_tempdir, registry
+from ..util import import_file, run_command, make_tempdir, registry, logger
+from ..util import is_compatible_version, ENV_VARS
+from .. import about
 
 if TYPE_CHECKING:
     from pathy import Pathy  # noqa: F401
@@ -62,24 +65,41 @@ def setup_cli() -> None:
     command(prog_name=COMMAND)
 
 
-def parse_config_overrides(args: List[str]) -> Dict[str, Any]:
+def parse_config_overrides(
+    args: List[str], env_var: Optional[str] = ENV_VARS.CONFIG_OVERRIDES
+) -> Dict[str, Any]:
     """Generate a dictionary of config overrides based on the extra arguments
     provided on the CLI, e.g. --training.batch_size to override
     "training.batch_size". Arguments without a "." are considered invalid,
     since the config only allows top-level sections to exist.
 
-    args (List[str]): The extra arguments from the command line.
+    env_vars (Optional[str]): Optional environment variable to read from.
     RETURNS (Dict[str, Any]): The parsed dict, keyed by nested config setting.
     """
+    env_string = os.environ.get(env_var, "") if env_var else ""
+    env_overrides = _parse_overrides(split_arg_string(env_string))
+    cli_overrides = _parse_overrides(args, is_cli=True)
+    if cli_overrides:
+        keys = [k for k in cli_overrides if k not in env_overrides]
+        logger.debug(f"Config overrides from CLI: {keys}")
+    if env_overrides:
+        logger.debug(f"Config overrides from env variables: {list(env_overrides)}")
+    return {**cli_overrides, **env_overrides}
+
+
+def _parse_overrides(args: List[str], is_cli: bool = False) -> Dict[str, Any]:
     result = {}
     while args:
         opt = args.pop(0)
-        err = f"Invalid CLI argument '{opt}'"
+        err = f"Invalid config override '{opt}'"
         if opt.startswith("--"):  # new argument
             orig_opt = opt
             opt = opt.replace("--", "")
             if "." not in opt:
-                raise NoSuchOption(orig_opt)
+                if is_cli:
+                    raise NoSuchOption(orig_opt)
+                else:
+                    msg.fail(f"{err}: can't override top-level sections", exits=1)
             if "=" in opt:  # we have --opt=value
                 opt, value = opt.split("=", 1)
                 opt = opt.replace("-", "_")
@@ -98,7 +118,7 @@ def parse_config_overrides(args: List[str]) -> Dict[str, Any]:
             except ValueError:
                 result[opt] = str(value)
         else:
-            msg.fail(f"{err}: override option should start with --", exits=1)
+            msg.fail(f"{err}: name should start with --", exits=1)
     return result
 
 
@@ -123,6 +143,7 @@ def load_project_config(path: Path, interpolate: bool = True) -> Dict[str, Any]:
         msg.fail(invalid_err)
         print("\n".join(errors))
         sys.exit(1)
+    validate_project_version(config)
     validate_project_commands(config)
     # Make sure directories defined in config exist
     for subdir in config.get("directories", []):
@@ -146,6 +167,23 @@ def substitute_project_variables(config: Dict[str, Any], overrides: Dict = {}):
     cfg = Config({"project": config, key: config[key]})
     interpolated = cfg.interpolate()
     return dict(interpolated["project"])
+
+
+def validate_project_version(config: Dict[str, Any]) -> None:
+    """If the project defines a compatible spaCy version range, chec that it's
+    compatible with the current version of spaCy.
+
+    config (Dict[str, Any]): The loaded config.
+    """
+    spacy_version = config.get("spacy_version", None)
+    if spacy_version and not is_compatible_version(about.__version__, spacy_version):
+        err = (
+            f"The {PROJECT_FILE} specifies a spaCy version range ({spacy_version}) "
+            f"that's not compatible with the version of spaCy you're running "
+            f"({about.__version__}). You can edit version requirement in the "
+            f"{PROJECT_FILE} to load it, but the project may not run as expected."
+        )
+        msg.fail(err, exits=1)
 
 
 def validate_project_commands(config: Dict[str, Any]) -> None:
@@ -174,12 +212,15 @@ def validate_project_commands(config: Dict[str, Any]) -> None:
                 )
 
 
-def get_hash(data) -> str:
+def get_hash(data, exclude: Iterable[str] = tuple()) -> str:
     """Get the hash for a JSON-serializable object.
 
     data: The data to hash.
+    exclude (Iterable[str]): Top-level keys to exclude if data is a dict.
     RETURNS (str): The hash.
     """
+    if isinstance(data, dict):
+        data = {k: v for k, v in data.items() if k not in exclude}
     data_str = srsly.json_dumps(data, sort_keys=True).encode("utf8")
     return hashlib.md5(data_str).hexdigest()
 
@@ -207,32 +248,40 @@ def get_checksum(path: Union[Path, str]) -> str:
 def show_validation_error(
     file_path: Optional[Union[str, Path]] = None,
     *,
-    title: str = "Config validation error",
+    title: Optional[str] = None,
+    desc: str = "",
+    show_config: Optional[bool] = None,
     hint_fill: bool = True,
 ):
     """Helper to show custom config validation errors on the CLI.
 
     file_path (str / Path): Optional file path of config file, used in hints.
-    title (str): Title of the custom formatted error.
+    title (str): Override title of custom formatted error.
+    desc (str): Override description of custom formatted error.
+    show_config (bool): Whether to output the config the error refers to.
     hint_fill (bool): Show hint about filling config.
     """
     try:
         yield
-    except (ConfigValidationError, InterpolationError) as e:
-        msg.fail(title, spaced=True)
-        # TODO: This is kinda hacky and we should probably provide a better
-        # helper for this in Thinc
-        err_text = str(e).replace("Config validation error", "").strip()
-        print(err_text)
-        if hint_fill and "field required" in err_text:
+    except ConfigValidationError as e:
+        title = title if title is not None else e.title
+        if e.desc:
+            desc = f"{e.desc}" if not desc else f"{e.desc}\n\n{desc}"
+        # Re-generate a new error object with overrides
+        err = e.from_error(e, title="", desc=desc, show_config=show_config)
+        msg.fail(title)
+        print(err.text.strip())
+        if hint_fill and "value_error.missing" in err.error_types:
             config_path = file_path if file_path is not None else "config.cfg"
             msg.text(
                 "If your config contains missing values, you can run the 'init "
                 "fill-config' command to fill in all the defaults, if possible:",
                 spaced=True,
             )
-            print(f"{COMMAND} init fill-config {config_path} --base {config_path}\n")
+            print(f"{COMMAND} init fill-config {config_path} {config_path} \n")
         sys.exit(1)
+    except InterpolationError as e:
+        msg.fail("Config validation error", e, exits=1)
 
 
 def import_code(code_path: Optional[Union[Path, str]]) -> None:
@@ -246,18 +295,6 @@ def import_code(code_path: Optional[Union[Path, str]]) -> None:
             import_file("python_code", code_path)
         except Exception as e:
             msg.fail(f"Couldn't load Python code: {code_path}", e, exits=1)
-
-
-def get_sourced_components(config: Union[Dict[str, Any], Config]) -> List[str]:
-    """RETURNS (List[str]): All sourced components in the original config,
-        e.g. {"source": "en_core_web_sm"}. If the config contains a key
-        "factory", we assume it refers to a component factory.
-    """
-    return [
-        name
-        for name, cfg in config.get("components", {}).items()
-        if "factory" not in cfg and "source" in cfg
-    ]
 
 
 def upload_file(src: Path, dest: Union[str, "Pathy"]) -> None:
@@ -287,7 +324,7 @@ def download_file(src: Union[str, "Pathy"], dest: Path, *, force: bool = False) 
     if dest.exists() and not force:
         return None
     src = str(src)
-    with smart_open.open(src, mode="rb") as input_file:
+    with smart_open.open(src, mode="rb", ignore_ext=True) as input_file:
         with dest.open(mode="wb") as output_file:
             output_file.write(input_file.read())
 
@@ -307,7 +344,31 @@ def git_checkout(
     if dest.exists():
         msg.fail("Destination of checkout must not exist", exits=1)
     if not dest.parent.exists():
-        raise IOError("Parent of destination of checkout must exist")
+        msg.fail("Parent of destination of checkout must exist", exits=1)
+    if sparse and git_version >= (2, 22):
+        return git_sparse_checkout(repo, subpath, dest, branch)
+    elif sparse:
+        # Only show warnings if the user explicitly wants sparse checkout but
+        # the Git version doesn't support it
+        err_old = (
+            f"You're running an old version of Git (v{git_version[0]}.{git_version[1]}) "
+            f"that doesn't fully support sparse checkout yet."
+        )
+        err_unk = "You're running an unknown version of Git, so sparse checkout has been disabled."
+        msg.warn(
+            f"{err_unk if git_version == (0, 0) else err_old} "
+            f"This means that more files than necessary may be downloaded "
+            f"temporarily. To only download the files needed, make sure "
+            f"you're using Git v2.22 or above."
+        )
+    with make_tempdir() as tmp_dir:
+        cmd = f"git -C {tmp_dir} clone {repo} . -b {branch}"
+        run_command(cmd, capture=True)
+        # We need Path(name) to make sure we also support subdirectories
+        shutil.copytree(str(tmp_dir / Path(subpath)), str(dest))
+
+
+def git_sparse_checkout(repo, subpath, dest, branch):
     # We're using Git, partial clone and sparse checkout to
     # only clone the files we need
     # This ends up being RIDICULOUS. omg.
@@ -324,47 +385,31 @@ def git_checkout(
     # *that* we can do by path.
     # We're using Git and sparse checkout to only clone the files we need
     with make_tempdir() as tmp_dir:
-        supports_sparse = git_version >= (2, 22)
-        use_sparse = supports_sparse and sparse
         # This is the "clone, but don't download anything" part.
-        cmd = f"git clone {repo} {tmp_dir} --no-checkout --depth 1 " f"-b {branch} "
-        if use_sparse:
-            cmd += f"--filter=blob:none"  # <-- The key bit
-        # Only show warnings if the user explicitly wants sparse checkout but
-        # the Git version doesn't support it
-        elif sparse:
-            err_old = (
-                f"You're running an old version of Git (v{git_version[0]}.{git_version[1]}) "
-                f"that doesn't fully support sparse checkout yet."
-            )
-            err_unk = "You're running an unknown version of Git, so sparse checkout has been disabled."
-            msg.warn(
-                f"{err_unk if git_version == (0, 0) else err_old} "
-                f"This means that more files than necessary may be downloaded "
-                f"temporarily. To only download the files needed, make sure "
-                f"you're using Git v2.22 or above."
-            )
-        try_run_command(cmd)
+        cmd = (
+            f"git clone {repo} {tmp_dir} --no-checkout --depth 1 "
+            f"-b {branch} --filter=blob:none"
+        )
+        run_command(cmd)
         # Now we need to find the missing filenames for the subpath we want.
         # Looking for this 'rev-list' command in the git --help? Hah.
-        cmd = f"git -C {tmp_dir} rev-list --objects --all {'--missing=print ' if use_sparse else ''} -- {subpath}"
-        ret = try_run_command(cmd)
-        git_repo = _from_http_to_git(repo)
+        cmd = f"git -C {tmp_dir} rev-list --objects --all --missing=print -- {subpath}"
+        ret = run_command(cmd, capture=True)
+        git_repo = _http_to_git(repo)
         # Now pass those missings into another bit of git internals
         missings = " ".join([x[1:] for x in ret.stdout.split() if x.startswith("?")])
-        if use_sparse and not missings:
+        if not missings:
             err = (
                 f"Could not find any relevant files for '{subpath}'. "
                 f"Did you specify a correct and complete path within repo '{repo}' "
                 f"and branch {branch}?"
             )
             msg.fail(err, exits=1)
-        if use_sparse:
-            cmd = f"git -C {tmp_dir} fetch-pack {git_repo} {missings}"
-            try_run_command(cmd)
+        cmd = f"git -C {tmp_dir} fetch-pack {git_repo} {missings}"
+        run_command(cmd, capture=True)
         # And finally, we can checkout our subpath
         cmd = f"git -C {tmp_dir} checkout {branch} {subpath}"
-        try_run_command(cmd)
+        run_command(cmd, capture=True)
         # We need Path(name) to make sure we also support subdirectories
         shutil.move(str(tmp_dir / Path(subpath)), str(dest))
 
@@ -378,7 +423,7 @@ def get_git_version(
     RETURNS (Tuple[int, int]): The version as a (major, minor) tuple. Returns
         (0, 0) if the version couldn't be determined.
     """
-    ret = try_run_command(["git", "--version"], error=error)
+    ret = run_command("git --version", capture=True)
     stdout = ret.stdout.strip()
     if not stdout or not stdout.startswith("git version"):
         return (0, 0)
@@ -386,24 +431,7 @@ def get_git_version(
     return (int(version[0]), int(version[1]))
 
 
-def try_run_command(
-    cmd: Union[str, List[str]], error: str = "Could not run command"
-) -> subprocess.CompletedProcess:
-    """Try running a command and raise an error if it fails.
-
-    cmd (Union[str, List[str]]): The command to run.
-    error (str): The error message.
-    RETURNS (CompletedProcess): The completed process if the command ran.
-    """
-    try:
-        return run_command(cmd, capture=True)
-    except subprocess.CalledProcessError as e:
-        msg.fail(error)
-        print(cmd)
-        sys.exit(1)
-
-
-def _from_http_to_git(repo: str) -> str:
+def _http_to_git(repo: str) -> str:
     if repo.startswith("http://"):
         repo = repo.replace(r"http://", r"https://")
     if repo.startswith(r"https://"):
@@ -439,3 +467,12 @@ def string_to_list(value: str, intify: bool = False) -> Union[List[str], List[in
             p = int(p)
         result.append(p)
     return result
+
+
+def setup_gpu(use_gpu: int) -> None:
+    """Configure the GPU and log info."""
+    if use_gpu >= 0:
+        msg.info(f"Using GPU: {use_gpu}")
+        require_gpu(use_gpu)
+    else:
+        msg.info("Using CPU")

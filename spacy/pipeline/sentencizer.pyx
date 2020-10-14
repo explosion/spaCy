@@ -15,7 +15,6 @@ from .. import util
     "sentencizer",
     assigns=["token.is_sent_start", "doc.sents"],
     default_config={"punct_chars": None},
-    scores=["sents_p", "sents_r", "sents_f"],
     default_score_weights={"sents_f": 1.0, "sents_p": 0.0, "sents_r": 0.0},
 )
 def make_sentencizer(
@@ -58,9 +57,6 @@ class Sentencizer(Pipe):
             self.punct_chars = set(punct_chars)
         else:
             self.punct_chars = set(self.default_punct_chars)
-
-    def begin_training(self, get_examples, pipeline=None, sgd=None):
-        pass
 
     def __call__(self, doc):
         """Apply the sentencizer to a Doc and set Token.is_sent_start.
@@ -205,9 +201,3 @@ class Sentencizer(Pipe):
         cfg = srsly.read_json(path)
         self.punct_chars = set(cfg.get("punct_chars", self.default_punct_chars))
         return self
-
-    def get_loss(self, examples, scores):
-        raise NotImplementedError
-
-    def add_label(self, label):
-        raise NotImplementedError

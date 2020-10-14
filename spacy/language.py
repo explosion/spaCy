@@ -1,5 +1,5 @@
 from typing import Optional, Any, Dict, Callable, Iterable, Union, List, Pattern
-from typing import Tuple, Iterator
+from typing import Tuple
 from dataclasses import dataclass
 import random
 import itertools
@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from copy import deepcopy
 from pathlib import Path
 import warnings
-from thinc.api import get_current_ops, Config, require_gpu, Optimizer
+from thinc.api import Model, get_current_ops, Config, Optimizer
 import srsly
 import multiprocessing as mp
 from itertools import chain, cycle
@@ -18,8 +18,9 @@ from .tokens.underscore import Underscore
 from .vocab import Vocab, create_vocab
 from .pipe_analysis import validate_attrs, analyze_pipes, print_pipe_analysis
 from .training import Example, validate_examples
+from .training.initialize import init_vocab, init_tok2vec
 from .scorer import Scorer
-from .util import create_default_optimizer, registry, SimpleFrozenList
+from .util import registry, SimpleFrozenList, _pipe
 from .util import SimpleFrozenDict, combine_score_weights, CONFIG_SECTION_ORDER
 from .lang.tokenizer_exceptions import URL_MATCH, BASE_EXCEPTIONS
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
@@ -27,10 +28,12 @@ from .lang.punctuation import TOKENIZER_INFIXES
 from .tokens import Doc
 from .tokenizer import Tokenizer
 from .errors import Errors, Warnings
-from .schemas import ConfigSchema
+from .schemas import ConfigSchema, ConfigSchemaNlp, ConfigSchemaInit
+from .schemas import ConfigSchemaPretrain, validate_init_settings
 from .git_info import GIT_VERSION
 from . import util
 from . import about
+from .lookups import load_lookups
 
 
 # This is the base config will all settings (training etc.)
@@ -84,6 +87,13 @@ def create_tokenizer() -> Callable[["Language"], Tokenizer]:
         )
 
     return tokenizer_factory
+
+
+@registry.misc("spacy.LookupsDataLoader.v1")
+def load_lookups_data(lang, tables):
+    util.logger.debug(f"Loading lookups from spacy-lookups-data: {tables}")
+    lookups = load_lookups(lang=lang, tables=tables)
+    return lookups
 
 
 class Language:
@@ -148,12 +158,7 @@ class Language:
             raise ValueError(Errors.E918.format(vocab=vocab, vocab_type=type(Vocab)))
         if vocab is True:
             vectors_name = meta.get("vectors", {}).get("name")
-            vocab = create_vocab(
-                self.lang,
-                self.Defaults,
-                vectors_name=vectors_name,
-                load_data=self._config["nlp"]["load_vocab_data"],
-            )
+            vocab = create_vocab(self.lang, self.Defaults, vectors_name=vectors_name)
         else:
             if (self.lang and vocab.lang) and (self.lang != vocab.lang):
                 raise ValueError(Errors.E150.format(nlp=self.lang, vocab=vocab.lang))
@@ -163,11 +168,10 @@ class Language:
         self._components = []
         self._disabled = set()
         self.max_length = max_length
-        self.resolved = {}
         # Create the default tokenizer from the default config
         if not create_tokenizer:
             tokenizer_cfg = {"tokenizer": self._config["nlp"]["tokenizer"]}
-            create_tokenizer = registry.make_from_config(tokenizer_cfg)["tokenizer"]
+            create_tokenizer = registry.resolve(tokenizer_cfg)["tokenizer"]
         self.tokenizer = create_tokenizer(self)
 
     def __init_subclass__(cls, **kwargs):
@@ -245,9 +249,12 @@ class Language:
         self._config["nlp"]["pipeline"] = list(self.component_names)
         self._config["nlp"]["disabled"] = list(self.disabled)
         self._config["components"] = pipeline
-        if not self._config["training"].get("score_weights"):
-            combined_score_weights = combine_score_weights(score_weights)
-            self._config["training"]["score_weights"] = combined_score_weights
+        # We're merging the existing score weights back into the combined
+        # weights to make sure we're preserving custom settings in the config
+        # but also reflect updates (e.g. new components added)
+        prev_weights = self._config["training"].get("score_weights", {})
+        combined_score_weights = combine_score_weights(score_weights, prev_weights)
+        self._config["training"]["score_weights"] = combined_score_weights
         if not srsly.is_json_serializable(self._config):
             raise ValueError(Errors.E961.format(config=self._config))
         return self._config
@@ -409,7 +416,6 @@ class Language:
         assigns: Iterable[str] = SimpleFrozenList(),
         requires: Iterable[str] = SimpleFrozenList(),
         retokenizes: bool = False,
-        scores: Iterable[str] = SimpleFrozenList(),
         default_score_weights: Dict[str, float] = SimpleFrozenDict(),
         func: Optional[Callable] = None,
     ) -> Callable:
@@ -427,12 +433,11 @@ class Language:
             e.g. "token.ent_id". Used for pipeline analyis.
         retokenizes (bool): Whether the component changes the tokenization.
             Used for pipeline analysis.
-        scores (Iterable[str]): All scores set by the component if it's trainable,
-            e.g. ["ents_f", "ents_r", "ents_p"].
         default_score_weights (Dict[str, float]): The scores to report during
             training, and their default weight towards the final score used to
             select the best model. Weights should sum to 1.0 per component and
-            will be combined and normalized for the whole pipeline.
+            will be combined and normalized for the whole pipeline. If None,
+            the score won't be shown in the logs or be weighted.
         func (Optional[Callable]): Factory function if not used as a decorator.
 
         DOCS: https://nightly.spacy.io/api/language#factory
@@ -463,7 +468,7 @@ class Language:
             if "nlp" not in arg_names or "name" not in arg_names:
                 raise ValueError(Errors.E964.format(name=name))
             # Officially register the factory so we can later call
-            # registry.make_from_config and refer to it in the config as
+            # registry.resolve and refer to it in the config as
             # @factories = "spacy.Language.xyz". We use the class name here so
             # different classes can have different factories.
             registry.factories.register(internal_name, func=factory_func)
@@ -472,7 +477,7 @@ class Language:
                 default_config=default_config,
                 assigns=validate_attrs(assigns),
                 requires=validate_attrs(requires),
-                scores=scores,
+                scores=list(default_score_weights.keys()),
                 default_score_weights=default_score_weights,
                 retokenizes=retokenizes,
             )
@@ -646,8 +651,9 @@ class Language:
         cfg = {factory_name: config}
         # We're calling the internal _fill here to avoid constructing the
         # registered functions twice
-        resolved, filled = registry.resolve(cfg, validate=validate)
-        filled = Config(filled[factory_name])
+        resolved = registry.resolve(cfg, validate=validate)
+        filled = registry.fill({"cfg": cfg[factory_name]}, validate=validate)["cfg"]
+        filled = Config(filled)
         filled["factory"] = factory_name
         filled.pop("@factories", None)
         # Remove the extra values we added because we don't want to keep passing
@@ -837,7 +843,7 @@ class Language:
         *,
         config: Dict[str, Any] = SimpleFrozenDict(),
         validate: bool = True,
-    ) -> None:
+    ) -> Callable[[Doc], Doc]:
         """Replace a component in the pipeline.
 
         name (str): Name of the component to replace.
@@ -846,6 +852,7 @@ class Language:
             component. Will be merged with default config, if available.
         validate (bool): Whether to validate the component config against the
             arguments and types expected by the factory.
+        RETURNS (Callable[[Doc], Doc]): The new pipeline component.
 
         DOCS: https://nightly.spacy.io/api/language#replace_pipe
         """
@@ -860,9 +867,11 @@ class Language:
         self.remove_pipe(name)
         if not len(self._components) or pipe_index == len(self._components):
             # we have no components to insert before/after, or we're replacing the last component
-            self.add_pipe(factory_name, name=name, config=config, validate=validate)
+            return self.add_pipe(
+                factory_name, name=name, config=config, validate=validate
+            )
         else:
-            self.add_pipe(
+            return self.add_pipe(
                 factory_name,
                 name=name,
                 before=pipe_index,
@@ -890,6 +899,10 @@ class Language:
         self._components[i] = (new_name, self._components[i][1])
         self._pipe_meta[new_name] = self._pipe_meta.pop(old_name)
         self._pipe_configs[new_name] = self._pipe_configs.pop(old_name)
+        # Make sure [initialize] config is adjusted
+        if old_name in self._config["initialize"]["components"]:
+            init_cfg = self._config["initialize"]["components"].pop(old_name)
+            self._config["initialize"]["components"][new_name] = init_cfg
 
     def remove_pipe(self, name: str) -> Tuple[str, Callable[[Doc], Doc]]:
         """Remove a component from the pipeline.
@@ -906,6 +919,9 @@ class Language:
         # because factory may be used for something else
         self._pipe_meta.pop(name)
         self._pipe_configs.pop(name)
+        # Make sure name is removed from the [initialize] config
+        if name in self._config["initialize"]["components"]:
+            self._config["initialize"]["components"].pop(name)
         # Make sure the name is also removed from the set of disabled components
         if name in self.disabled:
             self._disabled.remove(name)
@@ -966,8 +982,9 @@ class Language:
                 raise ValueError(Errors.E003.format(component=type(proc), name=name))
             try:
                 doc = proc(doc, **component_cfg.get(name, {}))
-            except KeyError:
-                raise ValueError(Errors.E109.format(name=name)) from None
+            except KeyError as e:
+                # This typically happens if a component is not initialized
+                raise ValueError(Errors.E109.format(name=name)) from e
             if doc is None:
                 raise ValueError(Errors.E005.format(name=name))
         return doc
@@ -1017,6 +1034,9 @@ class Language:
                     )
                 )
             disable = to_disable
+        # DisabledPipes will restore the pipes in 'disable' when it's done, so we need to exclude
+        # those pipes that were already disabled.
+        disable = [d for d in disable if d not in self._disabled]
         return DisabledPipes(self, disable)
 
     def make_doc(self, text: str) -> Doc:
@@ -1061,7 +1081,7 @@ class Language:
         validate_examples(examples, "Language.update")
         if sgd is None:
             if self._optimizer is None:
-                self._optimizer = create_default_optimizer()
+                self._optimizer = self.create_optimizer()
             sgd = self._optimizer
         if component_cfg is None:
             component_cfg = {}
@@ -1077,10 +1097,11 @@ class Language:
             for name, proc in self.pipeline:
                 if (
                     name not in exclude
-                    and hasattr(proc, "model")
+                    and hasattr(proc, "is_trainable")
+                    and proc.is_trainable
                     and proc.model not in (True, False, None)
                 ):
-                    proc.model.finish_update(sgd)
+                    proc.finish_update(sgd)
         return losses
 
     def rehearse(
@@ -1119,7 +1140,7 @@ class Language:
         validate_examples(examples, "Language.rehearse")
         if sgd is None:
             if self._optimizer is None:
-                self._optimizer = create_default_optimizer()
+                self._optimizer = self.create_optimizer()
             sgd = self._optimizer
         pipes = list(self.pipeline)
         random.shuffle(pipes)
@@ -1149,61 +1170,75 @@ class Language:
         get_examples: Optional[Callable[[], Iterable[Example]]] = None,
         *,
         sgd: Optional[Optimizer] = None,
-        device: int = -1,
+    ) -> Optimizer:
+        warnings.warn(Warnings.W089, DeprecationWarning)
+        return self.initialize(get_examples, sgd=sgd)
+
+    def initialize(
+        self,
+        get_examples: Optional[Callable[[], Iterable[Example]]] = None,
+        *,
+        sgd: Optional[Optimizer] = None,
     ) -> Optimizer:
         """Initialize the pipe for training, using data examples if available.
 
         get_examples (Callable[[], Iterable[Example]]): Optional function that
             returns gold-standard Example objects.
-        sgd (thinc.api.Optimizer): Optional optimizer. Will be created with
-            create_optimizer if it doesn't exist.
+        sgd (Optional[Optimizer]): An optimizer to use for updates. If not
+            provided, will be created using the .create_optimizer() method.
         RETURNS (thinc.api.Optimizer): The optimizer.
 
-        DOCS: https://nightly.spacy.io/api/language#begin_training
+        DOCS: https://nightly.spacy.io/api/language#initialize
         """
         if get_examples is None:
             util.logger.debug(
-                "No 'get_examples' callback provided to 'Language.begin_training', creating dummy examples"
+                "No 'get_examples' callback provided to 'Language.initialize', creating dummy examples"
             )
             doc = Doc(self.vocab, words=["x", "y", "z"])
             get_examples = lambda: [Example.from_dict(doc, {})]
-        # Populate vocab
         if not hasattr(get_examples, "__call__"):
-            err = Errors.E930.format(name="Language", obj=type(get_examples))
-            raise ValueError(err)
-        valid_examples = False
-        for example in get_examples():
-            if not isinstance(example, Example):
-                err = Errors.E978.format(
-                    name="Language.begin_training", types=type(example)
-                )
-                raise ValueError(err)
-            else:
-                valid_examples = True
-            for word in [t.text for t in example.reference]:
-                _ = self.vocab[word]  # noqa: F841
-        if not valid_examples:
-            err = Errors.E930.format(name="Language", obj="empty list")
-            raise ValueError(err)
-        if device >= 0:  # TODO: do we need this here?
-            require_gpu(device)
-            if self.vocab.vectors.data.shape[1] >= 1:
-                ops = get_current_ops()
-                self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
-        if sgd is None:
-            sgd = create_default_optimizer()
-        self._optimizer = sgd
+            err = Errors.E930.format(
+                method="Language.initialize", obj=type(get_examples)
+            )
+            raise TypeError(err)
+        # Make sure the config is interpolated so we can resolve subsections
+        config = self.config.interpolate()
+        # These are the settings provided in the [initialize] block in the config
+        I = registry.resolve(config["initialize"], schema=ConfigSchemaInit)
+        init_vocab(
+            self, data=I["vocab_data"], lookups=I["lookups"], vectors=I["vectors"]
+        )
+        pretrain_cfg = config.get("pretraining")
+        if pretrain_cfg:
+            P = registry.resolve(pretrain_cfg, schema=ConfigSchemaPretrain)
+            init_tok2vec(self, P, I)
+        if self.vocab.vectors.data.shape[1] >= 1:
+            ops = get_current_ops()
+            self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
+        if hasattr(self.tokenizer, "initialize"):
+            tok_settings = validate_init_settings(
+                self.tokenizer.initialize,
+                I["tokenizer"],
+                section="tokenizer",
+                name="tokenizer",
+            )
+            self.tokenizer.initialize(get_examples, nlp=self, **tok_settings)
         for name, proc in self.pipeline:
-            if hasattr(proc, "begin_training"):
-                proc.begin_training(
-                    get_examples, pipeline=self.pipeline, sgd=self._optimizer
+            if hasattr(proc, "initialize"):
+                p_settings = I["components"].get(name, {})
+                p_settings = validate_init_settings(
+                    proc.initialize, p_settings, section="components", name=name
                 )
+                proc.initialize(get_examples, nlp=self, **p_settings)
         self._link_components()
+        self._optimizer = sgd
+        if sgd is not None:
+            self._optimizer = sgd
+        elif self._optimizer is None:
+            self._optimizer = self.create_optimizer()
         return self._optimizer
 
-    def resume_training(
-        self, *, sgd: Optional[Optimizer] = None, device: int = -1
-    ) -> Optimizer:
+    def resume_training(self, *, sgd: Optional[Optimizer] = None) -> Optimizer:
         """Continue training a pretrained model.
 
         Create and return an optimizer, and initialize "rehearsal" for any pipeline
@@ -1212,22 +1247,20 @@ class Language:
         rehearsal, collect samples of text you want the models to retain performance
         on, and call nlp.rehearse() with a batch of Example objects.
 
-        sgd (Optional[Optimizer]): An optimizer.
         RETURNS (Optimizer): The optimizer.
 
         DOCS: https://nightly.spacy.io/api/language#resume_training
         """
-        if device >= 0:  # TODO: do we need this here?
-            require_gpu(device)
-            ops = get_current_ops()
-            if self.vocab.vectors.data.shape[1] >= 1:
-                self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
-        if sgd is None:
-            sgd = create_default_optimizer()
-        self._optimizer = sgd
+        ops = get_current_ops()
+        if self.vocab.vectors.data.shape[1] >= 1:
+            self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
         for name, proc in self.pipeline:
             if hasattr(proc, "_rehearsal_model"):
                 proc._rehearsal_model = deepcopy(proc.model)
+        if sgd is not None:
+            self._optimizer = sgd
+        elif self._optimizer is None:
+            self._optimizer = self.create_optimizer()
         return self._optimizer
 
     def evaluate(
@@ -1273,10 +1306,7 @@ class Language:
         for name, pipe in self.pipeline:
             kwargs = component_cfg.get(name, {})
             kwargs.setdefault("batch_size", batch_size)
-            if not hasattr(pipe, "pipe"):
-                docs = _pipe(docs, pipe, kwargs)
-            else:
-                docs = pipe.pipe(docs, **kwargs)
+            docs = _pipe(docs, pipe, kwargs)
         # iterate over the final generator
         if len(self.pipeline):
             docs = list(docs)
@@ -1288,6 +1318,11 @@ class Language:
         n_words = sum(len(doc) for doc in docs)
         results["speed"] = n_words / (end_time - start_time)
         return results
+
+    def create_optimizer(self):
+        """Create an optimizer, usually using the [training.optimizer] config."""
+        subconfig = {"optimizer": self.config["training"]["optimizer"]}
+        return registry.resolve(subconfig)["optimizer"]
 
     @contextmanager
     def use_params(self, params: Optional[dict]):
@@ -1378,11 +1413,7 @@ class Language:
             kwargs = component_cfg.get(name, {})
             # Allow component_cfg to overwrite the top-level kwargs.
             kwargs.setdefault("batch_size", batch_size)
-            if hasattr(proc, "pipe"):
-                f = functools.partial(proc.pipe, **kwargs)
-            else:
-                # Apply the function, but yield the doc
-                f = functools.partial(_pipe, proc=proc, kwargs=kwargs)
+            f = functools.partial(_pipe, proc=proc, kwargs=kwargs)
             pipes.append(f)
 
         if n_process != 1:
@@ -1448,10 +1479,15 @@ class Language:
         """Register 'listeners' within pipeline components, to allow them to
         effectively share weights.
         """
+        # I had though, "Why do we do this inside the Language object? Shouldn't
+        # it be the tok2vec/transformer/etc's job?
+        # The problem is we need to do it during deserialization...And the
+        # components don't receive the pipeline then. So this does have to be
+        # here :(
         for i, (name1, proc1) in enumerate(self.pipeline):
             if hasattr(proc1, "find_listeners"):
-                for name2, proc2 in self.pipeline[i:]:
-                    if hasattr(proc2, "model"):
+                for name2, proc2 in self.pipeline[i + 1 :]:
+                    if isinstance(getattr(proc2, "model", None), Model):
                         proc1.find_listeners(proc2.model)
 
     @classmethod
@@ -1492,7 +1528,7 @@ class Language:
             ).merge(config)
         if "nlp" not in config:
             raise ValueError(Errors.E985.format(config=config))
-        config_lang = config["nlp"]["lang"]
+        config_lang = config["nlp"].get("lang")
         if config_lang is not None and config_lang != cls.lang:
             raise ValueError(
                 Errors.E958.format(
@@ -1509,15 +1545,19 @@ class Language:
         config = util.copy_config(config)
         orig_pipeline = config.pop("components", {})
         config["components"] = {}
-        resolved, filled = registry.resolve(
-            config, validate=validate, schema=ConfigSchema
-        )
+        if auto_fill:
+            filled = registry.fill(config, validate=validate, schema=ConfigSchema)
+        else:
+            filled = config
         filled["components"] = orig_pipeline
         config["components"] = orig_pipeline
-        create_tokenizer = resolved["nlp"]["tokenizer"]
-        before_creation = resolved["nlp"]["before_creation"]
-        after_creation = resolved["nlp"]["after_creation"]
-        after_pipeline_creation = resolved["nlp"]["after_pipeline_creation"]
+        resolved_nlp = registry.resolve(
+            filled["nlp"], validate=validate, schema=ConfigSchemaNlp
+        )
+        create_tokenizer = resolved_nlp["tokenizer"]
+        before_creation = resolved_nlp["before_creation"]
+        after_creation = resolved_nlp["after_creation"]
+        after_pipeline_creation = resolved_nlp["after_pipeline_creation"]
         lang_cls = cls
         if before_creation is not None:
             lang_cls = before_creation(cls)
@@ -1578,7 +1618,6 @@ class Language:
         disabled_pipes = [*config["nlp"]["disabled"], *disable]
         nlp._disabled = set(p for p in disabled_pipes if p not in exclude)
         nlp.config = filled if auto_fill else config
-        nlp.resolved = resolved
         if after_pipeline_creation is not None:
             nlp = after_pipeline_creation(nlp)
             if not isinstance(nlp, cls):
@@ -1771,19 +1810,6 @@ class DisabledPipes(list):
                 raise ValueError(Errors.E008.format(name=name))
             self.nlp.enable_pipe(name)
         self[:] = []
-
-
-def _pipe(
-    examples: Iterable[Example], proc: Callable[[Doc], Doc], kwargs: Dict[str, Any]
-) -> Iterator[Example]:
-    # We added some args for pipe that __call__ doesn't expect.
-    kwargs = dict(kwargs)
-    for arg in ["batch_size"]:
-        if arg in kwargs:
-            kwargs.pop(arg)
-    for eg in examples:
-        eg = proc(eg, **kwargs)
-        yield eg
 
 
 def _apply_pipes(

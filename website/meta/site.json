@@ -12,6 +12,7 @@
     "companyUrl": "https://explosion.ai",
     "repo": "explosion/spaCy",
     "modelsRepo": "explosion/spacy-models",
+    "projectsRepo": "explosion/projects/tree/v3",
     "social": {
         "twitter": "spacy_io",
         "github": "explosion"

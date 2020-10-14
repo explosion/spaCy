@@ -230,6 +230,106 @@ def test_matcher_set_value_operator(en_vocab):
     assert len(matches) == 1
 
 
+def test_matcher_subset_value_operator(en_vocab):
+    matcher = Matcher(en_vocab)
+    pattern = [{"MORPH": {"IS_SUBSET": ["Feat=Val", "Feat2=Val2"]}}]
+    matcher.add("M", [pattern])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    assert len(matcher(doc)) == 3
+    doc[0].set_morph("Feat=Val")
+    assert len(matcher(doc)) == 3
+    doc[0].set_morph("Feat=Val|Feat2=Val2")
+    assert len(matcher(doc)) == 3
+    doc[0].set_morph("Feat=Val|Feat2=Val2|Feat3=Val3")
+    assert len(matcher(doc)) == 2
+    doc[0].set_morph("Feat=Val|Feat2=Val2|Feat3=Val3|Feat4=Val4")
+    assert len(matcher(doc)) == 2
+
+    # IS_SUBSET acts like "IN" for attrs other than MORPH
+    matcher = Matcher(en_vocab)
+    pattern = [{"TAG": {"IS_SUBSET": ["A", "B"]}}]
+    matcher.add("M", [pattern])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    doc[0].tag_ = "A"
+    assert len(matcher(doc)) == 1
+
+    # IS_SUBSET with an empty list matches nothing
+    matcher = Matcher(en_vocab)
+    pattern = [{"TAG": {"IS_SUBSET": []}}]
+    matcher.add("M", [pattern])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    doc[0].tag_ = "A"
+    assert len(matcher(doc)) == 0
+
+
+def test_matcher_superset_value_operator(en_vocab):
+    matcher = Matcher(en_vocab)
+    pattern = [{"MORPH": {"IS_SUPERSET": ["Feat=Val", "Feat2=Val2", "Feat3=Val3"]}}]
+    matcher.add("M", [pattern])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    assert len(matcher(doc)) == 0
+    doc[0].set_morph("Feat=Val|Feat2=Val2")
+    assert len(matcher(doc)) == 0
+    doc[0].set_morph("Feat=Val|Feat2=Val2|Feat3=Val3")
+    assert len(matcher(doc)) == 1
+    doc[0].set_morph("Feat=Val|Feat2=Val2|Feat3=Val3|Feat4=Val4")
+    assert len(matcher(doc)) == 1
+
+    # IS_SUPERSET with more than one value only matches for MORPH
+    matcher = Matcher(en_vocab)
+    pattern = [{"TAG": {"IS_SUPERSET": ["A", "B"]}}]
+    matcher.add("M", [pattern])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    doc[0].tag_ = "A"
+    assert len(matcher(doc)) == 0
+
+    # IS_SUPERSET with one value is the same as ==
+    matcher = Matcher(en_vocab)
+    pattern = [{"TAG": {"IS_SUPERSET": ["A"]}}]
+    matcher.add("M", [pattern])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    doc[0].tag_ = "A"
+    assert len(matcher(doc)) == 1
+
+    # IS_SUPERSET with an empty value matches everything
+    matcher = Matcher(en_vocab)
+    pattern = [{"TAG": {"IS_SUPERSET": []}}]
+    matcher.add("M", [pattern])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    doc[0].tag_ = "A"
+    assert len(matcher(doc)) == 3
+
+
+def test_matcher_morph_handling(en_vocab):
+    # order of features in pattern doesn't matter
+    matcher = Matcher(en_vocab)
+    pattern1 = [{"MORPH": {"IN": ["Feat1=Val1|Feat2=Val2"]}}]
+    pattern2 = [{"MORPH": {"IN": ["Feat2=Val2|Feat1=Val1"]}}]
+    matcher.add("M", [pattern1])
+    matcher.add("N", [pattern2])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    assert len(matcher(doc)) == 0
+
+    doc[0].set_morph("Feat2=Val2|Feat1=Val1")
+    assert len(matcher(doc)) == 2
+    doc[0].set_morph("Feat1=Val1|Feat2=Val2")
+    assert len(matcher(doc)) == 2
+
+    # multiple values are split
+    matcher = Matcher(en_vocab)
+    pattern1 = [{"MORPH": {"IS_SUPERSET": ["Feat1=Val1", "Feat2=Val2"]}}]
+    pattern2 = [{"MORPH": {"IS_SUPERSET": ["Feat1=Val1", "Feat1=Val3", "Feat2=Val2"]}}]
+    matcher.add("M", [pattern1])
+    matcher.add("N", [pattern2])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    assert len(matcher(doc)) == 0
+
+    doc[0].set_morph("Feat2=Val2,Val3|Feat1=Val1")
+    assert len(matcher(doc)) == 1
+    doc[0].set_morph("Feat1=Val1,Val3|Feat2=Val2")
+    assert len(matcher(doc)) == 2
+
+
 def test_matcher_regex(en_vocab):
     matcher = Matcher(en_vocab)
     pattern = [{"ORTH": {"REGEX": r"(?:a|an)"}}]
@@ -301,11 +401,14 @@ def test_matcher_basic_check(en_vocab):
 
 def test_attr_pipeline_checks(en_vocab):
     doc1 = Doc(en_vocab, words=["Test"])
-    doc1.is_parsed = True
+    doc1[0].dep_ = "ROOT"
     doc2 = Doc(en_vocab, words=["Test"])
-    doc2.is_tagged = True
+    doc2[0].tag_ = "TAG"
+    doc2[0].pos_ = "X"
+    doc2[0].set_morph("Feat=Val")
+    doc2[0].lemma_ = "LEMMA"
     doc3 = Doc(en_vocab, words=["Test"])
-    # DEP requires is_parsed
+    # DEP requires DEP
     matcher = Matcher(en_vocab)
     matcher.add("TEST", [[{"DEP": "a"}]])
     matcher(doc1)
@@ -313,7 +416,10 @@ def test_attr_pipeline_checks(en_vocab):
         matcher(doc2)
     with pytest.raises(ValueError):
         matcher(doc3)
-    # TAG, POS, LEMMA require is_tagged
+    # errors can be suppressed if desired
+    matcher(doc2, allow_missing=True)
+    matcher(doc3, allow_missing=True)
+    # TAG, POS, LEMMA require those values
     for attr in ("TAG", "POS", "LEMMA"):
         matcher = Matcher(en_vocab)
         matcher.add("TEST", [[{attr: "a"}]])

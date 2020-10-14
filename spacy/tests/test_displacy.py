@@ -1,15 +1,13 @@
 import pytest
 from spacy import displacy
 from spacy.displacy.render import DependencyRenderer, EntityRenderer
-from spacy.tokens import Span
+from spacy.tokens import Span, Doc
 from spacy.lang.fa import Persian
-
-from .util import get_doc
 
 
 def test_displacy_parse_ents(en_vocab):
     """Test that named entities on a Doc are converted into displaCy's format."""
-    doc = get_doc(en_vocab, words=["But", "Google", "is", "starting", "from", "behind"])
+    doc = Doc(en_vocab, words=["But", "Google", "is", "starting", "from", "behind"])
     doc.ents = [Span(doc, 1, 2, label=doc.vocab.strings["ORG"])]
     ents = displacy.parse_ents(doc)
     assert isinstance(ents, dict)
@@ -20,11 +18,11 @@ def test_displacy_parse_ents(en_vocab):
 def test_displacy_parse_deps(en_vocab):
     """Test that deps and tags on a Doc are converted into displaCy's format."""
     words = ["This", "is", "a", "sentence"]
-    heads = [1, 0, 1, -2]
+    heads = [1, 1, 3, 1]
     pos = ["DET", "VERB", "DET", "NOUN"]
     tags = ["DT", "VBZ", "DT", "NN"]
     deps = ["nsubj", "ROOT", "det", "attr"]
-    doc = get_doc(en_vocab, words=words, heads=heads, pos=pos, tags=tags, deps=deps)
+    doc = Doc(en_vocab, words=words, heads=heads, pos=pos, tags=tags, deps=deps)
     deps = displacy.parse_deps(doc)
     assert isinstance(deps, dict)
     assert deps["words"] == [
@@ -53,7 +51,7 @@ def test_displacy_invalid_arcs():
 
 def test_displacy_spans(en_vocab):
     """Test that displaCy can render Spans."""
-    doc = get_doc(en_vocab, words=["But", "Google", "is", "starting", "from", "behind"])
+    doc = Doc(en_vocab, words=["But", "Google", "is", "starting", "from", "behind"])
     doc.ents = [Span(doc, 1, 2, label=doc.vocab.strings["ORG"])]
     html = displacy.render(doc[1:4], style="ent")
     assert html.startswith("<div")
@@ -70,9 +68,9 @@ def test_displacy_rtl():
     # These are (likely) wrong, but it's just for testing
     pos = ["PRO", "ADV", "N_PL", "V_SUB"]  # needs to match lang.fa.tag_map
     deps = ["foo", "bar", "foo", "baz"]
-    heads = [1, 0, 1, -2]
+    heads = [1, 0, 3, 1]
     nlp = Persian()
-    doc = get_doc(nlp.vocab, words=words, tags=pos, heads=heads, deps=deps)
+    doc = Doc(nlp.vocab, words=words, tags=pos, heads=heads, deps=deps)
     doc.ents = [Span(doc, 1, 3, label="TEST")]
     html = displacy.render(doc, page=True, style="dep")
     assert "direction: rtl" in html
@@ -90,7 +88,7 @@ def test_displacy_render_wrapper(en_vocab):
         return "TEST" + html + "TEST"
 
     displacy.set_render_wrapper(wrapper)
-    doc = get_doc(en_vocab, words=["But", "Google", "is", "starting", "from", "behind"])
+    doc = Doc(en_vocab, words=["But", "Google", "is", "starting", "from", "behind"])
     doc.ents = [Span(doc, 1, 2, label=doc.vocab.strings["ORG"])]
     html = displacy.render(doc, style="ent")
     assert html.startswith("TEST<div")

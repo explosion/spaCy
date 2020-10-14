@@ -20,13 +20,13 @@ It also orchestrates training and serialization.
 
 | Name                        | Description                                                                                                                                             |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`Language`](/api/language) | Processing class that turns text into `Doc` objects. Different languages implement their own subclasses of it. The variable is typically called `nlp`.  |
 | [`Doc`](/api/doc)           | A container for accessing linguistic annotations.                                                                                                       |
+| [`DocBin`](/api/docbin)     | A collection of `Doc` objects for efficient binary serialization. Also used for [training data](/api/data-formats#binary-training).                     |
+| [`Example`](/api/example)   | A collection of training annotations, containing two `Doc` objects: the reference data and the predictions.                                             |
+| [`Language`](/api/language) | Processing class that turns text into `Doc` objects. Different languages implement their own subclasses of it. The variable is typically called `nlp`.  |
+| [`Lexeme`](/api/lexeme)     | An entry in the vocabulary. It's a word type with no context, as opposed to a word token. It therefore has no part-of-speech tag, dependency parse etc. |
 | [`Span`](/api/span)         | A slice from a `Doc` object.                                                                                                                            |
 | [`Token`](/api/token)       | An individual token — i.e. a word, punctuation symbol, whitespace, etc.                                                                                 |
-| [`Lexeme`](/api/lexeme)     | An entry in the vocabulary. It's a word type with no context, as opposed to a word token. It therefore has no part-of-speech tag, dependency parse etc. |
-| [`Example`](/api/example)   | A collection of training annotations, containing two `Doc` objects: the reference data and the predictions.                                             |
-| [`DocBin`](/api/docbin)     | A collection of `Doc` objects for efficient binary serialization. Also used for [training data](/api/data-formats#binary-training).                     |
 
 ### Processing pipeline {#architecture-pipeline}
 
@@ -42,22 +42,22 @@ components for different language processing tasks and also allows adding
 
 | Name                                            | Description                                                                                 |
 | ----------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| [`Tokenizer`](/api/tokenizer)                   | Segment raw text and create `Doc` objects from the words.                                   |
-| [`Tok2Vec`](/api/tok2vec)                       | Apply a "token-to-vector" model and set its outputs.                                        |
-| [`Transformer`](/api/transformer)               | Use a transformer model and set its outputs.                                                |
-| [`Lemmatizer`](/api/lemmatizer)                 | Determine the base forms of words.                                                          |
-| [`Morphologizer`](/api/morphologizer)           | Predict morphological features and coarse-grained part-of-speech tags.                      |
-| [`Tagger`](/api/tagger)                         | Predict part-of-speech tags.                                                                |
 | [`AttributeRuler`](/api/attributeruler)         | Set token attributes using matcher rules.                                                   |
 | [`DependencyParser`](/api/dependencyparser)     | Predict syntactic dependencies.                                                             |
+| [`EntityLinker`](/api/entitylinker)             | Disambiguate named entities to nodes in a knowledge base.                                   |
 | [`EntityRecognizer`](/api/entityrecognizer)     | Predict named entities, e.g. persons or products.                                           |
 | [`EntityRuler`](/api/entityruler)               | Add entity spans to the `Doc` using token-based rules or exact phrase matches.              |
-| [`EntityLinker`](/api/entitylinker)             | Disambiguate named entities to nodes in a knowledge base.                                   |
-| [`TextCategorizer`](/api/textcategorizer)       | Predict categories or labels over the whole document.                                       |
-| [`Sentencizer`](/api/sentencizer)               | Implement rule-based sentence boundary detection that doesn't require the dependency parse. |
+| [`Lemmatizer`](/api/lemmatizer)                 | Determine the base forms of words.                                                          |
+| [`Morphologizer`](/api/morphologizer)           | Predict morphological features and coarse-grained part-of-speech tags.                      |
 | [`SentenceRecognizer`](/api/sentencerecognizer) | Predict sentence boundaries.                                                                |
+| [`Sentencizer`](/api/sentencizer)               | Implement rule-based sentence boundary detection that doesn't require the dependency parse. |
+| [`Tagger`](/api/tagger)                         | Predict part-of-speech tags.                                                                |
+| [`TextCategorizer`](/api/textcategorizer)       | Predict categories or labels over the whole document.                                       |
+| [`Tok2Vec`](/api/tok2vec)                       | Apply a "token-to-vector" model and set its outputs.                                        |
+| [`Tokenizer`](/api/tokenizer)                   | Segment raw text and create `Doc` objects from the words.                                   |
+| [`TrainablePipe`](/api/pipe)                    | Class that all trainable pipeline components inherit from.                                  |
+| [`Transformer`](/api/transformer)               | Use a transformer model and set its outputs.                                                |
 | [Other functions](/api/pipeline-functions)      | Automatically apply something to the `Doc`, e.g. to merge spans of tokens.                  |
-| [`Pipe`](/api/pipe)                             | Base class that all trainable pipeline components inherit from.                             |
 
 ### Matchers {#architecture-matchers}
 
@@ -65,22 +65,22 @@ Matchers help you find and extract information from [`Doc`](/api/doc) objects
 based on match patterns describing the sequences you're looking for. A matcher
 operates on a `Doc` and gives you access to the matched tokens **in context**.
 
-| Name                                          | Description                                                                                                                                                                         |
-| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`Matcher`](/api/matcher)                     | Match sequences of tokens, based on pattern rules, similar to regular expressions.                                                                                                  |
-| [`PhraseMatcher`](/api/phrasematcher)         | Match sequences of tokens based on phrases.                                                                                                                                         |
-| [`DependencyMatcher`](/api/dependencymatcher) | Match sequences of tokens based on dependency trees using the [Semgrex syntax](https://nlp.stanford.edu/nlp/javadoc/javanlp/edu/stanford/nlp/semgraph/semgrex/SemgrexPattern.html). |
+| Name                                          | Description                                                                                                                                                                        |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`DependencyMatcher`](/api/dependencymatcher) | Match sequences of tokens based on dependency trees using [Semgrex operators](https://nlp.stanford.edu/nlp/javadoc/javanlp/edu/stanford/nlp/semgraph/semgrex/SemgrexPattern.html). |
+| [`Matcher`](/api/matcher)                     | Match sequences of tokens, based on pattern rules, similar to regular expressions.                                                                                                 |
+| [`PhraseMatcher`](/api/phrasematcher)         | Match sequences of tokens based on phrases.                                                                                                                                        |
 
 ### Other classes {#architecture-other}
 
-| Name                                             | Description                                                                                                      |
-| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
-| [`Vocab`](/api/vocab)                            | The shared vocabulary that stores strings and gives you access to [`Lexeme`](/api/lexeme) objects.               |
-| [`StringStore`](/api/stringstore)                | Map strings to and from hash values.                                                                             |
-| [`Vectors`](/api/vectors)                        | Container class for vector data keyed by string.                                                                 |
-| [`Lookups`](/api/lookups)                        | Container for convenient access to large lookup tables and dictionaries.                                         |
-| [`Morphology`](/api/morphology)                  | Assign linguistic features like lemmas, noun case, verb tense etc. based on the word and its part-of-speech tag. |
-| [`MorphAnalysis`](/api/morphology#morphanalysis) | A morphological analysis.                                                                                        |
-| [`KnowledgeBase`](/api/kb)                       | Storage for entities and aliases of a knowledge base for entity linking.                                         |
-| [`Scorer`](/api/scorer)                          | Compute evaluation scores.                                                                                       |
-| [`Corpus`](/api/corpus)                          | Class for managing annotated corpora for training and evaluation data.                                           |
+| Name                                             | Description                                                                                        |
+| ------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| [`Corpus`](/api/corpus)                          | Class for managing annotated corpora for training and evaluation data.                             |
+| [`KnowledgeBase`](/api/kb)                       | Storage for entities and aliases of a knowledge base for entity linking.                           |
+| [`Lookups`](/api/lookups)                        | Container for convenient access to large lookup tables and dictionaries.                           |
+| [`MorphAnalysis`](/api/morphology#morphanalysis) | A morphological analysis.                                                                          |
+| [`Morphology`](/api/morphology)                  | Store morphological analyses and map them to and from hash values.                                 |
+| [`Scorer`](/api/scorer)                          | Compute evaluation scores.                                                                         |
+| [`StringStore`](/api/stringstore)                | Map strings to and from hash values.                                                               |
+| [`Vectors`](/api/vectors)                        | Container class for vector data keyed by string.                                                   |
+| [`Vocab`](/api/vocab)                            | The shared vocabulary that stores strings and gives you access to [`Lexeme`](/api/lexeme) objects. |

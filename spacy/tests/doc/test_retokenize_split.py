@@ -2,13 +2,11 @@ import pytest
 from spacy.vocab import Vocab
 from spacy.tokens import Doc, Token
 
-from ..util import get_doc
-
 
 def test_doc_retokenize_split(en_vocab):
     words = ["LosAngeles", "start", "."]
-    heads = [1, 1, 0]
-    doc = get_doc(en_vocab, words=words, heads=heads)
+    heads = [1, 2, 2]
+    doc = Doc(en_vocab, words=words, heads=heads)
     assert len(doc) == 3
     assert len(str(doc)) == 19
     assert doc[0].head.text == "start"
@@ -29,11 +27,11 @@ def test_doc_retokenize_split(en_vocab):
     assert doc[0].text == "Los"
     assert doc[0].head.text == "Angeles"
     assert doc[0].idx == 0
-    assert doc[0].morph_ == "Number=Sing"
+    assert str(doc[0].morph) == "Number=Sing"
     assert doc[1].idx == 3
     assert doc[1].text == "Angeles"
     assert doc[1].head.text == "start"
-    assert doc[1].morph_ == "Number=Sing"
+    assert str(doc[1].morph) == "Number=Sing"
     assert doc[2].text == "start"
     assert doc[2].head.text == "."
     assert doc[3].text == "."
@@ -88,11 +86,11 @@ def test_doc_retokenize_spans_sentence_update_after_split(en_vocab):
     # fmt: off
     words = ["StewartLee", "is", "a", "stand", "up", "comedian", ".", "He",
              "lives", "in", "England", "and", "loves", "JoePasquale", "."]
-    heads = [1, 0, 1, 2, -1, -4, -5, 1, 0, -1, -1, -3, -4, 1, -2]
+    heads = [1, 1, 3, 5, 3, 1, 1, 8, 8, 8, 9, 8, 8, 14, 12]
     deps = ["nsubj", "ROOT", "det", "amod", "prt", "attr", "punct", "nsubj",
             "ROOT", "prep", "pobj", "cc", "conj", "compound", "punct"]
     # fmt: on
-    doc = get_doc(en_vocab, words=words, heads=heads, deps=deps)
+    doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
     sent1, sent2 = list(doc.sents)
     init_len = len(sent1)
     init_len2 = len(sent2)
@@ -198,3 +196,26 @@ def test_doc_retokenizer_realloc(en_vocab):
         token = doc[0]
         heads = [(token, 0)] * len(token)
         retokenizer.split(doc[token.i], list(token.text), heads=heads)
+
+
+def test_doc_retokenizer_split_norm(en_vocab):
+    """#6060: reset norm in split"""
+    text = "The quick brownfoxjumpsoverthe lazy dog w/ white spots"
+    doc = Doc(en_vocab, words=text.split())
+
+    # Set custom norm on the w/ token.
+    doc[5].norm_ = "with"
+
+    # Retokenize to split out the words in the token at doc[2].
+    token = doc[2]
+    with doc.retokenize() as retokenizer:
+        retokenizer.split(
+            token,
+            ["brown", "fox", "jumps", "over", "the"],
+            heads=[(token, idx) for idx in range(5)],
+        )
+
+    assert doc[9].text == "w/"
+    assert doc[9].norm_ == "with"
+    assert doc[5].text == "over"
+    assert doc[5].norm_ == "over"

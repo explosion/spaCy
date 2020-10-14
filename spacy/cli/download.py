@@ -88,7 +88,6 @@ def get_compatibility() -> dict:
 
 
 def get_version(model: str, comp: dict) -> str:
-    model = get_base_version(model)
     if model not in comp:
         msg.fail(
             f"No compatible package found for '{model}' (spaCy v{about.__version__})",

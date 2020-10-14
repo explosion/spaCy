@@ -158,20 +158,21 @@ The available token pattern keys correspond to a number of
 [`Token` attributes](/api/token#attributes). The supported attributes for
 rule-based matching are:
 
-| Attribute                              |  Description                                                                                                              |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `ORTH`                                 | The exact verbatim text of a token. ~~str~~                                                                               |
-| `TEXT` <Tag variant="new">2.1</Tag>    | The exact verbatim text of a token. ~~str~~                                                                               |
-| `LOWER`                                | The lowercase form of the token text. ~~str~~                                                                             |
-|  `LENGTH`                              | The length of the token text. ~~int~~                                                                                     |
-|  `IS_ALPHA`, `IS_ASCII`, `IS_DIGIT`    | Token text consists of alphabetic characters, ASCII characters, digits. ~~bool~~                                          |
-|  `IS_LOWER`, `IS_UPPER`, `IS_TITLE`    | Token text is in lowercase, uppercase, titlecase. ~~bool~~                                                                |
-|  `IS_PUNCT`, `IS_SPACE`, `IS_STOP`     | Token is punctuation, whitespace, stop word. ~~bool~~                                                                     |
-|  `LIKE_NUM`, `LIKE_URL`, `LIKE_EMAIL`  | Token text resembles a number, URL, email. ~~bool~~                                                                       |
-|  `POS`, `TAG`, `DEP`, `LEMMA`, `SHAPE` | The token's simple and extended part-of-speech tag, dependency label, lemma, shape. ~~str~~                               |
-| `ENT_TYPE`                             | The token's entity label. ~~str~~                                                                                         |
-| `_` <Tag variant="new">2.1</Tag>       | Properties in [custom extension attributes](/usage/processing-pipelines#custom-components-attributes). ~~Dict[str, Any]~~ |
-| `OP`                                   | [Operator or quantifier](#quantifiers) to determine how often to match a token pattern. ~~str~~                           |
+| Attribute                                       |  Description                                                                                                              |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `ORTH`                                          | The exact verbatim text of a token. ~~str~~                                                                               |
+| `TEXT` <Tag variant="new">2.1</Tag>             | The exact verbatim text of a token. ~~str~~                                                                               |
+| `LOWER`                                         | The lowercase form of the token text. ~~str~~                                                                             |
+|  `LENGTH`                                       | The length of the token text. ~~int~~                                                                                     |
+|  `IS_ALPHA`, `IS_ASCII`, `IS_DIGIT`             | Token text consists of alphabetic characters, ASCII characters, digits. ~~bool~~                                          |
+|  `IS_LOWER`, `IS_UPPER`, `IS_TITLE`             | Token text is in lowercase, uppercase, titlecase. ~~bool~~                                                                |
+|  `IS_PUNCT`, `IS_SPACE`, `IS_STOP`              | Token is punctuation, whitespace, stop word. ~~bool~~                                                                     |
+|  `IS_SENT_START`                                | Token is start of sentence. ~~bool~~                                                                                      |
+|  `LIKE_NUM`, `LIKE_URL`, `LIKE_EMAIL`           | Token text resembles a number, URL, email. ~~bool~~                                                                       |
+|  `POS`, `TAG`, `MORPH`, `DEP`, `LEMMA`, `SHAPE` | The token's simple and extended part-of-speech tag, morphological analysis, dependency label, lemma, shape. ~~str~~       |
+| `ENT_TYPE`                                      | The token's entity label. ~~str~~                                                                                         |
+| `_` <Tag variant="new">2.1</Tag>                | Properties in [custom extension attributes](/usage/processing-pipelines#custom-components-attributes). ~~Dict[str, Any]~~ |
+| `OP`                                            | [Operator or quantifier](#quantifiers) to determine how often to match a token pattern. ~~str~~                           |
 
 <Accordion title="Does it matter if the attribute names are uppercase or lowercase?">
 
@@ -236,6 +237,8 @@ following rich comparison attributes are available:
 | -------------------------- | ------------------------------------------------------------------------------------------------------- |
 | `IN`                       | Attribute value is member of a list. ~~Any~~                                                            |
 | `NOT_IN`                   | Attribute value is _not_ member of a list. ~~Any~~                                                      |
+| `ISSUBSET`                 | Attribute values (for `MORPH`) are a subset of a list. ~~Any~~                                          |
+| `ISSUPERSET`               | Attribute values (for `MORPH`) are a superset of a list. ~~Any~~                                        |
 | `==`, `>=`, `<=`, `>`, `<` | Attribute value is equal, greater or equal, smaller or equal, greater or smaller. ~~Union[int, float]~~ |
 
 #### Regular expressions {#regex new="2.1"}
@@ -835,7 +838,7 @@ nlp = spacy.load("en_core_web_sm")
 matcher = Matcher(nlp.vocab)
 
 # Add pattern for valid hashtag, i.e. '#' plus any ASCII token
-matcher.add("HASHTAG", None, [{"ORTH": "#"}, {"IS_ASCII": True}])
+matcher.add("HASHTAG", [[{"ORTH": "#"}, {"IS_ASCII": True}]])
 
 # Register token extension
 Token.set_extension("is_hashtag", default=False)

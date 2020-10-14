@@ -8,6 +8,7 @@ import re
 from pathlib import Path
 import thinc
 from thinc.api import NumpyOps, get_current_ops, Adam, Config, Optimizer
+from thinc.api import ConfigValidationError
 import functools
 import itertools
 import numpy.random
@@ -56,17 +57,23 @@ if TYPE_CHECKING:
 
 
 OOV_RANK = numpy.iinfo(numpy.uint64).max
+DEFAULT_OOV_PROB = -20
 LEXEME_NORM_LANGS = ["da", "de", "el", "en", "id", "lb", "pt", "ru", "sr", "ta", "th"]
 
 # Default order of sections in the config.cfg. Not all sections needs to exist,
 # and additional sections are added at the end, in alphabetical order.
 # fmt: off
-CONFIG_SECTION_ORDER = ["paths", "variables", "system", "nlp", "components", "training", "pretraining"]
+CONFIG_SECTION_ORDER = ["paths", "variables", "system", "nlp", "components", "corpora", "training", "pretraining", "initialize"]
 # fmt: on
 
 
-logging.basicConfig()
+logging.basicConfig(format="%(message)s")
 logger = logging.getLogger("spacy")
+
+
+class ENV_VARS:
+    CONFIG_OVERRIDES = "SPACY_CONFIG_OVERRIDES"
+    PROJECT_USE_GIT_VERSION = "SPACY_PROJECT_USE_GIT_VERSION"
 
 
 class registry(thinc.registry):
@@ -81,12 +88,13 @@ class registry(thinc.registry):
     callbacks = catalogue.create("spacy", "callbacks")
     batchers = catalogue.create("spacy", "batchers", entry_points=True)
     readers = catalogue.create("spacy", "readers", entry_points=True)
+    augmenters = catalogue.create("spacy", "augmenters", entry_points=True)
     loggers = catalogue.create("spacy", "loggers", entry_points=True)
     # These are factories registered via third-party packages and the
     # spacy_factories entry point. This registry only exists so we can easily
     # load them via the entry points. The "true" factories are added via the
     # Language.factory decorator (in the spaCy code base and user code) and those
-    # are the factories used to initialize components via registry.make_from_config.
+    # are the factories used to initialize components via registry.resolve.
     _entry_point_factories = catalogue.create("spacy", "factories", entry_points=True)
     factories = catalogue.create("spacy", "internal_factories")
     # This is mostly used to get a list of all installed models in the current
@@ -239,20 +247,6 @@ def get_module_path(module: ModuleType) -> Path:
     return Path(sys.modules[module.__module__].__file__).parent
 
 
-def load_vectors_into_model(
-    nlp: "Language", name: Union[str, Path], *, add_strings=True
-) -> None:
-    """Load word vectors from an installed model or path into a model instance."""
-    vectors_nlp = load_model(name)
-    nlp.vocab.vectors = vectors_nlp.vocab.vectors
-    if add_strings:
-        # I guess we should add the strings from the vectors_nlp model?
-        # E.g. if someone does a similarity query, they might expect the strings.
-        for key in nlp.vocab.vectors.key2row:
-            if key in vectors_nlp.vocab.strings:
-                nlp.vocab.strings.add(vectors_nlp.vocab.strings[key])
-
-
 def load_model(
     name: Union[str, Path],
     *,
@@ -343,9 +337,7 @@ def load_model_from_path(
         meta = get_model_meta(model_path)
     config_path = model_path / "config.cfg"
     config = load_config(config_path, overrides=dict_to_dot(config))
-    nlp, _ = load_model_from_config(
-        config, vocab=vocab, disable=disable, exclude=exclude
-    )
+    nlp = load_model_from_config(config, vocab=vocab, disable=disable, exclude=exclude)
     return nlp.from_disk(model_path, exclude=exclude)
 
 
@@ -357,7 +349,7 @@ def load_model_from_config(
     exclude: Iterable[str] = SimpleFrozenList(),
     auto_fill: bool = False,
     validate: bool = True,
-) -> Tuple["Language", Config]:
+) -> "Language":
     """Create an nlp object from a config. Expects the full config file including
     a section "nlp" containing the settings for the nlp object.
 
@@ -390,7 +382,42 @@ def load_model_from_config(
         auto_fill=auto_fill,
         validate=validate,
     )
-    return nlp, nlp.resolved
+    return nlp
+
+
+def resolve_dot_names(config: Config, dot_names: List[Optional[str]]) -> Tuple[Any]:
+    """Resolve one or more "dot notation" names, e.g. corpora.train.
+    The paths could point anywhere into the config, so we don't know which
+    top-level section we'll be looking within.
+
+    We resolve the whole top-level section, although we could resolve less --
+    we could find the lowest part of the tree.
+    """
+    # TODO: include schema?
+    resolved = {}
+    output = []
+    errors = []
+    for name in dot_names:
+        if name is None:
+            output.append(name)
+        else:
+            section = name.split(".")[0]
+            # We want to avoid resolving the same thing twice
+            if section not in resolved:
+                if registry.is_promise(config[section]):
+                    # Otherwise we can't resolve [corpus] if it's a promise
+                    result = registry.resolve({"config": config[section]})["config"]
+                else:
+                    result = registry.resolve(config[section])
+                resolved[section] = result
+            try:
+                output.append(dot_to_object(resolved, name))
+            except KeyError:
+                msg = f"not a valid section reference: {name}"
+                errors.append({"loc": name.split("."), "msg": msg})
+    if errors:
+        raise ConfigValidationError(config=config, errors=errors)
+    return tuple(output)
 
 
 def load_model_from_init_py(
@@ -462,7 +489,7 @@ def load_config_from_str(
     RETURNS (Config): The loaded config.
     """
     return Config(section_order=CONFIG_SECTION_ORDER).from_str(
-        text, overrides=overrides, interpolate=interpolate,
+        text, overrides=overrides, interpolate=interpolate
     )
 
 
@@ -558,6 +585,33 @@ def get_base_version(version: str) -> str:
     return Version(version).base_version
 
 
+def get_minor_version(version: str) -> Optional[str]:
+    """Get the major + minor version (without patch or prerelease identifiers).
+
+    version (str): The version.
+    RETURNS (str): The major + minor version or None if version is invalid.
+    """
+    try:
+        v = Version(version)
+    except (TypeError, InvalidVersion):
+        return None
+    return f"{v.major}.{v.minor}"
+
+
+def is_minor_version_match(version_a: str, version_b: str) -> bool:
+    """Compare two versions and check if they match in major and minor, without
+    patch or prerelease identifiers. Used internally for compatibility checks
+    that should be insensitive to patch releases.
+
+    version_a (str): The first version
+    version_b (str): The second version.
+    RETURNS (bool): Whether the versions match.
+    """
+    a = get_minor_version(version_a)
+    b = get_minor_version(version_b)
+    return a is not None and b is not None and a == b
+
+
 def load_meta(path: Union[str, Path]) -> Dict[str, Any]:
     """Load a model meta.json from a path and validate its contents.
 
@@ -568,7 +622,7 @@ def load_meta(path: Union[str, Path]) -> Dict[str, Any]:
     if not path.parent.exists():
         raise IOError(Errors.E052.format(path=path.parent))
     if not path.exists() or not path.is_file():
-        raise IOError(Errors.E053.format(path=path, name="meta.json"))
+        raise IOError(Errors.E053.format(path=path.parent, name="meta.json"))
     meta = srsly.read_json(path)
     for setting in ["lang", "name", "version"]:
         if setting not in meta or not meta[setting]:
@@ -651,8 +705,8 @@ def join_command(command: List[str]) -> str:
 def run_command(
     command: Union[str, List[str]],
     *,
-    capture: bool = False,
     stdin: Optional[Any] = None,
+    capture: bool = False,
 ) -> Optional[subprocess.CompletedProcess]:
     """Run a command on the command line as a subprocess. If the subprocess
     returns a non-zero exit code, a system exit is performed.
@@ -660,33 +714,46 @@ def run_command(
     command (str / List[str]): The command. If provided as a string, the
         string will be split using shlex.split.
     stdin (Optional[Any]): stdin to read from or None.
-    capture (bool): Whether to capture the output.
+    capture (bool): Whether to capture the output and errors. If False,
+        the stdout and stderr will not be redirected, and if there's an error,
+        sys.exit will be called with the returncode. You should use capture=False
+        when you want to turn over execution to the command, and capture=True
+        when you want to run the command more like a function.
     RETURNS (Optional[CompletedProcess]): The process object.
     """
     if isinstance(command, str):
-        command = split_command(command)
+        cmd_list = split_command(command)
+        cmd_str = command
+    else:
+        cmd_list = command
+        cmd_str = " ".join(command)
     try:
         ret = subprocess.run(
-            command,
+            cmd_list,
             env=os.environ.copy(),
             input=stdin,
             encoding="utf8",
-            check=True,
+            check=False,
             stdout=subprocess.PIPE if capture else None,
-            stderr=subprocess.PIPE if capture else None,
+            stderr=subprocess.STDOUT if capture else None,
         )
     except FileNotFoundError:
+        # Indicates the *command* wasn't found, it's an error before the command
+        # is run.
         raise FileNotFoundError(
-            Errors.E970.format(str_command=" ".join(command), tool=command[0])
+            Errors.E970.format(str_command=cmd_str, tool=cmd_list[0])
         ) from None
-    except subprocess.CalledProcessError as e:
-        # We don't want a duplicate traceback here so we're making sure the
-        # CalledProcessError isn't re-raised. We also print both the string
-        # message and the stderr, in case the error only has one of them.
-        print(e.stderr)
-        print(e)
-        sys.exit(1)
-    if ret.returncode != 0:
+    if ret.returncode != 0 and capture:
+        message = f"Error running command:\n\n{cmd_str}\n\n"
+        message += f"Subprocess exited with status {ret.returncode}"
+        if ret.stdout is not None:
+            message += f"\n\nProcess log (stdout and stderr):\n\n"
+            message += ret.stdout
+        error = subprocess.SubprocessError(message)
+        error.ret = ret
+        error.command = cmd_str
+        raise error
+    elif ret.returncode != 0:
         sys.exit(ret.returncode)
     return ret
 
@@ -754,7 +821,7 @@ def get_object_name(obj: Any) -> str:
     obj (Any): The Python object, typically a function or class.
     RETURNS (str): A human-readable name.
     """
-    if hasattr(obj, "name"):
+    if hasattr(obj, "name") and obj.name is not None:
         return obj.name
     if hasattr(obj, "__name__"):
         return obj.__name__
@@ -951,7 +1018,7 @@ def filter_spans(spans: Iterable["Span"]) -> List["Span"]:
         # Check for end - 1 here because boundaries are inclusive
         if span.start not in seen_tokens and span.end - 1 not in seen_tokens:
             result.append(span)
-        seen_tokens.update(range(span.start, span.end))
+            seen_tokens.update(range(span.start, span.end))
     result = sorted(result, key=lambda span: span.start)
     return result
 
@@ -1026,7 +1093,6 @@ def import_file(name: str, loc: Union[str, Path]) -> ModuleType:
     loc (str / Path): Path to the file.
     RETURNS: The loaded module.
     """
-    loc = str(loc)
     spec = importlib.util.spec_from_file_location(name, str(loc))
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -1181,22 +1247,44 @@ def get_arg_names(func: Callable) -> List[str]:
     return list(set([*argspec.args, *argspec.kwonlyargs]))
 
 
-def combine_score_weights(weights: List[Dict[str, float]]) -> Dict[str, float]:
+def combine_score_weights(
+    weights: List[Dict[str, float]],
+    overrides: Dict[str, Optional[Union[float, int]]] = SimpleFrozenDict(),
+) -> Dict[str, float]:
     """Combine and normalize score weights defined by components, e.g.
     {"ents_r": 0.2, "ents_p": 0.3, "ents_f": 0.5} and {"some_other_score": 1.0}.
 
     weights (List[dict]): The weights defined by the components.
+    overrides (Dict[str, Optional[Union[float, int]]]): Existing scores that
+        should be preserved.
     RETURNS (Dict[str, float]): The combined and normalized weights.
     """
+    # We first need to extract all None/null values for score weights that
+    # shouldn't be shown in the table *or* be weighted
     result = {}
+    all_weights = []
     for w_dict in weights:
+        filtered_weights = {}
+        for key, value in w_dict.items():
+            value = overrides.get(key, value)
+            if value is None:
+                result[key] = None
+            else:
+                filtered_weights[key] = value
+        all_weights.append(filtered_weights)
+    for w_dict in all_weights:
         # We need to account for weights that don't sum to 1.0 and normalize
         # the score weights accordingly, then divide score by the number of
         # components.
         total = sum(w_dict.values())
         for key, value in w_dict.items():
-            weight = round(value / total / len(weights), 2)
-            result[key] = result.get(key, 0.0) + weight
+            if total == 0:
+                weight = 0.0
+            else:
+                weight = round(value / total / len(all_weights), 2)
+            prev_weight = result.get(key, 0.0)
+            prev_weight = 0.0 if prev_weight is None else prev_weight
+            result[key] = prev_weight + weight
     return result
 
 
@@ -1235,3 +1323,50 @@ def minibatch(items, size):
         if len(batch) == 0:
             break
         yield list(batch)
+
+
+def is_cython_func(func: Callable) -> bool:
+    """Slightly hacky check for whether a callable is implemented in Cython.
+    Can be used to implement slightly different behaviors, especially around
+    inspecting and parameter annotations. Note that this will only return True
+    for actual cdef functions and methods, not regular Python functions defined
+    in Python modules.
+
+    func (Callable): The callable to check.
+    RETURNS (bool): Whether the callable is Cython (probably).
+    """
+    attr = "__pyx_vtable__"
+    if hasattr(func, attr):  # function or class instance
+        return True
+    # https://stackoverflow.com/a/55767059
+    if hasattr(func, "__qualname__") and hasattr(func, "__module__"):  # method
+        cls_func = vars(sys.modules[func.__module__])[func.__qualname__.split(".")[0]]
+        return hasattr(cls_func, attr)
+    return False
+
+
+def check_bool_env_var(env_var: str) -> bool:
+    """Convert the value of an environment variable to a boolean. Add special
+    check for "0" (falsy) and consider everything else truthy, except unset.
+
+    env_var (str): The name of the environment variable to check.
+    RETURNS (bool): Its boolean value.
+    """
+    value = os.environ.get(env_var, False)
+    if value == "0":
+        return False
+    return bool(value)
+
+
+def _pipe(docs, proc, kwargs):
+    if hasattr(proc, "pipe"):
+        yield from proc.pipe(docs, **kwargs)
+    else:
+        # We added some args for pipe that __call__ doesn't expect.
+        kwargs = dict(kwargs)
+        for arg in ["batch_size"]:
+            if arg in kwargs:
+                kwargs.pop(arg)
+        for doc in docs:
+            doc = proc(doc, **kwargs)
+            yield doc

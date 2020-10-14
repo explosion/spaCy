@@ -7,10 +7,13 @@ from wasabi import Printer, MESSAGES, msg
 import typer
 
 from ._util import app, Arg, Opt, show_validation_error, parse_config_overrides
-from ._util import import_code, debug_cli, get_sourced_components
-from ..training import Corpus, Example
+from ._util import import_code, debug_cli
+from ..training import Example
+from ..training.initialize import get_sourced_components
+from ..schemas import ConfigSchemaTraining
 from ..pipeline._parser_internals import nonproj
 from ..language import Language
+from ..util import registry, resolve_dot_names
 from .. import util
 
 
@@ -24,7 +27,7 @@ BLANK_MODEL_THRESHOLD = 2000
 
 
 @debug_cli.command(
-    "data", context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+    "data", context_settings={"allow_extra_args": True, "ignore_unknown_options": True}
 )
 @app.command(
     "debug-data",
@@ -34,8 +37,6 @@ BLANK_MODEL_THRESHOLD = 2000
 def debug_data_cli(
     # fmt: off
     ctx: typer.Context,  # This is only used to read additional arguments
-    train_path: Path = Arg(..., help="Location of JSON-formatted training data", exists=True),
-    dev_path: Path = Arg(..., help="Location of JSON-formatted development data", exists=True),
     config_path: Path = Arg(..., help="Path to config file", exists=True),
     code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     ignore_warnings: bool = Opt(False, "--ignore-warnings", "-IW", help="Ignore warnings, only show stats and errors"),
@@ -59,8 +60,6 @@ def debug_data_cli(
     overrides = parse_config_overrides(ctx.args)
     import_code(code_path)
     debug_data(
-        train_path,
-        dev_path,
         config_path,
         config_overrides=overrides,
         ignore_warnings=ignore_warnings,
@@ -71,8 +70,6 @@ def debug_data_cli(
 
 
 def debug_data(
-    train_path: Path,
-    dev_path: Path,
     config_path: Path,
     *,
     config_overrides: Dict[str, Any] = {},
@@ -85,55 +82,28 @@ def debug_data(
         no_print=silent, pretty=not no_format, ignore_warnings=ignore_warnings
     )
     # Make sure all files and paths exists if they are needed
-    if not train_path.exists():
-        msg.fail("Training data not found", train_path, exits=1)
-    if not dev_path.exists():
-        msg.fail("Development data not found", dev_path, exits=1)
-    if not config_path.exists():
-        msg.fail("Config file not found", config_path, exists=1)
     with show_validation_error(config_path):
         cfg = util.load_config(config_path, overrides=config_overrides)
-        nlp, config = util.load_model_from_config(cfg)
+        nlp = util.load_model_from_config(cfg)
+        config = nlp.config.interpolate()
+        T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
     # Use original config here, not resolved version
     sourced_components = get_sourced_components(cfg)
-    frozen_components = config["training"]["frozen_components"]
+    frozen_components = T["frozen_components"]
     resume_components = [p for p in sourced_components if p not in frozen_components]
     pipeline = nlp.pipe_names
     factory_names = [nlp.get_pipe_meta(pipe).factory for pipe in nlp.pipe_names]
-    tag_map_path = util.ensure_path(config["training"]["tag_map"])
-    tag_map = {}
-    if tag_map_path is not None:
-        tag_map = srsly.read_json(tag_map_path)
-    morph_rules_path = util.ensure_path(config["training"]["morph_rules"])
-    morph_rules = {}
-    if morph_rules_path is not None:
-        morph_rules = srsly.read_json(morph_rules_path)
-    # Replace tag map with provided mapping
-    nlp.vocab.morphology.load_tag_map(tag_map)
-    # Load morph rules
-    nlp.vocab.morphology.load_morph_exceptions(morph_rules)
-
     msg.divider("Data file validation")
 
     # Create the gold corpus to be able to better analyze data
-    loading_train_error_message = ""
-    loading_dev_error_message = ""
-    with msg.loading("Loading corpus..."):
-        try:
-            train_dataset = list(Corpus(train_path)(nlp))
-        except ValueError as e:
-            loading_train_error_message = f"Training data cannot be loaded: {e}"
-        try:
-            dev_dataset = list(Corpus(dev_path)(nlp))
-        except ValueError as e:
-            loading_dev_error_message = f"Development data cannot be loaded: {e}"
-    if loading_train_error_message or loading_dev_error_message:
-        if loading_train_error_message:
-            msg.fail(loading_train_error_message)
-        if loading_dev_error_message:
-            msg.fail(loading_dev_error_message)
-        sys.exit(1)
+    dot_names = [T["train_corpus"], T["dev_corpus"]]
+    train_corpus, dev_corpus = resolve_dot_names(config, dot_names)
+    train_dataset = list(train_corpus(nlp))
+    dev_dataset = list(dev_corpus(nlp))
     msg.good("Corpus is loadable")
+
+    nlp.initialize(lambda: train_dataset)
+    msg.good("Pipeline can be initialized with data")
 
     # Create all gold data here to avoid iterating over the train_dataset constantly
     gold_train_data = _compile_gold(train_dataset, factory_names, nlp, make_proj=True)
@@ -144,10 +114,10 @@ def debug_data(
 
     train_texts = gold_train_data["texts"]
     dev_texts = gold_dev_data["texts"]
-    frozen_components = config["training"]["frozen_components"]
+    frozen_components = T["frozen_components"]
 
     msg.divider("Training stats")
-    msg.text(f"Language: {config['nlp']['lang']}")
+    msg.text(f"Language: {nlp.lang}")
     msg.text(f"Training pipeline: {', '.join(pipeline)}")
     if resume_components:
         msg.text(f"Components from other pipelines: {', '.join(resume_components)}")
@@ -201,7 +171,7 @@ def debug_data(
         n_missing_vectors = sum(gold_train_data["words_missing_vectors"].values())
         msg.warn(
             "{} words in training data without vectors ({:0.2f}%)".format(
-                n_missing_vectors, n_missing_vectors / gold_train_data["n_words"],
+                n_missing_vectors, n_missing_vectors / gold_train_data["n_words"]
             ),
         )
         msg.text(
@@ -354,17 +324,12 @@ def debug_data(
     if "tagger" in factory_names:
         msg.divider("Part-of-speech Tagging")
         labels = [label for label in gold_train_data["tags"]]
-        tag_map = nlp.vocab.morphology.tag_map
-        msg.info(f"{len(labels)} label(s) in data ({len(tag_map)} label(s) in tag map)")
+        # TODO: does this need to be updated?
+        msg.info(f"{len(labels)} label(s) in data")
         labels_with_counts = _format_labels(
             gold_train_data["tags"].most_common(), counts=True
         )
         msg.text(labels_with_counts, show=verbose)
-        non_tagmap = [l for l in labels if l not in tag_map]
-        if not non_tagmap:
-            msg.good(f"All labels present in tag map for language '{nlp.lang}'")
-        for label in non_tagmap:
-            msg.fail(f"Label '{label}' not found in tag map for language '{nlp.lang}'")
 
     if "parser" in factory_names:
         has_low_data_warning = False

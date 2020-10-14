@@ -1,4 +1,3 @@
-from typing import Callable
 import warnings
 from unittest import TestCase
 import pytest
@@ -7,8 +6,8 @@ from numpy import zeros
 from spacy.kb import KnowledgeBase, Writer
 from spacy.vectors import Vectors
 from spacy.language import Language
-from spacy.pipeline import Pipe
-from spacy.util import registry
+from spacy.pipeline import TrainablePipe
+from spacy.vocab import Vocab
 
 from ..util import make_tempdir
 
@@ -45,16 +44,16 @@ def custom_pipe():
         def from_disk(self, path, exclude=tuple(), **kwargs):
             return self
 
-    class MyPipe(Pipe):
+    class MyPipe(TrainablePipe):
         def __init__(self, vocab, model=True, **cfg):
             if cfg:
                 self.cfg = cfg
             else:
                 self.cfg = None
             self.model = SerializableDummy()
-            self.vocab = SerializableDummy()
+            self.vocab = vocab
 
-    return MyPipe(None)
+    return MyPipe(Vocab())
 
 
 def tagger():
@@ -64,28 +63,24 @@ def tagger():
     # 1. no model leads to error in serialization,
     # 2. the affected line is the one for model serialization
     tagger.add_label("A")
-    nlp.begin_training()
+    nlp.initialize()
     return tagger
 
 
 def entity_linker():
     nlp = Language()
 
-    @registry.misc.register("TestIssue5230KB.v1")
-    def dummy_kb() -> Callable[["Vocab"], KnowledgeBase]:
-        def create_kb(vocab):
-            kb = KnowledgeBase(vocab, entity_vector_length=1)
-            kb.add_entity("test", 0.0, zeros((1, 1), dtype="f"))
-            return kb
+    def create_kb(vocab):
+        kb = KnowledgeBase(vocab, entity_vector_length=1)
+        kb.add_entity("test", 0.0, zeros((1, 1), dtype="f"))
+        return kb
 
-        return create_kb
-
-    config = {"kb_loader": {"@misc": "TestIssue5230KB.v1"}}
-    entity_linker = nlp.add_pipe("entity_linker", config=config)
+    entity_linker = nlp.add_pipe("entity_linker")
+    entity_linker.set_kb(create_kb)
     # need to add model for two reasons:
     # 1. no model leads to error in serialization,
     # 2. the affected line is the one for model serialization
-    nlp.begin_training()
+    nlp.initialize()
     return entity_linker
 
 

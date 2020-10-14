@@ -10,6 +10,7 @@ const htmlToReactParser = new HtmlToReactParser()
 const DEFAULT_BRANCH = 'develop'
 export const repo = siteMetadata.repo
 export const modelsRepo = siteMetadata.modelsRepo
+export const projectsRepo = siteMetadata.projectsRepo
 
 /**
  * This is used to provide selectors for headings so they can be crawled by

@@ -11,7 +11,7 @@ api_string_name: transformer
 > #### Installation
 >
 > ```bash
-> $ pip install spacy-transformers
+> $ pip install -U %%SPACY_PKG_NAME[transformers] %%SPACY_PKG_FLAGS
 > ```
 
 <Infobox title="Important note" variant="warning">
@@ -158,7 +158,7 @@ applied to the `Doc` in order. Both [`__call__`](/api/transformer#call) and
 | `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
 | **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
-## Transformer.begin_training {#begin_training tag="method"}
+## Transformer.initialize {#initialize tag="method"}
 
 Initialize the component for training and return an
 [`Optimizer`](https://thinc.ai/docs/api-optimizers). `get_examples` should be a
@@ -167,26 +167,25 @@ examples are used to **initialize the model** of the component and can either be
 the full training data or a representative sample. Initialization includes
 validating the network,
 [inferring missing shapes](https://thinc.ai/docs/usage-models#validation) and
-setting up the label scheme based on the data.
+setting up the label scheme based on the data. This method is typically called
+by [`Language.initialize`](/api/language#initialize).
 
 > #### Example
 >
 > ```python
 > trf = nlp.add_pipe("transformer")
-> optimizer = trf.begin_training(lambda: [], pipeline=nlp.pipeline)
+> trf.initialize(lambda: [], nlp=nlp)
 > ```
 
 | Name           | Description                                                                                                                           |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. ~~Callable[[], Iterable[Example]]~~ |
 | _keyword-only_ |                                                                                                                                       |
-| `pipeline`     | Optional list of pipeline components that this component is part of. ~~Optional[List[Tuple[str, Callable[[Doc], Doc]]]]~~             |
-| `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                         |
-| **RETURNS**    | The optimizer. ~~Optimizer~~                                                                                                          |
+| `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                  |
 
 ## Transformer.predict {#predict tag="method"}
 
-Apply the component's model to a batch of [`Doc`](/api/doc) objects, without
+Apply the component's model to a batch of [`Doc`](/api/doc) objects without
 modifying them.
 
 > #### Example
@@ -203,7 +202,7 @@ modifying them.
 
 ## Transformer.set_annotations {#set_annotations tag="method"}
 
-Assign the extracted features to the Doc objects. By default, the
+Assign the extracted features to the `Doc` objects. By default, the
 [`TransformerData`](/api/transformer#transformerdata) object is written to the
 [`Doc._.trf_data`](#custom-attributes) attribute. Your `set_extra_annotations`
 callback is then called, if provided.
@@ -241,7 +240,7 @@ and call the optimizer, while the others simply increment the gradients.
 >
 > ```python
 > trf = nlp.add_pipe("transformer")
-> optimizer = nlp.begin_training()
+> optimizer = nlp.initialize()
 > losses = trf.update(examples, sgd=optimizer)
 > ```
 
@@ -272,7 +271,7 @@ Create an optimizer for the pipeline component.
 
 ## Transformer.use_params {#use_params tag="method, contextmanager"}
 
-Modify the pipe's model, to use the given parameter values. At the end of the
+Modify the pipe's model to use the given parameter values. At the end of the
 context, the original parameters are restored.
 
 > #### Example
@@ -386,12 +385,12 @@ are wrapped into the
 by this class. Instances of this class are typically assigned to the
 [`Doc._.trf_data`](/api/transformer#custom-attributes) extension attribute.
 
-| Name      | Description                                                                                                                                                                                                                                                                                                                                             |
-| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tokens`  | A slice of the tokens data produced by the tokenizer. This may have several fields, including the token IDs, the texts, and the attention mask. See the [`transformers.BatchEncoding`](https://huggingface.co/transformers/main_classes/tokenizer.html#transformers.BatchEncoding) object for details. ~~dict~~                                         |
-| `tensors` | The activations for the Doc from the transformer. Usually the last tensor that is 3-dimensional will be the most important, as that will provide the final hidden state. Generally activations that are 2-dimensional will be attention weights. Details of this variable will differ depending on the underlying transformer model. ~~List[FloatsXd]~~ |
-| `align`   | Alignment from the `Doc`'s tokenization to the wordpieces. This is a ragged array, where `align.lengths[i]` indicates the number of wordpiece tokens that token `i` aligns against. The actual indices are provided at `align[i].dataXd`. ~~Ragged~~                                                                                                    |
-| `width`   | The width of the last hidden layer. ~~int~~                                                                                                                                                                                                                                                                                                             |
+| Name      | Description                                                                                                                                                                                                                                                                                                                                               |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tokens`  | A slice of the tokens data produced by the tokenizer. This may have several fields, including the token IDs, the texts and the attention mask. See the [`transformers.BatchEncoding`](https://huggingface.co/transformers/main_classes/tokenizer.html#transformers.BatchEncoding) object for details. ~~dict~~                                            |
+| `tensors` | The activations for the `Doc` from the transformer. Usually the last tensor that is 3-dimensional will be the most important, as that will provide the final hidden state. Generally activations that are 2-dimensional will be attention weights. Details of this variable will differ depending on the underlying transformer model. ~~List[FloatsXd]~~ |
+| `align`   | Alignment from the `Doc`'s tokenization to the wordpieces. This is a ragged array, where `align.lengths[i]` indicates the number of wordpiece tokens that token `i` aligns against. The actual indices are provided at `align[i].dataXd`. ~~Ragged~~                                                                                                      |
+| `width`   | The width of the last hidden layer. ~~int~~                                                                                                                                                                                                                                                                                                               |
 
 ### TransformerData.empty {#transformerdata-emoty tag="classmethod"}
 
@@ -407,13 +406,13 @@ Holds a batch of input and output objects for a transformer model. The data can
 then be split to a list of [`TransformerData`](/api/transformer#transformerdata)
 objects to associate the outputs to each [`Doc`](/api/doc) in the batch.
 
-| Name       | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `spans`    | The batch of input spans. The outer list refers to the Doc objects in the batch, and the inner list are the spans for that `Doc`. Note that spans are allowed to overlap or exclude tokens, but each Span can only refer to one `Doc` (by definition). This means that within a `Doc`, the regions of the output tensors that correspond to each Span may overlap or have gaps, but for each `Doc`, there is a non-overlapping contiguous slice of the outputs. ~~List[List[Span]]~~ |
-| `tokens`   | The output of the tokenizer. ~~transformers.BatchEncoding~~                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| `tensors`  | The output of the transformer model. ~~List[torch.Tensor]~~                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| `align`    | Alignment from the spaCy tokenization to the wordpieces. This is a ragged array, where `align.lengths[i]` indicates the number of wordpiece tokens that token `i` aligns against. The actual indices are provided at `align[i].dataXd`. ~~Ragged~~                                                                                                                                                                                                                                   |
-| `doc_data` | The outputs, split per `Doc` object. ~~List[TransformerData]~~                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Name       | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `spans`    | The batch of input spans. The outer list refers to the Doc objects in the batch, and the inner list are the spans for that `Doc`. Note that spans are allowed to overlap or exclude tokens, but each `Span` can only refer to one `Doc` (by definition). This means that within a `Doc`, the regions of the output tensors that correspond to each `Span` may overlap or have gaps, but for each `Doc`, there is a non-overlapping contiguous slice of the outputs. ~~List[List[Span]]~~ |
+| `tokens`   | The output of the tokenizer. ~~transformers.BatchEncoding~~                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `tensors`  | The output of the transformer model. ~~List[torch.Tensor]~~                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `align`    | Alignment from the spaCy tokenization to the wordpieces. This is a ragged array, where `align.lengths[i]` indicates the number of wordpiece tokens that token `i` aligns against. The actual indices are provided at `align[i].dataXd`. ~~Ragged~~                                                                                                                                                                                                                                       |
+| `doc_data` | The outputs, split per `Doc` object. ~~List[TransformerData]~~                                                                                                                                                                                                                                                                                                                                                                                                                           |
 
 ### FullTransformerBatch.unsplit_by_doc {#fulltransformerbatch-unsplit_by_doc tag="method"}
 
@@ -439,10 +438,10 @@ Split a `TransformerData` object that represents a batch into a list with one
 ## Span getters {#span_getters source="github.com/explosion/spacy-transformers/blob/master/spacy_transformers/span_getters.py"}
 
 Span getters are functions that take a batch of [`Doc`](/api/doc) objects and
-return a lists of [`Span`](/api/span) objects for each doc, to be processed by
-the transformer. This is used to manage long documents, by cutting them into
+return a lists of [`Span`](/api/span) objects for each doc to be processed by
+the transformer. This is used to manage long documents by cutting them into
 smaller sequences before running the transformer. The spans are allowed to
-overlap, and you can also omit sections of the Doc if they are not relevant.
+overlap, and you can also omit sections of the `Doc` if they are not relevant.
 
 Span getters can be referenced in the `[components.transformer.model.get_spans]`
 block of the config to customize the sequences processed by the transformer. You

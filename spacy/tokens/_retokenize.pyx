@@ -274,7 +274,7 @@ def _merge(Doc doc, merges):
     for i in range(doc.length):
         doc.c[i].head -= i
     # Set the left/right children, left/right edges
-    set_children_from_heads(doc.c, doc.length)
+    set_children_from_heads(doc.c, 0, doc.length)
     # Make sure ent_iob remains consistent
     make_iob_consistent(doc.c, doc.length)
     # Return the merged Python object
@@ -336,6 +336,7 @@ def _split(Doc doc, int token_index, orths, heads, attrs):
         lex = doc.vocab.get(doc.mem, orth)
         token.lex = lex
         token.lemma = 0  # reset lemma
+        token.norm = 0  # reset norm
         if to_process_tensor:
             # setting the tensors of the split tokens to array of zeros
             doc.tensor[token_index + i] = xp.zeros((1,doc.tensor.shape[1]), dtype="float32")
@@ -381,7 +382,7 @@ def _split(Doc doc, int token_index, orths, heads, attrs):
     for i in range(doc.length):
         doc.c[i].head -= i
     # set children from head
-    set_children_from_heads(doc.c, doc.length)
+    set_children_from_heads(doc.c, 0, doc.length)
 
 
 def _validate_extensions(extensions):
@@ -408,7 +409,6 @@ cdef make_iob_consistent(TokenC* tokens, int length):
 def normalize_token_attrs(Vocab vocab, attrs):
     if "_" in attrs:  # Extension attributes
         extensions = attrs["_"]
-        print("EXTENSIONS", extensions)
         _validate_extensions(extensions)
         attrs = {key: value for key, value in attrs.items() if key != "_"}
         attrs = intify_attrs(attrs, strings_map=vocab.strings)

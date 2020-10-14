@@ -1,5 +1,4 @@
 from typing import Optional
-
 from thinc.api import Model
 
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
@@ -9,7 +8,6 @@ from .syntax_iterators import SYNTAX_ITERATORS
 from .punctuation import TOKENIZER_INFIXES
 from .lemmatizer import EnglishLemmatizer
 from ...language import Language
-from ...lookups import Lookups
 
 
 class EnglishDefaults(Language.Defaults):
@@ -28,19 +26,11 @@ class English(Language):
 @English.factory(
     "lemmatizer",
     assigns=["token.lemma"],
-    default_config={"model": None, "mode": "rule", "lookups": None},
-    scores=["lemma_acc"],
+    default_config={"model": None, "mode": "rule"},
     default_score_weights={"lemma_acc": 1.0},
 )
-def make_lemmatizer(
-    nlp: Language,
-    model: Optional[Model],
-    name: str,
-    mode: str,
-    lookups: Optional[Lookups],
-):
-    lookups = EnglishLemmatizer.load_lookups(nlp.lang, mode, lookups)
-    return EnglishLemmatizer(nlp.vocab, model, name, mode=mode, lookups=lookups)
+def make_lemmatizer(nlp: Language, model: Optional[Model], name: str, mode: str):
+    return EnglishLemmatizer(nlp.vocab, model, name, mode=mode)
 
 
 __all__ = ["English"]

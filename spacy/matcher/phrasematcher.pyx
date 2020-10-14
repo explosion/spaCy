@@ -4,7 +4,7 @@ from preshed.maps cimport map_init, map_set, map_get, map_clear, map_iter
 
 import warnings
 
-from ..attrs cimport ORTH, POS, TAG, DEP, LEMMA
+from ..attrs cimport ORTH, POS, TAG, DEP, LEMMA, MORPH
 from ..structs cimport TokenC
 from ..tokens.token cimport Token
 from ..tokens.span cimport Span
@@ -184,12 +184,22 @@ cdef class PhraseMatcher:
             if len(doc) == 0:
                 continue
             if isinstance(doc, Doc):
-                if self.attr in (POS, TAG, LEMMA) and not doc.is_tagged:
-                    raise ValueError(Errors.E155.format())
-                if self.attr == DEP and not doc.is_parsed:
-                    raise ValueError(Errors.E156.format())
-                if self._validate and (doc.is_tagged or doc.is_parsed) \
-                  and self.attr not in (DEP, POS, TAG, LEMMA):
+                attrs = (TAG, POS, MORPH, LEMMA, DEP)
+                has_annotation = {attr: doc.has_annotation(attr) for attr in attrs}
+                for attr in attrs:
+                    if self.attr == attr and not has_annotation[attr]:
+                        if attr == TAG:
+                            pipe = "tagger"
+                        elif attr in (POS, MORPH):
+                            pipe = "morphologizer"
+                        elif attr == LEMMA:
+                            pipe = "lemmatizer"
+                        elif attr == DEP:
+                            pipe = "parser"
+                        error_msg = Errors.E155.format(pipe=pipe, attr=self.vocab.strings.as_string(attr))
+                        raise ValueError(error_msg)
+                if self._validate and any(has_annotation.values()) \
+                        and self.attr not in attrs:
                     string_attr = self.vocab.strings[self.attr]
                     warnings.warn(Warnings.W012.format(key=key, attr=string_attr))
                 keyword = self._convert_to_array(doc)

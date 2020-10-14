@@ -28,7 +28,7 @@ cdef class Vocab:
     cpdef readonly StringStore strings
     cpdef public Morphology morphology
     cpdef public object vectors
-    cpdef public object lookups
+    cpdef public object _lookups
     cpdef public object writing_system
     cpdef public object get_noun_chunks
     cdef readonly int length

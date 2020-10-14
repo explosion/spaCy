@@ -15,14 +15,14 @@ def test_label_types():
         tagger.add_label(9)
 
 
-def test_tagger_begin_training_tag_map():
-    """Test that Tagger.begin_training() without gold tuples does not clobber
+def test_tagger_initialize_tag_map():
+    """Test that Tagger.initialize() without gold tuples does not clobber
     the tag map."""
     nlp = Language()
     tagger = nlp.add_pipe("tagger")
     orig_tag_count = len(tagger.labels)
     tagger.add_label("A")
-    nlp.begin_training()
+    nlp.initialize()
     assert orig_tag_count + 1 == len(nlp.get_pipe("tagger").labels)
 
 
@@ -38,7 +38,7 @@ def test_no_label():
     nlp = Language()
     nlp.add_pipe("tagger")
     with pytest.raises(ValueError):
-        nlp.begin_training()
+        nlp.initialize()
 
 
 def test_no_resize():
@@ -47,7 +47,7 @@ def test_no_resize():
     tagger.add_label("N")
     tagger.add_label("V")
     assert tagger.labels == ("N", "V")
-    nlp.begin_training()
+    nlp.initialize()
     assert tagger.model.get_dim("nO") == 2
     # this throws an error because the tagger can't be resized after initialization
     with pytest.raises(ValueError):
@@ -60,10 +60,10 @@ def test_implicit_label():
     train_examples = []
     for t in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
-    nlp.begin_training(get_examples=lambda: train_examples)
+    nlp.initialize(get_examples=lambda: train_examples)
 
 
-def test_begin_training_examples():
+def test_initialize_examples():
     nlp = Language()
     tagger = nlp.add_pipe("tagger")
     train_examples = []
@@ -72,16 +72,16 @@ def test_begin_training_examples():
     for t in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
     # you shouldn't really call this more than once, but for testing it should be fine
-    nlp.begin_training()
-    nlp.begin_training(get_examples=lambda: train_examples)
+    nlp.initialize()
+    nlp.initialize(get_examples=lambda: train_examples)
     with pytest.raises(TypeError):
-        nlp.begin_training(get_examples=lambda: None)
+        nlp.initialize(get_examples=lambda: None)
     with pytest.raises(TypeError):
-        nlp.begin_training(get_examples=lambda: train_examples[0])
-    with pytest.raises(ValueError):
-        nlp.begin_training(get_examples=lambda: [])
-    with pytest.raises(ValueError):
-        nlp.begin_training(get_examples=train_examples)
+        nlp.initialize(get_examples=lambda: train_examples[0])
+    with pytest.raises(TypeError):
+        nlp.initialize(get_examples=lambda: [])
+    with pytest.raises(TypeError):
+        nlp.initialize(get_examples=train_examples)
 
 
 def test_overfitting_IO():
@@ -91,7 +91,7 @@ def test_overfitting_IO():
     train_examples = []
     for t in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
-    optimizer = nlp.begin_training(get_examples=lambda: train_examples)
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
     assert tagger.model.get_dim("nO") == len(TAGS)
 
     for i in range(50):
@@ -122,4 +122,4 @@ def test_tagger_requires_labels():
     nlp = English()
     nlp.add_pipe("tagger")
     with pytest.raises(ValueError):
-        nlp.begin_training()
+        nlp.initialize()

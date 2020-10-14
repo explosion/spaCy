@@ -30,12 +30,13 @@ def init_config_cli(
     pipeline: Optional[str] = Opt("tagger,parser,ner", "--pipeline", "-p", help="Comma-separated names of trainable pipeline components to include (without 'tok2vec' or 'transformer')"),
     optimize: Optimizations = Opt(Optimizations.efficiency.value, "--optimize", "-o", help="Whether to optimize for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger and slower model). This will impact the choice of architecture, pretrained weights and related hyperparameters."),
     cpu: bool = Opt(False, "--cpu", "-C", help="Whether the model needs to run on CPU. This will impact the choice of architecture, pretrained weights and related hyperparameters."),
+    pretraining: bool = Opt(False, "--pretraining", "-pt", help="Include config for pretraining (with 'spacy pretrain')"),
     # fmt: on
 ):
     """
     Generate a starter config.cfg for training. Based on your requirements
     specified via the CLI arguments, this command generates a config with the
-    optimal settings for you use case. This includes the choice of architecture,
+    optimal settings for your use case. This includes the choice of architecture,
     pretrained weights and related hyperparameters.
 
     DOCS: https://nightly.spacy.io/api/cli#init-config
@@ -43,7 +44,14 @@ def init_config_cli(
     if isinstance(optimize, Optimizations):  # instance of enum from the CLI
         optimize = optimize.value
     pipeline = string_to_list(pipeline)
-    init_config(output_file, lang=lang, pipeline=pipeline, optimize=optimize, cpu=cpu)
+    init_config(
+        output_file,
+        lang=lang,
+        pipeline=pipeline,
+        optimize=optimize,
+        cpu=cpu,
+        pretraining=pretraining,
+    )
 
 
 @init_cli.command("fill-config")
@@ -51,7 +59,7 @@ def init_fill_config_cli(
     # fmt: off
     base_path: Path = Arg(..., help="Base config to fill", exists=True, dir_okay=False),
     output_file: Path = Arg("-", help="File to save config.cfg to (or - for stdout)", allow_dash=True),
-    pretraining: bool = Opt(False, "--pretraining", "-p", help="Include config for pretraining (with 'spacy pretrain')"),
+    pretraining: bool = Opt(False, "--pretraining", "-pt", help="Include config for pretraining (with 'spacy pretrain')"),
     diff: bool = Opt(False, "--diff", "-D", help="Print a visual diff highlighting the changes")
     # fmt: on
 ):
@@ -80,10 +88,10 @@ def fill_config(
     msg = Printer(no_print=no_print)
     with show_validation_error(hint_fill=False):
         config = util.load_config(base_path)
-        nlp, _ = util.load_model_from_config(config, auto_fill=True, validate=False)
+        nlp = util.load_model_from_config(config, auto_fill=True, validate=False)
     # Load a second time with validation to be extra sure that the produced
     # config result is a valid config
-    nlp, _ = util.load_model_from_config(nlp.config)
+    nlp = util.load_model_from_config(nlp.config)
     filled = nlp.config
     if pretraining:
         validate_config_for_pretrain(filled, msg)
@@ -109,7 +117,13 @@ def fill_config(
 
 
 def init_config(
-    output_file: Path, *, lang: str, pipeline: List[str], optimize: str, cpu: bool
+    output_file: Path,
+    *,
+    lang: str,
+    pipeline: List[str],
+    optimize: str,
+    cpu: bool,
+    pretraining: bool = False,
 ) -> None:
     is_stdout = str(output_file) == "-"
     msg = Printer(no_print=is_stdout)
@@ -155,9 +169,14 @@ def init_config(
         msg.text(f"- {label}: {value}")
     with show_validation_error(hint_fill=False):
         config = util.load_config_from_str(base_template)
-        nlp, _ = util.load_model_from_config(config, auto_fill=True)
+        nlp = util.load_model_from_config(config, auto_fill=True)
+        config = nlp.config
+        if pretraining:
+            validate_config_for_pretrain(config, msg)
+            pretrain_config = util.load_config(DEFAULT_CONFIG_PRETRAIN_PATH)
+            config = pretrain_config.merge(config)
     msg.good("Auto-filled config with all values")
-    save_config(nlp.config, output_file, is_stdout=is_stdout)
+    save_config(config, output_file, is_stdout=is_stdout)
 
 
 def save_config(

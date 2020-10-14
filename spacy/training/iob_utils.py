@@ -1,9 +1,11 @@
+from typing import List, Tuple, Iterable, Union, Iterator
 import warnings
+
 from ..errors import Errors, Warnings
-from ..tokens import Span
+from ..tokens import Span, Doc
 
 
-def iob_to_biluo(tags):
+def iob_to_biluo(tags: Iterable[str]) -> List[str]:
     out = []
     tags = list(tags)
     while tags:
@@ -12,7 +14,7 @@ def iob_to_biluo(tags):
     return out
 
 
-def biluo_to_iob(tags):
+def biluo_to_iob(tags: Iterable[str]) -> List[str]:
     out = []
     for tag in tags:
         if tag is None:
@@ -23,12 +25,12 @@ def biluo_to_iob(tags):
     return out
 
 
-def _consume_os(tags):
+def _consume_os(tags: List[str]) -> Iterator[str]:
     while tags and tags[0] == "O":
         yield tags.pop(0)
 
 
-def _consume_ent(tags):
+def _consume_ent(tags: List[str]) -> List[str]:
     if not tags:
         return []
     tag = tags.pop(0)
@@ -50,15 +52,17 @@ def _consume_ent(tags):
         return [start] + middle + [end]
 
 
-def biluo_tags_from_doc(doc, missing="O"):
-    return biluo_tags_from_offsets(
+def doc_to_biluo_tags(doc: Doc, missing: str = "O"):
+    return offsets_to_biluo_tags(
         doc,
         [(ent.start_char, ent.end_char, ent.label_) for ent in doc.ents],
         missing=missing,
     )
 
 
-def biluo_tags_from_offsets(doc, entities, missing="O"):
+def offsets_to_biluo_tags(
+    doc: Doc, entities: Iterable[Tuple[int, int, Union[str, int]]], missing: str = "O"
+) -> List[str]:
     """Encode labelled spans into per-token tags, using the
     Begin/In/Last/Unit/Out scheme (BILUO).
 
@@ -69,7 +73,7 @@ def biluo_tags_from_offsets(doc, entities, missing="O"):
         the original string.
     RETURNS (list): A list of unicode strings, describing the tags. Each tag
         string will be of the form either "", "O" or "{action}-{label}", where
-        action is one of "B", "I", "L", "U". The string "-" is used where the
+        action is one of "B", "I", "L", "U". The missing label is used where the
         entity offsets don't align with the tokenization in the `Doc` object.
         The training algorithm will view these as missing values. "O" denotes a
         non-entity token. "B" denotes the beginning of a multi-token entity,
@@ -80,12 +84,11 @@ def biluo_tags_from_offsets(doc, entities, missing="O"):
         >>> text = 'I like London.'
         >>> entities = [(len('I like '), len('I like London'), 'LOC')]
         >>> doc = nlp.tokenizer(text)
-        >>> tags = biluo_tags_from_offsets(doc, entities)
+        >>> tags = offsets_to_biluo_tags(doc, entities)
         >>> assert tags == ["O", "O", 'U-LOC', "O"]
     """
     # Ensure no overlapping entity labels exist
     tokens_in_ents = {}
-
     starts = {token.idx: token.i for token in doc}
     ends = {token.idx + len(token): token.i for token in doc}
     biluo = ["-" for _ in doc]
@@ -109,7 +112,6 @@ def biluo_tags_from_offsets(doc, entities, missing="O"):
                         )
                     )
                 tokens_in_ents[token_index] = (start_char, end_char, label)
-
             start_token = starts.get(start_char)
             end_token = ends.get(end_char)
             # Only interested if the tokenization is correct
@@ -143,15 +145,16 @@ def biluo_tags_from_offsets(doc, entities, missing="O"):
     return biluo
 
 
-def spans_from_biluo_tags(doc, tags):
+def biluo_tags_to_spans(doc: Doc, tags: Iterable[str]) -> List[Span]:
     """Encode per-token tags following the BILUO scheme into Span object, e.g.
     to overwrite the doc.ents.
 
     doc (Doc): The document that the BILUO tags refer to.
     entities (iterable): A sequence of BILUO tags with each tag describing one
-        token. Each tags string will be of the form of either "", "O" or
+        token. Each tag string will be of the form of either "", "O" or
         "{action}-{label}", where action is one of "B", "I", "L", "U".
-    RETURNS (list): A sequence of Span objects.
+    RETURNS (list): A sequence of Span objects. Each token with a missing IOB
+        tag is returned as a Span with an empty label.
     """
     token_offsets = tags_to_entities(tags)
     spans = []
@@ -161,7 +164,9 @@ def spans_from_biluo_tags(doc, tags):
     return spans
 
 
-def offsets_from_biluo_tags(doc, tags):
+def biluo_tags_to_offsets(
+    doc: Doc, tags: Iterable[str]
+) -> List[Tuple[int, int, Union[str, int]]]:
     """Encode per-token tags following the BILUO scheme into entity offsets.
 
     doc (Doc): The document that the BILUO tags refer to.
@@ -172,32 +177,28 @@ def offsets_from_biluo_tags(doc, tags):
         `end` will be character-offset integers denoting the slice into the
         original string.
     """
-    spans = spans_from_biluo_tags(doc, tags)
+    spans = biluo_tags_to_spans(doc, tags)
     return [(span.start_char, span.end_char, span.label_) for span in spans]
 
 
-def tags_to_entities(tags):
-    """ Note that the end index returned by this function is inclusive.
+def tags_to_entities(tags: Iterable[str]) -> List[Tuple[str, int, int]]:
+    """Note that the end index returned by this function is inclusive.
     To use it for Span creation, increment the end by 1."""
     entities = []
     start = None
     for i, tag in enumerate(tags):
-        if tag is None:
-            continue
-        if tag.startswith("O"):
+        if tag is None or tag.startswith("-"):
             # TODO: We shouldn't be getting these malformed inputs. Fix this.
             if start is not None:
                 start = None
             else:
                 entities.append(("", i, i))
-            continue
-        elif tag == "-":
-            continue
+        elif tag.startswith("O"):
+            pass
         elif tag.startswith("I"):
             if start is None:
                 raise ValueError(Errors.E067.format(start="I", tags=tags[: i + 1]))
-            continue
-        if tag.startswith("U"):
+        elif tag.startswith("U"):
             entities.append((tag[2:], i, i))
         elif tag.startswith("B"):
             start = i
@@ -209,3 +210,9 @@ def tags_to_entities(tags):
         else:
             raise ValueError(Errors.E068.format(tag=tag))
     return entities
+
+
+# Fallbacks to make backwards-compat easier
+offsets_from_biluo_tags = biluo_tags_to_offsets
+spans_from_biluo_tags = biluo_tags_to_spans
+biluo_tags_from_offsets = offsets_to_biluo_tags

@@ -2065,10 +2065,8 @@
             "code_example": [
                 "import spacy",
                 "",
-                "nlp = spacy.load(\"en_trf_bertbaseuncased_lg\")",
-                "doc = nlp(\"Apple shares rose on the news. Apple pie is delicious.\")",
-                "print(doc[0].similarity(doc[7]))",
-                "print(doc._.trf_last_hidden_state.shape)"
+                "nlp = spacy.load(\"en_core_web_trf\")",
+                "doc = nlp(\"Apple shares rose on the news. Apple pie is delicious.\")"
             ],
             "author": "Explosion",
             "author_links": {
@@ -2543,6 +2541,42 @@
             "author": "Alec Chapman",
             "author_links": {
                 "github": "abchapman93"
+            }
+        },
+	      {
+            "id": "rita-dsl",
+            "title": "RITA DSL",
+            "slogan": "Domain Specific Language for creating language rules",
+            "github": "zaibacu/rita-dsl",
+            "description": "A Domain Specific Language (DSL) for building language patterns. These can be later compiled into spaCy patterns, pure regex, or any other format",
+            "pip": "rita-dsl",
+	          "thumb": "https://raw.githubusercontent.com/zaibacu/rita-dsl/master/docs/assets/logo-100px.png",
+            "code_language": "python",
+            "code_example": [
+                "import spacy",
+                "from rita.shortcuts import setup_spacy",
+                "",
+                "rules = \"\"\"",
+                "cuts = {\"fitted\", \"wide-cut\"}",
+                "lengths = {\"short\", \"long\", \"calf-length\", \"knee-length\"}",
+                "fabric_types = {\"soft\", \"airy\", \"crinkled\"}",
+                "fabrics = {\"velour\", \"chiffon\", \"knit\", \"woven\", \"stretch\"}",
+                "",
+                "{IN_LIST(cuts)?, IN_LIST(lengths), WORD(\"dress\")}->MARK(\"DRESS_TYPE\")",
+                "{IN_LIST(lengths), IN_LIST(cuts), WORD(\"dress\")}->MARK(\"DRESS_TYPE\")",
+                "{IN_LIST(fabric_types)?, IN_LIST(fabrics)}->MARK(\"DRESS_FABRIC\")",
+                "\"\"\"",
+                "",
+                "nlp = spacy.load(\"en\")",
+                "setup_spacy(nlp, rules_string=rules)",
+                "r = nlp(\"She was wearing a short wide-cut dress\")",
+                "print(list([{\"label\": e.label_, \"text\": e.text} for e in r.ents]))"
+            ],
+            "category": ["standalone"],
+            "tags": ["dsl", "language-patterns", "language-rules", "nlp"],
+            "author": "Šarūnas Navickas",
+            "author_links": {
+                "github": "zaibacu"
             }
         }
     ],

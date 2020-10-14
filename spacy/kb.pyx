@@ -1,5 +1,7 @@
 # cython: infer_types=True, profile=True
-from typing import Iterator
+from typing import Iterator, Iterable
+
+import srsly
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 from cpython.exc cimport PyErr_SetFromErrno
@@ -9,11 +11,11 @@ from libcpp.vector cimport vector
 
 from pathlib import Path
 import warnings
-from os import path
 
 from .typedefs cimport hash_t
 from .errors import Errors, Warnings
-
+from . import util
+from .util import SimpleFrozenList, ensure_path
 
 cdef class Candidate:
     """A `Candidate` object refers to a textual mention (`alias`) that may or may not be resolved
@@ -89,7 +91,6 @@ cdef class KnowledgeBase:
         self._entry_index = PreshMap()
         self._alias_index = PreshMap()
         self.vocab = vocab
-        self.vocab.strings.add("")
         self._create_empty_vectors(dummy_hash=self.vocab.strings[""])
 
     @property
@@ -318,9 +319,30 @@ cdef class KnowledgeBase:
 
         return 0.0
 
+    def to_disk(self, path, exclude: Iterable[str] = SimpleFrozenList()):
+        path = ensure_path(path)
+        if not path.exists():
+            path.mkdir(parents=True)
+        if not path.is_dir():
+            raise ValueError(Errors.E928.format(loc=path))
+        serialize = {}
+        serialize["contents"] = lambda p: self.write_contents(p)
+        serialize["strings.json"] = lambda p: self.vocab.strings.to_disk(p)
+        util.to_disk(path, serialize, exclude)
 
-    def to_disk(self, loc):
-        cdef Writer writer = Writer(loc)
+    def from_disk(self, path, exclude: Iterable[str] = SimpleFrozenList()):
+        path = ensure_path(path)
+        if not path.exists():
+            raise ValueError(Errors.E929.format(loc=path))
+        if not path.is_dir():
+            raise ValueError(Errors.E928.format(loc=path))
+        deserialize = {}
+        deserialize["contents"] = lambda p: self.read_contents(p)
+        deserialize["strings.json"] = lambda p: self.vocab.strings.from_disk(p)
+        util.from_disk(path, deserialize, exclude)
+
+    def write_contents(self, file_path):
+        cdef Writer writer = Writer(file_path)
         writer.write_header(self.get_size_entities(), self.entity_vector_length)
 
         # dumping the entity vectors in their original order
@@ -359,7 +381,7 @@ cdef class KnowledgeBase:
 
         writer.close()
 
-    cpdef from_disk(self, loc):
+    def read_contents(self, file_path):
         cdef hash_t entity_hash
         cdef hash_t alias_hash
         cdef int64_t entry_index
@@ -369,7 +391,7 @@ cdef class KnowledgeBase:
         cdef AliasC alias
         cdef float vector_element
 
-        cdef Reader reader = Reader(loc)
+        cdef Reader reader = Reader(file_path)
 
         # STEP 0: load header and initialize KB
         cdef int64_t nr_entities
@@ -450,16 +472,13 @@ cdef class KnowledgeBase:
 
 
 cdef class Writer:
-    def __init__(self, object loc):
-        if isinstance(loc, Path):
-            loc = bytes(loc)
-        if path.exists(loc):
-            if path.isdir(loc):
-                raise ValueError(Errors.E928.format(loc=loc))
-        cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
+    def __init__(self, path):
+        assert isinstance(path, Path)
+        content = bytes(path)
+        cdef bytes bytes_loc = content.encode('utf8') if type(content) == unicode else content
         self._fp = fopen(<char*>bytes_loc, 'wb')
         if not self._fp:
-            raise IOError(Errors.E146.format(path=loc))
+            raise IOError(Errors.E146.format(path=path))
         fseek(self._fp, 0, 0)
 
     def close(self):
@@ -496,14 +515,9 @@ cdef class Writer:
 
 
 cdef class Reader:
-    def __init__(self, object loc):
-        if isinstance(loc, Path):
-            loc = bytes(loc)
-        if not path.exists(loc):
-            raise ValueError(Errors.E929.format(loc=loc))
-        if path.isdir(loc):
-            raise ValueError(Errors.E928.format(loc=loc))
-        cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
+    def __init__(self, path):
+        content = bytes(path)
+        cdef bytes bytes_loc = content.encode('utf8') if type(content) == unicode else content
         self._fp = fopen(<char*>bytes_loc, 'rb')
         if not self._fp:
             PyErr_SetFromErrno(IOError)

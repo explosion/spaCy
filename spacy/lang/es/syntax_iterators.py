@@ -8,7 +8,7 @@ from ...tokens import Doc, Span, Token
 def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
     """Detect base noun phrases from a dependency parse. Works on Doc and Span."""
     doc = doclike.doc
-    if not doc.is_parsed:
+    if not doc.has_annotation("DEP"):
         raise ValueError(Errors.E029)
     if not len(doc):
         return
@@ -58,7 +58,7 @@ def noun_bounds(
                 doc, token, np_left_deps, np_right_deps, stop_deps
             )
             filter_func = lambda t: is_verb_token(t) or t.dep in stop_deps
-            if list(filter(filter_func, doc[left_bound.i : right.i],)):
+            if list(filter(filter_func, doc[left_bound.i : right.i])):
                 break
             else:
                 right_bound = right

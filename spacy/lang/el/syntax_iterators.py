@@ -13,7 +13,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
     # Further improvement of the models will eliminate the need for this tag.
     labels = ["nsubj", "obj", "iobj", "appos", "ROOT", "obl"]
     doc = doclike.doc  # Ensure works on both Doc and Span.
-    if not doc.is_parsed:
+    if not doc.has_annotation("DEP"):
         raise ValueError(Errors.E029)
     np_deps = [doc.vocab.strings.add(label) for label in labels]
     conj = doc.vocab.strings.add("conj")

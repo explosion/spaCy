@@ -4,16 +4,15 @@ import re
 import copy
 from mock import Mock
 from spacy.matcher import DependencyMatcher
-from ..util import get_doc
+from spacy.tokens import Doc
 
 
 @pytest.fixture
 def doc(en_vocab):
-    text = "The quick brown fox jumped over the lazy fox"
-    heads = [3, 2, 1, 1, 0, -1, 2, 1, -3]
+    words = ["The", "quick", "brown", "fox", "jumped", "over", "the", "lazy", "fox"]
+    heads = [3, 3, 3, 4, 4, 4, 8, 8, 5]
     deps = ["det", "amod", "amod", "nsubj", "ROOT", "prep", "pobj", "det", "amod"]
-    doc = get_doc(en_vocab, text.split(), heads=heads, deps=deps)
-    return doc
+    return Doc(en_vocab, words=words, heads=heads, deps=deps)
 
 
 @pytest.fixture
@@ -236,10 +235,10 @@ def test_dependency_matcher_callback(en_vocab, doc):
 @pytest.mark.parametrize("op,num_matches", [(".", 8), (".*", 20), (";", 8), (";*", 20)])
 def test_dependency_matcher_precedence_ops(en_vocab, op, num_matches):
     # two sentences to test that all matches are within the same sentence
-    doc = get_doc(
+    doc = Doc(
         en_vocab,
         words=["a", "b", "c", "d", "e"] * 2,
-        heads=[0, -1, -2, -3, -4] * 2,
+        heads=[0, 0, 0, 0, 0, 5, 5, 5, 5, 5],
         deps=["dep"] * 10,
     )
     match_count = 0

@@ -13,7 +13,7 @@ from ..errors import Errors
 from ..util import ensure_path, SimpleFrozenList
 
 # fmt: off
-ALL_ATTRS = ("ORTH", "TAG", "HEAD", "DEP", "ENT_IOB", "ENT_TYPE", "ENT_KB_ID", "LEMMA", "MORPH", "POS")
+ALL_ATTRS = ("ORTH", "NORM", "TAG", "HEAD", "DEP", "ENT_IOB", "ENT_TYPE", "ENT_KB_ID", "ENT_ID", "LEMMA", "MORPH", "POS", "SENT_START")
 # fmt: on
 
 
@@ -58,7 +58,7 @@ class DocBin:
 
         attrs (Iterable[str]): List of attributes to serialize. 'orth' and
             'spacy' are always serialized, so they're not required.
-        store_user_data (bool): Whether to include the `Doc.user_data`.
+        store_user_data (bool): Whether to write the `Doc.user_data` to bytes/file.
         docs (Iterable[Doc]): Docs to add.
 
         DOCS: https://nightly.spacy.io/api/docbin#init
@@ -101,16 +101,17 @@ class DocBin:
             self.strings.add(token.text)
             self.strings.add(token.tag_)
             self.strings.add(token.lemma_)
-            self.strings.add(token.morph_)
+            self.strings.add(str(token.morph))
             self.strings.add(token.dep_)
             self.strings.add(token.ent_type_)
             self.strings.add(token.ent_kb_id_)
         self.cats.append(doc.cats)
-        if self.store_user_data:
-            self.user_data.append(srsly.msgpack_dumps(doc.user_data))
+        self.user_data.append(srsly.msgpack_dumps(doc.user_data))
 
     def get_docs(self, vocab: Vocab) -> Iterator[Doc]:
         """Recover Doc objects from the annotations, using the given vocab.
+        Note that the user data of each doc will be read (if available) and returned,
+        regardless of the setting of 'self.store_user_data'.
 
         vocab (Vocab): The shared vocab.
         YIELDS (Doc): The Doc objects.
@@ -129,7 +130,7 @@ class DocBin:
             doc = Doc(vocab, words=tokens[:, orth_col], spaces=spaces)
             doc = doc.from_array(self.attrs, tokens)
             doc.cats = self.cats[i]
-            if self.store_user_data:
+            if i < len(self.user_data) and self.user_data[i] is not None:
                 user_data = srsly.msgpack_loads(self.user_data[i], use_list=False)
                 doc.user_data.update(user_data)
             yield doc
@@ -137,21 +138,31 @@ class DocBin:
     def merge(self, other: "DocBin") -> None:
         """Extend the annotations of this DocBin with the annotations from
         another. Will raise an error if the pre-defined attrs of the two
-        DocBins don't match.
+        DocBins don't match, or if they differ in whether or not to store
+        user data.
 
         other (DocBin): The DocBin to merge into the current bin.
 
         DOCS: https://nightly.spacy.io/api/docbin#merge
         """
         if self.attrs != other.attrs:
-            raise ValueError(Errors.E166.format(current=self.attrs, other=other.attrs))
+            raise ValueError(
+                Errors.E166.format(param="attrs", current=self.attrs, other=other.attrs)
+            )
+        if self.store_user_data != other.store_user_data:
+            raise ValueError(
+                Errors.E166.format(
+                    param="store_user_data",
+                    current=self.store_user_data,
+                    other=other.store_user_data,
+                )
+            )
         self.tokens.extend(other.tokens)
         self.spaces.extend(other.spaces)
         self.strings.update(other.strings)
         self.cats.extend(other.cats)
         self.flags.extend(other.flags)
-        if self.store_user_data:
-            self.user_data.extend(other.user_data)
+        self.user_data.extend(other.user_data)
 
     def to_bytes(self) -> bytes:
         """Serialize the DocBin's annotations to a bytestring.
@@ -171,7 +182,7 @@ class DocBin:
             "tokens": tokens.tobytes("C"),
             "spaces": spaces.tobytes("C"),
             "lengths": numpy.asarray(lengths, dtype="int32").tobytes("C"),
-            "strings": list(self.strings),
+            "strings": list(sorted(self.strings)),
             "cats": self.cats,
             "flags": self.flags,
         }
@@ -200,8 +211,10 @@ class DocBin:
         self.spaces = NumpyOps().unflatten(flat_spaces, lengths)
         self.cats = msg["cats"]
         self.flags = msg.get("flags", [{} for _ in lengths])
-        if self.store_user_data and "user_data" in msg:
+        if "user_data" in msg:
             self.user_data = list(msg["user_data"])
+        else:
+            self.user_data = [None] * len(self)
         for tokens in self.tokens:
             assert len(tokens.shape) == 2, tokens.shape  # this should never happen
         return self

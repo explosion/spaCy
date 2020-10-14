@@ -7,7 +7,6 @@ from .lex_attrs import LEX_ATTRS
 from .syntax_iterators import SYNTAX_ITERATORS
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
 from .lemmatizer import GreekLemmatizer
-from ...lookups import Lookups
 from ...language import Language
 
 
@@ -29,19 +28,11 @@ class Greek(Language):
 @Greek.factory(
     "lemmatizer",
     assigns=["token.lemma"],
-    default_config={"model": None, "mode": "rule", "lookups": None},
-    scores=["lemma_acc"],
+    default_config={"model": None, "mode": "rule"},
     default_score_weights={"lemma_acc": 1.0},
 )
-def make_lemmatizer(
-    nlp: Language,
-    model: Optional[Model],
-    name: str,
-    mode: str,
-    lookups: Optional[Lookups],
-):
-    lookups = GreekLemmatizer.load_lookups(nlp.lang, mode, lookups)
-    return GreekLemmatizer(nlp.vocab, model, name, mode=mode, lookups=lookups)
+def make_lemmatizer(nlp: Language, model: Optional[Model], name: str, mode: str):
+    return GreekLemmatizer(nlp.vocab, model, name, mode=mode)
 
 
 __all__ = ["Greek"]

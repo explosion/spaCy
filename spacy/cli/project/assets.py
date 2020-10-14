@@ -66,6 +66,7 @@ def project_assets(project_dir: Path, *, sparse_checkout: bool = False) -> None:
                 branch=asset["git"].get("branch"),
                 sparse=sparse_checkout,
             )
+            msg.good(f"Downloaded asset {dest}")
         else:
             url = asset.get("url")
             if not url:

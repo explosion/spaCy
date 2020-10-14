@@ -32,7 +32,7 @@ the [config](/usage/training#config):
 
 ```ini
 [nlp]
-pipeline = ["tagger", "parser", "ner"]
+pipeline = ["tok2vec", "tagger", "parser", "ner"]
 ```
 
 import Accordion from 'components/accordion.js'

@@ -197,18 +197,24 @@ def test_issue1807():
 def test_issue1834():
     """Test that sentence boundaries & parse/tag flags are not lost
     during serialization."""
-    string = "This is a first sentence . And another one"
-    doc = Doc(Vocab(), words=string.split())
-    doc[6].sent_start = True
+    words = ["This", "is", "a", "first", "sentence", ".", "And", "another", "one"]
+    doc = Doc(Vocab(), words=words)
+    doc[6].is_sent_start = True
     new_doc = Doc(doc.vocab).from_bytes(doc.to_bytes())
     assert new_doc[6].sent_start
-    assert not new_doc.is_parsed
-    assert not new_doc.is_tagged
-    doc.is_parsed = True
-    doc.is_tagged = True
+    assert not new_doc.has_annotation("DEP")
+    assert not new_doc.has_annotation("TAG")
+    doc = Doc(
+        Vocab(),
+        words=words,
+        tags=["TAG"] * len(words),
+        heads=[0, 0, 0, 0, 0, 0, 6, 6, 6],
+        deps=["dep"] * len(words),
+    )
     new_doc = Doc(doc.vocab).from_bytes(doc.to_bytes())
-    assert new_doc.is_parsed
-    assert new_doc.is_tagged
+    assert new_doc[6].sent_start
+    assert new_doc.has_annotation("DEP")
+    assert new_doc.has_annotation("TAG")
 
 
 def test_issue1868():
@@ -244,7 +250,7 @@ def test_issue1915():
     ner = nlp.add_pipe("ner")
     ner.add_label("answer")
     with pytest.raises(ValueError):
-        nlp.begin_training(**cfg)
+        nlp.initialize(**cfg)
 
 
 def test_issue1945():

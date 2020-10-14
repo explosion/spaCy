@@ -108,8 +108,8 @@ _num_words = [
 
 def like_num(text):
     """
-   Check if text resembles a number
-   """
+    Check if text resembles a number
+    """
     if text.startswith(("+", "-", "±", "~")):
         text = text[1:]
     text = text.replace(",", "").replace(".", "")

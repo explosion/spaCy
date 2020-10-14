@@ -31,19 +31,19 @@ TRAIN_DATA = [
 ]
 
 
-def test_begin_training_examples():
+def test_initialize_examples():
     nlp = Language()
     nlp.add_pipe("senter")
     train_examples = []
     for t in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
     # you shouldn't really call this more than once, but for testing it should be fine
-    nlp.begin_training()
-    nlp.begin_training(get_examples=lambda: train_examples)
+    nlp.initialize()
+    nlp.initialize(get_examples=lambda: train_examples)
     with pytest.raises(TypeError):
-        nlp.begin_training(get_examples=lambda: None)
-    with pytest.raises(ValueError):
-        nlp.begin_training(get_examples=train_examples)
+        nlp.initialize(get_examples=lambda: None)
+    with pytest.raises(TypeError):
+        nlp.initialize(get_examples=train_examples)
 
 
 def test_overfitting_IO():
@@ -58,7 +58,7 @@ def test_overfitting_IO():
     train_examples[1].reference[11].is_sent_start = False
 
     nlp.add_pipe("senter")
-    optimizer = nlp.begin_training()
+    optimizer = nlp.initialize()
 
     for i in range(200):
         losses = {}

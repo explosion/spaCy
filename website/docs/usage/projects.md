@@ -29,15 +29,13 @@ and share your results with your team. spaCy projects can be used via the new
 
 ![Illustration of project workflow and commands](../images/projects.svg)
 
-<!-- TODO:
-<Project id="some_example_project">
+<Project id="pipelines/tagger_parser_ud">
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus interdum
-sodales lectus, ut sodales orci ullamcorper id. Sed condimentum neque ut erat
-mattis pretium.
+The easiest way to get started is to clone a project template and run it – for
+example, this end-to-end template that lets you train a **part-of-speech
+tagger** and **dependency parser** on a Universal Dependencies treebank.
 
 </Project>
--->
 
 spaCy projects make it easy to integrate with many other **awesome tools** in
 the data science and machine learning ecosystem to track and manage your data
@@ -65,10 +63,8 @@ project template and copies the files to a local directory. You can then run the
 project, e.g. to train a pipeline and edit the commands and scripts to build
 fully custom workflows.
 
-<!-- TODO: update with real example project -->
-
 ```cli
-python -m spacy project clone some_example_project
+python -m spacy project clone pipelines/tagger_parser_ud
 ```
 
 By default, the project will be cloned into the current working directory. You
@@ -216,21 +212,20 @@ format, train a pipeline, evaluate it and export metrics, package it and spin up
 a quick web demo. It looks pretty similar to a config file used to define CI
 pipelines.
 
-<!-- TODO: update with better (final) example -->
-
 ```yaml
-https://github.com/explosion/projects/tree/v3/tutorials/ner_fashion_brands/project.yml
+%%GITHUB_PROJECTS/pipelines/tagger_parser_ud/project.yml
 ```
 
-| Section       | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `title`       | An optional project title used in `--help` message and [auto-generated docs](#custom-docs).                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `description` | An optional project description used in [auto-generated docs](#custom-docs).                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `vars`        | A dictionary of variables that can be referenced in paths, URLs and scripts, just like [`config.cfg` variables](/usage/training#config-interpolation). For example, `${vars.name}` will use the value of the variable `name`. Variables need to be defined in the section `vars`, but can be a nested dict, so you're able to reference `${vars.model.name}`.                                                                                                                                                |
-| `directories` | An optional list of [directories](#project-files) that should be created in the project for assets, training outputs, metrics etc. spaCy will make sure that these directories always exist.                                                                                                                                                                                                                                                                                                                 |
-| `assets`      | A list of assets that can be fetched with the [`project assets`](/api/cli#project-assets) command. `url` defines a URL or local path, `dest` is the destination file relative to the project directory, and an optional `checksum` ensures that an error is raised if the file's checksum doesn't match. Instead of `url`, you can also provide a `git` block with the keys `repo`, `branch` and `path`, to download from a Git repo.                                                                        |
-| `workflows`   | A dictionary of workflow names, mapped to a list of command names, to execute in order. Workflows can be run with the [`project run`](/api/cli#project-run) command.                                                                                                                                                                                                                                                                                                                                         |
-| `commands`    | A list of named commands. A command can define an optional help message (shown in the CLI when the user adds `--help`) and the `script`, a list of commands to run. The `deps` and `outputs` let you define the created file the command depends on and produces, respectively. This lets spaCy determine whether a command needs to be re-run because its dependencies or outputs changed. Commands can be run as part of a workflow, or separately with the [`project run`](/api/cli#project-run) command. |
+| Section         | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `title`         | An optional project title used in `--help` message and [auto-generated docs](#custom-docs).                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `description`   | An optional project description used in [auto-generated docs](#custom-docs).                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `vars`          | A dictionary of variables that can be referenced in paths, URLs and scripts, just like [`config.cfg` variables](/usage/training#config-interpolation). For example, `${vars.name}` will use the value of the variable `name`. Variables need to be defined in the section `vars`, but can be a nested dict, so you're able to reference `${vars.model.name}`.                                                                                                                                                |
+| `directories`   | An optional list of [directories](#project-files) that should be created in the project for assets, training outputs, metrics etc. spaCy will make sure that these directories always exist.                                                                                                                                                                                                                                                                                                                 |
+| `assets`        | A list of assets that can be fetched with the [`project assets`](/api/cli#project-assets) command. `url` defines a URL or local path, `dest` is the destination file relative to the project directory, and an optional `checksum` ensures that an error is raised if the file's checksum doesn't match. Instead of `url`, you can also provide a `git` block with the keys `repo`, `branch` and `path`, to download from a Git repo.                                                                        |
+| `workflows`     | A dictionary of workflow names, mapped to a list of command names, to execute in order. Workflows can be run with the [`project run`](/api/cli#project-run) command.                                                                                                                                                                                                                                                                                                                                         |
+| `commands`      | A list of named commands. A command can define an optional help message (shown in the CLI when the user adds `--help`) and the `script`, a list of commands to run. The `deps` and `outputs` let you define the created file the command depends on and produces, respectively. This lets spaCy determine whether a command needs to be re-run because its dependencies or outputs changed. Commands can be run as part of a workflow, or separately with the [`project run`](/api/cli#project-run) command. |
+| `spacy_version` | Optional spaCy version range like `>=3.0.0,<3.1.0` that the project is compatible with. If it's loaded with an incompatible version, an error is raised when the project is loaded.                                                                                                                                                                                                                                                                                                                          |
 
 ### Data assets {#data-assets}
 
@@ -738,7 +733,10 @@ workflows, but only one can be tracked by DVC.
 <Infobox title="This section is still under construction" emoji="🚧" variant="warning">
 
 The Prodigy integration will require a nightly version of Prodigy that supports
-spaCy v3+.
+spaCy v3+. You can already use annotations created with Prodigy in spaCy v3 by
+exporting your data with
+[`data-to-spacy`](https://prodi.gy/docs/recipes#data-to-spacy) and running
+[`spacy convert`](/api/cli#convert) to convert it to the binary format.
 
 </Infobox>
 
@@ -814,7 +812,7 @@ full embedded visualizer, as well as individual components.
 > #### Installation
 >
 > ```bash
-> $ pip install "spacy-streamlit>=1.0.0a0"
+> $ pip install spacy-streamlit --pre
 > ```
 
 ![](../images/spacy-streamlit.png)
@@ -912,7 +910,7 @@ https://github.com/explosion/projects/blob/v3/integrations/fastapi/scripts/main.
 > #### Installation
 >
 > ```cli
-> $ pip install spacy-ray
+> $ pip install -U %%SPACY_PKG_NAME[ray]%%SPACY_PKG_FLAGS
 > # Check that the CLI is registered
 > $ python -m spacy ray --help
 > ```
@@ -925,6 +923,14 @@ package is installed in the same environment as spaCy, it will automatically add
 [`spacy ray`](/api/cli#ray) commands to your spaCy CLI. See the usage guide on
 [parallel training](/usage/training#parallel-training) for more details on how
 it works under the hood.
+
+<Project id="integrations/ray">
+
+Get started with parallel training using our project template. It trains a
+simple model on a Universal Dependencies Treebank and lets you parallelize the
+training with Ray.
+
+</Project>
 
 You can integrate [`spacy ray train`](/api/cli#ray-train) into your
 `project.yml` just like the regular training command and pass it the config, and
@@ -945,10 +951,6 @@ commands:
       - "training/model-best"
 ```
 
-<!-- TODO: <Project id="integrations/ray">
-
-</Project> -->
-
 ---
 
 ### Weights & Biases {#wandb} <IntegrationLogo name="wandb" width={175} height="auto" align="right" />
@@ -968,21 +970,19 @@ your results.
 > [training.logger]
 > @loggers = "spacy.WandbLogger.v1"
 > project_name = "monitor_spacy_training"
-> remove_config_values = ["paths.train", "paths.dev", "training.dev_corpus.path", "training.train_corpus.path"]
+> remove_config_values = ["paths.train", "paths.dev", "corpora.train.path", "corpora.dev.path"]
 > ```
 
 ![Screenshot: Visualized training results](../images/wandb1.jpg)
 
 ![Screenshot: Parameter importance using config values](../images/wandb2.jpg 'Parameter importance using config values')
 
-<!-- TODO:
-
 <Project id="integrations/wandb">
 
 Get started with tracking your spaCy training runs in Weights & Biases using our
-project template. It includes a simple config using the `WandbLogger`, as well
-as a custom logger implementation you can adjust for your specific use case.
+project template. It trains on the IMDB Movie Review Dataset and includes a
+simple config with the built-in `WandbLogger`, as well as a custom example of
+creating variants of the config for a simple hyperparameter grid search and
+logging the results.
 
 </Project>
-
--->

@@ -1,37 +1,36 @@
 # cython: infer_types=True, bounds_check=False, profile=True
 cimport cython
 cimport numpy as np
-from libc.string cimport memcpy, memset
+from libc.string cimport memcpy
 from libc.math cimport sqrt
 from libc.stdint cimport int32_t, uint64_t
 
 import copy
 from collections import Counter
+from enum import Enum
+import itertools
 import numpy
-import numpy.linalg
-import struct
 import srsly
 from thinc.api import get_array_module
 from thinc.util import copy_array
 import warnings
-import copy
 
 from .span cimport Span
 from .token cimport Token
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
-from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, CLUSTER
+from ..attrs cimport attr_id_t
 from ..attrs cimport LENGTH, POS, LEMMA, TAG, MORPH, DEP, HEAD, SPACY, ENT_IOB
-from ..attrs cimport ENT_TYPE, ENT_ID, ENT_KB_ID, SENT_START, IDX, attr_id_t
-from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
+from ..attrs cimport ENT_TYPE, ENT_ID, ENT_KB_ID, SENT_START, IDX, NORM
 
-from ..attrs import intify_attr, intify_attrs, IDS
-from ..util import normalize_slice
+from ..attrs import intify_attr, IDS
 from ..compat import copy_reg, pickle
 from ..errors import Errors, Warnings
+from ..morphology import Morphology
 from .. import util
 from .underscore import Underscore, get_ext_args
 from ._retokenize import Retokenizer
+from ._serialize import ALL_ATTRS as DOCBIN_ALL_ATTRS
 
 
 DEF PADDING = 5
@@ -87,6 +86,17 @@ cdef attr_t get_token_attr_for_matcher(const TokenC* token, attr_id_t feat_name)
             return False
     else:
         return get_token_attr(token, feat_name)
+
+
+class SetEntsDefault(str, Enum):
+    blocked = "blocked"
+    missing = "missing"
+    outside = "outside"
+    unmodified = "unmodified"
+
+    @classmethod
+    def values(cls):
+        return list(cls.__members__.keys())
 
 
 cdef class Doc:
@@ -161,17 +171,51 @@ cdef class Doc:
             raise ValueError(Errors.E046.format(name=name))
         return Underscore.doc_extensions.pop(name)
 
-    def __init__(self, Vocab vocab, words=None, spaces=None, user_data=None):
+    def __init__(
+        self,
+        Vocab vocab,
+        words=None,
+        spaces=None,
+        *,
+        user_data=None,
+        tags=None,
+        pos=None,
+        morphs=None,
+        lemmas=None,
+        heads=None,
+        deps=None,
+        sent_starts=None,
+        ents=None,
+    ):
         """Create a Doc object.
 
         vocab (Vocab): A vocabulary object, which must match any models you
             want to use (e.g. tokenizer, parser, entity recognizer).
-        words (list or None): A list of unicode strings to add to the document
+        words (Optional[List[str]]): A list of unicode strings to add to the document
             as words. If `None`, defaults to empty list.
-        spaces (list or None): A list of boolean values, of the same length as
+        spaces (Optional[List[bool]]): A list of boolean values, of the same length as
             words. True means that the word is followed by a space, False means
             it is not. If `None`, defaults to `[True]*len(words)`
         user_data (dict or None): Optional extra data to attach to the Doc.
+        tags (Optional[List[str]]): A list of unicode strings, of the same
+            length as words, to assign as token.tag. Defaults to None.
+        pos (Optional[List[str]]): A list of unicode strings, of the same
+            length as words, to assign as token.pos. Defaults to None.
+        morphs (Optional[List[str]]): A list of unicode strings, of the same
+            length as words, to assign as token.morph. Defaults to None.
+        lemmas (Optional[List[str]]): A list of unicode strings, of the same
+            length as words, to assign as token.lemma. Defaults to None.
+        heads (Optional[List[int]]): A list of values, of the same length as
+            words, to assign as heads. Head indices are the position of the
+            head in the doc. Defaults to None.
+        deps (Optional[List[str]]): A list of unicode strings, of the same
+            length as words, to assign as token.dep. Defaults to None.
+        sent_starts (Optional[List[Union[bool, None]]]): A list of values, of
+            the same length as words, to assign as token.is_sent_start. Will be
+            overridden by heads if heads is provided. Defaults to None.
+        ents (Optional[List[str]]): A list of unicode strings, of the same
+            length as words, as IOB tags to assign as token.ent_iob and
+            token.ent_type. Defaults to None.
 
         DOCS: https://nightly.spacy.io/api/doc#init
         """
@@ -190,8 +234,6 @@ cdef class Doc:
         self.c = data_start + PADDING
         self.max_length = size
         self.length = 0
-        self.is_tagged = False
-        self.is_parsed = False
         self.sentiment = 0.0
         self.cats = {}
         self.user_hooks = {}
@@ -203,7 +245,7 @@ cdef class Doc:
         self.noun_chunks_iterator = self.vocab.get_noun_chunks
         cdef bint has_space
         if words is None and spaces is not None:
-            raise ValueError("words must be set if spaces is set")
+            raise ValueError(Errors.E908)
         elif spaces is None and words is not None:
             self.has_unknown_spaces = True
         else:
@@ -221,11 +263,100 @@ cdef class Doc:
             else:
                 lexeme = self.vocab.get_by_orth(self.mem, word)
             self.push_back(lexeme, has_space)
-        # Tough to decide on policy for this. Is an empty doc tagged and parsed?
-        # There's no information we'd like to add to it, so I guess so?
-        if self.length == 0:
-            self.is_tagged = True
-            self.is_parsed = True
+
+        if heads is not None:
+            heads = [head - i for i, head in enumerate(heads)]
+        if deps and not heads:
+            heads = [0] * len(deps)
+        if sent_starts is not None:
+            for i in range(len(sent_starts)):
+                if sent_starts[i] is True:
+                    sent_starts[i] = 1
+                elif sent_starts[i] is False:
+                    sent_starts[i] = -1
+                elif sent_starts[i] is None or sent_starts[i] not in [-1, 0, 1]:
+                    sent_starts[i] = 0
+        ent_iobs = None
+        ent_types = None
+        if ents is not None:
+            iob_strings = Token.iob_strings()
+            # make valid IOB2 out of IOB1 or IOB2
+            for i, ent in enumerate(ents):
+                if ent is "":
+                    ents[i] = None
+                elif ent is not None and not isinstance(ent, str):
+                    raise ValueError(Errors.E177.format(tag=ent))
+                if i < len(ents) - 1:
+                    # OI -> OB
+                    if (ent is None or ent.startswith("O")) and \
+                            (ents[i+1] is not None and ents[i+1].startswith("I")):
+                        ents[i+1] = "B" + ents[i+1][1:]
+                    # B-TYPE1 I-TYPE2 or I-TYPE1 I-TYPE2 -> B/I-TYPE1 B-TYPE2
+                    if ent is not None and ents[i+1] is not None and \
+                            (ent.startswith("B") or ent.startswith("I")) and \
+                            ents[i+1].startswith("I") and \
+                            ent[1:] != ents[i+1][1:]:
+                        ents[i+1] = "B" + ents[i+1][1:]
+            ent_iobs = []
+            ent_types = []
+            for ent in ents:
+                if ent is None:
+                    ent_iobs.append(iob_strings.index(""))
+                    ent_types.append("")
+                elif ent == "O":
+                    ent_iobs.append(iob_strings.index(ent))
+                    ent_types.append("")
+                else:
+                    if len(ent) < 3 or ent[1] != "-":
+                        raise ValueError(Errors.E177.format(tag=ent))
+                    ent_iob, ent_type = ent.split("-", 1)
+                    if ent_iob not in iob_strings:
+                        raise ValueError(Errors.E177.format(tag=ent))
+                    ent_iob = iob_strings.index(ent_iob)
+                    ent_iobs.append(ent_iob)
+                    ent_types.append(ent_type)
+        headings = []
+        values = []
+        annotations = [pos, heads, deps, lemmas, tags, morphs, sent_starts, ent_iobs, ent_types]
+        possible_headings = [POS, HEAD, DEP, LEMMA, TAG, MORPH, SENT_START, ENT_IOB, ENT_TYPE]
+        for a, annot in enumerate(annotations):
+            if annot is not None:
+                if len(annot) != len(words):
+                    raise ValueError(Errors.E189)
+                headings.append(possible_headings[a])
+                if annot is not heads and annot is not sent_starts and annot is not ent_iobs:
+                    values.extend(annot)
+        for value in values:
+            self.vocab.strings.add(value)
+
+        # if there are any other annotations, set them
+        if headings:
+            attrs = self.to_array(headings)
+
+            j = 0
+            for annot in annotations:
+                if annot:
+                    if annot is heads or annot is sent_starts or annot is ent_iobs:
+                        for i in range(len(words)):
+                            if attrs.ndim == 1:
+                                attrs[i] = annot[i]
+                            else:
+                                attrs[i, j] = annot[i]
+                    elif annot is morphs:
+                        for i in range(len(words)):
+                            morph_key = vocab.morphology.add(morphs[i])
+                            if attrs.ndim == 1:
+                                attrs[i] = morph_key
+                            else:
+                                attrs[i, j] = morph_key
+                    else:
+                        for i in range(len(words)):
+                            if attrs.ndim == 1:
+                                attrs[i] = self.vocab.strings[annot[i]]
+                            else:
+                                attrs[i, j] = self.vocab.strings[annot[i]]
+                    j += 1
+            self.from_array(headings, attrs)
 
     @property
     def _(self):
@@ -233,37 +364,61 @@ cdef class Doc:
         return Underscore(Underscore.doc_extensions, self)
 
     @property
-    def is_sentenced(self):
-        """Check if the document has sentence boundaries assigned. This is
-        defined as having at least one of the following:
+    def is_tagged(self):
+        warnings.warn(Warnings.W107.format(prop="is_tagged", attr="TAG"), DeprecationWarning)
+        return self.has_annotation("TAG")
 
-        a) An entry "sents" in doc.user_hooks";
-        b) Doc.is_parsed is set to True;
-        c) At least one token other than the first where sent_start is not None.
-        """
-        if "sents" in self.user_hooks:
-            return True
-        if self.is_parsed:
-            return True
-        if len(self) < 2:
-            return True
-        for i in range(1, self.length):
-            if self.c[i].sent_start == -1 or self.c[i].sent_start == 1:
-                return True
-        return False
+    @property
+    def is_parsed(self):
+        warnings.warn(Warnings.W107.format(prop="is_parsed", attr="DEP"), DeprecationWarning)
+        return self.has_annotation("DEP")
 
     @property
     def is_nered(self):
-        """Check if the document has named entities set. Will return True if
-        *any* of the tokens has a named entity tag set (even if the others are
-        unknown values), or if the document is empty.
+        warnings.warn(Warnings.W107.format(prop="is_nered", attr="ENT_IOB"), DeprecationWarning)
+        return self.has_annotation("ENT_IOB")
+
+    @property
+    def is_sentenced(self):
+        warnings.warn(Warnings.W107.format(prop="is_sentenced", attr="SENT_START"), DeprecationWarning)
+        return self.has_annotation("SENT_START")
+
+    def has_annotation(self, attr, *, require_complete=False):
+        """Check whether the doc contains annotation on a token attribute.
+
+        attr (Union[int, str]): The attribute string name or int ID.
+        require_complete (bool): Whether to check that the attribute is set on
+            every token in the doc.
+        RETURNS (bool): Whether annotation is present.
+
+        DOCS: https://nightly.spacy.io/api/doc#has_annotation
         """
-        if len(self) == 0:
+
+        # empty docs are always annotated
+        if self.length == 0:
             return True
-        for i in range(self.length):
-            if self.c[i].ent_iob != 0:
+        cdef int i
+        cdef int range_start = 0
+        attr = intify_attr(attr)
+        # adjust attributes
+        if attr == HEAD:
+            # HEAD does not have an unset state, so rely on DEP
+            attr = DEP
+        elif attr == self.vocab.strings["IS_SENT_START"]:
+            # as in Matcher, allow IS_SENT_START as an alias of SENT_START
+            attr = SENT_START
+        # special cases for sentence boundaries
+        if attr == SENT_START:
+            if "sents" in self.user_hooks:
                 return True
-        return False
+            # docs of length 1 always have sentence boundaries
+            if self.length == 1:
+                return True
+            range_start = 1
+        if require_complete:
+            return all(Token.get_struct_attr(&self.c[i], attr) for i in range(range_start, self.length))
+        else:
+            return any(Token.get_struct_attr(&self.c[i], attr) for i in range(range_start, self.length))
 
     def __getitem__(self, object i):
         """Get a `Token` or `Span` object.
@@ -291,7 +446,7 @@ cdef class Doc:
         DOCS: https://nightly.spacy.io/api/doc#getitem
         """
         if isinstance(i, slice):
-            start, stop = normalize_slice(len(self), i.start, i.stop, i.step)
+            start, stop = util.normalize_slice(len(self), i.start, i.stop, i.step)
             return Span(self, start, stop, label=0)
         if i < 0:
             i = self.length + i
@@ -556,47 +711,100 @@ cdef class Doc:
             # TODO:
             # 1. Test basic data-driven ORTH gazetteer
             # 2. Test more nuanced date and currency regex
-            tokens_in_ents = {}
-            cdef attr_t entity_type
-            cdef attr_t kb_id
+            cdef attr_t entity_type, kb_id
             cdef int ent_start, ent_end
+            ent_spans = []
             for ent_info in ents:
-                entity_type, kb_id, ent_start, ent_end = get_entity_info(ent_info)
-                for token_index in range(ent_start, ent_end):
-                    if token_index in tokens_in_ents.keys():
-                        raise ValueError(Errors.E103.format(
-                            span1=(tokens_in_ents[token_index][0],
-                                   tokens_in_ents[token_index][1],
-                                   self.vocab.strings[tokens_in_ents[token_index][2]]),
-                            span2=(ent_start, ent_end, self.vocab.strings[entity_type])))
-                    tokens_in_ents[token_index] = (ent_start, ent_end, entity_type, kb_id)
-            cdef int i
+                entity_type_, kb_id, ent_start, ent_end = get_entity_info(ent_info)
+                if isinstance(entity_type_, str):
+                    self.vocab.strings.add(entity_type_)
+                span = Span(self, ent_start, ent_end, label=entity_type_, kb_id=kb_id)
+                ent_spans.append(span)
+            self.set_ents(ent_spans, default=SetEntsDefault.outside)
+
+    def set_ents(self, entities, *, blocked=None, missing=None, outside=None, default=SetEntsDefault.outside):
+        """Set entity annotation.
+
+        entities (List[Span]): Spans with labels to set as entities.
+        blocked (Optional[List[Span]]): Spans to set as 'blocked' (never an
+            entity) for spacy's built-in NER component. Other components may
+            ignore this setting.
+        missing (Optional[List[Span]]): Spans with missing/unknown entity
+            information.
+        outside (Optional[List[Span]]): Spans outside of entities (O in IOB).
+        default (str): How to set entity annotation for tokens outside of any
+            provided spans. Options: "blocked", "missing", "outside" and
+            "unmodified" (preserve current state). Defaults to "outside".
+        """
+        if default not in SetEntsDefault.values():
+            raise ValueError(Errors.E1011.format(default=default, modes=", ".join(SetEntsDefault)))
+
+        # Ignore spans with missing labels
+        entities = [ent for ent in entities if ent.label > 0]
+
+        if blocked is None:
+            blocked = tuple()
+        if missing is None:
+            missing = tuple()
+        if outside is None:
+            outside = tuple()
+
+        # Find all tokens covered by spans and check that none are overlapping
+        cdef int i
+        seen_tokens = set()
+        for span in itertools.chain.from_iterable([entities, blocked, missing, outside]):
+            if not isinstance(span, Span):
+                raise ValueError(Errors.E1012.format(span=span))
+            for i in range(span.start, span.end):
+                if i in seen_tokens:
+                    raise ValueError(Errors.E1010.format(i=i))
+                seen_tokens.add(i)
+
+        # Set all specified entity information
+        for span in entities:
+            for i in range(span.start, span.end):
+                if i == span.start:
+                    self.c[i].ent_iob = 3
+                else:
+                    self.c[i].ent_iob = 1
+                self.c[i].ent_type = span.label
+                self.c[i].ent_kb_id = span.kb_id
+        for span in blocked:
+            for i in range(span.start, span.end):
+                self.c[i].ent_iob = 3
+                self.c[i].ent_type = 0
+        for span in missing:
+            for i in range(span.start, span.end):
+                self.c[i].ent_iob = 0
+                self.c[i].ent_type = 0
+        for span in outside:
+            for i in range(span.start, span.end):
+                self.c[i].ent_iob = 2
+                self.c[i].ent_type = 0
+
+        # Set tokens outside of all provided spans
+        if default != SetEntsDefault.unmodified:
             for i in range(self.length):
-                # default values
-                entity_type = 0
-                kb_id = 0
+                if i not in seen_tokens:
+                    self.c[i].ent_type = 0
+                    if default == SetEntsDefault.outside:
+                        self.c[i].ent_iob = 2
+                    elif default == SetEntsDefault.missing:
+                        self.c[i].ent_iob = 0
+                    elif default == SetEntsDefault.blocked:
+                        self.c[i].ent_iob = 3
 
-                # Set ent_iob to Missing (0) by default unless this token was nered before
-                ent_iob = 0
-                if self.c[i].ent_iob != 0:
-                    ent_iob = 2
-
-                # overwrite if the token was part of a specified entity
-                if i in tokens_in_ents.keys():
-                    ent_start, ent_end, entity_type, kb_id = tokens_in_ents[i]
-                    if entity_type is None or entity_type <= 0:
-                        # Blocking this token from being overwritten by downstream NER
-                        ent_iob = 3
-                    elif ent_start == i:
-                        # Marking the start of an entity
-                        ent_iob = 3
-                    else:
-                        # Marking the inside of an entity
-                        ent_iob = 1
-
-                self.c[i].ent_type = entity_type
-                self.c[i].ent_kb_id = kb_id
-                self.c[i].ent_iob = ent_iob
+        # Fix any resulting inconsistent annotation
+        for i in range(self.length - 1):
+            # I must follow B or I: convert I to B
+            if (self.c[i].ent_iob == 0 or self.c[i].ent_iob == 2) and \
+                    self.c[i+1].ent_iob == 1:
+                self.c[i+1].ent_iob = 3
+            # Change of type with BI or II: convert second I to B
+            if self.c[i].ent_type != self.c[i+1].ent_type and \
+                    (self.c[i].ent_iob == 3 or self.c[i].ent_iob == 1) and \
+                    self.c[i+1].ent_iob == 1:
+                self.c[i+1].ent_iob = 3
 
     @property
     def noun_chunks(self):
@@ -627,16 +835,13 @@ cdef class Doc:
     @property
     def sents(self):
         """Iterate over the sentences in the document. Yields sentence `Span`
-        objects. Sentence spans have no label. To improve accuracy on informal
-        texts, spaCy calculates sentence boundaries from the syntactic
-        dependency parse. If the parser is disabled, the `sents` iterator will
-        be unavailable.
+        objects. Sentence spans have no label.
 
         YIELDS (Span): Sentences in the document.
 
         DOCS: https://nightly.spacy.io/api/doc#sents
         """
-        if not self.is_sentenced:
+        if not self.has_annotation("SENT_START"):
             raise ValueError(Errors.E030)
         if "sents" in self.user_hooks:
             yield from self.user_hooks["sents"](self)
@@ -660,10 +865,6 @@ cdef class Doc:
         return self.vocab.lang
 
     cdef int push_back(self, LexemeOrToken lex_or_tok, bint has_space) except -1:
-        if self.length == 0:
-            # Flip these to false when we see the first token.
-            self.is_tagged = False
-            self.is_parsed = False
         if self.length == self.max_length:
             self._realloc(self.length * 2)
         cdef TokenC* t = &self.c[self.length]
@@ -786,14 +987,6 @@ cdef class Doc:
         for i in range(self.length, self.max_length + PADDING):
             self.c[i].lex = &EMPTY_LEXEME
 
-    cdef void set_parse(self, const TokenC* parsed) nogil:
-        # TODO: This method is fairly misleading atm. It's used by Parser
-        # to actually apply the parse calculated. Need to rethink this.
-        # Probably we should use from_array?
-        self.is_parsed = True
-        for i in range(self.length):
-            self.c[i] = parsed[i]
-
     def from_array(self, attrs, array):
         """Load attributes from a numpy array. Write to a `Doc` object, from an
         `(M, N)` array of attributes.
@@ -818,8 +1011,6 @@ cdef class Doc:
         if array.dtype != numpy.uint64:
             warnings.warn(Warnings.W028.format(type=array.dtype))
 
-        if SENT_START in attrs and HEAD in attrs:
-            raise ValueError(Errors.E032)
         cdef int i, col
         cdef int32_t abs_head_index
         cdef attr_id_t attr_id
@@ -879,18 +1070,17 @@ cdef class Doc:
                     # add morph to morphology table
                     self.vocab.morphology.add(self.vocab.strings[value])
                 Token.set_struct_attr(token, attr_ids[j], value)
-        # Set flags
-        self.is_parsed = bool(self.is_parsed or HEAD in attrs)
-        self.is_tagged = bool(self.is_tagged or TAG in attrs or POS in attrs)
-        # If document is parsed, set children
-        if self.is_parsed:
-            set_children_from_heads(self.c, length)
+        # If document is parsed, set children and sentence boundaries
+        if HEAD in attrs and DEP in attrs:
+            col = attrs.index(DEP)
+            if array[:, col].any():
+                set_children_from_heads(self.c, 0, length)
         return self
 
     @staticmethod
     def from_docs(docs, ensure_whitespace=True, attrs=None):
-        """Concatenate multiple Doc objects to form a new one. Raises an error if the `Doc` objects do not all share
-        the same `Vocab`.
+        """Concatenate multiple Doc objects to form a new one. Raises an error
+        if the `Doc` objects do not all share the same `Vocab`.
 
         docs (list): A list of Doc objects.
         ensure_whitespace (bool): Insert a space between two adjacent docs whenever the first doc does not end in whitespace.
@@ -908,16 +1098,7 @@ cdef class Doc:
         (vocab,) = vocab
 
         if attrs is None:
-            attrs = [LEMMA, NORM]
-            if all(doc.is_nered for doc in docs):
-                attrs.extend([ENT_IOB, ENT_KB_ID, ENT_TYPE])
-            # TODO: separate for is_morphed?
-            if all(doc.is_tagged for doc in docs):
-                attrs.extend([TAG, POS, MORPH])
-            if all(doc.is_parsed for doc in docs):
-                attrs.extend([HEAD, DEP])
-            else:
-                attrs.append(SENT_START)
+            attrs = Doc._get_array_attrs()
         else:
             if any(isinstance(attr, str) for attr in attrs):     # resolve attribute names
                 attrs = [intify_attr(attr) for attr in attrs]    # intify_attr returns None for invalid attrs
@@ -989,9 +1170,6 @@ cdef class Doc:
         other.tensor = copy.deepcopy(self.tensor)
         other.cats = copy.deepcopy(self.cats)
         other.user_data = copy.deepcopy(self.user_data)
-        other.is_tagged = self.is_tagged
-        other.is_parsed = self.is_parsed
-        other.is_morphed = self.is_morphed
         other.sentiment = self.sentiment
         other.has_unknown_spaces = self.has_unknown_spaces
         other.user_hooks = dict(self.user_hooks)
@@ -1065,22 +1243,16 @@ cdef class Doc:
 
         DOCS: https://nightly.spacy.io/api/doc#to_bytes
         """
-        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE, ENT_ID, NORM, ENT_KB_ID]
-        if self.is_tagged:
-            array_head.extend([TAG, POS])
-        # If doc parsed add head and dep attribute
-        if self.is_parsed:
-            array_head.extend([HEAD, DEP])
-        # Otherwise add sent_start
-        else:
-            array_head.append(SENT_START)
+        array_head = Doc._get_array_attrs()
         strings = set()
         for token in self:
             strings.add(token.tag_)
             strings.add(token.lemma_)
+            strings.add(str(token.morph))
             strings.add(token.dep_)
             strings.add(token.ent_type_)
             strings.add(token.ent_kb_id_)
+            strings.add(token.ent_id_)
             strings.add(token.norm_)
         # Msgpack doesn't distinguish between lists and tuples, which is
         # vexing for user data. As a best guess, we *know* that within
@@ -1226,26 +1398,31 @@ cdef class Doc:
         attributes. Attribute values need to be JSON-serializable. Values will
         be added to an "_" key in the data, e.g. "_": {"foo": "bar"}.
         RETURNS (dict): The data in spaCy's JSON format.
-
-        DOCS: https://nightly.spacy.io/api/doc#to_json
         """
         data = {"text": self.text}
-        if self.is_nered:
+        if self.has_annotation("ENT_IOB"):
             data["ents"] = [{"start": ent.start_char, "end": ent.end_char,
                             "label": ent.label_} for ent in self.ents]
-        if self.is_sentenced:
+        if self.has_annotation("SENT_START"):
             sents = list(self.sents)
             data["sents"] = [{"start": sent.start_char, "end": sent.end_char}
                              for sent in sents]
         if self.cats:
             data["cats"] = self.cats
         data["tokens"] = []
+        attrs = ["TAG", "MORPH", "POS", "LEMMA", "DEP"]
+        include_annotation = {attr: self.has_annotation(attr) for attr in attrs}
         for token in self:
             token_data = {"id": token.i, "start": token.idx, "end": token.idx + len(token)}
-            if self.is_tagged:
-                token_data["pos"] = token.pos_
+            if include_annotation["TAG"]:
                 token_data["tag"] = token.tag_
-            if self.is_parsed:
+            if include_annotation["POS"]:
+                token_data["pos"] = token.pos_
+            if include_annotation["MORPH"]:
+                token_data["morph"] = token.morph.to_json()
+            if include_annotation["LEMMA"]:
+                token_data["lemma"] = token.lemma_
+            if include_annotation["DEP"]:
                 token_data["dep"] = token.dep_
                 token_data["head"] = token.head.i
             data["tokens"].append(token_data)
@@ -1291,6 +1468,12 @@ cdef class Doc:
                     j += 1
         return output
 
+    @staticmethod
+    def _get_array_attrs():
+        attrs = [LENGTH, SPACY]
+        attrs.extend(intify_attr(x) for x in DOCBIN_ALL_ATTRS)
+        return tuple(attrs)
+
 
 cdef int token_by_start(const TokenC* tokens, int length, int start_char) except -2:
     cdef int i = token_by_char(tokens, length, start_char)
@@ -1321,13 +1504,13 @@ cdef int token_by_char(const TokenC* tokens, int length, int char_idx) except -2
             return mid
     return -1
 
-
-cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
+cdef int set_children_from_heads(TokenC* tokens, int start, int end) except -1:
+    # note: end is exclusive
     cdef TokenC* head
     cdef TokenC* child
     cdef int i
     # Set number of left/right children to 0. We'll increment it in the loops.
-    for i in range(length):
+    for i in range(start, end):
         tokens[i].l_kids = 0
         tokens[i].r_kids = 0
         tokens[i].l_edge = i
@@ -1341,38 +1524,40 @@ cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
     # without risking getting stuck in an infinite loop if something is
     # terribly malformed.
     while not heads_within_sents:
-        heads_within_sents = _set_lr_kids_and_edges(tokens, length, loop_count)
+        heads_within_sents = _set_lr_kids_and_edges(tokens, start, end, loop_count)
         if loop_count > 10:
-            warnings.warn(Warnings.W026)
+            util.logger.debug(Warnings.W026)
             break
         loop_count += 1
     # Set sentence starts
-    for i in range(length):
-        if tokens[i].head == 0 and tokens[i].dep != 0:
-            tokens[tokens[i].l_edge].sent_start = True
+    for i in range(start, end):
+        tokens[i].sent_start = -1
+    for i in range(start, end):
+        if tokens[i].head == 0:
+            tokens[tokens[i].l_edge].sent_start = 1
 
 
-cdef int _set_lr_kids_and_edges(TokenC* tokens, int length, int loop_count) except -1:
+cdef int _set_lr_kids_and_edges(TokenC* tokens, int start, int end, int loop_count) except -1:
     # May be called multiple times due to non-projectivity. See issues #3170
     # and #4688.
     # Set left edges
     cdef TokenC* head
     cdef TokenC* child
     cdef int i, j
-    for i in range(length):
+    for i in range(start, end):
         child = &tokens[i]
         head = &tokens[i + child.head]
-        if child < head and loop_count == 0:
+        if loop_count == 0 and child < head:
             head.l_kids += 1
         if child.l_edge < head.l_edge:
             head.l_edge = child.l_edge
         if child.r_edge > head.r_edge:
             head.r_edge = child.r_edge
     # Set right edges - same as above, but iterate in reverse
-    for i in range(length-1, -1, -1):
+    for i in range(end-1, start-1, -1):
         child = &tokens[i]
         head = &tokens[i + child.head]
-        if child > head and loop_count == 0:
+        if loop_count == 0 and child > head:
             head.r_kids += 1
         if child.r_edge > head.r_edge:
             head.r_edge = child.r_edge
@@ -1380,14 +1565,14 @@ cdef int _set_lr_kids_and_edges(TokenC* tokens, int length, int loop_count) exce
             head.l_edge = child.l_edge
     # Get sentence start positions according to current state
     sent_starts = set()
-    for i in range(length):
-        if tokens[i].head == 0 and tokens[i].dep != 0:
+    for i in range(start, end):
+        if tokens[i].head == 0:
             sent_starts.add(tokens[i].l_edge)
     cdef int curr_sent_start = 0
     cdef int curr_sent_end = 0
     # Check whether any heads are not within the current sentence
-    for i in range(length):
-        if (i > 0 and i in sent_starts) or i == length - 1:
+    for i in range(start, end):
+        if (i > 0 and i in sent_starts) or i == end - 1:
             curr_sent_end = i
             for j in range(curr_sent_start, curr_sent_end):
                 if tokens[j].head + j < curr_sent_start or tokens[j].head + j >= curr_sent_end + 1:
@@ -1436,6 +1621,7 @@ cdef int [:,:] _get_lca_matrix(Doc doc, int start, int end):
         with shape (n, n), where n = len(doc).
     """
     cdef int [:,:] lca_matrix
+    cdef int j, k
     n_tokens= end - start
     lca_mat = numpy.empty((n_tokens, n_tokens), dtype=numpy.int32)
     lca_mat.fill(-1)

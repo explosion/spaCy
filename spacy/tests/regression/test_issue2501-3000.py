@@ -12,20 +12,18 @@ from spacy.compat import pickle
 import numpy
 import random
 
-from ..util import get_doc
-
 
 def test_issue2564():
-    """Test the tagger sets is_tagged correctly when used via Language.pipe."""
+    """Test the tagger sets has_annotation("TAG") correctly when used via Language.pipe."""
     nlp = Language()
     tagger = nlp.add_pipe("tagger")
     tagger.add_label("A")
-    nlp.begin_training()
+    nlp.initialize()
     doc = nlp("hello world")
-    assert doc.is_tagged
+    assert doc.has_annotation("TAG")
     docs = nlp.pipe(["hello", "world"])
     piped_doc = next(docs)
-    assert piped_doc.is_tagged
+    assert piped_doc.has_annotation("TAG")
 
 
 def test_issue2569(en_tokenizer):
@@ -117,13 +115,15 @@ def test_issue2754(en_tokenizer):
 
 def test_issue2772(en_vocab):
     """Test that deprojectivization doesn't mess up sentence boundaries."""
-    words = "When we write or communicate virtually , we can hide our true feelings .".split()
+    # fmt: off
+    words = ["When", "we", "write", "or", "communicate", "virtually", ",", "we", "can", "hide", "our", "true", "feelings", "."]
+    # fmt: on
     # A tree with a non-projective (i.e. crossing) arc
     # The arcs (0, 4) and (2, 9) cross.
-    heads = [4, 1, 7, -1, -2, -1, 3, 2, 1, 0, 2, 1, -3, -4]
+    heads = [4, 2, 9, 2, 2, 4, 9, 9, 9, 9, 12, 12, 9, 9]
     deps = ["dep"] * len(heads)
-    doc = get_doc(en_vocab, words=words, heads=heads, deps=deps)
-    assert doc[1].is_sent_start is None
+    doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
+    assert doc[1].is_sent_start is False
 
 
 @pytest.mark.parametrize("text", ["-0.23", "+123,456", "±1"])
@@ -149,7 +149,7 @@ def test_issue2800():
     ner = nlp.add_pipe("ner")
     for entity_type in list(entity_types):
         ner.add_label(entity_type)
-    optimizer = nlp.begin_training()
+    optimizer = nlp.initialize()
     for i in range(20):
         losses = {}
         random.shuffle(train_data)

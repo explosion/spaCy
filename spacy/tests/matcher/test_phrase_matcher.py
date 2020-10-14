@@ -3,7 +3,6 @@ import srsly
 from mock import Mock
 from spacy.matcher import PhraseMatcher
 from spacy.tokens import Doc, Span
-from ..util import get_doc
 
 
 def test_matcher_phrase_matcher(en_vocab):
@@ -140,10 +139,10 @@ def test_phrase_matcher_string_attrs(en_vocab):
     pos1 = ["PRON", "VERB", "NOUN"]
     words2 = ["Yes", ",", "you", "hate", "dogs", "very", "much"]
     pos2 = ["INTJ", "PUNCT", "PRON", "VERB", "NOUN", "ADV", "ADV"]
-    pattern = get_doc(en_vocab, words=words1, pos=pos1)
+    pattern = Doc(en_vocab, words=words1, pos=pos1)
     matcher = PhraseMatcher(en_vocab, attr="POS")
     matcher.add("TEST", [pattern])
-    doc = get_doc(en_vocab, words=words2, pos=pos2)
+    doc = Doc(en_vocab, words=words2, pos=pos2)
     matches = matcher(doc)
     assert len(matches) == 1
     match_id, start, end = matches[0]
@@ -158,10 +157,10 @@ def test_phrase_matcher_string_attrs_negative(en_vocab):
     pos1 = ["PRON", "VERB", "NOUN"]
     words2 = ["matcher:POS-PRON", "matcher:POS-VERB", "matcher:POS-NOUN"]
     pos2 = ["X", "X", "X"]
-    pattern = get_doc(en_vocab, words=words1, pos=pos1)
+    pattern = Doc(en_vocab, words=words1, pos=pos1)
     matcher = PhraseMatcher(en_vocab, attr="POS")
     matcher.add("TEST", [pattern])
-    doc = get_doc(en_vocab, words=words2, pos=pos2)
+    doc = Doc(en_vocab, words=words2, pos=pos2)
     matches = matcher(doc)
     assert len(matches) == 0
 
@@ -187,9 +186,11 @@ def test_phrase_matcher_bool_attrs(en_vocab):
 
 def test_phrase_matcher_validation(en_vocab):
     doc1 = Doc(en_vocab, words=["Test"])
-    doc1.is_parsed = True
+    doc1[0].dep_ = "ROOT"
     doc2 = Doc(en_vocab, words=["Test"])
-    doc2.is_tagged = True
+    doc2[0].tag_ = "TAG"
+    doc2[0].pos_ = "X"
+    doc2[0].set_morph("Feat=Val")
     doc3 = Doc(en_vocab, words=["Test"])
     matcher = PhraseMatcher(en_vocab, validate=True)
     with pytest.warns(UserWarning):
@@ -212,18 +213,21 @@ def test_attr_validation(en_vocab):
 
 def test_attr_pipeline_checks(en_vocab):
     doc1 = Doc(en_vocab, words=["Test"])
-    doc1.is_parsed = True
+    doc1[0].dep_ = "ROOT"
     doc2 = Doc(en_vocab, words=["Test"])
-    doc2.is_tagged = True
+    doc2[0].tag_ = "TAG"
+    doc2[0].pos_ = "X"
+    doc2[0].set_morph("Feat=Val")
+    doc2[0].lemma_ = "LEMMA"
     doc3 = Doc(en_vocab, words=["Test"])
-    # DEP requires is_parsed
+    # DEP requires DEP
     matcher = PhraseMatcher(en_vocab, attr="DEP")
     matcher.add("TEST1", [doc1])
     with pytest.raises(ValueError):
         matcher.add("TEST2", [doc2])
     with pytest.raises(ValueError):
         matcher.add("TEST3", [doc3])
-    # TAG, POS, LEMMA require is_tagged
+    # TAG, POS, LEMMA require those values
     for attr in ("TAG", "POS", "LEMMA"):
         matcher = PhraseMatcher(en_vocab, attr=attr)
         matcher.add("TEST2", [doc2])

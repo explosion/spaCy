@@ -1,9 +1,12 @@
+from typing import Optional
+from thinc.api import Model
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .punctuation import TOKENIZER_SUFFIXES
 from .syntax_iterators import SYNTAX_ITERATORS
 from ...language import Language
+from ...pipeline import Lemmatizer
 
 
 class PersianDefaults(Language.Defaults):
@@ -18,6 +21,16 @@ class PersianDefaults(Language.Defaults):
 class Persian(Language):
     lang = "fa"
     Defaults = PersianDefaults
+
+
+@Persian.factory(
+    "lemmatizer",
+    assigns=["token.lemma"],
+    default_config={"model": None, "mode": "rule"},
+    default_score_weights={"lemma_acc": 1.0},
+)
+def make_lemmatizer(nlp: Language, model: Optional[Model], name: str, mode: str):
+    return Lemmatizer(nlp.vocab, model, name, mode=mode)
 
 
 __all__ = ["Persian"]

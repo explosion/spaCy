@@ -3,12 +3,13 @@ from thinc.api import Model, reduce_mean, Linear, list2ragged, Logistic
 from thinc.api import chain, concatenate, clone, Dropout, ParametricAttention
 from thinc.api import SparseLinear, Softmax, softmax_activation, Maxout, reduce_sum
 from thinc.api import HashEmbed, with_array, with_cpu, uniqued
-from thinc.api import Relu, residual, expand_window, FeatureExtractor
+from thinc.api import Relu, residual, expand_window
 
 from ...attrs import ID, ORTH, PREFIX, SUFFIX, SHAPE, LOWER
 from ...util import registry
 from ..extract_ngrams import extract_ngrams
 from ..staticvectors import StaticVectors
+from ..featureextractor import FeatureExtractor
 
 
 @registry.architectures.register("spacy.TextCatCNN.v1")
@@ -23,11 +24,11 @@ def build_simple_cnn_text_classifier(
     """
     with Model.define_operators({">>": chain}):
         if exclusive_classes:
-            output_layer = Softmax(nO=nO, nI=tok2vec.get_dim("nO"))
+            output_layer = Softmax(nO=nO, nI=tok2vec.maybe_get_dim("nO"))
             model = tok2vec >> list2ragged() >> reduce_mean() >> output_layer
             model.set_ref("output_layer", output_layer)
         else:
-            linear_layer = Linear(nO=nO, nI=tok2vec.get_dim("nO"))
+            linear_layer = Linear(nO=nO, nI=tok2vec.maybe_get_dim("nO"))
             model = (
                 tok2vec >> list2ragged() >> reduce_mean() >> linear_layer >> Logistic()
             )

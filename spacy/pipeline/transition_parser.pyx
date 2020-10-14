@@ -1,4 +1,4 @@
-# cython: infer_types=True, cdivision=True, boundscheck=False
+# cython: infer_types=True, cdivision=True, boundscheck=False, binding=True
 from __future__ import print_function
 from cymem.cymem cimport Pool
 cimport numpy as np
@@ -7,6 +7,7 @@ from libcpp.vector cimport vector
 from libc.string cimport memset
 from libc.stdlib cimport calloc, free
 import random
+from typing import Optional
 
 import srsly
 from thinc.api import set_dropout_rate
@@ -20,13 +21,14 @@ from ..ml.parser_model cimport predict_states, arg_max_if_valid
 from ..ml.parser_model cimport WeightsC, ActivationsC, SizesC, cpu_log_loss
 from ..ml.parser_model cimport get_c_weights, get_c_sizes
 from ..tokens.doc cimport Doc
+from .trainable_pipe import TrainablePipe
 
-from ..training import validate_examples
+from ..training import validate_examples, validate_get_examples
 from ..errors import Errors, Warnings
 from .. import util
 
 
-cdef class Parser(Pipe):
+cdef class Parser(TrainablePipe):
     """
     Base class of the DependencyParser and EntityRecognizer.
     """
@@ -96,6 +98,10 @@ cdef class Parser(Pipe):
         return class_names
 
     @property
+    def label_data(self):
+        return self.moves.labels
+
+    @property
     def tok2vec(self):
         """Return the embedding and convolutional layer of the model."""
         return self.model.get_ref("tok2vec")
@@ -113,6 +119,7 @@ cdef class Parser(Pipe):
                 resized = True
         if resized:
             self._resize()
+            self.vocab.strings.add(label)
             return 1
         return 0
 
@@ -310,7 +317,7 @@ cdef class Parser(Pipe):
 
         backprop_tok2vec(golds)
         if sgd not in (None, False):
-            self.model.finish_update(sgd)
+            self.finish_update(sgd)
         if set_annotations:
             docs = [eg.predicted for eg in examples]
             self.set_annotations(docs, all_states)
@@ -354,7 +361,7 @@ cdef class Parser(Pipe):
             # If all weights for an output are 0 in the original model, don't
             # supervise that output. This allows us to add classes.
             loss += (d_scores**2).sum()
-            backprop(d_scores, sgd=sgd)
+            backprop(d_scores)
             # Follow the predicted action
             self.transition_states(states, guesses)
             states = [state for state in states if not state.is_final()]
@@ -362,7 +369,7 @@ cdef class Parser(Pipe):
         # Do the backprop
         backprop_tok2vec(docs)
         if sgd is not None:
-            self.model.finish_update(sgd)
+            self.finish_update(sgd)
         losses[self.name] += loss / n_scores
         del backprop
         del backprop_tok2vec
@@ -405,18 +412,20 @@ cdef class Parser(Pipe):
     def set_output(self, nO):
         self.model.attrs["resize_output"](self.model, nO)
 
-    def begin_training(self, get_examples, pipeline=None, sgd=None, **kwargs):
-        self._ensure_examples(get_examples)
-        self.cfg.update(kwargs)
+    def initialize(self, get_examples, nlp=None, labels=None):
+        validate_get_examples(get_examples, "Parser.initialize")
         lexeme_norms = self.vocab.lookups.get_table("lexeme_norm", {})
         if len(lexeme_norms) == 0 and self.vocab.lang in util.LEXEME_NORM_LANGS:
             langs = ", ".join(util.LEXEME_NORM_LANGS)
             util.logger.debug(Warnings.W033.format(model="parser or NER", langs=langs))
-        actions = self.moves.get_actions(
-            examples=get_examples(),
-            min_freq=self.cfg['min_action_freq'],
-            learn_tokens=self.cfg["learn_tokens"]
-        )
+        if labels is not None:
+            actions = dict(labels)
+        else:
+            actions = self.moves.get_actions(
+                examples=get_examples(),
+                min_freq=self.cfg['min_action_freq'],
+                learn_tokens=self.cfg["learn_tokens"]
+            )
         for action, labels in self.moves.labels.items():
             actions.setdefault(action, {})
             for label, freq in labels.items():
@@ -425,13 +434,13 @@ cdef class Parser(Pipe):
         self.moves.initialize_actions(actions)
         # make sure we resize so we have an appropriate upper layer
         self._resize()
-        if sgd is None:
-            sgd = self.create_optimizer()
         doc_sample = []
-        if pipeline is not None:
-            for name, component in pipeline:
+        if nlp is not None:
+            for name, component in nlp.pipeline:
                 if component is self:
                     break
+                # non-trainable components may have a pipe() implementation that refers to dummy
+                # predict and set_annotations methods
                 if hasattr(component, "pipe"):
                     doc_sample = list(component.pipe(doc_sample, batch_size=8))
                 else:
@@ -441,30 +450,29 @@ cdef class Parser(Pipe):
                 doc_sample.append(example.predicted)
         assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(doc_sample)
-        if pipeline is not None:
-            self.init_multitask_objectives(get_examples, pipeline, sgd=sgd, **self.cfg)
-        return sgd
+        if nlp is not None:
+            self.init_multitask_objectives(get_examples, nlp.pipeline)
 
     def to_disk(self, path, exclude=tuple()):
         serializers = {
-            'model': lambda p: (self.model.to_disk(p) if self.model is not True else True),
-            'vocab': lambda p: self.vocab.to_disk(p),
-            'moves': lambda p: self.moves.to_disk(p, exclude=["strings"]),
-            'cfg': lambda p: srsly.write_json(p, self.cfg)
+            "model": lambda p: (self.model.to_disk(p) if self.model is not True else True),
+            "vocab": lambda p: self.vocab.to_disk(p),
+            "moves": lambda p: self.moves.to_disk(p, exclude=["strings"]),
+            "cfg": lambda p: srsly.write_json(p, self.cfg)
         }
         util.to_disk(path, serializers, exclude)
 
     def from_disk(self, path, exclude=tuple()):
         deserializers = {
-            'vocab': lambda p: self.vocab.from_disk(p),
-            'moves': lambda p: self.moves.from_disk(p, exclude=["strings"]),
-            'cfg': lambda p: self.cfg.update(srsly.read_json(p)),
-            'model': lambda p: None,
+            "vocab": lambda p: self.vocab.from_disk(p),
+            "moves": lambda p: self.moves.from_disk(p, exclude=["strings"]),
+            "cfg": lambda p: self.cfg.update(srsly.read_json(p)),
+            "model": lambda p: None,
         }
         util.from_disk(path, deserializers, exclude)
-        if 'model' not in exclude:
+        if "model" not in exclude:
             path = util.ensure_path(path)
-            with (path / 'model').open('rb') as file_:
+            with (path / "model").open("rb") as file_:
                 bytes_data = file_.read()
             try:
                 self._resize()

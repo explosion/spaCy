@@ -1,9 +1,9 @@
-from typing import Iterator, Sequence, Iterable, Optional, Dict, Callable, List, Tuple
+from typing import Iterator, Sequence, Iterable, Optional, Dict, Callable, List
 from thinc.api import Model, set_dropout_rate, Optimizer, Config
 from itertools import islice
 
-from .pipe import Pipe
-from ..training import Example, validate_examples
+from .trainable_pipe import TrainablePipe
+from ..training import Example, validate_examples, validate_get_examples
 from ..tokens import Doc
 from ..vocab import Vocab
 from ..language import Language
@@ -32,7 +32,7 @@ def make_tok2vec(nlp: Language, name: str, model: Model) -> "Tok2Vec":
     return Tok2Vec(nlp.vocab, model, name)
 
 
-class Tok2Vec(Pipe):
+class Tok2Vec(TrainablePipe):
     """Apply a "token-to-vector" model and set its outputs in the doc.tensor
     attribute. This is mostly useful to share a single subnetwork between multiple
     components, e.g. to have one embedding and CNN network shared between a
@@ -127,7 +127,7 @@ class Tok2Vec(Pipe):
         tokvecs = self.model.predict(docs)
         batch_id = Tok2VecListener.get_batch_id(docs)
         for listener in self.listeners:
-            listener.receive(batch_id, tokvecs, None)
+            listener.receive(batch_id, tokvecs, lambda dX: [])
         return tokvecs
 
     def set_annotations(self, docs: Sequence[Doc], tokvecses) -> None:
@@ -188,7 +188,7 @@ class Tok2Vec(Pipe):
             accumulate_gradient(one_d_tokvecs)
             d_docs = bp_tokvecs(d_tokvecs)
             if sgd is not None:
-                self.model.finish_update(sgd)
+                self.finish_update(sgd)
             return d_docs
 
         batch_id = Tok2VecListener.get_batch_id(docs)
@@ -203,28 +203,22 @@ class Tok2Vec(Pipe):
     def get_loss(self, examples, scores) -> None:
         pass
 
-    def begin_training(
+    def initialize(
         self,
         get_examples: Callable[[], Iterable[Example]],
         *,
-        pipeline: Optional[List[Tuple[str, Callable[[Doc], Doc]]]] = None,
-        sgd: Optional[Optimizer] = None,
+        nlp: Optional[Language] = None,
     ):
         """Initialize the pipe for training, using a representative set
         of data examples.
 
         get_examples (Callable[[], Iterable[Example]]): Function that
             returns a representative sample of gold-standard Example objects.
-        pipeline (List[Tuple[str, Callable]]): Optional list of pipeline
-            components that this component is part of. Corresponds to
-            nlp.pipeline.
-        sgd (thinc.api.Optimizer): Optional optimizer. Will be created with
-            create_optimizer if it doesn't exist.
-        RETURNS (thinc.api.Optimizer): The optimizer.
+        nlp (Language): The current nlp object the component is part of.
 
-        DOCS: https://nightly.spacy.io/api/tok2vec#begin_training
+        DOCS: https://nightly.spacy.io/api/tok2vec#initialize
         """
-        self._ensure_examples(get_examples)
+        validate_get_examples(get_examples, "Tok2Vec.initialize")
         doc_sample = []
         for example in islice(get_examples(), 10):
             doc_sample.append(example.x)

@@ -113,7 +113,7 @@ def test_Example_from_dict_with_morphology(annots):
     predicted = Doc(vocab, words=annots["words"])
     example = Example.from_dict(predicted, annots)
     for i, token in enumerate(example.reference):
-        assert token.morph_ == annots["morphs"][i]
+        assert str(token.morph) == annots["morphs"][i]
 
 
 @pytest.mark.parametrize(
@@ -244,3 +244,22 @@ def test_Example_from_dict_with_links_invalid(annots):
     predicted = Doc(vocab, words=annots["words"])
     with pytest.raises(ValueError):
         Example.from_dict(predicted, annots)
+
+
+def test_Example_from_dict_sentences():
+    vocab = Vocab()
+    predicted = Doc(vocab, words=["One", "sentence", ".", "one", "more"])
+    annots = {"sent_starts": [1, 0, 0, 1, 0]}
+    ex = Example.from_dict(predicted, annots)
+    assert len(list(ex.reference.sents)) == 2
+
+    # this currently throws an error - bug or feature?
+    # predicted = Doc(vocab, words=["One", "sentence", "not", "one", "more"])
+    # annots = {"sent_starts": [1, 0, 0, 0, 0]}
+    # ex = Example.from_dict(predicted, annots)
+    # assert len(list(ex.reference.sents)) == 1
+
+    predicted = Doc(vocab, words=["One", "sentence", "not", "one", "more"])
+    annots = {"sent_starts": [1, -1, 0, 0, 0]}
+    ex = Example.from_dict(predicted, annots)
+    assert len(list(ex.reference.sents)) == 1

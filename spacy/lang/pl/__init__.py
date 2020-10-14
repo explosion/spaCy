@@ -8,7 +8,6 @@ from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .lemmatizer import PolishLemmatizer
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
-from ...lookups import Lookups
 from ...language import Language
 
 
@@ -34,19 +33,11 @@ class Polish(Language):
 @Polish.factory(
     "lemmatizer",
     assigns=["token.lemma"],
-    default_config={"model": None, "mode": "pos_lookup", "lookups": None},
-    scores=["lemma_acc"],
+    default_config={"model": None, "mode": "pos_lookup"},
     default_score_weights={"lemma_acc": 1.0},
 )
-def make_lemmatizer(
-    nlp: Language,
-    model: Optional[Model],
-    name: str,
-    mode: str,
-    lookups: Optional[Lookups],
-):
-    lookups = PolishLemmatizer.load_lookups(nlp.lang, mode, lookups)
-    return PolishLemmatizer(nlp.vocab, model, name, mode=mode, lookups=lookups)
+def make_lemmatizer(nlp: Language, model: Optional[Model], name: str, mode: str):
+    return PolishLemmatizer(nlp.vocab, model, name, mode=mode)
 
 
 __all__ = ["Polish"]

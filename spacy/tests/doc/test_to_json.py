@@ -1,6 +1,5 @@
 import pytest
 from spacy.tokens import Doc
-from ..util import get_doc
 
 
 @pytest.fixture()
@@ -8,11 +7,19 @@ def doc(en_vocab):
     words = ["c", "d", "e"]
     pos = ["VERB", "NOUN", "NOUN"]
     tags = ["VBP", "NN", "NN"]
-    heads = [0, -1, -2]
+    heads = [0, 0, 0]
     deps = ["ROOT", "dobj", "dobj"]
-    ents = [(1, 2, "ORG")]
-    return get_doc(
-        en_vocab, words=words, pos=pos, tags=tags, heads=heads, deps=deps, ents=ents
+    ents = ["O", "B-ORG", "O"]
+    morphs = ["Feat1=A", "Feat1=B", "Feat1=A|Feat2=D"]
+    return Doc(
+        en_vocab,
+        words=words,
+        pos=pos,
+        tags=tags,
+        heads=heads,
+        deps=deps,
+        ents=ents,
+        morphs=morphs,
     )
 
 

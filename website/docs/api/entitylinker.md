@@ -34,20 +34,20 @@ architectures and their arguments and hyperparameters.
 >    "incl_prior": True,
 >    "incl_context": True,
 >    "model": DEFAULT_NEL_MODEL,
->    "kb_loader": {'@misc': 'spacy.EmptyKB.v1', 'entity_vector_length': 64},
+>    "entity_vector_length": 64,
 >    "get_candidates": {'@misc': 'spacy.CandidateGenerator.v1'},
 > }
 > nlp.add_pipe("entity_linker", config=config)
 > ```
 
-| Setting          | Description                                                                                                                                                                                                                                                              |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `labels_discard` | NER labels that will automatically get a "NIL" prediction. Defaults to `[]`. ~~Iterable[str]~~                                                                                                                                                                           |
-| `incl_prior`     | Whether or not to include prior probabilities from the KB in the model. Defaults to `True`. ~~bool~~                                                                                                                                                                     |
-| `incl_context`   | Whether or not to include the local context in the model. Defaults to `True`. ~~bool~~                                                                                                                                                                                   |
-| `model`          | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. Defaults to [EntityLinker](/api/architectures#EntityLinker). ~~Model~~                                                                                                                   |
-| `kb_loader`      | Function that creates a [`KnowledgeBase`](/api/kb) from a `Vocab` instance. Defaults to [EmptyKB](/api/architectures#EmptyKB), a function returning an empty `KnowledgeBase` with an `entity_vector_length` of `64`. ~~Callable[[Vocab], KnowledgeBase]~~                |
-| `get_candidates` | Function that generates plausible candidates for a given `Span` object. Defaults to [CandidateGenerator](/api/architectures#CandidateGenerator), a function looking up exact, case-dependent aliases in the KB. ~~Callable[[KnowledgeBase, Span], Iterable[Candidate]]~~ |
+| Setting                | Description                                                                                                                                                                                                                                                              |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `labels_discard`       | NER labels that will automatically get a "NIL" prediction. Defaults to `[]`. ~~Iterable[str]~~                                                                                                                                                                           |
+| `incl_prior`           | Whether or not to include prior probabilities from the KB in the model. Defaults to `True`. ~~bool~~                                                                                                                                                                     |
+| `incl_context`         | Whether or not to include the local context in the model. Defaults to `True`. ~~bool~~                                                                                                                                                                                   |
+| `model`                | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. Defaults to [EntityLinker](/api/architectures#EntityLinker). ~~Model~~                                                                                                                   |
+| `entity_vector_length` | Size of encoding vectors in the KB. Defaults to `64`. ~~int~~                                                                                                                                                                                                            |
+| `get_candidates`       | Function that generates plausible candidates for a given `Span` object. Defaults to [CandidateGenerator](/api/architectures#CandidateGenerator), a function looking up exact, case-dependent aliases in the KB. ~~Callable[[KnowledgeBase, Span], Iterable[Candidate]]~~ |
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/entity_linker.py
@@ -65,10 +65,6 @@ architectures and their arguments and hyperparameters.
 > config = {"model": {"@architectures": "my_el.v1"}}
 > entity_linker = nlp.add_pipe("entity_linker", config=config)
 >
-> # Construction via add_pipe with custom KB and candidate generation
-> config = {"kb": {"@misc": "my_kb.v1"}}
-> entity_linker = nlp.add_pipe("entity_linker", config=config)
->
 > # Construction from class
 > from spacy.pipeline import EntityLinker
 > entity_linker = EntityLinker(nlp.vocab, model)
@@ -76,25 +72,29 @@ architectures and their arguments and hyperparameters.
 
 Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
-[`nlp.add_pipe`](/api/language#add_pipe). Note that both the internal
-`KnowledgeBase` as well as the Candidate generator can be customized by
-providing custom registered functions.
+[`nlp.add_pipe`](/api/language#add_pipe).
 
-| Name             | Description                                                                                                                      |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`          | The shared vocabulary. ~~Vocab~~                                                                                                 |
-| `model`          | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model~~                                        |
-| `name`           | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                              |
-| _keyword-only_   |                                                                                                                                  |
-| `kb_loader`      | Function that creates a [`KnowledgeBase`](/api/kb) from a `Vocab` instance. ~~Callable[[Vocab], KnowledgeBase]~~                 |
-| `get_candidates` | Function that generates plausible candidates for a given `Span` object. ~~Callable[[KnowledgeBase, Span], Iterable[Candidate]]~~ |
-| `labels_discard` | NER labels that will automatically get a `"NIL"` prediction. ~~Iterable[str]~~                                                   |
-| `incl_prior`     | Whether or not to include prior probabilities from the KB in the model. ~~bool~~                                                 |
-| `incl_context`   | Whether or not to include the local context in the model. ~~bool~~                                                               |
+Upon construction of the entity linker component, an empty knowledge base is
+constructed with the provided `entity_vector_length`. If you want to use a
+custom knowledge base, you should either call
+[`set_kb`](/api/entitylinker#set_kb) or provide a `kb_loader` in the
+[`initialize`](/api/entitylinker#initialize) call.
+
+| Name                   | Description                                                                                                                      |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`                | The shared vocabulary. ~~Vocab~~                                                                                                 |
+| `model`                | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model~~                                        |
+| `name`                 | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                              |
+| _keyword-only_         |                                                                                                                                  |
+| `entity_vector_length` | Size of encoding vectors in the KB. ~~int~~                                                                                      |
+| `get_candidates`       | Function that generates plausible candidates for a given `Span` object. ~~Callable[[KnowledgeBase, Span], Iterable[Candidate]]~~ |
+| `labels_discard`       | NER labels that will automatically get a `"NIL"` prediction. ~~Iterable[str]~~                                                   |
+| `incl_prior`           | Whether or not to include prior probabilities from the KB in the model. ~~bool~~                                                 |
+| `incl_context`         | Whether or not to include the local context in the model. ~~bool~~                                                               |
 
 ## EntityLinker.\_\_call\_\_ {#call tag="method"}
 
-Apply the pipe to one document. The document is modified in place, and returned.
+Apply the pipe to one document. The document is modified in place and returned.
 This usually happens under the hood when the `nlp` object is called on a text
 and all pipeline components are applied to the `Doc` in order. Both
 [`__call__`](/api/entitylinker#call) and [`pipe`](/api/entitylinker#pipe)
@@ -139,31 +139,63 @@ applied to the `Doc` in order. Both [`__call__`](/api/entitylinker#call) and
 | `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
 | **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
-## EntityLinker.begin_training {#begin_training tag="method"}
+## EntityLinker.set_kb {#initialize tag="method" new="3"}
 
-Initialize the component for training and return an
-[`Optimizer`](https://thinc.ai/docs/api-optimizers). `get_examples` should be a
-function that returns an iterable of [`Example`](/api/example) objects. The data
-examples are used to **initialize the model** of the component and can either be
-the full training data or a representative sample. Initialization includes
-validating the network,
-[inferring missing shapes](https://thinc.ai/docs/usage-models#validation) and
-setting up the label scheme based on the data.
+The `kb_loader` should be a function that takes a `Vocab` instance and creates
+the `KnowledgeBase`, ensuring that the strings of the knowledge base are synced
+with the current vocab.
 
 > #### Example
 >
 > ```python
-> entity_linker = nlp.add_pipe("entity_linker", last=True)
-> optimizer = entity_linker.begin_training(lambda: [], pipeline=nlp.pipeline)
+> def create_kb(vocab):
+>     kb = KnowledgeBase(vocab, entity_vector_length=128)
+>     kb.add_entity(...)
+>     kb.add_alias(...)
+>     return kb
+> entity_linker = nlp.add_pipe("entity_linker")
+> entity_linker.set_kb(lambda: [], nlp=nlp, kb_loader=create_kb)
+> ```
+
+| Name        | Description                                                                                                      |
+| ----------- | ---------------------------------------------------------------------------------------------------------------- |
+| `kb_loader` | Function that creates a [`KnowledgeBase`](/api/kb) from a `Vocab` instance. ~~Callable[[Vocab], KnowledgeBase]~~ |
+
+## EntityLinker.initialize {#initialize tag="method" new="3"}
+
+Initialize the component for training. `get_examples` should be a function that
+returns an iterable of [`Example`](/api/example) objects. The data examples are
+used to **initialize the model** of the component and can either be the full
+training data or a representative sample. Initialization includes validating the
+network,
+[inferring missing shapes](https://thinc.ai/docs/usage-models#validation) and
+setting up the label scheme based on the data. This method is typically called
+by [`Language.initialize`](/api/language#initialize).
+
+Optionally, a `kb_loader` argument may be specified to change the internal
+knowledge base. This argument should be a function that takes a `Vocab` instance
+and creates the `KnowledgeBase`, ensuring that the strings of the knowledge base
+are synced with the current vocab.
+
+<Infobox variant="warning" title="Changed in v3.0" id="begin_training">
+
+This method was previously called `begin_training`.
+
+</Infobox>
+
+> #### Example
+>
+> ```python
+> entity_linker = nlp.add_pipe("entity_linker")
+> entity_linker.initialize(lambda: [], nlp=nlp, kb_loader=my_kb)
 > ```
 
 | Name           | Description                                                                                                                           |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. ~~Callable[[], Iterable[Example]]~~ |
 | _keyword-only_ |                                                                                                                                       |
-| `pipeline`     | Optional list of pipeline components that this component is part of. ~~Optional[List[Tuple[str, Callable[[Doc], Doc]]]]~~             |
-| `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                         |
-| **RETURNS**    | The optimizer. ~~Optimizer~~                                                                                                          |
+| `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                  |
+| `kb_loader`    | Function that creates a [`KnowledgeBase`](/api/kb) from a `Vocab` instance. ~~Callable[[Vocab], KnowledgeBase]~~                      |
 
 ## EntityLinker.predict {#predict tag="method"}
 
@@ -211,7 +243,7 @@ pipe's entity linking model and context encoder. Delegates to
 >
 > ```python
 > entity_linker = nlp.add_pipe("entity_linker")
-> optimizer = nlp.begin_training()
+> optimizer = nlp.initialize()
 > losses = entity_linker.update(examples, sgd=optimizer)
 > ```
 
@@ -224,6 +256,21 @@ pipe's entity linking model and context encoder. Delegates to
 | `sgd`             | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                      |
 | `losses`          | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~           |
 | **RETURNS**       | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                              |
+
+## EntityLinker.score {#score tag="method" new="3"}
+
+Score a batch of examples.
+
+> #### Example
+>
+> ```python
+> scores = entity_linker.score(examples)
+> ```
+
+| Name        | Description                                                                                    |
+| ----------- | ---------------------------------------------------------------------------------------------- |
+| `examples`  | The examples to score. ~~Iterable[Example]~~                                                   |
+| **RETURNS** | The scores, produced by [`Scorer.score_links`](/api/scorer#score_links) . ~~Dict[str, float]~~ |
 
 ## EntityLinker.create_optimizer {#create_optimizer tag="method"}
 

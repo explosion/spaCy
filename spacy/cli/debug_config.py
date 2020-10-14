@@ -7,6 +7,8 @@ import typer
 
 from ._util import Arg, Opt, show_validation_error, parse_config_overrides
 from ._util import import_code, debug_cli
+from ..schemas import ConfigSchemaTraining
+from ..util import registry
 from .. import util
 
 
@@ -51,7 +53,11 @@ def debug_config(
     msg.divider("Config validation")
     with show_validation_error(config_path):
         config = util.load_config(config_path, overrides=overrides)
-        nlp, _ = util.load_model_from_config(config)
+        nlp = util.load_model_from_config(config)
+        config = nlp.config.interpolate()
+        T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
+        dot_names = [T["train_corpus"], T["dev_corpus"]]
+        util.resolve_dot_names(config, dot_names)
     msg.good("Config is valid")
     if show_vars:
         variables = get_variables(config)

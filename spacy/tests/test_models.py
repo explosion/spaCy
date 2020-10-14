@@ -1,12 +1,11 @@
 from typing import List
-
 import pytest
 from thinc.api import fix_random_seed, Adam, set_dropout_rate
 from numpy.testing import assert_array_equal
 import numpy
-
 from spacy.ml.models import build_Tok2Vec_model, MultiHashEmbed, MaxoutWindowEncoder
 from spacy.ml.models import build_text_classifier, build_simple_cnn_text_classifier
+from spacy.ml.staticvectors import StaticVectors
 from spacy.lang.en import English
 from spacy.lang.en.examples import sentences as EN_SENTENCES
 
@@ -61,16 +60,45 @@ def get_tok2vec_kwargs():
     # This actually creates models, so seems best to put it in a function.
     return {
         "embed": MultiHashEmbed(
-            width=32, rows=500, also_embed_subwords=True, also_use_static_vectors=False
+            width=32,
+            rows=[500, 500, 500],
+            attrs=["NORM", "PREFIX", "SHAPE"],
+            include_static_vectors=False,
         ),
         "encode": MaxoutWindowEncoder(
-            width=32, depth=2, maxout_pieces=2, window_size=1,
+            width=32, depth=2, maxout_pieces=2, window_size=1
         ),
     }
 
 
 def test_tok2vec():
     return build_Tok2Vec_model(**get_tok2vec_kwargs())
+
+
+def test_multi_hash_embed():
+    embed = MultiHashEmbed(
+        width=32,
+        rows=[500, 500, 500],
+        attrs=["NORM", "PREFIX", "SHAPE"],
+        include_static_vectors=False,
+    )
+    hash_embeds = [node for node in embed.walk() if node.name == "hashembed"]
+    assert len(hash_embeds) == 3
+    # Check they look at different columns.
+    assert list(sorted(he.attrs["column"] for he in hash_embeds)) == [0, 1, 2]
+    # Check they use different seeds
+    assert len(set(he.attrs["seed"] for he in hash_embeds)) == 3
+    # Check they all have the same number of rows
+    assert [he.get_dim("nV") for he in hash_embeds] == [500, 500, 500]
+    # Now try with different row factors
+    embed = MultiHashEmbed(
+        width=32,
+        rows=[1000, 50, 250],
+        attrs=["NORM", "PREFIX", "SHAPE"],
+        include_static_vectors=False,
+    )
+    hash_embeds = [node for node in embed.walk() if node.name == "hashembed"]
+    assert [he.get_dim("nV") for he in hash_embeds] == [1000, 50, 250]
 
 
 @pytest.mark.parametrize(
@@ -156,3 +184,17 @@ def test_models_update_consistently(seed, dropout, model_func, kwargs, get_X):
     model1 = get_updated_model()
     model2 = get_updated_model()
     assert_array_equal(get_all_params(model1), get_all_params(model2))
+
+
+@pytest.mark.parametrize("model_func,kwargs", [(StaticVectors, {"nO": 128, "nM": 300})])
+def test_empty_docs(model_func, kwargs):
+    nlp = English()
+    model = model_func(**kwargs).initialize()
+    # Test the layer can be called successfully with 0, 1 and 2 empty docs.
+    for n_docs in range(3):
+        docs = [nlp("") for _ in range(n_docs)]
+        # Test predict
+        model.predict(docs)
+        # Test backprop
+        output, backprop = model.begin_update(docs)
+        backprop(output)

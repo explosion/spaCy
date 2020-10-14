@@ -56,16 +56,13 @@ create a surface form. Here are some examples:
 
 Morphological features are stored in the [`MorphAnalysis`](/api/morphanalysis)
 under `Token.morph`, which allows you to access individual morphological
-features. The attribute `Token.morph_` provides the morphological analysis in
-the Universal Dependencies
-[FEATS](https://universaldependencies.org/format.html#morphological-annotation)
-format.
+features.
 
 > #### 📝 Things to try
 >
 > 1. Change "I" to "She". You should see that the morphological features change
 >    and express that it's a pronoun in the third person.
-> 2. Inspect `token.morph_` for the other tokens.
+> 2. Inspect `token.morph` for the other tokens.
 
 ```python
 ### {executable="true"}
@@ -75,7 +72,7 @@ nlp = spacy.load("en_core_web_sm")
 print("Pipeline:", nlp.pipe_names)
 doc = nlp("I was reading the paper.")
 token = doc[0]  # 'I'
-print(token.morph_)  # 'Case=Nom|Number=Sing|Person=1|PronType=Prs'
+print(token.morph)  # 'Case=Nom|Number=Sing|Person=1|PronType=Prs'
 print(token.morph.get("PronType"))  # ['Prs']
 ```
 
@@ -91,7 +88,7 @@ import spacy
 
 nlp = spacy.load("de_core_news_sm")
 doc = nlp("Wo bist du?") # English: 'Where are you?'
-print(doc[2].morph_)  # 'Case=Nom|Number=Sing|Person=2|PronType=Prs'
+print(doc[2].morph)  # 'Case=Nom|Number=Sing|Person=2|PronType=Prs'
 print(doc[2].pos_) # 'PRON'
 ```
 
@@ -117,7 +114,7 @@ import spacy
 
 nlp = spacy.load("en_core_web_sm")
 doc = nlp("Where are you?")
-print(doc[2].morph_)  # 'Case=Nom|Person=2|PronType=Prs'
+print(doc[2].morph)  # 'Case=Nom|Person=2|PronType=Prs'
 print(doc[2].pos_)  # 'PRON'
 ```
 
@@ -169,7 +166,7 @@ lookup lemmatizer looks up the token surface form in the lookup table without
 reference to the token's part-of-speech or context.
 
 ```python
-# pip install spacy-lookups-data
+# pip install -U %%SPACY_PKG_NAME[lookups]%%SPACY_PKG_FLAGS
 import spacy
 
 nlp = spacy.blank("sv")
@@ -184,7 +181,7 @@ rule-based lemmatizer can be added using rule tables from
 [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data):
 
 ```python
-# pip install spacy-lookups-data
+# pip install -U %%SPACY_PKG_NAME[lookups]%%SPACY_PKG_FLAGS
 import spacy
 
 nlp = spacy.blank("de")
@@ -205,9 +202,10 @@ acquired from [WordNet](https://wordnet.princeton.edu/).
 spaCy features a fast and accurate syntactic dependency parser, and has a rich
 API for navigating the tree. The parser also powers the sentence boundary
 detection, and lets you iterate over base noun phrases, or "chunks". You can
-check whether a [`Doc`](/api/doc) object has been parsed with the
-`doc.is_parsed` attribute, which returns a boolean value. If this attribute is
-`False`, the default sentence iterator will raise an exception.
+check whether a [`Doc`](/api/doc) object has been parsed by calling
+`doc.has_annotation("DEP")`, which checks whether the attribute `Token.dep` has
+been set returns a boolean value. If the result is `False`, the default sentence
+iterator will raise an exception.
 
 <Infobox title="Dependency label scheme" emoji="📖">
 
@@ -972,8 +970,8 @@ import spacy
 from spacy.tokenizer import Tokenizer
 
 special_cases = {":)": [{"ORTH": ":)"}]}
-prefix_re = re.compile(r'''^[\[\("']''')
-suffix_re = re.compile(r'''[\]\)"']$''')
+prefix_re = re.compile(r'''^[\\[\\("']''')
+suffix_re = re.compile(r'''[\\]\\)"']$''')
 infix_re = re.compile(r'''[-~]''')
 simple_url_re = re.compile(r'''^https?://''')
 
@@ -1594,7 +1592,9 @@ print("After:", [(token.text, token._.is_musician) for token in doc])
 A [`Doc`](/api/doc) object's sentences are available via the `Doc.sents`
 property. To view a `Doc`'s sentences, you can iterate over the `Doc.sents`, a
 generator that yields [`Span`](/api/span) objects. You can check whether a `Doc`
-has sentence boundaries with the `doc.is_sentenced` attribute.
+has sentence boundaries by calling
+[`Doc.has_annotation`](/api/doc#has_annotation) with the attribute name
+`"SENT_START"`.
 
 ```python
 ### {executable="true"}
@@ -1602,7 +1602,7 @@ import spacy
 
 nlp = spacy.load("en_core_web_sm")
 doc = nlp("This is a sentence. This is another sentence.")
-assert doc.is_sentenced
+assert doc.has_annotation("SENT_START")
 for sent in doc.sents:
     print(sent.text)
 ```
@@ -1653,9 +1653,13 @@ The [`SentenceRecognizer`](/api/sentencerecognizer) is a simple statistical
 component that only provides sentence boundaries. Along with being faster and
 smaller than the parser, its primary advantage is that it's easier to train
 because it only requires annotated sentence boundaries rather than full
-dependency parses.
-
-<!-- TODO: update/confirm usage once we have final models trained -->
+dependency parses. spaCy's [trained pipelines](/models) include both a parser
+and a trained sentence segmenter, which is
+[disabled](/usage/processing-pipelines#disabling) by default. If you only need
+sentence boundaries and no parser, you can use the `exclude` or `disable`
+argument on [`spacy.load`](/api/top-level#spacy.load) to load the pipeline
+without the parser and then enable the sentence recognizer explicitly with
+[`nlp.enable_pipe`](/api/language#enable_pipe).
 
 > #### senter vs. parser
 >
@@ -1667,7 +1671,8 @@ dependency parses.
 ### {executable="true"}
 import spacy
 
-nlp = spacy.load("en_core_web_sm", enable=["senter"], disable=["parser"])
+nlp = spacy.load("en_core_web_sm", exclude=["parser"])
+nlp.enable_pipe("senter")
 doc = nlp("This is a sentence. This is another sentence.")
 for sent in doc.sents:
     print(sent.text)
@@ -1705,9 +1710,10 @@ and can still be overwritten by the parser.
 <Infobox title="Important note" variant="warning">
 
 To prevent inconsistent state, you can only set boundaries **before** a document
-is parsed (and `doc.is_parsed` is `False`). To ensure that your component is
-added in the right place, you can set `before='parser'` or `first=True` when
-adding it to the pipeline using [`nlp.add_pipe`](/api/language#add_pipe).
+is parsed (and `doc.has_annotation("DEP")` is `False`). To ensure that your
+component is added in the right place, you can set `before='parser'` or
+`first=True` when adding it to the pipeline using
+[`nlp.add_pipe`](/api/language#add_pipe).
 
 </Infobox>
 
@@ -1730,7 +1736,7 @@ nlp = spacy.load("en_core_web_sm")
 doc = nlp(text)
 print("Before:", [sent.text for sent in doc.sents])
 
-@Language.component("set_custom_coundaries")
+@Language.component("set_custom_boundaries")
 def set_custom_boundaries(doc):
     for token in doc[:-1]:
         if token.text == "...":
@@ -1799,17 +1805,10 @@ print(doc2[5].tag_, doc2[5].pos_)  # WP PRON
 
 <Infobox variant="warning" title="Migrating from spaCy v2.x">
 
-For easy migration from from spaCy v2 to v3, the
-[`AttributeRuler`](/api/attributeruler) can import a **tag map and morph rules**
-in the v2 format with the methods
-[`load_from_tag_map`](/api/attributeruler#load_from_tag_map) and
-[`load_from_morph_rules`](/api/attributeruler#load_from_morph_rules).
-
-```diff
-nlp = spacy.blank("en")
-+ ruler = nlp.add_pipe("attribute_ruler")
-+ ruler.load_from_tag_map(YOUR_TAG_MAP)
-```
+The [`AttributeRuler`](/api/attributeruler) can import a **tag map and morph
+rules** in the v2.x format via its built-in methods or when the component is
+initialized before training. See the
+[migration guide](/usage/v3#migrating-training-mappings-exceptions) for details.
 
 </Infobox>
 
@@ -1829,10 +1828,12 @@ word vector libraries output an easy-to-read text-based format, where each line
 consists of the word followed by its vector. For everyday use, we want to
 convert the vectors into a binary format that loads faster and takes up less
 space on disk. The easiest way to do this is the
-[`init vocab`](/api/cli#init-vocab) command-line utility. This will output a
+[`init vectors`](/api/cli#init-vectors) command-line utility. This will output a
 blank spaCy pipeline in the directory `/tmp/la_vectors_wiki_lg`, giving you
 access to some nice Latin vectors. You can then pass the directory path to
-[`spacy.load`](/api/top-level#spacy.load).
+[`spacy.load`](/api/top-level#spacy.load) or use it in the
+[`[initialize]`](/api/data-formats#config-initialize) of your config when you
+[train](/usage/training) a model.
 
 > #### Usage example
 >
@@ -1845,7 +1846,7 @@ access to some nice Latin vectors. You can then pass the directory path to
 
 ```cli
 $ wget https://s3-us-west-1.amazonaws.com/fasttext-vectors/word-vectors-v2/cc.la.300.vec.gz
-$ python -m spacy init vocab en /tmp/la_vectors_wiki_lg --vectors-loc cc.la.300.vec.gz
+$ python -m spacy init vectors en cc.la.300.vec.gz /tmp/la_vectors_wiki_lg
 ```
 
 <Accordion title="How to optimize vector coverage" id="custom-vectors-coverage" spaced>
@@ -1853,9 +1854,9 @@ $ python -m spacy init vocab en /tmp/la_vectors_wiki_lg --vectors-loc cc.la.300.
 To help you strike a good balance between coverage and memory usage, spaCy's
 [`Vectors`](/api/vectors) class lets you map **multiple keys** to the **same
 row** of the table. If you're using the
-[`spacy init vocab`](/api/cli#init-vocab) command to create a vocabulary,
-pruning the vectors will be taken care of automatically if you set the
-`--prune-vectors` flag. You can also do it manually in the following steps:
+[`spacy init vectors`](/api/cli#init-vectors) command to create a vocabulary,
+pruning the vectors will be taken care of automatically if you set the `--prune`
+flag. You can also do it manually in the following steps:
 
 1. Start with a **word vectors package** that covers a huge vocabulary. For
    instance, the [`en_vectors_web_lg`](/models/en-starters#en_vectors_web_lg)
@@ -1900,12 +1901,12 @@ the two words.
 In the example above, the vector for "Shore" was removed and remapped to the
 vector of "coast", which is deemed about 73% similar. "Leaving" was remapped to
 the vector of "leaving", which is identical. If you're using the
-[`init vocab`](/api/cli#init-vocab) command, you can set the `--prune-vectors`
+[`init vectors`](/api/cli#init-vectors) command, you can set the `--prune`
 option to easily reduce the size of the vectors as you add them to a spaCy
 pipeline:
 
 ```cli
-$ python -m spacy init vocab en /tmp/la_vectors_web_md --vectors-loc la.300d.vec.tgz --prune-vectors 10000
+$ python -m spacy init vectors en la.300d.vec.tgz /tmp/la_vectors_web_md --prune 10000
 ```
 
 This will create a blank spaCy pipeline with vectors for the first 10,000 words

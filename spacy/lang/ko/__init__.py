@@ -1,5 +1,4 @@
 from typing import Optional, Any, Dict
-from thinc.api import Config
 
 from .stop_words import STOP_WORDS
 from .tag_map import TAG_MAP
@@ -7,8 +6,10 @@ from .lex_attrs import LEX_ATTRS
 from ...language import Language
 from ...tokens import Doc
 from ...compat import copy_reg
+from ...scorer import Scorer
 from ...symbols import POS
-from ...util import DummyTokenizer, registry
+from ...training import validate_examples
+from ...util import DummyTokenizer, registry, load_config_from_str
 
 
 DEFAULT_CONFIG = """
@@ -62,9 +63,13 @@ class KoreanTokenizer(DummyTokenizer):
                 lemma = surface
             yield {"surface": surface, "lemma": lemma, "tag": tag}
 
+    def score(self, examples):
+        validate_examples(examples, "KoreanTokenizer.score")
+        return Scorer.score_tokenization(examples)
+
 
 class KoreanDefaults(Language.Defaults):
-    config = Config().from_str(DEFAULT_CONFIG)
+    config = load_config_from_str(DEFAULT_CONFIG)
     lex_attr_getters = LEX_ATTRS
     stop_words = STOP_WORDS
     writing_system = {"direction": "ltr", "has_case": False, "has_letters": False}

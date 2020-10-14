@@ -4,8 +4,7 @@ from spacy.lang.en import English
 from spacy.lang.de import German
 from spacy.tokens import Doc
 from spacy.util import registry, SimpleFrozenDict, combine_score_weights
-from thinc.api import Model, Linear
-from thinc.config import ConfigValidationError
+from thinc.api import Model, Linear, ConfigValidationError
 from pydantic import StrictInt, StrictStr
 
 from ..util import make_tempdir
@@ -345,15 +344,13 @@ def test_language_factories_invalid():
             [{"a": 100, "b": 400}, {"c": 0.5, "d": 0.5}],
             {"a": 0.1, "b": 0.4, "c": 0.25, "d": 0.25},
         ),
-        (
-            [{"a": 0.5, "b": 0.5}, {"b": 1.0}],
-            {"a": 0.25, "b": 0.75},
-        ),
+        ([{"a": 0.5, "b": 0.5}, {"b": 1.0}], {"a": 0.25, "b": 0.75}),
+        ([{"a": 0.0, "b": 0.0}, {"c": 0.0}], {"a": 0.0, "b": 0.0, "c": 0.0}),
     ],
 )
 def test_language_factories_combine_score_weights(weights, expected):
     result = combine_score_weights(weights)
-    assert sum(result.values()) in (0.99, 1.0)
+    assert sum(result.values()) in (0.99, 1.0, 0.0)
     assert result == expected
 
 
@@ -362,18 +359,8 @@ def test_language_factories_scores():
     func = lambda nlp, name: lambda doc: doc
     weights1 = {"a1": 0.5, "a2": 0.5}
     weights2 = {"b1": 0.2, "b2": 0.7, "b3": 0.1}
-    Language.factory(
-        f"{name}1",
-        scores=list(weights1),
-        default_score_weights=weights1,
-        func=func,
-    )
-    Language.factory(
-        f"{name}2",
-        scores=list(weights2),
-        default_score_weights=weights2,
-        func=func,
-    )
+    Language.factory(f"{name}1", default_score_weights=weights1, func=func)
+    Language.factory(f"{name}2", default_score_weights=weights2, func=func)
     meta1 = Language.get_factory_meta(f"{name}1")
     assert meta1.default_score_weights == weights1
     meta2 = Language.get_factory_meta(f"{name}2")
@@ -385,6 +372,21 @@ def test_language_factories_scores():
     cfg = nlp.config["training"]
     expected_weights = {"a1": 0.25, "a2": 0.25, "b1": 0.1, "b2": 0.35, "b3": 0.05}
     assert cfg["score_weights"] == expected_weights
+    # Test with custom defaults
+    config = nlp.config.copy()
+    config["training"]["score_weights"]["a1"] = 0.0
+    config["training"]["score_weights"]["b3"] = 1.0
+    nlp = English.from_config(config)
+    score_weights = nlp.config["training"]["score_weights"]
+    expected = {"a1": 0.0, "a2": 0.5, "b1": 0.03, "b2": 0.12, "b3": 0.34}
+    assert score_weights == expected
+    # Test with null values
+    config = nlp.config.copy()
+    config["training"]["score_weights"]["a1"] = None
+    nlp = English.from_config(config)
+    score_weights = nlp.config["training"]["score_weights"]
+    expected = {"a1": None, "a2": 0.5, "b1": 0.03, "b2": 0.12, "b3": 0.35}
+    assert score_weights == expected
 
 
 def test_pipe_factories_from_source():

@@ -22,6 +22,11 @@ try:
 except ImportError:
     cupy = None
 
+try:  # Python 3.8+
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal  # noqa: F401
+
 from thinc.api import Optimizer  # noqa: F401
 
 pickle = pickle

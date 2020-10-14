@@ -75,63 +75,64 @@
             {
                 "label": "Containers",
                 "items": [
-                    { "text": "Language", "url": "/api/language" },
                     { "text": "Doc", "url": "/api/doc" },
-                    { "text": "Token", "url": "/api/token" },
-                    { "text": "Span", "url": "/api/span" },
-                    { "text": "Lexeme", "url": "/api/lexeme" },
+                    { "text": "DocBin", "url": "/api/docbin" },
                     { "text": "Example", "url": "/api/example" },
-                    { "text": "DocBin", "url": "/api/docbin" }
+                    { "text": "Language", "url": "/api/language" },
+                    { "text": "Lexeme", "url": "/api/lexeme" },
+                    { "text": "Span", "url": "/api/span" },
+                    { "text": "Token", "url": "/api/token" }
                 ]
             },
             {
                 "label": "Pipeline",
                 "items": [
-                    { "text": "Tokenizer", "url": "/api/tokenizer" },
-                    { "text": "Tok2Vec", "url": "/api/tok2vec" },
-                    { "text": "Transformer", "url": "/api/transformer" },
-                    { "text": "Lemmatizer", "url": "/api/lemmatizer" },
-                    { "text": "Morphologizer", "url": "/api/morphologizer" },
-                    { "text": "Tagger", "url": "/api/tagger" },
                     { "text": "AttributeRuler", "url": "/api/attributeruler" },
                     { "text": "DependencyParser", "url": "/api/dependencyparser" },
+                    { "text": "EntityLinker", "url": "/api/entitylinker" },
                     { "text": "EntityRecognizer", "url": "/api/entityrecognizer" },
                     { "text": "EntityRuler", "url": "/api/entityruler" },
-                    { "text": "EntityLinker", "url": "/api/entitylinker" },
-                    { "text": "TextCategorizer", "url": "/api/textcategorizer" },
-                    { "text": "Sentencizer", "url": "/api/sentencizer" },
+                    { "text": "Lemmatizer", "url": "/api/lemmatizer" },
+                    { "text": "Morphologizer", "url": "/api/morphologizer" },
                     { "text": "SentenceRecognizer", "url": "/api/sentencerecognizer" },
-                    { "text": "Other Functions", "url": "/api/pipeline-functions" },
-                    { "text": "Pipe", "url": "/api/pipe" }
+                    { "text": "Sentencizer", "url": "/api/sentencizer" },
+                    { "text": "Tagger", "url": "/api/tagger" },
+                    { "text": "TextCategorizer", "url": "/api/textcategorizer" },
+                    { "text": "Tok2Vec", "url": "/api/tok2vec" },
+                    { "text": "Tokenizer", "url": "/api/tokenizer" },
+                    { "text": "TrainablePipe", "url": "/api/pipe" },
+                    { "text": "Transformer", "url": "/api/transformer" },
+                    { "text": "Other Functions", "url": "/api/pipeline-functions" }
                 ]
             },
             {
                 "label": "Matchers",
                 "items": [
+                    { "text": "DependencyMatcher", "url": "/api/dependencymatcher" },
                     { "text": "Matcher", "url": "/api/matcher" },
-                    { "text": "PhraseMatcher", "url": "/api/phrasematcher" },
-                    { "text": "DependencyMatcher", "url": "/api/dependencymatcher" }
+                    { "text": "PhraseMatcher", "url": "/api/phrasematcher" }
                 ]
             },
             {
                 "label": "Other",
                 "items": [
-                    { "text": "Vocab", "url": "/api/vocab" },
+                    { "text": "Corpus", "url": "/api/corpus" },
+                    { "text": "KnowledgeBase", "url": "/api/kb" },
+                    { "text": "Lookups", "url": "/api/lookups" },
+                    { "text": "MorphAnalysis", "url": "/api/morphology#morphanalysis" },
+                    { "text": "Morphology", "url": "/api/morphology" },
+                    { "text": "Scorer", "url": "/api/scorer" },
                     { "text": "StringStore", "url": "/api/stringstore" },
                     { "text": "Vectors", "url": "/api/vectors" },
-                    { "text": "Lookups", "url": "/api/lookups" },
-                    { "text": "Morphology", "url": "/api/morphology" },
-                    { "text": "KnowledgeBase", "url": "/api/kb" },
-                    { "text": "Scorer", "url": "/api/scorer" },
-                    { "text": "Corpus", "url": "/api/corpus" }
+                    { "text": "Vocab", "url": "/api/vocab" }
                 ]
             },
             {
                 "label": "Cython",
                 "items": [
                     { "text": "Architecture", "url": "/api/cython" },
-                    { "text": "Structs", "url": "/api/cython-structs" },
-                    { "text": "Classes", "url": "/api/cython-classes" }
+                    { "text": "Classes", "url": "/api/cython-classes" },
+                    { "text": "Structs", "url": "/api/cython-structs" }
                 ]
             }
         ]

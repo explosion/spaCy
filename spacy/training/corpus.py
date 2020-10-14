@@ -1,11 +1,13 @@
 import warnings
 from typing import Union, List, Iterable, Iterator, TYPE_CHECKING, Callable
+from typing import Optional
 from pathlib import Path
 import srsly
 
 from .. import util
+from .augment import dont_augment
 from .example import Example
-from ..errors import Warnings
+from ..errors import Warnings, Errors
 from ..tokens import DocBin, Doc
 from ..vocab import Vocab
 
@@ -18,16 +20,38 @@ FILE_TYPE = ".spacy"
 
 @util.registry.readers("spacy.Corpus.v1")
 def create_docbin_reader(
-    path: Path, gold_preproc: bool, max_length: int = 0, limit: int = 0
+    path: Optional[Path],
+    gold_preproc: bool,
+    max_length: int = 0,
+    limit: int = 0,
+    augmenter: Optional[Callable] = None,
 ) -> Callable[["Language"], Iterable[Example]]:
-    return Corpus(path, gold_preproc=gold_preproc, max_length=max_length, limit=limit)
+    if path is None:
+        raise ValueError(Errors.E913)
+    util.logger.debug(f"Loading corpus from path: {path}")
+    return Corpus(
+        path,
+        gold_preproc=gold_preproc,
+        max_length=max_length,
+        limit=limit,
+        augmenter=augmenter,
+    )
 
 
-@util.registry.readers("spacy.JsonlReader.v1")
+@util.registry.readers("spacy.JsonlCorpus.v1")
 def create_jsonl_reader(
     path: Path, min_length: int = 0, max_length: int = 0, limit: int = 0
 ) -> Callable[["Language"], Iterable[Doc]]:
-    return JsonlTexts(path, min_length=min_length, max_length=max_length, limit=limit)
+    return JsonlCorpus(path, min_length=min_length, max_length=max_length, limit=limit)
+
+
+@util.registry.readers("spacy.read_labels.v1")
+def read_labels(path: Path, *, require: bool = False):
+    # I decided not to give this a generic name, because I don't want people to
+    # use it for arbitrary stuff, as I want this require arg with default False.
+    if not require and not path.exists():
+        return None
+    return srsly.read_json(path)
 
 
 def walk_corpus(path: Union[str, Path], file_type) -> List[Path]:
@@ -49,7 +73,9 @@ def walk_corpus(path: Union[str, Path], file_type) -> List[Path]:
         elif path.parts[-1].endswith(file_type):
             locs.append(path)
     if len(locs) == 0:
-        warnings.warn(Warnings.W090.format(path=orig_path))
+        warnings.warn(Warnings.W090.format(path=orig_path, format=file_type))
+    # It's good to sort these, in case the ordering messes up a cache.
+    locs.sort()
     return locs
 
 
@@ -68,6 +94,8 @@ class Corpus:
         0, which indicates no limit.
     limit (int): Limit corpus to a subset of examples, e.g. for debugging.
         Defaults to 0, which indicates no limit.
+    augment (Callable[Example, Iterable[Example]]): Optional data augmentation
+        function, to extrapolate additional examples from your annotations.
 
     DOCS: https://nightly.spacy.io/api/corpus
     """
@@ -79,11 +107,13 @@ class Corpus:
         limit: int = 0,
         gold_preproc: bool = False,
         max_length: int = 0,
+        augmenter: Optional[Callable] = None,
     ) -> None:
         self.path = util.ensure_path(path)
         self.gold_preproc = gold_preproc
         self.max_length = max_length
         self.limit = limit
+        self.augmenter = augmenter if augmenter is not None else dont_augment
 
     def __call__(self, nlp: "Language") -> Iterator[Example]:
         """Yield examples from the data.
@@ -98,7 +128,9 @@ class Corpus:
             examples = self.make_examples_gold_preproc(nlp, ref_docs)
         else:
             examples = self.make_examples(nlp, ref_docs)
-        yield from examples
+        for real_eg in examples:
+            for augmented_eg in self.augmenter(nlp, real_eg):
+                yield augmented_eg
 
     def _make_example(
         self, nlp: "Language", reference: Doc, gold_preproc: bool
@@ -161,7 +193,7 @@ class Corpus:
                             break
 
 
-class JsonlTexts:
+class JsonlCorpus:
     """Iterate Doc objects from a file or directory of jsonl
     formatted raw text files.
 
@@ -174,7 +206,7 @@ class JsonlTexts:
     limit (int): Limit corpus to a subset of examples, e.g. for debugging.
         Defaults to 0, which indicates no limit.
 
-    DOCS: https://nightly.spacy.io/api/corpus#jsonltexts
+    DOCS: https://nightly.spacy.io/api/corpus#jsonlcorpus
     """
 
     file_type = "jsonl"
@@ -198,9 +230,9 @@ class JsonlTexts:
         nlp (Language): The current nlp object.
         YIELDS (Example): The example objects.
 
-        DOCS: https://nightly.spacy.io/api/corpus#jsonltexts-call
+        DOCS: https://nightly.spacy.io/api/corpus#jsonlcorpus-call
         """
-        for loc in walk_corpus(self.path, "jsonl"):
+        for loc in walk_corpus(self.path, ".jsonl"):
             records = srsly.read_jsonl(loc)
             for record in records:
                 doc = nlp.make_doc(record["text"])

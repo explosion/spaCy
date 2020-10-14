@@ -3,8 +3,6 @@ from spacy.attrs import LEMMA
 from spacy.vocab import Vocab
 from spacy.tokens import Doc, Token
 
-from ..util import get_doc
-
 
 def test_doc_retokenize_merge(en_tokenizer):
     text = "WKRO played songs by the beach boys all night"
@@ -23,11 +21,11 @@ def test_doc_retokenize_merge(en_tokenizer):
     assert doc[4].text == "the beach boys"
     assert doc[4].text_with_ws == "the beach boys "
     assert doc[4].tag_ == "NAMED"
-    assert doc[4].morph_ == "Number=Plur"
+    assert str(doc[4].morph) == "Number=Plur"
     assert doc[5].text == "all night"
     assert doc[5].text_with_ws == "all night"
     assert doc[5].tag_ == "NAMED"
-    assert doc[5].morph_ == "Number=Plur"
+    assert str(doc[5].morph) == "Number=Plur"
 
 
 def test_doc_retokenize_merge_children(en_tokenizer):
@@ -88,9 +86,9 @@ def test_doc_retokenize_lex_attrs(en_tokenizer):
 
 def test_doc_retokenize_spans_merge_tokens(en_tokenizer):
     text = "Los Angeles start."
-    heads = [1, 1, 0, -1]
+    heads = [1, 2, 2, 2]
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
+    doc = Doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
     assert len(doc) == 4
     assert doc[0].head.text == "Angeles"
     assert doc[1].head.text == "start"
@@ -103,17 +101,12 @@ def test_doc_retokenize_spans_merge_tokens(en_tokenizer):
     assert doc[0].ent_type_ == "GPE"
 
 
-def test_doc_retokenize_spans_merge_tokens_default_attrs(en_tokenizer):
-    text = "The players start."
-    heads = [1, 1, 0, -1]
-    tokens = en_tokenizer(text)
-    doc = get_doc(
-        tokens.vocab,
-        words=[t.text for t in tokens],
-        tags=["DT", "NN", "VBZ", "."],
-        pos=["DET", "NOUN", "VERB", "PUNCT"],
-        heads=heads,
-    )
+def test_doc_retokenize_spans_merge_tokens_default_attrs(en_vocab):
+    words = ["The", "players", "start", "."]
+    heads = [1, 2, 2, 2]
+    tags = ["DT", "NN", "VBZ", "."]
+    pos = ["DET", "NOUN", "VERB", "PUNCT"]
+    doc = Doc(en_vocab, words=words, tags=tags, pos=pos, heads=heads)
     assert len(doc) == 4
     assert doc[0].text == "The"
     assert doc[0].tag_ == "DT"
@@ -124,13 +117,7 @@ def test_doc_retokenize_spans_merge_tokens_default_attrs(en_tokenizer):
     assert doc[0].text == "The players"
     assert doc[0].tag_ == "NN"
     assert doc[0].pos_ == "NOUN"
-    doc = get_doc(
-        tokens.vocab,
-        words=[t.text for t in tokens],
-        tags=["DT", "NN", "VBZ", "."],
-        pos=["DET", "NOUN", "VERB", "PUNCT"],
-        heads=heads,
-    )
+    doc = Doc(en_vocab, words=words, tags=tags, pos=pos, heads=heads)
     assert len(doc) == 4
     assert doc[0].text == "The"
     assert doc[0].tag_ == "DT"
@@ -147,11 +134,10 @@ def test_doc_retokenize_spans_merge_tokens_default_attrs(en_tokenizer):
     assert doc[1].pos_ == "VERB"
 
 
-def test_doc_retokenize_spans_merge_heads(en_tokenizer):
-    text = "I found a pilates class near work."
-    heads = [1, 0, 2, 1, -3, -1, -1, -6]
-    tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
+def test_doc_retokenize_spans_merge_heads(en_vocab):
+    words = ["I", "found", "a", "pilates", "class", "near", "work", "."]
+    heads = [1, 1, 4, 6, 1, 4, 5, 1]
+    doc = Doc(en_vocab, words=words, heads=heads)
     assert len(doc) == 8
     with doc.retokenize() as retokenizer:
         attrs = {"tag": doc[4].tag_, "lemma": "pilates class", "ent_type": "O"}
@@ -182,9 +168,9 @@ def test_doc_retokenize_spans_merge_non_disjoint(en_tokenizer):
 
 def test_doc_retokenize_span_np_merges(en_tokenizer):
     text = "displaCy is a parse tool built with Javascript"
-    heads = [1, 0, 2, 1, -3, -1, -1, -1]
+    heads = [1, 1, 4, 4, 1, 4, 5, 6]
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
+    doc = Doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
     assert doc[4].head.i == 1
     with doc.retokenize() as retokenizer:
         attrs = {"tag": "NP", "lemma": "tool", "ent_type": "O"}
@@ -192,18 +178,18 @@ def test_doc_retokenize_span_np_merges(en_tokenizer):
     assert doc[2].head.i == 1
 
     text = "displaCy is a lightweight and modern dependency parse tree visualization tool built with CSS3 and JavaScript."
-    heads = [1, 0, 8, 3, -1, -2, 4, 3, 1, 1, -9, -1, -1, -1, -1, -2, -15]
+    heads = [1, 1, 10, 7, 3, 3, 7, 10, 9, 10, 1, 10, 11, 12, 13, 13, 1]
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
+    doc = Doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
     with doc.retokenize() as retokenizer:
         for ent in doc.ents:
             attrs = {"tag": ent.label_, "lemma": ent.lemma_, "ent_type": ent.label_}
             retokenizer.merge(ent, attrs=attrs)
 
     text = "One test with entities like New York City so the ents list is not void"
-    heads = [1, 11, -1, -1, -1, 1, 1, -3, 4, 2, 1, 1, 0, -1, -2]
+    heads = [1, 1, 1, 2, 3, 6, 7, 4, 12, 11, 11, 12, 1, 12, 12]
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
+    doc = Doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
     with doc.retokenize() as retokenizer:
         for ent in doc.ents:
             retokenizer.merge(ent)
@@ -212,12 +198,18 @@ def test_doc_retokenize_span_np_merges(en_tokenizer):
 def test_doc_retokenize_spans_entity_merge(en_tokenizer):
     # fmt: off
     text = "Stewart Lee is a stand up comedian who lives in England and loves Joe Pasquale.\n"
-    heads = [1, 1, 0, 1, 2, -1, -4, 1, -2, -1, -1, -3, -10, 1, -2, -13, -1]
+    heads = [1, 2, 2, 4, 6, 4, 2, 8, 6, 8, 9, 8, 8, 14, 12, 2, 15]
     tags = ["NNP", "NNP", "VBZ", "DT", "VB", "RP", "NN", "WP", "VBZ", "IN", "NNP", "CC", "VBZ", "NNP", "NNP", ".", "SP"]
-    ents = [(0, 2, "PERSON"), (10, 11, "GPE"), (13, 15, "PERSON")]
+    ents = [("PERSON", 0, 2), ("GPE", 10, 11), ("PERSON", 13, 15)]
+    ents = ["O"] * len(heads)
+    ents[0] = "B-PERSON"
+    ents[1] = "I-PERSON"
+    ents[10] = "B-GPE"
+    ents[13] = "B-PERSON"
+    ents[14] = "I-PERSON"
     # fmt: on
     tokens = en_tokenizer(text)
-    doc = get_doc(
+    doc = Doc(
         tokens.vocab, words=[t.text for t in tokens], heads=heads, tags=tags, ents=ents
     )
     assert len(doc) == 17
@@ -282,13 +274,17 @@ def test_doc_retokenize_spans_entity_merge_iob(en_vocab):
 
     # if there is a parse, span.root provides default values
     words = ["a", "b", "c", "d", "e", "f", "g", "h", "i"]
-    heads = [0, -1, 1, -3, -4, -5, -1, -7, -8]
-    ents = [(3, 5, "ent-de"), (5, 7, "ent-fg")]
+    heads = [0, 0, 3, 0, 0, 0, 5, 0, 0]
+    ents = ["O"] * len(words)
+    ents[3] = "B-ent-de"
+    ents[4] = "I-ent-de"
+    ents[5] = "B-ent-fg"
+    ents[6] = "I-ent-fg"
     deps = ["dep"] * len(words)
     en_vocab.strings.add("ent-de")
     en_vocab.strings.add("ent-fg")
     en_vocab.strings.add("dep")
-    doc = get_doc(en_vocab, words=words, heads=heads, deps=deps, ents=ents)
+    doc = Doc(en_vocab, words=words, heads=heads, deps=deps, ents=ents)
     assert doc[2:4].root == doc[3]  # root of 'c d' is d
     assert doc[4:6].root == doc[4]  # root is 'e f' is e
     with doc.retokenize() as retokenizer:
@@ -305,10 +301,14 @@ def test_doc_retokenize_spans_entity_merge_iob(en_vocab):
 
     # check that B is preserved if span[start] is B
     words = ["a", "b", "c", "d", "e", "f", "g", "h", "i"]
-    heads = [0, -1, 1, 1, -4, -5, -1, -7, -8]
-    ents = [(3, 5, "ent-de"), (5, 7, "ent-de")]
+    heads = [0, 0, 3, 4, 0, 0, 5, 0, 0]
+    ents = ["O"] * len(words)
+    ents[3] = "B-ent-de"
+    ents[4] = "I-ent-de"
+    ents[5] = "B-ent-de"
+    ents[6] = "I-ent-de"
     deps = ["dep"] * len(words)
-    doc = get_doc(en_vocab, words=words, heads=heads, deps=deps, ents=ents)
+    doc = Doc(en_vocab, words=words, heads=heads, deps=deps, ents=ents)
     with doc.retokenize() as retokenizer:
         retokenizer.merge(doc[3:5])
         retokenizer.merge(doc[5:7])
@@ -322,13 +322,13 @@ def test_doc_retokenize_spans_entity_merge_iob(en_vocab):
 def test_doc_retokenize_spans_sentence_update_after_merge(en_tokenizer):
     # fmt: off
     text = "Stewart Lee is a stand up comedian. He lives in England and loves Joe Pasquale."
-    heads = [1, 1, 0, 1, 2, -1, -4, -5, 1, 0, -1, -1, -3, -4, 1, -2, -7]
+    heads = [1, 2, 2, 4, 2, 4, 4, 2, 9, 9, 9, 10, 9, 9, 15, 13, 9]
     deps = ['compound', 'nsubj', 'ROOT', 'det', 'amod', 'prt', 'attr',
             'punct', 'nsubj', 'ROOT', 'prep', 'pobj', 'cc', 'conj',
             'compound', 'dobj', 'punct']
     # fmt: on
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
+    doc = Doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
     sent1, sent2 = list(doc.sents)
     init_len = len(sent1)
     init_len2 = len(sent2)
@@ -336,6 +336,7 @@ def test_doc_retokenize_spans_sentence_update_after_merge(en_tokenizer):
         attrs = {"lemma": "none", "ent_type": "none"}
         retokenizer.merge(doc[0:2], attrs=attrs)
         retokenizer.merge(doc[-2:], attrs=attrs)
+    sent1, sent2 = list(doc.sents)
     assert len(sent1) == init_len - 1
     assert len(sent2) == init_len2 - 1
 
@@ -343,13 +344,13 @@ def test_doc_retokenize_spans_sentence_update_after_merge(en_tokenizer):
 def test_doc_retokenize_spans_subtree_size_check(en_tokenizer):
     # fmt: off
     text = "Stewart Lee is a stand up comedian who lives in England and loves Joe Pasquale"
-    heads = [1, 1, 0, 1, 2, -1, -4, 1, -2, -1, -1, -3, -10, 1, -2]
+    heads = [1, 2, 2, 4, 6, 4, 2, 8, 6, 8, 9, 8, 8, 14, 12]
     deps = ["compound", "nsubj", "ROOT", "det", "amod", "prt", "attr",
             "nsubj", "relcl", "prep", "pobj", "cc", "conj", "compound",
             "dobj"]
     # fmt: on
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
+    doc = Doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
     sent1 = list(doc.sents)[0]
     init_len = len(list(sent1.root.subtree))
     with doc.retokenize() as retokenizer:
