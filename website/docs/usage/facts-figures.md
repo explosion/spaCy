@@ -65,8 +65,8 @@ import Benchmarks from 'usage/\_benchmarks-models.md'
 
 | Dependency Parsing System                                                      |  UAS |  LAS |
 | ------------------------------------------------------------------------------ | ---: | ---: |
-| spaCy RoBERTa (2020)<sup>1</sup>                                               | 95.5 | 94.3 |
-| spaCy CNN (2020)<sup>1</sup>                                                   |      |      |
+| spaCy RoBERTa (2020)                                                           | 95.5 | 94.3 |
+| spaCy CNN (2020)                                                               |      |      |
 | [Mrini et al.](https://khalilmrini.github.io/Label_Attention_Layer.pdf) (2019) | 97.4 | 96.3 |
 | [Zhou and Zhao](https://www.aclweb.org/anthology/P19-1230/) (2019)             | 97.2 | 95.7 |
 
@@ -74,8 +74,32 @@ import Benchmarks from 'usage/\_benchmarks-models.md'
 
 **Dependency parsing accuracy** on the Penn Treebank. See
 [NLP-progress](http://nlpprogress.com/english/dependency_parsing.html) for more
-results. **1. ** Project template:
+results. Project template:
 [`benchmarks/parsing_penn_treebank`](%%GITHUB_PROJECTS/benchmarks/parsing_penn_treebank).
+
+</figcaption>
+
+</figure>
+
+### Speed comparison {#benchmarks-speed}
+
+<!-- TODO: intro -->
+
+<figure>
+
+| Library | Pipeline                                        | WPS CPU <Help>words per second on CPU, higher is better</Help> | WPS GPU <Help>words per second on GPU, higher is better</Help> |
+| ------- | ----------------------------------------------- | -------------------------------------------------------------: | -------------------------------------------------------------: |
+| spaCy   | [`en_core_web_md`](/models/en#en_core_web_md)   |
+| spaCy   | [`en_core_web_trf`](/models/en#en_core_web_trf) |
+| Stanza  | `en_ewt`                                        |                                                                |
+| Flair   | `pos-fast_ner-fast`                             |
+| Flair   | `pos_ner`                                       |
+| UDPipe  | `english-ewt-ud-2.5`                            |
+
+<figcaption class="caption">
+
+**End-to-end processing speed** on raw unannotated text. Project template:
+[`benchmarks/speed`](%%GITHUB_PROJECTS/benchmarks/speed).
 
 </figcaption>
 
