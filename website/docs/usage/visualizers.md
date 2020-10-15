@@ -149,7 +149,7 @@ import DisplacyEntCustomHtml from 'images/displacy-ent-custom.html'
 The above example uses a little trick: Since the background color values are
 added as the `background` style attribute, you can use any
 [valid background value](https://tympanus.net/codrops/css_reference/background/)
-or shorthand — including gradients and even images!
+or shorthand – including gradients and even images!
 
 ### Adding titles to documents {#ent-titles}
 
