@@ -20,7 +20,8 @@ def docs_to_json(docs, doc_id=0, ner_missing_tag="O"):
         docs = [docs]
     json_doc = {"id": doc_id, "paragraphs": []}
     for i, doc in enumerate(docs):
-        json_para = {'raw': doc.text, "sentences": [], "cats": [], "entities": [], "links": []}
+        raw = None if doc.has_unknown_spaces else doc.text
+        json_para = {'raw': raw, "sentences": [], "cats": [], "entities": [], "links": []}
         for cat, val in doc.cats.items():
             json_cat = {"label": cat, "value": val}
             json_para["cats"].append(json_cat)
