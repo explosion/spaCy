@@ -171,6 +171,11 @@ def lt_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def mk_tokenizer():
+    return get_lang_class("mk").Defaults.create_tokenizer()
+
+
+@pytest.fixture(scope="session")
 def ml_tokenizer():
     return get_lang_class("ml").Defaults.create_tokenizer()
 
