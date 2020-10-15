@@ -334,7 +334,8 @@ def test_roc_auc_score():
     score = ROCAUCScore()
     score.score_set(0.25, 0)
     score.score_set(0.75, 0)
-    assert score.score == -float("inf")
+    with pytest.raises(ValueError):
+        s = score.score
 
     y_true = [1, 1]
     y_score = [0.25, 0.75]
@@ -344,4 +345,5 @@ def test_roc_auc_score():
     score = ROCAUCScore()
     score.score_set(0.25, 1)
     score.score_set(0.75, 1)
-    assert score.score == -float("inf")
+    with pytest.raises(ValueError):
+        s = score.score
