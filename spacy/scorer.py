@@ -59,7 +59,9 @@ class PRFScore:
 
 
 class ROCAUCScore:
-    """An AUC ROC score."""
+    """An AUC ROC score. This is only defined for binary classification.
+    Use the method is_binary before calculating the score, otherwise it
+    may throw an error."""
 
     def __init__(self) -> None:
         self.golds = []
@@ -71,16 +73,16 @@ class ROCAUCScore:
         self.cands.append(cand)
         self.golds.append(gold)
 
+    def is_binary(self):
+        return len(np.unique(self.golds)) == 2
+
     @property
     def score(self):
+        if not self.is_binary:
+            raise ValueError(Errors.E165.format(label=set(self.golds)))
         if len(self.golds) == self.saved_score_at_len:
             return self.saved_score
-        try:
-            self.saved_score = _roc_auc_score(self.golds, self.cands)
-        # catch ValueError: Only one class present in y_true.
-        # ROC AUC score is not defined in that case.
-        except ValueError:
-            self.saved_score = -float("inf")
+        self.saved_score = _roc_auc_score(self.golds, self.cands)
         self.saved_score_at_len = len(self.golds)
         return self.saved_score
 
@@ -431,7 +433,9 @@ class Scorer:
         macro_p = sum(prf.precision for prf in f_per_type.values()) / n_cats
         macro_r = sum(prf.recall for prf in f_per_type.values()) / n_cats
         macro_f = sum(prf.fscore for prf in f_per_type.values()) / n_cats
-        macro_auc = sum(auc.score for auc in auc_per_type.values()) / n_cats
+        # Limit macro_auc to those labels with gold annotations,
+        # but still divide by all cats to avoid artificial boosting of datasets with missing labels
+        macro_auc = sum(auc.score if auc.is_binary else 0.0 for auc in auc_per_type.values()) / n_cats
         results = {
             f"{attr}_score": None,
             f"{attr}_score_desc": None,
@@ -443,7 +447,7 @@ class Scorer:
             f"{attr}_macro_f": macro_f,
             f"{attr}_macro_auc": macro_auc,
             f"{attr}_f_per_type": {k: v.to_dict() for k, v in f_per_type.items()},
-            f"{attr}_auc_per_type": {k: v.score for k, v in auc_per_type.items()},
+            f"{attr}_auc_per_type": {k: v.score if v.is_binary() else None for k, v in auc_per_type.items()},
         }
         if len(labels) == 2 and not multi_label and positive_label:
             positive_label_f = results[f"{attr}_f_per_type"][positive_label]["f"]
@@ -726,7 +730,7 @@ def _roc_auc_score(y_true, y_score):
             <https://www.ncbi.nlm.nih.gov/pubmed/2668680>`_
     """
     if len(np.unique(y_true)) != 2:
-        raise ValueError(Errors.E165)
+        raise ValueError(Errors.E165.format(label=np.unique(y_true)))
     fpr, tpr, _ = _roc_curve(y_true, y_score)
     return _auc(fpr, tpr)
 
