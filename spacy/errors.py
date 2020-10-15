@@ -456,6 +456,8 @@ class Errors:
             "issue tracker: http://github.com/explosion/spaCy/issues")
 
     # TODO: fix numbering after merging develop into master
+    E897 = ("Field '{field}' should be a dot-notation string referring to the "
+            "relevant section in the config, but found type {type} instead.")
     E898 = ("Can't serialize trainable pipe '{name}': the `model` attribute "
             "is not set or None. If you've implemented a custom component, make "
             "sure to store the component model as `self.model` in your "
