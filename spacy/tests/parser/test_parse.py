@@ -1,4 +1,7 @@
 import pytest
+from numpy.testing import assert_equal
+from spacy.attrs import DEP
+
 from spacy.lang.en import English
 from spacy.training import Example
 from spacy.tokens import Doc
@@ -210,3 +213,16 @@ def test_overfitting_IO():
         assert doc2[0].dep_ == "nsubj"
         assert doc2[2].dep_ == "dobj"
         assert doc2[3].dep_ == "punct"
+
+    # Make sure that running pipe twice, or comparing to call, always amounts to the same predictions
+    texts = [
+        "Just a sentence.",
+        "Then one more sentence about London.",
+        "Here is another one.",
+        "I like London.",
+    ]
+    batch_deps_1 = [doc.to_array([DEP]) for doc in nlp.pipe(texts)]
+    batch_deps_2 = [doc.to_array([DEP]) for doc in nlp.pipe(texts)]
+    no_batch_deps = [doc.to_array([DEP]) for doc in [nlp(text) for text in texts]]
+    assert_equal(batch_deps_1, batch_deps_2)
+    assert_equal(batch_deps_1, no_batch_deps)

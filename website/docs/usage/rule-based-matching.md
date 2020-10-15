@@ -489,11 +489,11 @@ This allows you to write callbacks that consider the entire set of matched
 phrases, so that you can resolve overlaps and other conflicts in whatever way
 you prefer.
 
-| Argument  | Description                                                                                                                                        |
-| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `matcher` | The matcher instance. ~~Matcher~~                                                                                                                  |
-| `doc`     | The document the matcher was used on. ~~Doc~~                                                                                                      |
-| `i`       | Index of the current match (`matches[i`]). ~~int~~                                                                                                 |
+| Argument  | Description                                                                                                                                       |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `matcher` | The matcher instance. ~~Matcher~~                                                                                                                 |
+| `doc`     | The document the matcher was used on. ~~Doc~~                                                                                                     |
+| `i`       | Index of the current match (`matches[i`]). ~~int~~                                                                                                |
 | `matches` | A list of `(match_id, start, end)` tuples, describing the matches. A match tuple describes a span `doc[start:end`]. ~~List[Tuple[int, int int]]~~ |
 
 ### Creating spans from matches {#matcher-spans}
@@ -631,8 +631,8 @@ To get a quick overview of the results, you could collect all sentences
 containing a match and render them with the
 [displaCy visualizer](/usage/visualizers). In the callback function, you'll have
 access to the `start` and `end` of each match, as well as the parent `Doc`. This
-lets you determine the sentence containing the match, `doc[start:end].sent`,
-and calculate the start and end of the matched span within the sentence. Using
+lets you determine the sentence containing the match, `doc[start:end].sent`, and
+calculate the start and end of the matched span within the sentence. Using
 displaCy in ["manual" mode](/usage/visualizers#manual-usage) lets you pass in a
 list of dictionaries containing the text and entities to render.
 

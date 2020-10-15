@@ -1,6 +1,7 @@
 import pytest
 import random
 import numpy.random
+from numpy.testing import assert_equal
 from thinc.api import fix_random_seed
 from spacy import util
 from spacy.lang.en import English
@@ -173,6 +174,14 @@ def test_overfitting_IO():
     assert scores["cats_micro_f"] == 1.0
     assert scores["cats_score"] == 1.0
     assert "cats_score_desc" in scores
+
+    # Make sure that running pipe twice, or comparing to call, always amounts to the same predictions
+    texts = ["Just a sentence.", "I like green eggs.", "I am happy.", "I eat ham."]
+    batch_deps_1 = [doc.cats for doc in nlp.pipe(texts)]
+    batch_deps_2 = [doc.cats for doc in nlp.pipe(texts)]
+    no_batch_deps = [doc.cats for doc in [nlp(text) for text in texts]]
+    assert_equal(batch_deps_1, batch_deps_2)
+    assert_equal(batch_deps_1, no_batch_deps)
 
 
 # fmt: off
