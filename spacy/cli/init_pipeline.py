@@ -100,7 +100,7 @@ def init_labels_cli(
     extract the labels."""
     util.logger.setLevel(logging.DEBUG if verbose else logging.INFO)
     if not output_path.exists():
-        output_path.mkdir()
+        output_path.mkdir(parents=True)
     overrides = parse_config_overrides(ctx.args)
     import_code(code_path)
     setup_gpu(use_gpu)
