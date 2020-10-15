@@ -717,7 +717,7 @@ tabular results to a file:
 ```python
 ### functions.py
 import sys
-from typing import IO, Tuple, Callable, Dict, Any
+from typing import IO, Tuple, Callable, Dict, Any, Optional
 import spacy
 from spacy import Language
 from pathlib import Path
