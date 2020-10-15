@@ -216,7 +216,7 @@ in `/opt/nvidia/cuda`, you would run:
 ```bash
 ### Installation with CUDA
 $ export CUDA_PATH="/opt/nvidia/cuda"
-$ pip install -U %%SPACY_PKG_NAME[cud102,transformers]%%SPACY_PKG_FLAGS
+$ pip install -U %%SPACY_PKG_NAME[cuda102,transformers]%%SPACY_PKG_FLAGS
 ```
 
 ### Runtime usage {#transformers-runtime}
@@ -516,7 +516,7 @@ Many neural network models are able to use word vector tables as additional
 features, which sometimes results in significant improvements in accuracy.
 spaCy's built-in embedding layer,
 [MultiHashEmbed](/api/architectures#MultiHashEmbed), can be configured to use
-word vector tables using the `include_static_vectors` flag. 
+word vector tables using the `include_static_vectors` flag.
 
 ```ini
 [tagger.model.tok2vec.embed]
