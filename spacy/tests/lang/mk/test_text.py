@@ -1,4 +1,6 @@
 # coding: utf8
+from __future__ import unicode_literals
+
 import pytest
 from spacy.lang.mk.lex_attrs import like_num
 
