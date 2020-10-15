@@ -364,9 +364,13 @@ class Scorer:
             for all:
                 attr_score (one of attr_micro_f / attr_macro_f / attr_macro_auc),
                 attr_score_desc (text description of the overall score),
+                attr_micro_p,
+                attr_micro_r,
                 attr_micro_f,
+                attr_macro_p,
+                attr_macro_r,
                 attr_macro_f,
-                attr_auc,
+                attr_macro_auc,
                 attr_f_per_type,
                 attr_auc_per_type
 
