@@ -18,8 +18,7 @@ website/.npm
 website/logs
 *.log
 npm-debug.log*
-website/www/
-website/_deploy.sh
+quickstart-training-generator.js
 
 # Cython / C extensions
 cythonize.json
