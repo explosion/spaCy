@@ -435,7 +435,7 @@ class Scorer:
         macro_f = sum(prf.fscore for prf in f_per_type.values()) / n_cats
         # Limit macro_auc to those labels with gold annotations,
         # but still divide by all cats to avoid artificial boosting of datasets with missing labels
-        macro_auc = sum(auc.score if auc.is_binary else 0.0 for auc in auc_per_type.values()) / n_cats
+        macro_auc = sum(auc.score if auc.is_binary() else 0.0 for auc in auc_per_type.values()) / n_cats
         results = {
             f"{attr}_score": None,
             f"{attr}_score_desc": None,
