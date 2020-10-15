@@ -10,6 +10,18 @@ menu:
 
 ## Comparison {#comparison hidden="true"}
 
+spaCy is a **free, open-source library** for advanced **Natural Language
+Processing** (NLP) in Python. It's designed specifically for **production use**
+and helps you build applications that process and "understand" large volumes of
+text. It can be used to build information extraction or natural language
+understanding systems.
+
+### Feature overview {#comparison-features}
+
+import Features from 'widgets/features.js'
+
+<Features />
+
 ### When should I use spaCy? {#comparison-usage}
 
 - ✅ **I'm a beginner and just getting started with NLP.** – spaCy makes it easy
