@@ -1,4 +1,7 @@
 import pytest
+from numpy.testing import assert_equal
+from spacy.attrs import ENT_IOB
+
 from spacy import util
 from spacy.lang.en import English
 from spacy.language import Language
@@ -331,6 +334,19 @@ def test_overfitting_IO():
         assert len(ents2) == 1
         assert ents2[0].text == "London"
         assert ents2[0].label_ == "LOC"
+
+    # Make sure that running pipe twice, or comparing to call, always amounts to the same predictions
+    texts = [
+        "Just a sentence.",
+        "Then one more sentence about London.",
+        "Here is another one.",
+        "I like London.",
+    ]
+    batch_deps_1 = [doc.to_array([ENT_IOB]) for doc in nlp.pipe(texts)]
+    batch_deps_2 = [doc.to_array([ENT_IOB]) for doc in nlp.pipe(texts)]
+    no_batch_deps = [doc.to_array([ENT_IOB]) for doc in [nlp(text) for text in texts]]
+    assert_equal(batch_deps_1, batch_deps_2)
+    assert_equal(batch_deps_1, no_batch_deps)
 
 
 def test_ner_warns_no_lookups(caplog):

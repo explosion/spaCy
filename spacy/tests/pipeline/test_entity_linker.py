@@ -1,5 +1,7 @@
 from typing import Callable, Iterable
 import pytest
+from numpy.testing import assert_equal
+from spacy.attrs import ENT_KB_ID
 
 from spacy.kb import KnowledgeBase, get_candidates, Candidate
 from spacy.vocab import Vocab
@@ -495,6 +497,19 @@ def test_overfitting_IO():
             for ent in doc2.ents:
                 predictions.append(ent.kb_id_)
         assert predictions == GOLD_entities
+
+    # Make sure that running pipe twice, or comparing to call, always amounts to the same predictions
+    texts = [
+        "Russ Cochran captured his first major title with his son as caddie.",
+        "Russ Cochran his reprints include EC Comics.",
+        "Russ Cochran has been publishing comic art.",
+        "Russ Cochran was a member of University of Kentucky's golf team.",
+    ]
+    batch_deps_1 = [doc.to_array([ENT_KB_ID]) for doc in nlp.pipe(texts)]
+    batch_deps_2 = [doc.to_array([ENT_KB_ID]) for doc in nlp.pipe(texts)]
+    no_batch_deps = [doc.to_array([ENT_KB_ID]) for doc in [nlp(text) for text in texts]]
+    assert_equal(batch_deps_1, batch_deps_2)
+    assert_equal(batch_deps_1, no_batch_deps)
 
 
 def test_kb_serialization():
