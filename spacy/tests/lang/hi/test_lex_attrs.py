@@ -28,14 +28,16 @@ def test_hi_norm(word, word_norm):
 
 
 @pytest.mark.parametrize(
-    "word", ["१९८७", "1987", "१२,२६७", "उन्नीस", "पाँच", "नवासी", "५/१०"],
+    "word",
+    ["१९८७", "1987", "१२,२६७", "उन्नीस", "पाँच", "नवासी", "५/१०"],
 )
 def test_hi_like_num(word):
     assert like_num(word)
 
 
 @pytest.mark.parametrize(
-    "word", ["पहला", "तृतीय", "निन्यानवेवाँ", "उन्नीस", "तिहत्तरवाँ", "छत्तीसवाँ",],
+    "word",
+    ["पहला", "तृतीय", "निन्यानवेवाँ", "उन्नीस", "तिहत्तरवाँ", "छत्तीसवाँ"],
 )
 def test_hi_like_num_ordinal_words(word):
     assert like_num(word)

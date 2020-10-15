@@ -297,7 +297,7 @@ def zh_tokenizer_pkuseg():
                 "segmenter": "pkuseg",
             }
         },
-        "initialize": {"tokenizer": {"pkuseg_model": "web",}},
+        "initialize": {"tokenizer": {"pkuseg_model": "web"}},
     }
     nlp = get_lang_class("zh").from_config(config)
     nlp.initialize()
