@@ -1,7 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-
 STOP_WORDS = set(
     """
 a à â a-a a-e a-i a-o aiva aloa an ancheu ancon apreuvo ascì atra atre atri atro avanti avei

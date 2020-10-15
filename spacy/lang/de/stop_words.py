@@ -1,7 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-
 STOP_WORDS = set(
     """
 á a ab aber ach acht achte achten achter achtes ag alle allein allem allen

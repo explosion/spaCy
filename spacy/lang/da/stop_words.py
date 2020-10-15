@@ -1,6 +1,3 @@
-# encoding: utf8
-from __future__ import unicode_literals
-
 # Source: Handpicked by Jens Dahl Møllerhøj.
 
 STOP_WORDS = set(

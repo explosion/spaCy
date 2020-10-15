@@ -1,9 +1,9 @@
-# cython: infer_types=True
-# cython: profile=True
-from __future__ import unicode_literals
+# cython: infer_types=True, cython: profile=True
+from typing import List
 
 from libcpp.vector cimport vector
 from libc.stdint cimport int32_t
+from libc.string cimport memset, memcmp
 from cymem.cymem cimport Pool
 from murmurhash.mrmr cimport hash64
 
@@ -17,10 +17,10 @@ from ..vocab cimport Vocab
 from ..tokens.doc cimport Doc, get_token_attr_for_matcher
 from ..tokens.span cimport Span
 from ..tokens.token cimport Token
-from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH, POS, TAG, DEP, LEMMA
+from ..tokens.morphanalysis cimport MorphAnalysis
+from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH, POS, TAG, DEP, LEMMA, MORPH
 
-from ._schemas import TOKEN_PATTERN_SCHEMA
-from ..util import get_json_validator, validate_json
+from ..schemas import validate_token_pattern
 from ..errors import Errors, MatchPatternError, Warnings
 from ..strings import get_string_id
 from ..attrs import IDS
@@ -32,28 +32,25 @@ DEF PADDING = 5
 cdef class Matcher:
     """Match sequences of tokens, based on pattern rules.
 
-    DOCS: https://spacy.io/api/matcher
-    USAGE: https://spacy.io/usage/rule-based-matching
+    DOCS: https://nightly.spacy.io/api/matcher
+    USAGE: https://nightly.spacy.io/usage/rule-based-matching
     """
 
-    def __init__(self, vocab, validate=False):
+    def __init__(self, vocab, validate=True):
         """Create the Matcher.
 
         vocab (Vocab): The vocabulary object, which must be shared with the
             documents the matcher will operate on.
-        RETURNS (Matcher): The newly constructed object.
         """
         self._extra_predicates = []
         self._patterns = {}
         self._callbacks = {}
+        self._filter = {}
         self._extensions = {}
         self._seen_attrs = set()
         self.vocab = vocab
         self.mem = Pool()
-        if validate:
-            self.validator = get_json_validator(TOKEN_PATTERN_SCHEMA)
-        else:
-            self.validator = None
+        self.validate = validate
 
     def __reduce__(self):
         data = (self.vocab, self._patterns, self._callbacks)
@@ -71,12 +68,12 @@ cdef class Matcher:
     def __contains__(self, key):
         """Check whether the matcher contains rules for a match ID.
 
-        key (unicode): The match ID.
+        key (str): The match ID.
         RETURNS (bool): Whether the matcher contains rules for this match ID.
         """
-        return self._normalize_key(key) in self._patterns
+        return self.has_key(key)
 
-    def add(self, key, patterns, *_patterns, on_match=None):
+    def add(self, key, patterns, *, on_match=None, greedy: str=None):
         """Add a match-rule to the matcher. A match-rule consists of: an ID
         key, an on_match callback, and one or more patterns.
 
@@ -94,59 +91,58 @@ cdef class Matcher:
         '+': Require the pattern to match 1 or more times.
         '*': Allow the pattern to zero or more times.
 
-        The + and * operators are usually interpretted "greedily", i.e. longer
-        matches are returned where possible. However, if you specify two '+'
-        and '*' patterns in a row and their matches overlap, the first
-        operator will behave non-greedily. This quirk in the semantics makes
-        the matcher more efficient, by avoiding the need for back-tracking.
+        The + and * operators return all possible matches (not just the greedy
+        ones). However, the "greedy" argument can filter the final matches
+        by returning a non-overlapping set per key, either taking preference to
+        the first greedy match ("FIRST"), or the longest ("LONGEST").
 
         As of spaCy v2.2.2, Matcher.add supports the future API, which makes
         the patterns the second argument and a list (instead of a variable
         number of arguments). The on_match callback becomes an optional keyword
         argument.
 
-        key (unicode): The match ID.
+        key (str): The match ID.
         patterns (list): The patterns to add for the given key.
         on_match (callable): Optional callback executed on match.
-        *_patterns (list): For backwards compatibility: list of patterns to add
-            as variable arguments. Will be ignored if a list of patterns is
-            provided as the second argument.
+        greedy (str): Optional filter: "FIRST" or "LONGEST".
         """
         errors = {}
         if on_match is not None and not hasattr(on_match, "__call__"):
             raise ValueError(Errors.E171.format(arg_type=type(on_match)))
-        if patterns is None or hasattr(patterns, "__call__"):  # old API
-            on_match = patterns
-            patterns = _patterns
+        if patterns is None or not isinstance(patterns, List):  # old API
+            raise ValueError(Errors.E948.format(arg_type=type(patterns)))
+        if greedy is not None and greedy not in ["FIRST", "LONGEST"]:
+            raise ValueError(Errors.E947.format(expected=["FIRST", "LONGEST"], arg=greedy))
         for i, pattern in enumerate(patterns):
             if len(pattern) == 0:
                 raise ValueError(Errors.E012.format(key=key))
             if not isinstance(pattern, list):
                 raise ValueError(Errors.E178.format(pat=pattern, key=key))
-            if self.validator:
-                errors[i] = validate_json(pattern, self.validator)
+            if self.validate:
+                errors[i] = validate_token_pattern(pattern)
         if any(err for err in errors.values()):
             raise MatchPatternError(key, errors)
         key = self._normalize_key(key)
         for pattern in patterns:
             try:
-                specs = _preprocess_pattern(pattern, self.vocab.strings,
+                specs = _preprocess_pattern(pattern, self.vocab,
                     self._extensions, self._extra_predicates)
                 self.patterns.push_back(init_pattern(self.mem, key, specs))
                 for spec in specs:
                     for attr, _ in spec[1]:
                         self._seen_attrs.add(attr)
             except OverflowError, AttributeError:
-                raise ValueError(Errors.E154.format())
+                raise ValueError(Errors.E154.format()) from None
         self._patterns.setdefault(key, [])
         self._callbacks[key] = on_match
+        self._filter[key] = greedy
         self._patterns[key].extend(patterns)
 
     def remove(self, key):
         """Remove a rule from the matcher. A KeyError is raised if the key does
         not exist.
 
-        key (unicode): The ID of the match rule.
+        key (str): The ID of the match rule.
         """
         norm_key = self._normalize_key(key)
         if not norm_key in self._patterns:
@@ -167,13 +163,12 @@ cdef class Matcher:
         key (string or int): The key to check.
         RETURNS (bool): Whether the matcher has the rule.
         """
-        key = self._normalize_key(key)
-        return key in self._patterns
+        return self._normalize_key(key) in self._patterns
 
     def get(self, key, default=None):
         """Retrieve the pattern stored for a key.
 
-        key (unicode or int): The key to retrieve.
+        key (str / int): The key to retrieve.
         RETURNS (tuple): The rule, as an (on_match, patterns) tuple.
         """
         key = self._normalize_key(key)
@@ -181,23 +176,11 @@ cdef class Matcher:
             return default
         return (self._callbacks[key], self._patterns[key])
 
-    def pipe(self, docs, batch_size=1000, n_threads=-1, return_matches=False,
-             as_tuples=False):
-        """Match a stream of documents, yielding them in turn.
-
-        docs (iterable): A stream of documents.
-        batch_size (int): Number of documents to accumulate into a working set.
-        return_matches (bool): Yield the match lists along with the docs, making
-            results (doc, matches) tuples.
-        as_tuples (bool): Interpret the input stream as (doc, context) tuples,
-            and yield (result, context) tuples out.
-            If both return_matches and as_tuples are True, the output will
-            be a sequence of ((doc, matches), context) tuples.
-        YIELDS (Doc): Documents, in order.
+    def pipe(self, docs, batch_size=1000, return_matches=False, as_tuples=False):
+        """Match a stream of documents, yielding them in turn. Deprecated as of
+        spaCy v3.0.
         """
-        if n_threads != -1:
-            warnings.warn(Warnings.W016, DeprecationWarning)
-
+        warnings.warn(Warnings.W105.format(matcher="Matcher"), DeprecationWarning)
         if as_tuples:
             for doc, context in docs:
                 matches = self(doc)
@@ -213,13 +196,16 @@ cdef class Matcher:
                 else:
                     yield doc
 
-    def __call__(self, object doclike):
+    def __call__(self, object doclike, *, as_spans=False, allow_missing=False):
         """Find all token sequences matching the supplied pattern.
 
         doclike (Doc or Span): The document to match over.
-        RETURNS (list): A list of `(key, start, end)` tuples,
+        as_spans (bool): Return Span objects with labels instead of (match_id,
+            start, end) tuples.
+        RETURNS (list): A list of `(match_id, start, end)` tuples,
             describing the matches. A match tuple describes a span
-            `doc[start:end]`. The `label_id` and `key` are both integers.
+            `doc[start:end]`. The `match_id` is an integer. If as_spans is set
+            to True, a list of Span objects is returned.
         """
         if isinstance(doclike, Doc):
             doc = doclike
@@ -229,18 +215,61 @@ cdef class Matcher:
             length = doclike.end - doclike.start
         else:
             raise ValueError(Errors.E195.format(good="Doc or Span", got=type(doclike).__name__))
-        if len(set([LEMMA, POS, TAG]) & self._seen_attrs) > 0 \
-          and not doc.is_tagged:
-            raise ValueError(Errors.E155.format())
-        if DEP in self._seen_attrs and not doc.is_parsed:
-            raise ValueError(Errors.E156.format())
+        cdef Pool tmp_pool = Pool()
+        if not allow_missing:
+            for attr in (TAG, POS, MORPH, LEMMA, DEP):
+                if attr in self._seen_attrs and not doc.has_annotation(attr):
+                    if attr == TAG:
+                        pipe = "tagger"
+                    elif attr in (POS, MORPH):
+                        pipe = "morphologizer"
+                    elif attr == LEMMA:
+                        pipe = "lemmatizer"
+                    elif attr == DEP:
+                        pipe = "parser"
+                    error_msg = Errors.E155.format(pipe=pipe, attr=self.vocab.strings.as_string(attr))
+                    raise ValueError(error_msg)
         matches = find_matches(&self.patterns[0], self.patterns.size(), doclike, length,
                                 extensions=self._extensions, predicates=self._extra_predicates)
-        for i, (key, start, end) in enumerate(matches):
+        final_matches = []
+        pairs_by_id = {}
+        # For each key, either add all matches, or only the filtered, non-overlapping ones
+        for (key, start, end) in matches:
+            span_filter = self._filter.get(key)
+            if span_filter is not None:
+                pairs = pairs_by_id.get(key, [])
+                pairs.append((start,end))
+                pairs_by_id[key] = pairs
+            else:
+                final_matches.append((key, start, end))
+        matched = <char*>tmp_pool.alloc(length, sizeof(char))
+        empty = <char*>tmp_pool.alloc(length, sizeof(char))
+        for key, pairs in pairs_by_id.items():
+            memset(matched, 0, length * sizeof(matched[0]))
+            span_filter = self._filter.get(key)
+            if span_filter == "FIRST":
+                sorted_pairs = sorted(pairs, key=lambda x: (x[0], -x[1]), reverse=False) # sort by start
+            elif span_filter == "LONGEST":
+                sorted_pairs = sorted(pairs, key=lambda x: (x[1]-x[0], -x[0]), reverse=True) # reverse sort by length
+            else:
+                raise ValueError(Errors.E947.format(expected=["FIRST", "LONGEST"], arg=span_filter))
+            for (start, end) in sorted_pairs:
+                assert 0 <= start < end  # Defend against segfaults
+                span_len = end-start
+                # If no tokens in the span have matched
+                if memcmp(&matched[start], &empty[start], span_len * sizeof(matched[0])) == 0:
+                    final_matches.append((key, start, end))
+                    # Mark tokens that have matched
+                    memset(&matched[start], 1, span_len * sizeof(matched[0]))
+        # perform the callbacks on the filtered set of results
+        for i, (key, start, end) in enumerate(final_matches):
             on_match = self._callbacks.get(key, None)
             if on_match is not None:
-                on_match(self, doc, i, matches)
-        return matches
+                on_match(self, doc, i, final_matches)
+        if as_spans:
+            return [Span(doc, start, end, label=key) for key, start, end in final_matches]
+        else:
+            return final_matches
 
     def _normalize_key(self, key):
         if isinstance(key, basestring):
@@ -251,9 +280,9 @@ cdef class Matcher:
 
 def unpickle_matcher(vocab, patterns, callbacks):
     matcher = Matcher(vocab)
-    for key, specs in patterns.items():
+    for key, pattern in patterns.items():
         callback = callbacks.get(key, None)
-        matcher.add(key, callback, *specs)
+        matcher.add(key, pattern, on_match=callback)
     return matcher
 
 
@@ -635,7 +664,7 @@ cdef attr_t get_ent_id(const TokenPatternC* pattern) nogil:
     return id_attr.value
 
 
-def _preprocess_pattern(token_specs, string_store, extensions_table, extra_predicates):
+def _preprocess_pattern(token_specs, vocab, extensions_table, extra_predicates):
     """This function interprets the pattern, converting the various bits of
     syntactic sugar before we compile it into a struct with init_pattern.
 
@@ -650,6 +679,7 @@ def _preprocess_pattern(token_specs, string_store, extensions_table, extra_predi
         extra_predicates.
     """
     tokens = []
+    string_store = vocab.strings
     for spec in token_specs:
         if not spec:
             # Signifier for 'any token'
@@ -660,7 +690,7 @@ def _preprocess_pattern(token_specs, string_store, extensions_table, extra_predi
         ops = _get_operators(spec)
         attr_values = _get_attr_values(spec, string_store)
         extensions = _get_extensions(spec, string_store, extensions_table)
-        predicates = _get_extra_predicates(spec, extra_predicates)
+        predicates = _get_extra_predicates(spec, extra_predicates, vocab)
         for op in ops:
             tokens.append((op, list(attr_values), list(extensions), list(predicates)))
     return tokens
@@ -679,8 +709,6 @@ def _get_attr_values(spec, string_store):
                 attr = "ORTH"
             if attr == "IS_SENT_START":
                 attr = "SENT_START"
-            if attr not in TOKEN_PATTERN_SCHEMA["items"]["properties"]:
-                raise ValueError(Errors.E152.format(attr=attr))
             attr = IDS.get(attr)
         if isinstance(value, basestring):
             value = string_store.add(value)
@@ -695,7 +723,7 @@ def _get_attr_values(spec, string_store):
         if attr is not None:
             attr_values.append((attr, value))
         else:
-            # should be caught above using TOKEN_PATTERN_SCHEMA
+            # should be caught in validation
             raise ValueError(Errors.E152.format(attr=attr))
     return attr_values
 
@@ -703,10 +731,10 @@ def _get_attr_values(spec, string_store):
 # These predicate helper classes are used to match the REGEX, IN, >= etc
 # extensions to the matcher introduced in #3173.
 
-class _RegexPredicate(object):
+class _RegexPredicate:
     operators = ("REGEX",)
 
-    def __init__(self, i, attr, value, predicate, is_extension=False):
+    def __init__(self, i, attr, value, predicate, is_extension=False, vocab=None):
         self.i = i
         self.attr = attr
         self.value = re.compile(value)
@@ -724,13 +752,18 @@ class _RegexPredicate(object):
         return bool(self.value.search(value))
 
 
-class _SetMemberPredicate(object):
-    operators = ("IN", "NOT_IN")
+class _SetPredicate:
+    operators = ("IN", "NOT_IN", "IS_SUBSET", "IS_SUPERSET")
 
-    def __init__(self, i, attr, value, predicate, is_extension=False):
+    def __init__(self, i, attr, value, predicate, is_extension=False, vocab=None):
         self.i = i
         self.attr = attr
-        self.value = set(get_string_id(v) for v in value)
+        self.vocab = vocab
+        if self.attr == MORPH:
+            # normalize morph strings
+            self.value = set(self.vocab.morphology.add(v) for v in value)
+        else:
+            self.value = set(get_string_id(v) for v in value)
         self.predicate = predicate
         self.is_extension = is_extension
         self.key = (attr, self.predicate, srsly.json_dumps(value, sort_keys=True))
@@ -742,19 +775,32 @@ class _SetMemberPredicate(object):
             value = get_string_id(token._.get(self.attr))
         else:
             value = get_token_attr_for_matcher(token.c, self.attr)
+
+        if self.predicate in ("IS_SUBSET", "IS_SUPERSET"):
+            if self.attr == MORPH:
+                # break up MORPH into individual Feat=Val values
+                value = set(get_string_id(v) for v in MorphAnalysis.from_id(self.vocab, value))
+            else:
+                # IS_SUBSET for other attrs will be equivalent to "IN"
+                # IS_SUPERSET will only match for other attrs with 0 or 1 values
+                value = set([value])
         if self.predicate == "IN":
             return value in self.value
-        else:
+        elif self.predicate == "NOT_IN":
             return value not in self.value
+        elif self.predicate == "IS_SUBSET":
+            return value <= self.value
+        elif self.predicate == "IS_SUPERSET":
+            return value >= self.value
 
     def __repr__(self):
-        return repr(("SetMemberPredicate", self.i, self.attr, self.value, self.predicate))
+        return repr(("SetPredicate", self.i, self.attr, self.value, self.predicate))
 
 
-class _ComparisonPredicate(object):
+class _ComparisonPredicate:
     operators = ("==", "!=", ">=", "<=", ">", "<")
 
-    def __init__(self, i, attr, value, predicate, is_extension=False):
+    def __init__(self, i, attr, value, predicate, is_extension=False, vocab=None):
         self.i = i
         self.attr = attr
         self.value = value
@@ -783,11 +829,13 @@ class _ComparisonPredicate(object):
             return value < self.value
 
 
-def _get_extra_predicates(spec, extra_predicates):
+def _get_extra_predicates(spec, extra_predicates, vocab):
     predicate_types = {
         "REGEX": _RegexPredicate,
-        "IN": _SetMemberPredicate,
-        "NOT_IN": _SetMemberPredicate,
+        "IN": _SetPredicate,
+        "NOT_IN": _SetPredicate,
+        "IS_SUBSET": _SetPredicate,
+        "IS_SUPERSET": _SetPredicate,
         "==": _ComparisonPredicate,
         "!=": _ComparisonPredicate,
         ">=": _ComparisonPredicate,
@@ -815,7 +863,7 @@ def _get_extra_predicates(spec, extra_predicates):
             value_with_upper_keys = {k.upper(): v for k, v in value.items()}
             for type_, cls in predicate_types.items():
                 if type_ in value_with_upper_keys:
-                    predicate = cls(len(extra_predicates), attr, value_with_upper_keys[type_], type_)
+                    predicate = cls(len(extra_predicates), attr, value_with_upper_keys[type_], type_, vocab=vocab)
                     # Don't create a redundant predicates.
                     # This helps with efficiency, as we're caching the results.
                     if predicate.key in seen_predicates:

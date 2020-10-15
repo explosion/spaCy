@@ -1,54 +1,73 @@
-# coding: utf8
-from __future__ import division, print_function, unicode_literals
-
+from typing import Optional, Iterable, Dict, Any, Callable, TYPE_CHECKING
 import numpy as np
+from collections import defaultdict
 
-from .gold import tags_to_entities, GoldParse
+from .training import Example
+from .tokens import Token, Doc, Span
 from .errors import Errors
+from .util import get_lang_class, SimpleFrozenList
+from .morphology import Morphology
+
+if TYPE_CHECKING:
+    # This lets us add type hints for mypy etc. without causing circular imports
+    from .language import Language  # noqa: F401
 
 
-class PRFScore(object):
-    """
-    A precision / recall / F score
-    """
+DEFAULT_PIPELINE = ["senter", "tagger", "morphologizer", "parser", "ner", "textcat"]
 
-    def __init__(self):
+
+class PRFScore:
+    """A precision / recall / F score."""
+
+    def __init__(self) -> None:
         self.tp = 0
         self.fp = 0
         self.fn = 0
 
-    def score_set(self, cand, gold):
+    def __iadd__(self, other):
+        self.tp += other.tp
+        self.fp += other.fp
+        self.fn += other.fn
+        return self
+
+    def __add__(self, other):
+        return PRFScore(
+            tp=self.tp + other.tp, fp=self.fp + other.fp, fn=self.fn + other.fn
+        )
+
+    def score_set(self, cand: set, gold: set) -> None:
         self.tp += len(cand.intersection(gold))
         self.fp += len(cand - gold)
         self.fn += len(gold - cand)
 
     @property
-    def precision(self):
+    def precision(self) -> float:
         return self.tp / (self.tp + self.fp + 1e-100)
 
     @property
-    def recall(self):
+    def recall(self) -> float:
         return self.tp / (self.tp + self.fn + 1e-100)
 
     @property
-    def fscore(self):
+    def fscore(self) -> float:
         p = self.precision
         r = self.recall
         return 2 * ((p * r) / (p + r + 1e-100))
 
+    def to_dict(self) -> Dict[str, float]:
+        return {"p": self.precision, "r": self.recall, "f": self.fscore}
 
-class ROCAUCScore(object):
-    """
-    An AUC ROC score.
-    """
 
-    def __init__(self):
+class ROCAUCScore:
+    """An AUC ROC score."""
+
+    def __init__(self) -> None:
         self.golds = []
         self.cands = []
         self.saved_score = 0.0
         self.saved_score_at_len = 0
 
-    def score_set(self, cand, gold):
+    def score_set(self, cand, gold) -> None:
         self.cands.append(cand)
         self.golds.append(gold)
 
@@ -66,285 +85,570 @@ class ROCAUCScore(object):
         return self.saved_score
 
 
-class Scorer(object):
+class Scorer:
     """Compute evaluation scores."""
 
-    def __init__(self, eval_punct=False, pipeline=None):
+    def __init__(
+        self,
+        nlp: Optional["Language"] = None,
+        default_lang: str = "xx",
+        default_pipeline=DEFAULT_PIPELINE,
+        **cfg,
+    ) -> None:
         """Initialize the Scorer.
 
-        eval_punct (bool): Evaluate the dependency attachments to and from
-            punctuation.
-        RETURNS (Scorer): The newly created object.
-
-        DOCS: https://spacy.io/api/scorer#init
+        DOCS: https://nightly.spacy.io/api/scorer#init
         """
-        self.tokens = PRFScore()
-        self.sbd = PRFScore()
-        self.unlabelled = PRFScore()
-        self.labelled = PRFScore()
-        self.labelled_per_dep = dict()
-        self.tags = PRFScore()
-        self.ner = PRFScore()
-        self.ner_per_ents = dict()
-        self.eval_punct = eval_punct
-        self.textcat = None
-        self.textcat_per_cat = dict()
-        self.textcat_positive_label = None
-        self.textcat_multilabel = False
+        self.nlp = nlp
+        self.cfg = cfg
+        if not nlp:
+            nlp = get_lang_class(default_lang)()
+            for pipe in default_pipeline:
+                nlp.add_pipe(pipe)
+            self.nlp = nlp
 
-        if pipeline:
-            for name, model in pipeline:
-                if name == "textcat":
-                    self.textcat_positive_label = model.cfg.get("positive_label", None)
-                    if self.textcat_positive_label:
-                        self.textcat = PRFScore()
-                    if not model.cfg.get("exclusive_classes", False):
-                        self.textcat_multilabel = True
-                        for label in model.cfg.get("labels", []):
-                            self.textcat_per_cat[label] = ROCAUCScore()
-                    else:
-                        for label in model.cfg.get("labels", []):
-                            self.textcat_per_cat[label] = PRFScore()
+    def score(self, examples: Iterable[Example]) -> Dict[str, Any]:
+        """Evaluate a list of Examples.
 
-    @property
-    def tags_acc(self):
-        """RETURNS (float): Part-of-speech tag accuracy (fine grained tags,
-            i.e. `Token.tag`).
+        examples (Iterable[Example]): The predicted annotations + correct annotations.
+        RETURNS (Dict): A dictionary of scores.
+
+        DOCS: https://nightly.spacy.io/api/scorer#score
         """
-        return self.tags.fscore * 100
+        scores = {}
+        if hasattr(self.nlp.tokenizer, "score"):
+            scores.update(self.nlp.tokenizer.score(examples, **self.cfg))
+        for name, component in self.nlp.pipeline:
+            if hasattr(component, "score"):
+                scores.update(component.score(examples, **self.cfg))
+        return scores
 
-    @property
-    def token_acc(self):
-        """RETURNS (float): Tokenization accuracy."""
-        return self.tokens.precision * 100
+    @staticmethod
+    def score_tokenization(examples: Iterable[Example], **cfg) -> Dict[str, float]:
+        """Returns accuracy and PRF scores for tokenization.
+        * token_acc: # correct tokens / # gold tokens
+        * token_p/r/f: PRF for token character spans
 
-    @property
-    def uas(self):
-        """RETURNS (float): Unlabelled dependency score."""
-        return self.unlabelled.fscore * 100
+        examples (Iterable[Example]): Examples to score
+        RETURNS (Dict[str, float]): A dictionary containing the scores
+            token_acc/p/r/f.
 
-    @property
-    def las(self):
-        """RETURNS (float): Labelled dependency score."""
-        return self.labelled.fscore * 100
-
-    @property
-    def las_per_type(self):
-        """RETURNS (dict): Scores per dependency label.
+        DOCS: https://nightly.spacy.io/api/scorer#score_tokenization
         """
+        acc_score = PRFScore()
+        prf_score = PRFScore()
+        for example in examples:
+            gold_doc = example.reference
+            pred_doc = example.predicted
+            align = example.alignment
+            gold_spans = set()
+            pred_spans = set()
+            for token in gold_doc:
+                if token.orth_.isspace():
+                    continue
+                gold_spans.add((token.idx, token.idx + len(token)))
+            for token in pred_doc:
+                if token.orth_.isspace():
+                    continue
+                pred_spans.add((token.idx, token.idx + len(token)))
+                if align.x2y.lengths[token.i] != 1:
+                    acc_score.fp += 1
+                else:
+                    acc_score.tp += 1
+            prf_score.score_set(pred_spans, gold_spans)
         return {
-            k: {"p": v.precision * 100, "r": v.recall * 100, "f": v.fscore * 100}
-            for k, v in self.labelled_per_dep.items()
+            "token_acc": acc_score.fscore,
+            "token_p": prf_score.precision,
+            "token_r": prf_score.recall,
+            "token_f": prf_score.fscore,
         }
 
-    @property
-    def ents_p(self):
-        """RETURNS (float): Named entity accuracy (precision)."""
-        return self.ner.precision * 100
+    @staticmethod
+    def score_token_attr(
+        examples: Iterable[Example],
+        attr: str,
+        *,
+        getter: Callable[[Token, str], Any] = getattr,
+        **cfg,
+    ) -> Dict[str, float]:
+        """Returns an accuracy score for a token-level attribute.
 
-    @property
-    def ents_r(self):
-        """RETURNS (float): Named entity accuracy (recall)."""
-        return self.ner.recall * 100
+        examples (Iterable[Example]): Examples to score
+        attr (str): The attribute to score.
+        getter (Callable[[Token, str], Any]): Defaults to getattr. If provided,
+            getter(token, attr) should return the value of the attribute for an
+            individual token.
+        RETURNS (Dict[str, float]): A dictionary containing the accuracy score
+            under the key attr_acc.
 
-    @property
-    def ents_f(self):
-        """RETURNS (float): Named entity accuracy (F-score)."""
-        return self.ner.fscore * 100
-
-    @property
-    def ents_per_type(self):
-        """RETURNS (dict): Scores per entity label.
+        DOCS: https://nightly.spacy.io/api/scorer#score_token_attr
         """
-        return {
-            k: {"p": v.precision * 100, "r": v.recall * 100, "f": v.fscore * 100}
-            for k, v in self.ner_per_ents.items()
-        }
+        tag_score = PRFScore()
+        for example in examples:
+            gold_doc = example.reference
+            pred_doc = example.predicted
+            align = example.alignment
+            gold_tags = set()
+            for gold_i, token in enumerate(gold_doc):
+                gold_tags.add((gold_i, getter(token, attr)))
+            pred_tags = set()
+            for token in pred_doc:
+                if token.orth_.isspace():
+                    continue
+                if align.x2y.lengths[token.i] == 1:
+                    gold_i = align.x2y[token.i].dataXd[0, 0]
+                    pred_tags.add((gold_i, getter(token, attr)))
+            tag_score.score_set(pred_tags, gold_tags)
+        return {f"{attr}_acc": tag_score.fscore}
 
-    @property
-    def textcat_score(self):
-        """RETURNS (float): f-score on positive label for binary exclusive,
-        macro-averaged f-score for 3+ exclusive,
-        macro-averaged AUC ROC score for multilabel (-1 if undefined)
+    @staticmethod
+    def score_token_attr_per_feat(
+        examples: Iterable[Example],
+        attr: str,
+        *,
+        getter: Callable[[Token, str], Any] = getattr,
+        **cfg,
+    ):
+        """Return PRF scores per feat for a token attribute in UFEATS format.
+
+        examples (Iterable[Example]): Examples to score
+        attr (str): The attribute to score.
+        getter (Callable[[Token, str], Any]): Defaults to getattr. If provided,
+            getter(token, attr) should return the value of the attribute for an
+            individual token.
+        RETURNS (dict): A dictionary containing the per-feat PRF scores unders
+            the key attr_per_feat.
         """
-        if not self.textcat_multilabel:
-            # binary multiclass
-            if self.textcat_positive_label:
-                return self.textcat.fscore * 100
-            # other multiclass
-            return (
-                sum([score.fscore for label, score in self.textcat_per_cat.items()])
-                / (len(self.textcat_per_cat) + 1e-100)
-                * 100
-            )
-        # multilabel
-        return max(
-            sum([score.score for label, score in self.textcat_per_cat.items()])
-            / (len(self.textcat_per_cat) + 1e-100),
-            -1,
-        )
+        per_feat = {}
+        for example in examples:
+            pred_doc = example.predicted
+            gold_doc = example.reference
+            align = example.alignment
+            gold_per_feat = {}
+            for gold_i, token in enumerate(gold_doc):
+                morph = str(getter(token, attr))
+                if morph:
+                    for feat in morph.split(Morphology.FEATURE_SEP):
+                        field, values = feat.split(Morphology.FIELD_SEP)
+                        if field not in per_feat:
+                            per_feat[field] = PRFScore()
+                        if field not in gold_per_feat:
+                            gold_per_feat[field] = set()
+                        gold_per_feat[field].add((gold_i, feat))
+            pred_per_feat = {}
+            for token in pred_doc:
+                if token.orth_.isspace():
+                    continue
+                if align.x2y.lengths[token.i] == 1:
+                    gold_i = align.x2y[token.i].dataXd[0, 0]
+                    morph = str(getter(token, attr))
+                    if morph:
+                        for feat in morph.split("|"):
+                            field, values = feat.split("=")
+                            if field not in per_feat:
+                                per_feat[field] = PRFScore()
+                            if field not in pred_per_feat:
+                                pred_per_feat[field] = set()
+                            pred_per_feat[field].add((gold_i, feat))
+            for field in per_feat:
+                per_feat[field].score_set(
+                    pred_per_feat.get(field, set()), gold_per_feat.get(field, set())
+                )
+        result = {k: v.to_dict() for k, v in per_feat.items()}
+        return {f"{attr}_per_feat": result}
 
-    @property
-    def textcats_per_cat(self):
-        """RETURNS (dict): Scores per textcat label.
+    @staticmethod
+    def score_spans(
+        examples: Iterable[Example],
+        attr: str,
+        *,
+        getter: Callable[[Doc, str], Iterable[Span]] = getattr,
+        **cfg,
+    ) -> Dict[str, Any]:
+        """Returns PRF scores for labeled spans.
+
+        examples (Iterable[Example]): Examples to score
+        attr (str): The attribute to score.
+        getter (Callable[[Doc, str], Iterable[Span]]): Defaults to getattr. If
+            provided, getter(doc, attr) should return the spans for the
+            individual doc.
+        RETURNS (Dict[str, Any]): A dictionary containing the PRF scores under
+            the keys attr_p/r/f and the per-type PRF scores under attr_per_type.
+
+        DOCS: https://nightly.spacy.io/api/scorer#score_spans
         """
-        if not self.textcat_multilabel:
-            return {
-                k: {"p": v.precision * 100, "r": v.recall * 100, "f": v.fscore * 100}
-                for k, v in self.textcat_per_cat.items()
-            }
-        return {
-            k: {"roc_auc_score": max(v.score, -1)}
-            for k, v in self.textcat_per_cat.items()
-        }
-
-    @property
-    def scores(self):
-        """RETURNS (dict): All scores with keys `uas`, `las`, `ents_p`,
-            `ents_r`, `ents_f`, `tags_acc`, `token_acc`, and `textcat_score`.
-        """
-        return {
-            "uas": self.uas,
-            "las": self.las,
-            "las_per_type": self.las_per_type,
-            "ents_p": self.ents_p,
-            "ents_r": self.ents_r,
-            "ents_f": self.ents_f,
-            "ents_per_type": self.ents_per_type,
-            "tags_acc": self.tags_acc,
-            "token_acc": self.token_acc,
-            "textcat_score": self.textcat_score,
-            "textcats_per_cat": self.textcats_per_cat,
-        }
-
-    def score(self, doc, gold, verbose=False, punct_labels=("p", "punct")):
-        """Update the evaluation scores from a single Doc / GoldParse pair.
-
-        doc (Doc): The predicted annotations.
-        gold (GoldParse): The correct annotations.
-        verbose (bool): Print debugging information.
-        punct_labels (tuple): Dependency labels for punctuation. Used to
-            evaluate dependency attachments to punctuation if `eval_punct` is
-            `True`.
-
-        DOCS: https://spacy.io/api/scorer#score
-        """
-        if len(doc) != len(gold):
-            gold = GoldParse.from_annot_tuples(
-                doc, zip(*gold.orig_annot), cats=gold.cats,
-            )
-        gold_deps = set()
-        gold_deps_per_dep = {}
-        gold_tags = set()
-        gold_ents = set(tags_to_entities([annot[-1] for annot in gold.orig_annot]))
-        for id_, word, tag, head, dep, ner in gold.orig_annot:
-            gold_tags.add((id_, tag))
-            if dep not in (None, "") and dep.lower() not in punct_labels:
-                gold_deps.add((id_, head, dep.lower()))
-                if dep.lower() not in self.labelled_per_dep:
-                    self.labelled_per_dep[dep.lower()] = PRFScore()
-                if dep.lower() not in gold_deps_per_dep:
-                    gold_deps_per_dep[dep.lower()] = set()
-                gold_deps_per_dep[dep.lower()].add((id_, head, dep.lower()))
-        cand_deps = set()
-        cand_deps_per_dep = {}
-        cand_tags = set()
-        for token in doc:
-            if token.orth_.isspace():
+        score = PRFScore()
+        score_per_type = dict()
+        for example in examples:
+            pred_doc = example.predicted
+            gold_doc = example.reference
+            # TODO
+            # This is a temporary hack to work around the problem that the scorer
+            # fails if you have examples that are not fully annotated for all
+            # the tasks in your pipeline. For instance, you might have a corpus
+            # of NER annotations that does not set sentence boundaries, but the
+            # pipeline includes a parser or senter, and then the score_weights
+            # are used to evaluate that component. When the scorer attempts
+            # to read the sentences from the gold document, it fails.
+            try:
+                list(getter(gold_doc, attr))
+            except ValueError:
                 continue
-            gold_i = gold.cand_to_gold[token.i]
-            if gold_i is None:
-                self.tokens.fp += 1
-            else:
-                self.tokens.tp += 1
-                cand_tags.add((gold_i, token.tag_))
-            if token.dep_.lower() not in punct_labels and token.orth_.strip():
-                gold_head = gold.cand_to_gold[token.head.i]
-                # None is indistinct, so we can't just add it to the set
-                # Multiple (None, None) deps are possible
-                if gold_i is None or gold_head is None:
-                    self.unlabelled.fp += 1
-                    self.labelled.fp += 1
-                else:
-                    cand_deps.add((gold_i, gold_head, token.dep_.lower()))
-                    if token.dep_.lower() not in self.labelled_per_dep:
-                        self.labelled_per_dep[token.dep_.lower()] = PRFScore()
-                    if token.dep_.lower() not in cand_deps_per_dep:
-                        cand_deps_per_dep[token.dep_.lower()] = set()
-                    cand_deps_per_dep[token.dep_.lower()].add(
-                        (gold_i, gold_head, token.dep_.lower())
-                    )
-        if "-" not in [token[-1] for token in gold.orig_annot]:
-            # Find all NER labels in gold and doc
-            ent_labels = set([x[0] for x in gold_ents] + [k.label_ for k in doc.ents])
+            # Find all labels in gold and doc
+            labels = set(
+                [k.label_ for k in getter(gold_doc, attr)]
+                + [k.label_ for k in getter(pred_doc, attr)]
+            )
             # Set up all labels for per type scoring and prepare gold per type
-            gold_per_ents = {ent_label: set() for ent_label in ent_labels}
-            for ent_label in ent_labels:
-                if ent_label not in self.ner_per_ents:
-                    self.ner_per_ents[ent_label] = PRFScore()
-                gold_per_ents[ent_label].update(
-                    [x for x in gold_ents if x[0] == ent_label]
+            gold_per_type = {label: set() for label in labels}
+            for label in labels:
+                if label not in score_per_type:
+                    score_per_type[label] = PRFScore()
+            # Find all predidate labels, for all and per type
+            gold_spans = set()
+            pred_spans = set()
+            for span in getter(gold_doc, attr):
+                gold_span = (span.label_, span.start, span.end - 1)
+                gold_spans.add(gold_span)
+                gold_per_type[span.label_].add((span.label_, span.start, span.end - 1))
+            pred_per_type = {label: set() for label in labels}
+            for span in example.get_aligned_spans_x2y(getter(pred_doc, attr)):
+                pred_spans.add((span.label_, span.start, span.end - 1))
+                pred_per_type[span.label_].add((span.label_, span.start, span.end - 1))
+            # Scores per label
+            for k, v in score_per_type.items():
+                if k in pred_per_type:
+                    v.score_set(pred_per_type[k], gold_per_type[k])
+            # Score for all labels
+            score.score_set(pred_spans, gold_spans)
+        results = {
+            f"{attr}_p": score.precision,
+            f"{attr}_r": score.recall,
+            f"{attr}_f": score.fscore,
+            f"{attr}_per_type": {k: v.to_dict() for k, v in score_per_type.items()},
+        }
+        return results
+
+    @staticmethod
+    def score_cats(
+        examples: Iterable[Example],
+        attr: str,
+        *,
+        getter: Callable[[Doc, str], Any] = getattr,
+        labels: Iterable[str] = SimpleFrozenList(),
+        multi_label: bool = True,
+        positive_label: Optional[str] = None,
+        threshold: Optional[float] = None,
+        **cfg,
+    ) -> Dict[str, Any]:
+        """Returns PRF and ROC AUC scores for a doc-level attribute with a
+        dict with scores for each label like Doc.cats. The reported overall
+        score depends on the scorer settings.
+
+        examples (Iterable[Example]): Examples to score
+        attr (str): The attribute to score.
+        getter (Callable[[Doc, str], Any]): Defaults to getattr. If provided,
+            getter(doc, attr) should return the values for the individual doc.
+        labels (Iterable[str]): The set of possible labels. Defaults to [].
+        multi_label (bool): Whether the attribute allows multiple labels.
+            Defaults to True.
+        positive_label (str): The positive label for a binary task with
+            exclusive classes. Defaults to None.
+        threshold (float): Cutoff to consider a prediction "positive". Defaults
+            to 0.5 for multi-label, and 0.0 (i.e. whatever's highest scoring)
+            otherwise.
+        RETURNS (Dict[str, Any]): A dictionary containing the scores, with
+            inapplicable scores as None:
+            for all:
+                attr_score (one of attr_micro_f / attr_macro_f / attr_macro_auc),
+                attr_score_desc (text description of the overall score),
+                attr_micro_f,
+                attr_macro_f,
+                attr_auc,
+                attr_f_per_type,
+                attr_auc_per_type
+
+        DOCS: https://nightly.spacy.io/api/scorer#score_cats
+        """
+        if threshold is None:
+            threshold = 0.5 if multi_label else 0.0
+        f_per_type = {label: PRFScore() for label in labels}
+        auc_per_type = {label: ROCAUCScore() for label in labels}
+        labels = set(labels)
+        if labels:
+            for eg in examples:
+                labels.update(eg.predicted.cats.keys())
+                labels.update(eg.reference.cats.keys())
+        for example in examples:
+            # Through this loop, None in the gold_cats indicates missing label.
+            pred_cats = getter(example.predicted, attr)
+            gold_cats = getter(example.reference, attr)
+
+            # I think the AUC metric is applicable regardless of whether we're
+            # doing multi-label classification? Unsure. If not, move this into
+            # the elif pred_cats and gold_cats block below.
+            for label in labels:
+                pred_score = pred_cats.get(label, 0.0)
+                gold_score = gold_cats.get(label, 0.0)
+                if gold_score is not None:
+                    auc_per_type[label].score_set(pred_score, gold_score)
+            if multi_label:
+                for label in labels:
+                    pred_score = pred_cats.get(label, 0.0)
+                    gold_score = gold_cats.get(label, 0.0)
+                    if gold_score is not None:
+                        if pred_score >= threshold and gold_score > 0:
+                            f_per_type[label].tp += 1
+                        elif pred_score >= threshold and gold_score == 0:
+                            f_per_type[label].fp += 1
+                        elif pred_score < threshold and gold_score > 0:
+                            f_per_type[label].fn += 1
+            elif pred_cats and gold_cats:
+                # Get the highest-scoring for each.
+                pred_label, pred_score = max(pred_cats.items(), key=lambda it: it[1])
+                gold_label, gold_score = max(gold_cats.items(), key=lambda it: it[1])
+                if gold_score is not None:
+                    if pred_label == gold_label and pred_score >= threshold:
+                        f_per_type[pred_label].tp += 1
+                    else:
+                        f_per_type[gold_label].fn += 1
+                        if pred_score >= threshold:
+                            f_per_type[pred_label].fp += 1
+            elif gold_cats:
+                gold_label, gold_score = max(gold_cats, key=lambda it: it[1])
+                if gold_score is not None and gold_score > 0:
+                    f_per_type[gold_label].fn += 1
+            else:
+                pred_label, pred_score = max(pred_cats, key=lambda it: it[1])
+                if pred_score >= threshold:
+                    f_per_type[pred_label].fp += 1
+        micro_prf = PRFScore()
+        for label_prf in f_per_type.values():
+            micro_prf.tp += label_prf.tp
+            micro_prf.fn += label_prf.fn
+            micro_prf.fp += label_prf.fp
+        n_cats = len(f_per_type) + 1e-100
+        macro_p = sum(prf.precision for prf in f_per_type.values()) / n_cats
+        macro_r = sum(prf.recall for prf in f_per_type.values()) / n_cats
+        macro_f = sum(prf.fscore for prf in f_per_type.values()) / n_cats
+        macro_auc = sum(auc.score for auc in auc_per_type.values()) / n_cats
+        results = {
+            f"{attr}_score": None,
+            f"{attr}_score_desc": None,
+            f"{attr}_micro_p": micro_prf.precision,
+            f"{attr}_micro_r": micro_prf.recall,
+            f"{attr}_micro_f": micro_prf.fscore,
+            f"{attr}_macro_p": macro_p,
+            f"{attr}_macro_r": macro_r,
+            f"{attr}_macro_f": macro_f,
+            f"{attr}_macro_auc": macro_auc,
+            f"{attr}_f_per_type": {k: v.to_dict() for k, v in f_per_type.items()},
+            f"{attr}_auc_per_type": {k: v.score for k, v in auc_per_type.items()},
+        }
+        if len(labels) == 2 and not multi_label and positive_label:
+            positive_label_f = results[f"{attr}_f_per_type"][positive_label]["f"]
+            results[f"{attr}_score"] = positive_label_f
+            results[f"{attr}_score_desc"] = f"F ({positive_label})"
+        elif not multi_label:
+            results[f"{attr}_score"] = results[f"{attr}_macro_f"]
+            results[f"{attr}_score_desc"] = "macro F"
+        else:
+            results[f"{attr}_score"] = results[f"{attr}_macro_auc"]
+            results[f"{attr}_score_desc"] = "macro AUC"
+        return results
+
+    @staticmethod
+    def score_links(
+        examples: Iterable[Example], *, negative_labels: Iterable[str]
+    ) -> Dict[str, Any]:
+        """Returns PRF for predicted links on the entity level.
+        To disentangle the performance of the NEL from the NER,
+        this method only evaluates NEL links for entities that overlap
+        between the gold reference and the predictions.
+
+        examples (Iterable[Example]): Examples to score
+        negative_labels (Iterable[str]): The string values that refer to no annotation (e.g. "NIL")
+        RETURNS (Dict[str, Any]): A dictionary containing the scores.
+
+        DOCS (TODO): https://nightly.spacy.io/api/scorer#score_links
+        """
+        f_per_type = {}
+        for example in examples:
+            gold_ent_by_offset = {}
+            for gold_ent in example.reference.ents:
+                gold_ent_by_offset[(gold_ent.start_char, gold_ent.end_char)] = gold_ent
+
+            for pred_ent in example.predicted.ents:
+                gold_span = gold_ent_by_offset.get(
+                    (pred_ent.start_char, pred_ent.end_char), None
                 )
-            # Find all candidate labels, for all and per type
-            cand_ents = set()
-            cand_per_ents = {ent_label: set() for ent_label in ent_labels}
-            for ent in doc.ents:
-                first = gold.cand_to_gold[ent.start]
-                last = gold.cand_to_gold[ent.end - 1]
-                if first is None or last is None:
-                    self.ner.fp += 1
-                    self.ner_per_ents[ent.label_].fp += 1
+                label = gold_span.label_
+                if label not in f_per_type:
+                    f_per_type[label] = PRFScore()
+                gold = gold_span.kb_id_
+                # only evaluating entities that overlap between gold and pred,
+                # to disentangle the performance of the NEL from the NER
+                if gold is not None:
+                    pred = pred_ent.kb_id_
+                    if gold in negative_labels and pred in negative_labels:
+                        # ignore true negatives
+                        pass
+                    elif gold == pred:
+                        f_per_type[label].tp += 1
+                    elif gold in negative_labels:
+                        f_per_type[label].fp += 1
+                    elif pred in negative_labels:
+                        f_per_type[label].fn += 1
+                    else:
+                        # a wrong prediction (e.g. Q42 != Q3) counts as both a FP as well as a FN
+                        f_per_type[label].fp += 1
+                        f_per_type[label].fn += 1
+        micro_prf = PRFScore()
+        for label_prf in f_per_type.values():
+            micro_prf.tp += label_prf.tp
+            micro_prf.fn += label_prf.fn
+            micro_prf.fp += label_prf.fp
+        n_labels = len(f_per_type) + 1e-100
+        macro_p = sum(prf.precision for prf in f_per_type.values()) / n_labels
+        macro_r = sum(prf.recall for prf in f_per_type.values()) / n_labels
+        macro_f = sum(prf.fscore for prf in f_per_type.values()) / n_labels
+        results = {
+            f"nel_score": micro_prf.fscore,
+            f"nel_score_desc": "micro F",
+            f"nel_micro_p": micro_prf.precision,
+            f"nel_micro_r": micro_prf.recall,
+            f"nel_micro_f": micro_prf.fscore,
+            f"nel_macro_p": macro_p,
+            f"nel_macro_r": macro_r,
+            f"nel_macro_f": macro_f,
+            f"nel_f_per_type": {k: v.to_dict() for k, v in f_per_type.items()},
+        }
+        return results
+
+    @staticmethod
+    def score_deps(
+        examples: Iterable[Example],
+        attr: str,
+        *,
+        getter: Callable[[Token, str], Any] = getattr,
+        head_attr: str = "head",
+        head_getter: Callable[[Token, str], Token] = getattr,
+        ignore_labels: Iterable[str] = SimpleFrozenList(),
+        **cfg,
+    ) -> Dict[str, Any]:
+        """Returns the UAS, LAS, and LAS per type scores for dependency
+        parses.
+
+        examples (Iterable[Example]): Examples to score
+        attr (str): The attribute containing the dependency label.
+        getter (Callable[[Token, str], Any]): Defaults to getattr. If provided,
+            getter(token, attr) should return the value of the attribute for an
+            individual token.
+        head_attr (str): The attribute containing the head token. Defaults to
+            'head'.
+        head_getter (Callable[[Token, str], Token]): Defaults to getattr. If provided,
+            head_getter(token, attr) should return the value of the head for an
+            individual token.
+        ignore_labels (Tuple): Labels to ignore while scoring (e.g., punct).
+        RETURNS (Dict[str, Any]): A dictionary containing the scores:
+            attr_uas, attr_las, and attr_las_per_type.
+
+        DOCS: https://nightly.spacy.io/api/scorer#score_deps
+        """
+        unlabelled = PRFScore()
+        labelled = PRFScore()
+        labelled_per_dep = dict()
+        for example in examples:
+            gold_doc = example.reference
+            pred_doc = example.predicted
+            align = example.alignment
+            gold_deps = set()
+            gold_deps_per_dep = {}
+            for gold_i, token in enumerate(gold_doc):
+                dep = getter(token, attr)
+                head = head_getter(token, head_attr)
+                if dep not in ignore_labels:
+                    gold_deps.add((gold_i, head.i, dep))
+                    if dep not in labelled_per_dep:
+                        labelled_per_dep[dep] = PRFScore()
+                    if dep not in gold_deps_per_dep:
+                        gold_deps_per_dep[dep] = set()
+                    gold_deps_per_dep[dep].add((gold_i, head.i, dep))
+            pred_deps = set()
+            pred_deps_per_dep = {}
+            for token in pred_doc:
+                if token.orth_.isspace():
+                    continue
+                if align.x2y.lengths[token.i] != 1:
+                    gold_i = None
                 else:
-                    cand_ents.add((ent.label_, first, last))
-                    cand_per_ents[ent.label_].add((ent.label_, first, last))
-            # Scores per ent
-            for k, v in self.ner_per_ents.items():
-                if k in cand_per_ents:
-                    v.score_set(cand_per_ents[k], gold_per_ents[k])
-            # Score for all ents
-            self.ner.score_set(cand_ents, gold_ents)
-        self.tags.score_set(cand_tags, gold_tags)
-        self.labelled.score_set(cand_deps, gold_deps)
-        for dep in self.labelled_per_dep:
-            self.labelled_per_dep[dep].score_set(
-                cand_deps_per_dep.get(dep, set()), gold_deps_per_dep.get(dep, set())
-            )
-        self.unlabelled.score_set(
-            set(item[:2] for item in cand_deps), set(item[:2] for item in gold_deps)
-        )
-        if (
-            len(gold.cats) > 0
-            and set(self.textcat_per_cat) == set(gold.cats)
-            and set(gold.cats) == set(doc.cats)
-        ):
-            goldcat = max(gold.cats, key=gold.cats.get)
-            candcat = max(doc.cats, key=doc.cats.get)
-            if self.textcat_positive_label:
-                self.textcat.score_set(
-                    set([self.textcat_positive_label]) & set([candcat]),
-                    set([self.textcat_positive_label]) & set([goldcat]),
+                    gold_i = align.x2y[token.i].dataXd[0, 0]
+                dep = getter(token, attr)
+                head = head_getter(token, head_attr)
+                if dep not in ignore_labels and token.orth_.strip():
+                    if align.x2y.lengths[head.i] == 1:
+                        gold_head = align.x2y[head.i].dataXd[0, 0]
+                    else:
+                        gold_head = None
+                    # None is indistinct, so we can't just add it to the set
+                    # Multiple (None, None) deps are possible
+                    if gold_i is None or gold_head is None:
+                        unlabelled.fp += 1
+                        labelled.fp += 1
+                    else:
+                        pred_deps.add((gold_i, gold_head, dep))
+                        if dep not in labelled_per_dep:
+                            labelled_per_dep[dep] = PRFScore()
+                        if dep not in pred_deps_per_dep:
+                            pred_deps_per_dep[dep] = set()
+                        pred_deps_per_dep[dep].add((gold_i, gold_head, dep))
+            labelled.score_set(pred_deps, gold_deps)
+            for dep in labelled_per_dep:
+                labelled_per_dep[dep].score_set(
+                    pred_deps_per_dep.get(dep, set()), gold_deps_per_dep.get(dep, set())
                 )
-            for label in self.textcat_per_cat:
-                if self.textcat_multilabel:
-                    self.textcat_per_cat[label].score_set(
-                        doc.cats[label], gold.cats[label]
-                    )
-                else:
-                    self.textcat_per_cat[label].score_set(
-                        set([label]) & set([candcat]), set([label]) & set([goldcat])
-                    )
-        elif len(self.textcat_per_cat) > 0:
-            model_labels = set(self.textcat_per_cat)
-            eval_labels = set(gold.cats)
-            raise ValueError(
-                Errors.E162.format(model_labels=model_labels, eval_labels=eval_labels)
+            unlabelled.score_set(
+                set(item[:2] for item in pred_deps), set(item[:2] for item in gold_deps)
             )
-        if verbose:
-            gold_words = [item[1] for item in gold.orig_annot]
-            for w_id, h_id, dep in cand_deps - gold_deps:
-                print("F", gold_words[w_id], dep, gold_words[h_id])
-            for w_id, h_id, dep in gold_deps - cand_deps:
-                print("M", gold_words[w_id], dep, gold_words[h_id])
+        return {
+            f"{attr}_uas": unlabelled.fscore,
+            f"{attr}_las": labelled.fscore,
+            f"{attr}_las_per_type": {
+                k: v.to_dict() for k, v in labelled_per_dep.items()
+            },
+        }
+
+
+def get_ner_prf(examples: Iterable[Example]) -> Dict[str, PRFScore]:
+    """Compute per-entity PRFScore objects for a sequence of examples. The
+    results are returned as a dictionary keyed by the entity type. You can
+    add the PRFScore objects to get micro-averaged total.
+    """
+    scores = defaultdict(PRFScore)
+    for eg in examples:
+        if not eg.y.has_annotation("ENT_IOB"):
+            continue
+        golds = {(e.label_, e.start, e.end) for e in eg.y.ents}
+        align_x2y = eg.alignment.x2y
+        for pred_ent in eg.x.ents:
+            if pred_ent.label_ not in scores:
+                scores[pred_ent.label_] = PRFScore()
+            indices = align_x2y[pred_ent.start : pred_ent.end].dataXd.ravel()
+            if len(indices):
+                g_span = eg.y[indices[0] : indices[-1] + 1]
+                # Check we aren't missing annotation on this span. If so,
+                # our prediction is neither right nor wrong, we just
+                # ignore it.
+                if all(token.ent_iob != 0 for token in g_span):
+                    key = (pred_ent.label_, indices[0], indices[-1] + 1)
+                    if key in golds:
+                        scores[pred_ent.label_].tp += 1
+                        golds.remove(key)
+                    else:
+                        scores[pred_ent.label_].fp += 1
+        for label, start, end in golds:
+            scores[label].fn += 1
+    return scores
 
 
 #############################################################################
@@ -601,7 +905,7 @@ def _auc(x, y):
         if np.all(dx <= 0):
             direction = -1
         else:
-            raise ValueError(Errors.E164.format(x))
+            raise ValueError(Errors.E164.format(x=x))
 
     area = direction * np.trapz(y, x)
     if isinstance(area, np.memmap):

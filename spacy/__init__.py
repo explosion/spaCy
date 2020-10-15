@@ -1,39 +1,68 @@
-# coding: utf8
-from __future__ import unicode_literals
+from typing import Union, Iterable, Dict, Any
+from pathlib import Path
 import warnings
 import sys
 
-warnings.filterwarnings("ignore", message="numpy.dtype size changed")
-warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
+warnings.filterwarnings("ignore", message="numpy.dtype size changed")  # noqa
+warnings.filterwarnings("ignore", message="numpy.ufunc size changed")  # noqa
 
 # These are imported as part of the API
-from thinc.neural.util import prefer_gpu, require_gpu
+from thinc.api import prefer_gpu, require_gpu  # noqa: F401
+from thinc.api import Config
 
-from . import pipeline
-from .cli.info import info as cli_info
-from .glossary import explain
-from .about import __version__
-from .errors import Errors, Warnings
+from . import pipeline  # noqa: F401
+from .cli.info import info  # noqa: F401
+from .glossary import explain  # noqa: F401
+from .about import __version__  # noqa: F401
+from .util import registry, logger  # noqa: F401
+
+from .errors import Errors
+from .language import Language
+from .vocab import Vocab
 from . import util
-from .util import registry
-from .language import component
 
 
 if sys.maxunicode == 65535:
     raise SystemError(Errors.E130)
 
 
-def load(name, **overrides):
-    depr_path = overrides.get("path")
-    if depr_path not in (True, False, None):
-        warnings.warn(Warnings.W001.format(path=depr_path), DeprecationWarning)
-    return util.load_model(name, **overrides)
+def load(
+    name: Union[str, Path],
+    disable: Iterable[str] = util.SimpleFrozenList(),
+    exclude: Iterable[str] = util.SimpleFrozenList(),
+    config: Union[Dict[str, Any], Config] = util.SimpleFrozenDict(),
+) -> Language:
+    """Load a spaCy model from an installed package or a local path.
+
+    name (str): Package name or model path.
+    disable (Iterable[str]): Names of pipeline components to disable. Disabled
+        pipes will be loaded but they won't be run unless you explicitly
+        enable them by calling nlp.enable_pipe.
+    exclude (Iterable[str]): Names of pipeline components to exclude. Excluded
+        components won't be loaded.
+    config (Dict[str, Any] / Config): Config overrides as nested dict or dict
+        keyed by section values in dot notation.
+    RETURNS (Language): The loaded nlp object.
+    """
+    return util.load_model(name, disable=disable, exclude=exclude, config=config)
 
 
-def blank(name, **kwargs):
+def blank(
+    name: str,
+    *,
+    vocab: Union[Vocab, bool] = True,
+    config: Union[Dict[str, Any], Config] = util.SimpleFrozenDict(),
+    meta: Dict[str, Any] = util.SimpleFrozenDict()
+) -> Language:
+    """Create a blank nlp object for a given language code.
+
+    name (str): The language code, e.g. "en".
+    vocab (Vocab): A Vocab object. If True, a vocab is created.
+    config (Dict[str, Any] / Config): Optional config overrides.
+    meta (Dict[str, Any]): Overrides for nlp.meta.
+    RETURNS (Language): The nlp object.
+    """
     LangClass = util.get_lang_class(name)
-    return LangClass(**kwargs)
-
-
-def info(model=None, markdown=False, silent=False):
-    return cli_info(model, markdown, silent)
+    # We should accept both dot notation and nested dict here for consistency
+    config = util.dot_to_dict(config)
+    return LangClass.from_config(config, meta=meta)

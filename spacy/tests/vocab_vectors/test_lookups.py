@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 from spacy.lookups import Lookups, Table
 from spacy.strings import get_string_id

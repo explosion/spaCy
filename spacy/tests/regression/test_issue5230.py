@@ -1,4 +1,3 @@
-# coding: utf8
 import warnings
 from unittest import TestCase
 import pytest
@@ -7,9 +6,8 @@ from numpy import zeros
 from spacy.kb import KnowledgeBase, Writer
 from spacy.vectors import Vectors
 from spacy.language import Language
-from spacy.pipeline import Pipe
-from spacy.compat import is_python2
-
+from spacy.pipeline import TrainablePipe
+from spacy.vocab import Vocab
 
 from ..util import make_tempdir
 
@@ -26,7 +24,7 @@ def vectors():
 
 def custom_pipe():
     # create dummy pipe partially implementing interface -- only want to test to_disk
-    class SerializableDummy(object):
+    class SerializableDummy:
         def __init__(self, **cfg):
             if cfg:
                 self.cfg = cfg
@@ -46,39 +44,43 @@ def custom_pipe():
         def from_disk(self, path, exclude=tuple(), **kwargs):
             return self
 
-    class MyPipe(Pipe):
+    class MyPipe(TrainablePipe):
         def __init__(self, vocab, model=True, **cfg):
             if cfg:
                 self.cfg = cfg
             else:
                 self.cfg = None
             self.model = SerializableDummy()
-            self.vocab = SerializableDummy()
+            self.vocab = vocab
 
-    return MyPipe(None)
+    return MyPipe(Vocab())
 
 
 def tagger():
     nlp = Language()
-    nlp.add_pipe(nlp.create_pipe("tagger"))
-    tagger = nlp.get_pipe("tagger")
+    tagger = nlp.add_pipe("tagger")
     # need to add model for two reasons:
     # 1. no model leads to error in serialization,
     # 2. the affected line is the one for model serialization
-    tagger.begin_training(pipeline=nlp.pipeline)
+    tagger.add_label("A")
+    nlp.initialize()
     return tagger
 
 
 def entity_linker():
     nlp = Language()
-    nlp.add_pipe(nlp.create_pipe("entity_linker"))
-    entity_linker = nlp.get_pipe("entity_linker")
+
+    def create_kb(vocab):
+        kb = KnowledgeBase(vocab, entity_vector_length=1)
+        kb.add_entity("test", 0.0, zeros((1, 1), dtype="f"))
+        return kb
+
+    entity_linker = nlp.add_pipe("entity_linker")
+    entity_linker.set_kb(create_kb)
     # need to add model for two reasons:
     # 1. no model leads to error in serialization,
     # 2. the affected line is the one for model serialization
-    kb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
-    entity_linker.set_kb(kb)
-    entity_linker.begin_training(pipeline=nlp.pipeline)
+    nlp.initialize()
     return entity_linker
 
 
@@ -97,14 +99,12 @@ def write_obj_and_catch_warnings(obj):
             return list(filter(lambda x: isinstance(x, ResourceWarning), warnings_list))
 
 
-@pytest.mark.skipif(is_python2, reason="ResourceWarning needs Python 3.x")
 @pytest.mark.parametrize("obj", objects_to_test[0], ids=objects_to_test[1])
 def test_to_disk_resource_warning(obj):
     warnings_list = write_obj_and_catch_warnings(obj)
     assert len(warnings_list) == 0
 
 
-@pytest.mark.skipif(is_python2, reason="ResourceWarning needs Python 3.x")
 def test_writer_with_path_py35():
     writer = None
     with make_tempdir() as d:
@@ -124,24 +124,22 @@ def test_save_and_load_knowledge_base():
     with make_tempdir() as d:
         path = d / "kb"
         try:
-            kb.dump(path)
+            kb.to_disk(path)
         except Exception as e:
             pytest.fail(str(e))
 
         try:
             kb_loaded = KnowledgeBase(nlp.vocab, entity_vector_length=1)
-            kb_loaded.load_bulk(path)
+            kb_loaded.from_disk(path)
         except Exception as e:
             pytest.fail(str(e))
 
 
-if not is_python2:
+class TestToDiskResourceWarningUnittest(TestCase):
+    def test_resource_warning(self):
+        scenarios = zip(*objects_to_test)
 
-    class TestToDiskResourceWarningUnittest(TestCase):
-        def test_resource_warning(self):
-            scenarios = zip(*objects_to_test)
-
-            for scenario in scenarios:
-                with self.subTest(msg=scenario[1]):
-                    warnings_list = write_obj_and_catch_warnings(scenario[0])
-                    self.assertEqual(len(warnings_list), 0)
+        for scenario in scenarios:
+            with self.subTest(msg=scenario[1]):
+                warnings_list = write_obj_and_catch_warnings(scenario[0])
+                self.assertEqual(len(warnings_list), 0)

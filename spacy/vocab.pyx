@@ -1,28 +1,45 @@
-# coding: utf8
 # cython: profile=True
-from __future__ import unicode_literals
 from libc.string cimport memcpy
 
 import srsly
-from collections import OrderedDict
-from thinc.neural.util import get_array_module
+from thinc.api import get_array_module
+import functools
 
 from .lexeme cimport EMPTY_LEXEME, OOV_RANK
 from .lexeme cimport Lexeme
 from .typedefs cimport attr_t
 from .tokens.token cimport Token
-from .attrs cimport LANG, ORTH, TAG, POS
+from .attrs cimport LANG, ORTH
 
-from .compat import copy_reg, basestring_
+from .compat import copy_reg
 from .errors import Errors
-from .lemmatizer import Lemmatizer
-from .attrs import intify_attrs, NORM
+from .attrs import intify_attrs, NORM, IS_STOP
 from .vectors import Vectors
-from ._ml import link_vectors_to_models
+from .util import registry
 from .lookups import Lookups
 from . import util
 from .lang.norm_exceptions import BASE_NORMS
-from .lang.lex_attrs import LEX_ATTRS
+from .lang.lex_attrs import LEX_ATTRS, is_stop, get_lang
+
+
+def create_vocab(lang, defaults, vectors_name=None):
+    # If the spacy-lookups-data package is installed, we pre-populate the lookups
+    # with lexeme data, if available
+    lex_attrs = {**LEX_ATTRS, **defaults.lex_attr_getters}
+    # This is messy, but it's the minimal working fix to Issue #639.
+    lex_attrs[IS_STOP] = functools.partial(is_stop, stops=defaults.stop_words)
+    # Ensure that getter can be pickled
+    lex_attrs[LANG] = functools.partial(get_lang, lang=lang)
+    lex_attrs[NORM] = util.add_lookups(
+        lex_attrs.get(NORM, LEX_ATTRS[NORM]),
+        BASE_NORMS,
+    )
+    return Vocab(
+        lex_attr_getters=lex_attrs,
+        writing_system=defaults.writing_system,
+        get_noun_chunks=defaults.syntax_iterators.get("noun_chunks"),
+        vectors_name=vectors_name,
+    )
 
 
 cdef class Vocab:
@@ -30,36 +47,24 @@ cdef class Vocab:
     instance also provides access to the `StringStore`, and owns underlying
     C-data that is shared between `Doc` objects.
 
-    DOCS: https://spacy.io/api/vocab
+    DOCS: https://nightly.spacy.io/api/vocab
     """
-    def __init__(self, lex_attr_getters=None, tag_map=None, lemmatizer=None,
-                 strings=tuple(), lookups=None, lookups_extra=None,
-                 oov_prob=-20., vectors_name=None, **deprecated_kwargs):
+    def __init__(self, lex_attr_getters=None, strings=tuple(), lookups=None,
+                 oov_prob=-20., vectors_name=None, writing_system={},
+                 get_noun_chunks=None, **deprecated_kwargs):
         """Create the vocabulary.
 
         lex_attr_getters (dict): A dictionary mapping attribute IDs to
             functions to compute them. Defaults to `None`.
-        tag_map (dict): Dictionary mapping fine-grained tags to coarse-grained
-            parts-of-speech, and optionally morphological attributes.
-        lemmatizer (object): A lemmatizer. Defaults to `None`.
         strings (StringStore): StringStore that maps strings to integers, and
             vice versa.
         lookups (Lookups): Container for large lookup tables and dictionaries.
-        lookups_extra (Lookups): Container for optional lookup tables and dictionaries.
         oov_prob (float): Default OOV probability.
         vectors_name (unicode): Optional name to identify the vectors table.
-        RETURNS (Vocab): The newly constructed object.
         """
         lex_attr_getters = lex_attr_getters if lex_attr_getters is not None else {}
-        tag_map = tag_map if tag_map is not None else {}
         if lookups in (None, True, False):
             lookups = Lookups()
-        if "lexeme_norm" not in lookups:
-            lookups.add_table("lexeme_norm")
-        if lemmatizer in (None, True, False):
-            lemmatizer = Lemmatizer(lookups)
-        if lookups_extra in (None, True, False):
-            lookups_extra = Lookups()
         self.cfg = {'oov_prob': oov_prob}
         self.mem = Pool()
         self._by_orth = PreshMap()
@@ -69,10 +74,11 @@ cdef class Vocab:
             for string in strings:
                 _ = self[string]
         self.lex_attr_getters = lex_attr_getters
-        self.morphology = Morphology(self.strings, tag_map, lemmatizer)
+        self.morphology = Morphology(self.strings)
         self.vectors = Vectors(name=vectors_name)
         self.lookups = lookups
-        self.lookups_extra = lookups_extra
+        self.writing_system = writing_system
+        self.get_noun_chunks = get_noun_chunks
 
     @property
     def lang(self):
@@ -80,17 +86,6 @@ cdef class Vocab:
         if self.lex_attr_getters:
             langfunc = self.lex_attr_getters.get(LANG, None)
         return langfunc("_") if langfunc else ""
-
-    property writing_system:
-        """A dict with information about the language's writing system. To get
-        the data, we use the vocab.lang property to fetch the Language class.
-        If the Language class is not loaded, an empty dict is returned.
-        """
-        def __get__(self):
-            if not util.lang_class_is_loaded(self.lang):
-                return {}
-            lang_class = util.get_lang_class(self.lang)
-            return dict(lang_class.Defaults.writing_system)
 
     def __len__(self):
         """The current number of lexemes stored.
@@ -115,7 +110,7 @@ cdef class Vocab:
             available bit will be chosen.
         RETURNS (int): The integer ID by which the flag value can be checked.
 
-        DOCS: https://spacy.io/api/vocab#add_flag
+        DOCS: https://nightly.spacy.io/api/vocab#add_flag
         """
         if flag_id == -1:
             for bit in range(1, 64):
@@ -199,7 +194,7 @@ cdef class Vocab:
         string (unicode): The ID string.
         RETURNS (bool) Whether the string has an entry in the vocabulary.
 
-        DOCS: https://spacy.io/api/vocab#contains
+        DOCS: https://nightly.spacy.io/api/vocab#contains
         """
         cdef hash_t int_key
         if isinstance(key, bytes):
@@ -216,7 +211,7 @@ cdef class Vocab:
 
         YIELDS (Lexeme): An entry in the vocabulary.
 
-        DOCS: https://spacy.io/api/vocab#iter
+        DOCS: https://nightly.spacy.io/api/vocab#iter
         """
         cdef attr_t key
         cdef size_t addr
@@ -239,7 +234,7 @@ cdef class Vocab:
             >>> apple = nlp.vocab.strings["apple"]
             >>> assert nlp.vocab[apple] == nlp.vocab[u"apple"]
 
-        DOCS: https://spacy.io/api/vocab#getitem
+        DOCS: https://nightly.spacy.io/api/vocab#getitem
         """
         cdef attr_t orth
         if isinstance(id_or_string, unicode):
@@ -258,12 +253,6 @@ cdef class Vocab:
             # Set the special tokens up to have arbitrary attributes
             lex = <LexemeC*>self.get_by_orth(self.mem, props[ORTH])
             token.lex = lex
-            if TAG in props:
-                self.morphology.assign_tag(token, props[TAG])
-            elif POS in props:
-                # Don't allow POS to be set without TAG -- this causes problems,
-                # see #1773
-                props.pop(POS)
             for attr_id, value in props.items():
                 Token.set_struct_attr(token, attr_id, value)
                 # NORM is the only one that overlaps between the two
@@ -313,7 +302,7 @@ cdef class Vocab:
             word was mapped to, and `score` the similarity score between the
             two words.
 
-        DOCS: https://spacy.io/api/vocab#prune_vectors
+        DOCS: https://nightly.spacy.io/api/vocab#prune_vectors
         """
         xp = get_array_module(self.vectors.data)
         # Make prob negative so it sorts by rank ascending
@@ -334,29 +323,28 @@ cdef class Vocab:
             synonym = self.strings[syn_keys[i][0]]
             score = scores[i][0]
             remap[word] = (synonym, score)
-        link_vectors_to_models(self)
         return remap
 
     def get_vector(self, orth, minn=None, maxn=None):
         """Retrieve a vector for a word in the vocabulary. Words can be looked
         up by string or int ID. If no vectors data is loaded, ValueError is
         raised.
-        
-        If `minn` is defined, then the resulting vector uses Fasttext's 
+
+        If `minn` is defined, then the resulting vector uses Fasttext's
         subword features by average over ngrams of `orth`.
 
         orth (int / unicode): The hash value of a word, or its unicode string.
-        minn (int): Minimum n-gram length used for Fasttext's ngram computation. 
+        minn (int): Minimum n-gram length used for Fasttext's ngram computation.
             Defaults to the length of `orth`.
-        maxn (int): Maximum n-gram length used for Fasttext's ngram computation. 
+        maxn (int): Maximum n-gram length used for Fasttext's ngram computation.
             Defaults to the length of `orth`.
         RETURNS (numpy.ndarray): A word vector. Size
             and shape determined by the `vocab.vectors` instance. Usually, a
             numpy ndarray of shape (300,) and dtype float32.
 
-        DOCS: https://spacy.io/api/vocab#get_vector
+        DOCS: https://nightly.spacy.io/api/vocab#get_vector
         """
-        if isinstance(orth, basestring_):
+        if isinstance(orth, str):
             orth = self.strings.add(orth)
         word = self[orth].orth_
         if orth in self.vectors.key2row:
@@ -401,9 +389,9 @@ cdef class Vocab:
         orth (int / unicode): The word.
         vector (numpy.ndarray[ndim=1, dtype='float32']): The vector to set.
 
-        DOCS: https://spacy.io/api/vocab#set_vector
+        DOCS: https://nightly.spacy.io/api/vocab#set_vector
         """
-        if isinstance(orth, basestring_):
+        if isinstance(orth, str):
             orth = self.strings.add(orth)
         if self.vectors.is_full and orth not in self.vectors:
             new_rows = max(100, int(self.vectors.shape[0]*1.3))
@@ -423,36 +411,46 @@ cdef class Vocab:
         orth (int / unicode): The word.
         RETURNS (bool): Whether the word has a vector.
 
-        DOCS: https://spacy.io/api/vocab#has_vector
+        DOCS: https://nightly.spacy.io/api/vocab#has_vector
         """
-        if isinstance(orth, basestring_):
+        if isinstance(orth, str):
             orth = self.strings.add(orth)
         return orth in self.vectors
 
-    def to_disk(self, path, exclude=tuple(), **kwargs):
+    property lookups:
+        def __get__(self):
+            return self._lookups
+
+        def __set__(self, lookups):
+            self._lookups = lookups
+            if lookups.has_table("lexeme_norm"):
+                self.lex_attr_getters[NORM] = util.add_lookups(
+                    self.lex_attr_getters.get(NORM, LEX_ATTRS[NORM]),
+                    self.lookups.get_table("lexeme_norm"),
+                )
+
+
+    def to_disk(self, path, *, exclude=tuple()):
         """Save the current state to a directory.
 
         path (unicode or Path): A path to a directory, which will be created if
             it doesn't exist.
         exclude (list): String names of serialization fields to exclude.
 
-        DOCS: https://spacy.io/api/vocab#to_disk
+        DOCS: https://nightly.spacy.io/api/vocab#to_disk
         """
         path = util.ensure_path(path)
         if not path.exists():
             path.mkdir()
         setters = ["strings", "vectors"]
-        exclude = util.get_serialization_exclude(setters, exclude, kwargs)
         if "strings" not in exclude:
             self.strings.to_disk(path / "strings.json")
-        if "vectors" not in "exclude" and self.vectors is not None:
+        if "vectors" not in "exclude":
             self.vectors.to_disk(path)
-        if "lookups" not in "exclude" and self.lookups is not None:
+        if "lookups" not in "exclude":
             self.lookups.to_disk(path)
-        if "lookups_extra" not in "exclude" and self.lookups_extra is not None:
-            self.lookups_extra.to_disk(path, filename="lookups_extra.bin")
 
-    def from_disk(self, path, exclude=tuple(), **kwargs):
+    def from_disk(self, path, *, exclude=tuple()):
         """Loads state from a directory. Modifies the object in place and
         returns it.
 
@@ -460,22 +458,17 @@ cdef class Vocab:
         exclude (list): String names of serialization fields to exclude.
         RETURNS (Vocab): The modified `Vocab` object.
 
-        DOCS: https://spacy.io/api/vocab#to_disk
+        DOCS: https://nightly.spacy.io/api/vocab#to_disk
         """
         path = util.ensure_path(path)
         getters = ["strings", "vectors"]
-        exclude = util.get_serialization_exclude(getters, exclude, kwargs)
         if "strings" not in exclude:
             self.strings.from_disk(path / "strings.json")  # TODO: add exclude?
         if "vectors" not in exclude:
             if self.vectors is not None:
                 self.vectors.from_disk(path, exclude=["strings"])
-            if self.vectors.name is not None:
-                link_vectors_to_models(self)
         if "lookups" not in exclude:
             self.lookups.from_disk(path)
-        if "lookups_extra" not in exclude:
-            self.lookups_extra.from_disk(path, filename="lookups_extra.bin")
         if "lexeme_norm" in self.lookups:
             self.lex_attr_getters[NORM] = util.add_lookups(
                 self.lex_attr_getters.get(NORM, LEX_ATTRS[NORM]), self.lookups.get_table("lexeme_norm")
@@ -484,13 +477,13 @@ cdef class Vocab:
         self._by_orth = PreshMap()
         return self
 
-    def to_bytes(self, exclude=tuple(), **kwargs):
+    def to_bytes(self, *, exclude=tuple()):
         """Serialize the current state to a binary string.
 
         exclude (list): String names of serialization fields to exclude.
         RETURNS (bytes): The serialized form of the `Vocab` object.
 
-        DOCS: https://spacy.io/api/vocab#to_bytes
+        DOCS: https://nightly.spacy.io/api/vocab#to_bytes
         """
         def deserialize_vectors():
             if self.vectors is None:
@@ -498,23 +491,21 @@ cdef class Vocab:
             else:
                 return self.vectors.to_bytes()
 
-        getters = OrderedDict((
-            ("strings", lambda: self.strings.to_bytes()),
-            ("vectors", deserialize_vectors),
-            ("lookups", lambda: self.lookups.to_bytes()),
-            ("lookups_extra", lambda: self.lookups_extra.to_bytes())
-        ))
-        exclude = util.get_serialization_exclude(getters, exclude, kwargs)
+        getters = {
+            "strings": lambda: self.strings.to_bytes(),
+            "vectors": deserialize_vectors,
+            "lookups": lambda: self.lookups.to_bytes(),
+        }
         return util.to_bytes(getters, exclude)
 
-    def from_bytes(self, bytes_data, exclude=tuple(), **kwargs):
+    def from_bytes(self, bytes_data, *, exclude=tuple()):
         """Load state from a binary string.
 
         bytes_data (bytes): The data to load from.
         exclude (list): String names of serialization fields to exclude.
         RETURNS (Vocab): The `Vocab` object.
 
-        DOCS: https://spacy.io/api/vocab#from_bytes
+        DOCS: https://nightly.spacy.io/api/vocab#from_bytes
         """
         def serialize_vectors(b):
             if self.vectors is None:
@@ -522,13 +513,12 @@ cdef class Vocab:
             else:
                 return self.vectors.from_bytes(b)
 
-        setters = OrderedDict((
-            ("strings", lambda b: self.strings.from_bytes(b)),
-            ("vectors", lambda b: serialize_vectors(b)),
-            ("lookups", lambda b: self.lookups.from_bytes(b)),
-            ("lookups_extra", lambda b: self.lookups_extra.from_bytes(b))
-        ))
-        exclude = util.get_serialization_exclude(setters, exclude, kwargs)
+        setters = {
+            "strings": lambda b: self.strings.from_bytes(b),
+            "lexemes": lambda b: self.lexemes_from_bytes(b),
+            "vectors": lambda b: serialize_vectors(b),
+            "lookups": lambda b: self.lookups.from_bytes(b),
+        }
         util.from_bytes(bytes_data, setters, exclude)
         if "lexeme_norm" in self.lookups:
             self.lex_attr_getters[NORM] = util.add_lookups(
@@ -536,26 +526,11 @@ cdef class Vocab:
             )
         self.length = 0
         self._by_orth = PreshMap()
-        if self.vectors.name is not None:
-            link_vectors_to_models(self)
         return self
 
     def _reset_cache(self, keys, strings):
         # I'm not sure this made sense. Disable it for now.
         raise NotImplementedError
-
-
-    def load_extra_lookups(self, table_name):
-        if table_name not in self.lookups_extra:
-            if self.lang + "_extra" in util.registry.lookups:
-                tables = util.registry.lookups.get(self.lang + "_extra")
-                for name, filename in tables.items():
-                    if table_name == name:
-                        data = util.load_language_data(filename)
-                        self.lookups_extra.add_table(name, data)
-        if table_name not in self.lookups_extra:
-            self.lookups_extra.add_table(table_name)
-        return self.lookups_extra.get_table(table_name)
 
 
 def pickle_vocab(vocab):
@@ -565,13 +540,12 @@ def pickle_vocab(vocab):
     data_dir = vocab.data_dir
     lex_attr_getters = srsly.pickle_dumps(vocab.lex_attr_getters)
     lookups = vocab.lookups
-    lookups_extra = vocab.lookups_extra
     return (unpickle_vocab,
-            (sstore, vectors, morph, data_dir, lex_attr_getters, lookups, lookups_extra))
+            (sstore, vectors, morph, data_dir, lex_attr_getters, lookups))
 
 
 def unpickle_vocab(sstore, vectors, morphology, data_dir,
-                   lex_attr_getters, lookups, lookups_extra):
+                   lex_attr_getters, lookups):
     cdef Vocab vocab = Vocab()
     vocab.vectors = vectors
     vocab.strings = sstore
@@ -579,7 +553,6 @@ def unpickle_vocab(sstore, vectors, morphology, data_dir,
     vocab.data_dir = data_dir
     vocab.lex_attr_getters = srsly.pickle_loads(lex_attr_getters)
     vocab.lookups = lookups
-    vocab.lookups_extra = lookups_extra
     return vocab
 
 

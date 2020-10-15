@@ -1,7 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-
 verb_roots = """
 #هست
 آخت#آهنج

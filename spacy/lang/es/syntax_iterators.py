@@ -1,16 +1,15 @@
-# coding: utf8
-from __future__ import unicode_literals
+from typing import Union, Iterator, Optional, List, Tuple
 
 from ...symbols import NOUN, PROPN, PRON, VERB, AUX
 from ...errors import Errors
+from ...tokens import Doc, Span, Token
 
 
-def noun_chunks(doclike):
+def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
+    """Detect base noun phrases from a dependency parse. Works on Doc and Span."""
     doc = doclike.doc
-
-    if not doc.is_parsed:
+    if not doc.has_annotation("DEP"):
         raise ValueError(Errors.E029)
-
     if not len(doc):
         return
     np_label = doc.vocab.strings.add("NP")
@@ -30,18 +29,24 @@ def noun_chunks(doclike):
         token = next_token(token)
 
 
-def is_verb_token(token):
+def is_verb_token(token: Token) -> bool:
     return token.pos in [VERB, AUX]
 
 
-def next_token(token):
+def next_token(token: Token) -> Optional[Token]:
     try:
         return token.nbor()
     except IndexError:
         return None
 
 
-def noun_bounds(doc, root, np_left_deps, np_right_deps, stop_deps):
+def noun_bounds(
+    doc: Doc,
+    root: Token,
+    np_left_deps: List[str],
+    np_right_deps: List[str],
+    stop_deps: List[str],
+) -> Tuple[Token, Token]:
     left_bound = root
     for token in reversed(list(root.lefts)):
         if token.dep in np_left_deps:
@@ -52,12 +57,8 @@ def noun_bounds(doc, root, np_left_deps, np_right_deps, stop_deps):
             left, right = noun_bounds(
                 doc, token, np_left_deps, np_right_deps, stop_deps
             )
-            if list(
-                filter(
-                    lambda t: is_verb_token(t) or t.dep in stop_deps,
-                    doc[left_bound.i : right.i],
-                )
-            ):
+            filter_func = lambda t: is_verb_token(t) or t.dep in stop_deps
+            if list(filter(filter_func, doc[left_bound.i : right.i])):
                 break
             else:
                 right_bound = right

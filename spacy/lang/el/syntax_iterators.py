@@ -1,24 +1,20 @@
-# coding: utf8
-from __future__ import unicode_literals
+from typing import Union, Iterator
 
 from ...symbols import NOUN, PROPN, PRON
 from ...errors import Errors
+from ...tokens import Doc, Span
 
 
-def noun_chunks(doclike):
-    """
-    Detect base noun phrases. Works on both Doc and Span.
-    """
+def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
+    """Detect base noun phrases from a dependency parse. Works on Doc and Span."""
     # It follows the logic of the noun chunks finder of English language,
     # adjusted to some Greek language special characteristics.
     # obj tag corrects some DEP tagger mistakes.
     # Further improvement of the models will eliminate the need for this tag.
     labels = ["nsubj", "obj", "iobj", "appos", "ROOT", "obl"]
     doc = doclike.doc  # Ensure works on both Doc and Span.
-
-    if not doc.is_parsed:
+    if not doc.has_annotation("DEP"):
         raise ValueError(Errors.E029)
-
     np_deps = [doc.vocab.strings.add(label) for label in labels]
     conj = doc.vocab.strings.add("conj")
     nmod = doc.vocab.strings.add("nmod")

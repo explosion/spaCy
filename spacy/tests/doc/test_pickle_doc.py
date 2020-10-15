@@ -1,8 +1,5 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 from spacy.language import Language
-from spacy.compat import pickle, unicode_
+from spacy.compat import pickle
 
 
 def test_pickle_single_doc():
@@ -16,9 +13,9 @@ def test_pickle_single_doc():
 def test_list_of_docs_pickles_efficiently():
     nlp = Language()
     for i in range(10000):
-        _ = nlp.vocab[unicode_(i)]  # noqa: F841
+        _ = nlp.vocab[str(i)]  # noqa: F841
     one_pickled = pickle.dumps(nlp("0"), -1)
-    docs = list(nlp.pipe(unicode_(i) for i in range(100)))
+    docs = list(nlp.pipe(str(i) for i in range(100)))
     many_pickled = pickle.dumps(docs, -1)
     assert len(many_pickled) < (len(one_pickled) * 2)
     many_unpickled = pickle.loads(many_pickled)

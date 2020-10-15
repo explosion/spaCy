@@ -1,7 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-
 # Stop words from HAZM package
 STOP_WORDS = set(
     """

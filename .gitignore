@@ -18,8 +18,7 @@ website/.npm
 website/logs
 *.log
 npm-debug.log*
-website/www/
-website/_deploy.sh
+quickstart-training-generator.js
 
 # Cython / C extensions
 cythonize.json
@@ -44,12 +43,14 @@ __pycache__/
 .env*
 .~env/
 .venv
+env3.6/
 venv/
 env3.*/
 .dev
 .denv
 .pypyenv
 .pytest_cache/
+.mypy_cache/
 
 # Distribution / packaging
 env/
@@ -119,3 +120,6 @@ Desktop.ini
 
 # Pycharm project files
 *.idea
+
+# IPython
+.ipynb_checkpoints/

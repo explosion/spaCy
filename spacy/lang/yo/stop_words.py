@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 # stop words as whitespace-separated list.
 # Source: https://raw.githubusercontent.com/dohliam/more-stoplists/master/yo/yo.txt
 

@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 
 
@@ -52,7 +49,6 @@ def test_en_tokenizer_handles_ll_contraction(en_tokenizer, text):
     assert len(tokens) == 2
     assert tokens[0].text == text.split("'")[0]
     assert tokens[1].text == "'ll"
-    assert tokens[1].lemma_ == "will"
 
 
 @pytest.mark.parametrize(
@@ -107,7 +103,6 @@ def test_en_tokenizer_handles_exc_in_text(en_tokenizer):
 def test_en_tokenizer_handles_times(en_tokenizer, text):
     tokens = en_tokenizer(text)
     assert len(tokens) == 2
-    assert tokens[1].lemma_ in ["a.m.", "p.m."]
 
 
 @pytest.mark.parametrize(

@@ -1,8 +1,8 @@
-# coding: utf8
-from __future__ import unicode_literals
-
+from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ._tokenizer_exceptions_list import ID_BASE_EXCEPTIONS
-from ...symbols import ORTH, LEMMA, NORM
+from ...symbols import ORTH, NORM
+from ...util import update_exc
+
 
 # Daftar singkatan dan Akronim dari:
 # https://id.wiktionary.org/wiki/Wiktionary:Daftar_singkatan_dan_akronim_bahasa_Indonesia#A
@@ -11,53 +11,47 @@ _exc = {}
 
 for orth in ID_BASE_EXCEPTIONS:
     _exc[orth] = [{ORTH: orth}]
-
     orth_title = orth.title()
     _exc[orth_title] = [{ORTH: orth_title}]
-
     orth_caps = orth.upper()
     _exc[orth_caps] = [{ORTH: orth_caps}]
-
     orth_lower = orth.lower()
     _exc[orth_lower] = [{ORTH: orth_lower}]
-
     orth_first_upper = orth[0].upper() + orth[1:]
     _exc[orth_first_upper] = [{ORTH: orth_first_upper}]
-
     if "-" in orth:
         orth_title = "-".join([part.title() for part in orth.split("-")])
         _exc[orth_title] = [{ORTH: orth_title}]
-
         orth_caps = "-".join([part.upper() for part in orth.split("-")])
         _exc[orth_caps] = [{ORTH: orth_caps}]
 
 for exc_data in [
-    {ORTH: "Jan.", LEMMA: "Januari", NORM: "Januari"},
-    {ORTH: "Feb.", LEMMA: "Februari", NORM: "Februari"},
-    {ORTH: "Mar.", LEMMA: "Maret", NORM: "Maret"},
-    {ORTH: "Apr.", LEMMA: "April", NORM: "April"},
-    {ORTH: "Jun.", LEMMA: "Juni", NORM: "Juni"},
-    {ORTH: "Jul.", LEMMA: "Juli", NORM: "Juli"},
-    {ORTH: "Agu.", LEMMA: "Agustus", NORM: "Agustus"},
-    {ORTH: "Ags.", LEMMA: "Agustus", NORM: "Agustus"},
-    {ORTH: "Sep.", LEMMA: "September", NORM: "September"},
-    {ORTH: "Okt.", LEMMA: "Oktober", NORM: "Oktober"},
-    {ORTH: "Nov.", LEMMA: "November", NORM: "November"},
-    {ORTH: "Des.", LEMMA: "Desember", NORM: "Desember"},
+    {ORTH: "Jan.", NORM: "Januari"},
+    {ORTH: "Feb.", NORM: "Februari"},
+    {ORTH: "Mar.", NORM: "Maret"},
+    {ORTH: "Apr.", NORM: "April"},
+    {ORTH: "Jun.", NORM: "Juni"},
+    {ORTH: "Jul.", NORM: "Juli"},
+    {ORTH: "Agu.", NORM: "Agustus"},
+    {ORTH: "Ags.", NORM: "Agustus"},
+    {ORTH: "Sep.", NORM: "September"},
+    {ORTH: "Okt.", NORM: "Oktober"},
+    {ORTH: "Nov.", NORM: "November"},
+    {ORTH: "Des.", NORM: "Desember"},
 ]:
     _exc[exc_data[ORTH]] = [exc_data]
 
 _other_exc = {
-    "do'a": [{ORTH: "do'a", LEMMA: "doa", NORM: "doa"}],
-    "jum'at": [{ORTH: "jum'at", LEMMA: "Jumat", NORM: "Jumat"}],
-    "Jum'at": [{ORTH: "Jum'at", LEMMA: "Jumat", NORM: "Jumat"}],
-    "la'nat": [{ORTH: "la'nat", LEMMA: "laknat", NORM: "laknat"}],
-    "ma'af": [{ORTH: "ma'af", LEMMA: "maaf", NORM: "maaf"}],
-    "mu'jizat": [{ORTH: "mu'jizat", LEMMA: "mukjizat", NORM: "mukjizat"}],
-    "Mu'jizat": [{ORTH: "Mu'jizat", LEMMA: "mukjizat", NORM: "mukjizat"}],
-    "ni'mat": [{ORTH: "ni'mat", LEMMA: "nikmat", NORM: "nikmat"}],
-    "raka'at": [{ORTH: "raka'at", LEMMA: "rakaat", NORM: "rakaat"}],
-    "ta'at": [{ORTH: "ta'at", LEMMA: "taat", NORM: "taat"}],
+    "do'a": [{ORTH: "do'a", NORM: "doa"}],
+    "jum'at": [{ORTH: "jum'at", NORM: "Jumat"}],
+    "Jum'at": [{ORTH: "Jum'at", NORM: "Jumat"}],
+    "la'nat": [{ORTH: "la'nat", NORM: "laknat"}],
+    "ma'af": [{ORTH: "ma'af", NORM: "maaf"}],
+    "mu'jizat": [{ORTH: "mu'jizat", NORM: "mukjizat"}],
+    "Mu'jizat": [{ORTH: "Mu'jizat", NORM: "mukjizat"}],
+    "ni'mat": [{ORTH: "ni'mat", NORM: "nikmat"}],
+    "raka'at": [{ORTH: "raka'at", NORM: "rakaat"}],
+    "ta'at": [{ORTH: "ta'at", NORM: "taat"}],
 }
 
 _exc.update(_other_exc)
@@ -224,4 +218,4 @@ for orth in [
 ]:
     _exc[orth] = [{ORTH: orth}]
 
-TOKENIZER_EXCEPTIONS = _exc
+TOKENIZER_EXCEPTIONS = update_exc(BASE_EXCEPTIONS, _exc)

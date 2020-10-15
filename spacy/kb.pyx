@@ -1,6 +1,7 @@
-# cython: infer_types=True
-# cython: profile=True
-# coding: utf8
+# cython: infer_types=True, profile=True
+from typing import Iterator, Iterable
+
+import srsly
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 from cpython.exc cimport PyErr_SetFromErrno
@@ -8,14 +9,13 @@ from libc.stdio cimport fopen, fclose, fread, fwrite, feof, fseek
 from libc.stdint cimport int32_t, int64_t
 from libcpp.vector cimport vector
 
-import warnings
-from os import path
 from pathlib import Path
+import warnings
 
 from .typedefs cimport hash_t
-
 from .errors import Errors, Warnings
-
+from . import util
+from .util import SimpleFrozenList, ensure_path
 
 cdef class Candidate:
     """A `Candidate` object refers to a textual mention (`alias`) that may or may not be resolved
@@ -23,7 +23,7 @@ cdef class Candidate:
     algorithm which will disambiguate the various candidates to the correct one.
     Each candidate (alias, entity) pair is assigned to a certain prior probability.
 
-    DOCS: https://spacy.io/api/kb/#candidate_init
+    DOCS: https://nightly.spacy.io/api/kb/#candidate_init
     """
 
     def __init__(self, KnowledgeBase kb, entity_hash, entity_freq, entity_vector, alias_hash, prior_prob):
@@ -41,7 +41,7 @@ cdef class Candidate:
 
     @property
     def entity_(self):
-        """RETURNS (unicode): ID/name of this entity in the KB"""
+        """RETURNS (str): ID/name of this entity in the KB"""
         return self.kb.vocab.strings[self.entity_hash]
 
     @property
@@ -51,7 +51,7 @@ cdef class Candidate:
 
     @property
     def alias_(self):
-        """RETURNS (unicode): ID of the original alias"""
+        """RETURNS (str): ID of the original alias"""
         return self.kb.vocab.strings[self.alias_hash]
 
     @property
@@ -67,22 +67,30 @@ cdef class Candidate:
         return self.prior_prob
 
 
+def get_candidates(KnowledgeBase kb, span) -> Iterator[Candidate]:
+    """
+    Return candidate entities for a given span by using the text of the span as the alias
+    and fetching appropriate entries from the index.
+    This particular function is optimized to work with the built-in KB functionality,
+    but any other custom candidate generation method can be used in combination with the KB as well.
+    """
+    return kb.get_alias_candidates(span.text)
+
+
 cdef class KnowledgeBase:
     """A `KnowledgeBase` instance stores unique identifiers for entities and their textual aliases,
     to support entity linking of named entities to real-world concepts.
 
-    DOCS: https://spacy.io/api/kb
+    DOCS: https://nightly.spacy.io/api/kb
     """
 
-    def __init__(self, Vocab vocab, entity_vector_length=64):
-        self.vocab = vocab
+    def __init__(self, Vocab vocab, entity_vector_length):
+        """Create a KnowledgeBase."""
         self.mem = Pool()
         self.entity_vector_length = entity_vector_length
-
         self._entry_index = PreshMap()
         self._alias_index = PreshMap()
-
-        self.vocab.strings.add("")
+        self.vocab = vocab
         self._create_empty_vectors(dummy_hash=self.vocab.strings[""])
 
     @property
@@ -261,8 +269,7 @@ cdef class KnowledgeBase:
             alias_entry.probs = probs
             self._aliases_table[alias_index] = alias_entry
 
-
-    def get_candidates(self, unicode alias):
+    def get_alias_candidates(self, unicode alias) -> Iterator[Candidate]:
         """
         Return candidate entities for an alias. Each candidate defines the entity, the original alias,
         and the prior probability of that alias resolving to that entity.
@@ -312,9 +319,30 @@ cdef class KnowledgeBase:
 
         return 0.0
 
+    def to_disk(self, path, exclude: Iterable[str] = SimpleFrozenList()):
+        path = ensure_path(path)
+        if not path.exists():
+            path.mkdir(parents=True)
+        if not path.is_dir():
+            raise ValueError(Errors.E928.format(loc=path))
+        serialize = {}
+        serialize["contents"] = lambda p: self.write_contents(p)
+        serialize["strings.json"] = lambda p: self.vocab.strings.to_disk(p)
+        util.to_disk(path, serialize, exclude)
 
-    def dump(self, loc):
-        cdef Writer writer = Writer(loc)
+    def from_disk(self, path, exclude: Iterable[str] = SimpleFrozenList()):
+        path = ensure_path(path)
+        if not path.exists():
+            raise ValueError(Errors.E929.format(loc=path))
+        if not path.is_dir():
+            raise ValueError(Errors.E928.format(loc=path))
+        deserialize = {}
+        deserialize["contents"] = lambda p: self.read_contents(p)
+        deserialize["strings.json"] = lambda p: self.vocab.strings.from_disk(p)
+        util.from_disk(path, deserialize, exclude)
+
+    def write_contents(self, file_path):
+        cdef Writer writer = Writer(file_path)
         writer.write_header(self.get_size_entities(), self.entity_vector_length)
 
         # dumping the entity vectors in their original order
@@ -353,7 +381,7 @@ cdef class KnowledgeBase:
 
         writer.close()
 
-    cpdef load_bulk(self, loc):
+    def read_contents(self, file_path):
         cdef hash_t entity_hash
         cdef hash_t alias_hash
         cdef int64_t entry_index
@@ -363,7 +391,7 @@ cdef class KnowledgeBase:
         cdef AliasC alias
         cdef float vector_element
 
-        cdef Reader reader = Reader(loc)
+        cdef Reader reader = Reader(file_path)
 
         # STEP 0: load header and initialize KB
         cdef int64_t nr_entities
@@ -444,15 +472,13 @@ cdef class KnowledgeBase:
 
 
 cdef class Writer:
-    def __init__(self, object loc):
-        if isinstance(loc, Path):
-            loc = bytes(loc)
-        if path.exists(loc):
-            assert not path.isdir(loc), "%s is directory." % loc
-        cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
+    def __init__(self, path):
+        assert isinstance(path, Path)
+        content = bytes(path)
+        cdef bytes bytes_loc = content.encode('utf8') if type(content) == unicode else content
         self._fp = fopen(<char*>bytes_loc, 'wb')
         if not self._fp:
-            raise IOError(Errors.E146.format(path=loc))
+            raise IOError(Errors.E146.format(path=path))
         fseek(self._fp, 0, 0)
 
     def close(self):
@@ -489,12 +515,9 @@ cdef class Writer:
 
 
 cdef class Reader:
-    def __init__(self, object loc):
-        if isinstance(loc, Path):
-            loc = bytes(loc)
-        assert path.exists(loc)
-        assert not path.isdir(loc)
-        cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
+    def __init__(self, path):
+        content = bytes(path)
+        cdef bytes bytes_loc = content.encode('utf8') if type(content) == unicode else content
         self._fp = fopen(<char*>bytes_loc, 'rb')
         if not self._fp:
             PyErr_SetFromErrno(IOError)

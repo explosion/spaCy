@@ -1,7 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-
 # Source: https://github.com/sanjaalcorps/NepaliStopWords/blob/master/NepaliStopWords.txt
 
 STOP_WORDS = set(

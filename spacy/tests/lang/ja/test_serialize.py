@@ -1,7 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
-import pytest
 from spacy.lang.ja import Japanese
 from ...util import make_tempdir
 
@@ -11,7 +7,7 @@ def test_ja_tokenizer_serialize(ja_tokenizer):
     nlp = Japanese()
     nlp.tokenizer.from_bytes(tokenizer_bytes)
     assert tokenizer_bytes == nlp.tokenizer.to_bytes()
-    assert nlp.tokenizer.split_mode == None
+    assert nlp.tokenizer.split_mode is None
 
     with make_tempdir() as d:
         file_path = d / "tokenizer"
@@ -19,10 +15,10 @@ def test_ja_tokenizer_serialize(ja_tokenizer):
         nlp = Japanese()
         nlp.tokenizer.from_disk(file_path)
         assert tokenizer_bytes == nlp.tokenizer.to_bytes()
-        assert nlp.tokenizer.split_mode == None
+        assert nlp.tokenizer.split_mode is None
 
     # split mode is (de)serialized correctly
-    nlp = Japanese(meta={"tokenizer": {"config": {"split_mode": "B"}}})
+    nlp = Japanese.from_config({"nlp": {"tokenizer": {"split_mode": "B"}}})
     nlp_r = Japanese()
     nlp_bytes = nlp.to_bytes()
     nlp_r.from_bytes(nlp_bytes)

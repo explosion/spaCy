@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 split_chars = lambda char: list(char.strip().split(" "))
 merge_chars = lambda char: char.strip().replace(" ", "|")
 group_chars = lambda char: char.strip().replace(" ", "")

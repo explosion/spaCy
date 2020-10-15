@@ -6,6 +6,9 @@
     margin-bottom: var(--spacing-md)
     max-width: 100%
 
+figure > .root
+    margin-bottom: var(--spacing-sm)
+
 .fixed
     table-layout: fixed
 
@@ -17,15 +20,20 @@
         background: var(--color-subtle-opaque)
 
 .footer
-    background: var(--color-theme-light)
+    --color-inline-code-bg: var(--color-theme-opaque)
+    background: var(--color-theme-light) !important
     border-top: 2px solid var(--color-theme)
 
     & > td:first-child
         font-family: var(--font-secondary)
         color: var(--color-theme)
 
+    & > td:nth-child(2) a
+        border: 0
+
 .td
-    padding: 1rem
+    padding: 0.9rem 1rem
+    font-size: 95%
 
     &:not(:last-child)
         border-right: 1px solid var(--color-subtle)
@@ -48,6 +56,58 @@
     padding: 1rem 0.5rem
     border-bottom: 2px solid var(--color-theme)
     vertical-align: bottom
+
+.th-rotated
+    height: 100px
+
+.tx
+    transform: translate(15px, 0) rotate(315deg) // 45 = 360 - 45
+    width: 30px
+    white-space: nowrap
+
+    & > span
+        padding-left: 0.5rem
+
+    [data-tooltip]
+        display: inline-block
+        transform: rotate(-316deg)
+
+.divider
+    height: 0
+    border-bottom: 1px solid var(--color-subtle)
+
+    td
+        top: -1px
+        height: 0
+        position: relative
+        padding: 0 !important
+
+    & + tr td
+        padding-top: 12px
+
+    td em
+        position: absolute
+        top: -5px
+        left: 10px
+        display: inline-block
+        background: var(--color-theme)
+        color: var(--color-back)
+        padding: 0 5px 1px
+        font-size: 0.85rem
+        text-transform: uppercase
+        font-weight: bold
+        border: 0
+        border-radius: 1em
+        font-style: normal
+        white-space: nowrap
+        z-index: 5
+
+    &:first-child // directly after thead/tr
+        border-bottom: 0
+
+        td em
+            top: -7px
+
 
 // Responsive table
 // Shadows adapted from "CSS only Responsive Tables" by David Bushell

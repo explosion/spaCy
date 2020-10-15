@@ -14,6 +14,10 @@ function getNodeTitle({ childMdx }) {
     return (frontmatter.title || '').replace("'", '’')
 }
 
+function findNode(pages, slug) {
+    return slug ? pages.find(({ node }) => node.fields.slug === slug) : null
+}
+
 exports.createPages = ({ graphql, actions }) => {
     const { createPage } = actions
 
@@ -33,7 +37,6 @@ exports.createPages = ({ graphql, actions }) => {
                                     code
                                     name
                                     models
-                                    starters
                                     example
                                     has_examples
                                 }
@@ -70,6 +73,9 @@ exports.createPages = ({ graphql, actions }) => {
                                             title
                                             teaser
                                             source
+                                            api_base_class
+                                            api_string_name
+                                            api_trainable
                                             tag
                                             new
                                             next
@@ -115,10 +121,18 @@ exports.createPages = ({ graphql, actions }) => {
                         const section = frontmatter.section || page.node.relativeDirectory
                         const sectionMeta = sections[section] || {}
                         const title = getNodeTitle(page.node)
-                        const next = frontmatter.next
-                            ? pages.find(({ node }) => node.fields.slug === frontmatter.next)
-                            : null
-
+                        const next = findNode(pages, frontmatter.next)
+                        const baseClass = findNode(pages, frontmatter.api_base_class)
+                        const apiDetails = {
+                            stringName: frontmatter.api_string_name,
+                            baseClass: baseClass
+                                ? {
+                                      title: getNodeTitle(baseClass.node),
+                                      slug: frontmatter.api_base_class,
+                                  }
+                                : null,
+                            trainable: frontmatter.api_trainable,
+                        }
                         createPage({
                             path: replacePath(page.node.fields.slug),
                             component: DEFAULT_TEMPLATE,
@@ -131,6 +145,7 @@ exports.createPages = ({ graphql, actions }) => {
                                 sectionTitle: sectionMeta.title,
                                 menu: frontmatter.menu || [],
                                 teaser: frontmatter.teaser,
+                                apiDetails,
                                 source: frontmatter.source,
                                 sidebar: frontmatter.sidebar,
                                 tag: frontmatter.tag,

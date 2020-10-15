@@ -1,7 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-
 STOP_WORDS = set(
     """
 অতএব অথচ অথবা অনুযায়ী অনেক অনেকে অনেকেই অন্তত  অবধি অবশ্য অর্থাৎ অন্য অনুযায়ী অর্ধভাগে
