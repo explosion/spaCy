@@ -1233,6 +1233,8 @@ components. It also makes the components more **modular** and lets you
 [swap](/usage/layers-architectures#swap-architectures) different architectures
 in your config, and re-use model definitions.
 
+<!-- TODO fix documentation -->
+
 ```ini
 ### config.cfg (excerpt)
 [components]
