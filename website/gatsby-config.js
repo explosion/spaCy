@@ -187,7 +187,10 @@ module.exports = {
                         policy: [{ userAgent: '*', allow: '/' }],
                     },
                     development: {
-                        policy: [{ userAgent: '*', disallow: ['/'] }],
+                        policy: [
+                            { userAgent: '*', disallow: ['/'] },
+                            { userAgent: 'Twitterbot', allow: '/' },
+                        ],
                     },
                 },
             },
