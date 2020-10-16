@@ -68,8 +68,8 @@ representation consists of 300 dimensions of `0`, which means it's practically
 nonexistent. If your application will benefit from a **large vocabulary** with
 more vectors, you should consider using one of the larger pipeline packages or
 loading in a full vector package, for example,
-[`en_vectors_web_lg`](/models/en-starters#en_vectors_web_lg), which includes
-over **1 million unique vectors**.
+[`en_core_web_lg`](/models/en#en_core_web_lg), which includes **685k unique
+vectors**.
 
 spaCy is able to compare two objects, and make a prediction of **how similar
 they are**. Predicting similarity is useful for building recommendation systems

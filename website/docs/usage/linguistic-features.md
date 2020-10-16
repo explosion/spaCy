@@ -1859,9 +1859,8 @@ pruning the vectors will be taken care of automatically if you set the `--prune`
 flag. You can also do it manually in the following steps:
 
 1. Start with a **word vectors package** that covers a huge vocabulary. For
-   instance, the [`en_vectors_web_lg`](/models/en-starters#en_vectors_web_lg)
-   starter provides 300-dimensional GloVe vectors for over 1 million terms of
-   English.
+   instance, the [`en_core_web_lg`](/models/en#en_core_web_lg) package provides
+   300-dimensional GloVe vectors for 685k terms of English.
 2. If your vocabulary has values set for the `Lexeme.prob` attribute, the
    lexemes will be sorted by descending probability to determine which vectors
    to prune. Otherwise, lexemes will be sorted by their order in the `Vocab`.
@@ -1869,7 +1868,7 @@ flag. You can also do it manually in the following steps:
    vectors you want to keep.
 
 ```python
-nlp = spacy.load('en_vectors_web_lg')
+nlp = spacy.load("en_core_web_lg")
 n_vectors = 105000  # number of vectors to keep
 removed_words = nlp.vocab.prune_vectors(n_vectors)
 
