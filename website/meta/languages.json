@@ -233,7 +233,9 @@
         { "id": "CC BY-NC 4.0", "url": "https://creativecommons.org/licenses/by-nc/4.0/" },
         { "id": "CC-BY-NC-SA 3.0", "url": "https://creativecommons.org/licenses/by-nc-sa/3.0/" },
         { "id": "GPL", "url": "https://www.gnu.org/licenses/gpl.html" },
+        { "id": "GPU GPL 3.0", "url": "https://www.gnu.org/licenses/gpl-3.0.en.html" },
         { "id": "LGPL", "url": "https://www.gnu.org/licenses/lgpl.html" },
-        { "id": "MIT", "url": "https://opensource.org/licenses/MIT" }
+        { "id": "MIT", "url": "https://opensource.org/licenses/MIT" },
+        { "id": "LGPL-LR", "url": "https://github.com/UniversalDependencies/UD_French-Sequoia/blob/master/LICENSE.txt" }
     ]
 }
