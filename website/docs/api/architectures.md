@@ -561,6 +561,29 @@ from the linear model, where it is stored in `model.attrs["multi_label"]`.
 | `nO`           | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `initialize` is called. ~~Optional[int]~~ |
 | **CREATES**    | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                               |
 
+<Accordion title="spacy.TextCatEnsemble.v1 definition" spaced>
+
+Here's an example of dependencies, part-of-speech tags and named entities, taken
+from the English Wall Street Journal portion of the Penn Treebank:
+
+```json
+https://github.com/explosion/spaCy/blob/v2.3.x/examples/training/training-data.json
+```
+| Name                 | Description                                                                                                                                                                                    |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `exclusive_classes`  | Whether or not categories are mutually exclusive. ~~bool~~                                                                                                                                     |
+| `pretrained_vectors` | Whether or not pretrained vectors will be used in addition to the feature vectors. ~~bool~~                                                                                                    |
+| `width`              | Output dimension of the feature encoding step. ~~int~~                                                                                                                                         |
+| `embed_size`         | Input dimension of the feature encoding step. ~~int~~                                                                                                                                          |
+| `conv_depth`         | Depth of the tok2vec layer. ~~int~~                                                                                                                                                            |
+| `window_size`        | The number of contextual vectors to [concatenate](https://thinc.ai/docs/api-layers#expand_window) from the left and from the right. ~~int~~                                                    |
+| `ngram_size`         | Determines the maximum length of the n-grams in the BOW model. For instance, `ngram_size=3`would give unigram, trigram and bigram features. ~~int~~                                            |
+| `dropout`            | The dropout rate. ~~float~~                                                                                                                                                                    |
+| `nO`                 | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `initialize` is called. ~~Optional[int]~~ |
+| **CREATES**          | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                               |
+
+</Accordion>
+
 ### spacy.TextCatCNN.v1 {#TextCatCNN}
 
 > #### Example Config
