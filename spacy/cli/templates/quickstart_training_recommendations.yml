@@ -2,7 +2,7 @@
 # Not all languages have recommended word vectors or transformers and for some,
 # the recommended transformer for efficiency and accuracy may be the same.
 en:
-  word_vectors: en_vectors_web_lg
+  word_vectors: en_core_web_lg
   transformer:
     efficiency:
       name: roberta-base
@@ -11,7 +11,7 @@ en:
       name: roberta-base
       size_factor: 3
 de:
-  word_vectors: null
+  word_vectors: de_core_news_lg
   transformer:
     efficiency:
       name: bert-base-german-cased
@@ -20,7 +20,7 @@ de:
       name: bert-base-german-cased
       size_factor: 3
 fr:
-  word_vectors: null
+  word_vectors: fr_core_news_lg
   transformer:
     efficiency:
       name: camembert-base
@@ -29,7 +29,7 @@ fr:
       name: camembert-base
       size_factor: 3
 es:
-  word_vectors: null
+  word_vectors: es_core_news_lg
   transformer:
     efficiency:
       name: dccuchile/bert-base-spanish-wwm-cased
@@ -56,7 +56,7 @@ fi:
       name: TurkuNLP/bert-base-finnish-cased-v1
       size_factor: 3
 el:
-  word_vectors: null
+  word_vectors: el_core_news_lg
   transformer:
     efficiency:
       name: nlpaueb/bert-base-greek-uncased-v1
@@ -74,7 +74,7 @@ tr:
       name: dbmdz/bert-base-turkish-cased
       size_factor: 3
 zh:
-  word_vectors: null
+  word_vectors: zh_core_web_lg
   transformer:
     efficiency:
       name: bert-base-chinese
@@ -93,7 +93,7 @@ ar:
       name: asafaya/bert-base-arabic
       size_factor: 3
 pl:
-  word_vectors: null
+  word_vectors: pl_core_news_lg
   transformer:
     efficiency:
       name: dkleczek/bert-base-polish-cased-v1
@@ -102,7 +102,7 @@ pl:
       name: dkleczek/bert-base-polish-cased-v1
       size_factor: 3
 nl:
-  word_vectors: null
+  word_vectors: nl_core_news_lg
   transformer:
     efficiency:
       name: pdelobelle/robbert-v2-dutch-base
@@ -111,7 +111,7 @@ nl:
       name: pdelobelle/robbert-v2-dutch-base
       size_factor: 3
 pt:
-  word_vectors: null
+  word_vectors: pt_core_news_lg
   transformer:
     efficiency:
       name: neuralmind/bert-base-portuguese-cased
