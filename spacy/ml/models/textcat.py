@@ -1,5 +1,6 @@
 from typing import Optional, List
 
+from spacy.ml import FeatureExtractor
 from spacy.tokens import Doc
 from thinc.types import Floats2d
 from thinc.api import Model, reduce_mean, Linear, list2ragged, Logistic
