@@ -20,6 +20,7 @@ import Button from '../components/button'
 import Link from '../components/link'
 
 import courseImage from '../../docs/images/course.jpg'
+import prodigyImage from '../../docs/images/prodigy_overview.jpg'
 
 import BenchmarksChoi from 'usage/_benchmarks-choi.md'
 
@@ -149,6 +150,59 @@ const Landing = ({ data }) => {
 
             <LandingBannerGrid>
                 <LandingBanner
+                    title="spaCy v3.0 nightly: Transformer-based pipelines, new training system, project templates &amp; more"
+                    label="Try the pre-release"
+                    to="https://nightly.spacy.io"
+                    button="See what's new"
+                    background="#8758fe"
+                    color="#ffffff"
+                    small
+                >
+                    spaCy v3.0 features all new <strong>transformer-based pipelines</strong> that
+                    bring spaCy's accuracy right up to the current <strong>state-of-the-art</strong>
+                    . You can use any pretrained transformer to train your own pipelines, and even
+                    share one transformer between multiple components with{' '}
+                    <strong>multi-task learning</strong>. Training is now fully configurable and
+                    extensible, and you can define your own custom models using{' '}
+                    <strong>PyTorch</strong>, <strong>TensorFlow</strong> and other frameworks. The
+                    new spaCy projects system lets you describe whole{' '}
+                    <strong>end-to-end workflows</strong> in a single file, giving you an easy path
+                    from prototype to production, and making it easy to clone and adapt
+                    best-practice projects for your own use cases.
+                </LandingBanner>
+
+                <LandingBanner
+                    title="Prodigy: Radically efficient machine teaching"
+                    label="From the makers of spaCy"
+                    to="https://prodi.gy"
+                    button="Try it out"
+                    background="#f6f6f6"
+                    color="#000"
+                    small
+                >
+                    <Link to="https://prodi.gy" hidden>
+                        <img
+                            src={prodigyImage}
+                            alt="Prodigy: Radically efficient machine teaching"
+                        />
+                    </Link>
+                    <br />
+                    <br />
+                    Prodigy is an <strong>annotation tool</strong> so efficient that data scientists
+                    can do the annotation themselves, enabling a new level of rapid iteration.
+                    Whether you're working on entity recognition, intent detection or image
+                    classification, Prodigy can help you <strong>train and evaluate</strong> your
+                    models faster.
+                </LandingBanner>
+            </LandingBannerGrid>
+
+            <LandingLogos title="spaCy is trusted by" logos={data.logosUsers}>
+                <Button to={`https://github.com/${data.repo}/stargazers`}>and many more</Button>
+            </LandingLogos>
+            <LandingLogos title="Featured on" logos={data.logosPublications} />
+
+            <LandingBannerGrid>
+                <LandingBanner
                     to="https://course.spacy.io"
                     button="Start the course"
                     background="#f6f6f6"
@@ -169,44 +223,22 @@ const Landing = ({ data }) => {
                     <strong>55 exercises</strong> featuring videos, slide decks, multiple-choice
                     questions and interactive coding practice in the browser.
                 </LandingBanner>
-
                 <LandingBanner
-                    title="Prodigy: Radically efficient machine teaching"
-                    label="From the makers of spaCy"
-                    to="https://prodi.gy"
-                    button="Try it out"
-                    background="#eee"
-                    color="#000"
+                    title="BERT-style language model pretraining"
+                    label="New in v2.1"
+                    to="/usage/v2-1"
+                    button="Read more"
                     small
                 >
-                    Prodigy is an <strong>annotation tool</strong> so efficient that data scientists
-                    can do the annotation themselves, enabling a new level of rapid iteration.
-                    Whether you're working on entity recognition, intent detection or image
-                    classification, Prodigy can help you <strong>train and evaluate</strong> your
-                    models faster. Stream in your own examples or real-world data from live APIs,
-                    update your model in real-time and chain models together to build more complex
-                    systems.
+                    Learn more from small training corpora by initializing your models with{' '}
+                    <strong>knowledge from raw text</strong>. The new pretrain command teaches
+                    spaCy's CNN model to predict words based on their context, producing
+                    representations of words in contexts. If you've seen Google's BERT system or
+                    fast.ai's ULMFiT, spaCy's pretraining is similar – but much more efficient. It's
+                    still experimental, but users are already reporting good results, so give it a
+                    try!
                 </LandingBanner>
             </LandingBannerGrid>
-
-            <LandingLogos title="spaCy is trusted by" logos={data.logosUsers}>
-                <Button to={`https://github.com/${data.repo}/stargazers`}>and many more</Button>
-            </LandingLogos>
-            <LandingLogos title="Featured on" logos={data.logosPublications} />
-
-            <LandingBanner
-                title="BERT-style language model pretraining"
-                label="New in v2.1"
-                to="/usage/v2-1"
-                button="Read more"
-            >
-                Learn more from small training corpora by initializing your models with{' '}
-                <strong>knowledge from raw text</strong>. The new pretrain command teaches spaCy's
-                CNN model to predict words based on their context, producing representations of
-                words in contexts. If you've seen Google's BERT system or fast.ai's ULMFiT, spaCy's
-                pretraining is similar – but much more efficient. It's still experimental, but users
-                are already reporting good results, so give it a try!
-            </LandingBanner>
 
             <LandingGrid cols={2}>
                 <LandingCol>
