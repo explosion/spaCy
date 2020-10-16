@@ -26,6 +26,14 @@ class TurkishDefaults(Language.Defaults):
     stop_words = STOP_WORDS
     syntax_iterators = SYNTAX_ITERATORS
     morph_rules = MORPH_RULES
+    single_orth_variants = [
+        {"tags": ["PUNCT"], "variants": ["…", "..."]},
+        {"tags": ["PUNCT"], "variants": ["-", "—", "–", "--", "---", "——"]},
+    ]
+    paired_orth_variants = [
+        {"tags": ["PUNCT"], "variants": [("'", "'"), ("‘", "’")]},
+        {"tags": ["PUNCT"], "variants": [('"', '"'), ("“", "”")]},
+    ]
 
 
 class Turkish(Language):
