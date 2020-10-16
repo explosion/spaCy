@@ -131,15 +131,30 @@ labels = []
 
 [components.textcat.model]
 @architectures = "spacy.TextCatEnsemble.v1"
-exclusive_classes = false
-pretrained_vectors = null
-width = 64
-conv_depth = 2
-embed_size = 2000
-window_size = 1
-ngram_size = 1
-dropout = 0
 nO = null
+
+[components.textcat.model.tok2vec]
+@architectures = "spacy.Tok2Vec.v1"
+
+[components.textcat.model.tok2vec.embed]
+@architectures = "spacy.MultiHashEmbed.v1"
+width = 64
+rows = [2000, 2000, 1000, 1000, 1000, 1000]
+attrs = ["ORTH", "LOWER", "PREFIX", "SUFFIX", "SHAPE", "ID"]
+include_static_vectors = false
+
+[components.textcat.model.tok2vec.encode]
+@architectures = "spacy.MaxoutWindowEncoder.v1"
+width = ${components.textcat.model.tok2vec.embed.width}
+window_size = 1
+maxout_pieces = 3
+depth = 2
+
+[components.textcat.model.linear_model]
+@architectures = "spacy.TextCatBOW.v1"
+exclusive_classes = false
+ngram_size = 1
+no_output_layer = false
 ```
 
 spaCy has two additional built-in `textcat` architectures, and you can easily
@@ -687,7 +702,7 @@ Before the model can be used, it needs to be
 [initialized](/usage/training#initialization). This function receives a callback
 to access the full **training data set**, or a representative sample. This data
 set can be used to deduce all **relevant labels**. Alternatively, a list of
-labels can be provided to `initialize`, or you can call 
+labels can be provided to `initialize`, or you can call
 `RelationExtractor.add_label` directly. The number of labels defines the output
 dimensionality of the network, and will be used to do
 [shape inference](https://thinc.ai/docs/usage-models#validation) throughout the
