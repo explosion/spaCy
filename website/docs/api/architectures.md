@@ -143,7 +143,7 @@ argument that connects to the shared `tok2vec` component in the pipeline.
 
 Construct an embedding layer that separately embeds a number of lexical
 attributes using hash embedding, concatenates the results, and passes it through
-a feed-forward subnetwork to build a mixed representations. The features used
+a feed-forward subnetwork to build a mixed representation. The features used
 can be configured with the `attrs` argument. The suggested attributes are
 `NORM`, `PREFIX`, `SUFFIX` and `SHAPE`. This lets the model take into account
 some subword information, without construction a fully character-based
