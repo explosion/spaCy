@@ -16,7 +16,7 @@ from ..vocab import Vocab
 
 default_model_config = """
 [model]
-@architectures = "spacy.TextCatEnsemble.v1"
+@architectures = "spacy.TextCatEnsemble.v2"
 
 [model.tok2vec]
 @architectures = "spacy.Tok2Vec.v1"

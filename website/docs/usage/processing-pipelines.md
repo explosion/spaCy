@@ -1233,8 +1233,6 @@ components. It also makes the components more **modular** and lets you
 [swap](/usage/layers-architectures#swap-architectures) different architectures
 in your config, and re-use model definitions.
 
-<!-- TODO fix documentation -->
-
 ```ini
 ### config.cfg (excerpt)
 [components]
@@ -1246,15 +1244,10 @@ labels = []
 # This function is created and then passed to the "textcat" component as
 # the argument "model"
 [components.textcat.model]
-@architectures = "spacy.TextCatEnsemble.v1"
+@architectures = "spacy.TextCatBOW.v1"
 exclusive_classes = false
-pretrained_vectors = null
-width = 64
-conv_depth = 2
-embed_size = 2000
-window_size = 1
 ngram_size = 1
-dropout = null
+no_output_layer = false
 
 [components.other_textcat]
 factory = "textcat"

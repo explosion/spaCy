@@ -58,7 +58,7 @@ def build_bow_text_classifier(
     return model
 
 
-@registry.architectures.register("spacy.TextCatEnsemble.v1")
+@registry.architectures.register("spacy.TextCatEnsemble.v2")
 def build_text_classifier(
     tok2vec: Model[List[Doc], List[Floats2d]],
     linear_model: Model[List[Doc], Floats2d],

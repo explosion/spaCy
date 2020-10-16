@@ -516,13 +516,13 @@ several different built-in architectures. It is recommended to experiment with
 different architectures and settings to determine what works best on your
 specific data and challenge.
 
-### spacy.TextCatEnsemble.v1 {#TextCatEnsemble}
+### spacy.TextCatEnsemble.v2 {#TextCatEnsemble}
 
 > #### Example Config
 >
 > ```ini
 > [model]
-> @architectures = "spacy.TextCatEnsemble.v1"
+> @architectures = "spacy.TextCatEnsemble.v2"
 > nO = null
 >
 > [model.linear_model]
