@@ -1,7 +1,5 @@
 from typing import Optional, List
 
-from spacy.ml import FeatureExtractor
-from spacy.tokens import Doc
 from thinc.types import Floats2d
 from thinc.api import Model, reduce_mean, Linear, list2ragged, Logistic
 from thinc.api import chain, concatenate, clone, Dropout, ParametricAttention
@@ -13,6 +11,8 @@ from ...attrs import ID, ORTH, PREFIX, SUFFIX, SHAPE, LOWER
 from ...util import registry
 from ..extract_ngrams import extract_ngrams
 from ..staticvectors import StaticVectors
+from ..featureextractor import FeatureExtractor
+from ...tokens import Doc
 
 
 @registry.architectures.register("spacy.TextCatCNN.v1")
