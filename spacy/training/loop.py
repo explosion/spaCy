@@ -112,10 +112,10 @@ def train(
                     nlp.to_disk(final_model_path)
             else:
                 nlp.to_disk(final_model_path)
-    # This will only run if we don't hit an error
-    stdout.write(
-        msg.good("Saved pipeline to output directory", final_model_path) + "\n"
-    )
+            # This will only run if we don't hit an error
+            stdout.write(
+                msg.good("Saved pipeline to output directory", final_model_path) + "\n"
+            )
 
 
 def train_while_improving(

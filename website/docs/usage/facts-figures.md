@@ -10,6 +10,18 @@ menu:
 
 ## Comparison {#comparison hidden="true"}
 
+spaCy is a **free, open-source library** for advanced **Natural Language
+Processing** (NLP) in Python. It's designed specifically for **production use**
+and helps you build applications that process and "understand" large volumes of
+text. It can be used to build information extraction or natural language
+understanding systems.
+
+### Feature overview {#comparison-features}
+
+import Features from 'widgets/features.js'
+
+<Features />
+
 ### When should I use spaCy? {#comparison-usage}
 
 - ✅ **I'm a beginner and just getting started with NLP.** – spaCy makes it easy
@@ -66,7 +78,6 @@ import Benchmarks from 'usage/\_benchmarks-models.md'
 | Dependency Parsing System                                                      |  UAS |  LAS |
 | ------------------------------------------------------------------------------ | ---: | ---: |
 | spaCy RoBERTa (2020)                                                           | 95.5 | 94.3 |
-| spaCy CNN (2020)                                                               |      |      |
 | [Mrini et al.](https://khalilmrini.github.io/Label_Attention_Layer.pdf) (2019) | 97.4 | 96.3 |
 | [Zhou and Zhao](https://www.aclweb.org/anthology/P19-1230/) (2019)             | 97.2 | 95.7 |
 
@@ -76,30 +87,6 @@ import Benchmarks from 'usage/\_benchmarks-models.md'
 [NLP-progress](http://nlpprogress.com/english/dependency_parsing.html) for more
 results. Project template:
 [`benchmarks/parsing_penn_treebank`](%%GITHUB_PROJECTS/benchmarks/parsing_penn_treebank).
-
-</figcaption>
-
-</figure>
-
-### Speed comparison {#benchmarks-speed}
-
-<!-- TODO: intro -->
-
-<figure>
-
-| Library | Pipeline                                        | WPS CPU <Help>words per second on CPU, higher is better</Help> | WPS GPU <Help>words per second on GPU, higher is better</Help> |
-| ------- | ----------------------------------------------- | -------------------------------------------------------------: | -------------------------------------------------------------: |
-| spaCy   | [`en_core_web_md`](/models/en#en_core_web_md)   |
-| spaCy   | [`en_core_web_trf`](/models/en#en_core_web_trf) |
-| Stanza  | `en_ewt`                                        |                                                                |
-| Flair   | `pos-fast_ner-fast`                             |
-| Flair   | `pos_ner`                                       |
-| UDPipe  | `english-ewt-ud-2.5`                            |
-
-<figcaption class="caption">
-
-**End-to-end processing speed** on raw unannotated text. Project template:
-[`benchmarks/speed`](%%GITHUB_PROJECTS/benchmarks/speed).
 
 </figcaption>
 

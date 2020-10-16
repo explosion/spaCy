@@ -42,6 +42,7 @@ const Docs = ({ pageContext, children }) => (
             if (isModels) {
                 sidebar.items[1].items = languages
                     .filter(({ models }) => models && models.length)
+                    .sort((a, b) => a.name.localeCompare(b.name))
                     .map(lang => ({
                         text: lang.name,
                         url: `/models/${lang.code}`,
