@@ -563,12 +563,8 @@ from the linear model, where it is stored in `model.attrs["multi_label"]`.
 
 <Accordion title="spacy.TextCatEnsemble.v1 definition" spaced>
 
-Here's an example of dependencies, part-of-speech tags and named entities, taken
-from the English Wall Street Journal portion of the Penn Treebank:
+The v1 was functionally similar, but used an internal `tok2vec` instead of taking it as argument.
 
-```json
-https://github.com/explosion/spaCy/blob/v2.3.x/examples/training/training-data.json
-```
 | Name                 | Description                                                                                                                                                                                    |
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `exclusive_classes`  | Whether or not categories are mutually exclusive. ~~bool~~                                                                                                                                     |
