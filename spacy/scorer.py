@@ -78,7 +78,7 @@ class ROCAUCScore:
 
     @property
     def score(self):
-        if not self.is_binary:
+        if not self.is_binary():
             raise ValueError(Errors.E165.format(label=set(self.golds)))
         if len(self.golds) == self.saved_score_at_len:
             return self.saved_score
