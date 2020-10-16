@@ -1,7 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
+from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS, TOKEN_MATCH
 from .stop_words import STOP_WORDS
 from .syntax_iterators import SYNTAX_ITERATORS
 from .lex_attrs import LEX_ATTRS
@@ -23,17 +23,10 @@ class TurkishDefaults(Language.Defaults):
         Language.Defaults.lex_attr_getters[NORM], BASE_NORMS
     )
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+    token_match = TOKEN_MATCH
     stop_words = STOP_WORDS
     syntax_iterators = SYNTAX_ITERATORS
     morph_rules = MORPH_RULES
-    single_orth_variants = [
-        {"tags": ["PUNCT"], "variants": ["…", "..."]},
-        {"tags": ["PUNCT"], "variants": ["-", "—", "–", "--", "---", "——"]},
-    ]
-    paired_orth_variants = [
-        {"tags": ["PUNCT"], "variants": [("'", "'"), ("‘", "’")]},
-        {"tags": ["PUNCT"], "variants": [('"', '"'), ("“", "”")]},
-    ]
 
 
 class Turkish(Language):
