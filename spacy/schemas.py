@@ -257,7 +257,7 @@ class TokenPattern(BaseModel):
 
 
 class TokenPatternSchema(BaseModel):
-    pattern: List[TokenPattern] = Field(..., minItems=1)
+    pattern: List[TokenPattern] = Field(..., min_items=1)
 
     class Config:
         extra = "forbid"
