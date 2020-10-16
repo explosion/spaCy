@@ -243,12 +243,12 @@ $ python -m spacy download en_core_web_trf
 ```python
 ### Example
 import spacy
-from thinc.api import use_pytorch_for_gpu_memory, require_gpu
+from thinc.api import set_gpu_allocator, require_gpu
 
 # Use the GPU, with memory allocations directed via PyTorch.
 # This prevents out-of-memory errors that would otherwise occur from competing
 # memory pools.
-use_pytorch_for_gpu_memory()
+set_gpu_allocator("pytorch")
 require_gpu(0)
 
 nlp = spacy.load("en_core_web_trf")
