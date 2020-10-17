@@ -6,7 +6,7 @@ from ...symbols import ORTH, LEMMA, NORM
 _exc = {}
 
 
-_abbr_period_exc_ = [
+_abbr_period_exc = [
     {ORTH: "A.B.D.", LEMMA: "Amerika Birleşik Devletleri", NORM: "Amerika"},
     {ORTH: "Alb.", LEMMA: "albay", NORM: "albay"},
     {ORTH: "Ank.", LEMMA: "Ankara", NORM: "Ankara"},
@@ -130,7 +130,7 @@ _abbr_period_exc_ = [
     {ORTH: "Yrd.Doç.", LEMMA: "yardımcı doçent"},
     {ORTH: "Y.Müh.", LEMMA: "yüksek mühendis"},
     {ORTH: "Y.Mim.", LEMMA: "yüksek mimar"},
-    {ORTH: "yy.", LEMMA: "yüzyıl", NORM: "yüzyıl"},
+    {ORTH: "yy.", LEMMA: "yüzyıl", NORM: "yüzyıl"}
 ]
 
 for abbr in _abbr_period_exc:
@@ -155,7 +155,7 @@ _abbr_exc = [
     {ORTH: "TBMM", LEMMA: "Türkiye Büyük Millet Meclisi"},
     {ORTH: "TC", LEMMA: "Türkiye Cumhuriyeti"},
     {ORTH: "TÜİK", LEMMA: "Türkiye istatistik kurumu", NORM: "Türkiye istatistik kurumu"},
-    {ORTH: "YÖK", LEMMA: "Yüksek Öğrenim Kurumu"},
+    {ORTH: "YÖK", LEMMA: "Yüksek Öğrenim Kurumu"}
 ]
 
 for abbr in _abbr_exc:
