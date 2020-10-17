@@ -6,10 +6,8 @@ from ...symbols import ORTH, LEMMA, NORM
 _exc = {}
 
 
-for exc_data in [
-    {ORTH: "AB", LEMMA: "Avrupa Birliği", NORM: "Avrupa Birliği"},
+_abbr_period_exc_ = [
     {ORTH: "A.B.D.", LEMMA: "Amerika Birleşik Devletleri", NORM: "Amerika"},
-    {ORTH: "ABD.", LEMMA: "Amerika Birleşik Devletleri", NORM: "Amerika"},
     {ORTH: "Alb.", LEMMA: "albay", NORM: "albay"},
     {ORTH: "Ank.", LEMMA: "Ankara", NORM: "Ankara"},
     {ORTH: "Ar.Gör.", LEMMA: "araştırma görevlisi"},
@@ -104,11 +102,9 @@ for exc_data in [
     {ORTH: "şb.", LEMMA: "şube", NORM: "şube"},
     {ORTH: "Şti.", LEMMA: "şirketi", NORM: "şirketi"},
     {ORTH: "şti.", LEMMA: "şirketi", NORM: "şirketi"},
-    {ORTH: "TBMM", LEMMA: "Türkiye Büyük Millet Meclisi"},
     {ORTH: "Tbp.", LEMMA: "tabip", NORM: "tabip"},
     {ORTH: "tbp.", LEMMA: "tabip", NORM: "tabip"},
     {ORTH: "T.C.", LEMMA: "Türkiye Cumhuriyeti"},
-    {ORTH: "TC", LEMMA: "Türkiye Cumhuriyeti"},
     {ORTH: "Tel.", LEMMA: "telefon", NORM: "telefon"},
     {ORTH: "tel.", LEMMA: "telefon", NORM: "telefon"},
     {ORTH: "telg.", LEMMA: "telgraf", NORM: "telgraf"},
@@ -117,7 +113,6 @@ for exc_data in [
     {ORTH: "tic.", LEMMA: "ticaret", NORM: "ticaret"},
     {ORTH: "Tug.", LEMMA: "tugay", NORM: "tugay"},
     {ORTH: "Tuğg.", LEMMA: "tuğgeneral", NORM: "tuğgeneral"},
-    {ORTH: "TÜİK", LEMMA: "Türkiye istatistik kurumu", NORM: "Türkiye istatistik kurumu"},
     {ORTH: "Tümg.", LEMMA: "tümgeneral", NORM: "tümgeneral"},
     {ORTH: "Uzm.", LEMMA: "uzman", NORM: "uzman"},
     {ORTH: "Üçvş.", LEMMA: "üstçavuş", NORM: "üstçavuş"},
@@ -135,10 +130,36 @@ for exc_data in [
     {ORTH: "Yrd.Doç.", LEMMA: "yardımcı doçent"},
     {ORTH: "Y.Müh.", LEMMA: "yüksek mühendis"},
     {ORTH: "Y.Mim.", LEMMA: "yüksek mimar"},
-    {ORTH: "YÖK", LEMMA: "Yüksek Öğrenim Kurumu"},
     {ORTH: "yy.", LEMMA: "yüzyıl", NORM: "yüzyıl"},
-]:
-    _exc[exc_data[ORTH]] = [exc_data]
+]
+
+for abbr in _abbr_period_exc:
+    _exc[abbr[ORTH]] = [abbr]
+
+_abbr_exc = [
+    {ORTH: "AB", LEMMA: "Avrupa Birliği", NORM: "Avrupa Birliği"},
+    {ORTH: "ABD", LEMMA: "Amerika Birleşik Devletleri", NORM: "Amerika"},
+    {ORTH: "ABS", LEMMA: "fren", NORM: "fren"},
+    {ORTH: "AOÇ", LEMMA: "Atatürk orman çiftliği"},
+    {ORTH: "ASKİ", LEMMA: "Ankara su ve kanalizasyon idaresi"},
+    {ORTH: "Bağ-kur", LEMMA: "Bağkur", NORM: "Bağkur"},
+    {ORTH: "BDDK", LEMMA: "bankacılık düzenleme ve denetleme kurumu"},
+    {ORTH: "BJK", LEMMA: "Beşiktaş", NORM: "Beşiktaş"},
+    {ORTH: "ESA", LEMMA: "Avrupa uzay ajansı", NORM: "Avrupa uzay ajansı"},
+    {ORTH: "FB", LEMMA: "Fenerbahçe", NORM: "Fenerbahçe"},
+    {ORTH: "GATA", LEMMA: "Gülhane askeri tıp akademisi"},
+    {ORTH: "GS", LEMMA: "Galatasaray", NORM: "Galatasaray"},
+    {ORTH: "İSKİ", LEMMA: "İstanbul su ve kanalizasyon idaresi"},
+    {ORTH: "KBB", LEMMA: "kulak burun boğaz"},
+    {ORTH: "RTÜK", LEMMA: "radyo ve televizyon üst kurulu", NORM: "radyo ve televizyon üst kurulu"},
+    {ORTH: "TBMM", LEMMA: "Türkiye Büyük Millet Meclisi"},
+    {ORTH: "TC", LEMMA: "Türkiye Cumhuriyeti"},
+    {ORTH: "TÜİK", LEMMA: "Türkiye istatistik kurumu", NORM: "Türkiye istatistik kurumu"},
+    {ORTH: "YÖK", LEMMA: "Yüksek Öğrenim Kurumu"},
+]
+
+for abbr in _abbr_exc:
+    _exc[abbr[ORTH]] = [abbr]
 
 
 TOKENIZER_EXCEPTIONS = _exc
