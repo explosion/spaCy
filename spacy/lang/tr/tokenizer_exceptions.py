@@ -7,9 +7,11 @@ _exc = {}
 
 
 for exc_data in [
-    {ORTH: "A.B.D.", LEMMA: "Amerika Birleşik Devletleri"},
-    {ORTH: "ABD.", LEMMA: "Amerika Birleşik Devletleri"},
+    {ORTH: "AB", LEMMA: "Avrupa Birliği", NORM: "Avrupa Birliği"},
+    {ORTH: "A.B.D.", LEMMA: "Amerika Birleşik Devletleri", NORM: "Amerika"},
+    {ORTH: "ABD.", LEMMA: "Amerika Birleşik Devletleri", NORM: "Amerika"},
     {ORTH: "Alb.", LEMMA: "albay", NORM: "albay"},
+    {ORTH: "Ank.", LEMMA: "Ankara", NORM: "Ankara"},
     {ORTH: "Ar.Gör.", LEMMA: "araştırma görevlisi"},
     {ORTH: "Arş.Gör.", LEMMA: "araştırma görevlisi"},
     {ORTH: "Asb.", LEMMA: "astsubay", NORM: "astsubay"},
@@ -70,6 +72,7 @@ for exc_data in [
     {ORTH: "Hz.", LEMMA: "hazreti", NORM: "hazreti"},
     {ORTH: "Hz.Öz.", LEMMA: "hizmete özel"},
     {ORTH: "İng.", LEMMA: "ingilizce", NORM: "ingilizce"},
+    {ORTH: "İst.", LEMMA: "İstanbul", NORM: "İstanbul"},
     {ORTH: "Jeol.", LEMMA: "jeoloji", NORM: "jeoloji"},
     {ORTH: "jeol.", LEMMA: "jeoloji", NORM: "jeoloji"},
     {ORTH: "Korg.", LEMMA: "korgeneral", NORM: "korgeneral"},
@@ -114,6 +117,7 @@ for exc_data in [
     {ORTH: "tic.", LEMMA: "ticaret", NORM: "ticaret"},
     {ORTH: "Tug.", LEMMA: "tugay", NORM: "tugay"},
     {ORTH: "Tuğg.", LEMMA: "tuğgeneral", NORM: "tuğgeneral"},
+    {ORTH: "TÜİK", LEMMA: "Türkiye istatistik kurumu", NORM: "Türkiye istatistik kurumu"},
     {ORTH: "Tümg.", LEMMA: "tümgeneral", NORM: "tümgeneral"},
     {ORTH: "Uzm.", LEMMA: "uzman", NORM: "uzman"},
     {ORTH: "Üçvş.", LEMMA: "üstçavuş", NORM: "üstçavuş"},
