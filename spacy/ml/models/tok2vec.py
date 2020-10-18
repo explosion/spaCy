@@ -106,7 +106,7 @@ def MultiHashEmbed(
 ) -> Model[List[Doc], List[Floats2d]]:
     """Construct an embedding layer that separately embeds a number of lexical
     attributes using hash embedding, concatenates the results, and passes it
-    through a feed-forward subnetwork to build a mixed representations.
+    through a feed-forward subnetwork to build a mixed representation.
 
     The features used can be configured with the 'attrs' argument. The suggested
     attributes are NORM, PREFIX, SUFFIX and SHAPE. This lets the model take into

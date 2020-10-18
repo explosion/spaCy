@@ -398,8 +398,8 @@ class Errors:
     E163 = ("cumsum was found to be unstable: its last element does not "
             "correspond to sum")
     E164 = ("x is neither increasing nor decreasing: {x}.")
-    E165 = ("Only one class present in y_true. ROC AUC score is not defined in "
-            "that case.")
+    E165 = ("Only one class present in the gold labels: {label}. "
+            "ROC AUC score is not defined in that case.")
     E166 = ("Can only merge DocBins with the same value for '{param}'.\n"
             "Current DocBin: {current}\nOther DocBin: {other}")
     E169 = ("Can't find module: {module}")
@@ -456,6 +456,8 @@ class Errors:
             "issue tracker: http://github.com/explosion/spaCy/issues")
 
     # TODO: fix numbering after merging develop into master
+    E897 = ("Field '{field}' should be a dot-notation string referring to the "
+            "relevant section in the config, but found type {type} instead.")
     E898 = ("Can't serialize trainable pipe '{name}': the `model` attribute "
             "is not set or None. If you've implemented a custom component, make "
             "sure to store the component model as `self.model` in your "

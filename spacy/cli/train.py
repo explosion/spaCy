@@ -44,7 +44,7 @@ def train_cli(
     if not config_path or not config_path.exists():
         msg.fail("Config file not found", config_path, exits=1)
     if output_path is not None and not output_path.exists():
-        output_path.mkdir()
+        output_path.mkdir(parents=True)
         msg.good(f"Created output directory: {output_path}")
     overrides = parse_config_overrides(ctx.args)
     import_code(code_path)

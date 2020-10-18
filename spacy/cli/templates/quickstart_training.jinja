@@ -136,14 +136,18 @@ factory = "textcat"
 
 {% if optimize == "accuracy" %}
 [components.textcat.model]
-@architectures = "spacy.TextCatEnsemble.v1"
-exclusive_classes = false
-width = 64
-conv_depth = 2
-embed_size = 2000
-window_size = 1
-ngram_size = 1
+@architectures = "spacy.TextCatEnsemble.v2"
 nO = null
+
+[components.textcat.model.tok2vec]
+@architectures = "spacy-transformers.TransformerListener.v1"
+grad_factor = 1.0
+
+[components.textcat.model.linear_model]
+@architectures = "spacy.TextCatBOW.v1"
+exclusive_classes = false
+ngram_size = 1
+no_output_layer = false
 
 {% else -%}
 [components.textcat.model]
@@ -271,14 +275,18 @@ factory = "textcat"
 
 {% if optimize == "accuracy" %}
 [components.textcat.model]
-@architectures = "spacy.TextCatEnsemble.v1"
-exclusive_classes = false
-width = 64
-conv_depth = 2
-embed_size = 2000
-window_size = 1
-ngram_size = 1
+@architectures = "spacy.TextCatEnsemble.v2"
 nO = null
+
+[components.textcat.model.tok2vec]
+@architectures = "spacy.Tok2VecListener.v1"
+width = ${components.tok2vec.model.encode.width}
+
+[components.textcat.model.linear_model]
+@architectures = "spacy.TextCatBOW.v1"
+exclusive_classes = false
+ngram_size = 1
+no_output_layer = false
 
 {% else -%}
 [components.textcat.model]
