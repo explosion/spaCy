@@ -143,7 +143,7 @@ argument that connects to the shared `tok2vec` component in the pipeline.
 
 Construct an embedding layer that separately embeds a number of lexical
 attributes using hash embedding, concatenates the results, and passes it through
-a feed-forward subnetwork to build a mixed representations. The features used
+a feed-forward subnetwork to build a mixed representation. The features used
 can be configured with the `attrs` argument. The suggested attributes are
 `NORM`, `PREFIX`, `SUFFIX` and `SHAPE`. This lets the model take into account
 some subword information, without construction a fully character-based
@@ -516,26 +516,54 @@ several different built-in architectures. It is recommended to experiment with
 different architectures and settings to determine what works best on your
 specific data and challenge.
 
-### spacy.TextCatEnsemble.v1 {#TextCatEnsemble}
+### spacy.TextCatEnsemble.v2 {#TextCatEnsemble}
 
 > #### Example Config
 >
 > ```ini
 > [model]
-> @architectures = "spacy.TextCatEnsemble.v1"
-> exclusive_classes = false
-> pretrained_vectors = null
-> width = 64
-> embed_size = 2000
-> conv_depth = 2
-> window_size = 1
-> ngram_size = 1
-> dropout = null
+> @architectures = "spacy.TextCatEnsemble.v2"
 > nO = null
+>
+> [model.linear_model]
+> @architectures = "spacy.TextCatBOW.v1"
+> exclusive_classes = true
+> ngram_size = 1
+> no_output_layer = false
+>
+> [model.tok2vec]
+> @architectures = "spacy.Tok2Vec.v1"
+>
+> [model.tok2vec.embed]
+> @architectures = "spacy.MultiHashEmbed.v1"
+> width = 64
+> rows = [2000, 2000, 1000, 1000, 1000, 1000]
+> attrs = ["ORTH", "LOWER", "PREFIX", "SUFFIX", "SHAPE", "ID"]
+> include_static_vectors = false
+>
+> [model.tok2vec.encode]
+> @architectures = "spacy.MaxoutWindowEncoder.v1"
+> width = ${model.tok2vec.embed.width}
+> window_size = 1
+> maxout_pieces = 3
+> depth = 2
 > ```
 
-Stacked ensemble of a bag-of-words model and a neural network model. The neural
-network has an internal CNN Tok2Vec layer and uses attention.
+Stacked ensemble of a linear bag-of-words model and a neural network model. The
+neural network is built upon a Tok2Vec layer and uses attention. The setting for
+whether or not this model should cater for multi-label classification, is taken
+from the linear model, where it is stored in `model.attrs["multi_label"]`.
+
+| Name           | Description                                                                                                                                                                                    |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `linear_model` | The linear bag-of-words model. ~~Model[List[Doc], Floats2d]~~                                                                                                                                  |
+| `tok2vec`      | The `tok2vec` layer to build the neural network upon. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                     |
+| `nO`           | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `initialize` is called. ~~Optional[int]~~ |
+| **CREATES**    | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                               |
+
+<Accordion title="spacy.TextCatEnsemble.v1 definition" spaced>
+
+The v1 was functionally similar, but used an internal `tok2vec` instead of taking it as argument.
 
 | Name                 | Description                                                                                                                                                                                    |
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -549,6 +577,8 @@ network has an internal CNN Tok2Vec layer and uses attention.
 | `dropout`            | The dropout rate. ~~float~~                                                                                                                                                                    |
 | `nO`                 | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `initialize` is called. ~~Optional[int]~~ |
 | **CREATES**          | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                               |
+
+</Accordion>
 
 ### spacy.TextCatCNN.v1 {#TextCatCNN}
 

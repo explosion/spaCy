@@ -174,15 +174,25 @@ Calculate the UAS, LAS, and LAS per type scores for dependency parses.
 ## Scorer.score_cats {#score_cats tag="staticmethod" new="3"}
 
 Calculate PRF and ROC AUC scores for a doc-level attribute that is a dict
-containing scores for each label like `Doc.cats`. The reported overall score
-depends on the scorer settings:
+containing scores for each label like `Doc.cats`. The returned dictionary
+contains the following scores:
 
-1. **all:** `{attr}_score` (one of `{attr}_f` / `{attr}_macro_f` /
-   `{attr}_macro_auc`), `{attr}_score_desc` (text description of the overall
-   score), `{attr}_f_per_type`, `{attr}_auc_per_type`
-2. **binary exclusive with positive label:** `{attr}_p`, `{attr}_r`, `{attr}_f`
-3. **3+ exclusive classes**, macro-averaged F-score: `{attr}_macro_f`;
-4. **multilabel**, macro-averaged AUC: `{attr}_macro_auc`
+- `{attr}_micro_p`, `{attr}_micro_r` and `{attr}_micro_f`: each instance across
+  each label is weighted equally
+- `{attr}_macro_p`, `{attr}_macro_r` and `{attr}_macro_f`: the average values
+  across evaluations per label
+- `{attr}_f_per_type` and `{attr}_auc_per_type`: each contains a dictionary of
+  scores, keyed by label
+- A final `{attr}_score` and corresponding `{attr}_score_desc` (text
+  description)
+
+The reported `{attr}_score` depends on the classification properties:
+
+- **binary exclusive with positive label:** `{attr}_score` is set to the F-score
+  of the positive label
+- **3+ exclusive classes**, macro-averaged F-score:
+  `{attr}_score = {attr}_macro_f`
+- **multilabel**, macro-averaged AUC: `{attr}_score = {attr}_macro_auc`
 
 > #### Example
 >
