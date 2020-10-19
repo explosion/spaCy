@@ -107,15 +107,19 @@ def evaluate(
 
     if "morph_per_feat" in scores:
         if scores["morph_per_feat"]:
-            print_morph_per_feat(msg, scores["morph_per_feat"])
+            print_prf_per_type(msg, scores["morph_per_feat"], "MORPH", "feat")
             data["morph_per_feat"] = scores["morph_per_feat"]
+    if "dep_las_per_type" in scores:
+        if scores["dep_las_per_type"]:
+            print_prf_per_type(msg, scores["dep_las_per_type"], "LAS", "type")
+            data["dep_las_per_type"] = scores["dep_las_per_type"]
     if "ents_per_type" in scores:
         if scores["ents_per_type"]:
-            print_ents_per_type(msg, scores["ents_per_type"])
+            print_prf_per_type(msg, scores["ents_per_type"], "NER", "type")
             data["ents_per_type"] = scores["ents_per_type"]
     if "cats_f_per_type" in scores:
         if scores["cats_f_per_type"]:
-            print_textcats_f_per_cat(msg, scores["cats_f_per_type"])
+            print_prf_per_type(msg, scores["cats_f_per_type"], "Textcat F", "label")
             data["cats_f_per_type"] = scores["cats_f_per_type"]
     if "cats_auc_per_type" in scores:
         if scores["cats_auc_per_type"]:
@@ -164,7 +168,7 @@ def render_parses(
             file_.write(html)
 
 
-def print_morph_per_feat(msg: Printer, scores: Dict[str, Dict[str, float]]) -> None:
+def print_prf_per_type(msg: Printer, scores: Dict[str, Dict[str, float]], name: str, type: str) -> None:
     data = [
         (k, f"{v['p']*100:.2f}", f"{v['r']*100:.2f}", f"{v['f']*100:.2f}")
         for k, v in scores.items()
@@ -173,33 +177,7 @@ def print_morph_per_feat(msg: Printer, scores: Dict[str, Dict[str, float]]) -> N
         data,
         header=("", "P", "R", "F"),
         aligns=("l", "r", "r", "r"),
-        title="MORPH (per feat)",
-    )
-
-
-def print_ents_per_type(msg: Printer, scores: Dict[str, Dict[str, float]]) -> None:
-    data = [
-        (k, f"{v['p']*100:.2f}", f"{v['r']*100:.2f}", f"{v['f']*100:.2f}")
-        for k, v in scores.items()
-    ]
-    msg.table(
-        data,
-        header=("", "P", "R", "F"),
-        aligns=("l", "r", "r", "r"),
-        title="NER (per type)",
-    )
-
-
-def print_textcats_f_per_cat(msg: Printer, scores: Dict[str, Dict[str, float]]) -> None:
-    data = [
-        (k, f"{v['p']*100:.2f}", f"{v['r']*100:.2f}", f"{v['f']*100:.2f}")
-        for k, v in scores.items()
-    ]
-    msg.table(
-        data,
-        header=("", "P", "R", "F"),
-        aligns=("l", "r", "r", "r"),
-        title="Textcat F (per label)",
+        title=f"{name} (per {type})",
     )
 
 
