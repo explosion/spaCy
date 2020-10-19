@@ -93,6 +93,7 @@ def evaluate(
         "SPEED": "speed",
     }
     results = {}
+    data = {}
     for metric, key in metrics.items():
         if key in scores:
             if key == "cats_score":
@@ -101,7 +102,7 @@ def evaluate(
                 results[metric] = f"{scores[key]:.0f}"
             else:
                 results[metric] = f"{scores[key]*100:.2f}"
-    data = {re.sub(r"[\s/]", "_", k.lower()): v for k, v in results.items()}
+            data[re.sub(r"[\s/]", "_", key.lower())] = scores[key]
 
     msg.table(results, title="Results")
 
