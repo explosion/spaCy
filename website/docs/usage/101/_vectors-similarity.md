@@ -115,7 +115,7 @@ print(french_fries, "<->", burgers, french_fries.similarity(burgers))
 
 Computing similarity scores can be helpful in many situations, but it's also
 important to maintain **realistic expectations** about what information it can
-provide. Words can be related to each over in many ways, so a single
+provide. Words can be related to each other in many ways, so a single
 "similarity" score will always be a **mix of different signals**, and vectors
 trained on different data can produce very different results that may not be
 useful for your purpose. Here are some important considerations to keep in mind:
