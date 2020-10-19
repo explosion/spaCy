@@ -105,15 +105,22 @@ def evaluate(
 
     msg.table(results, title="Results")
 
+    if "morph_per_feat" in scores:
+        if scores["morph_per_feat"]:
+            print_morph_per_feat(msg, scores["morph_per_feat"])
+            data["morph_per_feat"] = scores["morph_per_feat"]
     if "ents_per_type" in scores:
         if scores["ents_per_type"]:
             print_ents_per_type(msg, scores["ents_per_type"])
+            data["ents_per_type"] = scores["ents_per_type"]
     if "cats_f_per_type" in scores:
         if scores["cats_f_per_type"]:
             print_textcats_f_per_cat(msg, scores["cats_f_per_type"])
+            data["cats_f_per_type"] = scores["cats_f_per_type"]
     if "cats_auc_per_type" in scores:
         if scores["cats_auc_per_type"]:
             print_textcats_auc_per_cat(msg, scores["cats_auc_per_type"])
+            data["cats_auc_per_type"] = scores["cats_auc_per_type"]
 
     if displacy_path:
         factory_names = [nlp.get_pipe_meta(pipe).factory for pipe in nlp.pipe_names]
@@ -155,6 +162,19 @@ def render_parses(
         )
         with (output_path / "parses.html").open("w", encoding="utf8") as file_:
             file_.write(html)
+
+
+def print_morph_per_feat(msg: Printer, scores: Dict[str, Dict[str, float]]) -> None:
+    data = [
+        (k, f"{v['p']*100:.2f}", f"{v['r']*100:.2f}", f"{v['f']*100:.2f}")
+        for k, v in scores.items()
+    ]
+    msg.table(
+        data,
+        header=("", "P", "R", "F"),
+        aligns=("l", "r", "r", "r"),
+        title="MORPH (per feat)",
+    )
 
 
 def print_ents_per_type(msg: Printer, scores: Dict[str, Dict[str, float]]) -> None:
