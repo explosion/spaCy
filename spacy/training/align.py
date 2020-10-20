@@ -38,10 +38,11 @@ def get_alignments(A: List[str], B: List[str]) -> (List[List[int]], List[List[in
     tokens_a (List[str]): The first tokenization.
     tokens_b (List[str]): The second tokenization.
     RETURNS: (tuple): A 5-tuple consisting of the following information:
-      * a2b (List[int]): Mapping of indices in `tokens_a` to indices in `tokens_b`.
-        For instance, if `a2b[4] == [6]`, that means that `tokens_a[4]` aligns
-        to `tokens_b[6]`.
-      * b2a (List[int]): The same as `a2b`, but mapping the other direction.
+      * a2b (List[List[int]): Mapping of indices in `tokens_a` to indices in
+        `tokens_b`. For instance, if `a2b[4] == [6]`, that means that
+        `tokens_a[4]` aligns to `tokens_b[6]`.
+      * b2a (List[List[int]]): The same as `a2b`, but mapping the other
+        direction.
     """
     # Remove whitespace from all non-whitespace tokens
     tokens_a = [x.replace(" ", "") if not x.isspace() else x for x in A]
