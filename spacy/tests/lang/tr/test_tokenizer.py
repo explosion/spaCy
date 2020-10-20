@@ -71,7 +71,7 @@ NUMBER_TESTS = [
         ("%1-2 arası büyüme bekliyoruz.", ["%", "1", "-", "2", "arası", "büyüme", "bekleniyor", "."]),
         ("%1.5luk büyüme bekliyoruz.", ["%", "1.5luk", "büyüme", "bekleniyor", "."]),
         ("Saat 1-2 arası gelin lütfen.", ["Saat", "1", "-", "2", "arası", "gelin", "lütfen", "."]),
-        ("Saat 15:30 gibi buluşalım.", ["Saat", "15:30", "gibi", "buluşalım", "."] )
+        ("Saat 15:30 gibi buluşalım.", ["Saat", "15:30", "gibi", "buluşalım", "."]),
         ("Saat 15:30'da buluşalım.", ["Saat", "15:30'da", "buluşalım", "."]),
         ("Saat 15.30'da buluşalım.", ["Saat", "15.30'da", "buluşalım", "."]),
         ("Saat 15.30da buluşalım.", ["Saat", "15.30da", "buluşalım", "."]),
@@ -108,8 +108,22 @@ PUNCT_TESTS = [
 GENERAL_TESTS = [
         ("1914'teki Endurance seferinde, Sir Ernest Shackleton'ın kaptanlığını yaptığı İngiliz Endurance gemisi yirmi sekiz kişi ile Antarktika'yı geçmek üzere yelken açtı.", ["1914'teki", "Endurance", "seferinde", ",", "Sir", "Ernest", "Shackleton'ın", "kaptanlığını", "yaptığı", "İngiliz", "Endurance", "gemisi", "yirmi", "sekiz", "kişi", "ile", "Antarktika'yı", "geçmek", "üzere", "yelken", "açtı", "."]),
         ("Danışılan \"%100 Cospedal\" olduğunu belirtti.", ["Danışılan", '"', "%", "100", "Cospedal", '"', "olduğunu", "belirtti", "."]),
-
+        ("1976'da parkur artık kullanılmıyordu; 1990'da ise bir yangın, daha sonraları ahırlarla birlikte yıkılacak olan tahta tribünlerden geri kalanları da yok etmişti.", ["1976'da", "parkur", "artık", "kullanılmıyordu", ";", "1990'da", "ise", "bir", "yangın", ",", "daha", "sonraları", "ahırlarla", "birlikte", "yıkılacak", "olan", "tahta", "tribünlerden", "geri", "kalanları", "da", "yok", "etmişti", "."]),
+        ("Dahiyane bir ameliyat ve zorlu bir rehabilitasyon sürecinden sonra, tamamen iyileştim.", ["Dahiyane", "bir", "ameliyat", "ve", "zorlu", "bir", "rehabilitasyon", "sürecinden", "sonra", ",", "tamamen", "iyileştim", "."]),
+        ("Yaklaşık iki hafta süren bireysel erken oy kullanma döneminin ardından 5,7 milyondan fazla Floridalı sandık başına gitti.", ["Yaklaşık", "iki", "hafta", "süren", "bireysel", "erken", "oy", "kullanma", "döneminin", "ardından", "5,7", "milyondan", "fazla", "Floridalı", "sandık", "başına", "gitti", "."]),
+        ("Ancak, bu ABD Çevre Koruma Ajansı'nın dünyayı bu konularda uyarmasının ardından ortaya çıktı.", ["Ancak", ",", "bu", "ABD", "Çevre", "Koruma", "Ajansı'nın", "dünyayı", "bu", "konularda", "uyarmasının", "ardından", "ortaya", "çıktı", "."]),
+        ("Ortalama şansa ve 10.000 Sterlin değerinde tahvillere sahip bir yatırımcı yılda 125 Sterlin ikramiye kazanabilir.", ["Ortalama", "şansa", "ve", "10.000", "Sterlin", "değerinde", "tahvillere", "sahip", "bir", "yatırımcı", "yılda", "125", "Sterlin", "ikramiye", "kazanabilir", "."]),
+        ("Granit adaları; Seyşeller ve Tioman ile Saint Helena gibi volkanik adaları kapsar." , ["Granit", "adaları", ";", "Seyşeller", "ve", "Tioman", "ile", "Saint", "Helena", "gibi", "volkanik", "adaları", "kapsar", "."]),
+        ("Barış antlaşmasıyla İspanya, Amerika'ya Porto Riko, Guam ve Filipinler kolonilerini devretti.", ["Barış", "antlaşmasıyla", "İspanya", "Amerika'ya", "Porto", "Riko", "Guam", "ve", "Filipinler", "kolonilerini", "devretti", "."]),
+        ("Makedonya\'nın sınır bölgelerini güvence altına alan Philip, büyük bir Makedon ordusu kurdu ve uzun bir fetih seferi için Trakya\'ya doğru yürüdü.", ["Makedonya\'nın", "sınır", "bölgelerini", "güvence", "altına", "alan", "Philip", ",", "büyük", "bir", "Makedon", "ordusu", "kurdu", "ve", "uzun", "bir", "fetih", "seferi", "için", "Trakya\'ya", "doğru", "yürüdü", "."]),
+        ("Fransız gazetesi Le Figaro'ya göre bu hükumet planı sayesinde 42 milyon Euro kazanç sağlanabilir ve elde edilen paranın 15.5 milyonu ulusal güvenlik için kullanılabilir.", ["Fransız", "gazetesi", "Le", "Figaro'ya", "göre", "bu", "hükumet", "planı", "sayesinde", "42", "milyon", "Euro", "kazanç", "sağlanabilir", "ve", "elde", "edilen", "paranın", "15.5", "milyonu", "ulusal", "güvenlik", "için", "kullanılabilir", "."]),
+        ("Ortalama şansa ve 10.000 Sterlin değerinde tahvillere sahip bir yatırımcı yılda 125 Sterlin ikramiye kazanabilir.", ["Ortalama", "şansa", "ve", "10.000", "Sterlin", "değerinde", "tahvillere", "sahip", "bir", "yatırımcı", "yılda", "125", "Sterlin", "ikramiye", "kazanabilir", "."]),
+        ("3 Kasım Salı günü, Saint-Gaudens Belediye Başkanı 2014'te hükümetle birlikte oluşturulan kentsel gelişim anlaşmasını askıya alma kararı verdi.", ["3", "Kasım", "Salı", "günü", ",", "Saint-Gaudens", "Belediye", "Başkanı", "2014'te", "hükümetle", "birlikte", "oluşturulan", "kentsel", "gelişim", "anlaşmasını", "askıya", "alma", "kararı", "verdi", "."]),
+        ("Stalin, Abakumov'u Beria'nın enerji bakanlıkları üzerindeki baskınlığına karşı MGB içinde kendi ağını kurmaya teşvik etmeye başlamıştı.", ["Stalin", ",", "Abakumov'u", "Beria'nın", "enerji", "bakanlıkları", "üzerindeki", "baskınlığına", "karşı", "MGB", "içinde", "kendi", "ağını", "kurmaya", "teşvik", "etmeye", "başlamıştı", "."]),
+        ("Güney Avrupa'daki kazı alanlarının çoğunluğu gibi, bu bulgu M.Ö. 5. yüzyılın başlar", ["Güney", "Avrupa'daki", "kazı", "alanlarının", "çoğunluğu", "gibi", ",", "bu", "bulgu", "M.Ö.", "5.", "yüzyılın", "başlar"]),
+        ("Sağlığın bozulması Hitchcock hayatının son yirmi yılında üretimini azalttı.", ["Sağlığın", "bozulması", "Hitchcock", "hayatının", "son", "yirmi", "yılında", "üretimini", "azalttı", "."]),
 ]
+
 
 TESTS = (ABBREV_TESTS + NUMBER_TESTS + PUNCT_TESTS + GENERAL_TESTS)
 
