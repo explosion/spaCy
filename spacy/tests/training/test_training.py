@@ -2,6 +2,7 @@ import numpy
 from spacy.training import offsets_to_biluo_tags, biluo_tags_to_offsets, Alignment
 from spacy.training import biluo_tags_to_spans, iob_to_biluo
 from spacy.training import Corpus, docs_to_json, Example
+from spacy.training.align import get_alignments
 from spacy.training.converters import json_to_docs
 from spacy.lang.en import English
 from spacy.tokens import Doc, DocBin
@@ -492,36 +493,35 @@ def test_roundtrip_docs_to_docbin(doc):
     assert cats["BAKING"] == reloaded_example.reference.cats["BAKING"]
 
 
-@pytest.mark.skip("Outdated")
 @pytest.mark.parametrize(
     "tokens_a,tokens_b,expected",
     [
-        (["a", "b", "c"], ["ab", "c"], (3, [-1, -1, 1], [-1, 2], {0: 0, 1: 0}, {})),
+        (["a", "b", "c"], ["ab", "c"], ([[0], [0], [1]], [[0, 1], [2]])),
         (
             ["a", "b", '"', "c"],
             ['ab"', "c"],
-            (4, [-1, -1, -1, 1], [-1, 3], {0: 0, 1: 0, 2: 0}, {}),
+            ([[0], [0], [0], [1]], [[0, 1, 2], [3]]),
         ),
-        (["a", "bc"], ["ab", "c"], (4, [-1, -1], [-1, -1], {0: 0}, {1: 1})),
+        (["a", "bc"], ["ab", "c"], ([[0], [0, 1]], [[0, 1], [1]])),
         (
             ["ab", "c", "d"],
             ["a", "b", "cd"],
-            (6, [-1, -1, -1], [-1, -1, -1], {1: 2, 2: 2}, {0: 0, 1: 0}),
+            ([[0, 1], [2], [2]], [[0], [0], [1, 2]]),
         ),
         (
             ["a", "b", "cd"],
             ["a", "b", "c", "d"],
-            (3, [0, 1, -1], [0, 1, -1, -1], {}, {2: 2, 3: 2}),
+            ([[0], [1], [2, 3]], [[0], [1], [2], [2]]),
         ),
-        ([" ", "a"], ["a"], (1, [-1, 0], [1], {}, {})),
+        ([" ", "a"], ["a"], ([[], [0]], [[1]])),
     ],
 )
 def test_align(tokens_a, tokens_b, expected):  # noqa
-    cost, a2b, b2a, a2b_multi, b2a_multi = align(tokens_a, tokens_b)  # noqa
-    assert (cost, list(a2b), list(b2a), a2b_multi, b2a_multi) == expected  # noqa
+    a2b, b2a = get_alignments(tokens_a, tokens_b)
+    assert (a2b, b2a) == expected  # noqa
     # check symmetry
-    cost, a2b, b2a, a2b_multi, b2a_multi = align(tokens_b, tokens_a)  # noqa
-    assert (cost, list(b2a), list(a2b), b2a_multi, a2b_multi) == expected  # noqa
+    a2b, b2a = get_alignments(tokens_b, tokens_a)  # noqa
+    assert (b2a, a2b) == expected  # noqa
 
 
 def test_goldparse_startswith_space(en_tokenizer):
