@@ -539,6 +539,21 @@ def test_goldparse_startswith_space(en_tokenizer):
     assert example.get_aligned("DEP", as_string=True) == [None, "ROOT"]
 
 
+def test_goldparse_endswith_space(en_tokenizer):
+    text = "a\n"
+    doc = en_tokenizer(text)
+    gold_words = ["a"]
+    entities = ["U-DATE"]
+    deps = ["ROOT"]
+    heads = [0]
+    example = Example.from_dict(
+        doc, {"words": gold_words, "entities": entities, "deps": deps, "heads": heads}
+    )
+    ner_tags = example.get_aligned_ner()
+    assert ner_tags == ["U-DATE", "O"]
+    assert example.get_aligned("DEP", as_string=True) == ["ROOT", None]
+
+
 def test_gold_constructor():
     """Test that the Example constructor works fine"""
     nlp = English()
@@ -667,6 +682,90 @@ def test_alignment_complex_example(en_vocab):
     assert list(align.x2y.dataXd) == [0, 1, 2, 3, 4, 4, 5, 5]
     assert list(align.y2x.lengths) == [1, 1, 1, 1, 2, 2]
     assert list(align.y2x.dataXd) == [0, 0, 0, 1, 2, 3, 4, 5]
+
+
+def test_alignment_spaces(en_vocab):
+    # single leading whitespace
+    other_tokens = [" ", "i listened to", "obama", "'", "s", "podcasts", "."]
+    spacy_tokens = ["i", "listened", "to", "obama", "'s", "podcasts."]
+    align = Alignment.from_strings(other_tokens, spacy_tokens)
+    assert list(align.x2y.lengths) == [0, 3, 1, 1, 1, 1, 1]
+    assert list(align.x2y.dataXd) == [0, 1, 2, 3, 4, 4, 5, 5]
+    assert list(align.y2x.lengths) == [1, 1, 1, 1, 2, 2,]
+    assert list(align.y2x.dataXd) == [1, 1, 1, 2, 3, 4, 5, 6]
+
+    # multiple leading whitespace tokens
+    other_tokens = [" ", " ", "i listened to", "obama", "'", "s", "podcasts", "."]
+    spacy_tokens = ["i", "listened", "to", "obama", "'s", "podcasts."]
+    align = Alignment.from_strings(other_tokens, spacy_tokens)
+    assert list(align.x2y.lengths) == [0, 0, 3, 1, 1, 1, 1, 1]
+    assert list(align.x2y.dataXd) == [0, 1, 2, 3, 4, 4, 5, 5]
+    assert list(align.y2x.lengths) == [1, 1, 1, 1, 2, 2,]
+    assert list(align.y2x.dataXd) == [2, 2, 2, 3, 4, 5, 6, 7]
+
+    # both with leading whitespace, not identical
+    other_tokens = [" ", " ", "i listened to", "obama", "'", "s", "podcasts", "."]
+    spacy_tokens = [" ", "i", "listened", "to", "obama", "'s", "podcasts."]
+    align = Alignment.from_strings(other_tokens, spacy_tokens)
+    assert list(align.x2y.lengths) == [1, 0, 3, 1, 1, 1, 1, 1]
+    assert list(align.x2y.dataXd) == [0, 1, 2, 3, 4, 5, 5, 6, 6]
+    assert list(align.y2x.lengths) == [1, 1, 1, 1, 1, 2, 2]
+    assert list(align.y2x.dataXd) == [0, 2, 2, 2, 3, 4, 5, 6, 7]
+
+    # same leading whitespace, different tokenization
+    other_tokens = [" ", " ", "i listened to", "obama", "'", "s", "podcasts", "."]
+    spacy_tokens = ["  ", "i", "listened", "to", "obama", "'s", "podcasts."]
+    align = Alignment.from_strings(other_tokens, spacy_tokens)
+    assert list(align.x2y.lengths) == [1, 1, 3, 1, 1, 1, 1, 1]
+    assert list(align.x2y.dataXd) == [0, 0, 1, 2, 3, 4, 5, 5, 6, 6]
+    assert list(align.y2x.lengths) == [2, 1, 1, 1, 1, 2, 2]
+    assert list(align.y2x.dataXd) == [0, 1, 2, 2, 2, 3, 4, 5, 6, 7]
+
+    # only one with trailing whitespace
+    other_tokens = ["i listened to", "obama", "'", "s", "podcasts", ".", " "]
+    spacy_tokens = ["i", "listened", "to", "obama", "'s", "podcasts."]
+    align = Alignment.from_strings(other_tokens, spacy_tokens)
+    assert list(align.x2y.lengths) == [3, 1, 1, 1, 1, 1, 0]
+    assert list(align.x2y.dataXd) == [0, 1, 2, 3, 4, 4, 5, 5]
+    assert list(align.y2x.lengths) == [1, 1, 1, 1, 2, 2]
+    assert list(align.y2x.dataXd) == [0, 0, 0, 1, 2, 3, 4, 5]
+
+    # different trailing whitespace
+    other_tokens = ["i listened to", "obama", "'", "s", "podcasts", ".", " ", " "]
+    spacy_tokens = ["i", "listened", "to", "obama", "'s", "podcasts.", " "]
+    align = Alignment.from_strings(other_tokens, spacy_tokens)
+    # note: with pytokenizations would be: [3, 1, 1, 1, 1, 1, 1, 0]
+    assert list(align.x2y.lengths) == [3, 1, 1, 1, 1, 1, 0, 1]
+    assert list(align.x2y.dataXd) == [0, 1, 2, 3, 4, 4, 5, 5, 6]
+    assert list(align.y2x.lengths) == [1, 1, 1, 1, 2, 2, 1]
+    # note: with pytokenizations would be: [0, 0, 0, 1, 2, 3, 4, 5, 6]
+    assert list(align.y2x.dataXd) == [0, 0, 0, 1, 2, 3, 4, 5, 7]
+
+    # same trailing whitespace, different tokenization
+    other_tokens = ["i listened to", "obama", "'", "s", "podcasts", ".", " ", " "]
+    spacy_tokens = ["i", "listened", "to", "obama", "'s", "podcasts.", "  "]
+    align = Alignment.from_strings(other_tokens, spacy_tokens)
+    assert list(align.x2y.lengths) == [3, 1, 1, 1, 1, 1, 1, 1]
+    assert list(align.x2y.dataXd) == [0, 1, 2, 3, 4, 4, 5, 5, 6, 6]
+    assert list(align.y2x.lengths) == [1, 1, 1, 1, 2, 2, 2]
+    assert list(align.y2x.dataXd) == [0, 0, 0, 1, 2, 3, 4, 5, 6, 7]
+
+    # differing internal whitespace is not allowed
+    other_tokens = ["a", " ", "b", "c"]
+    spacy_tokens = ["a", "b", " ", "c"]
+    with pytest.raises(ValueError):
+        align = Alignment.from_strings(other_tokens, spacy_tokens)
+
+    # differing leading/trailing whitespace tokens that can't be aligned on
+    # token boundaries are not allowed
+    other_tokens = [" ", "a"]
+    spacy_tokens = ["  ", "a"]
+    with pytest.raises(ValueError):
+        align = Alignment.from_strings(other_tokens, spacy_tokens)
+    other_tokens = ["a", " "]
+    spacy_tokens = ["a", "  "]
+    with pytest.raises(ValueError):
+        align = Alignment.from_strings(other_tokens, spacy_tokens)
 
 
 def test_alignment_different_texts():
