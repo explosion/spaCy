@@ -44,9 +44,10 @@ def get_alignments(A: List[str], B: List[str]) -> Tuple[List[List[int]], List[Li
       * b2a (List[List[int]]): The same as `a2b`, but mapping the other
         direction.
     """
-    # Remove whitespace from all non-whitespace tokens
-    tokens_a = [x.replace(" ", "") if not x.isspace() else x for x in A]
-    tokens_b = [x.replace(" ", "") if not x.isspace() else x for x in B]
+    # Remove whitespace from all non-whitespace tokens, replace all whitespace
+    # tokens with a single space
+    tokens_a = [x.replace(" ", "") if not x.isspace() else " " for x in A]
+    tokens_b = [x.replace(" ", "") if not x.isspace() else " " for x in B]
     # Handle leading whitespace: replace whitespace tokens with empty strings
     # unless the whitespace is in both A and B
     str_a = "".join(tokens_a)

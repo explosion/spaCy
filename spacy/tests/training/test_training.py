@@ -716,10 +716,10 @@ def test_alignment_spaces(en_vocab):
     other_tokens = [" ", " ", "i listened to", "obama", "'", "s", "podcasts", "."]
     spacy_tokens = ["  ", "i", "listened", "to", "obama", "'s", "podcasts."]
     align = Alignment.from_strings(other_tokens, spacy_tokens)
-    assert list(align.x2y.lengths) == [1, 1, 3, 1, 1, 1, 1, 1]
-    assert list(align.x2y.dataXd) == [0, 0, 1, 2, 3, 4, 5, 5, 6, 6]
-    assert list(align.y2x.lengths) == [2, 1, 1, 1, 1, 2, 2]
-    assert list(align.y2x.dataXd) == [0, 1, 2, 2, 2, 3, 4, 5, 6, 7]
+    assert list(align.x2y.lengths) == [1, 0, 3, 1, 1, 1, 1, 1]
+    assert list(align.x2y.dataXd) == [0, 1, 2, 3, 4, 5, 5, 6, 6]
+    assert list(align.y2x.lengths) == [1, 1, 1, 1, 1, 2, 2]
+    assert list(align.y2x.dataXd) == [0, 2, 2, 2, 3, 4, 5, 6, 7]
 
     # only one with trailing whitespace
     other_tokens = ["i listened to", "obama", "'", "s", "podcasts", ".", " "]
@@ -743,10 +743,10 @@ def test_alignment_spaces(en_vocab):
     other_tokens = ["i listened to", "obama", "'", "s", "podcasts", ".", " ", " "]
     spacy_tokens = ["i", "listened", "to", "obama", "'s", "podcasts.", "  "]
     align = Alignment.from_strings(other_tokens, spacy_tokens)
-    assert list(align.x2y.lengths) == [3, 1, 1, 1, 1, 1, 1, 1]
-    assert list(align.x2y.dataXd) == [0, 1, 2, 3, 4, 4, 5, 5, 6, 6]
-    assert list(align.y2x.lengths) == [1, 1, 1, 1, 2, 2, 2]
-    assert list(align.y2x.dataXd) == [0, 0, 0, 1, 2, 3, 4, 5, 6, 7]
+    assert list(align.x2y.lengths) == [3, 1, 1, 1, 1, 1, 1, 0]
+    assert list(align.x2y.dataXd) == [0, 1, 2, 3, 4, 4, 5, 5, 6]
+    assert list(align.y2x.lengths) == [1, 1, 1, 1, 2, 2, 1]
+    assert list(align.y2x.dataXd) == [0, 0, 0, 1, 2, 3, 4, 5, 6]
 
     # differing internal whitespace is not allowed
     other_tokens = ["a", " ", "b", "c"]
@@ -754,16 +754,14 @@ def test_alignment_spaces(en_vocab):
     with pytest.raises(ValueError):
         align = Alignment.from_strings(other_tokens, spacy_tokens)
 
-    # differing leading/trailing whitespace tokens that can't be aligned on
-    # token boundaries are not allowed
+    # whitespace tokens are normalized to a single space
     other_tokens = [" ", "a"]
     spacy_tokens = ["  ", "a"]
-    with pytest.raises(ValueError):
-        align = Alignment.from_strings(other_tokens, spacy_tokens)
+    align = Alignment.from_strings(other_tokens, spacy_tokens)
+
     other_tokens = ["a", " "]
     spacy_tokens = ["a", "  "]
-    with pytest.raises(ValueError):
-        align = Alignment.from_strings(other_tokens, spacy_tokens)
+    align = Alignment.from_strings(other_tokens, spacy_tokens)
 
 
 def test_alignment_different_texts():
