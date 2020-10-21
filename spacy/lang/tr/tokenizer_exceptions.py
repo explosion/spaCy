@@ -1,6 +1,10 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+import re
+
+from ..punctuation import ALPHA_LOWER, ALPHA
+from ..tokenizer_exceptions import URL_PATTERN
 from ...symbols import ORTH, LEMMA, NORM
 
 _exc = {}
@@ -162,4 +166,22 @@ for abbr in _abbr_exc:
     _exc[abbr[ORTH]] = [abbr]
 
 
+
+_ord_num = r"(\d+\.)"
+_date = r"(((\d{1,2}[./-]){2})?(\d{4})|(\d{1,2}[./]\d{1,2}(\.)?))"
+_dash_num = r"(([{al}\d]+/\d+)|(\d+/[{al}]))".format(al=ALPHA)
+
+
+#_ord_num_or_date = r"([A-Z0-9]+[./-])*(\d+\.?)"
+_num = r"[+-]?\d+([,.]\d+)*"
+_roman_num =  "M{0,3}(?:C[MD]|D?C{0,3})(?:X[CL]|L?X{0,3})(?:I[XV]|V?I{0,3})"
+_roman_ord = r"({rn})\.".format(rn=_roman_num)
+_inflections = r"'[{al}]+".format(al=ALPHA_LOWER)
+_time_exp = r"\d+(:\d+)*"
+
+_abbrev_inflected = r"[{a}]+\.'[{al}]+".format(a=ALPHA, al=ALPHA_LOWER)
+
+_nums = r"(({d})|({dn})|({te})|({on})|({n})|({ro})|({rn}))({inf})?".format(d=_date, dn=_dash_num, te=_time_exp, on=_ord_num, n=_num, ro=_roman_ord, rn=_roman_num, inf=_inflections)
+
 TOKENIZER_EXCEPTIONS = _exc
+TOKEN_MATCH = re.compile(r"^({u})|({abbr})|({n})$".format(u=URL_PATTERN, n=_nums, abbr=_abbrev_inflected)).match
