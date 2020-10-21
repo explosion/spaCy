@@ -1,6 +1,6 @@
 from typing import List, Tuple
 import numpy
-from itertools import chain
+from itertools import chain, islice
 from thinc.types import Ragged
 from dataclasses import dataclass
 
@@ -44,46 +44,33 @@ def get_alignments(A: List[str], B: List[str]) -> Tuple[List[List[int]], List[Li
       * b2a (List[List[int]]): The same as `a2b`, but mapping the other
         direction.
     """
+    if len(A) == 0 or len(B) == 0:
+        if len(A) == 0 and len(B) == 0:
+            return [], []
+        else:
+            raise ValueError(Errors.E949)
     # Remove whitespace from all non-whitespace tokens, replace all whitespace
     # tokens with a single space
     tokens_a = [x.replace(" ", "") if not x.isspace() else " " for x in A]
     tokens_b = [x.replace(" ", "") if not x.isspace() else " " for x in B]
     # Handle leading whitespace: replace whitespace tokens with empty strings
     # unless the whitespace is in both A and B
-    str_a = "".join(tokens_a)
-    str_b = "".join(tokens_b)
-    _adjust_whitespace(tokens_a, str_a, str_b)
-    _adjust_whitespace(tokens_b, str_b, str_a)
+    if tokens_a[0].isspace() or tokens_b[0].isspace():
+        tokens_a, tokens_b = _adjust_leading_whitespace(tokens_a, tokens_b)
     # Handle trailing whitespace: temporarily split off trailing whitespace
     # tokens and align them in the same way as leading whitespace
-    trailing_ws_start_a = _get_trailing_ws_start(tokens_a)
-    trailing_ws_start_b = _get_trailing_ws_start(tokens_b)
-    trailing_ws_a = tokens_a[trailing_ws_start_a:]
-    trailing_ws_b = tokens_b[trailing_ws_start_b:]
-    str_trailing_ws_a = "".join(trailing_ws_a)
-    str_trailing_ws_b = "".join(trailing_ws_b)
-    _adjust_whitespace(trailing_ws_a, str_trailing_ws_a, str_trailing_ws_b)
-    _adjust_whitespace(trailing_ws_b, str_trailing_ws_b, str_trailing_ws_a)
-    tokens_a = tokens_a[:trailing_ws_start_a] + trailing_ws_a
-    tokens_b = tokens_b[:trailing_ws_start_b] + trailing_ws_b
+    if tokens_a[-1].isspace() or tokens_b[-1].isspace():
+        tokens_a, tokens_b = _adjust_trailing_whitespace(tokens_a, tokens_b)
     # Check that the strings align, allowing only differences in capitalization
     if "".join(tokens_a).lower() != "".join(tokens_b).lower():
         raise ValueError(Errors.E949)
-    # Store the set of aligned token indices per token
-    a2b = [set() for _ in range(len(tokens_a))]
-    b2a = [set() for _ in range(len(tokens_b))]
     # Create iterators for token indices per character position
-    token_by_char_a = chain(*[[i] * len(x) for i, x in enumerate(tokens_a)])
-    token_by_char_b = chain(*[[i] * len(x) for i, x in enumerate(tokens_b)])
     # Map the token indices per character range for each token
-    for i, token_a in enumerate(tokens_a):
-        for _ in range(len(token_a)):
-            a2b[i].add(next(token_by_char_b))
-    for i, token_b in enumerate(tokens_b):
-        for _ in range(len(token_b)):
-            b2a[i].add(next(token_by_char_a))
-    # Convert the token index sets to sorted lists
-    return [sorted(x) for x in a2b], [sorted(x) for x in b2a]
+    token_by_char_a = chain(*((i,) * len(x) for i, x in enumerate(tokens_a)))
+    token_by_char_b = chain(*((i,) * len(x) for i, x in enumerate(tokens_b)))
+    a2b = [sorted(set(islice(token_by_char_b, len(t)))) for t in tokens_a]
+    b2a = [sorted(set(islice(token_by_char_a, len(t)))) for t in tokens_b]
+    return a2b, b2a
 
 
 def _adjust_whitespace(tokens_a: List[str], str_a: str, str_b: str) -> None:
@@ -97,6 +84,28 @@ def _adjust_whitespace(tokens_a: List[str], str_a: str, str_b: str) -> None:
                 tokens_a[i] = ''
         else:
             return
+
+
+def _adjust_leading_whitespace(tokens_a: List[str], tokens_b: List[str]) -> Tuple[List[str], List[str]]:
+    str_a = "".join(tokens_a)
+    str_b = "".join(tokens_b)
+    _adjust_whitespace(tokens_a, str_a, str_b)
+    _adjust_whitespace(tokens_b, str_b, str_a)
+    return tokens_a, tokens_b
+
+
+def _adjust_trailing_whitespace(tokens_a: List[str], tokens_b: List[str]) -> Tuple[List[str], List[str]]:
+    trailing_ws_start_a = _get_trailing_ws_start(tokens_a)
+    trailing_ws_start_b = _get_trailing_ws_start(tokens_b)
+    trailing_ws_a = tokens_a[trailing_ws_start_a:]
+    trailing_ws_b = tokens_b[trailing_ws_start_b:]
+    str_trailing_ws_a = "".join(trailing_ws_a)
+    str_trailing_ws_b = "".join(trailing_ws_b)
+    _adjust_whitespace(trailing_ws_a, str_trailing_ws_a, str_trailing_ws_b)
+    _adjust_whitespace(trailing_ws_b, str_trailing_ws_b, str_trailing_ws_a)
+    tokens_a = tokens_a[:trailing_ws_start_a] + trailing_ws_a
+    tokens_b = tokens_b[:trailing_ws_start_b] + trailing_ws_b
+    return tokens_a, tokens_b
 
 
 def _get_trailing_ws_start(tokens: List[str]) -> int:
