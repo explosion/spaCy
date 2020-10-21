@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 import numpy
 from itertools import chain
 from thinc.types import Ragged
@@ -32,7 +32,7 @@ def _make_ragged(indices):
     return Ragged(numpy.array(flat, dtype="i"), lengths)
 
 
-def get_alignments(A: List[str], B: List[str]) -> (List[List[int]], List[List[int]]):
+def get_alignments(A: List[str], B: List[str]) -> Tuple[List[List[int]], List[List[int]]]:
     """Calculate alignment tables between two tokenizations.
 
     tokens_a (List[str]): The first tokenization.
@@ -47,59 +47,60 @@ def get_alignments(A: List[str], B: List[str]) -> (List[List[int]], List[List[in
     # Remove whitespace from all non-whitespace tokens
     tokens_a = [x.replace(" ", "") if not x.isspace() else x for x in A]
     tokens_b = [x.replace(" ", "") if not x.isspace() else x for x in B]
-    # Remove leading/trailing whitespace tokens unless the whitespace is in
-    # both A and B
+    # Handle leading whitespace: replace whitespace tokens with empty strings
+    # unless the whitespace is in both A and B
     str_a = "".join(tokens_a)
     str_b = "".join(tokens_b)
-    # Handle leading whitespace
-    for i in range(len(tokens_a)):
-        if "".join(tokens_a[:i+1]).isspace():
-            lead_len = sum([len(x) for x in tokens_a[:i+1]])
-            if str_a[:lead_len] != str_b[:lead_len]:
-                tokens_a[i] = ''
-        else:
-            break
-    for i in range(len(tokens_b)):
-        if "".join(tokens_b[:i+1]).isspace():
-            lead_len = sum([len(x) for x in tokens_b[:i+1]])
-            if str_a[:lead_len] != str_b[:lead_len]:
-                tokens_b[i] = ''
-        else:
-            break
-    # Handle trailing whitespace
-    # (Note that iterating through the tokens in reverse as below leads to a
-    # slightly different alignment than with pytokenizations for the trailing
-    # whitespace characters.)
-    for i in range(len(tokens_a)-1, -1, -1):
-        if "".join(tokens_a[i:]).isspace():
-            trail_len = sum([len(x) for x in tokens_a[i:]])
-            if str_a[-trail_len:] != str_b[-trail_len:]:
-                tokens_a[i] = ''
-        else:
-            break
-    for i in range(len(tokens_b)-1, -1, -1):
-        if "".join(tokens_b[i:]).isspace():
-            trail_len = sum([len(x) for x in tokens_b[i:]])
-            if str_a[-trail_len:] != str_b[-trail_len:]:
-                tokens_b[i] = ''
-        else:
-            break
-    # Check that the tokens align, allowing only differences in capitalization
+    _adjust_whitespace(tokens_a, str_a, str_b)
+    _adjust_whitespace(tokens_b, str_b, str_a)
+    # Handle trailing whitespace: temporarily split off trailing whitespace
+    # tokens and align them in the same way as leading whitespace
+    trailing_ws_start_a = _get_trailing_ws_start(tokens_a)
+    trailing_ws_start_b = _get_trailing_ws_start(tokens_b)
+    trailing_ws_a = tokens_a[trailing_ws_start_a:]
+    trailing_ws_b = tokens_b[trailing_ws_start_b:]
+    str_trailing_ws_a = "".join(trailing_ws_a)
+    str_trailing_ws_b = "".join(trailing_ws_b)
+    _adjust_whitespace(trailing_ws_a, str_trailing_ws_a, str_trailing_ws_b)
+    _adjust_whitespace(trailing_ws_b, str_trailing_ws_b, str_trailing_ws_a)
+    tokens_a = tokens_a[:trailing_ws_start_a] + trailing_ws_a
+    tokens_b = tokens_b[:trailing_ws_start_b] + trailing_ws_b
+    # Check that the strings align, allowing only differences in capitalization
     if "".join(tokens_a).lower() != "".join(tokens_b).lower():
         raise ValueError(Errors.E949)
-    a2b = [set() for i in range(len(tokens_a))]
-    b2a = [set() for i in range(len(tokens_b))]
+    # Store the set of aligned token indices per token
+    a2b = [set() for _ in range(len(tokens_a))]
+    b2a = [set() for _ in range(len(tokens_b))]
     # Create iterators for token indices per character position
-    a_i = chain(*[[i] * len(x) for i, x in enumerate(tokens_a)])
-    b_i = chain(*[[i] * len(x) for i, x in enumerate(tokens_b)])
+    token_by_char_a = chain(*[[i] * len(x) for i, x in enumerate(tokens_a)])
+    token_by_char_b = chain(*[[i] * len(x) for i, x in enumerate(tokens_b)])
     # Map the token indices per character range for each token
     for i, token_a in enumerate(tokens_a):
-        for j in range(len(token_a)):
-            a2b[i].add(next(b_i))
+        for _ in range(len(token_a)):
+            a2b[i].add(next(token_by_char_b))
     for i, token_b in enumerate(tokens_b):
-        for j in range(len(token_b)):
-            b2a[i].add(next(a_i))
+        for _ in range(len(token_b)):
+            b2a[i].add(next(token_by_char_a))
     # Convert the token index sets to sorted lists
-    a2b = [sorted(x) for x in a2b]
-    b2a = [sorted(x) for x in b2a]
-    return a2b, b2a
+    return [sorted(x) for x in a2b], [sorted(x) for x in b2a]
+
+
+def _adjust_whitespace(tokens_a: List[str], str_a: str, str_b: str) -> None:
+    """Replace whitespace tokens with empty strings at the beginning of the
+    token list if the corresponding whitespace is not present in both strings.
+    """
+    for i in range(len(tokens_a)):
+        if "".join(tokens_a[:i+1]).isspace():
+            lead_len = sum(len(x) for x in tokens_a[:i+1])
+            if str_a[:lead_len] != str_b[:lead_len]:
+                tokens_a[i] = ''
+        else:
+            return
+
+
+def _get_trailing_ws_start(tokens: List[str]) -> int:
+    """Return the index of the first trailing whitespace token."""
+    trailing_ws_start = len(tokens)
+    while tokens[trailing_ws_start - 1].isspace():
+        trailing_ws_start -= 1
+    return trailing_ws_start

@@ -734,12 +734,10 @@ def test_alignment_spaces(en_vocab):
     other_tokens = ["i listened to", "obama", "'", "s", "podcasts", ".", " ", " "]
     spacy_tokens = ["i", "listened", "to", "obama", "'s", "podcasts.", " "]
     align = Alignment.from_strings(other_tokens, spacy_tokens)
-    # note: with pytokenizations would be: [3, 1, 1, 1, 1, 1, 1, 0]
-    assert list(align.x2y.lengths) == [3, 1, 1, 1, 1, 1, 0, 1]
+    assert list(align.x2y.lengths) == [3, 1, 1, 1, 1, 1, 1, 0]
     assert list(align.x2y.dataXd) == [0, 1, 2, 3, 4, 4, 5, 5, 6]
     assert list(align.y2x.lengths) == [1, 1, 1, 1, 2, 2, 1]
-    # note: with pytokenizations would be: [0, 0, 0, 1, 2, 3, 4, 5, 6]
-    assert list(align.y2x.dataXd) == [0, 0, 0, 1, 2, 3, 4, 5, 7]
+    assert list(align.y2x.dataXd) == [0, 0, 0, 1, 2, 3, 4, 5, 6]
 
     # same trailing whitespace, different tokenization
     other_tokens = ["i listened to", "obama", "'", "s", "podcasts", ".", " ", " "]
