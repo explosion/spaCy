@@ -101,6 +101,6 @@ def _adjust_whitespace(tokens_a: List[str], str_a: str, str_b: str) -> None:
 def _get_trailing_ws_start(tokens: List[str]) -> int:
     """Return the index of the first trailing whitespace token."""
     trailing_ws_start = len(tokens)
-    while tokens[trailing_ws_start - 1].isspace():
+    while trailing_ws_start >= 0 and tokens[trailing_ws_start - 1].isspace():
         trailing_ws_start -= 1
     return trailing_ws_start
