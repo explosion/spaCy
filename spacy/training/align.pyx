@@ -67,17 +67,7 @@ def get_alignments(A: List[str], B: List[str]) -> Tuple[List[List[int]], List[Li
         prev_token_idx_a = token_idx_a
         prev_token_idx_b = token_idx_b
     # Process unaligned trailing whitespace
-    while char_idx_a < len_str_a:
-        token_idx_a = char_to_token_a[char_idx_a]
-        if prev_token_idx_a != token_idx_a:
-            a2b.append(set())
-        prev_token_idx_a = token_idx_a
-        char_idx_a += 1
-    while char_idx_b < len_str_b:
-        token_idx_b = char_to_token_b[char_idx_b]
-        if prev_token_idx_b != token_idx_b:
-            b2a.append(set())
-        prev_token_idx_b = token_idx_b
-        char_idx_b += 1
+    a2b.extend([set()] * len(set(char_to_token_a[char_idx_a:])))
+    b2a.extend([set()] * len(set(char_to_token_b[char_idx_b:])))
     # Return values as sorted lists per token position
     return [sorted(x) for x in a2b], [sorted(x) for x in b2a]
