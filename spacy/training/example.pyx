@@ -7,7 +7,7 @@ from ..tokens.doc cimport Doc
 from ..tokens.span cimport Span
 from ..tokens.span import Span
 from ..attrs import IDS
-from .align import Alignment
+from .alignment import Alignment
 from .iob_utils import biluo_to_iob, offsets_to_biluo_tags, doc_to_biluo_tags
 from .iob_utils import biluo_tags_to_spans
 from ..errors import Errors, Warnings
