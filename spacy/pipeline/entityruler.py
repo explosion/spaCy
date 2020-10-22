@@ -340,7 +340,7 @@ class EntityRuler(Pipe):
 
     def score(self, examples, **kwargs):
         validate_examples(examples, "EntityRuler.score")
-        return Scorer.score_spans(examples, "ents", **kwargs)
+        return get_ner_prf(examples)
 
     def from_bytes(
         self, patterns_bytes: bytes, *, exclude: Iterable[str] = SimpleFrozenList()

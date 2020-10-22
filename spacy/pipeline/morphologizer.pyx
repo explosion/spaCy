@@ -251,10 +251,13 @@ class Morphologizer(Tagger):
 
         DOCS: https://nightly.spacy.io/api/morphologizer#score
         """
+        def morph_key_getter(token, attr):
+            return getattr(token, attr).key
+
         validate_examples(examples, "Morphologizer.score")
         results = {}
         results.update(Scorer.score_token_attr(examples, "pos", **kwargs))
-        results.update(Scorer.score_token_attr(examples, "morph", **kwargs))
+        results.update(Scorer.score_token_attr(examples, "morph", getter=morph_key_getter, **kwargs))
         results.update(Scorer.score_token_attr_per_feat(examples,
-            "morph", **kwargs))
+            "morph", getter=morph_key_getter, **kwargs))
         return results

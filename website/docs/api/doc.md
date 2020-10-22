@@ -683,6 +683,7 @@ The L2 norm of the document's vector representation.
 | `user_hooks`                         | A dictionary that allows customization of the `Doc`'s properties. ~~Dict[str, Callable]~~                                                   |
 | `user_token_hooks`                   | A dictionary that allows customization of properties of `Token` children. ~~Dict[str, Callable]~~                                           |
 | `user_span_hooks`                    | A dictionary that allows customization of properties of `Span` children. ~~Dict[str, Callable]~~                                            |
+| `has_unknown_spaces`                 | Whether the document was constructed without known spacing between tokens (typically when created from gold tokenization). ~~bool~~         |
 | `_`                                  | User space for adding custom [attribute extensions](/usage/processing-pipelines#custom-components-attributes). ~~Underscore~~               |
 
 ## Serialization fields {#serialization-fields}

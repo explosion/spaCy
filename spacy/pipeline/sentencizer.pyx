@@ -155,8 +155,11 @@ class Sentencizer(Pipe):
 
         DOCS: https://nightly.spacy.io/api/sentencizer#score
         """
+        def has_sents(doc):
+            return doc.has_annotation("SENT_START")
+
         validate_examples(examples, "Sentencizer.score")
-        results = Scorer.score_spans(examples, "sents", **kwargs)
+        results = Scorer.score_spans(examples, "sents", has_annotation=has_sents, **kwargs)
         del results["sents_per_type"]
         return results
 
