@@ -10,7 +10,7 @@ from ..errors import Errors
 from ..util import ensure_path, to_disk, from_disk, SimpleFrozenList
 from ..tokens import Doc, Span
 from ..matcher import Matcher, PhraseMatcher
-from ..scorer import Scorer
+from ..scorer import get_ner_prf
 from ..training import validate_examples
 
 
