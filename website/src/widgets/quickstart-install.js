@@ -18,7 +18,7 @@ const CUDA = {
     '10.2': 'cuda102',
     '11.0': 'cuda110',
 }
-const LANG_EXTRAS = ['zh', 'ja'] // only for languages with models
+const LANG_EXTRAS = ['ja'] // only for languages with models
 const DATA = [
     {
         id: 'os',
