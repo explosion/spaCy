@@ -7,7 +7,7 @@ import { repo } from '../components/util'
 const DEFAULT_MODELS = ['en']
 const DEFAULT_OPT = 'efficiency'
 const DEFAULT_HARDWARE = 'cpu'
-const DEFAULT_CUDA = 'cuda100'
+const DEFAULT_CUDA = 'cuda102'
 const CUDA = {
     '8.0': 'cuda80',
     '9.0': 'cuda90',
@@ -16,6 +16,7 @@ const CUDA = {
     '10.0': 'cuda100',
     '10.1': 'cuda101',
     '10.2': 'cuda102',
+    '11.0': 'cuda110',
 }
 const LANG_EXTRAS = ['zh', 'ja'] // only for languages with models
 const DATA = [
@@ -184,11 +185,14 @@ const QuickstartInstall = ({ id, title }) => {
                             <QS package="source">pip install -e '.[{pipExtras}]'</QS>
                         )}
 
+                        <QS config="train" package="conda" comment prompt={false}>
+			    # packages only available via pip
+			</QS>
                         <QS config="train" package="conda">
-                            conda install -c conda-forge spacy-transformers
+                            pip install spacy-transformers
                         </QS>
                         <QS config="train" package="conda">
-                            conda install -c conda-forge spacy-lookups-data
+                            pip install spacy-lookups-data
                         </QS>
 
                         {models.map(({ code, models: modelOptions }) => {
