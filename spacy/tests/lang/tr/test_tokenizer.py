@@ -19,6 +19,15 @@ ABBREV_TESTS = [
 
 
 
+URL_TESTS = [
+        ("Bizler de www.duygu.com.tr adında bir websitesi kurduk.", ["Bizler", "de", "www.duygu.com.tr", "adında", "bir", "websitesi", "kurduk", "."]),
+        ("Bizler de https://www.duygu.com.tr adında bir websitesi kurduk.", ["Bizler", "de", "https://www.duygu.com.tr", "adında", "bir", "websitesi", "kurduk", "."]),
+        ("Bizler de www.duygu.com.tr'dan satın aldık.", ["Bizler", "de", "www.duygu.com.tr'dan", "satın", "aldık", "."]),
+        ("Bizler de https://www.duygu.com.tr'dan satın aldık.", ["Bizler", "de", "https://www.duygu.com.tr'dan", "satın", "aldık", "."]),
+]
+
+
+
 NUMBER_TESTS = [
         ("Rakamla 6 yazılıydı.", ["Rakamla", "6", "yazılıydı", "."]),
         ("Hava -4 dereceydi.", ["Hava", "-4", "dereceydi", "."]),
@@ -132,7 +141,8 @@ GENERAL_TESTS = [
 ]
 
 
-TESTS = (ABBREV_TESTS + NUMBER_TESTS + PUNCT_TESTS + GENERAL_TESTS)
+
+TESTS = (ABBREV_TESTS + URL_TESTS +  NUMBER_TESTS + PUNCT_TESTS + GENERAL_TESTS)
 
 
 
