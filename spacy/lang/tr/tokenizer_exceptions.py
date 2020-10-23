@@ -181,4 +181,4 @@ _abbrev_inflected = r"[{a}]+\.'[{al}]+".format(a=ALPHA, al=ALPHA_LOWER)
 _nums = r"(({d})|({dn})|({te})|({on})|({n})|({ro})|({rn}))({inf})?".format(d=_date, dn=_dash_num, te=_time_exp, on=_ord_num, n=_num, ro=_roman_ord, rn=_roman_num, inf=_inflections)
 
 TOKENIZER_EXCEPTIONS = _exc
-TOKEN_MATCH = re.compile(r"^({u})|({abbr})|({n})$".format(u=URL_PATTERN, n=_nums, abbr=_abbrev_inflected)).match
+TOKEN_MATCH = re.compile(r"^({abbr})|({n})$".format(n=_nums, abbr=_abbrev_inflected)).match
