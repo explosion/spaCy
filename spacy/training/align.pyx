@@ -6,13 +6,9 @@ from ..errors import Errors
 
 
 def get_alignments(A: List[str], B: List[str]) -> Tuple[List[List[int]], List[List[int]]]:
-    if len(A) == 0 or len(B) == 0:
-        if len(A) == 0 and len(B) == 0:
-            # Empty docs have an empty alignment
-            return [], []
-        else:
-            # Unable to align an empty doc with a non-empty doc
-            raise ValueError(Errors.E949.format(x=str(A[:10]), y=str(B[:10])))
+    # Empty docs have an empty alignment
+    if len(A) == 0 and len(B) == 0:
+        return [], []
     # Create character-to-token mappings
     char_to_token_a = tuple(chain(*((i,) * len(x) for i, x in enumerate(A))))
     char_to_token_b = tuple(chain(*((i,) * len(x) for i, x in enumerate(B))))
@@ -20,7 +16,7 @@ def get_alignments(A: List[str], B: List[str]) -> Tuple[List[List[int]], List[Li
     str_b = "".join(B).lower()
     cdef int len_str_a = len(str_a)
     cdef int len_str_b = len(str_b)
-    # Confirm that the two texts only differ in whitespace and capitalization
+    # Check that the two texts only differ in whitespace and capitalization
     if re.sub(r"\s+", "", str_a) != re.sub(r"\s+", "", str_b) or \
             len_str_a != len(char_to_token_a) or \
             len_str_b != len(char_to_token_b):
