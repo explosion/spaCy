@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 import re
 
 from ..punctuation import ALPHA_LOWER, ALPHA
-from ..tokenizer_exceptions import URL_PATTERN
 from ...symbols import ORTH, LEMMA, NORM
 
 _exc = {}
