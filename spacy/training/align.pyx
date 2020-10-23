@@ -6,9 +6,6 @@ from ..errors import Errors
 
 
 def get_alignments(A: List[str], B: List[str]) -> Tuple[List[List[int]], List[List[int]]]:
-    # Empty docs have an empty alignment
-    if len(A) == 0 and len(B) == 0:
-        return [], []
     # Create character-to-token mappings
     char_to_token_a = tuple(chain(*((i,) * len(x) for i, x in enumerate(A))))
     char_to_token_b = tuple(chain(*((i,) * len(x) for i, x in enumerate(B))))
