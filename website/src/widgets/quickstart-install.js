@@ -187,8 +187,8 @@ const QuickstartInstall = ({ id, title }) => {
                         )}
 
                         <QS config="train" package="conda" comment prompt={false}>
-			    # packages only available via pip
-			</QS>
+                            # packages only available via pip
+                        </QS>
                         <QS config="train" package="conda">
                             pip install spacy-transformers
                         </QS>
