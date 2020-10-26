@@ -888,9 +888,9 @@ assigns it a name and lets you create the component with
 > max_length = 20
 > 
 > [training.score_weights]
-> rel_micro_p: 0.0
-> rel_micro_r: 0.0
-> rel_micro_f: 1.0
+> rel_micro_p = 0.0
+> rel_micro_r = 0.0
+> rel_micro_f = 1.0
 > ```
 
 ```python
