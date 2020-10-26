@@ -478,7 +478,7 @@ class Scorer:
         negative_labels (Iterable[str]): The string values that refer to no annotation (e.g. "NIL")
         RETURNS (Dict[str, Any]): A dictionary containing the scores.
 
-        DOCS (TODO): https://nightly.spacy.io/api/scorer#score_links
+        DOCS: https://nightly.spacy.io/api/scorer#score_links
         """
         f_per_type = {}
         for example in examples:
