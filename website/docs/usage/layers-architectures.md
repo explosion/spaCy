@@ -843,6 +843,27 @@ def __call__(self, Doc doc):
     return doc
 ```
 
+There is one more optional method to implement: [`score`](/api/pipe#score) 
+calculates the performance of your component on a set of examples, and 
+returns the results as a dictionary:
+
+```python
+### The score method
+def score(self, examples: Iterable[Example]) -> Dict[str, Any]:
+    prf = PRFScore()
+    for example in examples:
+        ...
+
+    return {
+        f"rel_micro_p": prf.precision,
+        f"rel_micro_r": prf.recall,
+        f"rel_micro_f": prf.fscore,
+        }
+```
+
+This is particularly useful to see the scores on the development corpus 
+when training the component with [`spacy train`](/api/cli#training).
+
 Once our `TrainablePipe` subclass is fully implemented, we can
 [register](/usage/processing-pipelines#custom-components-factories) the
 component with the [`@Language.factory`](/api/language#factory) decorator. This
@@ -872,6 +893,37 @@ assigns it a name and lets you create the component with
 from spacy.language import Language
 
 @Language.factory("relation_extractor")
+def make_relation_extractor(nlp, name, model):
+    return RelationExtractor(nlp.vocab, model, name)
+```
+
+You can extend the decorator to include information such as the type of 
+annotations that are required for this component to run, the type of annotations 
+it produces, and the scores that can be calculated:
+
+> #### config.cfg (excerpt)
+>
+> ```ini
+> [training.score_weights]
+> rel_micro_p: 0.0
+> rel_micro_r: 0.0
+> rel_micro_f: 1.0
+> ```
+
+```python
+### Factory annotations
+from spacy.language import Language
+
+@Language.factory(
+    "relation_extractor",
+    requires=["doc.ents", "token.ent_iob", "token.ent_type"],
+    assigns=["doc._.rel"],
+    default_score_weights={
+        "rel_micro_p": None,
+        "rel_micro_r": None,
+        "rel_micro_f": None,
+    },
+)
 def make_relation_extractor(nlp, name, model):
     return RelationExtractor(nlp.vocab, model, name)
 ```
