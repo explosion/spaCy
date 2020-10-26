@@ -855,10 +855,10 @@ def score(self, examples: Iterable[Example]) -> Dict[str, Any]:
         ...
 
     return {
-        f"rel_micro_p": prf.precision,
-        f"rel_micro_r": prf.recall,
-        f"rel_micro_f": prf.fscore,
-        }
+        "rel_micro_p": prf.precision,
+        "rel_micro_r": prf.recall,
+        "rel_micro_f": prf.fscore,
+    }
 ```
 
 This is particularly useful to see the scores on the development corpus 
@@ -886,6 +886,11 @@ assigns it a name and lets you create the component with
 > [components.relation_extractor.model.get_candidates]
 > @misc = "rel_cand_generator.v1"
 > max_length = 20
+> 
+> [training.score_weights]
+> rel_micro_p: 0.0
+> rel_micro_r: 0.0
+> rel_micro_f: 1.0
 > ```
 
 ```python
@@ -904,14 +909,11 @@ it produces, and the scores that can be calculated:
 > #### config.cfg (excerpt)
 >
 > ```ini
-> [training.score_weights]
-> rel_micro_p: 0.0
-> rel_micro_r: 0.0
-> rel_micro_f: 1.0
+
 > ```
 
 ```python
-### Factory annotations
+### Factory annotations {highlight="5-11"}
 from spacy.language import Language
 
 @Language.factory(
