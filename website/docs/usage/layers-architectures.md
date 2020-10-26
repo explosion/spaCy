@@ -906,12 +906,6 @@ You can extend the decorator to include information such as the type of
 annotations that are required for this component to run, the type of annotations 
 it produces, and the scores that can be calculated:
 
-> #### config.cfg (excerpt)
->
-> ```ini
-
-> ```
-
 ```python
 ### Factory annotations {highlight="5-11"}
 from spacy.language import Language
