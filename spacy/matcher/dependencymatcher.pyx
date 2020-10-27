@@ -286,10 +286,10 @@ cdef class DependencyMatcher:
                 self.recurse(_tree, id_to_position, _node_operator_map, 0, [], matched_trees)
                 for matched_tree in matched_trees:
                     matched_key_trees.append((key, matched_tree))
-            for i, (match_id, nodes) in enumerate(matched_key_trees):
-                on_match = self._callbacks.get(match_id)
-                if on_match is not None:
-                    on_match(self, doc, i, matched_key_trees)
+        for i, (match_id, nodes) in enumerate(matched_key_trees):
+            on_match = self._callbacks.get(match_id)
+            if on_match is not None:
+                on_match(self, doc, i, matched_key_trees)
         return matched_key_trees
 
     def recurse(self, tree, id_to_position, _node_operator_map, int patternLength, visited_nodes, matched_trees):
