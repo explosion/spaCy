@@ -235,6 +235,11 @@
             "has_examples": true
         },
         {
+            "code": "ne",
+            "name": "Nepali",
+            "has_examples": true
+        },
+        {
             "code": "xx",
             "name": "Multi-language",
             "models": ["xx_ent_wiki_sm"],
