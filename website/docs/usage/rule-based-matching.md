@@ -1142,7 +1142,7 @@ pattern = [
     {
         "LEFT_ID": "anchor_founded",
         "REL_OP": ">",
-        "RIGHT_ID": "subject",
+        "RIGHT_ID": "founded_subject",
         "RIGHT_ATTRS": {"DEP": "nsubj"},
     }
     # ...
@@ -1212,7 +1212,7 @@ pattern = [
     {
         "LEFT_ID": "anchor_founded",
         "REL_OP": ">",
-        "RIGHT_ID": "subject",
+        "RIGHT_ID": "founded_subject",
         "RIGHT_ATTRS": {"DEP": "nsubj"},
     },
     {
