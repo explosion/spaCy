@@ -2536,7 +2536,7 @@
               "import cov_bsv",
               "",
               "nlp = cov_bsv.load()",
-              "text = 'Pt tested for COVID-19. His wife was recently diagnosed with novel coronavirus. SARS-COV-2: Detected'",
+              "doc = nlp('Pt tested for COVID-19. His wife was recently diagnosed with novel coronavirus. SARS-COV-2: Detected')",
               "",
               "print(doc.ents)",
               "print(doc._.cov_classification)",
@@ -2547,6 +2547,35 @@
             "author": "Alec Chapman",
             "author_links": {
                 "github": "abchapman93"
+            }
+        },
+        {
+            "id": "medspacy",
+            "title": "medspaCy",
+            "thumb": "https://github.com/medspacy/medspacy/blob/master/images/medspacy_logo.png",
+            "slogan": "A toolkit for clinical NLP with spaCy.",
+            "github": "medspacy/medspacy",
+            "description": "A toolkit for clinical NLP with spaCy. Features include sentence splitting, section detection, and asserting negation, family history, and uncertainty.",
+            "pip": "medspacy",
+            "code_example": [
+              "import medspacy",
+              "from medspacy.ner import TargetRule",
+              "",
+              "nlp = medspacy.load()",
+              "print(nlp.pipe_names)",
+              "",
+              "nlp.get_pipe('target_matcher').add([TargetRule('stroke', 'CONDITION'), TargetRule('diabetes', 'CONDITION'), TargetRule('pna', 'CONDITION')])",
+              "doc = nlp('Patient has hx of stroke. Mother diagnosed with diabetes. No evidence of pna.')",
+              "",
+              "for ent in doc.ents:",
+              "    print(ent, ent._.is_negated, ent._.is_family, ent._.is_historical)",
+              "medspacy.visualization.visualize_ent(doc)"
+            ],
+            "category": ["biomedical", "scientific", "research"],
+            "tags": ["clinical"],
+            "author": "medspacy",
+            "author_links": {
+                "github": "medspacy"
             }
         },
 	      {
