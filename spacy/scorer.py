@@ -130,13 +130,13 @@ class Scorer:
         return scores
 
     @staticmethod
-    def score_tokenization(examples: Iterable[Example], **cfg) -> Dict[str, float]:
+    def score_tokenization(examples: Iterable[Example], **cfg) -> Dict[str, Any]:
         """Returns accuracy and PRF scores for tokenization.
         * token_acc: # correct tokens / # gold tokens
         * token_p/r/f: PRF for token character spans
 
         examples (Iterable[Example]): Examples to score
-        RETURNS (Dict[str, float]): A dictionary containing the scores
+        RETURNS (Dict[str, Any]): A dictionary containing the scores
             token_acc/p/r/f.
 
         DOCS: https://nightly.spacy.io/api/scorer#score_tokenization
@@ -187,7 +187,7 @@ class Scorer:
         getter: Callable[[Token, str], Any] = getattr,
         missing_values: Set[Any] = MISSING_VALUES,
         **cfg,
-    ) -> Dict[str, float]:
+    ) -> Dict[str, Any]:
         """Returns an accuracy score for a token-level attribute.
 
         examples (Iterable[Example]): Examples to score
@@ -195,7 +195,7 @@ class Scorer:
         getter (Callable[[Token, str], Any]): Defaults to getattr. If provided,
             getter(token, attr) should return the value of the attribute for an
             individual token.
-        RETURNS (Dict[str, float]): A dictionary containing the accuracy score
+        RETURNS (Dict[str, Any]): A dictionary containing the accuracy score
             under the key attr_acc.
 
         DOCS: https://nightly.spacy.io/api/scorer#score_token_attr
@@ -236,7 +236,7 @@ class Scorer:
         getter: Callable[[Token, str], Any] = getattr,
         missing_values: Set[Any] = MISSING_VALUES,
         **cfg,
-    ):
+    ) -> Dict[str, Any]:
         """Return PRF scores per feat for a token attribute in UFEATS format.
 
         examples (Iterable[Example]): Examples to score
@@ -244,7 +244,7 @@ class Scorer:
         getter (Callable[[Token, str], Any]): Defaults to getattr. If provided,
             getter(token, attr) should return the value of the attribute for an
             individual token.
-        RETURNS (dict): A dictionary containing the per-feat PRF scores unders
+        RETURNS (dict): A dictionary containing the per-feat PRF scores under
             the key attr_per_feat.
         """
         per_feat = {}
@@ -674,7 +674,7 @@ class Scorer:
             }
 
 
-def get_ner_prf(examples: Iterable[Example]) -> Dict[str, PRFScore]:
+def get_ner_prf(examples: Iterable[Example]) -> Dict[str, Any]:
     """Compute micro-PRF and per-entity PRF scores for a sequence of examples.
     """
     score_per_type = defaultdict(PRFScore)
