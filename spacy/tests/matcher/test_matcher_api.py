@@ -479,3 +479,15 @@ def test_matcher_span(matcher):
     assert len(matcher(doc)) == 2
     assert len(matcher(span_js)) == 1
     assert len(matcher(span_java)) == 1
+
+
+def test_matcher_remove_zero_operator(en_vocab):
+    matcher = Matcher(en_vocab)
+    pattern = [{"OP": "!"}]
+    matcher.add("Rule", [pattern])
+    doc = Doc(en_vocab, words=["This", "is", "a", "test", "."])
+    matches = matcher(doc)
+    assert len(matches) == 0
+    assert "Rule" in matcher
+    matcher.remove("Rule")
+    assert "Rule" not in matcher
