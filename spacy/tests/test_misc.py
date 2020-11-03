@@ -102,6 +102,7 @@ def test_require_cpu():
     require_cpu()
     assert isinstance(get_current_ops(), NumpyOps)
     try:
+        import cupy  # noqa: F401
         require_gpu()
         assert isinstance(get_current_ops(), CupyOps)
     except ImportError:
