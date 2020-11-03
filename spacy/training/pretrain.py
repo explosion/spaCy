@@ -17,7 +17,7 @@ from ..ml.models.multi_task import build_cloze_multi_task_model
 from ..ml.models.multi_task import build_cloze_characters_multi_task_model
 from ..schemas import ConfigSchemaTraining, ConfigSchemaPretrain
 from ..errors import Errors
-from ..util import registry, load_model_from_config, dot_to_object
+from ..util import registry, load_model_from_config, resolve_dot_names
 
 
 def pretrain(
@@ -38,7 +38,7 @@ def pretrain(
     _config = nlp.config.interpolate()
     T = registry.resolve(_config["training"], schema=ConfigSchemaTraining)
     P = registry.resolve(_config["pretraining"], schema=ConfigSchemaPretrain)
-    corpus = dot_to_object(T, P["corpus"])
+    corpus = resolve_dot_names(_config, [P["corpus"]])[0]
     batcher = P["batcher"]
     model = create_pretraining_model(nlp, P)
     optimizer = P["optimizer"]

@@ -398,8 +398,8 @@ class Errors:
     E163 = ("cumsum was found to be unstable: its last element does not "
             "correspond to sum")
     E164 = ("x is neither increasing nor decreasing: {x}.")
-    E165 = ("Only one class present in y_true. ROC AUC score is not defined in "
-            "that case.")
+    E165 = ("Only one class present in the gold labels: {label}. "
+            "ROC AUC score is not defined in that case.")
     E166 = ("Can only merge DocBins with the same value for '{param}'.\n"
             "Current DocBin: {current}\nOther DocBin: {other}")
     E169 = ("Can't find module: {module}")
@@ -456,6 +456,8 @@ class Errors:
             "issue tracker: http://github.com/explosion/spaCy/issues")
 
     # TODO: fix numbering after merging develop into master
+    E897 = ("Field '{field}' should be a dot-notation string referring to the "
+            "relevant section in the config, but found type {type} instead.")
     E898 = ("Can't serialize trainable pipe '{name}': the `model` attribute "
             "is not set or None. If you've implemented a custom component, make "
             "sure to store the component model as `self.model` in your "
@@ -562,7 +564,10 @@ class Errors:
             "a string value from {expected} but got: '{arg}'")
     E948 = ("`Matcher.add` received invalid 'patterns' argument: expected "
             "a list, but got: {arg_type}")
-    E949 = ("Can only create an alignment when the texts are the same.")
+    E949 = ("Unable to align tokens for the predicted and reference docs. It "
+            "is only possible to align the docs when both texts are the same "
+            "except for whitespace and capitalization. The predicted tokens "
+            "start with: {x}. The reference tokens start with: {y}.")
     E952 = ("The section '{name}' is not a valid section in the provided config.")
     E953 = ("Mismatched IDs received by the Tok2Vec listener: {id1} vs. {id2}")
     E954 = ("The Tok2Vec listener did not receive any valid input from an upstream "

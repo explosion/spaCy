@@ -4,32 +4,23 @@ from thinc.api import fix_random_seed, Adam, set_dropout_rate
 from numpy.testing import assert_array_equal
 import numpy
 from spacy.ml.models import build_Tok2Vec_model, MultiHashEmbed, MaxoutWindowEncoder
-from spacy.ml.models import build_text_classifier, build_simple_cnn_text_classifier
+from spacy.ml.models import build_bow_text_classifier, build_simple_cnn_text_classifier
 from spacy.ml.staticvectors import StaticVectors
 from spacy.lang.en import English
 from spacy.lang.en.examples import sentences as EN_SENTENCES
 
 
-def get_textcat_kwargs():
+def get_textcat_bow_kwargs():
     return {
-        "width": 64,
-        "embed_size": 2000,
-        "pretrained_vectors": None,
-        "exclusive_classes": False,
+        "exclusive_classes": True,
         "ngram_size": 1,
-        "window_size": 1,
-        "conv_depth": 2,
-        "dropout": None,
-        "nO": 7,
+        "no_output_layer": False,
+        "nO": 34,
     }
 
 
 def get_textcat_cnn_kwargs():
-    return {
-        "tok2vec": test_tok2vec(),
-        "exclusive_classes": False,
-        "nO": 13,
-    }
+    return {"tok2vec": test_tok2vec(), "exclusive_classes": False, "nO": 13}
 
 
 def get_all_params(model):
@@ -105,7 +96,7 @@ def test_multi_hash_embed():
     "seed,model_func,kwargs",
     [
         (0, build_Tok2Vec_model, get_tok2vec_kwargs()),
-        (0, build_text_classifier, get_textcat_kwargs()),
+        (0, build_bow_text_classifier, get_textcat_bow_kwargs()),
         (0, build_simple_cnn_text_classifier, get_textcat_cnn_kwargs()),
     ],
 )
@@ -125,7 +116,7 @@ def test_models_initialize_consistently(seed, model_func, kwargs):
     "seed,model_func,kwargs,get_X",
     [
         (0, build_Tok2Vec_model, get_tok2vec_kwargs(), get_docs),
-        (0, build_text_classifier, get_textcat_kwargs(), get_docs),
+        (0, build_bow_text_classifier, get_textcat_bow_kwargs(), get_docs),
         (0, build_simple_cnn_text_classifier, get_textcat_cnn_kwargs(), get_docs),
     ],
 )
@@ -160,7 +151,7 @@ def test_models_predict_consistently(seed, model_func, kwargs, get_X):
     "seed,dropout,model_func,kwargs,get_X",
     [
         (0, 0.2, build_Tok2Vec_model, get_tok2vec_kwargs(), get_docs),
-        (0, 0.2, build_text_classifier, get_textcat_kwargs(), get_docs),
+        (0, 0.2, build_bow_text_classifier, get_textcat_bow_kwargs(), get_docs),
         (0, 0.2, build_simple_cnn_text_classifier, get_textcat_cnn_kwargs(), get_docs),
     ],
 )

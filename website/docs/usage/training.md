@@ -717,7 +717,7 @@ tabular results to a file:
 ```python
 ### functions.py
 import sys
-from typing import IO, Tuple, Callable, Dict, Any
+from typing import IO, Tuple, Callable, Dict, Any, Optional
 import spacy
 from spacy import Language
 from pathlib import Path
@@ -729,7 +729,7 @@ def custom_logger(log_path):
         stdout: IO=sys.stdout,
         stderr: IO=sys.stderr
     ) -> Tuple[Callable, Callable]:
-        stdout.write(f"Logging to {log_path}\n")
+        stdout.write(f"Logging to {log_path}\\n")
         log_file = Path(log_path).open("w", encoding="utf8")
         log_file.write("step\\t")
         log_file.write("score\\t")

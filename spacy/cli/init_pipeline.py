@@ -39,7 +39,7 @@ def init_vectors_cli(
     nlp.to_disk(output_dir)
     msg.good(
         "Saved nlp object with vectors to output directory. You can now use the "
-        "path to it in your config as the 'vectors' setting in [initialize.vocab].",
+        "path to it in your config as the 'vectors' setting in [initialize].",
         output_dir.resolve(),
     )
 
@@ -100,7 +100,7 @@ def init_labels_cli(
     extract the labels."""
     util.logger.setLevel(logging.DEBUG if verbose else logging.INFO)
     if not output_path.exists():
-        output_path.mkdir()
+        output_path.mkdir(parents=True)
     overrides = parse_config_overrides(ctx.args)
     import_code(code_path)
     setup_gpu(use_gpu)
