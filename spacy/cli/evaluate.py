@@ -98,10 +98,13 @@ def evaluate(
         if key in scores:
             if key == "cats_score":
                 metric = metric + " (" + scores.get("cats_score_desc", "unk") + ")"
-            if key == "speed":
-                results[metric] = f"{scores[key]:.0f}"
+            if isinstance(scores[key], (int, float)):
+                if key == "speed":
+                    results[metric] = f"{scores[key]:.0f}"
+                else:
+                    results[metric] = f"{scores[key]*100:.2f}"
             else:
-                results[metric] = f"{scores[key]*100:.2f}"
+                results[metric] = "-"
             data[re.sub(r"[\s/]", "_", key.lower())] = scores[key]
 
     msg.table(results, title="Results")

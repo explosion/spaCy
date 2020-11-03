@@ -160,7 +160,10 @@ class SentenceRecognizer(Tagger):
         RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_spans.
         DOCS: https://nightly.spacy.io/api/sentencerecognizer#score
         """
+        def has_sents(doc):
+            return doc.has_annotation("SENT_START")
+
         validate_examples(examples, "SentenceRecognizer.score")
-        results = Scorer.score_spans(examples, "sents", **kwargs)
+        results = Scorer.score_spans(examples, "sents", has_annotation=has_sents, **kwargs)
         del results["sents_per_type"]
         return results
