@@ -105,7 +105,7 @@ jobs:
 
   - bash: |
       SDIST=$(python -c "import os;print(os.listdir('./dist')[-1])" 2>&1)
-      pip install dist/$SDIST
+      pip install dist/$SDIST --prefer-binary
     displayName: 'Install from sdist'
 
   - script: python -m pytest --pyargs spacy
