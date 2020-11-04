@@ -51,15 +51,15 @@ jobs:
         imageName: 'macos-10.14'
         python.version: '3.6'
       # Don't test on 3.7 for now to speed up builds
-      # Python37Linux:
-      #   imageName: 'ubuntu-16.04'
-      #   python.version: '3.7'
-      # Python37Windows:
-      #   imageName: 'vs2017-win2016'
-      #   python.version: '3.7'
-      # Python37Mac:
-      #   imageName: 'macos-10.13'
-      #   python.version: '3.7'
+      Python37Linux:
+        imageName: 'ubuntu-16.04'
+        python.version: '3.7'
+      Python37Windows:
+        imageName: 'vs2017-win2016'
+        python.version: '3.7'
+      Python37Mac:
+        imageName: 'macos-10.13'
+        python.version: '3.7'
       Python38Linux:
         imageName: 'ubuntu-16.04'
         python.version: '3.8'
@@ -69,6 +69,15 @@ jobs:
       Python38Mac:
         imageName: 'macos-10.14'
         python.version: '3.8'
+      Python39Linux:
+        imageName: 'ubuntu-16.04'
+        python.version: '3.9'
+      Python39Windows:
+        imageName: 'vs2017-win2016'
+        python.version: '3.9'
+      Python39Mac:
+        imageName: 'macos-10.14'
+        python.version: '3.9'
     maxParallel: 4
   pool:
     vmImage: $(imageName)
@@ -81,7 +90,7 @@ jobs:
 
   - script: |
       python -m pip install -U setuptools
-      pip install -r requirements.txt
+      pip install -r requirements.txt --prefer-binary
     displayName: 'Install dependencies'
 
   - script: |
