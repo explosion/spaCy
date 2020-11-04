@@ -663,7 +663,7 @@ into the "real world". This requires 3 main components:
 > pretrained_vectors = null
 > width = 96
 > depth = 2
-> embed_size = 300
+> embed_size = 2000
 > window_size = 1
 > maxout_pieces = 3
 > subword_features = true
