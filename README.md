@@ -115,9 +115,9 @@ pip install -U pip
 pip install spacy
 ```
 
-For installation on python 2.7 and python 3.5 where binary wheels are not
-provided for the most recent versions of the dependencies, you can prefer older
-binary wheels over newer source packages with `--prefer-binary`:
+For installation on python 3.5 where binary wheels are not provided for the most
+recent versions of the dependencies, you can prefer older binary wheels over
+newer source packages with `--prefer-binary`:
 
 ```bash
 pip install spacy --prefer-binary
