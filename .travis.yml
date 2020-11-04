@@ -8,7 +8,7 @@ python:
 os:
   - linux
 install:
-  - "pip install -r requirements.txt --prefer-binary"
+  - "pip install -r requirements.txt"
   - "python setup.py build_ext --inplace"
   - "pip install -e ."
 script:
