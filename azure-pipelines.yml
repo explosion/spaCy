@@ -96,6 +96,8 @@ jobs:
   - script: |
       python setup.py build_ext --inplace
       python setup.py sdist --formats=gztar
+      pip freeze > installed.txt
+      pip uninstall -y -r installed.txt
     displayName: 'Compile and build sdist'
 
   - task: DeleteFiles@1
@@ -108,5 +110,7 @@ jobs:
       pip install dist/$SDIST --prefer-binary
     displayName: 'Install from sdist'
 
-  - script: python -m pytest --pyargs spacy
+  - script: |
+      pip install -r requirements.txt --prefer-binary
+      python -m pytest --pyargs spacy
     displayName: 'Run tests'
