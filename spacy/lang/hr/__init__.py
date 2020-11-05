@@ -19,6 +19,7 @@ class CroatianDefaults(Language.Defaults):
     )
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS)
     stop_words = STOP_WORDS
+    tag_map = TAG_MAP
 
 
 class Croatian(Language):
