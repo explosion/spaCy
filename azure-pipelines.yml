@@ -98,7 +98,7 @@ jobs:
       pip freeze > installed.txt
       pip uninstall -y -r installed.txt
       SDIST=$(python -c "import os;print(os.listdir('./dist')[-1])" 2>&1)
-      pip install dist/$SDIST
+      pip install dist/$SDIST --only-binary :all:
     displayName: 'Install from sdist'
 
   - script: |
