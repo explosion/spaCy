@@ -933,6 +933,7 @@ cdef class Doc:
             strings.add(token.dep_)
             strings.add(token.ent_type_)
             strings.add(token.ent_kb_id_)
+            strings.add(token.ent_id_)
             strings.add(token.norm_)
         # Msgpack doesn't distinguish between lists and tuples, which is
         # vexing for user data. As a best guess, we *know* that within
