@@ -94,7 +94,7 @@ def build_text_classifier(
 
 # TODO: move to legacy
 @registry.architectures.register("spacy.TextCatEnsemble.v1")
-def build_text_classifier(
+def build_text_classifier_v1(
     width: int,
     embed_size: int,
     pretrained_vectors: Optional[bool],

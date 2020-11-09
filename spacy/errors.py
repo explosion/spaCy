@@ -125,8 +125,9 @@ class Warnings:
 class Errors:
     E001 = ("No component '{name}' found in pipeline. Available names: {opts}")
     E002 = ("Can't find factory for '{name}' for language {lang} ({lang_code}). "
-            "This usually happens when spaCy calls `nlp.{method}` with custom "
+            "This usually happens when spaCy calls `nlp.{method}` with a custom "
             "component name that's not registered on the current language class. "
+            "If you're using a Transformer, make sure to install 'spacy-transformers'. "
             "If you're using a custom component, make sure you've added the "
             "decorator `@Language.component` (for function components) or "
             "`@Language.factory` (for class components).\n\nAvailable "
