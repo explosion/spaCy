@@ -54,9 +54,9 @@ create a surface form. Here are some examples:
 | I don't watch the news, I read the paper | read    | read  | `VERB` | `VerbForm=Fin`, `Mood=Ind`, `Tense=Pres` |
 | I read the paper yesterday               | read    | read  | `VERB` | `VerbForm=Fin`, `Mood=Ind`, `Tense=Past` |
 
-Morphological features are stored in the [`MorphAnalysis`](/api/morphanalysis)
-under `Token.morph`, which allows you to access individual morphological
-features.
+Morphological features are stored in the
+[`MorphAnalysis`](/api/morphology#morphanalysis) under `Token.morph`, which
+allows you to access individual morphological features.
 
 > #### 📝 Things to try
 >
