@@ -109,12 +109,12 @@ Loading the models is expensive and not necessary if you're not actually testing
 
 ```python
 def test_doc_token_api_strings(en_vocab):
-    text = "Give it back! He pleaded."
+    words = ["Give", "it", "back", "!", "He", "pleaded", "."]
     pos = ['VERB', 'PRON', 'PART', 'PUNCT', 'PRON', 'VERB', 'PUNCT']
     heads = [0, 0, 0, 0, 5, 5, 5]
     deps = ['ROOT', 'dobj', 'prt', 'punct', 'nsubj', 'ROOT', 'punct']
 
-    doc = Doc(en_vocab, [t.text for t in tokens], pos=pos, heads=heads, deps=deps)
+    doc = Doc(en_vocab, words=words, pos=pos, heads=heads, deps=deps)
     assert doc[0].text == 'Give'
     assert doc[0].lower_ == 'give'
     assert doc[0].pos_ == 'VERB'
