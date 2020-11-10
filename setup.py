@@ -48,6 +48,7 @@ MOD_NAMES = [
     "spacy.pipeline._parser_internals._state",
     "spacy.pipeline._parser_internals.stateclass",
     "spacy.pipeline._parser_internals.transition_system",
+    "spacy.pipeline._parser_internals._beam_utils",
     "spacy.tokenizer",
     "spacy.training.gold_io",
     "spacy.tokens.doc",
