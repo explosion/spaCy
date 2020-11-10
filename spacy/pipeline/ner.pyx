@@ -82,6 +82,9 @@ def make_ner(
         multitasks=[],
         min_action_freq=1,
         learn_tokens=False,
+        beam_width=1,
+        beam_density=0.0,
+        beam_update_prob=0.0,
     )
 
 

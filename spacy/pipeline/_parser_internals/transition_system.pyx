@@ -44,6 +44,8 @@ cdef class TransitionSystem:
         if labels_by_action:
             self.initialize_actions(labels_by_action, min_freq=min_freq)
         self.root_label = self.strings.add('ROOT')
+        self.init_beam_state = _init_state
+        self.del_beam_state = _del_state
 
     def __reduce__(self):
         return (self.__class__, (self.strings, self.labels), None, None)

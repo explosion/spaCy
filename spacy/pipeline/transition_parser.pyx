@@ -4,13 +4,14 @@ from cymem.cymem cimport Pool
 cimport numpy as np
 from itertools import islice
 from libcpp.vector cimport vector
-from libc.string cimport memset
+from libc.string cimport memset, memcpy
 from libc.stdlib cimport calloc, free
 import random
 from typing import Optional
 
 import srsly
-from thinc.api import set_dropout_rate
+from thinc.api import set_dropout_rate, CupyOps
+from thinc.extra.search cimport Beam
 import numpy.random
 import numpy
 import warnings
@@ -22,6 +23,8 @@ from ..ml.parser_model cimport WeightsC, ActivationsC, SizesC, cpu_log_loss
 from ..ml.parser_model cimport get_c_weights, get_c_sizes
 from ..tokens.doc cimport Doc
 from .trainable_pipe import TrainablePipe
+from ._parser_internals cimport _beam_utils
+from ._parser_internals import _beam_utils
 
 from ..training import validate_examples, validate_get_examples
 from ..errors import Errors, Warnings
@@ -44,6 +47,9 @@ cdef class Parser(TrainablePipe):
         multitasks=tuple(),
         min_action_freq,
         learn_tokens,
+        beam_width,
+        beam_density,
+        beam_update_prob
     ):
         """Create a Parser.
 
@@ -61,7 +67,10 @@ cdef class Parser(TrainablePipe):
             "update_with_oracle_cut_size": update_with_oracle_cut_size,
             "multitasks": list(multitasks),
             "min_action_freq": min_action_freq,
-            "learn_tokens": learn_tokens
+            "learn_tokens": learn_tokens,
+            "beam_width": beam_width,
+            "beam_density": beam_density,
+            "beam_update_prob": beam_update_prob
         }
         if moves is None:
             # defined by EntityRecognizer as a BiluoPushDown
@@ -207,6 +216,45 @@ cdef class Parser(TrainablePipe):
         del model
         return batch
 
+    def beam_parse(self, docs, int beam_width, float drop=0., beam_density=0.):
+        cdef Beam beam
+        cdef Doc doc
+        cdef np.ndarray token_ids
+        beams = self.moves.init_beams(docs, beam_width, beam_density=beam_density)
+        # This is pretty dirty, but the NER can resize itself in init_batch,
+        # if labels are missing. We therefore have to check whether we need to
+        # expand our model output.
+        self._resize()
+        model = self.model(docs)
+        token_ids = numpy.zeros((len(docs) * beam_width, self.nr_feature),
+                                 dtype='i', order='C')
+        cdef int* c_ids
+        cdef int nr_feature = self.cfg["nr_feature_tokens"]
+        cdef int n_states
+        model = self.model(docs)
+        todo = [beam for beam in beams if not beam.is_done]
+        while todo:
+            token_ids.fill(-1)
+            c_ids = <int*>token_ids.data
+            n_states = 0
+            for beam in todo:
+                for i in range(beam.size):
+                    state = <StateC*>beam.at(i)
+                    # This way we avoid having to score finalized states
+                    # We do have to take care to keep indexes aligned, though
+                    if not state.is_final():
+                        state.set_context_tokens(c_ids, nr_feature)
+                        c_ids += nr_feature
+                        n_states += 1
+            if n_states == 0:
+                break
+            vectors = model.state2vec(token_ids[:n_states])
+            scores = model.vec2scores(vectors)
+            todo = self.transition_beams(todo, scores)
+        model.clear_memory()
+        del model
+        return beams
+
     cdef void _parseC(self, StateC** states,
             WeightsC weights, SizesC sizes) nogil:
         cdef int i, j
@@ -268,6 +316,20 @@ cdef class Parser(TrainablePipe):
                 states[i].push_hist(guess)
         free(is_valid)
 
+    def transition_beams(self, beams, float[:, ::1] scores):
+        cdef Beam beam
+        cdef float* c_scores = &scores[0, 0]
+        for beam in beams:
+            for i in range(beam.size):
+                state = <StateC*>beam.at(i)
+                if not state.is_final():
+                    self.moves.set_valid(beam.is_valid[i], state)
+                    memcpy(beam.scores[i], c_scores, scores.shape[1] * sizeof(float))
+                    c_scores += scores.shape[1]
+            beam.advance(_beam_utils.transition_state, _beam_utils.hash_state, <void*>self.moves.c)
+            beam.check_done(_beam_utils.check_final_state, NULL)
+        return [b for b in beams if not b.is_done]
+
     def update(self, examples, *, drop=0., set_annotations=False, sgd=None, losses=None):
         cdef StateClass state
         if losses is None:
@@ -276,13 +338,23 @@ cdef class Parser(TrainablePipe):
         validate_examples(examples, "Parser.update")
         for multitask in self._multitasks:
             multitask.update(examples, drop=drop, sgd=sgd)
+    
         n_examples = len([eg for eg in examples if self.moves.has_gold(eg)])
         if n_examples == 0:
             return losses
         set_dropout_rate(self.model, drop)
-        # Prepare the stepwise model, and get the callback for finishing the batch
-        model, backprop_tok2vec = self.model.begin_update(
-            [eg.predicted for eg in examples])
+        # The probability we use beam update, instead of falling back to
+        # a greedy update
+        beam_update_prob = self.cfg["beam_update_prob"]
+        if self.cfg.get('beam_width', 1) >= 2 and numpy.random.random() < beam_update_prob:
+            return self.update_beam(
+                examples,
+                beam_width=self.cfg["beam_width"],
+                set_annotations=set_annotations,
+                sgd=sgd,
+                losses=losses,
+                beam_density=self.cfg["beam_density"]
+            )
         max_moves = self.cfg["update_with_oracle_cut_size"]
         if max_moves >= 1:
             # Chop sequences into lengths of this many words, to make the
@@ -296,6 +368,8 @@ cdef class Parser(TrainablePipe):
             states, golds, _ = self.moves.init_gold_batch(examples)
         if not states:
             return losses
+        model, backprop_tok2vec = self.model.begin_update([eg.x for eg in examples])
+ 
         all_states = list(states)
         states_golds = list(zip(states, golds))
         n_moves = 0
@@ -378,6 +452,38 @@ cdef class Parser(TrainablePipe):
         del model
         del tutor
         return losses
+
+    def update_beam(self, examples, *, beam_width,
+            drop=0., sgd=None, losses=None, set_annotations=False, beam_density=0.0):
+        states, golds, _ = self.moves.init_gold_batch(examples)
+        if not states:
+            return losses
+        # Prepare the stepwise model, and get the callback for finishing the batch
+        model, backprop_tok2vec = self.model.begin_update(
+            [eg.predicted for eg in examples])
+        states_d_scores, backprops, beams = _beam_utils.update_beam(
+            self.moves,
+            self.cfg["nr_feature_tokens"],
+            10000,
+            states,
+            golds,
+            model.state2vec,
+            model.vec2scores,
+            beam_width,
+            drop=drop,
+            losses=losses,
+            beam_density=beam_density
+        )
+        for i, d_scores in enumerate(states_d_scores):
+            losses[self.name] += (d_scores**2).mean()
+            ids, bp_vectors, bp_scores = backprops[i]
+            bp_vectors(bp_scores(d_scores))
+        backprop_tok2vec(golds)
+        if sgd is not None:
+            self.finish_update(sgd)
+        cdef Beam beam
+        for beam in beams:
+            _beam_utils.cleanup_beam(beam)
 
     def get_batch_loss(self, states, golds, float[:, ::1] scores, losses):
         cdef StateClass state

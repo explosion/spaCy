@@ -189,6 +189,7 @@ cdef class ArcEagerGold:
     def __init__(self, ArcEager moves, StateClass stcls, Example example):
         self.mem = Pool()
         heads, labels = example.get_aligned_parse(projectivize=True)
+        print("AE gold", heads, labels)
         labels = [label if label is not None else "" for label in labels]
         labels = [example.x.vocab.strings.add(label) for label in labels]
         sent_starts = example.get_aligned("SENT_START")
@@ -515,6 +516,8 @@ cdef int _del_state(Pool mem, void* state, void* x) except -1:
 cdef class ArcEager(TransitionSystem):
     def __init__(self, *args, **kwargs):
         TransitionSystem.__init__(self, *args, **kwargs)
+        self.init_beam_state = _init_state
+        self.del_beam_state = _del_state
 
     @classmethod
     def get_actions(cls, **kwargs):
@@ -723,13 +726,16 @@ cdef class ArcEager(TransitionSystem):
         gold_.update(stcls)
         gold_state = gold_.c
         cdef int n_gold = 0
+        print("Set costs", self.n_moves)
         for i in range(self.n_moves):
             if self.c[i].is_valid(stcls.c, self.c[i].label):
                 is_valid[i] = True
                 costs[i] = self.c[i].get_cost(stcls, &gold_state, self.c[i].label)
+                print(i, self.get_class_name(i), costs[i])
                 if costs[i] <= 0:
                     n_gold += 1
             else:
+                print(i, self.get_class_name(i), "invalid", stcls.stack, stcls.queue)
                 is_valid[i] = False
                 costs[i] = 9000
         if n_gold < 1:
