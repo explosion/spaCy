@@ -226,10 +226,10 @@ cdef class Parser(TrainablePipe):
         # expand our model output.
         self._resize()
         model = self.model(docs)
-        token_ids = numpy.zeros((len(docs) * beam_width, self.nr_feature),
+        cdef int nr_feature = model.state2vec.nF
+        token_ids = numpy.zeros((len(docs) * beam_width, nr_feature),
                                  dtype='i', order='C')
         cdef int* c_ids
-        cdef int nr_feature = self.cfg["nr_feature_tokens"]
         cdef int n_states
         model = self.model(docs)
         todo = [beam for beam in beams if not beam.is_done]
@@ -463,12 +463,11 @@ cdef class Parser(TrainablePipe):
             [eg.predicted for eg in examples])
         states_d_scores, backprops, beams = _beam_utils.update_beam(
             self.moves,
-            self.cfg["nr_feature_tokens"],
+            model.state2vec.nF,
             10000,
             states,
             golds,
-            model.state2vec,
-            model.vec2scores,
+            model,
             beam_width,
             drop=drop,
             losses=losses,
@@ -476,8 +475,8 @@ cdef class Parser(TrainablePipe):
         )
         for i, d_scores in enumerate(states_d_scores):
             losses[self.name] += (d_scores**2).mean()
-            ids, bp_vectors, bp_scores = backprops[i]
-            bp_vectors(bp_scores(d_scores))
+            bp_scores = backprops[i]
+            bp_scores(d_scores)
         backprop_tok2vec(golds)
         if sgd is not None:
             self.finish_update(sgd)

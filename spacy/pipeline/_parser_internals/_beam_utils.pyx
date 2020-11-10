@@ -158,8 +158,7 @@ nr_update = 0
 
 
 def update_beam(TransitionSystem moves, int nr_feature, int max_steps,
-                states, golds,
-                state2vec, vec2scores,
+                states, golds, model,
                 int width, losses=None, drop=0.,
                 early_update=True, beam_density=0.0):
     global nr_update
@@ -189,13 +188,9 @@ def update_beam(TransitionSystem moves, int nr_feature, int max_steps,
         if not states:
             break
         # Now that we have our flat list of states, feed them through the model
-        token_ids = get_token_ids(states, nr_feature)
-        vectors, bp_vectors = state2vec.begin_update(token_ids, drop=drop)
-        scores, bp_scores = vec2scores.begin_update(vectors, drop=drop)
-
+        scores, bp_scores = model.begin_update(states)
         # Store the callbacks for the backward pass
-        backprops.append((token_ids, bp_vectors, bp_scores))
-
+        backprops.append(bp_scores)
         # Unpack the flat scores into lists for the two beams. The indices arrays
         # tell us which example and state the scores-row refers to.
         p_scores = [numpy.ascontiguousarray(scores[indices], dtype='f')
