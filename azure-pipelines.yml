@@ -94,7 +94,7 @@ jobs:
     displayName: 'Install dependencies'
 
   - script: |
-      python setup.py build_ext --inplace
+      python setup.py build_ext --inplace -j 2
       python setup.py sdist --formats=gztar
     displayName: 'Compile and build sdist'
 
