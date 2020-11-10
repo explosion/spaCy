@@ -177,11 +177,9 @@ const QuickstartInstall = ({ id, title }) => {
                         </QS>
                         <QS package="source">pip install -r requirements.txt</QS>
                         <QS package="source">python setup.py build_ext --inplace</QS>
-                        <QS package="source">python setup.py install</QS>
-                        {(train || hardware == 'gpu') && (
-                            <QS package="source">pip install -e '.[{pipExtras}]'</QS>
-                        )}
-
+                        <QS package="source">
+                            pip install {train || hardware == 'gpu' ? `'.[${pipExtras}]'` : '.'}
+                        </QS>
                         <QS config="train" package="conda" comment prompt={false}>
                             # packages only available via pip
                         </QS>
