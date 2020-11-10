@@ -61,14 +61,14 @@ def build_bow_text_classifier(
 
 
 @registry.architectures.register("spacy.TextCatEnsemble.v2")
-def build_text_classifier(
+def build_text_classifier_v2(
     tok2vec: Model[List[Doc], List[Floats2d]],
     linear_model: Model[List[Doc], Floats2d],
     nO: Optional[int] = None,
 ) -> Model[List[Doc], Floats2d]:
     exclusive_classes = not linear_model.attrs["multi_label"]
     with Model.define_operators({">>": chain, "|": concatenate}):
-        width = tok2vec.get_dim("nO")
+        width = tok2vec.maybe_get_dim("nO")
         cnn_model = (
                 tok2vec
                 >> list2ragged()
@@ -94,7 +94,7 @@ def build_text_classifier(
 
 # TODO: move to legacy
 @registry.architectures.register("spacy.TextCatEnsemble.v1")
-def build_text_classifier(
+def build_text_classifier_v1(
     width: int,
     embed_size: int,
     pretrained_vectors: Optional[bool],
