@@ -481,7 +481,8 @@ cdef class Parser(TrainablePipe):
             beam_width,
             drop=drop,
             losses=losses,
-            beam_density=beam_density
+            beam_density=beam_density,
+            early_update=False
         )
         for i, d_scores in enumerate(states_d_scores):
             losses[self.name] += (d_scores**2).mean()

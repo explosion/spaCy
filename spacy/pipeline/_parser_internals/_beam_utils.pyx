@@ -193,9 +193,9 @@ def update_beam(TransitionSystem moves, int nr_feature, int max_steps,
         backprops.append(bp_scores)
         # Unpack the flat scores into lists for the two beams. The indices arrays
         # tell us which example and state the scores-row refers to.
-        p_scores = [numpy.ascontiguousarray(scores[indices], dtype='f')
+        p_scores = [model.ops.as_contig(scores[indices], dtype='f')
                     for indices in p_indices]
-        g_scores = [numpy.ascontiguousarray(scores[indices], dtype='f')
+        g_scores = [model.ops.as_contig(scores[indices], dtype='f')
                     for indices in g_indices]
         # Now advance the states in the beams. The gold beam is constrained to
         # to follow only gold analyses.
@@ -204,6 +204,9 @@ def update_beam(TransitionSystem moves, int nr_feature, int max_steps,
         # Track the "maximum violation", to use in the update.
         for i, violn in enumerate(violns):
             violn.check_crf(pbeam[i], gbeam[i])
+            if early_update and pbeam[i].score < gbeam[i].min_score:
+                pbeam.dones[i] = True
+                gbeam.dones[i] = True
     histories = []
     losses = []
     for violn in violns:
