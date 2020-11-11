@@ -30,10 +30,7 @@ cdef int check_final_state(void* _state, void* extra_args) except -1:
 
 cdef hash_t hash_state(void* _state, void* _) except 0:
     state = <StateC*>_state
-    if state.is_final():
-        return 1
-    else:
-        return state.hash()
+    return state.hash()
 
 
 def collect_states(beams):
