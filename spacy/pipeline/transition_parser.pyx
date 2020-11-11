@@ -85,6 +85,7 @@ cdef class Parser(TrainablePipe):
             self.add_multitask_objective(multitask)
 
         self._rehearsal_model = None
+        print(self.cfg)
 
     def __getnewargs_ex__(self):
         """This allows pickling the Parser and its keyword-only init arguments"""
@@ -192,7 +193,15 @@ cdef class Parser(TrainablePipe):
             result = self.moves.init_batch(docs)
             self._resize()
             return result
-        return self.greedy_parse(docs, drop=0.0)
+        if self.cfg["beam_width"] == 1:
+            return self.greedy_parse(docs, drop=0.0)
+        else:
+            return self.beam_parse(
+                docs,
+                drop=0.0,
+                beam_width=self.cfg["beam_width"],
+                beam_density=self.cfg["beam_density"]
+            )
 
     def greedy_parse(self, docs, drop=0.):
         cdef vector[StateC*] states
@@ -219,40 +228,28 @@ cdef class Parser(TrainablePipe):
     def beam_parse(self, docs, int beam_width, float drop=0., beam_density=0.):
         cdef Beam beam
         cdef Doc doc
-        cdef np.ndarray token_ids
         beams = self.moves.init_beams(docs, beam_width, beam_density=beam_density)
         # This is pretty dirty, but the NER can resize itself in init_batch,
         # if labels are missing. We therefore have to check whether we need to
         # expand our model output.
         self._resize()
-        model = self.model(docs)
+        model = self.model.predict(docs)
         cdef int nr_feature = model.state2vec.nF
-        token_ids = numpy.zeros((len(docs) * beam_width, nr_feature),
-                                 dtype='i', order='C')
-        cdef int* c_ids
-        cdef int n_states
-        model = self.model(docs)
         todo = [beam for beam in beams if not beam.is_done]
         while todo:
-            token_ids.fill(-1)
-            c_ids = <int*>token_ids.data
-            n_states = 0
+            states = []
             for beam in todo:
                 for i in range(beam.size):
                     state = <StateC*>beam.at(i)
-                    # This way we avoid having to score finalized states
-                    # We do have to take care to keep indexes aligned, though
                     if not state.is_final():
-                        state.set_context_tokens(c_ids, nr_feature)
-                        c_ids += nr_feature
-                        n_states += 1
-            if n_states == 0:
+                        states.append(StateClass.borrow(state))
+            if not states:
                 break
-            vectors = model.state2vec(token_ids[:n_states])
-            scores = model.vec2scores(vectors)
+            scores = model.predict(states)
             todo = self.transition_beams(todo, scores)
         model.clear_memory()
         del model
+        assert len(set([id(beam) for beam in beams])) == len(beams)
         return beams
 
     cdef void _parseC(self, StateC** states,
@@ -275,9 +272,20 @@ cdef class Parser(TrainablePipe):
             unfinished.clear()
         free_activations(&activations)
 
-    def set_annotations(self, docs, states):
+    def set_annotations(self, docs, states_or_beams):
         cdef StateClass state
+        cdef Beam beam
         cdef Doc doc
+        states = []
+        beams = []
+        for state_or_beam in states_or_beams:
+            if isinstance(state_or_beam, StateClass):
+                states.append(state_or_beam)
+            else:
+                beam = state_or_beam
+                state = StateClass.borrow(<StateC*>beam.at(0))
+                states.append(state)
+                beams.append(beam)
         for i, (state, doc) in enumerate(zip(states, docs)):
             self.moves.finalize_state(state.c)
             for j in range(doc.length):
@@ -285,6 +293,8 @@ cdef class Parser(TrainablePipe):
             self.moves.finalize_doc(doc)
             for hook in self.postprocesses:
                 hook(doc)
+        for beam in beams:
+            _beam_utils.cleanup_beam(beam)
 
     def transition_states(self, states, float[:, ::1] scores):
         cdef StateClass state
@@ -346,7 +356,7 @@ cdef class Parser(TrainablePipe):
         # The probability we use beam update, instead of falling back to
         # a greedy update
         beam_update_prob = self.cfg["beam_update_prob"]
-        if self.cfg.get('beam_width', 1) >= 2 and numpy.random.random() < beam_update_prob:
+        if self.cfg['beam_width'] >= 2 and numpy.random.random() < beam_update_prob:
             return self.update_beam(
                 examples,
                 beam_width=self.cfg["beam_width"],
