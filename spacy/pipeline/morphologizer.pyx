@@ -67,9 +67,6 @@ class Morphologizer(Tagger):
         vocab: Vocab,
         model: Model,
         name: str = "morphologizer",
-        *,
-        labels_morph: Optional[dict] = None,
-        labels_pos: Optional[dict] = None,
     ):
         """Initialize a morphologizer.
 
@@ -77,8 +74,6 @@ class Morphologizer(Tagger):
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
         name (str): The component instance name, used to add entries to the
             losses during training.
-        labels_morph (dict): Mapping of morph + POS tags to morph labels.
-        labels_pos (dict): Mapping of morph + POS tags to POS tags.
 
         DOCS: https://nightly.spacy.io/api/morphologizer#init
         """
@@ -90,7 +85,7 @@ class Morphologizer(Tagger):
         # store mappings from morph+POS labels to token-level annotations:
         # 1) labels_morph stores a mapping from morph+POS->morph
         # 2) labels_pos stores a mapping from morph+POS->POS
-        cfg = {"labels_morph": labels_morph or {}, "labels_pos": labels_pos or {}}
+        cfg = {"labels_morph": {}, "labels_pos": {}}
         self.cfg = dict(sorted(cfg.items()))
 
     @property
