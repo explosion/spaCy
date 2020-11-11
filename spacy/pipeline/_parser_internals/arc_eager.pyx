@@ -276,7 +276,7 @@ cdef bint arc_is_gold(const GoldParseStateC* gold, int head, int child) nogil:
         return False
 
 
-cdef bint label_is_gold(const GoldParseStateC* gold, int head, int child, attr_t label) nogil:
+cdef bint label_is_gold(const GoldParseStateC* gold, int child, attr_t label) nogil:
     if is_head_unknown(gold, child):
         return True
     elif label == 0:
@@ -393,7 +393,7 @@ cdef class LeftArc:
 
     @staticmethod
     cdef inline weight_t label_cost(StateClass s, const GoldParseStateC* gold, attr_t label) nogil:
-        return arc_is_gold(gold, s.B(0), s.S(0)) and not label_is_gold(gold, s.B(0), s.S(0), label)
+        return arc_is_gold(gold, s.B(0), s.S(0)) and not label_is_gold(gold, s.S(0), label)
 
 
 cdef class RightArc:
@@ -429,7 +429,7 @@ cdef class RightArc:
     @staticmethod
     cdef weight_t label_cost(StateClass s, const void* _gold, attr_t label) nogil:
         gold = <const GoldParseStateC*>_gold
-        return arc_is_gold(gold, s.S(0), s.B(0)) and not label_is_gold(gold, s.S(0), s.B(0), label)
+        return arc_is_gold(gold, s.S(0), s.B(0)) and not label_is_gold(gold, s.B(0), label)
 
 
 cdef class Break:
@@ -569,8 +569,14 @@ cdef class ArcEager(TransitionSystem):
         t.do(state.c, t.label)
         return state
 
-    def is_gold_parse(self, StateClass state, gold):
-        raise NotImplementedError
+    def is_gold_parse(self, StateClass state, ArcEagerGold gold):
+        for i in range(state.c.length):
+            token = state.c.safe_get(i)
+            if not arc_is_gold(&gold.c, i, i+token.head):
+                return False
+            elif not label_is_gold(&gold.c, i, token.dep):
+                return False
+        return True
 
     def init_gold(self, StateClass state, Example example):
         gold = ArcEagerGold(self, state, example)
