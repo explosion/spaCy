@@ -14,6 +14,7 @@ import zipfile
 import srsly
 import warnings
 from wasabi import msg
+import ctypes
 
 from ..vectors import Vectors
 from ..errors import Errors, Warnings
@@ -228,19 +229,58 @@ def read_vectors(vectors_loc, truncate_vectors=0):
     shape = tuple(int(size) for size in next(f).split())
     if truncate_vectors >= 1:
         shape = (truncate_vectors, shape[1])
-    vectors_data = numpy.zeros(shape=shape, dtype="f")
-    vectors_keys = []
+    # inspect the first line to see if the vectors are float or binary format
+    word, pieces, dtype = inspect_vector_type(next(f), shape)
+    vectors_data = numpy.zeros(shape=shape, dtype=dtype)
+    vectors_data[0] = numpy.asarray(pieces, dtype=dtype)
+    vectors_keys = [word]
+    read_vector = read_float_vector
+    if dtype == numpy.int8:
+        read_vector = read_binary_vector
     for i, line in enumerate(tqdm(f)):
-        line = line.rstrip()
-        pieces = line.rsplit(" ", vectors_data.shape[1])
-        word = pieces.pop(0)
+        line_num = i + 1
+        word, pieces = read_vector(line)
         if len(pieces) != vectors_data.shape[1]:
-            msg.fail(Errors.E094.format(line_num=i, loc=vectors_loc), exits=1)
-        vectors_data[i] = numpy.asarray(pieces, dtype="f")
+            msg.fail(Errors.E094.format(line_num=line_num, loc=vectors_loc), exits=1)
+        vectors_data[line_num] = numpy.asarray(pieces, dtype=dtype)
         vectors_keys.append(word)
         if i == truncate_vectors - 1:
             break
     return vectors_data, vectors_keys
+
+
+def inspect_vector_type(line, shape):
+    dtype = "f"
+    word, pieces = read_float_vector(line)
+    length = len(pieces)
+    if length != shape[1]:
+        word, pieces = read_binary_vector(line)
+        if len(pieces) == shape[1]:
+            dtype = numpy.int8
+    return word, pieces, dtype
+
+
+def read_float_vector(line):
+    line = line.rstrip()
+    pieces = line.rsplit(" ")
+    word = pieces.pop(0)
+    return word, pieces
+
+
+def read_binary_vector(line):
+    word, pieces = read_float_vector(line)
+    # allow loading binarized vectors (https://github.com/tca19/near-lossless-binarization)
+    # if the binary vectors have 256 bits and a `long` has a length of 64 bits, then each binary vector is an
+    # array of 4 `long` (4 * 64 = 256)
+    if ctypes.sizeof(ctypes.c_long) % len(pieces) == 0:
+        binlen = ctypes.sizeof(ctypes.c_long) * 8
+        formatstr = "%sb" % binlen
+        # get a list of binary str representations of ints of length binlen, replacing spaces with leading zeroes
+        # then split each of those strings into a list of 0s and 1s [['0','1'...,'0'],['1','0',...'1']...]
+        pieces = [list(format(int(piece), formatstr).replace(" ", "0")) for piece in pieces]
+        # put them into one big list
+        pieces = numpy.concatenate(pieces)
+    return word, pieces
 
 
 def read_freqs(freqs_loc, max_length=100, min_doc_freq=5, min_freq=50):

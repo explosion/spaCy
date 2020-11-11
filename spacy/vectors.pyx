@@ -340,16 +340,17 @@ cdef class Vectors:
 
         best_rows = xp.zeros((queries.shape[0], n), dtype='i')
         scores = xp.zeros((queries.shape[0], n), dtype='f')
+
+        # choose the right type of similarity score based on dtype
+        similarity_fn = self.similarity_float
+        if self.data.dtype == xp.int8:
+            similarity_fn = self.similarity_binary
+
         # Work in batches, to avoid memory problems.
         for i in range(0, queries.shape[0], batch_size):
             batch = queries[i : i+batch_size]
-            batch_norms = xp.linalg.norm(batch, axis=1, keepdims=True)
-            batch_norms[batch_norms == 0] = 1
-            batch /= batch_norms
-            # batch   e.g. (1024, 300)
-            # vectors e.g. (10000, 300)
-            # sims    e.g. (1024, 10000)
-            sims = xp.dot(batch, vectors.T)
+
+            sims = similarity_fn(xp, batch, vectors)
             best_rows[i:i+batch_size] = xp.argpartition(sims, -n, axis=1)[:,-n:]
             scores[i:i+batch_size] = xp.partition(sims, -n, axis=1)[:,-n:]
 
@@ -369,6 +370,26 @@ cdef class Vectors:
             [[row2key[row] for row in best_rows[i] if row in row2key] 
                     for i in range(len(queries)) ], dtype="uint64")
         return (keys, best_rows, scores)
+
+    def similarity_float(self, xp, batch, vectors):
+        """For each of the given vectors, calculate similarities to batch by
+            cosine."""
+        batch_norms = xp.linalg.norm(batch, axis=1, keepdims=True)
+        batch_norms[batch_norms == 0] = 1
+        batch /= batch_norms
+        # batch   e.g. (1024, 300)
+        # vectors e.g. (10000, 300)
+        # sims    e.g. (1024, 10000)
+        sims = xp.dot(batch, vectors.T)
+        return sims
+
+    def similarity_binary(self, xp, batch, vectors):
+        """For each of the given vectors, calculate similarities to batch by
+            Sokal Michener similarity."""
+        vector_size = batch.shape[1]
+        ones = xp.dot(batch , vectors.T)
+        zeroes = (xp.dot((1.0 - batch) , (1.0 - vectors.T)))
+        return (ones + zeroes) / vector_size
 
     def to_disk(self, path, **kwargs):
         """Save the current state to a directory.
