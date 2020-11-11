@@ -39,6 +39,9 @@ def blank_parser(en_vocab):
         "learn_tokens": False,
         "min_action_freq": 30,
         "update_with_oracle_cut_size": 100,
+        "beam_width": 1,
+        "beam_update_prob": 1.0,
+        "beam_density": 0.0
     }
     cfg = {"model": DEFAULT_PARSER_MODEL}
     model = registry.resolve(cfg, validate=True)["model"]
@@ -61,6 +64,9 @@ def test_serialize_parser_roundtrip_bytes(en_vocab, Parser):
         "learn_tokens": False,
         "min_action_freq": 0,
         "update_with_oracle_cut_size": 100,
+        "beam_width": 1,
+        "beam_update_prob": 1.0,
+        "beam_density": 0.0
     }
     cfg = {"model": DEFAULT_PARSER_MODEL}
     model = registry.resolve(cfg, validate=True)["model"]
