@@ -126,6 +126,11 @@ def he_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def hi_tokenizer():
+    return get_lang_class("hi")().tokenizer
+
+
+@pytest.fixture(scope="session")
 def hr_tokenizer():
     return get_lang_class("hr")().tokenizer
 
@@ -241,11 +246,6 @@ def tr_tokenizer():
 
 
 @pytest.fixture(scope="session")
-def tr_vocab():
-    return get_lang_class("tr").Defaults.create_vocab()
-
-
-@pytest.fixture(scope="session")
 def tt_tokenizer():
     return get_lang_class("tt")().tokenizer
 
@@ -297,11 +297,7 @@ def zh_tokenizer_pkuseg():
                 "segmenter": "pkuseg",
             }
         },
-        "initialize": {
-            "tokenizer": {
-                "pkuseg_model": "web",
-            }
-        },
+        "initialize": {"tokenizer": {"pkuseg_model": "web"}},
     }
     nlp = get_lang_class("zh").from_config(config)
     nlp.initialize()

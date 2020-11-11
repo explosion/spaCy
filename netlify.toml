@@ -58,5 +58,7 @@ redirects = [
     {from = "/universe", to = "/universe/project/:id", query = {id = ":id"}, force = true},
     {from = "/universe", to = "/universe/category/:category", query = {category = ":category"}, force = true},
     # Renamed universe projects
-    {from = "/universe/project/spacy-pytorch-transformers", to = "/universe/project/spacy-transformers", force = true}
+    {from = "/universe/project/spacy-pytorch-transformers", to = "/universe/project/spacy-transformers", force = true},
+    # Old model pages
+    {from = "/models/en-starters", to = "/models/en", force = true},
 ]

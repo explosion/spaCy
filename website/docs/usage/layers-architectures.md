@@ -130,16 +130,31 @@ factory = "textcat"
 labels = []
 
 [components.textcat.model]
-@architectures = "spacy.TextCatEnsemble.v1"
-exclusive_classes = false
-pretrained_vectors = null
-width = 64
-conv_depth = 2
-embed_size = 2000
-window_size = 1
-ngram_size = 1
-dropout = 0
+@architectures = "spacy.TextCatEnsemble.v2"
 nO = null
+
+[components.textcat.model.tok2vec]
+@architectures = "spacy.Tok2Vec.v1"
+
+[components.textcat.model.tok2vec.embed]
+@architectures = "spacy.MultiHashEmbed.v1"
+width = 64
+rows = [2000, 2000, 1000, 1000, 1000, 1000]
+attrs = ["ORTH", "LOWER", "PREFIX", "SUFFIX", "SHAPE", "ID"]
+include_static_vectors = false
+
+[components.textcat.model.tok2vec.encode]
+@architectures = "spacy.MaxoutWindowEncoder.v1"
+width = ${components.textcat.model.tok2vec.embed.width}
+window_size = 1
+maxout_pieces = 3
+depth = 2
+
+[components.textcat.model.linear_model]
+@architectures = "spacy.TextCatBOW.v1"
+exclusive_classes = false
+ngram_size = 1
+no_output_layer = false
 ```
 
 spaCy has two additional built-in `textcat` architectures, and you can easily
@@ -352,7 +367,7 @@ dropout = 0.2
 
 <Infobox variant="warning">
 
-Remember that it is best not to rely on any (hidden) default values, to ensure
+Remember that it is best not to rely on any (hidden) default values to ensure
 that training configs are complete and experiments fully reproducible.
 
 </Infobox>
@@ -503,7 +518,7 @@ overview of the `TrainablePipe` methods used by
 
 </Infobox>
 
-### Example: Entity elation extraction component {#component-rel}
+### Example: Entity relation extraction component {#component-rel}
 
 This section outlines an example use-case of implementing a **novel relation
 extraction component** from scratch. We'll implement a binary relation
@@ -618,7 +633,7 @@ we can define our relation model in a config file as such:
 # ...
 
 [model.get_candidates]
-@misc = "rel_cand_generator.v2"
+@misc = "rel_cand_generator.v1"
 max_length = 20
 
 [model.create_candidate_tensor]
@@ -687,8 +702,8 @@ Before the model can be used, it needs to be
 [initialized](/usage/training#initialization). This function receives a callback
 to access the full **training data set**, or a representative sample. This data
 set can be used to deduce all **relevant labels**. Alternatively, a list of
-labels can be provided to `initialize`, or you can call the
-`RelationExtractoradd_label` directly. The number of labels defines the output
+labels can be provided to `initialize`, or you can call
+`RelationExtractor.add_label` directly. The number of labels defines the output
 dimensionality of the network, and will be used to do
 [shape inference](https://thinc.ai/docs/usage-models#validation) throughout the
 layers of the neural network. This is triggered by calling
@@ -729,7 +744,7 @@ and its internal model can be trained and used to make predictions.
 During training, the function [`update`](/api/pipe#update) is invoked which
 delegates to
 [`Model.begin_update`](https://thinc.ai/docs/api-model#begin_update) and a
-[`get_loss`](/api/pipe#get_loss) function that **calculate the loss** for a
+[`get_loss`](/api/pipe#get_loss) function that **calculates the loss** for a
 batch of examples, as well as the **gradient** of loss that will be used to
 update the weights of the model layers. Thinc provides several
 [loss functions](https://thinc.ai/docs/api-loss) that can be used for the
@@ -828,6 +843,27 @@ def __call__(self, Doc doc):
     return doc
 ```
 
+There is one more optional method to implement: [`score`](/api/pipe#score) 
+calculates the performance of your component on a set of examples, and 
+returns the results as a dictionary:
+
+```python
+### The score method
+def score(self, examples: Iterable[Example]) -> Dict[str, Any]:
+    prf = PRFScore()
+    for example in examples:
+        ...
+
+    return {
+        "rel_micro_p": prf.precision,
+        "rel_micro_r": prf.recall,
+        "rel_micro_f": prf.fscore,
+    }
+```
+
+This is particularly useful to see the scores on the development corpus 
+when training the component with [`spacy train`](/api/cli#training).
+
 Once our `TrainablePipe` subclass is fully implemented, we can
 [register](/usage/processing-pipelines#custom-components-factories) the
 component with the [`@Language.factory`](/api/language#factory) decorator. This
@@ -850,6 +886,11 @@ assigns it a name and lets you create the component with
 > [components.relation_extractor.model.get_candidates]
 > @misc = "rel_cand_generator.v1"
 > max_length = 20
+> 
+> [training.score_weights]
+> rel_micro_p = 0.0
+> rel_micro_r = 0.0
+> rel_micro_f = 1.0
 > ```
 
 ```python
@@ -857,6 +898,28 @@ assigns it a name and lets you create the component with
 from spacy.language import Language
 
 @Language.factory("relation_extractor")
+def make_relation_extractor(nlp, name, model):
+    return RelationExtractor(nlp.vocab, model, name)
+```
+
+You can extend the decorator to include information such as the type of 
+annotations that are required for this component to run, the type of annotations 
+it produces, and the scores that can be calculated:
+
+```python
+### Factory annotations {highlight="5-11"}
+from spacy.language import Language
+
+@Language.factory(
+    "relation_extractor",
+    requires=["doc.ents", "token.ent_iob", "token.ent_type"],
+    assigns=["doc._.rel"],
+    default_score_weights={
+        "rel_micro_p": None,
+        "rel_micro_r": None,
+        "rel_micro_f": None,
+    },
+)
 def make_relation_extractor(nlp, name, model):
     return RelationExtractor(nlp.vocab, model, name)
 ```

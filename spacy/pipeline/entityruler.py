@@ -10,7 +10,7 @@ from ..errors import Errors
 from ..util import ensure_path, to_disk, from_disk, SimpleFrozenList
 from ..tokens import Doc, Span
 from ..matcher import Matcher, PhraseMatcher
-from ..scorer import Scorer
+from ..scorer import get_ner_prf
 from ..training import validate_examples
 
 
@@ -340,7 +340,7 @@ class EntityRuler(Pipe):
 
     def score(self, examples, **kwargs):
         validate_examples(examples, "EntityRuler.score")
-        return Scorer.score_spans(examples, "ents", **kwargs)
+        return get_ner_prf(examples)
 
     def from_bytes(
         self, patterns_bytes: bytes, *, exclude: Iterable[str] = SimpleFrozenList()

@@ -41,11 +41,7 @@ function getCounts(langs = []) {
     return {
         langs: langs.length,
         modelLangs: langs.filter(({ models }) => models && !!models.length).length,
-        starterLangs: langs.filter(({ starters }) => starters && !!starters.length).length,
         models: langs.map(({ models }) => (models ? models.length : 0)).reduce((a, b) => a + b, 0),
-        starters: langs
-            .map(({ starters }) => (starters ? starters.length : 0))
-            .reduce((a, b) => a + b, 0),
     }
 }
 
@@ -191,7 +187,10 @@ module.exports = {
                         policy: [{ userAgent: '*', allow: '/' }],
                     },
                     development: {
-                        policy: [{ userAgent: '*', disallow: ['/'] }],
+                        policy: [
+                            { userAgent: '*', disallow: ['/'] },
+                            { userAgent: 'Twitterbot', allow: '/' },
+                        ],
                     },
                 },
             },

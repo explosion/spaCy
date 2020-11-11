@@ -7,7 +7,7 @@ import { repo } from '../components/util'
 const DEFAULT_MODELS = ['en']
 const DEFAULT_OPT = 'efficiency'
 const DEFAULT_HARDWARE = 'cpu'
-const DEFAULT_CUDA = 'cuda100'
+const DEFAULT_CUDA = 'cuda102'
 const CUDA = {
     '8.0': 'cuda80',
     '9.0': 'cuda90',
@@ -16,56 +16,9 @@ const CUDA = {
     '10.0': 'cuda100',
     '10.1': 'cuda101',
     '10.2': 'cuda102',
+    '11.0': 'cuda110',
 }
-const LANG_EXTRAS = ['zh', 'ja'] // only for languages with models
-const DATA = [
-    {
-        id: 'os',
-        title: 'Operating system',
-        options: [
-            { id: 'mac', title: 'macOS / OSX', checked: true },
-            { id: 'windows', title: 'Windows' },
-            { id: 'linux', title: 'Linux' },
-        ],
-    },
-    {
-        id: 'package',
-        title: 'Package manager',
-        options: [
-            { id: 'pip', title: 'pip', checked: true },
-            { id: 'conda', title: 'conda' },
-            { id: 'source', title: 'from source' },
-        ],
-    },
-    {
-        id: 'hardware',
-        title: 'Hardware',
-        options: [
-            { id: 'cpu', title: 'CPU', checked: DEFAULT_HARDWARE === 'cpu' },
-            { id: 'gpu', title: 'GPU', checked: DEFAULT_HARDWARE == 'gpu' },
-        ],
-        dropdown: Object.keys(CUDA).map(id => ({ id: CUDA[id], title: `CUDA ${id}` })),
-        defaultValue: DEFAULT_CUDA,
-    },
-    {
-        id: 'config',
-        title: 'Configuration',
-        multiple: true,
-        options: [
-            {
-                id: 'venv',
-                title: 'virtual env',
-                help: 'Use a virtual environment and install spaCy into a user directory',
-            },
-            {
-                id: 'train',
-                title: 'train models',
-                help:
-                    'Check this if you plan to train your own models with spaCy to install extra dependencies and data resources',
-            },
-        ],
-    },
-]
+const LANG_EXTRAS = ['ja'] // only for languages with models
 
 const QuickstartInstall = ({ id, title }) => {
     const [train, setTrain] = useState(false)
@@ -99,7 +52,56 @@ const QuickstartInstall = ({ id, title }) => {
                 const pkg = nightly ? 'spacy-nightly' : 'spacy'
                 const models = languages.filter(({ models }) => models !== null)
                 const data = [
-                    ...DATA,
+                    {
+                        id: 'os',
+                        title: 'Operating system',
+                        options: [
+                            { id: 'mac', title: 'macOS / OSX', checked: true },
+                            { id: 'windows', title: 'Windows' },
+                            { id: 'linux', title: 'Linux' },
+                        ],
+                    },
+                    {
+                        id: 'package',
+                        title: 'Package manager',
+                        options: [
+                            { id: 'pip', title: 'pip', checked: true },
+                            !nightly ? { id: 'conda', title: 'conda' } : null,
+                            { id: 'source', title: 'from source' },
+                        ].filter(o => o),
+                    },
+                    {
+                        id: 'hardware',
+                        title: 'Hardware',
+                        options: [
+                            { id: 'cpu', title: 'CPU', checked: DEFAULT_HARDWARE === 'cpu' },
+                            { id: 'gpu', title: 'GPU', checked: DEFAULT_HARDWARE == 'gpu' },
+                        ],
+                        dropdown: Object.keys(CUDA).map(id => ({
+                            id: CUDA[id],
+                            title: `CUDA ${id}`,
+                        })),
+                        defaultValue: DEFAULT_CUDA,
+                    },
+                    {
+                        id: 'config',
+                        title: 'Configuration',
+                        multiple: true,
+                        options: [
+                            {
+                                id: 'venv',
+                                title: 'virtual env',
+                                help:
+                                    'Use a virtual environment and install spaCy into a user directory',
+                            },
+                            {
+                                id: 'train',
+                                title: 'train models',
+                                help:
+                                    'Check this if you plan to train your own models with spaCy to install extra dependencies and data resources',
+                            },
+                        ],
+                    },
                     {
                         id: 'models',
                         title: 'Trained pipelines',
@@ -141,11 +143,6 @@ const QuickstartInstall = ({ id, title }) => {
                         setters={setters}
                         showDropdown={showDropdown}
                     >
-                        {nightly && (
-                            <QS package="conda" comment prompt={false}>
-                                # 🚨 Nightly releases are currently only available via pip
-                            </QS>
-                        )}
                         <QS config="venv">python -m venv .env</QS>
                         <QS config="venv" os="mac">
                             source .env/bin/activate
@@ -180,15 +177,17 @@ const QuickstartInstall = ({ id, title }) => {
                         </QS>
                         <QS package="source">pip install -r requirements.txt</QS>
                         <QS package="source">python setup.py build_ext --inplace</QS>
-                        {(train || hardware == 'gpu') && (
-                            <QS package="source">pip install -e '.[{pipExtras}]'</QS>
-                        )}
-
-                        <QS config="train" package="conda">
-                            conda install -c conda-forge spacy-transformers
+                        <QS package="source">
+                            pip install {train || hardware == 'gpu' ? `'.[${pipExtras}]'` : '.'}
+                        </QS>
+                        <QS config="train" package="conda" comment prompt={false}>
+                            # packages only available via pip
                         </QS>
                         <QS config="train" package="conda">
-                            conda install -c conda-forge spacy-lookups-data
+                            pip install spacy-transformers
+                        </QS>
+                        <QS config="train" package="conda">
+                            pip install spacy-lookups-data
                         </QS>
 
                         {models.map(({ code, models: modelOptions }) => {

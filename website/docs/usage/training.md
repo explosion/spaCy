@@ -551,7 +551,7 @@ or TensorFlow, make **custom modifications** to the `nlp` object, create custom
 optimizers or schedules, or **stream in data** and preprocesses it on the fly
 while training.
 
-Each custom function can have any numbers of arguments that are passed in via
+Each custom function can have any number of arguments that are passed in via
 the [config](#config), just the built-in functions. If your function defines
 **default argument values**, spaCy is able to auto-fill your config when you run
 [`init fill-config`](/api/cli#init-fill-config). If you want to make sure that a
@@ -717,7 +717,7 @@ tabular results to a file:
 ```python
 ### functions.py
 import sys
-from typing import IO, Tuple, Callable, Dict, Any
+from typing import IO, Tuple, Callable, Dict, Any, Optional
 import spacy
 from spacy import Language
 from pathlib import Path
@@ -729,7 +729,7 @@ def custom_logger(log_path):
         stdout: IO=sys.stdout,
         stderr: IO=sys.stderr
     ) -> Tuple[Callable, Callable]:
-        stdout.write(f"Logging to {log_path}\n")
+        stdout.write(f"Logging to {log_path}\\n")
         log_file = Path(log_path).open("w", encoding="utf8")
         log_file.write("step\\t")
         log_file.write("score\\t")
@@ -863,7 +863,7 @@ The initialization step allows the config to define **all settings** required
 for the pipeline, while keeping a separation between settings and functions that
 should only be used **before training** to set up the initial pipeline, and
 logic and configuration that needs to be available **at runtime**. Without that
-separation, it would be very difficult to use the came, reproducible config file
+separation, it would be very difficult to use the same, reproducible config file
 because the component settings required for training (load data from an external
 file) wouldn't match the component settings required at runtime (load what's
 included with the saved `nlp` object and don't depend on external file).
@@ -958,7 +958,7 @@ data assets, track changes and share your end-to-end processes with your team.
 </Infobox>
 
 The binary `.spacy` format is a serialized [`DocBin`](/api/docbin) containing
-one or more [`Doc`](/api/doc) objects. It's is extremely **efficient in
+one or more [`Doc`](/api/doc) objects. It's extremely **efficient in
 storage**, especially when packing multiple documents together. You can also
 create `Doc` objects manually, so you can write your own custom logic to convert
 and store existing annotations for use in spaCy.
@@ -1300,7 +1300,7 @@ mapping so they know which worker owns which parameter.
 As training proceeds, every worker will be computing gradients for **all** of
 the model parameters. When they compute gradients for parameters they don't own,
 they'll **send them to the worker** that does own that parameter, along with a
-version identifier so that the owner can decide whether the discard the
+version identifier so that the owner can decide whether to discard the
 gradient. Workers use the gradients they receive and the ones they compute
 locally to update the parameters they own, and then broadcast the updated array
 and a new version ID to the other workers.
@@ -1375,7 +1375,7 @@ example = Example.from_dict(doc, {"entities": ["U-ORG", "O", "U-TECHNOLOGY", "O"
 <Infobox title="Migrating from v2.x" variant="warning">
 
 As of v3.0, the [`Example`](/api/example) object replaces the `GoldParse` class.
-It can be constructed in a very similar way, from a `Doc` and a dictionary of
+It can be constructed in a very similar way – from a `Doc` and a dictionary of
 annotations. For more details, see the
 [migration guide](/usage/v3#migrating-training).
 
@@ -1426,7 +1426,7 @@ The [`nlp.update`](/api/language#update) method takes the following arguments:
 | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `examples` | [`Example`](/api/example) objects. The `update` method takes a sequence of them, so you can batch up your training examples.                                           |
 | `drop`     | Dropout rate. Makes it harder for the model to just memorize the data.                                                                                                 |
-| `sgd`      | An [`Optimizer`](https://thinc.ai/docs/api-optimizers) object, which updated the model's weights. If not set, spaCy will create a new one and save it for further use. |
+| `sgd`      | An [`Optimizer`](https://thinc.ai/docs/api-optimizers) object, which updates the model's weights. If not set, spaCy will create a new one and save it for further use. |
 
 <Infobox title="Migrating from v2.x" variant="warning">
 

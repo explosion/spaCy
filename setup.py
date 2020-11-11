@@ -50,6 +50,7 @@ MOD_NAMES = [
     "spacy.pipeline._parser_internals.transition_system",
     "spacy.pipeline._parser_internals._beam_utils",
     "spacy.tokenizer",
+    "spacy.training.align",
     "spacy.training.gold_io",
     "spacy.tokens.doc",
     "spacy.tokens.span",

@@ -37,7 +37,6 @@ exports.createPages = ({ graphql, actions }) => {
                                     code
                                     name
                                     models
-                                    starters
                                     example
                                     has_examples
                                 }
@@ -227,8 +226,6 @@ exports.createPages = ({ graphql, actions }) => {
 
                 const langs = result.data.site.siteMetadata.languages
                 const modelLangs = langs.filter(({ models }) => models && models.length)
-                const starterLangs = langs.filter(({ starters }) => starters && starters.length)
-
                 modelLangs.forEach(({ code, name, models, example, has_examples }, i) => {
                     const slug = `/models/${code}`
                     const next = i < modelLangs.length - 1 ? modelLangs[i + 1] : null
@@ -245,28 +242,6 @@ exports.createPages = ({ graphql, actions }) => {
                             theme: sections.models.theme,
                             next: next ? { title: next.name, slug: `/models/${next.code}` } : null,
                             meta: { models, example, hasExamples: has_examples },
-                        },
-                    })
-                })
-
-                starterLangs.forEach(({ code, name, starters }, i) => {
-                    const slug = `/models/${code}-starters`
-                    const next = i < starterLangs.length - 1 ? starterLangs[i + 1] : null
-                    createPage({
-                        path: slug,
-                        component: DEFAULT_TEMPLATE,
-                        context: {
-                            id: `${code}-starters`,
-                            slug: slug,
-                            isIndex: false,
-                            title: name,
-                            section: 'models',
-                            sectionTitle: sections.models.title,
-                            theme: sections.models.theme,
-                            next: next
-                                ? { title: next.name, slug: `/models/${next.code}-starters` }
-                                : null,
-                            meta: { models: starters, isStarters: true },
                         },
                     })
                 })

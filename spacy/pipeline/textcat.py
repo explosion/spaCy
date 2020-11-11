@@ -16,15 +16,30 @@ from ..vocab import Vocab
 
 default_model_config = """
 [model]
-@architectures = "spacy.TextCatEnsemble.v1"
-exclusive_classes = false
-pretrained_vectors = null
+@architectures = "spacy.TextCatEnsemble.v2"
+
+[model.tok2vec]
+@architectures = "spacy.Tok2Vec.v1"
+
+[model.tok2vec.embed]
+@architectures = "spacy.MultiHashEmbed.v1"
 width = 64
-conv_depth = 2
-embed_size = 2000
+rows = [2000, 2000, 1000, 1000, 1000, 1000]
+attrs = ["ORTH", "LOWER", "PREFIX", "SUFFIX", "SHAPE", "ID"]
+include_static_vectors = false
+
+[model.tok2vec.encode]
+@architectures = "spacy.MaxoutWindowEncoder.v1"
+width = ${model.tok2vec.embed.width}
 window_size = 1
+maxout_pieces = 3
+depth = 2
+
+[model.linear_model]
+@architectures = "spacy.TextCatBOW.v1"
+exclusive_classes = false
 ngram_size = 1
-dropout = null
+no_output_layer = false
 """
 DEFAULT_TEXTCAT_MODEL = Config().from_str(default_model_config)["model"]
 
@@ -60,9 +75,11 @@ subword_features = true
     default_score_weights={
         "cats_score": 1.0,
         "cats_score_desc": None,
-        "cats_p": None,
-        "cats_r": None,
-        "cats_f": None,
+        "cats_micro_p": None,
+        "cats_micro_r": None,
+        "cats_micro_f": None,
+        "cats_macro_p": None,
+        "cats_macro_r": None,
         "cats_macro_f": None,
         "cats_macro_auc": None,
         "cats_f_per_type": None,

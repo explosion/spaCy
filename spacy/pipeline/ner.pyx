@@ -193,13 +193,4 @@ cdef class EntityRecognizer(Parser):
         DOCS: https://nightly.spacy.io/api/entityrecognizer#score
         """
         validate_examples(examples, "EntityRecognizer.score")
-        score_per_type = get_ner_prf(examples)
-        totals = PRFScore()
-        for prf in score_per_type.values():
-            totals += prf
-        return {
-            "ents_p": totals.precision,
-            "ents_r": totals.recall,
-            "ents_f": totals.fscore,
-            "ents_per_type": {k: v.to_dict() for k, v in score_per_type.items()},
-        }
+        return get_ner_prf(examples)

@@ -1,4 +1,5 @@
 import pytest
+from numpy.testing import assert_equal
 
 from spacy import util
 from spacy.training import Example
@@ -6,6 +7,7 @@ from spacy.lang.en import English
 from spacy.language import Language
 from spacy.tests.util import make_tempdir
 from spacy.morphology import Morphology
+from spacy.attrs import MORPH
 
 
 def test_label_types():
@@ -101,3 +103,36 @@ def test_overfitting_IO():
         doc2 = nlp2(test_text)
         assert [str(t.morph) for t in doc2] == gold_morphs
         assert [t.pos_ for t in doc2] == gold_pos_tags
+
+    # Make sure that running pipe twice, or comparing to call, always amounts to the same predictions
+    texts = [
+        "Just a sentence.",
+        "Then one more sentence about London.",
+        "Here is another one.",
+        "I like London.",
+    ]
+    batch_deps_1 = [doc.to_array([MORPH]) for doc in nlp.pipe(texts)]
+    batch_deps_2 = [doc.to_array([MORPH]) for doc in nlp.pipe(texts)]
+    no_batch_deps = [doc.to_array([MORPH]) for doc in [nlp(text) for text in texts]]
+    assert_equal(batch_deps_1, batch_deps_2)
+    assert_equal(batch_deps_1, no_batch_deps)
+
+    # Test without POS
+    nlp.remove_pipe("morphologizer")
+    nlp.add_pipe("morphologizer")
+    for example in train_examples:
+        for token in example.reference:
+            token.pos_ = ""
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+    for i in range(50):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+    assert losses["morphologizer"] < 0.00001
+
+    # Test the trained model
+    test_text = "I like blue ham"
+    doc = nlp(test_text)
+    gold_morphs = ["Feat=N", "Feat=V", "", ""]
+    gold_pos_tags = ["", "", "", ""]
+    assert [str(t.morph) for t in doc] == gold_morphs
+    assert [t.pos_ for t in doc] == gold_pos_tags

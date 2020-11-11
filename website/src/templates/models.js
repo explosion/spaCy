@@ -120,7 +120,7 @@ function formatAccuracy(data) {
                 ? null
                 : {
                       label,
-                      value: value.toFixed(2),
+                      value: (value * 100).toFixed(2),
                       help: MODEL_META[label],
                   }
         })
@@ -374,7 +374,7 @@ const Models = ({ pageContext, repo, children }) => {
     const [initialized, setInitialized] = useState(false)
     const [compatibility, setCompatibility] = useState({})
     const { id, title, meta } = pageContext
-    const { models, isStarters } = meta
+    const { models } = meta
     const baseUrl = `https://raw.githubusercontent.com/${repo}/master`
 
     useEffect(() => {
@@ -388,26 +388,9 @@ const Models = ({ pageContext, repo, children }) => {
         }
     }, [initialized, baseUrl])
 
-    const modelTitle = title
-    const modelTeaser = `Available trained pipelines for ${title}`
-    const starterTitle = `${title} starters`
-    const starterTeaser = `Available transfer learning starter packs for ${title}`
-
     return (
         <>
-            <Title
-                title={isStarters ? starterTitle : modelTitle}
-                teaser={isStarters ? starterTeaser : modelTeaser}
-            />
-            {isStarters && (
-                <Section>
-                    <p>
-                        Starter packs are pretrained weights you can initialize your models with to
-                        achieve better accuracy, like word vectors (which will be used as features
-                        during training).
-                    </p>
-                </Section>
-            )}
+            <Title title={title} teaser={`Available trained pipelines for ${title}`} />
             <StaticQuery
                 query={query}
                 render={({ site }) =>

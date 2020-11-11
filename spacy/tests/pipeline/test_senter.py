@@ -1,4 +1,6 @@
 import pytest
+from numpy.testing import assert_equal
+from spacy.attrs import SENT_START
 
 from spacy import util
 from spacy.training import Example
@@ -80,3 +82,18 @@ def test_overfitting_IO():
         nlp2 = util.load_model_from_path(tmp_dir)
         doc2 = nlp2(test_text)
         assert [int(t.is_sent_start) for t in doc2] == gold_sent_starts
+
+    # Make sure that running pipe twice, or comparing to call, always amounts to the same predictions
+    texts = [
+        "Just a sentence.",
+        "Then one more sentence about London.",
+        "Here is another one.",
+        "I like London.",
+    ]
+    batch_deps_1 = [doc.to_array([SENT_START]) for doc in nlp.pipe(texts)]
+    batch_deps_2 = [doc.to_array([SENT_START]) for doc in nlp.pipe(texts)]
+    no_batch_deps = [
+        doc.to_array([SENT_START]) for doc in [nlp(text) for text in texts]
+    ]
+    assert_equal(batch_deps_1, batch_deps_2)
+    assert_equal(batch_deps_1, no_batch_deps)

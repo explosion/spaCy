@@ -68,8 +68,8 @@ representation consists of 300 dimensions of `0`, which means it's practically
 nonexistent. If your application will benefit from a **large vocabulary** with
 more vectors, you should consider using one of the larger pipeline packages or
 loading in a full vector package, for example,
-[`en_vectors_web_lg`](/models/en-starters#en_vectors_web_lg), which includes
-over **1 million unique vectors**.
+[`en_core_web_lg`](/models/en#en_core_web_lg), which includes **685k unique
+vectors**.
 
 spaCy is able to compare two objects, and make a prediction of **how similar
 they are**. Predicting similarity is useful for building recommendation systems
@@ -115,7 +115,7 @@ print(french_fries, "<->", burgers, french_fries.similarity(burgers))
 
 Computing similarity scores can be helpful in many situations, but it's also
 important to maintain **realistic expectations** about what information it can
-provide. Words can be related to each over in many ways, so a single
+provide. Words can be related to each other in many ways, so a single
 "similarity" score will always be a **mix of different signals**, and vectors
 trained on different data can produce very different results that may not be
 useful for your purpose. Here are some important considerations to keep in mind:

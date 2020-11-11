@@ -216,7 +216,7 @@ in `/opt/nvidia/cuda`, you would run:
 ```bash
 ### Installation with CUDA
 $ export CUDA_PATH="/opt/nvidia/cuda"
-$ pip install -U %%SPACY_PKG_NAME[cud102,transformers]%%SPACY_PKG_FLAGS
+$ pip install -U %%SPACY_PKG_NAME[cuda102,transformers]%%SPACY_PKG_FLAGS
 ```
 
 ### Runtime usage {#transformers-runtime}
@@ -243,12 +243,12 @@ $ python -m spacy download en_core_web_trf
 ```python
 ### Example
 import spacy
-from thinc.api import use_pytorch_for_gpu_memory, require_gpu
+from thinc.api import set_gpu_allocator, require_gpu
 
 # Use the GPU, with memory allocations directed via PyTorch.
 # This prevents out-of-memory errors that would otherwise occur from competing
 # memory pools.
-use_pytorch_for_gpu_memory()
+set_gpu_allocator("pytorch")
 require_gpu(0)
 
 nlp = spacy.load("en_core_web_trf")
@@ -516,7 +516,7 @@ Many neural network models are able to use word vector tables as additional
 features, which sometimes results in significant improvements in accuracy.
 spaCy's built-in embedding layer,
 [MultiHashEmbed](/api/architectures#MultiHashEmbed), can be configured to use
-word vector tables using the `include_static_vectors` flag. 
+word vector tables using the `include_static_vectors` flag.
 
 ```ini
 [tagger.model.tok2vec.embed]

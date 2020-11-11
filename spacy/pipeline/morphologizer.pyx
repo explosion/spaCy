@@ -92,9 +92,6 @@ class Morphologizer(Tagger):
         # 2) labels_pos stores a mapping from morph+POS->POS
         cfg = {"labels_morph": labels_morph or {}, "labels_pos": labels_pos or {}}
         self.cfg = dict(sorted(cfg.items()))
-        # add mappings for empty morph
-        self.cfg["labels_morph"][Morphology.EMPTY_MORPH] = Morphology.EMPTY_MORPH
-        self.cfg["labels_pos"][Morphology.EMPTY_MORPH] = POS_IDS[""]
 
     @property
     def labels(self):
@@ -201,8 +198,8 @@ class Morphologizer(Tagger):
                 doc_tag_ids = doc_tag_ids.get()
             for j, tag_id in enumerate(doc_tag_ids):
                 morph = self.labels[tag_id]
-                doc.c[j].morph = self.vocab.morphology.add(self.cfg["labels_morph"][morph])
-                doc.c[j].pos = self.cfg["labels_pos"][morph]
+                doc.c[j].morph = self.vocab.morphology.add(self.cfg["labels_morph"].get(morph, 0))
+                doc.c[j].pos = self.cfg["labels_pos"].get(morph, 0)
 
     def get_loss(self, examples, scores):
         """Find the loss and gradient of loss for the batch of documents and
@@ -228,12 +225,12 @@ class Morphologizer(Tagger):
                 # doesn't, so if either is None, treat both as None here so that
                 # truths doesn't end up with an unknown morph+POS combination
                 if pos is None or morph is None:
-                    pos = None
-                    morph = None
-                label_dict = Morphology.feats_to_dict(morph)
-                if pos:
-                    label_dict[self.POS_FEAT] = pos
-                label = self.vocab.strings[self.vocab.morphology.add(label_dict)]
+                    label = None
+                else:
+                    label_dict = Morphology.feats_to_dict(morph)
+                    if pos:
+                        label_dict[self.POS_FEAT] = pos
+                    label = self.vocab.strings[self.vocab.morphology.add(label_dict)]
                 eg_truths.append(label)
             truths.append(eg_truths)
         d_scores, loss = loss_func(scores, truths)
@@ -251,10 +248,13 @@ class Morphologizer(Tagger):
 
         DOCS: https://nightly.spacy.io/api/morphologizer#score
         """
+        def morph_key_getter(token, attr):
+            return getattr(token, attr).key
+
         validate_examples(examples, "Morphologizer.score")
         results = {}
         results.update(Scorer.score_token_attr(examples, "pos", **kwargs))
-        results.update(Scorer.score_token_attr(examples, "morph", **kwargs))
+        results.update(Scorer.score_token_attr(examples, "morph", getter=morph_key_getter, **kwargs))
         results.update(Scorer.score_token_attr_per_feat(examples,
-            "morph", **kwargs))
+            "morph", getter=morph_key_getter, **kwargs))
         return results

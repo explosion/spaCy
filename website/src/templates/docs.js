@@ -42,22 +42,12 @@ const Docs = ({ pageContext, children }) => (
             if (isModels) {
                 sidebar.items[1].items = languages
                     .filter(({ models }) => models && models.length)
+                    .sort((a, b) => a.name.localeCompare(b.name))
                     .map(lang => ({
                         text: lang.name,
                         url: `/models/${lang.code}`,
                         isActive: id === lang.code,
                         menu: lang.models.map(model => ({
-                            text: model,
-                            id: model,
-                        })),
-                    }))
-                sidebar.items[2].items = languages
-                    .filter(({ starters }) => starters && starters.length)
-                    .map(lang => ({
-                        text: lang.name,
-                        url: `/models/${lang.code}-starters`,
-                        isActive: id === `${lang.code}-starters`,
-                        menu: lang.starters.map(model => ({
                             text: model,
                             id: model,
                         })),
@@ -146,7 +136,6 @@ const query = graphql`
                     code
                     name
                     models
-                    starters
                 }
                 nightly
                 sidebars {

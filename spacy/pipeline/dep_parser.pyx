@@ -242,13 +242,16 @@ cdef class DependencyParser(Parser):
 
         DOCS: https://nightly.spacy.io/api/dependencyparser#score
         """
+        def has_sents(doc):
+            return doc.has_annotation("SENT_START")
+
         validate_examples(examples, "DependencyParser.score")
         def dep_getter(token, attr):
             dep = getattr(token, attr)
             dep = token.vocab.strings.as_string(dep).lower()
             return dep
         results = {}
-        results.update(Scorer.score_spans(examples, "sents", **kwargs))
+        results.update(Scorer.score_spans(examples, "sents", has_annotation=has_sents, **kwargs))
         kwargs.setdefault("getter", dep_getter)
         kwargs.setdefault("ignore_labels", ("p", "punct"))
         results.update(Scorer.score_deps(examples, "dep", **kwargs))

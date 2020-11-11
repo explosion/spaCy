@@ -1,6 +1,7 @@
 import pytest
 import random
 import numpy.random
+from numpy.testing import assert_equal
 from thinc.api import fix_random_seed
 from spacy import util
 from spacy.lang.en import English
@@ -139,7 +140,7 @@ def test_overfitting_IO():
     nlp = English()
     nlp.config["initialize"]["components"]["textcat"] = {"positive_label": "POSITIVE"}
     # Set exclusive labels
-    config = {"model": {"exclusive_classes": True}}
+    config = {"model": {"linear_model": {"exclusive_classes": True}}}
     textcat = nlp.add_pipe("textcat", config=config)
     train_examples = []
     for text, annotations in TRAIN_DATA:
@@ -174,6 +175,14 @@ def test_overfitting_IO():
     assert scores["cats_score"] == 1.0
     assert "cats_score_desc" in scores
 
+    # Make sure that running pipe twice, or comparing to call, always amounts to the same predictions
+    texts = ["Just a sentence.", "I like green eggs.", "I am happy.", "I eat ham."]
+    batch_deps_1 = [doc.cats for doc in nlp.pipe(texts)]
+    batch_deps_2 = [doc.cats for doc in nlp.pipe(texts)]
+    no_batch_deps = [doc.cats for doc in [nlp(text) for text in texts]]
+    assert_equal(batch_deps_1, batch_deps_2)
+    assert_equal(batch_deps_1, no_batch_deps)
+
 
 # fmt: off
 @pytest.mark.parametrize(
@@ -183,9 +192,8 @@ def test_overfitting_IO():
         {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": True, "ngram_size": 4, "no_output_layer": False},
         {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": False, "ngram_size": 3, "no_output_layer": True},
         {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": True, "ngram_size": 2, "no_output_layer": True},
-        {"@architectures": "spacy.TextCatEnsemble.v1", "exclusive_classes": False, "ngram_size": 1, "pretrained_vectors": False, "width": 64, "conv_depth": 2, "embed_size": 2000, "window_size": 2, "dropout": None},
-        {"@architectures": "spacy.TextCatEnsemble.v1", "exclusive_classes": True, "ngram_size": 5, "pretrained_vectors": False, "width": 128, "conv_depth": 2, "embed_size": 2000, "window_size": 1, "dropout": None},
-        {"@architectures": "spacy.TextCatEnsemble.v1", "exclusive_classes": True, "ngram_size": 2, "pretrained_vectors": False, "width": 32, "conv_depth": 3, "embed_size": 500, "window_size": 3, "dropout": None},
+        {"@architectures": "spacy.TextCatEnsemble.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": False, "ngram_size": 1, "no_output_layer": False}},
+        {"@architectures": "spacy.TextCatEnsemble.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": True, "ngram_size": 5, "no_output_layer": False}},
         {"@architectures": "spacy.TextCatCNN.v1", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": True},
         {"@architectures": "spacy.TextCatCNN.v1", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": False},
     ],

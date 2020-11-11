@@ -195,7 +195,7 @@ class Tagger(TrainablePipe):
         validate_examples(examples, "Tagger.update")
         if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
             # Handle cases where there are no tokens in any docs.
-            return
+            return losses
         set_dropout_rate(self.model, drop)
         tag_scores, bp_tag_scores = self.model.begin_update([eg.predicted for eg in examples])
         for sc in tag_scores:
@@ -227,22 +227,24 @@ class Tagger(TrainablePipe):
 
         DOCS: https://nightly.spacy.io/api/tagger#rehearse
         """
+        if losses is None:
+            losses = {}
+        losses.setdefault(self.name, 0.0)
         validate_examples(examples, "Tagger.rehearse")
         docs = [eg.predicted for eg in examples]
         if self._rehearsal_model is None:
-            return
+            return losses
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
-            return
+            return losses
         set_dropout_rate(self.model, drop)
         guesses, backprop = self.model.begin_update(docs)
         target = self._rehearsal_model(examples)
         gradient = guesses - target
         backprop(gradient)
         self.finish_update(sgd)
-        if losses is not None:
-            losses.setdefault(self.name, 0.0)
-            losses[self.name] += (gradient**2).sum()
+        losses[self.name] += (gradient**2).sum()
+        return losses
 
     def get_loss(self, examples, scores):
         """Find the loss and gradient of loss for the batch of documents and

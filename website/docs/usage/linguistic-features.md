@@ -44,7 +44,7 @@ in the [models directory](/models).
 
 Inflectional morphology is the process by which a root form of a word is
 modified by adding prefixes or suffixes that specify its grammatical function
-but do not changes its part-of-speech. We say that a **lemma** (root form) is
+but do not change its part-of-speech. We say that a **lemma** (root form) is
 **inflected** (modified/combined) with one or more **morphological features** to
 create a surface form. Here are some examples:
 
@@ -54,9 +54,9 @@ create a surface form. Here are some examples:
 | I don't watch the news, I read the paper | read    | read  | `VERB` | `VerbForm=Fin`, `Mood=Ind`, `Tense=Pres` |
 | I read the paper yesterday               | read    | read  | `VERB` | `VerbForm=Fin`, `Mood=Ind`, `Tense=Past` |
 
-Morphological features are stored in the [`MorphAnalysis`](/api/morphanalysis)
-under `Token.morph`, which allows you to access individual morphological
-features.
+Morphological features are stored in the
+[`MorphAnalysis`](/api/morphology#morphanalysis) under `Token.morph`, which
+allows you to access individual morphological features.
 
 > #### 📝 Things to try
 >
@@ -288,7 +288,7 @@ import DisplaCyLong2Html from 'images/displacy-long2.html'
 Because the syntactic relations form a tree, every word has **exactly one
 head**. You can therefore iterate over the arcs in the tree by iterating over
 the words in the sentence. This is usually the best way to match an arc of
-interest — from below:
+interest – from below:
 
 ```python
 ### {executable="true"}
@@ -397,7 +397,7 @@ for descendant in subject.subtree:
 Finally, the `.left_edge` and `.right_edge` attributes can be especially useful,
 because they give you the first and last token of the subtree. This is the
 easiest way to create a `Span` object for a syntactic phrase. Note that
-`.right_edge` gives a token **within** the subtree — so if you use it as the
+`.right_edge` gives a token **within** the subtree – so if you use it as the
 end-point of a range, don't forget to `+1`!
 
 ```python
@@ -639,7 +639,7 @@ print("After", doc.ents)  # [London]
 
 #### Setting entity annotations in Cython {#setting-cython}
 
-Finally, you can always write to the underlying struct, if you compile a
+Finally, you can always write to the underlying struct if you compile a
 [Cython](http://cython.org/) function. This is easy to do, and allows you to
 write efficient native code.
 
@@ -763,15 +763,15 @@ import Tokenization101 from 'usage/101/\_tokenization.md'
 
 <Accordion title="Algorithm details: How spaCy's tokenizer works" id="how-tokenizer-works" spaced>
 
-spaCy introduces a novel tokenization algorithm, that gives a better balance
-between performance, ease of definition, and ease of alignment into the original
+spaCy introduces a novel tokenization algorithm that gives a better balance
+between performance, ease of definition and ease of alignment into the original
 string.
 
 After consuming a prefix or suffix, we consult the special cases again. We want
 the special cases to handle things like "don't" in English, and we want the same
 rule to work for "(don't)!". We do this by splitting off the open bracket, then
-the exclamation, then the close bracket, and finally matching the special case.
-Here's an implementation of the algorithm in Python, optimized for readability
+the exclamation, then the closed bracket, and finally matching the special case.
+Here's an implementation of the algorithm in Python optimized for readability
 rather than performance:
 
 ```python
@@ -845,7 +845,7 @@ The algorithm can be summarized as follows:
    #2.
 6. If we can't consume a prefix or a suffix, look for a URL match.
 7. If there's no URL match, then look for a special case.
-8. Look for "infixes" — stuff like hyphens etc. and split the substring into
+8. Look for "infixes" – stuff like hyphens etc. and split the substring into
    tokens on all infixes.
 9. Once we can't consume any more of the string, handle it as a single token.
 
@@ -862,10 +862,10 @@ intact (abbreviations like "U.S.").
 <Accordion title="Should I change the language data or add custom tokenizer rules?" id="lang-data-vs-tokenizer">
 
 Tokenization rules that are specific to one language, but can be **generalized
-across that language** should ideally live in the language data in
+across that language**, should ideally live in the language data in
 [`spacy/lang`](%%GITHUB_SPACY/spacy/lang) – we always appreciate pull requests!
 Anything that's specific to a domain or text type – like financial trading
-abbreviations, or Bavarian youth slang – should be added as a special case rule
+abbreviations or Bavarian youth slang – should be added as a special case rule
 to your tokenizer instance. If you're dealing with a lot of customizations, it
 might make sense to create an entirely custom subclass.
 
@@ -1108,7 +1108,7 @@ tokenized `Doc`.
 ![The processing pipeline](../images/pipeline.svg)
 
 To overwrite the existing tokenizer, you need to replace `nlp.tokenizer` with a
-custom function that takes a text, and returns a [`Doc`](/api/doc).
+custom function that takes a text and returns a [`Doc`](/api/doc).
 
 > #### Creating a Doc
 >
@@ -1227,7 +1227,7 @@ tokenizer** it will be using at runtime. See the docs on
 
 #### Training with custom tokenization {#custom-tokenizer-training new="3"}
 
-spaCy's [training config](/usage/training#config) describe the settings,
+spaCy's [training config](/usage/training#config) describes the settings,
 hyperparameters, pipeline and tokenizer used for constructing and training the
 pipeline. The `[nlp.tokenizer]` block refers to a **registered function** that
 takes the `nlp` object and returns a tokenizer. Here, we're registering a
@@ -1463,7 +1463,7 @@ filtered_spans = filter_spans(spans)
 The [`retokenizer.split`](/api/doc#retokenizer.split) method allows splitting
 one token into two or more tokens. This can be useful for cases where
 tokenization rules alone aren't sufficient. For example, you might want to split
-"its" into the tokens "it" and "is" — but not the possessive pronoun "its". You
+"its" into the tokens "it" and "is" – but not the possessive pronoun "its". You
 can write rule-based logic that can find only the correct "its" to split, but by
 that time, the `Doc` will already be tokenized.
 
@@ -1511,7 +1511,7 @@ the token indices after splitting.
 | `"York"` | `doc[2]`      | Attach this token to `doc[1]` in the original `Doc`, i.e. "in".                                     |
 
 If you don't care about the heads (for example, if you're only running the
-tokenizer and not the parser), you can each subtoken to itself:
+tokenizer and not the parser), you can attach each subtoken to itself:
 
 ```python
 ### {highlight="3"}
@@ -1859,9 +1859,8 @@ pruning the vectors will be taken care of automatically if you set the `--prune`
 flag. You can also do it manually in the following steps:
 
 1. Start with a **word vectors package** that covers a huge vocabulary. For
-   instance, the [`en_vectors_web_lg`](/models/en-starters#en_vectors_web_lg)
-   starter provides 300-dimensional GloVe vectors for over 1 million terms of
-   English.
+   instance, the [`en_core_web_lg`](/models/en#en_core_web_lg) package provides
+   300-dimensional GloVe vectors for 685k terms of English.
 2. If your vocabulary has values set for the `Lexeme.prob` attribute, the
    lexemes will be sorted by descending probability to determine which vectors
    to prune. Otherwise, lexemes will be sorted by their order in the `Vocab`.
@@ -1869,7 +1868,7 @@ flag. You can also do it manually in the following steps:
    vectors you want to keep.
 
 ```python
-nlp = spacy.load('en_vectors_web_lg')
+nlp = spacy.load("en_core_web_lg")
 n_vectors = 105000  # number of vectors to keep
 removed_words = nlp.vocab.prune_vectors(n_vectors)
 
@@ -1880,7 +1879,7 @@ assert nlp.vocab.vectors.n_keys > n_vectors  # but not the total entries
 [`Vocab.prune_vectors`](/api/vocab#prune_vectors) reduces the current vector
 table to a given number of unique entries, and returns a dictionary containing
 the removed words, mapped to `(string, score)` tuples, where `string` is the
-entry the removed word was mapped to, and `score` the similarity score between
+entry the removed word was mapped to and `score` the similarity score between
 the two words.
 
 ```python

@@ -399,14 +399,13 @@ cdef class Doc:
             return True
         cdef int i
         cdef int range_start = 0
+        if attr == "IS_SENT_START" or attr == self.vocab.strings["IS_SENT_START"]:
+            attr = SENT_START
         attr = intify_attr(attr)
         # adjust attributes
         if attr == HEAD:
             # HEAD does not have an unset state, so rely on DEP
             attr = DEP
-        elif attr == self.vocab.strings["IS_SENT_START"]:
-            # as in Matcher, allow IS_SENT_START as an alias of SENT_START
-            attr = SENT_START
         # special cases for sentence boundaries
         if attr == SENT_START:
             if "sents" in self.user_hooks:
@@ -1419,7 +1418,7 @@ cdef class Doc:
             if include_annotation["POS"]:
                 token_data["pos"] = token.pos_
             if include_annotation["MORPH"]:
-                token_data["morph"] = token.morph
+                token_data["morph"] = token.morph.to_json()
             if include_annotation["LEMMA"]:
                 token_data["lemma"] = token.lemma_
             if include_annotation["DEP"]:

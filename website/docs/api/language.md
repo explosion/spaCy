@@ -786,15 +786,13 @@ doesn't, the pipeline analysis won't catch that.
 ### Pretty
 ============================= Pipeline Overview =============================
 
-#   Component       Assigns           Requires         Scores      Retokenizes
--   -------------   ---------------   --------------   ---------   -----------
-0   tagger          token.tag                          tag_acc     False
-                                                       pos_acc
-                                                       lemma_acc
+#   Component       Assigns           Requires         Scores        Retokenizes
+-   -------------   ---------------   --------------   -----------   -----------
+0   tagger          token.tag                          tag_acc       False
 
-1   entity_linker   token.ent_kb_id   doc.ents                     False
-                                      doc.sents
-                                      token.ent_iob
+1   entity_linker   token.ent_kb_id   doc.ents         nel_micro_f   False
+                                      doc.sents        nel_micro_r
+                                      token.ent_iob    nel_micro_p
                                       token.ent_type
 
 

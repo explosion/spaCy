@@ -1,6 +1,6 @@
 from .corpus import Corpus  # noqa: F401
 from .example import Example, validate_examples, validate_get_examples  # noqa: F401
-from .align import Alignment  # noqa: F401
+from .alignment import Alignment  # noqa: F401
 from .augment import dont_augment, orth_variants_augmenter  # noqa: F401
 from .iob_utils import iob_to_biluo, biluo_to_iob  # noqa: F401
 from .iob_utils import offsets_to_biluo_tags, biluo_tags_to_offsets  # noqa: F401

@@ -2,6 +2,7 @@ import pytest
 from spacy.language import Language
 from spacy.lang.en import English
 from spacy.lang.de import German
+from spacy.pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
 from spacy.tokens import Doc
 from spacy.util import registry, SimpleFrozenDict, combine_score_weights
 from thinc.api import Model, Linear, ConfigValidationError
@@ -156,15 +157,10 @@ def test_pipe_class_component_model():
     name = "test_class_component_model"
     default_config = {
         "model": {
-            "@architectures": "spacy.TextCatEnsemble.v1",
-            "exclusive_classes": False,
-            "pretrained_vectors": None,
-            "width": 64,
-            "embed_size": 2000,
-            "window_size": 1,
-            "conv_depth": 2,
-            "ngram_size": 1,
-            "dropout": None,
+            "@architectures": "spacy.TextCatEnsemble.v2",
+            "tok2vec": DEFAULT_TOK2VEC_MODEL,
+            "linear_model": {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": False, "ngram_size": 1,
+                      "no_output_layer": False},
         },
         "value1": 10,
     }

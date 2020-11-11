@@ -149,7 +149,7 @@ import DisplacyEntCustomHtml from 'images/displacy-ent-custom.html'
 The above example uses a little trick: Since the background color values are
 added as the `background` style attribute, you can use any
 [valid background value](https://tympanus.net/codrops/css_reference/background/)
-or shorthand — including gradients and even images!
+or shorthand – including gradients and even images!
 
 ### Adding titles to documents {#ent-titles}
 
@@ -257,7 +257,7 @@ output_path.open("w", encoding="utf-8").write(svg)
 Since each visualization is generated as a separate SVG, exporting `.svg` files
 only works if you're rendering **one single doc** at a time. (This makes sense –
 after all, each visualization should be a standalone graphic.) So instead of
-rendering all `Doc`s at one, loop over them and export them separately.
+rendering all `Doc`s at once, loop over them and export them separately.
 
 </Infobox>
 

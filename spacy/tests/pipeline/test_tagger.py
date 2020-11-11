@@ -1,4 +1,7 @@
 import pytest
+from numpy.testing import assert_equal
+from spacy.attrs import TAG
+
 from spacy import util
 from spacy.training import Example
 from spacy.lang.en import English
@@ -116,6 +119,19 @@ def test_overfitting_IO():
         assert doc2[1].tag_ is "V"
         assert doc2[2].tag_ is "J"
         assert doc2[3].tag_ is "N"
+
+    # Make sure that running pipe twice, or comparing to call, always amounts to the same predictions
+    texts = [
+        "Just a sentence.",
+        "I like green eggs.",
+        "Here is another one.",
+        "I eat ham.",
+    ]
+    batch_deps_1 = [doc.to_array([TAG]) for doc in nlp.pipe(texts)]
+    batch_deps_2 = [doc.to_array([TAG]) for doc in nlp.pipe(texts)]
+    no_batch_deps = [doc.to_array([TAG]) for doc in [nlp(text) for text in texts]]
+    assert_equal(batch_deps_1, batch_deps_2)
+    assert_equal(batch_deps_1, no_batch_deps)
 
 
 def test_tagger_requires_labels():

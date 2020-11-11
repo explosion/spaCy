@@ -69,7 +69,7 @@ python -m spacy project clone pipelines/tagger_parser_ud
 
 By default, the project will be cloned into the current working directory. You
 can specify an optional second argument to define the output directory. The
-`--repo` option lets you define a custom repo to clone from, if you don't want
+`--repo` option lets you define a custom repo to clone from if you don't want
 to use the spaCy [`projects`](https://github.com/explosion/projects) repo. You
 can also use any private repo you have access to with Git.
 
@@ -105,7 +105,7 @@ $ python -m spacy project assets
 Asset URLs can be a number of different protocols: HTTP, HTTPS, FTP, SSH, and
 even cloud storage such as GCS and S3. You can also fetch assets using git, by
 replacing the `url` string with a `git` block. spaCy will use Git's "sparse
-checkout" feature, to avoid download the whole repository.
+checkout" feature to avoid downloading the whole repository.
 
 ### 3. Run a command {#run}
 
@@ -310,7 +310,7 @@ company-internal and not available over the internet. In that case, you can
 specify the destination paths and a checksum, and leave out the URL. When your
 teammates clone and run your project, they can place the files in the respective
 directory themselves. The [`project assets`](/api/cli#project-assets) command
-will alert about missing files and mismatched checksums, so you can ensure that
+will alert you about missing files and mismatched checksums, so you can ensure that
 others are running your project with the same data.
 
 ### Dependencies and outputs {#deps-outputs}
@@ -358,8 +358,7 @@ graphs based on the dependencies and outputs, and won't re-run previous steps
 automatically. For instance, if you only run the command `train` that depends on
 data created by `preprocess` and those files are missing, spaCy will show an
 error – it won't just re-run `preprocess`. If you're looking for more advanced
-data management, check out the [Data Version Control (DVC) integration](#dvc)
-integration. If you're planning on integrating your spaCy project with DVC, you
+data management, check out the [Data Version Control (DVC) integration](#dvc). If you're planning on integrating your spaCy project with DVC, you
 can also use `outputs_no_cache` instead of `outputs` to define outputs that
 won't be cached or tracked.
 
