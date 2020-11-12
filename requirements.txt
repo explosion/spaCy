@@ -14,6 +14,7 @@ plac>=0.9.6,<1.2.0
 pathlib==1.0.1; python_version < "3.4"
 tqdm>=4.38.0,<5.0.0
 # Optional dependencies
+pyrsistent<0.17.0
 jsonschema>=2.6.0,<3.1.0
 # Development dependencies
 cython>=0.25
