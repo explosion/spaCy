@@ -5,7 +5,7 @@ import pytest
 import numpy
 from spacy.tokens import Doc
 
-from ..util import get_cosine, add_vecs_to_vocab
+from ..util import get_similarity, add_vecs_to_vocab
 
 
 @pytest.fixture
@@ -13,9 +13,23 @@ def vectors():
     return [("apple", [1, 2, 3]), ("orange", [-1, -2, -3])]
 
 
+@pytest.fixture
+def vectors_binary():
+    return [
+        ("apple", numpy.array([1, 0, 1, 1, 0, 1, 1, 1], dtype=numpy.int8)),
+        ("orange", numpy.array([0, 1, 1, 0, 1, 1, 0, 0], dtype=numpy.int8)),
+    ]
+
+
 @pytest.fixture()
 def vocab(en_vocab, vectors):
     add_vecs_to_vocab(en_vocab, vectors)
+    return en_vocab
+
+
+@pytest.fixture()
+def vocab_binary(en_vocab, vectors_binary):
+    add_vecs_to_vocab(en_vocab, vectors_binary)
     return en_vocab
 
 
@@ -28,7 +42,7 @@ def test_vectors_similarity_LL(vocab, vectors):
     assert lex1.vector_norm != 0
     assert lex2.vector_norm != 0
     assert lex1.vector[0] != lex2.vector[0] and lex1.vector[1] != lex2.vector[1]
-    assert numpy.isclose(lex1.similarity(lex2), get_cosine(vec1, vec2))
+    assert numpy.isclose(lex1.similarity(lex2), get_similarity(vec1, vec2))
     assert numpy.isclose(lex2.similarity(lex2), lex1.similarity(lex1))
 
 
@@ -40,7 +54,7 @@ def test_vectors_similarity_TT(vocab, vectors):
     assert doc[0].vector_norm != 0
     assert doc[1].vector_norm != 0
     assert doc[0].vector[0] != doc[1].vector[0] and doc[0].vector[1] != doc[1].vector[1]
-    assert numpy.isclose(doc[0].similarity(doc[1]), get_cosine(vec1, vec2))
+    assert numpy.isclose(doc[0].similarity(doc[1]), get_similarity(vec1, vec2))
     assert numpy.isclose(doc[1].similarity(doc[0]), doc[0].similarity(doc[1]))
 
 
@@ -62,3 +76,51 @@ def test_vectors_similarity_TS(vocab, vectors):
     doc = Doc(vocab, words=[word1, word2])
     with pytest.warns(UserWarning):
         assert doc[:2].similarity(doc[0]) == doc[0].similarity(doc[:2])
+
+
+def test_vectors_similarity_LL_binary(vocab_binary, vectors_binary):
+    [(word1, vec1), (word2, vec2)] = vectors_binary
+    lex1 = vocab_binary[word1]
+    lex2 = vocab_binary[word2]
+    assert lex1.has_vector
+    assert lex2.has_vector
+    assert lex1.vector_norm != 0
+    assert lex2.vector_norm != 0
+    assert lex1.vector[0] != lex2.vector[0] and lex1.vector[1] != lex2.vector[1]
+    assert lex1.vector.dtype == numpy.int8
+    assert lex2.vector.dtype == numpy.int8
+    assert numpy.isclose(lex1.similarity(lex2), get_similarity(vec1, vec2))
+    assert numpy.isclose(lex2.similarity(lex2), lex1.similarity(lex1))
+
+
+def test_vectors_similarity_TT_binary(vocab_binary, vectors_binary):
+    [(word1, vec1), (word2, vec2)] = vectors_binary
+    doc = Doc(vocab_binary, words=[word1, word2])
+    assert doc[0].has_vector
+    assert doc[1].has_vector
+    assert doc[0].vector_norm != 0
+    assert doc[1].vector_norm != 0
+    assert doc[0].vector[0] != doc[1].vector[0] and doc[0].vector[1] != doc[1].vector[1]
+    assert doc[0].vector.dtype == numpy.int8
+    assert doc[1].vector.dtype == numpy.int8
+    assert numpy.isclose(doc[0].similarity(doc[1]), get_similarity(vec1, vec2))
+    assert numpy.isclose(doc[1].similarity(doc[0]), doc[0].similarity(doc[1]))
+
+
+def test_vectors_similarity_TD_binary(vocab_binary, vectors_binary):
+    [(word1, vec1), (word2, vec2)] = vectors_binary
+    doc = Doc(vocab_binary, words=[word1, word2])
+    assert doc.similarity(doc[0]) == doc[0].similarity(doc)
+
+
+def test_vectors_similarity_DS_binary(vocab_binary, vectors_binary):
+    [(word1, vec1), (word2, vec2)] = vectors_binary
+    doc = Doc(vocab_binary, words=[word1, word2])
+    assert doc.similarity(doc[:2]) == doc[:2].similarity(doc)
+
+
+def test_vectors_similarity_TS_binary(vocab_binary, vectors_binary):
+    [(word1, vec1), (word2, vec2)] = vectors_binary
+    doc = Doc(vocab_binary, words=[word1, word2])
+    print(doc[:2].vector)
+    assert doc[:2].similarity(doc[0]) == doc[0].similarity(doc[:2])

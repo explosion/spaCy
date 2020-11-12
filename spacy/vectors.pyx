@@ -58,7 +58,7 @@ cdef class Vectors:
     cdef public object key2row
     cdef cppset[int] _unset
 
-    def __init__(self, *, shape=None, data=None, keys=None, name=None):
+    def __init__(self, *, shape=None, data=None, keys=None, name=None, dtype=None):
         """Create a new vector store.
 
         shape (tuple): Size of the table, as (# entries, # columns)
@@ -70,10 +70,12 @@ cdef class Vectors:
         DOCS: https://spacy.io/api/vectors#init
         """
         self.name = name
+        if dtype is None:
+            dtype = "f"
         if data is None:
             if shape is None:
                 shape = (0,0)
-            data = numpy.zeros(shape, dtype="f")
+            data = numpy.zeros(shape, dtype=dtype)
         self.data = data
         self.key2row = OrderedDict()
         if self.data is not None:
@@ -342,9 +344,7 @@ cdef class Vectors:
         scores = xp.zeros((queries.shape[0], n), dtype='f')
 
         # choose the right type of similarity score based on dtype
-        similarity_fn = self.similarity_float
-        if self.data.dtype == xp.int8:
-            similarity_fn = self.similarity_binary
+        similarity_fn = self._similarity()
 
         # Work in batches, to avoid memory problems.
         for i in range(0, queries.shape[0], batch_size):
@@ -371,7 +371,13 @@ cdef class Vectors:
                     for i in range(len(queries)) ], dtype="uint64")
         return (keys, best_rows, scores)
 
-    def similarity_float(self, xp, batch, vectors):
+    def _similarity(self):
+        sim_fn = self._similarity_float
+        if self.data.dtype == numpy.int8:
+            sim_fn = self._similarity_binary
+        return sim_fn
+
+    def _similarity_float(self, xp, batch, vectors):
         """For each of the given vectors, calculate similarities to batch by
             cosine."""
         batch_norms = xp.linalg.norm(batch, axis=1, keepdims=True)
@@ -383,13 +389,14 @@ cdef class Vectors:
         sims = xp.dot(batch, vectors.T)
         return sims
 
-    def similarity_binary(self, xp, batch, vectors):
+    def _similarity_binary(self, xp, vec1, vec2):
         """For each of the given vectors, calculate similarities to batch by
             Sokal Michener similarity."""
-        vector_size = batch.shape[1]
-        ones = xp.dot(batch , vectors.T)
-        zeroes = (xp.dot((1.0 - batch) , (1.0 - vectors.T)))
-        return (ones + zeroes) / vector_size
+        ntt = xp.dot(vec1, vec2.T)
+        ntf = xp.dot(vec1, 1 - vec2.T)
+        nff = xp.dot((1.0 - vec1), (1.0 - vec2.T))
+        nft = xp.dot((1.0 - vec1), vec2.T)
+        return (ntt + nff) / (ntt + ntf + nff + nft)
 
     def to_disk(self, path, **kwargs):
         """Save the current state to a directory.

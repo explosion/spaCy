@@ -210,7 +210,7 @@ cdef class Doc:
         self.user_hooks = {}
         self.user_token_hooks = {}
         self.user_span_hooks = {}
-        self.tensor = numpy.zeros((0,), dtype="float32")
+        self.tensor = numpy.zeros((0,), dtype=self.vocab.vectors_dtype)
         self.user_data = {} if user_data is None else user_data
         self._vector = None
         self.noun_chunks_iterator = _get_chunker(self.vocab.lang)
@@ -437,7 +437,26 @@ cdef class Doc:
             return 0.0
         vector = self.vector
         xp = get_array_module(vector)
+        return self._similarity()(xp, vector, other)
+
+    def _similarity(self):
+        sim_fn = self._similarity_float
+        if self.vocab.vectors_dtype == numpy.int8:
+            sim_fn = self._similarity_binary
+        return sim_fn
+
+    def _similarity_float(self, xp, vector, other):
+        """Calculate cosine similarity."""
         return xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm)
+
+    def _similarity_binary(self, xp, vec1, other):
+        """Calculate Sokal Michener similarity."""
+        vec2 = other.vector
+        ntt = xp.dot(vec1, vec2.T)
+        ntf = xp.dot(vec1, 1 - vec2.T)
+        nff = xp.dot((1.0 - vec1), (1.0 - vec2.T))
+        nft = xp.dot((1.0 - vec1), vec2.T)
+        return (ntt + nff) / (ntt + ntf + nff + nft)
 
     @property
     def has_vector(self):
@@ -473,19 +492,19 @@ cdef class Doc:
                 return self._vector
             xp = get_array_module(self.vocab.vectors.data)
             if not len(self):
-                self._vector = xp.zeros((self.vocab.vectors_length,), dtype="f")
+                self._vector = xp.zeros((self.vocab.vectors_length,), dtype=self.vocab.vectors_dtype)
                 return self._vector
             elif self.vocab.vectors.data.size > 0:
                 self._vector = sum(t.vector for t in self) / len(self)
-                return self._vector
+                return self._vector.astype(self.vocab.vectors_dtype)
             elif self.tensor.size > 0:
                 self._vector = self.tensor.mean(axis=0)
-                return self._vector
+                return self._vector.astype(self.vocab.vectors_dtype)
             else:
-                return xp.zeros((self.vocab.vectors_length,), dtype="float32")
+                return xp.zeros((self.vocab.vectors_length,), dtype=self.vocab.vectors_dtype)
 
         def __set__(self, value):
-            self._vector = value
+            self._vector = value.astype(self.vocab.vectors_dtype)
 
     property vector_norm:
         """The L2 norm of the document's vector representation.

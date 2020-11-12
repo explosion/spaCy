@@ -276,17 +276,21 @@ cdef class Vocab:
     def vectors_length(self):
         return self.vectors.data.shape[1]
 
-    def reset_vectors(self, *, width=None, shape=None):
+    @property
+    def vectors_dtype(self):
+        return self.vectors.data.dtype
+
+    def reset_vectors(self, *, width=None, shape=None, dtype=None):
         """Drop the current vector table. Because all vectors must be the same
         width, you have to call this to change the size of the vectors.
         """
         if width is not None and shape is not None:
             raise ValueError(Errors.E065.format(width=width, shape=shape))
         elif shape is not None:
-            self.vectors = Vectors(shape=shape)
+            self.vectors = Vectors(shape=shape, dtype=dtype)
         else:
             width = width if width is not None else self.vectors.data.shape[1]
-            self.vectors = Vectors(shape=(self.vectors.shape[0], width))
+            self.vectors = Vectors(shape=(self.vectors.shape[0], width), dtype=dtype)
 
     def prune_vectors(self, nr_row, batch_size=1024):
         """Reduce the current vector table to `nr_row` unique entries. Words
@@ -367,7 +371,7 @@ cdef class Vocab:
         if maxn is None:
             maxn = len(word)
         xp = get_array_module(self.vectors.data)
-        vectors = xp.zeros((self.vectors_length,), dtype="f")
+        vectors = xp.zeros((self.vectors_length,), dtype=self.vectors_dtype)
         # Fasttext's ngram computation taken from
         # https://github.com/facebookresearch/fastText
         ngrams_size = 0;

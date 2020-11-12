@@ -97,15 +97,36 @@ def add_vecs_to_vocab(vocab, vectors):
     """Add list of vector tuples to given vocab. All vectors need to have the
     same length. Format: [("text", [1, 2, 3])]"""
     length = len(vectors[0][1])
-    vocab.reset_vectors(width=length)
+    dtype = "f"
+    if hasattr(vectors[0][1], 'dtype'):
+        dtype = vectors[0][1].dtype
+    vocab.reset_vectors(width=length, dtype=dtype)
     for word, vec in vectors:
         vocab.set_vector(word, vector=vec)
     return vocab
 
 
+def get_similarity(vec1, vec2):
+    """Choose similarity function based on dtype"""
+    sim_fn = get_cosine
+    if hasattr(vec1, "dtype") and hasattr(vec2, "dtype"):
+        if vec1.dtype == numpy.int8 and vec2.dtype == numpy.int8:
+            sim_fn = get_sokalmichener
+    return sim_fn(vec1, vec2)
+
+
 def get_cosine(vec1, vec2):
     """Get cosine for two given vectors"""
     return numpy.dot(vec1, vec2) / (numpy.linalg.norm(vec1) * numpy.linalg.norm(vec2))
+
+
+def get_sokalmichener(vec1, vec2):
+    """Get Sokal Michener similarity."""
+    ntt = numpy.dot(vec1, vec2.T)
+    ntf = numpy.dot(vec1, 1 - vec2.T)
+    nff = numpy.dot((1.0 - vec1), (1.0 - vec2.T))
+    nft = numpy.dot((1.0 - vec1), vec2.T)
+    return (ntt + nff) / (ntt + ntf + nff + nft)
 
 
 def assert_docs_equal(doc1, doc2):
