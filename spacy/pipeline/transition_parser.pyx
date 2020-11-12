@@ -44,12 +44,12 @@ cdef class Parser(TrainablePipe):
         moves=None,
         *,
         update_with_oracle_cut_size,
-        multitasks=tuple(),
         min_action_freq,
         learn_tokens,
-        beam_width,
-        beam_density,
-        beam_update_prob
+        beam_width=1,
+        beam_density=0.0,
+        beam_update_prob=0.0,
+        multitasks=tuple(),
     ):
         """Create a Parser.
 
@@ -473,14 +473,10 @@ cdef class Parser(TrainablePipe):
             [eg.predicted for eg in examples])
         states_d_scores, backprops, beams = _beam_utils.update_beam(
             self.moves,
-            model.state2vec.nF,
-            10000,
             states,
             golds,
             model,
             beam_width,
-            drop=drop,
-            losses=losses,
             beam_density=beam_density,
             early_update=False
         )
