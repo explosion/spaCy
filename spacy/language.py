@@ -1295,27 +1295,28 @@ class Language:
             kwargs = dict(scorer_cfg)
             kwargs.setdefault("nlp", self)
             scorer = Scorer(**kwargs)
-        texts = [eg.reference.text for eg in examples]
-        docs = [eg.predicted for eg in examples]
+        # reset annotation in predicted docs and time tokenization
         start_time = timer()
-        # tokenize the texts only for timing purposes
         if not hasattr(self.tokenizer, "pipe"):
-            _ = [self.tokenizer(text) for text in texts]  # noqa: F841
+            for eg in examples:
+                eg.predicted = self.tokenizer(eg.reference.text)
         else:
-            _ = list(self.tokenizer.pipe(texts))  # noqa: F841
+            for doc, eg in zip(
+                self.tokenizer.pipe(eg.reference.text for eg in examples), examples
+            ):
+                eg.predicted = doc
+        # apply all pipeline components
+        docs = [eg.predicted for eg in examples]
         for name, pipe in self.pipeline:
             kwargs = component_cfg.get(name, {})
             kwargs.setdefault("batch_size", batch_size)
             docs = _pipe(docs, pipe, kwargs)
-        # iterate over the final generator
-        if len(self.pipeline):
-            docs = list(docs)
+        # iterate over final generator
+        for doc in docs:
+            pass
         end_time = timer()
-        for i, (doc, eg) in enumerate(zip(docs, examples)):
-            util.logger.debug(doc)
-            eg.predicted = doc
         results = scorer.score(examples)
-        n_words = sum(len(doc) for doc in docs)
+        n_words = sum(len(eg.predicted) for eg in examples)
         results["speed"] = n_words / (end_time - start_time)
         return results
 

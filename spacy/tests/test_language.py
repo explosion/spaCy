@@ -53,7 +53,8 @@ def test_language_evaluate(nlp):
     annots = {"doc_annotation": {"cats": {"POSITIVE": 1.0, "NEGATIVE": 0.0}}}
     doc = Doc(nlp.vocab, words=text.split(" "))
     example = Example.from_dict(doc, annots)
-    nlp.evaluate([example])
+    scores = nlp.evaluate([example])
+    assert scores["speed"] > 0
 
     # Not allowed to call with just one Example
     with pytest.raises(TypeError):
