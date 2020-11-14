@@ -136,7 +136,7 @@ def test_beam_density(moves, examples, beam_width, hyp):
     states, golds, _ = moves.init_gold_batch(examples)
     beam = BeamBatch(moves, states, golds, width=beam_width, density=beam_density)
     n_state = sum(beam.size for beam in beam)
-    scores = hyp.draw(ndarrays_of_shape((n_size, moves.n_moves)))
+    scores = hyp.draw(ndarrays_of_shape((n_state, moves.n_moves)))
     beam.advance(scores)
     for b in beam:
         beam_probs = b.probs
