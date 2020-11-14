@@ -228,29 +228,27 @@ cdef class Parser(TrainablePipe):
     def beam_parse(self, docs, int beam_width, float drop=0., beam_density=0.):
         cdef Beam beam
         cdef Doc doc
-        states = self.moves.init_batch(docs)
-        batch = ParserBeam(self.moves, states, None, beam_width, density=beam_density)
+        batch = _beam_utils.BeamBatch(
+            self.moves,
+            self.moves.init_batch(docs),
+            None,
+            beam_width,
+            density=beam_density
+        )
         # This is pretty dirty, but the NER can resize itself in init_batch,
         # if labels are missing. We therefore have to check whether we need to
         # expand our model output.
         self._resize()
         model = self.model.predict(docs)
-        cdef int nr_feature = model.state2vec.nF
         while not batch.is_done:
-            states = []
-            for beam in todo:
-                for i in range(beam.size):
-                    state = <StateC*>beam.at(i)
-                    if not state.is_final():
-                        states.append(StateClass.borrow(state))
+            states = batch.get_unfinished_states()
             if not states:
                 break
             scores = model.predict(states)
-            todo = self.transition_beams(todo, scores)
+            batch.advance(scores)
         model.clear_memory()
         del model
-        assert len(set([id(beam) for beam in beams])) == len(beams)
-        return beams
+        return list(batch)
 
     cdef void _parseC(self, StateC** states,
             WeightsC weights, SizesC sizes) nogil:
@@ -284,8 +282,6 @@ cdef class Parser(TrainablePipe):
             self.moves.finalize_doc(doc)
             for hook in self.postprocesses:
                 hook(doc)
-        #for beam in beams:
-        #    _beam_utils.cleanup_beam(beam)
 
     def transition_states(self, states, float[:, ::1] scores):
         cdef StateClass state
@@ -316,20 +312,6 @@ cdef class Parser(TrainablePipe):
                 action.do(states[i], action.label)
                 states[i].push_hist(guess)
         free(is_valid)
-
-    def transition_beams(self, beams, float[:, ::1] scores):
-        cdef Beam beam
-        cdef float* c_scores = &scores[0, 0]
-        for beam in beams:
-            for i in range(beam.size):
-                state = <StateC*>beam.at(i)
-                if not state.is_final():
-                    self.moves.set_valid(beam.is_valid[i], state)
-                    memcpy(beam.scores[i], c_scores, scores.shape[1] * sizeof(float))
-                    c_scores += scores.shape[1]
-            beam.advance(_beam_utils.transition_state, _beam_utils.hash_state, <void*>self.moves.c)
-            beam.check_done(_beam_utils.check_final_state, NULL)
-        return [b for b in beams if not b.is_done]
 
     def update(self, examples, *, drop=0., set_annotations=False, sgd=None, losses=None):
         cdef StateClass state
@@ -462,25 +444,20 @@ cdef class Parser(TrainablePipe):
         # Prepare the stepwise model, and get the callback for finishing the batch
         model, backprop_tok2vec = self.model.begin_update(
             [eg.predicted for eg in examples])
-        states_d_scores, backprops, beams = _beam_utils.update_beam(
+        states_d_scores, backprops = _beam_utils.update_beam(
             self.moves,
             states,
             golds,
             model,
             beam_width,
             beam_density=beam_density,
-            early_update=False
         )
-        for i, d_scores in enumerate(states_d_scores):
+        for i, (d_scores, bp_scores) in enumerate(zip(states_d_scores, backprops)):
             losses[self.name] += (d_scores**2).mean()
-            bp_scores = backprops[i]
             bp_scores(d_scores)
         backprop_tok2vec(golds)
         if sgd is not None:
             self.finish_update(sgd)
-        cdef Beam beam
-        for beam in beams:
-            _beam_utils.cleanup_beam(beam)
 
     def get_batch_loss(self, states, golds, float[:, ::1] scores, losses):
         cdef StateClass state

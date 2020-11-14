@@ -4,7 +4,6 @@ from cymem.cymem cimport Pool
 
 from collections import Counter
 import srsly
-from thinc.extra.search cimport Beam
 
 from . cimport _beam_utils
 from ...typedefs cimport weight_t, attr_t
@@ -62,22 +61,6 @@ cdef class TransitionSystem:
             states.append(state)
             offset += len(doc)
         return states
-
-    def init_beams(self, docs, beam_width, beam_density=0.):
-        cdef Doc doc
-        beams = []
-        cdef int offset = 0
-        for doc in docs:
-            beam = Beam(self.n_moves, beam_width, min_density=beam_density)
-            beam.initialize(self.init_beam_state, self.del_beam_state,
-                            doc.length, doc.c)
-            for i in range(beam.width):
-                state = <StateC*>beam.at(i)
-                state.offset = offset
-            offset += len(doc)
-            beam.check_done(_beam_utils.check_final_state, NULL)
-            beams.append(beam)
-        return beams
 
     def get_oracle_sequence(self, Example example, _debug=False):
         states, golds, _ = self.init_gold_batch([example])
