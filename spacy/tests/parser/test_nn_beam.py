@@ -94,12 +94,13 @@ def beam(moves, examples, beam_width):
 
 @pytest.fixture
 def scores(moves, batch_size, beam_width):
-    return numpy.concatenate([
-        numpy.asarray(
-            numpy.random.uniform(-0.1, 0.1, (beam_width, moves.n_moves)), dtype="f"
-        )
-        for _ in range(batch_size)
-    ])
+    return numpy.asarray(
+        numpy.concatenate(
+            [
+                numpy.random.uniform(-0.1, 0.1, (beam_width, moves.n_moves))
+                for _ in range(batch_size)
+            ]
+        ), dtype="float32")
 
 
 def test_create_beam(beam):
@@ -107,12 +108,12 @@ def test_create_beam(beam):
 
 
 def test_beam_advance(beam, scores):
-    scores = scores[:len(beam.beams)]
     beam.advance(scores)
 
 
 def test_beam_advance_too_few_scores(beam, scores):
-    scores = scores[:len(beam.beams)]
+    n_size = sum(beam.size for beam in beam)
+    scores = scores[:n_size - 1]
     with pytest.raises(IndexError):
         beam.advance(scores[:-1])
 
@@ -134,12 +135,9 @@ def test_beam_density(moves, examples, beam_width, hyp):
     beam_density = float(hyp.draw(hypothesis.strategies.floats(0.0, 1.0, width=32)))
     states, golds, _ = moves.init_gold_batch(examples)
     beam = BeamBatch(moves, states, golds, width=beam_width, density=beam_density)
-    scores = [
-        hyp.draw(ndarrays_of_shape((len(b), moves.n_moves)))
-        for b in beam
-    ]
+    n_state = sum(beam.size for beam in beam)
+    scores = hyp.draw(ndarrays_of_shape((n_size, moves.n_moves)))
     beam.advance(scores)
-    print("Draw")
     for b in beam:
         beam_probs = b.probs
         assert b.min_density == beam_density
