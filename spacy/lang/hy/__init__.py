@@ -1,11 +1,12 @@
+# coding: utf8
+from __future__ import unicode_literals
+
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .tag_map import TAG_MAP
 
-
 from ...attrs import LANG
 from ...language import Language
-from ...tokens import Doc
 
 
 class ArmenianDefaults(Language.Defaults):

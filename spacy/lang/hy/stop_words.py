@@ -1,5 +1,5 @@
+# coding: utf8
 from __future__ import unicode_literals
-
 
 STOP_WORDS = set(
     """
@@ -105,6 +105,6 @@ STOP_WORDS = set(
 յուրաքանչյուր
 այս
 մեջ
-թ	
+թ
 """.split()
 )

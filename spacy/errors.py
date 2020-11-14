@@ -7,8 +7,8 @@ def add_codes(err_cls):
 
     class ErrorsWithCodes(err_cls):
         def __getattribute__(self, code):
-            msg = super().__getattribute__(code)
-            if code.startswith('__'):  # python system attributes like __class__
+            msg = super(ErrorsWithCodes, self).__getattribute__(code)
+            if code.startswith("__"):  # python system attributes like __class__
                 return msg
             else:
                 return "[{code}] {msg}".format(code=code, msg=msg)

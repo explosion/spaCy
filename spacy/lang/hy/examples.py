@@ -1,5 +1,5 @@
+# coding: utf8
 from __future__ import unicode_literals
-
 
 """
 Example sentences to test spaCy and its language models.
@@ -11,6 +11,6 @@ Example sentences to test spaCy and its language models.
 sentences = [
     "Լոնդոնը Միացյալ Թագավորության մեծ քաղաք է։",
     "Ո՞վ է Ֆրանսիայի նախագահը։",
-    "Որն է Միացյալ Նահանգների մայրաքաղաքը։",
+    "Ո՞րն է Միացյալ Նահանգների մայրաքաղաքը։",
     "Ե՞րբ է ծնվել Բարաք Օբաման։",
 ]
