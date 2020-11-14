@@ -28,20 +28,6 @@ cdef int check_final_state(void* _state, void* extra_args) except -1:
     return state.is_final()
 
 
-def collect_states(beams):
-    cdef StateClass state
-    cdef Beam beam
-    states = []
-    for state_or_beam in beams:
-        if isinstance(state_or_beam, StateClass):
-            states.append(state_or_beam)
-        else:
-            beam = state_or_beam
-            state = StateClass.borrow(<StateC*>beam.at(0))
-            states.append(state)
-    return states
-
-
 cdef class BeamBatch(object):
     cdef public TransitionSystem moves
     cdef public object states
@@ -171,11 +157,9 @@ def update_beam(TransitionSystem moves, states, golds, model, int width, beam_de
         # Now advance the states in the beams. The gold beam is constrained to
         # to follow only gold analyses.
         if not pbeam.is_done:
-            p_scores = model.ops.as_contig(scores[p_indices])
-            pbeam.advance(p_scores)
+            pbeam.advance(model.ops.as_contig(scores[p_indices]))
         if not gbeam.is_done:
-            g_scores = model.ops.as_contig(scores[g_indices])
-            gbeam.advance(g_scores, follow_gold=True)
+            gbeam.advance(model.ops.as_contig(scores[g_indices]), follow_gold=True)
         # Track the "maximum violation", to use in the update.
         for i, violn in enumerate(violns):
             if not dones[i]:
@@ -187,12 +171,27 @@ def update_beam(TransitionSystem moves, states, golds, model, int width, beam_de
     for violn in violns:
         if violn.p_hist:
             histories.append(violn.p_hist + violn.g_hist)
-            losses.append(violn.p_probs + violn.g_probs)
+            d_loss = [d_l * violn.cost for d_l in violn.p_probs + violn.g_probs]
+            losses.append(d_loss)
         else:
             histories.append([])
             losses.append([])
     states_d_scores = get_gradient(moves.n_moves, beam_maps, histories, losses)
     return states_d_scores, backprops[:len(states_d_scores)]
+
+
+def collect_states(beams):
+    cdef StateClass state
+    cdef Beam beam
+    states = []
+    for state_or_beam in beams:
+        if isinstance(state_or_beam, StateClass):
+            states.append(state_or_beam)
+        else:
+            beam = state_or_beam
+            state = StateClass.borrow(<StateC*>beam.at(0))
+            states.append(state)
+    return states
 
 
 def get_unique_states(pbeams, gbeams):
@@ -269,12 +268,12 @@ def get_gradient(nr_class, beam_maps, histories, losses):
             # We need to do this because each state in a short path is scored
             # multiple times, as we add in the average cost when we run out
             # of actions.
-            avg_loss = loss / len(hist)
-            loss += avg_loss * (nr_steps[eg_id] - len(hist))
-            for j, clas in enumerate(hist):
-                i = beam_maps[j][key]
+            #avg_loss = loss / len(hist)
+            #loss += avg_loss * (nr_steps[eg_id] - len(hist))
+            for step, clas in enumerate(hist):
+                i = beam_maps[step][key]
                 # In step j, at state i action clas
                 # resulted in loss
-                grads[j][i, clas] += loss
+                grads[step][i, clas] += loss
                 key = key + tuple([clas])
     return grads
