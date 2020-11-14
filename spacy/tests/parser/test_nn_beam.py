@@ -10,7 +10,7 @@ from spacy.language import Language
 from spacy.pipeline import DependencyParser
 from spacy.pipeline._parser_internals.arc_eager import ArcEager
 from spacy.tokens import Doc
-from spacy.pipeline._parser_internals._beam_utils import ParserBeam
+from spacy.pipeline._parser_internals._beam_utils import BeamBatch
 from spacy.pipeline._parser_internals.stateclass import StateClass
 from spacy.training import Example
 from thinc.tests.strategies import ndarrays_of_shape
@@ -89,7 +89,7 @@ def vector_size():
 @pytest.fixture
 def beam(moves, examples, beam_width):
     states, golds, _ = moves.init_gold_batch(examples)
-    return ParserBeam(moves, states, golds, width=beam_width, density=0.0)
+    return BeamBatch(moves, states, golds, width=beam_width, density=0.0)
 
 
 @pytest.fixture
@@ -133,7 +133,7 @@ def test_beam_parse(examples, beam_width):
 def test_beam_density(moves, examples, beam_width, hyp):
     beam_density = float(hyp.draw(hypothesis.strategies.floats(0.0, 1.0, width=32)))
     states, golds, _ = moves.init_gold_batch(examples)
-    beam = ParserBeam(moves, states, golds, width=beam_width, density=beam_density)
+    beam = BeamBatch(moves, states, golds, width=beam_width, density=beam_density)
     scores = [
         hyp.draw(ndarrays_of_shape((len(b), moves.n_moves)))
         for b in beam
