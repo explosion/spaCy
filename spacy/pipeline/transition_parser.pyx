@@ -228,15 +228,15 @@ cdef class Parser(TrainablePipe):
     def beam_parse(self, docs, int beam_width, float drop=0., beam_density=0.):
         cdef Beam beam
         cdef Doc doc
-        beams = self.moves.init_beams(docs, beam_width, beam_density=beam_density)
+        states = self.moves.init_batch(docs)
+        batch = ParserBeam(self.moves, states, None, beam_width, density=beam_density)
         # This is pretty dirty, but the NER can resize itself in init_batch,
         # if labels are missing. We therefore have to check whether we need to
         # expand our model output.
         self._resize()
         model = self.model.predict(docs)
         cdef int nr_feature = model.state2vec.nF
-        todo = [beam for beam in beams if not beam.is_done]
-        while todo:
+        while not batch.is_done:
             states = []
             for beam in todo:
                 for i in range(beam.size):
@@ -276,16 +276,7 @@ cdef class Parser(TrainablePipe):
         cdef StateClass state
         cdef Beam beam
         cdef Doc doc
-        states = []
-        beams = []
-        for state_or_beam in states_or_beams:
-            if isinstance(state_or_beam, StateClass):
-                states.append(state_or_beam)
-            else:
-                beam = state_or_beam
-                state = StateClass.borrow(<StateC*>beam.at(0))
-                states.append(state)
-                beams.append(beam)
+        states = _beam_utils.collect_states(states_or_beams)
         for i, (state, doc) in enumerate(zip(states, docs)):
             self.moves.finalize_state(state.c)
             for j in range(doc.length):
@@ -293,8 +284,8 @@ cdef class Parser(TrainablePipe):
             self.moves.finalize_doc(doc)
             for hook in self.postprocesses:
                 hook(doc)
-        for beam in beams:
-            _beam_utils.cleanup_beam(beam)
+        #for beam in beams:
+        #    _beam_utils.cleanup_beam(beam)
 
     def transition_states(self, states, float[:, ::1] scores):
         cdef StateClass state
