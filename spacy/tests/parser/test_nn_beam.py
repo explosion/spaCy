@@ -135,7 +135,7 @@ def test_beam_density(moves, examples, beam_width, hyp):
     beam_density = float(hyp.draw(hypothesis.strategies.floats(0.0, 1.0, width=32)))
     states, golds, _ = moves.init_gold_batch(examples)
     beam = BeamBatch(moves, states, golds, width=beam_width, density=beam_density)
-    n_state = sum(beam.size for beam in beam)
+    n_state = sum(len(beam) for beam in beam)
     scores = hyp.draw(ndarrays_of_shape((n_state, moves.n_moves)))
     beam.advance(scores)
     for b in beam:
