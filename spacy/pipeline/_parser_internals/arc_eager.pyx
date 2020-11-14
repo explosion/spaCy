@@ -14,8 +14,6 @@ from ._state cimport StateC
 
 from ...errors import Errors
 
-# Calculate cost as gold/not gold. We don't use scalar value anyway.
-cdef int BINARY_COSTS = 1
 cdef weight_t MIN_SCORE = -90000
 cdef attr_t SUBTOK_LABEL = hash_string(u'subtok')
 
@@ -249,7 +247,7 @@ cdef weight_t pop_cost(StateClass stcls, const void* _gold, int target) nogil:
     if is_head_in_buffer(gold, target):
         cost += 1
     cost += gold[0].n_kids_in_buffer[target]
-    if Break.is_valid(stcls.c, 0) and Break.move_cost(stcls, gold) == 0:
+    if cost == 0 and Break.is_valid(stcls.c, 0) and Break.move_cost(stcls, gold) == 0:
         cost += 1
     return cost
 
@@ -347,7 +345,7 @@ cdef class Reduce:
             if is_head_in_stack(gold, s0):
                 cost -= 1
             cost -= gold.n_kids_in_stack[s0]
-            if Break.is_valid(st.c, 0) and Break.move_cost(st, gold) == 0:
+            if cost >= 1 and Break.is_valid(st.c, 0) and Break.move_cost(st, gold) == 0:
                 cost -= 1
         return cost
 
@@ -481,6 +479,7 @@ cdef class Break:
     @staticmethod
     cdef inline weight_t label_cost(StateClass s, const void* gold, attr_t label) nogil:
         return 0
+
 
 cdef int _get_root(int word, const GoldParseStateC* gold) nogil:
     if is_head_unknown(gold, word):
