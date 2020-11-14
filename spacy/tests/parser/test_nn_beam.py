@@ -94,12 +94,12 @@ def beam(moves, examples, beam_width):
 
 @pytest.fixture
 def scores(moves, batch_size, beam_width):
-    return [
+    return numpy.concatenate([
         numpy.asarray(
             numpy.random.uniform(-0.1, 0.1, (beam_width, moves.n_moves)), dtype="f"
         )
         for _ in range(batch_size)
-    ]
+    ])
 
 
 def test_create_beam(beam):
