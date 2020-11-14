@@ -112,8 +112,8 @@ def test_beam_advance(beam, scores):
 
 
 def test_beam_advance_too_few_scores(beam, scores):
-    n_size = sum(beam.size for beam in beam)
-    scores = scores[:n_size - 1]
+    n_state = sum(len(beam) for beam in beam)
+    scores = scores[:n_state]
     with pytest.raises(IndexError):
         beam.advance(scores[:-1])
 
