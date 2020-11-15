@@ -534,9 +534,14 @@ steps required:
    machine learning model that sets annotations on the [`Doc`](/api/doc) passing
    through the pipeline.
 
-<!-- TODO: <Project id="tutorials/ner-relations">
-
-</Project> -->
+<Project id="tutorials/rel_component">
+Run this example use-case by using our project template. It includes all the 
+code to create the ML model and the pipeline component from scratch.
+It contains two config files to train the model: 
+one to run on CPU with a Tok2Vec layer, and one for the GPU using a transformer.
+The project applies the relation extraction component to identify biomolecular 
+interactions, but you can easily swap in your own dataset for your experiments.
+</Project>
 
 #### Step 1: Implementing the Model {#component-rel-model}
 
@@ -924,6 +929,11 @@ def make_relation_extractor(nlp, name, model):
     return RelationExtractor(nlp.vocab, model, name)
 ```
 
-<!-- TODO: <Project id="tutorials/ner-relations">
-
-</Project> -->
+<Project id="tutorials/rel_component">
+Run this example use-case by using our project template. It includes all the 
+code to create the ML model and the pipeline component from scratch.
+It contains two config files to train the model: 
+one to run on CPU with a Tok2Vec layer, and one for the GPU using a transformer.
+The project applies the relation extraction component to identify biomolecular 
+interactions, but you can easily swap in your own dataset for your experiments.
+</Project>
