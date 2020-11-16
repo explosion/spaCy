@@ -174,7 +174,13 @@ $ source .env/bin/activate                      # activate virtual env
 $ export PYTHONPATH=`pwd`                       # set Python path to spaCy dir
 $ pip install -r requirements.txt               # install all requirements
 $ python setup.py build_ext --inplace           # compile spaCy
-$ python setup.py install                       # install spaCy
+$ pip install .                                 # install spaCy
+```
+
+To install with extras:
+
+```bash
+$ pip install -e .[lookups,cuda102]             # install spaCy with extras
 ```
 
 Compared to regular install via pip, the
@@ -194,6 +200,28 @@ to get the right commands for your platform and Python version.
   or
   [Visual Studio Express](https://www.visualstudio.com/vs/visual-studio-express/)
   that matches the version that was used to compile your Python interpreter.
+
+#### Additional options for developers {#source-developers}
+
+Some additional options may be useful for spaCy developers who are editing the
+source code and recompiling frequently.
+
+- Install in developer mode. Changes to `.py` files will be reflected as soon as
+  the files are saved, but edits to Cython files (`.pxd`, `.pyx`) will require
+  the compile step to be run again. Before installing in developer mode, be sure
+  you have removed any previous installs with `pip uninstall spacy`.
+
+  ```diff
+  - $ pip install .
+  + $ python setup.py develop
+  ```
+
+- Build in parallel using `N` CPUs to speed up compilation:
+
+  ```diff
+  - $ python setup.py build_ext --inplace
+  + $ python setup.py build_ext --inplace -j N
+  ```
 
 ### Building an executable {#executable}
 
