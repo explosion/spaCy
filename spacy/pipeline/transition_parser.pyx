@@ -310,7 +310,6 @@ cdef class Parser(TrainablePipe):
             else:
                 action = self.moves.c[guess]
                 action.do(states[i], action.label)
-                states[i].push_hist(guess)
         free(is_valid)
 
     def update(self, examples, *, drop=0., set_annotations=False, sgd=None, losses=None):
@@ -619,7 +618,6 @@ cdef class Parser(TrainablePipe):
                 for clas in oracle_actions[i:i+max_length]:
                     action = self.moves.c[clas]
                     action.do(state.c, action.label)
-                    state.c.push_hist(action.clas)
                     if state.is_final():
                         break
                 if self.moves.has_gold(eg, start_state.B(0), state.B(0)):

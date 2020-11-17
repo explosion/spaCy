@@ -14,23 +14,6 @@ from ...typedefs cimport attr_t
 cdef inline bint is_space_token(const TokenC* token) nogil:
     return Lexeme.c_check_flag(token.lex, IS_SPACE)
 
-cdef struct RingBufferC:
-    int[8] data
-    int i
-    int default
-
-cdef inline int ring_push(RingBufferC* ring, int value) nogil:
-    ring.data[ring.i] = value
-    ring.i += 1
-    if ring.i >= 8:
-        ring.i = 0
-
-cdef inline int ring_get(RingBufferC* ring, int i) nogil:
-    if i >= ring.i:
-        return ring.default
-    else:
-        return ring.data[ring.i-i]
-
 
 cdef cppclass StateC:
     int* _stack
@@ -39,7 +22,6 @@ cdef cppclass StateC:
     TokenC* _sent
     SpanC* _ents
     TokenC _empty_token
-    RingBufferC _hist
     int length
     int offset
     int _s_i
@@ -59,7 +41,6 @@ cdef cppclass StateC:
             with gil:
                 PyErr_SetFromErrno(MemoryError)
                 PyErr_CheckSignals()
-        memset(&this._hist, 0, sizeof(this._hist))
         this.offset = 0
         cdef int i
         for i in range(length + (PADDING * 2)):
