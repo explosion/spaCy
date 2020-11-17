@@ -969,7 +969,7 @@ import spacy
 from spacy.tokens import Doc, DocBin
 
 nlp = spacy.blank("en")
-docbin = DocBin(nlp.vocab)
+docbin = DocBin()
 words = ["Apple", "is", "looking", "at", "buying", "U.K.", "startup", "."]
 spaces = [True, True, True, True, True, True, True, False]
 ents = ["B-ORG", "O", "O", "O", "O", "B-GPE", "O", "O"]
