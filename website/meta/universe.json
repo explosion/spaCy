@@ -2613,6 +2613,32 @@
             "author_links": {
                 "github": "zaibacu"
             }
+        },
+        {
+            "id": "PatternOmatic",
+            "title": "PatternOmatic",
+            "slogan": "Finds linguistic patterns effortlessly",
+            "description": "Discover spaCy's linguistic patterns matching a given set of String samples to be used by the spaCy's Rule Based Matcher",
+            "github": "revuel/PatternOmatic",
+            "pip": "PatternOmatic",
+            "code_example": [
+                "from PatternOmatic.api import find_patterns",
+                "",
+                "samples = ['I am a cat!', 'You are a dog!', 'She is an owl!']",
+                "",
+                "patterns_found, _ = find_patterns(samples)",
+                "",
+                "print(f'Patterns found: {patterns_found}')"
+            ],
+            "code_language": "python",
+            "thumb": "https://svgshare.com/i/R3P.svg",
+            "image": "https://svgshare.com/i/R3P.svg",
+            "author": "Miguel Revuelta Espinosa",
+            "author_links": {
+                "github": "revuel"
+            },
+            "category": ["scientific", "research", "standalone"],
+            "tags": ["Evolutionary Computation", "Grammatical Evolution"]
         }
     ],
 
