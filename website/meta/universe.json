@@ -1,5 +1,36 @@
 {
     "resources": [
+    	{
+            "id": "spacy-textblob",
+            "title": "spaCyTextBlob",
+            "slogan": "Easy sentiment analysis for spaCy using TextBlob",
+            "description": "spaCyTextBlob is a pipeline component that enables sentiment analysis using the [TextBlob](https://github.com/sloria/TextBlob) library. It will add the additional extenstion `._.sentiment` to `Doc`, `Span`, and `Token` objects.",
+            "github": "SamEdwardes/spaCyTextBlob",
+            "pip": "spacytextblob",
+            "code_example": [
+            "import spacy",
+            "from spacytextblob.spacytextblob import SpacyTextBlob",
+            "",
+            "nlp = spacy.load('en_core_web_sm')",
+            "spacy_text_blob = SpacyTextBlob()",
+            "nlp.add_pipe(spacy_text_blob)",
+            "text = 'I had a really horrible day. It was the worst day ever! But every now and then I have a really good day that makes me happy.'",
+            "doc = nlp(text)",
+            "doc._.sentiment.polarity      # Polarity: -0.125",
+            "doc._.sentiment.subjectivity  # Sujectivity: 0.9",
+            "doc._.sentiment.assessments   # Assessments: [(['really', 'horrible'], -1.0, 1.0, None), (['worst', '!'], -1.0, 1.0, None), (['really', 'good'], 0.7, 0.6000000000000001, None), (['happy'], 0.8, 1.0, None)]",
+            ],
+            "code_language": "python",
+            "url": "https://spacytextblob.netlify.app/",
+            "author": "Sam Edwardes",
+            "author_links": {
+            "twitter": "TheReaLSamlam",
+            "github": "SamEdwardes",
+            "website": "https://samedwardes.com"
+            },
+            "category": ["pipeline"],
+            "tags": ["sentiment", "textblob"]
+	    },
         {
             "id": "spacy-sentence-bert",
             "title": "spaCy - sentence-transformers",
