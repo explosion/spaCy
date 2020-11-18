@@ -1,5 +1,31 @@
 {
     "resources": [
+	{
+    "id": "Find_span",
+    "title": "Find_span",
+    "slogan": "Make your own diccionary and find terms and spans in text",
+    "description": "This tool allows to encompass a set of words (patterns) assigned to a SPAN or category. The use of this tool is multiple, from identifying synonyms, spelling checker, labeling words and of course name entity recognition, categories such as Person, Organization, Place, all you need is a dictionary to generate SPANs.",
+    "github": "PilarHidalgo/Find_span",
+    "pip": "findspan",
+    "code_example": [
+        "import spacy",
+        "import findspan as fs",
+        "",
+        "fs('Hello Rose','Names_diccionary')",
+        "#output: ('FEM','Rose') #label,text",
+        "fs('Hello Rose','Flowers_diccionary')",
+        "#output: ('FLW','Rose') #label,text"
+    ],
+    "code_language": "python",
+   
+    "author": "Pilar Hidalgo León",
+    "author_links": {
+        "github": "PilarHidalgo"
+    },
+    "category": ["ner"]
+}    
+	    
+	    
     	{
             "id": "spacy-textblob",
             "title": "spaCyTextBlob",
