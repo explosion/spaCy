@@ -5,22 +5,25 @@
     "title": "Find_span",
     "slogan": "Make your own diccionary and find terms and spans in text",
     "description": "This tool allows to encompass a set of words (patterns) assigned to a SPAN or category. The use of this tool is multiple, from identifying synonyms, spelling checker, labeling words and of course name entity recognition, categories such as Person, Organization, Place, all you need is a dictionary to generate SPANs.",
-    "github": "PilarHidalgo/Find_span",
+    "github": "https://github.com/PilarHidalgo/Find_span",
     "pip": "findspan",
     "code_example": [
         "import spacy",
-        "import findspan as fs",
+        "import FindsSPAN",
+	"from Find_SPAN import find_SPAN",
         "",
-        "fs('Hello Rose','Names_diccionary')",
-        "#output: ('FEM','Rose') #label,text",
-        "fs('Hello Rose','Flowers_diccionary')",
-        "#output: ('FLW','Rose') #label,text"
+        "find_SPAN('i love Dog’s tooth in pants','Garmend_dict.xlsx','excel','tuple')",
+        "#output: ('checkered patterns', 'dog’s tooth') #label,text",
+        "find_SPAN('Tengo hermosas rosas en mi jardín','Garmend_dict.json','json','tuple')
+        "#output: [('FLOR','rosa'),('CUARTO','jardín')] #label,text"
+	"find_SPAN('Tengo hermosas rosas en mi jardín','Garmend_dict.json','json','label')
+        "#output: 'FLOR' #label"
     ],
     "code_language": "python",
    
     "author": "Pilar Hidalgo León",
     "author_links": {
-        "github": "PilarHidalgo"
+        "github": "https://github.com/PilarHidalgo"
     },
     "category": ["ner"]
 }    
