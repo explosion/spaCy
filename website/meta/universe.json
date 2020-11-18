@@ -14,9 +14,9 @@
         "",
         "find_SPAN('i love Dog’s tooth in pants','Garmend_dict.xlsx','excel','tuple')",
         "#output: ('checkered patterns', 'dog’s tooth') #label,text",
-        "find_SPAN('Tengo hermosas rosas en mi jardín','Garmend_dict.json','json','tuple')
-        "#output: [('FLOR','rosa'),('CUARTO','jardín')] #label,text"
-	"find_SPAN('Tengo hermosas rosas en mi jardín','Garmend_dict.json','json','label')
+        "find_SPAN('Tengo hermosas rosas en mi jardín','Garmend_dict.json','json','tuple')",
+        "#output: [('FLOR','rosa'),('CUARTO','jardín')] #label,text",
+	"find_SPAN('Tengo hermosas rosas en mi jardín','Garmend_dict.json','json','label')"
         "#output: 'FLOR' #label"
     ],
     "code_language": "python",
