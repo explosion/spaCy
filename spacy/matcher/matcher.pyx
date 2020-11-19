@@ -279,7 +279,7 @@ cdef find_matches(TokenPatternC** patterns, int n, object doclike, int length, e
         # avoid any processing or mem alloc if the document is empty
         return output
     if len(predicates) > 0:
-        predicate_cache = <char*>mem.alloc(length * len(predicates), sizeof(char))
+        predicate_cache = <signed char*>mem.alloc(length * len(predicates), sizeof(signed char))
     if extensions is not None and len(extensions) >= 1:
         nr_extra_attr = max(extensions.values()) + 1
         extra_attr_values = <attr_t*>mem.alloc(length * nr_extra_attr, sizeof(attr_t))
@@ -320,7 +320,7 @@ cdef find_matches(TokenPatternC** patterns, int n, object doclike, int length, e
 
 
 cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& matches,
-                            char* cached_py_predicates,
+                            signed char* cached_py_predicates,
         Token token, const attr_t* extra_attrs, py_predicates) except *:
     cdef int q = 0
     cdef vector[PatternStateC] new_states
@@ -392,7 +392,7 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
         states.push_back(new_states[i])
 
 
-cdef int update_predicate_cache(char* cache,
+cdef int update_predicate_cache(signed char* cache,
         const TokenPatternC* pattern, Token token, predicates) except -1:
     # If the state references any extra predicates, check whether they match.
     # These are cached, so that we don't call these potentially expensive
@@ -430,7 +430,7 @@ cdef void finish_states(vector[MatchC]& matches, vector[PatternStateC]& states) 
 
 cdef action_t get_action(PatternStateC state,
         const TokenC* token, const attr_t* extra_attrs,
-        const char* predicate_matches) nogil:
+        const signed char* predicate_matches) nogil:
     """We need to consider:
     a) Does the token match the specification? [Yes, No]
     b) What's the quantifier? [1, 0+, ?]
@@ -488,7 +488,7 @@ cdef action_t get_action(PatternStateC state,
 
     Problem: If a quantifier is matching, we're adding a lot of open partials
     """
-    cdef char is_match
+    cdef signed char is_match
     is_match = get_is_match(state, token, extra_attrs, predicate_matches)
     quantifier = get_quantifier(state)
     is_final = get_is_final(state)
@@ -540,9 +540,9 @@ cdef action_t get_action(PatternStateC state,
           return RETRY
 
 
-cdef char get_is_match(PatternStateC state,
+cdef signed char get_is_match(PatternStateC state,
         const TokenC* token, const attr_t* extra_attrs,
-        const char* predicate_matches) nogil:
+        const signed char* predicate_matches) nogil:
     for i in range(state.pattern.nr_py):
         if predicate_matches[state.pattern.py_predicates[i]] == -1:
             return 0
@@ -557,7 +557,7 @@ cdef char get_is_match(PatternStateC state,
     return True
 
 
-cdef char get_is_final(PatternStateC state) nogil:
+cdef signed char get_is_final(PatternStateC state) nogil:
     if state.pattern[1].quantifier == FINAL_ID:
         id_attr = state.pattern[1].attrs[0]
         if id_attr.attr != ID:
@@ -568,7 +568,7 @@ cdef char get_is_final(PatternStateC state) nogil:
         return 0
 
 
-cdef char get_quantifier(PatternStateC state) nogil:
+cdef signed char get_quantifier(PatternStateC state) nogil:
     return state.pattern.quantifier
 
 
