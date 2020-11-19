@@ -174,6 +174,7 @@ $ source .env/bin/activate                      # activate virtual env
 $ export PYTHONPATH=`pwd`                       # set Python path to spaCy dir
 $ pip install -r requirements.txt               # install all requirements
 $ python setup.py build_ext --inplace           # compile spaCy
+$ python setup.py install                       # install spaCy
 ```
 
 Compared to regular install via pip, the
