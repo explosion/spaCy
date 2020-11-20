@@ -157,20 +157,20 @@ The available token pattern keys correspond to a number of
 [`Token` attributes](/api/token#attributes). The supported attributes for
 rule-based matching are:
 
-| Attribute                              | Type    |  Description                                                                                           |
-| -------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------ |
-| `ORTH`                                 | unicode | The exact verbatim text of a token.                                                                    |
-| `TEXT` <Tag variant="new">2.1</Tag>    | unicode | The exact verbatim text of a token.                                                                    |
-| `LOWER`                                | unicode | The lowercase form of the token text.                                                                  |
-|  `LENGTH`                              | int     | The length of the token text.                                                                          |
-|  `IS_ALPHA`, `IS_ASCII`, `IS_DIGIT`    | bool    | Token text consists of alphabetic characters, ASCII characters, digits.                                |
-|  `IS_LOWER`, `IS_UPPER`, `IS_TITLE`    | bool    | Token text is in lowercase, uppercase, titlecase.                                                      |
-|  `IS_PUNCT`, `IS_SPACE`, `IS_STOP`     | bool    | Token is punctuation, whitespace, stop word.                                                           |
-|  `IS_SENT_START`                       | bool    | Token is start of sentence.                                                           |
-|  `LIKE_NUM`, `LIKE_URL`, `LIKE_EMAIL`  | bool    | Token text resembles a number, URL, email.                                                             |
-|  `POS`, `TAG`, `DEP`, `LEMMA`, `SHAPE` | unicode | The token's simple and extended part-of-speech tag, dependency label, lemma, shape.                    |
-| `ENT_TYPE`                             | unicode | The token's entity label.                                                                              |
-| `_` <Tag variant="new">2.1</Tag>       | dict    | Properties in [custom extension attributes](/usage/processing-pipelines#custom-components-attributes). |
+| Attribute                              | Value Type    |  Description                                                                                           |
+| -------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------ |
+| `ORTH`                                 | unicode       | The exact verbatim text of a token.                                                                    |
+| `TEXT` <Tag variant="new">2.1</Tag>    | unicode       | The exact verbatim text of a token.                                                                    |
+| `LOWER`                                | unicode       | The lowercase form of the token text.                                                                  |
+| `LENGTH`                               | int           | The length of the token text.                                                                          |
+| `IS_ALPHA`, `IS_ASCII`, `IS_DIGIT`     | bool          | Token text consists of alphabetic characters, ASCII characters, digits.                                |
+| `IS_LOWER`, `IS_UPPER`, `IS_TITLE`     | bool          | Token text is in lowercase, uppercase, titlecase.                                                      |
+| `IS_PUNCT`, `IS_SPACE`, `IS_STOP`      | bool          | Token is punctuation, whitespace, stop word.                                                           |
+| `IS_SENT_START`                        | bool          | Token is start of sentence.                                                                            |
+| `LIKE_NUM`, `LIKE_URL`, `LIKE_EMAIL`   | bool          | Token text resembles a number, URL, email.                                                             |
+| `POS`, `TAG`, `DEP`, `LEMMA`, `SHAPE`  | unicode       | The token's simple and extended part-of-speech tag, dependency label, lemma, shape. Note that the values of this type of attribute are case-sensitive. For a list of available part-of-speech tags and dependency labels, see the [Annotation Specifications](/api/annotation).|
+| `ENT_TYPE`                             | unicode       | The token's entity label.                                                                              |
+| `_` <Tag variant="new">2.1</Tag>       | dict          | Properties in [custom extension attributes](/usage/processing-pipelines#custom-components-attributes). |
 
 <Accordion title="Does it matter if the attribute names are uppercase or lowercase?">
 
