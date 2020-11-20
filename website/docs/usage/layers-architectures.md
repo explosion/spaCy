@@ -567,10 +567,10 @@ def create_relation_model(...) -> Model[List[Doc], Floats2d]:
     return model
 ```
 
-We will adapt a **modular approach** to the definition of this relation model,
-and define it as chaining two layers together: the first layer that generates an
+We adapt a **modular approach** to the definition of this relation model, and
+define it as chaining two layers together: the first layer that generates an
 instance tensor from a given set of documents, and the second layer that
-transforms the instance tensor into a final tensor holding the predictions.
+transforms the instance tensor into a final tensor holding the predictions:
 
 > #### config.cfg (excerpt)
 >
@@ -586,7 +586,7 @@ transforms the instance tensor into a final tensor holding the predictions.
 > ```
 
 ```python
-### The model architecture
+### The model architecture {highlight="6"}
 @spacy.registry.architectures.register("rel_model.v1")
 def create_relation_model(
     create_instance_tensor: Model[List[Doc], Floats2d],
@@ -596,8 +596,9 @@ def create_relation_model(
     return model
 ```
 
-The `classification_layer` could be something like a Linear layer followed by a
-logistic activation function:
+The `classification_layer` could be something like a
+[Linear](https://thinc.ai/docs/api-layers#linear) layer followed by a
+[logistic](https://thinc.ai/docs/api-layers#logistic) activation function:
 
 > #### config.cfg (excerpt)
 >
@@ -748,16 +749,6 @@ generation function.
 
 #### Intermezzo: define how to store the relations data {#component-rel-attribute}
 
-For our new relation extraction component, we will use a custom
-[extension attribute](/usage/processing-pipelines#custom-components-attributes)
-`doc._.rel` in which we store relation data. The attribute refers to a
-dictionary, keyed by the **start offsets of each entity** involved in the
-candidate relation. The values in the dictionary refer to another dictionary
-where relation labels are mapped to values between 0 and 1. We assume anything
-above 0.5 to be a `True` relation. The ~~Example~~ instances that we'll use as
-training data, will include their gold-standard relation annotations in
-`example.reference._.rel`.
-
 > #### Example output
 >
 > ```python
@@ -770,6 +761,16 @@ training data, will include their gold-standard relation annotations in
 > # (0, 6): {'CAPITAL_OF': 0.89, 'LOCATED_IN': 0.75, 'UNRELATED': 0.002}
 > # (6, 0): {'CAPITAL_OF': 0.01, 'LOCATED_IN': 0.13, 'UNRELATED': 0.017}
 > ```
+
+For our new relation extraction component, we will use a custom
+[extension attribute](/usage/processing-pipelines#custom-components-attributes)
+`doc._.rel` in which we store relation data. The attribute refers to a
+dictionary, keyed by the **start offsets of each entity** involved in the
+candidate relation. The values in the dictionary refer to another dictionary
+where relation labels are mapped to values between 0 and 1. We assume anything
+above 0.5 to be a `True` relation. The ~~Example~~ instances that we'll use as
+training data, will include their gold-standard relation annotations in
+`example.reference._.rel`.
 
 ```python
 ### Registering the extension attribute
@@ -817,11 +818,11 @@ class RelationExtractor(TrainablePipe):
         ...
 ```
 
-Typically, the constructor defines the vocab, the Machine Learning model, and
-the name of this component. Additionally, this component, just like the
-`textcat` and the `tagger`, stores an internal list of labels. The ML model will
-predict scores for each label. We add convenience method to easily retrieve and
-add to them.
+Typically, the **constructor** defines the vocab, the Machine Learning model,
+and the name of this component. Additionally, this component, just like the
+`textcat` and the `tagger`, stores an **internal list of labels**. The ML model
+will predict scores for each label. We add convenience methods to easily
+retrieve and add to them.
 
 ```python
     def __init__(self, vocab, model, name="rel"):
@@ -1002,7 +1003,6 @@ assigns it a name and lets you create the component with
 > [components.relation_extractor.model]
 > @architectures = "rel_model.v1"
 > # ...
->
 >
 > [training.score_weights]
 > rel_micro_p = 0.0
