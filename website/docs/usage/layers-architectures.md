@@ -728,7 +728,7 @@ are within a **maximum distance** (in number of tokens) of eachother:
 > ```
 
 ```python
-### Candiate generation
+### Candidate generation
 @spacy.registry.misc.register("rel_instance_generator.v1")
 def create_instances(max_length: int) -> Callable[[Doc], List[Tuple[Span, Span]]]:
     def get_candidates(doc: "Doc") -> List[Tuple[Span, Span]]:
