@@ -427,7 +427,6 @@ cdef class LeftArc:
     cdef int transition(StateC* st, attr_t label) nogil:
         st.add_arc(st.B(0), st.S(0), label)
         st.pop()
-        #st.fast_forward()
 
     @staticmethod
     cdef inline weight_t cost(StateClass stcls, const void* _gold, attr_t label) nogil:
@@ -540,12 +539,14 @@ cdef class Break:
             return False
         elif st.is_sent_start(st.B(1)):
             return False
+        elif st.cannot_sent_start(st.B(1)):
+            return False
         else:
             return True
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
-        st.set_sent_start(st.B(1))
+        st.set_sent_start(st.B(1), 1)
 
     @staticmethod
     cdef weight_t cost(StateClass stcls, const void* _gold, attr_t label) nogil:
@@ -750,22 +751,16 @@ cdef class ArcEager(TransitionSystem):
 
     cdef int initialize_state(self, StateC* st) nogil:
         pass
-        #st.fast_forward()
 
-    cdef int finalize_state(self, StateC* st) nogil:
-        cdef int i
-        # TODO clean this up
-        sent = <TokenC*>st._sent
-        for i in range(st._arcs.size()):
-            arc = st._arcs.at(i)
+    def set_annotations(self, StateClass state, Doc doc):
+        for i in range(state.c._arcs.size()):
+            arc = state.c._arcs.at(i)
             if arc.head != -1 and arc.child != -1:
-                sent[arc.child].head = arc.head - arc.child
-                sent[arc.child].dep = arc.label
-        for i in range(st.length):
-            if sent[i].head == 0:
-                sent[i].dep = self.root_label
-
-    def finalize_doc(self, Doc doc):
+                doc.c[arc.child].head = arc.head - arc.child
+                doc.c[arc.child].dep = arc.label
+        for i in range(doc.length):
+            if doc.c[i].head == 0:
+                doc.c[i].dep = self.root_label
         set_children_from_heads(doc.c, 0, doc.length)
 
     def has_gold(self, Example eg, start=0, end=None):
@@ -851,10 +846,7 @@ cdef class ArcEager(TransitionSystem):
                             "B0=", (example.x[b0].text if b0 >= 0 else "__"),
                             "S0 head?", str(state.has_head(state.S(0))),
                         )))
-                        print(debug_log[-1])
-                    print("Do action", self.get_class_name(i))
                     action.do(state.c, action.label)
-                    print("Done")
                     break
             else:
                 failed = False
