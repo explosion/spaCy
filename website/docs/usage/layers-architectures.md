@@ -624,9 +624,9 @@ with an appropriate backpropagation callback. We also define an
 [initialization method](https://thinc.ai/docs/usage-models#weights-layers-init)
 that ensures that the layer is properly set up for training.
 
-We omit some of the implementation details here, and refer to the spaCy project
-that has the full implementation
-[here](https://github.com/explosion/projects/tree/v3/tutorials/rel_component).
+We omit some of the implementation details here, and refer to the
+[spaCy project](https://github.com/explosion/projects/tree/v3/tutorials/rel_component)
+that has the full implementation.
 
 > #### config.cfg (excerpt)
 >
@@ -636,13 +636,13 @@ that has the full implementation
 >
 > [model.create_instance_tensor.tok2vec]
 > @architectures = "spacy.HashEmbedCNN.v1"
-> ...
+> # ...
 >
 > [model.create_instance_tensor.pooling]
 > @layers = "reduce_mean.v1"
 >
 > [model.create_instance_tensor.get_instances]
-> ...
+> # ...
 > `
 > ```
 
@@ -658,10 +658,10 @@ def create_tensors(
     return Model(
         "instance_tensors",
         instance_forward,
+        init=instance_init,
         layers=[tok2vec, pooling],
         refs={"tok2vec": tok2vec, "pooling": pooling},
         attrs={"get_instances": get_instances},
-        init=instance_init,
     )
 
 
@@ -671,9 +671,11 @@ def instance_forward(
     docs: List[Doc],
     is_train: bool,
 ) -> Tuple[Floats2d, Callable]:
-    # ...
     tok2vec = model.get_ref("tok2vec")
     tokvecs, bp_tokvecs = tok2vec(docs, is_train)
+    get_instances = model.attrs["get_instances"]
+    all_instances = [get_instances(doc) for doc in docs]
+    pooling = model.get_ref("pooling")
     relations = ...
 
     def backprop(d_relations: Floats2d) -> List[Doc]:
@@ -744,14 +746,35 @@ This function in added to the [`@misc` registry](/api/top-level#registry) so we
 can refer to it from the config, and easily swap it out for any other candidate
 generation function.
 
-When creating this model, we store the custom functions as
-[attributes](https://thinc.ai/docs/api-model#properties) and the sublayers as
-references, so we can access them easily:
+#### Intermezzo: define how to store the relations data {#component-rel-attribute}
+
+For our new relation extraction component, we will use a custom
+[extension attribute](/usage/processing-pipelines#custom-components-attributes)
+`doc._.rel` in which we store relation data. The attribute refers to a
+dictionary, keyed by the **start offsets of each entity** involved in the
+candidate relation. The values in the dictionary refer to another dictionary
+where relation labels are mapped to values between 0 and 1. We assume anything
+above 0.5 to be a `True` relation. The ~~Example~~ instances that we'll use as
+training data, will include their gold-standard relation annotations in
+`example.reference._.rel`.
+
+> #### Example output
+>
+> ```python
+> doc = nlp("Amsterdam is the capital of the Netherlands.")
+> print("spans", [(e.start, e.text, e.label_) for e in doc.ents])
+> for value, rel_dict in doc._.rel.items():
+>     print(f"{value}: {rel_dict}")
+>
+> # spans [(0, 'Amsterdam', 'LOC'), (6, 'Netherlands', 'LOC')]
+> # (0, 6): {'CAPITAL_OF': 0.89, 'LOCATED_IN': 0.75, 'UNRELATED': 0.002}
+> # (6, 0): {'CAPITAL_OF': 0.01, 'LOCATED_IN': 0.13, 'UNRELATED': 0.017}
+> ```
 
 ```python
-pooling = model.get_ref("pooling")
-tok2vec = model.get_ref("tok2vec")
-get_instances = model.attrs["get_instances"]
+### Registering the extension attribute
+from spacy.tokens import Doc
+Doc.set_extension("rel", default={})
 ```
 
 #### Step 2: Implementing the pipeline component {#component-rel-pipe}
@@ -794,19 +817,43 @@ class RelationExtractor(TrainablePipe):
         ...
 ```
 
-Before the model can be used, it needs to be
-[initialized](/usage/training#initialization). This function receives a callback
-to access the full **training data set**, or a representative sample. This data
-set can be used to deduce all **relevant labels**. Alternatively, a list of
-labels can be provided to `initialize`, or you can call
-`RelationExtractor.add_label` directly. The number of labels defines the output
-dimensionality of the network, and will be used to do
+Typically, the constructor defines the vocab, the Machine Learning model, and
+the name of this component. Additionally, this component, just like the
+`textcat` and the `tagger`, stores an internal list of labels. The ML model will
+predict scores for each label. We add convenience method to easily retrieve and
+add to them.
+
+```python
+    def __init__(self, vocab, model, name="rel"):
+        """Create a component instance."""
+        # ...
+        self.cfg = {"labels": []}
+
+    @property
+    def labels(self) -> Tuple[str]:
+        """Returns the labels currently added to the component."""
+        return tuple(self.cfg["labels"])
+
+    def add_label(self, label: str):
+        """Add a new label to the pipe."""
+        self.cfg["labels"] = list(self.labels) + [label]
+```
+
+After creation, the component needs to be
+[initialized](/usage/training#initialization). This method can define the
+relevant labels in two ways: explicitely by setting the `labels` argument in the
+[`initialize` block](/api/data-formats#config-initialize) of the config, or
+implicately by deducing them from the `get_examples` callback that generates the
+full **training data set**, or a representative sample.
+
+The final number of labels defines the output dimensionality of the network, and
+will be used to do
 [shape inference](https://thinc.ai/docs/usage-models#validation) throughout the
 layers of the neural network. This is triggered by calling
 [`Model.initialize`](https://thinc.ai/api/model#initialize).
 
 ```python
-### The initialize method {highlight="12,18,22"}
+### The initialize method {highlight="12,15,18,22"}
 from itertools import islice
 
 def initialize(
@@ -837,7 +884,7 @@ Typically, this happens when the pipeline is set up before training in
 [`spacy train`](/api/cli#training). After initialization, the pipeline component
 and its internal model can be trained and used to make predictions.
 
-During training, the function [`update`](/api/pipe#update) is invoked which
+During training, the method [`update`](/api/pipe#update) is invoked which
 delegates to
 [`Model.begin_update`](https://thinc.ai/docs/api-model#begin_update) and a
 [`get_loss`](/api/pipe#get_loss) function that **calculates the loss** for a
@@ -858,7 +905,7 @@ def update(
     losses: Optional[Dict[str, float]] = None,
 ) -> Dict[str, float]:
     # ...
-    docs = [ex.predicted for ex in examples]
+    docs = [eg.predicted for eg in examples]
     predictions, backprop = self.model.begin_update(docs)
     loss, gradient = self.get_loss(examples, predictions)
     backprop(gradient)
@@ -867,8 +914,8 @@ def update(
     return losses
 ```
 
-When the internal model is trained, the component can be used to make novel
-**predictions**. The [`predict`](/api/pipe#predict) function needs to be
+After training the model, the component can be used to make novel
+**predictions**. The [`predict`](/api/pipe#predict) method needs to be
 implemented for each subclass of `TrainablePipe`. In our case, we can simply
 delegate to the internal model's
 [predict](https://thinc.ai/docs/api-model#predict) function that takes a batch
@@ -884,42 +931,21 @@ def predict(self, docs: Iterable[Doc]) -> Floats2d:
 The final method that needs to be implemented, is
 [`set_annotations`](/api/pipe#set_annotations). This function takes the
 predictions, and modifies the given `Doc` object in place to store them. For our
-relation extraction component, we store the data as a dictionary in a custom
-[extension attribute](/usage/processing-pipelines#custom-components-attributes)
-`doc._.rel`. As keys, we represent the candidate pair by the **start offsets of
-each entity**, as this defines an entity pair uniquely within one document.
+relation extraction component, we store the data in the
+[custom attribute](#component-rel-attribute)`doc._.rel`.
 
 To interpret the scores predicted by the relation extraction model correctly, we
-need to refer to the model's `get_candidates` function that defined which pairs
+need to refer to the model's `get_instances` function that defined which pairs
 of entities were relevant candidates, so that the predictions can be linked to
 those exact entities:
-
-> #### Example output
->
-> ```python
-> doc = nlp("Amsterdam is the capital of the Netherlands.")
-> print("spans", [(e.start, e.text, e.label_) for e in doc.ents])
-> for value, rel_dict in doc._.rel.items():
->     print(f"{value}: {rel_dict}")
->
-> # spans [(0, 'Amsterdam', 'LOC'), (6, 'Netherlands', 'LOC')]
-> # (0, 6): {'CAPITAL_OF': 0.89, 'LOCATED_IN': 0.75, 'UNRELATED': 0.002}
-> # (6, 0): {'CAPITAL_OF': 0.01, 'LOCATED_IN': 0.13, 'UNRELATED': 0.017}
-> ```
-
-```python
-### Registering the extension attribute
-from spacy.tokens import Doc
-Doc.set_extension("rel", default={})
-```
 
 ```python
 ### The set_annotations method {highlight="5-6,10"}
 def set_annotations(self, docs: Iterable[Doc], predictions: Floats2d):
     c = 0
-    get_candidates = self.model.attrs["get_candidates"]
+    get_instances = self.model.attrs["get_instances"]
     for doc in docs:
-        for (e1, e2) in get_candidates(doc):
+        for (e1, e2) in get_instances(doc):
             offset = (e1.start, e2.start)
             if offset not in doc._.rel:
                 doc._.rel[offset] = {}
@@ -933,7 +959,7 @@ Under the hood, when the pipe is applied to a document, it delegates to the
 
 ```python
 ### The __call__ method
-def __call__(self, Doc doc):
+def __call__(self, doc: Doc):
     predictions = self.predict([doc])
     self.set_annotations([doc], predictions)
     return doc
@@ -957,8 +983,8 @@ def score(self, examples: Iterable[Example]) -> Dict[str, Any]:
     }
 ```
 
-This is particularly useful to see the scores on the development corpus when
-training the component with [`spacy train`](/api/cli#training).
+This is particularly useful for calculating relevant scores on the development
+corpus when training the component with [`spacy train`](/api/cli#training).
 
 Once our `TrainablePipe` subclass is fully implemented, we can
 [register](/usage/processing-pipelines#custom-components-factories) the
@@ -975,13 +1001,8 @@ assigns it a name and lets you create the component with
 >
 > [components.relation_extractor.model]
 > @architectures = "rel_model.v1"
->
-> [components.relation_extractor.model.tok2vec]
 > # ...
 >
-> [components.relation_extractor.model.get_candidates]
-> @misc = "rel_cand_generator.v1"
-> max_length = 20
 >
 > [training.score_weights]
 > rel_micro_p = 0.0
