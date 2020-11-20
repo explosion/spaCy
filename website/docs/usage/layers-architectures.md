@@ -644,7 +644,6 @@ that has the full implementation.
 >
 > [model.create_instance_tensor.get_instances]
 > # ...
-> `
 > ```
 
 ```python
@@ -666,7 +665,7 @@ def create_tensors(
     )
 
 
-### The custom forward function
+# The custom forward function
 def instance_forward(
     model: Model[List[Doc], Floats2d],
     docs: List[Doc],
@@ -686,7 +685,7 @@ def instance_forward(
     return relations, backprop
 
 
-### The custom initialization method
+# The custom initialization method
 def instance_init(
     model: Model,
     X: List[Doc] = None,
@@ -712,6 +711,13 @@ several
 [built-in pooling operators](https://thinc.ai/docs/api-layers#reduction-ops) for
 this purpose.
 
+Finally, we need a `get_instances` method that **generates pairs of entities**
+that we want to classify as being related or not. As these candidate pairs are
+typically formed within one document, this function takes a [`Doc`](/api/doc) as
+input and outputs a `List` of `Span` tuples. For instance, the following
+implementation takes any two entities from the same document, as long as they
+are within a **maximum distance** (in number of tokens) of eachother:
+
 > #### config.cfg (excerpt)
 >
 > ```ini
@@ -721,17 +727,10 @@ this purpose.
 > max_length = 100
 > ```
 
-Finally, we need a `get_instances` method that **generates pairs of entities**
-that we want to classify as being related or not. As these candidate pairs are
-typically formed within one document, this function takes a [`Doc`](/api/doc) as
-input and outputs a `List` of `Span` tuples. For instance, the following
-implementation takes any two entities from the same document, as long as they
-are within a **maximum distance** (in number of tokens) of eachother:
-
 ```python
 ### Candiate generation
 @spacy.registry.misc.register("rel_instance_generator.v1")
-def create_candidate_indices(max_length: int) -> Callable[[Doc], List[Tuple[Span, Span]]]:
+def create_instances(max_length: int) -> Callable[[Doc], List[Tuple[Span, Span]]]:
     def get_candidates(doc: "Doc") -> List[Tuple[Span, Span]]:
         candidates = []
         for ent1 in doc.ents:
@@ -825,6 +824,7 @@ will predict scores for each label. We add convenience methods to easily
 retrieve and add to them.
 
 ```python
+### The constructor (continued) 
     def __init__(self, vocab, model, name="rel"):
         """Create a component instance."""
         # ...
