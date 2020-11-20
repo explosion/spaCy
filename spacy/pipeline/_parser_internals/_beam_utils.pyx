@@ -46,7 +46,7 @@ cdef class BeamBatch(object):
             beam = Beam(self.moves.n_moves, width, min_density=density)
             beam.initialize(self.moves.init_beam_state,
                             self.moves.del_beam_state, state.c.length,
-                            state.c._sent)
+                            <void*>state.c._sent)
             for i in range(beam.width):
                 st = <StateC*>beam.at(i)
                 st.offset = state.c.offset
@@ -166,17 +166,21 @@ def update_beam(TransitionSystem moves, states, golds, model, int width, beam_de
                 if pbeam[i].is_done and gbeam[i].is_done:
                     dones[i] = True
     histories = []
-    losses = []
+    grads = []
     for violn in violns:
         if violn.p_hist:
             histories.append(violn.p_hist + violn.g_hist)
             d_loss = [d_l * violn.cost for d_l in violn.p_probs + violn.g_probs]
-            losses.append(d_loss)
+            grads.append(d_loss)
         else:
             histories.append([])
-            losses.append([])
-    states_d_scores = get_gradient(moves.n_moves, beam_maps, histories, losses)
-    return states_d_scores, backprops[:len(states_d_scores)]
+            grads.append([])
+    loss = 0.0
+    states_d_scores = get_gradient(moves.n_moves, beam_maps, histories, grads)
+    for i, (d_scores, bp_scores) in enumerate(zip(states_d_scores, backprops)):
+        loss += (d_scores**2).mean()
+        bp_scores(d_scores)
+    return loss
 
 
 def collect_states(beams):
@@ -267,8 +271,8 @@ def get_gradient(nr_class, beam_maps, histories, losses):
             # We need to do this because each state in a short path is scored
             # multiple times, as we add in the average cost when we run out
             # of actions.
-            #avg_loss = loss / len(hist)
-            #loss += avg_loss * (nr_steps[eg_id] - len(hist))
+            avg_loss = loss / len(hist)
+            loss += avg_loss * (nr_steps[eg_id] - len(hist))
             for step, clas in enumerate(hist):
                 i = beam_maps[step][key]
                 # In step j, at state i action clas

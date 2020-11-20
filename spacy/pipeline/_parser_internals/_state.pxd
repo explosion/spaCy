@@ -1,6 +1,7 @@
 from libc.string cimport memcpy, memset
 from libc.stdlib cimport calloc, free
 from libc.stdint cimport uint32_t, uint64_t
+from libcpp.vector cimport vector
 from cpython.exc cimport PyErr_CheckSignals, PyErr_SetFromErrno
 from murmurhash.mrmr cimport hash64
 
@@ -14,70 +15,55 @@ from ...typedefs cimport attr_t
 cdef inline bint is_space_token(const TokenC* token) nogil:
     return Lexeme.c_check_flag(token.lex, IS_SPACE)
 
+cdef struct ArcC:
+    int head
+    int child
+    attr_t label
+
 
 cdef cppclass StateC:
     int* _stack
     int* _buffer
     bint* shifted
-    TokenC* _sent
-    SpanC* _ents
+    bint* sent_starts
+    const TokenC* _sent
+    vector[SpanC] _ents
+    vector[ArcC] _arcs
     TokenC _empty_token
     int length
     int offset
     int _s_i
     int _b_i
-    int _e_i
-    int _break
 
     __init__(const TokenC* sent, int length) nogil:
-        cdef int PADDING = 5
-        this._buffer = <int*>calloc(length + (PADDING * 2), sizeof(int))
-        this._stack = <int*>calloc(length + (PADDING * 2), sizeof(int))
-        this.shifted = <bint*>calloc(length + (PADDING * 2), sizeof(bint))
-        this._sent = <TokenC*>calloc(length + (PADDING * 2), sizeof(TokenC))
-        this._ents = <SpanC*>calloc(length + (PADDING * 2), sizeof(SpanC))
+        this._sent = sent
+        this._buffer = <int*>calloc(length, sizeof(int))
+        this._stack = <int*>calloc(length, sizeof(int))
+        this.sent_starts = <bint*>calloc(length, sizeof(bint))
+        this.shifted = <bint*>calloc(length, sizeof(bint))
         if not (this._buffer and this._stack and this.shifted
-                and this._sent and this._ents):
+                and this._sent):
             with gil:
                 PyErr_SetFromErrno(MemoryError)
                 PyErr_CheckSignals()
         this.offset = 0
-        cdef int i
-        for i in range(length + (PADDING * 2)):
-            this._ents[i].end = -1
-            this._sent[i].l_edge = i
-            this._sent[i].r_edge = i
-        for i in range(PADDING):
-            this._sent[i].lex = &EMPTY_LEXEME
-        this._sent += PADDING
-        this._ents += PADDING
-        this._buffer += PADDING
-        this._stack += PADDING
-        this.shifted += PADDING
         this.length = length
-        this._break = -1
         this._s_i = 0
         this._b_i = 0
-        this._e_i = 0
         for i in range(length):
             this._buffer[i] = i
+            this.sent_starts[i] = True if sent[i].sent_start else False
         memset(&this._empty_token, 0, sizeof(TokenC))
         this._empty_token.lex = &EMPTY_LEXEME
-        for i in range(length):
-            this._sent[i] = sent[i]
-            this._buffer[i] = i
-        for i in range(length, length+PADDING):
-            this._sent[i].lex = &EMPTY_LEXEME
 
     __dealloc__():
-        cdef int PADDING = 5
-        free(this._sent - PADDING)
-        free(this._ents - PADDING)
-        free(this._buffer - PADDING)
-        free(this._stack - PADDING)
-        free(this.shifted - PADDING)
+        free(this._buffer)
+        free(this._stack)
+        free(this.shifted)
+        free(this.sent_starts)
 
     void set_context_tokens(int* ids, int n) nogil:
+        cdef int i, j
         if n == 1:
             if this.B(0) >= 0:
                 ids[0] = this.B(0)
@@ -126,22 +112,18 @@ cdef cppclass StateC:
             ids[11] = this.R(this.S(1), 1)
             ids[12] = this.R(this.S(1), 2)
         elif n == 6:
+            for i in range(6):
+                ids[i] = -1
             if this.B(0) >= 0:
                 ids[0] = this.B(0)
-                ids[1] = this.B(0)-1
-            else:
-                ids[0] = -1
-                ids[1] = -1
-            ids[2] = this.B(1)
-            ids[3] = this.E(0)
-            if ids[3] >= 1:
-                ids[4] = this.E(0)-1
-            else:
-                ids[4] = -1
-            if (ids[3]+1) < this.length:
-                ids[5] = this.E(0)+1
-            else:
-                ids[5] = -1
+            if this.entity_is_open():
+                ent = this.get_ent()
+                j = 1
+                for i in range(ent.start, this.B(0)):
+                    ids[j] = i
+                    j += 1
+                    if j >= 6:
+                        break
         else:
             # TODO error =/
             pass
@@ -154,10 +136,14 @@ cdef cppclass StateC:
     int S(int i) nogil const:
         if i >= this._s_i:
             return -1
+        elif i < 0:
+            return -1
         return this._stack[this._s_i - (i+1)]
 
     int B(int i) nogil const:
         if (i + this._b_i) >= this.length:
+            return -1
+        elif i < 0:
             return -1
         return this._buffer[this._b_i + i]
 
@@ -185,67 +171,45 @@ cdef cppclass StateC:
         else:
             return &this._sent[i]
 
-    int H(int i) nogil const:
-        if i < 0 or i >= this.length:
+    int H(int child) nogil const:
+        for i in range(this._arcs.size()):
+            arc = this._arcs.at(i)
+            if arc.head != -1 and arc.child == child:
+                return arc.head
+        else:
             return -1
-        return this._sent[i].head + i
 
     int E(int i) nogil const:
-        if this._e_i <= 0 or this._e_i >= this.length:
+        if this._ents.size() == 0:
             return -1
-        if i < 0 or i >= this._e_i:
-            return -1
-        return this._ents[this._e_i - (i+1)].start
+        else:
+            return this._ents.back().start
 
-    int L(int i, int idx) nogil const:
-        if idx < 1:
+    int L(int head, int idx) nogil const:
+        if idx < 1 or this._arcs.size() == 0:
             return -1
-        if i < 0 or i >= this.length:
+        cdef vector[int] lefts
+        for i in range(this._arcs.size()):
+            arc = this._arcs.at(i)
+            if arc.head == head and arc.child != -1 and arc.child < head:
+                lefts.push_back(arc.child)
+        if idx > lefts.size():
             return -1
-        cdef const TokenC* target = &this._sent[i]
-        if target.l_kids < <uint32_t>idx:
-            return -1
-        cdef const TokenC* ptr = &this._sent[target.l_edge]
+        else:
+            return lefts.at(idx-1)
 
-        while ptr < target:
-            # If this head is still to the right of us, we can skip to it
-            # No token that's between this token and this head could be our
-            # child.
-            if (ptr.head >= 1) and (ptr + ptr.head) < target:
-                ptr += ptr.head
-
-            elif ptr + ptr.head == target:
-                idx -= 1
-                if idx == 0:
-                    return ptr - this._sent
-                ptr += 1
-            else:
-                ptr += 1
-        return -1
-
-    int R(int i, int idx) nogil const:
-        if idx < 1:
+    int R(int head, int idx) nogil const:
+        if idx < 1 or this._arcs.size() == 0:
             return -1
-        if i < 0 or i >= this.length:
+        cdef vector[int] rights
+        for i in range(this._arcs.size()):
+            arc = this._arcs.at(i)
+            if arc.head == head and arc.child != -1 and arc.child > head:
+                rights.push_back(arc.child)
+        if idx > rights.size():
             return -1
-        cdef const TokenC* target = &this._sent[i]
-        if target.r_kids < <uint32_t>idx:
-            return -1
-        cdef const TokenC* ptr = &this._sent[target.r_edge]
-        while ptr > target:
-            # If this head is still to the right of us, we can skip to it
-            # No token that's between this token and this head could be our
-            # child.
-            if (ptr.head < 0) and ((ptr + ptr.head) > target):
-                ptr += ptr.head
-            elif ptr + ptr.head == target:
-                idx -= 1
-                if idx == 0:
-                    return ptr - this._sent
-                ptr -= 1
-            else:
-                ptr -= 1
-        return -1
+        else:
+            return rights.at(idx-1)
 
     bint empty() nogil const:
         return this._s_i <= 0
@@ -253,69 +217,65 @@ cdef cppclass StateC:
     bint eol() nogil const:
         return this.buffer_length() == 0
 
-    bint at_break() nogil const:
-        return this._break != -1
-
     bint is_final() nogil const:
-        return this.stack_depth() <= 0 and this._b_i >= this.length
+        return this.stack_depth() <= 0 and this.eol()
 
-    bint has_head(int i) nogil const:
-        return this.safe_get(i).head != 0
+    int is_sent_start(int word) nogil const:
+        return this.sent_starts[word]
 
-    int n_L(int i) nogil const:
-        return this.safe_get(i).l_kids
+    void set_sent_start(int word) nogil:
+        this.sent_starts[word] = 1
 
-    int n_R(int i) nogil const:
-        return this.safe_get(i).r_kids
+    bint has_head(int child) nogil const:
+        for i in range(this._arcs.size()):
+            arc = this._arcs.at(i)
+            if arc.child == child and arc.head != -1:
+                return True
+        else:
+            return False
+
+    int l_edge(int word) nogil const:
+        return word
+
+    int r_edge(int word) nogil const:
+        return word
+ 
+    int n_L(int head) nogil const:
+        cdef int n = 0
+        for i in range(this._arcs.size()):
+            arc = this._arcs.at(i) 
+            if arc.head == head and arc.child != -1 and arc.child < arc.head:
+                n += 1
+        return n
+
+    int n_R(int head) nogil const:
+        cdef int n = 0
+        for i in range(this._arcs.size()):
+            arc = this._arcs.at(i) 
+            if arc.head == head and arc.child != -1 and arc.child > arc.head:
+                n += 1
+        return n
 
     bint stack_is_connected() nogil const:
         return False
 
     bint entity_is_open() nogil const:
-        if this._e_i < 1:
+        if this._ents.size() == 0:
             return False
-        return this._ents[this._e_i-1].end == -1
+        else:
+            return this._ents.back().end
 
     int stack_depth() nogil const:
         return this._s_i
 
     int buffer_length() nogil const:
-        if this._break != -1:
-            return this._break - this._b_i
-        else:
-            return this.length - this._b_i
-
-    uint64_t hash() nogil const:
-        cdef TokenC[11] sig
-        sig[0] = this.S_(2)[0]
-        sig[1] = this.S_(1)[0]
-        sig[2] = this.R_(this.S(1), 1)[0]
-        sig[3] = this.L_(this.S(0), 1)[0]
-        sig[4] = this.L_(this.S(0), 2)[0]
-        sig[5] = this.S_(0)[0]
-        sig[6] = this.R_(this.S(0), 2)[0]
-        sig[7] = this.R_(this.S(0), 1)[0]
-        sig[8] = this.B_(0)[0]
-        sig[9] = this.E_(0)[0]
-        sig[10] = this.E_(1)[0]
-        return hash64(sig, sizeof(sig), this._s_i) \
-             + hash64(<void*>&this._hist, sizeof(RingBufferC), 1)
-
-    void push_hist(int act) nogil:
-        ring_push(&this._hist, act+1)
-
-    int get_hist(int i) nogil:
-        return ring_get(&this._hist, i)
+        return this.length - this._b_i
 
     void push() nogil:
         if this.B(0) != -1:
             this._stack[this._s_i] = this.B(0)
         this._s_i += 1
         this._b_i += 1
-        if this.safe_get(this.B_(0).l_edge).sent_start == 1:
-            this.set_break(this.B_(0).l_edge)
-        if this._b_i > this._break:
-            this._break = -1
 
     void pop() nogil:
         if this._s_i >= 1:
@@ -336,145 +296,65 @@ cdef cppclass StateC:
     void add_arc(int head, int child, attr_t label) nogil:
         if this.has_head(child):
             this.del_arc(this.H(child), child)
-
-        cdef int dist = head - child
-        this._sent[child].head = dist
-        this._sent[child].dep = label
-        cdef int i
-        if child > head:
-            this._sent[head].r_kids += 1
-            # Some transition systems can have a word in the buffer have a
-            # rightward child, e.g. from Unshift.
-            this._sent[head].r_edge = this._sent[child].r_edge
-            i = 0
-            while this.has_head(head) and i < this.length:
-                head = this.H(head)
-                this._sent[head].r_edge = this._sent[child].r_edge
-                i += 1 # Guard against infinite loops
-        else:
-            this._sent[head].l_kids += 1
-            this._sent[head].l_edge = this._sent[child].l_edge
+        cdef ArcC arc
+        arc.head = head
+        arc.child = child
+        arc.label = label
+        this._arcs.push_back(arc)
 
     void del_arc(int h_i, int c_i) nogil:
-        cdef int dist = h_i - c_i
-        cdef TokenC* h = &this._sent[h_i]
-        cdef int i = 0
-        if c_i > h_i:
-            # this.R_(h_i, 2) returns the second-rightmost child token of h_i
-            # If we have more than 2 rightmost children, our 2nd rightmost child's
-            # rightmost edge is going to be our new rightmost edge.
-            h.r_edge = this.R_(h_i, 2).r_edge if h.r_kids >= 2 else h_i
-            h.r_kids -= 1
-            new_edge = h.r_edge
-            # Correct upwards in the tree --- see Issue #251
-            while h.head < 0 and i < this.length: # Guard infinite loop
-                h += h.head
-                h.r_edge = new_edge
-                i += 1
+        if this._arcs.size() == 0:
+            return
+        arc = this._arcs.back()
+        if arc.head == h_i and arc.child == c_i:
+            this._arcs.pop_back()
         else:
-            # Same logic applies for left edge, but we don't need to walk up
-            # the tree, as the head is off the stack.
-            h.l_edge = this.L_(h_i, 2).l_edge if h.l_kids >= 2 else h_i
-            h.l_kids -= 1
+            for i in range(this._arcs.size()-1):
+                arc = this._arcs.at(i)
+                if arc.head == h_i and arc.child == c_i:
+                    arc.head = -1
+                    arc.child = -1
+                    arc.label = 0
+                    break
+
+    SpanC get_ent() nogil:
+        cdef SpanC ent
+        if this._ents.size() == 0:
+            ent.start = 0
+            ent.end = 0
+            ent.label = 0
+            return ent
+        else:
+            return this._ents.back()
 
     void open_ent(attr_t label) nogil:
-        this._ents[this._e_i].start = this.B(0)
-        this._ents[this._e_i].label = label
-        this._ents[this._e_i].end = -1
-        this._e_i += 1
+        cdef SpanC ent
+        ent.start = this.B(0)
+        ent.label = label
+        ent.end = -1
+        this._ents.push_back(ent)
 
     void close_ent() nogil:
-        # Note that we don't decrement _e_i here! We want to maintain all
-        # entities, not over-write them...
-        this._ents[this._e_i-1].end = this.B(0)+1
-        this._sent[this.B(0)].ent_iob = 1
+        this._ents.back().end = this.B(0)+1
 
     void set_ent_tag(int i, int ent_iob, attr_t ent_type) nogil:
-        if 0 <= i < this.length:
-            this._sent[i].ent_iob = ent_iob
-            this._sent[i].ent_type = ent_type
-
-    void set_break(int i) nogil:
-        if 0 <= i < this.length:
-            this._sent[i].sent_start = 1
-            this._break = this._b_i
+        pass
 
     void clone(const StateC* src) nogil:
         this.length = src.length
-        memcpy(this._sent, src._sent, this.length * sizeof(TokenC))
+        this._sent = src._sent
         memcpy(this._stack, src._stack, this.length * sizeof(int))
         memcpy(this._buffer, src._buffer, this.length * sizeof(int))
-        memcpy(this._ents, src._ents, this.length * sizeof(SpanC))
         memcpy(this.shifted, src.shifted, this.length * sizeof(this.shifted[0]))
+        memcpy(this.sent_starts, src.sent_starts, this.length * sizeof(this.sent_starts[0]))
+        cdef int i
+        for i in range(src._ents.size()):
+            this._ents.push_back(src._ents.at(i)) 
+        for i in range(src._arcs.size()):
+            arc = src._arcs.at(i)
+            if arc.head != -1:
+                this._arcs.push_back(arc)
         this._b_i = src._b_i
         this._s_i = src._s_i
-        this._e_i = src._e_i
-        this._break = src._break
         this.offset = src.offset
         this._empty_token = src._empty_token
-
-    void fast_forward() nogil:
-        # space token attachement policy:
-        # - attach space tokens always to the last preceding real token
-        # - except if it's the beginning of a sentence, then attach to the first following
-        # - boundary case: a document containing multiple space tokens but nothing else,
-        #   then make the last space token the head of all others
-
-        while is_space_token(this.B_(0)) \
-        or this.buffer_length() == 0 \
-        or this.stack_depth() == 0:
-            if this.buffer_length() == 0:
-                # remove the last sentence's root from the stack
-                if this.stack_depth() == 1:
-                    this.pop()
-                # parser got stuck: reduce stack or unshift
-                elif this.stack_depth() > 1:
-                    if this.has_head(this.S(0)):
-                        this.pop()
-                    else:
-                        this.unshift()
-                # stack is empty but there is another sentence on the buffer
-                elif (this.length - this._b_i) >= 1:
-                    this.push()
-                else: # stack empty and nothing else coming
-                    break
-
-            elif is_space_token(this.B_(0)):
-                # the normal case: we're somewhere inside a sentence
-                if this.stack_depth() > 0:
-                    # assert not is_space_token(this.S_(0))
-                    # attach all coming space tokens to their last preceding
-                    # real token (which should be on the top of the stack)
-                    while is_space_token(this.B_(0)):
-                        this.add_arc(this.S(0),this.B(0),0)
-                        this.push()
-                        this.pop()
-                # the rare case: we're at the beginning of a document:
-                # space tokens are attached to the first real token on the buffer
-                elif this.stack_depth() == 0:
-                    # store all space tokens on the stack until a real token shows up
-                    # or the last token on the buffer is reached
-                    while is_space_token(this.B_(0)) and this.buffer_length() > 1:
-                        this.push()
-                    # empty the stack by attaching all space tokens to the
-                    # first token on the buffer
-                    # boundary case: if all tokens are space tokens, the last one
-                    # becomes the head of all others
-                    while this.stack_depth() > 0:
-                        this.add_arc(this.B(0),this.S(0),0)
-                        this.pop()
-                    # move the first token onto the stack
-                    this.push()
-
-            elif this.stack_depth() == 0:
-                # for one token sentences (?)
-                if this.buffer_length() == 1:
-                    this.push()
-                    this.pop()
-                # with an empty stack and a non-empty buffer
-                # only shift is valid anyway
-                elif (this.length - this._b_i) >= 1:
-                    this.push()
-
-            else: # can this even happen?
-                break

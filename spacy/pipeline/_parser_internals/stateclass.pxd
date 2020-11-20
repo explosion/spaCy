@@ -2,6 +2,7 @@ from cymem.cymem cimport Pool
 
 from ...structs cimport TokenC, SpanC
 from ...typedefs cimport attr_t
+from ...tokens.doc cimport Doc
 
 from ._state cimport StateC
 
@@ -9,6 +10,7 @@ from ._state cimport StateC
 cdef class StateClass:
     cdef Pool mem
     cdef StateC* c
+    cdef readonly Doc doc
     cdef int _borrowed
 
     @staticmethod
@@ -34,6 +36,7 @@ cdef class StateClass:
         self.c.offset = offset
         return self
 
+    """
     cdef inline int S(self, int i) nogil:
         return self.c.S(i)
 
@@ -135,3 +138,4 @@ cdef class StateClass:
 
     cdef inline void fast_forward(self) nogil:
         self.c.fast_forward()
+    """
