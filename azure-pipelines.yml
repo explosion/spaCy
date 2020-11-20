@@ -94,7 +94,7 @@ jobs:
       contents: 'spacy'
     displayName: 'Delete source directory'
 
-  - script: |
+  - bash: |
       pip freeze > installed.txt
       pip uninstall -y -r installed.txt
       SDIST=$(python -c "import os;print(os.listdir('./dist')[-1])" 2>&1)
