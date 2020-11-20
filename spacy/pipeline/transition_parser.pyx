@@ -85,7 +85,6 @@ cdef class Parser(TrainablePipe):
             self.add_multitask_objective(multitask)
 
         self._rehearsal_model = None
-        print(self.cfg)
 
     def __getnewargs_ex__(self):
         """This allows pickling the Parser and its keyword-only init arguments"""
@@ -276,10 +275,7 @@ cdef class Parser(TrainablePipe):
         cdef Doc doc
         states = _beam_utils.collect_states(states_or_beams)
         for i, (state, doc) in enumerate(zip(states, docs)):
-            self.moves.finalize_state(state.c)
-            for j in range(doc.length):
-                doc.c[j] = state.c._sent[j]
-            self.moves.finalize_doc(doc)
+            self.moves.set_annotations(state, doc)
             for hook in self.postprocesses:
                 hook(doc)
 
@@ -443,7 +439,7 @@ cdef class Parser(TrainablePipe):
         # Prepare the stepwise model, and get the callback for finishing the batch
         model, backprop_tok2vec = self.model.begin_update(
             [eg.predicted for eg in examples])
-        states_d_scores, backprops = _beam_utils.update_beam(
+        loss = _beam_utils.update_beam(
             self.moves,
             states,
             golds,
@@ -451,9 +447,10 @@ cdef class Parser(TrainablePipe):
             beam_width,
             beam_density=beam_density,
         )
-        for i, (d_scores, bp_scores) in enumerate(zip(states_d_scores, backprops)):
-            losses[self.name] += (d_scores**2).mean()
-            bp_scores(d_scores)
+        losses[self.name] += loss
+        #for i, (d_scores, bp_scores) in enumerate(zip(states_d_scores, backprops)):
+        #    losses[self.name] += (d_scores**2).mean()
+        #    bp_scores(d_scores)
         backprop_tok2vec(golds)
         if sgd is not None:
             self.finish_update(sgd)
