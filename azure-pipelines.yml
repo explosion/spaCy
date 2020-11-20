@@ -74,7 +74,7 @@ jobs:
       architecture: 'x64'
 
   - script: |
-      python -m pip install -U setuptools
+      python -m pip install -U pip setuptools
       pip install -r requirements.txt
     displayName: 'Install dependencies'
 
@@ -89,9 +89,13 @@ jobs:
     displayName: 'Delete source directory'
 
   - bash: |
+      pip freeze > installed.txt
+      pip uninstall -y -r installed.txt
       SDIST=$(python -c "import os;print(os.listdir('./dist')[-1])" 2>&1)
       pip install dist/$SDIST
     displayName: 'Install from sdist'
 
-  - script: python -m pytest --pyargs spacy
+  - script: |
+      pip install -r requirements.txt
+      python -m pytest --pyargs spacy
     displayName: 'Run tests'

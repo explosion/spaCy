@@ -194,8 +194,8 @@ def setup_package():
             print(f"Copied {copy_file} -> {target_dir}")
 
     include_dirs = [
-        get_python_inc(plat_specific=True),
         numpy.get_include(),
+        get_python_inc(plat_specific=True),
     ]
     ext_modules = []
     for name in MOD_NAMES:
@@ -212,7 +212,7 @@ def setup_package():
         ext_modules=ext_modules,
         cmdclass={"build_ext": build_ext_subclass},
         include_dirs=include_dirs,
-        package_data={"": ["*.pyx", "*.pxd", "*.pxi", "*.cpp"]},
+        package_data={"": ["*.pyx", "*.pxd", "*.pxi"]},
     )
 
 
