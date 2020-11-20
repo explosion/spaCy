@@ -52,7 +52,7 @@ cdef cppclass StateC:
         this._b_i = 0
         for i in range(length):
             this._buffer[i] = i
-            this.sent_starts[i] = True if sent[i].sent_start else False
+            this.sent_starts[i] = sent[i].sent_start
         memset(&this._empty_token, 0, sizeof(TokenC))
         this._empty_token.lex = &EMPTY_LEXEME
 
@@ -220,11 +220,14 @@ cdef cppclass StateC:
     bint is_final() nogil const:
         return this.stack_depth() <= 0 and this.eol()
 
-    int is_sent_start(int word) nogil const:
-        return this.sent_starts[word]
+    int cannot_sent_start(int word) nogil const:
+        return this.sent_starts[word] == -1
 
-    void set_sent_start(int word) nogil:
-        this.sent_starts[word] = 1
+    int is_sent_start(int word) nogil const:
+        return this.sent_starts[word] == 1
+
+    void set_sent_start(int word, int value) nogil:
+        this.sent_starts[word] = value
 
     bint has_head(int child) nogil const:
         for i in range(this._arcs.size()):
