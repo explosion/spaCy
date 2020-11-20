@@ -502,7 +502,7 @@ with Model.define_operators({">>": chain}):
 
 ## Create new trainable components {#components}
 
-In addition to [swapping out](#swap-architectures) default models in built-in
+In addition to [swapping out](#swap-architectures) layers in existing
 components, you can also implement an entirely new,
 [trainable](/usage/processing-pipelines#trainable-components) pipeline component
 from scratch. This can be done by creating a new class inheriting from
@@ -523,25 +523,27 @@ overview of the `TrainablePipe` methods used by
 This section outlines an example use-case of implementing a **novel relation
 extraction component** from scratch. We'll implement a binary relation
 extraction method that determines whether or not **two entities** in a document
-are related, and if so, what type of relation. We'll allow multiple types of
-relations between two such entities (multi-label setting). There are two major
-steps required:
+are related, and if so, what type of relation connects them. We allow multiple
+types of relations between two such entities (a multi-label setting). There are
+two major steps required:
 
 1. Implement a [machine learning model](#component-rel-model) specific to this
-   task. It will have to extract candidates from a [`Doc`](/api/doc) and predict
-   a relation for the available candidate pairs.
-2. Implement a custom [pipeline component](#component-rel-pipe) powered by the
-   machine learning model that sets annotations on the [`Doc`](/api/doc) passing
-   through the pipeline.
+   task. It will have to extract candidate relation instances from a
+   [`Doc`](/api/doc) and predict the corresponding scores for each relation
+   label.
+2. Implement a custom [pipeline component](#component-rel-pipe) - powered by the
+   machine learning model from step 1 - that translates the predicted scores
+   into annotations that are stored on the [`Doc`](/api/doc) objects as they
+   pass through the `nlp` pipeline.
 
 <Project id="tutorials/rel_component">
 Run this example use-case by using our project template. It includes all the 
 code to create the ML model and the pipeline component from scratch.
-It contains two config files to train the model: 
+It also contains two config files to train the model: 
 one to run on CPU with a Tok2Vec layer, and one for the GPU using a transformer.
 The project applies the relation extraction component to identify biomolecular 
-interactions, but you can easily swap in your own dataset for your experiments
-in any other domain.
+interactions in a sample dataset, but you can easily swap in your own dataset 
+for your experiments in any other domain.
 </Project>
 
 #### Step 1: Implementing the Model {#component-rel-model}
@@ -558,18 +560,17 @@ matrix** (~~Floats2d~~) of predictions:
 > for details.
 
 ```python
-### Register the model architecture
+### The model architecture
 @spacy.registry.architectures.register("rel_model.v1")
 def create_relation_model(...) -> Model[List[Doc], Floats2d]:
     model = ...  # 👈 model will go here
     return model
 ```
 
-We will adapt a **modular approach** to the definition of this relation model, and 
-define it as chaining to layers together: the first layer that generates an 
-instance tensor from a given set of documents, and the second layer that 
-transforms this tensor into a final tensor holding the predictions:
-
+We will adapt a **modular approach** to the definition of this relation model,
+and define it as chaining two layers together: the first layer that generates an
+instance tensor from a given set of documents, and the second layer that
+transforms the instance tensor into a final tensor holding the predictions.
 
 > #### config.cfg (excerpt)
 >
@@ -581,11 +582,11 @@ transforms this tensor into a final tensor holding the predictions:
 > # ...
 >
 > [model.classification_layer]
-> ...
+> # ...
 > ```
 
 ```python
-### Implement the model architecture
+### The model architecture
 @spacy.registry.architectures.register("rel_model.v1")
 def create_relation_model(
     create_instance_tensor: Model[List[Doc], Floats2d],
@@ -595,9 +596,8 @@ def create_relation_model(
     return model
 ```
 
-The `classification_layer` could be something simple like a Linear layer 
-followed by a logistic activation function:
-
+The `classification_layer` could be something like a Linear layer followed by a
+logistic activation function:
 
 > #### config.cfg (excerpt)
 >
@@ -609,7 +609,7 @@ followed by a logistic activation function:
 > ```
 
 ```python
-### Implement the classification layer
+### The classification layer
 @spacy.registry.architectures.register("rel_classification_layer.v1")
 def create_classification_layer(
     nO: int = None, nI: int = None
@@ -617,60 +617,16 @@ def create_classification_layer(
     return chain(Linear(nO=nO, nI=nI), Logistic())
 ```
 
-The first layer that **creates the instance tensor** can be defined 
-by implementing a 
-[custom forward function](https://thinc.ai/docs/usage-models#weights-layers-forward) 
-with an appropriate backpropagation callback. We also define an 
-[initialization method](https://thinc.ai/docs/usage-models#weights-layers-init) 
+The first layer that **creates the instance tensor** can be defined by
+implementing a
+[custom forward function](https://thinc.ai/docs/usage-models#weights-layers-forward)
+with an appropriate backpropagation callback. We also define an
+[initialization method](https://thinc.ai/docs/usage-models#weights-layers-init)
 that ensures that the layer is properly set up for training.
 
-```python
-### Implement the custom forward function
-def instance_forward(
-    model: Model[List[Doc], Floats2d], 
-    docs: List[Doc], 
-    is_train: bool
-) -> Tuple[Floats2d, Callable]:
-    ...
-    tok2vec = model.get_ref("tok2vec")
-    tokvecs, bp_tokvecs = tok2vec(docs, is_train)
-    relations = ... 
-
-    def backprop(d_relations: Floats2d) -> List[Doc]:
-        d_tokvecs = ...
-        return bp_tokvecs(d_tokvecs)
-
-    return relations, backprop
-
-
-### Implement the custom initialization method
-def instance_init(
-    model: Model, 
-    X: List[Doc] = None, 
-    Y: Floats2d = None
-) -> Model:
-    tok2vec = model.get_ref("tok2vec")
-    tok2vec.initialize(X)
-    return model
-
-
-### Implement the layer that creates the instance tensor
-@spacy.registry.architectures.register("rel_instance_tensor.v1")
-def create_tensors(
-    tok2vec: Model[List[Doc], List[Floats2d]],
-    pooling: Model[Ragged, Floats2d],
-    get_instances: Callable[[Doc], List[Tuple[Span, Span]]],
-) -> Model[List[Doc], Floats2d]:
-
-    return Model(
-        "instance_tensors",
-        instance_forward,
-        layers=[tok2vec, pooling],
-        refs={"tok2vec": tok2vec, "pooling": pooling},
-        attrs={"get_instances": get_instances},
-        init=instance_init,
-    )
-```
+We omit some of the implementation details here, and refer to the spaCy project
+that has the full implementation
+[here](https://github.com/explosion/projects/tree/v3/tutorials/rel_component).
 
 > #### config.cfg (excerpt)
 >
@@ -688,19 +644,69 @@ def create_tensors(
 > [model.create_instance_tensor.get_instances]
 > ...
 > `
+> ```
 
-This custom layer uses an
-**[embedding layer](/usage/embeddings-transformers)** such as a
-[`Tok2Vec`](/api/tok2vec) component or a [`Transformer`](/api/transformer). This
-layer is assumed to be of type ~~Model[List[Doc], List[Floats2d]]~~ as it
+```python
+### The layer that creates the instance tensor
+@spacy.registry.architectures.register("rel_instance_tensor.v1")
+def create_tensors(
+    tok2vec: Model[List[Doc], List[Floats2d]],
+    pooling: Model[Ragged, Floats2d],
+    get_instances: Callable[[Doc], List[Tuple[Span, Span]]],
+) -> Model[List[Doc], Floats2d]:
+
+    return Model(
+        "instance_tensors",
+        instance_forward,
+        layers=[tok2vec, pooling],
+        refs={"tok2vec": tok2vec, "pooling": pooling},
+        attrs={"get_instances": get_instances},
+        init=instance_init,
+    )
+
+
+### The custom forward function
+def instance_forward(
+    model: Model[List[Doc], Floats2d],
+    docs: List[Doc],
+    is_train: bool,
+) -> Tuple[Floats2d, Callable]:
+    # ...
+    tok2vec = model.get_ref("tok2vec")
+    tokvecs, bp_tokvecs = tok2vec(docs, is_train)
+    relations = ...
+
+    def backprop(d_relations: Floats2d) -> List[Doc]:
+        d_tokvecs = ...
+        return bp_tokvecs(d_tokvecs)
+
+    return relations, backprop
+
+
+### The custom initialization method
+def instance_init(
+    model: Model,
+    X: List[Doc] = None,
+    Y: Floats2d = None,
+) -> Model:
+    tok2vec = model.get_ref("tok2vec")
+    tok2vec.initialize(X)
+    return model
+
+```
+
+This custom layer uses an [embedding layer](/usage/embeddings-transformers) such
+as a [`Tok2Vec`](/api/tok2vec) component or a [`Transformer`](/api/transformer).
+This layer is assumed to be of type ~~Model[List[Doc], List[Floats2d]]~~ as it
 transforms each **document into a list of tokens**, with each token being
-represented by its embedding in the vector space. 
+represented by its embedding in the vector space.
 
-The **`pooling`** layer will be applied to summarize the token vectors into entity 
-vectors, as named entities (represented by `Span` objects) can consist of one 
-or multiple tokens. For instance, the pooling layer could resort to calculating 
-the average of all token vectors in an entity. Thinc provides several 
-[built-in pooling operators](https://thinc.ai/docs/api-layers#reduction-ops) for 
+The `pooling` layer will be applied to summarize the token vectors into **entity
+vectors**, as named entities (represented by ~~Span~~ objects) can consist of
+one or multiple tokens. For instance, the pooling layer could resort to
+calculating the average of all token vectors in an entity. Thinc provides
+several
+[built-in pooling operators](https://thinc.ai/docs/api-layers#reduction-ops) for
 this purpose.
 
 > #### config.cfg (excerpt)
@@ -712,15 +718,15 @@ this purpose.
 > max_length = 100
 > ```
 
-Finally, we need a `get_instances` method that **generates pairs of entities** 
-that we want to classify as being related or not. As these candidate pairs are typically formed
-within one document, this function takes a [`Doc`](/api/doc) as input and
-outputs a `List` of `Span` tuples. For instance, this
+Finally, we need a `get_instances` method that **generates pairs of entities**
+that we want to classify as being related or not. As these candidate pairs are
+typically formed within one document, this function takes a [`Doc`](/api/doc) as
+input and outputs a `List` of `Span` tuples. For instance, the following
 implementation takes any two entities from the same document, as long as they
 are within a **maximum distance** (in number of tokens) of eachother:
 
 ```python
-### Simple candiate generation
+### Candiate generation
 @spacy.registry.misc.register("rel_instance_generator.v1")
 def create_candidate_indices(max_length: int) -> Callable[[Doc], List[Tuple[Span, Span]]]:
     def get_candidates(doc: "Doc") -> List[Tuple[Span, Span]]:
@@ -733,10 +739,10 @@ def create_candidate_indices(max_length: int) -> Callable[[Doc], List[Tuple[Span
         return candidates
     return get_candidates
 ```
-This function in added to the
-[`@misc` registry](/api/top-level#registry) so we can refer to it from the
-config, and easily swap it out for any other candidate generation function.
 
+This function in added to the [`@misc` registry](/api/top-level#registry) so we
+can refer to it from the config, and easily swap it out for any other candidate
+generation function.
 
 When creating this model, we store the custom functions as
 [attributes](https://thinc.ai/docs/api-model#properties) and the sublayers as
@@ -851,13 +857,13 @@ def update(
     sgd: Optional[Optimizer] = None,
     losses: Optional[Dict[str, float]] = None,
 ) -> Dict[str, float]:
-    ...
+    # ...
     docs = [ex.predicted for ex in examples]
     predictions, backprop = self.model.begin_update(docs)
     loss, gradient = self.get_loss(examples, predictions)
     backprop(gradient)
     losses[self.name] += loss
-    ...
+    # ...
     return losses
 ```
 
@@ -933,9 +939,9 @@ def __call__(self, Doc doc):
     return doc
 ```
 
-There is one more optional method to implement: [`score`](/api/pipe#score) 
-calculates the performance of your component on a set of examples, and 
-returns the results as a dictionary:
+There is one more optional method to implement: [`score`](/api/pipe#score)
+calculates the performance of your component on a set of examples, and returns
+the results as a dictionary:
 
 ```python
 ### The score method
@@ -951,8 +957,8 @@ def score(self, examples: Iterable[Example]) -> Dict[str, Any]:
     }
 ```
 
-This is particularly useful to see the scores on the development corpus 
-when training the component with [`spacy train`](/api/cli#training).
+This is particularly useful to see the scores on the development corpus when
+training the component with [`spacy train`](/api/cli#training).
 
 Once our `TrainablePipe` subclass is fully implemented, we can
 [register](/usage/processing-pipelines#custom-components-factories) the
@@ -976,7 +982,7 @@ assigns it a name and lets you create the component with
 > [components.relation_extractor.model.get_candidates]
 > @misc = "rel_cand_generator.v1"
 > max_length = 20
-> 
+>
 > [training.score_weights]
 > rel_micro_p = 0.0
 > rel_micro_r = 0.0
@@ -992,8 +998,8 @@ def make_relation_extractor(nlp, name, model):
     return RelationExtractor(nlp.vocab, model, name)
 ```
 
-You can extend the decorator to include information such as the type of 
-annotations that are required for this component to run, the type of annotations 
+You can extend the decorator to include information such as the type of
+annotations that are required for this component to run, the type of annotations
 it produces, and the scores that can be calculated:
 
 ```python
