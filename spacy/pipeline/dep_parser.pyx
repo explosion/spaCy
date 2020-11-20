@@ -186,7 +186,7 @@ def make_beam_parser(
         model,
         name,
         moves=moves,
-        update_with_oracle_cut_size=0,
+        update_with_oracle_cut_size=update_with_oracle_cut_size,
         beam_width=beam_width,
         beam_density=beam_density,
         beam_update_prob=beam_update_prob,
