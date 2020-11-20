@@ -4,6 +4,7 @@ from cymem.cymem cimport Pool
 from collections import Counter
 
 from ...tokens.doc cimport Doc
+from ...tokens.span import Span
 from ...typedefs cimport weight_t, attr_t
 from ...lexeme cimport Lexeme
 from ...attrs cimport IS_SPACE
@@ -82,9 +83,10 @@ cdef bint _entity_is_sunk(StateClass st, Transition* golds) nogil:
         return False
 
     cdef const Transition* gold = &golds[st.c.E(0)]
+    ent = st.c.get_ent()
     if gold.move != BEGIN and gold.move != UNIT:
         return True
-    elif gold.label != st.c.E_(0).ent_type:
+    elif gold.label != ent.label:
         return True
     else:
         return False
@@ -240,22 +242,18 @@ cdef class BiluoPushDown(TransitionSystem):
                     self.add_action(UNIT, st._sent[i].ent_type)
                     self.add_action(LAST, st._sent[i].ent_type)
 
-    cdef int finalize_state(self, StateC* st) nogil:
+    def set_annotations(self, StateClass state, Doc doc):
         cdef int i
-        # TODO clean this up
-        sent = <TokenC*>st._sent
-        for i in range(st.length):
-            sent[i].ent_iob = 2
-        for i in range(st._ents.size()):
-            ent = st._ents.at(i)
+        ents = []
+        for i in range(state.c._ents.size()):
+            ent = state.c._ents.at(i)
             if ent.start != -1 and ent.end != -1:
-                for j in range(ent.start, ent.end):
-                    sent[j].ent_type = ent.label
-                    sent[j].ent_iob = 1
-                sent[ent.start].ent_iob = 3
-
-    def finalize_doc(self, Doc doc):
-        pass
+                ents.append(Span(doc, ent.start, ent.end, label=ent.label))
+        doc.set_ents(ents, default="unmodified")
+        # Set non-blocked tokens to O
+        for i in range(doc.length):
+            if doc.c[i].ent_iob == 0:
+                doc.c[i].ent_iob = 2
 
     def init_gold(self, StateClass state, Example example):
         return BiluoGold(self, state, example)
@@ -287,13 +285,12 @@ cdef class BiluoPushDown(TransitionSystem):
         gold_.update(stcls)
         gold_state = gold_.c
         n_gold = 0
+        self.set_valid(is_valid, stcls.c)
         for i in range(self.n_moves):
-            if self.c[i].is_valid(stcls.c, self.c[i].label):
-                is_valid[i] = 1
+            if is_valid[i]:
                 costs[i] = self.c[i].get_cost(stcls, &gold_state, self.c[i].label)
                 n_gold += costs[i] <= 0
             else:
-                is_valid[i] = 0
                 costs[i] = 9000
         if n_gold < 1:
             raise ValueError
@@ -318,10 +315,10 @@ cdef class Begin:
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
         cdef int preset_ent_iob = st.B_(0).ent_iob
         cdef attr_t preset_ent_label = st.B_(0).ent_type
-        # If we're the last token of the input, we can't B -- must U or O.
-        if st.B(1) == -1:
+        if st.entity_is_open():
             return False
-        elif st.entity_is_open():
+        if st.buffer_length() < 2:
+            # If we're the last token of the input, we can't B -- must U or O.
             return False
         elif label == 0:
             return False
@@ -356,7 +353,6 @@ cdef class Begin:
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
         st.open_ent(label)
-        st.set_ent_tag(st.B(0), 3, label)
         st.push()
         st.pop()
 
@@ -385,16 +381,17 @@ cdef class Begin:
 cdef class In:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
+        if not st.entity_is_open():
+            return False
+        if st.buffer_length() < 2:
+            # If we're at the end, we can't I.
+            return False
+        ent = st.get_ent()
         cdef int preset_ent_iob = st.B_(0).ent_iob
         cdef attr_t preset_ent_label = st.B_(0).ent_type
         if label == 0:
             return False
-        elif st.E_(0).ent_type != label:
-            return False
-        elif not st.entity_is_open():
-            return False
-        elif st.B(1) == -1:
-            # If we're at the end, we can't I.
+        elif ent.label != label:
             return False
         elif preset_ent_iob == 3:
             return False
@@ -420,7 +417,6 @@ cdef class In:
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
-        st.set_ent_tag(st.B(0), 1, label)
         st.push()
         st.pop()
 
@@ -476,7 +472,7 @@ cdef class Last:
                 # Otherwise, force acceptance, even if we're across a sentence
                 # boundary or the token is whitespace.
                 return True
-        elif st.E_(0).ent_type != label:
+        elif st.get_ent().label != label:
             return False
         elif st.B_(1).ent_iob == 1:
             # If a preset entity has I next, we can't L here.
@@ -487,7 +483,6 @@ cdef class Last:
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
         st.close_ent()
-        st.set_ent_tag(st.B(0), 1, label)
         st.push()
         st.pop()
 
@@ -556,7 +551,6 @@ cdef class Unit:
     cdef int transition(StateC* st, attr_t label) nogil:
         st.open_ent(label)
         st.close_ent()
-        st.set_ent_tag(st.B(0), 3, label)
         st.push()
         st.pop()
 
@@ -597,7 +591,6 @@ cdef class Out:
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
-        st.set_ent_tag(st.B(0), 2, 0)
         st.push()
         st.pop()
 

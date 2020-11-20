@@ -266,7 +266,7 @@ cdef cppclass StateC:
         if this._ents.size() == 0:
             return False
         else:
-            return this._ents.back().end
+            return this._ents.back().end == -1
 
     int stack_depth() nogil const:
         return this._s_i
@@ -320,7 +320,7 @@ cdef cppclass StateC:
                     arc.label = 0
                     break
 
-    SpanC get_ent() nogil:
+    SpanC get_ent() nogil const:
         cdef SpanC ent
         if this._ents.size() == 0:
             ent.start = 0
@@ -339,9 +339,6 @@ cdef cppclass StateC:
 
     void close_ent() nogil:
         this._ents.back().end = this.B(0)+1
-
-    void set_ent_tag(int i, int ent_iob, attr_t ent_type) nogil:
-        pass
 
     void clone(const StateC* src) nogil:
         this.length = src.length
