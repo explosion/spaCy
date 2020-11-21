@@ -437,10 +437,8 @@ cdef class Parser(TrainablePipe):
         if not states:
             return losses
         # Prepare the stepwise model, and get the callback for finishing the batch
-        print("Init model")
         model, backprop_tok2vec = self.model.begin_update(
             [eg.predicted for eg in examples])
-        print("Get beam grads")
         loss = _beam_utils.update_beam(
             self.moves,
             states,
@@ -450,9 +448,6 @@ cdef class Parser(TrainablePipe):
             beam_density=beam_density,
         )
         losses[self.name] += loss
-        #for i, (d_scores, bp_scores) in enumerate(zip(states_d_scores, backprops)):
-        #    losses[self.name] += (d_scores**2).mean()
-        #    bp_scores(d_scores)
         backprop_tok2vec(golds)
         if sgd is not None:
             self.finish_update(sgd)
