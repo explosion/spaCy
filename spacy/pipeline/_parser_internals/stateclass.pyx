@@ -66,7 +66,7 @@ cdef class StateClass:
         return self.c.is_final()
 
     def copy(self):
-        cdef StateClass new_state = StateClass(doc=self.doc, offset=self.offset)
+        cdef StateClass new_state = StateClass(doc=self.doc, offset=self.c.offset)
         new_state.c.clone(self.c)
         return new_state
 
