@@ -347,13 +347,8 @@ cdef cppclass StateC:
         memcpy(this._buffer, src._buffer, this.length * sizeof(int))
         memcpy(this.shifted, src.shifted, this.length * sizeof(this.shifted[0]))
         memcpy(this.sent_starts, src.sent_starts, this.length * sizeof(this.sent_starts[0]))
-        cdef int i
-        for i in range(src._ents.size()):
-            this._ents.push_back(src._ents.at(i)) 
-        for i in range(src._arcs.size()):
-            arc = src._arcs.at(i)
-            if arc.head != -1:
-                this._arcs.push_back(arc)
+        this._ents = src._ents
+        this._arcs = src._arcs
         this._b_i = src._b_i
         this._s_i = src._s_i
         this.offset = src.offset
