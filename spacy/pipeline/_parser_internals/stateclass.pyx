@@ -6,15 +6,12 @@ from ...tokens.doc cimport Doc
 
 cdef class StateClass:
     def __init__(self, Doc doc=None, int offset=0):
-        cdef Pool mem
         self._borrowed = 0
         if doc is not None:
             self.c = new StateC(doc.c, doc.length)
             self.c.offset = offset
-            self.mem = doc.mem
             self.doc = doc
         else:
-            self.mem = Pool()
             self.doc = None
 
     def __dealloc__(self):
@@ -69,7 +66,7 @@ cdef class StateClass:
         return self.c.is_final()
 
     def copy(self):
-        cdef StateClass new_state = StateClass.init(self.c._sent, self.c.length)
+        cdef StateClass new_state = StateClass(doc=self.doc, offset=self.offset)
         new_state.c.clone(self.c)
         return new_state
 
