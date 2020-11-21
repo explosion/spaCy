@@ -49,17 +49,17 @@ cdef class BiluoGold:
 
     def __init__(self, BiluoPushDown moves, StateClass stcls, Example example):
         self.mem = Pool()
-        self.c = create_gold_state(self.mem, moves, stcls, example)
+        self.c = create_gold_state(self.mem, moves, stcls.c, example)
 
     def update(self, StateClass stcls):
-        update_gold_state(&self.c, stcls)
+        update_gold_state(&self.c, stcls.c)
 
 
 
 cdef GoldNERStateC create_gold_state(
     Pool mem,
     BiluoPushDown moves,
-    StateClass stcls,
+    const StateC* stcls,
     Example example
 ) except *:
     cdef GoldNERStateC gs
@@ -70,7 +70,7 @@ cdef GoldNERStateC create_gold_state(
     return gs
 
 
-cdef void update_gold_state(GoldNERStateC* gs, StateClass stcls) except *:
+cdef void update_gold_state(GoldNERStateC* gs, const StateC* state) except *:
     # We don't need to update each time, unlike the parser.
     pass
 
@@ -78,12 +78,12 @@ cdef void update_gold_state(GoldNERStateC* gs, StateClass stcls) except *:
 cdef do_func_t[N_MOVES] do_funcs
 
 
-cdef bint _entity_is_sunk(StateClass st, Transition* golds) nogil:
-    if not st.c.entity_is_open():
+cdef bint _entity_is_sunk(const StateC* state, Transition* golds) nogil:
+    if not state.entity_is_open():
         return False
 
-    cdef const Transition* gold = &golds[st.c.E(0)]
-    ent = st.c.get_ent()
+    cdef const Transition* gold = &golds[state.E(0)]
+    ent = state.get_ent()
     if gold.move != BEGIN and gold.move != UNIT:
         return True
     elif gold.label != ent.label:
@@ -232,16 +232,6 @@ cdef class BiluoPushDown(TransitionSystem):
             self.labels[action][label_name] = -1
         return 1
 
-    cdef int initialize_state(self, StateC* st) nogil:
-        # This is especially necessary when we use limited training data.
-        for i in range(st.length):
-            if st._sent[i].ent_type != 0:
-                with gil:
-                    self.add_action(BEGIN, st._sent[i].ent_type)
-                    self.add_action(IN, st._sent[i].ent_type)
-                    self.add_action(UNIT, st._sent[i].ent_type)
-                    self.add_action(LAST, st._sent[i].ent_type)
-
     def set_annotations(self, StateClass state, Doc doc):
         cdef int i
         ents = []
@@ -272,23 +262,23 @@ cdef class BiluoPushDown(TransitionSystem):
         gold_state = gold_.c
         n_gold = 0
         if self.c[i].is_valid(stcls.c, self.c[i].label):
-            cost = self.c[i].get_cost(stcls, &gold_state, self.c[i].label)
+            cost = self.c[i].get_cost(stcls.c, &gold_state, self.c[i].label)
         else:
             cost = 9000
         return cost
 
     cdef int set_costs(self, int* is_valid, weight_t* costs,
-                       StateClass stcls, gold) except -1:
+                       const StateC* state, gold) except -1:
         if not isinstance(gold, BiluoGold):
             raise TypeError(Errors.E909.format(name="BiluoGold"))
         cdef BiluoGold gold_ = gold
-        gold_.update(stcls)
         gold_state = gold_.c
+        update_gold_state(&gold_state, state)
         n_gold = 0
-        self.set_valid(is_valid, stcls.c)
+        self.set_valid(is_valid, state)
         for i in range(self.n_moves):
             if is_valid[i]:
-                costs[i] = self.c[i].get_cost(stcls, &gold_state, self.c[i].label)
+                costs[i] = self.c[i].get_cost(state, &gold_state, self.c[i].label)
                 n_gold += costs[i] <= 0
             else:
                 costs[i] = 9000
@@ -306,7 +296,7 @@ cdef class Missing:
         pass
 
     @staticmethod
-    cdef weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
+    cdef weight_t cost(const StateC* s, const void* _gold, attr_t label) nogil:
         return 9000
 
 
@@ -357,10 +347,10 @@ cdef class Begin:
         st.pop()
 
     @staticmethod
-    cdef weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
+    cdef weight_t cost(const StateC* s, const void* _gold, attr_t label) nogil:
         gold = <GoldNERStateC*>_gold
-        cdef int g_act = gold.ner[s.c.B(0)].move
-        cdef attr_t g_tag = gold.ner[s.c.B(0)].label
+        cdef int g_act = gold.ner[s.B(0)].move
+        cdef attr_t g_tag = gold.ner[s.B(0)].label
 
         if g_act == MISSING:
             return 0
@@ -421,12 +411,12 @@ cdef class In:
         st.pop()
 
     @staticmethod
-    cdef weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
+    cdef weight_t cost(const StateC* s, const void* _gold, attr_t label) nogil:
         gold = <GoldNERStateC*>_gold
         move = IN
-        cdef int next_act = gold.ner[s.c.B(1)].move if s.c.B(1) >= 0 else OUT
-        cdef int g_act = gold.ner[s.c.B(0)].move
-        cdef attr_t g_tag = gold.ner[s.c.B(0)].label
+        cdef int next_act = gold.ner[s.B(1)].move if s.B(1) >= 0 else OUT
+        cdef int g_act = gold.ner[s.B(0)].move
+        cdef attr_t g_tag = gold.ner[s.B(0)].label
         cdef bint is_sunk = _entity_is_sunk(s, gold.ner)
 
         if g_act == MISSING:
@@ -487,12 +477,12 @@ cdef class Last:
         st.pop()
 
     @staticmethod
-    cdef weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
+    cdef weight_t cost(const StateC* s, const void* _gold, attr_t label) nogil:
         gold = <GoldNERStateC*>_gold
         move = LAST
 
-        cdef int g_act = gold.ner[s.c.B(0)].move
-        cdef attr_t g_tag = gold.ner[s.c.B(0)].label
+        cdef int g_act = gold.ner[s.B(0)].move
+        cdef attr_t g_tag = gold.ner[s.B(0)].label
 
         if g_act == MISSING:
             return 0
@@ -555,10 +545,10 @@ cdef class Unit:
         st.pop()
 
     @staticmethod
-    cdef weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
+    cdef weight_t cost(const StateC* s, const void* _gold, attr_t label) nogil:
         gold = <GoldNERStateC*>_gold
-        cdef int g_act = gold.ner[s.c.B(0)].move
-        cdef attr_t g_tag = gold.ner[s.c.B(0)].label
+        cdef int g_act = gold.ner[s.B(0)].move
+        cdef attr_t g_tag = gold.ner[s.B(0)].label
 
         if g_act == MISSING:
             return 0
@@ -595,10 +585,10 @@ cdef class Out:
         st.pop()
 
     @staticmethod
-    cdef weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
+    cdef weight_t cost(const StateC* s, const void* _gold, attr_t label) nogil:
         gold = <GoldNERStateC*>_gold
-        cdef int g_act = gold.ner[s.c.B(0)].move
-        cdef attr_t g_tag = gold.ner[s.c.B(0)].label
+        cdef int g_act = gold.ner[s.B(0)].move
+        cdef attr_t g_tag = gold.ner[s.B(0)].label
 
         if g_act == ISNT and g_tag == 0:
             return 1

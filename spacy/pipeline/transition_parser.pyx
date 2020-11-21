@@ -273,7 +273,7 @@ cdef class Parser(TrainablePipe):
         cdef StateClass state
         cdef Beam beam
         cdef Doc doc
-        states = _beam_utils.collect_states(states_or_beams)
+        states = _beam_utils.collect_states(states_or_beams, docs)
         for i, (state, doc) in enumerate(zip(states, docs)):
             self.moves.set_annotations(state, doc)
             for hook in self.postprocesses:
@@ -437,8 +437,10 @@ cdef class Parser(TrainablePipe):
         if not states:
             return losses
         # Prepare the stepwise model, and get the callback for finishing the batch
+        print("Init model")
         model, backprop_tok2vec = self.model.begin_update(
             [eg.predicted for eg in examples])
+        print("Get beam grads")
         loss = _beam_utils.update_beam(
             self.moves,
             states,
@@ -472,7 +474,7 @@ cdef class Parser(TrainablePipe):
         for i, (state, gold) in enumerate(zip(states, golds)):
             memset(is_valid, 0, self.moves.n_moves * sizeof(int))
             memset(costs, 0, self.moves.n_moves * sizeof(float))
-            self.moves.set_costs(is_valid, costs, state, gold)
+            self.moves.set_costs(is_valid, costs, state.c, gold)
             for j in range(self.moves.n_moves):
                 if costs[j] <= 0.0 and j in unseen_classes:
                     unseen_classes.remove(j)

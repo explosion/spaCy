@@ -30,17 +30,19 @@ cdef int check_final_state(void* _state, void* extra_args) except -1:
 cdef class BeamBatch(object):
     cdef public TransitionSystem moves
     cdef public object states
+    cdef public object docs
     cdef public object golds
     cdef public object beams
 
     def __init__(self, TransitionSystem moves, states, golds,
                  int width, float density=0.):
+        cdef StateClass state
         self.moves = moves
         self.states = states
+        self.docs = [state.doc for state in states]
         self.golds = golds
         self.beams = []
         cdef Beam beam
-        cdef StateClass state
         cdef StateC* st
         for state in states:
             beam = Beam(self.moves.n_moves, width, min_density=density)
@@ -65,10 +67,14 @@ cdef class BeamBatch(object):
 
     def get_states(self):
         cdef Beam beam
+        cdef StateC* state
+        cdef StateClass stcls
         states = []
-        for beam in self:
+        for beam, doc in zip(self, self.docs):
             for i in range(beam.size):
-                states.append(StateClass.borrow(<StateC*>beam.at(i)))
+                state = <StateC*>beam.at(i)
+                stcls = StateClass.borrow(state, doc)
+                states.append(stcls)
         return states
 
     def get_unfinished_states(self):
@@ -78,12 +84,18 @@ cdef class BeamBatch(object):
         cdef Beam beam
         cdef int nr_class = scores.shape[1]
         cdef const float* c_scores = &scores[0, 0]
+        docs = self.docs
         for i, beam in enumerate(self):
             if not beam.is_done:
                 nr_state = self._set_scores(beam, c_scores, nr_class)
                 assert nr_state
                 if self.golds is not None:
-                    self._set_costs(beam, self.golds[i], follow_gold=follow_gold)
+                    self._set_costs(
+                        beam,
+                        docs[i],
+                        self.golds[i],
+                        follow_gold=follow_gold
+                    )
                 c_scores += nr_state * nr_class
                 beam.advance(transition_state, NULL, <void*>self.moves.c)
                 beam.check_done(check_final_state, NULL)
@@ -103,9 +115,10 @@ cdef class BeamBatch(object):
                     beam.costs[i][j] = 0
         return nr_state
 
-    def _set_costs(self, Beam beam, gold, int follow_gold=False):
+    def _set_costs(self, Beam beam, doc, gold, int follow_gold=False):
+        cdef const StateC* state
         for i in range(beam.size):
-            state = StateClass.borrow(<StateC*>beam.at(i))
+            state = <const StateC*>beam.at(i)
             if state.is_final():
                 for j in range(beam.nr_class):
                     beam.is_valid[i][j] = 0
@@ -183,16 +196,16 @@ def update_beam(TransitionSystem moves, states, golds, model, int width, beam_de
     return loss
 
 
-def collect_states(beams):
+def collect_states(beams, docs):
     cdef StateClass state
     cdef Beam beam
     states = []
-    for state_or_beam in beams:
+    for state_or_beam, doc in zip(beams, docs):
         if isinstance(state_or_beam, StateClass):
             states.append(state_or_beam)
         else:
             beam = state_or_beam
-            state = StateClass.borrow(<StateC*>beam.at(0))
+            state = StateClass.borrow(<StateC*>beam.at(0), doc)
             states.append(state)
     return states
 
@@ -203,13 +216,14 @@ def get_unique_states(pbeams, gbeams):
     p_indices = []
     g_indices = []
     beam_map = {}
+    docs = pbeams.docs
     cdef Beam pbeam, gbeam
     if len(pbeams) != len(gbeams):
         raise ValueError(Errors.E079.format(pbeams=len(pbeams), gbeams=len(gbeams)))
-    for eg_id, (pbeam, gbeam) in enumerate(zip(pbeams, gbeams)):
+    for eg_id, (pbeam, gbeam, doc) in enumerate(zip(pbeams, gbeams, docs)):
         if not pbeam.is_done:
             for i in range(pbeam.size):
-                state = StateClass.borrow(<StateC*>pbeam.at(i))
+                state = StateClass.borrow(<StateC*>pbeam.at(i), doc)
                 if not state.is_final():
                     key = tuple([eg_id] + pbeam.histories[i])
                     if key in seen:
@@ -220,7 +234,7 @@ def get_unique_states(pbeams, gbeams):
             beam_map.update(seen)
         if not gbeam.is_done:
             for i in range(gbeam.size):
-                state = StateClass.borrow(<StateC*>gbeam.at(i))
+                state = StateClass.borrow(<StateC*>gbeam.at(i), doc)
                 if not state.is_final():
                     key = tuple([eg_id] + gbeam.histories[i])
                     if key in seen:
