@@ -1683,7 +1683,7 @@
                 "",
                 "nlp = spacy.load('en')",
                 "nlp.add_pipe(BeneparComponent('benepar_en'))",
-                "doc = nlp('The time for action is now. It's never too late to do something.')",
+                "doc = nlp('The time for action is now. It is never too late to do something.')",
                 "sent = list(doc.sents)[0]",
                 "print(sent._.parse_string)",
                 "# (S (NP (NP (DT The) (NN time)) (PP (IN for) (NP (NN action)))) (VP (VBZ is) (ADVP (RB now))) (. .))",
