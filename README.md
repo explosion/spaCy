@@ -108,10 +108,10 @@ For detailed installation instructions, see the
 
 Using pip, spaCy releases are available as source packages and binary wheels (as
 of `v2.0.13`). Before you install spaCy and its dependencies, make sure that
-`pip` is up to date.
+`pip` and `setuptools` are up to date.
 
 ```bash
-pip install -U pip
+pip install -U pip setuptools
 pip install spacy
 ```
 
