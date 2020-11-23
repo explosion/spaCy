@@ -110,10 +110,20 @@ For detailed installation instructions, see the
 ### pip
 
 Using pip, spaCy releases are available as source packages and binary wheels (as
-of `v2.0.13`).
+of `v2.0.13`). Before you install spaCy and its dependencies, make sure that
+`pip` and `setuptools` are up to date.
 
 ```bash
+pip install -U pip setuptools
 pip install spacy
+```
+
+For installation on python 3.5 where binary wheels are not provided for the most
+recent versions of the dependencies, you can prefer older binary wheels over
+newer source packages with `--prefer-binary`:
+
+```bash
+pip install spacy --prefer-binary
 ```
 
 To install additional data tables for lemmatization and normalization in
