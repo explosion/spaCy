@@ -11,7 +11,6 @@ def test_issue6177():
     # NOTE: no need to transform this code to v3 when 'master' is merged into 'develop'.
     # A similar test exists already for v3: test_issue5551
     # This is just a backport
-
     results = []
     for i in range(3):
         fix_random_seed(0)
@@ -24,9 +23,12 @@ def test_issue6177():
         nlp.add_pipe(textcat)
         for label in set(example[1]["cats"]):
             textcat.add_label(label)
-        nlp.begin_training()
+        # Train
+        optimizer = nlp.begin_training()
+        text, annots = example
+        nlp.update([text], [annots], sgd=optimizer)
         # Store the result of each iteration
-        result = textcat.model.predict([nlp.make_doc(example[0])])
+        result = textcat.model.predict([nlp.make_doc(text)])
         results.append(list(result[0]))
 
     # All results should be the same because of the fixed seed
