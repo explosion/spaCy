@@ -99,16 +99,17 @@ def build_text_classifier_v2(
     model.set_ref("linear_layer", linear_layer)
     model.attrs["multi_label"] = not exclusive_classes
 
-    def init(model, X, Y) -> Model:
-        tok2vec_width = get_tok2vec_width(model)
-        model.get_ref("attention_layer").set_dim("nO", tok2vec_width)
-        model.get_ref("maxout_layer").set_dim("nO", tok2vec_width)
-        model.get_ref("maxout_layer").set_dim("nI", tok2vec_width)
-        model.get_ref("linear_layer").set_dim("nI", tok2vec_width)
-        init_chain(model, X, Y)
-        return model
+    model.init = init_ensemble_textcat
+    return model
 
-    model.init = init
+
+def init_ensemble_textcat(model, X, Y) -> Model:
+    tok2vec_width = get_tok2vec_width(model)
+    model.get_ref("attention_layer").set_dim("nO", tok2vec_width)
+    model.get_ref("maxout_layer").set_dim("nO", tok2vec_width)
+    model.get_ref("maxout_layer").set_dim("nI", tok2vec_width)
+    model.get_ref("linear_layer").set_dim("nI", tok2vec_width)
+    init_chain(model, X, Y)
     return model
 
 
