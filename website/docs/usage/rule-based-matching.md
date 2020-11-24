@@ -168,7 +168,7 @@ rule-based matching are:
 | `IS_PUNCT`, `IS_SPACE`, `IS_STOP`      | bool          | Token is punctuation, whitespace, stop word.                                                           |
 | `IS_SENT_START`                        | bool          | Token is start of sentence.                                                                            |
 | `LIKE_NUM`, `LIKE_URL`, `LIKE_EMAIL`   | bool          | Token text resembles a number, URL, email.                                                             |
-| `POS`, `TAG`, `DEP`, `LEMMA`, `SHAPE`  | unicode       | The token's simple and extended part-of-speech tag, dependency label, lemma, shape. Note that the values of this type of attribute are case-sensitive. For a list of available part-of-speech tags and dependency labels, see the [Annotation Specifications](/api/annotation).|
+| `POS`, `TAG`, `DEP`, `LEMMA`, `SHAPE`  | unicode       | The token's simple and extended part-of-speech tag, dependency label, lemma, shape. Note that the values of these attributes are case-sensitive. For a list of available part-of-speech tags and dependency labels, see the [Annotation Specifications](/api/annotation).|
 | `ENT_TYPE`                             | unicode       | The token's entity label.                                                                              |
 | `_` <Tag variant="new">2.1</Tag>       | dict          | Properties in [custom extension attributes](/usage/processing-pipelines#custom-components-attributes). |
 
