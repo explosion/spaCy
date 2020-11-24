@@ -143,10 +143,10 @@ argument that connects to the shared `tok2vec` component in the pipeline.
 
 Construct an embedding layer that separately embeds a number of lexical
 attributes using hash embedding, concatenates the results, and passes it through
-a feed-forward subnetwork to build a mixed representation. The features used
-can be configured with the `attrs` argument. The suggested attributes are
-`NORM`, `PREFIX`, `SUFFIX` and `SHAPE`. This lets the model take into account
-some subword information, without construction a fully character-based
+a feed-forward subnetwork to build a mixed representation. The features used can
+be configured with the `attrs` argument. The suggested attributes are `NORM`,
+`PREFIX`, `SUFFIX` and `SHAPE`. This lets the model take into account some
+subword information, without construction a fully character-based
 representation. If pretrained vectors are available, they can be included in the
 representation as well, with the vectors table will be kept static (i.e. it's
 not updated).
@@ -251,19 +251,19 @@ and residual connections.
 > [model]
 > @architectures = "spacy.TorchBiLSTMEncoder.v1"
 > width = 64
-> window_size = 1
-> depth = 4
+> depth = 2
+> dropout = 0.0
 > ```
 
 Encode context using bidirectional LSTM layers. Requires
 [PyTorch](https://pytorch.org).
 
-| Name          | Description                                                                                                                                                                                                    |
-| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `width`       | The input and output width. These are required to be the same, to allow residual connections. This value will be determined by the width of the inputs. Recommended values are between `64` and `300`. ~~int~~ |
-| `window_size` | The number of words to concatenate around each token to construct the convolution. Recommended value is `1`. ~~int~~                                                                                           |
-| `depth`       | The number of convolutional layers. Recommended value is `4`. ~~int~~                                                                                                                                          |
-| **CREATES**   | The model using the architecture. ~~Model[List[Floats2d], List[Floats2d]]~~                                                                                                                                    |
+| Name        | Description                                                                                                                                                                                                    |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `width`     | The input and output width. These are required to be the same, to allow residual connections. This value will be determined by the width of the inputs. Recommended values are between `64` and `300`. ~~int~~ |
+| `depth`     | The number of recurrent layers, for instance `depth=2` results in stacking two LSTMs together. ~~int~~                                                                                                         |
+| `dropout`   | Creates a Dropout layer on the outputs of each LSTM layer except the last layer. Set to 0.0 to disable this functionality. ~~float~~                                                                           |
+| **CREATES** | The model using the architecture. ~~Model[List[Floats2d], List[Floats2d]]~~                                                                                                                                    |
 
 ### spacy.StaticVectors.v1 {#StaticVectors}
 
@@ -563,7 +563,8 @@ from the linear model, where it is stored in `model.attrs["multi_label"]`.
 
 <Accordion title="spacy.TextCatEnsemble.v1 definition" spaced>
 
-The v1 was functionally similar, but used an internal `tok2vec` instead of taking it as argument.
+The v1 was functionally similar, but used an internal `tok2vec` instead of
+taking it as argument.
 
 | Name                 | Description                                                                                                                                                                                    |
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
