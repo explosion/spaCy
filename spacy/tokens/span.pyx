@@ -181,9 +181,13 @@ cdef class Span:
             return Span(self.doc, start + self.start, end + self.start)
         else:
             if i < 0:
-                return self.doc[self.end + i]
+                token_i = self.end + i
             else:
-                return self.doc[self.start + i]
+                token_i = self.start + i
+            if self.start <= token_i < self.end:
+                return self.doc[token_i]
+            else:
+                raise IndexError(Errors.E201)
 
     def __iter__(self):
         """Iterate over `Token` objects.
@@ -387,8 +391,6 @@ cdef class Span:
         """RETURNS (Span): The sentence span that the span is a part of."""
         if "sent" in self.doc.user_span_hooks:
             return self.doc.user_span_hooks["sent"](self)
-        # This should raise if not parsed / no custom sentence boundaries
-        self.doc.sents
         # Use `sent_start` token attribute to find sentence boundaries
         cdef int n = 0
         if self.doc.is_sentenced:
@@ -398,13 +400,14 @@ cdef class Span:
                 start += -1
             # Find end of the sentence
             end = self.end
-            n = 0
             while end < self.doc.length and self.doc.c[end].sent_start != 1:
                 end += 1
                 n += 1
                 if n >= self.doc.length:
                     break
             return self.doc[start:end]
+        else:
+            raise ValueError(Errors.E030)
 
     @property
     def ents(self):

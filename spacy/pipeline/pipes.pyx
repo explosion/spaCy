@@ -519,6 +519,12 @@ class Tagger(Pipe):
             warnings.warn(Warnings.W022)
         if len(self.vocab.lookups.get_table("lexeme_norm", {})) == 0:
             warnings.warn(Warnings.W033.format(model="part-of-speech tagger"))
+            try:
+                import spacy_lookups_data
+            except ImportError:
+                if self.vocab.lang in ("da", "de", "el", "en", "id", "lb", "pt",
+                        "ru", "sr", "ta", "th"):
+                    warnings.warn(Warnings.W034.format(lang=self.vocab.lang))
         orig_tag_map = dict(self.vocab.morphology.tag_map)
         new_tag_map = OrderedDict()
         for raw_text, annots_brackets in get_gold_tuples():
@@ -1199,7 +1205,7 @@ class EntityLinker(Pipe):
         self.kb = None
         self.cfg = dict(cfg)
         
-        # how many neightbour sentences to take into account
+        # how many neighbour sentences to take into account
         self.n_sents = cfg.get("n_sents", 0)
 
     def set_kb(self, kb):
@@ -1369,7 +1375,7 @@ class EntityLinker(Pipe):
                 # This may go wrong if there are entities across sentences - which shouldn't happen normally.
                 for sent_index, sent in enumerate(sentences):
                     if sent.ents:
-                        # get n_neightbour sentences, clipped to the length of the document
+                        # get n_neighbour sentences, clipped to the length of the document
                         start_sentence = max(0, sent_index - self.n_sents)
                         end_sentence = min(len(sentences) -1, sent_index + self.n_sents)
 
@@ -1502,6 +1508,7 @@ class Sentencizer(object):
     """
 
     default_punct_chars = ['!', '.', '?', '։', '؟', '۔', '܀', '܁', '܂', '߹',
+            ':', ';', '؟',
             '।', '॥', '၊', '။', '።', '፧', '፨', '᙮', '᜵', '᜶', '᠃', '᠉', '᥄',
             '᥅', '᪨', '᪩', '᪪', '᪫', '᭚', '᭛', '᭞', '᭟', '᰻', '᰼', '᱾', '᱿',
             '‼', '‽', '⁇', '⁈', '⁉', '⸮', '⸼', '꓿', '꘎', '꘏', '꛳', '꛷', '꡶',

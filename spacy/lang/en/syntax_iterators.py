@@ -10,6 +10,7 @@ def noun_chunks(doclike):
     Detect base noun phrases from a dependency parse. Works on both Doc and Span.
     """
     labels = [
+        "oprd",
         "nsubj",
         "dobj",
         "nsubjpass",

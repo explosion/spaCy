@@ -132,12 +132,9 @@ module.exports = {
             },
         },
         {
-            resolve: `gatsby-plugin-google-analytics`,
+            resolve: `gatsby-plugin-plausible`,
             options: {
-                trackingId: site.analytics,
-                head: false,
-                anonymize: true,
-                respectDNT: true,
+                domain: site.domain,
             },
         },
         `gatsby-plugin-offline`,

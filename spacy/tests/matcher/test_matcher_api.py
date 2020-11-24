@@ -7,6 +7,7 @@ from mock import Mock
 from spacy.matcher import Matcher, DependencyMatcher
 from spacy.tokens import Doc, Token
 from ..doc.test_underscore import clean_underscore  # noqa: F401
+from ..util import get_doc
 
 
 @pytest.fixture
@@ -301,22 +302,6 @@ def test_matcher_extension_set_membership(en_vocab):
     assert len(matches) == 0
 
 
-@pytest.fixture
-def text():
-    return "The quick brown fox jumped over the lazy fox"
-
-
-@pytest.fixture
-def heads():
-    return [3, 2, 1, 1, 0, -1, 2, 1, -3]
-
-
-@pytest.fixture
-def deps():
-    return ["det", "amod", "amod", "nsubj", "prep", "pobj", "det", "amod"]
-
-
-@pytest.fixture
 def dependency_matcher(en_vocab):
     def is_brown_yellow(text):
         return bool(re.compile(r"brown|yellow|over").match(text))
@@ -359,24 +344,40 @@ def dependency_matcher(en_vocab):
         },
     ]
 
+    # pattern that doesn't match
+    pattern4 = [
+        {"SPEC": {"NODE_NAME": "jumped"}, "PATTERN": {"ORTH": "NOMATCH"}},
+        {
+            "SPEC": {"NODE_NAME": "fox", "NBOR_RELOP": ">", "NBOR_NAME": "jumped"},
+            "PATTERN": {"ORTH": "fox"},
+        },
+        {
+            "SPEC": {"NODE_NAME": "r", "NBOR_RELOP": ">>", "NBOR_NAME": "fox"},
+            "PATTERN": {"ORTH": "brown"},
+        },
+    ]
+
     matcher = DependencyMatcher(en_vocab)
-    matcher.add("pattern1", [pattern1])
-    matcher.add("pattern2", [pattern2])
-    matcher.add("pattern3", [pattern3])
+    on_match = Mock()
+    matcher.add("pattern1", [pattern1], on_match=on_match)
+    matcher.add("pattern2", [pattern2], on_match=on_match)
+    matcher.add("pattern3", [pattern3], on_match=on_match)
+    matcher.add("pattern4", [pattern4], on_match=on_match)
 
-    return matcher
+    assert len(dependency_matcher) == 4
 
+    text = "The quick brown fox jumped over the lazy fox"
+    heads = [3, 2, 1, 1, 0, -1, 2, 1, -3]
+    deps = ["det", "amod", "amod", "nsubj", "ROOT", "prep", "pobj", "det", "amod"]
 
-def test_dependency_matcher_compile(dependency_matcher):
-    assert len(dependency_matcher) == 3
+    doc = get_doc(dependency_matcher.vocab, text.split(), heads=heads, deps=deps)
+    matches = dependency_matcher(doc)
 
-
-# def test_dependency_matcher(dependency_matcher, text, heads, deps):
-#     doc = get_doc(dependency_matcher.vocab, text.split(), heads=heads, deps=deps)
-#     matches = dependency_matcher(doc)
-#     assert matches[0][1] == [[3, 1, 2]]
-#     assert matches[1][1] == [[4, 3, 3]]
-#     assert matches[2][1] == [[4, 3, 2]]
+    assert len(matches) == 3
+    assert matches[0][1] == [[3, 1, 2]]
+    assert matches[1][1] == [[4, 3, 3]]
+    assert matches[2][1] == [[4, 3, 2]]
+    assert on_match.call_count == 3
 
 
 def test_matcher_basic_check(en_vocab):
@@ -479,3 +480,15 @@ def test_matcher_span(matcher):
     assert len(matcher(doc)) == 2
     assert len(matcher(span_js)) == 1
     assert len(matcher(span_java)) == 1
+
+
+def test_matcher_remove_zero_operator(en_vocab):
+    matcher = Matcher(en_vocab)
+    pattern = [{"OP": "!"}]
+    matcher.add("Rule", [pattern])
+    doc = Doc(en_vocab, words=["This", "is", "a", "test", "."])
+    matches = matcher(doc)
+    assert len(matches) == 0
+    assert "Rule" in matcher
+    matcher.remove("Rule")
+    assert "Rule" not in matcher

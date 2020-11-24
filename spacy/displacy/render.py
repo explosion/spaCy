@@ -328,7 +328,11 @@ class EntityRenderer(object):
             else:
                 markup += entity
             offset = end
-        markup += escape_html(text[offset:])
+        fragments = text[offset:].split("\n")
+        for i, fragment in enumerate(fragments):
+            markup += escape_html(fragment)
+            if len(fragments) > 1 and i != len(fragments) - 1:
+                markup += "</br>"
         markup = TPL_ENTS.format(content=markup, dir=self.direction)
         if title:
             markup = TPL_TITLE.format(title=title) + markup

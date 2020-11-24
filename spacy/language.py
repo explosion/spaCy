@@ -751,7 +751,7 @@ class Language(object):
     ):
         """Process texts as a stream, and yield `Doc` objects in order.
 
-        texts (iterator): A sequence of texts to process.
+        texts (iterable): A sequence of texts to process.
         as_tuples (bool): If set to True, inputs should be a sequence of
             (text, context) tuples. Output will then be a sequence of
             (doc, context) tuples. Defaults to False.
