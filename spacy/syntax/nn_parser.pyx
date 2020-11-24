@@ -57,6 +57,7 @@ cdef class Parser:
         depth = util.env_opt('parser_hidden_depth', cfg.get('hidden_depth', 1))
         subword_features = util.env_opt('subword_features',
                             cfg.get('subword_features', True))
+        char_embed = util.env_opt('char_embed', cfg.get('char_embed', False))
         conv_depth = util.env_opt('conv_depth', cfg.get('conv_depth', 4))
         conv_window = util.env_opt('conv_window', cfg.get('conv_window', 1))
         t2v_pieces = util.env_opt('cnn_maxout_pieces', cfg.get('cnn_maxout_pieces', 3))
@@ -80,6 +81,7 @@ cdef class Parser:
                           conv_window=conv_window,
                           cnn_maxout_pieces=t2v_pieces,
                           subword_features=subword_features,
+                          char_embed=char_embed,
                           pretrained_vectors=pretrained_vectors,
                           bilstm_depth=bilstm_depth)
         tok2vec = chain(tok2vec, flatten)
@@ -108,7 +110,9 @@ cdef class Parser:
             'conv_depth': conv_depth,
             'conv_window': conv_window,
             'embed_size': embed_size,
-            'cnn_maxout_pieces': t2v_pieces
+            'cnn_maxout_pieces': t2v_pieces,
+            'subword_features': subword_features,
+            'char_embed': char_embed,
         }
         return ParserModel(tok2vec, lower, upper), cfg
 

@@ -544,7 +544,7 @@ class Tagger(Pipe):
                                           exc=vocab.morphology.exc)
         self.cfg["pretrained_vectors"] = kwargs.get("pretrained_vectors")
         if self.model is True:
-            for hp in ["token_vector_width", "conv_depth"]:
+            for hp in ["token_vector_width", "conv_depth", "subword_features", "char_embed"]:
                 if hp in kwargs:
                     self.cfg[hp] = kwargs[hp]
             self.model = self.Model(self.vocab.morphology.n_tags, **self.cfg)

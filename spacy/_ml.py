@@ -576,6 +576,7 @@ def build_tagger_model(nr_class, **cfg):
         token_vector_width = util.env_opt("token_vector_width", 96)
     pretrained_vectors = cfg.get("pretrained_vectors")
     subword_features = cfg.get("subword_features", True)
+    char_embed = cfg.get("char_embed", False)
     with Model.define_operators({">>": chain, "+": add}):
         if "tok2vec" in cfg:
             tok2vec = cfg["tok2vec"]
@@ -584,6 +585,7 @@ def build_tagger_model(nr_class, **cfg):
                 token_vector_width,
                 embed_size,
                 subword_features=subword_features,
+                char_embed=char_embed,
                 pretrained_vectors=pretrained_vectors,
             )
         softmax = with_flatten(Softmax(nr_class, token_vector_width))

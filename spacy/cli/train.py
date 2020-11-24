@@ -296,6 +296,7 @@ def train(
         cfg["embed_size"] = embed_rows
         cfg["conv_window"] = cnn_window
         cfg["subword_features"] = not use_chars
+        cfg["char_embed"] = use_chars
         optimizer = nlp.begin_training(lambda: corpus.train_tuples, **cfg)
 
     nlp._optimizer = None
