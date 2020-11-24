@@ -14,6 +14,9 @@ It's commercial open-source software, released under the MIT license.
 💫 **Version 2.3 out now!**
 [Check out the release notes here.](https://github.com/explosion/spaCy/releases)
 
+🌙 **Version 3.0 (nightly) out now!**
+[Check out the release notes here.](https://github.com/explosion/spaCy/releases/tag/v3.0.0rc1)
+
 [![Azure Pipelines](<https://img.shields.io/azure-devops/build/explosion-ai/public/8/master.svg?logo=azure-pipelines&style=flat-square&label=build+(3.x)>)](https://dev.azure.com/explosion-ai/public/_build?definitionId=8)
 [![Travis Build Status](<https://img.shields.io/travis/explosion/spaCy/master.svg?style=flat-square&logo=travis-ci&logoColor=white&label=build+(2.7)>)](https://travis-ci.org/explosion/spaCy)
 [![Current Release Version](https://img.shields.io/github/release/explosion/spacy.svg?style=flat-square&logo=github)](https://github.com/explosion/spaCy/releases)
@@ -107,10 +110,20 @@ For detailed installation instructions, see the
 ### pip
 
 Using pip, spaCy releases are available as source packages and binary wheels (as
-of `v2.0.13`).
+of `v2.0.13`). Before you install spaCy and its dependencies, make sure that
+`pip` and `setuptools` are up to date.
 
 ```bash
+pip install -U pip setuptools
 pip install spacy
+```
+
+For installation on python 3.5 where binary wheels are not provided for the most
+recent versions of the dependencies, you can prefer older binary wheels over
+newer source packages with `--prefer-binary`:
+
+```bash
+pip install spacy --prefer-binary
 ```
 
 To install additional data tables for lemmatization and normalization in

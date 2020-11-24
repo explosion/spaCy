@@ -109,6 +109,7 @@ def test_doc_api_serialize(en_tokenizer, text):
     tokens[0].lemma_ = "lemma"
     tokens[0].norm_ = "norm"
     tokens[0].ent_kb_id_ = "ent_kb_id"
+    tokens[0].ent_id_ = "ent_id"
     new_tokens = Doc(tokens.vocab).from_bytes(tokens.to_bytes())
     assert tokens.text == new_tokens.text
     assert [t.text for t in tokens] == [t.text for t in new_tokens]
@@ -116,6 +117,7 @@ def test_doc_api_serialize(en_tokenizer, text):
     assert new_tokens[0].lemma_ == "lemma"
     assert new_tokens[0].norm_ == "norm"
     assert new_tokens[0].ent_kb_id_ == "ent_kb_id"
+    assert new_tokens[0].ent_id_ == "ent_id"
 
     new_tokens = Doc(tokens.vocab).from_bytes(
         tokens.to_bytes(exclude=["tensor"]), exclude=["tensor"]

@@ -373,8 +373,6 @@ cdef class Parser:
             self.moves.finalize_doc(doc)
             for hook in self.postprocesses:
                 hook(doc)
-        for beam in beams:
-            _beam_utils.cleanup_beam(beam)
 
     def transition_states(self, states, float[:, ::1] scores):
         cdef StateClass state
@@ -527,9 +525,6 @@ cdef class Parser:
             else:
                 model.backprops.append((ids, d_vector, bp_vectors))
         model.make_updates(sgd)
-        cdef Beam beam
-        for beam in beams:
-            _beam_utils.cleanup_beam(beam)
 
     def _init_gold_batch(self, whole_docs, whole_golds, min_length=5, max_length=500):
         """Make a square batch, of length equal to the shortest doc. A long
@@ -604,6 +599,12 @@ cdef class Parser:
     def begin_training(self, get_gold_tuples, pipeline=None, sgd=None, **cfg):
         if len(self.vocab.lookups.get_table("lexeme_norm", {})) == 0:
             warnings.warn(Warnings.W033.format(model="parser or NER"))
+            try:
+                import spacy_lookups_data
+            except ImportError:
+                if self.vocab.lang in ("da", "de", "el", "en", "id", "lb", "pt",
+                        "ru", "sr", "ta", "th"):
+                    warnings.warn(Warnings.W034.format(lang=self.vocab.lang))
         if 'model' in cfg:
             self.model = cfg['model']
         if not hasattr(get_gold_tuples, '__call__'):

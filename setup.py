@@ -5,6 +5,7 @@ import os
 import subprocess
 import sys
 import contextlib
+import numpy
 from distutils.command.build_ext import build_ext
 from distutils.sysconfig import get_python_inc
 import distutils.util
@@ -193,7 +194,7 @@ def setup_package():
 
     root = os.path.abspath(os.path.dirname(__file__))
 
-    if len(sys.argv) > 1 and sys.argv[1] == "clean":
+    if hasattr(sys, "argv") and len(sys.argv) > 1 and sys.argv[1] == "clean":
         return clean(root)
 
     with chdir(root):
@@ -202,6 +203,7 @@ def setup_package():
             exec(f.read(), about)
 
         include_dirs = [
+            numpy.get_include(),
             get_python_inc(plat_specific=True),
             os.path.join(root, "include"),
         ]

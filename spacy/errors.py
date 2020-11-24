@@ -113,8 +113,8 @@ class Warnings(object):
     W030 = ("Some entities could not be aligned in the text \"{text}\" with "
             "entities \"{entities}\". Use "
             "`spacy.gold.biluo_tags_from_offsets(nlp.make_doc(text), entities)`"
-            " to check the alignment. Misaligned entities ('-') will be "
-            "ignored during training.")
+            " to check the alignment. Misaligned entities (with BILUO tag '-') "
+            "will be ignored during training.")
     W031 = ("Model '{model}' ({model_version}) requires spaCy {version} and "
             "is incompatible with the current spaCy version ({current}). This "
             "may lead to unexpected results or runtime errors. To resolve "
@@ -127,13 +127,14 @@ class Warnings(object):
             "this, download a newer compatible model or retrain your custom "
             "model with the current spaCy version. For more details and "
             "available updates, run: python -m spacy validate")
-    W033 = ("Training a new {model} using a model with no lexeme normalization "
-            "table. This may degrade the performance of the model to some "
-            "degree. If this is intentional or the language you're using "
-            "doesn't have a normalization table, please ignore this warning. "
-            "If this is surprising, make sure you have the spacy-lookups-data "
-            "package installed. The languages with lexeme normalization tables "
-            "are currently: da, de, el, en, id, lb, pt, ru, sr, ta, th.")
+    W033 = ("Training a new {model} using a model with an empty lexeme "
+            "normalization table. This may degrade the performance to some "
+            "degree. If this is intentional or this language doesn't have a "
+            "normalization table, please ignore this warning.")
+    W034 = ("Please install the package spacy-lookups-data in order to include "
+            "the default lexeme normalization table for the language '{lang}'.")
+    W035 = ('Discarding subpattern "{pattern}" due to an unrecognized '
+            "attribute or operator.")
 
 
 @add_codes
@@ -589,6 +590,7 @@ class Errors(object):
     E199 = ("Unable to merge 0-length span at doc[{start}:{end}].")
     E200 = ("Specifying a base model with a pretrained component '{component}' "
             "can not be combined with adding a pretrained Tok2Vec layer.")
+    E201 = ("Span index out of range.")
 
 
 @add_codes
