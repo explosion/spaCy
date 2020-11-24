@@ -5,7 +5,7 @@ requires = [
     "cymem>=2.0.2,<2.1.0",
     "preshed>=3.0.2,<3.1.0",
     "murmurhash>=0.28.0,<1.1.0",
-    "thinc>=7.4.1,<7.5.0",
+    "thinc==7.4.1",
     "numpy==1.15.0; python_version<='3.7'",
     "numpy==1.17.3; python_version=='3.8'",
     "numpy==1.19.3; python_version=='3.9'",
