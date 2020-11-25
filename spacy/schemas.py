@@ -351,7 +351,7 @@ class ConfigSchemaPretrain(BaseModel):
     batcher: Batcher = Field(..., title="Batcher for the training data")
     component: str = Field(..., title="Component to find the layer to pretrain")
     layer: str = Field(..., title="Layer to pretrain. Whole model if empty.")
-    objective: Tuple[Callable[["Vocab", "Model"], "Model"], Callable] = Field(..., title="Tuple of a function that the pretraining objective model and a function that calculates the loss.")
+    objective: Callable[["Vocab", "Model"], "Model"] = Field(..., title="A function that creates the pretraining objective.")
     # fmt: on
 
     class Config:

@@ -19,11 +19,12 @@ if TYPE_CHECKING:
 @registry.architectures.register("spacy.PretrainVectorsObjective.v1")
 def create_pretrain_vectors(
     maxout_pieces: int, hidden_size: int, loss: str
-) -> Tuple[Callable[["Vocab", Model], Model], Callable]:
+) -> Callable[["Vocab", Model], Model]:
     def create_vectors_objective(vocab: "Vocab", tok2vec: Model) -> Model:
         model = build_cloze_multi_task_model(
             vocab, tok2vec, hidden_size=hidden_size, maxout_pieces=maxout_pieces
         )
+        model.attrs["loss"] = create_vectors_loss()
         return model
 
     def create_vectors_loss() -> Callable:
@@ -34,15 +35,15 @@ def create_pretrain_vectors(
             distance = L2Distance(normalize=True)
             return partial(get_vectors_loss, distance=distance)
         else:
-            raise ValueError(Errors.E906.format(loss_type="loss"))
+            raise ValueError(Errors.E906.format(found=loss, supported="'cosine', 'L2'"))
 
-    return create_vectors_objective, create_vectors_loss
+    return create_vectors_objective
 
 
 @registry.architectures.register("spacy.PretrainCharactersObjective.v1")
 def create_pretrain_characters(
     maxout_pieces: int, hidden_size: int, n_characters: int
-) -> Tuple[Callable[["Vocab", Model], Model], Callable]:
+) -> Callable[["Vocab", Model], Model]:
     def create_characters_objective(vocab: "Vocab", tok2vec: Model) -> Model:
         model = build_cloze_characters_multi_task_model(
             vocab,
@@ -51,12 +52,13 @@ def create_pretrain_characters(
             maxout_pieces=maxout_pieces,
             nr_char=n_characters,
         )
+        model.attrs["loss"] = create_characters_loss()
         return model
 
     def create_characters_loss() -> Callable:
         return partial(get_characters_loss, nr_char=n_characters)
 
-    return create_characters_objective, create_characters_loss
+    return create_characters_objective
 
 
 def get_vectors_loss(ops, docs, prediction, distance):

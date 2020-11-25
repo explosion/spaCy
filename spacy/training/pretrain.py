@@ -139,11 +139,12 @@ def create_pretraining_model(nlp, pretrain_config):
     else:
         tok2vec = component.model
 
-    create_function, loss_function = pretrain_config["objective"]
+    create_function = pretrain_config["objective"]
     model = create_function(nlp.vocab, tok2vec)
+    loss_function = model.attrs["loss"]
     model.initialize(X=[nlp.make_doc("Give it a doc to infer shapes")])
     set_dropout_rate(model, pretrain_config["dropout"])
-    return model, loss_function()
+    return model, loss_function
 
 
 class ProgressTracker:
