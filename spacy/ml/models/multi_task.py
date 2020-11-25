@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from ...tokens import Doc  # noqa: F401
 
 
-@registry.architectures.register("spacy.PretrainVectorse.v1")
+@registry.architectures.register("spacy.PretrainVectors.v1")
 def create_pretrain_vectors(
     maxout_pieces: int, hidden_size: int, loss: str
 ) -> Callable[["Vocab", Model], Model]:
