@@ -112,6 +112,14 @@ pip install -U pip setuptools wheel
 pip install spacy
 ```
 
+For installation on python 3.5 where binary wheels are not provided for the most
+recent versions of the dependencies, you can prefer older binary wheels over
+newer source packages with `--prefer-binary`:
+
+```bash
+pip install spacy --prefer-binary
+```
+
 To install additional data tables for lemmatization and normalization in
 **spaCy v2.2+** you can run `pip install spacy[lookups]` or install
 [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data)

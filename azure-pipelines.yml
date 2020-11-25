@@ -63,6 +63,15 @@ jobs:
       Python38Mac:
         imageName: 'macos-10.14'
         python.version: '3.8'
+      Python39Linux:
+        imageName: 'ubuntu-16.04'
+        python.version: '3.9'
+      Python39Windows:
+        imageName: 'vs2017-win2016'
+        python.version: '3.9'
+      Python39Mac:
+        imageName: 'macos-10.14'
+        python.version: '3.9'
     maxParallel: 4
   pool:
     vmImage: $(imageName)
@@ -74,12 +83,12 @@ jobs:
       architecture: 'x64'
 
   - script: |
-      python -m pip install -U setuptools
-      pip install -r requirements.txt
+      python -m pip install -U pip setuptools
+      pip install -r requirements.txt --prefer-binary
     displayName: 'Install dependencies'
 
   - script: |
-      python setup.py build_ext --inplace
+      python setup.py build_ext --inplace -j 2
       python setup.py sdist --formats=gztar
     displayName: 'Compile and build sdist'
 
@@ -88,10 +97,17 @@ jobs:
       contents: 'spacy'
     displayName: 'Delete source directory'
 
+  - script: |
+      pip freeze > installed.txt
+      pip uninstall -y -r installed.txt
+    displayName: 'Uninstall all packages'
+
   - bash: |
       SDIST=$(python -c "import os;print(os.listdir('./dist')[-1])" 2>&1)
-      pip install dist/$SDIST
+      pip install dist/$SDIST --only-binary :all:
     displayName: 'Install from sdist'
 
-  - script: python -m pytest --pyargs spacy
+  - script: |
+      pip install -r requirements.txt --prefer-binary
+      python -m pytest --pyargs spacy
     displayName: 'Run tests'

@@ -207,6 +207,59 @@ const Landing = ({ data }) => {
 
             <LandingBannerGrid>
                 <LandingBanner
+                    title="spaCy v3.0 nightly: Transformer-based pipelines, new training system, project templates &amp; more"
+                    label="Try the pre-release"
+                    to="https://nightly.spacy.io"
+                    button="See what's new"
+                    background="#8758fe"
+                    color="#ffffff"
+                    small
+                >
+                    spaCy v3.0 features all new <strong>transformer-based pipelines</strong> that
+                    bring spaCy's accuracy right up to the current <strong>state-of-the-art</strong>
+                    . You can use any pretrained transformer to train your own pipelines, and even
+                    share one transformer between multiple components with{' '}
+                    <strong>multi-task learning</strong>. Training is now fully configurable and
+                    extensible, and you can define your own custom models using{' '}
+                    <strong>PyTorch</strong>, <strong>TensorFlow</strong> and other frameworks. The
+                    new spaCy projects system lets you describe whole{' '}
+                    <strong>end-to-end workflows</strong> in a single file, giving you an easy path
+                    from prototype to production, and making it easy to clone and adapt
+                    best-practice projects for your own use cases.
+                </LandingBanner>
+
+                <LandingBanner
+                    title="Prodigy: Radically efficient machine teaching"
+                    label="From the makers of spaCy"
+                    to="https://prodi.gy"
+                    button="Try it out"
+                    background="#f6f6f6"
+                    color="#000"
+                    small
+                >
+                    <Link to="https://prodi.gy" hidden>
+                        <img
+                            src={prodigyImage}
+                            alt="Prodigy: Radically efficient machine teaching"
+                        />
+                    </Link>
+                    <br />
+                    <br />
+                    Prodigy is an <strong>annotation tool</strong> so efficient that data scientists
+                    can do the annotation themselves, enabling a new level of rapid iteration.
+                    Whether you're working on entity recognition, intent detection or image
+                    classification, Prodigy can help you <strong>train and evaluate</strong> your
+                    models faster.
+                </LandingBanner>
+            </LandingBannerGrid>
+
+            <LandingLogos title="spaCy is trusted by" logos={data.logosUsers}>
+                <Button to={`https://github.com/${data.repo}/stargazers`}>and many more</Button>
+            </LandingLogos>
+            <LandingLogos title="Featured on" logos={data.logosPublications} />
+
+            <LandingBannerGrid>
+                <LandingBanner
                     to="https://course.spacy.io"
                     button="Start the course"
                     background="#f6f6f6"
