@@ -84,7 +84,7 @@ jobs:
 
   - script: |
       python -m pip install -U pip setuptools
-      pip install -r requirements.txt --prefer-binary
+      pip install -r requirements.txt
     displayName: 'Install dependencies'
 
   - script: |
@@ -104,10 +104,10 @@ jobs:
 
   - bash: |
       SDIST=$(python -c "import os;print(os.listdir('./dist')[-1])" 2>&1)
-      pip install dist/$SDIST --only-binary :all:
+      pip install dist/$SDIST
     displayName: 'Install from sdist'
 
   - script: |
-      pip install -r requirements.txt --prefer-binary
+      pip install -r requirements.txt
       python -m pytest --pyargs spacy
     displayName: 'Run tests'
