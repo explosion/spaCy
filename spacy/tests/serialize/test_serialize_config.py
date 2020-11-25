@@ -1,5 +1,3 @@
-from typing import Callable
-
 import pytest
 from thinc.api import Config, ConfigValidationError
 import spacy
