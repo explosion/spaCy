@@ -34,7 +34,7 @@ def pretrain(
     P = registry.resolve(_config["pretraining"], schema=ConfigSchemaPretrain)
     corpus = resolve_dot_names(_config, [P["corpus"]])[0]
     batcher = P["batcher"]
-    model, objective = create_pretraining_model(nlp, P)
+    model = create_pretraining_model(nlp, P)
     optimizer = P["optimizer"]
     # Load in pretrained weights to resume from
     if resume_path is not None:
@@ -42,6 +42,7 @@ def pretrain(
     else:
         # Without '--resume-path' the '--epoch-resume' argument is ignored
         epoch_resume = 0
+    objective = model.attrs["loss"]
     # TODO: move this to logger function?
     tracker = ProgressTracker(frequency=10000)
     msg.divider(f"Pre-training tok2vec layer - starting at epoch {epoch_resume}")
@@ -141,10 +142,9 @@ def create_pretraining_model(nlp, pretrain_config):
 
     create_function = pretrain_config["objective"]
     model = create_function(nlp.vocab, tok2vec)
-    loss_function = model.attrs["loss"]
     model.initialize(X=[nlp.make_doc("Give it a doc to infer shapes")])
     set_dropout_rate(model, pretrain_config["dropout"])
-    return model, loss_function
+    return model
 
 
 class ProgressTracker:

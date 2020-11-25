@@ -52,11 +52,8 @@ def create_pretrain_characters(
             maxout_pieces=maxout_pieces,
             nr_char=n_characters,
         )
-        model.attrs["loss"] = create_characters_loss()
+        model.attrs["loss"] = partial(get_characters_loss, nr_char=n_characters)
         return model
-
-    def create_characters_loss() -> Callable:
-        return partial(get_characters_loss, nr_char=n_characters)
 
     return create_characters_objective
 

@@ -4,13 +4,13 @@ import spacy
 from spacy.lang.en import English
 from spacy.lang.de import German
 from spacy.language import Language, DEFAULT_CONFIG, DEFAULT_CONFIG_PRETRAIN_PATH
-from spacy.util import registry, load_model_from_config
+from spacy.util import registry, load_model_from_config, load_config
 from spacy.ml.models import build_Tok2Vec_model, build_tb_parser_model
 from spacy.ml.models import MultiHashEmbed, MaxoutWindowEncoder
 from spacy.schemas import ConfigSchema, ConfigSchemaPretrain
 
+
 from ..util import make_tempdir
-from ... import util
 
 nlp_config_string = """
 [paths]
@@ -182,7 +182,7 @@ def test_create_nlp_from_config():
 def test_create_nlp_from_pretraining_config():
     """Test that the default pretraining config validates properly"""
     config = Config().from_str(pretrain_config_string)
-    pretrain_config = util.load_config(DEFAULT_CONFIG_PRETRAIN_PATH)
+    pretrain_config = load_config(DEFAULT_CONFIG_PRETRAIN_PATH)
     filled = config.merge(pretrain_config)
     resolved = registry.resolve(filled["pretraining"], schema=ConfigSchemaPretrain)
 
