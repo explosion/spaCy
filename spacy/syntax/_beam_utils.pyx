@@ -304,3 +304,7 @@ def get_gradient(nr_class, beam_maps, histories, losses):
                 grads[j][i, clas] += loss
                 key = key + tuple([clas])
     return grads
+
+
+def cleanup_beam(Beam beam):
+    del beam
