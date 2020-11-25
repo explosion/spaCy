@@ -1,5 +1,7 @@
 # cython: infer_types=True
 import numpy
+from libcpp.vector cimport vector
+from ._state cimport ArcC
 
 from ...tokens.doc cimport Doc
 
@@ -32,12 +34,14 @@ cdef class StateClass:
 
     @property
     def arcs(self):
-        arcs = []
-        for i in range(self.c._arcs.size()):
-            arc = self.c._arcs.at(i)
-            if arc.head != -1 and arc.child != -1:
-                arcs.append((arc.head, arc.child, arc.label))
-        return arcs
+        cdef vector[ArcC] arcs
+        self.c.get_arcs(&arcs)
+        return list(arcs)
+        #py_arcs = []
+        #for arc in arcs:
+        #    if arc.head != -1 and arc.child != -1:
+        #        py_arcs.append((arc.head, arc.child, arc.label))
+        #return arcs
 
     def add_arc(self, int head, int child, int label):
         self.c.add_arc(head, child, label)
@@ -70,14 +74,20 @@ cdef class StateClass:
         new_state.c.clone(self.c)
         return new_state
 
-    def print_state(self, words):
+    def print_state(self):
+        words = [token.text for token in self.doc]
         words = list(words) + ['_']
-        top = f"{words[self.S(0)]}_{self.S_(0).head}"
-        second = f"{words[self.S(1)]}_{self.S_(1).head}"
-        third = f"{words[self.S(2)]}_{self.S_(2).head}"
-        n0 = words[self.B(0)]
-        n1 = words[self.B(1)]
-        return ' '.join((third, second, top, '|', n0, n1))
+        bools = ["F", "T"]
+        sent_starts = [bools[self.c.is_sent_start(i)] for i in range(len(self.doc))]
+        shifted = [1 if self.c.shifted[i] else 0 for i in range(self.c.length)]
+        shifted.append("")
+        sent_starts.append("")
+        top = f"{self.S(0)}{words[self.S(0)]}_{words[self.H(self.S(0))]}_{shifted[self.S(0)]}"
+        second = f"{self.S(1)}{words[self.S(1)]}_{words[self.H(self.S(1))]}_{shifted[self.S(1)]}"
+        third = f"{self.S(2)}{words[self.S(2)]}_{words[self.H(self.S(2))]}_{shifted[self.S(2)]}"
+        n0 = f"{self.B(0)}{words[self.B(0)]}_{sent_starts[self.B(0)]}_{shifted[self.B(0)]}"
+        n1 = f"{self.B(1)}{words[self.B(1)]}_{sent_starts[self.B(1)]}_{shifted[self.B(1)]}"
+        return ' '.join((str(self.stack_depth()), str(self.buffer_length()), third, second, top, '|', n0, n1))
 
     def S(self, int i):
         return self.c.S(i)
@@ -97,6 +107,24 @@ cdef class StateClass:
     def R(self, int i, int idx):
         return self.c.R(i, idx)
 
+    def S_(self, int i):
+        return self.doc[self.c.S(i)]
+
+    def B_(self, int i):
+        return self.doc[self.c.B(i)]
+
+    def H_(self, int i):
+        return self.doc[self.c.H(i)]
+    
+    def E_(self, int i):
+        return self.doc[self.c.E(i)]
+
+    def L_(self, int i, int idx):
+        return self.doc[self.c.L(i, idx)]
+
+    def R_(self, int i, int idx):
+        return self.doc[self.c.R(i, idx)]
+ 
     def empty(self):
         return self.c.empty()
 
