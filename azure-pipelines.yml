@@ -41,31 +41,31 @@ jobs:
       Python35Windows:
         imageName: 'vs2017-win2016'
         python.version: '3.5'
+# Test on one OS per python 3.6/3.7/3.8 to speed up CI
       Python36Linux:
         imageName: 'ubuntu-16.04'
         python.version: '3.6'
-      Python36Windows:
-        imageName: 'vs2017-win2016'
-        python.version: '3.6'
-      Python36Mac:
-        imageName: 'macos-10.14'
-        python.version: '3.6'
-      # Don't test on 3.7 for now to speed up builds
-      Python37Linux:
-        imageName: 'ubuntu-16.04'
-        python.version: '3.7'
+#      Python36Windows:
+#        imageName: 'vs2017-win2016'
+#        python.version: '3.6'
+#      Python36Mac:
+#        imageName: 'macos-10.14'
+#        python.version: '3.6'
+#      Python37Linux:
+#        imageName: 'ubuntu-16.04'
+#        python.version: '3.7'
       Python37Windows:
         imageName: 'vs2017-win2016'
         python.version: '3.7'
-      Python37Mac:
-        imageName: 'macos-10.14'
-        python.version: '3.7'
-      Python38Linux:
-        imageName: 'ubuntu-16.04'
-        python.version: '3.8'
-      Python38Windows:
-        imageName: 'vs2017-win2016'
-        python.version: '3.8'
+#      Python37Mac:
+#        imageName: 'macos-10.14'
+#        python.version: '3.7'
+#      Python38Linux:
+#        imageName: 'ubuntu-16.04'
+#        python.version: '3.8'
+#      Python38Windows:
+#        imageName: 'vs2017-win2016'
+#        python.version: '3.8'
       Python38Mac:
         imageName: 'macos-10.14'
         python.version: '3.8'
