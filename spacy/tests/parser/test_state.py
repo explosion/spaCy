@@ -46,7 +46,7 @@ def test_H(doc):
     state = StateClass(doc)
     assert state.H(0) == -1
     state.add_arc(1, 0, 0)
-    assert state.arcs == [(1, 0, 0)]
+    assert state.arcs == [{"head": 1, "child": 0, "label": 0}]
     assert state.H(0) == 1
     state.add_arc(3, 1, 0)
     assert state.H(1) == 3
@@ -56,10 +56,10 @@ def test_L(doc):
     state = StateClass(doc)
     assert state.L(2, 1) == -1
     state.add_arc(2, 1, 0)
-    assert state.arcs == [(2, 1, 0)]
+    assert state.arcs == [{"head": 2, "child": 1, "label": 0}]
     assert state.L(2, 1) == 1
     state.add_arc(2, 0, 0)
-    assert state.L(2, 2) == 0
+    assert state.L(2, 1) == 0
     assert state.n_L(2) == 2
 
 
@@ -67,8 +67,8 @@ def test_R(doc):
     state = StateClass(doc)
     assert state.R(0, 1) == -1
     state.add_arc(0, 1, 0)
-    assert state.arcs == [(0, 1, 0)]
+    assert state.arcs == [{"head": 0, "child": 1, "label": 0}]
     assert state.R(0, 1) == 1
     state.add_arc(0, 2, 0)
-    assert state.R(0, 2) == 2
+    assert state.R(0, 1) == 2
     assert state.n_R(0) == 2
