@@ -427,17 +427,18 @@ one component.
 
 ## Parser & NER architectures {#parser}
 
-### spacy.TransitionBasedParser.v1 {#TransitionBasedParser source="spacy/ml/models/parser.py"}
+### spacy.TransitionBasedParser.v2 {#TransitionBasedParser source="spacy/ml/models/parser.py"}
 
 > #### Example Config
 >
 > ```ini
 > [model]
-> @architectures = "spacy.TransitionBasedParser.v1"
+> @architectures = "spacy.TransitionBasedParser.v2"
 > state_type = "ner"
 > extra_state_tokens = false
 > hidden_width = 64
 > maxout_pieces = 2
+> use_upper = true
 >
 > [model.tok2vec]
 > @architectures = "spacy.HashEmbedCNN.v1"

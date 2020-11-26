@@ -66,7 +66,7 @@ width = ${components.tok2vec.model.width}
 
 parser_config_string_upper = """
 [model]
-@architectures = "spacy.TransitionBasedParser.v1"
+@architectures = "spacy.TransitionBasedParser.v2"
 state_type = "parser"
 extra_state_tokens = false
 hidden_width = 66
@@ -87,7 +87,7 @@ subword_features = false
 
 parser_config_string_no_upper = """
 [model]
-@architectures = "spacy.TransitionBasedParser.v1"
+@architectures = "spacy.TransitionBasedParser.v2"
 state_type = "parser"
 extra_state_tokens = false
 hidden_width = 66

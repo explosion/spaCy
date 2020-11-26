@@ -12,7 +12,7 @@ from ..training import validate_examples
 
 default_model_config = """
 [model]
-@architectures = "spacy.TransitionBasedParser.v1"
+@architectures = "spacy.TransitionBasedParser.v2"
 state_type = "ner"
 extra_state_tokens = false
 hidden_width = 64

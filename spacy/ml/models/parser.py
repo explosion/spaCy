@@ -11,6 +11,46 @@ from ...tokens import Doc
 
 
 @registry.architectures.register("spacy.TransitionBasedParser.v1")
+def transition_parser_v1(
+    tok2vec: Model[List[Doc], List[Floats2d]],
+    state_type: Literal["parser", "ner"],
+    extra_state_tokens: bool,
+    hidden_width: int,
+    maxout_pieces: int,
+    use_upper: bool = True,
+    nO: Optional[int] = None,
+) -> Model:
+    return build_tb_parser_model(
+    tok2vec,
+    state_type,
+    extra_state_tokens,
+    hidden_width,
+    maxout_pieces,
+    use_upper,
+    nO,
+)
+
+
+@registry.architectures.register("spacy.TransitionBasedParser.v2")
+def transition_parser_v2(
+    tok2vec: Model[List[Doc], List[Floats2d]],
+    state_type: Literal["parser", "ner"],
+    extra_state_tokens: bool,
+    hidden_width: int,
+    maxout_pieces: int,
+    use_upper: bool,
+    nO: Optional[int] = None,
+) -> Model:
+    return build_tb_parser_model(
+    tok2vec,
+    state_type,
+    extra_state_tokens,
+    hidden_width,
+    maxout_pieces,
+    use_upper,
+    nO,
+)
+
 def build_tb_parser_model(
     tok2vec: Model[List[Doc], List[Floats2d]],
     state_type: Literal["parser", "ner"],
@@ -102,7 +142,6 @@ def resize_output(model, new_nO):
 
 def _resize_upper(model, new_nO):
     upper = model.get_ref("upper")
-
     if upper.has_dim("nO") is None:
         upper.set_dim("nO", new_nO)
         return model
