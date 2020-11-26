@@ -72,6 +72,7 @@ def test_readers():
 def test_cat_readers(reader, additional_config):
     nlp_config_string = """
     [training]
+    seed = 0
 
     [corpora]
     @readers = "PLACEHOLDER"
@@ -92,9 +93,7 @@ def test_cat_readers(reader, additional_config):
     config["corpora"]["@readers"] = reader
     config["corpora"].update(additional_config)
     nlp = load_model_from_config(config, auto_fill=True)
-    T = registry.resolve(
-        nlp.config["training"].interpolate(), schema=ConfigSchemaTraining
-    )
+    T = registry.resolve(nlp.config["training"], schema=ConfigSchemaTraining)
     dot_names = [T["train_corpus"], T["dev_corpus"]]
     train_corpus, dev_corpus = resolve_dot_names(nlp.config, dot_names)
     optimizer = T["optimizer"]
@@ -111,7 +110,7 @@ def test_cat_readers(reader, additional_config):
         # this shouldn't fail if each dev example has at least one positive label
         assert sorted(list(set(example.y.cats.values()))) == [0.0, 1.0]
     scores = nlp.evaluate(dev_examples)
-    assert scores["cats_score"]
+    assert scores["cats_score"] is not None
     # ensure the pipeline runs
     doc = nlp("Quick test")
     assert doc.cats
