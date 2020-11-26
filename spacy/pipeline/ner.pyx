@@ -17,6 +17,7 @@ state_type = "ner"
 extra_state_tokens = false
 hidden_width = 64
 maxout_pieces = 2
+use_upper = true
 
 [model.tok2vec]
 @architectures = "spacy.HashEmbedCNN.v1"

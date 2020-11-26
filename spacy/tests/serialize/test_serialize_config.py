@@ -64,13 +64,35 @@ width = ${components.tok2vec.model.width}
 """
 
 
-parser_config_string = """
+parser_config_string_upper = """
 [model]
 @architectures = "spacy.TransitionBasedParser.v1"
 state_type = "parser"
 extra_state_tokens = false
 hidden_width = 66
 maxout_pieces = 2
+use_upper = true
+
+[model.tok2vec]
+@architectures = "spacy.HashEmbedCNN.v1"
+pretrained_vectors = null
+width = 333
+depth = 4
+embed_size = 5555
+window_size = 1
+maxout_pieces = 7
+subword_features = false
+"""
+
+
+parser_config_string_no_upper = """
+[model]
+@architectures = "spacy.TransitionBasedParser.v1"
+state_type = "parser"
+extra_state_tokens = false
+hidden_width = 66
+maxout_pieces = 2
+use_upper = false
 
 [model.tok2vec]
 @architectures = "spacy.HashEmbedCNN.v1"
@@ -101,6 +123,7 @@ def my_parser():
         extra_state_tokens=True,
         hidden_width=65,
         maxout_pieces=5,
+        use_upper=True,
     )
     return parser
 
@@ -180,12 +203,15 @@ def test_serialize_custom_nlp():
         nlp2 = spacy.load(d)
         model = nlp2.get_pipe("parser").model
         model.get_ref("tok2vec")
-        upper = model.get_ref("upper")
         # check that we have the correct settings, not the default ones
-        assert upper.get_dim("nI") == 65
+        assert model.get_ref("upper").get_dim("nI") == 65
+        assert model.get_ref("lower").get_dim("nI") == 65
 
 
-def test_serialize_parser():
+@pytest.mark.parametrize(
+    "parser_config_string", [parser_config_string_upper, parser_config_string_no_upper]
+)
+def test_serialize_parser(parser_config_string):
     """ Create a non-default parser config to check nlp serializes it correctly """
     nlp = English()
     model_config = Config().from_str(parser_config_string)
@@ -198,9 +224,11 @@ def test_serialize_parser():
         nlp2 = spacy.load(d)
         model = nlp2.get_pipe("parser").model
         model.get_ref("tok2vec")
-        upper = model.get_ref("upper")
         # check that we have the correct settings, not the default ones
-        assert upper.get_dim("nI") == 66
+        if model.attrs["has_upper"]:
+            assert model.get_ref("upper").get_dim("nI") == 66
+        assert model.get_ref("lower").get_dim("nI") == 66
+
 
 
 def test_config_nlp_roundtrip():
@@ -347,7 +375,10 @@ def test_config_auto_fill_extra_fields():
     load_model_from_config(nlp.config)
 
 
-def test_config_validate_literal():
+@pytest.mark.parametrize(
+    "parser_config_string", [parser_config_string_upper, parser_config_string_no_upper]
+)
+def test_config_validate_literal(parser_config_string):
     nlp = English()
     config = Config().from_str(parser_config_string)
     config["model"]["state_type"] = "nonsense"
