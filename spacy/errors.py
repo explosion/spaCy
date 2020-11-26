@@ -485,7 +485,6 @@ class Errors:
             "dimension refers to the width of the vectors table.")
     E906 = ("Unexpected `loss` value in pretraining objective: '{found}'. Supported values "
             "are: {supported}")
-    E907 = ("Unexpected `objective_type` value in pretraining objective: {objective_type}")
     E908 = ("Can't set `spaces` without `words` in `Doc.__init__`.")
     E909 = ("Expected {name} in parser internals. This is likely a bug in spaCy.")
     E910 = ("Encountered NaN value when computing loss for component '{name}'.")
