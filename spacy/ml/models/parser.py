@@ -127,7 +127,7 @@ def build_tb_parser_model(
 
 
 def _define_upper(nO, nI):
-    return Linear(nO=nO, init_W=zero_init)
+    return Linear(nO=nO, nI=nI, init_W=zero_init)
 
 
 def _define_lower(nO, nF, nI, nP):
