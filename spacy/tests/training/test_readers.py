@@ -113,7 +113,6 @@ def test_cat_readers(reader, additional_config):
         # this shouldn't fail if each dev example has at least one positive label
         assert sorted(list(set(example.y.cats.values()))) == [0.0, 1.0]
     scores = nlp.evaluate(dev_examples)
-    print(scores["cats_score"])
     assert scores["cats_score"]
     # ensure the pipeline runs
     doc = nlp("Quick test")
