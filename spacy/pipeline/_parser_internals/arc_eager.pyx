@@ -139,6 +139,8 @@ cdef GoldParseStateC create_gold_state(Pool mem, const StateC* state,
             if head != i:
                 gs.kids[head][js[head]] = i
                 js[head] += 1
+    gs.push_cost = push_cost(state, &gs)
+    gs.pop_cost = pop_cost(state, &gs)
     return gs
 
 
@@ -253,7 +255,7 @@ cdef weight_t pop_cost(const StateC* state, const GoldParseStateC* gold) nogil:
         return 9000
     if is_head_in_buffer(gold, s0):
         cost += 1
-    cost += gold[0].n_kids_in_buffer[s0]
+    cost += gold.n_kids_in_buffer[s0]
     return cost
 
 
@@ -379,7 +381,7 @@ cdef class LeftArc:
     * not is_sent_start(B[0])
 
     Cost:
-        pop_cost + Arc(S[1], S[0]) - Arc(B[0], S[0], label)
+        pop_cost - Arc(B[0], S[0], label) + (Arc(S[1], S[0]) if H(S[0]) else Arcs(S, S[0]))
     """
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
@@ -402,14 +404,18 @@ cdef class LeftArc:
     @staticmethod
     cdef inline weight_t cost(const StateC* state, const void* _gold, attr_t label) nogil:
         gold = <const GoldParseStateC*>_gold
-        cost = gold.pop_cost
+        cdef weight_t cost = gold.pop_cost
         s0 = state.S(0)
         s1 = state.S(1)
         b0 = state.B(0)
-        # If this arc is correct, we're either clobbering it or losing it
-        # (due to the non-monotonic left or reduce, respectively.)
-        cost += arc_is_gold(gold, s1, s0)
-        if arc_is_gold(gold, b0, s0):
+        if state.has_head(s0):
+            # Increment cost if we're clobbering a correct arc
+            cost += gold.heads[s0] == s1
+        else:
+            # If there's no head, we're losing arcs between S0 and S[1:].
+            cost += is_head_in_stack(gold, s0)
+            cost += gold.n_kids_in_stack[s0]
+        if b0 != -1 and s0 != -1 and gold.heads[s0] == b0:
             cost -= 1
             cost += not label_is_gold(gold, s0, label)
         return cost
@@ -425,7 +431,7 @@ cdef class RightArc:
     * not is_sent_start(B[0])
 
     Cost:
-        push_cost - Arc(S[0], B[0], label)
+        push_cost + (not shifted[b0] and Arc(B[1:], B[0])) - Arc(S[0], B[0], label)
     """
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
@@ -452,9 +458,11 @@ cdef class RightArc:
         cost = gold.push_cost
         s0 = state.S(0)
         b0 = state.B(0)
-        if arc_is_gold(gold, s0, b0):
+        if s0 != -1 and b0 != -1 and gold.heads[b0] == s0:
             cost -= 1
             cost += not label_is_gold(gold, b0, label)
+        elif is_head_in_buffer(gold, b0) and not state.shifted[b0]:
+            cost += 1
         return cost
 
 
@@ -742,6 +750,9 @@ cdef class ArcEager(TransitionSystem):
             else:
                 costs[i] = 9000
         if n_gold < 1:
+            for i in range(self.n_moves):
+                print(self.get_class_name(i), is_valid[i], costs[i])
+            print("Gold sent starts?", is_sent_start(&gold_state, state.B(0)), is_sent_start(&gold_state, state.B(1)))
             raise ValueError
 
     def get_oracle_sequence_from_state(self, StateClass state, ArcEagerGold gold, _debug=None):
