@@ -198,7 +198,10 @@ class DocBin:
 
         DOCS: https://nightly.spacy.io/api/docbin#from_bytes
         """
-        msg = srsly.msgpack_loads(zlib.decompress(bytes_data))
+        try:
+            msg = srsly.msgpack_loads(zlib.decompress(bytes_data))
+        except zlib.error:
+            raise ValueError(Errors.E1014)
         self.attrs = msg["attrs"]
         self.strings = set(msg["strings"])
         lengths = numpy.frombuffer(msg["lengths"], dtype="int32")
