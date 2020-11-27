@@ -414,6 +414,13 @@ def test_doc_retokenizer_merge_lex_attrs(en_vocab):
     assert doc[1].is_stop
     assert not doc[0].is_stop
     assert not doc[1].like_num
+    # Test that norm is only set on tokens
+    doc = Doc(en_vocab, words=["eins", "zwei", "!", "!"])
+    assert doc[0].norm_ == "eins"
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[0:1], attrs={"norm": norm})
+    assert doc[0].norm_ == "1"
+    assert en_vocab["eins"].norm_ == "eins"
 
 
 def test_retokenize_skip_duplicates(en_vocab):
