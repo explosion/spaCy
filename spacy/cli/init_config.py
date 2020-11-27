@@ -5,6 +5,7 @@ from wasabi import Printer, diff_strings
 from thinc.api import Config
 import srsly
 import re
+from jinja2 import Template
 
 from .. import util
 from ..language import DEFAULT_CONFIG_PRETRAIN_PATH
@@ -127,10 +128,6 @@ def init_config(
 ) -> None:
     is_stdout = str(output_file) == "-"
     msg = Printer(no_print=is_stdout)
-    try:
-        from jinja2 import Template
-    except ImportError:
-        msg.fail("This command requires jinja2", "pip install jinja2", exits=1)
     with TEMPLATE_PATH.open("r") as f:
         template = Template(f.read())
     # Filter out duplicates since tok2vec and transformer are added by template
