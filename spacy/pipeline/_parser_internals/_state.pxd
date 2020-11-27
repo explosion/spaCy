@@ -292,7 +292,6 @@ cdef cppclass StateC:
         this._b_i -= 1
         this._buffer[this._b_i] = this.S(0)
         this._s_i -= 1
-        this.shifted[this.B(0)] = True
 
     void add_arc(int head, int child, attr_t label) nogil:
         if this.has_head(child):

@@ -161,7 +161,7 @@ cdef void update_gold_state(GoldParseStateC* gs, const StateC* s) nogil:
 
     for i in range(s.stack_depth()):
         s_i = s.S(i)
-        if not is_head_unknown(gs, s_i):
+        if not is_head_unknown(gs, s_i) and gs.heads[s_i] != s_i:
             gs.n_kids_in_stack[gs.heads[s_i]] += 1
         for kid in gs.kids[s_i][:gs.n_kids[s_i]]:
             gs.state_bits[kid] = set_state_flag(
@@ -173,7 +173,7 @@ cdef void update_gold_state(GoldParseStateC* gs, const StateC* s) nogil:
         b_i = s.B(i)
         if s.is_sent_start(b_i):
             break
-        if not is_head_unknown(gs, b_i):
+        if not is_head_unknown(gs, b_i) and gs.heads[b_i] != b_i:
             gs.n_kids_in_buffer[gs.heads[b_i]] += 1
         for kid in gs.kids[b_i][:gs.n_kids[b_i]]:
             gs.state_bits[kid] = set_state_flag(
@@ -313,6 +313,7 @@ cdef class Shift:
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
+        st.shifted[st.B(0)] = True
         st.push()
 
     @staticmethod
@@ -339,14 +340,16 @@ cdef class Reduce:
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
         if st.stack_depth() == 0:
             return False
-        elif st.stack_depth() >= 2:
-            return True
-        elif st.buffer_length() == 0:
-            return True
-        elif st.is_sent_start(st.B(0)):
-            return True
         else:
-            return False
+            return True
+        #elif st.stack_depth() >= 2:
+        #    return True
+        #elif st.buffer_length() == 0:
+        #    return True
+        #elif st.is_sent_start(st.B(0)):
+        #    return True
+        #else:
+        #    return False
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
@@ -399,6 +402,9 @@ cdef class LeftArc:
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
         st.add_arc(st.B(0), st.S(0), label)
+        # If we change the stack, it's okay to remove the shifted mark, as
+        # we can't get in an infinite loop this way.
+        st.shifted[st.B(0)] = False
         st.pop()
 
     @staticmethod
