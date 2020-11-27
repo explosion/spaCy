@@ -143,6 +143,9 @@ nO = null
 @architectures = "spacy-transformers.TransformerListener.v1"
 grad_factor = 1.0
 
+[components.textcat.model.tok2vec.pooling]
+@layers = "reduce_mean.v1"
+
 [components.textcat.model.linear_model]
 @architectures = "spacy.TextCatBOW.v1"
 exclusive_classes = false
