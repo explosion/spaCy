@@ -22,7 +22,7 @@ cdef class StateClass:
 
     @property
     def stack(self):
-        return {self.S(i) for i in range(self.c._s_i)}
+        return {self.S(i) for i in range(self.c.stack_depth())}
 
     @property
     def queue(self):

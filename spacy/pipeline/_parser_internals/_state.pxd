@@ -22,36 +22,33 @@ cdef struct ArcC:
 
 
 cdef cppclass StateC:
-    int* _stack
     int* _buffer
     int* _heads
     bint* shifted
     bint* sent_starts
     const TokenC* _sent
+    vector[int] _stack
     vector[SpanC] _ents
     vector[ArcC] _left_arcs
     vector[ArcC] _right_arcs
     TokenC _empty_token
     int length
     int offset
-    int _s_i
     int _b_i
 
     __init__(const TokenC* sent, int length) nogil:
         this._sent = sent
         this._buffer = <int*>calloc(length, sizeof(int))
-        this._stack = <int*>calloc(length, sizeof(int))
         this._heads = <int*>calloc(length, sizeof(int))
         this.sent_starts = <bint*>calloc(length, sizeof(bint))
         this.shifted = <bint*>calloc(length, sizeof(bint))
-        if not (this._buffer and this._stack and this.shifted
+        if not (this._buffer and this.shifted
                 and this._sent):
             with gil:
                 PyErr_SetFromErrno(MemoryError)
                 PyErr_CheckSignals()
         this.offset = 0
         this.length = length
-        this._s_i = 0
         this._b_i = 0
         for i in range(length):
             this._heads[i] = -1
@@ -59,10 +56,10 @@ cdef cppclass StateC:
             this.sent_starts[i] = sent[i].sent_start
         memset(&this._empty_token, 0, sizeof(TokenC))
         this._empty_token.lex = &EMPTY_LEXEME
+        this.cost = 0
 
     __dealloc__():
         free(this._buffer)
-        free(this._stack)
         free(this._heads)
         free(this.shifted)
         free(this.sent_starts)
@@ -139,11 +136,11 @@ cdef cppclass StateC:
                 ids[i] = -1
 
     int S(int i) nogil const:
-        if i >= this._s_i:
+        if i >= this._stack.size():
             return -1
         elif i < 0:
             return -1
-        return this._stack[this._s_i - (i+1)]
+        return this._stack.at(this._stack.size() - (i+1))
 
     int B(int i) nogil const:
         if (i + this._b_i) >= this.length:
@@ -215,7 +212,7 @@ cdef cppclass StateC:
             return rights.at(idx)
 
     bint empty() nogil const:
-        return this._s_i <= 0
+        return this._stack.size() == 0
 
     bint eol() nogil const:
         return this.buffer_length() == 0
@@ -267,31 +264,31 @@ cdef cppclass StateC:
             return this._ents.back().end == -1
 
     int stack_depth() nogil const:
-        return this._s_i
+        return this._stack.size()
 
     int buffer_length() nogil const:
         return this.length - this._b_i
 
     void push() nogil:
         if this.B(0) != -1:
-            this._stack[this._s_i] = this.B(0)
-        this._s_i += 1
+            this._stack.push_back(this.B(0))
         this._b_i += 1
 
     void pop() nogil:
-        if this._s_i >= 1:
-            this._s_i -= 1
+        if this._stack.size():
+            this._stack.pop_back()
 
     void force_final() nogil:
         # This should only be used in desperate situations, as it may leave
         # the analysis in an unexpected state.
-        this._s_i = 0
+        this._stack.clear()
         this._b_i = this.length
 
     void unshift() nogil:
-        this._b_i -= 1
-        this._buffer[this._b_i] = this.S(0)
-        this._s_i -= 1
+        if this._stack.size():
+            this._b_i -= 1
+            this._buffer[this._b_i] = this._stack.back()
+            this._stack.pop_back()
 
     void add_arc(int head, int child, attr_t label) nogil:
         if this.has_head(child):
@@ -349,7 +346,7 @@ cdef cppclass StateC:
     void clone(const StateC* src) nogil:
         this.length = src.length
         this._sent = src._sent
-        memcpy(this._stack, src._stack, this.length * sizeof(int))
+        this._stack = src._stack
         memcpy(this._buffer, src._buffer, this.length * sizeof(int))
         memcpy(this.shifted, src.shifted, this.length * sizeof(this.shifted[0]))
         memcpy(this.sent_starts, src.sent_starts, this.length * sizeof(this.sent_starts[0]))
@@ -358,6 +355,5 @@ cdef cppclass StateC:
         this._left_arcs = src._left_arcs
         this._right_arcs = src._right_arcs
         this._b_i = src._b_i
-        this._s_i = src._s_i
         this.offset = src.offset
         this._empty_token = src._empty_token
