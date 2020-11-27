@@ -418,7 +418,7 @@ def test_doc_retokenizer_merge_lex_attrs(en_vocab):
     doc = Doc(en_vocab, words=["eins", "zwei", "!", "!"])
     assert doc[0].norm_ == "eins"
     with doc.retokenize() as retokenizer:
-        retokenizer.merge(doc[0:1], attrs={"norm": norm})
+        retokenizer.merge(doc[0:1], attrs={"norm": "1"})
     assert doc[0].norm_ == "1"
     assert en_vocab["eins"].norm_ == "eins"
 
