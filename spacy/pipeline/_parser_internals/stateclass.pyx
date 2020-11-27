@@ -79,7 +79,7 @@ cdef class StateClass:
         words = list(words) + ['_']
         bools = ["F", "T"]
         sent_starts = [bools[self.c.is_sent_start(i)] for i in range(len(self.doc))]
-        shifted = [1 if self.c.shifted[i] else 0 for i in range(self.c.length)]
+        shifted = [1 if self.c.is_unshiftable(i) else 0 for i in range(self.c.length)]
         shifted.append("")
         sent_starts.append("")
         top = f"{self.S(0)}{words[self.S(0)]}_{words[self.H(self.S(0))]}_{shifted[self.S(0)]}"

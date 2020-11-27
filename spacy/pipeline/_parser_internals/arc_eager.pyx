@@ -306,14 +306,13 @@ cdef class Shift:
             return 0
         elif st.is_sent_start(st.B(0)):
             return 0
-        elif st.shifted[st.B(0)]:
+        elif st.is_unshiftable(st.B(0)):
             return 0
         else:
             return 1
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
-        st.shifted[st.B(0)] = True
         st.push()
 
     @staticmethod
@@ -404,7 +403,7 @@ cdef class LeftArc:
         st.add_arc(st.B(0), st.S(0), label)
         # If we change the stack, it's okay to remove the shifted mark, as
         # we can't get in an infinite loop this way.
-        st.shifted[st.B(0)] = False
+        st.set_reshiftable(st.B(0))
         st.pop()
 
     @staticmethod
@@ -467,7 +466,7 @@ cdef class RightArc:
         if s0 != -1 and b0 != -1 and gold.heads[b0] == s0:
             cost -= 1
             cost += not label_is_gold(gold, b0, label)
-        elif is_head_in_buffer(gold, b0) and not state.shifted[b0]:
+        elif is_head_in_buffer(gold, b0) and not state.is_unshiftable(b0):
             cost += 1
         return cost
 

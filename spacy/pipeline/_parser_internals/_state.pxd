@@ -1,7 +1,9 @@
 from libc.string cimport memcpy, memset
 from libc.stdlib cimport calloc, free
 from libc.stdint cimport uint32_t, uint64_t
+cimport libcpp
 from libcpp.vector cimport vector
+from libcpp.set cimport set
 from cpython.exc cimport PyErr_CheckSignals, PyErr_SetFromErrno
 from murmurhash.mrmr cimport hash64
 
@@ -22,15 +24,15 @@ cdef struct ArcC:
 
 
 cdef cppclass StateC:
-    int* _buffer
     int* _heads
-    bint* shifted
-    bint* sent_starts
     const TokenC* _sent
     vector[int] _stack
+    vector[int] _rebuffer
     vector[SpanC] _ents
     vector[ArcC] _left_arcs
     vector[ArcC] _right_arcs
+    vector[libcpp.bool] _unshiftable
+    set[int] _sent_starts
     TokenC _empty_token
     int length
     int offset
@@ -38,12 +40,8 @@ cdef cppclass StateC:
 
     __init__(const TokenC* sent, int length) nogil:
         this._sent = sent
-        this._buffer = <int*>calloc(length, sizeof(int))
         this._heads = <int*>calloc(length, sizeof(int))
-        this.sent_starts = <bint*>calloc(length, sizeof(bint))
-        this.shifted = <bint*>calloc(length, sizeof(bint))
-        if not (this._buffer and this.shifted
-                and this._sent):
+        if not (this._sent and this._heads):
             with gil:
                 PyErr_SetFromErrno(MemoryError)
                 PyErr_CheckSignals()
@@ -52,17 +50,14 @@ cdef cppclass StateC:
         this._b_i = 0
         for i in range(length):
             this._heads[i] = -1
-            this._buffer[i] = i
-            this.sent_starts[i] = sent[i].sent_start
+            this._unshiftable.push_back(0)
+            if sent[i].sent_start:
+                this._sent_starts.insert(i)
         memset(&this._empty_token, 0, sizeof(TokenC))
         this._empty_token.lex = &EMPTY_LEXEME
-        this.cost = 0
 
     __dealloc__():
-        free(this._buffer)
         free(this._heads)
-        free(this.shifted)
-        free(this.sent_starts)
 
     void set_context_tokens(int* ids, int n) nogil:
         cdef int i, j
@@ -143,11 +138,16 @@ cdef cppclass StateC:
         return this._stack.at(this._stack.size() - (i+1))
 
     int B(int i) nogil const:
-        if (i + this._b_i) >= this.length:
+        if i < 0:
             return -1
-        elif i < 0:
-            return -1
-        return this._buffer[this._b_i + i]
+        elif i < this._rebuffer.size():
+            return this._rebuffer.at(this._rebuffer.size() - (i+1))
+        else:
+            b_i = this._b_i + (i - this._rebuffer.size())
+            if b_i >= this.length:
+                return -1
+            else:
+                return b_i
 
     const TokenC* B_(int i) nogil const:
         return this.safe_get(this.B(i))
@@ -221,13 +221,25 @@ cdef cppclass StateC:
         return this.stack_depth() <= 0 and this.eol()
 
     int cannot_sent_start(int word) nogil const:
-        return this.sent_starts[word] == -1
+        if word < 0 or word >= this.length:
+            return 0
+        elif this._sent[word].sent_start == -1:
+            return 1
+        else:
+            return 0
 
     int is_sent_start(int word) nogil const:
-        return this.sent_starts[word] == 1
+        if word < 0 or word >= this.length:
+            return 0
+        elif this._sent[word].sent_start == 1:
+            return 1
+        elif this._sent_starts.count(word) >= 1:
+            return 1
+        else:
+            return 0
 
     void set_sent_start(int word, int value) nogil:
-        this.sent_starts[word] = value
+        this._sent_starts.insert(word)
 
     bint has_head(int child) nogil const:
         return this._heads[child] >= 0
@@ -270,13 +282,17 @@ cdef cppclass StateC:
         return this.length - this._b_i
 
     void push() nogil:
-        if this.B(0) != -1:
-            this._stack.push_back(this.B(0))
-        this._b_i += 1
+        b0 = this.B(0)
+        if this._rebuffer.size():
+            b0 = this._rebuffer.back()
+            this._rebuffer.pop_back()
+        else:
+            b0 = this._b_i
+            this._b_i += 1
+        this._stack.push_back(b0)
 
     void pop() nogil:
-        if this._stack.size():
-            this._stack.pop_back()
+        this._stack.pop_back()
 
     void force_final() nogil:
         # This should only be used in desperate situations, as it may leave
@@ -285,10 +301,20 @@ cdef cppclass StateC:
         this._b_i = this.length
 
     void unshift() nogil:
-        if this._stack.size():
-            this._b_i -= 1
-            this._buffer[this._b_i] = this._stack.back()
-            this._stack.pop_back()
+        s0 = this._stack.back()
+        this._unshiftable[s0] = 1
+        this._rebuffer.push_back(s0)
+        this._stack.pop_back()
+
+    int is_unshiftable(int item) nogil const:
+        if item >= this._unshiftable.size():
+            return 0
+        else:
+            return this._unshiftable.at(item)
+
+    void set_reshiftable(int item) nogil:
+        if item < this._unshiftable.size():
+            this._unshiftable[item] = 0
 
     void add_arc(int head, int child, attr_t label) nogil:
         if this.has_head(child):
@@ -347,9 +373,9 @@ cdef cppclass StateC:
         this.length = src.length
         this._sent = src._sent
         this._stack = src._stack
-        memcpy(this._buffer, src._buffer, this.length * sizeof(int))
-        memcpy(this.shifted, src.shifted, this.length * sizeof(this.shifted[0]))
-        memcpy(this.sent_starts, src.sent_starts, this.length * sizeof(this.sent_starts[0]))
+        this._rebuffer = src._rebuffer
+        this._sent_starts = src._sent_starts
+        this._unshiftable = src._unshiftable
         memcpy(this._heads, src._heads, this.length * sizeof(this._heads[0]))
         this._ents = src._ents
         this._left_arcs = src._left_arcs
