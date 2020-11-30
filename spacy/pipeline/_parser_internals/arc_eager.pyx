@@ -194,7 +194,7 @@ cdef class ArcEagerGold:
         heads, labels = example.get_aligned_parse(projectivize=True)
         labels = [label if label is not None else "" for label in labels]
         labels = [example.x.vocab.strings.add(label) for label in labels]
-        sent_starts = example.get_aligned("SENT_START")
+        sent_starts = example.get_aligned_sent_starts()
         assert len(heads) == len(labels) == len(sent_starts)
         self.c = create_gold_state(self.mem, stcls.c, heads, labels, sent_starts)
 
