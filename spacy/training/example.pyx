@@ -191,6 +191,24 @@ cdef class Example:
                     aligned_deps[cand_i] = deps[gold_i]
         return aligned_heads, aligned_deps
 
+    def get_aligned_sent_starts(self):
+        """Get list of SENT_START attributes aligned to the predicted tokenization.
+        If the reference has not sentence starts, return a list of None values.
+
+        The aligned sentence starts use the get_aligned_spans method, rather
+        than aligning the list of tags, so that it handles cases where a mistaken
+        tokenization starts the sentence.
+        """
+        if self.y.has_annotation("SENT_START"):
+            x_sents = self.get_aligned_spans_y2x(self.y.sents)
+            sent_starts = []
+            for sent in x_sents:
+                sent_starts.append(True)
+                sent_starts.extend([False] * (len(sent) - 1))
+            return sent_starts
+        else:
+            return [None] * len(self.x)
+
     def get_aligned_spans_x2y(self, x_spans):
         return self._get_aligned_spans(self.y, x_spans, self.alignment.x2y)
 
