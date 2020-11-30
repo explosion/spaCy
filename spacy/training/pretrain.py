@@ -11,7 +11,7 @@ from wasabi import Printer
 from .example import Example
 from ..tokens import Doc
 from ..schemas import ConfigSchemaTraining, ConfigSchemaPretrain
-from ..util import registry, load_model_from_config, resolve_dot_names
+from ..util import registry, load_model_from_config, dot_to_object
 
 
 def pretrain(
@@ -32,7 +32,8 @@ def pretrain(
     _config = nlp.config.interpolate()
     T = registry.resolve(_config["training"], schema=ConfigSchemaTraining)
     P = registry.resolve(_config["pretraining"], schema=ConfigSchemaPretrain)
-    corpus = resolve_dot_names(_config, [P["corpus"]])[0]
+    corpus = dot_to_object(_config, P["corpus"])
+    corpus = registry.resolve({"corpus": corpus})["corpus"]
     batcher = P["batcher"]
     model = create_pretraining_model(nlp, P)
     optimizer = P["optimizer"]
