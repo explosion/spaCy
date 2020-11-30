@@ -339,16 +339,12 @@ cdef class Reduce:
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
         if st.stack_depth() == 0:
             return False
+        elif st.buffer_length() == 0:
+            return True
+        elif st.stack_depth() == 1 and st.cannot_sent_start(st.l_edge(st.B(0))):
+            return False
         else:
             return True
-        #elif st.stack_depth() >= 2:
-        #    return True
-        #elif st.buffer_length() == 0:
-        #    return True
-        #elif st.is_sent_start(st.B(0)):
-        #    return True
-        #else:
-        #    return False
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
