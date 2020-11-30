@@ -51,8 +51,6 @@ cdef cppclass StateC:
         for i in range(length):
             this._heads[i] = -1
             this._unshiftable.push_back(0)
-            if sent[i].sent_start:
-                this._sent_starts.insert(i)
         memset(&this._empty_token, 0, sizeof(TokenC))
         this._empty_token.lex = &EMPTY_LEXEME
 
@@ -239,7 +237,8 @@ cdef cppclass StateC:
             return 0
 
     void set_sent_start(int word, int value) nogil:
-        this._sent_starts.insert(word)
+        if value >= 1:
+            this._sent_starts.insert(word)
 
     bint has_head(int child) nogil const:
         return this._heads[child] >= 0
