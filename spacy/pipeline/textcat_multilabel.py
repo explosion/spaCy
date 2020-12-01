@@ -66,6 +66,7 @@ maxout_pieces = 3
 subword_features = true
 """
 
+
 @Language.factory(
     "textcat_multilabel",
     assigns=["doc.cats"],
@@ -107,7 +108,12 @@ class MultiLabel_TextCategorizer(TextCategorizer):
     """
 
     def __init__(
-        self, vocab: Vocab, model: Model, name: str = "textcat_multilabel", *, threshold: float
+        self,
+        vocab: Vocab,
+        model: Model,
+        name: str = "textcat_multilabel",
+        *,
+        threshold: float,
     ) -> None:
         """Initialize a text categorizer for multi-label classification.
 
