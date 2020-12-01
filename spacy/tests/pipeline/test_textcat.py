@@ -167,7 +167,7 @@ def test_initialize_examples(name, get_examples, train_data):
 
 
 def test_overfitting_IO():
-    # Simple test to try and quickly overfit the textcat component - ensuring the ML models work correctly
+    # Simple test to try and quickly overfit the single-label textcat component - ensuring the ML models work correctly
     fix_random_seed(0)
     nlp = English()
     textcat = nlp.add_pipe("textcat")
@@ -217,7 +217,7 @@ def test_overfitting_IO():
 
 
 def test_overfitting_IO_multi():
-    # Simple test to try and quickly overfit the textcat component - ensuring the ML models work correctly
+    # Simple test to try and quickly overfit the multi-label textcat component - ensuring the ML models work correctly
     fix_random_seed(0)
     nlp = English()
     textcat = nlp.add_pipe("textcat_multilabel")
