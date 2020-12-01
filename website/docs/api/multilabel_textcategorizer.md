@@ -1,17 +1,17 @@
 ---
-title: TextCategorizer
+title: Multi-label TextCategorizer
 tag: class
-source: spacy/pipeline/textcat.py
-new: 2
-teaser: 'Pipeline component for single-label text classification'
+source: spacy/pipeline/textcat_multilabel.py
+new: 3
+teaser: 'Pipeline component for multi-label text classification'
 api_base_class: /api/pipe
-api_string_name: textcat
+api_string_name: textcat_multilabel
 api_trainable: true
 ---
 
-The text categorizer predicts **categories over a whole document**. It can learn
-one or more labels, and the labels are mutually exclusive - there is exactly one 
-true label per document. 
+The text categorizer predicts **categories over a whole document**. It 
+learns non-mutually exclusive labels, which means that zero or more labels 
+may be true per document.
 
 ## Config and implementation {#config}
 
@@ -25,12 +25,12 @@ architectures and their arguments and hyperparameters.
 > #### Example
 >
 > ```python
-> from spacy.pipeline.textcat import DEFAULT_SINGLE_TEXTCAT_MODEL
+> from spacy.pipeline.textcat_multilabel import DEFAULT_MULTI_TEXTCAT_MODEL
 > config = {
 >    "threshold": 0.5,
->    "model": DEFAULT_SINGLE_TEXTCAT_MODEL,
+>    "model": DEFAULT_MULTI_TEXTCAT_MODEL,
 > }
-> nlp.add_pipe("textcat", config=config)
+> nlp.add_pipe("textcat_multilabel", config=config)
 > ```
 
 | Setting     | Description                                                                                                                                                      |
@@ -39,24 +39,24 @@ architectures and their arguments and hyperparameters.
 | `model`     | A model instance that predicts scores for each category. Defaults to [TextCatEnsemble](/api/architectures#TextCatEnsemble). ~~Model[List[Doc], List[Floats2d]]~~ |
 
 ```python
-%%GITHUB_SPACY/spacy/pipeline/textcat.py
+%%GITHUB_SPACY/spacy/pipeline/textcat_multilabel.py
 ```
 
-## TextCategorizer.\_\_init\_\_ {#init tag="method"}
+## MultiLabel_TextCategorizer.\_\_init\_\_ {#init tag="method"}
 
 > #### Example
 >
 > ```python
 > # Construction via add_pipe with default model
-> textcat = nlp.add_pipe("textcat")
+> textcat = nlp.add_pipe("textcat_multilabel")
 >
 > # Construction via add_pipe with custom model
 > config = {"model": {"@architectures": "my_textcat"}}
-> parser = nlp.add_pipe("textcat", config=config)
+> parser = nlp.add_pipe("textcat_multilabel", config=config)
 >
 > # Construction from class
-> from spacy.pipeline import TextCategorizer
-> textcat = TextCategorizer(nlp.vocab, model, threshold=0.5)
+> from spacy.pipeline import MultiLabel_TextCategorizer
+> textcat = MultiLabel_TextCategorizer(nlp.vocab, model, threshold=0.5)
 > ```
 
 Create a new pipeline instance. In your application, you would normally use a
@@ -71,20 +71,20 @@ shortcut for this and instantiate the component using its string name and
 | _keyword-only_ |                                                                                                                            |
 | `threshold`    | Cutoff to consider a prediction "positive", relevant when printing accuracy results. ~~float~~                             |
 
-## TextCategorizer.\_\_call\_\_ {#call tag="method"}
+## MultiLabel_TextCategorizer.\_\_call\_\_ {#call tag="method"}
 
 Apply the pipe to one document. The document is modified in place, and returned.
 This usually happens under the hood when the `nlp` object is called on a text
 and all pipeline components are applied to the `Doc` in order. Both
-[`__call__`](/api/textcategorizer#call) and [`pipe`](/api/textcategorizer#pipe)
-delegate to the [`predict`](/api/textcategorizer#predict) and
-[`set_annotations`](/api/textcategorizer#set_annotations) methods.
+[`__call__`](/api/multilabel_textcategorizer#call) and [`pipe`](/api/multilabel_textcategorizer#pipe)
+delegate to the [`predict`](/api/multilabel_textcategorizer#predict) and
+[`set_annotations`](/api/multilabel_textcategorizer#set_annotations) methods.
 
 > #### Example
 >
 > ```python
 > doc = nlp("This is a sentence.")
-> textcat = nlp.add_pipe("textcat")
+> textcat = nlp.add_pipe("textcat_multilabel")
 > # This usually happens under the hood
 > processed = textcat(doc)
 > ```
@@ -94,19 +94,19 @@ delegate to the [`predict`](/api/textcategorizer#predict) and
 | `doc`       | The document to process. ~~Doc~~ |
 | **RETURNS** | The processed document. ~~Doc~~  |
 
-## TextCategorizer.pipe {#pipe tag="method"}
+## MultiLabel_TextCategorizer.pipe {#pipe tag="method"}
 
 Apply the pipe to a stream of documents. This usually happens under the hood
 when the `nlp` object is called on a text and all pipeline components are
-applied to the `Doc` in order. Both [`__call__`](/api/textcategorizer#call) and
-[`pipe`](/api/textcategorizer#pipe) delegate to the
-[`predict`](/api/textcategorizer#predict) and
-[`set_annotations`](/api/textcategorizer#set_annotations) methods.
+applied to the `Doc` in order. Both [`__call__`](/api/multilabel_textcategorizer#call) and
+[`pipe`](/api/multilabel_textcategorizer#pipe) delegate to the
+[`predict`](/api/multilabel_textcategorizer#predict) and
+[`set_annotations`](/api/multilabel_textcategorizer#set_annotations) methods.
 
 > #### Example
 >
 > ```python
-> textcat = nlp.add_pipe("textcat")
+> textcat = nlp.add_pipe("textcat_multilabel")
 > for doc in textcat.pipe(docs, batch_size=50):
 >     pass
 > ```
@@ -118,7 +118,7 @@ applied to the `Doc` in order. Both [`__call__`](/api/textcategorizer#call) and
 | `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
 | **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
-## TextCategorizer.initialize {#initialize tag="method" new="3"}
+## MultiLabel_TextCategorizer.initialize {#initialize tag="method" new="3"}
 
 Initialize the component for training. `get_examples` should be a function that
 returns an iterable of [`Example`](/api/example) objects. The data examples are
@@ -141,16 +141,15 @@ This method was previously called `begin_training`.
 > #### Example
 >
 > ```python
-> textcat = nlp.add_pipe("textcat")
+> textcat = nlp.add_pipe("textcat_multilabel")
 > textcat.initialize(lambda: [], nlp=nlp)
 > ```
 >
 > ```ini
 > ### config.cfg
-> [initialize.components.textcat]
-> positive_label = "POS"
+> [initialize.components.textcat_multilabel]
 >
-> [initialize.components.textcat.labels]
+> [initialize.components.textcat_multilabel.labels]
 > @readers = "spacy.read_labels.v1"
 > path = "corpus/labels/textcat.json
 > ```
@@ -161,9 +160,8 @@ This method was previously called `begin_training`.
 | _keyword-only_   |                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `nlp`            | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                                                                                                                                                                                                                                                                       |
 | `labels`         | The label information to add to the component, as provided by the [`label_data`](#label_data) property after initialization. To generate a reusable JSON file from your data, you should run the [`init labels`](/api/cli#init-labels) command. If no labels are provided, the `get_examples` callback is used to extract the labels from the data, which may be a lot slower. ~~Optional[Iterable[str]]~~ |
-| `positive_label` | The positive label for a binary task with exclusive classes, None otherwise and by default. ~~Optional[str]~~                                                                                                                                                                                                                                                                                              |
 
-## TextCategorizer.predict {#predict tag="method"}
+## MultiLabel_TextCategorizer.predict {#predict tag="method"}
 
 Apply the component's model to a batch of [`Doc`](/api/doc) objects without
 modifying them.
@@ -171,7 +169,7 @@ modifying them.
 > #### Example
 >
 > ```python
-> textcat = nlp.add_pipe("textcat")
+> textcat = nlp.add_pipe("textcat_multilabel")
 > scores = textcat.predict([doc1, doc2])
 > ```
 
@@ -180,14 +178,14 @@ modifying them.
 | `docs`      | The documents to predict. ~~Iterable[Doc]~~ |
 | **RETURNS** | The model's prediction for each document.   |
 
-## TextCategorizer.set_annotations {#set_annotations tag="method"}
+## MultiLabel_TextCategorizer.set_annotations {#set_annotations tag="method"}
 
 Modify a batch of [`Doc`](/api/doc) objects using pre-computed scores.
 
 > #### Example
 >
 > ```python
-> textcat = nlp.add_pipe("textcat")
+> textcat = nlp.add_pipe("textcat_multilabel")
 > scores = textcat.predict(docs)
 > textcat.set_annotations(docs, scores)
 > ```
@@ -195,19 +193,19 @@ Modify a batch of [`Doc`](/api/doc) objects using pre-computed scores.
 | Name     | Description                                               |
 | -------- | --------------------------------------------------------- |
 | `docs`   | The documents to modify. ~~Iterable[Doc]~~                |
-| `scores` | The scores to set, produced by `TextCategorizer.predict`. |
+| `scores` | The scores to set, produced by `MultiLabel_TextCategorizer.predict`. |
 
-## TextCategorizer.update {#update tag="method"}
+## MultiLabel_TextCategorizer.update {#update tag="method"}
 
 Learn from a batch of [`Example`](/api/example) objects containing the
 predictions and gold-standard annotations, and update the component's model.
-Delegates to [`predict`](/api/textcategorizer#predict) and
-[`get_loss`](/api/textcategorizer#get_loss).
+Delegates to [`predict`](/api/multilabel_textcategorizer#predict) and
+[`get_loss`](/api/multilabel_textcategorizer#get_loss).
 
 > #### Example
 >
 > ```python
-> textcat = nlp.add_pipe("textcat")
+> textcat = nlp.add_pipe("textcat_multilabel")
 > optimizer = nlp.initialize()
 > losses = textcat.update(examples, sgd=optimizer)
 > ```
@@ -222,7 +220,7 @@ Delegates to [`predict`](/api/textcategorizer#predict) and
 | `losses`          | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~           |
 | **RETURNS**       | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                              |
 
-## TextCategorizer.rehearse {#rehearse tag="method,experimental" new="3"}
+## MultiLabel_TextCategorizer.rehearse {#rehearse tag="method,experimental" new="3"}
 
 Perform a "rehearsal" update from a batch of data. Rehearsal updates teach the
 current model to make predictions similar to an initial model to try to address
@@ -231,7 +229,7 @@ the "catastrophic forgetting" problem. This feature is experimental.
 > #### Example
 >
 > ```python
-> textcat = nlp.add_pipe("textcat")
+> textcat = nlp.add_pipe("textcat_multilabel")
 > optimizer = nlp.resume_training()
 > losses = textcat.rehearse(examples, sgd=optimizer)
 > ```
@@ -245,7 +243,7 @@ the "catastrophic forgetting" problem. This feature is experimental.
 | `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
 | **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
 
-## TextCategorizer.get_loss {#get_loss tag="method"}
+## MultiLabel_TextCategorizer.get_loss {#get_loss tag="method"}
 
 Find the loss and gradient of loss for the batch of documents and their
 predicted scores.
@@ -253,7 +251,7 @@ predicted scores.
 > #### Example
 >
 > ```python
-> textcat = nlp.add_pipe("textcat")
+> textcat = nlp.add_pipe("textcat_multilabel")
 > scores = textcat.predict([eg.predicted for eg in examples])
 > loss, d_loss = textcat.get_loss(examples, scores)
 > ```
@@ -264,7 +262,7 @@ predicted scores.
 | `scores`    | Scores representing the model's predictions.                                |
 | **RETURNS** | The loss and the gradient, i.e. `(loss, gradient)`. ~~Tuple[float, float]~~ |
 
-## TextCategorizer.score {#score tag="method" new="3"}
+## MultiLabel_TextCategorizer.score {#score tag="method" new="3"}
 
 Score a batch of examples.
 
@@ -280,7 +278,7 @@ Score a batch of examples.
 | _keyword-only_   |                                                                                                                      |
 | **RETURNS**      | The scores, produced by [`Scorer.score_cats`](/api/scorer#score_cats). ~~Dict[str, Union[float, Dict[str, float]]]~~ |
 
-## TextCategorizer.create_optimizer {#create_optimizer tag="method"}
+## MultiLabel_TextCategorizer.create_optimizer {#create_optimizer tag="method"}
 
 Create an optimizer for the pipeline component.
 
@@ -295,7 +293,7 @@ Create an optimizer for the pipeline component.
 | ----------- | ---------------------------- |
 | **RETURNS** | The optimizer. ~~Optimizer~~ |
 
-## TextCategorizer.use_params {#use_params tag="method, contextmanager"}
+## MultiLabel_TextCategorizer.use_params {#use_params tag="method, contextmanager"}
 
 Modify the pipe's model to use the given parameter values.
 
@@ -311,7 +309,7 @@ Modify the pipe's model to use the given parameter values.
 | -------- | -------------------------------------------------- |
 | `params` | The parameter values to use in the model. ~~dict~~ |
 
-## TextCategorizer.add_label {#add_label tag="method"}
+## MultiLabel_TextCategorizer.add_label {#add_label tag="method"}
 
 Add a new label to the pipe. Raises an error if the output dimension is already
 set, or if the model has already been fully [initialized](#initialize). Note
@@ -333,7 +331,7 @@ automatically.
 | `label`     | The label to add. ~~str~~                                   |
 | **RETURNS** | `0` if the label is already present, otherwise `1`. ~~int~~ |
 
-## TextCategorizer.to_disk {#to_disk tag="method"}
+## MultiLabel_TextCategorizer.to_disk {#to_disk tag="method"}
 
 Serialize the pipe to disk.
 
@@ -350,7 +348,7 @@ Serialize the pipe to disk.
 | _keyword-only_ |                                                                                                                                            |
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~                                                |
 
-## TextCategorizer.from_disk {#from_disk tag="method"}
+## MultiLabel_TextCategorizer.from_disk {#from_disk tag="method"}
 
 Load the pipe from disk. Modifies the object in place and returns it.
 
@@ -366,9 +364,9 @@ Load the pipe from disk. Modifies the object in place and returns it.
 | `path`         | A path to a directory. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
 | _keyword-only_ |                                                                                                 |
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~     |
-| **RETURNS**    | The modified `TextCategorizer` object. ~~TextCategorizer~~                                      |
+| **RETURNS**    | The modified `MultiLabel_TextCategorizer` object. ~~MultiLabel_TextCategorizer~~                                      |
 
-## TextCategorizer.to_bytes {#to_bytes tag="method"}
+## MultiLabel_TextCategorizer.to_bytes {#to_bytes tag="method"}
 
 > #### Example
 >
@@ -383,9 +381,9 @@ Serialize the pipe to a bytestring.
 | -------------- | ------------------------------------------------------------------------------------------- |
 | _keyword-only_ |                                                                                             |
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
-| **RETURNS**    | The serialized form of the `TextCategorizer` object. ~~bytes~~                              |
+| **RETURNS**    | The serialized form of the `MultiLabel_TextCategorizer` object. ~~bytes~~                              |
 
-## TextCategorizer.from_bytes {#from_bytes tag="method"}
+## MultiLabel_TextCategorizer.from_bytes {#from_bytes tag="method"}
 
 Load the pipe from a bytestring. Modifies the object in place and returns it.
 
@@ -402,9 +400,9 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 | `bytes_data`   | The data to load from. ~~bytes~~                                                            |
 | _keyword-only_ |                                                                                             |
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
-| **RETURNS**    | The `TextCategorizer` object. ~~TextCategorizer~~                                           |
+| **RETURNS**    | The `MultiLabel_TextCategorizer` object. ~~MultiLabel_TextCategorizer~~                                           |
 
-## TextCategorizer.labels {#labels tag="property"}
+## MultiLabel_TextCategorizer.labels {#labels tag="property"}
 
 The labels currently added to the component.
 
@@ -419,11 +417,11 @@ The labels currently added to the component.
 | ----------- | ------------------------------------------------------ |
 | **RETURNS** | The labels added to the component. ~~Tuple[str, ...]~~ |
 
-## TextCategorizer.label_data {#label_data tag="property" new="3"}
+## MultiLabel_TextCategorizer.label_data {#label_data tag="property" new="3"}
 
 The labels currently added to the component and their internal meta information.
 This is the data generated by [`init labels`](/api/cli#init-labels) and used by
-[`TextCategorizer.initialize`](/api/textcategorizer#initialize) to initialize
+[`MultiLabel_TextCategorizer.initialize`](/api/multilabel_textcategorizer#initialize) to initialize
 the model with a pre-defined label set.
 
 > #### Example

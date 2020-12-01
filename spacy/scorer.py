@@ -458,7 +458,7 @@ class Scorer:
                 gold_label, gold_score = max(gold_cats, key=lambda it: it[1])
                 if gold_score is not None and gold_score > 0:
                     f_per_type[gold_label].fn += 1
-            else:
+            elif pred_cats:
                 pred_label, pred_score = max(pred_cats, key=lambda it: it[1])
                 if pred_score >= threshold:
                     f_per_type[pred_label].fp += 1

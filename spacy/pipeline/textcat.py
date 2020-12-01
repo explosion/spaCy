@@ -14,7 +14,7 @@ from ..tokens import Doc
 from ..vocab import Vocab
 
 
-default_model_config = """
+single_label_default_config = """
 [model]
 @architectures = "spacy.TextCatEnsemble.v2"
 
@@ -37,24 +37,24 @@ depth = 2
 
 [model.linear_model]
 @architectures = "spacy.TextCatBOW.v1"
-exclusive_classes = false
+exclusive_classes = true
 ngram_size = 1
 no_output_layer = false
 """
-DEFAULT_TEXTCAT_MODEL = Config().from_str(default_model_config)["model"]
+DEFAULT_SINGLE_TEXTCAT_MODEL = Config().from_str(single_label_default_config)["model"]
 
-bow_model_config = """
+single_label_bow_config = """
 [model]
 @architectures = "spacy.TextCatBOW.v1"
-exclusive_classes = false
+exclusive_classes = true
 ngram_size = 1
 no_output_layer = false
 """
 
-cnn_model_config = """
+single_label_cnn_config = """
 [model]
 @architectures = "spacy.TextCatCNN.v1"
-exclusive_classes = false
+exclusive_classes = true
 
 [model.tok2vec]
 @architectures = "spacy.HashEmbedCNN.v1"
@@ -71,7 +71,7 @@ subword_features = true
 @Language.factory(
     "textcat",
     assigns=["doc.cats"],
-    default_config={"threshold": 0.5, "model": DEFAULT_TEXTCAT_MODEL},
+    default_config={"threshold": 0.5, "model": DEFAULT_SINGLE_TEXTCAT_MODEL},
     default_score_weights={
         "cats_score": 1.0,
         "cats_score_desc": None,
@@ -103,7 +103,7 @@ def make_textcat(
 
 
 class TextCategorizer(TrainablePipe):
-    """Pipeline component for text classification.
+    """Pipeline component for single-label text classification.
 
     DOCS: https://nightly.spacy.io/api/textcategorizer
     """
@@ -111,7 +111,7 @@ class TextCategorizer(TrainablePipe):
     def __init__(
         self, vocab: Vocab, model: Model, name: str = "textcat", *, threshold: float
     ) -> None:
-        """Initialize a text categorizer.
+        """Initialize a text categorizer for single-label classification.
 
         vocab (Vocab): The shared vocabulary.
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
@@ -377,7 +377,7 @@ class TextCategorizer(TrainablePipe):
             examples,
             "cats",
             labels=self.labels,
-            multi_label=self.model.attrs["multi_label"],
+            multi_label=False,
             positive_label=self.cfg["positive_label"],
             threshold=self.cfg["threshold"],
             **kwargs,

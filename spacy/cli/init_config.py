@@ -161,7 +161,7 @@ def init_config(
         "Hardware": variables["hardware"].upper(),
         "Transformer": template_vars.transformer.get("name", False),
     }
-    msg.info("Generated template specific for your use case")
+    msg.info("Generated config template specific for your use case")
     for label, value in use_case.items():
         msg.text(f"- {label}: {value}")
     with show_validation_error(hint_fill=False):

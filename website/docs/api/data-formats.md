@@ -92,7 +92,7 @@ Defines the `nlp` object, its tokenizer and
 >
 > [components.textcat.model]
 > @architectures = "spacy.TextCatBOW.v1"
-> exclusive_classes = false
+> exclusive_classes = true
 > ngram_size = 1
 > no_output_layer = false
 > ```
