@@ -514,6 +514,11 @@ def test_roundtrip_docs_to_docbin(doc):
             ([[0], [1], [2, 3]], [[0], [1], [2], [2]]),
         ),
         ([" ", "a"], ["a"], ([[], [0]], [[1]])),
+        (
+            ["a", "''", "'", ","],
+            ["a'", "''", ","],
+            ([[0], [0, 1], [1], [2]], [[0, 1], [1, 2], [3]]),
+        ),
     ],
 )
 def test_align(tokens_a, tokens_b, expected):  # noqa
@@ -698,7 +703,7 @@ def test_alignment_spaces(en_vocab):
     align = Alignment.from_strings(other_tokens, spacy_tokens)
     assert list(align.x2y.lengths) == [0, 3, 1, 1, 1, 1, 1]
     assert list(align.x2y.dataXd) == [0, 1, 2, 3, 4, 4, 5, 5]
-    assert list(align.y2x.lengths) == [1, 1, 1, 1, 2, 2,]
+    assert list(align.y2x.lengths) == [1, 1, 1, 1, 2, 2]
     assert list(align.y2x.dataXd) == [1, 1, 1, 2, 3, 4, 5, 6]
 
     # multiple leading whitespace tokens
@@ -707,7 +712,7 @@ def test_alignment_spaces(en_vocab):
     align = Alignment.from_strings(other_tokens, spacy_tokens)
     assert list(align.x2y.lengths) == [0, 0, 3, 1, 1, 1, 1, 1]
     assert list(align.x2y.dataXd) == [0, 1, 2, 3, 4, 4, 5, 5]
-    assert list(align.y2x.lengths) == [1, 1, 1, 1, 2, 2,]
+    assert list(align.y2x.lengths) == [1, 1, 1, 1, 2, 2]
     assert list(align.y2x.dataXd) == [2, 2, 2, 3, 4, 5, 6, 7]
 
     # both with leading whitespace, not identical
