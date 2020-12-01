@@ -2,6 +2,7 @@ import pytest
 from spacy.vocab import Vocab
 from spacy.tokenizer import Tokenizer
 from spacy.util import ensure_path
+from spacy.lang.en import English
 
 
 def test_tokenizer_handles_no_word(tokenizer):
@@ -148,6 +149,22 @@ def test_tokenizer_special_cases_with_affixes(tokenizer):
         '"',
         ")",
     ]
+
+
+def test_tokenizer_special_cases_with_affixes_preserve_spacy():
+    tokenizer = English().tokenizer
+    # reset all special cases
+    tokenizer.rules = {}
+
+    # in-place modification (only merges)
+    text = "''a'' "
+    tokenizer.add_special_case("''", [{"ORTH": "''"}])
+    assert tokenizer(text).text == text
+
+    # not in-place (splits and merges)
+    tokenizer.add_special_case("ab", [{"ORTH": "a"}, {"ORTH": "b"}])
+    text = "ab ab ab ''ab ab'' ab'' ''ab"
+    assert tokenizer(text).text == text
 
 
 def test_tokenizer_special_cases_with_period(tokenizer):
