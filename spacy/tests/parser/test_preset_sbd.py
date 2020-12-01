@@ -88,8 +88,5 @@ def test_sents_1_3(parser):
     doc[1].is_sent_start = True
     doc[2].is_sent_start = False
     doc[3].is_sent_start = True
-    print("Parse")
-    print([(w.text, w.is_sent_start) for w in doc])
     doc = parser(doc)
-    print([(w.text, w.head.text) for w in doc])
     assert len(list(doc.sents)) == 3
