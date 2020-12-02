@@ -135,7 +135,7 @@ def test_initialize_examples():
 
 
 def test_overfitting_IO():
-    # Simple test to try and quickly overfit the textcat component - ensuring the ML models work correctly
+    # Simple test to try and quickly overfit the single-label textcat component - ensuring the ML models work correctly
     fix_random_seed(0)
     nlp = English()
     nlp.config["initialize"]["components"]["textcat"] = {"positive_label": "POSITIVE"}
@@ -177,15 +177,15 @@ def test_overfitting_IO():
 
     # Make sure that running pipe twice, or comparing to call, always amounts to the same predictions
     texts = ["Just a sentence.", "I like green eggs.", "I am happy.", "I eat ham."]
-    batch_deps_1 = [doc.cats for doc in nlp.pipe(texts)]
-    batch_deps_2 = [doc.cats for doc in nlp.pipe(texts)]
-    no_batch_deps = [doc.cats for doc in [nlp(text) for text in texts]]
-    assert_equal(batch_deps_1, batch_deps_2)
-    assert_equal(batch_deps_1, no_batch_deps)
+    batch_cats_1 = [doc.cats for doc in nlp.pipe(texts)]
+    batch_cats_2 = [doc.cats for doc in nlp.pipe(texts)]
+    no_batch_cats = [doc.cats for doc in [nlp(text) for text in texts]]
+    assert_equal(batch_cats_1, batch_cats_2)
+    assert_equal(batch_cats_1, no_batch_cats)
 
 
 def test_overfitting_IO_multi():
-    # Simple test to try and quickly overfit the textcat component - ensuring the ML models work correctly
+    # Simple test to try and quickly overfit the multi-label textcat component - ensuring the ML models work correctly
     fix_random_seed(0)
     nlp = English()
     # Set exclusive labels to False
@@ -224,11 +224,11 @@ def test_overfitting_IO_multi():
 
     # Make sure that running pipe twice, or comparing to call, always amounts to the same predictions
     texts = ["Just a sentence.", "I like green eggs.", "I am happy.", "I eat ham."]
-    batch_deps_1 = [doc.cats for doc in nlp.pipe(texts)]
-    batch_deps_2 = [doc.cats for doc in nlp.pipe(texts)]
-    no_batch_deps = [doc.cats for doc in [nlp(text) for text in texts]]
-    assert_equal(batch_deps_1, batch_deps_2)
-    assert_equal(batch_deps_1, no_batch_deps)
+    batch_cats_1 = [doc.cats for doc in nlp.pipe(texts)]
+    batch_cats_2 = [doc.cats for doc in nlp.pipe(texts)]
+    no_batch_cats = [doc.cats for doc in [nlp(text) for text in texts]]
+    assert_equal(batch_cats_1, batch_cats_2)
+    assert_equal(batch_cats_1, no_batch_cats)
 
 
 # fmt: off
