@@ -237,7 +237,6 @@ def test_overfitting_IO_multi():
     test_text = "I am confused but happy."
     doc = nlp(test_text)
     cats = doc.cats
-    print("cats", cats)
     assert cats["HAPPY"] > 0.9
     assert cats["CONFUSED"] > 0.9
 
@@ -252,7 +251,6 @@ def test_overfitting_IO_multi():
 
     # Test scoring
     scores = nlp.evaluate(train_examples)
-    print("scores", scores)
     assert scores["cats_micro_f"] == 1.0
     assert scores["cats_macro_f"] == 1.0
     assert "cats_score_desc" in scores
