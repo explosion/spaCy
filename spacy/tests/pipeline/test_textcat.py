@@ -188,8 +188,7 @@ def test_overfitting_IO_multi():
     # Simple test to try and quickly overfit the textcat component - ensuring the ML models work correctly
     fix_random_seed(0)
     nlp = English()
-    nlp.config["initialize"]["components"]["textcat"] = {"positive_label": "POSITIVE"}
-    # Set exclusive labels
+    # Set exclusive labels to False
     config = {"model": {"linear_model": {"exclusive_classes": False}}}
     textcat = nlp.add_pipe("textcat", config=config)
     train_examples = []
