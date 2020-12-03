@@ -144,6 +144,16 @@ def test_no_resize(name):
         textcat.add_label("NEUTRAL")
 
 
+def test_error_with_multi_labels():
+    nlp = Language()
+    textcat = nlp.add_pipe("textcat")
+    train_examples = []
+    for text, annotations in TRAIN_DATA_MULTI_LABEL:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
+    with pytest.raises(ValueError):
+        optimizer = nlp.initialize(get_examples=lambda: train_examples)
+
+
 @pytest.mark.parametrize(
     "name,get_examples, train_data",
     [

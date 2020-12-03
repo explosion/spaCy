@@ -214,6 +214,7 @@ class TextCategorizer(TrainablePipe):
             losses = {}
         losses.setdefault(self.name, 0.0)
         validate_examples(examples, "TextCategorizer.update")
+        self._validate_categories(examples)
         if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
             # Handle cases where there are no tokens in any docs.
             return losses
@@ -256,6 +257,7 @@ class TextCategorizer(TrainablePipe):
         if self._rehearsal_model is None:
             return losses
         validate_examples(examples, "TextCategorizer.rehearse")
+        self._validate_categories(examples)
         docs = [eg.predicted for eg in examples]
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
@@ -296,6 +298,7 @@ class TextCategorizer(TrainablePipe):
         DOCS: https://nightly.spacy.io/api/textcategorizer#get_loss
         """
         validate_examples(examples, "TextCategorizer.get_loss")
+        self._validate_categories(examples)
         truths, not_missing = self._examples_to_truth(examples)
         not_missing = self.model.ops.asarray(not_missing)
         d_scores = (scores - truths) / scores.shape[0]
@@ -341,6 +344,7 @@ class TextCategorizer(TrainablePipe):
         DOCS: https://nightly.spacy.io/api/textcategorizer#initialize
         """
         validate_get_examples(get_examples, "TextCategorizer.initialize")
+        self._validate_categories(get_examples())
         if labels is None:
             for example in get_examples():
                 for cat in example.y.cats:
@@ -373,6 +377,7 @@ class TextCategorizer(TrainablePipe):
         DOCS: https://nightly.spacy.io/api/textcategorizer#score
         """
         validate_examples(examples, "TextCategorizer.score")
+        self._validate_categories(examples)
         return Scorer.score_cats(
             examples,
             "cats",
@@ -382,3 +387,10 @@ class TextCategorizer(TrainablePipe):
             threshold=self.cfg["threshold"],
             **kwargs,
         )
+
+
+    def _validate_categories(self, examples: List[Example]):
+        """Check whether the provided examples all have single-label cats annotations."""
+        for ex in examples:
+            if list(ex.reference.cats.values()).count(1.0) > 1:
+                raise ValueError(Errors.E896.format(value=ex.reference.cats))
