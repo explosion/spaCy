@@ -6,7 +6,7 @@ from spacy.pipeline import merge_entities
 
 
 def test_issue5551():
-    """Test that after fixing the random seed, the results of the pipeline are truly identical"""
+    """Test that after fixing the random seed, the results of the pipeline are truly identical."""
     component = "textcat"
     pipe_cfg = {
         "model": {
