@@ -103,6 +103,9 @@ def package(
             )
     Path.mkdir(package_path, parents=True)
     shutil.copytree(str(input_dir), str(package_path / model_name_v))
+    license_path = package_path / model_name_v / "LICENSE"
+    if license_path.exists():
+        shutil.move(str(license_path), str(main_path))
     create_file(main_path / "meta.json", srsly.json_dumps(meta, indent=2))
     create_file(main_path / "setup.py", TEMPLATE_SETUP)
     create_file(main_path / "MANIFEST.in", TEMPLATE_MANIFEST)
@@ -238,7 +241,7 @@ if __name__ == '__main__':
 
 TEMPLATE_MANIFEST = """
 include meta.json
-include config.cfg
+include LICENSE
 """.strip()
 
 
