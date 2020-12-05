@@ -1,7 +1,7 @@
 language: python
 sudo: false
 cache: pip
-python: 3.8
+python: 3.6
 dist: focal
 jobs:
   include:
@@ -15,10 +15,11 @@ jobs:
         - BLIS_ARCH="power9"
 install:
   - "python -m pip install -U pip setuptools"
-  - "pip install -v -e ."
+  - "pip install cython numpy"
+  - "pip install -r requirements.txt"
+  - "pip install --no-deps -v -e ."
 script:
   - "cat /proc/cpuinfo | grep flags | head -n 1"
-  - "pip install -r requirements.txt"
   - "python -m pytest --tb=native spacy"
 branches:
   except:
