@@ -1306,11 +1306,14 @@ class Language:
             ):
                 eg.predicted = doc
         # apply all pipeline components
-        docs = [eg.predicted for eg in examples]
+        docs = None
         for name, pipe in self.pipeline:
             kwargs = component_cfg.get(name, {})
             kwargs.setdefault("batch_size", batch_size)
-            docs = _pipe(docs, pipe, kwargs)
+            if docs is None:
+                docs = _pipe(eg.predicted for eg in examples, pipe, kwargs)
+            else:
+                docs = _pipe(docs, pipe, kwargs)
         # iterate over final generator
         for doc in docs:
             pass
