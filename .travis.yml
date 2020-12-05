@@ -16,7 +16,10 @@ jobs:
 install:
   - "python -m pip install -U pip setuptools"
   - "pip install cython numpy"
-  - "pip install -r requirements.txt"
+  - "pip install --no-build-isolation cymem murmurhash"
+  - "pip install --no-build-isolation preshed"
+  - "pip install --no-build-isolation thinc --pre"
+  - "pip install --no-build-isolation -r requirements.txt"
   - "pip install --no-deps -v -e ."
 script:
   - "cat /proc/cpuinfo | grep flags | head -n 1"
