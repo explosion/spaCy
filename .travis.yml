@@ -8,16 +8,17 @@ jobs:
     - os: linux
       arch: arm64
       env:
-        - BLIS_ARCH="cortexa57"
+        - BLIS_ARCH="generic"
     - os: linux
       arch: ppc64le
       env:
-        - BLIS_ARCH="power9"
+        - BLIS_ARCH="generic"
 install:
   - "python -m pip install -U pip setuptools"
   - "pip install cython numpy"
   - "pip install --no-build-isolation cymem murmurhash"
   - "pip install --no-build-isolation preshed"
+  - "pip install --no-build-isolation -v blis"
   - "pip install --no-build-isolation thinc --pre"
   - "pip install --no-build-isolation -r requirements.txt"
   - "pip install --no-deps -v -e ."
