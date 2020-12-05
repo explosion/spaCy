@@ -7,8 +7,12 @@ jobs:
   include:
     - os: linux
       arch: arm64
+      env:
+        - BLIS_ARCH="cortexa57"
     - os: linux
       arch: ppc64le
+      env:
+        - BLIS_ARCH="power9"
 install:
   - "python -m pip install -U pip setuptools"
   - "pip install -e ."
