@@ -21,7 +21,7 @@ install:
   - "pip install --no-build-isolation blis"
   - "pip install --no-build-isolation thinc --pre"
   - "pip install --no-build-isolation -r requirements.txt"
-  - "python setup.py build_ext"
+  - "python setup.py build_ext --inplace"
   - "python setup.py install"
 script:
   - "cat /proc/cpuinfo | grep flags | head -n 1"
