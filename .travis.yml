@@ -19,9 +19,9 @@ install:
   - "pip install --no-build-isolation cymem murmurhash"
   - "pip install --no-build-isolation preshed"
   - "pip install --no-build-isolation -v blis"
-  - "pip install --no-build-isolation thinc --pre"
+  - "pip install --no-build-isolation --no-deps thinc --pre"
   - "pip install --no-build-isolation -r requirements.txt"
-  - "pip install --no-deps -v -e ."
+  - "pip install --no-build-isolation --no-deps -e ."
 script:
   - "cat /proc/cpuinfo | grep flags | head -n 1"
   - "python -m pytest --tb=native spacy"
