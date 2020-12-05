@@ -2,6 +2,7 @@ language: python
 sudo: false
 cache: pip
 python: 3.8
+dist: focal
 jobs:
   include:
     - os: linux
