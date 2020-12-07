@@ -1311,7 +1311,7 @@ class Language:
             kwargs = component_cfg.get(name, {})
             kwargs.setdefault("batch_size", batch_size)
             if docs is None:
-                docs = _pipe(eg.predicted for eg in examples, pipe, kwargs)
+                docs = _pipe((eg.predicted for eg in examples), pipe, kwargs)
             else:
                 docs = _pipe(docs, pipe, kwargs)
         # iterate over final generator
