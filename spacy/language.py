@@ -1315,8 +1315,9 @@ class Language:
             else:
                 docs = _pipe(docs, pipe, kwargs)
         # iterate over final generator
-        for doc in docs:
-            pass
+        if docs is not None:
+            for doc in docs:
+                pass
         end_time = timer()
         results = scorer.score(examples)
         n_words = sum(len(eg.predicted) for eg in examples)
