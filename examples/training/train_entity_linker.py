@@ -9,7 +9,7 @@ For more details, see the documentation:
 * Entity Linking: https://spacy.io/usage/linguistic-features#entity-linking
 
 Compatible with: spaCy v2.2.4
-Last tested with: v2.2.4
+Last tested with: v2.3.4
 """
 from __future__ import unicode_literals, print_function
 
@@ -91,7 +91,7 @@ def main(kb_path, vocab_path, output_dir=None, n_iter=50):
         nlp.add_pipe(entity_linker, last=True)
 
     # Convert the texts to docs to make sure we have doc.ents set for the training examples.
-    # Also ensure that the annotated examples correspond to known identifiers in the knowlege base.
+    # Also ensure that the annotated examples correspond to known identifiers in the knowledge base.
     kb_ids = nlp.get_pipe("entity_linker").kb.get_entity_strings()
     TRAIN_DOCS = []
     for text, annotation in TRAIN_DATA:
