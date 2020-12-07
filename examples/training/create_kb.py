@@ -9,7 +9,7 @@ For more details, see the documentation:
 * Entity Linking: https://spacy.io/usage/linguistic-features#entity-linking
 
 Compatible with: spaCy v2.2.4
-Last tested with: v2.2.4
+Last tested with: v2.3.4
 """
 from __future__ import unicode_literals, print_function
 
