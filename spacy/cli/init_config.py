@@ -45,7 +45,7 @@ def init_config_cli(
     if isinstance(optimize, Optimizations):  # instance of enum from the CLI
         optimize = optimize.value
     pipeline = string_to_list(pipeline)
-    init_config(
+    config = init_config(
         output_file,
         lang=lang,
         pipeline=pipeline,
@@ -53,6 +53,8 @@ def init_config_cli(
         cpu=cpu,
         pretraining=pretraining,
     )
+    is_stdout = str(output_file) == "-"
+    save_config(config, output_file, is_stdout=is_stdout)
 
 
 @init_cli.command("fill-config")
@@ -125,7 +127,7 @@ def init_config(
     optimize: str,
     cpu: bool,
     pretraining: bool = False,
-) -> None:
+) -> Config:
     is_stdout = str(output_file) == "-"
     msg = Printer(no_print=is_stdout)
     with TEMPLATE_PATH.open("r") as f:
@@ -173,7 +175,7 @@ def init_config(
             pretrain_config = util.load_config(DEFAULT_CONFIG_PRETRAIN_PATH)
             config = pretrain_config.merge(config)
     msg.good("Auto-filled config with all values")
-    save_config(config, output_file, is_stdout=is_stdout)
+    return config
 
 
 def save_config(
