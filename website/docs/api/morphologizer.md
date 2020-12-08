@@ -66,9 +66,6 @@ shortcut for this and instantiate the component using its string name and
 | `vocab`        | The shared vocabulary. ~~Vocab~~                                                                                     |
 | `model`        | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model[List[Doc], List[Floats2d]]~~ |
 | `name`         | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                  |
-| _keyword-only_ |                                                                                                                      |
-| `labels_morph` | Mapping of morph + POS tags to morph labels. ~~Dict[str, str]~~                                                      |
-| `labels_pos`   | Mapping of morph + POS tags to POS tags. ~~Dict[str, str]~~                                                          |
 
 ## Morphologizer.\_\_call\_\_ {#call tag="method"}
 
