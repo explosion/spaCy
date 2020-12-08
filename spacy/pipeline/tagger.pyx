@@ -61,14 +61,13 @@ class Tagger(TrainablePipe):
 
     DOCS: https://nightly.spacy.io/api/tagger
     """
-    def __init__(self, vocab, model, name="tagger", *, labels=None):
+    def __init__(self, vocab, model, name="tagger"):
         """Initialize a part-of-speech tagger.
 
         vocab (Vocab): The shared vocabulary.
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
         name (str): The component instance name, used to add entries to the
             losses during training.
-        labels (List): The set of labels. Defaults to None.
 
         DOCS: https://nightly.spacy.io/api/tagger#init
         """
@@ -76,7 +75,7 @@ class Tagger(TrainablePipe):
         self.model = model
         self.name = name
         self._rehearsal_model = None
-        cfg = {"labels": labels or []}
+        cfg = {"labels": []}
         self.cfg = dict(sorted(cfg.items()))
 
     @property
