@@ -45,15 +45,15 @@ def init_config_cli(
     if isinstance(optimize, Optimizations):  # instance of enum from the CLI
         optimize = optimize.value
     pipeline = string_to_list(pipeline)
+    is_stdout = str(output_file) == "-"
     config = init_config(
-        output_file,
         lang=lang,
         pipeline=pipeline,
         optimize=optimize,
         cpu=cpu,
         pretraining=pretraining,
+        silent=is_stdout,
     )
-    is_stdout = str(output_file) == "-"
     save_config(config, output_file, is_stdout=is_stdout)
 
 
@@ -120,16 +120,15 @@ def fill_config(
 
 
 def init_config(
-    output_file: Path,
     *,
     lang: str,
     pipeline: List[str],
     optimize: str,
     cpu: bool,
     pretraining: bool = False,
+    silent: bool = True,
 ) -> Config:
-    is_stdout = str(output_file) == "-"
-    msg = Printer(no_print=is_stdout)
+    msg = Printer(no_print=silent)
     with TEMPLATE_PATH.open("r") as f:
         template = Template(f.read())
     # Filter out duplicates since tok2vec and transformer are added by template
