@@ -457,6 +457,9 @@ class Errors:
             "issue tracker: http://github.com/explosion/spaCy/issues")
 
     # TODO: fix numbering after merging develop into master
+    E896 = ("There was an error using the static vectors. Ensure that the vectors "
+            "of the vocab are properly initialized, or set 'include_static_vectors' "
+            "to False.")
     E897 = ("Field '{field}' should be a dot-notation string referring to the "
             "relevant section in the config, but found type {type} instead.")
     E898 = ("Can't serialize trainable pipe '{name}': the `model` attribute "
