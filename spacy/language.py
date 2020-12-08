@@ -1306,18 +1306,13 @@ class Language:
             ):
                 eg.predicted = doc
         # apply all pipeline components
-        docs = None
         for name, pipe in self.pipeline:
             kwargs = component_cfg.get(name, {})
             kwargs.setdefault("batch_size", batch_size)
-            if docs is None:
-                docs = _pipe((eg.predicted for eg in examples), pipe, kwargs)
-            else:
-                docs = _pipe(docs, pipe, kwargs)
-        # iterate over final generator
-        if docs is not None:
-            for doc in docs:
-                pass
+            for doc, eg in zip(
+                _pipe((eg.predicted for eg in examples), pipe, kwargs), examples
+            ):
+                eg.predicted = doc
         end_time = timer()
         results = scorer.score(examples)
         n_words = sum(len(eg.predicted) for eg in examples)
