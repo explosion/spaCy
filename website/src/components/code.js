@@ -120,52 +120,65 @@ function parseArgs(raw) {
     return result
 }
 
+function convertLine(line, i) {
+    console.log(line, i)
+    const cliRegex = /^(\$ )?python -m spacy/
+    if (cliRegex.test(line)) {
+        const text = line.replace(cliRegex, '')
+        const args = parseArgs(text)
+        const cmd = Object.keys(args).map((key, i) => {
+            const value = args[key]
+            return value === null || value === true || i === 0 ? key : `${key} ${value}`
+        })
+        return (
+            <Fragment key={line}>
+                <span data-prompt={i === 0 ? '$' : null} className={classes.cliArgSubtle}>
+                    python -m
+                </span>{' '}
+                <span>spacy</span>{' '}
+                {cmd.map((item, j) => {
+                    const isCmd = j === 0
+                    const url = isCmd ? `/api/cli#${item.replace(' ', '-')}` : null
+                    const isAbstract = isString(item) && /^\[(.+)\]$/.test(item)
+                    const itemClassNames = classNames(classes.cliArg, {
+                        [classes.cliArgHighlight]: isCmd,
+                        [classes.cliArgEmphasis]: isAbstract,
+                    })
+                    const text = isAbstract ? item.slice(1, -1) : item
+                    return (
+                        <Fragment key={j}>
+                            {j !== 0 && ' '}
+                            <span className={itemClassNames}>
+                                <OptionalLink hidden hideIcon to={url}>
+                                    {text}
+                                </OptionalLink>
+                            </span>
+                        </Fragment>
+                    )
+                })}
+            </Fragment>
+        )
+    }
+    const htmlLine = replacePrompt(highlightCode('bash', line), '$')
+    return htmlToReact(htmlLine)
+}
+
 function formatCode(html, lang, prompt) {
     if (lang === 'cli') {
-        const cliRegex = /^(\$ )?python -m spacy/
         const lines = html
             .trim()
             .split('\n')
-            .map((line, i) => {
-                if (cliRegex.test(line)) {
-                    const text = line.replace(cliRegex, '')
-                    const args = parseArgs(text)
-                    const cmd = Object.keys(args).map((key, i) => {
-                        const value = args[key]
-                        return value === null || value === true || i === 0 ? key : `${key} ${value}`
-                    })
-                    return (
-                        <Fragment key={i}>
-                            <span data-prompt="$" className={classes.cliArgSubtle}>
-                                python -m
-                            </span>{' '}
-                            <span>spacy</span>{' '}
-                            {cmd.map((item, j) => {
-                                const isCmd = j === 0
-                                const url = isCmd ? `/api/cli#${item.replace(' ', '-')}` : null
-                                const isAbstract = isString(item) && /^\[(.+)\]$/.test(item)
-                                const itemClassNames = classNames(classes.cliArg, {
-                                    [classes.cliArgHighlight]: isCmd,
-                                    [classes.cliArgEmphasis]: isAbstract,
-                                })
-                                const text = isAbstract ? item.slice(1, -1) : item
-                                return (
-                                    <Fragment key={j}>
-                                        {j !== 0 && ' '}
-                                        <span className={itemClassNames}>
-                                            <OptionalLink hidden hideIcon to={url}>
-                                                {text}
-                                            </OptionalLink>
-                                        </span>
-                                    </Fragment>
-                                )
-                            })}
+            .map(line =>
+                line
+                    .split(' | ')
+                    .map((l, i) => convertLine(l, i))
+                    .map((l, j) => (
+                        <Fragment>
+                            {j !== 0 && <span> | </span>}
+                            {l}
                         </Fragment>
-                    )
-                }
-                const htmlLine = replacePrompt(highlightCode('bash', line), '$')
-                return htmlToReact(htmlLine)
-            })
+                    ))
+            )
         return lines.map((line, i) => (
             <Fragment key={i}>
                 {i !== 0 && <br />}

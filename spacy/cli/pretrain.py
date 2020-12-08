@@ -17,7 +17,7 @@ from ..util import load_config
 def pretrain_cli(
     # fmt: off
     ctx: typer.Context,  # This is only used to read additional arguments
-    config_path: Path = Arg(..., help="Path to config file", exists=True, dir_okay=False),
+    config_path: Path = Arg(..., help="Path to config file", exists=True, dir_okay=False, allow_dash=True),
     output_dir: Path = Arg(..., help="Directory to write weights to on each epoch"),
     code_path: Optional[Path] = Opt(None, "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     resume_path: Optional[Path] = Opt(None, "--resume-path", "-r", help="Path to pretrained weights from which to resume pretraining"),
@@ -79,7 +79,7 @@ def pretrain_cli(
 
 
 def verify_cli_args(config_path, output_dir, resume_path, epoch_resume):
-    if not config_path or not config_path.exists():
+    if not config_path or (str(config_path) != "-" and not config_path.exists()):
         msg.fail("Config file not found", config_path, exits=1)
     if output_dir.exists() and [p for p in output_dir.iterdir()]:
         if resume_path:

@@ -465,18 +465,24 @@ def load_config(
 ) -> Config:
     """Load a config file. Takes care of path validation and section order.
 
-    path (Union[str, Path]): Path to the config file.
+    path (Union[str, Path]): Path to the config file or "-" to read from stdin.
     overrides: (Dict[str, Any]): Config overrides as nested dict or
         dict keyed by section values in dot notation.
     interpolate (bool): Whether to interpolate and resolve variables.
     RETURNS (Config): The loaded config.
     """
     config_path = ensure_path(path)
-    if not config_path.exists() or not config_path.is_file():
-        raise IOError(Errors.E053.format(path=config_path, name="config.cfg"))
-    return Config(section_order=CONFIG_SECTION_ORDER).from_disk(
-        config_path, overrides=overrides, interpolate=interpolate
-    )
+    config = Config(section_order=CONFIG_SECTION_ORDER)
+    if str(config_path) == "-":  # read from standard input
+        return config.from_str(
+            sys.stdin.read(), overrides=overrides, interpolate=interpolate
+        )
+    else:
+        if not config_path or not config_path.exists() or not config_path.is_file():
+            raise IOError(Errors.E053.format(path=config_path, name="config.cfg"))
+        return config.from_disk(
+            config_path, overrides=overrides, interpolate=interpolate
+        )
 
 
 def load_config_from_str(
