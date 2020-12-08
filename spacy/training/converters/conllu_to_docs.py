@@ -34,16 +34,14 @@ def conllu_to_docs(
         ner_map=ner_map,
         merge_subtokens=merge_subtokens,
     )
-    docs = []
     sent_docs_to_merge = []
     for sent_doc in sent_docs:
         sent_docs_to_merge.append(sent_doc)
         if len(sent_docs_to_merge) % n_sents == 0:
-            docs.append(Doc.from_docs(sent_docs_to_merge))
+            yield Doc.from_docs(sent_docs_to_merge)
             sent_docs_to_merge = []
     if sent_docs_to_merge:
-        docs.append(Doc.from_docs(sent_docs_to_merge))
-    return docs
+        yield Doc.from_docs(sent_docs_to_merge)
 
 
 def has_ner(input_data, ner_tag_pattern):
