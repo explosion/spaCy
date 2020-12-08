@@ -120,13 +120,13 @@ jobs:
     condition: and(eq(variables['os'], 'linux'), eq(variables['python.version'], '3.5'))
     displayName: 'Hack: install wheel for python 3.5'
 
-  - script: |
+  - bash: |
       SDIST=$(python -c "import os;print(os.listdir('./dist')[-1])" 2>&1)
       pip install dist/$SDIST --prefer-binary
     displayName: 'Install from sdist (python 3.5: prefer binary)'
     condition: eq(variables['python.version'], '3.5')
 
-  - script: |
+  - bash: |
       SDIST=$(python -c "import os;print(os.listdir('./dist')[-1])" 2>&1)
       pip install dist/$SDIST
     displayName: 'Install from sdist'
