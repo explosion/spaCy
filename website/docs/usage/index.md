@@ -215,20 +215,18 @@ source code and recompiling frequently.
   previous installs with `pip uninstall spacy`, which you may need to run
   multiple times to remove all traces of earlier installs.
 
-  ```diff
-  - $ pip install .
-  + $ pip install -r requirements.txt
-  + $ pip install --no-build-isolation --editable .
+  ```bash
+  $ pip install -r requirements.txt
+  $ pip install --no-build-isolation --editable .
   ```
 
 - Build in parallel using `N` CPUs to speed up compilation and then install in
   editable mode:
 
-  ```diff
-  - $ pip install .
-  + $ pip install -r requirements.txt
-  + $ python setup.py build_ext --inplace -j N
-  + $ pip install --no-build-isolation --editable .
+  ```bash
+  $ pip install -r requirements.txt
+  $ python setup.py build_ext --inplace -j N
+  $ pip install --no-build-isolation --editable .
   ```
 
 ### Building an executable {#executable}
