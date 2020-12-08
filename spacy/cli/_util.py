@@ -272,7 +272,7 @@ def show_validation_error(
         msg.fail(title)
         print(err.text.strip())
         if hint_fill and "value_error.missing" in err.error_types:
-            path = (
+            config_path = (
                 file_path
                 if file_path is not None and str(file_path) != "-"
                 else "config.cfg"
