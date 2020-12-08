@@ -38,7 +38,6 @@ from .. import about
     conv_depth=("Depth of CNN layers of Tok2Vec component", "option", "cd", int),
     cnn_window=("Window size for CNN layers of Tok2Vec component", "option", "cW", int),
     cnn_pieces=("Maxout size for CNN layers of Tok2Vec component. 1 for Mish", "option", "cP", int),
-    use_chars=("Whether to use character-based embedding of Tok2Vec component", "flag", "chr", bool),
     bilstm_depth=("Depth of BiLSTM layers of Tok2Vec component (requires PyTorch)", "option", "lstm", int),
     embed_rows=("Number of embedding rows of Tok2Vec component", "option", "er", int),
     n_iter=("Number of iterations", "option", "n", int),
@@ -78,7 +77,6 @@ def train(
     conv_depth=4,
     cnn_window=1,
     cnn_pieces=3,
-    use_chars=False,
     bilstm_depth=0,
     embed_rows=2000,
     n_iter=30,
@@ -294,7 +292,6 @@ def train(
         cfg["cnn_maxout_pieces"] = cnn_pieces
         cfg["embed_size"] = embed_rows
         cfg["conv_window"] = cnn_window
-        cfg["subword_features"] = not use_chars
         optimizer = nlp.begin_training(lambda: corpus.train_tuples, **cfg)
 
     nlp._optimizer = None
