@@ -223,10 +223,6 @@ class JapaneseTokenizer(DummyTokenizer):
     def _set_config(self, config={}):
         self.split_mode = config.get("split_mode", None)
 
-    def pipe(self, texts, batch_size=1000, n_threads=-1):
-        for text in texts:
-            yield self(text)
-
     def to_bytes(self, **kwargs):
         serializers = OrderedDict(
             (
