@@ -171,6 +171,25 @@ and _before_ loading any pipelines.
 | `gpu_id`    | Device index to select. Defaults to `0`. ~~int~~ |
 | **RETURNS** | `True` ~~bool~~                                  |
 
+### spacy.require_cpu {#spacy.require_cpu tag="function" new="3.0.0"}
+
+Allocate data and perform operations on CPU. 
+If data has already been allocated on GPU, it will not
+be moved. Ideally, this function should be called right after importing spaCy
+and _before_ loading any pipelines.
+
+> #### Example
+>
+> ```python
+> import spacy
+> spacy.require_cpu()
+> nlp = spacy.load("en_core_web_sm")
+> ```
+
+| Name        | Description                                      |
+| ----------- | ------------------------------------------------ |
+| **RETURNS** | `True` ~~bool~~                                  |
+
 ## displaCy {#displacy source="spacy/displacy"}
 
 As of v2.0, spaCy comes with a built-in visualization suite. For more info and
