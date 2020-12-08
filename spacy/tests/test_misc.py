@@ -4,7 +4,7 @@ import ctypes
 from pathlib import Path
 from spacy.about import __version__ as spacy_version
 from spacy import util
-from spacy import prefer_gpu, require_gpu
+from spacy import prefer_gpu, require_gpu, require_cpu
 from spacy.ml._precomputable_affine import PrecomputableAffine
 from spacy.ml._precomputable_affine import _backprop_precomputable_affine_padding
 from spacy.util import dot_to_object, SimpleFrozenList
@@ -14,6 +14,8 @@ from spacy.lang.en import English
 from spacy.lang.nl import Dutch
 from spacy.language import DEFAULT_CONFIG_PATH
 from spacy.schemas import ConfigSchemaTraining
+
+from thinc.api import get_current_ops, NumpyOps, CupyOps
 
 from .util import get_random_doc
 
@@ -81,6 +83,8 @@ def test_PrecomputableAffine(nO=4, nI=5, nF=3, nP=2):
 def test_prefer_gpu():
     try:
         import cupy  # noqa: F401
+        prefer_gpu()
+        assert isinstance(get_current_ops(), CupyOps)
     except ImportError:
         assert not prefer_gpu()
 
@@ -88,9 +92,23 @@ def test_prefer_gpu():
 def test_require_gpu():
     try:
         import cupy  # noqa: F401
+        require_gpu()
+        assert isinstance(get_current_ops(), CupyOps)
     except ImportError:
         with pytest.raises(ValueError):
             require_gpu()
+
+def test_require_cpu():
+    require_cpu()
+    assert isinstance(get_current_ops(), NumpyOps)
+    try:
+        import cupy  # noqa: F401
+        require_gpu()
+        assert isinstance(get_current_ops(), CupyOps)
+    except ImportError:
+        pass
+    require_cpu()
+    assert isinstance(get_current_ops(), NumpyOps)
 
 
 def test_ascii_filenames():

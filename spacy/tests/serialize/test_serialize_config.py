@@ -3,14 +3,14 @@ from thinc.api import Config, ConfigValidationError
 import spacy
 from spacy.lang.en import English
 from spacy.lang.de import German
-from spacy.language import Language, DEFAULT_CONFIG
-from spacy.util import registry, load_model_from_config
+from spacy.language import Language, DEFAULT_CONFIG, DEFAULT_CONFIG_PRETRAIN_PATH
+from spacy.util import registry, load_model_from_config, load_config
 from spacy.ml.models import build_Tok2Vec_model, build_tb_parser_model
 from spacy.ml.models import MultiHashEmbed, MaxoutWindowEncoder
-from spacy.schemas import ConfigSchema
+from spacy.schemas import ConfigSchema, ConfigSchemaPretrain
+
 
 from ..util import make_tempdir
-
 
 nlp_config_string = """
 [paths]
@@ -61,6 +61,59 @@ factory = "tagger"
 [components.tagger.model.tok2vec]
 @architectures = "spacy.Tok2VecListener.v1"
 width = ${components.tok2vec.model.width}
+"""
+
+pretrain_config_string = """
+[paths]
+train = null
+dev = null
+
+[corpora]
+
+[corpora.train]
+@readers = "spacy.Corpus.v1"
+path = ${paths.train}
+
+[corpora.dev]
+@readers = "spacy.Corpus.v1"
+path = ${paths.dev}
+
+[training]
+
+[training.batcher]
+@batchers = "spacy.batch_by_words.v1"
+size = 666
+
+[nlp]
+lang = "en"
+pipeline = ["tok2vec", "tagger"]
+
+[components]
+
+[components.tok2vec]
+factory = "tok2vec"
+
+[components.tok2vec.model]
+@architectures = "spacy.HashEmbedCNN.v1"
+pretrained_vectors = null
+width = 342
+depth = 4
+window_size = 1
+embed_size = 2000
+maxout_pieces = 3
+subword_features = true
+
+[components.tagger]
+factory = "tagger"
+
+[components.tagger.model]
+@architectures = "spacy.Tagger.v1"
+
+[components.tagger.model.tok2vec]
+@architectures = "spacy.Tok2VecListener.v1"
+width = ${components.tok2vec.model.width}
+
+[pretraining]
 """
 
 
@@ -124,6 +177,14 @@ def test_create_nlp_from_config():
     with pytest.raises(ValueError):
         bad_cfg = {"pipeline": {"foo": "bar"}}
         load_model_from_config(Config(bad_cfg), auto_fill=True)
+
+
+def test_create_nlp_from_pretraining_config():
+    """Test that the default pretraining config validates properly"""
+    config = Config().from_str(pretrain_config_string)
+    pretrain_config = load_config(DEFAULT_CONFIG_PRETRAIN_PATH)
+    filled = config.merge(pretrain_config)
+    resolved = registry.resolve(filled["pretraining"], schema=ConfigSchemaPretrain)
 
 
 def test_create_nlp_from_config_multiple_instances():

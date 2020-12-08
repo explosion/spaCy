@@ -7,8 +7,8 @@ from ..errors import Errors
 
 def get_alignments(A: List[str], B: List[str]) -> Tuple[List[List[int]], List[List[int]]]:
     # Create character-to-token mappings
-    char_to_token_a = tuple(chain(*((i,) * len(x) for i, x in enumerate(A))))
-    char_to_token_b = tuple(chain(*((i,) * len(x) for i, x in enumerate(B))))
+    char_to_token_a = tuple(chain(*((i,) * len(x.lower()) for i, x in enumerate(A))))
+    char_to_token_b = tuple(chain(*((i,) * len(x.lower()) for i, x in enumerate(B))))
     str_a = "".join(A).lower()
     str_b = "".join(B).lower()
     cdef int len_str_a = len(str_a)
@@ -36,8 +36,14 @@ def get_alignments(A: List[str], B: List[str]) -> Tuple[List[List[int]], List[Li
         if prev_token_idx_b != token_idx_b:
             b2a.append(set())
         # Process the alignment at the current position
-        if A[token_idx_a] == B[token_idx_b]:
-            # Current tokens are identical
+        if A[token_idx_a] == B[token_idx_b] and \
+                (char_idx_a == 0 or \
+                    char_to_token_a[char_idx_a - 1] < token_idx_a) and \
+                (char_idx_b == 0 or \
+                    char_to_token_b[char_idx_b - 1] < token_idx_b):
+            # Current tokens are identical and both character offsets are the
+            # start of a token (either at the beginning of the document or the
+            # previous character belongs to a different token)
             a2b[-1].add(token_idx_b)
             b2a[-1].add(token_idx_a)
             char_idx_a += len(A[token_idx_a])
