@@ -248,9 +248,8 @@ def create_evaluation_callback(
     weights = {key: value for key, value in weights.items() if value is not None}
 
     def evaluate() -> Tuple[float, Dict[str, float]]:
-        dev_examples = list(dev_corpus(nlp))
         try:
-            scores = nlp.evaluate(dev_examples)
+            scores = nlp.evaluate(dev_corpus(nlp))
         except KeyError as e:
             raise KeyError(Errors.E900.format(pipeline=nlp.pipe_names)) from e
         # Calculate a weighted sum based on score_weights for the main score.

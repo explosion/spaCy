@@ -1286,6 +1286,7 @@ class Language:
 
         DOCS: https://nightly.spacy.io/api/language#evaluate
         """
+        examples = list(examples)
         validate_examples(examples, "Language.evaluate")
         if component_cfg is None:
             component_cfg = {}
