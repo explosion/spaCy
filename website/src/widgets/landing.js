@@ -253,52 +253,6 @@ const Landing = ({ data }) => {
                 </LandingBanner>
             </LandingBannerGrid>
 
-            <LandingLogos title="spaCy is trusted by" logos={data.logosUsers}>
-                <Button to={`https://github.com/${data.repo}/stargazers`}>and many more</Button>
-            </LandingLogos>
-            <LandingLogos title="Featured on" logos={data.logosPublications} />
-
-            <LandingBannerGrid>
-                <LandingBanner
-                    to="https://course.spacy.io"
-                    button="Start the course"
-                    background="#f6f6f6"
-                    color="#252a33"
-                    small
-                >
-                    <Link to="https://course.spacy.io" hidden>
-                        <img
-                            src={courseImage}
-                            alt="Advanced NLP with spaCy: A free online course"
-                        />
-                    </Link>
-                    <br />
-                    <br />
-                    In this <strong>free and interactive online course</strong> you’ll learn how to
-                    use spaCy to build advanced natural language understanding systems, using both
-                    rule-based and machine learning approaches. It includes{' '}
-                    <strong>55 exercises</strong> featuring videos, slide decks, multiple-choice
-                    questions and interactive coding practice in the browser.
-                </LandingBanner>
-                <LandingBanner
-                    title="spaCy IRL: Two days of NLP"
-                    label="Watch the videos"
-                    to="https://www.youtube.com/playlist?list=PLBmcuObd5An4UC6jvK_-eSl6jCvP1gwXc"
-                    button="Watch the videos"
-                    background="#ffc194"
-                    backgroundImage={irlBackground}
-                    color="#1a1e23"
-                    small
-                >
-                    We were pleased to invite the spaCy community and other folks working on NLP to
-                    Berlin for a small and intimate event. We booked a beautiful venue, hand-picked
-                    an awesome lineup of speakers and scheduled plenty of social time to get to know
-                    each other. The YouTube playlist includes 12 talks about NLP research,
-                    development and applications, with keynotes by Sebastian Ruder (DeepMind) and
-                    Yoav Goldberg (Allen AI).
-                </LandingBanner>
-            </LandingBannerGrid>
-
             <LandingGrid cols={2} style={{ gridTemplateColumns: '1fr 60%' }}>
                 <LandingCol>
                     <H2>Benchmarks</H2>
