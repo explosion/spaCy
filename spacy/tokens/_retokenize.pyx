@@ -11,7 +11,7 @@ from .span cimport Span
 from .token cimport Token
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..structs cimport LexemeC, TokenC
-from ..attrs cimport MORPH
+from ..attrs cimport MORPH, NORM
 from ..vocab cimport Vocab
 
 from .underscore import is_writable_attr
@@ -372,9 +372,10 @@ def _split(Doc doc, int token_index, orths, heads, attrs):
                 # Set attributes on both token and lexeme to take care of token
                 # attribute vs. lexical attribute without having to enumerate
                 # them. If an attribute name is not valid, set_struct_attr will
-                # ignore it.
+                # ignore it. Exception: set NORM only on tokens.
                 Token.set_struct_attr(token, attr_name, get_string_id(attr_value))
-                Lexeme.set_struct_attr(<LexemeC*>token.lex, attr_name, get_string_id(attr_value))
+                if attr_name != NORM:
+                    Lexeme.set_struct_attr(<LexemeC*>token.lex, attr_name, get_string_id(attr_value))
     # Assign correct dependencies to the inner token
     for i, head in enumerate(heads):
         doc.c[token_index + i].head = head
@@ -435,6 +436,7 @@ def set_token_attrs(Token py_token, attrs):
             # Set attributes on both token and lexeme to take care of token
             # attribute vs. lexical attribute without having to enumerate
             # them. If an attribute name is not valid, set_struct_attr will
-            # ignore it.
+            # ignore it. Exception: set NORM only on tokens.
             Token.set_struct_attr(token, attr_name, attr_value)
-            Lexeme.set_struct_attr(<LexemeC*>lex, attr_name, attr_value)
+            if attr_name != NORM:
+                Lexeme.set_struct_attr(<LexemeC*>lex, attr_name, attr_value)

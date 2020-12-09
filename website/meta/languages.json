@@ -200,6 +200,36 @@
             "dependencies": [{ "name": "Pyvi", "url": "https://github.com/trungtv/pyvi" }]
         },
         {
+            "code": "lij",
+            "name": "Ligurian",
+            "example": "Sta chì a l'é unna fraxe.",
+            "has_examples": true
+        },
+        {
+            "code": "hy",
+            "name": "Armenian",
+            "has_examples": true
+        },
+        {
+            "code": "gu",
+            "name": "Gujarati",
+            "has_examples": true
+        },
+        {
+            "code": "ml",
+            "name": "Malayalam",
+            "has_examples": true
+        },
+        {
+            "code": "ne",
+            "name": "Nepali",
+            "has_examples": true
+        },
+        {
+            "code": "mk",
+            "name": "Macedonian"
+        },
+        {
             "code": "xx",
             "name": "Multi-language",
             "models": ["xx_ent_wiki_sm"],

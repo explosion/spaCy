@@ -119,6 +119,10 @@ class Warnings:
             "call the {matcher} on each Doc object.")
     W107 = ("The property `Doc.{prop}` is deprecated. Use "
             "`Doc.has_annotation(\"{attr}\")` instead.")
+    W108 = ("The rule-based lemmatizer did not find POS annotation for the "
+            "token '{text}'. Check that your pipeline includes components that "
+            "assign token.pos, typically 'tagger'+'attribute_ruler' or "
+            "'morphologizer'.")
 
 
 @add_codes
