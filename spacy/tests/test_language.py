@@ -56,6 +56,10 @@ def test_language_evaluate(nlp):
     scores = nlp.evaluate([example])
     assert scores["speed"] > 0
 
+    # test with generator
+    scores = nlp.evaluate(eg for eg in [example])
+    assert scores["speed"] > 0
+
     # Not allowed to call with just one Example
     with pytest.raises(TypeError):
         nlp.evaluate(example)
