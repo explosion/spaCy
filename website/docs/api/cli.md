@@ -121,7 +121,7 @@ customize those settings in your config file later.
 > ```
 
 ```cli
-$ python -m spacy init config [output_file] [--lang] [--pipeline] [--optimize] [--cpu] [--pretraining]
+$ python -m spacy init config [output_file] [--lang] [--pipeline] [--optimize] [--gpu] [--pretraining]
 ```
 
 | Name                   | Description                                                                                                                                                                                                                                                                                                                        |
@@ -130,7 +130,7 @@ $ python -m spacy init config [output_file] [--lang] [--pipeline] [--optimize] [
 | `--lang`, `-l`         | Optional code of the [language](/usage/models#languages) to use. Defaults to `"en"`. ~~str (option)~~                                                                                                                                                                                                                              |
 | `--pipeline`, `-p`     | Comma-separated list of trainable [pipeline components](/usage/processing-pipelines#built-in) to include. Defaults to `"tagger,parser,ner"`. ~~str (option)~~                                                                                                                                                                      |
 | `--optimize`, `-o`     | `"efficiency"` or `"accuracy"`. Whether to optimize for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger and slower model). This will impact the choice of architecture, pretrained weights and related hyperparameters. Defaults to `"efficiency"`. ~~str (option)~~ |
-| `--cpu`, `-C`          | Whether the model needs to run on CPU. This will impact the choice of architecture, pretrained weights and related hyperparameters. ~~bool (flag)~~                                                                                                                                                                                |
+| `--gpu`, `-G`          | Whether the model can run on GPU. This will impact the choice of architecture, pretrained weights and related hyperparameters. ~~bool (flag)~~                                                                                                                                                                                     |
 | `--pretraining`, `-pt` | Include config for pretraining (with [`spacy pretrain`](/api/cli#pretrain)). Defaults to `False`. ~~bool (flag)~~                                                                                                                                                                                                                  |
 | `--help`, `-h`         | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                                                                                                                                         |
 | **CREATES**            | The config file for training.                                                                                                                                                                                                                                                                                                      |
