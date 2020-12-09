@@ -368,7 +368,7 @@ def test_parse_cli_overrides():
 @pytest.mark.parametrize("optimize", ["efficiency", "accuracy"])
 def test_init_config(lang, pipeline, optimize):
     # TODO: add more tests and also check for GPU with transformers
-    config = init_config("-", lang=lang, pipeline=pipeline, optimize=optimize, cpu=True)
+    config = init_config(lang=lang, pipeline=pipeline, optimize=optimize, cpu=True)
     assert isinstance(config, Config)
 
 
