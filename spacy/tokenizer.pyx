@@ -338,7 +338,7 @@ cdef class Tokenizer:
                     # Copy special case tokens into doc and adjust token and
                     # character offsets
                     idx_offset = 0
-                    orig_final_spacy = doc.c[span_end + offset - 1].spacy
+                    orig_final_spacy = doc.c[span_end - 1].spacy
                     orig_idx = doc.c[i].idx
                     for j in range(cached.length):
                         tokens[i + offset + j] = cached.data.tokens[j]
