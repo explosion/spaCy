@@ -42,6 +42,7 @@ information in [`Language.meta`](/api/language#meta) and not to configure the
 | `max_length`       | Maximum number of characters allowed in a single text. Defaults to `10 ** 6`. ~~int~~                                    |
 | `meta`             | [Meta data](/api/data-formats#meta) overrides. ~~Dict[str, Any]~~                                                        |
 | `create_tokenizer` | Optional function that receives the `nlp` object and returns a tokenizer. ~~Callable[[Language], Callable[[str], Doc]]~~ |
+| `batch_size`       | Default batch size for [`pipe`](#pipe) and [`evaluate`](#evaluate). Defaults to `1000`. ~~int~~                          |
 
 ## Language.from_config {#from_config tag="classmethod" new="3"}
 
@@ -195,7 +196,7 @@ more efficient than processing texts one-by-one.
 | `texts`                                    | A sequence of strings. ~~Iterable[str]~~                                                                                                                            |
 | _keyword-only_                             |                                                                                                                                                                     |
 | `as_tuples`                                | If set to `True`, inputs should be a sequence of `(text, context)` tuples. Output will then be a sequence of `(doc, context)` tuples. Defaults to `False`. ~~bool~~ |
-| `batch_size`                               | The number of texts to buffer. ~~int~~                                                                                                                              |
+| `batch_size`                               | The number of texts to buffer. ~~Optional[int]~~                                                                                                                    |
 | `disable`                                  | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). ~~List[str]~~                                                                     |
 | `cleanup`                                  | If `True`, unneeded strings are freed to control memory use. Experimental. ~~bool~~                                                                                 |
 | `component_cfg`                            | Optional dictionary of keyword arguments for components, keyed by component names. Defaults to `None`. ~~Optional[Dict[str, Dict[str, Any]]]~~                      |
@@ -357,7 +358,7 @@ objects instead of tuples of `Doc` and `GoldParse` objects.
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | `examples`      | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                                              |
 | _keyword-only_  |                                                                                                                                                |
-| `batch_size`    | The batch size to use. ~~int~~                                                                                                                 |
+| `batch_size`    | The batch size to use. ~~Optional[int]~~                                                                                                       |
 | `scorer`        | Optional [`Scorer`](/api/scorer) to use. If not passed in, a new one will be created. ~~Optional[Scorer]~~                                     |
 | `component_cfg` | Optional dictionary of keyword arguments for components, keyed by component names. Defaults to `None`. ~~Optional[Dict[str, Dict[str, Any]]]~~ |
 | `scorer_cfg`    | Optional dictionary of keyword arguments for the `Scorer`. Defaults to `None`. ~~Optional[Dict[str, Any]]~~                                    |

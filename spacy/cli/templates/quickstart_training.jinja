@@ -19,6 +19,7 @@ lang = "{{ lang }}"
 {%- set full_pipeline = ["transformer" if use_transformer else "tok2vec"] + components %}
 pipeline = {{ full_pipeline|pprint()|replace("'", '"')|safe }}
 tokenizer = {"@tokenizers": "spacy.Tokenizer.v1"}
+batch_size = {{ 128 if hardware == "gpu" else 1000 }}
 
 [components]
 

@@ -63,6 +63,7 @@ your config and check that it's valid, you can run the
 > before_creation = null
 > after_creation = null
 > after_pipeline_creation = null
+> batch_size = 1000
 >
 > [nlp.tokenizer]
 > @tokenizers = "spacy.Tokenizer.v1"
@@ -80,6 +81,7 @@ Defines the `nlp` object, its tokenizer and
 | `after_creation`          | Optional [callback](/usage/training#custom-code-nlp-callbacks) to modify `nlp` object right after it's initialized. Defaults to `null`. ~~Optional[Callable[[Language], Language]]~~                                                                                                                    |
 | `after_pipeline_creation` | Optional [callback](/usage/training#custom-code-nlp-callbacks) to modify `nlp` object after the pipeline components have been added. Defaults to `null`. ~~Optional[Callable[[Language], Language]]~~                                                                                                   |
 | `tokenizer`               | The tokenizer to use. Defaults to [`Tokenizer`](/api/tokenizer). ~~Callable[[str], Doc]~~                                                                                                                                                                                                               |
+| `batch_size`              | Default batch size for [`Language.pipe`](/api/language#pipe) and [`Language.evaluate`](/api/language#evaluate). ~~int~~                                                                                                                                                                                 |
 
 ### components {#config-components tag="section"}
 
