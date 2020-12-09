@@ -393,4 +393,4 @@ class TextCategorizer(TrainablePipe):
         """Check whether the provided examples all have single-label cats annotations."""
         for ex in examples:
             if list(ex.reference.cats.values()).count(1.0) > 1:
-                raise ValueError(Errors.E896.format(value=ex.reference.cats))
+                raise ValueError(Errors.E895.format(value=ex.reference.cats))
