@@ -968,10 +968,6 @@ class Language:
 
         DOCS: https://nightly.spacy.io/api/language#call
         """
-        if len(text) > self.max_length:
-            raise ValueError(
-                Errors.E088.format(length=len(text), max_length=self.max_length)
-            )
         doc = self.make_doc(text)
         if component_cfg is None:
             component_cfg = {}
@@ -1045,6 +1041,11 @@ class Language:
         text (str): The text to process.
         RETURNS (Doc): The processed doc.
         """
+        if len(text) > self.max_length:
+            raise ValueError(
+                Errors.E088.format(length=len(text), max_length=self.max_length)
+            )
+        return self.tokenizer(text)
         return self.tokenizer(text)
 
     def update(

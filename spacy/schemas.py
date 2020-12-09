@@ -351,9 +351,7 @@ class ConfigSchemaPretrain(BaseModel):
     batcher: Batcher = Field(..., title="Batcher for the training data")
     component: str = Field(..., title="Component to find the layer to pretrain")
     layer: str = Field(..., title="Layer to pretrain. Whole model if empty.")
-
-    # TODO: use a more detailed schema for this?
-    objective: Dict[str, Any] = Field(..., title="Pretraining objective")
+    objective: Callable[["Vocab", "Model"], "Model"] = Field(..., title="A function that creates the pretraining objective.")
     # fmt: on
 
     class Config:

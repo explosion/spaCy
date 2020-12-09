@@ -219,11 +219,58 @@ def test_overfitting_IO():
 
     # Make sure that running pipe twice, or comparing to call, always amounts to the same predictions
     texts = ["Just a sentence.", "I like green eggs.", "I am happy.", "I eat ham."]
-    batch_deps_1 = [doc.cats for doc in nlp.pipe(texts)]
-    batch_deps_2 = [doc.cats for doc in nlp.pipe(texts)]
-    no_batch_deps = [doc.cats for doc in [nlp(text) for text in texts]]
-    assert_equal(batch_deps_1, batch_deps_2)
-    assert_equal(batch_deps_1, no_batch_deps)
+    batch_cats_1 = [doc.cats for doc in nlp.pipe(texts)]
+    batch_cats_2 = [doc.cats for doc in nlp.pipe(texts)]
+    no_batch_cats = [doc.cats for doc in [nlp(text) for text in texts]]
+    assert_equal(batch_cats_1, batch_cats_2)
+    assert_equal(batch_cats_1, no_batch_cats)
+
+
+def test_overfitting_IO_multi():
+    # Simple test to try and quickly overfit the multi-label textcat component - ensuring the ML models work correctly
+    fix_random_seed(0)
+    nlp = English()
+    # Set exclusive labels to False
+    config = {"model": {"linear_model": {"exclusive_classes": False}}}
+    textcat = nlp.add_pipe("textcat", config=config)
+    train_examples = []
+    for text, annotations in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+    assert textcat.model.get_dim("nO") == 2
+
+    for i in range(50):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+    assert losses["textcat"] < 0.01
+
+    # test the trained model
+    test_text = "I am happy."
+    doc = nlp(test_text)
+    cats = doc.cats
+    assert cats["POSITIVE"] > 0.9
+
+    # Also test the results are still the same after IO
+    with make_tempdir() as tmp_dir:
+        nlp.to_disk(tmp_dir)
+        nlp2 = util.load_model_from_path(tmp_dir)
+        doc2 = nlp2(test_text)
+        cats2 = doc2.cats
+        assert cats2["POSITIVE"] > 0.9
+
+    # Test scoring
+    scores = nlp.evaluate(train_examples)
+    assert scores["cats_micro_f"] == 1.0
+    assert scores["cats_score"] == 1.0
+    assert "cats_score_desc" in scores
+
+    # Make sure that running pipe twice, or comparing to call, always amounts to the same predictions
+    texts = ["Just a sentence.", "I like green eggs.", "I am happy.", "I eat ham."]
+    batch_cats_1 = [doc.cats for doc in nlp.pipe(texts)]
+    batch_cats_2 = [doc.cats for doc in nlp.pipe(texts)]
+    no_batch_cats = [doc.cats for doc in [nlp(text) for text in texts]]
+    assert_equal(batch_cats_1, batch_cats_2)
+    assert_equal(batch_cats_1, no_batch_cats)
 
 
 def test_overfitting_IO_multi():

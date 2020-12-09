@@ -119,14 +119,19 @@ class Warnings:
             "call the {matcher} on each Doc object.")
     W107 = ("The property `Doc.{prop}` is deprecated. Use "
             "`Doc.has_annotation(\"{attr}\")` instead.")
+    W108 = ("The rule-based lemmatizer did not find POS annotation for the "
+            "token '{text}'. Check that your pipeline includes components that "
+            "assign token.pos, typically 'tagger'+'attribute_ruler' or "
+            "'morphologizer'.")
 
 
 @add_codes
 class Errors:
     E001 = ("No component '{name}' found in pipeline. Available names: {opts}")
     E002 = ("Can't find factory for '{name}' for language {lang} ({lang_code}). "
-            "This usually happens when spaCy calls `nlp.{method}` with custom "
+            "This usually happens when spaCy calls `nlp.{method}` with a custom "
             "component name that's not registered on the current language class. "
+            "If you're using a Transformer, make sure to install 'spacy-transformers'. "
             "If you're using a custom component, make sure you've added the "
             "decorator `@Language.component` (for function components) or "
             "`@Language.factory` (for class components).\n\nAvailable "
@@ -456,10 +461,13 @@ class Errors:
             "issue tracker: http://github.com/explosion/spaCy/issues")
 
     # TODO: fix numbering after merging develop into master
-    E896 = ("The 'textcat' component received gold-standard annotations with "
+    E895 = ("The 'textcat' component received gold-standard annotations with "
             "multiple labels per document. In spaCy 3 you should use the "
             "'textcat_multilabel' component for this instead. "
             "Example of an offending annotation: {value}")
+    E896 = ("There was an error using the static vectors. Ensure that the vectors "
+            "of the vocab are properly initialized, or set 'include_static_vectors' "
+            "to False.")
     E897 = ("Field '{field}' should be a dot-notation string referring to the "
             "relevant section in the config, but found type {type} instead.")
     E898 = ("Can't serialize trainable pipe '{name}': the `model` attribute "
@@ -487,8 +495,8 @@ class Errors:
             "has been applied.")
     E905 = ("Cannot initialize StaticVectors layer: nM dimension unset. This "
             "dimension refers to the width of the vectors table.")
-    E906 = ("Unexpected `loss` value in pretraining objective: {loss_type}")
-    E907 = ("Unexpected `objective_type` value in pretraining objective: {objective_type}")
+    E906 = ("Unexpected `loss` value in pretraining objective: '{found}'. Supported values "
+            "are: {supported}")
     E908 = ("Can't set `spaces` without `words` in `Doc.__init__`.")
     E909 = ("Expected {name} in parser internals. This is likely a bug in spaCy.")
     E910 = ("Encountered NaN value when computing loss for component '{name}'.")

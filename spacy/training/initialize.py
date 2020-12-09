@@ -103,7 +103,7 @@ def load_vectors_into_model(
             "with the packaged vectors. Make sure that the vectors package you're "
             "loading is compatible with the current version of spaCy."
         )
-        err = ConfigValidationError.from_error(e, config=None, title=title, desc=desc)
+        err = ConfigValidationError.from_error(e, title=title, desc=desc)
         raise err from None
     nlp.vocab.vectors = vectors_nlp.vocab.vectors
     if add_strings:

@@ -8,7 +8,7 @@ from spacy.cli.init_config import init_config, RECOMMENDATIONS
 from spacy.cli._util import validate_project_commands, parse_config_overrides
 from spacy.cli._util import load_project_config, substitute_project_variables
 from spacy.cli._util import string_to_list
-from thinc.api import ConfigValidationError
+from thinc.api import ConfigValidationError, Config
 import srsly
 import os
 
@@ -368,7 +368,8 @@ def test_parse_cli_overrides():
 @pytest.mark.parametrize("optimize", ["efficiency", "accuracy"])
 def test_init_config(lang, pipeline, optimize):
     # TODO: add more tests and also check for GPU with transformers
-    init_config("-", lang=lang, pipeline=pipeline, optimize=optimize, cpu=True)
+    config = init_config(lang=lang, pipeline=pipeline, optimize=optimize, cpu=True)
+    assert isinstance(config, Config)
 
 
 def test_model_recommendations():
