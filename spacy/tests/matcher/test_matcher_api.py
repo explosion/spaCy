@@ -457,6 +457,7 @@ def test_attr_pipeline_checks(en_vocab):
         ([{"IS_LEFT_PUNCT": True}], "``"),
         ([{"IS_RIGHT_PUNCT": True}], "''"),
         ([{"IS_STOP": True}], "the"),
+        ([{"SPACY": True}], "the"),
         ([{"LIKE_NUM": True}], "1"),
         ([{"LIKE_URL": True}], "http://example.com"),
         ([{"LIKE_EMAIL": True}], "mail@example.com"),
