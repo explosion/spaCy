@@ -42,7 +42,7 @@ information in [`Language.meta`](/api/language#meta) and not to configure the
 | `max_length`       | Maximum number of characters allowed in a single text. Defaults to `10 ** 6`. ~~int~~                                    |
 | `meta`             | [Meta data](/api/data-formats#meta) overrides. ~~Dict[str, Any]~~                                                        |
 | `create_tokenizer` | Optional function that receives the `nlp` object and returns a tokenizer. ~~Callable[[Language], Callable[[str], Doc]]~~ |
-| `batch_size`       | Default batch size for [`pipe`](#pipe) and [`evaluate`](#evaluate). Defaults to `1000`. ~~int~~                                                |
+| `batch_size`       | Default batch size for [`pipe`](#pipe) and [`evaluate`](#evaluate). Defaults to `1000`. ~~int~~                          |
 
 ## Language.from_config {#from_config tag="classmethod" new="3"}
 
