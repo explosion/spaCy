@@ -30,7 +30,7 @@ def init_config_cli(
     lang: Optional[str] = Opt("en", "--lang", "-l", help="Two-letter code of the language to use"),
     pipeline: Optional[str] = Opt("tagger,parser,ner", "--pipeline", "-p", help="Comma-separated names of trainable pipeline components to include (without 'tok2vec' or 'transformer')"),
     optimize: Optimizations = Opt(Optimizations.efficiency.value, "--optimize", "-o", help="Whether to optimize for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger and slower model). This will impact the choice of architecture, pretrained weights and related hyperparameters."),
-    cpu: bool = Opt(False, "--cpu", "-C", help="Whether the model needs to run on CPU. This will impact the choice of architecture, pretrained weights and related hyperparameters."),
+    gpu: bool = Opt(False, "--gpu", "-G", help="Whether the model can run on GPU. This will impact the choice of architecture, pretrained weights and related hyperparameters."),
     pretraining: bool = Opt(False, "--pretraining", "-pt", help="Include config for pretraining (with 'spacy pretrain')"),
     # fmt: on
 ):
@@ -50,7 +50,7 @@ def init_config_cli(
         lang=lang,
         pipeline=pipeline,
         optimize=optimize,
-        cpu=cpu,
+        gpu=gpu,
         pretraining=pretraining,
         silent=is_stdout,
     )
@@ -124,7 +124,7 @@ def init_config(
     lang: str,
     pipeline: List[str],
     optimize: str,
-    cpu: bool,
+    gpu: bool,
     pretraining: bool = False,
     silent: bool = True,
 ) -> Config:
@@ -138,7 +138,7 @@ def init_config(
         "lang": lang,
         "components": pipeline,
         "optimize": optimize,
-        "hardware": "cpu" if cpu else "gpu",
+        "hardware": "gpu" if gpu else "cpu",
         "transformer_data": reco["transformer"],
         "word_vectors": reco["word_vectors"],
         "has_letters": reco["has_letters"],
