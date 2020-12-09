@@ -62,15 +62,15 @@ jobs:
         Python38Mac:
           imageName: "macos-10.14"
           python.version: "3.8"
-        Python39Linux:
-          imageName: "ubuntu-16.04"
-          python.version: "3.9"
-        Python39Windows:
-          imageName: "vs2017-win2016"
-          python.version: "3.9"
-        Python39Mac:
-          imageName: "macos-10.14"
-          python.version: "3.9"
+        # Python39Linux:
+        #   imageName: "ubuntu-16.04"
+        #   python.version: "3.9"
+        # Python39Windows:
+        #   imageName: "vs2017-win2016"
+        #   python.version: "3.9"
+        # Python39Mac:
+        #   imageName: "macos-10.14"
+        #   python.version: "3.9"
       maxParallel: 4
     pool:
       vmImage: $(imageName)
