@@ -234,7 +234,7 @@ def test_overfitting_IO_multi():
     config = {"model": {"linear_model": {"exclusive_classes": False}}}
     textcat = nlp.add_pipe("textcat", config=config)
     train_examples = []
-    for text, annotations in TRAIN_DATA:
+    for text, annotations in TRAIN_DATA_MULTI_LABEL:
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
     optimizer = nlp.initialize(get_examples=lambda: train_examples)
     assert textcat.model.get_dim("nO") == 2
