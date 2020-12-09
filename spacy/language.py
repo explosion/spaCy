@@ -1279,7 +1279,7 @@ class Language:
         """Evaluate a model's pipeline components.
 
         examples (Iterable[Example]): `Example` objects.
-        batch_size (int): Batch size to use.
+        batch_size (Optional[int]): Batch size to use.
         scorer (Optional[Scorer]): Scorer to use. If not passed in, a new one
             will be created.
         component_cfg (dict): An optional dictionary with extra keyword
