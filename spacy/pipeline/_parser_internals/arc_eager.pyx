@@ -195,7 +195,7 @@ cdef class ArcEagerGold:
         labels = [label if label is not None else "" for label in labels]
         labels = [example.x.vocab.strings.add(label) for label in labels]
         sent_starts = example.get_aligned_sent_starts()
-        assert len(heads) == len(labels) == len(sent_starts)
+        assert len(heads) == len(labels) == len(sent_starts), (len(heads), len(labels), len(sent_starts))
         self.c = create_gold_state(self.mem, stcls.c, heads, labels, sent_starts)
 
     def update(self, StateClass stcls):
@@ -328,6 +328,8 @@ cdef class Reduce:
 
     Validity:
     * Stack not empty
+    * Buffer nt empty
+    * Stack depth 1 and cannot sent start l_edge(st.B(0))
 
     Cost:
     * If B[0] is the start of a sentence, cost is 0
@@ -475,6 +477,7 @@ cdef class Break:
     * len(buffer) >= 2
     * B[1] == B[0] + 1
     * not is_sent_start(B[1])
+    * not cannot_sent_start(B[1])
 
     Action:
     * mark_sent_start(B[1])
@@ -606,6 +609,7 @@ cdef class ArcEager(TransitionSystem):
         return gold
 
     def init_gold_batch(self, examples):
+        # TODO: Projectivitity?
         all_states = self.init_batch([eg.predicted for eg in examples])
         golds = []
         states = []
@@ -773,8 +777,9 @@ cdef class ArcEager(TransitionSystem):
             except ValueError:
                 failed = True
                 break
+            min_cost = min(costs[i] for i in range(self.n_moves))
             for i in range(self.n_moves):
-                if is_valid[i] and costs[i] <= 0:
+                if is_valid[i] and costs[i] <= min_cost:
                     action = self.c[i]
                     history.append(i)
                     s0 = state.S(0)
@@ -783,9 +788,7 @@ cdef class ArcEager(TransitionSystem):
                         example = _debug
                         debug_log.append(" ".join((
                             self.get_class_name(i),
-                            "S0=", (example.x[s0].text if s0 >= 0 else "__"),
-                            "B0=", (example.x[b0].text if b0 >= 0 else "__"),
-                            "S0 head?", str(state.has_head(state.S(0))),
+                            state.print_state()
                         )))
                     action.do(state.c, action.label)
                     break
@@ -804,6 +807,8 @@ cdef class ArcEager(TransitionSystem):
             print("Aligned heads")
             for i, head in enumerate(aligned_heads):
                 print(example.x[i], example.x[head] if head is not None else "__")
+            print("Aligned sent starts")
+            print(example.get_aligned_sent_starts())
 
             print("Predicted tokens")
             print([(w.i, w.text) for w in example.x])
