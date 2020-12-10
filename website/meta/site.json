@@ -53,7 +53,7 @@
             "items": [
                 { "text": "Universe", "url": "/universe" },
                 {
-                    "text": "Github Discussions",
+                    "text": "GitHub Discussions",
                     "url": "https://github.com/explosion/spaCy/discussions"
                 },
                 { "text": "Issue Tracker", "url": "https://github.com/explosion/spaCy/issues" },
