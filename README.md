@@ -61,13 +61,12 @@ be able to provide individual support via email. We also believe that help is
 much more valuable if it's shared publicly, so that more people can benefit from
 it.
 
-| Type                     | Platforms                               |
-| ------------------------ | --------------------------------------- |
-| 🚨 **Bug Reports**       | [GitHub Issue Tracker]                  |
-| 🎁 **Feature Requests**  | [GitHub Issue Tracker]                  |
-| 🎁 **Project ideas**     | [GitHub Discussions]                    |
-| 👩‍💻 **Usage Questions**   | [GitHub Discussions] · [Stack Overflow] |
-| 🗯 **General Discussion** | [GitHub Discussions]                    |
+| Type                            | Platforms                               |
+| ------------------------------- | --------------------------------------- |
+| 🚨 **Bug Reports**              | [GitHub Issue Tracker]                  |
+| 🎁 **Feature Requests & Ideas** | [GitHub Discussions]                    |
+| 👩‍💻 **Usage Questions**          | [GitHub Discussions] · [Stack Overflow] |
+| 🗯 **General Discussion**        | [GitHub Discussions]                    |
 
 [github issue tracker]: https://github.com/explosion/spaCy/issues
 [github discussions]: https://github.com/explosion/spaCy/discussions
