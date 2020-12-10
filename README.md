@@ -61,14 +61,15 @@ be able to provide individual support via email. We also believe that help is
 much more valuable if it's shared publicly, so that more people can benefit from
 it.
 
-| Type                     | Platforms                                              |
-| ------------------------ | ------------------------------------------------------ |
-| 🚨 **Bug Reports**       | [GitHub Issue Tracker]                                 |
-| 🎁 **Feature Requests**  | [GitHub Issue Tracker]                                 |
-| 👩‍💻 **Usage Questions**   | [Stack Overflow] · [Gitter Chat] · [Reddit User Group] |
-| 🗯 **General Discussion** | [Gitter Chat] · [Reddit User Group]                    |
+| Type                     | Platforms                                                                     |
+| ------------------------ | ----------------------------------------------------------------------------- |
+| 🚨 **Bug Reports**       | [GitHub Issue Tracker]                                                        |
+| 🎁 **Feature Requests**  | [GitHub Discussions]                                                          |
+| 👩‍💻 **Usage Questions**   | [GitHub Discussions] · [Stack Overflow] · [Gitter Chat] · [Reddit User Group] |
+| 🗯 **General Discussion** | [GitHub Discussions] · [Gitter Chat] · [Reddit User Group]                    |
 
 [github issue tracker]: https://github.com/explosion/spaCy/issues
+[github discussions]: https://github.com/explosion/spaCy/discussions
 [stack overflow]: https://stackoverflow.com/questions/tagged/spacy
 [gitter chat]: https://gitter.im/explosion/spaCy
 [reddit user group]: https://www.reddit.com/r/spacynlp
