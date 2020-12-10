@@ -51,12 +51,12 @@
         {
             "label": "Support",
             "items": [
+                { "text": "Github Discussions", "url": "https://github.com/explosion/spaCy/discussions" },
                 { "text": "Issue Tracker", "url": "https://github.com/explosion/spaCy/issues" },
                 {
                     "text": "Stack Overflow",
                     "url": "http://stackoverflow.com/questions/tagged/spacy"
                 },
-                { "text": "Reddit User Group", "url": "https://www.reddit.com/r/spacynlp/" },
                 { "text": "Gitter Chat", "url": "https://gitter.im/explosion/spaCy" }
             ]
         },
