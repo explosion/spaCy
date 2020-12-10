@@ -200,11 +200,11 @@ cdef class Example:
         tokenization starts the sentence.
         """
         if self.y.has_annotation("SENT_START"):
-            x_sents = self.get_aligned_spans_y2x(self.y.sents)
-            sent_starts = []
-            for sent in x_sents:
-                sent_starts.append(True)
-                sent_starts.extend([False] * (len(sent) - 1))
+            align = self.alignment.y2x
+            sent_starts = [False] * len(self.x)
+            for y_sent in self.y.sents:
+                x_start = int(align[y_sent.start].dataXd[0])
+                sent_starts[x_start] = True
             return sent_starts
         else:
             return [None] * len(self.x)
