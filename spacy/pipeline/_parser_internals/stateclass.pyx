@@ -22,11 +22,11 @@ cdef class StateClass:
 
     @property
     def stack(self):
-        return {self.S(i) for i in range(self.c.stack_depth())}
+        return [self.S(i) for i in range(self.c.stack_depth())]
 
     @property
     def queue(self):
-        return {self.B(i) for i in range(self.c.buffer_length())}
+        return [self.B(i) for i in range(self.c.buffer_length())]
 
     @property
     def token_vector_lenth(self):
