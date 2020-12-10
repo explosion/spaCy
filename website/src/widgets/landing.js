@@ -207,42 +207,49 @@ const Landing = ({ data }) => {
 
             <LandingBannerGrid>
                 <LandingBanner
-                    to="https://course.spacy.io"
-                    button="Start the course"
-                    background="#f6f6f6"
-                    color="#252a33"
+                    title="spaCy v3.0 nightly: Transformer-based pipelines, new training system, project templates &amp; more"
+                    label="Try the pre-release"
+                    to="https://nightly.spacy.io"
+                    button="See what's new"
+                    background="#8758fe"
+                    color="#ffffff"
                     small
                 >
-                    <Link to="https://course.spacy.io" hidden>
+                    spaCy v3.0 features all new <strong>transformer-based pipelines</strong> that
+                    bring spaCy's accuracy right up to the current <strong>state-of-the-art</strong>
+                    . You can use any pretrained transformer to train your own pipelines, and even
+                    share one transformer between multiple components with{' '}
+                    <strong>multi-task learning</strong>. Training is now fully configurable and
+                    extensible, and you can define your own custom models using{' '}
+                    <strong>PyTorch</strong>, <strong>TensorFlow</strong> and other frameworks. The
+                    new spaCy projects system lets you describe whole{' '}
+                    <strong>end-to-end workflows</strong> in a single file, giving you an easy path
+                    from prototype to production, and making it easy to clone and adapt
+                    best-practice projects for your own use cases.
+                </LandingBanner>
+
+                <LandingBanner
+                    title="Prodigy: Radically efficient machine teaching"
+                    label="From the makers of spaCy"
+                    to="https://prodi.gy"
+                    button="Try it out"
+                    background="#f6f6f6"
+                    color="#000"
+                    small
+                >
+                    <Link to="https://prodi.gy" hidden>
                         <img
-                            src={courseImage}
-                            alt="Advanced NLP with spaCy: A free online course"
+                            src={prodigyImage}
+                            alt="Prodigy: Radically efficient machine teaching"
                         />
                     </Link>
                     <br />
                     <br />
-                    In this <strong>free and interactive online course</strong> you’ll learn how to
-                    use spaCy to build advanced natural language understanding systems, using both
-                    rule-based and machine learning approaches. It includes{' '}
-                    <strong>55 exercises</strong> featuring videos, slide decks, multiple-choice
-                    questions and interactive coding practice in the browser.
-                </LandingBanner>
-                <LandingBanner
-                    title="spaCy IRL: Two days of NLP"
-                    label="Watch the videos"
-                    to="https://www.youtube.com/playlist?list=PLBmcuObd5An4UC6jvK_-eSl6jCvP1gwXc"
-                    button="Watch the videos"
-                    background="#ffc194"
-                    backgroundImage={irlBackground}
-                    color="#1a1e23"
-                    small
-                >
-                    We were pleased to invite the spaCy community and other folks working on NLP to
-                    Berlin for a small and intimate event. We booked a beautiful venue, hand-picked
-                    an awesome lineup of speakers and scheduled plenty of social time to get to know
-                    each other. The YouTube playlist includes 12 talks about NLP research,
-                    development and applications, with keynotes by Sebastian Ruder (DeepMind) and
-                    Yoav Goldberg (Allen AI).
+                    Prodigy is an <strong>annotation tool</strong> so efficient that data scientists
+                    can do the annotation themselves, enabling a new level of rapid iteration.
+                    Whether you're working on entity recognition, intent detection or image
+                    classification, Prodigy can help you <strong>train and evaluate</strong> your
+                    models faster.
                 </LandingBanner>
             </LandingBannerGrid>
 

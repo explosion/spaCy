@@ -143,10 +143,10 @@ argument that connects to the shared `tok2vec` component in the pipeline.
 
 Construct an embedding layer that separately embeds a number of lexical
 attributes using hash embedding, concatenates the results, and passes it through
-a feed-forward subnetwork to build a mixed representation. The features used
-can be configured with the `attrs` argument. The suggested attributes are
-`NORM`, `PREFIX`, `SUFFIX` and `SHAPE`. This lets the model take into account
-some subword information, without construction a fully character-based
+a feed-forward subnetwork to build a mixed representation. The features used can
+be configured with the `attrs` argument. The suggested attributes are `NORM`,
+`PREFIX`, `SUFFIX` and `SHAPE`. This lets the model take into account some
+subword information, without construction a fully character-based
 representation. If pretrained vectors are available, they can be included in the
 representation as well, with the vectors table will be kept static (i.e. it's
 not updated).
@@ -393,11 +393,12 @@ operate over wordpieces, which usually don't align one-to-one against spaCy
 tokens. The layer therefore requires a reduction operation in order to calculate
 a single token vector given zero or more wordpiece vectors.
 
-| Name          | Description                                                                                                                                                                                                                                                                   |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pooling`     | A reduction layer used to calculate the token vectors based on zero or more wordpiece vectors. If in doubt, mean pooling (see [`reduce_mean`](https://thinc.ai/docs/api-layers#reduce_mean)) is usually a good choice. ~~Model[Ragged, Floats2d]~~                            |
-| `grad_factor` | Reweight gradients from the component before passing them upstream. You can set this to `0` to "freeze" the transformer weights with respect to the component, or use it to make some components more significant than others. Leaving it at `1.0` is usually fine. ~~float~~ |
-| **CREATES**   | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                        |
+| Name          | Description                                                                                                                                                                                                                                                                                                                                      |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `pooling`     | A reduction layer used to calculate the token vectors based on zero or more wordpiece vectors. If in doubt, mean pooling (see [`reduce_mean`](https://thinc.ai/docs/api-layers#reduce_mean)) is usually a good choice. ~~Model[Ragged, Floats2d]~~                                                                                               |
+| `grad_factor` | Reweight gradients from the component before passing them upstream. You can set this to `0` to "freeze" the transformer weights with respect to the component, or use it to make some components more significant than others. Leaving it at `1.0` is usually fine. ~~float~~                                                                    |
+| `upstream`    | A string to identify the "upstream" `Transformer` component to communicate with. By default, the upstream name is the wildcard string `"*"`, but you could also specify the name of the `Transformer` component. You'll almost never have multiple upstream `Transformer` components, so the wildcard string will almost always be fine. ~~str~~ |
+| **CREATES**   | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                                                                                           |
 
 ### spacy-transformers.Tok2VecTransformer.v1 {#Tok2VecTransformer}
 
@@ -563,7 +564,8 @@ from the linear model, where it is stored in `model.attrs["multi_label"]`.
 
 <Accordion title="spacy.TextCatEnsemble.v1 definition" spaced>
 
-The v1 was functionally similar, but used an internal `tok2vec` instead of taking it as argument.
+The v1 was functionally similar, but used an internal `tok2vec` instead of
+taking it as argument.
 
 | Name                 | Description                                                                                                                                                                                    |
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

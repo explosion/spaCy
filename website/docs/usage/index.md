@@ -158,29 +158,37 @@ The other way to install spaCy is to clone its
 source. That is the common way if you want to make changes to the code base.
 You'll need to make sure that you have a development environment consisting of a
 Python distribution including header files, a compiler,
-[pip](https://pip.pypa.io/en/latest/installing/),
-[virtualenv](https://virtualenv.pypa.io/) and [git](https://git-scm.com)
-installed. The compiler part is the trickiest. How to do that depends on your
-system. See notes on [Ubuntu](#source-ubuntu), [macOS / OS X](#source-osx) and
+[pip](https://pip.pypa.io/en/stable/) and [git](https://git-scm.com) installed.
+The compiler part is the trickiest. How to do that depends on your system. See
+notes on [Ubuntu](#source-ubuntu), [macOS / OS X](#source-osx) and
 [Windows](#source-windows) for details.
 
 ```bash
-$ python -m pip install -U pip                  # update pip
+$ python -m pip install -U pip setuptools wheel # install/update build tools
 $ git clone https://github.com/explosion/spaCy  # clone spaCy
 $ cd spaCy                                      # navigate into dir
-
 $ python -m venv .env                           # create environment in .env
 $ source .env/bin/activate                      # activate virtual env
-$ export PYTHONPATH=`pwd`                       # set Python path to spaCy dir
-$ pip install -r requirements.txt               # install all requirements
-$ python setup.py build_ext --inplace           # compile spaCy
-$ python setup.py install                       # install spaCy
+$ pip install .                                 # compile and install spaCy
 ```
 
-Compared to regular install via pip, the
-[`requirements.txt`](%%GITHUB_SPACY/requirements.txt) additionally installs
-developer dependencies such as Cython. See the [quickstart widget](#quickstart)
-to get the right commands for your platform and Python version.
+To install with extras:
+
+```bash
+$ pip install .[lookups,cuda102]                # install spaCy with extras
+```
+
+To install all dependencies required for development:
+
+```bash
+$ pip install -r requirements.txt
+```
+
+Compared to a regular install via pip, the
+[`requirements.txt`](%%GITHUB_SPACY/requirements.txt) additionally includes
+developer dependencies such as Cython and the libraries required to run the test
+suite. See the [quickstart widget](#quickstart) to get the right commands for
+your platform and Python version.
 
 <a id="source-ubuntu"></a><a id="source-osx"></a><a id="source-windows"></a>
 
@@ -194,6 +202,32 @@ to get the right commands for your platform and Python version.
   or
   [Visual Studio Express](https://www.visualstudio.com/vs/visual-studio-express/)
   that matches the version that was used to compile your Python interpreter.
+
+#### Additional options for developers {#source-developers}
+
+Some additional options may be useful for spaCy developers who are editing the
+source code and recompiling frequently.
+
+- Install in editable mode. Changes to `.py` files will be reflected as soon as
+  the files are saved, but edits to Cython files (`.pxd`, `.pyx`) will require
+  the `pip install` or `python setup.py build_ext` command below to be run
+  again. Before installing in editable mode, be sure you have removed any
+  previous installs with `pip uninstall spacy`, which you may need to run
+  multiple times to remove all traces of earlier installs.
+
+  ```bash
+  $ pip install -r requirements.txt
+  $ pip install --no-build-isolation --editable .
+  ```
+
+- Build in parallel using `N` CPUs to speed up compilation and then install in
+  editable mode:
+
+  ```bash
+  $ pip install -r requirements.txt
+  $ python setup.py build_ext --inplace -j N
+  $ pip install --no-build-isolation --editable .
+  ```
 
 ### Building an executable {#executable}
 
