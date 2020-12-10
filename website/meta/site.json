@@ -44,20 +44,23 @@
             "items": [
                 { "text": "Usage", "url": "/usage" },
                 { "text": "Models", "url": "/models" },
-                { "text": "API", "url": "/api" },
-                { "text": "Universe", "url": "/universe" }
+                { "text": "API Reference", "url": "/api" },
+                { "text": "Online Course", "url": "https://course.spacy.io" }
             ]
         },
         {
-            "label": "Support",
+            "label": "Community",
             "items": [
-                { "text": "Github Discussions", "url": "https://github.com/explosion/spaCy/discussions" },
+                { "text": "Universe", "url": "/universe" },
+                {
+                    "text": "Github Discussions",
+                    "url": "https://github.com/explosion/spaCy/discussions"
+                },
                 { "text": "Issue Tracker", "url": "https://github.com/explosion/spaCy/issues" },
                 {
                     "text": "Stack Overflow",
                     "url": "http://stackoverflow.com/questions/tagged/spacy"
-                },
-                { "text": "Gitter Chat", "url": "https://gitter.im/explosion/spaCy" }
+                }
             ]
         },
         {
