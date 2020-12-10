@@ -543,6 +543,7 @@ source of truth** used for loading a pipeline.
 >   "version": "1.0.0",
 >   "spacy_version": ">=3.0.0,<3.1.0",
 >   "parent_package": "spacy",
+>   "requirements": ["spacy-transformers>=1.0.0,<1.1.0"],
 >   "description": "Example pipeline for spaCy",
 >   "author": "You",
 >   "email": "you@example.com",
@@ -573,6 +574,7 @@ source of truth** used for loading a pipeline.
 | `version`                                      | Pipeline version. Will be used to version a Python package created with [`spacy package`](/api/cli#package). Defaults to `"0.0.0"`. ~~str~~                                                                                                                                                                                      |
 | `spacy_version`                                | spaCy version range the package is compatible with. Defaults to the spaCy version used to create the pipeline, up to next minor version, which is the default compatibility for the available [trained pipelines](/models). For instance, a pipeline trained with v3.0.0 will have the version range `">=3.0.0,<3.1.0"`. ~~str~~ |
 | `parent_package`                               | Name of the spaCy package. Typically `"spacy"` or `"spacy_nightly"`. Defaults to `"spacy"`. ~~str~~                                                                                                                                                                                                                              |
+| `requirements`                                 | Python package requirements that the pipeline depends on. Will be used for the Python package setup in [`spacy package`](/api/cli#package). Should be a list of package names with optional version specifiers, just like you'd define them in a `setup.cfg` or `requirements.txt`. Defaults to `[]`. ~~List[str]~~              |
 | `description`                                  | Pipeline description. Also used for Python package. Defaults to `""`. ~~str~~                                                                                                                                                                                                                                                    |
 | `author`                                       | Pipeline author name. Also used for Python package. Defaults to `""`. ~~str~~                                                                                                                                                                                                                                                    |
 | `email`                                        | Pipeline author email. Also used for Python package. Defaults to `""`. ~~str~~                                                                                                                                                                                                                                                   |

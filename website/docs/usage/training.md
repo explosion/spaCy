@@ -581,10 +581,14 @@ value for it.
 
 ### Training with custom code {#custom-code}
 
-> #### Example
+> ```cli
+> ### Training
+> $ python -m spacy train config.cfg --code functions.py
+> ```
 >
 > ```cli
-> $ python -m spacy train config.cfg --code functions.py
+> ### Packaging
+> $ python -m spacy package ./model-best ./packages --code functions.py
 > ```
 
 The [`spacy train`](/api/cli#train) recipe lets you specify an optional argument
@@ -592,7 +596,13 @@ The [`spacy train`](/api/cli#train) recipe lets you specify an optional argument
 allows you to add custom functions and architectures to the function registry
 that can then be referenced from your `config.cfg`. This lets you train spaCy
 pipelines with custom components, without having to re-implement the whole
-training workflow.
+training workflow. When you package your trained pipeline later using
+[`spacy package`](/api/cli#package), you can provide one or more Python files to
+be included in the package and imported in its `__init__.py`. This means that
+any custom architectures, functions or
+[components](/usage/processing-pipelines#custom-components) will be shipped with
+your pipeline and registered when it's loaded. See the documentation on
+[saving and loading pipelines](/usage/saving-loading#models-custom) for details.
 
 #### Example: Modifying the nlp object {#custom-code-nlp-callbacks}
 

@@ -1,4 +1,4 @@
-from typing import Optional, Union, Any, Dict
+from typing import Optional, Union, Any, Dict, List
 import shutil
 from pathlib import Path
 from wasabi import Printer, get_raw_input
@@ -16,6 +16,7 @@ def package_cli(
     # fmt: off
     input_dir: Path = Arg(..., help="Directory with pipeline data", exists=True, file_okay=False),
     output_dir: Path = Arg(..., help="Output parent directory", exists=True, file_okay=False),
+    code_paths: Optional[str] = Opt(None, "--code", "-c", help="Comma-separated paths to Python file with additional code (registered functions) to be included in the package"),
     meta_path: Optional[Path] = Opt(None, "--meta-path", "--meta", "-m", help="Path to meta.json", exists=True, dir_okay=False),
     create_meta: bool = Opt(False, "--create-meta", "-c", "-C", help="Create meta.json, even if one exists"),
     name: Optional[str] = Opt(None, "--name", "-n", help="Package name to override meta"),
@@ -33,12 +34,22 @@ def package_cli(
     After packaging, "python setup.py sdist" is run in the package directory,
     which will create a .tar.gz archive that can be installed via "pip install".
 
+    If additional code files are provided (e.g. Python files containing custom
+    registered functions like pipeline components), they are copied into the
+    package and imported in the __init__.py.
+
     DOCS: https://nightly.spacy.io/api/cli#package
     """
+    code_paths = (
+        [Path(p.strip()) for p in code_paths.split(",")]
+        if code_paths is not None
+        else []
+    )
     package(
         input_dir,
         output_dir,
         meta_path=meta_path,
+        code_paths=code_paths,
         name=name,
         version=version,
         create_meta=create_meta,
@@ -52,6 +63,7 @@ def package(
     input_dir: Path,
     output_dir: Path,
     meta_path: Optional[Path] = None,
+    code_paths: List[Path] = [],
     name: Optional[str] = None,
     version: Optional[str] = None,
     create_meta: bool = False,
@@ -67,6 +79,14 @@ def package(
         msg.fail("Can't locate pipeline data", input_path, exits=1)
     if not output_path or not output_path.exists():
         msg.fail("Output directory not found", output_path, exits=1)
+    for code_path in code_paths:
+        if not code_path.exists():
+            msg.fail("Can't find code file", code_path, exits=1)
+        # Import the code here so it's available when model is loaded (via
+        # get_meta helper). Also verifies that everything works
+        util.import_file(code_path.stem, code_path)
+    if code_paths:
+        msg.good(f"Including {len(code_paths)} Python module(s) with custom code")
     if meta_path and not meta_path.exists():
         msg.fail("Can't find pipeline meta.json", meta_path, exits=1)
     meta_path = meta_path or input_dir / "meta.json"
@@ -106,10 +126,17 @@ def package(
     license_path = package_path / model_name_v / "LICENSE"
     if license_path.exists():
         shutil.move(str(license_path), str(main_path))
+    imports = []
+    for code_path in code_paths:
+        imports.append(code_path.stem)
+        shutil.copy(str(code_path), str(package_path))
     create_file(main_path / "meta.json", srsly.json_dumps(meta, indent=2))
     create_file(main_path / "setup.py", TEMPLATE_SETUP)
     create_file(main_path / "MANIFEST.in", TEMPLATE_MANIFEST)
-    create_file(package_path / "__init__.py", TEMPLATE_INIT)
+    init_py = TEMPLATE_INIT.format(
+        imports="\n".join(f"from . import {m}" for m in imports)
+    )
+    create_file(package_path / "__init__.py", init_py)
     msg.good(f"Successfully created package '{model_name_v}'", main_path)
     if create_sdist:
         with util.working_dir(main_path):
@@ -249,6 +276,7 @@ TEMPLATE_INIT = """
 from pathlib import Path
 from spacy.util import load_model_from_init_py, get_model_meta
 
+{imports}
 
 __version__ = get_model_meta(Path(__file__).parent)['version']
 
