@@ -1,7 +1,7 @@
 ---
 name: "\U0001F4AC Anything else?"
 about: For general usage questions or help with your code, please consider
-  posting on Stack Overflow instead.
+  posting on Stack Overflow or GH Discussions instead.
 
 ---
 

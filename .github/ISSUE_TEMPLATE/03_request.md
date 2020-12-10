@@ -1,6 +1,6 @@
 ---
 name: "\U0001F381 Feature Request"
-about: Do you have an idea for an improvement, a new feature or a plugin?
+about: Do you have an idea for an improvement to the core library? Note that project ideas or plugins should be posted at GH Discussions instead.
 
 ---
 
