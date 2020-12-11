@@ -14,8 +14,8 @@ def doc(vocab):
 
 def test_init_state(doc):
     state = StateClass(doc)
-    assert state.stack == set()
-    assert state.queue == set(range(len(doc)))
+    assert state.stack == []
+    assert state.queue == list(range(len(doc)))
     assert not state.is_final()
     assert state.buffer_length() == 4
 
