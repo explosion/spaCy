@@ -26,7 +26,7 @@ def test_push_pop(doc):
     assert state.stack == [0]
     assert 0 not in state.queue
     state.push()
-    assert state.stack == [0, 1]
+    assert state.stack == [1, 0]
     assert 1 not in state.queue
     assert state.buffer_length() == 2
     state.pop()
