@@ -5,6 +5,7 @@ from cymem.cymem cimport Pool
 from collections import Counter
 import srsly
 
+from . cimport _beam_utils
 from ...typedefs cimport weight_t, attr_t
 from ...tokens.doc cimport Doc
 from ...structs cimport TokenC
@@ -44,6 +45,8 @@ cdef class TransitionSystem:
         if labels_by_action:
             self.initialize_actions(labels_by_action, min_freq=min_freq)
         self.root_label = self.strings.add('ROOT')
+        self.init_beam_state = _init_state
+        self.del_beam_state = _del_state
 
     def __reduce__(self):
         return (self.__class__, (self.strings, self.labels), None, None)
@@ -54,7 +57,6 @@ cdef class TransitionSystem:
         offset = 0
         for doc in docs:
             state = StateClass(doc, offset=offset)
-            self.initialize_state(state.c)
             states.append(state)
             offset += len(doc)
         return states
@@ -80,7 +82,7 @@ cdef class TransitionSystem:
         history = []
         debug_log = []
         while not state.is_final():
-            self.set_costs(is_valid, costs, state, gold)
+            self.set_costs(is_valid, costs, state.c, gold)
             for i in range(self.n_moves):
                 if is_valid[i] and costs[i] <= 0:
                     action = self.c[i]
@@ -124,15 +126,6 @@ cdef class TransitionSystem:
         action = self.lookup_transition(name)
         action.do(state.c, action.label)
 
-    cdef int initialize_state(self, StateC* state) nogil:
-        pass
-
-    cdef int finalize_state(self, StateC* state) nogil:
-        pass
-
-    def finalize_doc(self, doc):
-        pass
-
     cdef Transition lookup_transition(self, object name) except *:
         raise NotImplementedError
 
@@ -151,7 +144,7 @@ cdef class TransitionSystem:
             is_valid[i] = self.c[i].is_valid(st, self.c[i].label)
 
     cdef int set_costs(self, int* is_valid, weight_t* costs,
-                       StateClass stcls, gold) except -1:
+                       const StateC* state, gold) except -1:
         raise NotImplementedError
 
     def get_class_name(self, int clas):

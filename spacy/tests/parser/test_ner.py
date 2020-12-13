@@ -54,7 +54,7 @@ def tsys(vocab, entity_types):
 
 def test_get_oracle_moves(tsys, doc, entity_annots):
     example = Example.from_dict(doc, {"entities": entity_annots})
-    act_classes = tsys.get_oracle_sequence(example)
+    act_classes = tsys.get_oracle_sequence(example, _debug=False)
     names = [tsys.get_class_name(act) for act in act_classes]
     assert names == ["U-PERSON", "O", "O", "B-GPE", "L-GPE", "O"]
 

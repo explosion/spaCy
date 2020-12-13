@@ -4,13 +4,14 @@ from cymem.cymem cimport Pool
 cimport numpy as np
 from itertools import islice
 from libcpp.vector cimport vector
-from libc.string cimport memset
+from libc.string cimport memset, memcpy
 from libc.stdlib cimport calloc, free
 import random
 from typing import Optional
 
 import srsly
-from thinc.api import set_dropout_rate
+from thinc.api import set_dropout_rate, CupyOps
+from thinc.extra.search cimport Beam
 import numpy.random
 import numpy
 import warnings
@@ -22,6 +23,8 @@ from ..ml.parser_model cimport WeightsC, ActivationsC, SizesC, cpu_log_loss
 from ..ml.parser_model cimport get_c_weights, get_c_sizes
 from ..tokens.doc cimport Doc
 from .trainable_pipe import TrainablePipe
+from ._parser_internals cimport _beam_utils
+from ._parser_internals import _beam_utils
 
 from ..training import validate_examples, validate_get_examples
 from ..errors import Errors, Warnings
@@ -41,9 +44,12 @@ cdef class Parser(TrainablePipe):
         moves=None,
         *,
         update_with_oracle_cut_size,
-        multitasks=tuple(),
         min_action_freq,
         learn_tokens,
+        beam_width=1,
+        beam_density=0.0,
+        beam_update_prob=0.0,
+        multitasks=tuple(),
     ):
         """Create a Parser.
 
@@ -61,7 +67,10 @@ cdef class Parser(TrainablePipe):
             "update_with_oracle_cut_size": update_with_oracle_cut_size,
             "multitasks": list(multitasks),
             "min_action_freq": min_action_freq,
-            "learn_tokens": learn_tokens
+            "learn_tokens": learn_tokens,
+            "beam_width": beam_width,
+            "beam_density": beam_density,
+            "beam_update_prob": beam_update_prob
         }
         if moves is None:
             # defined by EntityRecognizer as a BiluoPushDown
@@ -183,7 +192,15 @@ cdef class Parser(TrainablePipe):
             result = self.moves.init_batch(docs)
             self._resize()
             return result
-        return self.greedy_parse(docs, drop=0.0)
+        if self.cfg["beam_width"] == 1:
+            return self.greedy_parse(docs, drop=0.0)
+        else:
+            return self.beam_parse(
+                docs,
+                drop=0.0,
+                beam_width=self.cfg["beam_width"],
+                beam_density=self.cfg["beam_density"]
+            )
 
     def greedy_parse(self, docs, drop=0.):
         cdef vector[StateC*] states
@@ -207,6 +224,31 @@ cdef class Parser(TrainablePipe):
         del model
         return batch
 
+    def beam_parse(self, docs, int beam_width, float drop=0., beam_density=0.):
+        cdef Beam beam
+        cdef Doc doc
+        batch = _beam_utils.BeamBatch(
+            self.moves,
+            self.moves.init_batch(docs),
+            None,
+            beam_width,
+            density=beam_density
+        )
+        # This is pretty dirty, but the NER can resize itself in init_batch,
+        # if labels are missing. We therefore have to check whether we need to
+        # expand our model output.
+        self._resize()
+        model = self.model.predict(docs)
+        while not batch.is_done:
+            states = batch.get_unfinished_states()
+            if not states:
+                break
+            scores = model.predict(states)
+            batch.advance(scores)
+        model.clear_memory()
+        del model
+        return list(batch)
+
     cdef void _parseC(self, StateC** states,
             WeightsC weights, SizesC sizes) nogil:
         cdef int i, j
@@ -227,14 +269,13 @@ cdef class Parser(TrainablePipe):
             unfinished.clear()
         free_activations(&activations)
 
-    def set_annotations(self, docs, states):
+    def set_annotations(self, docs, states_or_beams):
         cdef StateClass state
+        cdef Beam beam
         cdef Doc doc
+        states = _beam_utils.collect_states(states_or_beams, docs)
         for i, (state, doc) in enumerate(zip(states, docs)):
-            self.moves.finalize_state(state.c)
-            for j in range(doc.length):
-                doc.c[j] = state.c._sent[j]
-            self.moves.finalize_doc(doc)
+            self.moves.set_annotations(state, doc)
             for hook in self.postprocesses:
                 hook(doc)
 
@@ -265,7 +306,6 @@ cdef class Parser(TrainablePipe):
             else:
                 action = self.moves.c[guess]
                 action.do(states[i], action.label)
-                states[i].push_hist(guess)
         free(is_valid)
 
     def update(self, examples, *, drop=0., set_annotations=False, sgd=None, losses=None):
@@ -276,13 +316,23 @@ cdef class Parser(TrainablePipe):
         validate_examples(examples, "Parser.update")
         for multitask in self._multitasks:
             multitask.update(examples, drop=drop, sgd=sgd)
+    
         n_examples = len([eg for eg in examples if self.moves.has_gold(eg)])
         if n_examples == 0:
             return losses
         set_dropout_rate(self.model, drop)
-        # Prepare the stepwise model, and get the callback for finishing the batch
-        model, backprop_tok2vec = self.model.begin_update(
-            [eg.predicted for eg in examples])
+        # The probability we use beam update, instead of falling back to
+        # a greedy update
+        beam_update_prob = self.cfg["beam_update_prob"]
+        if self.cfg['beam_width'] >= 2 and numpy.random.random() < beam_update_prob:
+            return self.update_beam(
+                examples,
+                beam_width=self.cfg["beam_width"],
+                set_annotations=set_annotations,
+                sgd=sgd,
+                losses=losses,
+                beam_density=self.cfg["beam_density"]
+            )
         max_moves = self.cfg["update_with_oracle_cut_size"]
         if max_moves >= 1:
             # Chop sequences into lengths of this many words, to make the
@@ -296,6 +346,8 @@ cdef class Parser(TrainablePipe):
             states, golds, _ = self.moves.init_gold_batch(examples)
         if not states:
             return losses
+        model, backprop_tok2vec = self.model.begin_update([eg.x for eg in examples])
+ 
         all_states = list(states)
         states_golds = list(zip(states, golds))
         n_moves = 0
@@ -379,6 +431,27 @@ cdef class Parser(TrainablePipe):
         del tutor
         return losses
 
+    def update_beam(self, examples, *, beam_width,
+            drop=0., sgd=None, losses=None, set_annotations=False, beam_density=0.0):
+        states, golds, _ = self.moves.init_gold_batch(examples)
+        if not states:
+            return losses
+        # Prepare the stepwise model, and get the callback for finishing the batch
+        model, backprop_tok2vec = self.model.begin_update(
+            [eg.predicted for eg in examples])
+        loss = _beam_utils.update_beam(
+            self.moves,
+            states,
+            golds,
+            model,
+            beam_width,
+            beam_density=beam_density,
+        )
+        losses[self.name] += loss
+        backprop_tok2vec(golds)
+        if sgd is not None:
+            self.finish_update(sgd)
+
     def get_batch_loss(self, states, golds, float[:, ::1] scores, losses):
         cdef StateClass state
         cdef Pool mem = Pool()
@@ -396,7 +469,7 @@ cdef class Parser(TrainablePipe):
         for i, (state, gold) in enumerate(zip(states, golds)):
             memset(is_valid, 0, self.moves.n_moves * sizeof(int))
             memset(costs, 0, self.moves.n_moves * sizeof(float))
-            self.moves.set_costs(is_valid, costs, state, gold)
+            self.moves.set_costs(is_valid, costs, state.c, gold)
             for j in range(self.moves.n_moves):
                 if costs[j] <= 0.0 and j in unseen_classes:
                     unseen_classes.remove(j)
@@ -539,7 +612,6 @@ cdef class Parser(TrainablePipe):
                 for clas in oracle_actions[i:i+max_length]:
                     action = self.moves.c[clas]
                     action.do(state.c, action.label)
-                    state.c.push_hist(action.clas)
                     if state.is_final():
                         break
                 if self.moves.has_gold(eg, start_state.B(0), state.B(0)):
