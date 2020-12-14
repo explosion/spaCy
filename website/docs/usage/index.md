@@ -31,9 +31,10 @@ import QuickstartInstall from 'widgets/quickstart-install.js'
 ### pip {#pip}
 
 Using pip, spaCy releases are available as source packages and binary wheels (as
-of v2.0.13).
+of v2.0.13). For the most recent releases, pip 19.3 or newer is recommended.
 
 ```bash
+$ pip install -U pip setuptools wheel
 $ pip install -U spacy
 ```
 
@@ -66,6 +67,7 @@ environment to avoid modifying system state:
 ```bash
 python -m venv .env
 source .env/bin/activate
+pip install -U pip setuptools wheel
 pip install spacy
 ```
 
@@ -122,10 +124,11 @@ support, we've been grateful to use the work of Chainer's
 interface for GPU arrays.
 
 spaCy can be installed on GPU by specifying `spacy[cuda]`, `spacy[cuda90]`,
-`spacy[cuda91]`, `spacy[cuda92]`, `spacy[cuda100]`, `spacy[cuda101]` or
-`spacy[cuda102]`. If you know your cuda version, using the more explicit
-specifier allows cupy to be installed via wheel, saving some compilation time.
-The specifiers should install [`cupy`](https://cupy.chainer.org).
+`spacy[cuda91]`, `spacy[cuda92]`, `spacy[cuda100]`, `spacy[cuda101]`,
+`spacy[cuda102]`, `spacy[cuda110]` or `spacy[cuda111]`. If you know your cuda
+version, using the more explicit specifier allows cupy to be installed via
+wheel, saving some compilation time. The specifiers should install
+[`cupy`](https://cupy.chainer.org).
 
 ```bash
 $ pip install -U spacy[cuda92]
@@ -158,15 +161,25 @@ system. See notes on [Ubuntu](#source-ubuntu), [macOS / OS X](#source-osx) and
 [Windows](#source-windows) for details.
 
 ```bash
-python -m pip install -U pip                   # update pip
 git clone https://github.com/explosion/spaCy   # clone spaCy
 cd spaCy                                       # navigate into directory
 
 python -m venv .env                            # create environment in .env
 source .env/bin/activate                       # activate virtual environment
-\export PYTHONPATH=`pwd`                        # set Python path to spaCy directory
-pip install -r requirements.txt                # install all requirements
-python setup.py build_ext --inplace            # compile spaCy
+python -m pip install -U pip setuptools wheel  # update build tools
+pip install .                                  # compile and install spaCy
+```
+
+To install with extras:
+
+```bash
+pip install .[lookups,cuda102]                 # install spaCy with extras
+```
+
+To install all dependencies required for development:
+
+```bash
+pip install -r requirements.txt
 ```
 
 Compared to regular install via pip, the
@@ -204,6 +217,36 @@ official distributions these are:
 | Python 3.4   | Visual Studio 2010 |
 | Python 3.5+  | Visual Studio 2015 |
 
+#### Additional options for developers {#source-developers}
+
+Some additional options may be useful for spaCy developers who are editing the
+source code and recompiling frequently.
+
+- Install in editable mode. Changes to `.py` files will be reflected as soon as
+  the files are saved, but edits to Cython files (`.pxd`, `.pyx`) will require
+  the `pip install` or `python setup.py build_ext` command below to be run
+  again. Before installing in editable mode, be sure you have removed any
+  previous installs with `pip uninstall spacy`, which you may need to run
+  multiple times to remove all traces of earlier installs.
+
+  ```diff
+    pip install -U pip setuptools wheel
+  - pip install .
+  + pip install -r requirements.txt
+  + pip install --no-build-isolation --editable .
+  ```
+
+- Build in parallel using `N` CPUs to speed up compilation and then install in
+  editable mode:
+
+  ```diff
+    pip install -U pip setuptools wheel
+  - pip install .
+  + pip install -r requirements.txt
+  + python setup.py build_ext --inplace -j N
+  + python setup.py develop
+  ```
+
 ### Run tests {#run-tests}
 
 spaCy comes with an
@@ -213,14 +256,12 @@ In order to run the tests, you'll usually want to clone the
 [build spaCy from source](#source). This will also install the required
 development dependencies and test utilities defined in the `requirements.txt`.
 
-Alternatively, you can find out where spaCy is installed and run `pytest` on
-that directory. Don't forget to also install the test utilities via spaCy's
-[`requirements.txt`](https://github.com/explosion/spaCy/tree/master/requirements.txt):
+Alternatively, you can run `pytest` on the tests packaged with the install
+`spacy package. Don't forget to also install the test utilities via spaCy's [`requirements.txt`](https://github.com/explosion/spaCy/tree/master/requirements.txt):
 
 ```bash
-python -c "import os; import spacy; print(os.path.dirname(spacy.__file__))"
-pip install -r path/to/requirements.txt
-python -m pytest [spacy directory]
+pip install -r requirements.txt
+python -m pytest --pyargs spacy
 ```
 
 Calling `pytest` on the spaCy directory will run only the basic tests. The flag
@@ -230,8 +271,8 @@ Calling `pytest` on the spaCy directory will run only the basic tests. The flag
 # make sure you are using recent pytest version
 python -m pip install -U pytest
 
-python -m pytest [spacy directory]                 # basic tests
-python -m pytest [spacy directory] --slow          # basic and slow tests
+python -m pytest --pyargs spacy                # basic tests
+python -m pytest --pyargs spacy --slow         # basic and slow tests
 ```
 
 ## Troubleshooting guide {#troubleshooting}

@@ -61,17 +61,16 @@ be able to provide individual support via email. We also believe that help is
 much more valuable if it's shared publicly, so that more people can benefit from
 it.
 
-| Type                     | Platforms                                              |
-| ------------------------ | ------------------------------------------------------ |
-| 🚨 **Bug Reports**       | [GitHub Issue Tracker]                                 |
-| 🎁 **Feature Requests**  | [GitHub Issue Tracker]                                 |
-| 👩‍💻 **Usage Questions**   | [Stack Overflow] · [Gitter Chat] · [Reddit User Group] |
-| 🗯 **General Discussion** | [Gitter Chat] · [Reddit User Group]                    |
+| Type                            | Platforms                               |
+| ------------------------------- | --------------------------------------- |
+| 🚨 **Bug Reports**              | [GitHub Issue Tracker]                  |
+| 🎁 **Feature Requests & Ideas** | [GitHub Discussions]                    |
+| 👩‍💻 **Usage Questions**          | [GitHub Discussions] · [Stack Overflow] |
+| 🗯 **General Discussion**        | [GitHub Discussions]                    |
 
 [github issue tracker]: https://github.com/explosion/spaCy/issues
+[github discussions]: https://github.com/explosion/spaCy/discussions
 [stack overflow]: https://stackoverflow.com/questions/tagged/spacy
-[gitter chat]: https://gitter.im/explosion/spaCy
-[reddit user group]: https://www.reddit.com/r/spacynlp
 
 ## Features
 
@@ -111,16 +110,16 @@ For detailed installation instructions, see the
 
 Using pip, spaCy releases are available as source packages and binary wheels (as
 of `v2.0.13`). Before you install spaCy and its dependencies, make sure that
-`pip` and `setuptools` are up to date.
+`pip`, `setuptools` and `wheel` are up to date.
 
 ```bash
-pip install -U pip setuptools
+pip install -U pip setuptools wheel
 pip install spacy
 ```
 
-For installation on python 3.5 where binary wheels are not provided for the most
-recent versions of the dependencies, you can prefer older binary wheels over
-newer source packages with `--prefer-binary`:
+For installation on python 2.7 or 3.5 where binary wheels are not provided for
+the most recent versions of the dependencies, you can prefer older binary
+wheels over newer source packages with `--prefer-binary`:
 
 ```bash
 pip install spacy --prefer-binary
@@ -140,6 +139,7 @@ environment to avoid modifying system state:
 ```bash
 python -m venv .env
 source .env/bin/activate
+pip install -U pip setuptools wheel
 pip install spacy
 ```
 
@@ -238,16 +238,28 @@ do that depends on your system. See notes on Ubuntu, OS X and Windows for
 details.
 
 ```bash
-# make sure you are using the latest pip
-python -m pip install -U pip
 git clone https://github.com/explosion/spaCy
 cd spaCy
 
 python -m venv .env
 source .env/bin/activate
-export PYTHONPATH=`pwd`
+
+# make sure you are using the latest pip
+python -m pip install -U pip setuptools wheel
+
+pip install .
+```
+
+To install with extras:
+
+```bash
+pip install .[lookups,cuda102]
+```
+
+To install all dependencies required for development:
+
+```bash
 pip install -r requirements.txt
-python setup.py build_ext --inplace
 ```
 
 Compared to regular install via pip, [requirements.txt](requirements.txt)
@@ -287,14 +299,13 @@ tests, you'll usually want to clone the repository and build spaCy from source.
 This will also install the required development dependencies and test utilities
 defined in the `requirements.txt`.
 
-Alternatively, you can find out where spaCy is installed and run `pytest` on
-that directory. Don't forget to also install the test utilities via spaCy's
+Alternatively, you can run `pytest` on the tests from within the installed
+`spacy` package. Don't forget to also install the test utilities via spaCy's
 `requirements.txt`:
 
 ```bash
-python -c "import os; import spacy; print(os.path.dirname(spacy.__file__))"
-pip install -r path/to/requirements.txt
-python -m pytest <spacy-directory>
+pip install -r requirements.txt
+python -m pytest --pyargs spacy
 ```
 
 See [the documentation](https://spacy.io/usage#tests) for more details and
