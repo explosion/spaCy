@@ -24,7 +24,7 @@ def test_cli_converters_conllu_to_docs():
         "4\tavstår\tavstå\tVERB\t_\tMood=Ind|Tense=Pres|VerbForm=Fin\t0\troot\t_\tO",
     ]
     input_data = "\n".join(lines)
-    converted_docs = conllu_to_docs(input_data, n_sents=1)
+    converted_docs = list(conllu_to_docs(input_data, n_sents=1))
     assert len(converted_docs) == 1
     converted = [docs_to_json(converted_docs)]
     assert converted[0]["id"] == 0
@@ -65,8 +65,8 @@ def test_cli_converters_conllu_to_docs():
 )
 def test_cli_converters_conllu_to_docs_name_ner_map(lines):
     input_data = "\n".join(lines)
-    converted_docs = conllu_to_docs(
-        input_data, n_sents=1, ner_map={"PER": "PERSON", "BAD": ""}
+    converted_docs = list(
+        conllu_to_docs(input_data, n_sents=1, ner_map={"PER": "PERSON", "BAD": ""})
     )
     assert len(converted_docs) == 1
     converted = [docs_to_json(converted_docs)]
@@ -99,8 +99,10 @@ def test_cli_converters_conllu_to_docs_subtokens():
         "5\t.\t$.\tPUNCT\t_\t_\t4\tpunct\t_\tname=O",
     ]
     input_data = "\n".join(lines)
-    converted_docs = conllu_to_docs(
-        input_data, n_sents=1, merge_subtokens=True, append_morphology=True
+    converted_docs = list(
+        conllu_to_docs(
+            input_data, n_sents=1, merge_subtokens=True, append_morphology=True
+        )
     )
     assert len(converted_docs) == 1
     converted = [docs_to_json(converted_docs)]
@@ -145,7 +147,7 @@ def test_cli_converters_iob_to_docs():
         "I|PRP|O like|VBP|O London|NNP|B-GPE and|CC|O New|NNP|B-GPE York|NNP|I-GPE City|NNP|I-GPE .|.|O",
     ]
     input_data = "\n".join(lines)
-    converted_docs = iob_to_docs(input_data, n_sents=10)
+    converted_docs = list(iob_to_docs(input_data, n_sents=10))
     assert len(converted_docs) == 1
     converted = docs_to_json(converted_docs)
     assert converted["id"] == 0
@@ -212,7 +214,7 @@ def test_cli_converters_conll_ner_to_docs():
         ".\t.\t_\tO",
     ]
     input_data = "\n".join(lines)
-    converted_docs = conll_ner_to_docs(input_data, n_sents=10)
+    converted_docs = list(conll_ner_to_docs(input_data, n_sents=10))
     assert len(converted_docs) == 1
     converted = docs_to_json(converted_docs)
     assert converted["id"] == 0

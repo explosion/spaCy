@@ -195,7 +195,7 @@ def test_json_to_docs_no_ner(en_vocab):
             ],
         }
     ]
-    docs = json_to_docs(data)
+    docs = list(json_to_docs(data))
     assert len(docs) == 1
     for doc in docs:
         assert not doc.has_annotation("ENT_IOB")
