@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import pytest
 import hypothesis
 import hypothesis.strategies
@@ -44,7 +41,7 @@ def docs(vocab):
             words=["Rats", "bite", "things"],
             heads=[1, 1, 1],
             deps=["nsubj", "ROOT", "dobj"],
-            sent_starts=[True, False, False]
+            sent_starts=[True, False, False],
         )
     ]
 
@@ -77,9 +74,11 @@ def batch_size(docs):
 def beam_width():
     return 4
 
+
 @pytest.fixture(params=[0.0, 0.5, 1.0])
 def beam_density(request):
     return request.param
+
 
 @pytest.fixture
 def vector_size():
@@ -100,7 +99,9 @@ def scores(moves, batch_size, beam_width):
                 numpy.random.uniform(-0.1, 0.1, (beam_width, moves.n_moves))
                 for _ in range(batch_size)
             ]
-        ), dtype="float32")
+        ),
+        dtype="float32",
+    )
 
 
 def test_create_beam(beam):
@@ -126,8 +127,6 @@ def test_beam_parse(examples, beam_width):
     parser.initialize(lambda: examples)
     doc = nlp.make_doc("Australia is a country")
     parser(doc)
-
-
 
 
 @hypothesis.given(hyp=hypothesis.strategies.data())
