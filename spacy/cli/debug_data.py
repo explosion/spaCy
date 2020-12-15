@@ -504,13 +504,18 @@ def _compile_gold(
     for eg in examples:
         gold = eg.reference
         doc = eg.predicted
-        valid_words = [x for x in gold if x is not None]
+        valid_words = [x.text for x in gold]
         data["words"].update(valid_words)
         data["n_words"] += len(valid_words)
-        data["n_misaligned_words"] += len(gold) - len(valid_words)
+        align = eg.alignment
+        for token in doc:
+            if token.orth_.isspace():
+                continue
+            if align.x2y.lengths[token.i] != 1:
+                data["n_misaligned_words"] += 1
         data["texts"].add(doc.text)
         if len(nlp.vocab.vectors):
-            for word in valid_words:
+            for word in [t.text for t in doc]:
                 if nlp.vocab.strings[word] not in nlp.vocab.vectors:
                     data["words_missing_vectors"].update([word])
         if "ner" in factory_names:
