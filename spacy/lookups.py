@@ -120,8 +120,7 @@ class Lookups(object):
         """
         self._tables = OrderedDict()
         for key, value in srsly.msgpack_loads(bytes_data).items():
-            self._tables[key] = Table(key)
-            self._tables[key].update(value)
+            self._tables[key] = Table(key, value)
         return self
 
     def to_disk(self, path, filename="lookups.bin", **kwargs):
@@ -192,7 +191,7 @@ class Table(OrderedDict):
         self.name = name
         # Assume a default size of 1M items
         self.default_size = 1e6
-        size = len(data) if data and len(data) > 0 else self.default_size
+        size = max(len(data), 1) if data is not None else self.default_size
         self.bloom = BloomFilter.from_error_rate(size)
         if data:
             self.update(data)

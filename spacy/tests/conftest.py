@@ -48,6 +48,11 @@ def ca_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def cs_tokenizer():
+    return get_lang_class("cs").Defaults.create_tokenizer()
+
+
+@pytest.fixture(scope="session")
 def da_tokenizer():
     return get_lang_class("da").Defaults.create_tokenizer()
 
@@ -119,6 +124,11 @@ def he_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def hi_tokenizer():
+    return get_lang_class("hi").Defaults.create_tokenizer()
+
+
+@pytest.fixture(scope="session")
 def hr_tokenizer():
     return get_lang_class("hr").Defaults.create_tokenizer()
 
@@ -161,6 +171,11 @@ def lt_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def mk_tokenizer():
+    return get_lang_class("mk").Defaults.create_tokenizer()
+
+
+@pytest.fixture(scope="session")
 def ml_tokenizer():
     return get_lang_class("ml").Defaults.create_tokenizer()
 
@@ -168,6 +183,11 @@ def ml_tokenizer():
 @pytest.fixture(scope="session")
 def nb_tokenizer():
     return get_lang_class("nb").Defaults.create_tokenizer()
+
+
+@pytest.fixture(scope="session")
+def ne_tokenizer():
+    return get_lang_class("ne").Defaults.create_tokenizer()
 
 
 @pytest.fixture(scope="session")
@@ -203,6 +223,11 @@ def ru_lemmatizer():
 
 
 @pytest.fixture(scope="session")
+def sa_tokenizer():
+    return get_lang_class("sa").Defaults.create_tokenizer()
+
+
+@pytest.fixture(scope="session")
 def sr_tokenizer():
     return get_lang_class("sr").Defaults.create_tokenizer()
 
@@ -222,6 +247,9 @@ def th_tokenizer():
 def tr_tokenizer():
     return get_lang_class("tr").Defaults.create_tokenizer()
 
+@pytest.fixture(scope="session")
+def tr_vocab():
+    return get_lang_class("tr").Defaults.create_vocab()
 
 @pytest.fixture(scope="session")
 def tt_tokenizer():

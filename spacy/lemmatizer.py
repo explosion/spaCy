@@ -21,7 +21,7 @@ class Lemmatizer(object):
     def load(cls, *args, **kwargs):
         raise NotImplementedError(Errors.E172)
 
-    def __init__(self, lookups, *args, **kwargs):
+    def __init__(self, lookups, is_base_form=None, *args, **kwargs):
         """Initialize a Lemmatizer.
 
         lookups (Lookups): The lookups object containing the (optional) tables
@@ -31,6 +31,7 @@ class Lemmatizer(object):
         if args or kwargs or not isinstance(lookups, Lookups):
             raise ValueError(Errors.E173)
         self.lookups = lookups
+        self.is_base_form = is_base_form
 
     def __call__(self, string, univ_pos, morphology=None):
         """Lemmatize a string.
@@ -51,7 +52,7 @@ class Lemmatizer(object):
         if univ_pos in ("", "eol", "space"):
             return [string.lower()]
         # See Issue #435 for example of where this logic is requied.
-        if self.is_base_form(univ_pos, morphology):
+        if callable(self.is_base_form) and self.is_base_form(univ_pos, morphology):
             return [string.lower()]
         index_table = self.lookups.get_table("lemma_index", {})
         exc_table = self.lookups.get_table("lemma_exc", {})
@@ -68,40 +69,6 @@ class Lemmatizer(object):
             rules_table.get(univ_pos, []),
         )
         return lemmas
-
-    def is_base_form(self, univ_pos, morphology=None):
-        """
-        Check whether we're dealing with an uninflected paradigm, so we can
-        avoid lemmatization entirely.
-
-        univ_pos (unicode / int): The token's universal part-of-speech tag.
-        morphology (dict): The token's morphological features following the
-            Universal Dependencies scheme.
-        """
-        if morphology is None:
-            morphology = {}
-        if univ_pos == "noun" and morphology.get("Number") == "sing":
-            return True
-        elif univ_pos == "verb" and morphology.get("VerbForm") == "inf":
-            return True
-        # This maps 'VBP' to base form -- probably just need 'IS_BASE'
-        # morphology
-        elif univ_pos == "verb" and (
-            morphology.get("VerbForm") == "fin"
-            and morphology.get("Tense") == "pres"
-            and morphology.get("Number") is None
-        ):
-            return True
-        elif univ_pos == "adj" and morphology.get("Degree") == "pos":
-            return True
-        elif morphology.get("VerbForm") == "inf":
-            return True
-        elif morphology.get("VerbForm") == "none":
-            return True
-        elif morphology.get("Degree") == "pos":
-            return True
-        else:
-            return False
 
     def noun(self, string, morphology=None):
         return self(string, "noun", morphology)

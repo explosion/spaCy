@@ -59,7 +59,7 @@ def test_issue2626_2835(en_tokenizer, text):
 
 
 def test_issue2656(en_tokenizer):
-    """Test that tokenizer correctly splits of punctuation after numbers with
+    """Test that tokenizer correctly splits off punctuation after numbers with
     decimal points.
     """
     doc = en_tokenizer("I went for 40.3, and got home by 10.0.")

@@ -26,6 +26,7 @@ cdef enum quantifier_t:
     ZERO_PLUS
     ONE
     ONE_PLUS
+    FINAL_ID
 
 
 cdef struct AttrValueC:

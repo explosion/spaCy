@@ -14,6 +14,9 @@ It's commercial open-source software, released under the MIT license.
 💫 **Version 2.3 out now!**
 [Check out the release notes here.](https://github.com/explosion/spaCy/releases)
 
+🌙 **Version 3.0 (nightly) out now!**
+[Check out the release notes here.](https://github.com/explosion/spaCy/releases/tag/v3.0.0rc1)
+
 [![Azure Pipelines](<https://img.shields.io/azure-devops/build/explosion-ai/public/8/master.svg?logo=azure-pipelines&style=flat-square&label=build+(3.x)>)](https://dev.azure.com/explosion-ai/public/_build?definitionId=8)
 [![Travis Build Status](<https://img.shields.io/travis/explosion/spaCy/master.svg?style=flat-square&logo=travis-ci&logoColor=white&label=build+(2.7)>)](https://travis-ci.org/explosion/spaCy)
 [![Current Release Version](https://img.shields.io/github/release/explosion/spacy.svg?style=flat-square&logo=github)](https://github.com/explosion/spaCy/releases)

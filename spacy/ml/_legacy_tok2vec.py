@@ -27,16 +27,16 @@ def Tok2Vec(width, embed_size, **kwargs):
     bilstm_depth = kwargs.get("bilstm_depth", 0)
     cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
     with Model.define_operators({">>": chain, "|": concatenate, "**": clone}):
-        norm = HashEmbed(width, embed_size, column=cols.index(NORM), name="embed_norm")
+        norm = HashEmbed(width, embed_size, column=cols.index(NORM), name="embed_norm", seed=6)
         if subword_features:
             prefix = HashEmbed(
-                width, embed_size // 2, column=cols.index(PREFIX), name="embed_prefix"
+                width, embed_size // 2, column=cols.index(PREFIX), name="embed_prefix", seed=7
             )
             suffix = HashEmbed(
-                width, embed_size // 2, column=cols.index(SUFFIX), name="embed_suffix"
+                width, embed_size // 2, column=cols.index(SUFFIX), name="embed_suffix", seed=8
             )
             shape = HashEmbed(
-                width, embed_size // 2, column=cols.index(SHAPE), name="embed_shape"
+                width, embed_size // 2, column=cols.index(SHAPE), name="embed_shape", seed=9
             )
         else:
             prefix, suffix, shape = (None, None, None)
@@ -48,6 +48,14 @@ def Tok2Vec(width, embed_size, **kwargs):
                     (glove | norm | prefix | suffix | shape)
                     >> LN(Maxout(width, width * 5, pieces=3)),
                     column=cols.index(ORTH),
+                )
+            elif char_embed:
+                embed = concatenate_lists(
+                    CharacterEmbed(nM=64, nC=8),
+                    FeatureExtracter(cols) >> with_flatten(glove),
+                )
+                reduce_dimensions = LN(
+                    Maxout(width, 64 * 8 + width, pieces=cnn_maxout_pieces)
                 )
             else:
                 embed = uniqued(
@@ -81,7 +89,8 @@ def Tok2Vec(width, embed_size, **kwargs):
             )
         else:
             tok2vec = FeatureExtracter(cols) >> with_flatten(
-                embed >> convolution ** conv_depth, pad=conv_depth
+                embed
+                >> convolution ** conv_depth, pad=conv_depth
             )
 
         if bilstm_depth >= 1:

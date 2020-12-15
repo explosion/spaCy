@@ -349,7 +349,7 @@ cdef class Lexeme:
     @property
     def is_oov(self):
         """RETURNS (bool): Whether the lexeme is out-of-vocabulary."""
-        return self.orth in self.vocab.vectors
+        return self.orth not in self.vocab.vectors
 
     property is_stop:
         """RETURNS (bool): Whether the lexeme is a stop word."""

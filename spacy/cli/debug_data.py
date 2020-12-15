@@ -59,10 +59,6 @@ def debug_data(
     if not dev_path.exists():
         msg.fail("Development data not found", dev_path, exits=1)
 
-    tag_map = {}
-    if tag_map_path is not None:
-        tag_map = srsly.read_json(tag_map_path)
-
     # Initialize the model and pipeline
     pipeline = [p.strip() for p in pipeline.split(",")]
     if base_model:
@@ -70,8 +66,11 @@ def debug_data(
     else:
         lang_cls = get_lang_class(lang)
         nlp = lang_cls()
-    # Update tag map with provided mapping
-    nlp.vocab.morphology.tag_map.update(tag_map)
+
+    if tag_map_path is not None:
+        tag_map = srsly.read_json(tag_map_path)
+        # Replace tag map with provided mapping
+        nlp.vocab.morphology.load_tag_map(tag_map)
 
     msg.divider("Data format validation")
 

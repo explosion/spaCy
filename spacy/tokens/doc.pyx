@@ -352,17 +352,25 @@ cdef class Doc:
     def doc(self):
         return self
 
-    def char_span(self, int start_idx, int end_idx, label=0, kb_id=0, vector=None):
-        """Create a `Span` object from the slice `doc.text[start : end]`.
+    def char_span(self, int start_idx, int end_idx, label=0, kb_id=0, vector=None, alignment_mode="strict"):
+        """Create a `Span` object from the slice
+        `doc.text[start_idx : end_idx]`. Returns None if no valid `Span` can be
+        created.
 
         doc (Doc): The parent document.
-        start (int): The index of the first character of the span.
-        end (int): The index of the first character after the span.
+        start_idx (int): The index of the first character of the span.
+        end_idx (int): The index of the first character after the span.
         label (uint64 or string): A label to attach to the Span, e.g. for
             named entities.
-        kb_id (uint64 or string):  An ID from a KB to capture the meaning of a named entity.
+        kb_id (uint64 or string):  An ID from a KB to capture the meaning of a
+            named entity.
         vector (ndarray[ndim=1, dtype='float32']): A meaning representation of
             the span.
+        alignment_mode (str): How character indices are aligned to token
+            boundaries. Options: "strict" (character indices must be aligned
+            with token boundaries), "contract" (span of all tokens completely
+            within the character span), "expand" (span of all tokens at least
+            partially covered by the character span). Defaults to "strict".
         RETURNS (Span): The newly constructed object.
 
         DOCS: https://spacy.io/api/doc#char_span
@@ -371,12 +379,29 @@ cdef class Doc:
             label = self.vocab.strings.add(label)
         if not isinstance(kb_id, int):
             kb_id = self.vocab.strings.add(kb_id)
-        cdef int start = token_by_start(self.c, self.length, start_idx)
-        if start == -1:
+        if alignment_mode not in ("strict", "contract", "expand"):
+            alignment_mode = "strict"
+        cdef int start = token_by_char(self.c, self.length, start_idx)
+        if start < 0 or (alignment_mode == "strict" and start_idx != self[start].idx):
             return None
-        cdef int end = token_by_end(self.c, self.length, end_idx)
-        if end == -1:
+        # end_idx is exclusive, so find the token at one char before
+        cdef int end = token_by_char(self.c, self.length, end_idx - 1)
+        if end < 0 or (alignment_mode == "strict" and end_idx != self[end].idx + len(self[end])):
             return None
+        # Adjust start and end by alignment_mode
+        if alignment_mode == "contract":
+            if self[start].idx < start_idx:
+                start += 1
+            if end_idx < self[end].idx + len(self[end]):
+                end -= 1
+            # if no tokens are completely within the span, return None
+            if end < start:
+                return None
+        elif alignment_mode == "expand":
+            # Don't consider the trailing whitespace to be part of the previous
+            # token
+            if start_idx == self[start].idx + len(self[start]):
+                start += 1
         # Currently we have the token index, we want the range-end index
         end += 1
         cdef Span span = Span(self, start, end, label=label, kb_id=kb_id, vector=vector)
@@ -892,7 +917,7 @@ cdef class Doc:
 
         DOCS: https://spacy.io/api/doc#to_bytes
         """
-        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE, ENT_ID, NORM]  # TODO: ENT_KB_ID ?
+        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE, ENT_ID, NORM, ENT_KB_ID]
         if self.is_tagged:
             array_head.extend([TAG, POS])
         # If doc parsed add head and dep attribute
@@ -901,6 +926,15 @@ cdef class Doc:
         # Otherwise add sent_start
         else:
             array_head.append(SENT_START)
+        strings = set()
+        for token in self:
+            strings.add(token.tag_)
+            strings.add(token.lemma_)
+            strings.add(token.dep_)
+            strings.add(token.ent_type_)
+            strings.add(token.ent_kb_id_)
+            strings.add(token.ent_id_)
+            strings.add(token.norm_)
         # Msgpack doesn't distinguish between lists and tuples, which is
         # vexing for user data. As a best guess, we *know* that within
         # keys, we must have tuples. In values we just have to hope
@@ -912,6 +946,7 @@ cdef class Doc:
             "sentiment": lambda: self.sentiment,
             "tensor": lambda: self.tensor,
             "cats": lambda: self.cats,
+            "strings": lambda: list(strings),
         }
         for key in kwargs:
             if key in serializers or key in ("user_data", "user_data_keys", "user_data_values"):
@@ -942,6 +977,7 @@ cdef class Doc:
             "sentiment": lambda b: None,
             "tensor": lambda b: None,
             "cats": lambda b: None,
+            "strings": lambda b: None,
             "user_data_keys": lambda b: None,
             "user_data_values": lambda b: None,
         }
@@ -965,6 +1001,9 @@ cdef class Doc:
             self.tensor = msg["tensor"]
         if "cats" not in exclude and "cats" in msg:
             self.cats = msg["cats"]
+        if "strings" not in exclude and "strings" in msg:
+            for s in msg["strings"]:
+                self.vocab.strings.add(s)
         start = 0
         cdef const LexemeC* lex
         cdef unicode orth_
@@ -1154,21 +1193,33 @@ cdef class Doc:
 
 
 cdef int token_by_start(const TokenC* tokens, int length, int start_char) except -2:
-    cdef int i
-    for i in range(length):
-        if tokens[i].idx == start_char:
-            return i
+    cdef int i = token_by_char(tokens, length, start_char)
+    if i >= 0 and tokens[i].idx == start_char:
+        return i
     else:
         return -1
 
 
 cdef int token_by_end(const TokenC* tokens, int length, int end_char) except -2:
-    cdef int i
-    for i in range(length):
-        if tokens[i].idx + tokens[i].lex.length == end_char:
-            return i
+    # end_char is exclusive, so find the token at one char before
+    cdef int i = token_by_char(tokens, length, end_char - 1)
+    if i >= 0 and tokens[i].idx + tokens[i].lex.length == end_char:
+        return i
     else:
         return -1
+
+
+cdef int token_by_char(const TokenC* tokens, int length, int char_idx) except -2:
+    cdef int start = 0, mid, end = length - 1
+    while start <= end:
+        mid = (start + end) / 2
+        if char_idx < tokens[mid].idx:
+            end = mid - 1
+        elif char_idx >= tokens[mid].idx + tokens[mid].lex.length + tokens[mid].spacy:
+            start = mid + 1
+        else:
+            return mid
+    return -1
 
 
 cdef int set_children_from_heads(TokenC* tokens, int length) except -1:

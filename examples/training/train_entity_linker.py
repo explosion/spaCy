@@ -9,7 +9,7 @@ For more details, see the documentation:
 * Entity Linking: https://spacy.io/usage/linguistic-features#entity-linking
 
 Compatible with: spaCy v2.2.4
-Last tested with: v2.2.4
+Last tested with: v2.3.4
 """
 from __future__ import unicode_literals, print_function
 
@@ -60,12 +60,12 @@ TRAIN_DATA = sample_train_data()
     output_dir=("Optional output directory", "option", "o", Path),
     n_iter=("Number of training iterations", "option", "n", int),
 )
-def main(kb_path, vocab_path=None, output_dir=None, n_iter=50):
+def main(kb_path, vocab_path, output_dir=None, n_iter=50):
     """Create a blank model with the specified vocab, set up the pipeline and train the entity linker.
     The `vocab` should be the one used during creation of the KB."""
-    vocab = Vocab().from_disk(vocab_path)
     # create blank English model with correct vocab
-    nlp = spacy.blank("en", vocab=vocab)
+    nlp = spacy.blank("en")
+    nlp.vocab.from_disk(vocab_path)
     nlp.vocab.vectors.name = "spacy_pretrained_vectors"
     print("Created blank 'en' model with vocab from '%s'" % vocab_path)
 
@@ -91,7 +91,7 @@ def main(kb_path, vocab_path=None, output_dir=None, n_iter=50):
         nlp.add_pipe(entity_linker, last=True)
 
     # Convert the texts to docs to make sure we have doc.ents set for the training examples.
-    # Also ensure that the annotated examples correspond to known identifiers in the knowlege base.
+    # Also ensure that the annotated examples correspond to known identifiers in the knowledge base.
     kb_ids = nlp.get_pipe("entity_linker").kb.get_entity_strings()
     TRAIN_DOCS = []
     for text, annotation in TRAIN_DATA:

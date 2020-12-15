@@ -67,7 +67,7 @@ def main(model_name, unlabelled_loc):
     pipe_exceptions = ["ner", "trf_wordpiecer", "trf_tok2vec"]
     other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipe_exceptions]
     sizes = compounding(1.0, 4.0, 1.001)
-    with nlp.disable_pipes(*other_pipes) and warnings.catch_warnings():
+    with nlp.disable_pipes(*other_pipes), warnings.catch_warnings():
         # show warnings for misaligned entity spans once
         warnings.filterwarnings("once", category=UserWarning, module='spacy')
 

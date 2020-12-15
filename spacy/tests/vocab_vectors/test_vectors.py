@@ -376,6 +376,6 @@ def test_vector_is_oov():
     data[1] = 2.0
     vocab.set_vector("cat", data[0])
     vocab.set_vector("dog", data[1])
-    assert vocab["cat"].is_oov is True
-    assert vocab["dog"].is_oov is True
-    assert vocab["hamster"].is_oov is False
+    assert vocab["cat"].is_oov is False
+    assert vocab["dog"].is_oov is False
+    assert vocab["hamster"].is_oov is True

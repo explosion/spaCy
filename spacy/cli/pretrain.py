@@ -18,7 +18,8 @@ from ..errors import Errors
 from ..tokens import Doc
 from ..attrs import ID, HEAD
 from .._ml import Tok2Vec, flatten, chain, create_default_optimizer
-from .._ml import masked_language_model, get_cossim_loss
+from .._ml import masked_language_model, get_cossim_loss, get_characters_loss
+from .._ml import MultiSoftmax
 from .. import util
 from .train import _load_pretrained_tok2vec
 
@@ -42,7 +43,7 @@ from .train import _load_pretrained_tok2vec
     bilstm_depth=("Depth of BiLSTM layers (requires PyTorch)", "option", "lstm", int),
     embed_rows=("Number of embedding rows", "option", "er", int),
     loss_func=(
-        "Loss function to use for the objective. Either 'L2' or 'cosine'",
+        "Loss function to use for the objective. Either 'characters', 'L2' or 'cosine'",
         "option",
         "L",
         str,
@@ -85,11 +86,11 @@ def pretrain(
     output_dir,
     width=96,
     conv_depth=4,
-    bilstm_depth=0,
     cnn_pieces=3,
     sa_depth=0,
-    use_chars=False,
     cnn_window=1,
+    bilstm_depth=0,
+    use_chars=False,
     embed_rows=2000,
     loss_func="cosine",
     use_vectors=False,
@@ -125,10 +126,6 @@ def pretrain(
     util.fix_random_seed(seed)
 
     has_gpu = prefer_gpu()
-    if has_gpu:
-        import torch
-
-        torch.set_default_tensor_type("torch.cuda.FloatTensor")
     msg.info("Using GPU" if has_gpu else "Not using GPU")
 
     output_dir = Path(output_dir)
@@ -174,6 +171,7 @@ def pretrain(
             subword_features=not use_chars,  # Set to False for Chinese etc
             cnn_maxout_pieces=cnn_pieces,  # If set to 1, use Mish activation.
         ),
+        objective=loss_func
     )
     # Load in pretrained weights
     if init_tok2vec is not None:
@@ -264,7 +262,10 @@ def make_update(model, docs, optimizer, drop=0.0, objective="L2"):
     RETURNS loss: A float for the loss.
     """
     predictions, backprop = model.begin_update(docs, drop=drop)
-    loss, gradients = get_vectors_loss(model.ops, docs, predictions, objective)
+    if objective == "characters":
+        loss, gradients = get_characters_loss(model.ops, docs, predictions)
+    else:
+        loss, gradients = get_vectors_loss(model.ops, docs, predictions, objective)
     backprop(gradients, sgd=optimizer)
     # Don't want to return a cupy object here
     # The gradients are modified in-place by the BERT MLM,
@@ -326,16 +327,23 @@ def get_vectors_loss(ops, docs, prediction, objective="L2"):
     return loss, d_target
 
 
-def create_pretraining_model(nlp, tok2vec):
+def create_pretraining_model(nlp, tok2vec, objective="cosine", nr_char=10):
     """Define a network for the pretraining. We simply add an output layer onto
     the tok2vec input model. The tok2vec input model needs to be a model that
     takes a batch of Doc objects (as a list), and returns a list of arrays.
     Each array in the output needs to have one row per token in the doc.
     """
-    output_size = nlp.vocab.vectors.data.shape[1]
-    output_layer = chain(
-        LN(Maxout(300, pieces=3)), Affine(output_size, drop_factor=0.0)
-    )
+    if objective == "characters":
+        out_sizes = [256] * nr_char
+        output_layer = chain(
+            LN(Maxout(300, pieces=3)),
+            MultiSoftmax(out_sizes, 300)
+        )
+    else:
+        output_size = nlp.vocab.vectors.data.shape[1]
+        output_layer = chain(
+            LN(Maxout(300, pieces=3)), Affine(output_size, drop_factor=0.0)
+        )
     # This is annoying, but the parser etc have the flatten step after
     # the tok2vec. To load the weights in cleanly, we need to match
     # the shape of the models' components exactly. So what we cann

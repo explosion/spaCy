@@ -38,7 +38,6 @@ from .. import about
     conv_depth=("Depth of CNN layers of Tok2Vec component", "option", "cd", int),
     cnn_window=("Window size for CNN layers of Tok2Vec component", "option", "cW", int),
     cnn_pieces=("Maxout size for CNN layers of Tok2Vec component. 1 for Mish", "option", "cP", int),
-    use_chars=("Whether to use character-based embedding of Tok2Vec component", "flag", "chr", bool),
     bilstm_depth=("Depth of BiLSTM layers of Tok2Vec component (requires PyTorch)", "option", "lstm", int),
     embed_rows=("Number of embedding rows of Tok2Vec component", "option", "er", int),
     n_iter=("Number of iterations", "option", "n", int),
@@ -78,7 +77,6 @@ def train(
     conv_depth=4,
     cnn_window=1,
     cnn_pieces=3,
-    use_chars=False,
     bilstm_depth=0,
     embed_rows=2000,
     n_iter=30,
@@ -137,9 +135,6 @@ def train(
         output_path.mkdir()
         msg.good("Created output directory: {}".format(output_path))
 
-    tag_map = {}
-    if tag_map_path is not None:
-        tag_map = srsly.read_json(tag_map_path)
     # Take dropout and batch size as generators of values -- dropout
     # starts high and decays sharply, to force the optimizer to explore.
     # Batch size starts at 1 and grows, so that we make updates quickly
@@ -204,7 +199,7 @@ def train(
                     "positive_label": textcat_positive_label,
                 }
             if pipe not in nlp.pipe_names:
-                msg.text("Adding component to base model '{}'".format(pipe))
+                msg.text("Adding component to base model: '{}'".format(pipe))
                 nlp.add_pipe(nlp.create_pipe(pipe, config=pipe_cfg))
                 pipes_added = True
             elif replace_components:
@@ -250,8 +245,10 @@ def train(
                 pipe_cfg = {}
             nlp.add_pipe(nlp.create_pipe(pipe, config=pipe_cfg))
 
-    # Update tag map with provided mapping
-    nlp.vocab.morphology.tag_map.update(tag_map)
+    if tag_map_path is not None:
+        tag_map = srsly.read_json(tag_map_path)
+        # Replace tag map with provided mapping
+        nlp.vocab.morphology.load_tag_map(tag_map)
 
     # Create empty extra lexeme tables so the data from spacy-lookups-data
     # isn't loaded if these features are accessed
@@ -285,7 +282,7 @@ def train(
 
     if base_model and not pipes_added:
         # Start with an existing model, use default optimizer
-        optimizer = create_default_optimizer(Model.ops)
+        optimizer = nlp.resume_training(device=use_gpu)
     else:
         # Start with a blank model, call begin_training
         cfg = {"device": use_gpu}
@@ -295,7 +292,6 @@ def train(
         cfg["cnn_maxout_pieces"] = cnn_pieces
         cfg["embed_size"] = embed_rows
         cfg["conv_window"] = cnn_window
-        cfg["subword_features"] = not use_chars
         optimizer = nlp.begin_training(lambda: corpus.train_tuples, **cfg)
 
     nlp._optimizer = None
@@ -554,9 +550,10 @@ def train(
                         iter_since_best = 0
                         best_score = current_score
                     if iter_since_best >= n_early_stopping:
+                        iter_current = i + 1
                         msg.text(
                             "Early stopping, best iteration "
-                            "is: {}".format(i - iter_since_best)
+                            "is: {}".format(iter_current - iter_since_best)
                         )
                         msg.text(
                             "Best score = {}; Final iteration "
@@ -573,9 +570,12 @@ def train(
         best_pipes = nlp.pipe_names
         if disabled_pipes:
             disabled_pipes.restore()
+            meta["pipeline"] = nlp.pipe_names
         with nlp.use_params(optimizer.averages):
             final_model_path = output_path / "model-final"
             nlp.to_disk(final_model_path)
+            srsly.write_json(final_model_path / "meta.json", meta)
+
             meta_loc = output_path / "model-final" / "meta.json"
             final_meta = srsly.read_json(meta_loc)
             final_meta.setdefault("accuracy", {})

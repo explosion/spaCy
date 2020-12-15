@@ -5,6 +5,7 @@ import os
 import subprocess
 import sys
 import contextlib
+import numpy
 from distutils.command.build_ext import build_ext
 from distutils.sysconfig import get_python_inc
 import distutils.util
@@ -118,6 +119,55 @@ def is_source_release(path):
     return os.path.exists(os.path.join(path, "PKG-INFO"))
 
 
+# Include the git version in the build (adapted from NumPy)
+# Copyright (c) 2005-2020, NumPy Developers.
+# BSD 3-Clause license, see licenses/3rd_party_licenses.txt
+def write_git_info_py(filename="spacy/git_info.py"):
+    def _minimal_ext_cmd(cmd):
+        # construct minimal environment
+        env = {}
+        for k in ["SYSTEMROOT", "PATH", "HOME"]:
+            v = os.environ.get(k)
+            if v is not None:
+                env[k] = v
+        # LANGUAGE is used on win32
+        env["LANGUAGE"] = "C"
+        env["LANG"] = "C"
+        env["LC_ALL"] = "C"
+        out = subprocess.check_output(cmd, stderr=subprocess.STDOUT, env=env)
+        return out
+
+    git_version = "Unknown"
+    if os.path.exists(".git"):
+        try:
+            out = _minimal_ext_cmd(["git", "rev-parse", "--short", "HEAD"])
+            git_version = out.strip().decode("ascii")
+        except:
+            pass
+    elif os.path.exists(filename):
+        # must be a source distribution, use existing version file
+        try:
+            a = open(filename, "r")
+            lines = a.readlines()
+            git_version = lines[-1].split('"')[1]
+        except:
+            pass
+        finally:
+            a.close()
+
+    text = """# THIS FILE IS GENERATED FROM SPACY SETUP.PY
+#
+GIT_VERSION = "%(git_version)s"
+"""
+    a = open(filename, "w")
+    try:
+        a.write(
+            text % {"git_version": git_version,}
+        )
+    finally:
+        a.close()
+
+
 def clean(path):
     for name in MOD_NAMES:
         name = name.replace(".", "/")
@@ -140,9 +190,11 @@ def chdir(new_dir):
 
 
 def setup_package():
+    write_git_info_py()
+
     root = os.path.abspath(os.path.dirname(__file__))
 
-    if len(sys.argv) > 1 and sys.argv[1] == "clean":
+    if hasattr(sys, "argv") and len(sys.argv) > 1 and sys.argv[1] == "clean":
         return clean(root)
 
     with chdir(root):
@@ -151,6 +203,7 @@ def setup_package():
             exec(f.read(), about)
 
         include_dirs = [
+            numpy.get_include(),
             get_python_inc(plat_specific=True),
             os.path.join(root, "include"),
         ]
