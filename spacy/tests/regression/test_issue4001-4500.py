@@ -307,9 +307,9 @@ def test_issue4313():
     # ensure the beam_parse still works with the new label
     docs = [doc]
     ner = nlp.get_pipe("beam_ner")
-    beams = ner.beam_parse(docs, drop=0.0,
-                beam_width=beam_width,
-                beam_density=beam_density)
+    beams = ner.beam_parse(
+        docs, drop=0.0, beam_width=beam_width, beam_density=beam_density
+    )
 
     # for doc, beam in zip(docs, beams):
     #     entity_scores = defaultdict(float)
