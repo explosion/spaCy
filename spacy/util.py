@@ -67,8 +67,10 @@ CONFIG_SECTION_ORDER = ["paths", "variables", "system", "nlp", "components", "co
 # fmt: on
 
 
-logging.basicConfig(format="%(message)s")
 logger = logging.getLogger("spacy")
+logger_stream_handler = logging.StreamHandler()
+logger_stream_handler.setFormatter(logging.Formatter('%(message)s'))
+logger.addHandler(logger_stream_handler)
 
 
 class ENV_VARS:
