@@ -293,14 +293,18 @@ def test_issue4313():
     beam_width = 16
     beam_density = 0.0001
     nlp = English()
-    config = {}
+    config = {
+        "beam_width": beam_width,
+        "beam_density": beam_density,
+    }
     ner = nlp.add_pipe("beam_ner", config=config)
     ner.add_label("SOME_LABEL")
     nlp.initialize()
-    # add a new label to the doc without adding it explicitely to the NER
+    # add a new label to the doc
     doc = nlp("What do you think about Apple ?")
     assert len(ner.labels) == 1
     assert "SOME_LABEL" in ner.labels
+    ner.add_label("MY_ORG")   # TODO: not sure if we want this to be necessary...
     apple_ent = Span(doc, 5, 6, label="MY_ORG")
     doc.ents = list(doc.ents) + [apple_ent]
 
@@ -310,12 +314,6 @@ def test_issue4313():
     beams = ner.beam_parse(
         docs, drop=0.0, beam_width=beam_width, beam_density=beam_density
     )
-
-    # for doc, beam in zip(docs, beams):
-    #     entity_scores = defaultdict(float)
-    #     for score, ents in ner.moves.get_beam_parses(beam):
-    #         for start, end, label in ents:
-    #             entity_scores[(start, end, label)] += score
 
 
 def test_issue4348():

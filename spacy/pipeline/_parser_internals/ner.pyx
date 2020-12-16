@@ -2,6 +2,7 @@ from libc.stdint cimport int32_t
 from cymem.cymem cimport Pool
 
 from collections import Counter
+from thinc.extra.search cimport Beam
 
 from ...tokens.doc cimport Doc
 from ...tokens.span import Span
@@ -244,6 +245,22 @@ cdef class BiluoPushDown(TransitionSystem):
         for i in range(doc.length):
             if doc.c[i].ent_iob == 0:
                 doc.c[i].ent_iob = 2
+
+    def get_beam_parses(self, Beam beam):
+        parses = []
+        probs = beam.probs
+        for i in range(beam.size):
+            state = <StateC*>beam.at(i)
+            if state.is_final():
+                prob = probs[i]
+                parse = []
+                for j in range(state._ents.size()):
+                    start = state._ents[j].start
+                    end = state._ents[j].end
+                    label = state._ents[j].label
+                    parse.append((start, end, self.strings[label]))
+                parses.append((prob, parse))
+        return parses
 
     def init_gold(self, StateClass state, Example example):
         return BiluoGold(self, state, example)
