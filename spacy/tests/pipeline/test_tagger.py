@@ -87,6 +87,22 @@ def test_initialize_examples():
         nlp.initialize(get_examples=train_examples)
 
 
+def test_no_data():
+    # Test that the tagger provides a nice error when there's no tagging data / labels
+    TEXTCAT_DATA = [
+        ("I'm so happy.", {"cats": {"POSITIVE": 1.0, "NEGATIVE": 0.0}}),
+        ("I'm so angry", {"cats": {"POSITIVE": 0.0, "NEGATIVE": 1.0}}),
+    ]
+    nlp = English()
+    nlp.add_pipe("tagger")
+    nlp.add_pipe("textcat")
+    train_examples = []
+    for t in TEXTCAT_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+    with pytest.raises(ValueError):
+        nlp.initialize(get_examples=lambda: train_examples)
+
+
 def test_overfitting_IO():
     # Simple test to try and quickly overfit the tagger - ensuring the ML models work correctly
     nlp = English()
