@@ -256,7 +256,7 @@ class Tagger(TrainablePipe):
         DOCS: https://nightly.spacy.io/api/tagger#get_loss
         """
         validate_examples(examples, "Tagger.get_loss")
-        loss_func = SequenceCategoricalCrossentropy(names=self.labels, normalize=False)
+        loss_func = SequenceCategoricalCrossentropy(names=self.labels, normalize=False, missing_value="")
         truths = [eg.get_aligned("TAG", as_string=True) for eg in examples]
         d_scores, loss = loss_func(scores, truths)
         if self.model.ops.xp.isnan(loss):

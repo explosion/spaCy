@@ -36,6 +36,10 @@ TRAIN_DATA = [
     ("Eat blue ham", {"tags": ["V", "J", "N"]}),
 ]
 
+PARTIAL_DATA = [
+    ("I like green eggs", {"tags": ["", "V", "J", ""]}),
+]
+
 
 def test_no_label():
     nlp = Language()
@@ -102,6 +106,25 @@ def test_no_data():
     with pytest.raises(ValueError):
         nlp.initialize(get_examples=lambda: train_examples)
 
+
+def test_incomplete_data():
+    # Test that the tagger works with incomplete information
+    nlp = English()
+    nlp.add_pipe("tagger")
+    train_examples = []
+    for t in PARTIAL_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+    for i in range(50):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+    assert losses["tagger"] < 0.00001
+
+    # test the trained model
+    test_text = "I like blue eggs"
+    doc = nlp(test_text)
+    assert doc[1].tag_ is "V"
+    assert doc[2].tag_ is "J"
 
 def test_overfitting_IO():
     # Simple test to try and quickly overfit the tagger - ensuring the ML models work correctly
