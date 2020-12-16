@@ -5,6 +5,7 @@ from wasabi import Printer
 import srsly
 import re
 import sys
+import itertools
 
 from ._util import app, Arg, Opt
 from ..training import docs_to_json
@@ -130,15 +131,16 @@ def convert(
         )
         doc_files.append((input_loc, docs))
     if concatenate:
-        all_docs = []
-        for _, docs in doc_files:
-            all_docs.extend(docs)
+        all_docs = itertools.chain.from_iterable([docs for _, docs in doc_files])
         doc_files = [(input_path, all_docs)]
     for input_loc, docs in doc_files:
         if file_type == "json":
             data = [docs_to_json(docs)]
+            len_docs = len(data)
         else:
-            data = DocBin(docs=docs, store_user_data=True).to_bytes()
+            db = DocBin(docs=docs, store_user_data=True)
+            len_docs = len(db)
+            data = db.to_bytes()
         if output_dir == "-":
             _print_docs_to_stdout(data, file_type)
         else:
@@ -149,7 +151,7 @@ def convert(
                 output_file = Path(output_dir) / input_loc.parts[-1]
                 output_file = output_file.with_suffix(f".{file_type}")
             _write_docs_to_file(data, output_file, file_type)
-            msg.good(f"Generated output file ({len(docs)} documents): {output_file}")
+            msg.good(f"Generated output file ({len_docs} documents): {output_file}")
 
 
 def _print_docs_to_stdout(data: Any, output_type: str) -> None:

@@ -7,7 +7,7 @@ warnings.filterwarnings("ignore", message="numpy.dtype size changed")  # noqa
 warnings.filterwarnings("ignore", message="numpy.ufunc size changed")  # noqa
 
 # These are imported as part of the API
-from thinc.api import prefer_gpu, require_gpu  # noqa: F401
+from thinc.api import prefer_gpu, require_gpu, require_cpu  # noqa: F401
 from thinc.api import Config
 
 from . import pipeline  # noqa: F401

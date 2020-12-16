@@ -120,7 +120,7 @@ function formatAccuracy(data) {
                 ? null
                 : {
                       label,
-                      value: (value * 100).toFixed(2),
+                      value: value.toFixed(2),
                       help: MODEL_META[label],
                   }
         })

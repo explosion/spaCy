@@ -338,7 +338,7 @@ cdef class Tokenizer:
                     # Copy special case tokens into doc and adjust token and
                     # character offsets
                     idx_offset = 0
-                    orig_final_spacy = doc.c[span_end + offset - 1].spacy
+                    orig_final_spacy = doc.c[span_end - 1].spacy
                     orig_idx = doc.c[i].idx
                     for j in range(cached.length):
                         tokens[i + offset + j] = cached.data.tokens[j]
@@ -404,9 +404,7 @@ cdef class Tokenizer:
         cdef unicode minus_suf
         cdef size_t last_size = 0
         while string and len(string) != last_size:
-            if self.token_match and self.token_match(string) \
-                    and not self.find_prefix(string) \
-                    and not self.find_suffix(string):
+            if self.token_match and self.token_match(string):
                 break
             if with_special_cases and self._specials.get(hash_string(string)) != NULL:
                 break
@@ -679,6 +677,8 @@ cdef class Tokenizer:
                             break
                         suffixes.append(("SUFFIX", substring[split:]))
                         substring = substring[:split]
+                if len(substring) == 0:
+                    continue
                 if token_match(substring):
                     tokens.append(("TOKEN_MATCH", substring))
                     substring = ''

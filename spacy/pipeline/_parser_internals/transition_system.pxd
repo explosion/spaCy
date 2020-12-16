@@ -16,14 +16,14 @@ cdef struct Transition:
     weight_t score
 
     bint (*is_valid)(const StateC* state, attr_t label) nogil
-    weight_t (*get_cost)(StateClass state, const void* gold, attr_t label) nogil
+    weight_t (*get_cost)(const StateC* state, const void* gold, attr_t label) nogil
     int (*do)(StateC* state, attr_t label) nogil
 
 
-ctypedef weight_t (*get_cost_func_t)(StateClass state, const void* gold,
+ctypedef weight_t (*get_cost_func_t)(const StateC* state, const void* gold,
         attr_tlabel) nogil
-ctypedef weight_t (*move_cost_func_t)(StateClass state, const void* gold) nogil
-ctypedef weight_t (*label_cost_func_t)(StateClass state, const void*
+ctypedef weight_t (*move_cost_func_t)(const StateC* state, const void* gold) nogil
+ctypedef weight_t (*label_cost_func_t)(const StateC* state, const void*
         gold, attr_t label) nogil
 
 ctypedef int (*do_func_t)(StateC* state, attr_t label) nogil
@@ -41,9 +41,8 @@ cdef class TransitionSystem:
     cdef public attr_t root_label
     cdef public freqs
     cdef public object labels
-
-    cdef int initialize_state(self, StateC* state) nogil
-    cdef int finalize_state(self, StateC* state) nogil
+    cdef init_state_t init_beam_state
+    cdef del_state_t del_beam_state
 
     cdef Transition lookup_transition(self, object name) except *
 
@@ -52,4 +51,4 @@ cdef class TransitionSystem:
     cdef int set_valid(self, int* output, const StateC* st) nogil
 
     cdef int set_costs(self, int* is_valid, weight_t* costs,
-                       StateClass state, gold) except -1
+                       const StateC* state, gold) except -1

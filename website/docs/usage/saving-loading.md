@@ -463,12 +463,12 @@ entry_points={
 }
 ```
 
-The factory can also implement other pipeline component methods like `to_disk` and
-`from_disk` for serialization, or even `update` to make the component trainable.
-If a component exposes a `from_disk` method and is included in a pipeline, spaCy
-will call it on load. This lets you ship custom data with your pipeline package.
-When you save out a pipeline using `nlp.to_disk` and the component exposes a
-`to_disk` method, it will be called with the disk path.
+The factory can also implement other pipeline component methods like `to_disk`
+and `from_disk` for serialization, or even `update` to make the component
+trainable. If a component exposes a `from_disk` method and is included in a
+pipeline, spaCy will call it on load. This lets you ship custom data with your
+pipeline package. When you save out a pipeline using `nlp.to_disk` and the
+component exposes a `to_disk` method, it will be called with the disk path.
 
 ```python
 def to_disk(self, path, exclude=tuple()):
@@ -633,10 +633,10 @@ can be a convenient way to share them with your team.
 </Infobox>
 
 spaCy comes with a handy CLI command that will create all required files, and
-walk you through generating the meta data. You can also create the `meta.json`
-manually and place it in the data directory, or supply a path to it using the
-`--meta` flag. For more info on this, see the [`package`](/api/cli#package)
-docs.
+walk you through generating the meta data. You can also create the
+[`meta.json`](/api/data-formats#meta) manually and place it in the data
+directory, or supply a path to it using the `--meta` flag. For more info on
+this, see the [`package`](/api/cli#package) docs.
 
 > #### meta.json (example)
 >
@@ -654,7 +654,7 @@ docs.
 > ```
 
 ```cli
-$ python -m spacy package ./en_example_pipeline ./my_pipelines
+$ python -m spacy package ./en_example_pipeline ./packages
 ```
 
 This command will create a pipeline package directory and will run
@@ -683,15 +683,44 @@ If you're creating the package manually, keep in mind that the directories need
 to be named according to the naming conventions of `lang_name` and
 `lang_name-version`.
 
-### Customizing the package setup {#models-custom}
+### Including custom functions and components {#models-custom}
 
-The `load()` method that comes with our pipeline package templates will take
-care of putting all this together and returning a `Language` object with the
-loaded pipeline and data. If your pipeline requires
-[custom components](/usage/processing-pipelines#custom-components) or a custom
-language class, you can also **ship the code with your package** and include it
-in the `__init__.py` – for example, to register a component before the `nlp`
-object is created.
+If your pipeline includes
+[custom components](/usage/processing-pipelines#custom-components), model
+architectures or other [code](/usage/training#custom-code), those functions need
+to be registered **before** your pipeline is loaded. Otherwise, spaCy won't know
+how to create the objects referenced in the config. The
+[`spacy package`](/api/cli#package) command lets you provide one or more paths
+to Python files containing custom registered functions using the `--code`
+argument.
+
+> #### \_\_init\_\_.py (excerpt)
+>
+> ```python
+> from . import functions
+>
+> def load(**overrides):
+>    ...
+> ```
+
+```cli
+$ python -m spacy package ./en_example_pipeline ./packages --code functions.py
+```
+
+The Python files will be copied over into the root of the package, and the
+package's `__init__.py` will import them as modules. This ensures that functions
+are registered when the pipeline is imported, e.g. when you call `spacy.load`. A
+simple import is all that's needed to make registered functions available.
+
+Make sure to include **all Python files** that are referenced in your custom
+code, including modules imported by others. If your custom code depends on
+**external packages**, make sure they're listed in the list of `"requirements"`
+in your [`meta.json`](/api/data-formats#meta). For the majority of use cases,
+registered functions should provide you with all customizations you need, from
+custom components to custom model architectures and lifecycle hooks. However, if
+you do want to customize the setup in more detail, you can edit the package's
+`__init__.py` and the package's `load` function that's called by
+[`spacy.load`](/api/top-level#spacy.load).
 
 <Infobox variant="warning" title="Important note on making manual edits">
 

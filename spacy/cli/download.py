@@ -35,7 +35,7 @@ def download_cli(
 
 
 def download(model: str, direct: bool = False, *pip_args) -> None:
-    if not is_package("spacy") and "--no-deps" not in pip_args:
+    if not (is_package("spacy") or is_package("spacy-nightly")) and "--no-deps" not in pip_args:
         msg.warn(
             "Skipping pipeline package dependencies and setting `--no-deps`. "
             "You don't seem to have the spaCy package itself installed "

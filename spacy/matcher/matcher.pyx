@@ -2,7 +2,7 @@
 from typing import List
 
 from libcpp.vector cimport vector
-from libc.stdint cimport int32_t
+from libc.stdint cimport int32_t, int8_t
 from libc.string cimport memset, memcmp
 from cymem.cymem cimport Pool
 from murmurhash.mrmr cimport hash64
@@ -308,7 +308,7 @@ cdef find_matches(TokenPatternC** patterns, int n, object doclike, int length, e
         # avoid any processing or mem alloc if the document is empty
         return output
     if len(predicates) > 0:
-        predicate_cache = <char*>mem.alloc(length * len(predicates), sizeof(char))
+        predicate_cache = <int8_t*>mem.alloc(length * len(predicates), sizeof(int8_t))
     if extensions is not None and len(extensions) >= 1:
         nr_extra_attr = max(extensions.values()) + 1
         extra_attr_values = <attr_t*>mem.alloc(length * nr_extra_attr, sizeof(attr_t))
@@ -349,7 +349,7 @@ cdef find_matches(TokenPatternC** patterns, int n, object doclike, int length, e
 
 
 cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& matches,
-                            char* cached_py_predicates,
+                            int8_t* cached_py_predicates,
         Token token, const attr_t* extra_attrs, py_predicates) except *:
     cdef int q = 0
     cdef vector[PatternStateC] new_states
@@ -421,7 +421,7 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
         states.push_back(new_states[i])
 
 
-cdef int update_predicate_cache(char* cache,
+cdef int update_predicate_cache(int8_t* cache,
         const TokenPatternC* pattern, Token token, predicates) except -1:
     # If the state references any extra predicates, check whether they match.
     # These are cached, so that we don't call these potentially expensive
@@ -459,7 +459,7 @@ cdef void finish_states(vector[MatchC]& matches, vector[PatternStateC]& states) 
 
 cdef action_t get_action(PatternStateC state,
         const TokenC* token, const attr_t* extra_attrs,
-        const char* predicate_matches) nogil:
+        const int8_t* predicate_matches) nogil:
     """We need to consider:
     a) Does the token match the specification? [Yes, No]
     b) What's the quantifier? [1, 0+, ?]
@@ -517,7 +517,7 @@ cdef action_t get_action(PatternStateC state,
 
     Problem: If a quantifier is matching, we're adding a lot of open partials
     """
-    cdef char is_match
+    cdef int8_t is_match
     is_match = get_is_match(state, token, extra_attrs, predicate_matches)
     quantifier = get_quantifier(state)
     is_final = get_is_final(state)
@@ -569,9 +569,9 @@ cdef action_t get_action(PatternStateC state,
           return RETRY
 
 
-cdef char get_is_match(PatternStateC state,
+cdef int8_t get_is_match(PatternStateC state,
         const TokenC* token, const attr_t* extra_attrs,
-        const char* predicate_matches) nogil:
+        const int8_t* predicate_matches) nogil:
     for i in range(state.pattern.nr_py):
         if predicate_matches[state.pattern.py_predicates[i]] == -1:
             return 0
@@ -586,8 +586,8 @@ cdef char get_is_match(PatternStateC state,
     return True
 
 
-cdef char get_is_final(PatternStateC state) nogil:
-    if state.pattern[1].nr_attr == 0 and state.pattern[1].attrs != NULL:
+cdef int8_t get_is_final(PatternStateC state) nogil:
+    if state.pattern[1].quantifier == FINAL_ID:
         id_attr = state.pattern[1].attrs[0]
         if id_attr.attr != ID:
             with gil:
@@ -597,7 +597,7 @@ cdef char get_is_final(PatternStateC state) nogil:
         return 0
 
 
-cdef char get_quantifier(PatternStateC state) nogil:
+cdef int8_t get_quantifier(PatternStateC state) nogil:
     return state.pattern.quantifier
 
 
@@ -626,36 +626,20 @@ cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id, object token_specs)
         pattern[i].nr_py = len(predicates)
         pattern[i].key = hash64(pattern[i].attrs, pattern[i].nr_attr * sizeof(AttrValueC), 0)
     i = len(token_specs)
-    # Even though here, nr_attr == 0, we're storing the ID value in attrs[0] (bug-prone, thread carefully!)
-    pattern[i].attrs = <AttrValueC*>mem.alloc(2, sizeof(AttrValueC))
+    # Use quantifier to identify final ID pattern node (rather than previous
+    # uninitialized quantifier == 0/ZERO + nr_attr == 0 + non-zero-length attrs)
+    pattern[i].quantifier = FINAL_ID
+    pattern[i].attrs = <AttrValueC*>mem.alloc(1, sizeof(AttrValueC))
     pattern[i].attrs[0].attr = ID
     pattern[i].attrs[0].value = entity_id
-    pattern[i].nr_attr = 0
+    pattern[i].nr_attr = 1
     pattern[i].nr_extra_attr = 0
     pattern[i].nr_py = 0
     return pattern
 
 
 cdef attr_t get_ent_id(const TokenPatternC* pattern) nogil:
-    # There have been a few bugs here. We used to have two functions,
-    # get_ent_id and get_pattern_key that tried to do the same thing. These
-    # are now unified to try to solve the "ghost match" problem.
-    # Below is the previous implementation of get_ent_id and the comment on it,
-    # preserved for reference while we figure out whether the heisenbug in the
-    # matcher is resolved.
-    #
-    #
-    #     cdef attr_t get_ent_id(const TokenPatternC* pattern) nogil:
-    #         # The code was originally designed to always have pattern[1].attrs.value
-    #         # be the ent_id when we get to the end of a pattern. However, Issue #2671
-    #         # showed this wasn't the case when we had a reject-and-continue before a
-    #         # match.
-    #         # The patch to #2671 was wrong though, which came up in #3839.
-    #         while pattern.attrs.attr != ID:
-    #             pattern += 1
-    #         return pattern.attrs.value
-    while pattern.nr_attr != 0 or pattern.nr_extra_attr != 0 or pattern.nr_py != 0 \
-            or pattern.quantifier != ZERO:
+    while pattern.quantifier != FINAL_ID:
         pattern += 1
     id_attr = pattern[0].attrs[0]
     if id_attr.attr != ID:

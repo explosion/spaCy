@@ -5,7 +5,6 @@ from libc.stdint cimport uint8_t
 ctypedef float weight_t
 ctypedef uint64_t hash_t
 ctypedef uint64_t class_t
-ctypedef char* utf8_t
 ctypedef uint64_t attr_t
 ctypedef uint64_t flags_t
 ctypedef uint16_t len_t

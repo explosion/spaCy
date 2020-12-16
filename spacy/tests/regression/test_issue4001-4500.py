@@ -122,7 +122,8 @@ def test_issue4042_bug2():
     assert "SOME_LABEL" in ner1.labels
     apple_ent = Span(doc1, 5, 6, label="MY_ORG")
     doc1.ents = list(doc1.ents) + [apple_ent]
-    # reapply the NER - at this point it should resize itself
+    # Add the label explicitly. Previously we didn't require this.
+    ner1.add_label("MY_ORG")
     ner1(doc1)
     assert len(ner1.labels) == 2
     assert "SOME_LABEL" in ner1.labels

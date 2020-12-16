@@ -24,12 +24,10 @@ def iob_to_docs(input_data, n_sents=10, no_print=False, *args, **kwargs):
     msg = Printer(no_print=no_print)
     if n_sents > 0:
         n_sents_info(msg, n_sents)
-    docs = read_iob(input_data.split("\n"), vocab, n_sents)
-    return docs
+    yield from read_iob(input_data.split("\n"), vocab, n_sents)
 
 
 def read_iob(raw_sents, vocab, n_sents):
-    docs = []
     for group in minibatch(raw_sents, size=n_sents):
         tokens = []
         words = []
@@ -61,5 +59,4 @@ def read_iob(raw_sents, vocab, n_sents):
         biluo = iob_to_biluo(iob)
         entities = tags_to_entities(biluo)
         doc.ents = [Span(doc, start=s, end=e + 1, label=L) for (L, s, e) in entities]
-        docs.append(doc)
-    return docs
+        yield doc

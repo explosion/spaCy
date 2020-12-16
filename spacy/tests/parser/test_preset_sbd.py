@@ -22,6 +22,7 @@ def _parser_example(parser):
 
 @pytest.fixture
 def parser(vocab):
+    vocab.strings.add("ROOT")
     config = {
         "learn_tokens": False,
         "min_action_freq": 30,
@@ -76,13 +77,16 @@ def test_sents_1_2(parser):
 
 def test_sents_1_3(parser):
     doc = Doc(parser.vocab, words=["a", "b", "c", "d"])
-    doc[1].sent_start = True
-    doc[3].sent_start = True
+    doc[0].is_sent_start = True
+    doc[1].is_sent_start = True
+    doc[2].is_sent_start = None
+    doc[3].is_sent_start = True
     doc = parser(doc)
     assert len(list(doc.sents)) >= 3
     doc = Doc(parser.vocab, words=["a", "b", "c", "d"])
-    doc[1].sent_start = True
-    doc[2].sent_start = False
-    doc[3].sent_start = True
+    doc[0].is_sent_start = True
+    doc[1].is_sent_start = True
+    doc[2].is_sent_start = False
+    doc[3].is_sent_start = True
     doc = parser(doc)
     assert len(list(doc.sents)) == 3

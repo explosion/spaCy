@@ -264,6 +264,26 @@ defined in the config file.
 $ SPACY_CONFIG_OVERRIDES="--system.gpu_allocator pytorch --training.batch_size 128" ./your_script.sh
 ```
 
+### Reading from standard input {#config-stdin}
+
+Setting the config path to `-` on the command line lets you read the config from
+standard input and pipe it forward from a different process, like
+[`init config`](/api/cli#init-config) or your own custom script. This is
+especially useful for quick experiments, as it lets you generate a config on the
+fly without having to save to and load from disk.
+
+> #### 💡 Tip: Writing to stdout
+>
+> When you run `init config`, you can set the output path to `-` to write to
+> stdout. In a custom script, you can print the string config, e.g.
+> `print(nlp.config.to_str())`.
+
+```cli
+$ python -m spacy init config - --lang en --pipeline ner,textcat --optimize accuracy | python -m spacy train - --paths.train ./corpus/train.spacy --paths.dev ./corpus/dev.spacy
+```
+
+<!-- TODO: add reference to Prodigy's commands once Prodigy nightly is available -->
+
 ### Using variable interpolation {#config-interpolation}
 
 Another very useful feature of the config system is that it supports variable
@@ -378,7 +398,8 @@ weights and [resume training](/api/language#resume_training).
 If you don't want a component to be updated, you can **freeze** it by adding it
 to the `frozen_components` list in the `[training]` block. Frozen components are
 **not updated** during training and are included in the final trained pipeline
-as-is. They are also excluded when calling [`nlp.initialize`](/api/language#initialize).
+as-is. They are also excluded when calling
+[`nlp.initialize`](/api/language#initialize).
 
 > #### Note on frozen components
 >
@@ -551,8 +572,8 @@ or TensorFlow, make **custom modifications** to the `nlp` object, create custom
 optimizers or schedules, or **stream in data** and preprocesses it on the fly
 while training.
 
-Each custom function can have any number of arguments that are passed in via
-the [config](#config), just the built-in functions. If your function defines
+Each custom function can have any number of arguments that are passed in via the
+[config](#config), just the built-in functions. If your function defines
 **default argument values**, spaCy is able to auto-fill your config when you run
 [`init fill-config`](/api/cli#init-fill-config). If you want to make sure that a
 given parameter is always explicitly set in the config, avoid setting a default
@@ -560,10 +581,14 @@ value for it.
 
 ### Training with custom code {#custom-code}
 
-> #### Example
+> ```cli
+> ### Training
+> $ python -m spacy train config.cfg --code functions.py
+> ```
 >
 > ```cli
-> $ python -m spacy train config.cfg --code functions.py
+> ### Packaging
+> $ python -m spacy package ./model-best ./packages --code functions.py
 > ```
 
 The [`spacy train`](/api/cli#train) recipe lets you specify an optional argument
@@ -571,7 +596,13 @@ The [`spacy train`](/api/cli#train) recipe lets you specify an optional argument
 allows you to add custom functions and architectures to the function registry
 that can then be referenced from your `config.cfg`. This lets you train spaCy
 pipelines with custom components, without having to re-implement the whole
-training workflow.
+training workflow. When you package your trained pipeline later using
+[`spacy package`](/api/cli#package), you can provide one or more Python files to
+be included in the package and imported in its `__init__.py`. This means that
+any custom architectures, functions or
+[components](/usage/processing-pipelines#custom-components) will be shipped with
+your pipeline and registered when it's loaded. See the documentation on
+[saving and loading pipelines](/usage/saving-loading#models-custom) for details.
 
 #### Example: Modifying the nlp object {#custom-code-nlp-callbacks}
 
@@ -958,10 +989,10 @@ data assets, track changes and share your end-to-end processes with your team.
 </Infobox>
 
 The binary `.spacy` format is a serialized [`DocBin`](/api/docbin) containing
-one or more [`Doc`](/api/doc) objects. It's extremely **efficient in
-storage**, especially when packing multiple documents together. You can also
-create `Doc` objects manually, so you can write your own custom logic to convert
-and store existing annotations for use in spaCy.
+one or more [`Doc`](/api/doc) objects. It's extremely **efficient in storage**,
+especially when packing multiple documents together. You can also create `Doc`
+objects manually, so you can write your own custom logic to convert and store
+existing annotations for use in spaCy.
 
 ```python
 ### Training data from Doc objects {highlight="6-9"}
@@ -969,7 +1000,7 @@ import spacy
 from spacy.tokens import Doc, DocBin
 
 nlp = spacy.blank("en")
-docbin = DocBin(nlp.vocab)
+docbin = DocBin()
 words = ["Apple", "is", "looking", "at", "buying", "U.K.", "startup", "."]
 spaces = [True, True, True, True, True, True, True, False]
 ents = ["B-ORG", "O", "O", "O", "O", "B-GPE", "O", "O"]
@@ -1300,10 +1331,10 @@ mapping so they know which worker owns which parameter.
 As training proceeds, every worker will be computing gradients for **all** of
 the model parameters. When they compute gradients for parameters they don't own,
 they'll **send them to the worker** that does own that parameter, along with a
-version identifier so that the owner can decide whether to discard the
-gradient. Workers use the gradients they receive and the ones they compute
-locally to update the parameters they own, and then broadcast the updated array
-and a new version ID to the other workers.
+version identifier so that the owner can decide whether to discard the gradient.
+Workers use the gradients they receive and the ones they compute locally to
+update the parameters they own, and then broadcast the updated array and a new
+version ID to the other workers.
 
 This training procedure is **asynchronous** and **non-blocking**. Workers always
 push their gradient increments and parameter updates, they do not have to pull
