@@ -2129,7 +2129,7 @@
                 "from negspacy.negation import Negex",
                 "",
                 "nlp = spacy.load(\"en_core_web_sm\")",
-                "negex = Negex(nlp, ent_types=[\"PERSON','ORG\"])",
+                "negex = Negex(nlp, ent_types=[\"PERSON\",\"ORG\"])",
                 "nlp.add_pipe(negex, last=True)",
                 "",
                 "doc = nlp(\"She does not like Steve Jobs but likes Apple products.\")",
