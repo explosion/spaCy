@@ -305,6 +305,9 @@ TAG_MAP = {
     "VERB__VerbForm=Ger": {"morph": "VerbForm=Ger", POS: VERB},
     "VERB__VerbForm=Inf": {"morph": "VerbForm=Inf", POS: VERB},
     "X___": {"morph": "_", POS: X},
+    "___PunctType=Quot": {POS: PUNCT},
+    "___VerbForm=Inf": {POS: VERB},
+    "___Number=Sing|Person=2|PronType=Prs": {POS: PRON},
     "_SP": {"morph": "_", POS: SPACE},
 }
 # fmt: on

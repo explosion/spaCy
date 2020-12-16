@@ -40,7 +40,8 @@ string where an integer is expected) or unexpected property names.
 
 ## Matcher.\_\_call\_\_ {#call tag="method"}
 
-Find all token sequences matching the supplied patterns on the `Doc`.
+Find all token sequences matching the supplied patterns on the `Doc`. As of
+spaCy v2.3, the `Matcher` can also be called on `Span` objects.
 
 > #### Example
 >
@@ -50,14 +51,14 @@ Find all token sequences matching the supplied patterns on the `Doc`.
 > matcher = Matcher(nlp.vocab)
 > pattern = [{"LOWER": "hello"}, {"LOWER": "world"}]
 > matcher.add("HelloWorld", None, pattern)
-> doc = nlp(u'hello world!')
+> doc = nlp("hello world!")
 > matches = matcher(doc)
 > ```
 
-| Name        | Type  | Description                                                                                                                                                              |
-| ----------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `doc`       | `Doc` | The document to match over.                                                                                                                                              |
-| **RETURNS** | list  | A list of `(match_id, start, end)` tuples, describing the matches. A match tuple describes a span `doc[start:end`]. The `match_id` is the ID of the added match pattern. |
+| Name        | Type         | Description                                                                                                                                                              |
+| ----------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `doclike`   | `Doc`/`Span` | The document to match over or a `Span` (as of v2.3).                                                                                                                     |
+| **RETURNS** | list         | A list of `(match_id, start, end)` tuples, describing the matches. A match tuple describes a span `doc[start:end`]. The `match_id` is the ID of the added match pattern. |
 
 <Infobox title="Important note" variant="warning">
 
@@ -147,7 +148,7 @@ overwritten.
 >   matcher = Matcher(nlp.vocab)
 >   matcher.add("HelloWorld", on_match, [{"LOWER": "hello"}, {"LOWER": "world"}])
 >   matcher.add("GoogleMaps", on_match, [{"ORTH": "Google"}, {"ORTH": "Maps"}])
->   doc = nlp(u"HELLO WORLD on Google Maps.")
+>   doc = nlp("HELLO WORLD on Google Maps.")
 >   matches = matcher(doc)
 > ```
 
@@ -157,16 +158,19 @@ overwritten.
 | `on_match`  | callable or `None` | Callback function to act on matches. Takes the arguments `matcher`, `doc`, `i` and `matches`. |
 | `*patterns` | list               | Match pattern. A pattern consists of a list of dicts, where each dict describes a token.      |
 
-<Infobox title="Changed in v2.0" variant="warning">
+<Infobox title="Changed in v2.2.2" variant="warning">
 
-As of spaCy 2.0, `Matcher.add_pattern` and `Matcher.add_entity` are deprecated
-and have been replaced with a simpler [`Matcher.add`](/api/matcher#add) that
-lets you add a list of patterns and a callback for a given match ID.
+As of spaCy 2.2.2, `Matcher.add` also supports the new API, which will become
+the default in the future. The patterns are now the second argument and a list
+(instead of a variable number of arguments). The `on_match` callback becomes an
+optional keyword argument.
 
 ```diff
-- matcher.add_entity("GoogleNow", on_match=merge_phrases)
-- matcher.add_pattern("GoogleNow", [{ORTH: "Google"}, {ORTH: "Now"}])
-+ matcher.add('GoogleNow', merge_phrases, [{"ORTH": "Google"}, {"ORTH": "Now"}])
+patterns = [[{"TEXT": "Google"}, {"TEXT": "Now"}], [{"TEXT": "GoogleNow"}]]
+- matcher.add("GoogleNow", None, *patterns)
++ matcher.add("GoogleNow", patterns)
+- matcher.add("GoogleNow", on_match, *patterns)
++ matcher.add("GoogleNow", patterns, on_match=on_match)
 ```
 
 </Infobox>

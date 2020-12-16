@@ -4,18 +4,22 @@ from __future__ import unicode_literals
 from ...attrs import LIKE_NUM
 
 
-_num_words = set("""
+_num_words = set(
+    """
 nul een één twee drie vier vijf zes zeven acht negen tien elf twaalf dertien
 veertien twintig dertig veertig vijftig zestig zeventig tachtig negentig honderd
 duizend miljoen miljard biljoen biljard triljoen triljard
-""".split())
+""".split()
+)
 
-_ordinal_words = set("""
+_ordinal_words = set(
+    """
 eerste tweede derde vierde vijfde zesde zevende achtste negende tiende elfde
 twaalfde dertiende veertiende twintigste dertigste veertigste vijftigste
 zestigste zeventigste tachtigste negentigste honderdste duizendste miljoenste
 miljardste biljoenste biljardste triljoenste triljardste
-""".split())
+""".split()
+)
 
 
 def like_num(text):
@@ -23,11 +27,11 @@ def like_num(text):
     # or matches one of the number words. In order to handle numbers like
     # "drieëntwintig", more work is required.
     # See this discussion: https://github.com/explosion/spaCy/pull/1177
-    text = text.replace(',', '').replace('.', '')
+    text = text.replace(",", "").replace(".", "")
     if text.isdigit():
         return True
-    if text.count('/') == 1:
-        num, denom = text.split('/')
+    if text.count("/") == 1:
+        num, denom = text.split("/")
         if num.isdigit() and denom.isdigit():
             return True
     if text.lower() in _num_words:
@@ -37,6 +41,4 @@ def like_num(text):
     return False
 
 
-LEX_ATTRS = {
-    LIKE_NUM: like_num
-}
+LEX_ATTRS = {LIKE_NUM: like_num}

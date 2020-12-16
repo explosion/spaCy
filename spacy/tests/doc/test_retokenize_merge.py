@@ -99,6 +99,53 @@ def test_doc_retokenize_spans_merge_tokens(en_tokenizer):
     assert doc[0].ent_type_ == "GPE"
 
 
+def test_doc_retokenize_spans_merge_tokens_default_attrs(en_tokenizer):
+    text = "The players start."
+    heads = [1, 1, 0, -1]
+    tokens = en_tokenizer(text)
+    doc = get_doc(
+        tokens.vocab,
+        words=[t.text for t in tokens],
+        tags=["DT", "NN", "VBZ", "."],
+        pos=["DET", "NOUN", "VERB", "PUNCT"],
+        heads=heads,
+    )
+    assert len(doc) == 4
+    assert doc[0].text == "The"
+    assert doc[0].tag_ == "DT"
+    assert doc[0].pos_ == "DET"
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[0:2])
+    assert len(doc) == 3
+    assert doc[0].text == "The players"
+    assert doc[0].tag_ == "NN"
+    assert doc[0].pos_ == "NOUN"
+    assert doc[0].lemma_ == "The players"
+    doc = get_doc(
+        tokens.vocab,
+        words=[t.text for t in tokens],
+        tags=["DT", "NN", "VBZ", "."],
+        pos=["DET", "NOUN", "VERB", "PUNCT"],
+        heads=heads,
+    )
+    assert len(doc) == 4
+    assert doc[0].text == "The"
+    assert doc[0].tag_ == "DT"
+    assert doc[0].pos_ == "DET"
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[0:2])
+        retokenizer.merge(doc[2:4])
+    assert len(doc) == 2
+    assert doc[0].text == "The players"
+    assert doc[0].tag_ == "NN"
+    assert doc[0].pos_ == "NOUN"
+    assert doc[0].lemma_ == "The players"
+    assert doc[1].text == "start ."
+    assert doc[1].tag_ == "VBZ"
+    assert doc[1].pos_ == "VERB"
+    assert doc[1].lemma_ == "start ."
+
+
 def test_doc_retokenize_spans_merge_heads(en_tokenizer):
     text = "I found a pilates class near work."
     heads = [1, 0, 2, 1, -3, -1, -1, -6]
@@ -182,7 +229,7 @@ def test_doc_retokenize_spans_entity_merge(en_tokenizer):
     assert len(doc) == 15
 
 
-def test_doc_retokenize_spans_entity_merge_iob():
+def test_doc_retokenize_spans_entity_merge_iob(en_vocab):
     # Test entity IOB stays consistent after merging
     words = ["a", "b", "c", "d", "e"]
     doc = Doc(Vocab(), words=words)
@@ -195,10 +242,23 @@ def test_doc_retokenize_spans_entity_merge_iob():
     assert doc[2].ent_iob_ == "I"
     assert doc[3].ent_iob_ == "B"
     with doc.retokenize() as retokenizer:
-        retokenizer.merge(doc[0:1])
+        retokenizer.merge(doc[0:2])
+    assert len(doc) == len(words) - 1
     assert doc[0].ent_iob_ == "B"
     assert doc[1].ent_iob_ == "I"
 
+    # Test that IOB stays consistent with provided IOB
+    words = ["a", "b", "c", "d", "e"]
+    doc = Doc(Vocab(), words=words)
+    with doc.retokenize() as retokenizer:
+        attrs = {"ent_type": "ent-abc", "ent_iob": 1}
+        retokenizer.merge(doc[0:3], attrs=attrs)
+        retokenizer.merge(doc[3:5], attrs=attrs)
+    assert doc[0].ent_iob_ == "B"
+    assert doc[1].ent_iob_ == "I"
+
+    # if no parse/heads, the first word in the span is the root and provides
+    # default values
     words = ["a", "b", "c", "d", "e", "f", "g", "h", "i"]
     doc = Doc(Vocab(), words=words)
     doc.ents = [
@@ -215,7 +275,47 @@ def test_doc_retokenize_spans_entity_merge_iob():
         retokenizer.merge(doc[7:9])
     assert len(doc) == 6
     assert doc[3].ent_iob_ == "B"
-    assert doc[4].ent_iob_ == "I"
+    assert doc[3].ent_type_ == "ent-de"
+    assert doc[4].ent_iob_ == "B"
+    assert doc[4].ent_type_ == "ent-fg"
+
+    # if there is a parse, span.root provides default values
+    words = ["a", "b", "c", "d", "e", "f", "g", "h", "i"]
+    heads = [0, -1, 1, -3, -4, -5, -1, -7, -8]
+    ents = [(3, 5, "ent-de"), (5, 7, "ent-fg")]
+    deps = ["dep"] * len(words)
+    en_vocab.strings.add("ent-de")
+    en_vocab.strings.add("ent-fg")
+    en_vocab.strings.add("dep")
+    doc = get_doc(en_vocab, words=words, heads=heads, deps=deps, ents=ents)
+    assert doc[2:4].root == doc[3]  # root of 'c d' is d
+    assert doc[4:6].root == doc[4]  # root is 'e f' is e
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[2:4])
+        retokenizer.merge(doc[4:6])
+        retokenizer.merge(doc[7:9])
+    assert len(doc) == 6
+    assert doc[2].ent_iob_ == "B"
+    assert doc[2].ent_type_ == "ent-de"
+    assert doc[3].ent_iob_ == "I"
+    assert doc[3].ent_type_ == "ent-de"
+    assert doc[4].ent_iob_ == "B"
+    assert doc[4].ent_type_ == "ent-fg"
+
+    # check that B is preserved if span[start] is B
+    words = ["a", "b", "c", "d", "e", "f", "g", "h", "i"]
+    heads = [0, -1, 1, 1, -4, -5, -1, -7, -8]
+    ents = [(3, 5, "ent-de"), (5, 7, "ent-de")]
+    deps = ["dep"] * len(words)
+    doc = get_doc(en_vocab, words=words, heads=heads, deps=deps, ents=ents)
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[3:5])
+        retokenizer.merge(doc[5:7])
+    assert len(doc) == 7
+    assert doc[3].ent_iob_ == "B"
+    assert doc[3].ent_type_ == "ent-de"
+    assert doc[4].ent_iob_ == "B"
+    assert doc[4].ent_type_ == "ent-de"
 
 
 def test_doc_retokenize_spans_sentence_update_after_merge(en_tokenizer):
@@ -314,3 +414,28 @@ def test_doc_retokenizer_merge_lex_attrs(en_vocab):
     assert doc[1].is_stop
     assert not doc[0].is_stop
     assert not doc[1].like_num
+    # Test that norm is only set on tokens
+    doc = Doc(en_vocab, words=["eins", "zwei", "!", "!"])
+    assert doc[0].norm_ == "eins"
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[0:1], attrs={"norm": "1"})
+    assert doc[0].norm_ == "1"
+    assert en_vocab["eins"].norm_ == "eins"
+
+
+def test_retokenize_skip_duplicates(en_vocab):
+    """Test that the retokenizer automatically skips duplicate spans instead
+    of complaining about overlaps. See #3687."""
+    doc = Doc(en_vocab, words=["hello", "world", "!"])
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[0:2])
+        retokenizer.merge(doc[0:2])
+    assert len(doc) == 2
+    assert doc[0].text == "hello world"
+
+
+def test_retokenize_disallow_zero_length(en_vocab):
+    doc = Doc(en_vocab, words=["hello", "world", "!"])
+    with pytest.raises(ValueError):
+        with doc.retokenize() as retokenizer:
+            retokenizer.merge(doc[1:1])

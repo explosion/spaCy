@@ -9,6 +9,8 @@
                     { "text": "Models & Languages", "url": "/usage/models" },
                     { "text": "Facts & Figures", "url": "/usage/facts-figures" },
                     { "text": "spaCy 101", "url": "/usage/spacy-101" },
+                    { "text": "New in v2.3", "url": "/usage/v2-3" },
+                    { "text": "New in v2.2", "url": "/usage/v2-2" },
                     { "text": "New in v2.1", "url": "/usage/v2-1" },
                     { "text": "New in v2.0", "url": "/usage/v2" }
                 ]
@@ -40,7 +42,11 @@
                 "items": [{ "text": "Overview", "url": "/models" }]
             },
             {
-                "label": "Language Models",
+                "label": "Core Models",
+                "items": []
+            },
+            {
+                "label": "Starter Models",
                 "items": []
             }
         ]
@@ -75,6 +81,7 @@
                     { "text": "Tagger", "url": "/api/tagger" },
                     { "text": "DependencyParser", "url": "/api/dependencyparser" },
                     { "text": "EntityRecognizer", "url": "/api/entityrecognizer" },
+                    { "text": "EntityLinker", "url": "/api/entitylinker" },
                     { "text": "TextCategorizer", "url": "/api/textcategorizer" },
                     { "text": "Matcher", "url": "/api/matcher" },
                     { "text": "PhraseMatcher", "url": "/api/phrasematcher" },
@@ -89,9 +96,12 @@
                     { "text": "Vocab", "url": "/api/vocab" },
                     { "text": "StringStore", "url": "/api/stringstore" },
                     { "text": "Vectors", "url": "/api/vectors" },
+                    { "text": "Lookups", "url": "/api/lookups" },
+                    { "text": "KnowledgeBase", "url": "/api/kb" },
                     { "text": "GoldParse", "url": "/api/goldparse" },
                     { "text": "GoldCorpus", "url": "/api/goldcorpus" },
-                    { "text": "Scorer", "url": "/api/scorer" }
+                    { "text": "Scorer", "url": "/api/scorer" },
+                    { "text": "DocBin", "url": "/api/docbin" }
                 ]
             },
             {

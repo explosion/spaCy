@@ -2,7 +2,6 @@
 from __future__ import unicode_literals, print_function
 
 import os
-import pkg_resources
 import importlib
 import re
 from pathlib import Path
@@ -13,7 +12,12 @@ from thinc.neural.ops import NumpyOps
 import functools
 import itertools
 import numpy.random
+import numpy
 import srsly
+import catalogue
+import sys
+import warnings
+from . import about
 
 try:
     import jsonschema
@@ -28,12 +32,20 @@ except ImportError:
 from .symbols import ORTH
 from .compat import cupy, CudaStream, path2str, basestring_, unicode_
 from .compat import import_file
-from .errors import Errors, Warnings, deprecation_warning
+from .errors import Errors, Warnings
 
 
-LANGUAGES = {}
 _data_path = Path(__file__).parent / "data"
 _PRINT_ENV = False
+OOV_RANK = numpy.iinfo(numpy.uint64).max
+
+
+class registry(object):
+    languages = catalogue.create("spacy", "languages", entry_points=True)
+    architectures = catalogue.create("spacy", "architectures", entry_points=True)
+    lookups = catalogue.create("spacy", "lookups", entry_points=True)
+    factories = catalogue.create("spacy", "factories", entry_points=True)
+    displacy_colors = catalogue.create("spacy", "displacy_colors", entry_points=True)
 
 
 def set_env_log(value):
@@ -49,8 +61,7 @@ def lang_class_is_loaded(lang):
     lang (unicode): Two-letter language code, e.g. 'en'.
     RETURNS (bool): Whether a Language class has been loaded.
     """
-    global LANGUAGES
-    return lang in LANGUAGES
+    return lang in registry.languages
 
 
 def get_lang_class(lang):
@@ -59,19 +70,16 @@ def get_lang_class(lang):
     lang (unicode): Two-letter language code, e.g. 'en'.
     RETURNS (Language): Language class.
     """
-    global LANGUAGES
-    # Check if an entry point is exposed for the language code
-    entry_point = get_entry_point("spacy_languages", lang)
-    if entry_point is not None:
-        LANGUAGES[lang] = entry_point
-        return entry_point
-    if lang not in LANGUAGES:
+    # Check if language is registered / entry point is available
+    if lang in registry.languages:
+        return registry.languages.get(lang)
+    else:
         try:
             module = importlib.import_module(".lang.%s" % lang, "spacy")
         except ImportError as err:
             raise ImportError(Errors.E048.format(lang=lang, err=err))
-        LANGUAGES[lang] = getattr(module, module.__all__[0])
-    return LANGUAGES[lang]
+        set_lang_class(lang, getattr(module, module.__all__[0]))
+    return registry.languages.get(lang)
 
 
 def set_lang_class(name, cls):
@@ -80,8 +88,7 @@ def set_lang_class(name, cls):
     name (unicode): Name of Language class.
     cls (Language): Language class.
     """
-    global LANGUAGES
-    LANGUAGES[name] = cls
+    registry.languages.register(name, func=cls)
 
 
 def get_data_path(require_exists=True):
@@ -105,6 +112,11 @@ def set_data_path(path):
     _data_path = ensure_path(path)
 
 
+def make_layer(arch_config):
+    arch_func = registry.architectures.get(arch_config["arch"])
+    return arch_func(arch_config["config"])
+
+
 def ensure_path(path):
     """Ensure string is converted to a Path.
 
@@ -115,6 +127,28 @@ def ensure_path(path):
         return Path(path)
     else:
         return path
+
+
+def load_language_data(path):
+    """Load JSON language data using the given path as a base. If the provided
+    path isn't present, will attempt to load a gzipped version before giving up.
+
+    path (unicode / Path): The data to load.
+    RETURNS: The loaded data.
+    """
+    path = ensure_path(path)
+    if path.exists():
+        return srsly.read_json(path)
+    path = path.with_suffix(path.suffix + ".gz")
+    if path.exists():
+        return srsly.read_gzip_json(path)
+    raise ValueError(Errors.E160.format(path=path2str(path)))
+
+
+def get_module_path(module):
+    if not hasattr(module, "__module__"):
+        raise ValueError(Errors.E169.format(module=repr(module)))
+    return Path(sys.modules[module.__module__].__file__).parent
 
 
 def load_model(name, **overrides):
@@ -128,6 +162,8 @@ def load_model(name, **overrides):
     if not data_path or not data_path.exists():
         raise IOError(Errors.E049.format(path=path2str(data_path)))
     if isinstance(name, basestring_):  # in data dir / shortcut
+        if name.startswith("blank:"):  # shortcut for blank model
+            return get_lang_class(name.replace("blank:", ""))()
         if name in set([d.name for d in data_path.iterdir()]):
             return load_model_from_link(name, **overrides)
         if is_package(name):  # installed as package
@@ -166,17 +202,24 @@ def load_model_from_path(model_path, meta=False, **overrides):
     cls = get_lang_class(lang)
     nlp = cls(meta=meta, **overrides)
     pipeline = meta.get("pipeline", [])
+    factories = meta.get("factories", {})
     disable = overrides.get("disable", [])
     if pipeline is True:
         pipeline = nlp.Defaults.pipe_names
     elif pipeline in (False, None):
         pipeline = []
+    # skip "vocab" from overrides in component initialization since vocab is
+    # already configured from overrides when nlp is initialized above
+    if "vocab" in overrides:
+        del overrides["vocab"]
     for name in pipeline:
         if name not in disable:
             config = meta.get("pipeline_args", {}).get(name, {})
-            component = nlp.create_pipe(name, config=config)
+            config.update(overrides)
+            factory = factories.get(name, name)
+            component = nlp.create_pipe(factory, config=config)
             nlp.add_pipe(component, name=name)
-    return nlp.from_disk(model_path)
+    return nlp.from_disk(model_path, exclude=disable)
 
 
 def load_model_from_init_py(init_file, **overrides):
@@ -212,6 +255,31 @@ def get_model_meta(path):
     for setting in ["lang", "name", "version"]:
         if setting not in meta or not meta[setting]:
             raise ValueError(Errors.E054.format(setting=setting))
+    if "spacy_version" in meta:
+        about_major_minor = ".".join(about.__version__.split(".")[:2])
+        if not meta["spacy_version"].startswith(">=" + about_major_minor):
+            # try to simplify version requirements from model meta to vx.x
+            # for warning message
+            meta_spacy_version = "v" + ".".join(
+                meta["spacy_version"].replace(">=", "").split(".")[:2]
+            )
+            # if the format is unexpected, supply the full version
+            if not re.match(r"v\d+\.\d+", meta_spacy_version):
+                meta_spacy_version = meta["spacy_version"]
+            warn_msg = Warnings.W031.format(
+                model=meta["lang"] + "_" + meta["name"],
+                model_version=meta["version"],
+                version=meta_spacy_version,
+                current=about.__version__,
+            )
+            warnings.warn(warn_msg)
+    else:
+        warn_msg = Warnings.W032.format(
+            model=meta["lang"] + "_" + meta["name"],
+            model_version=meta["version"],
+            current=about.__version__,
+        )
+        warnings.warn(warn_msg)
     return meta
 
 
@@ -221,6 +289,8 @@ def is_package(name):
     name (unicode): Name of package.
     RETURNS (bool): True if installed package, False if not.
     """
+    import pkg_resources
+
     name = name.lower()  # compare package name against lowercase name
     packages = pkg_resources.working_set.by_key.keys()
     for package in packages:
@@ -242,32 +312,6 @@ def get_package_path(name):
     return Path(pkg.__file__).parent
 
 
-def get_entry_points(key):
-    """Get registered entry points from other packages for a given key, e.g.
-    'spacy_factories' and return them as a dictionary, keyed by name.
-
-    key (unicode): Entry point name.
-    RETURNS (dict): Entry points, keyed by name.
-    """
-    result = {}
-    for entry_point in pkg_resources.iter_entry_points(key):
-        result[entry_point.name] = entry_point.load()
-    return result
-
-
-def get_entry_point(key, value):
-    """Check if registered entry point is available for a given name and
-    load it. Otherwise, return None.
-
-    key (unicode): Entry point name.
-    value (unicode): Name of entry point to load.
-    RETURNS: The loaded entry point or None.
-    """
-    for entry_point in pkg_resources.iter_entry_points(key):
-        if entry_point.name == value:
-            return entry_point.load()
-
-
 def is_in_jupyter():
     """Check if user is running spaCy from a Jupyter notebook by detecting the
     IPython kernel. Mainly used for the displaCy visualizer.
@@ -283,13 +327,23 @@ def is_in_jupyter():
     return False
 
 
-def get_cuda_stream(require=False):
+def get_component_name(component):
+    if hasattr(component, "name"):
+        return component.name
+    if hasattr(component, "__name__"):
+        return component.__name__
+    if hasattr(component, "__class__") and hasattr(component.__class__, "__name__"):
+        return component.__class__.__name__
+    return repr(component)
+
+
+def get_cuda_stream(require=False, non_blocking=True):
     if CudaStream is None:
         return None
     elif isinstance(Model.ops, NumpyOps):
         return None
     else:
-        return CudaStream()
+        return CudaStream(non_blocking=non_blocking)
 
 
 def get_async(stream, numpy_array):
@@ -324,7 +378,7 @@ def env_opt(name, default=None):
 
 def read_regex(path):
     path = ensure_path(path)
-    with path.open() as file_:
+    with path.open(encoding="utf8") as file_:
         entries = file_.read().split("\n")
     expression = "|".join(
         ["^" + re.escape(piece) for piece in entries if piece.strip()]
@@ -586,7 +640,7 @@ def filter_spans(spans):
     spans (iterable): The spans to filter.
     RETURNS (list): The filtered spans.
     """
-    get_sort_key = lambda span: (span.end - span.start, span.start)
+    get_sort_key = lambda span: (span.end - span.start, -span.start)
     sorted_spans = sorted(spans, key=get_sort_key, reverse=True)
     result = []
     seen_tokens = set()
@@ -594,7 +648,7 @@ def filter_spans(spans):
         # Check for end - 1 here because boundaries are inclusive
         if span.start not in seen_tokens and span.end - 1 not in seen_tokens:
             result.append(span)
-        seen_tokens.update(range(span.start, span.end))
+            seen_tokens.update(range(span.start, span.end))
     result = sorted(result, key=lambda span: span.start)
     return result
 
@@ -729,12 +783,42 @@ def get_serialization_exclude(serializers, exclude, kwargs):
     options = [name.split(".")[0] for name in serializers]
     for key, value in kwargs.items():
         if key in ("vocab",) and value is False:
-            deprecation_warning(Warnings.W015.format(arg=key))
+            warnings.warn(Warnings.W015.format(arg=key), DeprecationWarning)
             exclude.append(key)
         elif key.split(".")[0] in options:
             raise ValueError(Errors.E128.format(arg=key))
         # TODO: user warning?
     return exclude
+
+
+def get_words_and_spaces(words, text):
+    if "".join("".join(words).split()) != "".join(text.split()):
+        raise ValueError(Errors.E194.format(text=text, words=words))
+    text_words = []
+    text_spaces = []
+    text_pos = 0
+    # normalize words to remove all whitespace tokens
+    norm_words = [word for word in words if not word.isspace()]
+    # align words with text
+    for word in norm_words:
+        try:
+            word_start = text[text_pos:].index(word)
+        except ValueError:
+            raise ValueError(Errors.E194.format(text=text, words=words))
+        if word_start > 0:
+            text_words.append(text[text_pos : text_pos + word_start])
+            text_spaces.append(False)
+            text_pos += word_start
+        text_words.append(word)
+        text_spaces.append(False)
+        text_pos += len(word)
+        if text_pos < len(text) and text[text_pos] == " ":
+            text_spaces[-1] = True
+            text_pos += 1
+    if text_pos < len(text):
+        text_words.append(text[text_pos:])
+        text_spaces.append(False)
+    return (text_words, text_spaces)
 
 
 class SimpleFrozenDict(dict):
@@ -754,6 +838,13 @@ class SimpleFrozenDict(dict):
 
 
 class DummyTokenizer(object):
+    def __call__(self, text):
+        raise NotImplementedError
+
+    def pipe(self, texts, **kwargs):
+        for text in texts:
+            yield self(text)
+
     # add dummy methods for to_bytes, from_bytes, to_disk and from_disk to
     # allow serialization (see #1557)
     def to_bytes(self, **kwargs):

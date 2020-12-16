@@ -5,7 +5,6 @@
 from __future__ import unicode_literals
 
 import plac
-import tqdm
 from pathlib import Path
 import re
 import sys
@@ -85,7 +84,7 @@ def read_conllu(file_):
 def evaluate(nlp, text_loc, gold_loc, sys_loc, limit=None):
     if text_loc.parts[-1].endswith(".conllu"):
         docs = []
-        with text_loc.open() as file_:
+        with text_loc.open(encoding="utf8") as file_:
             for conllu_doc in read_conllu(file_):
                 for conllu_sent in conllu_doc:
                     words = [line[1] for line in conllu_sent]
@@ -110,15 +109,13 @@ def write_conllu(docs, file_):
     merger = Matcher(docs[0].vocab)
     merger.add("SUBTOK", None, [{"DEP": "subtok", "op": "+"}])
     for i, doc in enumerate(docs):
-        matches = merger(doc)
+        matches = []
+        if doc.is_parsed:
+            matches = merger(doc)
         spans = [doc[start : end + 1] for _, start, end in matches]
         with doc.retokenize() as retokenizer:
             for span in spans:
                 retokenizer.merge(span)
-        # TODO: This shouldn't be necessary? Should be handled in merge
-        for word in doc:
-            if word.i == word.head.i:
-                word.dep_ = "ROOT"
         file_.write("# newdoc id = {i}\n".format(i=i))
         for j, sent in enumerate(doc.sents):
             file_.write("# sent_id = {i}.{j}\n".format(i=i, j=j))

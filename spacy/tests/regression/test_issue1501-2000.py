@@ -126,7 +126,8 @@ def test_issue1727():
     vectors = Vectors(data=data, keys=["I", "am", "Matt"])
     tagger = Tagger(Vocab())
     tagger.add_label("PRP")
-    tagger.begin_training()
+    with pytest.warns(UserWarning):
+        tagger.begin_training()
     assert tagger.cfg.get("pretrained_dims", 0) == 0
     tagger.vocab.vectors = vectors
     with make_tempdir() as path:
@@ -187,7 +188,7 @@ def test_issue1799():
 
 def test_issue1807():
     """Test vocab.set_vector also adds the word to the vocab."""
-    vocab = Vocab()
+    vocab = Vocab(vectors_name="test_issue1807")
     assert "hello" not in vocab
     vocab.set_vector("hello", numpy.ones((50,), dtype="f"))
     assert "hello" in vocab
@@ -223,7 +224,7 @@ def test_issue1868():
 
 def test_issue1883():
     matcher = Matcher(Vocab())
-    matcher.add("pat1", None, [{"orth": "hello"}])
+    matcher.add("pat1", [[{"orth": "hello"}]])
     doc = Doc(matcher.vocab, words=["hello"])
     assert len(matcher(doc)) == 1
     new_matcher = copy.deepcopy(matcher)
@@ -248,7 +249,7 @@ def test_issue1915():
 def test_issue1945():
     """Test regression in Matcher introduced in v2.0.6."""
     matcher = Matcher(Vocab())
-    matcher.add("MWE", None, [{"orth": "a"}, {"orth": "a"}])
+    matcher.add("MWE", [[{"orth": "a"}, {"orth": "a"}]])
     doc = Doc(matcher.vocab, words=["a", "a", "a"])
     matches = matcher(doc)  # we should see two overlapping matches here
     assert len(matches) == 2
@@ -284,7 +285,7 @@ def test_issue1971(en_vocab):
         {"ORTH": "!", "OP": "?"},
     ]
     Token.set_extension("optional", default=False)
-    matcher.add("TEST", None, pattern)
+    matcher.add("TEST", [pattern])
     doc = Doc(en_vocab, words=["Hello", "John", "Doe", "!"])
     # We could also assert length 1 here, but this is more conclusive, because
     # the real problem here is that it returns a duplicate match for a match_id
@@ -298,7 +299,7 @@ def test_issue_1971_2(en_vocab):
     pattern1 = [{"ORTH": "EUR", "LOWER": {"IN": ["eur"]}}, {"LIKE_NUM": True}]
     pattern2 = [{"LIKE_NUM": True}, {"ORTH": "EUR"}]  # {"IN": ["EUR"]}}]
     doc = Doc(en_vocab, words=["EUR", "10", "is", "10", "EUR"])
-    matcher.add("TEST1", None, pattern1, pattern2)
+    matcher.add("TEST1", [pattern1, pattern2])
     matches = matcher(doc)
     assert len(matches) == 2
 
@@ -309,8 +310,8 @@ def test_issue_1971_3(en_vocab):
     Token.set_extension("b", default=2, force=True)
     doc = Doc(en_vocab, words=["hello", "world"])
     matcher = Matcher(en_vocab)
-    matcher.add("A", None, [{"_": {"a": 1}}])
-    matcher.add("B", None, [{"_": {"b": 2}}])
+    matcher.add("A", [[{"_": {"a": 1}}]])
+    matcher.add("B", [[{"_": {"b": 2}}]])
     matches = sorted((en_vocab.strings[m_id], s, e) for m_id, s, e in matcher(doc))
     assert len(matches) == 4
     assert matches == sorted([("A", 0, 1), ("A", 1, 2), ("B", 0, 1), ("B", 1, 2)])
@@ -325,7 +326,8 @@ def test_issue_1971_4(en_vocab):
     matcher = Matcher(en_vocab)
     doc = Doc(en_vocab, words=["this", "is", "text"])
     pattern = [{"_": {"ext_a": "str_a", "ext_b": "str_b"}}] * 3
-    matcher.add("TEST", None, pattern)
+    matcher.add("TEST", [pattern])
     matches = matcher(doc)
     # Uncommenting this caused a segmentation fault
     assert len(matches) == 1
+    assert matches[0] == (en_vocab.strings["TEST"], 0, 3)

@@ -66,7 +66,8 @@ cdef class BiluoPushDown(TransitionSystem):
             UNIT: Counter(),
             OUT: Counter()
         }
-        actions[OUT][''] = 1
+        actions[OUT][''] = 1  # Represents a token predicted to be outside of any entity
+        actions[UNIT][''] = 1 # Represents a token prohibited to be in an entity
         for entity_type in kwargs.get('entity_types', []):
             for action in (BEGIN, IN, LAST, UNIT):
                 actions[action][entity_type] = 1
@@ -161,8 +162,7 @@ cdef class BiluoPushDown(TransitionSystem):
         for i in range(self.n_moves):
             if self.c[i].move == move and self.c[i].label == label:
                 return self.c[i]
-        else:
-            raise KeyError(Errors.E022.format(name=name))
+        raise KeyError(Errors.E022.format(name=name))
 
     cdef Transition init_transition(self, int clas, int move, attr_t label) except *:
         # TODO: Apparent Cython bug here when we try to use the Transition()
@@ -258,7 +258,7 @@ cdef class Begin:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
         cdef int preset_ent_iob = st.B_(0).ent_iob
-        cdef int preset_ent_label = st.B_(0).ent_type
+        cdef attr_t preset_ent_label = st.B_(0).ent_type
         # If we're the last token of the input, we can't B -- must U or O.
         if st.B(1) == -1:
             return False
@@ -266,7 +266,7 @@ cdef class Begin:
             return False
         elif label == 0:
             return False
-        elif preset_ent_iob == 1 or preset_ent_iob == 2:
+        elif preset_ent_iob == 1:
             # Ensure we don't clobber preset entities. If no entity preset,
             # ent_iob is 0
             return False
@@ -282,8 +282,8 @@ cdef class Begin:
                 # Otherwise, force acceptance, even if we're across a sentence
                 # boundary or the token is whitespace.
                 return True
-        elif st.B_(1).ent_iob == 2 or st.B_(1).ent_iob == 3:
-            # If the next word is B or O, we can't B now
+        elif st.B_(1).ent_iob == 3:
+            # If the next word is B, we can't B now
             return False
         elif st.B_(1).sent_start == 1:
             # Don't allow entities to extend across sentence boundaries
@@ -326,6 +326,7 @@ cdef class In:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
         cdef int preset_ent_iob = st.B_(0).ent_iob
+        cdef attr_t preset_ent_label = st.B_(0).ent_type
         if label == 0:
             return False
         elif st.E_(0).ent_type != label:
@@ -335,13 +336,22 @@ cdef class In:
         elif st.B(1) == -1:
             # If we're at the end, we can't I.
             return False
-        elif preset_ent_iob == 2:
-            return False
         elif preset_ent_iob == 3:
             return False
-        elif st.B_(1).ent_iob == 2 or st.B_(1).ent_iob == 3:
-            # If we know the next word is B or O, we can't be I (must be L)
+        elif st.B_(1).ent_iob == 3:
+            # If we know the next word is B, we can't be I (must be L)
             return False
+        elif preset_ent_iob == 1:
+            if st.B_(1).ent_iob in (0, 2):
+                # if next preset is missing or O, this can't be I (must be L)
+                return False
+            elif label != preset_ent_label:
+                # If label isn't right, reject
+                return False
+            else:
+                # Otherwise, force acceptance, even if we're across a sentence
+                # boundary or the token is whitespace.
+                return True
         elif st.B(1) != -1 and st.B_(1).sent_start == 1:
             # Don't allow entities to extend across sentence boundaries
             return False
@@ -387,14 +397,24 @@ cdef class In:
         else:
             return 1
 
-
 cdef class Last:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
+        cdef int preset_ent_iob = st.B_(0).ent_iob
+        cdef attr_t preset_ent_label = st.B_(0).ent_type
         if label == 0:
             return False
         elif not st.entity_is_open():
             return False
+        elif preset_ent_iob == 1 and st.B_(1).ent_iob != 1:
+            # If a preset entity has I followed by not-I, is L
+            if label != preset_ent_label:
+                # If label isn't right, reject
+                return False
+            else:
+                # Otherwise, force acceptance, even if we're across a sentence
+                # boundary or the token is whitespace.
+                return True
         elif st.E_(0).ent_type != label:
             return False
         elif st.B_(1).ent_iob == 1:
@@ -447,11 +467,12 @@ cdef class Unit:
         cdef int preset_ent_iob = st.B_(0).ent_iob
         cdef attr_t preset_ent_label = st.B_(0).ent_type
         if label == 0:
-            return False
+            # this is only allowed if it's a preset blocked annotation
+            if preset_ent_label == 0 and preset_ent_iob == 3:
+                return True
+            else:
+                return False
         elif st.entity_is_open():
-            return False
-        elif preset_ent_iob == 2:
-            # Don't clobber preset O
             return False
         elif st.B_(1).ent_iob == 1:
             # If next token is In, we can't be Unit -- must be Begin

@@ -38,10 +38,10 @@ const Languages = () => (
             const langs = site.siteMetadata.languages
             const withModels = langs
                 .filter(({ models }) => models && !!models.length)
-                .sort((a, b) => a.code.localeCompare(b.code))
+                .sort((a, b) => a.name.localeCompare(b.name))
             const withoutModels = langs
                 .filter(({ models }) => !models || !models.length)
-                .sort((a, b) => a.code.localeCompare(b.code))
+                .sort((a, b) => a.name.localeCompare(b.name))
             const withDeps = langs.filter(({ dependencies }) => dependencies && dependencies.length)
             return (
                 <>

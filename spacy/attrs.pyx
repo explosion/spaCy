@@ -16,7 +16,7 @@ IDS = {
     "LIKE_NUM": LIKE_NUM,
     "LIKE_EMAIL": LIKE_EMAIL,
     "IS_STOP": IS_STOP,
-    "IS_OOV": IS_OOV,
+    "IS_OOV_DEPRECATED": IS_OOV_DEPRECATED,
     "IS_BRACKET": IS_BRACKET,
     "IS_QUOTE": IS_QUOTE,
     "IS_LEFT_PUNCT": IS_LEFT_PUNCT,
@@ -84,12 +84,15 @@ IDS = {
     "DEP": DEP,
     "ENT_IOB": ENT_IOB,
     "ENT_TYPE": ENT_TYPE,
+    "ENT_ID": ENT_ID,
     "ENT_KB_ID": ENT_KB_ID,
     "HEAD": HEAD,
     "SENT_START": SENT_START,
+    "SENT_END": SENT_END,
     "SPACY": SPACY,
     "PROB": PROB,
     "LANG": LANG,
+    "IDX": IDX
 }
 
 
@@ -142,14 +145,28 @@ def intify_attrs(stringy_attrs, strings_map=None, _do_deprecated=False):
             elif key.upper() in stringy_attrs:
                 stringy_attrs.pop(key.upper())
     for name, value in stringy_attrs.items():
-        if isinstance(name, int):
-            int_key = name
-        else:
-            int_key = IDS[name.upper()]
-        if strings_map is not None and isinstance(value, basestring):
-            if hasattr(strings_map, 'add'):
-                value = strings_map.add(value)
-            else:
-                value = strings_map[value]
-        inty_attrs[int_key] = value
+        int_key = intify_attr(name)
+        if int_key is not None:
+            if strings_map is not None and isinstance(value, basestring):
+                if hasattr(strings_map, 'add'):
+                    value = strings_map.add(value)
+                else:
+                    value = strings_map[value]
+            inty_attrs[int_key] = value
     return inty_attrs
+
+
+def intify_attr(name):
+    """
+    Normalize an attribute name, converting it to int.
+
+    stringy_attr (string): Attribute string name. Can also be int (will then be left unchanged)
+    RETURNS (int): int representation of the attribute, or None if it couldn't be converted.
+    """
+    if isinstance(name, int):
+        return name
+    elif name in IDS:
+        return IDS[name]
+    elif name.upper() in IDS:
+        return IDS[name.upper()]
+    return None

@@ -1,9 +1,9 @@
 """This script is experimental.
 
 Try pre-training the CNN component of the text categorizer using a cheap
-language modelling-like objective. Specifically, we load pre-trained vectors
+language modelling-like objective. Specifically, we load pretrained vectors
 (from something like word2vec, GloVe, FastText etc), and use the CNN to
-predict the tokens' pre-trained vectors. This isn't as easy as it sounds:
+predict the tokens' pretrained vectors. This isn't as easy as it sounds:
 we're not merely doing compression here, because heavy dropout is applied,
 including over the input words. This means the model must often (50% of the time)
 use the context in order to predict the word.
@@ -14,11 +14,11 @@ pre-train with the development data, but also not *so* terrible: we're not using
 the development labels, after all --- only the unlabelled text.
 """
 import plac
+import tqdm
 import random
 import spacy
 import thinc.extra.datasets
 from spacy.util import minibatch, use_gpu, compounding
-import tqdm
 from spacy._ml import Tok2Vec
 from spacy.pipeline import TextCategorizer
 import numpy
@@ -131,7 +131,8 @@ def train_textcat(nlp, n_texts, n_iter=10):
     train_data = list(zip(train_texts, [{"cats": cats} for cats in train_cats]))
 
     # get names of other pipes to disable them during training
-    other_pipes = [pipe for pipe in nlp.pipe_names if pipe != "textcat"]
+    pipe_exceptions = ["textcat", "trf_wordpiecer", "trf_tok2vec"]
+    other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipe_exceptions]
     with nlp.disable_pipes(*other_pipes):  # only train textcat
         optimizer = nlp.begin_training()
         textcat.model.tok2vec.from_bytes(tok2vec_weights)
@@ -186,7 +187,7 @@ def evaluate_textcat(tokenizer, textcat, texts, cats):
     width=("Width of CNN layers", "positional", None, int),
     embed_size=("Embedding rows", "positional", None, int),
     pretrain_iters=("Number of iterations to pretrain", "option", "pn", int),
-    train_iters=("Number of iterations to pretrain", "option", "tn", int),
+    train_iters=("Number of iterations to train", "option", "tn", int),
     train_examples=("Number of labelled examples", "option", "eg", int),
     vectors_model=("Name or path to vectors model to learn from"),
 )

@@ -34,8 +34,7 @@ def test_issue4030():
     nlp.add_pipe(textcat, last=True)
 
     # training the network
-    other_pipes = [pipe for pipe in nlp.pipe_names if pipe != "textcat"]
-    with nlp.disable_pipes(*other_pipes):
+    with nlp.disable_pipes([p for p in nlp.pipe_names if p != "textcat"]):
         optimizer = nlp.begin_training()
         for i in range(3):
             losses = {}

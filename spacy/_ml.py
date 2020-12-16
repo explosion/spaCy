@@ -2,20 +2,19 @@
 from __future__ import unicode_literals
 
 import numpy
+import warnings
 from thinc.v2v import Model, Maxout, Softmax, Affine, ReLu
-from thinc.i2v import HashEmbed, StaticVectors
 from thinc.t2t import ExtractWindow, ParametricAttention
 from thinc.t2v import Pooling, sum_pool, mean_pool
-from thinc.misc import Residual
+from thinc.i2v import HashEmbed
+from thinc.misc import Residual, FeatureExtracter
 from thinc.misc import LayerNorm as LN
-from thinc.misc import FeatureExtracter
 from thinc.api import add, layerize, chain, clone, concatenate, with_flatten
 from thinc.api import with_getitem, flatten_add_lengths
 from thinc.api import uniqued, wrap, noop
-from thinc.api import with_square_sequences
 from thinc.linear.linear import LinearModel
 from thinc.neural.ops import NumpyOps, CupyOps
-from thinc.neural.util import get_array_module
+from thinc.neural.util import get_array_module, copy_array, to_categorical
 from thinc.neural.optimizers import Adam
 
 from thinc import describe
@@ -24,16 +23,15 @@ from thinc.neural._classes.affine import _set_dimensions_if_needed
 import thinc.extra.load_nlp
 
 from .attrs import ID, ORTH, LOWER, NORM, PREFIX, SUFFIX, SHAPE
-from .errors import Errors, user_warning, Warnings
+from .errors import Errors, Warnings
 from . import util
+from . import ml as new_ml
+from .ml import _legacy_tok2vec
 
-try:
-    import torch.nn
-    from thinc.extra.wrappers import PyTorchWrapperRNN
-except ImportError:
-    torch = None
 
 VECTORS_KEY = "spacy_pretrained_vectors"
+# Backwards compatibility with <2.2.2
+USE_MODEL_REGISTRY_TOK2VEC = False
 
 
 def cosine(vec1, vec2):
@@ -281,38 +279,39 @@ class PrecomputableAffine(Model):
                 break
 
 
-def link_vectors_to_models(vocab):
+def link_vectors_to_models(vocab, skip_rank=False):
     vectors = vocab.vectors
     if vectors.name is None:
         vectors.name = VECTORS_KEY
         if vectors.data.size != 0:
-            print(
-                "Warning: Unnamed vectors -- this won't allow multiple vectors "
-                "models to be loaded. (Shape: (%d, %d))" % vectors.data.shape
-            )
+            warnings.warn(Warnings.W020.format(shape=vectors.data.shape))
     ops = Model.ops
-    for word in vocab:
-        if word.orth in vectors.key2row:
-            word.rank = vectors.key2row[word.orth]
-        else:
-            word.rank = 0
+    if not skip_rank:
+        for word in vocab:
+            if word.orth in vectors.key2row:
+                word.rank = vectors.key2row[word.orth]
+            else:
+                word.rank = util.OOV_RANK
     data = ops.asarray(vectors.data)
     # Set an entry here, so that vectors are accessed by StaticVectors
     # (unideal, I know)
     key = (ops.device, vectors.name)
     if key in thinc.extra.load_nlp.VECTORS:
         if thinc.extra.load_nlp.VECTORS[key].shape != data.shape:
-            # This is a hack to avoid the problem in #3853. Maybe we should
-            # print a warning as well?
+            # This is a hack to avoid the problem in #3853.
             old_name = vectors.name
             new_name = vectors.name + "_%d" % data.shape[0]
-            user_warning(Warnings.W019.format(old=old_name, new=new_name))
+            warnings.warn(Warnings.W019.format(old=old_name, new=new_name))
             vectors.name = new_name
             key = (ops.device, vectors.name)
     thinc.extra.load_nlp.VECTORS[key] = data
 
 
 def PyTorchBiLSTM(nO, nI, depth, dropout=0.2):
+    import torch.nn
+    from thinc.api import with_square_sequences
+    from thinc.extra.wrappers import PyTorchWrapperRNN
+
     if depth == 0:
         return layerize(noop())
     model = torch.nn.LSTM(nI, nO // 2, depth, bidirectional=True, dropout=dropout)
@@ -320,64 +319,89 @@ def PyTorchBiLSTM(nO, nI, depth, dropout=0.2):
 
 
 def Tok2Vec(width, embed_size, **kwargs):
+    if not USE_MODEL_REGISTRY_TOK2VEC:
+        # Preserve prior tok2vec for backwards compat, in v2.2.2
+        return _legacy_tok2vec.Tok2Vec(width, embed_size, **kwargs)
     pretrained_vectors = kwargs.get("pretrained_vectors", None)
     cnn_maxout_pieces = kwargs.get("cnn_maxout_pieces", 3)
     subword_features = kwargs.get("subword_features", True)
+    char_embed = kwargs.get("char_embed", False)
     conv_depth = kwargs.get("conv_depth", 4)
     bilstm_depth = kwargs.get("bilstm_depth", 0)
-    cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
-    with Model.define_operators(
-        {">>": chain, "|": concatenate, "**": clone, "+": add, "*": reapply}
-    ):
-        norm = HashEmbed(width, embed_size, column=cols.index(NORM), name="embed_norm")
-        if subword_features:
-            prefix = HashEmbed(
-                width, embed_size // 2, column=cols.index(PREFIX), name="embed_prefix"
-            )
-            suffix = HashEmbed(
-                width, embed_size // 2, column=cols.index(SUFFIX), name="embed_suffix"
-            )
-            shape = HashEmbed(
-                width, embed_size // 2, column=cols.index(SHAPE), name="embed_shape"
-            )
-        else:
-            prefix, suffix, shape = (None, None, None)
-        if pretrained_vectors is not None:
-            glove = StaticVectors(pretrained_vectors, width, column=cols.index(ID))
+    conv_window = kwargs.get("conv_window", 1)
 
-            if subword_features:
-                embed = uniqued(
-                    (glove | norm | prefix | suffix | shape)
-                    >> LN(Maxout(width, width * 5, pieces=3)),
-                    column=cols.index(ORTH),
-                )
-            else:
-                embed = uniqued(
-                    (glove | norm) >> LN(Maxout(width, width * 2, pieces=3)),
-                    column=cols.index(ORTH),
-                )
-        elif subword_features:
-            embed = uniqued(
-                (norm | prefix | suffix | shape)
-                >> LN(Maxout(width, width * 4, pieces=3)),
-                column=cols.index(ORTH),
-            )
-        else:
-            embed = norm
+    cols = ["ID", "NORM", "PREFIX", "SUFFIX", "SHAPE", "ORTH"]
 
-        convolution = Residual(
-            ExtractWindow(nW=1)
-            >> LN(Maxout(width, width * 3, pieces=cnn_maxout_pieces))
-        )
-        tok2vec = FeatureExtracter(cols) >> with_flatten(
-            embed >> convolution ** conv_depth, pad=conv_depth
-        )
-        if bilstm_depth >= 1:
-            tok2vec = tok2vec >> PyTorchBiLSTM(width, width, bilstm_depth)
-        # Work around thinc API limitations :(. TODO: Revise in Thinc 7
-        tok2vec.nO = width
-        tok2vec.embed = embed
-    return tok2vec
+    doc2feats_cfg = {"arch": "spacy.Doc2Feats.v1", "config": {"columns": cols}}
+    if char_embed:
+        embed_cfg = {
+            "arch": "spacy.CharacterEmbed.v1",
+            "config": {
+                "width": 64,
+                "chars": 6,
+                "@mix": {
+                    "arch": "spacy.LayerNormalizedMaxout.v1",
+                    "config": {"width": width, "pieces": 3},
+                },
+                "@embed_features": None,
+            },
+        }
+    else:
+        embed_cfg = {
+            "arch": "spacy.MultiHashEmbed.v1",
+            "config": {
+                "width": width,
+                "rows": embed_size,
+                "columns": cols,
+                "use_subwords": subword_features,
+                "@pretrained_vectors": None,
+                "@mix": {
+                    "arch": "spacy.LayerNormalizedMaxout.v1",
+                    "config": {"width": width, "pieces": 3},
+                },
+            },
+        }
+        if pretrained_vectors:
+            embed_cfg["config"]["@pretrained_vectors"] = {
+                "arch": "spacy.PretrainedVectors.v1",
+                "config": {
+                    "vectors_name": pretrained_vectors,
+                    "width": width,
+                    "column": cols.index("ID"),
+                },
+            }
+    if cnn_maxout_pieces >= 2:
+        cnn_cfg = {
+            "arch": "spacy.MaxoutWindowEncoder.v1",
+            "config": {
+                "width": width,
+                "window_size": conv_window,
+                "pieces": cnn_maxout_pieces,
+                "depth": conv_depth,
+            },
+        }
+    else:
+        cnn_cfg = {
+            "arch": "spacy.MishWindowEncoder.v1",
+            "config": {"width": width, "window_size": conv_window, "depth": conv_depth},
+        }
+    bilstm_cfg = {
+        "arch": "spacy.TorchBiLSTMEncoder.v1",
+        "config": {"width": width, "depth": bilstm_depth},
+    }
+    if conv_depth == 0 and bilstm_depth == 0:
+        encode_cfg = {}
+    elif conv_depth >= 1 and bilstm_depth >= 1:
+        encode_cfg = {
+            "arch": "thinc.FeedForward.v1",
+            "config": {"children": [cnn_cfg, bilstm_cfg]},
+        }
+    elif conv_depth >= 1:
+        encode_cfg = cnn_cfg
+    else:
+        encode_cfg = bilstm_cfg
+    config = {"@doc2feats": doc2feats_cfg, "@embed": embed_cfg, "@encode": encode_cfg}
+    return new_ml.Tok2Vec(config)
 
 
 def reapply(layer, n_times):
@@ -504,6 +528,46 @@ def getitem(i):
     return layerize(getitem_fwd)
 
 
+@describe.attributes(
+    W=Synapses("Weights matrix", lambda obj: (obj.nO, obj.nI), lambda W, ops: None)
+)
+class MultiSoftmax(Affine):
+    """Neural network layer that predicts several multi-class attributes at once.
+    For instance, we might predict one class with 6 variables, and another with 5.
+    We predict the 11 neurons required for this, and then softmax them such
+    that columns 0-6 make a probability distribution and coumns 6-11 make another.
+    """
+
+    name = "multisoftmax"
+
+    def __init__(self, out_sizes, nI=None, **kwargs):
+        Model.__init__(self, **kwargs)
+        self.out_sizes = out_sizes
+        self.nO = sum(out_sizes)
+        self.nI = nI
+
+    def predict(self, input__BI):
+        output__BO = self.ops.affine(self.W, self.b, input__BI)
+        i = 0
+        for out_size in self.out_sizes:
+            self.ops.softmax(output__BO[:, i : i + out_size], inplace=True)
+            i += out_size
+        return output__BO
+
+    def begin_update(self, input__BI, drop=0.0):
+        output__BO = self.predict(input__BI)
+
+        def finish_update(grad__BO, sgd=None):
+            self.d_W += self.ops.gemm(grad__BO, input__BI, trans1=True)
+            self.d_b += grad__BO.sum(axis=0)
+            grad__BI = self.ops.gemm(grad__BO, self.W)
+            if sgd is not None:
+                sgd(self._mem.weights, self._mem.gradient, key=self.id)
+            return grad__BI
+
+        return output__BO, finish_update
+
+
 def build_tagger_model(nr_class, **cfg):
     embed_size = util.env_opt("embed_size", 2000)
     if "token_vector_width" in cfg:
@@ -523,6 +587,33 @@ def build_tagger_model(nr_class, **cfg):
                 pretrained_vectors=pretrained_vectors,
             )
         softmax = with_flatten(Softmax(nr_class, token_vector_width))
+        model = tok2vec >> softmax
+    model.nI = None
+    model.tok2vec = tok2vec
+    model.softmax = softmax
+    return model
+
+
+def build_morphologizer_model(class_nums, **cfg):
+    embed_size = util.env_opt("embed_size", 7000)
+    if "token_vector_width" in cfg:
+        token_vector_width = cfg["token_vector_width"]
+    else:
+        token_vector_width = util.env_opt("token_vector_width", 128)
+    pretrained_vectors = cfg.get("pretrained_vectors")
+    char_embed = cfg.get("char_embed", True)
+    with Model.define_operators({">>": chain, "+": add, "**": clone}):
+        if "tok2vec" in cfg:
+            tok2vec = cfg["tok2vec"]
+        else:
+            tok2vec = Tok2Vec(
+                token_vector_width,
+                embed_size,
+                char_embed=char_embed,
+                pretrained_vectors=pretrained_vectors,
+            )
+        softmax = with_flatten(MultiSoftmax(class_nums, token_vector_width))
+        softmax.out_sizes = class_nums
         model = tok2vec >> softmax
     model.nI = None
     model.tok2vec = tok2vec
@@ -555,7 +646,7 @@ def build_text_classifier(nr_class, width=64, **cfg):
                 SpacyVectors
                 >> flatten_add_lengths
                 >> with_getitem(0, Affine(width, pretrained_dims))
-                >> ParametricAttention(width)
+                >> ParametricAttention(width, seed=100)
                 >> Pooling(sum_pool)
                 >> Residual(ReLu(width, width)) ** 2
                 >> zero_init(Affine(nr_class, width, drop_factor=0.0))
@@ -563,10 +654,10 @@ def build_text_classifier(nr_class, width=64, **cfg):
             )
             return model
 
-        lower = HashEmbed(width, nr_vector, column=1)
-        prefix = HashEmbed(width // 2, nr_vector, column=2)
-        suffix = HashEmbed(width // 2, nr_vector, column=3)
-        shape = HashEmbed(width // 2, nr_vector, column=4)
+        lower = HashEmbed(width, nr_vector, column=1, seed=10)
+        prefix = HashEmbed(width // 2, nr_vector, column=2, seed=11)
+        suffix = HashEmbed(width // 2, nr_vector, column=3, seed=12)
+        shape = HashEmbed(width // 2, nr_vector, column=4, seed=13)
 
         trained_vectors = FeatureExtracter(
             [ORTH, LOWER, PREFIX, SUFFIX, SHAPE, ID]
@@ -597,16 +688,18 @@ def build_text_classifier(nr_class, width=64, **cfg):
         cnn_model = (
             tok2vec
             >> flatten_add_lengths
-            >> ParametricAttention(width)
+            >> ParametricAttention(width, seed=99)
             >> Pooling(sum_pool)
             >> Residual(zero_init(Maxout(width, width)))
             >> zero_init(Affine(nr_class, width, drop_factor=0.0))
         )
 
         linear_model = build_bow_text_classifier(
-            nr_class, ngram_size=cfg.get("ngram_size", 1), exclusive_classes=False
+            nr_class,
+            ngram_size=cfg.get("ngram_size", 1),
+            exclusive_classes=cfg.get("exclusive_classes", False),
         )
-        if cfg.get("exclusive_classes"):
+        if cfg.get("exclusive_classes", False):
             output_layer = Softmax(nr_class, nr_class * 2)
         else:
             output_layer = (
@@ -674,14 +767,14 @@ def build_nel_encoder(embed_width, hidden_width, ner_types, **cfg):
     with Model.define_operators({">>": chain, "**": clone}):
         # context encoder
         tok2vec = Tok2Vec(
-                width=hidden_width,
-                embed_size=embed_width,
-                pretrained_vectors=pretrained_vectors,
-                cnn_maxout_pieces=cnn_maxout_pieces,
-                subword_features=True,
-                conv_depth=conv_depth,
-                bilstm_depth=0,
-            )
+            width=hidden_width,
+            embed_size=embed_width,
+            pretrained_vectors=pretrained_vectors,
+            cnn_maxout_pieces=cnn_maxout_pieces,
+            subword_features=True,
+            conv_depth=conv_depth,
+            bilstm_depth=0,
+        )
 
         model = (
             tok2vec
@@ -720,7 +813,8 @@ def concatenate_lists(*layers, **kwargs):  # pragma: no cover
     concat = concatenate(*layers)
 
     def concatenate_lists_fwd(Xs, drop=0.0):
-        drop *= drop_factor
+        if drop is not None:
+            drop *= drop_factor
         lengths = ops.asarray([len(X) for X in Xs], dtype="i")
         flat_y, bp_flat_y = concat.begin_update(Xs, drop=drop)
         ys = ops.unflatten(flat_y, lengths)
@@ -746,6 +840,8 @@ def masked_language_model(vocab, model, mask_prob=0.15):
 
         def mlm_backward(d_output, sgd=None):
             d_output *= 1 - mask
+            # Rescale gradient for number of instances.
+            d_output *= mask.size - mask.sum()
             return backprop(d_output, sgd=sgd)
 
         return output, mlm_backward
@@ -808,3 +904,101 @@ def _replace_word(word, random_words, mask="[MASK]"):
         return random_words.next()
     else:
         return word
+
+
+def _uniform_init(lo, hi):
+    def wrapped(W, ops):
+        copy_array(W, ops.xp.random.uniform(lo, hi, W.shape))
+
+    return wrapped
+
+
+@describe.attributes(
+    nM=Dimension("Vector dimensions"),
+    nC=Dimension("Number of characters per word"),
+    vectors=Synapses(
+        "Embed matrix", lambda obj: (obj.nC, obj.nV, obj.nM), _uniform_init(-0.1, 0.1)
+    ),
+    d_vectors=Gradient("vectors"),
+)
+class CharacterEmbed(Model):
+    def __init__(self, nM=None, nC=None, **kwargs):
+        Model.__init__(self, **kwargs)
+        self.nM = nM
+        self.nC = nC
+
+    @property
+    def nO(self):
+        return self.nM * self.nC
+
+    @property
+    def nV(self):
+        return 256
+
+    def begin_update(self, docs, drop=0.0):
+        if not docs:
+            return []
+        ids = []
+        output = []
+        weights = self.vectors
+        # This assists in indexing; it's like looping over this dimension.
+        # Still consider this weird witch craft...But thanks to Mark Neumann
+        # for the tip.
+        nCv = self.ops.xp.arange(self.nC)
+        for doc in docs:
+            doc_ids = self.ops.asarray(doc.to_utf8_array(nr_char=self.nC))
+            doc_vectors = self.ops.allocate((len(doc), self.nC, self.nM))
+            # Let's say I have a 2d array of indices, and a 3d table of data. What numpy
+            # incantation do I chant to get
+            # output[i, j, k] == data[j, ids[i, j], k]?
+            doc_vectors[:, nCv] = weights[nCv, doc_ids[:, nCv]]
+            output.append(doc_vectors.reshape((len(doc), self.nO)))
+            ids.append(doc_ids)
+
+        def backprop_character_embed(d_vectors, sgd=None):
+            gradient = self.d_vectors
+            for doc_ids, d_doc_vectors in zip(ids, d_vectors):
+                d_doc_vectors = d_doc_vectors.reshape((len(doc_ids), self.nC, self.nM))
+                gradient[nCv, doc_ids[:, nCv]] += d_doc_vectors[:, nCv]
+            if sgd is not None:
+                sgd(self._mem.weights, self._mem.gradient, key=self.id)
+            return None
+
+        return output, backprop_character_embed
+
+
+def get_cossim_loss(yh, y, ignore_zeros=False):
+    xp = get_array_module(yh)
+    # Find the zero vectors
+    if ignore_zeros:
+        zero_indices = xp.abs(y).sum(axis=1) == 0
+    # Add a small constant to avoid 0 vectors
+    yh = yh + 1e-8
+    y = y + 1e-8
+    # https://math.stackexchange.com/questions/1923613/partial-derivative-of-cosine-similarity
+    norm_yh = xp.linalg.norm(yh, axis=1, keepdims=True)
+    norm_y = xp.linalg.norm(y, axis=1, keepdims=True)
+    mul_norms = norm_yh * norm_y
+    cosine = (yh * y).sum(axis=1, keepdims=True) / mul_norms
+    d_yh = (y / mul_norms) - (cosine * (yh / norm_yh ** 2))
+    losses = xp.abs(cosine - 1)
+    if ignore_zeros:
+        # If the target was a zero vector, don't count it in the loss.
+        d_yh[zero_indices] = 0
+        losses[zero_indices] = 0
+    loss = losses.sum()
+    return loss, -d_yh
+
+
+def get_characters_loss(ops, docs, prediction, nr_char=10):
+    target_ids = numpy.vstack([doc.to_utf8_array(nr_char=nr_char) for doc in docs])
+    target_ids = target_ids.reshape((-1,))
+    target = ops.asarray(to_categorical(target_ids, nb_classes=256), dtype="f")
+    target = target.reshape((-1, 256*nr_char))
+    diff = prediction - target
+    loss = (diff**2).sum()
+    d_target = diff / float(prediction.shape[0])
+    return loss, d_target
+
+
+

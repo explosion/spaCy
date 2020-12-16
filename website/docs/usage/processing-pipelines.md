@@ -20,7 +20,7 @@ component** on the `Doc`, in order. It then returns the processed `Doc` that you
 can work with.
 
 ```python
-doc = nlp(u"This is a text")
+doc = nlp("This is a text")
 ```
 
 When processing large volumes of text, the statistical models are usually more
@@ -29,7 +29,7 @@ efficient if you let them work on batches of texts. spaCy's
 processed `Doc` objects. The batching is done internally.
 
 ```diff
-texts = [u"This is a text", u"These are lots of texts", u"..."]
+texts = ["This is a text", "These are lots of texts", "..."]
 - docs = [nlp(text) for text in texts]
 + docs = list(nlp.pipe(texts))
 ```
@@ -172,7 +172,7 @@ which is then processed by the component next in the pipeline.
 
 ```python
 ### The pipeline under the hood
-doc = nlp.make_doc(u"This is a sentence")   # create a Doc from raw text
+doc = nlp.make_doc("This is a sentence")   # create a Doc from raw text
 for name, proc in nlp.pipeline:             # iterate over components in order
     doc = proc(doc)                         # apply each component
 ```
@@ -213,6 +213,7 @@ require them in the pipeline settings in your model's `meta.json`.
 | `tagger`            | [`Tagger`](/api/tagger)                                          | Assign part-of-speech-tags.                                                                   |
 | `parser`            | [`DependencyParser`](/api/dependencyparser)                      | Assign dependency labels.                                                                     |
 | `ner`               | [`EntityRecognizer`](/api/entityrecognizer)                      | Assign named entities.                                                                        |
+| `entity_linker`     | [`EntityLinker`](/api/entitylinker)                              | Assign knowledge base IDs to named entities. Should be added after the entity recognizer.     |
 | `textcat`           | [`TextCategorizer`](/api/textcategorizer)                        | Assign text categories.                                                                       |
 | `entity_ruler`      | [`EntityRuler`](/api/entityruler)                                | Assign named entities based on pattern rules.                                                 |
 | `sentencizer`       | [`Sentencizer`](/api/sentencizer)                                | Add rule-based sentence segmentation without the dependency parse.                            |
@@ -262,12 +263,12 @@ blocks.
 ### Disable for block
 # 1. Use as a contextmanager
 with nlp.disable_pipes("tagger", "parser"):
-    doc = nlp(u"I won't be tagged and parsed")
-doc = nlp(u"I will be tagged and parsed")
+    doc = nlp("I won't be tagged and parsed")
+doc = nlp("I will be tagged and parsed")
 
 # 2. Restore manually
 disabled = nlp.disable_pipes("ner")
-doc = nlp(u"I won't have named entities")
+doc = nlp("I won't have named entities")
 disabled.restore()
 ```
 
@@ -294,11 +295,11 @@ initializing a Language class via [`from_disk`](/api/language#from_disk).
 
 ```diff
 - nlp = spacy.load('en', tagger=False, entity=False)
-- doc = nlp(u"I don't want parsed", parse=False)
+- doc = nlp("I don't want parsed", parse=False)
 
 + nlp = spacy.load("en", disable=["ner"])
 + nlp.remove_pipe("parser")
-+ doc = nlp(u"I don't want parsed")
++ doc = nlp("I don't want parsed")
 ```
 
 </Infobox>
@@ -375,7 +376,7 @@ def my_component(doc):
 nlp = spacy.load("en_core_web_sm")
 nlp.add_pipe(my_component, name="print_info", last=True)
 print(nlp.pipe_names)  # ['tagger', 'parser', 'ner', 'print_info']
-doc = nlp(u"This is a sentence.")
+doc = nlp("This is a sentence.")
 
 ```
 
@@ -425,14 +426,14 @@ class EntityMatcher(object):
         return doc
 
 nlp = spacy.load("en_core_web_sm")
-terms = (u"cat", u"dog", u"tree kangaroo", u"giant sea spider")
+terms = ("cat", "dog", "tree kangaroo", "giant sea spider")
 entity_matcher = EntityMatcher(nlp, terms, "ANIMAL")
 
 nlp.add_pipe(entity_matcher, after="ner")
 
 print(nlp.pipe_names)  # The components in the pipeline
 
-doc = nlp(u"This is a text about Barack Obama and a tree kangaroo")
+doc = nlp("This is a text about Barack Obama and a tree kangaroo")
 print([(ent.text, ent.label_) for ent in doc.ents])
 ```
 
@@ -470,7 +471,7 @@ def custom_sentencizer(doc):
 
 nlp = spacy.load("en_core_web_sm")
 nlp.add_pipe(custom_sentencizer, before="parser")  # Insert before the parser
-doc = nlp(u"This is. A sentence. | This is. Another sentence.")
+doc = nlp("This is. A sentence. | This is. Another sentence.")
 for sent in doc.sents:
     print(sent.text)
 ```
@@ -516,7 +517,7 @@ config parameters are passed all the way down from
 components with custom settings:
 
 ```python
-nlp = spacy.load("your_custom_model", terms=(u"tree kangaroo"), label="ANIMAL")
+nlp = spacy.load("your_custom_model", terms=["tree kangaroo"], label="ANIMAL")
 ```
 
 <Infobox title="Important note" variant="warning">
@@ -616,7 +617,7 @@ raise an `AttributeError`.
 ### Example
 from spacy.tokens import Doc, Span, Token
 
-fruits = [u"apple", u"pear", u"banana", u"orange", u"strawberry"]
+fruits = ["apple", "pear", "banana", "orange", "strawberry"]
 is_fruit_getter = lambda token: token.text in fruits
 has_fruit_getter = lambda obj: any([t.text in fruits for t in obj])
 
@@ -628,7 +629,7 @@ Span.set_extension("has_fruit", getter=has_fruit_getter)
 > #### Usage example
 >
 > ```python
-> doc = nlp(u"I have an apple and a melon")
+> doc = nlp("I have an apple and a melon")
 > assert doc[3]._.is_fruit      # get Token attributes
 > assert not doc[0]._.is_fruit
 > assert doc._.has_fruit        # get Doc attributes
@@ -859,7 +860,7 @@ def custom_ner_wrapper(doc):
 
 The `custom_ner_wrapper` can then be added to the pipeline of a blank model
 using [`nlp.add_pipe`](/api/language#add_pipe). You can also replace the
-existing entity recognizer of a pre-trained model with
+existing entity recognizer of a pretrained model with
 [`nlp.replace_pipe`](/api/language#replace_pipe).
 
 Here's another example of a custom model, `your_custom_model`, that takes a list

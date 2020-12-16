@@ -12,10 +12,10 @@ def test_issue3839(en_vocab):
     match_id = "PATTERN"
     pattern1 = [{"LOWER": "terrific"}, {"OP": "?"}, {"LOWER": "group"}]
     pattern2 = [{"LOWER": "terrific"}, {"OP": "?"}, {"OP": "?"}, {"LOWER": "group"}]
-    matcher.add(match_id, None, pattern1)
+    matcher.add(match_id, [pattern1])
     matches = matcher(doc)
     assert matches[0][0] == en_vocab.strings[match_id]
     matcher = Matcher(en_vocab)
-    matcher.add(match_id, None, pattern2)
+    matcher.add(match_id, [pattern2])
     matches = matcher(doc)
     assert matches[0][0] == en_vocab.strings[match_id]

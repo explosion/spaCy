@@ -1,0 +1,29 @@
+name: Issue Manager
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  issue_comment:
+    types:
+      - created
+      - edited
+  issues:
+    types:
+      - labeled
+
+jobs:
+  issue-manager:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: tiangolo/issue-manager@0.2.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config: >
+            {
+              "resolved": {
+                "delay": "P7D",
+                "message": "This issue has been automatically closed because it was answered and there was no follow-up discussion.",
+                "remove_label_on_comment": true,
+                "remove_label_on_close": true
+              }
+            }

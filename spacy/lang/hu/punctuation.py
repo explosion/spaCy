@@ -12,8 +12,7 @@ _currency = r"\$¢£€¥฿"
 _quotes = CONCAT_QUOTES.replace("'", "")
 
 _prefixes = (
-    [r"\+"]
-    + LIST_PUNCT
+    LIST_PUNCT
     + LIST_ELLIPSES
     + LIST_QUOTES
     + [_concat_icons]
@@ -21,7 +20,8 @@ _prefixes = (
 )
 
 _suffixes = (
-    LIST_PUNCT
+    [r"\+"]
+    + LIST_PUNCT
     + LIST_ELLIPSES
     + LIST_QUOTES
     + [_concat_icons]

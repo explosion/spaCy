@@ -99,8 +99,8 @@ mark both statements:
 | Field                          | Entry                              |
 |------------------------------- | --------------------               |
 | Name                           | Martino Mensio                     |
-| Company name (if applicable)   | Polytechnic University of Turin    |
-| Title or role (if applicable)  | Student                            |
+| Company name (if applicable)   | The Open University                |
+| Title or role (if applicable)  | PhD Student                        |
 | Date                           | 17 November 2017                   |
 | GitHub username                | MartinoMensio                      |
 | Website (optional)             | https://martinomensio.github.io/   |

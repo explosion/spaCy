@@ -16,6 +16,7 @@ import numpy.linalg
 import struct
 import srsly
 from thinc.neural.util import get_array_module, copy_array
+import warnings
 
 from .span cimport Span
 from .token cimport Token
@@ -23,13 +24,12 @@ from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
 from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, CLUSTER
 from ..attrs cimport LENGTH, POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB
-from ..attrs cimport ENT_TYPE, ENT_KB_ID, SENT_START, attr_id_t
+from ..attrs cimport ENT_TYPE, ENT_ID, ENT_KB_ID, SENT_START, IDX, attr_id_t
 from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
 
 from ..attrs import intify_attrs, IDS
 from ..util import normalize_slice
 from ..compat import is_config, copy_reg, pickle, basestring_
-from ..errors import deprecation_warning, models_warning, user_warning
 from ..errors import Errors, Warnings
 from .. import util
 from .underscore import Underscore, get_ext_args
@@ -69,10 +69,24 @@ cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
         return token.ent_iob
     elif feat_name == ENT_TYPE:
         return token.ent_type
+    elif feat_name == ENT_ID:
+        return token.ent_id
     elif feat_name == ENT_KB_ID:
         return token.ent_kb_id
+    elif feat_name == IDX:
+        return token.idx
     else:
         return Lexeme.get_struct_attr(token.lex, feat_name)
+
+
+cdef attr_t get_token_attr_for_matcher(const TokenC* token, attr_id_t feat_name) nogil:
+    if feat_name == SENT_START:
+        if token.sent_start == 1:
+            return True
+        else:
+            return False
+    else:
+        return get_token_attr(token, feat_name)
 
 
 def _get_chunker(lang):
@@ -256,7 +270,7 @@ cdef class Doc:
     def is_nered(self):
         """Check if the document has named entities set. Will return True if
         *any* of the tokens has a named entity tag set (even if the others are
-        uknown values).
+        unknown values), or if the document is empty.
         """
         if len(self) == 0:
             return True
@@ -338,17 +352,25 @@ cdef class Doc:
     def doc(self):
         return self
 
-    def char_span(self, int start_idx, int end_idx, label=0, kb_id=0, vector=None):
-        """Create a `Span` object from the slice `doc.text[start : end]`.
+    def char_span(self, int start_idx, int end_idx, label=0, kb_id=0, vector=None, alignment_mode="strict"):
+        """Create a `Span` object from the slice
+        `doc.text[start_idx : end_idx]`. Returns None if no valid `Span` can be
+        created.
 
         doc (Doc): The parent document.
-        start (int): The index of the first character of the span.
-        end (int): The index of the first character after the span.
+        start_idx (int): The index of the first character of the span.
+        end_idx (int): The index of the first character after the span.
         label (uint64 or string): A label to attach to the Span, e.g. for
             named entities.
-        kb_id (uint64 or string):  An ID from a KB to capture the meaning of a named entity.
+        kb_id (uint64 or string):  An ID from a KB to capture the meaning of a
+            named entity.
         vector (ndarray[ndim=1, dtype='float32']): A meaning representation of
             the span.
+        alignment_mode (str): How character indices are aligned to token
+            boundaries. Options: "strict" (character indices must be aligned
+            with token boundaries), "contract" (span of all tokens completely
+            within the character span), "expand" (span of all tokens at least
+            partially covered by the character span). Defaults to "strict".
         RETURNS (Span): The newly constructed object.
 
         DOCS: https://spacy.io/api/doc#char_span
@@ -357,12 +379,29 @@ cdef class Doc:
             label = self.vocab.strings.add(label)
         if not isinstance(kb_id, int):
             kb_id = self.vocab.strings.add(kb_id)
-        cdef int start = token_by_start(self.c, self.length, start_idx)
-        if start == -1:
+        if alignment_mode not in ("strict", "contract", "expand"):
+            alignment_mode = "strict"
+        cdef int start = token_by_char(self.c, self.length, start_idx)
+        if start < 0 or (alignment_mode == "strict" and start_idx != self[start].idx):
             return None
-        cdef int end = token_by_end(self.c, self.length, end_idx)
-        if end == -1:
+        # end_idx is exclusive, so find the token at one char before
+        cdef int end = token_by_char(self.c, self.length, end_idx - 1)
+        if end < 0 or (alignment_mode == "strict" and end_idx != self[end].idx + len(self[end])):
             return None
+        # Adjust start and end by alignment_mode
+        if alignment_mode == "contract":
+            if self[start].idx < start_idx:
+                start += 1
+            if end_idx < self[end].idx + len(self[end]):
+                end -= 1
+            # if no tokens are completely within the span, return None
+            if end < start:
+                return None
+        elif alignment_mode == "expand":
+            # Don't consider the trailing whitespace to be part of the previous
+            # token
+            if start_idx == self[start].idx + len(self[start]):
+                start += 1
         # Currently we have the token index, we want the range-end index
         end += 1
         cdef Span span = Span(self, start, end, label=label, kb_id=kb_id, vector=vector)
@@ -383,17 +422,18 @@ cdef class Doc:
         if isinstance(other, (Lexeme, Token)) and self.length == 1:
             if self.c[0].lex.orth == other.orth:
                 return 1.0
-        elif isinstance(other, (Span, Doc)):
-            if len(self) == len(other):
-                for i in range(self.length):
-                    if self[i].orth != other[i].orth:
-                        break
-                else:
-                    return 1.0
+        elif isinstance(other, (Span, Doc)) and len(self) == len(other):
+            similar = True
+            for i in range(self.length):
+                if self[i].orth != other[i].orth:
+                    similar = False
+                    break
+            if similar:
+                return 1.0
         if self.vocab.vectors.n_keys == 0:
-            models_warning(Warnings.W007.format(obj="Doc"))
+            warnings.warn(Warnings.W007.format(obj="Doc"))
         if self.vector_norm == 0 or other.vector_norm == 0:
-            user_warning(Warnings.W008.format(obj="Doc"))
+            warnings.warn(Warnings.W008.format(obj="Doc"))
             return 0.0
         vector = self.vector
         xp = get_array_module(vector)
@@ -525,16 +565,14 @@ cdef class Doc:
 
         def __set__(self, ents):
             # TODO:
-            # 1. Allow negative matches
-            # 2. Ensure pre-set NERs are not over-written during statistical
-            #    prediction
-            # 3. Test basic data-driven ORTH gazetteer
-            # 4. Test more nuanced date and currency regex
+            # 1. Test basic data-driven ORTH gazetteer
+            # 2. Test more nuanced date and currency regex
             tokens_in_ents = {}
             cdef attr_t entity_type
+            cdef attr_t kb_id
             cdef int ent_start, ent_end
             for ent_info in ents:
-                entity_type, ent_start, ent_end = get_entity_info(ent_info)
+                entity_type, kb_id, ent_start, ent_end = get_entity_info(ent_info)
                 for token_index in range(ent_start, ent_end):
                     if token_index in tokens_in_ents.keys():
                         raise ValueError(Errors.E103.format(
@@ -542,28 +580,34 @@ cdef class Doc:
                                    tokens_in_ents[token_index][1],
                                    self.vocab.strings[tokens_in_ents[token_index][2]]),
                             span2=(ent_start, ent_end, self.vocab.strings[entity_type])))
-                    tokens_in_ents[token_index] = (ent_start, ent_end, entity_type)
+                    tokens_in_ents[token_index] = (ent_start, ent_end, entity_type, kb_id)
             cdef int i
             for i in range(self.length):
-                self.c[i].ent_type = 0
-                self.c[i].ent_kb_id = 0
-                self.c[i].ent_iob = 0  # Means missing.
-            cdef attr_t ent_type
-            cdef int start, end
-            for ent_info in ents:
-                ent_type, start, end = get_entity_info(ent_info)
-                if ent_type is None or ent_type < 0:
-                    # Mark as O
-                    for i in range(start, end):
-                        self.c[i].ent_type = 0
-                        self.c[i].ent_iob = 2
-                else:
-                    # Mark (inside) as I
-                    for i in range(start, end):
-                        self.c[i].ent_type = ent_type
-                        self.c[i].ent_iob = 1
-                    # Set start as B
-                    self.c[start].ent_iob = 3
+                # default values
+                entity_type = 0
+                kb_id = 0
+
+                # Set ent_iob to Missing (0) bij default unless this token was nered before
+                ent_iob = 0
+                if self.c[i].ent_iob != 0:
+                    ent_iob = 2
+
+                # overwrite if the token was part of a specified entity
+                if i in tokens_in_ents.keys():
+                    ent_start, ent_end, entity_type, kb_id = tokens_in_ents[i]
+                    if entity_type is None or entity_type <= 0:
+                        # Blocking this token from being overwritten by downstream NER
+                        ent_iob = 3
+                    elif ent_start == i:
+                        # Marking the start of an entity
+                        ent_iob = 3
+                    else:
+                        # Marking the inside of an entity
+                        ent_iob = 1
+
+                self.c[i].ent_type = entity_type
+                self.c[i].ent_kb_id = kb_id
+                self.c[i].ent_iob = ent_iob
 
     @property
     def noun_chunks(self):
@@ -578,8 +622,7 @@ cdef class Doc:
 
         DOCS: https://spacy.io/api/doc#noun_chunks
         """
-        if not self.is_parsed:
-            raise ValueError(Errors.E029)
+        
         # Accumulate the result before beginning to iterate over it. This
         # prevents the tokenisation from being changed out from under us
         # during the iteration. The tricky thing here is that Span accepts
@@ -777,21 +820,33 @@ cdef class Doc:
         # Allow strings, e.g. 'lemma' or 'LEMMA'
         attrs = [(IDS[id_.upper()] if hasattr(id_, "upper") else id_)
                  for id_ in attrs]
+        if array.dtype != numpy.uint64:
+            warnings.warn(Warnings.W028.format(type=array.dtype))
 
         if SENT_START in attrs and HEAD in attrs:
             raise ValueError(Errors.E032)
-        cdef int i, col
+        cdef int i, col, abs_head_index
         cdef attr_id_t attr_id
         cdef TokenC* tokens = self.c
         cdef int length = len(array)
         # Get set up for fast loading
         cdef Pool mem = Pool()
         cdef int n_attrs = len(attrs)
+        # attrs should not be empty, but make sure to avoid zero-length mem alloc
+        assert n_attrs > 0
         attr_ids = <attr_id_t*>mem.alloc(n_attrs, sizeof(attr_id_t))
         for i, attr_id in enumerate(attrs):
             attr_ids[i] = attr_id
         if len(array.shape) == 1:
             array = array.reshape((array.size, 1))
+        # Check that all heads are within the document bounds
+        if HEAD in attrs:
+            col = attrs.index(HEAD)
+            for i in range(length):
+                # cast index to signed int
+                abs_head_index = numpy.int32(array[i, col]) + i
+                if abs_head_index < 0 or abs_head_index >= length:
+                    raise ValueError(Errors.E190.format(index=i, value=array[i, col], rel_head_index=numpy.int32(array[i, col])))
         # Do TAG first. This lets subsequent loop override stuff like POS, LEMMA
         if TAG in attrs:
             col = attrs.index(TAG)
@@ -805,7 +860,7 @@ cdef class Doc:
                 if attr_ids[j] != TAG:
                     Token.set_struct_attr(token, attr_ids[j], array[i, j])
         # Set flags
-        self.is_parsed = bool(self.is_parsed or HEAD in attrs or DEP in attrs)
+        self.is_parsed = bool(self.is_parsed or HEAD in attrs)
         self.is_tagged = bool(self.is_tagged or TAG in attrs or POS in attrs)
         # If document is parsed, set children
         if self.is_parsed:
@@ -862,15 +917,24 @@ cdef class Doc:
 
         DOCS: https://spacy.io/api/doc#to_bytes
         """
-        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE]  # TODO: ENT_KB_ID ?
+        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE, ENT_ID, NORM, ENT_KB_ID]
         if self.is_tagged:
-            array_head.append(TAG)
+            array_head.extend([TAG, POS])
         # If doc parsed add head and dep attribute
         if self.is_parsed:
             array_head.extend([HEAD, DEP])
         # Otherwise add sent_start
         else:
             array_head.append(SENT_START)
+        strings = set()
+        for token in self:
+            strings.add(token.tag_)
+            strings.add(token.lemma_)
+            strings.add(token.dep_)
+            strings.add(token.ent_type_)
+            strings.add(token.ent_kb_id_)
+            strings.add(token.ent_id_)
+            strings.add(token.norm_)
         # Msgpack doesn't distinguish between lists and tuples, which is
         # vexing for user data. As a best guess, we *know* that within
         # keys, we must have tuples. In values we just have to hope
@@ -881,6 +945,8 @@ cdef class Doc:
             "array_body": lambda: self.to_array(array_head),
             "sentiment": lambda: self.sentiment,
             "tensor": lambda: self.tensor,
+            "cats": lambda: self.cats,
+            "strings": lambda: list(strings),
         }
         for key in kwargs:
             if key in serializers or key in ("user_data", "user_data_keys", "user_data_values"):
@@ -910,6 +976,8 @@ cdef class Doc:
             "array_body": lambda b: None,
             "sentiment": lambda b: None,
             "tensor": lambda b: None,
+            "cats": lambda b: None,
+            "strings": lambda b: None,
             "user_data_keys": lambda b: None,
             "user_data_values": lambda b: None,
         }
@@ -931,6 +999,11 @@ cdef class Doc:
             self.sentiment = msg["sentiment"]
         if "tensor" not in exclude and "tensor" in msg:
             self.tensor = msg["tensor"]
+        if "cats" not in exclude and "cats" in msg:
+            self.cats = msg["cats"]
+        if "strings" not in exclude and "strings" in msg:
+            for s in msg["strings"]:
+                self.vocab.strings.add(s)
         start = 0
         cdef const LexemeC* lex
         cdef unicode orth_
@@ -984,9 +1057,9 @@ cdef class Doc:
          order, and no span intersection is allowed.
 
         spans (Span[]): Spans to merge, in document order, with all span
-            intersections empty. Cannot be emty.
+            intersections empty. Cannot be empty.
         attributes (Dictionary[]): Attributes to assign to the merged tokens. By default,
-            must be the same lenghth as spans, emty dictionaries are allowed.
+            must be the same length as spans, empty dictionaries are allowed.
             attributes are inherited from the syntactic root of the span.
         RETURNS (Token): The first newly merged token.
         """
@@ -1015,10 +1088,10 @@ cdef class Doc:
             indices did not fall at token boundaries.
         """
         cdef unicode tag, lemma, ent_type
-        deprecation_warning(Warnings.W013.format(obj="Doc"))
+        warnings.warn(Warnings.W013.format(obj="Doc"), DeprecationWarning)
         # TODO: ENT_KB_ID ?
         if len(args) == 3:
-            deprecation_warning(Warnings.W003)
+            warnings.warn(Warnings.W003, DeprecationWarning)
             tag, lemma, ent_type = args
             attributes[TAG] = tag
             attributes[LEMMA] = lemma
@@ -1087,23 +1160,66 @@ cdef class Doc:
                 data["_"][attr] = value
         return data
 
+    def to_utf8_array(self, int nr_char=-1):
+        """Encode word strings to utf8, and export to a fixed-width array
+        of characters. Characters are placed into the array in the order:
+            0, -1, 1, -2, etc
+        For example, if the array is sliced array[:, :8], the array will
+        contain the first 4 characters and last 4 characters of each word ---
+        with the middle characters clipped out. The value 255 is used as a pad
+        value.
+        """
+        byte_strings = [token.orth_.encode('utf8') for token in self]
+        if nr_char == -1:
+            nr_char = max(len(bs) for bs in byte_strings)
+        cdef np.ndarray output = numpy.zeros((len(byte_strings), nr_char), dtype='uint8')
+        output.fill(255)
+        cdef int i, j, start_idx, end_idx
+        cdef bytes byte_string
+        cdef unsigned char utf8_char
+        for i, byte_string in enumerate(byte_strings):
+            j = 0
+            start_idx = 0
+            end_idx = len(byte_string) - 1
+            while j < nr_char and start_idx <= end_idx:
+                output[i, j] = <unsigned char>byte_string[start_idx]
+                start_idx += 1
+                j += 1
+                if j < nr_char and start_idx <= end_idx:
+                    output[i, j] = <unsigned char>byte_string[end_idx]
+                    end_idx -= 1
+                    j += 1
+        return output
+
 
 cdef int token_by_start(const TokenC* tokens, int length, int start_char) except -2:
-    cdef int i
-    for i in range(length):
-        if tokens[i].idx == start_char:
-            return i
+    cdef int i = token_by_char(tokens, length, start_char)
+    if i >= 0 and tokens[i].idx == start_char:
+        return i
     else:
         return -1
 
 
 cdef int token_by_end(const TokenC* tokens, int length, int end_char) except -2:
-    cdef int i
-    for i in range(length):
-        if tokens[i].idx + tokens[i].lex.length == end_char:
-            return i
+    # end_char is exclusive, so find the token at one char before
+    cdef int i = token_by_char(tokens, length, end_char - 1)
+    if i >= 0 and tokens[i].idx + tokens[i].lex.length == end_char:
+        return i
     else:
         return -1
+
+
+cdef int token_by_char(const TokenC* tokens, int length, int char_idx) except -2:
+    cdef int start = 0, mid, end = length - 1
+    while start <= end:
+        mid = (start + end) / 2
+        if char_idx < tokens[mid].idx:
+            end = mid - 1
+        elif char_idx >= tokens[mid].idx + tokens[mid].lex.length + tokens[mid].spacy:
+            start = mid + 1
+        else:
+            return mid
+    return -1
 
 
 cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
@@ -1116,33 +1232,68 @@ cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
         tokens[i].r_kids = 0
         tokens[i].l_edge = i
         tokens[i].r_edge = i
-    # Three times, for non-projectivity. See issue #3170. This isn't a very
-    # satisfying fix, but I think it's sufficient.
-    for loop_count in range(3):
-        # Set left edges
-        for i in range(length):
-            child = &tokens[i]
-            head = &tokens[i + child.head]
-            if child < head and loop_count == 0:
-                head.l_kids += 1
-            if child.l_edge < head.l_edge:
-                head.l_edge = child.l_edge
-            if child.r_edge > head.r_edge:
-                head.r_edge = child.r_edge
-        # Set right edges - same as above, but iterate in reverse
-        for i in range(length-1, -1, -1):
-            child = &tokens[i]
-            head = &tokens[i + child.head]
-            if child > head and loop_count == 0:
-                head.r_kids += 1
-            if child.r_edge > head.r_edge:
-                head.r_edge = child.r_edge
-            if child.l_edge < head.l_edge:
-                head.l_edge = child.l_edge
+    cdef int loop_count = 0
+    cdef bint heads_within_sents = False
+    # Try up to 10 iterations of adjusting lr_kids and lr_edges in order to
+    # handle non-projective dependency parses, stopping when all heads are
+    # within their respective sentence boundaries. We have documented cases
+    # that need at least 4 iterations, so this is to be on the safe side
+    # without risking getting stuck in an infinite loop if something is
+    # terribly malformed.
+    while not heads_within_sents:
+        heads_within_sents = _set_lr_kids_and_edges(tokens, length, loop_count)
+        if loop_count > 10:
+            warnings.warn(Warnings.W026)
+            break
+        loop_count += 1
     # Set sentence starts
     for i in range(length):
         if tokens[i].head == 0 and tokens[i].dep != 0:
             tokens[tokens[i].l_edge].sent_start = True
+
+
+cdef int _set_lr_kids_and_edges(TokenC* tokens, int length, int loop_count) except -1:
+    # May be called multiple times due to non-projectivity. See issues #3170
+    # and #4688.
+    # Set left edges
+    cdef TokenC* head
+    cdef TokenC* child
+    cdef int i, j
+    for i in range(length):
+        child = &tokens[i]
+        head = &tokens[i + child.head]
+        if child < head and loop_count == 0:
+            head.l_kids += 1
+        if child.l_edge < head.l_edge:
+            head.l_edge = child.l_edge
+        if child.r_edge > head.r_edge:
+            head.r_edge = child.r_edge
+    # Set right edges - same as above, but iterate in reverse
+    for i in range(length-1, -1, -1):
+        child = &tokens[i]
+        head = &tokens[i + child.head]
+        if child > head and loop_count == 0:
+            head.r_kids += 1
+        if child.r_edge > head.r_edge:
+            head.r_edge = child.r_edge
+        if child.l_edge < head.l_edge:
+            head.l_edge = child.l_edge
+    # Get sentence start positions according to current state
+    sent_starts = set()
+    for i in range(length):
+        if tokens[i].head == 0 and tokens[i].dep != 0:
+            sent_starts.add(tokens[i].l_edge)
+    cdef int curr_sent_start = 0
+    cdef int curr_sent_end = 0
+    # Check whether any heads are not within the current sentence
+    for i in range(length):
+        if (i > 0 and i in sent_starts) or i == length - 1:
+            curr_sent_end = i
+            for j in range(curr_sent_start, curr_sent_end):
+                if tokens[j].head + j < curr_sent_start or tokens[j].head + j >= curr_sent_end + 1:
+                    return False
+            curr_sent_start = i
+    return True
 
 
 cdef int _get_tokens_lca(Token token_j, Token token_k):
@@ -1251,10 +1402,14 @@ def fix_attributes(doc, attributes):
 def get_entity_info(ent_info):
     if isinstance(ent_info, Span):
         ent_type = ent_info.label
+        ent_kb_id = ent_info.kb_id
         start = ent_info.start
         end = ent_info.end
     elif len(ent_info) == 3:
         ent_type, start, end = ent_info
+        ent_kb_id = 0
+    elif len(ent_info) == 4:
+        ent_type, ent_kb_id, start, end = ent_info
     else:
-        ent_id, ent_type, start, end = ent_info
-    return ent_type, start, end
+        ent_id, ent_kb_id, ent_type, start, end = ent_info
+    return ent_type, ent_kb_id, start, end

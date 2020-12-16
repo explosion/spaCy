@@ -3,18 +3,20 @@ from __future__ import unicode_literals
 
 import re
 
+from .char_classes import ALPHA_LOWER, ALPHA
 from ..symbols import ORTH, POS, TAG, LEMMA, SPACE
 
 
 # URL validation regex courtesy of: https://mathiasbynens.be/demo/url-regex
-# A few minor mods to this regex to account for use cases represented in test_urls
+# and https://gist.github.com/dperini/729294 (Diego Perini, MIT License)
+# A few mods to this regex to account for use cases represented in test_urls
 URL_PATTERN = (
+    # fmt: off
     r"^"
-    # in order to support the prefix tokenization (see prefix test cases in test_urls).
-    r"(?=[\w])"
-    # protocol identifier
-    r"(?:(?:https?|ftp|mailto)://)?"
-    # user:pass authentication
+    # protocol identifier (mods: make optional and expand schemes)
+    # (see: https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml)
+    r"(?:(?:[\w\+\-\.]{2,})://)?"
+    # mailto:user or user:pass authentication
     r"(?:\S+(?::\S*)?@)?"
     r"(?:"
     # IP address exclusion
@@ -33,25 +35,31 @@ URL_PATTERN = (
     r"(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}"
     r"(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))"
     r"|"
-    # host name
-    r"(?:(?:[a-z0-9\-]*)?[a-z0-9]+)"
-    # domain name
-    r"(?:\.(?:[a-z0-9])(?:[a-z0-9\-])*[a-z0-9])?"
+    # host & domain names
+    # mods: match is case-sensitive, so include [A-Z]
+      r"(?:"  # noqa
+        r"(?:"
+          r"[A-Za-z0-9\u00a1-\uffff]"
+          r"[A-Za-z0-9\u00a1-\uffff_-]{0,62}"
+        r")?"
+        r"[A-Za-z0-9\u00a1-\uffff]\."
+      r")+"
     # TLD identifier
-    r"(?:\.(?:[a-z]{2,}))"
+    # mods: use ALPHA_LOWER instead of a wider range so that this doesn't match
+    # strings like "lower.Upper", which can be split on "." by infixes in some
+    # languages
+    r"(?:[" + ALPHA_LOWER + "]{2,63})"
     r")"
     # port number
     r"(?::\d{2,5})?"
     # resource path
-    r"(?:/\S*)?"
-    # query parameters
-    r"\??(:?\S*)?"
-    # in order to support the suffix tokenization (see suffix test cases in test_urls),
-    r"(?<=[\w/])"
+    r"(?:[/?#]\S*)?"
     r"$"
+    # fmt: on
 ).strip()
 
-TOKEN_MATCH = re.compile(URL_PATTERN, re.UNICODE).match
+TOKEN_MATCH = None
+URL_MATCH = re.compile("(?u)" + URL_PATTERN).match
 
 
 BASE_EXCEPTIONS = {}
@@ -109,7 +117,7 @@ for orth in [
 
 
 emoticons = set(
-    """
+    r"""
 :)
 :-)
 :))
@@ -125,6 +133,8 @@ emoticons = set(
 :-]
 [:
 [-:
+[=
+=]
 :o)
 (o:
 :}
@@ -156,6 +166,8 @@ emoticons = set(
 =|
 :|
 :-|
+]=
+=[
 :1
 :P
 :-P

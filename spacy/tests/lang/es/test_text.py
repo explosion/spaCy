@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import pytest
+from spacy.lang.es.lex_attrs import like_num
 
 
 def test_es_tokenizer_handles_long_text(es_tokenizer):
@@ -33,3 +34,32 @@ en Montevideo y que pregona las bondades de la vida austera."""
 def test_es_tokenizer_handles_cnts(es_tokenizer, text, length):
     tokens = es_tokenizer(text)
     assert len(tokens) == length
+
+
+@pytest.mark.parametrize(
+    "text,match",
+    [
+        ("10", True),
+        ("1", True),
+        ("10.000", True),
+        ("1000", True),
+        ("999,0", True),
+        ("uno", True),
+        ("dos", True),
+        ("billón", True),
+        ("veintiséis", True),
+        ("perro", False),
+        (",", False),
+        ("1/2", True),
+    ],
+)
+def test_lex_attrs_like_number(es_tokenizer, text, match):
+    tokens = es_tokenizer(text)
+    assert len(tokens) == 1
+    assert tokens[0].like_num == match
+
+
+@pytest.mark.parametrize("word", ["once"])
+def test_es_lex_attrs_capitals(word):
+    assert like_num(word)
+    assert like_num(word.upper())

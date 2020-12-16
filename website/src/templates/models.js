@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react'
+import React, { useEffect, useState, useMemo, Fragment } from 'react'
 import { StaticQuery, graphql } from 'gatsby'
 import { window } from 'browser-monads'
 
@@ -14,13 +14,17 @@ import Icon from '../components/icon'
 import Link from '../components/link'
 import Grid from '../components/grid'
 import Infobox from '../components/infobox'
+import Accordion from '../components/accordion'
 import { join, arrayToObj, abbrNum, markdownToReact } from '../components/util'
+import { isString, isEmptyObj } from '../components/util'
 
 const MODEL_META = {
     core: 'Vocabulary, syntax, entities, vectors',
     core_sm: 'Vocabulary, syntax, entities',
     dep: 'Vocabulary, syntax',
     ent: 'Named entities',
+    pytt: 'PyTorch Transformers',
+    trf: 'Transformers',
     vectors: 'Word vectors',
     web: 'written text (blogs, news, comments)',
     news: 'written text (news, media)',
@@ -43,6 +47,12 @@ const MODEL_META = {
     compat: 'Latest compatible model version for your spaCy installation',
 }
 
+const LABEL_SCHEME_META = {
+    tagger: 'Part-of-speech tags via Token.tag_',
+    parser: 'Dependency labels via Token.dep_',
+    ner: 'Named entity labels',
+}
+
 const MARKDOWN_COMPONENTS = {
     code: InlineCode,
 }
@@ -59,7 +69,12 @@ function isStableVersion(v) {
 function getLatestVersion(modelId, compatibility) {
     for (let [version, models] of Object.entries(compatibility)) {
         if (isStableVersion(version) && models[modelId]) {
-            return models[modelId][0]
+            const modelVersions = models[modelId]
+            for (let modelVersion of modelVersions) {
+                if (isStableVersion(modelVersion)) {
+                    return modelVersion
+                }
+            }
         }
     }
 }
@@ -73,15 +88,24 @@ function formatVectors(data) {
 
 function formatAccuracy(data) {
     if (!data) return null
-    const labels = { tags_acc: 'POS', ents_f: 'NER F', ents_p: 'NER P', ents_r: 'NER R' }
+    const labels = {
+        las: 'LAS',
+        uas: 'UAS',
+        tags_acc: 'TAG',
+        ents_f: 'NER F',
+        ents_p: 'NER P',
+        ents_r: 'NER R',
+    }
     const isSyntax = key => ['tags_acc', 'las', 'uas'].includes(key)
     const isNer = key => key.startsWith('ents_')
-    return Object.keys(data).map(key => ({
-        label: labels[key] || key.toUpperCase(),
-        value: data[key].toFixed(2),
-        help: MODEL_META[key],
-        type: isNer(key) ? 'ner' : isSyntax(key) ? 'syntax' : null,
-    }))
+    return Object.keys(data)
+        .filter(key => labels[key])
+        .map(key => ({
+            label: labels[key],
+            value: data[key].toFixed(2),
+            help: MODEL_META[key],
+            type: isNer(key) ? 'ner' : isSyntax(key) ? 'syntax' : null,
+        }))
 }
 
 function formatModelMeta(data) {
@@ -96,9 +120,21 @@ function formatModelMeta(data) {
         author: data.author,
         url: data.url,
         license: data.license,
+        labels: isEmptyObj(data.labels) ? null : data.labels,
         vectors: formatVectors(data.vectors),
         accuracy: formatAccuracy(data.accuracy),
     }
+}
+
+function formatSources(data = []) {
+    const sources = data.map(s => (isString(s) ? { name: s } : s))
+    return sources.map(({ name, url, author }, i) => (
+        <Fragment key={i}>
+            {i > 0 && <br />}
+            {name && url ? <Link to={url}>{name}</Link> : name}
+            {author && ` (${author})`}
+        </Fragment>
+    ))
 }
 
 const Help = ({ children }) => (
@@ -135,11 +171,12 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
     const releaseUrl = `https://github.com/${repo}/releases/${releaseTag}`
     const pipeline =
         meta.pipeline && join(meta.pipeline.map(p => <InlineCode key={p}>{p}</InlineCode>))
-    const sources = meta.sources && join(meta.sources)
+    const sources = formatSources(meta.sources)
     const author = !meta.url ? meta.author : <Link to={meta.url}>{meta.author}</Link>
     const licenseUrl = licenses[meta.license] ? licenses[meta.license].url : null
     const license = licenseUrl ? <Link to={licenseUrl}>{meta.license}</Link> : meta.license
     const hasInteractiveCode = size === 'sm' && hasExamples && !isError
+    const labels = meta.labels
 
     const rows = [
         { label: 'Language', tag: langId, content: langName },
@@ -218,11 +255,11 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
                     )}
                 </tbody>
             </Table>
-            <Grid cols={2} gutterBottom={hasInteractiveCode}>
+            <Grid cols={2} gutterBottom={hasInteractiveCode || !!labels}>
                 {accuracy &&
                     accuracy.map(({ label, items }, i) =>
                         !items ? null : (
-                            <Table key={i}>
+                            <Table fixed key={i}>
                                 <thead>
                                     <Tr>
                                         <Th colSpan={2}>{label}</Th>
@@ -260,6 +297,46 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
                     ].join('\n')}
                 </CodeBlock>
             )}
+            {labels && (
+                <Accordion id={`${name}-labels`} title="Label Scheme">
+                    <p>
+                        The statistical components included in this model package assign the
+                        following labels. The labels are specific to the corpus that the model was
+                        trained on. To see the description of a label, you can use{' '}
+                        <Link to="/api/top-level#spacy.explain">
+                            <InlineCode>spacy.explain</InlineCode>
+                        </Link>
+                        .
+                    </p>
+                    <Table fixed>
+                        <tbody>
+                            {Object.keys(labels).map(pipe => {
+                                const labelNames = labels[pipe] || []
+                                const help = LABEL_SCHEME_META[pipe]
+                                return (
+                                    <Tr key={pipe} evenodd={false} key={pipe}>
+                                        <Td style={{ width: '20%' }}>
+                                            <Label>
+                                                {pipe} {help && <Help>{help}</Help>}
+                                            </Label>
+                                        </Td>
+                                        <Td>
+                                            {labelNames.map((label, i) => (
+                                                <Fragment key={i}>
+                                                    {i > 0 && ', '}
+                                                    <InlineCode wrap key={label}>
+                                                        {label}
+                                                    </InlineCode>
+                                                </Fragment>
+                                            ))}
+                                        </Td>
+                                    </Tr>
+                                )
+                            })}
+                        </tbody>
+                    </Table>
+                </Accordion>
+            )}
         </Section>
     )
 }
@@ -268,7 +345,7 @@ const Models = ({ pageContext, repo, children }) => {
     const [initialized, setInitialized] = useState(false)
     const [compatibility, setCompatibility] = useState({})
     const { id, title, meta } = pageContext
-    const { models } = meta
+    const { models, isStarters } = meta
     const baseUrl = `https://raw.githubusercontent.com/${repo}/master`
 
     useEffect(() => {
@@ -282,9 +359,27 @@ const Models = ({ pageContext, repo, children }) => {
         }
     }, [initialized, baseUrl])
 
+    const modelTitle = title
+    const modelTeaser = `Available pretrained statistical models for ${title}`
+
+    const starterTitle = `${title} starters`
+    const starterTeaser = `Available transfer learning starter packs for ${title}`
+
     return (
         <>
-            <Title title={title} teaser={`Available pre-trained statistical models for ${title}`} />
+            <Title
+                title={isStarters ? starterTitle : modelTitle}
+                teaser={isStarters ? starterTeaser : modelTeaser}
+            />
+            {isStarters && (
+                <Section>
+                    <p>
+                        Starter packs are pretrained weights you can initialize your models with to
+                        achieve better accuracy. They can include word vectors (which will be used
+                        as features during training) or other pretrained representations like BERT.
+                    </p>
+                </Section>
+            )}
             <StaticQuery
                 query={query}
                 render={({ site }) =>
@@ -297,7 +392,6 @@ const Models = ({ pageContext, repo, children }) => {
                             compatibility={compatibility}
                             baseUrl={baseUrl}
                             repo={repo}
-                            hasExamples={meta.hasExamples}
                             licenses={arrayToObj(site.siteMetadata.licenses, 'id')}
                         />
                     ))

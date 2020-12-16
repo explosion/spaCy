@@ -17,13 +17,13 @@ the processing pipeline using [`nlp.add_pipe`](/api/language#add_pipe).
 > #### Example
 >
 > ```python
-> texts = [t.token for t in nlp(u"I have a blue car")]
-> assert texts = ["I", "have", "a", "blue", "car"]
+> texts = [t.text for t in nlp("I have a blue car")]
+> assert texts == ["I", "have", "a", "blue", "car"]
 >
 > merge_nps = nlp.create_pipe("merge_noun_chunks")
 > nlp.add_pipe(merge_nps)
 >
-> texts = [t.token for t in nlp(u"I have a blue car")]
+> texts = [t.text for t in nlp("I have a blue car")]
 > assert texts == ["I", "have", "a blue car"]
 > ```
 
@@ -50,13 +50,13 @@ the processing pipeline using [`nlp.add_pipe`](/api/language#add_pipe).
 > #### Example
 >
 > ```python
-> texts = [t.token for t in nlp(u"I like David Bowie")]
-> assert texts = ["I", "like", "David", "Bowie"]
+> texts = [t.text for t in nlp("I like David Bowie")]
+> assert texts == ["I", "like", "David", "Bowie"]
 >
 > merge_ents = nlp.create_pipe("merge_entities")
 > nlp.add_pipe(merge_ents)
 >
-> texts = [t.token for t in nlp(u"I like David Bowie")]
+> texts = [t.text for t in nlp("I like David Bowie")]
 > assert texts == ["I", "like", "David Bowie"]
 > ```
 

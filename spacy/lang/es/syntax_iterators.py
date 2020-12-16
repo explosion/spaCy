@@ -2,10 +2,15 @@
 from __future__ import unicode_literals
 
 from ...symbols import NOUN, PROPN, PRON, VERB, AUX
+from ...errors import Errors
 
 
-def noun_chunks(obj):
-    doc = obj.doc
+def noun_chunks(doclike):
+    doc = doclike.doc
+
+    if not doc.is_parsed:
+        raise ValueError(Errors.E029)
+
     if not len(doc):
         return
     np_label = doc.vocab.strings.add("NP")
@@ -15,8 +20,7 @@ def noun_chunks(obj):
     np_left_deps = [doc.vocab.strings.add(label) for label in left_labels]
     np_right_deps = [doc.vocab.strings.add(label) for label in right_labels]
     stop_deps = [doc.vocab.strings.add(label) for label in stop_labels]
-    token = doc[0]
-    while token and token.i < len(doc):
+    for token in doclike:
         if token.pos in [PROPN, NOUN, PRON]:
             left, right = noun_bounds(
                 doc, token, np_left_deps, np_right_deps, stop_deps

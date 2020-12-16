@@ -9,7 +9,7 @@ menu:
 ---
 
 Compared to using regular expressions on raw text, spaCy's rule-based matcher
-engines and components not only let you find you the words and phrases you're
+engines and components not only let you find the words and phrases you're
 looking for – they also give you access to the tokens within the document and
 their relationships. This means you can easily access and analyze the
 surrounding tokens, merge spans into single tokens or add entries to the named
@@ -90,7 +90,7 @@ the pattern is not going to produce any results. When developing complex
 patterns, make sure to check examples against spaCy's tokenization:
 
 ```python
-doc = nlp(u"A complex-example,!")
+doc = nlp("A complex-example,!")
 print([token.text for token in doc])
 ```
 
@@ -113,7 +113,7 @@ matcher = Matcher(nlp.vocab)
 pattern = [{"LOWER": "hello"}, {"IS_PUNCT": True}, {"LOWER": "world"}]
 matcher.add("HelloWorld", None, pattern)
 
-doc = nlp(u"Hello, world! Hello world!")
+doc = nlp("Hello, world! Hello world!")
 matches = matcher(doc)
 for match_id, start, end in matches:
     string_id = nlp.vocab.strings[match_id]  # Get string representation
@@ -122,7 +122,7 @@ for match_id, start, end in matches:
 ```
 
 The matcher returns a list of `(match_id, start, end)` tuples – in this case,
-`[('15578876784678163569', 0, 2)]`, which maps to the span `doc[0:2]` of our
+`[('15578876784678163569', 0, 3)]`, which maps to the span `doc[0:3]` of our
 original document. The `match_id` is the [hash value](/usage/spacy-101#vocab) of
 the string ID "HelloWorld". To get the string value, you can look up the ID in
 the [`StringStore`](/api/stringstore).
@@ -157,19 +157,21 @@ The available token pattern keys correspond to a number of
 [`Token` attributes](/api/token#attributes). The supported attributes for
 rule-based matching are:
 
-| Attribute                              | Type    |  Description                                                                                           |
-| -------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------ |
-| `ORTH`                                 | unicode | The exact verbatim text of a token.                                                                    |
-| `TEXT` <Tag variant="new">2.1</Tag>    | unicode | The exact verbatim text of a token.                                                                    |
-| `LOWER`                                | unicode | The lowercase form of the token text.                                                                  |
-|  `LENGTH`                              | int     | The length of the token text.                                                                          |
-|  `IS_ALPHA`, `IS_ASCII`, `IS_DIGIT`    | bool    | Token text consists of alphanumeric characters, ASCII characters, digits.                              |
-|  `IS_LOWER`, `IS_UPPER`, `IS_TITLE`    | bool    | Token text is in lowercase, uppercase, titlecase.                                                      |
-|  `IS_PUNCT`, `IS_SPACE`, `IS_STOP`     | bool    | Token is punctuation, whitespace, stop word.                                                           |
-|  `LIKE_NUM`, `LIKE_URL`, `LIKE_EMAIL`  | bool    | Token text resembles a number, URL, email.                                                             |
-|  `POS`, `TAG`, `DEP`, `LEMMA`, `SHAPE` | unicode | The token's simple and extended part-of-speech tag, dependency label, lemma, shape.                    |
-| `ENT_TYPE`                             | unicode | The token's entity label.                                                                              |
-| `_` <Tag variant="new">2.1</Tag>       | dict    | Properties in [custom extension attributes](/usage/processing-pipelines#custom-components-attributes). |
+| Attribute                             | Value Type |  Description                                                                                                                                                                                                                                                              |
+| ------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ORTH`                                | unicode    | The exact verbatim text of a token.                                                                                                                                                                                                                                       |
+| `TEXT` <Tag variant="new">2.1</Tag>   | unicode    | The exact verbatim text of a token.                                                                                                                                                                                                                                       |
+| `LOWER`                               | unicode    | The lowercase form of the token text.                                                                                                                                                                                                                                     |
+| `LENGTH`                              | int        | The length of the token text.                                                                                                                                                                                                                                             |
+| `IS_ALPHA`, `IS_ASCII`, `IS_DIGIT`    | bool       | Token text consists of alphabetic characters, ASCII characters, digits.                                                                                                                                                                                                   |
+| `IS_LOWER`, `IS_UPPER`, `IS_TITLE`    | bool       | Token text is in lowercase, uppercase, titlecase.                                                                                                                                                                                                                         |
+| `IS_PUNCT`, `IS_SPACE`, `IS_STOP`     | bool       | Token is punctuation, whitespace, stop word.                                                                                                                                                                                                                              |
+| `IS_SENT_START`                       | bool       | Token is start of sentence.                                                                                                                                                                                                                                               |
+| `SPACY`                               | bool       | Token has a trailing space.                                                                                                                                                                                                                                               |
+| `LIKE_NUM`, `LIKE_URL`, `LIKE_EMAIL`  | bool       | Token text resembles a number, URL, email.                                                                                                                                                                                                                                |
+| `POS`, `TAG`, `DEP`, `LEMMA`, `SHAPE` | unicode    | The token's simple and extended part-of-speech tag, dependency label, lemma, shape. Note that the values of these attributes are case-sensitive. For a list of available part-of-speech tags and dependency labels, see the [Annotation Specifications](/api/annotation). |
+| `ENT_TYPE`                            | unicode    | The token's entity label.                                                                                                                                                                                                                                                 |
+| `_` <Tag variant="new">2.1</Tag>      | dict       | Properties in [custom extension attributes](/usage/processing-pipelines#custom-components-attributes).                                                                                                                                                                    |
 
 <Accordion title="Does it matter if the attribute names are uppercase or lowercase?">
 
@@ -249,36 +251,108 @@ pattern = [{"TEXT": {"REGEX": "^[Uu](\\.?|nited)$"}},
            {"LOWER": "president"}]
 ```
 
-`'REGEX'` as an operator (instead of a top-level property that only matches on
-the token's text) allows defining rules for any string value, including custom
-attributes:
+The `REGEX` operator allows defining rules for any attribute string value,
+including custom attributes. It always needs to be applied to an attribute like
+`TEXT`, `LOWER` or `TAG`:
 
 ```python
+# Match different spellings of token texts
+pattern = [{"TEXT": {"REGEX": "deff?in[ia]tely"}}]
+
 # Match tokens with fine-grained POS tags starting with 'V'
 pattern = [{"TAG": {"REGEX": "^V"}}]
 
 # Match custom attribute values with regular expressions
-pattern = [{"_": {"country": {"REGEX": "^[Uu](\\.?|nited) ?[Ss](\\.?|tates)$"}}}]
+pattern = [{"_": {"country": {"REGEX": "^[Uu](nited|\\.?) ?[Ss](tates|\\.?)$"}}}]
 ```
 
-<Infobox title="Regular expressions in older versions" variant="warning">
+<Infobox title="Important note" variant="warning">
 
-Versions before v2.1.0 don't yet support the `REGEX` operator. A simple solution
-is to match a regular expression on the `Doc.text` with `re.finditer` and use
-the [`Doc.char_span`](/api/doc#char_span) method to create a `Span` from the
-character indices of the match.
-
-You can also use the regular expression by converting it to a **binary token
-flag**. [`Vocab.add_flag`](/api/vocab#add_flag) returns a flag ID which you can
-use as a key of a token match pattern.
-
-```python
-definitely_flag = lambda text: bool(re.compile(r"deff?in[ia]tely").match(text))
-IS_DEFINITELY = nlp.vocab.add_flag(definitely_flag)
-pattern = [{IS_DEFINITELY: True}]
-```
+When using the `REGEX` operator, keep in mind that it operates on **single
+tokens**, not the whole text. Each expression you provide will be matched on a
+token. If you need to match on the whole text instead, see the details on
+[regex matching on the whole text](#regex-text).
 
 </Infobox>
+
+##### Matching regular expressions on the full text {#regex-text}
+
+If your expressions apply to multiple tokens, a simple solution is to match on
+the `doc.text` with `re.finditer` and use the
+[`Doc.char_span`](/api/doc#char_span) method to create a `Span` from the
+character indices of the match. If the matched characters don't map to one or
+more valid tokens, `Doc.char_span` returns `None`.
+
+> #### What's a valid token sequence?
+>
+> In the example, the expression will also match `"US"` in `"USA"`. However,
+> `"USA"` is a single token and `Span` objects are **sequences of tokens**. So
+> `"US"` cannot be its own span, because it does not end on a token boundary.
+
+```python
+### {executable="true"}
+import spacy
+import re
+
+nlp = spacy.load("en_core_web_sm")
+doc = nlp("The United States of America (USA) are commonly known as the United States (U.S. or US) or America.")
+
+expression = r"[Uu](nited|\\.?) ?[Ss](tates|\\.?)"
+for match in re.finditer(expression, doc.text):
+    start, end = match.span()
+    span = doc.char_span(start, end)
+    # This is a Span object or None if match doesn't map to valid token sequence
+    if span is not None:
+        print("Found match:", span.text)
+```
+
+<Accordion title="How can I expand the match to a valid token sequence?">
+
+In some cases, you might want to expand the match to the closest token
+boundaries, so you can create a `Span` for `"USA"`, even though only the
+substring `"US"` is matched. You can calculate this using the character offsets
+of the tokens in the document, available as
+[`Token.idx`](/api/token#attributes). This lets you create a list of valid token
+start and end boundaries and leaves you with a rather basic algorithmic problem:
+Given a number, find the next lowest (start token) or the next highest (end
+token) number that's part of a given list of numbers. This will be the closest
+valid token boundary.
+
+There are many ways to do this and the most straightforward one is to create a
+dict keyed by characters in the `Doc`, mapped to the token they're part of. It's
+easy to write and less error-prone, and gives you a constant lookup time: you
+only ever need to create the dict once per `Doc`.
+
+```python
+chars_to_tokens = {}
+for token in doc:
+    for i in range(token.idx, token.idx + len(token.text)):
+        chars_to_tokens[i] = token.i
+```
+
+You can then look up character at a given position, and get the index of the
+corresponding token that the character is part of. Your span would then be
+`doc[token_start:token_end]`. If a character isn't in the dict, it means it's
+the (white)space tokens are split on. That hopefully shouldn't happen, though,
+because it'd mean your regex is producing matches with leading or trailing
+whitespace.
+
+```python
+### {highlight="5-8"}
+span = doc.char_span(start, end)
+if span is not None:
+    print("Found match:", span.text)
+else:
+    start_token = chars_to_tokens.get(start)
+    end_token = chars_to_tokens.get(end)
+    if start_token is not None and end_token is not None:
+        span = doc[start_token:end_token + 1]
+        print("Found closest match:", span.text)
+```
+
+</Accordion>
+
+---
 
 #### Operators and quantifiers {#quantifiers}
 
@@ -375,7 +449,7 @@ def add_event_ent(matcher, doc, i, matches):
 
 pattern = [{"ORTH": "Google"}, {"ORTH": "I"}, {"ORTH": "/"}, {"ORTH": "O"}]
 matcher.add("GoogleIO", add_event_ent, pattern)
-doc = nlp(u"This is a text about Google I/O")
+doc = nlp("This is a text about Google I/O")
 matches = matcher(doc)
 ```
 
@@ -467,7 +541,7 @@ class BadHTMLMerger(object):
 nlp = spacy.load("en_core_web_sm")
 html_merger = BadHTMLMerger(nlp)
 nlp.add_pipe(html_merger, last=True)  # Add component to the pipeline
-doc = nlp(u"Hello<br>world! <br/> This is a test.")
+doc = nlp("Hello<br>world! <br/> This is a test.")
 for token in doc:
     print(token.text, token._.bad_html)
 
@@ -545,7 +619,7 @@ def collect_sents(matcher, doc, i, matches):
 pattern = [{"LOWER": "facebook"}, {"LEMMA": "be"}, {"POS": "ADV", "OP": "*"},
            {"POS": "ADJ"}]
 matcher.add("FacebookIs", collect_sents, pattern)  # add pattern
-doc = nlp(u"I'd say that Facebook is evil. – Facebook is pretty cool, right?")
+doc = nlp("I'd say that Facebook is evil. – Facebook is pretty cool, right?")
 matches = matcher(doc)
 
 # Serve visualization of sentences containing match with displaCy
@@ -566,7 +640,7 @@ punctuation – depending on the
 
 The `IS_DIGIT` flag is not very helpful here, because it doesn't tell us
 anything about the length. However, you can use the `SHAPE` flag, with each `d`
-representing a digit:
+representing a digit (up to 4 digits / characters):
 
 ```python
 [{"ORTH": "("}, {"SHAPE": "ddd"}, {"ORTH": ")"}, {"SHAPE": "dddd"},
@@ -582,7 +656,7 @@ match the most common formats of
 
 ```python
 [{"ORTH": "+"}, {"ORTH": "49"}, {"ORTH": "(", "OP": "?"}, {"SHAPE": "dddd"},
- {"ORTH": ")", "OP": "?"}, {"SHAPE": "dddddd"}]
+ {"ORTH": ")", "OP": "?"}, {"SHAPE": "dddd", "LENGTH": 6}]
 ```
 
 Depending on the formats your application needs to match, creating an extensive
@@ -601,7 +675,7 @@ pattern = [{"ORTH": "("}, {"SHAPE": "ddd"}, {"ORTH": ")"}, {"SHAPE": "ddd"},
            {"ORTH": "-", "OP": "?"}, {"SHAPE": "ddd"}]
 matcher.add("PHONE_NUMBER", None, pattern)
 
-doc = nlp(u"Call me at (123) 456 789 or (123) 456 789!")
+doc = nlp("Call me at (123) 456 789 or (123) 456 789!")
 print([t.text for t in doc])
 matches = matcher(doc)
 for match_id, start, end in matches:
@@ -647,8 +721,8 @@ from spacy.matcher import Matcher
 nlp = English()  # We only want the tokenizer, so no need to load a model
 matcher = Matcher(nlp.vocab)
 
-pos_emoji = [u"😀", u"😃", u"😂", u"🤣", u"😊", u"😍"]  # Positive emoji
-neg_emoji = [u"😞", u"😠", u"😩", u"😢", u"😭", u"😒"]  # Negative emoji
+pos_emoji = ["😀", "😃", "😂", "🤣", "😊", "😍"]  # Positive emoji
+neg_emoji = ["😞", "😠", "😩", "😢", "😭", "😒"]  # Negative emoji
 
 # Add patterns to match one or more emoji tokens
 pos_patterns = [[{"ORTH": emoji}] for emoji in pos_emoji]
@@ -668,7 +742,7 @@ matcher.add("SAD", label_sentiment, *neg_patterns)  # Add negative pattern
 # Add pattern for valid hashtag, i.e. '#' plus any ASCII token
 matcher.add("HASHTAG", None, [{"ORTH": "#"}, {"IS_ASCII": True}])
 
-doc = nlp(u"Hello world 😀 #MondayMotivation")
+doc = nlp("Hello world 😀 #MondayMotivation")
 matches = matcher(doc)
 for match_id, start, end in matches:
     string_id = doc.vocab.strings[match_id]  # Look up string ID
@@ -725,7 +799,7 @@ matcher.add("HASHTAG", None, [{"ORTH": "#"}, {"IS_ASCII": True}])
 # Register token extension
 Token.set_extension("is_hashtag", default=False)
 
-doc = nlp(u"Hello world 😀 #MondayMotivation")
+doc = nlp("Hello world 😀 #MondayMotivation")
 matches = matcher(doc)
 hashtags = []
 for match_id, start, end in matches:
@@ -766,13 +840,13 @@ from spacy.matcher import PhraseMatcher
 
 nlp = spacy.load('en_core_web_sm')
 matcher = PhraseMatcher(nlp.vocab)
-terms = [u"Barack Obama", u"Angela Merkel", u"Washington, D.C."]
+terms = ["Barack Obama", "Angela Merkel", "Washington, D.C."]
 # Only run nlp.make_doc to speed things up
 patterns = [nlp.make_doc(text) for text in terms]
 matcher.add("TerminologyList", None, *patterns)
 
-doc = nlp(u"German Chancellor Angela Merkel and US President Barack Obama "
-          u"converse in the Oval Office inside the White House in Washington, D.C.")
+doc = nlp("German Chancellor Angela Merkel and US President Barack Obama "
+          "converse in the Oval Office inside the White House in Washington, D.C.")
 matches = matcher(doc)
 for match_id, start, end in matches:
     span = doc[start:end]
@@ -781,18 +855,18 @@ for match_id, start, end in matches:
 
 Since spaCy is used for processing both the patterns and the text to be matched,
 you won't have to worry about specific tokenization – for example, you can
-simply pass in `nlp(u"Washington, D.C.")` and won't have to write a complex
-token pattern covering the exact tokenization of the term.
+simply pass in `nlp("Washington, D.C.")` and won't have to write a complex token
+pattern covering the exact tokenization of the term.
 
 <Infobox title="Important note on creating patterns" variant="warning">
 
 To create the patterns, each phrase has to be processed with the `nlp` object.
-If you have a mode loaded, doing this in a loop or list comprehension can easily
-become inefficient and slow. If you **only need the tokenization and lexical
-attributes**, you can run [`nlp.make_doc`](/api/language#make_doc) instead,
-which will only run the tokenizer. For an additional speed boost, you can also
-use the [`nlp.tokenizer.pipe`](/api/tokenizer#pipe) method, which will process
-the texts as a stream.
+If you have a model loaded, doing this in a loop or list comprehension can
+easily become inefficient and slow. If you **only need the tokenization and
+lexical attributes**, you can run [`nlp.make_doc`](/api/language#make_doc)
+instead, which will only run the tokenizer. For an additional speed boost, you
+can also use the [`nlp.tokenizer.pipe`](/api/tokenizer#pipe) method, which will
+process the texts as a stream.
 
 ```diff
 - patterns = [nlp(term) for term in LOTS_OF_TERMS]
@@ -817,10 +891,10 @@ from spacy.matcher import PhraseMatcher
 
 nlp = English()
 matcher = PhraseMatcher(nlp.vocab, attr="LOWER")
-patterns = [nlp.make_doc(name) for name in [u"Angela Merkel", u"Barack Obama"]]
+patterns = [nlp.make_doc(name) for name in ["Angela Merkel", "Barack Obama"]]
 matcher.add("Names", None, *patterns)
 
-doc = nlp(u"angela merkel and us president barack Obama")
+doc = nlp("angela merkel and us president barack Obama")
 for match_id, start, end in matcher(doc):
     print("Matched based on lowercase token text:", doc[start:end])
 ```
@@ -852,9 +926,9 @@ from spacy.matcher import PhraseMatcher
 
 nlp = English()
 matcher = PhraseMatcher(nlp.vocab, attr="SHAPE")
-matcher.add("IP", None, nlp(u"127.0.0.1"), nlp(u"127.127.0.0"))
+matcher.add("IP", None, nlp("127.0.0.1"), nlp("127.127.0.0"))
 
-doc = nlp(u"Often the router will have an IP address such as 192.168.1.1 or 192.168.2.1.")
+doc = nlp("Often the router will have an IP address such as 192.168.1.1 or 192.168.2.1.")
 for match_id, start, end in matcher(doc):
     print("Matched based on token shape:", doc[start:end])
 ```
@@ -896,7 +970,10 @@ pattern. The entity ruler accepts two types of patterns:
 The [`EntityRuler`](/api/entityruler) is a pipeline component that's typically
 added via [`nlp.add_pipe`](/api/language#add_pipe). When the `nlp` object is
 called on a text, it will find matches in the `doc` and add them as entities to
-the `doc.ents`, using the specified pattern label as the entity label.
+the `doc.ents`, using the specified pattern label as the entity label. If any
+matches were to overlap, the pattern matching most tokens takes priority. If
+they also happen to be equally long, then the match occuring first in the Doc is
+chosen.
 
 ```python
 ### {executable="true"}
@@ -910,7 +987,7 @@ patterns = [{"label": "ORG", "pattern": "Apple"},
 ruler.add_patterns(patterns)
 nlp.add_pipe(ruler)
 
-doc = nlp(u"Apple is opening its first big office in San Francisco.")
+doc = nlp("Apple is opening its first big office in San Francisco.")
 print([(ent.text, ent.label_) for ent in doc.ents])
 ```
 
@@ -934,7 +1011,7 @@ patterns = [{"label": "ORG", "pattern": "MyCorp Inc."}]
 ruler.add_patterns(patterns)
 nlp.add_pipe(ruler)
 
-doc = nlp(u"MyCorp Inc. is a company in the U.S.")
+doc = nlp("MyCorp Inc. is a company in the U.S.")
 print([(ent.text, ent.label_) for ent in doc.ents])
 ```
 
@@ -947,6 +1024,37 @@ The `EntityRuler` can validate patterns against a JSON schema with the option
 ```python
 ruler = EntityRuler(nlp, validate=True)
 ```
+
+### Adding IDs to patterns {#entityruler-ent-ids new="2.2.2"}
+
+The [`EntityRuler`](/api/entityruler) can also accept an `id` attribute for each
+pattern. Using the `id` attribute allows multiple patterns to be associated with
+the same entity.
+
+```python
+### {executable="true"}
+from spacy.lang.en import English
+from spacy.pipeline import EntityRuler
+
+nlp = English()
+ruler = EntityRuler(nlp)
+patterns = [{"label": "ORG", "pattern": "Apple", "id": "apple"},
+            {"label": "GPE", "pattern": [{"LOWER": "san"}, {"LOWER": "francisco"}], "id": "san-francisco"},
+            {"label": "GPE", "pattern": [{"LOWER": "san"}, {"LOWER": "fran"}], "id": "san-francisco"}]
+ruler.add_patterns(patterns)
+nlp.add_pipe(ruler)
+
+doc1 = nlp("Apple is opening its first big office in San Francisco.")
+print([(ent.text, ent.label_, ent.ent_id_) for ent in doc1.ents])
+
+doc2 = nlp("Apple is opening its first big office in San Fran.")
+print([(ent.text, ent.label_, ent.ent_id_) for ent in doc2.ents])
+```
+
+If the `id` attribute is included in the [`EntityRuler`](/api/entityruler)
+patterns, the `ent_id_` property of the matched entity is set to the `id` given
+in the patterns. So in the example above it's easy to identify that "San
+Francisco" and "San Fran" are both the same entity.
 
 ### Using pattern files {#entityruler-files}
 
@@ -993,6 +1101,40 @@ with the patterns. When you load the model back in, all pipeline components will
 be restored and deserialized – including the entity ruler. This lets you ship
 powerful model packages with binary weights _and_ rules included!
 
+### Using a large number of phrase patterns {#entityruler-large-phrase-patterns new="2.2.4"}
+
+When using a large amount of **phrase patterns** (roughly > 10000) it's useful
+to understand how the `add_patterns` function of the EntityRuler works. For each
+**phrase pattern**, the EntityRuler calls the nlp object to construct a doc
+object. This happens in case you try to add the EntityRuler at the end of an
+existing pipeline with, for example, a POS tagger and want to extract matches
+based on the pattern's POS signature.
+
+In this case you would pass a config value of `phrase_matcher_attr="POS"` for
+the EntityRuler.
+
+Running the full language pipeline across every pattern in a large list scales
+linearly and can therefore take a long time on large amounts of phrase patterns.
+
+As of spaCy 2.2.4 the `add_patterns` function has been refactored to use
+nlp.pipe on all phrase patterns resulting in about a 10x-20x speed up with
+5,000-100,000 phrase patterns respectively.
+
+Even with this speedup (but especially if you're using an older version) the
+`add_patterns` function can still take a long time.
+
+An easy workaround to make this function run faster is disabling the other
+language pipes while adding the phrase patterns.
+
+```python
+entityruler = EntityRuler(nlp)
+patterns = [{"label": "TEST", "pattern": str(i)} for i in range(100000)]
+
+other_pipes = [p for p in nlp.pipe_names if p != "tagger"]
+with nlp.disable_pipes(*other_pipes):
+    entityruler.add_patterns(patterns)
+```
+
 ## Combining models and rules {#models-rules}
 
 You can combine statistical and rule-based components in a variety of ways.
@@ -1006,7 +1148,7 @@ order to implement more abstract logic.
 
 ### Example: Expanding named entities {#models-rules-ner}
 
-When using the a pre-trained
+When using the a pretrained
 [named entity recognition](/usage/linguistic-features/#named-entities) model to
 extract information from your texts, you may find that the predicted span only
 includes parts of the entity you're looking for. Sometimes, this happens if
@@ -1025,17 +1167,17 @@ what you need for your application.
 > available corpus.
 
 For example, the corpus spaCy's [English models](/models/en) were trained on
-defines a `PERSON` entity as just the **person name**, without titles like "Mr"
-or "Dr". This makes sense, because it makes it easier to resolve the entity type
-back to a knowledge base. But what if your application needs the full names,
-_including_ the titles?
+defines a `PERSON` entity as just the **person name**, without titles like "Mr."
+or "Dr.". This makes sense, because it makes it easier to resolve the entity
+type back to a knowledge base. But what if your application needs the full
+names, _including_ the titles?
 
 ```python
 ### {executable="true"}
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp("Dr Alex Smith chaired first board meeting of Acme Corp Inc.")
+doc = nlp("Dr. Alex Smith chaired first board meeting of Acme Corp Inc.")
 print([(ent.text, ent.label_) for ent in doc.ents])
 ```
 
@@ -1063,6 +1205,8 @@ def expand_person_entities(doc):
             if prev_token.text in ("Dr", "Dr.", "Mr", "Mr.", "Ms", "Ms."):
                 new_ent = Span(doc, ent.start - 1, ent.end, label=ent.label)
                 new_ents.append(new_ent)
+            else:
+                new_ents.append(ent)
         else:
             new_ents.append(ent)
     doc.ents = new_ents
@@ -1098,7 +1242,7 @@ def expand_person_entities(doc):
 # Add the component after the named entity recognizer
 nlp.add_pipe(expand_person_entities, after='ner')
 
-doc = nlp("Dr Alex Smith chaired first board meeting of Acme Corp Inc.")
+doc = nlp("Dr. Alex Smith chaired first board meeting of Acme Corp Inc.")
 print([(ent.text, ent.label_) for ent in doc.ents])
 ```
 

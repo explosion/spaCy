@@ -16,10 +16,11 @@ cdef class Tokenizer:
     cdef PreshMap _specials
     cpdef readonly Vocab vocab
 
-    cdef public object token_match
-    cdef public object prefix_search
-    cdef public object suffix_search
-    cdef public object infix_finditer
+    cdef object _token_match
+    cdef object _url_match
+    cdef object _prefix_search
+    cdef object _suffix_search
+    cdef object _infix_finditer
     cdef object _rules
 
     cpdef Doc tokens_from_list(self, list strings)

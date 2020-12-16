@@ -122,6 +122,7 @@ related to more general machine learning functionality.
 | **Lemmatization**                     | Assigning the base forms of words. For example, the lemma of "was" is "be", and the lemma of "rats" is "rat".      |
 | **Sentence Boundary Detection** (SBD) | Finding and segmenting individual sentences.                                                                       |
 | **Named Entity Recognition** (NER)    | Labelling named "real-world" objects, like persons, companies or locations.                                        |
+| **Entity Linking** (EL)               | Disambiguating textual entities to unique identifiers in a Knowledge Base.                                         |
 | **Similarity**                        | Comparing words, text spans and documents and how similar they are to each other.                                  |
 | **Text Classification**               | Assigning categories or labels to a whole document, or parts of a document.                                        |
 | **Rule-based Matching**               | Finding sequences of tokens based on their texts and linguistic annotations, similar to regular expressions.       |
@@ -144,6 +145,7 @@ the following components:
   entity recognizer to predict those annotations in context.
 - **Lexical entries** in the vocabulary, i.e. words and their
   context-independent attributes like the shape or spelling.
+- **Data files** like lemmatization rules and lookup tables.
 - **Word vectors**, i.e. multi-dimensional meaning representations of words that
   let you determine how similar they are to each other.
 - **Configuration** options, like the language and processing pipeline settings,
@@ -178,7 +180,7 @@ processed `Doc`:
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"Apple is looking at buying U.K. startup for $1 billion")
+doc = nlp("Apple is looking at buying U.K. startup for $1 billion")
 for token in doc:
     print(token.text, token.pos_, token.dep_)
 ```
@@ -297,8 +299,8 @@ its hash, or a hash to get its string:
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"I love coffee")
-print(doc.vocab.strings[u"coffee"])  # 3197928453018144401
+doc = nlp("I love coffee")
+print(doc.vocab.strings["coffee"])  # 3197928453018144401
 print(doc.vocab.strings[3197928453018144401])  # 'coffee'
 ```
 
@@ -321,7 +323,7 @@ ever change. Its hash value will also always be the same.
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"I love coffee")
+doc = nlp("I love coffee")
 for word in doc:
     lexeme = doc.vocab[word.text]
     print(lexeme.text, lexeme.orth, lexeme.shape_, lexeme.prefix_, lexeme.suffix_,
@@ -362,14 +364,14 @@ from spacy.tokens import Doc
 from spacy.vocab import Vocab
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"I love coffee")  # Original Doc
-print(doc.vocab.strings[u"coffee"])  # 3197928453018144401
+doc = nlp("I love coffee")  # Original Doc
+print(doc.vocab.strings["coffee"])  # 3197928453018144401
 print(doc.vocab.strings[3197928453018144401])  # 'coffee' 👍
 
 empty_doc = Doc(Vocab())  # New Doc with empty Vocab
 # empty_doc.vocab.strings[3197928453018144401] will raise an error :(
 
-empty_doc.vocab.strings.add(u"coffee")  # Add "coffee" and generate hash
+empty_doc.vocab.strings.add("coffee")  # Add "coffee" and generate hash
 print(empty_doc.vocab.strings[3197928453018144401])  # 'coffee' 👍
 
 new_doc = Doc(doc.vocab)  # Create new doc with first doc's vocab
@@ -382,6 +384,79 @@ actually _know_ that the document contains that word. To prevent this problem,
 spaCy will also export the `Vocab` when you save a `Doc` or `nlp` object. This
 will give you the object and its encoded annotations, plus the "key" to decode
 it.
+
+## Knowledge Base {#kb}
+
+To support the entity linking task, spaCy stores external knowledge in a
+[`KnowledgeBase`](/api/kb). The knowledge base (KB) uses the `Vocab` to store
+its data efficiently.
+
+> - **Mention**: A textual occurrence of a named entity, e.g. 'Miss Lovelace'.
+> - **KB ID**: A unique identifier referring to a particular real-world concept,
+>   e.g. 'Q7259'.
+> - **Alias**: A plausible synonym or description for a certain KB ID, e.g. 'Ada
+>   Lovelace'.
+> - **Prior probability**: The probability of a certain mention resolving to a
+>   certain KB ID, prior to knowing anything about the context in which the
+>   mention is used.
+> - **Entity vector**: A pretrained word vector capturing the entity
+>   description.
+
+A knowledge base is created by first adding all entities to it. Next, for each
+potential mention or alias, a list of relevant KB IDs and their prior
+probabilities is added. The sum of these prior probabilities should never exceed
+1 for any given alias.
+
+```python
+### {executable="true"}
+import spacy
+from spacy.kb import KnowledgeBase
+
+# load the model and create an empty KB
+nlp = spacy.load('en_core_web_sm')
+kb = KnowledgeBase(vocab=nlp.vocab, entity_vector_length=3)
+
+# adding entities
+kb.add_entity(entity="Q1004791", freq=6, entity_vector=[0, 3, 5])
+kb.add_entity(entity="Q42", freq=342, entity_vector=[1, 9, -3])
+kb.add_entity(entity="Q5301561", freq=12, entity_vector=[-2, 4, 2])
+
+# adding aliases
+kb.add_alias(alias="Douglas", entities=["Q1004791", "Q42", "Q5301561"], probabilities=[0.6, 0.1, 0.2])
+kb.add_alias(alias="Douglas Adams", entities=["Q42"], probabilities=[0.9])
+
+print()
+print("Number of entities in KB:",kb.get_size_entities()) # 3
+print("Number of aliases in KB:", kb.get_size_aliases()) # 2
+```
+
+### Candidate generation
+
+Given a textual entity, the Knowledge Base can provide a list of plausible
+candidates or entity identifiers. The [`EntityLinker`](/api/entitylinker) will
+take this list of candidates as input, and disambiguate the mention to the most
+probable identifier, given the document context.
+
+```python
+### {executable="true"}
+import spacy
+from spacy.kb import KnowledgeBase
+
+nlp = spacy.load('en_core_web_sm')
+kb = KnowledgeBase(vocab=nlp.vocab, entity_vector_length=3)
+
+# adding entities
+kb.add_entity(entity="Q1004791", freq=6, entity_vector=[0, 3, 5])
+kb.add_entity(entity="Q42", freq=342, entity_vector=[1, 9, -3])
+kb.add_entity(entity="Q5301561", freq=12, entity_vector=[-2, 4, 2])
+
+# adding aliases
+kb.add_alias(alias="Douglas", entities=["Q1004791", "Q42", "Q5301561"], probabilities=[0.6, 0.1, 0.2])
+
+candidates = kb.get_candidates("Douglas")
+for c in candidates:
+    print(" ", c.entity_, c.prior_prob, c.entity_vector)
+```
 
 ## Serialization {#serialization}
 
@@ -441,11 +516,11 @@ python -m spacy download de_core_news_sm
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"Hello, world. Here are two sentences.")
+doc = nlp("Hello, world. Here are two sentences.")
 print([t.text for t in doc])
 
 nlp_de = spacy.load("de_core_news_sm")
-doc_de = nlp_de(u"Ich bin ein Berliner.")
+doc_de = nlp_de("Ich bin ein Berliner.")
 print([t.text for t in doc_de])
 
 ```
@@ -464,8 +539,8 @@ print([t.text for t in doc_de])
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"Peach emoji is where it has always been. Peach is the superior "
-          u"emoji. It's outranking eggplant 🍑 ")
+doc = nlp("Peach emoji is where it has always been. Peach is the superior "
+          "emoji. It's outranking eggplant 🍑 ")
 print(doc[0].text)          # 'Peach'
 print(doc[1].text)          # 'emoji'
 print(doc[-1].text)         # '🍑'
@@ -493,12 +568,12 @@ print(sentences[1].text)    # 'Peach is the superior emoji.'
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"Apple is looking at buying U.K. startup for $1 billion")
+doc = nlp("Apple is looking at buying U.K. startup for $1 billion")
 apple = doc[0]
 print("Fine-grained POS tag", apple.pos_, apple.pos)
 print("Coarse-grained POS tag", apple.tag_, apple.tag)
 print("Word shape", apple.shape_, apple.shape)
-print("Alphanumeric characters?", apple.is_alpha)
+print("Alphabetic characters?", apple.is_alpha)
 print("Punctuation mark?", apple.is_punct)
 
 billion = doc[10]
@@ -521,20 +596,20 @@ print("Like an email address?", billion.like_email)
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"I love coffee")
+doc = nlp("I love coffee")
 
-coffee_hash = nlp.vocab.strings[u"coffee"]  # 3197928453018144401
+coffee_hash = nlp.vocab.strings["coffee"]  # 3197928453018144401
 coffee_text = nlp.vocab.strings[coffee_hash]  # 'coffee'
 print(coffee_hash, coffee_text)
 print(doc[2].orth, coffee_hash)  # 3197928453018144401
 print(doc[2].text, coffee_text)  # 'coffee'
 
-beer_hash = doc.vocab.strings.add(u"beer")  # 3073001599257881079
+beer_hash = doc.vocab.strings.add("beer")  # 3073001599257881079
 beer_text = doc.vocab.strings[beer_hash]  # 'beer'
 print(beer_hash, beer_text)
 
-unicorn_hash = doc.vocab.strings.add(u"🦄 ")  # 18234233413267120783
-unicorn_text = doc.vocab.strings[unicorn_hash]  # '🦄 '
+unicorn_hash = doc.vocab.strings.add("🦄")  # 18234233413267120783
+unicorn_text = doc.vocab.strings[unicorn_hash]  # '🦄'
 print(unicorn_hash, unicorn_text)
 ```
 
@@ -550,19 +625,17 @@ print(unicorn_hash, unicorn_text)
 ```python
 ### {executable="true"}
 import spacy
-
-nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"San Francisco considers banning sidewalk delivery robots")
-for ent in doc.ents:
-    print(ent.text, ent.start_char, ent.end_char, ent.label_)
-
 from spacy.tokens import Span
 
-doc = nlp(u"FB is hiring a new VP of global policy")
-doc.ents = [Span(doc, 0, 1, label=doc.vocab.strings[u"ORG"])]
+nlp = spacy.load("en_core_web_sm")
+doc = nlp("San Francisco considers banning sidewalk delivery robots")
 for ent in doc.ents:
     print(ent.text, ent.start_char, ent.end_char, ent.label_)
 
+doc = nlp("FB is hiring a new VP of global policy")
+doc.ents = [Span(doc, 0, 1, label="ORG")]
+for ent in doc.ents:
+    print(ent.text, ent.start_char, ent.end_char, ent.label_)
 ```
 
 <Infobox>
@@ -578,7 +651,7 @@ import spacy
 import random
 
 nlp = spacy.load("en_core_web_sm")
-train_data = [(u"Uber blew through $1 million", {"entities": [(0, 4, "ORG")]})]
+train_data = [("Uber blew through $1 million", {"entities": [(0, 4, "ORG")]})]
 
 other_pipes = [pipe for pipe in nlp.pipe_names if pipe != "ner"]
 with nlp.disable_pipes(*other_pipes):
@@ -606,11 +679,11 @@ nlp.to_disk("/model")
 ```python
 from spacy import displacy
 
-doc_dep = nlp(u"This is a sentence.")
+doc_dep = nlp("This is a sentence.")
 displacy.serve(doc_dep, style="dep")
 
-doc_ent = nlp(u"When Sebastian Thrun started working on self-driving cars at Google "
-              u"in 2007, few people outside of the company took him seriously.")
+doc_ent = nlp("When Sebastian Thrun started working on self-driving cars at Google "
+              "in 2007, few people outside of the company took him seriously.")
 displacy.serve(doc_ent, style="ent")
 ```
 
@@ -628,7 +701,7 @@ displacy.serve(doc_ent, style="ent")
 import spacy
 
 nlp = spacy.load("en_core_web_md")
-doc = nlp(u"Apple and banana are similar. Pasta and hippo aren't.")
+doc = nlp("Apple and banana are similar. Pasta and hippo aren't.")
 
 apple = doc[0]
 banana = doc[2]
@@ -641,8 +714,8 @@ print(apple.has_vector, banana.has_vector, pasta.has_vector, hippo.has_vector)
 ```
 
 For the best results, you should run this example using the
-[`en_vectors_web_lg`](/models/en#en_vectors_web_lg) model (currently not
-available in the live demo).
+[`en_vectors_web_lg`](/models/en-starters#en_vectors_web_lg) model (currently
+not available in the live demo).
 
 <Infobox>
 
@@ -690,7 +763,7 @@ pattern2 = [[{"ORTH": emoji, "OP": "+"}] for emoji in ["😀", "😂", "🤣", "
 matcher.add("GoogleIO", None, pattern1)  # Match "Google I/O" or "Google i/o"
 matcher.add("HAPPY", set_sentiment, *pattern2)  # Match one or more happy emoji
 
-doc = nlp(u"A text about Google I/O 😀😀")
+doc = nlp("A text about Google I/O 😀😀")
 matches = matcher(doc)
 
 for match_id, start, end in matches:
@@ -710,7 +783,7 @@ print("Sentiment", doc.sentiment)
 ### Minibatched stream processing {#lightning-tour-minibatched}
 
 ```python
-texts = [u"One document.", u"...", u"Lots of documents"]
+texts = ["One document.", "...", "Lots of documents"]
 # .pipe streams input, and produces streaming output
 iter_texts = (texts[i % 3] for i in range(100000000))
 for i, doc in enumerate(nlp.pipe(iter_texts, batch_size=50)):
@@ -726,8 +799,8 @@ for i, doc in enumerate(nlp.pipe(iter_texts, batch_size=50)):
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"When Sebastian Thrun started working on self-driving cars at Google "
-          u"in 2007, few people outside of the company took him seriously.")
+doc = nlp("When Sebastian Thrun started working on self-driving cars at Google "
+          "in 2007, few people outside of the company took him seriously.")
 
 dep_labels = []
 for token in doc:
@@ -752,7 +825,7 @@ import spacy
 from spacy.attrs import ORTH, LIKE_URL
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"Check out https://spacy.io")
+doc = nlp("Check out https://spacy.io")
 for token in doc:
     print(token.text, token.orth, token.like_url)
 
@@ -798,7 +871,7 @@ def put_spans_around_tokens(doc):
 
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp(u"This is a test.\\n\\nHello   world.")
+doc = nlp("This is a test.\\n\\nHello   world.")
 html = put_spans_around_tokens(doc)
 print(html)
 ```
@@ -842,9 +915,10 @@ via the following platforms:
   questions** and everything related to problems with your specific code. The
   Stack Overflow community is much larger than ours, so if your problem can be
   solved by others, you'll receive help much quicker.
-- [Gitter chat](https://gitter.im/explosion/spaCy): **General discussion** about
-  spaCy, meeting other community members and exchanging **tips, tricks and best
-  practices**.
+- [GitHub discussions](https://github.com/explosion/spaCy/discussions): **General 
+  discussion**, **project ideas** and **usage questions**. Meet other community 
+  members to get help with a specific code implementation, discuss ideas for new 
+  projects/plugins, support more languages, and share best practices.
 - [GitHub issue tracker](https://github.com/explosion/spaCy/issues): **Bug
   reports** and **improvement suggestions**, i.e. everything that's likely
   spaCy's fault. This also includes problems with the models beyond statistical

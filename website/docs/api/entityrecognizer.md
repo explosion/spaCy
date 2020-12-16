@@ -58,7 +58,7 @@ and all pipeline components are applied to the `Doc` in order. Both
 >
 > ```python
 > ner = EntityRecognizer(nlp.vocab)
-> doc = nlp(u"This is a sentence.")
+> doc = nlp("This is a sentence.")
 > # This usually happens under the hood
 > processed = ner(doc)
 > ```
@@ -99,13 +99,13 @@ Apply the pipeline's model to a batch of docs, without modifying them.
 >
 > ```python
 > ner = EntityRecognizer(nlp.vocab)
-> scores = ner.predict([doc1, doc2])
+> scores, tensors = ner.predict([doc1, doc2])
 > ```
 
 | Name        | Type     | Description                                                                                                                                                                                                                        |
 | ----------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `docs`      | iterable | The documents to predict.                                                                                                                                                                                                          |
-| **RETURNS** | tuple    | A `(scores, tensors)` tuple where `scores` is the model's prediction for each document and `tensors` is the token representations used to predict the scores. Each tensor is an array with one row for each token in the document. |
+| **RETURNS** | list | List of `syntax.StateClass` objects. `syntax.StateClass` is a helper class for the parse state (internal). |
 
 ## EntityRecognizer.set_annotations {#set_annotations tag="method"}
 
@@ -115,14 +115,15 @@ Modify a batch of documents, using pre-computed scores.
 >
 > ```python
 > ner = EntityRecognizer(nlp.vocab)
-> scores = ner.predict([doc1, doc2])
-> ner.set_annotations([doc1, doc2], scores)
+> scores, tensors = ner.predict([doc1, doc2])
+> ner.set_annotations([doc1, doc2], scores, tensors)
 > ```
 
-| Name     | Type     | Description                                                |
-| -------- | -------- | ---------------------------------------------------------- |
-| `docs`   | iterable | The documents to modify.                                   |
-| `scores` | -        | The scores to set, produced by `EntityRecognizer.predict`. |
+| Name      | Type     | Description                                                |
+| --------- | -------- | ---------------------------------------------------------- |
+| `docs`    | iterable | The documents to modify.                                   |
+| `scores`  | -        | The scores to set, produced by `EntityRecognizer.predict`. |
+| `tensors` | iterable | The token representations used to predict the scores.      |
 
 ## EntityRecognizer.update {#update tag="method"}
 
@@ -210,13 +211,13 @@ Modify the pipe's model, to use the given parameter values.
 >
 > ```python
 > ner = EntityRecognizer(nlp.vocab)
-> with ner.use_params():
+> with ner.use_params(optimizer.averages):
 >     ner.to_disk("/best_model")
 > ```
 
 | Name     | Type | Description                                                                                                |
 | -------- | ---- | ---------------------------------------------------------------------------------------------------------- |
-| `params` | -    | The parameter values to use in the model. At the end of the context, the original parameters are restored. |
+| `params` | dict | The parameter values to use in the model. At the end of the context, the original parameters are restored. |
 
 ## EntityRecognizer.add_label {#add_label tag="method"}
 

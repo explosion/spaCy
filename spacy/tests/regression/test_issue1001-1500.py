@@ -10,7 +10,29 @@ from spacy.lang.lex_attrs import LEX_ATTRS
 from spacy.matcher import Matcher
 from spacy.tokenizer import Tokenizer
 from spacy.lemmatizer import Lemmatizer
+from spacy.lookups import Lookups
 from spacy.symbols import ORTH, LEMMA, POS, VERB, VerbForm_part
+
+
+def test_issue1061():
+    """Test special-case works after tokenizing. Was caching problem."""
+    text = "I like _MATH_ even _MATH_ when _MATH_, except when _MATH_ is _MATH_! but not _MATH_."
+    tokenizer = English.Defaults.create_tokenizer()
+    doc = tokenizer(text)
+    assert "MATH" in [w.text for w in doc]
+    assert "_MATH_" not in [w.text for w in doc]
+
+    tokenizer.add_special_case("_MATH_", [{ORTH: "_MATH_"}])
+    doc = tokenizer(text)
+    assert "_MATH_" in [w.text for w in doc]
+    assert "MATH" not in [w.text for w in doc]
+
+    # For sanity, check it works when pipeline is clean.
+    tokenizer = English.Defaults.create_tokenizer()
+    tokenizer.add_special_case("_MATH_", [{ORTH: "_MATH_"}])
+    doc = tokenizer(text)
+    assert "_MATH_" in [w.text for w in doc]
+    assert "MATH" not in [w.text for w in doc]
 
 
 @pytest.mark.xfail(
@@ -19,7 +41,7 @@ from spacy.symbols import ORTH, LEMMA, POS, VERB, VerbForm_part
 def test_issue1235():
     """Test that g is not split of if preceded by a number and a letter"""
     nlp = English()
-    testwords = u'e2g 2g 52g'
+    testwords = "e2g 2g 52g"
     doc = nlp(testwords)
     assert len(doc) == 5
     assert doc[0].text == "e2g"
@@ -70,10 +92,11 @@ def test_issue1375():
 
 def test_issue1387():
     tag_map = {"VBG": {POS: VERB, VerbForm_part: True}}
-    index = {"verb": ("cope", "cop")}
-    exc = {"verb": {"coping": ("cope",)}}
-    rules = {"verb": [["ing", ""]]}
-    lemmatizer = Lemmatizer(index, exc, rules)
+    lookups = Lookups()
+    lookups.add_table("lemma_index", {"verb": ("cope", "cop")})
+    lookups.add_table("lemma_exc", {"verb": {"coping": ("cope",)}})
+    lookups.add_table("lemma_rules", {"verb": [["ing", ""]]})
+    lemmatizer = Lemmatizer(lookups)
     vocab = Vocab(lemmatizer=lemmatizer, tag_map=tag_map)
     doc = Doc(vocab, words=["coping"])
     doc[0].tag_ = "VBG"
@@ -88,7 +111,7 @@ def test_issue1434():
     hello_world = Doc(vocab, words=["Hello", "World"])
     hello = Doc(vocab, words=["Hello"])
     matcher = Matcher(vocab)
-    matcher.add("MyMatcher", None, pattern)
+    matcher.add("MyMatcher", [pattern])
     matches = matcher(hello_world)
     assert matches
     matches = matcher(hello)
@@ -110,7 +133,7 @@ def test_issue1450(string, start, end):
     """Test matcher works when patterns end with * operator."""
     pattern = [{"ORTH": "a"}, {"ORTH": "b", "OP": "*"}]
     matcher = Matcher(Vocab())
-    matcher.add("TSTEND", None, pattern)
+    matcher.add("TSTEND", [pattern])
     doc = Doc(Vocab(), words=string.split())
     matches = matcher(doc)
     if start is None or end is None:

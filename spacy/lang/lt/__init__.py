@@ -1,11 +1,11 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+from .punctuation import TOKENIZER_INFIXES, TOKENIZER_SUFFIXES
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .tag_map import TAG_MAP
-from .lemmatizer import LOOKUP
 from .morph_rules import MORPH_RULES
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
@@ -27,11 +27,16 @@ class LithuanianDefaults(Language.Defaults):
     )
     lex_attr_getters.update(LEX_ATTRS)
 
-    tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+    infixes = TOKENIZER_INFIXES
+    suffixes = TOKENIZER_SUFFIXES
+    mod_base_exceptions = {
+        exc: val for exc, val in BASE_EXCEPTIONS.items() if not exc.endswith(".")
+    }
+    del mod_base_exceptions["8)"]
+    tokenizer_exceptions = update_exc(mod_base_exceptions, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
     tag_map = TAG_MAP
     morph_rules = MORPH_RULES
-    lemma_lookup = LOOKUP
 
 
 class Lithuanian(Language):

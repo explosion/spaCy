@@ -7,7 +7,7 @@ from ...gold import docs_to_json
 from ...util import get_lang_class, minibatch
 
 
-def ner_jsonl2json(input_data, lang=None, n_sents=10, use_morphology=False):
+def ner_jsonl2json(input_data, lang=None, n_sents=10, use_morphology=False, **_):
     if lang is None:
         raise ValueError("No --lang specified, but tokenization required")
     json_docs = []

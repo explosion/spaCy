@@ -17,6 +17,7 @@ cdef enum action_t:
     RETRY_ADVANCE = 0110
     MATCH_EXTEND = 1001
     MATCH_REJECT = 2000
+    MATCH_DOUBLE = 3000
 
 
 cdef enum quantifier_t:
@@ -25,6 +26,7 @@ cdef enum quantifier_t:
     ZERO_PLUS
     ONE
     ONE_PLUS
+    FINAL_ID
 
 
 cdef struct AttrValueC:
@@ -67,3 +69,4 @@ cdef class Matcher:
     cdef public object _callbacks
     cdef public object _extensions
     cdef public object _extra_predicates
+    cdef public object _seen_attrs

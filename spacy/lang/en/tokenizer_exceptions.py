@@ -30,14 +30,7 @@ for pron in ["i"]:
     for orth in [pron, pron.title()]:
         _exc[orth + "'m"] = [
             {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {
-                ORTH: "'m",
-                LEMMA: "be",
-                NORM: "am",
-                TAG: "VBP",
-                "tenspect": 1,
-                "number": 1,
-            },
+            {ORTH: "'m", LEMMA: "be", NORM: "am", TAG: "VBP"},
         ]
 
         _exc[orth + "m"] = [
@@ -84,12 +77,12 @@ for pron in ["i", "you", "he", "she", "it", "we", "they"]:
 
         _exc[orth + "'d"] = [
             {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "'d", LEMMA: "would", NORM: "would", TAG: "MD"},
+            {ORTH: "'d", NORM: "'d"},
         ]
 
         _exc[orth + "d"] = [
             {ORTH: orth, LEMMA: PRON_LEMMA, NORM: pron, TAG: "PRP"},
-            {ORTH: "d", LEMMA: "would", NORM: "would", TAG: "MD"},
+            {ORTH: "d", NORM: "'d"},
         ]
 
         _exc[orth + "'d've"] = [
@@ -146,7 +139,7 @@ for pron in ["he", "she", "it"]:
 
 # W-words, relative pronouns, prepositions etc.
 
-for word in ["who", "what", "when", "where", "why", "how", "there", "that"]:
+for word in ["who", "what", "when", "where", "why", "how", "there", "that", "this", "these", "those"]:
     for orth in [word, word.title()]:
         _exc[orth + "'s"] = [
             {ORTH: orth, LEMMA: word, NORM: word},
@@ -202,7 +195,10 @@ for word in ["who", "what", "when", "where", "why", "how", "there", "that"]:
             {ORTH: "'d", NORM: "'d"},
         ]
 
-        _exc[orth + "d"] = [{ORTH: orth, LEMMA: word, NORM: word}, {ORTH: "d"}]
+        _exc[orth + "d"] = [
+            {ORTH: orth, LEMMA: word, NORM: word},
+            {ORTH: "d", NORM: "'d"},
+        ]
 
         _exc[orth + "'d've"] = [
             {ORTH: orth, LEMMA: word, NORM: word},
@@ -403,6 +399,14 @@ _other_exc = {
         {ORTH: "Let", LEMMA: "let", NORM: "let"},
         {ORTH: "'s", LEMMA: PRON_LEMMA, NORM: "us"},
     ],
+    "c'mon": [
+        {ORTH: "c'm", NORM: "come", LEMMA: "come"},
+        {ORTH: "on"}
+    ],
+    "C'mon": [
+        {ORTH: "C'm", NORM: "come", LEMMA: "come"},
+        {ORTH: "on"}
+    ]
 }
 
 _exc.update(_other_exc)
@@ -538,7 +542,7 @@ for orth in [
     "Sen.",
     "St.",
     "vs.",
-    "v.s."
+    "v.s.",
 ]:
     _exc[orth] = [{ORTH: orth}]
 

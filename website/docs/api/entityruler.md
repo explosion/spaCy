@@ -10,7 +10,9 @@ token-based rules or exact phrase matches. It can be combined with the
 statistical [`EntityRecognizer`](/api/entityrecognizer) to boost accuracy, or
 used on its own to implement a purely rule-based entity recognition system.
 After initialization, the component is typically added to the processing
-pipeline using [`nlp.add_pipe`](/api/language#add_pipe).
+pipeline using [`nlp.add_pipe`](/api/language#add_pipe). For usage examples, see
+the docs on
+[rule-based entity recognition](/usage/rule-based-matching#entityruler).
 
 ## EntityRuler.\_\_init\_\_ {#init tag="method"}
 
@@ -34,7 +36,7 @@ be a token pattern (list) or a phrase pattern (string). For example:
 | --------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `nlp`                 | `Language`    | The shared nlp object to pass the vocab to the matchers and process phrase patterns.                                                                  |
 | `patterns`            | iterable      | Optional patterns to load in.                                                                                                                         |
-| `phrase_matcher_attr` | int / unicode | Optional attr to pass to the internal [`PhraseMatcher`](/api/phtasematcher). defaults to `None`                                                       |
+| `phrase_matcher_attr` | int / unicode | Optional attr to pass to the internal [`PhraseMatcher`](/api/phrasematcher). defaults to `None`                                                       |
 | `validate`            | bool          | Whether patterns should be validated, passed to Matcher and PhraseMatcher as `validate`. Defaults to `False`.                                         |
 | `overwrite_ents`      | bool          | If existing entities are present, e.g. entities added by the model, overwrite them by matches if necessary. Defaults to `False`.                      |
 | `**cfg`               | -             | Other config parameters. If pipeline component is loaded as part of a model pipeline, this will include all keyword arguments passed to `spacy.load`. |
@@ -81,7 +83,8 @@ Find matches in the `Doc` and add them to the `doc.ents`. Typically, this
 happens automatically after the component has been added to the pipeline using
 [`nlp.add_pipe`](/api/language#add_pipe). If the entity ruler was initialized
 with `overwrite_ents=True`, existing entities will be replaced if they overlap
-with the matches.
+with the matches. When matches overlap in a Doc, the entity ruler prioritizes longer
+patterns over shorter, and if equal the match occuring first in the Doc is chosen.
 
 > #### Example
 >
@@ -200,6 +203,14 @@ All labels present in the match patterns.
 | ----------- | ----- | ------------------ |
 | **RETURNS** | tuple | The string labels. |
 
+## EntityRuler.ent_ids {#labels tag="property" new="2.2.2"}
+
+All entity ids present in the match patterns `id` properties.
+
+| Name        | Type  | Description         |
+| ----------- | ----- | ------------------- |
+| **RETURNS** | tuple | The string ent_ids. |
+
 ## EntityRuler.patterns {#patterns tag="property"}
 
 Get all patterns that were added to the entity ruler.
@@ -213,6 +224,6 @@ Get all patterns that were added to the entity ruler.
 | Name              | Type                                  | Description                                                      |
 | ----------------- | ------------------------------------- | ---------------------------------------------------------------- |
 | `matcher`         | [`Matcher`](/api/matcher)             | The underlying matcher used to process token patterns.           |
-| `phrase_matcher`  | [`PhraseMatcher`](/api/phtasematcher) | The underlying phrase matcher, used to process phrase patterns.  |
+| `phrase_matcher`  | [`PhraseMatcher`](/api/phrasematcher) | The underlying phrase matcher, used to process phrase patterns.  |
 | `token_patterns`  | dict                                  | The token patterns present in the entity ruler, keyed by label.  |
 | `phrase_patterns` | dict                                  | The phrase patterns present in the entity ruler, keyed by label. |

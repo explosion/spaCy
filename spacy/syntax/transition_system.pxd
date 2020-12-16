@@ -33,6 +33,8 @@ ctypedef int (*do_func_t)(StateC* state, attr_t label) nogil
 
 ctypedef void* (*init_state_t)(Pool mem, int length, void* tokens) except NULL
 
+ctypedef int (*del_state_t)(Pool mem, void* state, void* extra_args) except -1
+
 cdef class TransitionSystem:
     cdef Pool mem
     cdef StringStore strings
@@ -42,6 +44,7 @@ cdef class TransitionSystem:
     cdef public attr_t root_label
     cdef public freqs
     cdef init_state_t init_beam_state
+    cdef del_state_t del_beam_state
     cdef public object labels
 
     cdef int initialize_state(self, StateC* state) nogil

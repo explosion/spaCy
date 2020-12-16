@@ -48,8 +48,8 @@ norm, which can be used to normalize vectors.
 ### {executable="true"}
 import spacy
 
-nlp = spacy.load('en_core_web_md')
-tokens = nlp(u'dog cat banana afskfsd')
+nlp = spacy.load("en_core_web_md")
+tokens = nlp("dog cat banana afskfsd")
 
 for token in tokens:
     print(token.text, token.has_vector, token.vector_norm, token.is_oov)
@@ -68,8 +68,8 @@ representation consists of 300 dimensions of `0`, which means it's practically
 nonexistent. If your application will benefit from a **large vocabulary** with
 more vectors, you should consider using one of the larger models or loading in a
 full vector package, for example,
-[`en_vectors_web_lg`](/models/en#en_vectors_web_lg), which includes over **1
-million unique vectors**.
+[`en_vectors_web_lg`](/models/en-starters#en_vectors_web_lg), which includes
+over **1 million unique vectors**.
 
 spaCy is able to compare two objects, and make a prediction of **how similar
 they are**. Predicting similarity is useful for building recommendation systems
@@ -88,8 +88,8 @@ definition of similarity.
 ### {executable="true"}
 import spacy
 
-nlp = spacy.load('en_core_web_md')  # make sure to use larger model!
-tokens = nlp(u'dog cat banana')
+nlp = spacy.load("en_core_web_md")  # make sure to use larger model!
+tokens = nlp("dog cat banana")
 
 for token1 in tokens:
     for token2 in tokens:

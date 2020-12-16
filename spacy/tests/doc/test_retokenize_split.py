@@ -183,3 +183,37 @@ def test_doc_retokenizer_split_lex_attrs(en_vocab):
         retokenizer.split(doc[0], ["Los", "Angeles"], heads, attrs=attrs)
     assert doc[0].is_stop
     assert not doc[1].is_stop
+
+
+def test_doc_retokenizer_realloc(en_vocab):
+    """#4604: realloc correctly when new tokens outnumber original tokens"""
+    text = "Hyperglycemic adverse events following antipsychotic drug administration in the"
+    doc = Doc(en_vocab, words=text.split()[:-1])
+    with doc.retokenize() as retokenizer:
+        token = doc[0]
+        heads = [(token, 0)] * len(token)
+        retokenizer.split(doc[token.i], list(token.text), heads=heads)
+    doc = Doc(en_vocab, words=text.split())
+    with doc.retokenize() as retokenizer:
+        token = doc[0]
+        heads = [(token, 0)] * len(token)
+        retokenizer.split(doc[token.i], list(token.text), heads=heads)
+
+
+def test_doc_retokenizer_split_norm(en_vocab):
+    """#6060: reset norm in split"""
+    text = "The quick brownfoxjumpsoverthe lazy dog w/ white spots"
+    doc = Doc(en_vocab, words=text.split())
+
+    # Set custom norm on the w/ token.
+    doc[5].norm_ = "with"
+
+    # Retokenize to split out the words in the token at doc[2].
+    token = doc[2]
+    with doc.retokenize() as retokenizer:
+      retokenizer.split(token, ["brown", "fox", "jumps", "over", "the"], heads=[(token, idx) for idx in range(5)])
+
+    assert doc[9].text  == "w/"
+    assert doc[9].norm_ == "with"
+    assert doc[5].text  == "over"
+    assert doc[5].norm_ == "over"

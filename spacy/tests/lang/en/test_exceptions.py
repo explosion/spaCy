@@ -46,7 +46,7 @@ def test_en_tokenizer_doesnt_split_apos_exc(en_tokenizer, text):
     assert tokens[0].text == text
 
 
-@pytest.mark.parametrize("text", ["we'll", "You'll", "there'll"])
+@pytest.mark.parametrize("text", ["we'll", "You'll", "there'll", "this'll", "those'll"])
 def test_en_tokenizer_handles_ll_contraction(en_tokenizer, text):
     tokens = en_tokenizer(text)
     assert len(tokens) == 2
@@ -118,15 +118,10 @@ def test_en_tokenizer_norm_exceptions(en_tokenizer, text, norms):
     assert [token.norm_ for token in tokens] == norms
 
 
+@pytest.mark.skip
 @pytest.mark.parametrize(
     "text,norm", [("radicalised", "radicalized"), ("cuz", "because")]
 )
 def test_en_lex_attrs_norm_exceptions(en_tokenizer, text, norm):
     tokens = en_tokenizer(text)
     assert tokens[0].norm_ == norm
-
-
-@pytest.mark.parametrize("text", ["faster", "fastest", "better", "best"])
-def test_en_lemmatizer_handles_irreg_adverbs(en_tokenizer, text):
-    tokens = en_tokenizer(text)
-    assert tokens[0].lemma_ in ["fast", "well"]

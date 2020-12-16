@@ -3,17 +3,15 @@
 from __future__ import unicode_literals
 from libc.string cimport memcpy
 
-import numpy
 import srsly
 from collections import OrderedDict
 from thinc.neural.util import get_array_module
 
-from .lexeme cimport EMPTY_LEXEME
+from .lexeme cimport EMPTY_LEXEME, OOV_RANK
 from .lexeme cimport Lexeme
 from .typedefs cimport attr_t
 from .tokens.token cimport Token
-from .attrs cimport PROB, LANG, ORTH, TAG, POS
-from .structs cimport SerializedLexemeC
+from .attrs cimport LANG, ORTH, TAG, POS
 
 from .compat import copy_reg, basestring_
 from .errors import Errors
@@ -21,7 +19,10 @@ from .lemmatizer import Lemmatizer
 from .attrs import intify_attrs, NORM
 from .vectors import Vectors
 from ._ml import link_vectors_to_models
+from .lookups import Lookups
 from . import util
+from .lang.norm_exceptions import BASE_NORMS
+from .lang.lex_attrs import LEX_ATTRS
 
 
 cdef class Vocab:
@@ -32,7 +33,8 @@ cdef class Vocab:
     DOCS: https://spacy.io/api/vocab
     """
     def __init__(self, lex_attr_getters=None, tag_map=None, lemmatizer=None,
-                 strings=tuple(), oov_prob=-20., **deprecated_kwargs):
+                 strings=tuple(), lookups=None, lookups_extra=None,
+                 oov_prob=-20., vectors_name=None, **deprecated_kwargs):
         """Create the vocabulary.
 
         lex_attr_getters (dict): A dictionary mapping attribute IDs to
@@ -42,12 +44,22 @@ cdef class Vocab:
         lemmatizer (object): A lemmatizer. Defaults to `None`.
         strings (StringStore): StringStore that maps strings to integers, and
             vice versa.
+        lookups (Lookups): Container for large lookup tables and dictionaries.
+        lookups_extra (Lookups): Container for optional lookup tables and dictionaries.
+        oov_prob (float): Default OOV probability.
+        vectors_name (unicode): Optional name to identify the vectors table.
         RETURNS (Vocab): The newly constructed object.
         """
         lex_attr_getters = lex_attr_getters if lex_attr_getters is not None else {}
         tag_map = tag_map if tag_map is not None else {}
+        if lookups in (None, True, False):
+            lookups = Lookups()
+        if "lexeme_norm" not in lookups:
+            lookups.add_table("lexeme_norm")
         if lemmatizer in (None, True, False):
-            lemmatizer = Lemmatizer({}, {}, {})
+            lemmatizer = Lemmatizer(lookups)
+        if lookups_extra in (None, True, False):
+            lookups_extra = Lookups()
         self.cfg = {'oov_prob': oov_prob}
         self.mem = Pool()
         self._by_orth = PreshMap()
@@ -58,7 +70,9 @@ cdef class Vocab:
                 _ = self[string]
         self.lex_attr_getters = lex_attr_getters
         self.morphology = Morphology(self.strings, tag_map, lemmatizer)
-        self.vectors = Vectors()
+        self.vectors = Vectors(name=vectors_name)
+        self.lookups = lookups
+        self.lookups_extra = lookups_extra
 
     @property
     def lang(self):
@@ -159,17 +173,15 @@ cdef class Vocab:
         lex.orth = self.strings.add(string)
         lex.length = len(string)
         if self.vectors is not None:
-            lex.id = self.vectors.key2row.get(lex.orth, 0)
+            lex.id = self.vectors.key2row.get(lex.orth, OOV_RANK)
         else:
-            lex.id = 0
+            lex.id = OOV_RANK
         if self.lex_attr_getters is not None:
             for attr, func in self.lex_attr_getters.items():
                 value = func(string)
                 if isinstance(value, unicode):
                     value = self.strings.add(value)
-                if attr == PROB:
-                    lex.prob = value
-                elif value is not None:
+                if value is not None:
                     Lexeme.set_struct_attr(lex, attr, value)
         if not is_oov:
             self._add_lex_to_vocab(lex.orth, lex)
@@ -304,23 +316,26 @@ cdef class Vocab:
         DOCS: https://spacy.io/api/vocab#prune_vectors
         """
         xp = get_array_module(self.vectors.data)
+        # Make sure all vectors are in the vocab
+        for orth in self.vectors:
+            self[orth]
         # Make prob negative so it sorts by rank ascending
         # (key2row contains the rank)
         priority = [(-lex.prob, self.vectors.key2row[lex.orth], lex.orth)
                     for lex in self if lex.orth in self.vectors.key2row]
         priority.sort()
-        indices = xp.asarray([i for (prob, i, key) in priority], dtype="i")
+        indices = xp.asarray([i for (prob, i, key) in priority], dtype="uint64")
         keys = xp.asarray([key for (prob, i, key) in priority], dtype="uint64")
         keep = xp.ascontiguousarray(self.vectors.data[indices[:nr_row]])
         toss = xp.ascontiguousarray(self.vectors.data[indices[nr_row:]])
-        self.vectors = Vectors(data=keep, keys=keys)
+        self.vectors = Vectors(data=keep, keys=keys[:nr_row], name=self.vectors.name)
         syn_keys, syn_rows, scores = self.vectors.most_similar(toss, batch_size=batch_size)
         remap = {}
         for i, key in enumerate(keys[nr_row:]):
-            self.vectors.add(key, row=syn_rows[i])
+            self.vectors.add(key, row=syn_rows[i][0])
             word = self.strings[key]
-            synonym = self.strings[syn_keys[i]]
-            score = scores[i]
+            synonym = self.strings[syn_keys[i][0]]
+            score = scores[i][0]
             remap[word] = (synonym, score)
         link_vectors_to_models(self)
         return remap
@@ -329,7 +344,15 @@ cdef class Vocab:
         """Retrieve a vector for a word in the vocabulary. Words can be looked
         up by string or int ID. If no vectors data is loaded, ValueError is
         raised.
+        
+        If `minn` is defined, then the resulting vector uses Fasttext's 
+        subword features by average over ngrams of `orth`.
 
+        orth (int / unicode): The hash value of a word, or its unicode string.
+        minn (int): Minimum n-gram length used for Fasttext's ngram computation. 
+            Defaults to the length of `orth`.
+        maxn (int): Maximum n-gram length used for Fasttext's ngram computation. 
+            Defaults to the length of `orth`.
         RETURNS (numpy.ndarray): A word vector. Size
             and shape determined by the `vocab.vectors` instance. Usually, a
             numpy ndarray of shape (300,) and dtype float32.
@@ -346,7 +369,8 @@ cdef class Vocab:
             minn = len(word)
         if maxn is None:
             maxn = len(word)
-        vectors = numpy.zeros((self.vectors_length,), dtype="f")
+        xp = get_array_module(self.vectors.data)
+        vectors = xp.zeros((self.vectors_length,), dtype="f")
         # Fasttext's ngram computation taken from
         # https://github.com/facebookresearch/fastText
         ngrams_size = 0;
@@ -366,7 +390,7 @@ cdef class Vocab:
                     j = j + 1
                 if (n >= minn and not (n == 1 and (i == 0 or j == len(word)))):
                     if self.strings[ngram] in self.vectors.key2row:
-                        vectors = numpy.add(self.vectors[self.strings[ngram]],vectors)
+                        vectors = xp.add(self.vectors[self.strings[ngram]], vectors)
                         ngrams_size += 1
                 n = n + 1
         if ngrams_size > 0:
@@ -391,9 +415,9 @@ cdef class Vocab:
             else:
                 width = self.vectors.shape[1]
             self.vectors.resize((new_rows, width))
-            lex = self[orth]  # Adds words to vocab
-            self.vectors.add(orth, vector=vector)
-        self.vectors.add(orth, vector=vector)
+        lex = self[orth]  # Add word to vocab if necessary
+        row = self.vectors.add(orth, vector=vector)
+        lex.rank = row
 
     def has_vector(self, orth):
         """Check whether a word has a vector. Returns False if no vectors have
@@ -420,15 +444,16 @@ cdef class Vocab:
         path = util.ensure_path(path)
         if not path.exists():
             path.mkdir()
-        setters = ["strings", "lexemes", "vectors"]
+        setters = ["strings", "vectors"]
         exclude = util.get_serialization_exclude(setters, exclude, kwargs)
         if "strings" not in exclude:
             self.strings.to_disk(path / "strings.json")
-        if "lexemes" not in exclude:
-            with (path / "lexemes.bin").open("wb") as file_:
-                file_.write(self.lexemes_to_bytes())
         if "vectors" not in "exclude" and self.vectors is not None:
             self.vectors.to_disk(path)
+        if "lookups" not in "exclude" and self.lookups is not None:
+            self.lookups.to_disk(path)
+        if "lookups_extra" not in "exclude" and self.lookups_extra is not None:
+            self.lookups_extra.to_disk(path, filename="lookups_extra.bin")
 
     def from_disk(self, path, exclude=tuple(), **kwargs):
         """Loads state from a directory. Modifies the object in place and
@@ -441,18 +466,25 @@ cdef class Vocab:
         DOCS: https://spacy.io/api/vocab#to_disk
         """
         path = util.ensure_path(path)
-        getters = ["strings", "lexemes", "vectors"]
+        getters = ["strings", "vectors"]
         exclude = util.get_serialization_exclude(getters, exclude, kwargs)
         if "strings" not in exclude:
             self.strings.from_disk(path / "strings.json")  # TODO: add exclude?
-        if "lexemes" not in exclude:
-            with (path / "lexemes.bin").open("rb") as file_:
-                self.lexemes_from_bytes(file_.read())
         if "vectors" not in exclude:
             if self.vectors is not None:
                 self.vectors.from_disk(path, exclude=["strings"])
             if self.vectors.name is not None:
                 link_vectors_to_models(self)
+        if "lookups" not in exclude:
+            self.lookups.from_disk(path)
+        if "lookups_extra" not in exclude:
+            self.lookups_extra.from_disk(path, filename="lookups_extra.bin")
+        if "lexeme_norm" in self.lookups:
+            self.lex_attr_getters[NORM] = util.add_lookups(
+                self.lex_attr_getters.get(NORM, LEX_ATTRS[NORM]), self.lookups.get_table("lexeme_norm")
+            )
+        self.length = 0
+        self._by_orth = PreshMap()
         return self
 
     def to_bytes(self, exclude=tuple(), **kwargs):
@@ -471,8 +503,9 @@ cdef class Vocab:
 
         getters = OrderedDict((
             ("strings", lambda: self.strings.to_bytes()),
-            ("lexemes", lambda: self.lexemes_to_bytes()),
-            ("vectors", deserialize_vectors)
+            ("vectors", deserialize_vectors),
+            ("lookups", lambda: self.lookups.to_bytes()),
+            ("lookups_extra", lambda: self.lookups_extra.to_bytes())
         ))
         exclude = util.get_serialization_exclude(getters, exclude, kwargs)
         return util.to_bytes(getters, exclude)
@@ -494,98 +527,62 @@ cdef class Vocab:
 
         setters = OrderedDict((
             ("strings", lambda b: self.strings.from_bytes(b)),
-            ("lexemes", lambda b: self.lexemes_from_bytes(b)),
-            ("vectors", lambda b: serialize_vectors(b))
+            ("vectors", lambda b: serialize_vectors(b)),
+            ("lookups", lambda b: self.lookups.from_bytes(b)),
+            ("lookups_extra", lambda b: self.lookups_extra.from_bytes(b))
         ))
         exclude = util.get_serialization_exclude(setters, exclude, kwargs)
         util.from_bytes(bytes_data, setters, exclude)
+        if "lexeme_norm" in self.lookups:
+            self.lex_attr_getters[NORM] = util.add_lookups(
+                self.lex_attr_getters.get(NORM, LEX_ATTRS[NORM]), self.lookups.get_table("lexeme_norm")
+            )
+        self.length = 0
+        self._by_orth = PreshMap()
         if self.vectors.name is not None:
             link_vectors_to_models(self)
         return self
-
-    def lexemes_to_bytes(self):
-        cdef hash_t key
-        cdef size_t addr
-        cdef LexemeC* lexeme = NULL
-        cdef SerializedLexemeC lex_data
-        cdef int size = 0
-        for key, addr in self._by_orth.items():
-            if addr == 0:
-                continue
-            size += sizeof(lex_data.data)
-        byte_string = b"\0" * size
-        byte_ptr = <unsigned char*>byte_string
-        cdef int j
-        cdef int i = 0
-        for key, addr in self._by_orth.items():
-            if addr == 0:
-                continue
-            lexeme = <LexemeC*>addr
-            lex_data = Lexeme.c_to_bytes(lexeme)
-            for j in range(sizeof(lex_data.data)):
-                byte_ptr[i] = lex_data.data[j]
-                i += 1
-        return byte_string
-
-    def lexemes_from_bytes(self, bytes bytes_data):
-        """Load the binary vocabulary data from the given string."""
-        cdef LexemeC* lexeme
-        cdef hash_t key
-        cdef unicode py_str
-        cdef int i = 0
-        cdef int j = 0
-        cdef SerializedLexemeC lex_data
-        chunk_size = sizeof(lex_data.data)
-        cdef void* ptr
-        cdef unsigned char* bytes_ptr = bytes_data
-        for i in range(0, len(bytes_data), chunk_size):
-            lexeme = <LexemeC*>self.mem.alloc(1, sizeof(LexemeC))
-            for j in range(sizeof(lex_data.data)):
-                lex_data.data[j] = bytes_ptr[i+j]
-            Lexeme.c_from_bytes(lexeme, lex_data)
-            prev_entry = self._by_orth.get(lexeme.orth)
-            if prev_entry != NULL:
-                memcpy(prev_entry, lexeme, sizeof(LexemeC))
-                continue
-            ptr = self.strings._map.get(lexeme.orth)
-            if ptr == NULL:
-                continue
-            py_str = self.strings[lexeme.orth]
-            if self.strings[py_str] != lexeme.orth:
-                raise ValueError(Errors.E086.format(string=py_str,
-                                                    orth_id=lexeme.orth,
-                                                    hash_id=self.strings[py_str]))
-            self._by_orth.set(lexeme.orth, lexeme)
-            self.length += 1
 
     def _reset_cache(self, keys, strings):
         # I'm not sure this made sense. Disable it for now.
         raise NotImplementedError
 
 
+    def load_extra_lookups(self, table_name):
+        if table_name not in self.lookups_extra:
+            if self.lang + "_extra" in util.registry.lookups:
+                tables = util.registry.lookups.get(self.lang + "_extra")
+                for name, filename in tables.items():
+                    if table_name == name:
+                        data = util.load_language_data(filename)
+                        self.lookups_extra.add_table(name, data)
+        if table_name not in self.lookups_extra:
+            self.lookups_extra.add_table(table_name)
+        return self.lookups_extra.get_table(table_name)
+
+
 def pickle_vocab(vocab):
     sstore = vocab.strings
     vectors = vocab.vectors
     morph = vocab.morphology
-    length = vocab.length
     data_dir = vocab.data_dir
     lex_attr_getters = srsly.pickle_dumps(vocab.lex_attr_getters)
-    lexemes_data = vocab.lexemes_to_bytes()
+    lookups = vocab.lookups
+    lookups_extra = vocab.lookups_extra
     return (unpickle_vocab,
-            (sstore, vectors, morph, data_dir, lex_attr_getters, lexemes_data, length))
+            (sstore, vectors, morph, data_dir, lex_attr_getters, lookups, lookups_extra))
 
 
 def unpickle_vocab(sstore, vectors, morphology, data_dir,
-                   lex_attr_getters, bytes lexemes_data, int length):
+                   lex_attr_getters, lookups, lookups_extra):
     cdef Vocab vocab = Vocab()
-    vocab.length = length
     vocab.vectors = vectors
     vocab.strings = sstore
     vocab.morphology = morphology
     vocab.data_dir = data_dir
     vocab.lex_attr_getters = srsly.pickle_loads(lex_attr_getters)
-    vocab.lexemes_from_bytes(lexemes_data)
-    vocab.length = length
+    vocab.lookups = lookups
+    vocab.lookups_extra = lookups_extra
     return vocab
 
 

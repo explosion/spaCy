@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import pytest
 from spacy import displacy
+from spacy.displacy.render import DependencyRenderer
 from spacy.tokens import Span
 from spacy.lang.fa import Persian
 
@@ -30,16 +31,27 @@ def test_displacy_parse_deps(en_vocab):
     deps = displacy.parse_deps(doc)
     assert isinstance(deps, dict)
     assert deps["words"] == [
-        {"text": "This", "tag": "DET"},
-        {"text": "is", "tag": "VERB"},
-        {"text": "a", "tag": "DET"},
-        {"text": "sentence", "tag": "NOUN"},
+        {"lemma": None, "text": words[0], "tag": pos[0]},
+        {"lemma": None, "text": words[1], "tag": pos[1]},
+        {"lemma": None, "text": words[2], "tag": pos[2]},
+        {"lemma": None, "text": words[3], "tag": pos[3]},
     ]
     assert deps["arcs"] == [
         {"start": 0, "end": 1, "label": "nsubj", "dir": "left"},
         {"start": 2, "end": 3, "label": "det", "dir": "left"},
         {"start": 1, "end": 3, "label": "attr", "dir": "right"},
     ]
+
+
+def test_displacy_invalid_arcs():
+    renderer = DependencyRenderer()
+    words = [{"text": "This", "tag": "DET"}, {"text": "is", "tag": "VERB"}]
+    arcs = [
+        {"start": 0, "end": 1, "label": "nsubj", "dir": "left"},
+        {"start": -1, "end": 2, "label": "det", "dir": "left"},
+    ]
+    with pytest.raises(ValueError):
+        renderer.render([{"words": words, "arcs": arcs}])
 
 
 def test_displacy_spans(en_vocab):
@@ -63,7 +75,7 @@ def test_displacy_rtl():
     deps = ["foo", "bar", "foo", "baz"]
     heads = [1, 0, 1, -2]
     nlp = Persian()
-    doc = get_doc(nlp.vocab, words=words, pos=pos, tags=pos, heads=heads, deps=deps)
+    doc = get_doc(nlp.vocab, words=words, tags=pos, heads=heads, deps=deps)
     doc.ents = [Span(doc, 1, 3, label="TEST")]
     html = displacy.render(doc, page=True, style="dep")
     assert "direction: rtl" in html

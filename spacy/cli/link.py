@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import plac
 from pathlib import Path
-from wasabi import Printer
+from wasabi import msg
 
 from ..compat import symlink_to, path2str
 from .. import util
@@ -20,7 +20,6 @@ def link(origin, link_name, force=False, model_path=None):
     either the name of a pip package, or the local path to the model data
     directory. Linking models allows loading them via spacy.load(link_name).
     """
-    msg = Printer()
     if util.is_package(origin):
         model_path = util.get_package_path(origin)
     else:

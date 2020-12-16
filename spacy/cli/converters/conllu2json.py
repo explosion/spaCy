@@ -6,7 +6,7 @@ import re
 from ...gold import iob_to_biluo
 
 
-def conllu2json(input_data, n_sents=10, use_morphology=False, lang=None):
+def conllu2json(input_data, n_sents=10, use_morphology=False, lang=None, **_):
     """
     Convert conllu files into JSON format for use with train cli.
     use_morphology parameter enables appending morphology to tags, which is
@@ -34,6 +34,9 @@ def conllu2json(input_data, n_sents=10, use_morphology=False, lang=None):
             doc = create_doc(sentences, i)
             docs.append(doc)
             sentences = []
+    if sentences:
+        doc = create_doc(sentences, i)
+        docs.append(doc)
     return docs
 
 
@@ -67,7 +70,7 @@ def read_conllx(input_data, use_morphology=False, n=0):
                     continue
                 try:
                     id_ = int(id_) - 1
-                    head = (int(head) - 1) if head != "0" else id_
+                    head = (int(head) - 1) if head not in ["0", "_"] else id_
                     dep = "ROOT" if dep == "root" else dep
                     tag = pos if tag == "_" else tag
                     tag = tag + "__" + morph if use_morphology else tag

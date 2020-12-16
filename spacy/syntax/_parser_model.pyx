@@ -19,7 +19,7 @@ from thinc.extra.search cimport Beam
 from thinc.api import chain, clone
 from thinc.v2v import Model, Maxout, Affine
 from thinc.misc import LayerNorm
-from thinc.neural.ops import CupyOps
+from thinc.neural.ops import CupyOps, NumpyOps
 from thinc.neural.util import get_array_module
 from thinc.linalg cimport Vec, VecVec
 cimport blis.cy
@@ -42,11 +42,17 @@ cdef WeightsC get_c_weights(model) except *:
     cdef precompute_hiddens state2vec = model.state2vec
     output.feat_weights = state2vec.get_feat_weights()
     output.feat_bias = <const float*>state2vec.bias.data
-    cdef np.ndarray vec2scores_W = model.vec2scores.W
-    cdef np.ndarray vec2scores_b = model.vec2scores.b
+    cdef np.ndarray vec2scores_W
+    cdef np.ndarray vec2scores_b
+    if model.vec2scores is None:
+        output.hidden_weights = NULL
+        output.hidden_bias = NULL
+    else:
+        vec2scores_W = model.vec2scores.W
+        vec2scores_b = model.vec2scores.b
+        output.hidden_weights = <const float*>vec2scores_W.data
+        output.hidden_bias = <const float*>vec2scores_b.data
     cdef np.ndarray class_mask = model._class_mask
-    output.hidden_weights = <const float*>vec2scores_W.data
-    output.hidden_bias = <const float*>vec2scores_b.data
     output.seen_classes = <const float*>class_mask.data
     return output
 
@@ -54,12 +60,30 @@ cdef WeightsC get_c_weights(model) except *:
 cdef SizesC get_c_sizes(model, int batch_size) except *:
     cdef SizesC output
     output.states = batch_size
-    output.classes = model.vec2scores.nO
+    if model.vec2scores is None:
+        output.classes = model.state2vec.nO
+    else:
+        output.classes = model.vec2scores.nO
     output.hiddens = model.state2vec.nO
     output.pieces = model.state2vec.nP
     output.feats = model.state2vec.nF
     output.embed_width = model.tokvecs.shape[1]
     return output
+
+
+cdef ActivationsC alloc_activations(SizesC n) nogil:
+    cdef ActivationsC A
+    memset(&A, 0, sizeof(A))
+    resize_activations(&A, n)
+    return A
+
+
+cdef void free_activations(const ActivationsC* A) nogil:
+    free(A.token_ids)
+    free(A.scores)
+    free(A.unmaxed)
+    free(A.hiddens)
+    free(A.is_valid)
 
 
 cdef void resize_activations(ActivationsC* A, SizesC n) nogil:
@@ -90,11 +114,12 @@ cdef void resize_activations(ActivationsC* A, SizesC n) nogil:
 
 cdef void predict_states(ActivationsC* A, StateC** states,
         const WeightsC* W, SizesC n) nogil:
+    cdef double one = 1.0
     resize_activations(A, n)
-    memset(A.unmaxed, 0, n.states * n.hiddens * n.pieces * sizeof(float))
-    memset(A.hiddens, 0, n.states * n.hiddens * sizeof(float))
     for i in range(n.states):
         states[i].set_context_tokens(&A.token_ids[i*n.feats], n.feats)
+    memset(A.unmaxed, 0, n.states * n.hiddens * n.pieces * sizeof(float))
+    memset(A.hiddens, 0, n.states * n.hiddens * sizeof(float))
     sum_state_features(A.unmaxed,
         W.feat_weights, A.token_ids, n.states, n.feats, n.hiddens * n.pieces)
     for i in range(n.states):
@@ -105,18 +130,20 @@ cdef void predict_states(ActivationsC* A, StateC** states,
             which = Vec.arg_max(&A.unmaxed[index], n.pieces)
             A.hiddens[i*n.hiddens + j] = A.unmaxed[index + which]
     memset(A.scores, 0, n.states * n.classes * sizeof(float))
-    cdef double one = 1.0
-    # Compute hidden-to-output
-    blis.cy.gemm(blis.cy.NO_TRANSPOSE, blis.cy.TRANSPOSE,
-        n.states, n.classes, n.hiddens, one,
-        <float*>A.hiddens, n.hiddens, 1,
-        <float*>W.hidden_weights, n.hiddens, 1,
-        one,
-        <float*>A.scores, n.classes, 1)
-    # Add bias
-    for i in range(n.states):
-        VecVec.add_i(&A.scores[i*n.classes],
-            W.hidden_bias, 1., n.classes)
+    if W.hidden_weights == NULL:
+        memcpy(A.scores, A.hiddens, n.states * n.classes * sizeof(float))
+    else:
+        # Compute hidden-to-output
+        blis.cy.gemm(blis.cy.NO_TRANSPOSE, blis.cy.TRANSPOSE,
+            n.states, n.classes, n.hiddens, one,
+            <float*>A.hiddens, n.hiddens, 1,
+            <float*>W.hidden_weights, n.hiddens, 1,
+            one,
+            <float*>A.scores, n.classes, 1)
+        # Add bias
+        for i in range(n.states):
+            VecVec.add_i(&A.scores[i*n.classes],
+                W.hidden_bias, 1., n.classes)
     # Set unseen classes to minimum value
     i = 0
     min_ = A.scores[0]
@@ -204,7 +231,9 @@ cdef int arg_max_if_valid(const weight_t* scores, const int* is_valid, int n) no
 class ParserModel(Model):
     def __init__(self, tok2vec, lower_model, upper_model, unseen_classes=None):
         Model.__init__(self)
-        self._layers = [tok2vec, lower_model, upper_model]
+        self._layers = [tok2vec, lower_model]
+        if upper_model is not None:
+            self._layers.append(upper_model)
         self.unseen_classes = set()
         if unseen_classes:
             for class_ in unseen_classes:
@@ -219,6 +248,8 @@ class ParserModel(Model):
         return step_model, finish_parser_update
 
     def resize_output(self, new_output):
+        if len(self._layers) == 2:
+            return 
         if new_output == self.upper.nO:
             return
         smaller = self.upper
@@ -260,12 +291,24 @@ class ParserModel(Model):
 class ParserStepModel(Model):
     def __init__(self, docs, layers, unseen_classes=None, drop=0.):
         self.tokvecs, self.bp_tokvecs = layers[0].begin_update(docs, drop=drop)
+        if layers[1].nP >= 2:
+            activation = "maxout"
+        elif len(layers) == 2:
+            activation = None
+        else:
+            activation = "relu"
         self.state2vec = precompute_hiddens(len(docs), self.tokvecs, layers[1],
-                                            drop=drop)
-        self.vec2scores = layers[-1]
-        self.cuda_stream = util.get_cuda_stream()
+                                            activation=activation, drop=drop)
+        if len(layers) == 3:
+            self.vec2scores = layers[-1]
+        else:
+            self.vec2scores = None
+        self.cuda_stream = util.get_cuda_stream(non_blocking=True)
         self.backprops = []
-        self._class_mask = numpy.zeros((self.vec2scores.nO,), dtype='f')
+        if self.vec2scores is None:
+            self._class_mask = numpy.zeros((self.state2vec.nO,), dtype='f')
+        else:
+            self._class_mask = numpy.zeros((self.vec2scores.nO,), dtype='f')
         self._class_mask.fill(1)
         if unseen_classes is not None:
             for class_ in unseen_classes:
@@ -287,10 +330,15 @@ class ParserStepModel(Model):
     def begin_update(self, states, drop=0.):
         token_ids = self.get_token_ids(states)
         vector, get_d_tokvecs = self.state2vec.begin_update(token_ids, drop=0.0)
-        mask = self.vec2scores.ops.get_dropout_mask(vector.shape, drop)
-        if mask is not None:
-            vector *= mask
-        scores, get_d_vector = self.vec2scores.begin_update(vector, drop=drop)
+        if self.vec2scores is not None:
+            mask = self.vec2scores.ops.get_dropout_mask(vector.shape, drop)
+            if mask is not None:
+                vector *= mask
+            scores, get_d_vector = self.vec2scores.begin_update(vector, drop=drop)
+        else:
+            scores = NumpyOps().asarray(vector)
+            get_d_vector = lambda d_scores, sgd=None: d_scores
+            mask = None
         # If the class is unseen, make sure its score is minimum
         scores[:, self._class_mask == 0] = numpy.nanmin(scores)
 
@@ -327,12 +375,12 @@ class ParserStepModel(Model):
         return ids
 
     def make_updates(self, sgd):
-        # Tells CUDA to block, so our async copies complete.
-        if self.cuda_stream is not None:
-            self.cuda_stream.synchronize()
         # Add a padding vector to the d_tokvecs gradient, so that missing
         # values don't affect the real gradient.
         d_tokvecs = self.ops.allocate((self.tokvecs.shape[0]+1, self.tokvecs.shape[1]))
+        # Tells CUDA to block, so our async copies complete.
+        if self.cuda_stream is not None:
+            self.cuda_stream.synchronize()
         for ids, d_vector, bp_vector in self.backprops:
             d_state_features = bp_vector((d_vector, ids), sgd=sgd)
             ids = ids.flatten()
@@ -370,9 +418,10 @@ cdef class precompute_hiddens:
     cdef np.ndarray bias
     cdef object _cuda_stream
     cdef object _bp_hiddens
+    cdef object activation
 
     def __init__(self, batch_size, tokvecs, lower_model, cuda_stream=None,
-                 drop=0.):
+                 activation="maxout", drop=0.):
         gpu_cached, bp_features = lower_model.begin_update(tokvecs, drop=drop)
         cdef np.ndarray cached
         if not isinstance(gpu_cached, numpy.ndarray):
@@ -390,6 +439,8 @@ cdef class precompute_hiddens:
         self.nP = getattr(lower_model, 'nP', 1)
         self.nO = cached.shape[2]
         self.ops = lower_model.ops
+        assert activation in (None, "relu", "maxout")
+        self.activation = activation
         self._is_synchronized = False
         self._cuda_stream = cuda_stream
         self._cached = cached
@@ -402,7 +453,7 @@ cdef class precompute_hiddens:
         return <float*>self._cached.data
 
     def __call__(self, X):
-        return self.begin_update(X)[0]
+        return self.begin_update(X, drop=None)[0]
 
     def begin_update(self, token_ids, drop=0.):
         cdef np.ndarray state_vector = numpy.zeros(
@@ -425,28 +476,45 @@ cdef class precompute_hiddens:
         def backward(d_state_vector_ids, sgd=None):
             d_state_vector, token_ids = d_state_vector_ids
             d_state_vector = bp_nonlinearity(d_state_vector, sgd)
-            # This will usually be on GPU
-            if not isinstance(d_state_vector, self.ops.xp.ndarray):
-                d_state_vector = self.ops.xp.array(d_state_vector)
             d_tokens = bp_hiddens((d_state_vector, token_ids), sgd)
             return d_tokens
         return state_vector, backward
 
     def _nonlinearity(self, state_vector):
-        if self.nP == 1:
-            state_vector = state_vector.reshape(state_vector.shape[:-1])
-            mask = state_vector >= 0.
-            state_vector *= mask
+        if isinstance(state_vector, numpy.ndarray):
+            ops = NumpyOps()
         else:
-            state_vector, mask = self.ops.maxout(state_vector)
+            ops = CupyOps()
+ 
+        if self.activation == "maxout":
+            state_vector, mask = ops.maxout(state_vector)
+        else:
+            state_vector = state_vector.reshape(state_vector.shape[:-1])
+            if self.activation == "relu":
+                mask = state_vector >= 0.
+                state_vector *= mask
+            else:
+                mask = None
 
         def backprop_nonlinearity(d_best, sgd=None):
+            if isinstance(d_best, numpy.ndarray):
+                ops = NumpyOps()
+            else:
+                ops = CupyOps()
+            if mask is not None:
+                mask_ = ops.asarray(mask)
+            # This will usually be on GPU
+            d_best = ops.asarray(d_best)
             # Fix nans (which can occur from unseen classes.)
-            d_best[self.ops.xp.isnan(d_best)] = 0.
-            if self.nP == 1:
-                d_best *= mask
+            d_best[ops.xp.isnan(d_best)] = 0.
+            if self.activation == "maxout":
+                mask_ = ops.asarray(mask)
+                return ops.backprop_maxout(d_best, mask_, self.nP)
+            elif self.activation == "relu":
+                mask_ = ops.asarray(mask)
+                d_best *= mask_
                 d_best = d_best.reshape((d_best.shape + (1,)))
                 return d_best
             else:
-                return self.ops.backprop_maxout(d_best, mask, self.nP)
+                return d_best.reshape((d_best.shape + (1,)))
         return state_vector, backprop_nonlinearity

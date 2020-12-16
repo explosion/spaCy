@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from ...symbols import POS, PUNCT, SYM, ADJ, CCONJ, NUM, DET, ADV, ADP, X, VERB
-from ...symbols import NOUN, PROPN, PART, INTJ, SPACE, PRON, AUX
+from ...symbols import NOUN, PROPN, PART, INTJ, SPACE, PRON
 
 
 TAG_MAP = {
@@ -14,10 +14,10 @@ TAG_MAP = {
     '""': {POS: PUNCT, "PunctType": "quot", "PunctSide": "fin"},
     "''": {POS: PUNCT, "PunctType": "quot", "PunctSide": "fin"},
     ":": {POS: PUNCT},
-    "$": {POS: SYM, "Other": {"SymType": "currency"}},
-    "#": {POS: SYM, "Other": {"SymType": "numbersign"}},
-    "AFX": {POS: X, "Hyph": "yes"},
-    "CC": {POS: CCONJ, "ConjType": "coor"},
+    "$": {POS: SYM},
+    "#": {POS: SYM},
+    "AFX": {POS: ADJ, "Hyph": "yes"},
+    "CC": {POS: CCONJ, "ConjType": "comp"},
     "CD": {POS: NUM, "NumType": "card"},
     "DT": {POS: DET},
     "EX": {POS: PRON, "AdvType": "ex"},
@@ -28,16 +28,16 @@ TAG_MAP = {
     "JJR": {POS: ADJ, "Degree": "comp"},
     "JJS": {POS: ADJ, "Degree": "sup"},
     "LS": {POS: X, "NumType": "ord"},
-    "MD": {POS: AUX, "VerbType": "mod"},
-    "NIL": {POS: ""},
+    "MD": {POS: VERB, "VerbType": "mod"},
+    "NIL": {POS: X},
     "NN": {POS: NOUN, "Number": "sing"},
     "NNP": {POS: PROPN, "NounType": "prop", "Number": "sing"},
     "NNPS": {POS: PROPN, "NounType": "prop", "Number": "plur"},
     "NNS": {POS: NOUN, "Number": "plur"},
-    "PDT": {POS: DET, "AdjType": "pdt", "PronType": "prn"},
+    "PDT": {POS: DET},
     "POS": {POS: PART, "Poss": "yes"},
     "PRP": {POS: PRON, "PronType": "prs"},
-    "PRP$": {POS: PRON, "PronType": "prs", "Poss": "yes"},
+    "PRP$": {POS: DET, "PronType": "prs", "Poss": "yes"},
     "RB": {POS: ADV, "Degree": "pos"},
     "RBR": {POS: ADV, "Degree": "comp"},
     "RBS": {POS: ADV, "Degree": "sup"},
@@ -56,12 +56,12 @@ TAG_MAP = {
         "VerbForm": "fin",
         "Tense": "pres",
         "Number": "sing",
-        "Person": 3,
+        "Person": "three",
     },
-    "WDT": {POS: PRON, "PronType": "int|rel"},
-    "WP": {POS: PRON, "PronType": "int|rel"},
-    "WP$": {POS: PRON, "Poss": "yes", "PronType": "int|rel"},
-    "WRB": {POS: ADV, "PronType": "int|rel"},
+    "WDT": {POS: DET},
+    "WP": {POS: PRON},
+    "WP$": {POS: DET, "Poss": "yes"},
+    "WRB": {POS: ADV},
     "ADD": {POS: X},
     "NFP": {POS: PUNCT},
     "GW": {POS: X},

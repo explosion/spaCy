@@ -3,7 +3,7 @@ from __future__ import unicode_literals, division, print_function
 
 import plac
 from timeit import default_timer as timer
-from wasabi import Printer
+from wasabi import msg
 
 from ..gold import GoldCorpus
 from .. import util
@@ -32,7 +32,6 @@ def evaluate(
     Evaluate a model. To render a sample of parses in a HTML file, set an
     output directory as the displacy_path argument.
     """
-    msg = Printer()
     util.fix_random_seed()
     if gpu_id >= 0:
         util.use_gpu(gpu_id)
@@ -44,7 +43,10 @@ def evaluate(
     if displacy_path and not displacy_path.exists():
         msg.fail("Visualization output directory not found", displacy_path, exits=1)
     corpus = GoldCorpus(data_path, data_path)
-    nlp = util.load_model(model)
+    if model.startswith("blank:"):
+        nlp = util.get_lang_class(model.replace("blank:", ""))()
+    else:
+        nlp = util.load_model(model)
     dev_docs = list(corpus.dev_docs(nlp, gold_preproc=gold_preproc))
     begin = timer()
     scorer = nlp.evaluate(dev_docs, verbose=False)
@@ -61,6 +63,7 @@ def evaluate(
         "NER P": "%.2f" % scorer.ents_p,
         "NER R": "%.2f" % scorer.ents_r,
         "NER F": "%.2f" % scorer.ents_f,
+        "Textcat": "%.2f" % scorer.textcat_score,
     }
     msg.table(results, title="Results")
 
@@ -84,12 +87,12 @@ def evaluate(
 def render_parses(docs, output_path, model_name="", limit=250, deps=True, ents=True):
     docs[0].user_data["title"] = model_name
     if ents:
-        with (output_path / "entities.html").open("w") as file_:
-            html = displacy.render(docs[:limit], style="ent", page=True)
+        html = displacy.render(docs[:limit], style="ent", page=True)
+        with (output_path / "entities.html").open("w", encoding="utf8") as file_:
             file_.write(html)
     if deps:
-        with (output_path / "parses.html").open("w") as file_:
-            html = displacy.render(
-                docs[:limit], style="dep", page=True, options={"compact": True}
-            )
+        html = displacy.render(
+            docs[:limit], style="dep", page=True, options={"compact": True}
+        )
+        with (output_path / "parses.html").open("w", encoding="utf8") as file_:
             file_.write(html)

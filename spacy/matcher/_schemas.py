@@ -102,12 +102,16 @@ TOKEN_PATTERN_SCHEMA = {
                 "title": "Entity label of single token",
                 "$ref": "#/definitions/string_value",
             },
+            "NORM": {
+                "title": "Normalized form of the token text",
+                "$ref": "#/definitions/string_value",
+            },
             "LENGTH": {
                 "title": "Token character length",
                 "$ref": "#/definitions/integer_value",
             },
             "IS_ALPHA": {
-                "title": "Token consists of alphanumeric characters",
+                "title": "Token consists of alphabetic characters",
                 "$ref": "#/definitions/boolean_value",
             },
             "IS_ASCII": {
@@ -138,8 +142,40 @@ TOKEN_PATTERN_SCHEMA = {
                 "title": "Token is whitespace",
                 "$ref": "#/definitions/boolean_value",
             },
+            "IS_BRACKET": {
+                "title": "Token is a bracket",
+                "$ref": "#/definitions/boolean_value",
+            },
+            "IS_QUOTE": {
+                "title": "Token is a quotation mark",
+                "$ref": "#/definitions/boolean_value",
+            },
+            "IS_LEFT_PUNCT": {
+                "title": "Token is a left punctuation mark",
+                "$ref": "#/definitions/boolean_value",
+            },
+            "IS_RIGHT_PUNCT": {
+                "title": "Token is a right punctuation mark",
+                "$ref": "#/definitions/boolean_value",
+            },
+            "IS_CURRENCY": {
+                "title": "Token is a currency symbol",
+                "$ref": "#/definitions/boolean_value",
+            },
             "IS_STOP": {
                 "title": "Token is stop word",
+                "$ref": "#/definitions/boolean_value",
+            },
+            "IS_SENT_START": {
+                "title": "Token is the first in a sentence",
+                "$ref": "#/definitions/boolean_value",
+            },
+            "SENT_START": {
+                "title": "Token is the first in a sentence",
+                "$ref": "#/definitions/boolean_value",
+            },
+            "SPACY": {
+                "title": "Token has a trailing space",
                 "$ref": "#/definitions/boolean_value",
             },
             "LIKE_NUM": {

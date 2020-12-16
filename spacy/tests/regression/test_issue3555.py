@@ -12,6 +12,6 @@ def test_issue3555(en_vocab):
     Token.set_extension("issue3555", default=None)
     matcher = Matcher(en_vocab)
     pattern = [{"LEMMA": "have"}, {"_": {"issue3555": True}}]
-    matcher.add("TEST", None, pattern)
+    matcher.add("TEST", [pattern])
     doc = Doc(en_vocab, words=["have", "apple"])
     matcher(doc)

@@ -22,14 +22,14 @@ dort drei drin dritte dritten dritter drittes du durch durchaus dürfen dürft
 durfte durften
 
 eben ebenso ehrlich eigen eigene eigenen eigener eigenes ein einander eine
-einem einen einer eines einigeeinigen einiger einiges einmal einmaleins elf en
+einem einen einer eines einige einigen einiger einiges einmal einmaleins elf en
 ende endlich entweder er erst erste ersten erster erstes es etwa etwas euch
 
 früher fünf fünfte fünften fünfter fünftes für
 
 gab ganz ganze ganzen ganzer ganzes gar gedurft gegen gegenüber gehabt gehen
 geht gekannt gekonnt gemacht gemocht gemusst genug gerade gern gesagt geschweige
-gewesen gewollt geworden gibt ging gleich gott gross groß grosse große grossen
+gewesen gewollt geworden gibt ging gleich gross groß grosse große grossen
 großen grosser großer grosses großes gut gute guter gutes
 
 habe haben habt hast hat hatte hätte hatten hätten heisst heißt her heute hier
@@ -47,9 +47,8 @@ kleines kommen kommt können könnt konnte könnte konnten kurz
 lang lange leicht leider lieber los
 
 machen macht machte mag magst man manche manchem manchen mancher manches mehr
-mein meine meinem meinen meiner meines mensch menschen mich mir mit mittel
-mochte möchte mochten mögen möglich mögt morgen muss muß müssen musst müsst
-musste mussten
+mein meine meinem meinen meiner meines mich mir mit mittel mochte möchte mochten
+mögen möglich mögt morgen muss muß müssen musst müsst musste mussten
 
 na nach nachdem nahm natürlich neben nein neue neuen neun neunte neunten neunter
 neuntes nicht nichts nie niemand niemandem niemanden noch nun nur

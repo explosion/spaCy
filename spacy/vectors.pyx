@@ -9,6 +9,7 @@ import functools
 import numpy
 from collections import OrderedDict
 import srsly
+import warnings
 from thinc.neural.util import get_array_module
 from thinc.neural._classes.model import Model
 
@@ -63,7 +64,7 @@ cdef class Vectors:
         shape (tuple): Size of the table, as (# entries, # columns)
         data (numpy.ndarray): The vector data.
         keys (iterable): A sequence of keys, aligned with the data.
-        name (string): A name to identify the vectors table.
+        name (unicode): A name to identify the vectors table.
         RETURNS (Vectors): The newly created object.
 
         DOCS: https://spacy.io/api/vectors#init
@@ -198,13 +199,20 @@ cdef class Vectors:
 
         DOCS: https://spacy.io/api/vectors#resize
         """
+        xp = get_array_module(self.data)
         if inplace:
-            self.data.resize(shape, refcheck=False)
+            if shape[1] != self.data.shape[1]:
+                raise ValueError(Errors.E193.format(new_dim=shape[1], curr_dim=self.data.shape[1]))
+            if xp == numpy:
+                self.data.resize(shape, refcheck=False)
+            else:
+                raise ValueError(Errors.E192)
         else:
-            xp = get_array_module(self.data)
-            self.data = xp.resize(self.data, shape)
-        filled = {row for row in self.key2row.values()}
-        self._unset = cppset[int]({row for row in range(shape[0]) if row not in filled})
+            resized_array = xp.zeros(shape, dtype=self.data.dtype)
+            copy_shape = (min(shape[0], self.data.shape[0]), min(shape[1], self.data.shape[1]))
+            resized_array[:copy_shape[0], :copy_shape[1]] = self.data[:copy_shape[0], :copy_shape[1]]
+            self.data = resized_array
+        self._sync_unset()
         removed_items = []
         for key, row in list(self.key2row.items()):
             if row >= shape[0]:
@@ -265,17 +273,12 @@ cdef class Vectors:
             rows = [self.key2row.get(key, -1.) for key in keys]
             return xp.asarray(rows, dtype="i")
         else:
-            targets = set()
+            row2key = {row: key for key, row in self.key2row.items()}
             if row is not None:
-                targets.add(row)
+                return row2key[row]
             else:
-                targets.update(rows)
-            results = []
-            for key, row in self.key2row.items():
-                if row in targets:
-                    results.append(key)
-                    targets.remove(row)
-            return xp.asarray(results, dtype="uint64")
+                results = [row2key[row] for row in rows]
+                return xp.asarray(results, dtype="uint64")
 
     def add(self, key, *, vector=None, row=None):
         """Add a key to the table. Keys can be mapped to an existing vector
@@ -288,7 +291,11 @@ cdef class Vectors:
 
         DOCS: https://spacy.io/api/vectors#add
         """
-        key = get_string_id(key)
+        # use int for all keys and rows in key2row for more efficient access
+        # and serialization
+        key = int(get_string_id(key))
+        if row is not None:
+            row = int(row)
         if row is None and key in self.key2row:
             row = self.key2row[key]
         elif row is None:
@@ -296,15 +303,18 @@ cdef class Vectors:
                 raise ValueError(Errors.E060.format(rows=self.data.shape[0],
                                                     cols=self.data.shape[1]))
             row = deref(self._unset.begin())
-        self.key2row[key] = row
+        if row < self.data.shape[0]:
+            self.key2row[key] = row
+        else:
+            raise ValueError(Errors.E197.format(row=row, key=key))
         if vector is not None:
             self.data[row] = vector
-            if self._unset.count(row):
-                self._unset.erase(self._unset.find(row))
+        if self._unset.count(row):
+            self._unset.erase(self._unset.find(row))
         return row
 
-    def most_similar(self, queries, *, batch_size=1024):
-        """For each of the given vectors, find the single entry most similar
+    def most_similar(self, queries, *, batch_size=1024, n=1, sort=True):
+        """For each of the given vectors, find the n most similar entries
         to it, by cosine.
 
         Queries are by vector. Results are returned as a `(keys, best_rows,
@@ -314,68 +324,51 @@ cdef class Vectors:
 
         queries (ndarray): An array with one or more vectors.
         batch_size (int): The batch size to use.
-        RETURNS (tuple): The most similar entry as a `(keys, best_rows, scores)`
+        n (int): The number of entries to return for each query.
+        sort (bool): Whether to sort the n entries returned by score.
+        RETURNS (tuple): The most similar entries as a `(keys, best_rows, scores)`
             tuple.
         """
+        filled = sorted(list({row for row in self.key2row.values()}))
+        if len(filled) < n:
+            raise ValueError(Errors.E198.format(n=n, n_rows=len(filled)))
         xp = get_array_module(self.data)
 
-        vectors = self.data / xp.linalg.norm(self.data, axis=1, keepdims=True)
+        norms = xp.linalg.norm(self.data[filled], axis=1, keepdims=True)
+        norms[norms == 0] = 1
+        vectors = self.data[filled] / norms
 
-        best_rows = xp.zeros((queries.shape[0],), dtype='i')
-        scores = xp.zeros((queries.shape[0],), dtype='f')
+        best_rows = xp.zeros((queries.shape[0], n), dtype='i')
+        scores = xp.zeros((queries.shape[0], n), dtype='f')
         # Work in batches, to avoid memory problems.
         for i in range(0, queries.shape[0], batch_size):
             batch = queries[i : i+batch_size]
-            batch /= xp.linalg.norm(batch, axis=1, keepdims=True)
+            batch_norms = xp.linalg.norm(batch, axis=1, keepdims=True)
+            batch_norms[batch_norms == 0] = 1
+            batch /= batch_norms
             # batch   e.g. (1024, 300)
             # vectors e.g. (10000, 300)
             # sims    e.g. (1024, 10000)
             sims = xp.dot(batch, vectors.T)
-            best_rows[i:i+batch_size] = sims.argmax(axis=1)
-            scores[i:i+batch_size] = sims.max(axis=1)
-        xp = get_array_module(self.data)
+            best_rows[i:i+batch_size] = xp.argpartition(sims, -n, axis=1)[:,-n:]
+            scores[i:i+batch_size] = xp.partition(sims, -n, axis=1)[:,-n:]
+
+            if sort and n >= 2:
+                sorted_index = xp.arange(scores.shape[0])[:,None][i:i+batch_size],xp.argsort(scores[i:i+batch_size], axis=1)[:,::-1]
+                scores[i:i+batch_size] = scores[sorted_index]
+                best_rows[i:i+batch_size] = best_rows[sorted_index]
+        
+        for i, j in numpy.ndindex(best_rows.shape):
+            best_rows[i, j] = filled[best_rows[i, j]]
+        # Round values really close to 1 or -1
+        scores = xp.around(scores, decimals=4, out=scores)
+        # Account for numerical error we want to return in range -1, 1
+        scores = xp.clip(scores, a_min=-1, a_max=1, out=scores)
         row2key = {row: key for key, row in self.key2row.items()}
         keys = xp.asarray(
-            [row2key[row] for row in best_rows if row in row2key], dtype="uint64")
+            [[row2key[row] for row in best_rows[i] if row in row2key] 
+                    for i in range(len(queries)) ], dtype="uint64")
         return (keys, best_rows, scores)
-
-    def from_glove(self, path):
-        """Load GloVe vectors from a directory. Assumes binary format,
-        that the vocab is in a vocab.txt, and that vectors are named
-        vectors.{size}.[fd].bin, e.g. vectors.128.f.bin for 128d float32
-        vectors, vectors.300.d.bin for 300d float64 (double) vectors, etc.
-        By default GloVe outputs 64-bit vectors.
-
-        path (unicode / Path): The path to load the GloVe vectors from.
-        RETURNS: A `StringStore` object, holding the key-to-string mapping.
-
-        DOCS: https://spacy.io/api/vectors#from_glove
-        """
-        path = util.ensure_path(path)
-        width = None
-        for name in path.iterdir():
-            if name.parts[-1].startswith("vectors"):
-                _, dims, dtype, _2 = name.parts[-1].split('.')
-                width = int(dims)
-                break
-        else:
-            raise IOError(Errors.E061.format(filename=path))
-        bin_loc = path / "vectors.{dims}.{dtype}.bin".format(dims=dims, dtype=dtype)
-        xp = get_array_module(self.data)
-        self.data = None
-        with bin_loc.open("rb") as file_:
-            self.data = xp.fromfile(file_, dtype=dtype)
-            if dtype != "float32":
-                self.data = xp.ascontiguousarray(self.data, dtype="float32")
-        if self.data.ndim == 1:
-            self.data = self.data.reshape((self.data.size//width, width))
-        n = 0
-        strings = StringStore()
-        with (path / "vocab.txt").open("r") as file_:
-            for i, line in enumerate(file_):
-                key = strings.add(line.strip())
-                self.add(key, row=i)
-        return strings
 
     def to_disk(self, path, **kwargs):
         """Save the current state to a directory.
@@ -390,8 +383,16 @@ cdef class Vectors:
             save_array = lambda arr, file_: xp.save(file_, arr, allow_pickle=False)
         else:
             save_array = lambda arr, file_: xp.save(file_, arr)
+
+        def save_vectors(path):
+            # the source of numpy.save indicates that the file object is closed after use.
+            # but it seems that somehow this does not happen, as ResourceWarnings are raised here.
+            # in order to not rely on this, wrap in context manager.
+            with path.open("wb") as _file:
+                save_array(self.data, _file)
+
         serializers = OrderedDict((
-            ("vectors", lambda p: save_array(self.data, p.open("wb"))),
+            ("vectors", lambda p: save_vectors(p)),
             ("key2row", lambda p: srsly.write_msgpack(p, self.key2row))
         ))
         return util.to_disk(path, serializers, [])
@@ -424,11 +425,12 @@ cdef class Vectors:
                 self.data = xp.load(str(path))
 
         serializers = OrderedDict((
-            ("key2row", load_key2row),
-            ("keys", load_keys),
             ("vectors", load_vectors),
+            ("keys", load_keys),
+            ("key2row", load_key2row),
         ))
         util.from_disk(path, serializers, [])
+        self._sync_unset()
         return self
 
     def to_bytes(self, **kwargs):
@@ -471,4 +473,9 @@ cdef class Vectors:
             ("vectors", deserialize_weights)
         ))
         util.from_bytes(data, deserializers, [])
+        self._sync_unset()
         return self
+
+    def _sync_unset(self):
+        filled = {row for row in self.key2row.values()}
+        self._unset = cppset[int]({row for row in range(self.data.shape[0]) if row not in filled})

@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS, TOKEN_MATCH
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
 from .stop_words import STOP_WORDS
-from .lemmatizer import LOOKUP
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
@@ -25,7 +24,6 @@ class HungarianDefaults(Language.Defaults):
     suffixes = TOKENIZER_SUFFIXES
     infixes = TOKENIZER_INFIXES
     token_match = TOKEN_MATCH
-    lemma_lookup = LOOKUP
 
 
 class Hungarian(Language):

@@ -52,7 +52,9 @@ def test_get_pipe(nlp, name):
     assert nlp.get_pipe(name) == new_pipe
 
 
-@pytest.mark.parametrize("name,replacement,not_callable", [("my_component", lambda doc: doc, {})])
+@pytest.mark.parametrize(
+    "name,replacement,not_callable", [("my_component", lambda doc: doc, {})]
+)
 def test_replace_pipe(nlp, name, replacement, not_callable):
     with pytest.raises(ValueError):
         nlp.replace_pipe(name, new_pipe)
@@ -103,6 +105,16 @@ def test_disable_pipes_context(nlp, name):
     assert nlp.has_pipe(name)
 
 
+def test_disable_pipes_list_arg(nlp):
+    for name in ["c1", "c2", "c3"]:
+        nlp.add_pipe(new_pipe, name=name)
+        assert nlp.has_pipe(name)
+    with nlp.disable_pipes(["c1", "c2"]):
+        assert not nlp.has_pipe("c1")
+        assert not nlp.has_pipe("c2")
+        assert nlp.has_pipe("c3")
+
+
 @pytest.mark.parametrize("n_pipes", [100])
 def test_add_lots_of_pipes(nlp, n_pipes):
     for i in range(n_pipes):
@@ -126,3 +138,19 @@ def test_pipe_base_class_add_label(nlp, component):
         assert label in pipe.labels
     else:
         assert pipe.labels == (label,)
+
+
+def test_pipe_labels(nlp):
+    input_labels = {
+        "ner": ["PERSON", "ORG", "GPE"],
+        "textcat": ["POSITIVE", "NEGATIVE"],
+    }
+    for name, labels in input_labels.items():
+        pipe = nlp.create_pipe(name)
+        for label in labels:
+            pipe.add_label(label)
+        assert len(pipe.labels) == len(labels)
+        nlp.add_pipe(pipe)
+    assert len(nlp.pipe_labels) == len(input_labels)
+    for name, labels in nlp.pipe_labels.items():
+        assert sorted(input_labels[name]) == sorted(labels)

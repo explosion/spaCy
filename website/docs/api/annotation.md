@@ -16,7 +16,7 @@ menu:
 > ```python
 > from spacy.lang.en import English
 > nlp = English()
-> tokens = nlp(u"Some\\nspaces  and\\ttab characters")
+> tokens = nlp("Some\\nspaces  and\\ttab characters")
 > tokens_text = [t.text for t in tokens]
 > assert tokens_text == ["Some", "\\n", "spaces", " ", "and", "\\t", "tab", "characters"]
 > ```
@@ -42,18 +42,20 @@ processing.
 > - **Nouns**: dogs, children → dog, child
 > - **Verbs**: writes, writing, wrote, written → write
 
-A lemma is the uninflected form of a word. The English lemmatization data is
-taken from [WordNet](https://wordnet.princeton.edu). Lookup tables are taken
-from [Lexiconista](http://www.lexiconista.com/datasets/lemmatization/). spaCy
-also adds a **special case for pronouns**: all pronouns are lemmatized to the
-special token `-PRON-`.
+As of v2.2, lemmatization data is stored in a separate package,
+[`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) that can
+be installed if needed via `pip install spacy[lookups]`. Some languages provide
+full lemmatization rules and exceptions, while other languages currently only
+rely on simple lookup tables.
 
-<Infobox title="About spaCy's custom pronoun lemma" variant="warning">
+<Infobox title="About spaCy's custom pronoun lemma for English" variant="warning">
 
-Unlike verbs and common nouns, there's no clear base form of a personal pronoun.
-Should the lemma of "me" be "I", or should we normalize person as well, giving
-"it" — or maybe "he"? spaCy's solution is to introduce a novel symbol, `-PRON-`,
-which is used as the lemma for all personal pronouns.
+spaCy adds a **special case for English pronouns**: all English pronouns are
+lemmatized to the special token `-PRON-`. Unlike verbs and common nouns, there's
+no clear base form of a personal pronoun. Should the lemma of "me" be "I", or
+should we normalize person as well, giving "it" — or maybe "he"? spaCy's
+solution is to introduce a novel symbol, `-PRON-`, which is used as the lemma
+for all personal pronouns.
 
 </Infobox>
 
@@ -80,8 +82,8 @@ training corpus and can be defined in the respective language data's
 
 <Accordion title="Universal Part-of-speech Tags" id="pos-universal">
 
-spaCy also maps all language-specific part-of-speech tags to a small, fixed set
-of word type tags following the
+spaCy maps all language-specific part-of-speech tags to a small, fixed set of
+word type tags following the
 [Universal Dependencies scheme](http://universaldependencies.org/u/pos/). The
 universal tags don't code for any morphological features and only cover the word
 type. They're available as the [`Token.pos`](/api/token#attributes) and
@@ -115,134 +117,131 @@ type. They're available as the [`Token.pos`](/api/token#attributes) and
 
 The English part-of-speech tagger uses the
 [OntoNotes 5](https://catalog.ldc.upenn.edu/LDC2013T19) version of the Penn
-Treebank tag set. We also map the tags to the simpler Google Universal POS tag
-set.
+Treebank tag set. We also map the tags to the simpler Universal Dependencies v2
+POS tag set.
 
-| Tag                                 |  POS    | Morphology                                     | Description                               |
-| ----------------------------------- | ------- | ---------------------------------------------- | ----------------------------------------- |
-| `-LRB-`                             | `PUNCT` | `PunctType=brck PunctSide=ini`                 | left round bracket                        |
-| `-RRB-`                             | `PUNCT` | `PunctType=brck PunctSide=fin`                 | right round bracket                       |
-| `,`                                 | `PUNCT` | `PunctType=comm`                               | punctuation mark, comma                   |
-| `:`                                 | `PUNCT` |                                                | punctuation mark, colon or ellipsis       |
-| `.`                                 | `PUNCT` | `PunctType=peri`                               | punctuation mark, sentence closer         |
-| `''`                                | `PUNCT` | `PunctType=quot PunctSide=fin`                 | closing quotation mark                    |
-| `""`                                | `PUNCT` | `PunctType=quot PunctSide=fin`                 | closing quotation mark                    |
-| <InlineCode>&#96;&#96;</InlineCode> | `PUNCT` | `PunctType=quot PunctSide=ini`                 | opening quotation mark                    |
-| `#`                                 | `SYM`   | `SymType=numbersign`                           | symbol, number sign                       |
-| `$`                                 | `SYM`   | `SymType=currency`                             | symbol, currency                          |
-| `ADD`                               | `X`     |                                                | email                                     |
-| `AFX`                               | `ADJ`   | `Hyph=yes`                                     | affix                                     |
-| `BES`                               | `VERB`  |                                                | auxiliary "be"                            |
-| `CC`                                | `CONJ`  | `ConjType=coor`                                | conjunction, coordinating                 |
-| `CD`                                | `NUM`   | `NumType=card`                                 | cardinal number                           |
-| `DT`                                | `DET`   |                                                | determiner                                |
-| `EX`                                | `ADV`   | `AdvType=ex`                                   | existential there                         |
-| `FW`                                | `X`     | `Foreign=yes`                                  | foreign word                              |
-| `GW`                                | `X`     |                                                | additional word in multi-word expression  |
-| `HVS`                               | `VERB`  |                                                | forms of "have"                           |
-| `HYPH`                              | `PUNCT` | `PunctType=dash`                               | punctuation mark, hyphen                  |
-| `IN`                                | `ADP`   |                                                | conjunction, subordinating or preposition |
-| `JJ`                                | `ADJ`   | `Degree=pos`                                   | adjective                                 |
-| `JJR`                               | `ADJ`   | `Degree=comp`                                  | adjective, comparative                    |
-| `JJS`                               | `ADJ`   | `Degree=sup`                                   | adjective, superlative                    |
-| `LS`                                | `PUNCT` | `NumType=ord`                                  | list item marker                          |
-| `MD`                                | `VERB`  | `VerbType=mod`                                 | verb, modal auxiliary                     |
-| `NFP`                               | `PUNCT` |                                                | superfluous punctuation                   |
-| `NIL`                               |         |                                                | missing tag                               |
-| `NN`                                | `NOUN`  | `Number=sing`                                  | noun, singular or mass                    |
-| `NNP`                               | `PROPN` | `NounType=prop Number=sign`                    | noun, proper singular                     |
-| `NNPS`                              | `PROPN` | `NounType=prop Number=plur`                    | noun, proper plural                       |
-| `NNS`                               | `NOUN`  | `Number=plur`                                  | noun, plural                              |
-| `PDT`                               | `ADJ`   | `AdjType=pdt PronType=prn`                     | predeterminer                             |
-| `POS`                               | `PART`  | `Poss=yes`                                     | possessive ending                         |
-| `PRP`                               | `PRON`  | `PronType=prs`                                 | pronoun, personal                         |
-| `PRP$`                              | `ADJ`   | `PronType=prs Poss=yes`                        | pronoun, possessive                       |
-| `RB`                                | `ADV`   | `Degree=pos`                                   | adverb                                    |
-| `RBR`                               | `ADV`   | `Degree=comp`                                  | adverb, comparative                       |
-| `RBS`                               | `ADV`   | `Degree=sup`                                   | adverb, superlative                       |
-| `RP`                                | `PART`  |                                                | adverb, particle                          |
-| `_SP`                               | `SPACE` |                                                | space                                     |
-| `SYM`                               | `SYM`   |                                                | symbol                                    |
-| `TO`                                | `PART`  | `PartType=inf VerbForm=inf`                    | infinitival "to"                          |
-| `UH`                                | `INTJ`  |                                                | interjection                              |
-| `VB`                                | `VERB`  | `VerbForm=inf`                                 | verb, base form                           |
-| `VBD`                               | `VERB`  | `VerbForm=fin Tense=past`                      | verb, past tense                          |
-| `VBG`                               | `VERB`  | `VerbForm=part Tense=pres Aspect=prog`         | verb, gerund or present participle        |
-| `VBN`                               | `VERB`  | `VerbForm=part Tense=past Aspect=perf`         | verb, past participle                     |
-| `VBP`                               | `VERB`  | `VerbForm=fin Tense=pres`                      | verb, non-3rd person singular present     |
-| `VBZ`                               | `VERB`  | `VerbForm=fin Tense=pres Number=sing Person=3` | verb, 3rd person singular present         |
-| `WDT`                               | `ADJ`   | `PronType=int|rel`                             | wh-determiner                             |
-| `WP`                                | `NOUN`  | `PronType=int|rel`                             | wh-pronoun, personal                      |
-| `WP$`                               | `ADJ`   | `Poss=yes PronType=int|rel`                    | wh-pronoun, possessive                    |
-| `WRB`                               | `ADV`   | `PronType=int|rel`                             | wh-adverb                                 |
-| `XX`                                | `X`     |                                                | unknown                                   |
+| Tag                                 |  POS    | Morphology                                         | Description                               |
+| ----------------------------------- | ------- | -------------------------------------------------- | ----------------------------------------- |
+| `$`                                 | `SYM`   |                                                    | symbol, currency                          |
+| <InlineCode>&#96;&#96;</InlineCode> | `PUNCT` | `PunctType=quot PunctSide=ini`                     | opening quotation mark                    |
+| `''`                                | `PUNCT` | `PunctType=quot PunctSide=fin`                     | closing quotation mark                    |
+| `,`                                 | `PUNCT` | `PunctType=comm`                                   | punctuation mark, comma                   |
+| `-LRB-`                             | `PUNCT` | `PunctType=brck PunctSide=ini`                     | left round bracket                        |
+| `-RRB-`                             | `PUNCT` | `PunctType=brck PunctSide=fin`                     | right round bracket                       |
+| `.`                                 | `PUNCT` | `PunctType=peri`                                   | punctuation mark, sentence closer         |
+| `:`                                 | `PUNCT` |                                                    | punctuation mark, colon or ellipsis       |
+| `ADD`                               | `X`     |                                                    | email                                     |
+| `AFX`                               | `ADJ`   | `Hyph=yes`                                         | affix                                     |
+| `CC`                                | `CCONJ` | `ConjType=comp`                                    | conjunction, coordinating                 |
+| `CD`                                | `NUM`   | `NumType=card`                                     | cardinal number                           |
+| `DT`                                | `DET`   |                                                    | determiner                                |
+| `EX`                                | `PRON`  | `AdvType=ex`                                       | existential there                         |
+| `FW`                                | `X`     | `Foreign=yes`                                      | foreign word                              |
+| `GW`                                | `X`     |                                                    | additional word in multi-word expression  |
+| `HYPH`                              | `PUNCT` | `PunctType=dash`                                   | punctuation mark, hyphen                  |
+| `IN`                                | `ADP`   |                                                    | conjunction, subordinating or preposition |
+| `JJ`                                | `ADJ`   | `Degree=pos`                                       | adjective                                 |
+| `JJR`                               | `ADJ`   | `Degree=comp`                                      | adjective, comparative                    |
+| `JJS`                               | `ADJ`   | `Degree=sup`                                       | adjective, superlative                    |
+| `LS`                                | `X`     | `NumType=ord`                                      | list item marker                          |
+| `MD`                                | `VERB`  | `VerbType=mod`                                     | verb, modal auxiliary                     |
+| `NFP`                               | `PUNCT` |                                                    | superfluous punctuation                   |
+| `NIL`                               | `X`     |                                                    | missing tag                               |
+| `NN`                                | `NOUN`  | `Number=sing`                                      | noun, singular or mass                    |
+| `NNP`                               | `PROPN` | `NounType=prop Number=sing`                        | noun, proper singular                     |
+| `NNPS`                              | `PROPN` | `NounType=prop Number=plur`                        | noun, proper plural                       |
+| `NNS`                               | `NOUN`  | `Number=plur`                                      | noun, plural                              |
+| `PDT`                               | `DET`   |                                                    | predeterminer                             |
+| `POS`                               | `PART`  | `Poss=yes`                                         | possessive ending                         |
+| `PRP`                               | `PRON`  | `PronType=prs`                                     | pronoun, personal                         |
+| `PRP$`                              | `DET`   | `PronType=prs Poss=yes`                            | pronoun, possessive                       |
+| `RB`                                | `ADV`   | `Degree=pos`                                       | adverb                                    |
+| `RBR`                               | `ADV`   | `Degree=comp`                                      | adverb, comparative                       |
+| `RBS`                               | `ADV`   | `Degree=sup`                                       | adverb, superlative                       |
+| `RP`                                | `ADP`   |                                                    | adverb, particle                          |
+| `SP`                                | `SPACE` |                                                    | space                                     |
+| `SYM`                               | `SYM`   |                                                    | symbol                                    |
+| `TO`                                | `PART`  | `PartType=inf VerbForm=inf`                        | infinitival "to"                          |
+| `UH`                                | `INTJ`  |                                                    | interjection                              |
+| `VB`                                | `VERB`  | `VerbForm=inf`                                     | verb, base form                           |
+| `VBD`                               | `VERB`  | `VerbForm=fin Tense=past`                          | verb, past tense                          |
+| `VBG`                               | `VERB`  | `VerbForm=part Tense=pres Aspect=prog`             | verb, gerund or present participle        |
+| `VBN`                               | `VERB`  | `VerbForm=part Tense=past Aspect=perf`             | verb, past participle                     |
+| `VBP`                               | `VERB`  | `VerbForm=fin Tense=pres`                          | verb, non-3rd person singular present     |
+| `VBZ`                               | `VERB`  | `VerbForm=fin Tense=pres Number=sing Person=three` | verb, 3rd person singular present         |
+| `WDT`                               | `DET`   |                                                    | wh-determiner                             |
+| `WP`                                | `PRON`  |                                                    | wh-pronoun, personal                      |
+| `WP$`                               | `DET`   | `Poss=yes`                                         | wh-pronoun, possessive                    |
+| `WRB`                               | `ADV`   |                                                    | wh-adverb                                 |
+| `XX`                                | `X`     |                                                    | unknown                                   |
+| `_SP`                               | `SPACE` |                                                    |                                           |
 
 </Accordion>
 
 <Accordion title="German" id="pos-de">
 
 The German part-of-speech tagger uses the
-[TIGER Treebank](http://www.ims.uni-stuttgart.de/forschung/ressourcen/korpora/TIGERCorpus/annotation/index.html)
-annotation scheme. We also map the tags to the simpler Google Universal POS tag
-set.
+[TIGER Treebank](https://www.ims.uni-stuttgart.de/forschung/ressourcen/korpora/tiger/)
+annotation scheme. We also map the tags to the simpler Universal Dependencies v2
+POS tag set.
 
-| Tag       |  POS    | Morphology                                  | Description                                       |
-| --------- | ------- | ------------------------------------------- | ------------------------------------------------- |
-| `$(`      | `PUNCT` | `PunctType=brck`                            | other sentence-internal punctuation mark          |
-| `$,`      | `PUNCT` | `PunctType=comm`                            | comma                                             |
-| `$.`      | `PUNCT` | `PunctType=peri`                            | sentence-final punctuation mark                   |
-| `ADJA`    | `ADJ`   |                                             | adjective, attributive                            |
-| `ADJD`    | `ADJ`   | `Variant=short`                             | adjective, adverbial or predicative               |
-| `ADV`     | `ADV`   |                                             | adverb                                            |
-| `APPO`    | `ADP`   | `AdpType=post`                              | postposition                                      |
-| `APPR`    | `ADP`   | `AdpType=prep`                              | preposition; circumposition left                  |
-| `APPRART` | `ADP`   | `AdpType=prep PronType=art`                 | preposition with article                          |
-| `APZR`    | `ADP`   | `AdpType=circ`                              | circumposition right                              |
-| `ART`     | `DET`   | `PronType=art`                              | definite or indefinite article                    |
-| `CARD`    | `NUM`   | `NumType=card`                              | cardinal number                                   |
-| `FM`      | `X`     | `Foreign=yes`                               | foreign language material                         |
-| `ITJ`     | `INTJ`  |                                             | interjection                                      |
-| `KOKOM`   | `CONJ`  | `ConjType=comp`                             | comparative conjunction                           |
-| `KON`     | `CONJ`  |                                             | coordinate conjunction                            |
-| `KOUI`    | `SCONJ` |                                             | subordinate conjunction with "zu" and infinitive  |
-| `KOUS`    | `SCONJ` |                                             | subordinate conjunction with sentence             |
-| `NE`      | `PROPN` |                                             | proper noun                                       |
-| `NNE`     | `PROPN` |                                             | proper noun                                       |
-| `NN`      | `NOUN`  |                                             | noun, singular or mass                            |
-| `PROAV`   | `ADV`   | `PronType=dem`                              | pronominal adverb                                 |
-| `PDAT`    | `DET`   | `PronType=dem`                              | attributive demonstrative pronoun                 |
-| `PDS`     | `PRON`  | `PronType=dem`                              | substituting demonstrative pronoun                |
-| `PIAT`    | `DET`   | `PronType=ind\|neg\|tot`                    | attributive indefinite pronoun without determiner |
-| `PIS`     | `PRON`  | `PronType=ind\|neg\|tot`                    | substituting indefinite pronoun                   |
-| `PPER`    | `PRON`  | `PronType=prs`                              | non-reflexive personal pronoun                    |
-| `PPOSAT`  | `DET`   | `Poss=yes PronType=prs`                     | attributive possessive pronoun                    |
-| `PPOSS`   | `PRON`  | `PronType=rel`                              | substituting possessive pronoun                   |
-| `PRELAT`  | `DET`   | `PronType=rel`                              | attributive relative pronoun                      |
-| `PRELS`   | `PRON`  | `PronType=rel`                              | substituting relative pronoun                     |
-| `PRF`     | `PRON`  | `PronType=prs Reflex=yes`                   | reflexive personal pronoun                        |
-| `PTKA`    | `PART`  |                                             | particle with adjective or adverb                 |
-| `PTKANT`  | `PART`  | `PartType=res`                              | answer particle                                   |
-| `PTKNEG`  | `PART`  | `Negative=yes`                              | negative particle                                 |
-| `PTKVZ`   | `PART`  | `PartType=vbp`                              | separable verbal particle                         |
-| `PTKZU`   | `PART`  | `PartType=inf`  | "zu" before infinitive    |
-| `PWAT`    | `DET`   | `PronType=int`                              | attributive interrogative pronoun                 |
-| `PWAV`    | `ADV`   | `PronType=int`                              | adverbial interrogative or relative pronoun       |
-| `PWS`     | `PRON`  | `PronType=int`                              | substituting interrogative pronoun                |
-| `TRUNC`   | `X`     | `Hyph=yes`                                  | word remnant                                      |
-| `VAFIN`   | `AUX`   | `Mood=ind VerbForm=fin`                     | finite verb, auxiliary                            |
-| `VAIMP`   | `AUX`   | `Mood=imp VerbForm=fin`                     | imperative, auxiliary                             |
-| `VAINF`   | `AUX`   | `VerbForm=inf`                              | infinitive, auxiliary                             |
-| `VAPP`    | `AUX`   | `Aspect=perf VerbForm=fin`                  | perfect participle, auxiliary                     |
-| `VMFIN`   | `VERB`  | `Mood=ind VerbForm=fin VerbType=mod`        | finite verb, modal                                |
-| `VMINF`   | `VERB`  | `VerbForm=fin VerbType=mod`                 | infinitive, modal                                 |
-| `VMPP`    | `VERB`  | `Aspect=perf VerbForm=part VerbType=mod`    | perfect participle, modal                         |
-| `VVFIN`   | `VERB`  | `Mood=ind VerbForm=fin`                     | finite verb, full                                 |
-| `VVIMP`   | `VERB`  | `Mood=imp VerbForm=fin`                     | imperative, full                                  |
-| `VVINF`   | `VERB`  | `VerbForm=inf`                              | infinitive, full                                  |
-| `VVIZU`   | `VERB`  | `VerbForm=inf`  | infinitive with "zu", full |
-| `VVPP`    | `VERB`  | `Aspect=perf VerbForm=part`                 | perfect participle, full                          |
-| `XY`      | `X`     |                                             | non-word containing non-letter                    |
-| `SP`      | `SPACE` |                                             | space                                             |
+| Tag       |  POS    | Morphology                               | Description                                       |
+| --------- | ------- | ---------------------------------------- | ------------------------------------------------- |
+| `$(`      | `PUNCT` | `PunctType=brck`                         | other sentence-internal punctuation mark          |
+| `$,`      | `PUNCT` | `PunctType=comm`                         | comma                                             |
+| `$.`      | `PUNCT` | `PunctType=peri`                         | sentence-final punctuation mark                   |
+| `ADJA`    | `ADJ`   |                                          | adjective, attributive                            |
+| `ADJD`    | `ADJ`   |                                          | adjective, adverbial or predicative               |
+| `ADV`     | `ADV`   |                                          | adverb                                            |
+| `APPO`    | `ADP`   | `AdpType=post`                           | postposition                                      |
+| `APPR`    | `ADP`   | `AdpType=prep`                           | preposition; circumposition left                  |
+| `APPRART` | `ADP`   | `AdpType=prep PronType=art`              | preposition with article                          |
+| `APZR`    | `ADP`   | `AdpType=circ`                           | circumposition right                              |
+| `ART`     | `DET`   | `PronType=art`                           | definite or indefinite article                    |
+| `CARD`    | `NUM`   | `NumType=card`                           | cardinal number                                   |
+| `FM`      | `X`     | `Foreign=yes`                            | foreign language material                         |
+| `ITJ`     | `INTJ`  |                                          | interjection                                      |
+| `KOKOM`   | `CCONJ` | `ConjType=comp`                          | comparative conjunction                           |
+| `KON`     | `CCONJ` |                                          | coordinate conjunction                            |
+| `KOUI`    | `SCONJ` |                                          | subordinate conjunction with "zu" and infinitive  |
+| `KOUS`    | `SCONJ` |                                          | subordinate conjunction with sentence             |
+| `NE`      | `PROPN` |                                          | proper noun                                       |
+| `NN`      | `NOUN`  |                                          | noun, singular or mass                            |
+| `NNE`     | `PROPN` |                                          | proper noun                                       |
+| `PDAT`    | `DET`   | `PronType=dem`                           | attributive demonstrative pronoun                 |
+| `PDS`     | `PRON`  | `PronType=dem`                           | substituting demonstrative pronoun                |
+| `PIAT`    | `DET`   | `PronType=ind|neg|tot`                   | attributive indefinite pronoun without determiner |
+| `PIS`     | `PRON`  | `PronType=ind|neg|tot`                   | substituting indefinite pronoun                   |
+| `PPER`    | `PRON`  | `PronType=prs`                           | replaceable personal pronoun                      |
+| `PPOSAT`  | `DET`   | `Poss=yes PronType=prs`                  | attributive possessive pronoun                    |
+| `PPOSS`   | `PRON`  | `Poss=yes PronType=prs`                  | substituting possessive pronoun                   |
+| `PRELAT`  | `DET`   | `PronType=rel`                           | attributive relative pronoun                      |
+| `PRELS`   | `PRON`  | `PronType=rel`                           | substituting relative pronoun                     |
+| `PRF`     | `PRON`  | `PronType=prs Reflex=yes`                | reflexive personal pronoun                        |
+| `PROAV`   | `ADV`   | `PronType=dem`                           | pronominal adverb                                 |
+| `PTKA`    | `PART`  |                                          | particle with adjective or adverb                 |
+| `PTKANT`  | `PART`  | `PartType=res`                           | answer particle                                   |
+| `PTKNEG`  | `PART`  | `Polarity=neg`                           | negative particle                                 |
+| `PTKVZ`   | `ADP`   | `PartType=vbp`                           | separable verbal particle                         |
+| `PTKZU`   | `PART`  | `PartType=inf`                           | "zu" before infinitive                            |
+| `PWAT`    | `DET`   | `PronType=int`                           | attributive interrogative pronoun                 |
+| `PWAV`    | `ADV`   | `PronType=int`                           | adverbial interrogative or relative pronoun       |
+| `PWS`     | `PRON`  | `PronType=int`                           | substituting interrogative pronoun                |
+| `TRUNC`   | `X`     | `Hyph=yes`                               | word remnant                                      |
+| `VAFIN`   | `AUX`   | `Mood=ind VerbForm=fin`                  | finite verb, auxiliary                            |
+| `VAIMP`   | `AUX`   | `Mood=imp VerbForm=fin`                  | imperative, auxiliary                             |
+| `VAINF`   | `AUX`   | `VerbForm=inf`                           | infinitive, auxiliary                             |
+| `VAPP`    | `AUX`   | `Aspect=perf VerbForm=part`              | perfect participle, auxiliary                     |
+| `VMFIN`   | `VERB`  | `Mood=ind VerbForm=fin VerbType=mod`     | finite verb, modal                                |
+| `VMINF`   | `VERB`  | `VerbForm=inf VerbType=mod`              | infinitive, modal                                 |
+| `VMPP`    | `VERB`  | `Aspect=perf VerbForm=part VerbType=mod` | perfect participle, modal                         |
+| `VVFIN`   | `VERB`  | `Mood=ind VerbForm=fin`                  | finite verb, full                                 |
+| `VVIMP`   | `VERB`  | `Mood=imp VerbForm=fin`                  | imperative, full                                  |
+| `VVINF`   | `VERB`  | `VerbForm=inf`                           | infinitive, full                                  |
+| `VVIZU`   | `VERB`  | `VerbForm=inf`                           | infinitive with "zu", full                        |
+| `VVPP`    | `VERB`  | `Aspect=perf VerbForm=part`              | perfect participle, full                          |
+| `XY`      | `X`     |                                          | non-word containing non-letter                    |
+| `_SP`     | `SPACE` |                                          |                                                   |
 
 </Accordion>
 
@@ -379,51 +378,51 @@ The German dependency labels use the
 [TIGER Treebank](http://www.ims.uni-stuttgart.de/forschung/ressourcen/korpora/TIGERCorpus/annotation/index.html)
 annotation scheme.
 
-| Label  | Description                     |
-| ------ | ------------------------------- |
-| `ac`   | adpositional case marker        |
-| `adc`  | adjective component             |
-| `ag`   | genitive attribute              |
-| `ams`  | measure argument of adjective   |
-| `app`  | apposition                      |
-| `avc`  | adverbial phrase component      |
-| `cc`   | comparative complement          |
-| `cd`   | coordinating conjunction        |
-| `cj`   | conjunct                        |
-| `cm`   | comparative conjunction         |
-| `cp`   | complementizer                  |
-| `cvc`  | collocational verb construction |
-| `da`   | dative                          |
-| `dm`   | discourse marker                |
-| `ep`   | expletive es                    |
-| `ju`   | junctor                         |
-| `mnr`  | postnominal modifier            |
-| `mo`   | modifier                        |
-| `ng`   | negation                        |
-| `nk`   | noun kernel element             |
-| `nmc`  | numerical component             |
-| `oa`   | accusative object               |
-| `oa2`  | second accusative object        |
-| `oc`   | clausal object                  |
-| `og`   | genitive object                 |
-| `op`   | prepositional object            |
-| `par`  | parenthetical element           |
-| `pd`   | predicate                       |
-| `pg`   | phrasal genitive                |
-| `ph`   | placeholder                     |
-| `pm`   | morphological particle          |
-| `pnc`  | proper noun component           |
-| `punct` | punctuation                    |
-| `rc`   | relative clause                 |
-| `re`   | repeated element                |
-| `rs`   | reported speech                 |
-| `sb`   | subject                         |
-| `sbp`  | passivized subject (PP)         |
-| `sp`   | subject or predicate            |
-| `svp`  | separable verb prefix           |
-| `uc`   | unit component                  |
-| `vo`   | vocative                        |
-| `ROOT` | root                            |
+| Label   | Description                     |
+| ------- | ------------------------------- |
+| `ac`    | adpositional case marker        |
+| `adc`   | adjective component             |
+| `ag`    | genitive attribute              |
+| `ams`   | measure argument of adjective   |
+| `app`   | apposition                      |
+| `avc`   | adverbial phrase component      |
+| `cc`    | comparative complement          |
+| `cd`    | coordinating conjunction        |
+| `cj`    | conjunct                        |
+| `cm`    | comparative conjunction         |
+| `cp`    | complementizer                  |
+| `cvc`   | collocational verb construction |
+| `da`    | dative                          |
+| `dm`    | discourse marker                |
+| `ep`    | expletive es                    |
+| `ju`    | junctor                         |
+| `mnr`   | postnominal modifier            |
+| `mo`    | modifier                        |
+| `ng`    | negation                        |
+| `nk`    | noun kernel element             |
+| `nmc`   | numerical component             |
+| `oa`    | accusative object               |
+| `oa2`   | second accusative object        |
+| `oc`    | clausal object                  |
+| `og`    | genitive object                 |
+| `op`    | prepositional object            |
+| `par`   | parenthetical element           |
+| `pd`    | predicate                       |
+| `pg`    | phrasal genitive                |
+| `ph`    | placeholder                     |
+| `pm`    | morphological particle          |
+| `pnc`   | proper noun component           |
+| `punct` | punctuation                     |
+| `rc`    | relative clause                 |
+| `re`    | repeated element                |
+| `rs`    | reported speech                 |
+| `sb`    | subject                         |
+| `sbp`   | passivized subject (PP)         |
+| `sp`    | subject or predicate            |
+| `svp`   | separable verb prefix           |
+| `uc`    | unit component                  |
+| `vo`    | vocative                        |
+| `ROOT`  | root                            |
 
 </Accordion>
 
@@ -501,7 +500,7 @@ entities:
 > than the **BILUO** scheme that we use, which explicitly marks boundary tokens.
 
 spaCy translates the character offsets into this scheme, in order to decide the
-cost of each action given the current state of the entity recogniser. The costs
+cost of each action given the current state of the entity recognizer. The costs
 are then used to calculate the gradient of the loss, to train the model. The
 exact algorithm is a pastiche of well-known methods, and is not currently
 described in any single publication. The model is a greedy transition-based
@@ -552,6 +551,10 @@ spaCy's JSON format, you can use the
                 "last": int,        # index of last token
                 "label": string     # phrase label
             }]
+        }],
+        "cats": [{                  # new in v2.2: categories for text classifier
+            "label": string,        # text category label
+            "value": float / bool   # label applies (1.0/true) or not (0.0/false)
         }]
     }]
 }]
@@ -584,8 +587,8 @@ data.
 ```python
 ### Entry structure
 {
-    "orth": string,
-    "id": int,
+    "orth": string,     # the word text
+    "id": int,          # can correspond to row in vectors table
     "lower": string,
     "norm": string,
     "shape": string

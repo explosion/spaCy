@@ -1,31 +1,29 @@
 ---
 title: Models
-teaser: Downloadable statistical models for spaCy to predict linguistic features
+teaser: Downloadable pretrained models for spaCy
 menu:
   - ['Quickstart', 'quickstart']
   - ['Model Architecture', 'architecture']
   - ['Conventions', 'conventions']
 ---
 
-spaCy v2.0 features new neural models for **tagging**, **parsing** and **entity
-recognition**. The models have been designed and implemented from scratch
-specifically for spaCy, to give you an unmatched balance of speed, size and
-accuracy. A novel bloom embedding strategy with subword features is used to
-support huge vocabularies in tiny tables. Convolutional layers with residual
-connections, layer normalization and maxout non-linearity are used, giving much
-better efficiency than the standard BiLSTM solution. For more details, see the
-notes on the [model architecture](#architecture).
+The models directory includes two types of pretrained models:
 
-The parser and NER use an imitation learning objective to deliver **accuracy
-in-line with the latest research systems**, even when evaluated from raw text.
-With these innovations, spaCy v2.0's models are **10× smaller**, **20% more
-accurate**, and **even cheaper to run** than the previous generation.
+1. **Core models:** General-purpose pretrained models to predict named entities,
+   part-of-speech tags and syntactic dependencies. Can be used out-of-the-box
+   and fine-tuned on more specific data.
+2. **Starter models:** Transfer learning starter packs with pretrained weights
+   you can initialize your models with to achieve better accuracy. They can
+   include word vectors (which will be used as features during training) or
+   other pretrained representations like BERT. These models don't include
+   components for specific tasks like NER or text classification and are
+   intended to be used as base models when training your own models.
 
 ### Quickstart {hidden="true"}
 
 import QuickstartModels from 'widgets/quickstart-models.js'
 
-<QuickstartModels title="Quickstart" id="quickstart" description="Install a default model, get the code to load it from within spaCy and an example to test it. For more options, see the section on available models below." />
+<QuickstartModels title="Quickstart" id="quickstart" description="Install a default model, get the code to load it from within spaCy and test it." />
 
 <Infobox title="📖 Installation and usage">
 
@@ -36,10 +34,20 @@ For more details on how to use models with spaCy, see the
 
 ## Model architecture {#architecture}
 
-spaCy's statistical models have been custom-designed to give a high-performance
-mix of speed and accuracy. The current architecture hasn't been published yet,
-but in the meantime we prepared a video that explains how the models work, with
-particular focus on NER.
+spaCy v2.0 features new neural models for **tagging**, **parsing** and **entity
+recognition**. The models have been designed and implemented from scratch
+specifically for spaCy, to give you an unmatched balance of speed, size and
+accuracy. A novel bloom embedding strategy with subword features is used to
+support huge vocabularies in tiny tables. Convolutional layers with residual
+connections, layer normalization and maxout non-linearity are used, giving much
+better efficiency than the standard BiLSTM solution.
+
+The parser and NER use an imitation learning objective to deliver **accuracy
+in-line with the latest research systems**, even when evaluated from raw text.
+With these innovations, spaCy v2.0's models are **10× smaller**, **20% more
+accurate**, and **even cheaper to run** than the previous generation. The
+current architecture hasn't been published yet, but in the meantime we prepared
+a video that explains how the models work, with particular focus on NER.
 
 <YouTube id="sqDHBH9IjRU" />
 

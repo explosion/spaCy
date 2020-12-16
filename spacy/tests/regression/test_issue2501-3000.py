@@ -22,7 +22,8 @@ def test_issue2564():
     """Test the tagger sets is_tagged correctly when used via Language.pipe."""
     nlp = Language()
     tagger = nlp.create_pipe("tagger")
-    tagger.begin_training()  # initialise weights
+    with pytest.warns(UserWarning):
+        tagger.begin_training()  # initialise weights
     nlp.add_pipe(tagger)
     doc = nlp("hello world")
     assert doc.is_tagged
@@ -36,7 +37,7 @@ def test_issue2569(en_tokenizer):
     doc = en_tokenizer("It is May 15, 1993.")
     doc.ents = [Span(doc, 2, 6, label=doc.vocab.strings["DATE"])]
     matcher = Matcher(doc.vocab)
-    matcher.add("RULE", None, [{"ENT_TYPE": "DATE", "OP": "+"}])
+    matcher.add("RULE", [[{"ENT_TYPE": "DATE", "OP": "+"}]])
     matched = [doc[start:end] for _, start, end in matcher(doc)]
     matched = sorted(matched, key=len, reverse=True)
     assert len(matched) == 10
@@ -58,7 +59,7 @@ def test_issue2626_2835(en_tokenizer, text):
 
 
 def test_issue2656(en_tokenizer):
-    """Test that tokenizer correctly splits of punctuation after numbers with
+    """Test that tokenizer correctly splits off punctuation after numbers with
     decimal points.
     """
     doc = en_tokenizer("I went for 40.3, and got home by 10.0.")
@@ -88,7 +89,7 @@ def test_issue2671():
         {"IS_PUNCT": True, "OP": "?"},
         {"LOWER": "adrenaline"},
     ]
-    matcher.add(pattern_id, None, pattern)
+    matcher.add(pattern_id, [pattern])
     doc1 = nlp("This is a high-adrenaline situation.")
     doc2 = nlp("This is a high adrenaline situation.")
     matches1 = matcher(doc1)
@@ -123,7 +124,7 @@ def test_issue2772(en_vocab):
     words = "When we write or communicate virtually , we can hide our true feelings .".split()
     # A tree with a non-projective (i.e. crossing) arc
     # The arcs (0, 4) and (2, 9) cross.
-    heads = [4, 1, 7, -1, -2, -1, 3, 2, 1, 0, -1, -2, -1]
+    heads = [4, 1, 7, -1, -2, -1, 3, 2, 1, 0, 2, 1, -3, -4]
     deps = ["dep"] * len(heads)
     doc = get_doc(en_vocab, words=words, heads=heads, deps=deps)
     assert doc[1].is_sent_start is None
@@ -184,7 +185,7 @@ def test_issue2833(en_vocab):
 def test_issue2871():
     """Test that vectors recover the correct key for spaCy reserved words."""
     words = ["dog", "cat", "SUFFIX"]
-    vocab = Vocab()
+    vocab = Vocab(vectors_name="test_issue2871")
     vocab.vectors.resize(shape=(3, 10))
     vector_data = numpy.zeros((3, 10), dtype="f")
     for word in words:

@@ -10,15 +10,16 @@ from collections import Counter
 from pathlib import Path
 from thinc.v2v import Affine, Maxout
 from thinc.misc import LayerNorm as LN
-from thinc.neural.util import prefer_gpu, get_array_module
-from wasabi import Printer
+from thinc.neural.util import prefer_gpu
+from wasabi import msg
 import srsly
 
 from ..errors import Errors
 from ..tokens import Doc
 from ..attrs import ID, HEAD
 from .._ml import Tok2Vec, flatten, chain, create_default_optimizer
-from .._ml import masked_language_model
+from .._ml import masked_language_model, get_cossim_loss, get_characters_loss
+from .._ml import MultiSoftmax
 from .. import util
 from .train import _load_pretrained_tok2vec
 
@@ -34,10 +35,15 @@ from .train import _load_pretrained_tok2vec
     vectors_model=("Name or path to spaCy model with vectors to learn from"),
     output_dir=("Directory to write models to on each epoch", "positional", None, str),
     width=("Width of CNN layers", "option", "cw", int),
-    depth=("Depth of CNN layers", "option", "cd", int),
+    conv_depth=("Depth of CNN layers", "option", "cd", int),
+    cnn_window=("Window size for CNN layers", "option", "cW", int),
+    cnn_pieces=("Maxout size for CNN layers. 1 for Mish", "option", "cP", int),
+    use_chars=("Whether to use character-based embedding", "flag", "chr", bool),
+    sa_depth=("Depth of self-attention layers", "option", "sa", int),
+    bilstm_depth=("Depth of BiLSTM layers (requires PyTorch)", "option", "lstm", int),
     embed_rows=("Number of embedding rows", "option", "er", int),
     loss_func=(
-        "Loss function to use for the objective. Either 'L2' or 'cosine'",
+        "Loss function to use for the objective. Either 'characters', 'L2' or 'cosine'",
         "option",
         "L",
         str,
@@ -71,7 +77,7 @@ from .train import _load_pretrained_tok2vec
         "renamed. Prevents unintended overwriting of existing weight files.",
         "option",
         "es",
-        int
+        int,
     ),
 )
 def pretrain(
@@ -79,7 +85,12 @@ def pretrain(
     vectors_model,
     output_dir,
     width=96,
-    depth=4,
+    conv_depth=4,
+    cnn_pieces=3,
+    sa_depth=0,
+    cnn_window=1,
+    bilstm_depth=0,
+    use_chars=False,
     embed_rows=2000,
     loss_func="cosine",
     use_vectors=False,
@@ -96,9 +107,9 @@ def pretrain(
     """
     Pre-train the 'token-to-vector' (tok2vec) layer of pipeline components,
     using an approximate language-modelling objective. Specifically, we load
-    pre-trained vectors, and train a component like a CNN, BiLSTM, etc to predict
-    vectors which match the pre-trained ones. The weights are saved to a directory
-    after each epoch. You can then pass a path to one of these pre-trained weights
+    pretrained vectors, and train a component like a CNN, BiLSTM, etc to predict
+    vectors which match the pretrained ones. The weights are saved to a directory
+    after each epoch. You can then pass a path to one of these pretrained weights
     files to the 'spacy train' command.
 
     This technique may be especially helpful if you have little labelled data.
@@ -112,16 +123,21 @@ def pretrain(
     for key in config:
         if isinstance(config[key], Path):
             config[key] = str(config[key])
-    msg = Printer()
     util.fix_random_seed(seed)
 
     has_gpu = prefer_gpu()
     msg.info("Using GPU" if has_gpu else "Not using GPU")
 
     output_dir = Path(output_dir)
+    if output_dir.exists() and [p for p in output_dir.iterdir()]:
+        msg.warn(
+            "Output directory is not empty",
+            "It is better to use an empty directory or refer to a new output path, "
+            "then the new directory will be created for you.",
+        )
     if not output_dir.exists():
         output_dir.mkdir()
-        msg.good("Created output directory")
+        msg.good("Created output directory: {}".format(output_dir))
     srsly.write_json(output_dir / "config.json", config)
     msg.good("Saved settings to config.json")
 
@@ -149,14 +165,15 @@ def pretrain(
         Tok2Vec(
             width,
             embed_rows,
-            conv_depth=depth,
+            conv_depth=conv_depth,
             pretrained_vectors=pretrained_vectors,
-            bilstm_depth=0,  # Requires PyTorch. Experimental.
-            cnn_maxout_pieces=3,  # You can try setting this higher
-            subword_features=True,  # Set to False for Chinese etc
+            bilstm_depth=bilstm_depth,  # Requires PyTorch. Experimental.
+            subword_features=not use_chars,  # Set to False for Chinese etc
+            cnn_maxout_pieces=cnn_pieces,  # If set to 1, use Mish activation.
         ),
+        objective=loss_func
     )
-    # Load in pre-trained weights
+    # Load in pretrained weights
     if init_tok2vec is not None:
         components = _load_pretrained_tok2vec(nlp, init_tok2vec)
         msg.text("Loaded pretrained tok2vec for: {}".format(components))
@@ -169,12 +186,14 @@ def pretrain(
             if not epoch_start:
                 msg.fail(
                     "You have to use the '--epoch-start' argument when using a renamed weight file for "
-                    "'--init-tok2vec'", exits=True
+                    "'--init-tok2vec'",
+                    exits=True,
                 )
             elif epoch_start < 0:
                 msg.fail(
-                    "The argument '--epoch-start' has to be greater or equal to 0. '%d' is invalid" % epoch_start,
-                    exits=True
+                    "The argument '--epoch-start' has to be greater or equal to 0. '%d' is invalid"
+                    % epoch_start,
+                    exits=True,
                 )
     else:
         # Without '--init-tok2vec' the '--epoch-start' argument is ignored
@@ -238,12 +257,15 @@ def make_update(model, docs, optimizer, drop=0.0, objective="L2"):
     """Perform an update over a single batch of documents.
 
     docs (iterable): A batch of `Doc` objects.
-    drop (float): The droput rate.
+    drop (float): The dropout rate.
     optimizer (callable): An optimizer.
     RETURNS loss: A float for the loss.
     """
     predictions, backprop = model.begin_update(docs, drop=drop)
-    loss, gradients = get_vectors_loss(model.ops, docs, predictions, objective)
+    if objective == "characters":
+        loss, gradients = get_characters_loss(model.ops, docs, predictions)
+    else:
+        loss, gradients = get_vectors_loss(model.ops, docs, predictions, objective)
     backprop(gradients, sgd=optimizer)
     # Don't want to return a cupy object here
     # The gradients are modified in-place by the BERT MLM,
@@ -305,31 +327,23 @@ def get_vectors_loss(ops, docs, prediction, objective="L2"):
     return loss, d_target
 
 
-def get_cossim_loss(yh, y):
-    # Add a small constant to avoid 0 vectors
-    yh = yh + 1e-8
-    y = y + 1e-8
-    # https://math.stackexchange.com/questions/1923613/partial-derivative-of-cosine-similarity
-    xp = get_array_module(yh)
-    norm_yh = xp.linalg.norm(yh, axis=1, keepdims=True)
-    norm_y = xp.linalg.norm(y, axis=1, keepdims=True)
-    mul_norms = norm_yh * norm_y
-    cosine = (yh * y).sum(axis=1, keepdims=True) / mul_norms
-    d_yh = (y / mul_norms) - (cosine * (yh / norm_yh ** 2))
-    loss = xp.abs(cosine - 1).sum()
-    return loss, -d_yh
-
-
-def create_pretraining_model(nlp, tok2vec):
+def create_pretraining_model(nlp, tok2vec, objective="cosine", nr_char=10):
     """Define a network for the pretraining. We simply add an output layer onto
     the tok2vec input model. The tok2vec input model needs to be a model that
     takes a batch of Doc objects (as a list), and returns a list of arrays.
     Each array in the output needs to have one row per token in the doc.
     """
-    output_size = nlp.vocab.vectors.data.shape[1]
-    output_layer = chain(
-        LN(Maxout(300, pieces=3)), Affine(output_size, drop_factor=0.0)
-    )
+    if objective == "characters":
+        out_sizes = [256] * nr_char
+        output_layer = chain(
+            LN(Maxout(300, pieces=3)),
+            MultiSoftmax(out_sizes, 300)
+        )
+    else:
+        output_size = nlp.vocab.vectors.data.shape[1]
+        output_layer = chain(
+            LN(Maxout(300, pieces=3)), Affine(output_size, drop_factor=0.0)
+        )
     # This is annoying, but the parser etc have the flatten step after
     # the tok2vec. To load the weights in cleanly, we need to match
     # the shape of the models' components exactly. So what we cann

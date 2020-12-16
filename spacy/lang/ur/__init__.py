@@ -3,13 +3,12 @@ from __future__ import unicode_literals
 
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
-from ..tag_map import TAG_MAP
+from .punctuation import TOKENIZER_SUFFIXES
+from .tag_map import TAG_MAP
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...language import Language
 from ...attrs import LANG
-
-from .punctuation import TOKENIZER_SUFFIXES
 
 
 class UrduDefaults(Language.Defaults):

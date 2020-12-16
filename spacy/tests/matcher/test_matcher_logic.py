@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 
 import pytest
 import re
+
+from spacy.lang.en import English
 from spacy.matcher import Matcher
 from spacy.tokens import Doc, Span
 
@@ -53,7 +55,7 @@ def test_greedy_matching(doc, text, pattern, re_pattern):
     """Test that the greedy matching behavior of the * op is consistant with
     other re implementations."""
     matcher = Matcher(doc.vocab)
-    matcher.add(re_pattern, None, pattern)
+    matcher.add(re_pattern, [pattern])
     matches = matcher(doc)
     re_matches = [m.span() for m in re.finditer(re_pattern, text)]
     for match, re_match in zip(matches, re_matches):
@@ -75,7 +77,7 @@ def test_match_consuming(doc, text, pattern, re_pattern):
     """Test that matcher.__call__ consumes tokens on a match similar to
     re.findall."""
     matcher = Matcher(doc.vocab)
-    matcher.add(re_pattern, None, pattern)
+    matcher.add(re_pattern, [pattern])
     matches = matcher(doc)
     re_matches = [m.span() for m in re.finditer(re_pattern, text)]
     assert len(matches) == len(re_matches)
@@ -109,7 +111,7 @@ def test_operator_combos(en_vocab):
                 pattern.append({"ORTH": part[0], "OP": "+"})
             else:
                 pattern.append({"ORTH": part})
-        matcher.add("PATTERN", None, pattern)
+        matcher.add("PATTERN", [pattern])
         matches = matcher(doc)
         if result:
             assert matches, (string, pattern_str)
@@ -121,7 +123,7 @@ def test_matcher_end_zero_plus(en_vocab):
     """Test matcher works when patterns end with * operator. (issue 1450)"""
     matcher = Matcher(en_vocab)
     pattern = [{"ORTH": "a"}, {"ORTH": "b", "OP": "*"}]
-    matcher.add("TSTEND", None, pattern)
+    matcher.add("TSTEND", [pattern])
     nlp = lambda string: Doc(matcher.vocab, words=string.split())
     assert len(matcher(nlp("a"))) == 1
     assert len(matcher(nlp("a b"))) == 2
@@ -134,12 +136,38 @@ def test_matcher_end_zero_plus(en_vocab):
 def test_matcher_sets_return_correct_tokens(en_vocab):
     matcher = Matcher(en_vocab)
     patterns = [
-        [{'LOWER': {'IN': ["zero"]}}],
-        [{'LOWER': {'IN': ["one"]}}],
-        [{'LOWER': {'IN': ["two"]}}],
+        [{"LOWER": {"IN": ["zero"]}}],
+        [{"LOWER": {"IN": ["one"]}}],
+        [{"LOWER": {"IN": ["two"]}}],
     ]
-    matcher.add('TEST', None, *patterns)
+    matcher.add("TEST", patterns)
     doc = Doc(en_vocab, words="zero one two three".split())
     matches = matcher(doc)
     texts = [Span(doc, s, e, label=L).text for L, s, e in matches]
-    assert texts == ['zero', 'one', 'two']
+    assert texts == ["zero", "one", "two"]
+
+
+def test_matcher_remove():
+    nlp = English()
+    matcher = Matcher(nlp.vocab)
+    text = "This is a test case."
+
+    pattern = [{"ORTH": "test"}, {"OP": "?"}]
+    assert len(matcher) == 0
+    matcher.add("Rule", [pattern])
+    assert "Rule" in matcher
+
+    # should give two matches
+    results1 = matcher(nlp(text))
+    assert len(results1) == 2
+
+    # removing once should work
+    matcher.remove("Rule")
+
+    # should not return any maches anymore
+    results2 = matcher(nlp(text))
+    assert len(results2) == 0
+
+    # removing again should throw an error
+    with pytest.raises(ValueError):
+        matcher.remove("Rule")

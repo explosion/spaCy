@@ -1,33 +1,58 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from ..char_classes import LIST_ELLIPSES, LIST_ICONS
+from ..char_classes import LIST_ELLIPSES, LIST_ICONS, LIST_UNITS, merge_chars
+from ..char_classes import LIST_PUNCT, LIST_QUOTES, CURRENCY, PUNCT
 from ..char_classes import CONCAT_QUOTES, ALPHA, ALPHA_LOWER, ALPHA_UPPER
 
-from ..punctuation import TOKENIZER_SUFFIXES as DEFAULT_TOKENIZER_SUFFIXES
+from ..punctuation import TOKENIZER_PREFIXES as BASE_TOKENIZER_PREFIXES
+
+
+_prefixes = [",,"] + BASE_TOKENIZER_PREFIXES
 
 
 # Copied from `de` package. Main purpose is to ensure that hyphens are not
 # split on.
 
-_quotes = CONCAT_QUOTES.replace("'", '')
+_quotes = CONCAT_QUOTES.replace("'", "")
 
-_infixes = (LIST_ELLIPSES + LIST_ICONS +
-            [r'(?<=[{}])\.(?=[{}])'.format(ALPHA_LOWER, ALPHA_UPPER),
-             r'(?<=[{a}])[,!?](?=[{a}])'.format(a=ALPHA),
-             r'(?<=[{a}"])[:<>=](?=[{a}])'.format(a=ALPHA),
-             r'(?<=[{a}]),(?=[{a}])'.format(a=ALPHA),
-             r'(?<=[{a}])([{q}\)\]\(\[])(?=[{a}])'.format(a=ALPHA, q=_quotes),
-             r'(?<=[{a}])--(?=[{a}])'.format(a=ALPHA),
-             r'(?<=[0-9])-(?=[0-9])'])
+_infixes = (
+    LIST_ELLIPSES
+    + LIST_ICONS
+    + [
+        r"(?<=[{}])\.(?=[{}])".format(ALPHA_LOWER, ALPHA_UPPER),
+        r"(?<=[{a}])[,!?](?=[{a}])".format(a=ALPHA),
+        r'(?<=[{a}"])[:<>=](?=[{a}])'.format(a=ALPHA),
+        r"(?<=[{a}]),(?=[{a}])".format(a=ALPHA),
+        r"(?<=[{a}])([{q}\)\]\(\[])(?=[{a}])".format(a=ALPHA, q=_quotes),
+        r"(?<=[{a}])--(?=[{a}])".format(a=ALPHA),
+    ]
+)
 
 
-# Remove "'s" suffix from suffix list. In Dutch, "'s" is a plural ending when
-# it occurs as a suffix and a clitic for "eens" in standalone use. To avoid
-# ambiguity it's better to just leave it attached when it occurs as a suffix.
-default_suffix_blacklist = ("'s", "'S", '’s', '’S')
-_suffixes = [suffix for suffix in DEFAULT_TOKENIZER_SUFFIXES
-             if suffix not in default_suffix_blacklist]
+_list_units = [u for u in LIST_UNITS if u != "%"]
+_units = merge_chars(" ".join(_list_units))
 
+_suffixes = (
+    ["''"]
+    + LIST_PUNCT
+    + LIST_ELLIPSES
+    + LIST_QUOTES
+    + LIST_ICONS
+    + ["—", "–"]
+    + [
+        r"(?<=[0-9])\+",
+        r"(?<=°[FfCcKk])\.",
+        r"(?<=[0-9])(?:{c})".format(c=CURRENCY),
+        r"(?<=[0-9])(?:{u})".format(u=_units),
+        r"(?<=[0-9{al}{e}{p}(?:{q})])\.".format(
+            al=ALPHA_LOWER, e=r"%²\-\+", q=CONCAT_QUOTES, p=PUNCT
+        ),
+        r"(?<=[{au}][{au}])\.".format(au=ALPHA_UPPER),
+    ]
+)
+
+
+TOKENIZER_PREFIXES = _prefixes
 TOKENIZER_INFIXES = _infixes
 TOKENIZER_SUFFIXES = _suffixes

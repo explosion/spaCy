@@ -7,7 +7,7 @@ dependency tree to find the noun phrase they are referring to – for example:
 $9.4 million --> Net income.
 
 Compatible with: spaCy v2.0.0+
-Last tested with: v2.1.0
+Last tested with: v2.2.1
 """
 from __future__ import unicode_literals, print_function
 
@@ -38,14 +38,17 @@ def main(model="en_core_web_sm"):
 
 def filter_spans(spans):
     # Filter a sequence of spans so they don't contain overlaps
-    get_sort_key = lambda span: (span.end - span.start, span.start)
+    # For spaCy 2.1.4+: this function is available as spacy.util.filter_spans()
+    get_sort_key = lambda span: (span.end - span.start, -span.start)
     sorted_spans = sorted(spans, key=get_sort_key, reverse=True)
     result = []
     seen_tokens = set()
     for span in sorted_spans:
+        # Check for end - 1 here because boundaries are inclusive
         if span.start not in seen_tokens and span.end - 1 not in seen_tokens:
             result.append(span)
-            seen_tokens.update(range(span.start, span.end))
+        seen_tokens.update(range(span.start, span.end))
+    result = sorted(result, key=lambda span: span.start)
     return result
 
 

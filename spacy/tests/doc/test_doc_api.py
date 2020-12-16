@@ -6,8 +6,7 @@ import pytest
 import numpy
 from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
-from spacy.errors import ModelsWarning
-from spacy.attrs import ENT_TYPE, ENT_IOB
+from spacy.attrs import ENT_TYPE, ENT_IOB, SENT_START, HEAD, DEP
 
 from ..util import get_doc
 
@@ -107,10 +106,18 @@ def test_doc_api_getitem(en_tokenizer):
 )
 def test_doc_api_serialize(en_tokenizer, text):
     tokens = en_tokenizer(text)
+    tokens[0].lemma_ = "lemma"
+    tokens[0].norm_ = "norm"
+    tokens[0].ent_kb_id_ = "ent_kb_id"
+    tokens[0].ent_id_ = "ent_id"
     new_tokens = Doc(tokens.vocab).from_bytes(tokens.to_bytes())
     assert tokens.text == new_tokens.text
     assert [t.text for t in tokens] == [t.text for t in new_tokens]
     assert [t.orth for t in tokens] == [t.orth for t in new_tokens]
+    assert new_tokens[0].lemma_ == "lemma"
+    assert new_tokens[0].norm_ == "norm"
+    assert new_tokens[0].ent_kb_id_ == "ent_kb_id"
+    assert new_tokens[0].ent_id_ == "ent_id"
 
     new_tokens = Doc(tokens.vocab).from_bytes(
         tokens.to_bytes(exclude=["tensor"]), exclude=["tensor"]
@@ -150,10 +157,9 @@ def test_doc_api_runtime_error(en_tokenizer):
     # Example that caused run-time error while parsing Reddit
     # fmt: off
     text = "67% of black households are single parent \n\n72% of all black babies born out of wedlock \n\n50% of all black kids don\u2019t finish high school"
-    deps = ["nsubj", "prep", "amod", "pobj", "ROOT", "amod", "attr", "",
-            "nummod", "prep", "det", "amod", "pobj", "acl", "prep", "prep",
-            "pobj", "", "nummod", "prep", "det", "amod", "pobj", "aux", "neg",
-            "ROOT", "amod", "dobj"]
+    deps = ["nummod", "nsubj", "prep", "amod", "pobj", "ROOT", "amod", "attr", "", "nummod", "appos", "prep", "det",
+            "amod", "pobj", "acl", "prep", "prep", "pobj",
+            "", "nummod", "nsubj", "prep", "det", "amod", "pobj", "aux", "neg", "ccomp", "amod", "dobj"]
     # fmt: on
     tokens = en_tokenizer(text)
     doc = get_doc(tokens.vocab, words=[t.text for t in tokens], deps=deps)
@@ -217,7 +223,7 @@ def test_doc_api_similarity_match():
     assert doc.similarity(doc[0]) == 1.0
     assert doc.similarity(doc.vocab["a"]) == 1.0
     doc2 = Doc(doc.vocab, words=["a", "b", "c"])
-    with pytest.warns(ModelsWarning):
+    with pytest.warns(UserWarning):
         assert doc.similarity(doc2[:1]) == 1.0
         assert doc.similarity(doc2) == 0.0
 
@@ -272,6 +278,41 @@ def test_doc_is_nered(en_vocab):
     # Test serialization
     new_doc = Doc(en_vocab).from_bytes(doc.to_bytes())
     assert new_doc.is_nered
+
+
+def test_doc_from_array_sent_starts(en_vocab):
+    words = ["I", "live", "in", "New", "York", ".", "I", "like", "cats", "."]
+    heads = [0, 0, 0, 0, 0, 0, 6, 6, 6, 6]
+    # fmt: off
+    deps = ["ROOT", "dep", "dep", "dep", "dep", "dep", "ROOT", "dep", "dep", "dep", "dep"]
+    # fmt: on
+    doc = Doc(en_vocab, words=words)
+    for i, (dep, head) in enumerate(zip(deps, heads)):
+        doc[i].dep_ = dep
+        doc[i].head = doc[head]
+        if head == i:
+            doc[i].is_sent_start = True
+    doc.is_parsed
+
+    attrs = [SENT_START, HEAD]
+    arr = doc.to_array(attrs)
+    new_doc = Doc(en_vocab, words=words)
+    with pytest.raises(ValueError):
+        new_doc.from_array(attrs, arr)
+
+    attrs = [SENT_START, DEP]
+    arr = doc.to_array(attrs)
+    new_doc = Doc(en_vocab, words=words)
+    new_doc.from_array(attrs, arr)
+    assert [t.is_sent_start for t in doc] == [t.is_sent_start for t in new_doc]
+    assert not new_doc.is_parsed
+
+    attrs = [HEAD, DEP]
+    arr = doc.to_array(attrs)
+    new_doc = Doc(en_vocab, words=words)
+    new_doc.from_array(attrs, arr)
+    assert [t.is_sent_start for t in doc] == [t.is_sent_start for t in new_doc]
+    assert new_doc.is_parsed
 
 
 def test_doc_lang(en_vocab):

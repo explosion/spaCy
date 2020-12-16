@@ -11,6 +11,23 @@ _hebrew = r"\u0591-\u05F4\uFB1D-\uFB4F"
 
 _hindi = r"\u0900-\u097F"
 
+_kannada = r"\u0C80-\u0CFF"
+
+_tamil = r"\u0B80-\u0BFF"
+
+_telugu = r"\u0C00-\u0C7F"
+
+# from the final table in: https://en.wikipedia.org/wiki/CJK_Unified_Ideographs
+_cjk = (
+    r"\u4E00-\u62FF\u6300-\u77FF\u7800-\u8CFF\u8D00-\u9FFF\u3400-\u4DBF"
+    r"\U00020000-\U000215FF\U00021600-\U000230FF\U00023100-\U000245FF"
+    r"\U00024600-\U000260FF\U00026100-\U000275FF\U00027600-\U000290FF"
+    r"\U00029100-\U0002A6DF\U0002A700-\U0002B73F\U0002B740-\U0002B81F"
+    r"\U0002B820-\U0002CEAF\U0002CEB0-\U0002EBEF\u2E80-\u2EFF\u2F00-\u2FDF"
+    r"\u2FF0-\u2FFF\u3000-\u303F\u31C0-\u31EF\u3200-\u32FF\u3300-\u33FF"
+    r"\uF900-\uFAFF\uFE30-\uFE4F\U0001F200-\U0001F2FF\U0002F800-\U0002FA1F"
+)
+
 # Latin standard
 _latin_u_standard = r"A-Z"
 _latin_l_standard = r"a-z"
@@ -24,6 +41,10 @@ _latin_standard_fullwidth = _latin_u_standard_fullwidth + _latin_l_standard_full
 _latin_u_supplement = r"\u00C0-\u00D6\u00D8-\u00DE"
 _latin_l_supplement = r"\u00DF-\u00F6\u00F8-\u00FF"
 _latin_supplement = r"\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u00FF"
+
+_hangul_syllables = r"\uAC00-\uD7AF"
+_hangul_jamo = r"\u1100-\u11FF"
+_hangul = _hangul_syllables + _hangul_jamo
 
 # letters with diacritics - Catalan, Czech, Latin, Latvian, Lithuanian, Polish, Slovak, Turkish, Welsh
 _latin_u_extendedA = (
@@ -178,7 +199,7 @@ _russian_lower = r"ёа-я"
 _russian_upper = r"ЁА-Я"
 _russian = r"ёа-яЁА-Я"
 
-_sinhala = r"\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6"
+_sinhala = r"\u0D80-\u0DFF"
 
 _tatar_lower = r"әөүҗңһ"
 _tatar_upper = r"ӘӨҮҖҢҺ"
@@ -192,12 +213,27 @@ _ukrainian_lower = r"а-щюяіїєґ"
 _ukrainian_upper = r"А-ЩЮЯІЇЄҐ"
 _ukrainian = r"а-щюяіїєґА-ЩЮЯІЇЄҐ"
 
-_upper = LATIN_UPPER + _russian_upper + _tatar_upper + _greek_upper + _ukrainian_upper
-_lower = LATIN_LOWER + _russian_lower + _tatar_lower + _greek_lower + _ukrainian_lower
+_macedonian_lower = r"ѓѕјљњќѐѝ"
+_macedonian_upper = r"ЃЅЈЉЊЌЀЍ"
+_macedonian = r"ѓѕјљњќѐѝЃЅЈЉЊЌЀЍ"
 
-_uncased = _bengali + _hebrew + _persian + _sinhala + _hindi
+_upper = LATIN_UPPER + _russian_upper + _tatar_upper + _greek_upper + _ukrainian_upper + _macedonian_upper
+_lower = LATIN_LOWER + _russian_lower + _tatar_lower + _greek_lower + _ukrainian_lower + _macedonian_lower
 
-ALPHA = group_chars(LATIN + _russian + _tatar + _greek + _ukrainian + _uncased)
+_uncased = (
+    _bengali
+    + _hebrew
+    + _persian
+    + _sinhala
+    + _hindi
+    + _kannada
+    + _tamil
+    + _telugu
+    + _hangul
+    + _cjk
+)
+
+ALPHA = group_chars(LATIN + _russian + _tatar + _greek + _ukrainian + _macedonian + _uncased)
 ALPHA_LOWER = group_chars(_lower + _uncased)
 ALPHA_UPPER = group_chars(_upper + _uncased)
 

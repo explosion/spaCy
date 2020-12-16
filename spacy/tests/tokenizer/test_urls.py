@@ -12,6 +12,7 @@ URLS_BASIC = [
 
 URLS_FULL = URLS_BASIC + [
     "mailto:foo-bar@baz-co.com",
+    "mailto:foo-bar@baz-co.com?subject=hi",
     "www.google.com?q=google",
     "http://foo.com/blah_(wikipedia)#cite-1",
 ]
@@ -19,6 +20,7 @@ URLS_FULL = URLS_BASIC + [
 # URL SHOULD_MATCH and SHOULD_NOT_MATCH patterns courtesy of https://mathiasbynens.be/demo/url-regex
 URLS_SHOULD_MATCH = [
     "http://foo.com/blah_blah",
+    "http://BlahBlah.com/Blah_Blah",
     "http://foo.com/blah_blah/",
     "http://www.example.com/wpstyle/?p=364",
     "https://www.example.com/foo/?bar=baz&inga=42&quux",
@@ -45,18 +47,28 @@ URLS_SHOULD_MATCH = [
     "http://a.b-c.de",
     "http://223.255.255.254",
     "http://a.b--c.de/",  # this is a legit domain name see: https://gist.github.com/dperini/729294 comment on 9/9/2014
-    pytest.param("http://foo.com/blah_blah_(wikipedia)", marks=pytest.mark.xfail()),
+    "ssh://login@server.com:12345/repository.git",
+    "svn+ssh://user@ssh.yourdomain.com/path",
     pytest.param(
-        "http://foo.com/blah_blah_(wikipedia)_(again)", marks=pytest.mark.xfail()
+        "chrome://extensions/?id=mhjfbmdgcfjbbpaeojofohoefgiehjai",
+        marks=pytest.mark.xfail(),
     ),
-    pytest.param("http://⌘.ws", marks=pytest.mark.xfail()),
-    pytest.param("http://⌘.ws/", marks=pytest.mark.xfail()),
-    pytest.param("http://☺.damowmow.com/", marks=pytest.mark.xfail()),
-    pytest.param("http://✪df.ws/123", marks=pytest.mark.xfail()),
-    pytest.param("http://➡.ws/䨹", marks=pytest.mark.xfail()),
-    pytest.param("http://مثال.إختبار", marks=pytest.mark.xfail()),
-    pytest.param("http://例子.测试", marks=pytest.mark.xfail()),
-    pytest.param("http://उदाहरण.परीक्षा", marks=pytest.mark.xfail()),
+    pytest.param(
+        "chrome-extension://mhjfbmdgcfjbbpaeojofohoefgiehjai", marks=pytest.mark.xfail()
+    ),
+    "http://foo.com/blah_blah_(wikipedia)",
+    "http://foo.com/blah_blah_(wikipedia)_(again)",
+    "http://www.foo.co.uk",
+    "http://www.foo.co.uk/",
+    "http://www.foo.co.uk/blah/blah",
+    "http://⌘.ws",
+    "http://⌘.ws/",
+    "http://☺.damowmow.com/",
+    "http://✪df.ws/123",
+    "http://➡.ws/䨹",
+    "http://مثال.إختبار",
+    "http://例子.测试",
+    "http://उदाहरण.परीक्षा",
 ]
 
 URLS_SHOULD_NOT_MATCH = [
@@ -81,7 +93,6 @@ URLS_SHOULD_NOT_MATCH = [
     "http:// shouldfail.com",
     ":// should fail",
     "http://foo.bar/foo(bar)baz quux",
-    "ftps://foo.bar/",
     "http://-error-.invalid/",
     "http://a.b-.co",
     "http://0.0.0.0",
@@ -96,8 +107,8 @@ URLS_SHOULD_NOT_MATCH = [
     "NASDAQ:GOOG",
     "http://-a.b.co",
     pytest.param("foo.com", marks=pytest.mark.xfail()),
-    pytest.param("http://1.1.1.1.1", marks=pytest.mark.xfail()),
-    pytest.param("http://www.foo.bar./", marks=pytest.mark.xfail()),
+    "http://1.1.1.1.1",
+    "http://www.foo.bar./",
 ]
 
 
@@ -111,16 +122,12 @@ SUFFIXES = ['"', ":", ">"]
 
 @pytest.mark.parametrize("url", URLS_SHOULD_MATCH)
 def test_should_match(en_tokenizer, url):
-    token_match = en_tokenizer.token_match
-    if token_match:
-        assert token_match(url)
+    assert en_tokenizer.url_match(url) is not None
 
 
 @pytest.mark.parametrize("url", URLS_SHOULD_NOT_MATCH)
 def test_should_not_match(en_tokenizer, url):
-    token_match = en_tokenizer.token_match
-    if token_match:
-        assert not token_match(url)
+    assert en_tokenizer.url_match(url) is None
 
 
 @pytest.mark.parametrize("url", URLS_BASIC)

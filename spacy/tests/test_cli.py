@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import pytest
 
 from spacy.lang.en import English
-from spacy.cli.converters import conllu2json
+from spacy.cli.converters import conllu2json, iob2json, conll_ner2json
 from spacy.cli.pretrain import make_docs
 
 
@@ -30,6 +30,95 @@ def test_cli_converters_conllu2json():
     assert [t["head"] for t in tokens] == [1, 2, -1, 0]
     assert [t["dep"] for t in tokens] == ["appos", "nsubj", "name", "ROOT"]
     assert [t["ner"] for t in tokens] == ["O", "B-PER", "L-PER", "O"]
+
+
+def test_cli_converters_iob2json():
+    lines = [
+        "I|O like|O London|I-GPE and|O New|B-GPE York|I-GPE City|I-GPE .|O",
+        "I|O like|O London|B-GPE and|O New|B-GPE York|I-GPE City|I-GPE .|O",
+        "I|PRP|O like|VBP|O London|NNP|I-GPE and|CC|O New|NNP|B-GPE York|NNP|I-GPE City|NNP|I-GPE .|.|O",
+        "I|PRP|O like|VBP|O London|NNP|B-GPE and|CC|O New|NNP|B-GPE York|NNP|I-GPE City|NNP|I-GPE .|.|O",
+    ]
+    input_data = "\n".join(lines)
+    converted = iob2json(input_data, n_sents=10)
+    assert len(converted) == 1
+    assert converted[0]["id"] == 0
+    assert len(converted[0]["paragraphs"]) == 1
+    assert len(converted[0]["paragraphs"][0]["sentences"]) == 4
+    for i in range(0, 4):
+        sent = converted[0]["paragraphs"][0]["sentences"][i]
+        assert len(sent["tokens"]) == 8
+        tokens = sent["tokens"]
+        # fmt: off
+        assert [t["orth"] for t in tokens] == ["I", "like", "London", "and", "New", "York", "City", "."]
+        assert [t["ner"] for t in tokens] == ["O", "O", "U-GPE", "O", "B-GPE", "I-GPE", "L-GPE", "O"]
+        # fmt: on
+
+
+def test_cli_converters_conll_ner2json():
+    lines = [
+        "-DOCSTART- -X- O O",
+        "",
+        "I\tO",
+        "like\tO",
+        "London\tB-GPE",
+        "and\tO",
+        "New\tB-GPE",
+        "York\tI-GPE",
+        "City\tI-GPE",
+        ".\tO",
+        "",
+        "I O",
+        "like O",
+        "London B-GPE",
+        "and O",
+        "New B-GPE",
+        "York I-GPE",
+        "City I-GPE",
+        ". O",
+        "",
+        "I PRP O",
+        "like VBP O",
+        "London NNP B-GPE",
+        "and CC O",
+        "New NNP B-GPE",
+        "York NNP I-GPE",
+        "City NNP I-GPE",
+        ". . O",
+        "",
+        "I PRP _ O",
+        "like VBP _ O",
+        "London NNP _ B-GPE",
+        "and CC _ O",
+        "New NNP _ B-GPE",
+        "York NNP _ I-GPE",
+        "City NNP _ I-GPE",
+        ". . _ O",
+        "",
+        "I\tPRP\t_\tO",
+        "like\tVBP\t_\tO",
+        "London\tNNP\t_\tB-GPE",
+        "and\tCC\t_\tO",
+        "New\tNNP\t_\tB-GPE",
+        "York\tNNP\t_\tI-GPE",
+        "City\tNNP\t_\tI-GPE",
+        ".\t.\t_\tO",
+    ]
+    input_data = "\n".join(lines)
+    converted = conll_ner2json(input_data, n_sents=10)
+    print(converted)
+    assert len(converted) == 1
+    assert converted[0]["id"] == 0
+    assert len(converted[0]["paragraphs"]) == 1
+    assert len(converted[0]["paragraphs"][0]["sentences"]) == 5
+    for i in range(0, 5):
+        sent = converted[0]["paragraphs"][0]["sentences"][i]
+        assert len(sent["tokens"]) == 8
+        tokens = sent["tokens"]
+        # fmt: off
+        assert [t["orth"] for t in tokens] == ["I", "like", "London", "and", "New", "York", "City", "."]
+        assert [t["ner"] for t in tokens] == ["O", "O", "U-GPE", "O", "B-GPE", "I-GPE", "L-GPE", "O"]
+        # fmt: on
 
 
 def test_pretrain_make_docs():

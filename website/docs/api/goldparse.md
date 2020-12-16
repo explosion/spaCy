@@ -7,23 +7,23 @@ source: spacy/gold.pyx
 
 ## GoldParse.\_\_init\_\_ {#init tag="method"}
 
-Create a `GoldParse`. Unlike annotations in `entities`, label annotations in
-`cats` can overlap, i.e. a single word can be covered by multiple labelled
-spans. The [`TextCategorizer`](/api/textcategorizer) component expects true
-examples of a label to have the value `1.0`, and negative examples of a label to
-have the value `0.0`. Labels not in the dictionary are treated as missing – the
-gradient for those labels will be zero.
+Create a `GoldParse`. The [`TextCategorizer`](/api/textcategorizer) component
+expects true examples of a label to have the value `1.0`, and negative examples
+of a label to have the value `0.0`. Labels not in the dictionary are treated as
+missing – the gradient for those labels will be zero.
 
-| Name        | Type        | Description                                                                                                                                                                                                                            |
-| ----------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `doc`       | `Doc`       | The document the annotations refer to.                                                                                                                                                                                                 |
-| `words`     | iterable    | A sequence of unicode word strings.                                                                                                                                                                                                    |
-| `tags`      | iterable    | A sequence of strings, representing tag annotations.                                                                                                                                                                                   |
-| `heads`     | iterable    | A sequence of integers, representing syntactic head offsets.                                                                                                                                                                           |
-| `deps`      | iterable    | A sequence of strings, representing the syntactic relation types.                                                                                                                                                                      |
-| `entities`  | iterable    | A sequence of named entity annotations, either as BILUO tag strings, or as `(start_char, end_char, label)` tuples, representing the entity positions. If BILUO tag strings, you can specify missing values by setting the tag to None. |
-| `cats`      | dict        | Labels for text classification. Each key in the dictionary may be a string or an int, or a `(start_char, end_char, label)` tuple, indicating that the label is applied to only part of the document (usually a sentence).              |
-| **RETURNS** | `GoldParse` | The newly constructed object.                                                                                                                                                                                                          |
+| Name              | Type        | Description                                                                                                                                                                                                                            |
+| ----------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `doc`             | `Doc`       | The document the annotations refer to.                                                                                                                                                                                                 |
+| `words`           | iterable    | A sequence of unicode word strings.                                                                                                                                                                                                    |
+| `tags`            | iterable    | A sequence of strings, representing tag annotations.                                                                                                                                                                                   |
+| `heads`           | iterable    | A sequence of integers, representing syntactic head offsets.                                                                                                                                                                           |
+| `deps`            | iterable    | A sequence of strings, representing the syntactic relation types.                                                                                                                                                                      |
+| `entities`        | iterable    | A sequence of named entity annotations, either as BILUO tag strings, or as `(start_char, end_char, label)` tuples, representing the entity positions. If BILUO tag strings, you can specify missing values by setting the tag to None. |
+| `cats`            | dict        | Labels for text classification. Each key in the dictionary is a string label for the category and each value is `1.0` (positive) or `0.0` (negative).                                                                                  |
+| `links`           | dict        | Labels for entity linking. A dict with `(start_char, end_char)` keys, and the values being dicts with `kb_id:value` entries, representing external KB IDs mapped to either `1.0` (positive) or `0.0` (negative).                       |
+| `make_projective` | bool        | Whether to projectivize the dependency tree. Defaults to `False`.                                                                                                                                                                      |
+| **RETURNS**       | `GoldParse` | The newly constructed object.                                                                                                                                                                                                          |
 
 ## GoldParse.\_\_len\_\_ {#len tag="method"}
 
@@ -43,16 +43,17 @@ Whether the provided syntactic annotations form a projective dependency tree.
 
 ## Attributes {#attributes}
 
-| Name                              | Type | Description                                                                                                                                              |
-| --------------------------------- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `words`                           | list | The words.                                                                                                                                               |
-| `tags`                            | list | The part-of-speech tag annotations.                                                                                                                      |
-| `heads`                           | list | The syntactic head annotations.                                                                                                                          |
-| `labels`                          | list | The syntactic relation-type annotations.                                                                                                                 |
-| `ner`                             | list | The named entity annotations as BILUO tags.                                                                                                              |
-| `cand_to_gold`                    | list | The alignment from candidate tokenization to gold tokenization.                                                                                          |
-| `gold_to_cand`                    | list | The alignment from gold tokenization to candidate tokenization.                                                                                          |
-| `cats` <Tag variant="new">2</Tag> | list | Entries in the list should be either a label, or a `(start, end, label)` triple. The tuple form is used for categories applied to spans of the document. |
+| Name                                 | Type | Description                                                                                                              |
+| ------------------------------------ | ---- | ------------------------------------------------------------------------------------------------------------------------ |
+| `words`                              | list | The words.                                                                                                               |
+| `tags`                               | list | The part-of-speech tag annotations.                                                                                      |
+| `heads`                              | list | The syntactic head annotations.                                                                                          |
+| `labels`                             | list | The syntactic relation-type annotations.                                                                                 |
+| `ner`                                | list | The named entity annotations as BILUO tags.                                                                              |
+| `cand_to_gold`                       | list | The alignment from candidate tokenization to gold tokenization.                                                          |
+| `gold_to_cand`                       | list | The alignment from gold tokenization to candidate tokenization.                                                          |
+| `cats` <Tag variant="new">2</Tag>    | dict | Keys in the dictionary are string category labels with values `1.0` or `0.0`.                                            |
+| `links` <Tag variant="new">2.2</Tag> | dict | Keys in the dictionary are `(start_char, end_char)` triples, and the values are dictionaries with `kb_id:value` entries. |
 
 ## Utilities {#util}
 
@@ -60,14 +61,15 @@ Whether the provided syntactic annotations form a projective dependency tree.
 
 Convert a list of Doc objects into the
 [JSON-serializable format](/api/annotation#json-input) used by the
-[`spacy train`](/api/cli#train) command.
+[`spacy train`](/api/cli#train) command. Each input doc will be treated as a
+'paragraph' in the output doc.
 
 > #### Example
 >
 > ```python
 > from spacy.gold import docs_to_json
 >
-> doc = nlp(u"I like London")
+> doc = nlp("I like London")
 > json_data = docs_to_json([doc])
 > ```
 
@@ -75,7 +77,7 @@ Convert a list of Doc objects into the
 | ----------- | ---------------- | ------------------------------------------ |
 | `docs`      | iterable / `Doc` | The `Doc` object(s) to convert.            |
 | `id`        | int              | ID to assign to the JSON. Defaults to `0`. |
-| **RETURNS** | list             | The data in spaCy's JSON format.           |
+| **RETURNS** | dict             | The data in spaCy's JSON format.           |
 
 ### gold.align {#align tag="function"}
 
@@ -148,7 +150,7 @@ single-token entity.
 > ```python
 > from spacy.gold import biluo_tags_from_offsets
 >
-> doc = nlp(u"I like London.")
+> doc = nlp("I like London.")
 > entities = [(7, 13, "LOC")]
 > tags = biluo_tags_from_offsets(doc, entities)
 > assert tags == ["O", "O", "U-LOC", "O"]
@@ -170,7 +172,7 @@ entity offsets.
 > ```python
 > from spacy.gold import offsets_from_biluo_tags
 >
-> doc = nlp(u"I like London.")
+> doc = nlp("I like London.")
 > tags = ["O", "O", "U-LOC", "O"]
 > entities = offsets_from_biluo_tags(doc, tags)
 > assert entities == [(7, 13, "LOC")]
@@ -193,7 +195,7 @@ token-based tags, e.g. to overwrite the `doc.ents`.
 > ```python
 > from spacy.gold import spans_from_biluo_tags
 >
-> doc = nlp(u"I like London.")
+> doc = nlp("I like London.")
 > tags = ["O", "O", "U-LOC", "O"]
 > doc.ents = spans_from_biluo_tags(doc, tags)
 > ```

@@ -8,12 +8,12 @@ from __future__ import unicode_literals
 
 from os import path
 
+import tqdm
 import math
 import numpy
 import plac
 import spacy
 import tensorflow as tf
-import tqdm
 from tensorflow.contrib.tensorboard.plugins.projector import (
     visualize_embeddings,
     ProjectorConfig,

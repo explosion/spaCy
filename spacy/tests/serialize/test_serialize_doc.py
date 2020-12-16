@@ -1,8 +1,12 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import spacy
+
 import pytest
-from spacy.tokens import Doc
+
+from spacy.lang.en import English
+from spacy.tokens import Doc, DocBin
 from spacy.compat import path2str
 
 from ..util import make_tempdir
@@ -20,6 +24,7 @@ def test_serialize_empty_doc(en_vocab):
 
 def test_serialize_doc_roundtrip_bytes(en_vocab):
     doc = Doc(en_vocab, words=["hello", "world"])
+    doc.cats = {"A": 0.5}
     doc_b = doc.to_bytes()
     new_doc = Doc(en_vocab).from_bytes(doc_b)
     assert new_doc.to_bytes() == doc_b
@@ -57,3 +62,22 @@ def test_serialize_doc_exclude(en_vocab):
         doc.to_bytes(user_data=False)
     with pytest.raises(ValueError):
         Doc(en_vocab).from_bytes(doc.to_bytes(), tensor=False)
+
+
+def test_serialize_doc_bin():
+    doc_bin = DocBin(attrs=["LEMMA", "ENT_IOB", "ENT_TYPE"], store_user_data=True)
+    texts = ["Some text", "Lots of texts...", "..."]
+    cats = {"A": 0.5}
+    nlp = English()
+    for doc in nlp.pipe(texts):
+        doc.cats = cats
+        doc_bin.add(doc)
+    bytes_data = doc_bin.to_bytes()
+
+    # Deserialize later, e.g. in a new process
+    nlp = spacy.blank("en")
+    doc_bin = DocBin().from_bytes(bytes_data)
+    reloaded_docs = list(doc_bin.get_docs(nlp.vocab))
+    for i, doc in enumerate(reloaded_docs):
+        assert doc.text == texts[i]
+        assert doc.cats == cats

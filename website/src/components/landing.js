@@ -37,8 +37,8 @@ export const LandingSubtitle = ({ children }) => (
 )
 
 export const LandingGrid = ({ cols = 3, blocks = false, children }) => (
-    <Content className={classNames(classes.grid, { [classes.blocks]: blocks })}>
-        <Grid cols={cols} narrow={blocks}>
+    <Content className={classNames({ [classes.blocks]: blocks })}>
+        <Grid cols={cols} narrow={blocks} className={classes.grid}>
             {children}
         </Grid>
     </Content>
@@ -46,10 +46,17 @@ export const LandingGrid = ({ cols = 3, blocks = false, children }) => (
 
 export const LandingCol = ({ children }) => <div className={classes.col}>{children}</div>
 
-export const LandingCard = ({ title, children }) => (
+export const LandingCard = ({ title, button, url, children }) => (
     <div className={classes.card}>
-        {title && <H3>{title}</H3>}
-        {children}
+        <section className={classes.cardText}>
+            {title && <H3>{title}</H3>}
+            <p>{children}</p>
+        </section>
+        {button && url && (
+            <footer>
+                <LandingButton to={url}>{button}</LandingButton>
+            </footer>
+        )}
     </div>
 )
 

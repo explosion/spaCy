@@ -10,7 +10,7 @@ from .. import attrs
 _like_email = re.compile(r"([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)").match
 _tlds = set(
     "com|org|edu|gov|net|mil|aero|asia|biz|cat|coop|info|int|jobs|mobi|museum|"
-    "name|pro|tel|travel|xxx|ac|ad|ae|af|ag|ai|al|am|an|ao|aq|ar|as|at|au|aw|"
+    "name|pro|tel|travel|xyz|icu|xxx|ac|ad|ae|af|ag|ai|al|am|an|ao|aq|ar|as|at|au|aw|"
     "ax|az|ba|bb|bd|be|bf|bg|bh|bi|bj|bm|bn|bo|br|bs|bt|bv|bw|by|bz|ca|cc|cd|"
     "cf|cg|ch|ci|ck|cl|cm|cn|co|cr|cs|cu|cv|cx|cy|cz|dd|de|dj|dk|dm|do|dz|ec|"
     "ee|eg|eh|er|es|et|eu|fi|fj|fk|fm|fo|fr|ga|gb|gd|ge|gf|gg|gh|gi|gl|gm|gn|"
@@ -186,10 +186,6 @@ def suffix(string):
     return string[-3:]
 
 
-def cluster(string):
-    return 0
-
-
 def is_alpha(string):
     return string.isalpha()
 
@@ -218,20 +214,11 @@ def is_stop(string, stops=set()):
     return string.lower() in stops
 
 
-def is_oov(string):
-    return True
-
-
-def get_prob(string):
-    return -20.0
-
-
 LEX_ATTRS = {
     attrs.LOWER: lower,
     attrs.NORM: lower,
     attrs.PREFIX: prefix,
     attrs.SUFFIX: suffix,
-    attrs.CLUSTER: cluster,
     attrs.IS_ALPHA: is_alpha,
     attrs.IS_DIGIT: is_digit,
     attrs.IS_LOWER: is_lower,
@@ -239,8 +226,6 @@ LEX_ATTRS = {
     attrs.IS_TITLE: is_title,
     attrs.IS_UPPER: is_upper,
     attrs.IS_STOP: is_stop,
-    attrs.IS_OOV: is_oov,
-    attrs.PROB: get_prob,
     attrs.LIKE_EMAIL: like_email,
     attrs.LIKE_NUM: like_num,
     attrs.IS_PUNCT: is_punct,

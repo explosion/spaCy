@@ -8,12 +8,11 @@ python:
 os:
   - linux
 install:
-  - "pip install -r requirements.txt"
-  - "python setup.py build_ext --inplace"
-  - "pip install -e ."
+  - "python -m pip install -U pip setuptools"
+  - "pip install -e . --prefer-binary"
 script:
   - "cat /proc/cpuinfo | grep flags | head -n 1"
-  - "pip install pytest pytest-timeout"
+  - "pip install -r requirements.txt"
   - "python -m pytest --tb=native spacy"
 branches:
   except:

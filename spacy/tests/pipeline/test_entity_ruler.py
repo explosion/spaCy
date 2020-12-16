@@ -21,6 +21,7 @@ def patterns():
         {"label": "HELLO", "pattern": [{"ORTH": "HELLO"}]},
         {"label": "COMPLEX", "pattern": [{"ORTH": "foo", "OP": "*"}]},
         {"label": "TECH_ORG", "pattern": "Apple", "id": "a1"},
+        {"label": "TECH_ORG", "pattern": "Microsoft", "id": "a2"},
     ]
 
 
@@ -137,8 +138,9 @@ def test_entity_ruler_validate(nlp):
     valid_pattern = {"label": "HELLO", "pattern": [{"LOWER": "HELLO"}]}
     invalid_pattern = {"label": "HELLO", "pattern": [{"ASDF": "HELLO"}]}
 
-    # invalid pattern is added without errors without validate
-    ruler.add_patterns([invalid_pattern])
+    # invalid pattern raises error without validate
+    with pytest.raises(ValueError):
+        ruler.add_patterns([invalid_pattern])
 
     # valid pattern is added without errors with validate
     validated_ruler.add_patterns([valid_pattern])
@@ -146,3 +148,40 @@ def test_entity_ruler_validate(nlp):
     # invalid pattern raises error with validate
     with pytest.raises(MatchPatternError):
         validated_ruler.add_patterns([invalid_pattern])
+
+
+def test_entity_ruler_properties(nlp, patterns):
+    ruler = EntityRuler(nlp, patterns=patterns, overwrite_ents=True)
+    assert sorted(ruler.labels) == sorted(["HELLO", "BYE", "COMPLEX", "TECH_ORG"])
+    assert sorted(ruler.ent_ids) == ["a1", "a2"]
+
+
+def test_entity_ruler_overlapping_spans(nlp):
+    ruler = EntityRuler(nlp)
+    patterns = [
+        {"label": "FOOBAR", "pattern": "foo bar"},
+        {"label": "BARBAZ", "pattern": "bar baz"},
+    ]
+    ruler.add_patterns(patterns)
+    doc = ruler(nlp.make_doc("foo bar baz"))
+    assert len(doc.ents) == 1
+    assert doc.ents[0].label_ == "FOOBAR"
+
+
+@pytest.mark.parametrize("n_process", [1, 2])
+def test_entity_ruler_multiprocessing(nlp, n_process):
+    ruler = EntityRuler(nlp)
+    texts = [
+        "I enjoy eating Pizza Hut pizza."
+    ]
+
+    patterns = [
+        {"label": "FASTFOOD", "pattern": "Pizza Hut", "id": "1234"}
+    ]
+
+    ruler.add_patterns(patterns)
+    nlp.add_pipe(ruler)
+
+    for doc in nlp.pipe(texts, n_process=2):
+        for ent in doc.ents:
+            assert ent.ent_id_ == "1234"

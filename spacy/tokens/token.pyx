@@ -10,13 +10,14 @@ cimport numpy as np
 np.import_array()
 
 import numpy
+import warnings
 from thinc.neural.util import get_array_module
 
 from ..typedefs cimport hash_t
 from ..lexeme cimport Lexeme
 from ..attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
 from ..attrs cimport IS_BRACKET, IS_QUOTE, IS_LEFT_PUNCT, IS_RIGHT_PUNCT
-from ..attrs cimport IS_OOV, IS_TITLE, IS_UPPER, IS_CURRENCY, LIKE_URL, LIKE_NUM, LIKE_EMAIL
+from ..attrs cimport IS_TITLE, IS_UPPER, IS_CURRENCY, LIKE_URL, LIKE_NUM, LIKE_EMAIL
 from ..attrs cimport IS_STOP, ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX
 from ..attrs cimport LENGTH, CLUSTER, LEMMA, POS, TAG, DEP
 from ..symbols cimport conj
@@ -24,8 +25,9 @@ from ..symbols cimport conj
 from .. import parts_of_speech
 from .. import util
 from ..compat import is_config
-from ..errors import Errors, Warnings, user_warning, models_warning
+from ..errors import Errors, Warnings
 from .underscore import Underscore, get_ext_args
+from .morphanalysis cimport MorphAnalysis
 
 
 cdef class Token:
@@ -210,13 +212,17 @@ cdef class Token:
             if self.c.lex.orth == other.orth:
                 return 1.0
         if self.vocab.vectors.n_keys == 0:
-            models_warning(Warnings.W007.format(obj="Token"))
+            warnings.warn(Warnings.W007.format(obj="Token"))
         if self.vector_norm == 0 or other.vector_norm == 0:
-            user_warning(Warnings.W008.format(obj="Token"))
+            warnings.warn(Warnings.W008.format(obj="Token"))
             return 0.0
         vector = self.vector
         xp = get_array_module(vector)
         return (xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm))
+
+    @property
+    def morph(self):
+        return MorphAnalysis.from_id(self.vocab, self.c.morph)
 
     @property
     def lex_id(self):
@@ -253,7 +259,7 @@ cdef class Token:
     @property
     def prob(self):
         """RETURNS (float): Smoothed log probability estimate of token type."""
-        return self.c.lex.prob
+        return self.vocab[self.c.lex.orth].prob
 
     @property
     def sentiment(self):
@@ -261,7 +267,7 @@ cdef class Token:
             negativity of the token."""
         if "sentiment" in self.doc.user_token_hooks:
             return self.doc.user_token_hooks["sentiment"](self)
-        return self.c.lex.sentiment
+        return self.vocab[self.c.lex.orth].sentiment
 
     @property
     def lang(self):
@@ -280,7 +286,7 @@ cdef class Token:
     @property
     def cluster(self):
         """RETURNS (int): Brown cluster ID."""
-        return self.c.lex.cluster
+        return self.vocab[self.c.lex.orth].cluster
 
     @property
     def orth(self):
@@ -330,7 +336,7 @@ cdef class Token:
         """
         def __get__(self):
             if self.c.lemma == 0:
-                lemma_ = self.vocab.morphology.lemmatizer.lookup(self.orth_)
+                lemma_ = self.vocab.morphology.lemmatizer.lookup(self.orth_, orth=self.orth)
                 return self.vocab.strings[lemma_]
             else:
                 return self.c.lemma
@@ -488,6 +494,28 @@ cdef class Token:
             else:
                 raise ValueError(Errors.E044.format(value=value))
 
+    property is_sent_end:
+        """A boolean value indicating whether the token ends a sentence.
+        `None` if unknown. Defaults to `True` for the last token in the `Doc`.
+
+        RETURNS (bool / None): Whether the token ends a sentence.
+            None if unknown.
+
+        DOCS: https://spacy.io/api/token#is_sent_end
+        """
+        def __get__(self):
+            if self.i + 1 == len(self.doc):
+                return True
+            elif self.doc[self.i+1].is_sent_start == None:
+                return None
+            elif self.doc[self.i+1].is_sent_start == True:
+                return True
+            else:
+                return False
+
+        def __set__(self, value):
+            raise ValueError(Errors.E196)
+
     @property
     def lefts(self):
         """The leftward immediate children of the word, in the syntactic
@@ -618,6 +646,9 @@ cdef class Token:
             # This function sets the head of self to new_head and updates the
             # counters for left/right dependents and left/right corner for the
             # new and the old head
+            # Check that token is from the same document
+            if self.doc != new_head.doc:
+                raise ValueError(Errors.E191)
             # Do nothing if old head is new head
             if self.i + self.c.head == new_head.i:
                 return
@@ -749,7 +780,8 @@ cdef class Token:
     def ent_iob_(self):
         """IOB code of named entity tag. "B" means the token begins an entity,
         "I" means it is inside an entity, "O" means it is outside an entity,
-        and "" means no entity tag is set.
+        and "" means no entity tag is set. "B" with an empty ent_type
+        means that the token is blocked from further processing by NER.
 
         RETURNS (unicode): IOB code of named entity tag.
         """
@@ -857,7 +889,7 @@ cdef class Token:
         """
         def __get__(self):
             if self.c.lemma == 0:
-                return self.vocab.morphology.lemmatizer.lookup(self.orth_)
+                return self.vocab.morphology.lemmatizer.lookup(self.orth_, orth=self.orth)
             else:
                 return self.vocab.strings[self.c.lemma]
 
@@ -891,7 +923,7 @@ cdef class Token:
     @property
     def is_oov(self):
         """RETURNS (bool): Whether the token is out-of-vocabulary."""
-        return Lexeme.c_check_flag(self.c.lex, IS_OOV)
+        return self.c.lex.orth not in self.vocab.vectors
 
     @property
     def is_stop(self):

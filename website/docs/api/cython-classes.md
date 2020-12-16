@@ -45,9 +45,9 @@ Append a token to the `Doc`. The token can be provided as a
 > from spacy.vocab cimport Vocab
 >
 > doc = Doc(Vocab())
-> lexeme = doc.vocab.get(u'hello')
+> lexeme = doc.vocab.get("hello")
 > doc.push_back(lexeme, True)
-> assert doc.text == u'hello '
+> assert doc.text == "hello "
 > ```
 
 | Name         | Type            | Description                               |
@@ -164,7 +164,7 @@ vocabulary.
 > #### Example
 >
 > ```python
-> lexeme = vocab.get(vocab.mem, u'hello')
+> lexeme = vocab.get(vocab.mem, "hello")
 > ```
 
 | Name        | Type             | Description                                                                                 |

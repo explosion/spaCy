@@ -8,6 +8,7 @@ from ..attrs cimport attr_id_t
 
 
 cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil
+cdef attr_t get_token_attr_for_matcher(const TokenC* token, attr_id_t feat_name) nogil
 
 
 ctypedef const LexemeC* const_Lexeme_ptr
@@ -19,6 +20,9 @@ ctypedef fused LexemeOrToken:
 
 
 cdef int set_children_from_heads(TokenC* tokens, int length) except -1
+
+
+cdef int _set_lr_kids_and_edges(TokenC* tokens, int length, int loop_count) except -1
 
 
 cdef int token_by_start(const TokenC* tokens, int length, int start_char) except -2

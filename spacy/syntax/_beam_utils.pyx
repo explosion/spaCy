@@ -69,7 +69,8 @@ cdef class ParserBeam(object):
         cdef StateC* st
         for state in states:
             beam = Beam(self.moves.n_moves, width, min_density=density)
-            beam.initialize(self.moves.init_beam_state, state.c.length,
+            beam.initialize(self.moves.init_beam_state,
+                            self.moves.del_beam_state, state.c.length,
                             state.c._sent)
             for i in range(beam.width):
                 st = <StateC*>beam.at(i)
@@ -306,24 +307,4 @@ def get_gradient(nr_class, beam_maps, histories, losses):
 
 
 def cleanup_beam(Beam beam):
-    cdef StateC* state
-    # Once parsing has finished, states in beam may not be unique. Is this
-    # correct?
-    seen = set()
-    for i in range(beam.width):
-        addr = <size_t>beam._parents[i].content
-        if addr not in seen:
-            state = <StateC*>addr
-            del state
-            seen.add(addr)
-        else:
-            raise ValueError(Errors.E023.format(addr=addr, i=i))
-        addr = <size_t>beam._states[i].content
-        if addr not in seen:
-            state = <StateC*>addr
-            del state
-            seen.add(addr)
-        else:
-            raise ValueError(Errors.E023.format(addr=addr, i=i))
-
-
+    del beam

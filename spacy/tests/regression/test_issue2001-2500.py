@@ -48,7 +48,7 @@ def test_issue2203(en_vocab):
     tag_ids = [en_vocab.strings.add(tag) for tag in tags]
     lemma_ids = [en_vocab.strings.add(lemma) for lemma in lemmas]
     doc = Doc(en_vocab, words=words)
-    # Work around lemma corrpution problem and set lemmas after tags
+    # Work around lemma corruption problem and set lemmas after tags
     doc.from_array("TAG", numpy.array(tag_ids, dtype="uint64"))
     doc.from_array("LEMMA", numpy.array(lemma_ids, dtype="uint64"))
     assert [t.tag_ for t in doc] == tags
@@ -128,7 +128,7 @@ def test_issue2464(en_vocab):
     """Test problem with successive ?. This is the same bug, so putting it here."""
     matcher = Matcher(en_vocab)
     doc = Doc(en_vocab, words=["a", "b"])
-    matcher.add("4", None, [{"OP": "?"}, {"OP": "?"}])
+    matcher.add("4", [[{"OP": "?"}, {"OP": "?"}]])
     matches = matcher(doc)
     assert len(matches) == 3
 

@@ -36,7 +36,9 @@ cdef WeightsC get_c_weights(model) except *
 
 cdef SizesC get_c_sizes(model, int batch_size) except *
 
-cdef void resize_activations(ActivationsC* A, SizesC n) nogil
+cdef ActivationsC alloc_activations(SizesC n) nogil
+
+cdef void free_activations(const ActivationsC* A) nogil
 
 cdef void predict_states(ActivationsC* A, StateC** states,
         const WeightsC* W, SizesC n) nogil

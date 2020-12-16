@@ -1,6 +1,7 @@
 """Prevent catastrophic forgetting with rehearsal updates."""
 import plac
 import random
+import warnings
 import srsly
 import spacy
 from spacy.gold import GoldParse
@@ -63,9 +64,13 @@ def main(model_name, unlabelled_loc):
     optimizer.b2 = 0.0
 
     # get names of other pipes to disable them during training
-    other_pipes = [pipe for pipe in nlp.pipe_names if pipe != "ner"]
+    pipe_exceptions = ["ner", "trf_wordpiecer", "trf_tok2vec"]
+    other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipe_exceptions]
     sizes = compounding(1.0, 4.0, 1.001)
-    with nlp.disable_pipes(*other_pipes):
+    with nlp.disable_pipes(*other_pipes), warnings.catch_warnings():
+        # show warnings for misaligned entity spans once
+        warnings.filterwarnings("once", category=UserWarning, module='spacy')
+
         for itn in range(n_iter):
             random.shuffle(TRAIN_DATA)
             random.shuffle(raw_docs)
@@ -80,14 +85,12 @@ def main(model_name, unlabelled_loc):
                 nlp.rehearse(raw_batch, sgd=optimizer, losses=r_losses)
             print("Losses", losses)
             print("R. Losses", r_losses)
-    print(nlp.get_pipe('ner').model.unseen_classes)
+    print(nlp.get_pipe("ner").model.unseen_classes)
     test_text = "Do you like horses?"
     doc = nlp(test_text)
     print("Entities in '%s'" % test_text)
     for ent in doc.ents:
         print(ent.label_, ent.text)
-
-
 
 
 if __name__ == "__main__":

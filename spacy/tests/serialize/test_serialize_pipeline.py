@@ -41,8 +41,8 @@ def test_serialize_parser_roundtrip_bytes(en_vocab, Parser):
     parser.model, _ = parser.Model(10)
     new_parser = Parser(en_vocab)
     new_parser.model, _ = new_parser.Model(10)
-    new_parser = new_parser.from_bytes(parser.to_bytes())
-    assert new_parser.to_bytes() == parser.to_bytes()
+    new_parser = new_parser.from_bytes(parser.to_bytes(exclude=["vocab"]))
+    assert new_parser.to_bytes(exclude=["vocab"]) == parser.to_bytes(exclude=["vocab"])
 
 
 @pytest.mark.parametrize("Parser", test_parsers)
@@ -55,8 +55,8 @@ def test_serialize_parser_roundtrip_disk(en_vocab, Parser):
         parser_d = Parser(en_vocab)
         parser_d.model, _ = parser_d.Model(0)
         parser_d = parser_d.from_disk(file_path)
-        parser_bytes = parser.to_bytes(exclude=["model"])
-        parser_d_bytes = parser_d.to_bytes(exclude=["model"])
+        parser_bytes = parser.to_bytes(exclude=["model", "vocab"])
+        parser_d_bytes = parser_d.to_bytes(exclude=["model", "vocab"])
         assert parser_bytes == parser_d_bytes
 
 
@@ -64,7 +64,7 @@ def test_to_from_bytes(parser, blank_parser):
     assert parser.model is not True
     assert blank_parser.model is True
     assert blank_parser.moves.n_moves != parser.moves.n_moves
-    bytes_data = parser.to_bytes()
+    bytes_data = parser.to_bytes(exclude=["vocab"])
     blank_parser.from_bytes(bytes_data)
     assert blank_parser.model is not True
     assert blank_parser.moves.n_moves == parser.moves.n_moves
@@ -97,9 +97,9 @@ def test_serialize_tagger_roundtrip_disk(en_vocab, taggers):
 def test_serialize_tensorizer_roundtrip_bytes(en_vocab):
     tensorizer = Tensorizer(en_vocab)
     tensorizer.model = tensorizer.Model()
-    tensorizer_b = tensorizer.to_bytes()
+    tensorizer_b = tensorizer.to_bytes(exclude=["vocab"])
     new_tensorizer = Tensorizer(en_vocab).from_bytes(tensorizer_b)
-    assert new_tensorizer.to_bytes() == tensorizer_b
+    assert new_tensorizer.to_bytes(exclude=["vocab"]) == tensorizer_b
 
 
 def test_serialize_tensorizer_roundtrip_disk(en_vocab):
@@ -109,13 +109,15 @@ def test_serialize_tensorizer_roundtrip_disk(en_vocab):
         file_path = d / "tensorizer"
         tensorizer.to_disk(file_path)
         tensorizer_d = Tensorizer(en_vocab).from_disk(file_path)
-        assert tensorizer.to_bytes() == tensorizer_d.to_bytes()
+        assert tensorizer.to_bytes(exclude=["vocab"]) == tensorizer_d.to_bytes(
+            exclude=["vocab"]
+        )
 
 
 def test_serialize_textcat_empty(en_vocab):
     # See issue #1105
     textcat = TextCategorizer(en_vocab, labels=["ENTITY", "ACTION", "MODIFIER"])
-    textcat.to_bytes()
+    textcat.to_bytes(exclude=["vocab"])
 
 
 @pytest.mark.parametrize("Parser", test_parsers)
@@ -128,13 +130,17 @@ def test_serialize_pipe_exclude(en_vocab, Parser):
     parser = Parser(en_vocab)
     parser.model, _ = parser.Model(0)
     parser.cfg["foo"] = "bar"
-    new_parser = get_new_parser().from_bytes(parser.to_bytes())
+    new_parser = get_new_parser().from_bytes(parser.to_bytes(exclude=["vocab"]))
     assert "foo" in new_parser.cfg
-    new_parser = get_new_parser().from_bytes(parser.to_bytes(), exclude=["cfg"])
+    new_parser = get_new_parser().from_bytes(
+        parser.to_bytes(exclude=["vocab"]), exclude=["cfg"]
+    )
     assert "foo" not in new_parser.cfg
-    new_parser = get_new_parser().from_bytes(parser.to_bytes(exclude=["cfg"]))
+    new_parser = get_new_parser().from_bytes(
+        parser.to_bytes(exclude=["cfg"]), exclude=["vocab"]
+    )
     assert "foo" not in new_parser.cfg
     with pytest.raises(ValueError):
-        parser.to_bytes(cfg=False)
+        parser.to_bytes(cfg=False, exclude=["vocab"])
     with pytest.raises(ValueError):
-        get_new_parser().from_bytes(parser.to_bytes(), cfg=False)
+        get_new_parser().from_bytes(parser.to_bytes(exclude=["vocab"]), cfg=False)

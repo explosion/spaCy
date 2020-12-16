@@ -5,6 +5,7 @@ import os
 import subprocess
 import sys
 import contextlib
+import numpy
 from distutils.command.build_ext import build_ext
 from distutils.sysconfig import get_python_inc
 import distutils.util
@@ -27,14 +28,10 @@ def is_new_osx():
         return False
 
 
-PACKAGE_DATA = {"": ["*.pyx", "*.pxd", "*.txt", "*.tokens", "*.json"]}
-
-
 PACKAGES = find_packages()
 
 
 MOD_NAMES = [
-    "spacy._align",
     "spacy.parts_of_speech",
     "spacy.strings",
     "spacy.lexeme",
@@ -43,6 +40,7 @@ MOD_NAMES = [
     "spacy.kb",
     "spacy.morphology",
     "spacy.pipeline.pipes",
+    "spacy.pipeline.morphologizer",
     "spacy.syntax.stateclass",
     "spacy.syntax._state",
     "spacy.tokenizer",
@@ -56,6 +54,7 @@ MOD_NAMES = [
     "spacy.tokens.doc",
     "spacy.tokens.span",
     "spacy.tokens.token",
+    "spacy.tokens.morphanalysis",
     "spacy.tokens._retokenize",
     "spacy.matcher.matcher",
     "spacy.matcher.phrasematcher",
@@ -84,22 +83,6 @@ if is_new_osx():
     # g++ (used by unix compiler on mac) links to libstdc++ as a default lib.
     # See: https://stackoverflow.com/questions/1653047/avoid-linking-to-libstdc
     LINK_OPTIONS["other"].append("-nodefaultlibs")
-
-
-USE_OPENMP_DEFAULT = "0" if sys.platform != "darwin" else None
-if os.environ.get("USE_OPENMP", USE_OPENMP_DEFAULT) == "1":
-    if sys.platform == "darwin":
-        COMPILE_OPTIONS["other"].append("-fopenmp")
-        LINK_OPTIONS["other"].append("-fopenmp")
-        PACKAGE_DATA["spacy.platform.darwin.lib"] = ["*.dylib"]
-        PACKAGES.append("spacy.platform.darwin.lib")
-
-    elif sys.platform == "win32":
-        COMPILE_OPTIONS["msvc"].append("/openmp")
-
-    else:
-        COMPILE_OPTIONS["other"].append("-fopenmp")
-        LINK_OPTIONS["other"].append("-fopenmp")
 
 
 # By subclassing build_extensions we have the actual compiler that will be used which is really known only after finalize_options
@@ -136,6 +119,55 @@ def is_source_release(path):
     return os.path.exists(os.path.join(path, "PKG-INFO"))
 
 
+# Include the git version in the build (adapted from NumPy)
+# Copyright (c) 2005-2020, NumPy Developers.
+# BSD 3-Clause license, see licenses/3rd_party_licenses.txt
+def write_git_info_py(filename="spacy/git_info.py"):
+    def _minimal_ext_cmd(cmd):
+        # construct minimal environment
+        env = {}
+        for k in ["SYSTEMROOT", "PATH", "HOME"]:
+            v = os.environ.get(k)
+            if v is not None:
+                env[k] = v
+        # LANGUAGE is used on win32
+        env["LANGUAGE"] = "C"
+        env["LANG"] = "C"
+        env["LC_ALL"] = "C"
+        out = subprocess.check_output(cmd, stderr=subprocess.STDOUT, env=env)
+        return out
+
+    git_version = "Unknown"
+    if os.path.exists(".git"):
+        try:
+            out = _minimal_ext_cmd(["git", "rev-parse", "--short", "HEAD"])
+            git_version = out.strip().decode("ascii")
+        except:
+            pass
+    elif os.path.exists(filename):
+        # must be a source distribution, use existing version file
+        try:
+            a = open(filename, "r")
+            lines = a.readlines()
+            git_version = lines[-1].split('"')[1]
+        except:
+            pass
+        finally:
+            a.close()
+
+    text = """# THIS FILE IS GENERATED FROM SPACY SETUP.PY
+#
+GIT_VERSION = "%(git_version)s"
+"""
+    a = open(filename, "w")
+    try:
+        a.write(
+            text % {"git_version": git_version,}
+        )
+    finally:
+        a.close()
+
+
 def clean(path):
     for name in MOD_NAMES:
         name = name.replace(".", "/")
@@ -158,9 +190,11 @@ def chdir(new_dir):
 
 
 def setup_package():
+    write_git_info_py()
+
     root = os.path.abspath(os.path.dirname(__file__))
 
-    if len(sys.argv) > 1 and sys.argv[1] == "clean":
+    if hasattr(sys, "argv") and len(sys.argv) > 1 and sys.argv[1] == "clean":
         return clean(root)
 
     with chdir(root):
@@ -168,10 +202,8 @@ def setup_package():
             about = {}
             exec(f.read(), about)
 
-        with io.open(os.path.join(root, "README.md"), encoding="utf8") as f:
-            readme = f.read()
-
         include_dirs = [
+            numpy.get_include(),
             get_python_inc(plat_specific=True),
             os.path.join(root, "include"),
         ]
@@ -186,7 +218,6 @@ def setup_package():
         for mod_name in MOD_NAMES:
             mod_path = mod_name.replace(".", "/") + ".cpp"
             extra_link_args = []
-            extra_compile_args = []
             # ???
             # Imported from patch from @mikepb
             # See Issue #267. Running blind here...
@@ -210,64 +241,9 @@ def setup_package():
 
         setup(
             name="spacy",
-            zip_safe=False,
             packages=PACKAGES,
-            package_data=PACKAGE_DATA,
-            description=about["__summary__"],
-            long_description=readme,
-            long_description_content_type="text/markdown",
-            author=about["__author__"],
-            author_email=about["__email__"],
             version=about["__version__"],
-            url=about["__uri__"],
-            license=about["__license__"],
             ext_modules=ext_modules,
-            scripts=["bin/spacy"],
-            install_requires=[
-                "numpy>=1.15.0",
-                "murmurhash>=0.28.0,<1.1.0",
-                "cymem>=2.0.2,<2.1.0",
-                "preshed>=2.0.1,<2.1.0",
-                "thinc>=7.0.8,<7.1.0",
-                "blis>=0.2.2,<0.3.0",
-                "plac<1.0.0,>=0.9.6",
-                "requests>=2.13.0,<3.0.0",
-                "wasabi>=0.2.0,<1.1.0",
-                "srsly>=0.0.6,<1.1.0",
-                'pathlib==1.0.1; python_version < "3.4"',
-            ],
-            setup_requires=["wheel"],
-            extras_require={
-                "cuda": ["thinc_gpu_ops>=0.0.1,<0.1.0", "cupy>=5.0.0b4"],
-                "cuda80": ["thinc_gpu_ops>=0.0.1,<0.1.0", "cupy-cuda80>=5.0.0b4"],
-                "cuda90": ["thinc_gpu_ops>=0.0.1,<0.1.0", "cupy-cuda90>=5.0.0b4"],
-                "cuda91": ["thinc_gpu_ops>=0.0.1,<0.1.0", "cupy-cuda91>=5.0.0b4"],
-                "cuda92": ["thinc_gpu_ops>=0.0.1,<0.1.0", "cupy-cuda92>=5.0.0b4"],
-                "cuda100": ["thinc_gpu_ops>=0.0.1,<0.1.0", "cupy-cuda100>=5.0.0b4"],
-                # Language tokenizers with external dependencies
-                "ja": ["mecab-python3==0.7"],
-                "ko": ["natto-py==0.9.0"],
-            },
-            python_requires=">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*",
-            classifiers=[
-                "Development Status :: 5 - Production/Stable",
-                "Environment :: Console",
-                "Intended Audience :: Developers",
-                "Intended Audience :: Science/Research",
-                "License :: OSI Approved :: MIT License",
-                "Operating System :: POSIX :: Linux",
-                "Operating System :: MacOS :: MacOS X",
-                "Operating System :: Microsoft :: Windows",
-                "Programming Language :: Cython",
-                "Programming Language :: Python :: 2",
-                "Programming Language :: Python :: 2.7",
-                "Programming Language :: Python :: 3",
-                "Programming Language :: Python :: 3.4",
-                "Programming Language :: Python :: 3.5",
-                "Programming Language :: Python :: 3.6",
-                "Programming Language :: Python :: 3.7",
-                "Topic :: Scientific/Engineering",
-            ],
             cmdclass={"build_ext": build_ext_subclass},
         )
 

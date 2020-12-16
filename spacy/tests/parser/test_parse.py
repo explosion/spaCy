@@ -148,3 +148,20 @@ def test_parser_arc_eager_finalize_state(en_tokenizer, en_parser):
     assert tokens[4].left_edge.i == 0
     assert tokens[4].right_edge.i == 4
     assert tokens[4].head.i == 4
+
+
+def test_parser_set_sent_starts(en_vocab):
+    # fmt: off
+    words = ['Ein', 'Satz', '.', 'Außerdem', 'ist', 'Zimmer', 'davon', 'überzeugt', ',', 'dass', 'auch', 'epige-', '\n', 'netische', 'Mechanismen', 'eine', 'Rolle', 'spielen', ',', 'also', 'Vorgänge', ',', 'die', '\n', 'sich', 'darauf', 'auswirken', ',', 'welche', 'Gene', 'abgelesen', 'werden', 'und', '\n', 'welche', 'nicht', '.', '\n']
+    heads = [1, 0, -1, 27, 0, -1, 1, -3, -1, 8, 4, 3, -1, 1, 3, 1, 1, -11, -1, 1, -9, -1, 4, -1, 2, 1, -6, -1, 1, 2, 1, -6, -1, -1, -17, -31, -32, -1]
+    deps = ['nk', 'ROOT', 'punct', 'mo', 'ROOT', 'sb', 'op', 'pd', 'punct', 'cp', 'mo', 'nk', '', 'nk', 'sb', 'nk', 'oa', 're', 'punct', 'mo', 'app', 'punct', 'sb', '', 'oa', 'op', 'rc', 'punct', 'nk', 'sb', 'oc', 're', 'cd', '', 'oa', 'ng', 'punct', '']
+    # fmt: on
+    doc = get_doc(en_vocab, words=words, deps=deps, heads=heads)
+    for i in range(len(words)):
+        if i == 0 or i == 3:
+            assert doc[i].is_sent_start is True
+        else:
+            assert doc[i].is_sent_start is None
+    for sent in doc.sents:
+        for token in sent:
+            assert token.head in sent

@@ -3,9 +3,17 @@ from __future__ import unicode_literals
 
 import uuid
 
-from .templates import TPL_DEP_SVG, TPL_DEP_WORDS, TPL_DEP_ARCS, TPL_ENTS
+from .templates import (
+    TPL_DEP_SVG,
+    TPL_DEP_WORDS,
+    TPL_DEP_WORDS_LEMMA,
+    TPL_DEP_ARCS,
+    TPL_ENTS,
+)
 from .templates import TPL_ENT, TPL_ENT_RTL, TPL_FIGURE, TPL_TITLE, TPL_PAGE
-from ..util import minify_html, escape_html, get_entry_points
+from ..util import minify_html, escape_html, registry
+from ..errors import Errors
+
 
 DEFAULT_LANG = "en"
 DEFAULT_DIR = "ltr"
@@ -81,7 +89,10 @@ class DependencyRenderer(object):
         self.width = self.offset_x + len(words) * self.distance
         self.height = self.offset_y + 3 * self.word_spacing
         self.id = render_id
-        words = [self.render_word(w["text"], w["tag"], i) for i, w in enumerate(words)]
+        words = [
+            self.render_word(w["text"], w["tag"], w.get("lemma", None), i)
+            for i, w in enumerate(words)
+        ]
         arcs = [
             self.render_arrow(a["label"], a["start"], a["end"], a["dir"], i)
             for i, a in enumerate(arcs)
@@ -99,7 +110,9 @@ class DependencyRenderer(object):
             lang=self.lang,
         )
 
-    def render_word(self, text, tag, i):
+    def render_word(
+        self, text, tag, lemma, i,
+    ):
         """Render individual word.
 
         text (unicode): Word text.
@@ -112,6 +125,10 @@ class DependencyRenderer(object):
         if self.direction == "rtl":
             x = self.width - x
         html_text = escape_html(text)
+        if lemma is not None:
+            return TPL_DEP_WORDS_LEMMA.format(
+                text=html_text, tag=tag, lemma=lemma, x=x, y=y
+            )
         return TPL_DEP_WORDS.format(text=html_text, tag=tag, x=x, y=y)
 
     def render_arrow(self, label, start, end, direction, i):
@@ -124,6 +141,9 @@ class DependencyRenderer(object):
         i (int): Unique ID, typically arrow index.
         RETURNS (unicode): Rendered SVG markup.
         """
+        if start < 0 or end < 0:
+            error_args = dict(start=start, end=end, label=label, dir=direction)
+            raise ValueError(Errors.E157.format(**error_args))
         level = self.levels.index(end - start) + 1
         x_start = self.offset_x + start * self.distance + self.arrow_spacing
         if self.direction == "rtl":
@@ -237,7 +257,7 @@ class EntityRenderer(object):
             "CARDINAL": "#e4e7d2",
             "PERCENT": "#e4e7d2",
         }
-        user_colors = get_entry_points("spacy_displacy_colors")
+        user_colors = registry.displacy_colors.get_all()
         for user_color in user_colors.values():
             colors.update(user_color)
         colors.update(options.get("colors", {}))
@@ -246,6 +266,15 @@ class EntityRenderer(object):
         self.ents = options.get("ents", None)
         self.direction = DEFAULT_DIR
         self.lang = DEFAULT_LANG
+
+        template = options.get("template")
+        if template:
+            self.ent_template = template
+        else:
+            if self.direction == "rtl":
+                self.ent_template = TPL_ENT_RTL
+            else:
+                self.ent_template = TPL_ENT
 
     def render(self, parsed, page=False, minify=False):
         """Render complete markup.
@@ -284,6 +313,7 @@ class EntityRenderer(object):
             label = span["label"]
             start = span["start"]
             end = span["end"]
+            additional_params = span.get("params", {})
             entity = escape_html(text[start:end])
             fragments = text[offset:start].split("\n")
             for i, fragment in enumerate(fragments):
@@ -293,14 +323,16 @@ class EntityRenderer(object):
             if self.ents is None or label.upper() in self.ents:
                 color = self.colors.get(label.upper(), self.default_color)
                 ent_settings = {"label": label, "text": entity, "bg": color}
-                if self.direction == "rtl":
-                    markup += TPL_ENT_RTL.format(**ent_settings)
-                else:
-                    markup += TPL_ENT.format(**ent_settings)
+                ent_settings.update(additional_params)
+                markup += self.ent_template.format(**ent_settings)
             else:
                 markup += entity
             offset = end
-        markup += escape_html(text[offset:])
+        fragments = text[offset:].split("\n")
+        for i, fragment in enumerate(fragments):
+            markup += escape_html(fragment)
+            if len(fragments) > 1 and i != len(fragments) - 1:
+                markup += "</br>"
         markup = TPL_ENTS.format(content=markup, dir=self.direction)
         if title:
             markup = TPL_TITLE.format(title=title) + markup

@@ -66,3 +66,39 @@ def test_doc_array_to_from_string_attrs(en_vocab, attrs):
     words = ["An", "example", "sentence"]
     doc = Doc(en_vocab, words=words)
     Doc(en_vocab, words=words).from_array(attrs, doc.to_array(attrs))
+
+
+def test_doc_array_idx(en_vocab):
+    """Test that Doc.to_array can retrieve token start indices"""
+    words = ["An", "example", "sentence"]
+    offsets = Doc(en_vocab, words=words).to_array("IDX")
+    assert offsets[0] == 0
+    assert offsets[1] == 3
+    assert offsets[2] == 11
+
+
+def test_doc_from_array_heads_in_bounds(en_vocab):
+    """Test that Doc.from_array doesn't set heads that are out of bounds."""
+    words = ["This", "is", "a", "sentence", "."]
+    doc = Doc(en_vocab, words=words)
+    for token in doc:
+        token.head = doc[0]
+
+    # correct
+    arr = doc.to_array(["HEAD"])
+    doc_from_array = Doc(en_vocab, words=words)
+    doc_from_array.from_array(["HEAD"], arr)
+
+    # head before start
+    arr = doc.to_array(["HEAD"])
+    arr[0] = -1
+    doc_from_array = Doc(en_vocab, words=words)
+    with pytest.raises(ValueError):
+        doc_from_array.from_array(["HEAD"], arr)
+
+    # head after end
+    arr = doc.to_array(["HEAD"])
+    arr[0] = 5
+    doc_from_array = Doc(en_vocab, words=words)
+    with pytest.raises(ValueError):
+        doc_from_array.from_array(["HEAD"], arr)

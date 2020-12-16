@@ -2,7 +2,7 @@
 # coding: utf8
 """Example of training an additional entity type
 
-This script shows how to add a new entity type to an existing pre-trained NER
+This script shows how to add a new entity type to an existing pretrained NER
 model. To keep the example short and simple, only four sentences are provided
 as examples. In practice, you'll need many more — a few hundred would be a
 good start. You will also likely need to mix in examples of other entity
@@ -24,12 +24,13 @@ For more details, see the documentation:
 * NER: https://spacy.io/usage/linguistic-features#named-entities
 
 Compatible with: spaCy v2.1.0+
-Last tested with: v2.1.0
+Last tested with: v2.2.4
 """
 from __future__ import unicode_literals, print_function
 
 import plac
 import random
+import warnings
 from pathlib import Path
 import spacy
 from spacy.util import minibatch, compounding
@@ -95,8 +96,13 @@ def main(model=None, new_model_name="animal", output_dir=None, n_iter=30):
         optimizer = nlp.resume_training()
     move_names = list(ner.move_names)
     # get names of other pipes to disable them during training
-    other_pipes = [pipe for pipe in nlp.pipe_names if pipe != "ner"]
-    with nlp.disable_pipes(*other_pipes):  # only train NER
+    pipe_exceptions = ["ner", "trf_wordpiecer", "trf_tok2vec"]
+    other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipe_exceptions]
+    # only train NER
+    with nlp.disable_pipes(*other_pipes), warnings.catch_warnings():
+        # show warnings for misaligned entity spans once
+        warnings.filterwarnings("once", category=UserWarning, module='spacy')
+
         sizes = compounding(1.0, 4.0, 1.001)
         # batch up the examples using spaCy's minibatch
         for itn in range(n_iter):

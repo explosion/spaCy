@@ -1,12 +1,12 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from ...symbols import POS, PUNCT, ADJ, CONJ, SCONJ, SYM, NUM, DET, ADV, ADP, X
+from ...symbols import POS, PUNCT, ADJ, CONJ, CCONJ, SCONJ, SYM, NUM, DET, ADV, ADP, X
 from ...symbols import VERB, NOUN, PROPN, PART, INTJ, PRON, AUX
 
 
-# Tags are a combination of POS and morphological features from a yet
-# unpublished dataset developed by Schibsted, Nasjonalbiblioteket and LTG. The
+# Tags are a combination of POS and morphological features from a
+# https://github.com/ltgoslo/norne developed by Schibsted, Nasjonalbiblioteket and LTG. The
 # data format is .conllu and follows the Universal Dependencies annotation.
 # (There are some annotation differences compared to this dataset:
 # https://github.com/UniversalDependencies/UD_Norwegian-Bokmaal
@@ -467,4 +467,295 @@ TAG_MAP = {
     "VERB__VerbForm=Part": {"morph": "VerbForm=Part", POS: VERB},
     "VERB___": {"morph": "_", POS: VERB},
     "X___": {"morph": "_", POS: X},
+    "CCONJ___": {"morph": "_", POS: CCONJ},
+    "ADJ__Abbr=Yes": {"morph": "Abbr=Yes", POS: ADJ},
+    "ADJ__Abbr=Yes|Degree=Pos": {"morph": "Abbr=Yes|Degree=Pos", POS: ADJ},
+    "ADJ__Case=Gen|Definite=Def|Number=Sing|VerbForm=Part": {
+        "morph": "Case=Gen|Definite=Def|Number=Sing|VerbForm=Part",
+        POS: ADJ,
+    },
+    "ADJ__Definite=Def|Number=Sing|VerbForm=Part": {
+        "morph": "Definite=Def|Number=Sing|VerbForm=Part",
+        POS: ADJ,
+    },
+    "ADJ__Definite=Ind|Gender=Masc|Number=Sing|VerbForm=Part": {
+        "morph": "Definite=Ind|Gender=Masc|Number=Sing|VerbForm=Part",
+        POS: ADJ,
+    },
+    "ADJ__Definite=Ind|Gender=Neut|Number=Sing|VerbForm=Part": {
+        "morph": "Definite=Ind|Gender=Neut|Number=Sing|VerbForm=Part",
+        POS: ADJ,
+    },
+    "ADJ__Definite=Ind|Number=Sing|VerbForm=Part": {
+        "morph": "Definite=Ind|Number=Sing|VerbForm=Part",
+        POS: ADJ,
+    },
+    "ADJ__Number=Sing|VerbForm=Part": {"morph": "Number=Sing|VerbForm=Part", POS: ADJ},
+    "ADJ__VerbForm=Part": {"morph": "VerbForm=Part", POS: ADJ},
+    "ADP__Abbr=Yes": {"morph": "Abbr=Yes", POS: ADP},
+    "ADV__Abbr=Yes": {"morph": "Abbr=Yes", POS: ADV},
+    "DET__Case=Gen|Gender=Masc|Number=Sing|PronType=Art": {
+        "morph": "Case=Gen|Gender=Masc|Number=Sing|PronType=Art",
+        POS: DET,
+    },
+    "DET__Case=Gen|Number=Plur|PronType=Tot": {
+        "morph": "Case=Gen|Number=Plur|PronType=Tot",
+        POS: DET,
+    },
+    "DET__Definite=Def|PronType=Prs": {"morph": "Definite=Def|PronType=Prs", POS: DET},
+    "DET__Definite=Ind|Gender=Fem|Number=Sing|PronType=Prs": {
+        "morph": "Definite=Ind|Gender=Fem|Number=Sing|PronType=Prs",
+        POS: DET,
+    },
+    "DET__Definite=Ind|Gender=Masc|Number=Sing|PronType=Prs": {
+        "morph": "Definite=Ind|Gender=Masc|Number=Sing|PronType=Prs",
+        POS: DET,
+    },
+    "DET__Definite=Ind|Gender=Neut|Number=Sing|PronType=Prs": {
+        "morph": "Definite=Ind|Gender=Neut|Number=Sing|PronType=Prs",
+        POS: DET,
+    },
+    "DET__Gender=Fem|Number=Sing|PronType=Art": {
+        "morph": "Gender=Fem|Number=Sing|PronType=Art",
+        POS: DET,
+    },
+    "DET__Gender=Fem|Number=Sing|PronType=Ind": {
+        "morph": "Gender=Fem|Number=Sing|PronType=Ind",
+        POS: DET,
+    },
+    "DET__Gender=Fem|Number=Sing|PronType=Prs": {
+        "morph": "Gender=Fem|Number=Sing|PronType=Prs",
+        POS: DET,
+    },
+    "DET__Gender=Fem|Number=Sing|PronType=Tot": {
+        "morph": "Gender=Fem|Number=Sing|PronType=Tot",
+        POS: DET,
+    },
+    "DET__Gender=Masc|Number=Sing|Polarity=Neg|PronType=Neg": {
+        "morph": "Gender=Masc|Number=Sing|Polarity=Neg|PronType=Neg",
+        POS: DET,
+    },
+    "DET__Gender=Masc|Number=Sing|PronType=Art": {
+        "morph": "Gender=Masc|Number=Sing|PronType=Art",
+        POS: DET,
+    },
+    "DET__Gender=Masc|Number=Sing|PronType=Ind": {
+        "morph": "Gender=Masc|Number=Sing|PronType=Ind",
+        POS: DET,
+    },
+    "DET__Gender=Masc|Number=Sing|PronType=Tot": {
+        "morph": "Gender=Masc|Number=Sing|PronType=Tot",
+        POS: DET,
+    },
+    "DET__Gender=Neut|Number=Sing|Polarity=Neg|PronType=Neg": {
+        "morph": "Gender=Neut|Number=Sing|Polarity=Neg|PronType=Neg",
+        POS: DET,
+    },
+    "DET__Gender=Neut|Number=Sing|PronType=Art": {
+        "morph": "Gender=Neut|Number=Sing|PronType=Art",
+        POS: DET,
+    },
+    "DET__Gender=Neut|Number=Sing|PronType=Dem,Ind": {
+        "morph": "Gender=Neut|Number=Sing|PronType=Dem,Ind",
+        POS: DET,
+    },
+    "DET__Gender=Neut|Number=Sing|PronType=Ind": {
+        "morph": "Gender=Neut|Number=Sing|PronType=Ind",
+        POS: DET,
+    },
+    "DET__Gender=Neut|Number=Sing|PronType=Tot": {
+        "morph": "Gender=Neut|Number=Sing|PronType=Tot",
+        POS: DET,
+    },
+    "DET__Number=Plur|Polarity=Neg|PronType=Neg": {
+        "morph": "Number=Plur|Polarity=Neg|PronType=Neg",
+        POS: DET,
+    },
+    "DET__Number=Plur|PronType=Art": {"morph": "Number=Plur|PronType=Art", POS: DET},
+    "DET__Number=Plur|PronType=Ind": {"morph": "Number=Plur|PronType=Ind", POS: DET},
+    "DET__Number=Plur|PronType=Prs": {"morph": "Number=Plur|PronType=Prs", POS: DET},
+    "DET__Number=Plur|PronType=Tot": {"morph": "Number=Plur|PronType=Tot", POS: DET},
+    "DET__PronType=Ind": {"morph": "PronType=Ind", POS: DET},
+    "DET__PronType=Prs": {"morph": "PronType=Prs", POS: DET},
+    "NOUN__Abbr=Yes": {"morph": "Abbr=Yes", POS: NOUN},
+    "NOUN__Abbr=Yes|Case=Gen": {"morph": "Abbr=Yes|Case=Gen", POS: NOUN},
+    "NOUN__Abbr=Yes|Definite=Def,Ind|Gender=Masc|Number=Plur,Sing": {
+        "morph": "Abbr=Yes|Definite=Def,Ind|Gender=Masc|Number=Plur,Sing",
+        POS: NOUN,
+    },
+    "NOUN__Abbr=Yes|Definite=Def,Ind|Gender=Masc|Number=Sing": {
+        "morph": "Abbr=Yes|Definite=Def,Ind|Gender=Masc|Number=Sing",
+        POS: NOUN,
+    },
+    "NOUN__Abbr=Yes|Definite=Def,Ind|Gender=Neut|Number=Plur,Sing": {
+        "morph": "Abbr=Yes|Definite=Def,Ind|Gender=Neut|Number=Plur,Sing",
+        POS: NOUN,
+    },
+    "NOUN__Abbr=Yes|Gender=Masc": {"morph": "Abbr=Yes|Gender=Masc", POS: NOUN},
+    "NUM__Case=Gen|Number=Plur|NumType=Card": {
+        "morph": "Case=Gen|Number=Plur|NumType=Card",
+        POS: NUM,
+    },
+    "NUM__Definite=Def|Number=Sing|NumType=Card": {
+        "morph": "Definite=Def|Number=Sing|NumType=Card",
+        POS: NUM,
+    },
+    "NUM__Definite=Def|NumType=Card": {"morph": "Definite=Def|NumType=Card", POS: NUM},
+    "NUM__Gender=Fem|Number=Sing|NumType=Card": {
+        "morph": "Gender=Fem|Number=Sing|NumType=Card",
+        POS: NUM,
+    },
+    "NUM__Gender=Masc|Number=Sing|NumType=Card": {
+        "morph": "Gender=Masc|Number=Sing|NumType=Card",
+        POS: NUM,
+    },
+    "NUM__Gender=Neut|Number=Sing|NumType=Card": {
+        "morph": "Gender=Neut|Number=Sing|NumType=Card",
+        POS: NUM,
+    },
+    "NUM__Number=Plur|NumType=Card": {"morph": "Number=Plur|NumType=Card", POS: NUM},
+    "NUM__Number=Sing|NumType=Card": {"morph": "Number=Sing|NumType=Card", POS: NUM},
+    "NUM__NumType=Card": {"morph": "NumType=Card", POS: NUM},
+    "PART__Polarity=Neg": {"morph": "Polarity=Neg", POS: PART},
+    "PRON__Animacy=Hum|Case=Acc|Gender=Fem|Number=Sing|Person=3|PronType=Prs": {
+        "morph": "Animacy=Hum|Case=Acc|Gender=Fem|Number=Sing|Person=3|PronType=Prs",
+        POS: PRON,
+    },
+    "PRON__Animacy=Hum|Case=Acc|Gender=Masc|Number=Sing|Person=3|PronType=Prs": {
+        "morph": "Animacy=Hum|Case=Acc|Gender=Masc|Number=Sing|Person=3|PronType=Prs",
+        POS: PRON,
+    },
+    "PRON__Animacy=Hum|Case=Acc|Number=Plur|Person=1|PronType=Prs": {
+        "morph": "Animacy=Hum|Case=Acc|Number=Plur|Person=1|PronType=Prs",
+        POS: PRON,
+    },
+    "PRON__Animacy=Hum|Case=Acc|Number=Plur|Person=2|PronType=Prs": {
+        "morph": "Animacy=Hum|Case=Acc|Number=Plur|Person=2|PronType=Prs",
+        POS: PRON,
+    },
+    "PRON__Animacy=Hum|Case=Acc|Number=Sing|Person=1|PronType=Prs": {
+        "morph": "Animacy=Hum|Case=Acc|Number=Sing|Person=1|PronType=Prs",
+        POS: PRON,
+    },
+    "PRON__Animacy=Hum|Case=Acc|Number=Sing|Person=2|PronType=Prs": {
+        "morph": "Animacy=Hum|Case=Acc|Number=Sing|Person=2|PronType=Prs",
+        POS: PRON,
+    },
+    "PRON__Animacy=Hum|Case=Gen,Nom|Number=Sing|PronType=Art,Prs": {
+        "morph": "Animacy=Hum|Case=Gen,Nom|Number=Sing|PronType=Art,Prs",
+        POS: PRON,
+    },
+    "PRON__Animacy=Hum|Case=Gen|Number=Sing|PronType=Art,Prs": {
+        "morph": "Animacy=Hum|Case=Gen|Number=Sing|PronType=Art,Prs",
+        POS: PRON,
+    },
+    "PRON__Animacy=Hum|Case=Nom|Gender=Fem|Number=Sing|Person=3|PronType=Prs": {
+        "morph": "Animacy=Hum|Case=Nom|Gender=Fem|Number=Sing|Person=3|PronType=Prs",
+        POS: PRON,
+    },
+    "PRON__Animacy=Hum|Case=Nom|Gender=Masc|Number=Sing|Person=3|PronType=Prs": {
+        "morph": "Animacy=Hum|Case=Nom|Gender=Masc|Number=Sing|Person=3|PronType=Prs",
+        POS: PRON,
+    },
+    "PRON__Animacy=Hum|Case=Nom|Number=Plur|Person=1|PronType=Prs": {
+        "morph": "Animacy=Hum|Case=Nom|Number=Plur|Person=1|PronType=Prs",
+        POS: PRON,
+    },
+    "PRON__Animacy=Hum|Case=Nom|Number=Plur|Person=2|PronType=Prs": {
+        "morph": "Animacy=Hum|Case=Nom|Number=Plur|Person=2|PronType=Prs",
+        POS: PRON,
+    },
+    "PRON__Animacy=Hum|Case=Nom|Number=Sing|Person=1|PronType=Prs": {
+        "morph": "Animacy=Hum|Case=Nom|Number=Sing|Person=1|PronType=Prs",
+        POS: PRON,
+    },
+    "PRON__Animacy=Hum|Case=Nom|Number=Sing|Person=2|PronType=Prs": {
+        "morph": "Animacy=Hum|Case=Nom|Number=Sing|Person=2|PronType=Prs",
+        POS: PRON,
+    },
+    "PRON__Animacy=Hum|Case=Nom|Number=Sing|PronType=Prs": {
+        "morph": "Animacy=Hum|Case=Nom|Number=Sing|PronType=Prs",
+        POS: PRON,
+    },
+    "PRON__Animacy=Hum|Number=Plur|PronType=Rcp": {
+        "morph": "Animacy=Hum|Number=Plur|PronType=Rcp",
+        POS: PRON,
+    },
+    "PRON__Animacy=Hum|Number=Sing|PronType=Art,Prs": {
+        "morph": "Animacy=Hum|Number=Sing|PronType=Art,Prs",
+        POS: PRON,
+    },
+    "PRON__Animacy=Hum|Poss=Yes|PronType=Int": {
+        "morph": "Animacy=Hum|Poss=Yes|PronType=Int",
+        POS: PRON,
+    },
+    "PRON__Animacy=Hum|PronType=Int": {"morph": "Animacy=Hum|PronType=Int", POS: PRON},
+    "PRON__Case=Acc|PronType=Prs|Reflex=Yes": {
+        "morph": "Case=Acc|PronType=Prs|Reflex=Yes",
+        POS: PRON,
+    },
+    "PRON__Gender=Fem,Masc|Number=Sing|Person=3|Polarity=Neg|PronType=Neg,Prs": {
+        "morph": "Gender=Fem,Masc|Number=Sing|Person=3|Polarity=Neg|PronType=Neg,Prs",
+        POS: PRON,
+    },
+    "PRON__Gender=Fem,Masc|Number=Sing|Person=3|PronType=Ind,Prs": {
+        "morph": "Gender=Fem,Masc|Number=Sing|Person=3|PronType=Ind,Prs",
+        POS: PRON,
+    },
+    "PRON__Gender=Fem,Masc|Number=Sing|Person=3|PronType=Prs,Tot": {
+        "morph": "Gender=Fem,Masc|Number=Sing|Person=3|PronType=Prs,Tot",
+        POS: PRON,
+    },
+    "PRON__Gender=Fem|Number=Sing|Poss=Yes|PronType=Prs": {
+        "morph": "Gender=Fem|Number=Sing|Poss=Yes|PronType=Prs",
+        POS: PRON,
+    },
+    "PRON__Gender=Masc|Number=Sing|Poss=Yes|PronType=Prs": {
+        "morph": "Gender=Masc|Number=Sing|Poss=Yes|PronType=Prs",
+        POS: PRON,
+    },
+    "PRON__Gender=Neut|Number=Sing|Person=3|PronType=Ind,Prs": {
+        "morph": "Gender=Neut|Number=Sing|Person=3|PronType=Ind,Prs",
+        POS: PRON,
+    },
+    "PRON__Gender=Neut|Number=Sing|Poss=Yes|PronType=Prs": {
+        "morph": "Gender=Neut|Number=Sing|Poss=Yes|PronType=Prs",
+        POS: PRON,
+    },
+    "PRON__Number=Plur|Person=3|Polarity=Neg|PronType=Neg,Prs": {
+        "morph": "Number=Plur|Person=3|Polarity=Neg|PronType=Neg,Prs",
+        POS: PRON,
+    },
+    "PRON__Number=Plur|Person=3|PronType=Ind,Prs": {
+        "morph": "Number=Plur|Person=3|PronType=Ind,Prs",
+        POS: PRON,
+    },
+    "PRON__Number=Plur|Person=3|PronType=Prs,Tot": {
+        "morph": "Number=Plur|Person=3|PronType=Prs,Tot",
+        POS: PRON,
+    },
+    "PRON__Number=Plur|Poss=Yes|PronType=Prs": {
+        "morph": "Number=Plur|Poss=Yes|PronType=Prs",
+        POS: PRON,
+    },
+    "PRON__Number=Plur|Poss=Yes|PronType=Rcp": {
+        "morph": "Number=Plur|Poss=Yes|PronType=Rcp",
+        POS: PRON,
+    },
+    "PRON__Number=Sing|Polarity=Neg|PronType=Neg": {
+        "morph": "Number=Sing|Polarity=Neg|PronType=Neg",
+        POS: PRON,
+    },
+    "PRON__PronType=Prs": {"morph": "PronType=Prs", POS: PRON},
+    "PRON__PronType=Rel": {"morph": "PronType=Rel", POS: PRON},
+    "PROPN__Abbr=Yes": {"morph": "Abbr=Yes", POS: PROPN},
+    "PROPN__Abbr=Yes|Case=Gen": {"morph": "Abbr=Yes|Case=Gen", POS: PROPN},
+    "VERB__Abbr=Yes|Mood=Ind|Tense=Pres|VerbForm=Fin": {
+        "morph": "Abbr=Yes|Mood=Ind|Tense=Pres|VerbForm=Fin",
+        POS: VERB,
+    },
+    "VERB__Definite=Ind|Number=Sing|VerbForm=Part": {
+        "morph": "Definite=Ind|Number=Sing|VerbForm=Part",
+        POS: VERB,
+    },
 }

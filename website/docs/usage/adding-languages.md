@@ -41,7 +41,7 @@ and morphological analysis.
 
 <Infobox title="Table of Contents" id="toc">
 
-- [Language data 101](#101)
+- [Language data 101](#language-data)
 - [The Language subclass](#language-subclass)
 - [Stop words](#stop-words)
 - [Tokenizer exceptions](#tokenizer-exceptions)
@@ -71,21 +71,19 @@ from the global rules. Others, like the tokenizer and norm exceptions, are very
 specific and will make a big difference to spaCy's performance on the particular
 language and training a language model.
 
-| Variable                                  | Type  | Description                                                                                                |
-| ----------------------------------------- | ----- | ---------------------------------------------------------------------------------------------------------- |
-| `STOP_WORDS`                              | set   | Individual words.                                                                                          |
-| `TOKENIZER_EXCEPTIONS`                    | dict  | Keyed by strings mapped to list of one dict per token with token attributes.                               |
-| `TOKEN_MATCH`                             | regex | Regexes to match complex tokens, e.g. URLs.                                                                |
-| `NORM_EXCEPTIONS`                         | dict  | Keyed by strings, mapped to their norms.                                                                   |
-| `TOKENIZER_PREFIXES`                      | list  | Strings or regexes, usually not customized.                                                                |
-| `TOKENIZER_SUFFIXES`                      | list  | Strings or regexes, usually not customized.                                                                |
-| `TOKENIZER_INFIXES`                       | list  | Strings or regexes, usually not customized.                                                                |
-| `LEX_ATTRS`                               | dict  | Attribute ID mapped to function.                                                                           |
-| `SYNTAX_ITERATORS`                        | dict  | Iterator ID mapped to function. Currently only supports `'noun_chunks'`.                                   |
-| `LOOKUP`                                  | dict  | Keyed by strings mapping to their lemma.                                                                   |
-| `LEMMA_RULES`, `LEMMA_INDEX`, `LEMMA_EXC` | dict  | Lemmatization rules, keyed by part of speech.                                                              |
-| `TAG_MAP`                                 | dict  | Keyed by strings mapped to [Universal Dependencies](http://universaldependencies.org/u/pos/all.html) tags. |
-| `MORPH_RULES`                             | dict  | Keyed by strings mapped to a dict of their morphological features.                                         |
+| Variable               | Type  | Description                                                                                                |
+| ---------------------- | ----- | ---------------------------------------------------------------------------------------------------------- |
+| `STOP_WORDS`           | set   | Individual words.                                                                                          |
+| `TOKENIZER_EXCEPTIONS` | dict  | Keyed by strings mapped to list of one dict per token with token attributes.                               |
+| `TOKEN_MATCH`          | regex | Regexes to match complex tokens, e.g. URLs.                                                                |
+| `NORM_EXCEPTIONS`      | dict  | Keyed by strings, mapped to their norms.                                                                   |
+| `TOKENIZER_PREFIXES`   | list  | Strings or regexes, usually not customized.                                                                |
+| `TOKENIZER_SUFFIXES`   | list  | Strings or regexes, usually not customized.                                                                |
+| `TOKENIZER_INFIXES`    | list  | Strings or regexes, usually not customized.                                                                |
+| `LEX_ATTRS`            | dict  | Attribute ID mapped to function.                                                                           |
+| `SYNTAX_ITERATORS`     | dict  | Iterator ID mapped to function. Currently only supports `'noun_chunks'`.                                   |
+| `TAG_MAP`              | dict  | Keyed by strings mapped to [Universal Dependencies](http://universaldependencies.org/u/pos/all.html) tags. |
+| `MORPH_RULES`          | dict  | Keyed by strings mapped to a dict of their morphological features.                                         |
 
 > #### Should I ever update the global data?
 >
@@ -213,9 +211,7 @@ spaCy's [tokenization algorithm](/usage/linguistic-features#how-tokenizer-works)
 lets you deal with whitespace-delimited chunks separately. This makes it easy to
 define special-case rules, without worrying about how they interact with the
 rest of the tokenizer. Whenever the key string is matched, the special-case rule
-is applied, giving the defined sequence of tokens. You can also attach
-attributes to the subtokens, covered by your special case, such as the subtokens
-`LEMMA` or `TAG`.
+is applied, giving the defined sequence of tokens.
 
 Tokenizer exceptions can be added in the following format:
 
@@ -223,8 +219,8 @@ Tokenizer exceptions can be added in the following format:
 ### tokenizer_exceptions.py (excerpt)
 TOKENIZER_EXCEPTIONS = {
     "don't": [
-        {ORTH: "do", LEMMA: "do"},
-        {ORTH: "n't", LEMMA: "not", NORM: "not", TAG: "RB"}]
+        {ORTH: "do"},
+        {ORTH: "n't", NORM: "not"}]
 }
 ```
 
@@ -233,40 +229,11 @@ TOKENIZER_EXCEPTIONS = {
 If an exception consists of more than one token, the `ORTH` values combined
 always need to **match the original string**. The way the original string is
 split up can be pretty arbitrary sometimes – for example `"gonna"` is split into
-`"gon"` (lemma "go") and `"na"` (lemma "to"). Because of how the tokenizer
+`"gon"` (norm "going") and `"na"` (norm "to"). Because of how the tokenizer
 works, it's currently not possible to split single-letter strings into multiple
 tokens.
 
 </Infobox>
-
-Unambiguous abbreviations, like month names or locations in English, should be
-added to exceptions with a lemma assigned, for example
-`{ORTH: "Jan.", LEMMA: "January"}`. Since the exceptions are added in Python,
-you can use custom logic to generate them more efficiently and make your data
-less verbose. How you do this ultimately depends on the language. Here's an
-example of how exceptions for time formats like "1a.m." and "1am" are generated
-in the English
-[`tokenizer_exceptions.py`](https://github.com/explosion/spaCy/tree/master/spacy/en/lang/tokenizer_exceptions.py):
-
-```python
-### tokenizer_exceptions.py (excerpt)
-# use short, internal variable for readability
-_exc = {}
-
-for h in range(1, 12 + 1):
-    for period in ["a.m.", "am"]:
-        # always keep an eye on string interpolation!
-        _exc["%d%s" % (h, period)] = [
-            {ORTH: "%d" % h},
-            {ORTH: period, LEMMA: "a.m."}]
-    for period in ["p.m.", "pm"]:
-        _exc["%d%s" % (h, period)] = [
-            {ORTH: "%d" % h},
-            {ORTH: period, LEMMA: "p.m."}]
-
-# only declare this at the bottom
-TOKENIZER_EXCEPTIONS = _exc
-```
 
 > #### Generating tokenizer exceptions
 >
@@ -275,7 +242,8 @@ TOKENIZER_EXCEPTIONS = _exc
 > This is not always the case – in Spanish for instance, infinitive or
 > imperative reflexive verbs and pronouns are one token (e.g. "vestirme"). In
 > cases like this, spaCy shouldn't be generating exceptions for _all verbs_.
-> Instead, this will be handled at a later stage during lemmatization.
+> Instead, this will be handled at a later stage after part-of-speech tagging
+> and lemmatization.
 
 When adding the tokenizer exceptions to the `Defaults`, you can use the
 [`update_exc`](/api/top-level#util.update_exc) helper function to merge them
@@ -292,33 +260,23 @@ custom one.
 from ...util import update_exc
 
 BASE_EXCEPTIONS =  {"a.": [{ORTH: "a."}], ":)": [{ORTH: ":)"}]}
-TOKENIZER_EXCEPTIONS = {"a.": [{ORTH: "a.", LEMMA: "all"}]}
+TOKENIZER_EXCEPTIONS = {"a.": [{ORTH: "a.", NORM: "all"}]}
 
 tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
-# {"a.": [{ORTH: "a.", LEMMA: "all"}], ":)": [{ORTH: ":)"}]}
+# {"a.": [{ORTH: "a.", NORM: "all"}], ":)": [{ORTH: ":)"}]}
 ```
-
-<Infobox title="About spaCy's custom pronoun lemma" variant="warning">
-
-Unlike verbs and common nouns, there's no clear base form of a personal pronoun.
-Should the lemma of "me" be "I", or should we normalize person as well, giving
-"it" — or maybe "he"? spaCy's solution is to introduce a novel symbol, `-PRON-`,
-which is used as the lemma for all personal pronouns.
-
-</Infobox>
 
 ### Norm exceptions {#norm-exceptions new="2"}
 
-In addition to `ORTH` or `LEMMA`, tokenizer exceptions can also set a `NORM`
-attribute. This is useful to specify a normalized version of the token – for
-example, the norm of "n't" is "not". By default, a token's norm equals its
-lowercase text. If the lowercase spelling of a word exists, norms should always
-be in lowercase.
+In addition to `ORTH`, tokenizer exceptions can also set a `NORM` attribute.
+This is useful to specify a normalized version of the token – for example, the
+norm of "n't" is "not". By default, a token's norm equals its lowercase text. If
+the lowercase spelling of a word exists, norms should always be in lowercase.
 
 > #### Norms vs. lemmas
 >
 > ```python
-> doc = nlp(u"I'm gonna realise")
+> doc = nlp("I'm gonna realise")
 > norms = [token.norm_ for token in doc]
 > lemmas = [token.lemma_ for token in doc]
 > assert norms == ["i", "am", "going", "to", "realize"]
@@ -330,7 +288,7 @@ common spelling. This has no effect on any other token attributes, or
 tokenization in general, but it ensures that **equivalent tokens receive similar
 representations**. This can improve the model's predictions on words that
 weren't common in the training data, but are equivalent to other words – for
-example, "realize" and "realize", or "thx" and "thanks".
+example, "realise" and "realize", or "thx" and "thanks".
 
 Similarly, spaCy also includes
 [global base norms](https://github.com/explosion/spaCy/tree/master/spacy/lang/norm_exceptions.py)
@@ -339,9 +297,35 @@ though `$` and `€` are very different, spaCy normalizes them both to `$`. This
 way, they'll always be seen as similar, no matter how common they were in the
 training data.
 
-Norm exceptions can be provided as a simple dictionary. For more examples, see
-the English
-[`norm_exceptions.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/en/norm_exceptions.py).
+As of spaCy v2.3, language-specific norm exceptions are provided as a
+JSON dictionary in the package
+[`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) rather
+than in the main library. For a full example, see
+[`en_lexeme_norm.json`](https://github.com/explosion/spacy-lookups-data/blob/master/spacy_lookups_data/data/en_lexeme_norm.json).
+
+```json
+### Example
+{
+    "cos": "because",
+    "fav": "favorite",
+    "accessorise": "accessorize",
+    "accessorised": "accessorized"
+}
+```
+
+If you're adding tables for a new languages, be sure to add the tables to
+[`spacy_lookups_data/__init__.py`](https://github.com/explosion/spacy-lookups-data/blob/master/spacy_lookups_data/__init__.py)
+and register the entry point under `spacy_lookups` in
+[`setup.cfg`](https://github.com/explosion/spacy-lookups-data/blob/master/setup.cfg).
+
+Alternatively, you can initialize your language [`Vocab`](/api/vocab) with a
+[`Lookups`](/api/lookups) object that includes the table `lexeme_norm`.
+
+<Accordion title="Norm exceptions in spaCy v2.0-v2.2" id="norm-exceptions-v2.2">
+
+Previously in spaCy v2.0-v2.2, norm exceptions were provided as a simple python
+dictionary. For more examples, see the English
+[`norm_exceptions.py`](https://github.com/explosion/spaCy/tree/v2.2.x/spacy/lang/en/norm_exceptions.py).
 
 ```python
 ### Example
@@ -368,6 +352,8 @@ The order of the dictionaries is also the lookup order – so if your language's
 norm exceptions overwrite any of the global exceptions, they should be added
 first. Also note that the tokenizer exceptions will always have priority over
 the attribute getters.
+
+</Accordion>
 
 ### Lexical attributes {#lex-attrs new="2"}
 
@@ -438,18 +424,23 @@ iterators:
 > #### Noun chunks example
 >
 > ```python
-> doc = nlp(u"A phrase with another phrase occurs.")
+> doc = nlp("A phrase with another phrase occurs.")
 > chunks = list(doc.noun_chunks)
-> assert chunks[0].text == u"A phrase"
-> assert chunks[1].text == u"another phrase"
+> assert chunks[0].text == "A phrase"
+> assert chunks[1].text == "another phrase"
 > ```
 
-| Language | Code | Source                                                                                                            |
-| -------- | ---- | ----------------------------------------------------------------------------------------------------------------- |
-| English  | `en` | [`lang/en/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/en/syntax_iterators.py) |
-| German   | `de` | [`lang/de/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/de/syntax_iterators.py) |
-| French   | `fr` | [`lang/fr/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/fr/syntax_iterators.py) |
-| Spanish  | `es` | [`lang/es/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/es/syntax_iterators.py) |
+| Language         | Code | Source                                                                                                            |
+| ---------------- | ---- | ----------------------------------------------------------------------------------------------------------------- |
+| English          | `en` | [`lang/en/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/en/syntax_iterators.py) |
+| German           | `de` | [`lang/de/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/de/syntax_iterators.py) |
+| French           | `fr` | [`lang/fr/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/fr/syntax_iterators.py) |
+| Spanish          | `es` | [`lang/es/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/es/syntax_iterators.py) |
+| Greek            | `el` | [`lang/el/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/el/syntax_iterators.py) |
+| Norwegian Bokmål | `nb` | [`lang/nb/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/nb/syntax_iterators.py) |
+| Swedish          | `sv` | [`lang/sv/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/sv/syntax_iterators.py) |
+| Indonesian       | `id` | [`lang/id/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/id/syntax_iterators.py) |
+| Persian          | `fa` | [`lang/fa/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/fa/syntax_iterators.py) |
 
 ### Lemmatizer {#lemmatizer new="2"}
 
@@ -458,26 +449,34 @@ the quickest and easiest way to get started. The data is stored in a dictionary
 mapping a string to its lemma. To determine a token's lemma, spaCy simply looks
 it up in the table. Here's an example from the Spanish language data:
 
-```python
-### lang/es/lemmatizer.py (excerpt)
-LOOKUP = {
-    "aba": "abar",
-    "ababa": "abar",
-    "ababais": "abar",
-    "ababan": "abar",
-    "ababanes": "ababán",
-    "ababas": "abar",
-    "ababoles": "ababol",
-    "ababábites": "ababábite"
+```json
+### es_lemma_lookup.json (excerpt)
+{
+  "aba": "abar",
+  "ababa": "abar",
+  "ababais": "abar",
+  "ababan": "abar",
+  "ababanes": "ababán",
+  "ababas": "abar",
+  "ababoles": "ababol",
+  "ababábites": "ababábite"
 }
 ```
 
-To provide a lookup lemmatizer for your language, import the lookup table and
-add it to the `Language` class as `lemma_lookup`:
+#### Adding JSON resources {#lemmatizer-resources new="2.2"}
 
-```python
-lemma_lookup = LOOKUP
-```
+As of v2.2, resources for the lemmatizer are stored as JSON and have been moved
+to a separate repository and package,
+[`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data). The
+package exposes the data files via language-specific
+[entry points](/usage/saving-loading#entry-points) that spaCy reads when
+constructing the `Vocab` and [`Lookups`](/api/lookups). This allows easier
+access to the data, serialization with the models and file compression on disk
+(so your spaCy installation is smaller). If you want to use the lookup tables
+without a pretrained model, you have to explicitly install spaCy with lookups
+via `pip install spacy[lookups]` or by installing
+[`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) in the
+same environment as spaCy.
 
 ### Tag map {#tag-map}
 
@@ -651,19 +650,19 @@ categorizer is to use the [`spacy train`](/api/cli#train) command-line utility.
 In order to use this, you'll need training and evaluation data in the
 [JSON format](/api/annotation#json-input) spaCy expects for training.
 
-You can now train the model using a corpus for your language annotated with If
-your data is in one of the supported formats, the easiest solution might be to
-use the [`spacy convert`](/api/cli#convert) command-line utility. This supports
-several popular formats, including the IOB format for named entity recognition,
-the JSONL format produced by our annotation tool [Prodigy](https://prodi.gy),
-and the [CoNLL-U](http://universaldependencies.org/docs/format.html) format used
-by the [Universal Dependencies](http://universaldependencies.org/) corpus.
+If your data is in one of the supported formats, the easiest solution might be
+to use the [`spacy convert`](/api/cli#convert) command-line utility. This
+supports several popular formats, including the IOB format for named entity
+recognition, the JSONL format produced by our annotation tool
+[Prodigy](https://prodi.gy), and the
+[CoNLL-U](http://universaldependencies.org/docs/format.html) format used by the
+[Universal Dependencies](http://universaldependencies.org/) corpus.
 
 One thing to keep in mind is that spaCy expects to train its models from **whole
 documents**, not just single sentences. If your corpus only contains single
 sentences, spaCy's models will never learn to expect multi-sentence documents,
 leading to low performance on real text. To mitigate this problem, you can use
-the `-N` argument to the `spacy convert` command, to merge some of the sentences
+the `-n` argument to the `spacy convert` command, to merge some of the sentences
 into longer pseudo-documents.
 
 ### Training the tagger and parser {#train-tagger-parser}

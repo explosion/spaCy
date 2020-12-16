@@ -7,11 +7,9 @@ from __future__ import print_function
 if __name__ == "__main__":
     import plac
     import sys
-    from wasabi import Printer
+    from wasabi import msg
     from spacy.cli import download, link, info, package, train, pretrain, convert
     from spacy.cli import init_model, profile, evaluate, validate, debug_data
-
-    msg = Printer()
 
     commands = {
         "download": download,

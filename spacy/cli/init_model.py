@@ -12,11 +12,14 @@ import tarfile
 import gzip
 import zipfile
 import srsly
-from wasabi import Printer
+import warnings
+from wasabi import msg
 
 from ..vectors import Vectors
-from ..errors import Errors, Warnings, user_warning
-from ..util import ensure_path, get_lang_class
+from ..errors import Errors, Warnings
+from ..util import ensure_path, get_lang_class, load_model, OOV_RANK
+from ..lookups import Lookups
+
 
 try:
     import ftfy
@@ -25,7 +28,6 @@ except ImportError:
 
 
 DEFAULT_OOV_PROB = -20
-msg = Printer()
 
 
 @plac.annotations(
@@ -35,7 +37,22 @@ msg = Printer()
     jsonl_loc=("Location of JSONL-formatted attributes file", "option", "j", Path),
     clusters_loc=("Optional location of brown clusters data", "option", "c", str),
     vectors_loc=("Optional vectors file in Word2Vec format", "option", "v", str),
+    truncate_vectors=(
+        "Optional number of vectors to truncate to when reading in vectors file",
+        "option",
+        "t",
+        int,
+    ),
     prune_vectors=("Optional number of vectors to prune to", "option", "V", int),
+    vectors_name=(
+        "Optional name for the word vectors, e.g. en_core_web_lg.vectors",
+        "option",
+        "vn",
+        str,
+    ),
+    model_name=("Optional name for the model meta", "option", "mn", str),
+    omit_extra_lookups=("Don't include extra lookups in model", "flag", "OEL", bool),
+    base_model=("Base model (for languages with custom tokenizers)", "option", "b", str),
 )
 def init_model(
     lang,
@@ -44,7 +61,12 @@ def init_model(
     clusters_loc=None,
     jsonl_loc=None,
     vectors_loc=None,
+    truncate_vectors=0,
     prune_vectors=-1,
+    vectors_name=None,
+    model_name=None,
+    omit_extra_lookups=False,
+    base_model=None,
 ):
     """
     Create a new model from raw data, like word frequencies, Brown clusters
@@ -76,10 +98,19 @@ def init_model(
         lex_attrs = read_attrs_from_deprecated(freqs_loc, clusters_loc)
 
     with msg.loading("Creating model..."):
-        nlp = create_model(lang, lex_attrs)
+        nlp = create_model(lang, lex_attrs, name=model_name, base_model=base_model)
+
+    # Create empty extra lexeme tables so the data from spacy-lookups-data
+    # isn't loaded if these features are accessed
+    if omit_extra_lookups:
+        nlp.vocab.lookups_extra = Lookups()
+        nlp.vocab.lookups_extra.add_table("lexeme_cluster")
+        nlp.vocab.lookups_extra.add_table("lexeme_prob")
+        nlp.vocab.lookups_extra.add_table("lexeme_settings")
+
     msg.good("Successfully created model")
     if vectors_loc is not None:
-        add_vectors(nlp, vectors_loc, prune_vectors)
+        add_vectors(nlp, vectors_loc, truncate_vectors, prune_vectors, vectors_name)
     vec_added = len(nlp.vocab.vectors)
     lex_added = len(nlp.vocab)
     msg.good(
@@ -114,7 +145,7 @@ def read_attrs_from_deprecated(freqs_loc, clusters_loc):
             probs, _ = read_freqs(freqs_loc)
         msg.good("Counted frequencies")
     else:
-        probs, _ = ({}, DEFAULT_OOV_PROB)
+        probs, _ = ({}, DEFAULT_OOV_PROB)  # noqa: F841
     if clusters_loc:
         with msg.loading("Reading clusters..."):
             clusters = read_clusters(clusters_loc)
@@ -136,58 +167,67 @@ def read_attrs_from_deprecated(freqs_loc, clusters_loc):
     return lex_attrs
 
 
-def create_model(lang, lex_attrs):
-    lang_class = get_lang_class(lang)
-    nlp = lang_class()
+def create_model(lang, lex_attrs, name=None, base_model=None):
+    if base_model:
+        nlp = load_model(base_model)
+        # keep the tokenizer but remove any existing pipeline components due to
+        # potentially conflicting vectors
+        for pipe in nlp.pipe_names:
+            nlp.remove_pipe(pipe)
+    else:
+        lang_class = get_lang_class(lang)
+        nlp = lang_class()
     for lexeme in nlp.vocab:
-        lexeme.rank = 0
-    lex_added = 0
+        lexeme.rank = OOV_RANK
     for attrs in lex_attrs:
         if "settings" in attrs:
             continue
         lexeme = nlp.vocab[attrs["orth"]]
         lexeme.set_attrs(**attrs)
-        lexeme.is_oov = False
-        lex_added += 1
-        lex_added += 1
     if len(nlp.vocab):
         oov_prob = min(lex.prob for lex in nlp.vocab) - 1
     else:
         oov_prob = DEFAULT_OOV_PROB
     nlp.vocab.cfg.update({"oov_prob": oov_prob})
+    if name:
+        nlp.meta["name"] = name
     return nlp
 
 
-def add_vectors(nlp, vectors_loc, prune_vectors):
+def add_vectors(nlp, vectors_loc, truncate_vectors, prune_vectors, name=None):
     vectors_loc = ensure_path(vectors_loc)
     if vectors_loc and vectors_loc.parts[-1].endswith(".npz"):
         nlp.vocab.vectors = Vectors(data=numpy.load(vectors_loc.open("rb")))
         for lex in nlp.vocab:
-            if lex.rank:
+            if lex.rank and lex.rank != OOV_RANK:
                 nlp.vocab.vectors.add(lex.orth, row=lex.rank)
     else:
         if vectors_loc:
             with msg.loading("Reading vectors from {}".format(vectors_loc)):
-                vectors_data, vector_keys = read_vectors(vectors_loc)
+                vectors_data, vector_keys = read_vectors(vectors_loc, truncate_vectors)
             msg.good("Loaded vectors from {}".format(vectors_loc))
         else:
             vectors_data, vector_keys = (None, None)
         if vector_keys is not None:
             for word in vector_keys:
                 if word not in nlp.vocab:
-                    lexeme = nlp.vocab[word]
-                    lexeme.is_oov = False
+                    nlp.vocab[word]
         if vectors_data is not None:
             nlp.vocab.vectors = Vectors(data=vectors_data, keys=vector_keys)
-    nlp.vocab.vectors.name = "%s_model.vectors" % nlp.meta["lang"]
+    if name is None:
+        nlp.vocab.vectors.name = "%s_model.vectors" % nlp.meta["lang"]
+    else:
+        nlp.vocab.vectors.name = name
     nlp.meta["vectors"]["name"] = nlp.vocab.vectors.name
     if prune_vectors >= 1:
         nlp.vocab.prune_vectors(prune_vectors)
 
 
-def read_vectors(vectors_loc):
+def read_vectors(vectors_loc, truncate_vectors=0):
     f = open_file(vectors_loc)
     shape = tuple(int(size) for size in next(f).split())
+    if truncate_vectors >= 1:
+        shape = (truncate_vectors, shape[1])
     vectors_data = numpy.zeros(shape=shape, dtype="f")
     vectors_keys = []
     for i, line in enumerate(tqdm(f)):
@@ -198,6 +238,8 @@ def read_vectors(vectors_loc):
             msg.fail(Errors.E094.format(line_num=i, loc=vectors_loc), exits=1)
         vectors_data[i] = numpy.asarray(pieces, dtype="f")
         vectors_keys.append(word)
+        if i == truncate_vectors - 1:
+            break
     return vectors_data, vectors_keys
 
 
@@ -233,7 +275,7 @@ def read_freqs(freqs_loc, max_length=100, min_doc_freq=5, min_freq=50):
 def read_clusters(clusters_loc):
     clusters = {}
     if ftfy is None:
-        user_warning(Warnings.W004)
+        warnings.warn(Warnings.W004)
     with clusters_loc.open() as f:
         for line in tqdm(f):
             try:

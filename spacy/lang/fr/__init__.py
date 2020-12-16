@@ -2,17 +2,18 @@
 from __future__ import unicode_literals
 
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS, TOKEN_MATCH
-from .punctuation import TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
+from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_INFIXES
+from .punctuation import TOKENIZER_SUFFIXES
 from .tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
-from .lemmatizer import LEMMA_RULES, LEMMA_INDEX, LEMMA_EXC, LOOKUP
-from .lemmatizer.lemmatizer import FrenchLemmatizer
+from .lemmatizer import FrenchLemmatizer
 from .syntax_iterators import SYNTAX_ITERATORS
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
 from ...language import Language
+from ...lookups import Lookups
 from ...attrs import LANG, NORM
 from ...util import update_exc, add_lookups
 
@@ -27,23 +28,17 @@ class FrenchDefaults(Language.Defaults):
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     tag_map = TAG_MAP
     stop_words = STOP_WORDS
+    prefixes = TOKENIZER_PREFIXES
     infixes = TOKENIZER_INFIXES
     suffixes = TOKENIZER_SUFFIXES
     token_match = TOKEN_MATCH
     syntax_iterators = SYNTAX_ITERATORS
 
     @classmethod
-    def create_lemmatizer(cls, nlp=None):
-        lemma_rules = LEMMA_RULES
-        lemma_index = LEMMA_INDEX
-        lemma_exc = LEMMA_EXC
-        lemma_lookup = LOOKUP
-        return FrenchLemmatizer(
-            index=lemma_index,
-            exceptions=lemma_exc,
-            rules=lemma_rules,
-            lookup=lemma_lookup,
-        )
+    def create_lemmatizer(cls, nlp=None, lookups=None):
+        if lookups is None:
+            lookups = Lookups()
+        return FrenchLemmatizer(lookups)
 
 
 class French(Language):

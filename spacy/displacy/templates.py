@@ -18,6 +18,15 @@ TPL_DEP_WORDS = """
 """
 
 
+TPL_DEP_WORDS_LEMMA = """
+<text class="displacy-token" fill="currentColor" text-anchor="middle" y="{y}">
+    <tspan class="displacy-word" fill="currentColor" x="{x}">{text}</tspan>
+    <tspan class="displacy-lemma" dy="2em" fill="currentColor" x="{x}">{lemma}</tspan>
+    <tspan class="displacy-tag" dy="2em" fill="currentColor" x="{x}">{tag}</tspan>
+</text>
+"""
+
+
 TPL_DEP_ARCS = """
 <g class="displacy-arrow">
     <path class="displacy-arc" id="arrow-{id}-{i}" stroke-width="{stroke}px" d="{arc}" fill="none" stroke="currentColor"/>
@@ -44,14 +53,14 @@ TPL_ENTS = """
 
 
 TPL_ENT = """
-<mark class="entity" style="background: {bg}; padding: 0.45em 0.6em; margin: 0 0.25em; line-height: 1; border-radius: 0.35em; box-decoration-break: clone; -webkit-box-decoration-break: clone">
+<mark class="entity" style="background: {bg}; padding: 0.45em 0.6em; margin: 0 0.25em; line-height: 1; border-radius: 0.35em;">
     {text}
     <span style="font-size: 0.8em; font-weight: bold; line-height: 1; border-radius: 0.35em; text-transform: uppercase; vertical-align: middle; margin-left: 0.5rem">{label}</span>
 </mark>
 """
 
 TPL_ENT_RTL = """
-<mark class="entity" style="background: {bg}; padding: 0.45em 0.6em; margin: 0 0.25em; line-height: 1; border-radius: 0.35em;">
+<mark class="entity" style="background: {bg}; padding: 0.45em 0.6em; margin: 0 0.25em; line-height: 1; border-radius: 0.35em">
     {text}
     <span style="font-size: 0.8em; font-weight: bold; line-height: 1; border-radius: 0.35em; text-transform: uppercase; vertical-align: middle; margin-right: 0.5rem">{label}</span>
 </mark>

@@ -6,6 +6,7 @@ from libc.math cimport sqrt
 
 import numpy
 import numpy.linalg
+import warnings
 from thinc.neural.util import get_array_module
 from collections import defaultdict
 
@@ -21,8 +22,7 @@ from ..symbols cimport dep
 
 from ..util import normalize_slice
 from ..compat import is_config, basestring_
-from ..errors import Errors, TempErrors, Warnings, user_warning, models_warning
-from ..errors import deprecation_warning
+from ..errors import Errors, TempErrors, Warnings
 from .underscore import Underscore, get_ext_args
 
 
@@ -127,22 +127,27 @@ cdef class Span:
                 return False
             else:
                 return True
-        # Eq
+        # <
         if op == 0:
             return self.start_char < other.start_char
+        # <=
         elif op == 1:
             return self.start_char <= other.start_char
+        # ==
         elif op == 2:
-            return self.start_char == other.start_char and self.end_char == other.end_char
+            return (self.doc, self.start_char, self.end_char, self.label, self.kb_id) == (other.doc, other.start_char, other.end_char, other.label, other.kb_id)
+        # !=
         elif op == 3:
-            return self.start_char != other.start_char or self.end_char != other.end_char
+            return (self.doc, self.start_char, self.end_char, self.label, self.kb_id) != (other.doc, other.start_char, other.end_char, other.label, other.kb_id)
+        # >
         elif op == 4:
             return self.start_char > other.start_char
+        # >=
         elif op == 5:
             return self.start_char >= other.start_char
 
     def __hash__(self):
-        return hash((self.doc, self.label, self.start_char, self.end_char))
+        return hash((self.doc, self.start_char, self.end_char, self.label, self.kb_id))
 
     def __len__(self):
         """Get the number of tokens in the span.
@@ -176,9 +181,13 @@ cdef class Span:
             return Span(self.doc, start + self.start, end + self.start)
         else:
             if i < 0:
-                return self.doc[self.end + i]
+                token_i = self.end + i
             else:
-                return self.doc[self.start + i]
+                token_i = self.start + i
+            if self.start <= token_i < self.end:
+                return self.doc[token_i]
+            else:
+                raise IndexError(Errors.E201)
 
     def __iter__(self):
         """Iterate over `Token` objects.
@@ -200,17 +209,19 @@ cdef class Span:
         return Underscore(Underscore.span_extensions, self,
                           start=self.start_char, end=self.end_char)
 
-    def as_doc(self):
+    def as_doc(self, bint copy_user_data=False):
         """Create a `Doc` object with a copy of the `Span`'s data.
 
+        copy_user_data (bool): Whether or not to copy the original doc's user data.
         RETURNS (Doc): The `Doc` copy of the span.
 
         DOCS: https://spacy.io/api/span#as_doc
         """
+        # TODO: make copy_user_data a keyword-only argument (Python 3 only)
         words = [t.text for t in self]
         spaces = [bool(t.whitespace_) for t in self]
         cdef Doc doc = Doc(self.doc.vocab, words=words, spaces=spaces)
-        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE, ENT_KB_ID]
+        array_head = [LENGTH, SPACY, LEMMA, ENT_IOB, ENT_TYPE, ENT_ID, ENT_KB_ID]
         if self.doc.is_tagged:
             array_head.append(TAG)
         # If doc parsed add head and dep attribute
@@ -235,6 +246,8 @@ cdef class Span:
                 cat_start, cat_end, cat_label = key
                 if cat_start == self.start_char and cat_end == self.end_char:
                     doc.cats[cat_label] = value
+        if copy_user_data:
+            doc.user_data = self.doc.user_data
         return doc
 
     def _fix_dep_copy(self, attrs, array):
@@ -283,7 +296,7 @@ cdef class Span:
             attributes are inherited from the syntactic root token of the span.
         RETURNS (Token): The newly merged token.
         """
-        deprecation_warning(Warnings.W013.format(obj="Span"))
+        warnings.warn(Warnings.W013.format(obj="Span"), DeprecationWarning)
         return self.doc.merge(self.start_char, self.end_char, *args,
                               **attributes)
 
@@ -315,16 +328,18 @@ cdef class Span:
         if len(self) == 1 and hasattr(other, "orth"):
             if self[0].orth == other.orth:
                 return 1.0
-        elif hasattr(other, "__len__") and len(self) == len(other):
+        elif isinstance(other, (Doc, Span)) and len(self) == len(other):
+            similar = True
             for i in range(len(self)):
                 if self[i].orth != getattr(other[i], "orth", None):
+                    similar = False
                     break
-            else:
+            if similar:
                 return 1.0
         if self.vocab.vectors.n_keys == 0:
-            models_warning(Warnings.W007.format(obj="Span"))
+            warnings.warn(Warnings.W007.format(obj="Span"))
         if self.vector_norm == 0.0 or other.vector_norm == 0.0:
-            user_warning(Warnings.W008.format(obj="Span"))
+            warnings.warn(Warnings.W008.format(obj="Span"))
             return 0.0
         vector = self.vector
         xp = get_array_module(vector)
@@ -376,34 +391,23 @@ cdef class Span:
         """RETURNS (Span): The sentence span that the span is a part of."""
         if "sent" in self.doc.user_span_hooks:
             return self.doc.user_span_hooks["sent"](self)
-        # This should raise if not parsed / no custom sentence boundaries
-        self.doc.sents
-        # If doc is parsed we can use the deps to find the sentence
-        # otherwise we use the `sent_start` token attribute
+        # Use `sent_start` token attribute to find sentence boundaries
         cdef int n = 0
-        cdef int i
-        if self.doc.is_parsed:
-            root = &self.doc.c[self.start]
-            while root.head != 0:
-                root += root.head
-                n += 1
-                if n >= self.doc.length:
-                    raise RuntimeError(Errors.E038)
-            return self.doc[root.l_edge:root.r_edge + 1]
-        elif self.doc.is_sentenced:
+        if self.doc.is_sentenced:
             # Find start of the sentence
             start = self.start
             while self.doc.c[start].sent_start != 1 and start > 0:
                 start += -1
             # Find end of the sentence
             end = self.end
-            n = 0
             while end < self.doc.length and self.doc.c[end].sent_start != 1:
                 end += 1
                 n += 1
                 if n >= self.doc.length:
                     break
             return self.doc[start:end]
+        else:
+            raise ValueError(Errors.E030)
 
     @property
     def ents(self):
@@ -579,6 +583,22 @@ cdef class Span:
             return self.doc[self.start]
         else:
             return self.doc[root]
+
+    def char_span(self, int start_idx, int end_idx, label=0, kb_id=0, vector=None):
+        """Create a `Span` object from the slice `span.text[start : end]`.
+
+        start (int): The index of the first character of the span.
+        end (int): The index of the first character after the span.
+        label (uint64 or string): A label to attach to the Span, e.g. for
+            named entities.
+        kb_id (uint64 or string):  An ID from a KB to capture the meaning of a named entity.
+        vector (ndarray[ndim=1, dtype='float32']): A meaning representation of
+            the span.
+        RETURNS (Span): The newly constructed object.
+        """
+        start_idx += self.start_char
+        end_idx += self.start_char
+        return self.doc.char_span(start_idx, end_idx)
 
     @property
     def conjuncts(self):

@@ -9,7 +9,6 @@ import {
     LandingGrid,
     LandingCard,
     LandingCol,
-    LandingButton,
     LandingDemo,
     LandingBannerGrid,
     LandingBanner,
@@ -19,7 +18,9 @@ import { H2 } from '../components/typography'
 import { Ul, Li } from '../components/list'
 import Button from '../components/button'
 import Link from '../components/link'
-import irlBackground from '../images/spacy-irl.jpg'
+
+import courseImage from '../../docs/images/course.jpg'
+import prodigyImage from '../../docs/images/prodigy_overview.jpg'
 
 import BenchmarksChoi from 'usage/_benchmarks-choi.md'
 
@@ -56,7 +57,11 @@ function getCounts(langs = []) {
     return {
         langs: langs.length,
         modelLangs: langs.filter(({ models }) => models && !!models.length).length,
+        starterLangs: langs.filter(({ starters }) => starters && !!starters.length).length,
         models: langs.map(({ models }) => (models ? models.length : 0)).reduce((a, b) => a + b, 0),
+        starters: langs
+            .map(({ starters }) => (starters ? starters.length : 0))
+            .reduce((a, b) => a + b, 0),
     }
 }
 
@@ -75,34 +80,28 @@ const Landing = ({ data }) => {
                 <LandingSubtitle>in Python</LandingSubtitle>
             </LandingHeader>
             <LandingGrid blocks>
-                <LandingCard title="Get things done">
-                    <p>
-                        spaCy is designed to help you do real work — to build real products, or
-                        gather real insights. The library respects your time, and tries to avoid
-                        wasting it. It's easy to install, and its API is simple and productive. We
-                        like to think of spaCy as the Ruby on Rails of Natural Language Processing.
-                    </p>
-                    <LandingButton to="/usage/spacy-101">Get started</LandingButton>
+                <LandingCard title="Get things done" url="/usage/spacy-101" button="Get started">
+                    spaCy is designed to help you do real work — to build real products, or gather
+                    real insights. The library respects your time, and tries to avoid wasting it.
+                    It's easy to install, and its API is simple and productive. We like to think of
+                    spaCy as the Ruby on Rails of Natural Language Processing.
                 </LandingCard>
-                <LandingCard title="Blazing fast">
-                    <p>
-                        spaCy excels at large-scale information extraction tasks. It's written from
-                        the ground up in carefully memory-managed Cython. Independent research in
-                        2015 found spaCy to be the fastest in the world. If your application needs
-                        to process entire web dumps, spaCy is the library you want to be using.
-                    </p>
-                    <LandingButton to="/usage/facts-figures">Facts & Figures</LandingButton>
+                <LandingCard
+                    title="Blazing fast"
+                    url="/usage/facts-figures"
+                    button="Facts &amp; Figures"
+                >
+                    spaCy excels at large-scale information extraction tasks. It's written from the
+                    ground up in carefully memory-managed Cython. Independent research in 2015 found
+                    spaCy to be the fastest in the world. If your application needs to process
+                    entire web dumps, spaCy is the library you want to be using.
                 </LandingCard>
 
-                <LandingCard title="Deep learning">
-                    <p>
-                        spaCy is the best way to prepare text for deep learning. It interoperates
-                        seamlessly with TensorFlow, PyTorch, scikit-learn, Gensim and the rest of
-                        Python's awesome AI ecosystem. With spaCy, you can easily construct
-                        linguistically sophisticated statistical models for a variety of NLP
-                        problems.
-                    </p>
-                    <LandingButton to="/usage/training">Read more</LandingButton>
+                <LandingCard title="Deep learning" url="/usage/training" button="Read more">
+                    spaCy is the best way to prepare text for deep learning. It interoperates
+                    seamlessly with TensorFlow, PyTorch, scikit-learn, Gensim and the rest of
+                    Python's awesome AI ecosystem. With spaCy, you can easily construct
+                    linguistically sophisticated statistical models for a variety of NLP problems.
                 </LandingCard>
             </LandingGrid>
 
@@ -126,7 +125,7 @@ const Landing = ({ data }) => {
                             {counts.modelLangs} languages
                         </Li>
                         <Li>
-                            Pre-trained <strong>word vectors</strong>
+                            Pretrained <strong>word vectors</strong>
                         </Li>
                         <Li>State-of-the-art speed</Li>
                         <Li>
@@ -151,22 +150,25 @@ const Landing = ({ data }) => {
 
             <LandingBannerGrid>
                 <LandingBanner
-                    title="spaCy IRL 2019: Two days of NLP"
-                    label="Watch the videos"
-                    to="https://www.youtube.com/playlist?list=PLBmcuObd5An4UC6jvK_-eSl6jCvP1gwXc"
-                    button="Watch the videos"
-                    background="#ffc194"
-                    backgroundImage={irlBackground}
-                    color="#1a1e23"
+                    title="spaCy v3.0 nightly: Transformer-based pipelines, new training system, project templates &amp; more"
+                    label="Try the pre-release"
+                    to="https://nightly.spacy.io"
+                    button="See what's new"
+                    background="#8758fe"
+                    color="#ffffff"
                     small
                 >
-                    We were pleased to invite the spaCy community and other folks working on Natural
-                    Language Processing to Berlin this summer for a small and intimate event{' '}
-                    <strong>July 6, 2019</strong>. We booked a beautiful venue, hand-picked an
-                    awesome lineup of speakers and scheduled plenty of social time to get to know
-                    each other and exchange ideas. The YouTube playlist includes 12 talks about NLP
-                    research, development and applications, with keynotes by Sebastian Ruder
-                    (DeepMind) and Yoav Goldberg (Allen AI).
+                    spaCy v3.0 features all new <strong>transformer-based pipelines</strong> that
+                    bring spaCy's accuracy right up to the current <strong>state-of-the-art</strong>
+                    . You can use any pretrained transformer to train your own pipelines, and even
+                    share one transformer between multiple components with{' '}
+                    <strong>multi-task learning</strong>. Training is now fully configurable and
+                    extensible, and you can define your own custom models using{' '}
+                    <strong>PyTorch</strong>, <strong>TensorFlow</strong> and other frameworks. The
+                    new spaCy projects system lets you describe whole{' '}
+                    <strong>end-to-end workflows</strong> in a single file, giving you an easy path
+                    from prototype to production, and making it easy to clone and adapt
+                    best-practice projects for your own use cases.
                 </LandingBanner>
 
                 <LandingBanner
@@ -174,17 +176,23 @@ const Landing = ({ data }) => {
                     label="From the makers of spaCy"
                     to="https://prodi.gy"
                     button="Try it out"
-                    background="#eee"
-                    color="#252a33"
+                    background="#f6f6f6"
+                    color="#000"
                     small
                 >
+                    <Link to="https://prodi.gy" hidden>
+                        <img
+                            src={prodigyImage}
+                            alt="Prodigy: Radically efficient machine teaching"
+                        />
+                    </Link>
+                    <br />
+                    <br />
                     Prodigy is an <strong>annotation tool</strong> so efficient that data scientists
                     can do the annotation themselves, enabling a new level of rapid iteration.
                     Whether you're working on entity recognition, intent detection or image
                     classification, Prodigy can help you <strong>train and evaluate</strong> your
-                    models faster. Stream in your own examples or real-world data from live APIs,
-                    update your model in real-time and chain models together to build more complex
-                    systems.
+                    models faster.
                 </LandingBanner>
             </LandingBannerGrid>
 
@@ -193,19 +201,44 @@ const Landing = ({ data }) => {
             </LandingLogos>
             <LandingLogos title="Featured on" logos={data.logosPublications} />
 
-            <LandingBanner
-                title="BERT-style language model pretraining"
-                label="New in v2.1"
-                to="/usage/v2-1"
-                button="Read more"
-            >
-                Learn more from small training corpora by initializing your models with{' '}
-                <strong>knowledge from raw text</strong>. The new pretrain command teaches spaCy's
-                CNN model to predict words based on their context, producing representations of
-                words in contexts. If you've seen Google's BERT system or fast.ai's ULMFiT, spaCy's
-                pretraining is similar – but much more efficient. It's still experimental, but users
-                are already reporting good results, so give it a try!
-            </LandingBanner>
+            <LandingBannerGrid>
+                <LandingBanner
+                    to="https://course.spacy.io"
+                    button="Start the course"
+                    background="#f6f6f6"
+                    color="#252a33"
+                    small
+                >
+                    <Link to="https://course.spacy.io" hidden>
+                        <img
+                            src={courseImage}
+                            alt="Advanced NLP with spaCy: A free online course"
+                        />
+                    </Link>
+                    <br />
+                    <br />
+                    In this <strong>free and interactive online course</strong> you’ll learn how to
+                    use spaCy to build advanced natural language understanding systems, using both
+                    rule-based and machine learning approaches. It includes{' '}
+                    <strong>55 exercises</strong> featuring videos, slide decks, multiple-choice
+                    questions and interactive coding practice in the browser.
+                </LandingBanner>
+                <LandingBanner
+                    title="BERT-style language model pretraining"
+                    label="New in v2.1"
+                    to="/usage/v2-1"
+                    button="Read more"
+                    small
+                >
+                    Learn more from small training corpora by initializing your models with{' '}
+                    <strong>knowledge from raw text</strong>. The new pretrain command teaches
+                    spaCy's CNN model to predict words based on their context, producing
+                    representations of words in contexts. If you've seen Google's BERT system or
+                    fast.ai's ULMFiT, spaCy's pretraining is similar – but much more efficient. It's
+                    still experimental, but users are already reporting good results, so give it a
+                    try!
+                </LandingBanner>
+            </LandingBannerGrid>
 
             <LandingGrid cols={2}>
                 <LandingCol>
@@ -270,6 +303,7 @@ const landingQuery = graphql`
                 repo
                 languages {
                     models
+                    starters
                 }
                 logosUsers {
                     id

@@ -40,6 +40,18 @@ const DATA = [
             },
         ],
     },
+    {
+        id: 'data',
+        title: 'Additional data',
+        multiple: true,
+        options: [
+            {
+                id: 'lookups',
+                title: 'Lemmatization',
+                help: 'Install additional lookup tables and rules for lemmatization',
+            },
+        ],
+    },
 ]
 
 const QuickstartInstall = ({ id, title }) => (
@@ -76,21 +88,31 @@ const QuickstartInstall = ({ id, title }) => (
                     <QS config="venv" os="windows">
                         .env\Scripts\activate
                     </QS>
-                    <QS package="pip">pip install -U spacy</QS>
+                    <QS package="pip">
+                        pip install -U pip setuptools wheel
+                    </QS>
+                    <QS package="pip">
+                        pip install -U spacy
+                    </QS>
                     <QS package="conda">conda install -c conda-forge spacy</QS>
                     <QS package="source">git clone https://github.com/{repo}</QS>
                     <QS package="source">cd spaCy</QS>
-                    <QS package="source" os="linux">
-                        export PYTHONPATH=`pwd`
+                    <QS data="lookups" package="pip">
+                        pip install -U spacy-lookups-data
                     </QS>
-                    <QS package="source" os="windows">
-                        set PYTHONPATH=/path/to/spaCy
+                    <QS data="lookups" package="source">
+                        pip install -U spacy-lookups-data
                     </QS>
-                    <QS package="source">pip install -r requirements.txt</QS>
-                    <QS package="source">python setup.py build_ext --inplace</QS>
-                    {models.map(({ code }) => (
+                    <QS data="lookups" package="conda">
+                        conda install -c conda-forge spacy-lookups-data
+                    </QS>
+                    <QS package="source">
+                        pip install -U pip setuptools wheel
+                    </QS>
+                    <QS package="source">pip install .</QS>
+                    {models.map(({ code, models: modelOptions }) => (
                         <QS models={code} key={code}>
-                            python -m spacy download {code}
+                            python -m spacy download {modelOptions[0]}
                         </QS>
                     ))}
                 </Quickstart>

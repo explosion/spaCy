@@ -38,14 +38,6 @@ def test_da_tokenizer_handles_custom_base_exc(da_tokenizer):
 
 
 @pytest.mark.parametrize(
-    "text,norm", [("akvarium", "akvarie"), ("bedstemoder", "bedstemor")]
-)
-def test_da_tokenizer_norm_exceptions(da_tokenizer, text, norm):
-    tokens = da_tokenizer(text)
-    assert tokens[0].norm_ == norm
-
-
-@pytest.mark.parametrize(
     "text,n_tokens",
     [
         ("Godt og/eller skidt", 3),
@@ -58,7 +50,8 @@ def test_da_tokenizer_norm_exceptions(da_tokenizer, text, norm):
         ("Kristiansen c/o Madsen", 3),
         ("Sprogteknologi a/s", 2),
         ("De boede i A/B Bellevue", 5),
-        ("Rotorhastigheden er 3400 o/m.", 5),
+        # note: skipping due to weirdness in UD_Danish-DDT
+        # ("Rotorhastigheden er 3400 o/m.", 5),
         ("Jeg købte billet t/r.", 5),
         ("Murerarbejdsmand m/k søges", 3),
         ("Netværket kører over TCP/IP", 4),

@@ -15,8 +15,8 @@ need to add an underscore `_` to its name:
 ### {executable="true"}
 import spacy
 
-nlp = spacy.load('en_core_web_sm')
-doc = nlp(u'Apple is looking at buying U.K. startup for $1 billion')
+nlp = spacy.load("en_core_web_sm")
+doc = nlp("Apple is looking at buying U.K. startup for $1 billion")
 
 for token in doc:
     print(token.text, token.lemma_, token.pos_, token.tag_, token.dep_,
@@ -25,7 +25,7 @@ for token in doc:
 
 > - **Text:** The original word text.
 > - **Lemma:** The base form of the word.
-> - **POS:** The simple part-of-speech tag.
+> - **POS:** The simple [UPOS](https://universaldependencies.org/docs/u/pos/) part-of-speech tag.
 > - **Tag:** The detailed part-of-speech tag.
 > - **Dep:** Syntactic dependency, i.e. the relation between tokens.
 > - **Shape:** The word shape – capitalization, punctuation, digits.
@@ -36,7 +36,7 @@ for token in doc:
 | Text    | Lemma   | POS     | Tag   | Dep        | Shape   | alpha   | stop    |
 | ------- | ------- | ------- | ----- | ---------- | ------- | ------- | ------- |
 | Apple   | apple   | `PROPN` | `NNP` | `nsubj`    | `Xxxxx` | `True`  | `False` |
-| is      | be      | `VERB`  | `VBZ` | `aux`      | `xx`    | `True`  | `True`  |
+| is      | be      | `AUX`   | `VBZ` | `aux`      | `xx`    | `True`  | `True`  |
 | looking | look    | `VERB`  | `VBG` | `ROOT`     | `xxxx`  | `True`  | `False` |
 | at      | at      | `ADP`   | `IN`  | `prep`     | `xx`    | `True`  | `True`  |
 | buying  | buy     | `VERB`  | `VBG` | `pcomp`    | `xxxx`  | `True`  | `False` |
@@ -45,7 +45,7 @@ for token in doc:
 | for     | for     | `ADP`   | `IN`  | `prep`     | `xxx`   | `True`  | `True`  |
 | \$      | \$      | `SYM`   | `$`   | `quantmod` | `$`     | `False` | `False` |
 | 1       | 1       | `NUM`   | `CD`  | `compound` | `d`     | `False` | `False` |
-| billion | billion | `NUM`   | `CD`  | `probj`    | `xxxx`  | `True`  | `False` |
+| billion | billion | `NUM`   | `CD`  | `pobj`     | `xxxx`  | `True`  | `False` |
 
 > #### Tip: Understanding tags and labels
 >

@@ -5,7 +5,6 @@ import pytest
 from spacy.attrs import ORTH, LENGTH
 from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
-from spacy.errors import ModelsWarning
 from spacy.util import filter_spans
 
 from ..util import get_doc
@@ -30,6 +29,24 @@ def doc_not_parsed(en_tokenizer):
     doc = Doc(tokens.vocab, words=[t.text for t in tokens])
     doc.is_parsed = False
     return doc
+
+
+@pytest.mark.parametrize(
+    "i_sent,i,j,text",
+    [
+        (0, 0, len("This is a"), "This is a"),
+        (1, 0, len("This is another"), "This is another"),
+        (2, len("And "), len("And ") + len("a third"), "a third"),
+        (0, 1, 2, None),
+    ],
+)
+def test_char_span(doc, i_sent, i, j, text):
+    sents = list(doc.sents)
+    span = sents[i_sent].char_span(i, j)
+    if not text:
+        assert not span
+    else:
+        assert span.text == text
 
 
 def test_spans_sent_spans(doc):
@@ -106,7 +123,7 @@ def test_span_similarity_match():
     doc = Doc(Vocab(), words=["a", "b", "a", "b"])
     span1 = doc[:2]
     span2 = doc[2:]
-    with pytest.warns(ModelsWarning):
+    with pytest.warns(UserWarning):
         assert span1.similarity(span2) == 1.0
         assert span1.similarity(doc) == 0.0
         assert span1[:1].similarity(doc.vocab["a"]) == 1.0
@@ -150,7 +167,32 @@ def test_spans_are_hashable(en_tokenizer):
 
 def test_spans_by_character(doc):
     span1 = doc[1:-2]
+
+    # default and specified alignment mode "strict"
     span2 = doc.char_span(span1.start_char, span1.end_char, label="GPE")
+    assert span1.start_char == span2.start_char
+    assert span1.end_char == span2.end_char
+    assert span2.label_ == "GPE"
+
+    span2 = doc.char_span(
+        span1.start_char, span1.end_char, label="GPE", alignment_mode="strict"
+    )
+    assert span1.start_char == span2.start_char
+    assert span1.end_char == span2.end_char
+    assert span2.label_ == "GPE"
+
+    # alignment mode "contract"
+    span2 = doc.char_span(
+        span1.start_char - 3, span1.end_char, label="GPE", alignment_mode="contract"
+    )
+    assert span1.start_char == span2.start_char
+    assert span1.end_char == span2.end_char
+    assert span2.label_ == "GPE"
+
+    # alignment mode "expand"
+    span2 = doc.char_span(
+        span1.start_char + 1, span1.end_char, label="GPE", alignment_mode="expand"
+    )
     assert span1.start_char == span2.start_char
     assert span1.end_char == span2.end_char
     assert span2.label_ == "GPE"
@@ -171,6 +213,21 @@ def test_span_as_doc(doc):
     assert isinstance(span_doc, doc.__class__)
     assert span_doc is not doc
     assert span_doc[0].idx == 0
+
+
+def test_span_as_doc_user_data(doc):
+    """Test that the user_data can be preserved (but not by default). """
+    my_key = "my_info"
+    my_value = 342
+    doc.user_data[my_key] = my_value
+
+    span = doc[4:10]
+    span_doc_with = span.as_doc(copy_user_data=True)
+    span_doc_without = span.as_doc()
+
+    assert doc.user_data.get(my_key, None) is my_value
+    assert span_doc_with.user_data.get(my_key, None) is my_value
+    assert span_doc_without.user_data.get(my_key, None) is None
 
 
 def test_span_string_label_kb_id(doc):
@@ -238,3 +295,40 @@ def test_filter_spans(doc):
     assert len(filtered[1]) == 5
     assert filtered[0].start == 1 and filtered[0].end == 4
     assert filtered[1].start == 5 and filtered[1].end == 10
+    # Test filtering overlaps with earlier preference for identical length
+    spans = [doc[1:4], doc[2:5], doc[5:10], doc[7:9], doc[1:4]]
+    filtered = filter_spans(spans)
+    assert len(filtered) == 2
+    assert len(filtered[0]) == 3
+    assert len(filtered[1]) == 5
+    assert filtered[0].start == 1 and filtered[0].end == 4
+    assert filtered[1].start == 5 and filtered[1].end == 10
+
+
+def test_span_eq_hash(doc, doc_not_parsed):
+    assert doc[0:2] == doc[0:2]
+    assert doc[0:2] != doc[1:3]
+    assert doc[0:2] != doc_not_parsed[0:2]
+    assert hash(doc[0:2]) == hash(doc[0:2])
+    assert hash(doc[0:2]) != hash(doc[1:3])
+    assert hash(doc[0:2]) != hash(doc_not_parsed[0:2])
+
+
+def test_span_boundaries(doc):
+    start = 1
+    end = 5
+    span = doc[start:end]
+    for i in range(start, end):
+        assert span[i - start] == doc[i]
+    with pytest.raises(IndexError):
+        _ = span[-5]
+    with pytest.raises(IndexError):
+        _ = span[5]
+
+
+def test_sent(en_tokenizer):
+    doc = en_tokenizer("Check span.sent raises error if doc is not sentencized.")
+    span = doc[1:3]
+    assert not span.doc.is_sentenced
+    with pytest.raises(ValueError):
+        span.sent

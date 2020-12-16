@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import plac
 import shutil
 from pathlib import Path
-from wasabi import Printer, get_raw_input
+from wasabi import msg, get_raw_input
 import srsly
 
 from ..compat import path2str
@@ -27,7 +27,6 @@ def package(input_dir, output_dir, meta_path=None, create_meta=False, force=Fals
     set and a meta.json already exists in the output directory, the existing
     values will be used as the defaults in the command-line prompt.
     """
-    msg = Printer()
     input_path = util.ensure_path(input_dir)
     output_path = util.ensure_path(output_dir)
     meta_path = util.ensure_path(meta_path)

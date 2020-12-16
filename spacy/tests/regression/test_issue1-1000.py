@@ -9,7 +9,9 @@ from spacy.symbols import POS, VERB, VerbForm_inf
 from spacy.vocab import Vocab
 from spacy.language import Language
 from spacy.lemmatizer import Lemmatizer
+from spacy.lookups import Lookups
 from spacy.tokens import Doc, Span
+from spacy.lang.en import EnglishDefaults
 
 from ..util import get_doc, make_tempdir
 
@@ -29,7 +31,7 @@ def test_issue118(en_tokenizer, patterns):
     doc = en_tokenizer(text)
     ORG = doc.vocab.strings["ORG"]
     matcher = Matcher(doc.vocab)
-    matcher.add("BostonCeltics", None, *patterns)
+    matcher.add("BostonCeltics", patterns)
     assert len(list(doc.ents)) == 0
     matches = [(ORG, start, end) for _, start, end in matcher(doc)]
     assert matches == [(ORG, 9, 11), (ORG, 10, 11)]
@@ -56,7 +58,7 @@ def test_issue118_prefix_reorder(en_tokenizer, patterns):
     doc = en_tokenizer(text)
     ORG = doc.vocab.strings["ORG"]
     matcher = Matcher(doc.vocab)
-    matcher.add("BostonCeltics", None, *patterns)
+    matcher.add("BostonCeltics", patterns)
     assert len(list(doc.ents)) == 0
     matches = [(ORG, start, end) for _, start, end in matcher(doc)]
     doc.ents += tuple(matches)[1:]
@@ -77,7 +79,7 @@ def test_issue242(en_tokenizer):
     ]
     doc = en_tokenizer(text)
     matcher = Matcher(doc.vocab)
-    matcher.add("FOOD", None, *patterns)
+    matcher.add("FOOD", patterns)
     matches = [(ent_type, start, end) for ent_type, start, end in matcher(doc)]
     match1, match2 = matches
     assert match1[1] == 3
@@ -126,17 +128,13 @@ def test_issue587(en_tokenizer):
     """Test that Matcher doesn't segfault on particular input"""
     doc = en_tokenizer("a b; c")
     matcher = Matcher(doc.vocab)
-    matcher.add("TEST1", None, [{ORTH: "a"}, {ORTH: "b"}])
+    matcher.add("TEST1", [[{ORTH: "a"}, {ORTH: "b"}]])
     matches = matcher(doc)
     assert len(matches) == 1
-    matcher.add(
-        "TEST2", None, [{ORTH: "a"}, {ORTH: "b"}, {IS_PUNCT: True}, {ORTH: "c"}]
-    )
+    matcher.add("TEST2", [[{ORTH: "a"}, {ORTH: "b"}, {IS_PUNCT: True}, {ORTH: "c"}]])
     matches = matcher(doc)
     assert len(matches) == 2
-    matcher.add(
-        "TEST3", None, [{ORTH: "a"}, {ORTH: "b"}, {IS_PUNCT: True}, {ORTH: "d"}]
-    )
+    matcher.add("TEST3", [[{ORTH: "a"}, {ORTH: "b"}, {IS_PUNCT: True}, {ORTH: "d"}]])
     matches = matcher(doc)
     assert len(matches) == 2
 
@@ -144,7 +142,7 @@ def test_issue587(en_tokenizer):
 def test_issue588(en_vocab):
     matcher = Matcher(en_vocab)
     with pytest.raises(ValueError):
-        matcher.add("TEST", None, [])
+        matcher.add("TEST", [[]])
 
 
 @pytest.mark.xfail
@@ -160,11 +158,9 @@ def test_issue590(en_vocab):
     doc = Doc(en_vocab, words=["n", "=", "1", ";", "a", ":", "5", "%"])
     matcher = Matcher(en_vocab)
     matcher.add(
-        "ab",
-        None,
-        [{"IS_ALPHA": True}, {"ORTH": ":"}, {"LIKE_NUM": True}, {"ORTH": "%"}],
+        "ab", [[{"IS_ALPHA": True}, {"ORTH": ":"}, {"LIKE_NUM": True}, {"ORTH": "%"}]]
     )
-    matcher.add("ab", None, [{"IS_ALPHA": True}, {"ORTH": "="}, {"LIKE_NUM": True}])
+    matcher.add("ab", [[{"IS_ALPHA": True}, {"ORTH": "="}, {"LIKE_NUM": True}]])
     matches = matcher(doc)
     assert len(matches) == 2
 
@@ -173,8 +169,11 @@ def test_issue595():
     """Test lemmatization of base forms"""
     words = ["Do", "n't", "feed", "the", "dog"]
     tag_map = {"VB": {POS: VERB, VerbForm_inf: True}}
-    rules = {"verb": [["ed", "e"]]}
-    lemmatizer = Lemmatizer({"verb": {}}, {"verb": {}}, rules)
+    lookups = Lookups()
+    lookups.add_table("lemma_rules", {"verb": [["ed", "e"]]})
+    lookups.add_table("lemma_index", {"verb": {}})
+    lookups.add_table("lemma_exc", {"verb": {}})
+    lemmatizer = Lemmatizer(lookups, is_base_form=EnglishDefaults.is_base_form)
     vocab = Vocab(lemmatizer=lemmatizer, tag_map=tag_map)
     doc = Doc(vocab, words=words)
     doc[2].tag_ = "VB"
@@ -217,7 +216,7 @@ def test_issue615(en_tokenizer):
     label = "Sport_Equipment"
     doc = en_tokenizer(text)
     matcher = Matcher(doc.vocab)
-    matcher.add(label, merge_phrases, pattern)
+    matcher.add(label, [pattern], on_match=merge_phrases)
     matcher(doc)
     entities = list(doc.ents)
     assert entities != []
@@ -335,7 +334,7 @@ def test_issue850():
     vocab = Vocab(lex_attr_getters={LOWER: lambda string: string.lower()})
     matcher = Matcher(vocab)
     pattern = [{"LOWER": "bob"}, {"OP": "*"}, {"LOWER": "frank"}]
-    matcher.add("FarAway", None, pattern)
+    matcher.add("FarAway", [pattern])
     doc = Doc(matcher.vocab, words=["bob", "and", "and", "frank"])
     match = matcher(doc)
     assert len(match) == 1
@@ -349,7 +348,7 @@ def test_issue850_basic():
     vocab = Vocab(lex_attr_getters={LOWER: lambda string: string.lower()})
     matcher = Matcher(vocab)
     pattern = [{"LOWER": "bob"}, {"OP": "*", "LOWER": "and"}, {"LOWER": "frank"}]
-    matcher.add("FarAway", None, pattern)
+    matcher.add("FarAway", [pattern])
     doc = Doc(matcher.vocab, words=["bob", "and", "and", "frank"])
     match = matcher(doc)
     assert len(match) == 1
@@ -358,7 +357,9 @@ def test_issue850_basic():
     assert end == 4
 
 
-@pytest.mark.skip(reason="French exception list is not enabled in the default tokenizer anymore")
+@pytest.mark.skip(
+    reason="French exception list is not enabled in the default tokenizer anymore"
+)
 @pytest.mark.parametrize(
     "text", ["au-delàs", "pair-programmâmes", "terra-formées", "σ-compacts"]
 )
@@ -424,7 +425,7 @@ def test_issue957(en_tokenizer):
 def test_issue999(train_data):
     """Test that adding entities and resuming training works passably OK.
     There are two issues here:
-    1) We have to readd labels. This isn't very nice.
+    1) We have to re-add labels. This isn't very nice.
     2) There's no way to set the learning rate for the weight update, so we
         end up out-of-scale, causing it to learn too fast.
     """

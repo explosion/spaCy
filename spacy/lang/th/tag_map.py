@@ -16,25 +16,33 @@ TAG_MAP = {
     "CMTR": {POS: NOUN},
     "CFQC": {POS: NOUN},
     "CVBL": {POS: NOUN},
+    "CL": {POS: NOUN},
+    "FX": {POS: NOUN},
+    "NN": {POS: NOUN},
     # VERB
     "VACT": {POS: VERB},
     "VSTA": {POS: VERB},
+    "VV": {POS: VERB},
     # PRON
     "PRON": {POS: PRON},
     "NPRP": {POS: PRON},
+    "PR": {POS: PRON},
     # ADJ
     "ADJ": {POS: ADJ},
     "NONM": {POS: ADJ},
     "VATT": {POS: ADJ},
     "DONM": {POS: ADJ},
+    "AJ": {POS: ADJ},
     # ADV
     "ADV": {POS: ADV},
     "ADVN": {POS: ADV},
     "ADVI": {POS: ADV},
     "ADVP": {POS: ADV},
     "ADVS": {POS: ADV},
-    # INT
+    "AV": {POS: ADV},
+    # INTJ
     "INT": {POS: INTJ},
+    "IJ": {POS: INTJ},
     # PRON
     "PROPN": {POS: PROPN},
     "PPRS": {POS: PROPN},
@@ -56,6 +64,7 @@ TAG_MAP = {
     "NCNM": {POS: NUM},
     "NLBL": {POS: NUM},
     "DCNM": {POS: NUM},
+    "NU": {POS: NUM},
     # AUX
     "AUX": {POS: AUX},
     "XVBM": {POS: AUX},
@@ -63,12 +72,15 @@ TAG_MAP = {
     "XVMM": {POS: AUX},
     "XVBB": {POS: AUX},
     "XVAE": {POS: AUX},
+    "AX": {POS: AUX},
     # ADP
     "ADP": {POS: ADP},
     "RPRE": {POS: ADP},
+    "PS": {POS: ADP},
     # CCONJ
     "CCONJ": {POS: CCONJ},
     "JCRG": {POS: CCONJ},
+    "CC": {POS: CCONJ},
     # SCONJ
     "SCONJ": {POS: SCONJ},
     "PREL": {POS: SCONJ},
@@ -82,6 +94,7 @@ TAG_MAP = {
     "AITT": {POS: PART},
     "NEG": {POS: PART},
     "EITT": {POS: PART},
+    "PA": {POS: PART},
     # PUNCT
     "PUNCT": {POS: PUNCT},
     "PUNC": {POS: PUNCT},

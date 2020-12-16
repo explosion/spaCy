@@ -15,11 +15,11 @@ def test_lt_tokenizer_handles_long_text(lt_tokenizer):
     [
         (
             "177R Parodų rūmai–Ozo g. nuo vasario 18 d. bus skelbiamas interneto tinklalapyje.",
-            15,
+            17,
         ),
         (
             "ISM universiteto doc. dr. Ieva Augutytė-Kvedaravičienė pastebi, kad tyrimais nustatyti elgesio pokyčiai.",
-            16,
+            18,
         ),
     ],
 )
@@ -31,7 +31,7 @@ def test_lt_tokenizer_handles_punct_abbrev(lt_tokenizer, text, length):
 @pytest.mark.parametrize("text", ["km.", "pvz.", "biol."])
 def test_lt_tokenizer_abbrev_exceptions(lt_tokenizer, text):
     tokens = lt_tokenizer(text)
-    assert len(tokens) == 1
+    assert len(tokens) == 2
 
 
 @pytest.mark.parametrize(

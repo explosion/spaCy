@@ -45,7 +45,7 @@ contain arbitrary whitespace. Alignment into the original string is preserved.
 > #### Example
 >
 > ```python
-> doc = nlp(u"An example sentence. Another sentence.")
+> doc = nlp("An example sentence. Another sentence.")
 > assert (doc[0].text, doc[0].head.tag_) == ("An", "NN")
 > ```
 
@@ -61,8 +61,8 @@ Pipeline components to prevent from being loaded can now be added as a list to
 `disable`, instead of specifying one keyword argument per component.
 
 ```diff
-- doc = nlp(u"I don't want parsed", parse=False)
-+ doc = nlp(u"I don't want parsed", disable=["parser"])
+- doc = nlp("I don't want parsed", parse=False)
++ doc = nlp("I don't want parsed", disable=["parser"])
 ```
 
 </Infobox>
@@ -77,16 +77,16 @@ more efficient than processing texts one-by-one.
 Early versions of spaCy used simple statistical models that could be efficiently
 multi-threaded, as we were able to entirely release Python's global interpreter
 lock. The multi-threading was controlled using the `n_threads` keyword argument
-to the `.pipe` method. This keyword argument is now deprecated as of v2.1.0.
-Future versions may introduce a `n_process` argument for parallel inference via
-multiprocessing.
+to the `.pipe` method. This keyword argument is now deprecated as of v2.1.0. A
+new keyword argument, `n_process`, was introduced to control parallel inference
+via multiprocessing in v2.2.2.
 
 </Infobox>
 
 > #### Example
 >
 > ```python
-> texts = [u"One document.", u"...", u"Lots of documents"]
+> texts = ["One document.", "...", "Lots of documents"]
 > for doc in nlp.pipe(texts, batch_size=50):
 >     assert doc.is_parsed
 > ```
@@ -98,6 +98,7 @@ multiprocessing.
 | `batch_size`                                 | int   | The number of texts to buffer.                                                                                                                             |
 | `disable`                                    | list  | Names of pipeline components to [disable](/usage/processing-pipelines#disabling).                                                                          |
 | `component_cfg` <Tag variant="new">2.1</Tag> | dict  | Config parameters for specific pipeline components, keyed by component name.                                                                               |
+| `n_process` <Tag variant="new">2.2.2</Tag>   | int   | Number of processors to use, only supported in Python 3. Defaults to `1`.                                                                                  |
 | **YIELDS**                                   | `Doc` | Documents in the order of the original text.                                                                                                               |
 
 ## Language.update {#update tag="method"}
@@ -135,11 +136,12 @@ Evaluate a model's pipeline components.
 
 | Name                                         | Type     | Description                                                                                                                                                   |
 | -------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docs_golds`                                 | iterable | Tuples of `Doc` and `GoldParse` objects or `(text, annotations)` of raw text and a dict (see [simple training style](/usage/training#training-simple-style)). |
+| `docs_golds`                                 | iterable | Tuples of `Doc` and `GoldParse` objects, such that the `Doc` objects contain the predictions and the `GoldParse` objects the correct annotations. Alternatively, `(text, annotations)` tuples of raw text and a dict (see [simple training style](/usage/training#training-simple-style)). |
 | `verbose`                                    | bool     | Print debugging information.                                                                                                                                  |
 | `batch_size`                                 | int      | The batch size to use.                                                                                                                                        |
 | `scorer`                                     | `Scorer` | Optional [`Scorer`](/api/scorer) to use. If not passed in, a new one will be created.                                                                         |
 | `component_cfg` <Tag variant="new">2.1</Tag> | dict     | Config parameters for specific pipeline components, keyed by component name.                                                                                  |
+| **RETURNS**                                  | Scorer   | The scorer containing the evaluation scores.                                                                                                                  |
 
 ## Language.begin_training {#begin_training tag="method"}
 
@@ -322,18 +324,38 @@ you can use to undo your changes.
 > #### Example
 >
 > ```python
-> with nlp.disable_pipes('tagger', 'parser'):
+> # New API as of v2.2.2
+> with nlp.disable_pipes(["tagger", "parser"]):
+>    nlp.begin_training()
+>
+> with nlp.disable_pipes("tagger", "parser"):
 >     nlp.begin_training()
 >
-> disabled = nlp.disable_pipes('tagger', 'parser')
+> disabled = nlp.disable_pipes("tagger", "parser")
 > nlp.begin_training()
 > disabled.restore()
 > ```
 
-| Name        | Type            | Description                                                                          |
-| ----------- | --------------- | ------------------------------------------------------------------------------------ |
-| `*disabled` | unicode         | Names of pipeline components to disable.                                             |
-| **RETURNS** | `DisabledPipes` | The disabled pipes that can be restored by calling the object's `.restore()` method. |
+| Name                                      | Type            | Description                                                                          |
+| ----------------------------------------- | --------------- | ------------------------------------------------------------------------------------ |
+| `disabled` <Tag variant="new">2.2.2</Tag> | list            | Names of pipeline components to disable.                                             |
+| `*disabled`                               | unicode         | Names of pipeline components to disable.                                             |
+| **RETURNS**                               | `DisabledPipes` | The disabled pipes that can be restored by calling the object's `.restore()` method. |
+
+<Infobox title="Changed in v2.2.2" variant="warning">
+
+As of spaCy v2.2.2, the `Language.disable_pipes` method can also take a list of
+component names as its first argument (instead of a variable number of
+arguments). This is especially useful if you're generating the component names
+to disable programmatically. The new syntax will become the default in the
+future.
+
+```diff
+- disabled = nlp.disable_pipes("tagger", "parser")
++ disabled = nlp.disable_pipes(["tagger", "parser"])
+```
+
+</Infobox>
 
 ## Language.to_disk {#to_disk tag="method" new="2"}
 
@@ -443,15 +465,16 @@ per component.
 
 ## Attributes {#attributes}
 
-| Name                                    | Type               | Description                                                                                     |
-| --------------------------------------- | ------------------ | ----------------------------------------------------------------------------------------------- |
-| `vocab`                                 | `Vocab`            | A container for the lexical types.                                                              |
-| `tokenizer`                             | `Tokenizer`        | The tokenizer.                                                                                  |
-| `make_doc`                              | `lambda text: Doc` | Create a `Doc` object from unicode text.                                                        |
-| `pipeline`                              | list               | List of `(name, component)` tuples describing the current processing pipeline, in order.        |
-| `pipe_names` <Tag variant="new">2</Tag> | list               | List of pipeline component names, in order.                                                     |
-| `meta`                                  | dict               | Custom meta data for the Language class. If a model is loaded, contains meta data of the model. |
-| `path` <Tag variant="new">2</Tag>       | `Path`             | Path to the model data directory, if a model is loaded. Otherwise `None`.                       |
+| Name                                       | Type        | Description                                                                                     |
+| ------------------------------------------ | ----------- | ----------------------------------------------------------------------------------------------- |
+| `vocab`                                    | `Vocab`     | A container for the lexical types.                                                              |
+| `tokenizer`                                | `Tokenizer` | The tokenizer.                                                                                  |
+| `make_doc`                                 | `callable`  | Callable that takes a unicode text and returns a `Doc`.                                         |
+| `pipeline`                                 | list        | List of `(name, component)` tuples describing the current processing pipeline, in order.        |
+| `pipe_names` <Tag variant="new">2</Tag>    | list        | List of pipeline component names, in order.                                                     |
+| `pipe_labels` <Tag variant="new">2.2</Tag> | dict        | List of labels set by the pipeline components, if available, keyed by component name.           |
+| `meta`                                     | dict        | Custom meta data for the Language class. If a model is loaded, contains meta data of the model. |
+| `path` <Tag variant="new">2</Tag>          | `Path`      | Path to the model data directory, if a model is loaded. Otherwise `None`.                       |
 
 ## Class attributes {#class-attributes}
 

@@ -30,6 +30,11 @@ cdef void* _init_state(Pool mem, int length, void* tokens) except NULL:
     return <void*>st
 
 
+cdef int _del_state(Pool mem, void* state, void* x) except -1:
+    cdef StateC* st = <StateC*>state
+    del st
+
+
 cdef class TransitionSystem:
     def __init__(self, StringStore string_table, labels_by_action=None, min_freq=None):
         self.mem = Pool()
@@ -44,6 +49,7 @@ cdef class TransitionSystem:
             self.initialize_actions(labels_by_action, min_freq=min_freq)
         self.root_label = self.strings.add('ROOT')
         self.init_beam_state = _init_state
+        self.del_beam_state = _del_state
 
     def __reduce__(self):
         return (self.__class__, (self.strings, self.labels), None, None)
@@ -63,9 +69,17 @@ cdef class TransitionSystem:
         cdef Doc doc
         beams = []
         cdef int offset = 0
+
+        # Doc objects might contain labels that we need to register actions for. We need to check for that
+        # *before* we create any Beam objects, because the Beam object needs the correct number of
+        # actions. It's sort of dumb, but the best way is to just call init_batch() -- that triggers the additions,
+        # and it doesn't matter that we create and discard the state objects.
+        self.init_batch(docs)
+
         for doc in docs:
             beam = Beam(self.n_moves, beam_width, min_density=beam_density)
-            beam.initialize(self.init_beam_state, doc.length, doc.c)
+            beam.initialize(self.init_beam_state, self.del_beam_state,
+                            doc.length, doc.c)
             for i in range(beam.width):
                 state = <StateC*>beam.at(i)
                 state.offset = offset
@@ -76,6 +90,8 @@ cdef class TransitionSystem:
 
     def get_oracle_sequence(self, doc, GoldParse gold):
         cdef Pool mem = Pool()
+        # n_moves should not be zero at this point, but make sure to avoid zero-length mem alloc
+        assert self.n_moves > 0
         costs = <float*>mem.alloc(self.n_moves, sizeof(float))
         is_valid = <int*>mem.alloc(self.n_moves, sizeof(int))
 
@@ -96,8 +112,7 @@ cdef class TransitionSystem:
 
     def apply_transition(self, StateClass state, name):
         if not self.is_valid(state, name):
-            raise ValueError(
-                "Cannot apply transition {name}: invalid for the current state.".format(name=name))
+            raise ValueError(Errors.E170.format(name=name))
         action = self.lookup_transition(name)
         action.do(state.c, action.label)
 

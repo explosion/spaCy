@@ -3,13 +3,19 @@ from __future__ import unicode_literals
 
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
-from .lemmatizer import LOOKUP
+from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_INFIXES
+from .punctuation import TOKENIZER_SUFFIXES
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
 from ...language import Language
 from ...attrs import LANG, NORM
 from ...util import update_exc, add_lookups
+from .tag_map import TAG_MAP
+
+# Lemma data note:
+# Original pairs downloaded from http://www.lexiconista.com/datasets/lemmatization/
+# Replaced characters using cedillas with the correct ones (ș and ț)
 
 
 class RomanianDefaults(Language.Defaults):
@@ -20,7 +26,10 @@ class RomanianDefaults(Language.Defaults):
     )
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
-    lemma_lookup = LOOKUP
+    prefixes = TOKENIZER_PREFIXES
+    suffixes = TOKENIZER_SUFFIXES
+    infixes = TOKENIZER_INFIXES
+    tag_map = TAG_MAP
 
 
 class Romanian(Language):

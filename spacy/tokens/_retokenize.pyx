@@ -16,7 +16,7 @@ from .span cimport Span
 from .token cimport Token
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..structs cimport LexemeC, TokenC
-from ..attrs cimport TAG
+from ..attrs cimport TAG, NORM
 
 from .underscore import is_writable_attr
 from ..attrs import intify_attrs
@@ -35,12 +35,14 @@ cdef class Retokenizer:
     cdef list merges
     cdef list splits
     cdef set tokens_to_merge
+    cdef list _spans_to_merge
 
     def __init__(self, doc):
         self.doc = doc
         self.merges = []
         self.splits = []
         self.tokens_to_merge = set()
+        self._spans_to_merge = []  # keep a record to filter out duplicates
 
     def merge(self, Span span, attrs=SimpleFrozenDict()):
         """Mark a span for merging. The attrs will be applied to the resulting
@@ -51,10 +53,15 @@ cdef class Retokenizer:
 
         DOCS: https://spacy.io/api/doc#retokenizer.merge
         """
+        if (span.start, span.end) in self._spans_to_merge:
+            return
+        if span.end - span.start <= 0:
+            raise ValueError(Errors.E199.format(start=span.start, end=span.end))
         for token in span:
             if token.i in self.tokens_to_merge:
                 raise ValueError(Errors.E102.format(token=repr(token)))
             self.tokens_to_merge.add(token.i)
+        self._spans_to_merge.append((span.start, span.end))
         if "_" in attrs:  # Extension attributes
             extensions = attrs["_"]
             _validate_extensions(extensions)
@@ -109,13 +116,8 @@ cdef class Retokenizer:
 
     def __exit__(self, *args):
         # Do the actual merging here
-        if len(self.merges) > 1:
-            _bulk_merge(self.doc, self.merges)
-        elif len(self.merges) == 1:
-            (span, attrs) = self.merges[0]
-            start = span.start
-            end = span.end
-            _merge(self.doc, start, end, attrs)
+        if len(self.merges) >= 1:
+            _merge(self.doc, self.merges)
         # Iterate in order, to keep things simple.
         for start_char, orths, heads, attrs in sorted(self.splits):
             # Resolve token index
@@ -140,95 +142,7 @@ cdef class Retokenizer:
             _split(self.doc, token_index, orths, head_indices, attrs)
 
 
-def _merge(Doc doc, int start, int end, attributes):
-    """Retokenize the document, such that the span at
-    `doc.text[start_idx : end_idx]` is merged into a single token. If
-    `start_idx` and `end_idx `do not mark start and end token boundaries,
-    the document remains unchanged.
-    start_idx (int): Character index of the start of the slice to merge.
-    end_idx (int): Character index after the end of the slice to merge.
-    **attributes: Attributes to assign to the merged token. By default,
-        attributes are inherited from the syntactic root of the span.
-    RETURNS (Token): The newly merged token, or `None` if the start and end
-        indices did not fall at token boundaries.
-    """
-    cdef Span span = doc[start:end]
-    cdef int start_char = span.start_char
-    cdef int end_char = span.end_char
-    # Resize the doc.tensor, if it's set. Let the last row for each token stand
-    # for the merged region. To do this, we create a boolean array indicating
-    # whether the row is to be deleted, then use numpy.delete
-    if doc.tensor is not None and doc.tensor.size != 0:
-        doc.tensor = _resize_tensor(doc.tensor, [(start, end)])
-    # Get LexemeC for newly merged token
-    new_orth = ''.join([t.text_with_ws for t in span])
-    if span[-1].whitespace_:
-        new_orth = new_orth[:-len(span[-1].whitespace_)]
-    cdef const LexemeC* lex = doc.vocab.get(doc.mem, new_orth)
-    # House the new merged token where it starts
-    cdef TokenC* token = &doc.c[start]
-    token.spacy = doc.c[end-1].spacy
-    for attr_name, attr_value in attributes.items():
-        if attr_name == "_":  # Set extension attributes
-            for ext_attr_key, ext_attr_value in attr_value.items():
-                doc[start]._.set(ext_attr_key, ext_attr_value)
-        elif attr_name == TAG:
-            doc.vocab.morphology.assign_tag(token, attr_value)
-        else:
-            # Set attributes on both token and lexeme to take care of token
-            # attribute vs. lexical attribute without having to enumerate them.
-            # If an attribute name is not valid, set_struct_attr will ignore it.
-            Token.set_struct_attr(token, attr_name, attr_value)
-            Lexeme.set_struct_attr(<LexemeC*>lex, attr_name, attr_value)
-    # Make sure ent_iob remains consistent
-    if doc.c[end].ent_iob == 1 and token.ent_iob in (0, 2):
-        if token.ent_type == doc.c[end].ent_type:
-            token.ent_iob = 3
-        else:
-            # If they're not the same entity type, let them be two entities
-            doc.c[end].ent_iob = 3
-    # Begin by setting all the head indices to absolute token positions
-    # This is easier to work with for now than the offsets
-    # Before thinking of something simpler, beware the case where a
-    # dependency bridges over the entity. Here the alignment of the
-    # tokens changes.
-    span_root = span.root.i
-    token.dep = span.root.dep
-    # We update token.lex after keeping span root and dep, since
-    # setting token.lex will change span.start and span.end properties
-    # as it modifies the character offsets in the doc
-    token.lex = lex
-    for i in range(doc.length):
-        doc.c[i].head += i
-    # Set the head of the merged token, and its dep relation, from the Span
-    token.head = doc.c[span_root].head
-    # Adjust deps before shrinking tokens
-    # Tokens which point into the merged token should now point to it
-    # Subtract the offset from all tokens which point to >= end
-    offset = (end - start) - 1
-    for i in range(doc.length):
-        head_idx = doc.c[i].head
-        if start <= head_idx < end:
-            doc.c[i].head = start
-        elif head_idx >= end:
-            doc.c[i].head -= offset
-    # Now compress the token array
-    for i in range(end, doc.length):
-        doc.c[i - offset] = doc.c[i]
-    for i in range(doc.length - offset, doc.length):
-        memset(&doc.c[i], 0, sizeof(TokenC))
-        doc.c[i].lex = &EMPTY_LEXEME
-    doc.length -= offset
-    for i in range(doc.length):
-        # ...And, set heads back to a relative position
-        doc.c[i].head -= i
-    # Set the left/right children, left/right edges
-    set_children_from_heads(doc.c, doc.length)
-    # Return the merged Python object
-    return doc[start]
-
-
-def _bulk_merge(Doc doc, merges):
+def _merge(Doc doc, merges):
     """Retokenize the document, such that the spans described in 'merges'
      are merged into a single token. This method assumes that the merges
      are in the same order at which they appear in the doc, and that merges
@@ -239,10 +153,15 @@ def _bulk_merge(Doc doc, merges):
         syntactic root of the span.
     RETURNS (Token): The first newly merged token.
     """
+    cdef int i, merge_index, start, end, token_index, current_span_index, current_offset, offset, span_index
     cdef Span span
     cdef const LexemeC* lex
     cdef TokenC* token
     cdef Pool mem = Pool()
+    cdef int merged_iob = 0
+
+    # merges should not be empty, but make sure to avoid zero-length mem alloc
+    assert len(merges) > 0
     tokens = <TokenC**>mem.alloc(len(merges), sizeof(TokenC))
     spans = []
 
@@ -256,6 +175,28 @@ def _bulk_merge(Doc doc, merges):
         spans.append(span)
         # House the new merged token where it starts
         token = &doc.c[start]
+        start_ent_iob = doc.c[start].ent_iob
+        start_ent_type = doc.c[start].ent_type
+        # Initially set attributes to attributes of span root
+        token.tag = doc.c[span.root.i].tag
+        token.pos = doc.c[span.root.i].pos
+        token.morph = doc.c[span.root.i].morph
+        token.ent_iob = doc.c[span.root.i].ent_iob
+        token.ent_type = doc.c[span.root.i].ent_type
+        merged_iob = token.ent_iob
+        # If span root is part of an entity, merged token is B-ENT
+        if token.ent_iob in (1, 3):
+            merged_iob = 3
+            # If start token is I-ENT and previous token is of the same
+            # type, then I-ENT (could check I-ENT from start to span root)
+            if start_ent_iob == 1 and start > 0 \
+                    and start_ent_type == token.ent_type \
+                    and doc.c[start - 1].ent_type == token.ent_type:
+                merged_iob = 1
+        token.ent_iob = merged_iob
+        # Unset attributes that don't match new token
+        token.lemma = 0
+        token.norm = 0
         tokens[merge_index] = token
     # Resize the doc.tensor, if it's set. Let the last row for each token stand
     # for the merged region. To do this, we create a boolean array indicating
@@ -276,6 +217,10 @@ def _bulk_merge(Doc doc, merges):
         new_orth = ''.join([t.text_with_ws for t in spans[token_index]])
         if spans[token_index][-1].whitespace_:
             new_orth = new_orth[:-len(spans[token_index][-1].whitespace_)]
+        # add the vector of the (merged) entity to the vocab
+        if not doc.vocab.get_vector(new_orth).any():
+            if doc.vocab.vectors_length > 0:
+                doc.vocab.set_vector(new_orth, span.vector)
         token = tokens[token_index]
         lex = doc.vocab.get(doc.mem, new_orth)
         token.lex = lex
@@ -293,9 +238,10 @@ def _bulk_merge(Doc doc, merges):
                 # Set attributes on both token and lexeme to take care of token
                 # attribute vs. lexical attribute without having to enumerate
                 # them. If an attribute name is not valid, set_struct_attr will
-                # ignore it.
+                # ignore it. Exception: set NORM only on tokens.
                 Token.set_struct_attr(token, attr_name, attr_value)
-                Lexeme.set_struct_attr(<LexemeC*>lex, attr_name, attr_value)
+                if attr_name != NORM:
+                    Lexeme.set_struct_attr(<LexemeC*>lex, attr_name, attr_value)
     # Begin by setting all the head indices to absolute token positions
     # This is easier to work with for now than the offsets
     # Before thinking of something simpler, beware the case where a
@@ -351,17 +297,7 @@ def _bulk_merge(Doc doc, merges):
     # Set the left/right children, left/right edges
     set_children_from_heads(doc.c, doc.length)
     # Make sure ent_iob remains consistent
-    for (span, _) in merges:
-        if(span.end < len(offsets)):
-        # If it's not the last span
-            token_after_span_position = offsets[span.end]
-            if doc.c[token_after_span_position].ent_iob == 1\
-                    and doc.c[token_after_span_position - 1].ent_iob in (0, 2):
-                if doc.c[token_after_span_position - 1].ent_type == doc.c[token_after_span_position].ent_type:
-                    doc.c[token_after_span_position - 1].ent_iob = 3
-                else:
-                    # If they're not the same entity type, let them be two entities
-                    doc.c[token_after_span_position].ent_iob = 3
+    make_iob_consistent(doc.c, doc.length)
     # Return the merged Python object
     return doc[spans[0].start]
 
@@ -388,6 +324,7 @@ def _split(Doc doc, int token_index, orths, heads, attrs):
     cdef const LexemeC* lex
     cdef TokenC* token
     cdef TokenC orig_token = doc.c[token_index]
+    cdef int orig_length = len(doc)
 
     if(len(heads) != nb_subtokens):
         raise ValueError(Errors.E115)
@@ -401,14 +338,14 @@ def _split(Doc doc, int token_index, orths, heads, attrs):
             doc.c[i].head += offset
     # Double doc.c max_length if necessary (until big enough for all new tokens)
     while doc.length + nb_subtokens - 1 >= doc.max_length:
-        doc._realloc(doc.length * 2)
+        doc._realloc(doc.max_length * 2)
     # Move tokens after the split to create space for the new tokens
     doc.length = len(doc) + nb_subtokens -1
     to_process_tensor = (doc.tensor is not None and doc.tensor.size != 0)
     if to_process_tensor:
         xp = get_array_module(doc.tensor)
         doc.tensor = xp.append(doc.tensor, xp.zeros((nb_subtokens,doc.tensor.shape[1]), dtype="float32"), axis=0)
-    for token_to_move in range(doc.length - 1, token_index, -1):
+    for token_to_move in range(orig_length - 1, token_index, -1):
         doc.c[token_to_move + nb_subtokens - 1] = doc.c[token_to_move]
         if to_process_tensor:
             doc.tensor[token_to_move + nb_subtokens - 1] = doc.tensor[token_to_move]
@@ -419,6 +356,7 @@ def _split(Doc doc, int token_index, orths, heads, attrs):
         lex = doc.vocab.get(doc.mem, orth)
         token.lex = lex
         token.lemma = 0  # reset lemma
+        token.norm = 0  # reset norm
         if to_process_tensor:
             # setting the tensors of the split tokens to array of zeros
             doc.tensor[token_index + i] = xp.zeros((1,doc.tensor.shape[1]), dtype="float32")
@@ -456,9 +394,10 @@ def _split(Doc doc, int token_index, orths, heads, attrs):
                 # Set attributes on both token and lexeme to take care of token
                 # attribute vs. lexical attribute without having to enumerate
                 # them. If an attribute name is not valid, set_struct_attr will
-                # ignore it.
+                # ignore it. Exception: set NORM only on tokens.
                 Token.set_struct_attr(token, attr_name, get_string_id(attr_value))
-                Lexeme.set_struct_attr(<LexemeC*>token.lex, attr_name, get_string_id(attr_value))
+                if attr_name != NORM:
+                    Lexeme.set_struct_attr(<LexemeC*>token.lex, attr_name, get_string_id(attr_value))
     # Assign correct dependencies to the inner token
     for i, head in enumerate(heads):
         doc.c[token_index + i].head = head
@@ -479,3 +418,12 @@ def _validate_extensions(extensions):
             raise ValueError(Errors.E118.format(attr=key))
         if not is_writable_attr(extension):
             raise ValueError(Errors.E119.format(attr=key))
+
+
+cdef make_iob_consistent(TokenC* tokens, int length):
+    cdef int i
+    if tokens[0].ent_iob == 1:
+        tokens[0].ent_iob = 3
+    for i in range(1, length):
+        if tokens[i].ent_iob == 1 and tokens[i - 1].ent_type != tokens[i].ent_type:
+            tokens[i].ent_iob = 3

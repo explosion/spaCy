@@ -45,3 +45,8 @@ def test_ko_tokenizer_full_tags(ko_tokenizer, text, expected_tags):
 def test_ko_tokenizer_pos(ko_tokenizer, text, expected_pos):
     pos = [token.pos_ for token in ko_tokenizer(text)]
     assert pos == expected_pos.split()
+
+
+def test_ko_empty_doc(ko_tokenizer):
+    tokens = ko_tokenizer("")
+    assert len(tokens) == 0

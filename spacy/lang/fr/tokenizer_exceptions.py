@@ -4,9 +4,8 @@ from __future__ import unicode_literals
 import re
 
 from .punctuation import ELISION, HYPHENS
-from ..tokenizer_exceptions import URL_PATTERN
 from ..char_classes import ALPHA_LOWER, ALPHA
-from ...symbols import ORTH, LEMMA, TAG
+from ...symbols import ORTH, LEMMA
 
 # not using the large _tokenizer_exceptions_list by default as it slows down the tokenizer
 # from ._tokenizer_exceptions_list import FR_BASE_EXCEPTIONS
@@ -56,7 +55,28 @@ for exc_data in [
     _exc[exc_data[ORTH]] = [exc_data]
 
 
-for orth in ["etc."]:
+for orth in [
+    "après-midi",
+    "au-delà",
+    "au-dessus",
+    "celle-ci",
+    "celles-ci",
+    "celui-ci",
+    "cf.",
+    "ci-dessous",
+    "elle-même",
+    "en-dessous",
+    "etc.",
+    "jusque-là",
+    "lui-même",
+    "MM.",
+    "No.",
+    "peut-être",
+    "pp.",
+    "quelques-uns",
+    "rendez-vous",
+    "Vol.",
+]:
     _exc[orth] = [{ORTH: orth}]
 
 
@@ -72,7 +92,7 @@ for verb, verb_lemma in [
         for pronoun in ["elle", "il", "on"]:
             token = "{}-t-{}".format(orth, pronoun)
             _exc[token] = [
-                {LEMMA: verb_lemma, ORTH: orth, TAG: "VERB"},
+                {LEMMA: verb_lemma, ORTH: orth},  # , TAG: "VERB"},
                 {LEMMA: "t", ORTH: "-t"},
                 {LEMMA: pronoun, ORTH: "-" + pronoun},
             ]
@@ -81,7 +101,7 @@ for verb, verb_lemma in [("est", "être")]:
     for orth in [verb, verb.title()]:
         token = "{}-ce".format(orth)
         _exc[token] = [
-            {LEMMA: verb_lemma, ORTH: orth, TAG: "VERB"},
+            {LEMMA: verb_lemma, ORTH: orth},  # , TAG: "VERB"},
             {LEMMA: "ce", ORTH: "-ce"},
         ]
 
@@ -89,10 +109,27 @@ for verb, verb_lemma in [("est", "être")]:
 for pre, pre_lemma in [("qu'", "que"), ("n'", "ne")]:
     for orth in [pre, pre.title()]:
         _exc["%sest-ce" % orth] = [
-            {LEMMA: pre_lemma, ORTH: orth, TAG: "ADV"},
-            {LEMMA: "être", ORTH: "est", TAG: "VERB"},
+            {LEMMA: pre_lemma, ORTH: orth},
+            {LEMMA: "être", ORTH: "est"},
             {LEMMA: "ce", ORTH: "-ce"},
         ]
+
+
+for verb, pronoun in [("est", "il"), ("EST", "IL")]:
+    token = "{}-{}".format(verb, pronoun)
+    _exc[token] = [
+        {LEMMA: "être", ORTH: verb},
+        {LEMMA: pronoun, ORTH: "-" + pronoun},
+    ]
+
+
+for s, verb, pronoun in [("s", "est", "il"), ("S", "EST", "IL")]:
+    token = "{}'{}-{}".format(s, verb, pronoun)
+    _exc[token] = [
+        {LEMMA: "se", ORTH: s + "'"},
+        {LEMMA: "être", ORTH: verb},
+        {LEMMA: pronoun, ORTH: "-" + pronoun},
+    ]
 
 
 _infixes_exc = []
@@ -417,11 +454,8 @@ _regular_exp += [
     for hc in _hyphen_combination
 ]
 
-# URLs
-_regular_exp.append(URL_PATTERN)
-
 
 TOKENIZER_EXCEPTIONS = _exc
 TOKEN_MATCH = re.compile(
-    "|".join("(?:{})".format(m) for m in _regular_exp), re.IGNORECASE | re.UNICODE
+    "(?iu)" + "|".join("(?:{})".format(m) for m in _regular_exp)
 ).match

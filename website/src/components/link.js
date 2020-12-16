@@ -1,12 +1,13 @@
 import React, { Fragment } from 'react'
 import PropTypes from 'prop-types'
 import { Link as GatsbyLink } from 'gatsby'
-import { OutboundLink } from 'gatsby-plugin-google-analytics'
 import classNames from 'classnames'
 
 import Icon from './icon'
 import classes from '../styles/link.module.sass'
 import { isString } from './util'
+
+const internalRegex = /(http(s?)):\/\/(prodi.gy|spacy.io|irl.spacy.io)/gi
 
 const Whitespace = ({ children }) => (
     // Ensure that links are always wrapped in spaces
@@ -68,17 +69,13 @@ const Link = ({
             </Wrapper>
         )
     }
+    const isInternal = internalRegex.test(dest)
+    const rel = isInternal ? null : 'noopener nofollow noreferrer'
     return (
         <Wrapper>
-            <OutboundLink
-                href={dest}
-                className={linkClassNames}
-                target="_blank"
-                rel="noopener nofollow noreferrer"
-                {...other}
-            >
+            <a href={dest} className={linkClassNames} target="_blank" rel={rel} {...other}>
                 {content}
-            </OutboundLink>
+            </a>
         </Wrapper>
     )
 }

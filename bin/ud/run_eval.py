@@ -7,14 +7,16 @@ import datetime
 from pathlib import Path
 import xml.etree.ElementTree as ET
 
-from spacy.cli.ud import conll17_ud_eval
-from spacy.cli.ud.ud_train import write_conllu
+import conll17_ud_eval
+from ud_train import write_conllu
 from spacy.lang.lex_attrs import word_shape
 from spacy.util import get_lang_class
 
 # All languages in spaCy - in UD format (note that Norwegian is 'no' instead of 'nb')
-ALL_LANGUAGES = "ar, ca, da, de, el, en, es, fa, fi, fr, ga, he, hi, hr, hu, id, " \
-                "it, ja, no, nl, pl, pt, ro, ru, sv, tr, ur, vi, zh"
+ALL_LANGUAGES = ("af, ar, bg, bn, ca, cs, da, de, el, en, es, et, fa, fi, fr,"
+                 "ga, he, hi, hr, hu, id, is, it, ja, kn, ko, lt, lv, mr, no,"
+                 "nl, pl, pt, ro, ru, si, sk, sl, sq, sr, sv, ta, te, th, tl,"
+                 "tr, tt, uk, ur, vi, zh")
 
 # Non-parsing tasks that will be evaluated (works for default models)
 EVAL_NO_PARSE = ['Tokens', 'Words', 'Lemmas', 'Sentences', 'Feats']
@@ -73,10 +75,10 @@ def _contains_blinded_text(stats_xml):
     tree = ET.parse(stats_xml)
     root = tree.getroot()
     total_tokens = int(root.find('size/total/tokens').text)
-    unique_lemmas = int(root.find('lemmas').get('unique'))
+    unique_forms = int(root.find('forms').get('unique'))
 
     # assume the corpus is largely blinded when there are less than 1% unique tokens
-    return (unique_lemmas / total_tokens) < 0.01
+    return (unique_forms / total_tokens) < 0.01
 
 
 def fetch_all_treebanks(ud_dir, languages, corpus, best_per_language):
@@ -262,22 +264,26 @@ def main(out_path, ud_dir, check_parse=False, langs=ALL_LANGUAGES, exclude_train
     if not exclude_trained_models:
         if 'de' in models:
             models['de'].append(load_model('de_core_news_sm'))
-        if 'es' in models:
-            models['es'].append(load_model('es_core_news_sm'))
-            models['es'].append(load_model('es_core_news_md'))
-        if 'pt' in models:
-            models['pt'].append(load_model('pt_core_news_sm'))
-        if 'it' in models:
-            models['it'].append(load_model('it_core_news_sm'))
-        if 'nl' in models:
-            models['nl'].append(load_model('nl_core_news_sm'))
+            models['de'].append(load_model('de_core_news_md'))
+        if 'el' in models:
+            models['el'].append(load_model('el_core_news_sm'))
+            models['el'].append(load_model('el_core_news_md'))
         if 'en' in models:
             models['en'].append(load_model('en_core_web_sm'))
             models['en'].append(load_model('en_core_web_md'))
             models['en'].append(load_model('en_core_web_lg'))
+        if 'es' in models:
+            models['es'].append(load_model('es_core_news_sm'))
+            models['es'].append(load_model('es_core_news_md'))
         if 'fr' in models:
             models['fr'].append(load_model('fr_core_news_sm'))
             models['fr'].append(load_model('fr_core_news_md'))
+        if 'it' in models:
+            models['it'].append(load_model('it_core_news_sm'))
+        if 'nl' in models:
+            models['nl'].append(load_model('nl_core_news_sm'))
+        if 'pt' in models:
+            models['pt'].append(load_model('pt_core_news_sm'))
 
     with out_path.open(mode='w', encoding='utf-8') as out_file:
         run_all_evals(models, treebanks, out_file, check_parse, print_freq_tasks)

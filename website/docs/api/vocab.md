@@ -18,16 +18,20 @@ Create the vocabulary.
 >
 > ```python
 > from spacy.vocab import Vocab
-> vocab = Vocab(strings=[u"hello", u"world"])
+> vocab = Vocab(strings=["hello", "world"])
 > ```
 
-| Name               | Type                 | Description                                                                                                        |
-| ------------------ | -------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `lex_attr_getters` | dict                 | A dictionary mapping attribute IDs to functions to compute them. Defaults to `None`.                               |
-| `tag_map`          | dict                 | A dictionary mapping fine-grained tags to coarse-grained parts-of-speech, and optionally morphological attributes. |
-| `lemmatizer`       | object               | A lemmatizer. Defaults to `None`.                                                                                  |
-| `strings`          | `StringStore` / list | A [`StringStore`](/api/stringstore) that maps strings to hash values, and vice versa, or a list of strings.        |
-| **RETURNS**        | `Vocab`              | The newly constructed object.                                                                                      |
+| Name                                        | Type                 | Description                                                                                                        |
+| ------------------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `lex_attr_getters`                          | dict                 | A dictionary mapping attribute IDs to functions to compute them. Defaults to `None`.                               |
+| `tag_map`                                   | dict                 | A dictionary mapping fine-grained tags to coarse-grained parts-of-speech, and optionally morphological attributes. |
+| `lemmatizer`                                | object               | A lemmatizer. Defaults to `None`.                                                                                  |
+| `strings`                                   | `StringStore` / list | A [`StringStore`](/api/stringstore) that maps strings to hash values, and vice versa, or a list of strings.        |
+| `lookups`                                   | `Lookups`            | A [`Lookups`](/api/lookups) that stores the `lemma_\*`, `lexeme_norm` and other large lookup tables. Defaults to `None`.           |
+| `lookups_extra` <Tag variant="new">2.3</Tag> | `Lookups`           | A [`Lookups`](/api/lookups) that stores the optional `lexeme_cluster`/`lexeme_prob`/`lexeme_sentiment`/`lexeme_settings` lookup tables. Defaults to `None`. |
+| `oov_prob`                                  | float                | The default OOV probability. Defaults to `-20.0`.                                                                  |
+| `vectors_name` <Tag variant="new">2.2</Tag> | unicode              | A name to identify the vectors table.                                                                              |
+| **RETURNS**                                 | `Vocab`              | The newly constructed object.                                                                                      |
 
 ## Vocab.\_\_len\_\_ {#len tag="method"}
 
@@ -36,7 +40,7 @@ Get the current number of lexemes in the vocabulary.
 > #### Example
 >
 > ```python
-> doc = nlp(u"This is a sentence.")
+> doc = nlp("This is a sentence.")
 > assert len(nlp.vocab) > 0
 > ```
 
@@ -52,8 +56,8 @@ unicode string is given, a new lexeme is created and stored.
 > #### Example
 >
 > ```python
-> apple = nlp.vocab.strings[u"apple"]
-> assert nlp.vocab[apple] == nlp.vocab[u"apple"]
+> apple = nlp.vocab.strings["apple"]
+> assert nlp.vocab[apple] == nlp.vocab["apple"]
 > ```
 
 | Name           | Type          | Description                                      |
@@ -84,8 +88,8 @@ given string, you need to look it up in
 > #### Example
 >
 > ```python
-> apple = nlp.vocab.strings[u"apple"]
-> oov = nlp.vocab.strings[u"dskfodkfos"]
+> apple = nlp.vocab.strings["apple"]
+> oov = nlp.vocab.strings["dskfodkfos"]
 > assert apple in nlp.vocab
 > assert oov not in nlp.vocab
 > ```
@@ -106,11 +110,11 @@ using `token.check_flag(flag_id)`.
 >
 > ```python
 > def is_my_product(text):
->     products = [u"spaCy", u"Thinc", u"displaCy"]
+>     products = ["spaCy", "Thinc", "displaCy"]
 >     return text in products
 >
 > MY_PRODUCT = nlp.vocab.add_flag(is_my_product)
-> doc = nlp(u"I like spaCy")
+> doc = nlp("I like spaCy")
 > assert doc[2].check_flag(MY_PRODUCT) == True
 > ```
 
@@ -165,18 +169,23 @@ cosines are calculated in minibatches, to reduce memory usage.
 ## Vocab.get_vector {#get_vector tag="method" new="2"}
 
 Retrieve a vector for a word in the vocabulary. Words can be looked up by string
-or hash value. If no vectors data is loaded, a `ValueError` is raised.
+or hash value. If no vectors data is loaded, a `ValueError` is raised. If `minn`
+is defined, then the resulting vector uses [FastText](https://fasttext.cc/)'s
+subword features by average over ngrams of `orth` (introduced in spaCy `v2.1`).
 
 > #### Example
 >
 > ```python
-> nlp.vocab.get_vector(u"apple")
+> nlp.vocab.get_vector("apple")
+> nlp.vocab.get_vector("apple", minn=1, maxn=5)
 > ```
 
-| Name        | Type                                     | Description                                                                   |
-| ----------- | ---------------------------------------- | ----------------------------------------------------------------------------- |
-| `orth`      | int / unicode                            | The hash value of a word, or its unicode string.                              |
-| **RETURNS** | `numpy.ndarray[ndim=1, dtype='float32']` | A word vector. Size and shape are determined by the `Vocab.vectors` instance. |
+| Name                                | Type                                     | Description                                                                                    |
+| ----------------------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `orth`                              | int / unicode                            | The hash value of a word, or its unicode string.                                               |
+| `minn` <Tag variant="new">2.1</Tag> | int                                      | Minimum n-gram length used for FastText's ngram computation. Defaults to the length of `orth`. |
+| `maxn` <Tag variant="new">2.1</Tag> | int                                      | Maximum n-gram length used for FastText's ngram computation. Defaults to the length of `orth`. |
+| **RETURNS**                         | `numpy.ndarray[ndim=1, dtype='float32']` | A word vector. Size and shape are determined by the `Vocab.vectors` instance.                  |
 
 ## Vocab.set_vector {#set_vector tag="method" new="2"}
 
@@ -186,7 +195,7 @@ or hash value.
 > #### Example
 >
 > ```python
-> nlp.vocab.set_vector(u"apple", array([...]))
+> nlp.vocab.set_vector("apple", array([...]))
 > ```
 
 | Name     | Type                                     | Description                                      |
@@ -202,8 +211,8 @@ Words can be looked up by string or hash value.
 > #### Example
 >
 > ```python
-> if nlp.vocab.has_vector(u"apple"):
->     vector = nlp.vocab.get_vector(u"apple")
+> if nlp.vocab.has_vector("apple"):
+>     vector = nlp.vocab.get_vector("apple")
 > ```
 
 | Name        | Type          | Description                                      |
@@ -282,9 +291,9 @@ Load state from a binary string.
 > #### Example
 >
 > ```python
-> apple_id = nlp.vocab.strings[u"apple"]
+> apple_id = nlp.vocab.strings["apple"]
 > assert type(apple_id) == int
-> PERSON = nlp.vocab.strings[u"PERSON"]
+> PERSON = nlp.vocab.strings["PERSON"]
 > assert type(PERSON) == int
 > ```
 
@@ -293,6 +302,7 @@ Load state from a binary string.
 | `strings`                                     | `StringStore` | A table managing the string-to-int mapping.                  |
 | `vectors` <Tag variant="new">2</Tag>          | `Vectors`     | A table associating word IDs to word vectors.                |
 | `vectors_length`                              | int           | Number of dimensions for each word vector.                   |
+| `lookups`                                     | `Lookups`     | The available lookup tables in this vocab.                   |
 | `writing_system` <Tag variant="new">2.1</Tag> | dict          | A dict with information about the language's writing system. |
 
 ## Serialization fields {#serialization-fields}
@@ -313,3 +323,4 @@ serialization by passing in the string names via the `exclude` argument.
 | `strings` | The strings in the [`StringStore`](/api/stringstore). |
 | `lexemes` | The lexeme data.                                      |
 | `vectors` | The word vectors, if available.                       |
+| `lookups` | The lookup tables, if available.                      |

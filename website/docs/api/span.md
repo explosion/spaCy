@@ -13,19 +13,20 @@ Create a Span object from the slice `doc[start : end]`.
 > #### Example
 >
 > ```python
-> doc = nlp(u"Give it back! He pleaded.")
+> doc = nlp("Give it back! He pleaded.")
 > span = doc[1:4]
-> assert [t.text for t in span] ==  [u"it", u"back", u"!"]
+> assert [t.text for t in span] ==  ["it", "back", "!"]
 > ```
 
-| Name        | Type                                     | Description                                                                                                 |
-| ----------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `doc`       | `Doc`                                    | The parent document.                                                                                        |
-| `start`     | int                                      | The index of the first token of the span.                                                                   |
-| `end`       | int                                      | The index of the first token after the span.                                                                |
-| `label`     | int / unicode                            | A label to attach to the span, e.g. for named entities. As of v2.1, the label can also be a unicode string. |
-| `vector`    | `numpy.ndarray[ndim=1, dtype='float32']` | A meaning representation of the span.                                                                       |
-| **RETURNS** | `Span`                                   | The newly constructed object.                                                                               |
+| Name        | Type                                     | Description                                                                                                       |
+| ----------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `doc`       | `Doc`                                    | The parent document.                                                                                              |
+| `start`     | int                                      | The index of the first token of the span.                                                                         |
+| `end`       | int                                      | The index of the first token after the span.                                                                      |
+| `label`     | int / unicode                            | A label to attach to the span, e.g. for named entities. As of v2.1, the label can also be a unicode string.       |
+| `kb_id`     | int / unicode                            | A knowledge base ID to attach to the span, e.g. for named entities. The ID can be an integer or a unicode string. |
+| `vector`    | `numpy.ndarray[ndim=1, dtype='float32']` | A meaning representation of the span.                                                                             |
+| **RETURNS** | `Span`                                   | The newly constructed object.                                                                                     |
 
 ## Span.\_\_getitem\_\_ {#getitem tag="method"}
 
@@ -34,7 +35,7 @@ Get a `Token` object.
 > #### Example
 >
 > ```python
-> doc = nlp(u"Give it back! He pleaded.")
+> doc = nlp("Give it back! He pleaded.")
 > span = doc[1:4]
 > assert span[1].text == "back"
 > ```
@@ -49,9 +50,9 @@ Get a `Span` object.
 > #### Example
 >
 > ```python
-> doc = nlp(u"Give it back! He pleaded.")
+> doc = nlp("Give it back! He pleaded.")
 > span = doc[1:4]
-> assert span[1:3].text == u"back!"
+> assert span[1:3].text == "back!"
 > ```
 
 | Name        | Type   | Description                      |
@@ -66,9 +67,9 @@ Iterate over `Token` objects.
 > #### Example
 >
 > ```python
-> doc = nlp(u"Give it back! He pleaded.")
+> doc = nlp("Give it back! He pleaded.")
 > span = doc[1:4]
-> assert [t.text for t in span] == [u"it", u"back", u"!"]
+> assert [t.text for t in span] == ["it", "back", "!"]
 > ```
 
 | Name       | Type    | Description       |
@@ -82,7 +83,7 @@ Get the number of tokens in the span.
 > #### Example
 >
 > ```python
-> doc = nlp(u"Give it back! He pleaded.")
+> doc = nlp("Give it back! He pleaded.")
 > span = doc[1:4]
 > assert len(span) == 3
 > ```
@@ -101,9 +102,9 @@ For details, see the documentation on
 >
 > ```python
 > from spacy.tokens import Span
-> city_getter = lambda span: any(city in span.text for city in (u"New York", u"Paris", u"Berlin"))
+> city_getter = lambda span: any(city in span.text for city in ("New York", "Paris", "Berlin"))
 > Span.set_extension("has_city", getter=city_getter)
-> doc = nlp(u"I like New York in Autumn")
+> doc = nlp("I like New York in Autumn")
 > assert doc[1:4]._.has_city
 > ```
 
@@ -114,6 +115,7 @@ For details, see the documentation on
 | `method`  | callable | Set a custom method on the object, for example `span._.compare(other_span)`.                                                          |
 | `getter`  | callable | Getter function that takes the object and returns an attribute value. Is called when the user accesses the `._` attribute.            |
 | `setter`  | callable | Setter function that takes the `Span` and a value, and modifies the object. Is called when the user writes to the `Span._` attribute. |
+| `force`   | bool     | Force overwriting existing attribute.                                                                                                 |
 
 ## Span.get_extension {#get_extension tag="classmethod" new="2"}
 
@@ -170,6 +172,28 @@ Remove a previously registered extension.
 | `name`      | unicode | Name of the extension.                                                |
 | **RETURNS** | tuple   | A `(default, method, getter, setter)` tuple of the removed extension. |
 
+## Span.char_span {#char_span tag="method" new="2.2.4"}
+
+Create a `Span` object from the slice `span.text[start:end]`. Returns `None` if
+the character indices don't map to a valid span.
+
+> #### Example
+>
+> ```python
+> doc = nlp("I like New York")
+> span = doc[1:4].char_span(5, 13, label="GPE")
+> assert span.text == "New York"
+> ```
+
+| Name        | Type                                     | Description                                                           |
+| ----------- | ---------------------------------------- | --------------------------------------------------------------------- |
+| `start`     | int                                      | The index of the first character of the span.                         |
+| `end`       | int                                      | The index of the last character after the span.                       |
+| `label`     | uint64 / unicode                         | A label to attach to the span, e.g. for named entities.               |
+| `kb_id`     | uint64 / unicode                         | An ID from a knowledge base to capture the meaning of a named entity. |
+| `vector`    | `numpy.ndarray[ndim=1, dtype='float32']` | A meaning representation of the span.                                 |
+| **RETURNS** | `Span`                                   | The newly constructed object or `None`.                               |
+
 ## Span.similarity {#similarity tag="method" model="vectors"}
 
 Make a semantic similarity estimate. The default estimate is cosine similarity
@@ -178,7 +202,7 @@ using an average of word vectors.
 > #### Example
 >
 > ```python
-> doc = nlp(u"green apples and red oranges")
+> doc = nlp("green apples and red oranges")
 > green_apples = doc[:2]
 > red_oranges = doc[3:]
 > apples_oranges = green_apples.similarity(red_oranges)
@@ -200,7 +224,7 @@ ancestor is found, e.g. if span excludes a necessary ancestor.
 > #### Example
 >
 > ```python
-> doc = nlp(u"I like New York in Autumn")
+> doc = nlp("I like New York in Autumn")
 > span = doc[1:4]
 > matrix = span.get_lca_matrix()
 > # array([[0, 0, 0], [0, 1, 2], [0, 2, 2]], dtype=int32)
@@ -220,7 +244,7 @@ shape `(N, M)`, where `N` is the length of the document. The values will be
 >
 > ```python
 > from spacy.attrs import LOWER, POS, ENT_TYPE, IS_ALPHA
-> doc = nlp(u"I like New York in Autumn.")
+> doc = nlp("I like New York in Autumn.")
 > span = doc[2:3]
 > # All strings mapped to integers, for easy export to numpy
 > np_array = span.to_array([LOWER, POS, ENT_TYPE, IS_ALPHA])
@@ -246,11 +270,11 @@ Retokenize the document, such that the span is merged into a single token.
 > #### Example
 >
 > ```python
-> doc = nlp(u"I like New York in Autumn.")
+> doc = nlp("I like New York in Autumn.")
 > span = doc[2:4]
 > span.merge()
 > assert len(doc) == 6
-> assert doc[2].text == u"New York"
+> assert doc[2].text == "New York"
 > ```
 
 | Name           | Type    | Description                                                                                                               |
@@ -266,12 +290,12 @@ if the entity recognizer has been applied.
 > #### Example
 >
 > ```python
-> doc = nlp(u"Mr. Best flew to New York on Saturday morning.")
+> doc = nlp("Mr. Best flew to New York on Saturday morning.")
 > span = doc[0:6]
 > ents = list(span.ents)
 > assert ents[0].label == 346
 > assert ents[0].label_ == "PERSON"
-> assert ents[0].text == u"Mr. Best"
+> assert ents[0].text == "Mr. Best"
 > ```
 
 | Name        | Type  | Description                                  |
@@ -285,15 +309,16 @@ Create a new `Doc` object corresponding to the `Span`, with a copy of the data.
 > #### Example
 >
 > ```python
-> doc = nlp(u"I like New York in Autumn.")
+> doc = nlp("I like New York in Autumn.")
 > span = doc[2:4]
 > doc2 = span.as_doc()
-> assert doc2.text == u"New York"
+> assert doc2.text == "New York"
 > ```
 
-| Name        | Type  | Description                             |
-| ----------- | ----- | --------------------------------------- |
-| **RETURNS** | `Doc` | A `Doc` object of the `Span`'s content. |
+| Name             | Type  | Description                                          |
+| ---------------- | ----- | ---------------------------------------------------- |
+| `copy_user_data` | bool  | Whether or not to copy the original doc's user data. |
+| **RETURNS**      | `Doc` | A `Doc` object of the `Span`'s content.              |
 
 ## Span.root {#root tag="property" model="parser"}
 
@@ -304,12 +329,12 @@ taken.
 > #### Example
 >
 > ```python
-> doc = nlp(u"I like New York in Autumn.")
+> doc = nlp("I like New York in Autumn.")
 > i, like, new, york, in_, autumn, dot = range(len(doc))
-> assert doc[new].head.text == u"York"
-> assert doc[york].head.text == u"like"
+> assert doc[new].head.text == "York"
+> assert doc[york].head.text == "like"
 > new_york = doc[new:york+1]
-> assert new_york.root.text == u"York"
+> assert new_york.root.text == "York"
 > ```
 
 | Name        | Type    | Description     |
@@ -323,9 +348,9 @@ A tuple of tokens coordinated to `span.root`.
 > #### Example
 >
 > ```python
-> doc = nlp(u"I like apples and oranges")
+> doc = nlp("I like apples and oranges")
 > apples_conjuncts = doc[2:3].conjuncts
-> assert [t.text for t in apples_conjuncts] == [u"oranges"]
+> assert [t.text for t in apples_conjuncts] == ["oranges"]
 > ```
 
 | Name        | Type    | Description             |
@@ -339,9 +364,9 @@ Tokens that are to the left of the span, whose heads are within the span.
 > #### Example
 >
 > ```python
-> doc = nlp(u"I like New York in Autumn.")
+> doc = nlp("I like New York in Autumn.")
 > lefts = [t.text for t in doc[3:7].lefts]
-> assert lefts == [u"New"]
+> assert lefts == ["New"]
 > ```
 
 | Name       | Type    | Description                          |
@@ -355,9 +380,9 @@ Tokens that are to the right of the span, whose heads are within the span.
 > #### Example
 >
 > ```python
-> doc = nlp(u"I like New York in Autumn.")
+> doc = nlp("I like New York in Autumn.")
 > rights = [t.text for t in doc[2:4].rights]
-> assert rights == [u"in"]
+> assert rights == ["in"]
 > ```
 
 | Name       | Type    | Description                           |
@@ -372,7 +397,7 @@ the span.
 > #### Example
 >
 > ```python
-> doc = nlp(u"I like New York in Autumn.")
+> doc = nlp("I like New York in Autumn.")
 > assert doc[3:7].n_lefts == 1
 > ```
 
@@ -388,7 +413,7 @@ the span.
 > #### Example
 >
 > ```python
-> doc = nlp(u"I like New York in Autumn.")
+> doc = nlp("I like New York in Autumn.")
 > assert doc[2:4].n_rights == 1
 > ```
 
@@ -403,9 +428,9 @@ Tokens within the span and tokens which descend from them.
 > #### Example
 >
 > ```python
-> doc = nlp(u"Give it back! He pleaded.")
+> doc = nlp("Give it back! He pleaded.")
 > subtree = [t.text for t in doc[:3].subtree]
-> assert subtree == [u"Give", u"it", u"back", u"!"]
+> assert subtree == ["Give", "it", "back", "!"]
 > ```
 
 | Name       | Type    | Description                                       |
@@ -419,7 +444,7 @@ A boolean value indicating whether a word vector is associated with the object.
 > #### Example
 >
 > ```python
-> doc = nlp(u"I like apples")
+> doc = nlp("I like apples")
 > assert doc[1:].has_vector
 > ```
 
@@ -435,7 +460,7 @@ vectors.
 > #### Example
 >
 > ```python
-> doc = nlp(u"I like apples")
+> doc = nlp("I like apples")
 > assert doc[1:].vector.dtype == "float32"
 > assert doc[1:].vector.shape == (300,)
 > ```
@@ -451,7 +476,7 @@ The L2 norm of the span's vector representation.
 > #### Example
 >
 > ```python
-> doc = nlp(u"I like apples")
+> doc = nlp("I like apples")
 > doc[1:].vector_norm # 4.800883928527915
 > doc[2:].vector_norm # 6.895897646384268
 > assert doc[1:].vector_norm != doc[2:].vector_norm
@@ -476,9 +501,11 @@ The L2 norm of the span's vector representation.
 | `text_with_ws`                          | unicode      | The text content of the span with a trailing whitespace character if the last token has one.                   |
 | `orth`                                  | int          | ID of the verbatim text content.                                                                               |
 | `orth_`                                 | unicode      | Verbatim text content (identical to `Span.text`). Exists mostly for consistency with the other attributes.     |
-| `label`                                 | int          | The span's label.                                                                                              |
+| `label`                                 | int          | The hash value of the span's label.                                                                            |
 | `label_`                                | unicode      | The span's label.                                                                                              |
 | `lemma_`                                | unicode      | The span's lemma.                                                                                              |
+| `kb_id`                                 | int          | The hash value of the knowledge base ID referred to by the span.                                               |
+| `kb_id_`                                | unicode      | The knowledge base ID referred to by the span.                                                                 |
 | `ent_id`                                | int          | The hash value of the named entity the token is an instance of.                                                |
 | `ent_id_`                               | unicode      | The string ID of the named entity the token is an instance of.                                                 |
 | `sentiment`                             | float        | A scalar value indicating the positivity or negativity of the span.                                            |

@@ -1,18 +1,30 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-import re
+from wasabi import Printer
 
 from ...gold import iob_to_biluo
 from ...util import minibatch
+from .conll_ner2json import n_sents_info
 
 
-def iob2json(input_data, n_sents=10, *args, **kwargs):
+def iob2json(input_data, n_sents=10, no_print=False, *args, **kwargs):
     """
-    Convert IOB files into JSON format for use with train cli.
+    Convert IOB files with one sentence per line and tags separated with '|'
+    into JSON format for use with train cli. IOB and IOB2 are accepted.
+
+    Sample formats:
+
+    I|O like|O London|I-GPE and|O New|B-GPE York|I-GPE City|I-GPE .|O
+    I|O like|O London|B-GPE and|O New|B-GPE York|I-GPE City|I-GPE .|O
+    I|PRP|O like|VBP|O London|NNP|I-GPE and|CC|O New|NNP|B-GPE York|NNP|I-GPE City|NNP|I-GPE .|.|O
+    I|PRP|O like|VBP|O London|NNP|B-GPE and|CC|O New|NNP|B-GPE York|NNP|I-GPE City|NNP|I-GPE .|.|O
     """
-    sentences = read_iob(input_data.split("\n"))
-    docs = merge_sentences(sentences, n_sents)
+    msg = Printer(no_print=no_print)
+    docs = read_iob(input_data.split("\n"))
+    if n_sents > 0:
+        n_sents_info(msg, n_sents)
+        docs = merge_sentences(docs, n_sents)
     return docs
 
 
@@ -21,7 +33,7 @@ def read_iob(raw_sents):
     for line in raw_sents:
         if not line.strip():
             continue
-        tokens = [re.split("[^\w\-]", line.strip())]
+        tokens = [t.split("|") for t in line.split()]
         if len(tokens[0]) == 3:
             words, pos, iob = zip(*tokens)
         elif len(tokens[0]) == 2:
@@ -29,7 +41,7 @@ def read_iob(raw_sents):
             pos = ["-"] * len(words)
         else:
             raise ValueError(
-                "The iob/iob2 file is not formatted correctly. Try checking whitespace and delimiters."
+                "The sentence-per-line IOB/IOB2 file is not formatted correctly. Try checking whitespace and delimiters. See https://spacy.io/api/cli#convert"
             )
         biluo = iob_to_biluo(iob)
         sentences.append(
@@ -40,7 +52,7 @@ def read_iob(raw_sents):
         )
     sentences = [{"tokens": sent} for sent in sentences]
     paragraphs = [{"sentences": [sent]} for sent in sentences]
-    docs = [{"id": 0, "paragraphs": [para]} for para in paragraphs]
+    docs = [{"id": i, "paragraphs": [para]} for i, para in enumerate(paragraphs)]
     return docs
 
 
@@ -50,7 +62,7 @@ def merge_sentences(docs, n_sents):
         group = list(group)
         first = group.pop(0)
         to_extend = first["paragraphs"][0]["sentences"]
-        for sent in group[1:]:
+        for sent in group:
             to_extend.extend(sent["paragraphs"][0]["sentences"])
         merged.append(first)
     return merged
