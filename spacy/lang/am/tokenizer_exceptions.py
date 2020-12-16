@@ -14,20 +14,9 @@ for exc_data in [
     _exc[exc_data[ORTH]] = [exc_data]
 
 
-# Times
-
-#_exc["12m."] = [{ORTH: "12"}, {ORTH: "m.", LEMMA: "p.m."}]
-
-
-for h in range(1, 12 + 1):
-    for period in ["a.m.", "am"]:
-        _exc["%d%s" % (h, period)] = [{ORTH: "%d" % h}, {ORTH: period, LEMMA: "a.m."}]
-    for period in ["p.m.", "pm"]:
-        _exc["%d%s" % (h, period)] = [{ORTH: "%d" % h}, {ORTH: period, LEMMA: "p.m."}]
-
-
 for orth in [
-    "ዓ.ም."
+    "ዓ.ም.",
+    "ኪ.ሜ.",
 ]:
     _exc[orth] = [{ORTH: orth}]
 
