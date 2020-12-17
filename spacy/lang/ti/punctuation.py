@@ -12,7 +12,7 @@ _suffixes = (
     + LIST_QUOTES
     + [
         r"(?<=[0-9])\+",
-        # Amharic is written from Left-To-Right
+        # Tigrinya is written from Left-To-Right
         r"(?<=[0-9])(?:{c})".format(c=CURRENCY),
         r"(?<=[0-9])(?:{u})".format(u=UNITS),
         r"(?<=[{au}][{au}])\.".format(au=ALPHA_UPPER),

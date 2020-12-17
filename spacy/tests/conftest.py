@@ -245,6 +245,9 @@ def th_tokenizer():
     pytest.importorskip("pythainlp")
     return get_lang_class("th").Defaults.create_tokenizer()
 
+@pytest.fixture(scope="session")
+def ti_tokenizer():
+    return get_lang_class("ti").Defaults.create_tokenizer()
 
 @pytest.fixture(scope="session")
 def tr_tokenizer():
