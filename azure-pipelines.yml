@@ -34,6 +34,7 @@ jobs:
     dependsOn: "Validate"
     strategy:
       matrix:
+        # We're only running one platform per Python version to speed up builds
         Python36Linux:
           imageName: "ubuntu-16.04"
           python.version: "3.6"
