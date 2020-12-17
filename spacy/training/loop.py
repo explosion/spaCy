@@ -66,7 +66,7 @@ def train(
         nlp,
         optimizer,
         create_train_batches(train_corpus(nlp), batcher, T["max_epochs"]),
-        create_evaluation_callback(nlp, dev_corpus, score_weights),
+        create_evaluation_callback(nlp, dev_corpus(nlp), score_weights),
         dropout=T["dropout"],
         accumulate_gradient=T["accumulate_gradient"],
         patience=T["patience"],
@@ -244,14 +244,14 @@ def subdivide_batch(batch, accumulate_gradient):
 
 
 def create_evaluation_callback(
-    nlp: "Language", dev_corpus: Callable, weights: Dict[str, float]
+    nlp: "Language", iterator: Iterator[Example], weights: Dict[str, float]
 ) -> Callable[[], Tuple[float, Dict[str, float]]]:
     weights = {key: value for key, value in weights.items() if value is not None}
+    examples = list(iterator)
 
     def evaluate() -> Tuple[float, Dict[str, float]]:
-        dev_examples = list(dev_corpus(nlp))
         try:
-            scores = nlp.evaluate(dev_examples)
+            scores = nlp.evaluate(examples)
         except KeyError as e:
             raise KeyError(Errors.E900.format(pipeline=nlp.pipe_names)) from e
         # Calculate a weighted sum based on score_weights for the main score.
