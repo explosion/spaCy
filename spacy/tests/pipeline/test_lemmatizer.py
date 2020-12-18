@@ -59,9 +59,9 @@ def test_lemmatizer_config(nlp):
     # warning if no POS assigned
     doc = nlp.make_doc("coping")
     logger = logging.getLogger("spacy")
-    with mock.patch.object(logger, "warn") as mock_warn:
+    with mock.patch.object(logger, "warning") as mock_warning:
         doc = lemmatizer(doc)
-        mock_warn.assert_called_once()
+        mock_warning.assert_called_once()
 
     # works with POS
     doc = nlp.make_doc("coping")
