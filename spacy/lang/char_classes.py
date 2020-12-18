@@ -7,6 +7,8 @@ group_chars = lambda char: char.strip().replace(" ", "")
 
 _bengali = r"\u0980-\u09FF"
 
+_ethiopic = r"\u1200-\u137F"
+
 _hebrew = r"\u0591-\u05F4\uFB1D-\uFB4F"
 
 _hindi = r"\u0900-\u097F"
@@ -231,6 +233,7 @@ _uncased = (
     + _telugu
     + _hangul
     + _cjk
+    + _ethiopic
 )
 
 ALPHA = group_chars(LATIN + _russian + _tatar + _greek + _ukrainian + _macedonian + _uncased)
