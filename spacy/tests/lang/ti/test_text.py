@@ -15,7 +15,7 @@ def test_ti_tokenizer_handles_long_text(ti_tokenizer):
 ቻንስለር ኣንጀላ መርከል ኣብ እዋን በዓላት ልደት ስድራቤታት ክተኣኻኸባ ዝፍቀደለን`ኳ እንተኾነ ድሕሪኡ ኣብ ዘሎ ግዜ ግን እቲ እገዳታት ክትግበር ትደሊ።"""
     tokens = ti_tokenizer(text)
     
-    assert len(tokens) == 83
+    assert len(tokens) == 85
 
 
 @pytest.mark.parametrize(
@@ -24,7 +24,7 @@ def test_ti_tokenizer_handles_long_text(ti_tokenizer):
         ("ቻንስለር ጀርመን ኣንገላ መርከል፧", 5),
         ("“ስድራቤታት፧”", 4),
         ("""ኣብ እዋን በዓላት ልደት ስድራቤታት ክተኣኻኸባ ዝፍቀደለን`ኳ እንተኾነ።""", 9),
-        ("ብግምት 10ኪ.ሜ. ጎይዩ።", 4),
+        ("ብግምት 10ኪ.ሜ. ጎይዩ።", 6),
         ("ኣብ ዝሓለፈ 24 ሰዓታት...", 5),
     ],
 )
