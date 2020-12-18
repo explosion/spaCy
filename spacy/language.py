@@ -1298,14 +1298,8 @@ class Language:
             scorer = Scorer(**kwargs)
         # reset annotation in predicted docs and time tokenization
         start_time = timer()
-        if not hasattr(self.tokenizer, "pipe"):
-            for eg in examples:
-                eg.predicted = self.tokenizer(eg.reference.text)
-        else:
-            for doc, eg in zip(
-                self.tokenizer.pipe(eg.reference.text for eg in examples), examples
-            ):
-                eg.predicted = doc
+        for eg in examples:
+            eg.predicted = self.make_doc(eg.reference.text)
         # apply all pipeline components
         for name, pipe in self.pipeline:
             kwargs = component_cfg.get(name, {})
