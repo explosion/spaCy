@@ -19,6 +19,8 @@ _tamil = r"\u0B80-\u0BFF"
 
 _telugu = r"\u0C00-\u0C7F"
 
+_tigrinya = r"\u1200-\u137F"
+
 # from the final table in: https://en.wikipedia.org/wiki/CJK_Unified_Ideographs
 _cjk = (
     r"\u4E00-\u62FF\u6300-\u77FF\u7800-\u8CFF\u8D00-\u9FFF\u3400-\u4DBF"
@@ -232,6 +234,7 @@ _uncased = (
     + _kannada
     + _tamil
     + _telugu
+    + _tigrinya
     + _hangul
     + _cjk
 )
