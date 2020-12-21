@@ -459,12 +459,12 @@ For more information, see the section on
 Predict the word's vector from a static embeddings table as pretraining
 objective for a Tok2Vec layer.
 
-| Name            | Description                                                                                                                                                          |
-| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `maxout_pieces` | The number of maxout pieces to use. Recommended values are `2` or `3`. ~~int~~                                                                                       |
-| `hidden_size`   | Size of the hidden layer of the model. ~~int~~                                                                                                                       |
-| `loss`          | The loss function can be either "cosine" or "L2". We typically recommend to use "cosine". ~~~str~~                                                                   |
-| **CREATES**     | A callable function that can create the Model, given the `vocab` of the pipeline and the `tok2vec` instance to pretrain. using t ~~Callable[[Vocab, Model], Model]~~ |
+| Name            | Description                                                                                                                                               |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `maxout_pieces` | The number of maxout pieces to use. Recommended values are `2` or `3`. ~~int~~                                                                            |
+| `hidden_size`   | Size of the hidden layer of the model. ~~int~~                                                                                                            |
+| `loss`          | The loss function can be either "cosine" or "L2". We typically recommend to use "cosine". ~~~str~~                                                        |
+| **CREATES**     | A callable function that can create the Model, given the `vocab` of the pipeline and the `tok2vec` layer to pretrain. ~~Callable[[Vocab, Model], Model]~~ |
 
 ### spacy.PretrainCharacters.v1 {#pretrain_chars}
 
@@ -485,12 +485,12 @@ objective for a Tok2Vec layer.
 Predict some number of leading and trailing UTF-8 bytes as pretraining objective
 for a Tok2Vec layer.
 
-| Name            | Description                                                                                                                                                          |
-| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `maxout_pieces` | The number of maxout pieces to use. Recommended values are `2` or `3`. ~~int~~                                                                                       |
-| `hidden_size`   | Size of the hidden layer of the model. ~~int~~                                                                                                                       |
-| `n_characters`  | The window of characters - e.g. if `n_characters = 2`, the model will try to predict the first two and last two characters of the word. ~~int~~                      |
-| **CREATES**     | A callable function that can create the Model, given the `vocab` of the pipeline and the `tok2vec` instance to pretrain. using t ~~Callable[[Vocab, Model], Model]~~ |
+| Name            | Description                                                                                                                                               |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `maxout_pieces` | The number of maxout pieces to use. Recommended values are `2` or `3`. ~~int~~                                                                            |
+| `hidden_size`   | Size of the hidden layer of the model. ~~int~~                                                                                                            |
+| `n_characters`  | The window of characters - e.g. if `n_characters = 2`, the model will try to predict the first two and last two characters of the word. ~~int~~           |
+| **CREATES**     | A callable function that can create the Model, given the `vocab` of the pipeline and the `tok2vec` layer to pretrain. ~~Callable[[Vocab, Model], Model]~~ |
 
 ## Parser & NER architectures {#parser}
 
