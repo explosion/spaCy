@@ -60,6 +60,8 @@ alături
 am
 anume
 apoi
+apai
+apăi
 ar
 are
 as
