@@ -429,12 +429,24 @@ one component.
 
 ## Pretraining architectures {#pretrain source="spacy/ml/models/multi_task.py"}
 
+The spacy `pretrain` command lets you initialize a `Tok2Vec` layer in your
+pipeline with information from raw text. To this end, additional layers are
+added to build a network for a temporary task that forces the `Tok2Vec` layer to
+learn something about sentence structure and word cooccurrence statistics. Two
+pretraining objectives are available, both of which are variants of the cloze
+task [Devlin et al. (2018)](https://arxiv.org/abs/1810.04805) introduced for
+BERT.
+
+For more information, see the section on
+[pretraining](/usage/embeddings-transformers#pretraining).
+
 ### spacy.PretrainVectors.v1 {#pretrain_vectors}
 
 > #### Example config
 >
 > ```ini
 > [pretraining]
+> component = "tok2vec"
 > ...
 >
 > [pretraining.objective]
@@ -445,13 +457,12 @@ one component.
 > ```
 
 Predict the word's vector from a static embeddings table as pretraining
-objective for a Tok2Vec layer. For more information, see the section on
-[pretraining](/usage/embeddings-transformers#pretraining).
+objective for a Tok2Vec layer.
 
 | Name            | Description                                                                                                                                                          |
 | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `maxout_pieces` | The number of maxout pieces to use. Recommended values are `2` or `3`. ~~int~~                                                                                       |
-| `hidden_size`   | Size of the intermediate layer. ~~int~~                                                                                                                              |
+| `hidden_size`   | Size of the hidden layer of the model. ~~int~~                                                                                                                       |
 | `loss`          | The loss function can be either "cosine" or "L2". We typically recommend to use "cosine". ~~~str~~                                                                   |
 | **CREATES**     | A callable function that can create the Model, given the `vocab` of the pipeline and the `tok2vec` instance to pretrain. using t ~~Callable[[Vocab, Model], Model]~~ |
 
@@ -461,6 +472,7 @@ objective for a Tok2Vec layer. For more information, see the section on
 >
 > ```ini
 > [pretraining]
+> component = "tok2vec"
 > ...
 >
 > [pretraining.objective]
@@ -471,14 +483,13 @@ objective for a Tok2Vec layer. For more information, see the section on
 > ```
 
 Predict some number of leading and trailing UTF-8 bytes as pretraining objective
-for a Tok2Vec layer. For more information, see the section on
-[pretraining](/usage/embeddings-transformers#pretraining).
+for a Tok2Vec layer.
 
 | Name            | Description                                                                                                                                                          |
 | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `maxout_pieces` | The number of maxout pieces to use. Recommended values are `2` or `3`. ~~int~~                                                                                       |
-| `hidden_size`   | Size of the intermediate layer. ~~int~~                                                                                                                              |
-| `n_characters`  | The window of characters - e.g. if `n_characters = 2`, the model will try to predict the first two and last two characters of the word. ~~~int~~                     |
+| `hidden_size`   | Size of the hidden layer of the model. ~~int~~                                                                                                                       |
+| `n_characters`  | The window of characters - e.g. if `n_characters = 2`, the model will try to predict the first two and last two characters of the word. ~~int~~                      |
 | **CREATES**     | A callable function that can create the Model, given the `vocab` of the pipeline and the `tok2vec` instance to pretrain. using t ~~Callable[[Vocab, Model], Model]~~ |
 
 ## Parser & NER architectures {#parser}
