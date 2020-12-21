@@ -5,12 +5,9 @@ requires = [
     "cymem>=2.0.2,<2.1.0",
     "preshed>=3.0.2,<3.1.0",
     "murmurhash>=0.28.0,<1.1.0",
-    "thinc>=8.0.0rc2,<8.1.0",
+    "thinc>=8.0.0rc3,<8.1.0",
     "blis>=0.4.0,<0.8.0",
     "pathy",
-    "numpy==1.15.0; python_version<='3.7'",
-    "numpy==1.17.3; python_version=='3.8'",
-    "numpy==1.19.3; python_version=='3.9'",
-    "numpy; python_version>='3.10'",
+    "numpy>=1.15.0",
 ]
 build-backend = "setuptools.build_meta"

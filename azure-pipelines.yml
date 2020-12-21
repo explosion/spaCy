@@ -34,43 +34,43 @@ jobs:
     dependsOn: "Validate"
     strategy:
       matrix:
+        # We're only running one platform per Python version to speed up builds
         Python36Linux:
           imageName: "ubuntu-16.04"
           python.version: "3.6"
-        Python36Windows:
+#        Python36Windows:
+#          imageName: "vs2017-win2016"
+#          python.version: "3.6"
+#        Python36Mac:
+#          imageName: "macos-10.14"
+#          python.version: "3.6"
+#        Python37Linux:
+#          imageName: "ubuntu-16.04"
+#          python.version: "3.7"
+        Python37Windows:
           imageName: "vs2017-win2016"
-          python.version: "3.6"
-        Python36Mac:
-          imageName: "macos-10.14"
-          python.version: "3.6"
-        # Don't test on 3.7 for now to speed up builds
-        # Python37Linux:
-        #   imageName: 'ubuntu-16.04'
-        #   python.version: '3.7'
-        # Python37Windows:
-        #   imageName: 'vs2017-win2016'
-        #   python.version: '3.7'
-        # Python37Mac:
-        #   imageName: 'macos-10.14'
-        #   python.version: '3.7'
-        Python38Linux:
-          imageName: "ubuntu-16.04"
-          python.version: "3.8"
-        Python38Windows:
-          imageName: "vs2017-win2016"
-          python.version: "3.8"
+          python.version: "3.7"
+#        Python37Mac:
+#          imageName: "macos-10.14"
+#          python.version: "3.7"
+#        Python38Linux:
+#          imageName: "ubuntu-16.04"
+#          python.version: "3.8"
+#        Python38Windows:
+#          imageName: "vs2017-win2016"
+#          python.version: "3.8"
         Python38Mac:
           imageName: "macos-10.14"
           python.version: "3.8"
-        # Python39Linux:
-        #   imageName: "ubuntu-16.04"
-        #   python.version: "3.9"
-        # Python39Windows:
-        #   imageName: "vs2017-win2016"
-        #   python.version: "3.9"
-        # Python39Mac:
-        #   imageName: "macos-10.14"
-        #   python.version: "3.9"
+        Python39Linux:
+          imageName: "ubuntu-16.04"
+          python.version: "3.9"
+        Python39Windows:
+          imageName: "vs2017-win2016"
+          python.version: "3.9"
+        Python39Mac:
+          imageName: "macos-10.14"
+          python.version: "3.9"
       maxParallel: 4
     pool:
       vmImage: $(imageName)
@@ -82,13 +82,12 @@ jobs:
           architecture: "x64"
 
       - script: |
-          python -m pip install -U pip setuptools
+          python -m pip install -U setuptools
           pip install -r requirements.txt
         displayName: "Install dependencies"
-        condition: not(eq(variables['python.version'], '3.5'))
 
       - script: |
-          python setup.py build_ext --inplace -j 2
+          python setup.py build_ext --inplace
           python setup.py sdist --formats=gztar
         displayName: "Compile and build sdist"
 
@@ -106,7 +105,6 @@ jobs:
           SDIST=$(python -c "import os;print(os.listdir('./dist')[-1])" 2>&1)
           pip install dist/$SDIST
         displayName: "Install from sdist"
-        condition: not(eq(variables['python.version'], '3.5'))
 
       - script: |
           pip install -r requirements.txt
