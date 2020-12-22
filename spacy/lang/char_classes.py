@@ -223,7 +223,7 @@ _upper = LATIN_UPPER + _russian_upper + _tatar_upper + _greek_upper + _ukrainian
 _lower = LATIN_LOWER + _russian_lower + _tatar_lower + _greek_lower + _ukrainian_lower + _macedonian_lower
 
 _uncased = (
-    _amharic
+    _ethiopic
     + _bengali
     + _hebrew
     + _persian
@@ -232,7 +232,6 @@ _uncased = (
     + _kannada
     + _tamil
     + _telugu
-    + _tigrinya
     + _hangul
     + _cjk
 )
