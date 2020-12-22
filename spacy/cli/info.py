@@ -20,7 +20,7 @@ from .. import about
 def info(model=None, markdown=False, silent=False):
     """
     Print info about spaCy installation. If a model shortcut link is
-    speficied as an argument, print model information. Flag --markdown
+    specified as an argument, print model information. Flag --markdown
     prints details in Markdown for easy copy-pasting to GitHub issues.
     """
     if model:
