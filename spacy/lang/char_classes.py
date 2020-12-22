@@ -5,7 +5,7 @@ split_chars = lambda char: list(char.strip().split(" "))
 merge_chars = lambda char: char.strip().replace(" ", "|")
 group_chars = lambda char: char.strip().replace(" ", "")
 
-_amharic = r"\u1200-\u137F"
+_ethiopic = r"\u1200-\u137F"
 
 _bengali = r"\u0980-\u09FF"
 
@@ -18,8 +18,6 @@ _kannada = r"\u0C80-\u0CFF"
 _tamil = r"\u0B80-\u0BFF"
 
 _telugu = r"\u0C00-\u0C7F"
-
-_tigrinya = r"\u1200-\u137F"
 
 # from the final table in: https://en.wikipedia.org/wiki/CJK_Unified_Ideographs
 _cjk = (
