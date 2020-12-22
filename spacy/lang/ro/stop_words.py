@@ -30,8 +30,6 @@ acestia
 acestui
 aceşti
 aceştia
-acești
-aceștia
 acolo
 acord
 acum
@@ -159,7 +157,9 @@ că
 căci
 cărei
 căror
+cărora
 cărui
+căruia
 către
 d
 da
@@ -269,6 +269,8 @@ mai
 mare
 macar
 măcar
+mata
+matale
 mea
 mei
 mele
@@ -324,6 +326,10 @@ noștri
 nu
 numai
 o
+odata
+odată
+odinioara
+odinioară
 opt
 or
 ori
@@ -439,6 +445,7 @@ unuia
 unul
 v
 va
+vai
 vi
 voastre
 voastră
