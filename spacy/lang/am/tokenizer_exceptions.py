@@ -18,8 +18,7 @@ for exc_data in [
     {ORTH: "ቤ/መ.", LEMMA: "ቤተመንግስት", NORM: "ቤተመንግስት"},
     {ORTH: "ሆ/ል", LEMMA: "ሆስፒታል", NORM: "ሆስፒታል"},
     {ORTH: "ዶ/ር", LEMMA: "ዶክተር", NORM: "ዶክተር"},
-    {ORTH: "ፕ/ሮ", LEMMA: "ፕሮፌሰር", NORM: "ፕሮፌሰር"},
-    {ORTH: "ፕ/ር", LEMMA: "ፕሬዝዳንት", NORM: "ፕሬዝዳንት"},    
+    {ORTH: "ፕ/ሮ", LEMMA: "ፕሮፌሰር", NORM: "ፕሮፌሰር"},  
     {ORTH: "ወ/ሮ", LEMMA: PRON_LEMMA, NORM: "ወይዘሮ"},
 
 ]:
