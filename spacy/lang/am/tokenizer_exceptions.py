@@ -13,7 +13,13 @@ for exc_data in [
     {ORTH: "ፅ/ቤት", LEMMA: "ጽህፈት ቤት", NORM: "ጽህፈት ቤት"},
     {ORTH: "መ/ቤት", LEMMA: "መስሪያ ቤት", NORM: "መስሪያ ቤት"},
     {ORTH: "ም/ቤት", LEMMA: "ምክር ቤት", NORM: "ምክር ቤት"},
-    {ORTH: "ፍ/ቤት", LEMMA: "ፍርድ ቤት", NORM: "ፍርድ ቤት"},    
+    {ORTH: "ፍ/ቤት", LEMMA: "ፍርድ ቤት", NORM: "ፍርድ ቤት"},
+     {ORTH: "ቤ/ክ", LEMMA: "ቤተክርስቲያን", NORM: "ቤተክርስቲያን"},
+    {ORTH: "ቤ/መ.", LEMMA: "ቤተመንግስት", NORM: "ቤተመንግስት"},
+    {ORTH: "ሆ/ል", LEMMA: "ሆስፒታል", NORM: "ሆስፒታል"},
+    {ORTH: "ዶ/ር", LEMMA: "ዶክተር", NORM: "ዶክተር"},
+    {ORTH: "ፕ/ሮ", LEMMA: "ፕሮፌሰር", NORM: "ፕሮፌሰር"},
+    {ORTH: "ፕ/ር", LEMMA: "ፕሬዝዳንት", NORM: "ፕሬዝዳንት"},    
     {ORTH: "ወ/ሮ", LEMMA: PRON_LEMMA, NORM: "ወይዘሮ"},
 
 ]:
