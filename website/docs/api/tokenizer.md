@@ -218,14 +218,14 @@ it.
 
 ## Attributes {#attributes}
 
-| Name             | Type    | Description                                                                                                                |
-| ---------------- | ------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`          | `Vocab` | The vocab object of the parent `Doc`.                                                                                      |
-| `prefix_search`  | -       | A function to find segment boundaries from the start of a string. Returns the length of the segment, or `None`.            |
-| `suffix_search`  | -       | A function to find segment boundaries from the end of a string. Returns the length of the segment, or `None`.              |
-| `infix_finditer` | -       | A function to find internal segment separators, e.g. hyphens. Returns a (possibly empty) list of `re.MatchObject` objects. |
-| `token_match`    | -       | A function matching the signature of `re.compile(string).match to find token matches. Returns an`re.MatchObject`or`None.   |
-| `rules`          | dict    | A dictionary of tokenizer exceptions and special cases.                                                                    |
+| Name             | Type    | Description                                                                                                                   |
+| ---------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`          | `Vocab` | The vocab object of the parent `Doc`.                                                                                         |
+| `prefix_search`  | -       | A function to find segment boundaries from the start of a string. Returns the length of the segment, or `None`.               |
+| `suffix_search`  | -       | A function to find segment boundaries from the end of a string. Returns the length of the segment, or `None`.                 |
+| `infix_finditer` | -       | A function to find internal segment separators, e.g. hyphens. Returns a (possibly empty) list of `re.MatchObject` objects.    |
+| `token_match`    | -       | A function matching the signature of `re.compile(string).match` to find token matches. Returns an `re.MatchObject` or `None`. |
+| `rules`          | dict    | A dictionary of tokenizer exceptions and special cases.                                                                       |
 
 ## Serialization fields {#serialization-fields}
 
