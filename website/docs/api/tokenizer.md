@@ -34,7 +34,7 @@ the
 > tokenizer = nlp.Defaults.create_tokenizer(nlp)
 > ```
 
-| Name             | Type        | Description                                                                                                                   |
+| Name             | Type        | Description                                                                                                                    |
 | ---------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | `vocab`          | `Vocab`     | A storage container for lexical types.                                                                                         |
 | `rules`          | dict        | Exceptions and special-cases for the tokenizer.                                                                                |
@@ -143,10 +143,10 @@ produced are identical to `Tokenizer.__call__` except for whitespace tokens.
 > assert [t[1] for t in tok_exp] == ["(", "do", "n't", ")"]
 > ```
 
-| Name        | Type     | Description                                         |
-| ------------| -------- | --------------------------------------------------- |
-| `string`    | unicode  | The string to tokenize with the debugging tokenizer |
-| **RETURNS** | list     | A list of `(pattern_string, token_string)` tuples   |
+| Name        | Type    | Description                                         |
+| ----------- | ------- | --------------------------------------------------- |
+| `string`    | unicode | The string to tokenize with the debugging tokenizer |
+| **RETURNS** | list    | A list of `(pattern_string, token_string)` tuples   |
 
 ## Tokenizer.to_disk {#to_disk tag="method"}
 
@@ -159,10 +159,10 @@ Serialize the tokenizer to disk.
 > tokenizer.to_disk("/path/to/tokenizer")
 > ```
 
-| Name      | Type             | Description                                                                                                           |
-| --------- | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path`    | unicode / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
-| `exclude` | list             | String names of [serialization fields](#serialization-fields) to exclude.                                             |
+| Name      | Type             | Description                                                                                                      |
+| --------- | ---------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `path`    | unicode / `Path` | A path to a file, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
+| `exclude` | list             | String names of [serialization fields](#serialization-fields) to exclude.                                        |
 
 ## Tokenizer.from_disk {#from_disk tag="method"}
 
@@ -218,14 +218,14 @@ it.
 
 ## Attributes {#attributes}
 
-| Name             | Type    | Description                                                                                                                 |
-| ---------------- | ------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`          | `Vocab` | The vocab object of the parent `Doc`.                                                                                       |
-| `prefix_search`  | -       | A function to find segment boundaries from the start of a string. Returns the length of the segment, or `None`.             |
-| `suffix_search`  | -       | A function to find segment boundaries from the end of a string. Returns the length of the segment, or `None`.               |
-| `infix_finditer` | -       | A function to find internal segment separators, e.g. hyphens. Returns a (possibly empty) list of `re.MatchObject` objects.  |
-| `token_match`    | -       | A function matching the signature of `re.compile(string).match to find token matches. Returns an `re.MatchObject` or `None. |
-| `rules`          | dict        | A dictionary of tokenizer exceptions and special cases.                                                                  |
+| Name             | Type    | Description                                                                                                                |
+| ---------------- | ------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`          | `Vocab` | The vocab object of the parent `Doc`.                                                                                      |
+| `prefix_search`  | -       | A function to find segment boundaries from the start of a string. Returns the length of the segment, or `None`.            |
+| `suffix_search`  | -       | A function to find segment boundaries from the end of a string. Returns the length of the segment, or `None`.              |
+| `infix_finditer` | -       | A function to find internal segment separators, e.g. hyphens. Returns a (possibly empty) list of `re.MatchObject` objects. |
+| `token_match`    | -       | A function matching the signature of `re.compile(string).match to find token matches. Returns an`re.MatchObject`or`None.   |
+| `rules`          | dict    | A dictionary of tokenizer exceptions and special cases.                                                                    |
 
 ## Serialization fields {#serialization-fields}
 
