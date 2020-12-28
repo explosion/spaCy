@@ -22,7 +22,6 @@ for exc_data in [
     {ORTH: "Uds.", LEMMA: PRON_LEMMA, NORM: "ustedes"},
     {ORTH: "Vds.", LEMMA: PRON_LEMMA, NORM: "ustedes"},
     {ORTH: "vol.", NORM: "volúmen"},
-
 ]:
     _exc[exc_data[ORTH]] = [exc_data]
 
@@ -51,6 +50,7 @@ for orth in [
     "Dr.",
     "Dra.",
     "EE.UU.",
+    "EE. UU.",
     "etc.",
     "fig.",
     "Gob.",
