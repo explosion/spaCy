@@ -123,6 +123,8 @@ class Warnings:
             "token '{text}'. Check that your pipeline includes components that "
             "assign token.pos, typically 'tagger'+'attribute_ruler' or "
             "'morphologizer'.")
+    W109 = ("Unable to save user hooks while serializing the doc. Re-add any "
+            "required user hooks to the doc after processing.")
 
 
 @add_codes

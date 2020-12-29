@@ -1273,6 +1273,8 @@ cdef class Doc:
                 serializers["user_data_keys"] = lambda: srsly.msgpack_dumps(user_data_keys)
             if "user_data_values" not in exclude:
                 serializers["user_data_values"] = lambda: srsly.msgpack_dumps(user_data_values)
+        if "user_hooks" not in exclude and any((self.user_hooks, self.user_token_hooks, self.user_span_hooks)):
+            util.logger.warning(Warnings.W109)
         return util.to_dict(serializers, exclude)
 
     def from_dict(self, msg, *, exclude=tuple()):
@@ -1649,7 +1651,7 @@ cdef int [:,:] _get_lca_matrix(Doc doc, int start, int end):
 
 
 def pickle_doc(doc):
-    bytes_data = doc.to_bytes(exclude=["vocab", "user_data"])
+    bytes_data = doc.to_bytes(exclude=["vocab", "user_data", "user_hooks"])
     hooks_and_data = (doc.user_data, doc.user_hooks, doc.user_span_hooks,
                       doc.user_token_hooks)
     return (unpickle_doc, (doc.vocab, srsly.pickle_dumps(hooks_and_data), bytes_data))
