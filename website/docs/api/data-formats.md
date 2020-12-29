@@ -148,7 +148,7 @@ This section defines a **dictionary** mapping of string keys to functions. Each
 function takes an `nlp` object and yields [`Example`](/api/example) objects. By
 default, the two keys `train` and `dev` are specified and each refer to a
 [`Corpus`](/api/top-level#Corpus). When pretraining, an additional `pretrain`
-section is added that defaults to a [`JsonlCorpus`](/api/top-level#JsonlCorpus).
+section is added that defaults to a [`JsonlCorpus`](/api/top-level#jsonlcorpus).
 You can also register custom functions that return a callable.
 
 | Name       | Description                                                                                                                                                                 |

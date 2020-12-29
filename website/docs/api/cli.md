@@ -816,7 +816,7 @@ these pretrained weights files** in your
 train your pipeline. This technique may be especially helpful if you have little
 labelled data. See the usage docs on
 [pretraining](/usage/embeddings-transformers#pretraining) for more info. To read
-the raw text, a [`JsonlCorpus`](/api/top-level#JsonlCorpus) is typically used.
+the raw text, a [`JsonlCorpus`](/api/top-level#jsonlcorpus) is typically used.
 
 <Infobox title="Changed in v3.0" variant="warning">
 
