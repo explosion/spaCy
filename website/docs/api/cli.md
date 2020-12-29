@@ -783,15 +783,15 @@ in the section `[paths]`.
 
 </Infobox>
 
-```cli
-$ python -m spacy train [config_path] [--output] [--code] [--verbose] [--gpu-id] [overrides]
-```
-
 > #### Example
 >
 > ```cli
 > $ python -m spacy train config.cfg --paths.train="./train" --paths.dev="./dev" --output output_dir
 > ```
+
+```cli
+$ python -m spacy train [config_path] [--output] [--code] [--verbose] [--gpu-id] [overrides]
+```
 
 | Name              | Description                                                                                                                                                                                                        |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
