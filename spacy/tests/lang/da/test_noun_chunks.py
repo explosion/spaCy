@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 
 import pytest
 
+from ...util import get_doc
+
 
 def test_noun_chunks_is_parsed(da_tokenizer):
     """Test that noun_chunks raises Value Error for 'da' language if Doc is not parsed.
@@ -37,7 +39,7 @@ DA_NP_TEST_EXAMPLES = [
         ['PROPN', 'CCONJ', 'PROPN', 'PROPN', 'VERB', 'PRON', 'ADP', 'DET', 'ADJ', 'NOUN'],
         ['nsubj', 'cc', 'conj', 'flat', 'ROOT', 'obj', 'case', 'det', 'amod', 'obl'],
         [4, 1, -2, -1, 0, -1, 3, 2, 1, -5],
-        ["Rikke", "Jacob Jensen", "sig", "en hyggelig skovtur"],
+        ["Rikke", "Jacob Jensen", "Jensen", "sig", "en hyggelig skovtur"],
     ),
 ]
 
