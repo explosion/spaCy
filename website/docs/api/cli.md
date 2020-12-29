@@ -787,6 +787,12 @@ in the section `[paths]`.
 $ python -m spacy train [config_path] [--output] [--code] [--verbose] [--gpu-id] [overrides]
 ```
 
+> #### Example
+>
+> ```cli
+> $ python -m spacy train config.cfg --paths.train="./train" --paths.dev="./dev" --output output_dir
+> ```
+
 | Name              | Description                                                                                                                                                                                                        |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `config_path`     | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. If `-`, the data will be [read from stdin](/usage/training#config-stdin). ~~Union[Path, str] \(positional)~~ |
