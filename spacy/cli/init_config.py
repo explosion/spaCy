@@ -32,6 +32,7 @@ def init_config_cli(
     optimize: Optimizations = Opt(Optimizations.efficiency.value, "--optimize", "-o", help="Whether to optimize for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger and slower model). This will impact the choice of architecture, pretrained weights and related hyperparameters."),
     gpu: bool = Opt(False, "--gpu", "-G", help="Whether the model can run on GPU. This will impact the choice of architecture, pretrained weights and related hyperparameters."),
     pretraining: bool = Opt(False, "--pretraining", "-pt", help="Include config for pretraining (with 'spacy pretrain')"),
+    overwrite: bool = Opt(False, "--overwrite", "-W", help="Whether or not to overwrite the file if it already exists."),
     # fmt: on
 ):
     """
@@ -46,6 +47,9 @@ def init_config_cli(
         optimize = optimize.value
     pipeline = string_to_list(pipeline)
     is_stdout = str(output_file) == "-"
+    if not is_stdout and output_file.exists() and not overwrite:
+        msg = Printer(no_print=False)
+        msg.fail("The provided output file already exists. To overwrite, set the flag -W", exits=1)
     config = init_config(
         lang=lang,
         pipeline=pipeline,
