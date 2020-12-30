@@ -3,7 +3,9 @@ from click import NoSuchOption
 from spacy.training import docs_to_json, offsets_to_biluo_tags
 from spacy.training.converters import iob_to_docs, conll_ner_to_docs, conllu_to_docs
 from spacy.schemas import ProjectConfigSchema, RecommendationSchema, validate
+from spacy.lang.nl import Dutch
 from spacy.util import ENV_VARS
+from spacy.cli import info
 from spacy.cli.init_config import init_config, RECOMMENDATIONS
 from spacy.cli._util import validate_project_commands, parse_config_overrides
 from spacy.cli._util import load_project_config, substitute_project_variables
@@ -13,8 +15,6 @@ import srsly
 import os
 
 from .util import make_tempdir
-from .. import info
-from ..lang.nl import Dutch
 
 
 def test_cli_info():
