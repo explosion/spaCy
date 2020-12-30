@@ -25,7 +25,6 @@ def test_cli_info():
         raw_data = info(tmp_dir, exclude=[""])
         assert raw_data["lang"] == "nl"
         assert raw_data["components"] == ["textcat"]
-        assert raw_data["source"] == str(tmp_dir)
 
 
 def test_cli_converters_conllu_to_docs():
