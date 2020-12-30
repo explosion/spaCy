@@ -13,6 +13,19 @@ import srsly
 import os
 
 from .util import make_tempdir
+from .. import info
+from ..lang.nl import Dutch
+
+
+def test_cli_info():
+    nlp = Dutch()
+    nlp.add_pipe("textcat")
+    with make_tempdir() as tmp_dir:
+        nlp.to_disk(tmp_dir)
+        raw_data = info(tmp_dir, exclude=[""])
+        assert raw_data["lang"] == "nl"
+        assert raw_data["components"] == ["textcat"]
+        assert raw_data["source"] == str(tmp_dir)
 
 
 def test_cli_converters_conllu_to_docs():

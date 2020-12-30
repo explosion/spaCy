@@ -19,7 +19,7 @@ def info_cli(
     # fmt: on
 ):
     """
-    Print info about spaCy installation. If a pipeline is speficied as an argument,
+    Print info about spaCy installation. If a pipeline is specified as an argument,
     print its meta information. Flag --markdown prints details in Markdown for easy
     copy-pasting to GitHub issues.
 
