@@ -88,6 +88,7 @@ def train(
                 with nlp.select_pipes(disable=frozen_components):
                     update_meta(T, nlp, info)
                     with nlp.use_params(optimizer.averages):
+                        nlp = before_to_disk(nlp)
                         nlp.to_disk(output_path / DIR_MODEL_LAST)
                     if is_best_checkpoint:
                         with nlp.use_params(optimizer.averages):
