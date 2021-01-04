@@ -188,8 +188,15 @@ def _merge(Doc doc, merges):
                     and doc.c[start - 1].ent_type == token.ent_type:
                 merged_iob = 1
         token.ent_iob = merged_iob
+        # Set lemma to concatenated lemmas
+        merged_lemma = ""
+        for span_token in span:
+            merged_lemma += span_token.lemma_
+            if doc.c[span_token.i].spacy:
+                merged_lemma += " "
+        merged_lemma = merged_lemma.strip()
+        token.lemma = doc.vocab.strings.add(merged_lemma)
         # Unset attributes that don't match new token
-        token.lemma = 0
         token.norm = 0
         tokens[merge_index] = token
     # Resize the doc.tensor, if it's set. Let the last row for each token stand
@@ -335,7 +342,9 @@ def _split(Doc doc, int token_index, orths, heads, attrs):
         token = &doc.c[token_index + i]
         lex = doc.vocab.get(doc.mem, orth)
         token.lex = lex
-        token.lemma = 0  # reset lemma
+        # If lemma is currently set, set default lemma to orth
+        if token.lemma != 0:
+            token.lemma = lex.orth
         token.norm = 0  # reset norm
         if to_process_tensor:
             # setting the tensors of the split tokens to array of zeros
