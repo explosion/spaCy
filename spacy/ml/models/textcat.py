@@ -70,13 +70,15 @@ def build_text_classifier_v2(
     with Model.define_operators({">>": chain, "|": concatenate}):
         width = tok2vec.maybe_get_dim("nO")
         cnn_model = (
-                tok2vec
-                >> list2ragged()
-                >> ParametricAttention(width)   # TODO: benchmark performance difference of this layer
-                >> reduce_sum()
-                >> residual(Maxout(nO=width, nI=width))
-                >> Linear(nO=nO, nI=width)
-                >> Dropout(0.0)
+            tok2vec
+            >> list2ragged()
+            >> ParametricAttention(
+                width
+            )  # TODO: benchmark performance difference of this layer
+            >> reduce_sum()
+            >> residual(Maxout(nO=width, nI=width))
+            >> Linear(nO=nO, nI=width)
+            >> Dropout(0.0)
         )
 
         nO_double = nO * 2 if nO else None
@@ -91,6 +93,7 @@ def build_text_classifier_v2(
     model.set_ref("output_layer", linear_model.get_ref("output_layer"))
     model.attrs["multi_label"] = not exclusive_classes
     return model
+
 
 # TODO: move to legacy
 @registry.architectures.register("spacy.TextCatEnsemble.v1")

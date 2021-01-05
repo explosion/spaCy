@@ -126,6 +126,7 @@ def test_incomplete_data():
     assert doc[1].tag_ is "V"
     assert doc[2].tag_ is "J"
 
+
 def test_overfitting_IO():
     # Simple test to try and quickly overfit the tagger - ensuring the ML models work correctly
     nlp = English()

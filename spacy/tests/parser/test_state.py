@@ -4,13 +4,16 @@ from spacy.tokens.doc import Doc
 from spacy.vocab import Vocab
 from spacy.pipeline._parser_internals.stateclass import StateClass
 
+
 @pytest.fixture
 def vocab():
     return Vocab()
 
+
 @pytest.fixture
 def doc(vocab):
     return Doc(vocab, words=["a", "b", "c", "d"])
+
 
 def test_init_state(doc):
     state = StateClass(doc)
@@ -18,6 +21,7 @@ def test_init_state(doc):
     assert state.queue == list(range(len(doc)))
     assert not state.is_final()
     assert state.buffer_length() == 4
+
 
 def test_push_pop(doc):
     state = StateClass(doc)
@@ -32,6 +36,7 @@ def test_push_pop(doc):
     state.pop()
     assert state.stack == [0]
     assert 1 not in state.queue
+
 
 def test_stack_depth(doc):
     state = StateClass(doc)

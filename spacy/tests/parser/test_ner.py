@@ -301,9 +301,7 @@ def test_block_ner():
     assert [token.ent_type_ for token in doc] == expected_types
 
 
-@pytest.mark.parametrize(
-    "use_upper", [True, False]
-)
+@pytest.mark.parametrize("use_upper", [True, False])
 def test_overfitting_IO(use_upper):
     # Simple test to try and quickly overfit the NER component - ensuring the ML models work correctly
     nlp = English()

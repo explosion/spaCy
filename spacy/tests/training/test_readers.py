@@ -73,7 +73,7 @@ def test_cat_readers(reader, additional_config):
     nlp_config_string = """
     [training]
     seed = 0
-    
+
     [training.score_weights]
     cats_macro_auc = 1.0
 

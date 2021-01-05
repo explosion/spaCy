@@ -21,8 +21,7 @@ _abbr_exc = [
     {ORTH: "хл", NORM: "хектолитар"},
     {ORTH: "дкл", NORM: "декалитар"},
     {ORTH: "л", NORM: "литар"},
-    {ORTH: "дл", NORM: "децилитар"}
-
+    {ORTH: "дл", NORM: "децилитар"},
 ]
 for abbr in _abbr_exc:
     _exc[abbr[ORTH]] = [abbr]
@@ -33,7 +32,6 @@ _abbr_line_exc = [
     {ORTH: "г-ѓа", NORM: "госпоѓа"},
     {ORTH: "г-ца", NORM: "госпоѓица"},
     {ORTH: "г-дин", NORM: "господин"},
-
 ]
 
 for abbr in _abbr_line_exc:
@@ -54,7 +52,6 @@ _abbr_dot_exc = [
     {ORTH: "т.", NORM: "точка"},
     {ORTH: "т.е.", NORM: "то ест"},
     {ORTH: "т.н.", NORM: "таканаречен"},
-
     {ORTH: "бр.", NORM: "број"},
     {ORTH: "гр.", NORM: "град"},
     {ORTH: "др.", NORM: "другар"},
@@ -68,7 +65,6 @@ _abbr_dot_exc = [
     {ORTH: "с.", NORM: "страница"},
     {ORTH: "стр.", NORM: "страница"},
     {ORTH: "чл.", NORM: "член"},
-
     {ORTH: "арх.", NORM: "архитект"},
     {ORTH: "бел.", NORM: "белешка"},
     {ORTH: "гимн.", NORM: "гимназија"},
@@ -89,8 +85,6 @@ _abbr_dot_exc = [
     {ORTH: "истор.", NORM: "историја"},
     {ORTH: "геогр.", NORM: "географија"},
     {ORTH: "литер.", NORM: "литература"},
-
-
 ]
 
 for abbr in _abbr_dot_exc:
