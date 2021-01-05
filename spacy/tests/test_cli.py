@@ -3,7 +3,9 @@ from click import NoSuchOption
 from spacy.training import docs_to_json, offsets_to_biluo_tags
 from spacy.training.converters import iob_to_docs, conll_ner_to_docs, conllu_to_docs
 from spacy.schemas import ProjectConfigSchema, RecommendationSchema, validate
+from spacy.lang.nl import Dutch
 from spacy.util import ENV_VARS
+from spacy.cli import info
 from spacy.cli.init_config import init_config, RECOMMENDATIONS
 from spacy.cli._util import validate_project_commands, parse_config_overrides
 from spacy.cli._util import load_project_config, substitute_project_variables
@@ -13,6 +15,16 @@ import srsly
 import os
 
 from .util import make_tempdir
+
+
+def test_cli_info():
+    nlp = Dutch()
+    nlp.add_pipe("textcat")
+    with make_tempdir() as tmp_dir:
+        nlp.to_disk(tmp_dir)
+        raw_data = info(tmp_dir, exclude=[""])
+        assert raw_data["lang"] == "nl"
+        assert raw_data["components"] == ["textcat"]
 
 
 def test_cli_converters_conllu_to_docs():
