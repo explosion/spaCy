@@ -83,6 +83,7 @@ def test_PrecomputableAffine(nO=4, nI=5, nF=3, nP=2):
 def test_prefer_gpu():
     try:
         import cupy  # noqa: F401
+
         prefer_gpu()
         assert isinstance(get_current_ops(), CupyOps)
     except ImportError:
@@ -92,17 +93,20 @@ def test_prefer_gpu():
 def test_require_gpu():
     try:
         import cupy  # noqa: F401
+
         require_gpu()
         assert isinstance(get_current_ops(), CupyOps)
     except ImportError:
         with pytest.raises(ValueError):
             require_gpu()
 
+
 def test_require_cpu():
     require_cpu()
     assert isinstance(get_current_ops(), NumpyOps)
     try:
         import cupy  # noqa: F401
+
         require_gpu()
         assert isinstance(get_current_ops(), CupyOps)
     except ImportError:
