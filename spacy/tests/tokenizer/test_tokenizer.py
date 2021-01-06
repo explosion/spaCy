@@ -180,3 +180,9 @@ def test_tokenizer_special_cases_idx(tokenizer):
     doc = tokenizer(text)
     assert doc[1].idx == 4
     assert doc[2].idx == 7
+
+
+def test_tokenizer_special_cases_spaces(tokenizer):
+    assert [t.text for t in tokenizer("a b c")] == ["a", "b", "c"]
+    tokenizer.add_special_case("a b c", [{"ORTH": "a b c"}])
+    assert [t.text for t in tokenizer("a b c")] == ["a b c"]
