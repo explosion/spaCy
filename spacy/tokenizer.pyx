@@ -258,6 +258,7 @@ cdef class Tokenizer:
             tokens = doc.c
         # Otherwise create a separate array to store modified tokens
         else:
+            assert max_length > 0
             tokens = <TokenC*>mem.alloc(max_length, sizeof(TokenC))
         # Modify tokenization according to filtered special cases
         offset = self._retokenize_special_spans(doc, tokens, span_data)
