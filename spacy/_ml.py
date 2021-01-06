@@ -646,7 +646,7 @@ def build_text_classifier(nr_class, width=64, **cfg):
                 SpacyVectors
                 >> flatten_add_lengths
                 >> with_getitem(0, Affine(width, pretrained_dims))
-                >> ParametricAttention(width)
+                >> ParametricAttention(width, seed=100)
                 >> Pooling(sum_pool)
                 >> Residual(ReLu(width, width)) ** 2
                 >> zero_init(Affine(nr_class, width, drop_factor=0.0))
@@ -688,7 +688,7 @@ def build_text_classifier(nr_class, width=64, **cfg):
         cnn_model = (
             tok2vec
             >> flatten_add_lengths
-            >> ParametricAttention(width)
+            >> ParametricAttention(width, seed=99)
             >> Pooling(sum_pool)
             >> Residual(zero_init(Maxout(width, width)))
             >> zero_init(Affine(nr_class, width, drop_factor=0.0))

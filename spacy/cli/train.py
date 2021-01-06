@@ -38,7 +38,6 @@ from .. import about
     conv_depth=("Depth of CNN layers of Tok2Vec component", "option", "cd", int),
     cnn_window=("Window size for CNN layers of Tok2Vec component", "option", "cW", int),
     cnn_pieces=("Maxout size for CNN layers of Tok2Vec component. 1 for Mish", "option", "cP", int),
-    use_chars=("Whether to use character-based embedding of Tok2Vec component", "flag", "chr", bool),
     bilstm_depth=("Depth of BiLSTM layers of Tok2Vec component (requires PyTorch)", "option", "lstm", int),
     embed_rows=("Number of embedding rows of Tok2Vec component", "option", "er", int),
     n_iter=("Number of iterations", "option", "n", int),
@@ -78,7 +77,6 @@ def train(
     conv_depth=4,
     cnn_window=1,
     cnn_pieces=3,
-    use_chars=False,
     bilstm_depth=0,
     embed_rows=2000,
     n_iter=30,
@@ -137,9 +135,6 @@ def train(
         output_path.mkdir()
         msg.good("Created output directory: {}".format(output_path))
 
-    tag_map = {}
-    if tag_map_path is not None:
-        tag_map = srsly.read_json(tag_map_path)
     # Take dropout and batch size as generators of values -- dropout
     # starts high and decays sharply, to force the optimizer to explore.
     # Batch size starts at 1 and grows, so that we make updates quickly
@@ -250,8 +245,10 @@ def train(
                 pipe_cfg = {}
             nlp.add_pipe(nlp.create_pipe(pipe, config=pipe_cfg))
 
-    # Replace tag map with provided mapping
-    nlp.vocab.morphology.load_tag_map(tag_map)
+    if tag_map_path is not None:
+        tag_map = srsly.read_json(tag_map_path)
+        # Replace tag map with provided mapping
+        nlp.vocab.morphology.load_tag_map(tag_map)
 
     # Create empty extra lexeme tables so the data from spacy-lookups-data
     # isn't loaded if these features are accessed
@@ -295,7 +292,6 @@ def train(
         cfg["cnn_maxout_pieces"] = cnn_pieces
         cfg["embed_size"] = embed_rows
         cfg["conv_window"] = cnn_window
-        cfg["subword_features"] = not use_chars
         optimizer = nlp.begin_training(lambda: corpus.train_tuples, **cfg)
 
     nlp._optimizer = None

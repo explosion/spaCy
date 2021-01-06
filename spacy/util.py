@@ -838,6 +838,13 @@ class SimpleFrozenDict(dict):
 
 
 class DummyTokenizer(object):
+    def __call__(self, text):
+        raise NotImplementedError
+
+    def pipe(self, texts, **kwargs):
+        for text in texts:
+            yield self(text)
+
     # add dummy methods for to_bytes, from_bytes, to_disk and from_disk to
     # allow serialization (see #1557)
     def to_bytes(self, **kwargs):

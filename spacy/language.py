@@ -434,10 +434,6 @@ class Language(object):
 
         DOCS: https://spacy.io/api/language#call
         """
-        if len(text) > self.max_length:
-            raise ValueError(
-                Errors.E088.format(length=len(text), max_length=self.max_length)
-            )
         doc = self.make_doc(text)
         if component_cfg is None:
             component_cfg = {}
@@ -464,6 +460,10 @@ class Language(object):
         return DisabledPipes(self, *names)
 
     def make_doc(self, text):
+        if len(text) > self.max_length:
+            raise ValueError(
+                Errors.E088.format(length=len(text), max_length=self.max_length)
+            )
         return self.tokenizer(text)
 
     def _format_docs_and_golds(self, docs, golds):
