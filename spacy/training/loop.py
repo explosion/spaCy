@@ -87,9 +87,13 @@ def train(
             if is_best_checkpoint is not None and output_path is not None:
                 with nlp.select_pipes(disable=frozen_components):
                     update_meta(T, nlp, info)
-                with nlp.use_params(optimizer.averages):
-                    nlp = before_to_disk(nlp)
-                    nlp.to_disk(output_path / DIR_MODEL_BEST)
+                    with nlp.use_params(optimizer.averages):
+                        nlp = before_to_disk(nlp)
+                        nlp.to_disk(output_path / DIR_MODEL_LAST)
+                    if is_best_checkpoint:
+                        with nlp.use_params(optimizer.averages):
+                            nlp.to_disk(output_path / DIR_MODEL_BEST)
+
     except Exception as e:
         if output_path is not None:
             # We don't want to swallow the traceback if we don't have a
