@@ -258,6 +258,7 @@ cdef class Tokenizer:
             tokens = doc.c
         # Otherwise create a separate array to store modified tokens
         else:
+            assert max_length > 0
             tokens = <TokenC*>mem.alloc(max_length, sizeof(TokenC))
         # Modify tokenization according to filtered special cases
         offset = self._retokenize_special_spans(doc, tokens, span_data)
@@ -610,7 +611,7 @@ cdef class Tokenizer:
             self.mem.free(stale_special)
         self._rules[string] = substrings
         self._flush_cache()
-        if self.find_prefix(string) or self.find_infix(string) or self.find_suffix(string):
+        if self.find_prefix(string) or self.find_infix(string) or self.find_suffix(string) or " " in string:
             self._special_matcher.add(string, None, self._tokenize_affixes(string, False))
 
     def _reload_special_cases(self):

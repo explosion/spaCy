@@ -10,7 +10,7 @@ from wasabi import Printer
 
 from .example import Example
 from ..tokens import Doc
-from ..schemas import ConfigSchemaTraining, ConfigSchemaPretrain
+from ..schemas import ConfigSchemaPretrain
 from ..util import registry, load_model_from_config, dot_to_object
 
 
@@ -30,7 +30,6 @@ def pretrain(
         set_gpu_allocator(allocator)
     nlp = load_model_from_config(config)
     _config = nlp.config.interpolate()
-    T = registry.resolve(_config["training"], schema=ConfigSchemaTraining)
     P = registry.resolve(_config["pretraining"], schema=ConfigSchemaPretrain)
     corpus = dot_to_object(_config, P["corpus"])
     corpus = registry.resolve({"corpus": corpus})["corpus"]

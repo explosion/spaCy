@@ -172,7 +172,9 @@ def render_parses(
             file_.write(html)
 
 
-def print_prf_per_type(msg: Printer, scores: Dict[str, Dict[str, float]], name: str, type: str) -> None:
+def print_prf_per_type(
+    msg: Printer, scores: Dict[str, Dict[str, float]], name: str, type: str
+) -> None:
     data = [
         (k, f"{v['p']*100:.2f}", f"{v['r']*100:.2f}", f"{v['f']*100:.2f}")
         for k, v in scores.items()

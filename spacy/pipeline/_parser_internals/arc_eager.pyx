@@ -65,6 +65,7 @@ cdef GoldParseStateC create_gold_state(Pool mem, const StateC* state,
     cdef GoldParseStateC gs
     gs.length = len(heads)
     gs.stride = 1
+    assert gs.length > 0
     gs.labels = <attr_t*>mem.alloc(gs.length, sizeof(gs.labels[0]))
     gs.heads = <int32_t*>mem.alloc(gs.length, sizeof(gs.heads[0]))
     gs.n_kids = <int32_t*>mem.alloc(gs.length, sizeof(gs.n_kids[0]))
@@ -126,6 +127,7 @@ cdef GoldParseStateC create_gold_state(Pool mem, const StateC* state,
                 1
             )
     # Make an array of pointers, pointing into the gs_kids_flat array.
+    assert gs.length > 0
     gs.kids = <int32_t**>mem.alloc(gs.length, sizeof(int32_t*))
     for i in range(gs.length):
         if gs.n_kids[i] != 0:

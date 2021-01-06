@@ -47,8 +47,7 @@ def forward(
     except ValueError:
         raise RuntimeError(Errors.E896)
     output = Ragged(
-        vectors_data,
-        model.ops.asarray([len(doc) for doc in docs], dtype="i")
+        vectors_data, model.ops.asarray([len(doc) for doc in docs], dtype="i")
     )
     mask = None
     if is_train:

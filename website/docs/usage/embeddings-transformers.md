@@ -713,34 +713,39 @@ layer = "tok2vec"
 
 #### Pretraining objectives {#pretraining-details}
 
-Two pretraining objectives are available, both of which are variants of the
-cloze task [Devlin et al. (2018)](https://arxiv.org/abs/1810.04805) introduced
-for BERT. The objective can be defined and configured via the
-`[pretraining.objective]` config block.
-
 > ```ini
 > ### Characters objective
 > [pretraining.objective]
-> type = "characters"
+> @architectures = "spacy.PretrainCharacters.v1"
+> maxout_pieces = 3
+> hidden_size = 300
 > n_characters = 4
 > ```
 >
 > ```ini
 > ### Vectors objective
 > [pretraining.objective]
-> type = "vectors"
+> @architectures = "spacy.PretrainVectors.v1"
+> maxout_pieces = 3
+> hidden_size = 300
 > loss = "cosine"
 > ```
 
-- **Characters:** The `"characters"` objective asks the model to predict some
-  number of leading and trailing UTF-8 bytes for the words. For instance,
-  setting `n_characters = 2`, the model will try to predict the first two and
-  last two characters of the word.
+Two pretraining objectives are available, both of which are variants of the
+cloze task [Devlin et al. (2018)](https://arxiv.org/abs/1810.04805) introduced
+for BERT. The objective can be defined and configured via the
+`[pretraining.objective]` config block.
 
-- **Vectors:** The `"vectors"` objective asks the model to predict the word's
-  vector, from a static embeddings table. This requires a word vectors model to
-  be trained and loaded. The vectors objective can optimize either a cosine or
-  an L2 loss. We've generally found cosine loss to perform better.
+- [`PretrainCharacters`](/api/architectures#pretrain_chars): The `"characters"`
+  objective asks the model to predict some number of leading and trailing UTF-8
+  bytes for the words. For instance, setting `n_characters = 2`, the model will
+  try to predict the first two and last two characters of the word.
+
+- [`PretrainVectors`](/api/architectures#pretrain_vectors): The `"vectors"`
+  objective asks the model to predict the word's vector, from a static
+  embeddings table. This requires a word vectors model to be trained and loaded.
+  The vectors objective can optimize either a cosine or an L2 loss. We've
+  generally found cosine loss to perform better.
 
 These pretraining objectives use a trick that we term **language modelling with
 approximate outputs (LMAO)**. The motivation for the trick is that predicting an

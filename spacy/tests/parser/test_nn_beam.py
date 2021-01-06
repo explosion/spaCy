@@ -4,7 +4,6 @@ import hypothesis.strategies
 import numpy
 from spacy.vocab import Vocab
 from spacy.language import Language
-from spacy.pipeline import DependencyParser
 from spacy.pipeline._parser_internals.arc_eager import ArcEager
 from spacy.tokens import Doc
 from spacy.pipeline._parser_internals._beam_utils import BeamBatch

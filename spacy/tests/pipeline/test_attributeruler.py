@@ -161,7 +161,7 @@ def test_attributeruler_score(nlp, pattern_dicts):
     # "cat" is the only correct lemma
     assert scores["lemma_acc"] == pytest.approx(0.2)
     # no morphs are set
-    assert scores["morph_acc"] == None
+    assert scores["morph_acc"] is None
 
 
 def test_attributeruler_rule_order(nlp):

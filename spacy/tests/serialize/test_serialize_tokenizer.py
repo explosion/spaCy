@@ -26,7 +26,6 @@ def test_serialize_custom_tokenizer(en_vocab, en_tokenizer):
     assert tokenizer_reloaded.rules == {}
 
 
-@pytest.mark.skip(reason="Currently unreliable across platforms")
 @pytest.mark.parametrize("text", ["I💜you", "they’re", "“hello”"])
 def test_serialize_tokenizer_roundtrip_bytes(en_tokenizer, text):
     tokenizer = en_tokenizer
@@ -38,7 +37,6 @@ def test_serialize_tokenizer_roundtrip_bytes(en_tokenizer, text):
     assert [token.text for token in doc1] == [token.text for token in doc2]
 
 
-@pytest.mark.skip(reason="Currently unreliable across platforms")
 def test_serialize_tokenizer_roundtrip_disk(en_tokenizer):
     tokenizer = en_tokenizer
     with make_tempdir() as d:

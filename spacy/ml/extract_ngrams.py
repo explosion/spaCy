@@ -1,4 +1,3 @@
-import numpy
 from thinc.api import Model
 
 from ..attrs import LOWER

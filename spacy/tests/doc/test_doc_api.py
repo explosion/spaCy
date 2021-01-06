@@ -1,5 +1,7 @@
 import pytest
 import numpy
+import logging
+import mock
 from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
 from spacy.lexeme import Lexeme
@@ -146,6 +148,17 @@ def test_doc_api_serialize(en_tokenizer, text):
     assert tokens.text == new_tokens.text
     assert [t.text for t in tokens] == [t.text for t in new_tokens]
     assert [t.orth for t in tokens] == [t.orth for t in new_tokens]
+
+    def inner_func(d1, d2):
+        return "hello!"
+
+    logger = logging.getLogger("spacy")
+    with mock.patch.object(logger, "warning") as mock_warning:
+        _ = tokens.to_bytes()  # noqa: F841
+        mock_warning.assert_not_called()
+        tokens.user_hooks["similarity"] = inner_func
+        _ = tokens.to_bytes()  # noqa: F841
+        mock_warning.assert_called_once()
 
 
 def test_doc_api_set_ents(en_tokenizer):

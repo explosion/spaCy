@@ -64,6 +64,7 @@ cdef GoldNERStateC create_gold_state(
     Example example
 ) except *:
     cdef GoldNERStateC gs
+    assert example.x.length > 0
     gs.ner = <Transition*>mem.alloc(example.x.length, sizeof(Transition))
     ner_tags = example.get_aligned_ner()
     for i, ner_tag in enumerate(ner_tags):
