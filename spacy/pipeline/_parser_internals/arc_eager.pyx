@@ -716,11 +716,13 @@ cdef class ArcEager(TransitionSystem):
             if state.is_final():
                 prob = probs[i]
                 parse = []
-                for arc in self.get_arcs(state):
-                    dep = arc["label"]
-                    label = self.strings[dep]
-                    parse.append((arc["head"], arc["child"], label))
-                parses.append((prob, parse))
+                arcs = self.get_arcs(state)
+                if arcs:
+                    for arc in arcs:
+                        dep = arc["label"]
+                        label = self.strings[dep]
+                        parse.append((arc["head"], arc["child"], label))
+                    parses.append((prob, parse))
         return parses
 
     cdef get_arcs(self, StateC* state):
