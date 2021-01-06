@@ -1,5 +1,3 @@
-from collections import defaultdict
-
 import pytest
 from numpy.testing import assert_equal
 from spacy.attrs import ENT_IOB
@@ -305,7 +303,7 @@ def test_block_ner():
 
 @pytest.mark.parametrize("use_upper", [True, False])
 def test_overfitting_IO(use_upper):
-    # Simple test to try and quickly overfit the NER component - ensuring the ML models work correctly
+    # Simple test to try and quickly overfit the NER component
     nlp = English()
     ner = nlp.add_pipe("ner", config={"model": {"use_upper": use_upper}})
     train_examples = []
@@ -386,7 +384,6 @@ def test_beam_ner_scores():
     test_text = "I like London."
     doc = nlp.make_doc(test_text)
     docs = [doc]
-    ner = nlp.get_pipe("beam_ner")
     beams = ner.predict(docs)
     entity_scores = ner.scored_ents(beams)[0]
 
@@ -423,7 +420,6 @@ def test_beam_overfitting_IO():
     # test the scores from the beam
     test_text = "I like London."
     docs = [nlp.make_doc(test_text)]
-    ner = nlp.get_pipe("beam_ner")
     beams = ner.predict(docs)
     entity_scores = ner.scored_ents(beams)[0]
     assert entity_scores[(2, 3, "LOC")] == 1.0
