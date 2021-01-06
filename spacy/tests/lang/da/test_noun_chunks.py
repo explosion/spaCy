@@ -39,7 +39,7 @@ DA_NP_TEST_EXAMPLES = [
         ['PROPN', 'CCONJ', 'PROPN', 'PROPN', 'VERB', 'PRON', 'ADP', 'DET', 'ADJ', 'NOUN'],
         ['nsubj', 'cc', 'conj', 'flat', 'ROOT', 'obj', 'case', 'det', 'amod', 'obl'],
         [4, 1, -2, -1, 0, -1, 3, 2, 1, -5],
-        ["Rikke", "Jacob Jensen", "Jensen", "sig", "en hyggelig skovtur"],
+        ["Rikke", "Jacob Jensen", "sig", "en hyggelig skovtur"],
     ),
 ]
 

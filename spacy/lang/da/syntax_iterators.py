@@ -68,26 +68,14 @@ def noun_chunks(doclike):
     stop_deps = [doc.vocab.strings.add(label) for label in stop_labels]
 
     chunks = []
+    prev_right = -1
     for token in doclike:
         if token.pos in [PROPN, NOUN, PRON]:
             left, right = get_bounds(doc, token)
-            chunks.append((left.i, right.i + 1, np_label))
-            token = right
-
-    is_chunk = [True for _ in chunks]
-    # remove nested chunks
-    for i, i_chunk in enumerate(chunks[:-1]):
-        i_left, i_right, _ = i_chunk
-        for j, j_chunk in enumerate(chunks[i+1:], start=i+1):
-            j_left, j_right, _ = j_chunk
-            if j_left <= i_left < i_right <= j_right:
-                is_chunk[i] = False
-            if i_left <= j_left < j_right <= i_right:
-                is_chunk[j] = False
-
-    for chk, ischk in zip(chunks, is_chunk):
-        if is_chunk:
-            yield chk
+            if left.i <= prev_right:
+                continue
+            yield left.i, right.i + 1, np_label
+            prev_right = right.i
 
 
 SYNTAX_ITERATORS = {"noun_chunks": noun_chunks}
