@@ -2,8 +2,11 @@ import pytest
 from thinc.api import Config, fix_random_seed
 
 from spacy.lang.en import English
-from spacy.pipeline.textcat import default_model_config, bow_model_config
-from spacy.pipeline.textcat import cnn_model_config
+from spacy.pipeline.textcat import single_label_default_config, single_label_bow_config
+from spacy.pipeline.textcat import single_label_cnn_config
+from spacy.pipeline.textcat_multilabel import multi_label_default_config
+from spacy.pipeline.textcat_multilabel import multi_label_bow_config
+from spacy.pipeline.textcat_multilabel import multi_label_cnn_config
 from spacy.tokens import Span
 from spacy import displacy
 from spacy.pipeline import merge_entities
@@ -11,7 +14,15 @@ from spacy.training import Example
 
 
 @pytest.mark.parametrize(
-    "textcat_config", [default_model_config, bow_model_config, cnn_model_config]
+    "textcat_config",
+    [
+        single_label_default_config,
+        single_label_bow_config,
+        single_label_cnn_config,
+        multi_label_default_config,
+        multi_label_bow_config,
+        multi_label_cnn_config,
+    ],
 )
 def test_issue5551(textcat_config):
     """Test that after fixing the random seed, the results of the pipeline are truly identical"""

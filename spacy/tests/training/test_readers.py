@@ -51,7 +51,7 @@ def test_readers():
     for example in train_corpus(nlp):
         nlp.update([example], sgd=optimizer)
     scores = nlp.evaluate(list(dev_corpus(nlp)))
-    assert scores["cats_score"] == 0.0
+    assert scores["cats_macro_auc"] == 0.0
     # ensure the pipeline runs
     doc = nlp("Quick test")
     assert doc.cats

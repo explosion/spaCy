@@ -152,7 +152,7 @@ depth = 2
 
 [components.textcat.model.linear_model]
 @architectures = "spacy.TextCatBOW.v1"
-exclusive_classes = false
+exclusive_classes = true
 ngram_size = 1
 no_output_layer = false
 ```
@@ -170,7 +170,7 @@ labels = []
 
 [components.textcat.model]
 @architectures = "spacy.TextCatBOW.v1"
-exclusive_classes = false
+exclusive_classes = true
 ngram_size = 1
 no_output_layer = false
 nO = null

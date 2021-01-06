@@ -4,7 +4,7 @@ from spacy.pipeline import Tagger, DependencyParser, EntityRecognizer
 from spacy.pipeline import TextCategorizer, SentenceRecognizer, TrainablePipe
 from spacy.pipeline.dep_parser import DEFAULT_PARSER_MODEL
 from spacy.pipeline.tagger import DEFAULT_TAGGER_MODEL
-from spacy.pipeline.textcat import DEFAULT_TEXTCAT_MODEL
+from spacy.pipeline.textcat import DEFAULT_SINGLE_TEXTCAT_MODEL
 from spacy.pipeline.senter import DEFAULT_SENTER_MODEL
 from spacy.lang.en import English
 from thinc.api import Linear
@@ -188,7 +188,7 @@ def test_serialize_tagger_strings(en_vocab, de_vocab, taggers):
 
 def test_serialize_textcat_empty(en_vocab):
     # See issue #1105
-    cfg = {"model": DEFAULT_TEXTCAT_MODEL}
+    cfg = {"model": DEFAULT_SINGLE_TEXTCAT_MODEL}
     model = registry.resolve(cfg, validate=True)["model"]
     textcat = TextCategorizer(en_vocab, model, threshold=0.5)
     textcat.to_bytes(exclude=["vocab"])

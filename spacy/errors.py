@@ -463,6 +463,10 @@ class Errors:
             "issue tracker: http://github.com/explosion/spaCy/issues")
 
     # TODO: fix numbering after merging develop into master
+    E895 = ("The 'textcat' component received gold-standard annotations with "
+            "multiple labels per document. In spaCy 3 you should use the "
+            "'textcat_multilabel' component for this instead. "
+            "Example of an offending annotation: {value}")
     E896 = ("There was an error using the static vectors. Ensure that the vectors "
             "of the vocab are properly initialized, or set 'include_static_vectors' "
             "to False.")
