@@ -4,4 +4,4 @@ from .transition_system cimport Transition, TransitionSystem
 
 
 cdef class ArcEager(TransitionSystem):
-    pass
+    cdef get_arcs(self, StateC* state)

@@ -28,6 +28,26 @@ TRAIN_DATA = [
 ]
 
 
+CONFLICTING_DATA = [
+    (
+        "I like London and Berlin.",
+        {
+            "heads": [1, 1, 1, 2, 2, 1],
+            "deps": ["nsubj", "ROOT", "dobj", "cc", "conj", "punct"],
+        },
+    ),
+    (
+        "I like London and Berlin.",
+        {
+            "heads": [0, 0, 0, 0, 0, 0],
+            "deps": ["ROOT", "nsubj", "nsubj", "cc", "conj", "punct"],
+        },
+    ),
+]
+
+eps = 0.01
+
+
 def test_parser_root(en_vocab):
     words = ["i", "do", "n't", "have", "other", "assistance"]
     heads = [3, 3, 3, 3, 5, 3]
@@ -197,7 +217,7 @@ def test_overfitting_IO(pipe_name):
             parser.add_label(dep)
     optimizer = nlp.initialize()
     # run overfitting
-    for i in range(100):
+    for i in range(150):
         losses = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)
     assert losses[pipe_name] < 0.0001
@@ -207,6 +227,9 @@ def test_overfitting_IO(pipe_name):
     assert doc[0].dep_ == "nsubj"
     assert doc[2].dep_ == "dobj"
     assert doc[3].dep_ == "punct"
+    assert doc[0].head.i == 1
+    assert doc[2].head.i == 1
+    assert doc[3].head.i == 1
     # Also test the results are still the same after IO
     with make_tempdir() as tmp_dir:
         nlp.to_disk(tmp_dir)
@@ -215,6 +238,9 @@ def test_overfitting_IO(pipe_name):
         assert doc2[0].dep_ == "nsubj"
         assert doc2[2].dep_ == "dobj"
         assert doc2[3].dep_ == "punct"
+        assert doc2[0].head.i == 1
+        assert doc2[2].head.i == 1
+        assert doc2[3].head.i == 1
 
     # Make sure that running pipe twice, or comparing to call, always amounts to the same predictions
     texts = [
@@ -241,28 +267,31 @@ def test_beam_parser_scores():
     }
     parser = nlp.add_pipe("beam_parser", config=config)
     train_examples = []
-    for text, annotations in TRAIN_DATA:
+    for text, annotations in CONFLICTING_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
         for dep in annotations.get("deps", []):
             parser.add_label(dep)
     optimizer = nlp.initialize()
 
-    # update once
-    losses = {}
-    nlp.update(train_examples, sgd=optimizer, losses=losses)
+    # update a bit with conflicting data
+    for i in range(10):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
 
     # test the scores from the beam
     test_text = "I like securities."
     doc = nlp.make_doc(test_text)
     docs = [doc]
     beams = parser.predict(docs)
-    parse_scores = parser.scored_parses(beams)[0]
+    head_scores, label_scores = parser.scored_parses(beams)
 
     for j in range(len(doc)):
         for label in parser.labels:
-            score = parse_scores[(j, label)]
-            eps = 0.00001
-            assert 0 - eps <= score <= 1 + eps
+            label_score = label_scores[0][(j, label)]
+            assert 0 - eps <= label_score <= 1 + eps
+        for i in range(len(doc)):
+            head_score = head_scores[0][(j, i)]
+            assert 0 - eps <= head_score <= 1 + eps
 
 
 def test_beam_overfitting_IO():
@@ -282,7 +311,7 @@ def test_beam_overfitting_IO():
             parser.add_label(dep)
     optimizer = nlp.initialize()
     # run overfitting
-    for i in range(100):
+    for i in range(150):
         losses = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)
     assert losses["beam_parser"] < 0.0001
@@ -290,16 +319,31 @@ def test_beam_overfitting_IO():
     test_text = "I like securities."
     docs = [nlp.make_doc(test_text)]
     beams = parser.predict(docs)
-    parser_scores = parser.scored_ents(beams)[0]
-    assert parser_scores[(0, "nsubj")] == 1.0
-    assert parser_scores[(0, "dobj")] == 0.0
-    assert parser_scores[(0, "punct")] == 0.0
-    assert parser_scores[(2, "nsubj")] == 0.0
-    assert parser_scores[(2, "dobj")] == 1.0
-    assert parser_scores[(2, "punct")] == 0.0
-    assert parser_scores[(3, "nsubj")] == 0.0
-    assert parser_scores[(3, "dobj")] == 0.0
-    assert parser_scores[(3, "punct")] == 1.0
+    head_scores, label_scores = parser.scored_parses(beams)
+    # we only processed one document
+    head_scores = head_scores[0]
+    label_scores = label_scores[0]
+    # test label annotations: 0=nsubj, 2=dobj, 3=punct
+    assert label_scores[(0, "nsubj")] == pytest.approx(1.0, eps)
+    assert label_scores[(0, "dobj")] == pytest.approx(0.0, eps)
+    assert label_scores[(0, "punct")] == pytest.approx(0.0, eps)
+    assert label_scores[(2, "nsubj")] == pytest.approx(0.0, eps)
+    assert label_scores[(2, "dobj")] == pytest.approx(1.0, eps)
+    assert label_scores[(2, "punct")] == pytest.approx(0.0, eps)
+    assert label_scores[(3, "nsubj")] == pytest.approx(0.0, eps)
+    assert label_scores[(3, "dobj")] == pytest.approx(0.0, eps)
+    assert label_scores[(3, "punct")] == pytest.approx(1.0, eps)
+    # test head annotations: the root is token at index 1
+    assert head_scores[(0, 0)] == pytest.approx(0.0, eps)
+    assert head_scores[(0, 1)] == pytest.approx(1.0, eps)
+    assert head_scores[(0, 2)] == pytest.approx(0.0, eps)
+    assert head_scores[(2, 0)] == pytest.approx(0.0, eps)
+    assert head_scores[(2, 1)] == pytest.approx(1.0, eps)
+    assert head_scores[(2, 2)] == pytest.approx(0.0, eps)
+    assert head_scores[(3, 0)] == pytest.approx(0.0, eps)
+    assert head_scores[(3, 1)] == pytest.approx(1.0, eps)
+    assert head_scores[(3, 2)] == pytest.approx(0.0, eps)
+
     # Also test the results are still the same after IO
     with make_tempdir() as tmp_dir:
         nlp.to_disk(tmp_dir)
@@ -307,13 +351,26 @@ def test_beam_overfitting_IO():
         docs2 = [nlp2.make_doc(test_text)]
         parser2 = nlp2.get_pipe("beam_parser")
         beams2 = parser2.predict(docs2)
-        parser_scores2 = parser.scored_ents(beams2)[0]
-        assert parser_scores2[(0, "nsubj")] == 1.0
-        assert parser_scores2[(0, "dobj")] == 0.0
-        assert parser_scores2[(0, "punct")] == 0.0
-        assert parser_scores2[(2, "nsubj")] == 0.0
-        assert parser_scores2[(2, "dobj")] == 1.0
-        assert parser_scores2[(2, "punct")] == 0.0
-        assert parser_scores2[(3, "nsubj")] == 0.0
-        assert parser_scores2[(3, "dobj")] == 0.0
-        assert parser_scores2[(3, "punct")] == 1.0
+        head_scores2, label_scores2 = parser2.scored_parses(beams2)
+        # we only processed one document
+        head_scores2 = head_scores2[0]
+        label_scores2 = label_scores2[0]
+        # check the results again
+        assert label_scores2[(0, "nsubj")] == pytest.approx(1.0, eps)
+        assert label_scores2[(0, "dobj")] == pytest.approx(0.0, eps)
+        assert label_scores2[(0, "punct")] == pytest.approx(0.0, eps)
+        assert label_scores2[(2, "nsubj")] == pytest.approx(0.0, eps)
+        assert label_scores2[(2, "dobj")] == pytest.approx(1.0, eps)
+        assert label_scores2[(2, "punct")] == pytest.approx(0.0, eps)
+        assert label_scores2[(3, "nsubj")] == pytest.approx(0.0, eps)
+        assert label_scores2[(3, "dobj")] == pytest.approx(0.0, eps)
+        assert label_scores2[(3, "punct")] == pytest.approx(1.0, eps)
+        assert head_scores2[(0, 0)] == pytest.approx(0.0, eps)
+        assert head_scores2[(0, 1)] == pytest.approx(1.0, eps)
+        assert head_scores2[(0, 2)] == pytest.approx(0.0, eps)
+        assert head_scores2[(2, 0)] == pytest.approx(0.0, eps)
+        assert head_scores2[(2, 1)] == pytest.approx(1.0, eps)
+        assert head_scores2[(2, 2)] == pytest.approx(0.0, eps)
+        assert head_scores2[(3, 0)] == pytest.approx(0.0, eps)
+        assert head_scores2[(3, 1)] == pytest.approx(1.0, eps)
+        assert head_scores2[(3, 2)] == pytest.approx(0.0, eps)

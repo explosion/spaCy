@@ -1,4 +1,5 @@
 # cython: infer_types=True, profile=True, binding=True
+from collections import defaultdict
 from typing import Optional, Iterable
 from thinc.api import Model, Config
 
@@ -258,3 +259,20 @@ cdef class DependencyParser(Parser):
         results.update(Scorer.score_deps(examples, "dep", **kwargs))
         del results["sents_per_type"]
         return results
+
+    def scored_parses(self, beams):
+        """Return two dictionaries with scores for each beam/doc that was processed:
+        one containing (i, head) keys, and another containing (i, label) keys.
+        """
+        head_scores = []
+        label_scores = []
+        for beam in beams:
+            score_head_dict = defaultdict(float)
+            score_label_dict = defaultdict(float)
+            for score, parses in self.moves.get_beam_parses(beam):
+                for head, i, label in parses:
+                    score_head_dict[(i, head)] += score
+                    score_label_dict[(i, label)] += score
+            head_scores.append(score_head_dict)
+            label_scores.append(score_label_dict)
+        return head_scores, label_scores
