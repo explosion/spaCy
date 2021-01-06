@@ -429,7 +429,7 @@ def test_beam_overfitting_IO():
     with make_tempdir() as tmp_dir:
         nlp.to_disk(tmp_dir)
         nlp2 = util.load_model_from_path(tmp_dir)
-        docs2 = [nlp2(test_text)]
+        docs2 = [nlp2.make_doc(test_text)]
         ner2 = nlp2.get_pipe("beam_ner")
         beams2 = ner2.predict(docs2)
         entity_scores2 = ner2.scored_ents(beams2)[0]

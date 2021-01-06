@@ -185,20 +185,22 @@ def test_parser_set_sent_starts(en_vocab):
             assert token.head in sent
 
 
-def test_overfitting_IO():
-    # Simple test to try and quickly overfit the dependency parser - ensuring the ML models work correctly
+@pytest.mark.parametrize("pipe_name", ["parser", "beam_parser"])
+def test_overfitting_IO(pipe_name):
+    # Simple test to try and quickly overfit the dependency parser (normal or beam)
     nlp = English()
-    parser = nlp.add_pipe("parser")
+    parser = nlp.add_pipe(pipe_name)
     train_examples = []
     for text, annotations in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
         for dep in annotations.get("deps", []):
             parser.add_label(dep)
     optimizer = nlp.initialize()
+    # run overfitting
     for i in range(100):
         losses = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)
-    assert losses["parser"] < 0.0001
+    assert losses[pipe_name] < 0.0001
     # test the trained model
     test_text = "I like securities."
     doc = nlp(test_text)
@@ -226,3 +228,92 @@ def test_overfitting_IO():
     no_batch_deps = [doc.to_array([DEP]) for doc in [nlp(text) for text in texts]]
     assert_equal(batch_deps_1, batch_deps_2)
     assert_equal(batch_deps_1, no_batch_deps)
+
+
+def test_beam_parser_scores():
+    # Test that we can get confidence values out of the beam_parser pipe
+    beam_width = 16
+    beam_density = 0.0001
+    nlp = English()
+    config = {
+        "beam_width": beam_width,
+        "beam_density": beam_density,
+    }
+    parser = nlp.add_pipe("beam_parser", config=config)
+    train_examples = []
+    for text, annotations in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
+        for dep in annotations.get("deps", []):
+            parser.add_label(dep)
+    optimizer = nlp.initialize()
+
+    # update once
+    losses = {}
+    nlp.update(train_examples, sgd=optimizer, losses=losses)
+
+    # test the scores from the beam
+    test_text = "I like securities."
+    doc = nlp.make_doc(test_text)
+    docs = [doc]
+    beams = parser.predict(docs)
+    parse_scores = parser.scored_parses(beams)[0]
+
+    for j in range(len(doc)):
+        for label in parser.labels:
+            score = parse_scores[(j, label)]
+            eps = 0.00001
+            assert 0 - eps <= score <= 1 + eps
+
+
+def test_beam_overfitting_IO():
+    # Simple test to try and quickly overfit the Beam dependency parser
+    nlp = English()
+    beam_width = 16
+    beam_density = 0.0001
+    config = {
+        "beam_width": beam_width,
+        "beam_density": beam_density,
+    }
+    parser = nlp.add_pipe("beam_parser", config=config)
+    train_examples = []
+    for text, annotations in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
+        for dep in annotations.get("deps", []):
+            parser.add_label(dep)
+    optimizer = nlp.initialize()
+    # run overfitting
+    for i in range(100):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+    assert losses["beam_parser"] < 0.0001
+    # test the scores from the beam
+    test_text = "I like securities."
+    docs = [nlp.make_doc(test_text)]
+    beams = parser.predict(docs)
+    parser_scores = parser.scored_ents(beams)[0]
+    assert parser_scores[(0, "nsubj")] == 1.0
+    assert parser_scores[(0, "dobj")] == 0.0
+    assert parser_scores[(0, "punct")] == 0.0
+    assert parser_scores[(2, "nsubj")] == 0.0
+    assert parser_scores[(2, "dobj")] == 1.0
+    assert parser_scores[(2, "punct")] == 0.0
+    assert parser_scores[(3, "nsubj")] == 0.0
+    assert parser_scores[(3, "dobj")] == 0.0
+    assert parser_scores[(3, "punct")] == 1.0
+    # Also test the results are still the same after IO
+    with make_tempdir() as tmp_dir:
+        nlp.to_disk(tmp_dir)
+        nlp2 = util.load_model_from_path(tmp_dir)
+        docs2 = [nlp2.make_doc(test_text)]
+        parser2 = nlp2.get_pipe("beam_parser")
+        beams2 = parser2.predict(docs2)
+        parser_scores2 = parser.scored_ents(beams2)[0]
+        assert parser_scores2[(0, "nsubj")] == 1.0
+        assert parser_scores2[(0, "dobj")] == 0.0
+        assert parser_scores2[(0, "punct")] == 0.0
+        assert parser_scores2[(2, "nsubj")] == 0.0
+        assert parser_scores2[(2, "dobj")] == 1.0
+        assert parser_scores2[(2, "punct")] == 0.0
+        assert parser_scores2[(3, "nsubj")] == 0.0
+        assert parser_scores2[(3, "dobj")] == 0.0
+        assert parser_scores2[(3, "punct")] == 1.0
