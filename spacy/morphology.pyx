@@ -29,7 +29,7 @@ cdef class Morphology:
     FEATURE_SEP = "|"
     FIELD_SEP = "="
     VALUE_SEP = ","
-    # not an empty string so that the PreshMap key is not 0
+    # not an empty string so we can distinguish unset morph from empty morph
     EMPTY_MORPH = symbols.NAMES[symbols._]
 
     def __init__(self, StringStore strings):
@@ -50,8 +50,8 @@ cdef class Morphology:
         """
         cdef MorphAnalysisC* tag_ptr
         if isinstance(features, str):
-            if features == self.EMPTY_MORPH:
-                features = ""
+            if features == "":
+                features = self.EMPTY_MORPH
             tag_ptr = <MorphAnalysisC*>self.tags.get(<hash_t>self.strings[features])
             if tag_ptr != NULL:
                 return tag_ptr.key
@@ -71,13 +71,9 @@ cdef class Morphology:
                 ))
         cdef MorphAnalysisC tag = self.create_morph_tag(field_feature_pairs)
         # the hash key for the tag is either the hash of the normalized UFEATS
-        # string or the hash of an empty placeholder (using the empty string
-        # would give a hash key of 0, which is not good for PreshMap)
+        # string or the hash of an empty placeholder
         norm_feats_string = self.normalize_features(features)
-        if norm_feats_string:
-            tag.key = self.strings.add(norm_feats_string)
-        else:
-            tag.key = self.strings.add(self.EMPTY_MORPH)
+        tag.key = self.strings.add(norm_feats_string)
         self.insert(tag)
         return tag.key
 
@@ -137,8 +133,9 @@ cdef class Morphology:
         """
         cdef MorphAnalysisC tag
         tag.length = len(field_feature_pairs)
-        tag.fields = <attr_t*>self.mem.alloc(tag.length, sizeof(attr_t))
-        tag.features = <attr_t*>self.mem.alloc(tag.length, sizeof(attr_t))
+        if tag.length > 0:
+            tag.fields = <attr_t*>self.mem.alloc(tag.length, sizeof(attr_t))
+            tag.features = <attr_t*>self.mem.alloc(tag.length, sizeof(attr_t))
         for i, (field, feature) in enumerate(field_feature_pairs):
             tag.fields[i] = field
             tag.features[i] = feature

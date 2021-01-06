@@ -1,4 +1,6 @@
 import pytest
+import logging
+import mock
 from spacy import util, registry
 from spacy.lang.en import English
 from spacy.lookups import Lookups
@@ -54,9 +56,18 @@ def test_lemmatizer_config(nlp):
     lemmatizer = nlp.add_pipe("lemmatizer", config={"mode": "rule"})
     nlp.initialize()
 
+    # warning if no POS assigned
     doc = nlp.make_doc("coping")
-    doc[0].pos_ = "VERB"
+    logger = logging.getLogger("spacy")
+    with mock.patch.object(logger, "warning") as mock_warning:
+        doc = lemmatizer(doc)
+        mock_warning.assert_called_once()
+
+    # works with POS
+    doc = nlp.make_doc("coping")
     assert doc[0].lemma_ == ""
+    doc[0].pos_ = "VERB"
+    doc = lemmatizer(doc)
     doc = lemmatizer(doc)
     assert doc[0].text == "coping"
     assert doc[0].lemma_ == "cope"

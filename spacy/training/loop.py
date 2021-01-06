@@ -28,7 +28,7 @@ def train(
     use_gpu: int = -1,
     stdout: IO = sys.stdout,
     stderr: IO = sys.stderr,
-) -> None:
+) -> Tuple["Language", Optional[Path]]:
     """Train a pipeline.
 
     nlp (Language): The initialized nlp object with the full config.
@@ -40,7 +40,7 @@ def train(
     stderr (file): A second file-like object to write output messages. To disable
         printing, set to io.StringIO.
 
-    RETURNS (Path / None): The path to the final exported model.
+    RETURNS (tuple): The final nlp object and the path to the exported model.
     """
     # We use no_print here so we can respect the stdout/stderr options.
     msg = Printer(no_print=True)
@@ -87,9 +87,13 @@ def train(
             if is_best_checkpoint is not None and output_path is not None:
                 with nlp.select_pipes(disable=frozen_components):
                     update_meta(T, nlp, info)
-                with nlp.use_params(optimizer.averages):
-                    nlp = before_to_disk(nlp)
-                    nlp.to_disk(output_path / DIR_MODEL_BEST)
+                    with nlp.use_params(optimizer.averages):
+                        nlp = before_to_disk(nlp)
+                        nlp.to_disk(output_path / DIR_MODEL_LAST)
+                    if is_best_checkpoint:
+                        with nlp.use_params(optimizer.averages):
+                            nlp.to_disk(output_path / DIR_MODEL_BEST)
+
     except Exception as e:
         if output_path is not None:
             # We don't want to swallow the traceback if we don't have a
@@ -105,17 +109,18 @@ def train(
         raise e
     finally:
         finalize_logger()
+        if optimizer.averages:
+            nlp.use_params(optimizer.averages)
         if output_path is not None:
             final_model_path = output_path / DIR_MODEL_LAST
-            if optimizer.averages:
-                with nlp.use_params(optimizer.averages):
-                    nlp.to_disk(final_model_path)
-            else:
-                nlp.to_disk(final_model_path)
+            nlp.to_disk(final_model_path)
             # This will only run if we don't hit an error
             stdout.write(
                 msg.good("Saved pipeline to output directory", final_model_path) + "\n"
             )
+            return (nlp, final_model_path)
+        else:
+            return (nlp, None)
 
 
 def train_while_improving(
@@ -248,9 +253,8 @@ def create_evaluation_callback(
     weights = {key: value for key, value in weights.items() if value is not None}
 
     def evaluate() -> Tuple[float, Dict[str, float]]:
-        dev_examples = list(dev_corpus(nlp))
         try:
-            scores = nlp.evaluate(dev_examples)
+            scores = nlp.evaluate(dev_corpus(nlp))
         except KeyError as e:
             raise KeyError(Errors.E900.format(pipeline=nlp.pipe_names)) from e
         # Calculate a weighted sum based on score_weights for the main score.

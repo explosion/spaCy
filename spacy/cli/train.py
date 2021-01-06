@@ -18,7 +18,7 @@ from .. import util
 def train_cli(
     # fmt: off
     ctx: typer.Context,  # This is only used to read additional arguments
-    config_path: Path = Arg(..., help="Path to config file", exists=True),
+    config_path: Path = Arg(..., help="Path to config file", exists=True, allow_dash=True),
     output_path: Optional[Path] = Opt(None, "--output", "--output-path", "-o", help="Output directory to store trained pipeline in"),
     code_path: Optional[Path] = Opt(None, "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
@@ -41,7 +41,7 @@ def train_cli(
     """
     util.logger.setLevel(logging.DEBUG if verbose else logging.INFO)
     # Make sure all files and paths exists if they are needed
-    if not config_path or not config_path.exists():
+    if not config_path or (str(config_path) != "-" and not config_path.exists()):
         msg.fail("Config file not found", config_path, exits=1)
     if output_path is not None and not output_path.exists():
         output_path.mkdir(parents=True)

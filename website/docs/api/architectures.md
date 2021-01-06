@@ -5,6 +5,7 @@ source: spacy/ml/models
 menu:
   - ['Tok2Vec', 'tok2vec-arch']
   - ['Transformers', 'transformers']
+  - ['Pretraining', 'pretrain']
   - ['Parser & NER', 'parser']
   - ['Tagging', 'tagger']
   - ['Text Classification', 'textcat']
@@ -143,10 +144,10 @@ argument that connects to the shared `tok2vec` component in the pipeline.
 
 Construct an embedding layer that separately embeds a number of lexical
 attributes using hash embedding, concatenates the results, and passes it through
-a feed-forward subnetwork to build a mixed representation. The features used
-can be configured with the `attrs` argument. The suggested attributes are
-`NORM`, `PREFIX`, `SUFFIX` and `SHAPE`. This lets the model take into account
-some subword information, without construction a fully character-based
+a feed-forward subnetwork to build a mixed representation. The features used can
+be configured with the `attrs` argument. The suggested attributes are `NORM`,
+`PREFIX`, `SUFFIX` and `SHAPE`. This lets the model take into account some
+subword information, without construction a fully character-based
 representation. If pretrained vectors are available, they can be included in the
 representation as well, with the vectors table will be kept static (i.e. it's
 not updated).
@@ -393,11 +394,12 @@ operate over wordpieces, which usually don't align one-to-one against spaCy
 tokens. The layer therefore requires a reduction operation in order to calculate
 a single token vector given zero or more wordpiece vectors.
 
-| Name          | Description                                                                                                                                                                                                                                                                   |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pooling`     | A reduction layer used to calculate the token vectors based on zero or more wordpiece vectors. If in doubt, mean pooling (see [`reduce_mean`](https://thinc.ai/docs/api-layers#reduce_mean)) is usually a good choice. ~~Model[Ragged, Floats2d]~~                            |
-| `grad_factor` | Reweight gradients from the component before passing them upstream. You can set this to `0` to "freeze" the transformer weights with respect to the component, or use it to make some components more significant than others. Leaving it at `1.0` is usually fine. ~~float~~ |
-| **CREATES**   | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                        |
+| Name          | Description                                                                                                                                                                                                                                                                                                                                      |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `pooling`     | A reduction layer used to calculate the token vectors based on zero or more wordpiece vectors. If in doubt, mean pooling (see [`reduce_mean`](https://thinc.ai/docs/api-layers#reduce_mean)) is usually a good choice. ~~Model[Ragged, Floats2d]~~                                                                                               |
+| `grad_factor` | Reweight gradients from the component before passing them upstream. You can set this to `0` to "freeze" the transformer weights with respect to the component, or use it to make some components more significant than others. Leaving it at `1.0` is usually fine. ~~float~~                                                                    |
+| `upstream`    | A string to identify the "upstream" `Transformer` component to communicate with. By default, the upstream name is the wildcard string `"*"`, but you could also specify the name of the `Transformer` component. You'll almost never have multiple upstream `Transformer` components, so the wildcard string will almost always be fine. ~~str~~ |
+| **CREATES**   | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                                                                                           |
 
 ### spacy-transformers.Tok2VecTransformer.v1 {#Tok2VecTransformer}
 
@@ -425,19 +427,85 @@ one component.
 | `grad_factor`      | Reweight gradients from the component before passing them upstream. You can set this to `0` to "freeze" the transformer weights with respect to the component, or use it to make some components more significant than others. Leaving it at `1.0` is usually fine. ~~float~~ |
 | **CREATES**        | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                        |
 
+## Pretraining architectures {#pretrain source="spacy/ml/models/multi_task.py"}
+
+The spacy `pretrain` command lets you initialize a `Tok2Vec` layer in your
+pipeline with information from raw text. To this end, additional layers are
+added to build a network for a temporary task that forces the `Tok2Vec` layer to
+learn something about sentence structure and word cooccurrence statistics. Two
+pretraining objectives are available, both of which are variants of the cloze
+task [Devlin et al. (2018)](https://arxiv.org/abs/1810.04805) introduced for
+BERT.
+
+For more information, see the section on
+[pretraining](/usage/embeddings-transformers#pretraining).
+
+### spacy.PretrainVectors.v1 {#pretrain_vectors}
+
+> #### Example config
+>
+> ```ini
+> [pretraining]
+> component = "tok2vec"
+> ...
+>
+> [pretraining.objective]
+> @architectures = "spacy.PretrainVectors.v1"
+> maxout_pieces = 3
+> hidden_size = 300
+> loss = "cosine"
+> ```
+
+Predict the word's vector from a static embeddings table as pretraining
+objective for a Tok2Vec layer.
+
+| Name            | Description                                                                                                                                               |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `maxout_pieces` | The number of maxout pieces to use. Recommended values are `2` or `3`. ~~int~~                                                                            |
+| `hidden_size`   | Size of the hidden layer of the model. ~~int~~                                                                                                            |
+| `loss`          | The loss function can be either "cosine" or "L2". We typically recommend to use "cosine". ~~~str~~                                                        |
+| **CREATES**     | A callable function that can create the Model, given the `vocab` of the pipeline and the `tok2vec` layer to pretrain. ~~Callable[[Vocab, Model], Model]~~ |
+
+### spacy.PretrainCharacters.v1 {#pretrain_chars}
+
+> #### Example config
+>
+> ```ini
+> [pretraining]
+> component = "tok2vec"
+> ...
+>
+> [pretraining.objective]
+> @architectures = "spacy.PretrainCharacters.v1"
+> maxout_pieces = 3
+> hidden_size = 300
+> n_characters = 4
+> ```
+
+Predict some number of leading and trailing UTF-8 bytes as pretraining objective
+for a Tok2Vec layer.
+
+| Name            | Description                                                                                                                                               |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `maxout_pieces` | The number of maxout pieces to use. Recommended values are `2` or `3`. ~~int~~                                                                            |
+| `hidden_size`   | Size of the hidden layer of the model. ~~int~~                                                                                                            |
+| `n_characters`  | The window of characters - e.g. if `n_characters = 2`, the model will try to predict the first two and last two characters of the word. ~~int~~           |
+| **CREATES**     | A callable function that can create the Model, given the `vocab` of the pipeline and the `tok2vec` layer to pretrain. ~~Callable[[Vocab, Model], Model]~~ |
+
 ## Parser & NER architectures {#parser}
 
-### spacy.TransitionBasedParser.v1 {#TransitionBasedParser source="spacy/ml/models/parser.py"}
+### spacy.TransitionBasedParser.v2 {#TransitionBasedParser source="spacy/ml/models/parser.py"}
 
 > #### Example Config
 >
 > ```ini
 > [model]
-> @architectures = "spacy.TransitionBasedParser.v1"
+> @architectures = "spacy.TransitionBasedParser.v2"
 > state_type = "ner"
 > extra_state_tokens = false
 > hidden_width = 64
 > maxout_pieces = 2
+> use_upper = true
 >
 > [model.tok2vec]
 > @architectures = "spacy.HashEmbedCNN.v1"
@@ -563,7 +631,8 @@ from the linear model, where it is stored in `model.attrs["multi_label"]`.
 
 <Accordion title="spacy.TextCatEnsemble.v1 definition" spaced>
 
-The v1 was functionally similar, but used an internal `tok2vec` instead of taking it as argument.
+The v1 was functionally similar, but used an internal `tok2vec` instead of
+taking it as argument.
 
 | Name                 | Description                                                                                                                                                                                    |
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

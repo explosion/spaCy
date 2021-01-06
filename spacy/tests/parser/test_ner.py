@@ -54,7 +54,7 @@ def tsys(vocab, entity_types):
 
 def test_get_oracle_moves(tsys, doc, entity_annots):
     example = Example.from_dict(doc, {"entities": entity_annots})
-    act_classes = tsys.get_oracle_sequence(example)
+    act_classes = tsys.get_oracle_sequence(example, _debug=False)
     names = [tsys.get_class_name(act) for act in act_classes]
     assert names == ["U-PERSON", "O", "O", "B-GPE", "L-GPE", "O"]
 
@@ -301,10 +301,11 @@ def test_block_ner():
     assert [token.ent_type_ for token in doc] == expected_types
 
 
-def test_overfitting_IO():
+@pytest.mark.parametrize("use_upper", [True, False])
+def test_overfitting_IO(use_upper):
     # Simple test to try and quickly overfit the NER component - ensuring the ML models work correctly
     nlp = English()
-    ner = nlp.add_pipe("ner")
+    ner = nlp.add_pipe("ner", config={"model": {"use_upper": use_upper}})
     train_examples = []
     for text, annotations in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
@@ -334,6 +335,15 @@ def test_overfitting_IO():
         assert len(ents2) == 1
         assert ents2[0].text == "London"
         assert ents2[0].label_ == "LOC"
+        # Ensure that the predictions are still the same, even after adding a new label
+        ner2 = nlp2.get_pipe("ner")
+        assert ner2.model.attrs["has_upper"] == use_upper
+        ner2.add_label("RANDOM_NEW_LABEL")
+        doc3 = nlp2(test_text)
+        ents3 = doc3.ents
+        assert len(ents3) == 1
+        assert ents3[0].text == "London"
+        assert ents3[0].label_ == "LOC"
 
     # Make sure that running pipe twice, or comparing to call, always amounts to the same predictions
     texts = [

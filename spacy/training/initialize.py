@@ -37,9 +37,17 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
     T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
     dot_names = [T["train_corpus"], T["dev_corpus"]]
     if not isinstance(T["train_corpus"], str):
-        raise ConfigValidationError(desc=Errors.E897.format(field="training.train_corpus", type=type(T["train_corpus"])))
+        raise ConfigValidationError(
+            desc=Errors.E897.format(
+                field="training.train_corpus", type=type(T["train_corpus"])
+            )
+        )
     if not isinstance(T["dev_corpus"], str):
-        raise ConfigValidationError(desc=Errors.E897.format(field="training.dev_corpus", type=type(T["dev_corpus"])))
+        raise ConfigValidationError(
+            desc=Errors.E897.format(
+                field="training.dev_corpus", type=type(T["dev_corpus"])
+            )
+        )
     train_corpus, dev_corpus = resolve_dot_names(config, dot_names)
     optimizer = T["optimizer"]
     # Components that shouldn't be updated during training
@@ -103,7 +111,7 @@ def load_vectors_into_model(
             "with the packaged vectors. Make sure that the vectors package you're "
             "loading is compatible with the current version of spaCy."
         )
-        err = ConfigValidationError.from_error(e, config=None, title=title, desc=desc)
+        err = ConfigValidationError.from_error(e, title=title, desc=desc)
         raise err from None
     nlp.vocab.vectors = vectors_nlp.vocab.vectors
     if add_strings:

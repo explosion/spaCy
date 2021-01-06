@@ -61,14 +61,13 @@ class Tagger(TrainablePipe):
 
     DOCS: https://nightly.spacy.io/api/tagger
     """
-    def __init__(self, vocab, model, name="tagger", *, labels=None):
+    def __init__(self, vocab, model, name="tagger"):
         """Initialize a part-of-speech tagger.
 
         vocab (Vocab): The shared vocabulary.
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
         name (str): The component instance name, used to add entries to the
             losses during training.
-        labels (List): The set of labels. Defaults to None.
 
         DOCS: https://nightly.spacy.io/api/tagger#init
         """
@@ -76,7 +75,7 @@ class Tagger(TrainablePipe):
         self.model = model
         self.name = name
         self._rehearsal_model = None
-        cfg = {"labels": labels or []}
+        cfg = {"labels": []}
         self.cfg = dict(sorted(cfg.items()))
 
     @property
@@ -257,7 +256,7 @@ class Tagger(TrainablePipe):
         DOCS: https://nightly.spacy.io/api/tagger#get_loss
         """
         validate_examples(examples, "Tagger.get_loss")
-        loss_func = SequenceCategoricalCrossentropy(names=self.labels, normalize=False)
+        loss_func = SequenceCategoricalCrossentropy(names=self.labels, normalize=False, missing_value="")
         truths = [eg.get_aligned("TAG", as_string=True) for eg in examples]
         d_scores, loss = loss_func(scores, truths)
         if self.model.ops.xp.isnan(loss):
@@ -296,6 +295,7 @@ class Tagger(TrainablePipe):
             gold_tags = example.get_aligned("TAG", as_string=True)
             gold_array = [[1.0 if tag == gold_tag else 0.0 for tag in self.labels] for gold_tag in gold_tags]
             label_sample.append(self.model.ops.asarray(gold_array, dtype="float32"))
+        self._require_labels()
         assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
         assert len(label_sample) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(X=doc_sample, Y=label_sample)

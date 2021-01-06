@@ -3,17 +3,15 @@ title: TextCategorizer
 tag: class
 source: spacy/pipeline/textcat.py
 new: 2
-teaser: 'Pipeline component for text classification'
+teaser: 'Pipeline component for single-label text classification'
 api_base_class: /api/pipe
 api_string_name: textcat
 api_trainable: true
 ---
 
 The text categorizer predicts **categories over a whole document**. It can learn
-one or more labels, and the labels can be mutually exclusive (i.e. one true
-label per document) or non-mutually exclusive (i.e. zero or more labels may be
-true per document). The multi-label setting is controlled by the model instance
-that's provided.
+one or more labels, and the labels are mutually exclusive - there is exactly one 
+true label per document. 
 
 ## Config and implementation {#config}
 
@@ -27,10 +25,10 @@ architectures and their arguments and hyperparameters.
 > #### Example
 >
 > ```python
-> from spacy.pipeline.textcat import DEFAULT_TEXTCAT_MODEL
+> from spacy.pipeline.textcat import DEFAULT_SINGLE_TEXTCAT_MODEL
 > config = {
 >    "threshold": 0.5,
->    "model": DEFAULT_TEXTCAT_MODEL,
+>    "model": DEFAULT_SINGLE_TEXTCAT_MODEL,
 > }
 > nlp.add_pipe("textcat", config=config)
 > ```
@@ -280,7 +278,6 @@ Score a batch of examples.
 | ---------------- | -------------------------------------------------------------------------------------------------------------------- |
 | `examples`       | The examples to score. ~~Iterable[Example]~~                                                                         |
 | _keyword-only_   |                                                                                                                      |
-| `positive_label` | Optional positive label. ~~Optional[str]~~                                                                           |
 | **RETURNS**      | The scores, produced by [`Scorer.score_cats`](/api/scorer#score_cats). ~~Dict[str, Union[float, Dict[str, float]]]~~ |
 
 ## TextCategorizer.create_optimizer {#create_optimizer tag="method"}

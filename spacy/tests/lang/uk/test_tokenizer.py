@@ -89,7 +89,6 @@ def test_uk_tokenizer_splits_open_appostrophe(uk_tokenizer, text):
     assert tokens[0].text == "'"
 
 
-@pytest.mark.skip(reason="See Issue #3327 and PR #3329")
 @pytest.mark.parametrize("text", ["Тест''"])
 def test_uk_tokenizer_splits_double_end_quote(uk_tokenizer, text):
     tokens = uk_tokenizer(text)

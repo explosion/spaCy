@@ -61,20 +61,27 @@ markup to copy-paste into
 [GitHub issues](https://github.com/explosion/spaCy/issues).
 
 ```cli
-$ python -m spacy info [--markdown] [--silent]
+$ python -m spacy info [--markdown] [--silent] [--exclude]
 ```
+
+> #### Example
+>
+> ```cli
+> $ python -m spacy info en_core_web_lg --markdown
+> ```
 
 ```cli
-$ python -m spacy info [model] [--markdown] [--silent]
+$ python -m spacy info [model] [--markdown] [--silent] [--exclude]
 ```
 
-| Name                                             | Description                                                                               |
-| ------------------------------------------------ | ----------------------------------------------------------------------------------------- |
-| `model`                                          | A trained pipeline, i.e. package name or path (optional). ~~Optional[str] \(positional)~~ |
-| `--markdown`, `-md`                              | Print information as Markdown. ~~bool (flag)~~                                            |
-| `--silent`, `-s` <Tag variant="new">2.0.12</Tag> | Don't print anything, just return the values. ~~bool (flag)~~                             |
-| `--help`, `-h`                                   | Show help message and available arguments. ~~bool (flag)~~                                |
-| **PRINTS**                                       | Information about your spaCy installation.                                                |
+| Name                                             | Description                                                                                   |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| `model`                                          | A trained pipeline, i.e. package name or path (optional). ~~Optional[str] \(positional)~~     |
+| `--markdown`, `-md`                              | Print information as Markdown. ~~bool (flag)~~                                                |
+| `--silent`, `-s` <Tag variant="new">2.0.12</Tag> | Don't print anything, just return the values. ~~bool (flag)~~                                 |
+| `--exclude`, `-e`                                | Comma-separated keys to exclude from the print-out. Defaults to `"labels"`. ~~Optional[str]~~ |
+| `--help`, `-h`                                   | Show help message and available arguments. ~~bool (flag)~~                                    |
+| **PRINTS**                                       | Information about your spaCy installation.                                                    |
 
 ## validate {#validate new="2" tag="command"}
 
@@ -121,17 +128,18 @@ customize those settings in your config file later.
 > ```
 
 ```cli
-$ python -m spacy init config [output_file] [--lang] [--pipeline] [--optimize] [--cpu] [--pretraining]
+$ python -m spacy init config [output_file] [--lang] [--pipeline] [--optimize] [--gpu] [--pretraining] [--force]
 ```
 
 | Name                   | Description                                                                                                                                                                                                                                                                                                                        |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `output_file`          | Path to output `.cfg` file or `-` to write the config to stdout (so you can pipe it forward to a file). Note that if you're writing to stdout, no additional logging info is printed. ~~Path (positional)~~                                                                                                                        |
+| `output_file`          | Path to output `.cfg` file or `-` to write the config to stdout (so you can pipe it forward to a file or to the `train` command). Note that if you're writing to stdout, no additional logging info is printed. ~~Path (positional)~~                                                                                              |
 | `--lang`, `-l`         | Optional code of the [language](/usage/models#languages) to use. Defaults to `"en"`. ~~str (option)~~                                                                                                                                                                                                                              |
 | `--pipeline`, `-p`     | Comma-separated list of trainable [pipeline components](/usage/processing-pipelines#built-in) to include. Defaults to `"tagger,parser,ner"`. ~~str (option)~~                                                                                                                                                                      |
 | `--optimize`, `-o`     | `"efficiency"` or `"accuracy"`. Whether to optimize for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger and slower model). This will impact the choice of architecture, pretrained weights and related hyperparameters. Defaults to `"efficiency"`. ~~str (option)~~ |
-| `--cpu`, `-C`          | Whether the model needs to run on CPU. This will impact the choice of architecture, pretrained weights and related hyperparameters. ~~bool (flag)~~                                                                                                                                                                                |
+| `--gpu`, `-G`          | Whether the model can run on GPU. This will impact the choice of architecture, pretrained weights and related hyperparameters. ~~bool (flag)~~                                                                                                                                                                                     |
 | `--pretraining`, `-pt` | Include config for pretraining (with [`spacy pretrain`](/api/cli#pretrain)). Defaults to `False`. ~~bool (flag)~~                                                                                                                                                                                                                  |
+| `--force`, `-f`        | Force overwriting the output file if it already exists. ~~bool (flag)~~                                                                                                                                                                                                                                                            |
 | `--help`, `-h`         | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                                                                                                                                         |
 | **CREATES**            | The config file for training.                                                                                                                                                                                                                                                                                                      |
 
@@ -223,16 +231,16 @@ After generating the labels, you can provide them to components that accept a
 $ python -m spacy init labels [config_path] [output_path] [--code] [--verbose] [--gpu-id] [overrides]
 ```
 
-| Name              | Description                                                                                                                                                                                |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `config_path`     | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. ~~Path (positional)~~                                                                |
-| `output_path`     | Output directory for the label files. Will create one JSON file per component. ~~Path (positional)~~                                                                                       |
-| `--code`, `-c`    | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~       |
-| `--verbose`, `-V` | Show more detailed messages during training. ~~bool (flag)~~                                                                                                                               |
-| `--gpu-id`, `-g`  | GPU ID or `-1` for CPU. Defaults to `-1`. ~~int (option)~~                                                                                                                                 |
-| `--help`, `-h`    | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                 |
-| overrides         | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~ |
-| **CREATES**       | The best trained pipeline and the final checkpoint (if training is terminated).                                                                                                            |
+| Name              | Description                                                                                                                                                                                                        |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `config_path`     | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. If `-`, the data will be [read from stdin](/usage/training#config-stdin). ~~Union[Path, str] \(positional)~~ |
+| `output_path`     | Output directory for the label files. Will create one JSON file per component. ~~Path (positional)~~                                                                                                               |
+| `--code`, `-c`    | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~                               |
+| `--verbose`, `-V` | Show more detailed messages during training. ~~bool (flag)~~                                                                                                                                                       |
+| `--gpu-id`, `-g`  | GPU ID or `-1` for CPU. Defaults to `-1`. ~~int (option)~~                                                                                                                                                         |
+| `--help`, `-h`    | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                         |
+| overrides         | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~                         |
+| **CREATES**       | The best trained pipeline and the final checkpoint (if training is terminated).                                                                                                                                    |
 
 ## convert {#convert tag="command"}
 
@@ -428,7 +436,7 @@ File       /path/to/thinc/thinc/schedules.py (line 91)
 
 | Name                     | Description                                                                                                                                                                                                                    |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `config_path`            | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. ~~Path (positional)~~                                                                                                    |
+| `config_path`            | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. If `-`, the data will be [read from stdin](/usage/training#config-stdin). ~~Union[Path, str] \(positional)~~             |
 | `--code`, `-c`           | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~                                           |
 | `--show-functions`, `-F` | Show an overview of all registered function blocks used in the config and where those functions come from, including the module name, Python file and line number. ~~bool (flag)~~                                             |
 | `--show-variables`, `-V` | Show an overview of all variables referenced in the config, e.g. `${paths.train}` and their values that will be used. This also reflects any config overrides provided on the CLI, e.g. `--paths.train /path`. ~~bool (flag)~~ |
@@ -600,16 +608,16 @@ will not be available.
 
 </Accordion>
 
-| Name                       | Description                                                                                                                                                                                |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `config_path`              | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. ~~Path (positional)~~                                                                |
-| `--code`, `-c`             | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~       |
-| `--ignore-warnings`, `-IW` | Ignore warnings, only show stats and errors. ~~bool (flag)~~                                                                                                                               |
-| `--verbose`, `-V`          | Print additional information and explanations. ~~bool (flag)~~                                                                                                                             |
-| `--no-format`, `-NF`       | Don't pretty-print the results. Use this if you want to write to a file. ~~bool (flag)~~                                                                                                   |
-| `--help`, `-h`             | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                 |
-| overrides                  | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~ |
-| **PRINTS**                 | Debugging information.                                                                                                                                                                     |
+| Name                       | Description                                                                                                                                                                                                        |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `config_path`              | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. If `-`, the data will be [read from stdin](/usage/training#config-stdin). ~~Union[Path, str] \(positional)~~ |
+| `--code`, `-c`             | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~                               |
+| `--ignore-warnings`, `-IW` | Ignore warnings, only show stats and errors. ~~bool (flag)~~                                                                                                                                                       |
+| `--verbose`, `-V`          | Print additional information and explanations. ~~bool (flag)~~                                                                                                                                                     |
+| `--no-format`, `-NF`       | Don't pretty-print the results. Use this if you want to write to a file. ~~bool (flag)~~                                                                                                                           |
+| `--help`, `-h`             | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                         |
+| overrides                  | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~                         |
+| **PRINTS**                 | Debugging information.                                                                                                                                                                                             |
 
 ### debug profile {#debug-profile tag="command"}
 
@@ -742,22 +750,22 @@ $ python -m spacy debug model ./config.cfg tagger -l "5,15" -DIM -PAR -P0 -P1 -P
 
 </Accordion>
 
-| Name                    | Description                                                                                                                 |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `config_path`           | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. ~~Path (positional)~~ |
-| `component`             | Name of the pipeline component of which the model should be analyzed. ~~str (positional)~~                                  |
-| `--layers`, `-l`        | Comma-separated names of layer IDs to print. ~~str (option)~~                                                               |
-| `--dimensions`, `-DIM`  | Show dimensions of each layer. ~~bool (flag)~~                                                                              |
-| `--parameters`, `-PAR`  | Show parameters of each layer. ~~bool (flag)~~                                                                              |
-| `--gradients`, `-GRAD`  | Show gradients of each layer. ~~bool (flag)~~                                                                               |
-| `--attributes`, `-ATTR` | Show attributes of each layer. ~~bool (flag)~~                                                                              |
-| `--print-step0`, `-P0`  | Print model before training. ~~bool (flag)~~                                                                                |
-| `--print-step1`, `-P1`  | Print model after initialization. ~~bool (flag)~~                                                                           |
-| `--print-step2`, `-P2`  | Print model after training. ~~bool (flag)~~                                                                                 |
-| `--print-step3`, `-P3`  | Print final predictions. ~~bool (flag)~~                                                                                    |
-| `--gpu-id`, `-g`        | GPU ID or `-1` for CPU. Defaults to `-1`. ~~int (option)~~                                                                  |
-| `--help`, `-h`          | Show help message and available arguments. ~~bool (flag)~~                                                                  |
-| **PRINTS**              | Debugging information.                                                                                                      |
+| Name                    | Description                                                                                                                                                                                                        |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `config_path`           | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. If `-`, the data will be [read from stdin](/usage/training#config-stdin). ~~Union[Path, str] \(positional)~~ |
+| `component`             | Name of the pipeline component of which the model should be analyzed. ~~str (positional)~~                                                                                                                         |
+| `--layers`, `-l`        | Comma-separated names of layer IDs to print. ~~str (option)~~                                                                                                                                                      |
+| `--dimensions`, `-DIM`  | Show dimensions of each layer. ~~bool (flag)~~                                                                                                                                                                     |
+| `--parameters`, `-PAR`  | Show parameters of each layer. ~~bool (flag)~~                                                                                                                                                                     |
+| `--gradients`, `-GRAD`  | Show gradients of each layer. ~~bool (flag)~~                                                                                                                                                                      |
+| `--attributes`, `-ATTR` | Show attributes of each layer. ~~bool (flag)~~                                                                                                                                                                     |
+| `--print-step0`, `-P0`  | Print model before training. ~~bool (flag)~~                                                                                                                                                                       |
+| `--print-step1`, `-P1`  | Print model after initialization. ~~bool (flag)~~                                                                                                                                                                  |
+| `--print-step2`, `-P2`  | Print model after training. ~~bool (flag)~~                                                                                                                                                                        |
+| `--print-step3`, `-P3`  | Print final predictions. ~~bool (flag)~~                                                                                                                                                                           |
+| `--gpu-id`, `-g`        | GPU ID or `-1` for CPU. Defaults to `-1`. ~~int (option)~~                                                                                                                                                         |
+| `--help`, `-h`          | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                         |
+| **PRINTS**              | Debugging information.                                                                                                                                                                                             |
 
 ## train {#train tag="command"}
 
@@ -783,33 +791,40 @@ in the section `[paths]`.
 
 </Infobox>
 
+> #### Example
+>
+> ```cli
+> $ python -m spacy train config.cfg --output ./output --paths.train ./train --paths.dev ./dev
+> ```
+
 ```cli
 $ python -m spacy train [config_path] [--output] [--code] [--verbose] [--gpu-id] [overrides]
 ```
 
-| Name              | Description                                                                                                                                                                                |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `config_path`     | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. ~~Path (positional)~~                                                                |
-| `--output`, `-o`  | Directory to store trained pipeline in. Will be created if it doesn't exist. ~~Optional[Path] \(positional)~~                                                                              |
-| `--code`, `-c`    | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~       |
-| `--verbose`, `-V` | Show more detailed messages during training. ~~bool (flag)~~                                                                                                                               |
-| `--gpu-id`, `-g`  | GPU ID or `-1` for CPU. Defaults to `-1`. ~~int (option)~~                                                                                                                                 |
-| `--help`, `-h`    | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                 |
-| overrides         | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~ |
-| **CREATES**       | The final trained pipeline and the best trained pipeline.                                                                                                                                  |
+| Name              | Description                                                                                                                                                                                                        |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `config_path`     | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. If `-`, the data will be [read from stdin](/usage/training#config-stdin). ~~Union[Path, str] \(positional)~~ |
+| `--output`, `-o`  | Directory to store trained pipeline in. Will be created if it doesn't exist. ~~Optional[Path] \(positional)~~                                                                                                      |
+| `--code`, `-c`    | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~                               |
+| `--verbose`, `-V` | Show more detailed messages during training. ~~bool (flag)~~                                                                                                                                                       |
+| `--gpu-id`, `-g`  | GPU ID or `-1` for CPU. Defaults to `-1`. ~~int (option)~~                                                                                                                                                         |
+| `--help`, `-h`    | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                         |
+| overrides         | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~                         |
+| **CREATES**       | The final trained pipeline and the best trained pipeline.                                                                                                                                                          |
 
 ## pretrain {#pretrain new="2.1" tag="command,experimental"}
 
 Pretrain the "token to vector" ([`Tok2vec`](/api/tok2vec)) layer of pipeline
-components on [raw text](/api/data-formats#pretrain), using an approximate
-language-modeling objective. Specifically, we load pretrained vectors, and train
-a component like a CNN, BiLSTM, etc to predict vectors which match the
-pretrained ones. The weights are saved to a directory after each epoch. You can
-then include a **path to one of these pretrained weights files** in your
+components on raw text, using an approximate language-modeling objective.
+Specifically, we load pretrained vectors, and train a component like a CNN,
+BiLSTM, etc to predict vectors which match the pretrained ones. The weights are
+saved to a directory after each epoch. You can then include a **path to one of
+these pretrained weights files** in your
 [training config](/usage/training#config) as the `init_tok2vec` setting when you
 train your pipeline. This technique may be especially helpful if you have little
 labelled data. See the usage docs on
-[pretraining](/usage/embeddings-transformers#pretraining) for more info.
+[pretraining](/usage/embeddings-transformers#pretraining) for more info. To read
+the raw text, a [`JsonlCorpus`](/api/top-level#jsonlcorpus) is typically used.
 
 <Infobox title="Changed in v3.0" variant="warning">
 
@@ -823,21 +838,27 @@ auto-generated by setting `--pretraining` on
 
 </Infobox>
 
+> #### Example
+>
+> ```cli
+> $ python -m spacy pretrain config.cfg ./output_pretrain --paths.raw_text ./data.jsonl
+> ```
+
 ```cli
 $ python -m spacy pretrain [config_path] [output_dir] [--code] [--resume-path] [--epoch-resume] [--gpu-id] [overrides]
 ```
 
-| Name                    | Description                                                                                                                                                                           |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `config_path`           | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. ~~Path (positional)~~                                                           |
-| `output_dir`            | Directory to save binary weights to on each epoch. ~~Path (positional)~~                                                                                                              |
-| `--code`, `-c`          | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~  |
-| `--resume-path`, `-r`   | Path to pretrained weights from which to resume pretraining. ~~Optional[Path] \(option)~~                                                                                             |
-| `--epoch-resume`, `-er` | The epoch to resume counting from when using `--resume-path`. Prevents unintended overwriting of existing weight files. ~~Optional[int] \(option)~~                                   |
-| `--gpu-id`, `-g`        | GPU ID or `-1` for CPU. Defaults to `-1`. ~~int (option)~~                                                                                                                            |
-| `--help`, `-h`          | Show help message and available arguments. ~~bool (flag)~~                                                                                                                            |
-| overrides               | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--training.dropout 0.2`. ~~Any (option/flag)~~ |
-| **CREATES**             | The pretrained weights that can be used to initialize `spacy train`.                                                                                                                  |
+| Name                    | Description                                                                                                                                                                                                        |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `config_path`           | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. If `-`, the data will be [read from stdin](/usage/training#config-stdin). ~~Union[Path, str] \(positional)~~ |
+| `output_dir`            | Directory to save binary weights to on each epoch. ~~Path (positional)~~                                                                                                                                           |
+| `--code`, `-c`          | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~                               |
+| `--resume-path`, `-r`   | Path to pretrained weights from which to resume pretraining. ~~Optional[Path] \(option)~~                                                                                                                          |
+| `--epoch-resume`, `-er` | The epoch to resume counting from when using `--resume-path`. Prevents unintended overwriting of existing weight files. ~~Optional[int] \(option)~~                                                                |
+| `--gpu-id`, `-g`        | GPU ID or `-1` for CPU. Defaults to `-1`. ~~int (option)~~                                                                                                                                                         |
+| `--help`, `-h`          | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                         |
+| overrides               | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--training.dropout 0.2`. ~~Any (option/flag)~~                              |
+| **CREATES**             | The pretrained weights that can be used to initialize `spacy train`.                                                                                                                                               |
 
 ## evaluate {#evaluate new="2" tag="command"}
 
@@ -872,11 +893,15 @@ $ python -m spacy evaluate [model] [data_path] [--output] [--gold-preproc] [--gp
 ## package {#package tag="command"}
 
 Generate an installable [Python package](/usage/training#models-generating) from
-an existing pipeline data directory. All data files are copied over. If the path
-to a [`meta.json`](/api/data-formats#meta) is supplied, or a `meta.json` is
-found in the input directory, this file is used. Otherwise, the data can be
-entered directly from the command line. spaCy will then create a `.tar.gz`
-archive file that you can distribute and install with `pip install`.
+an existing pipeline data directory. All data files are copied over. If
+additional code files are provided (e.g. Python files containing custom
+registered functions like
+[pipeline components](/usage/processing-pipelines#custom-components)), they are
+copied into the package and imported in the `__init__.py`. If the path to a
+[`meta.json`](/api/data-formats#meta) is supplied, or a `meta.json` is found in
+the input directory, this file is used. Otherwise, the data can be entered
+directly from the command line. spaCy will then create a `.tar.gz` archive file
+that you can distribute and install with `pip install`.
 
 <Infobox title="New in v3.0" variant="warning">
 
@@ -887,7 +912,7 @@ this, you can set the `--no-sdist` flag.
 </Infobox>
 
 ```cli
-$ python -m spacy package [input_dir] [output_dir] [--meta-path] [--create-meta] [--no-sdist] [--name] [--version] [--force]
+$ python -m spacy package [input_dir] [output_dir] [--code] [--meta-path] [--create-meta] [--no-sdist] [--name] [--version] [--force]
 ```
 
 > #### Example
@@ -898,18 +923,19 @@ $ python -m spacy package [input_dir] [output_dir] [--meta-path] [--create-meta]
 > $ pip install dist/en_pipeline-0.0.0.tar.gz
 > ```
 
-| Name                                             | Description                                                                                                                                                                                                     |
-| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `input_dir`                                      | Path to directory containing pipeline data. ~~Path (positional)~~                                                                                                                                               |
-| `output_dir`                                     | Directory to create package folder in. ~~Path (positional)~~                                                                                                                                                    |
-| `--meta-path`, `-m` <Tag variant="new">2</Tag>   | Path to [`meta.json`](/api/data-formats#meta) file (optional). ~~Optional[Path] \(option)~~                                                                                                                     |
-| `--create-meta`, `-C` <Tag variant="new">2</Tag> | Create a `meta.json` file on the command line, even if one already exists in the directory. If an existing file is found, its entries will be shown as the defaults in the command line prompt. ~~bool (flag)~~ |
-| `--no-sdist`, `-NS`,                             | Don't build the `.tar.gz` sdist automatically. Can be set if you want to run this step manually. ~~bool (flag)~~                                                                                                |
-| `--name`, `-n` <Tag variant="new">3</Tag>        | Package name to override in meta. ~~Optional[str] \(option)~~                                                                                                                                                   |
-| `--version`, `-v` <Tag variant="new">3</Tag>     | Package version to override in meta. Useful when training new versions, as it doesn't require editing the meta template. ~~Optional[str] \(option)~~                                                            |
-| `--force`, `-f`                                  | Force overwriting of existing folder in output directory. ~~bool (flag)~~                                                                                                                                       |
-| `--help`, `-h`                                   | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                      |
-| **CREATES**                                      | A Python package containing the spaCy pipeline.                                                                                                                                                                 |
+| Name                                             | Description                                                                                                                                                                                                                                                                                |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `input_dir`                                      | Path to directory containing pipeline data. ~~Path (positional)~~                                                                                                                                                                                                                          |
+| `output_dir`                                     | Directory to create package folder in. ~~Path (positional)~~                                                                                                                                                                                                                               |
+| `--code`, `-c` <Tag variant="new">3</Tag>        | Comma-separated paths to Python files to be included in the package and imported in its `__init__.py`. This allows including [registering functions](/usage/training#custom-functions) and [custom components](/usage/processing-pipelines#custom-components). ~~Optional[str] \(option)~~ |
+| `--meta-path`, `-m` <Tag variant="new">2</Tag>   | Path to [`meta.json`](/api/data-formats#meta) file (optional). ~~Optional[Path] \(option)~~                                                                                                                                                                                                |
+| `--create-meta`, `-C` <Tag variant="new">2</Tag> | Create a `meta.json` file on the command line, even if one already exists in the directory. If an existing file is found, its entries will be shown as the defaults in the command line prompt. ~~bool (flag)~~                                                                            |
+| `--no-sdist`, `-NS`,                             | Don't build the `.tar.gz` sdist automatically. Can be set if you want to run this step manually. ~~bool (flag)~~                                                                                                                                                                           |
+| `--name`, `-n` <Tag variant="new">3</Tag>        | Package name to override in meta. ~~Optional[str] \(option)~~                                                                                                                                                                                                                              |
+| `--version`, `-v` <Tag variant="new">3</Tag>     | Package version to override in meta. Useful when training new versions, as it doesn't require editing the meta template. ~~Optional[str] \(option)~~                                                                                                                                       |
+| `--force`, `-f`                                  | Force overwriting of existing folder in output directory. ~~bool (flag)~~                                                                                                                                                                                                                  |
+| `--help`, `-h`                                   | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                                                                                                 |
+| **CREATES**                                      | A Python package containing the spaCy pipeline.                                                                                                                                                                                                                                            |
 
 ## project {#project new="3"}
 

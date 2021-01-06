@@ -2,96 +2,111 @@ trigger:
   batch: true
   branches:
     include:
-    - '*'
+      - "*"
     exclude:
-    - 'spacy.io'
+      - "spacy.io"
   paths:
     exclude:
-    - 'website/*'
-    - '*.md'
+      - "website/*"
+      - "*.md"
 pr:
   paths:
     exclude:
-    - 'website/*'
-    - '*.md'
+      - "website/*"
+      - "*.md"
 
 jobs:
+  # Perform basic checks for most important errors (syntax etc.) Uses the config
+  # defined in .flake8 and overwrites the selected codes.
+  - job: "Validate"
+    pool:
+      vmImage: "ubuntu-16.04"
+    steps:
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: "3.7"
+      - script: |
+          pip install flake8==3.5.0
+          python -m flake8 spacy --count --select=E901,E999,F821,F822,F823 --show-source --statistics
+        displayName: "flake8"
 
-# Perform basic checks for most important errors (syntax etc.) Uses the config
-# defined in .flake8 and overwrites the selected codes.
-- job: 'Validate'
-  pool:
-    vmImage: 'ubuntu-16.04'
-  steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '3.7'
-  - script: |
-      pip install flake8==3.5.0
-      python -m flake8 spacy --count --select=E901,E999,F821,F822,F823 --show-source --statistics
-    displayName: 'flake8'
+  - job: "Test"
+    dependsOn: "Validate"
+    strategy:
+      matrix:
+        # We're only running one platform per Python version to speed up builds
+        Python36Linux:
+          imageName: "ubuntu-16.04"
+          python.version: "3.6"
+#        Python36Windows:
+#          imageName: "vs2017-win2016"
+#          python.version: "3.6"
+#        Python36Mac:
+#          imageName: "macos-10.14"
+#          python.version: "3.6"
+#        Python37Linux:
+#          imageName: "ubuntu-16.04"
+#          python.version: "3.7"
+        Python37Windows:
+          imageName: "vs2017-win2016"
+          python.version: "3.7"
+#        Python37Mac:
+#          imageName: "macos-10.14"
+#          python.version: "3.7"
+#        Python38Linux:
+#          imageName: "ubuntu-16.04"
+#          python.version: "3.8"
+#        Python38Windows:
+#          imageName: "vs2017-win2016"
+#          python.version: "3.8"
+        Python38Mac:
+          imageName: "macos-10.14"
+          python.version: "3.8"
+        Python39Linux:
+          imageName: "ubuntu-16.04"
+          python.version: "3.9"
+        Python39Windows:
+          imageName: "vs2017-win2016"
+          python.version: "3.9"
+        Python39Mac:
+          imageName: "macos-10.14"
+          python.version: "3.9"
+      maxParallel: 4
+    pool:
+      vmImage: $(imageName)
 
-- job: 'Test'
-  dependsOn: 'Validate'
-  strategy:
-    matrix:
-      Python36Linux:
-        imageName: 'ubuntu-16.04'
-        python.version: '3.6'
-      Python36Windows:
-        imageName: 'vs2017-win2016'
-        python.version: '3.6'
-      Python36Mac:
-        imageName: 'macos-10.14'
-        python.version: '3.6'
-      # Don't test on 3.7 for now to speed up builds
-      # Python37Linux:
-      #   imageName: 'ubuntu-16.04'
-      #   python.version: '3.7'
-      # Python37Windows:
-      #   imageName: 'vs2017-win2016'
-      #   python.version: '3.7'
-      # Python37Mac:
-      #   imageName: 'macos-10.14'
-      #   python.version: '3.7'
-      Python38Linux:
-        imageName: 'ubuntu-16.04'
-        python.version: '3.8'
-      Python38Windows:
-        imageName: 'vs2017-win2016'
-        python.version: '3.8'
-      Python38Mac:
-        imageName: 'macos-10.14'
-        python.version: '3.8'
-    maxParallel: 4
-  pool:
-    vmImage: $(imageName)
+    steps:
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: "$(python.version)"
+          architecture: "x64"
 
-  steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '$(python.version)'
-      architecture: 'x64'
+      - script: |
+          python -m pip install -U setuptools
+          pip install -r requirements.txt
+        displayName: "Install dependencies"
 
-  - script: |
-      python -m pip install -U setuptools
-      pip install -r requirements.txt
-    displayName: 'Install dependencies'
+      - script: |
+          python setup.py build_ext --inplace
+          python setup.py sdist --formats=gztar
+        displayName: "Compile and build sdist"
 
-  - script: |
-      python setup.py build_ext --inplace
-      python setup.py sdist --formats=gztar
-    displayName: 'Compile and build sdist'
+      - task: DeleteFiles@1
+        inputs:
+          contents: "spacy"
+        displayName: "Delete source directory"
 
-  - task: DeleteFiles@1
-    inputs:
-      contents: 'spacy'
-    displayName: 'Delete source directory'
+      - script: |
+          pip freeze > installed.txt
+          pip uninstall -y -r installed.txt
+        displayName: "Uninstall all packages"
 
-  - bash: |
-      SDIST=$(python -c "import os;print(os.listdir('./dist')[-1])" 2>&1)
-      pip install dist/$SDIST
-    displayName: 'Install from sdist'
+      - bash: |
+          SDIST=$(python -c "import os;print(os.listdir('./dist')[-1])" 2>&1)
+          pip install dist/$SDIST
+        displayName: "Install from sdist"
 
-  - script: python -m pytest --pyargs spacy
-    displayName: 'Run tests'
+      - script: |
+          pip install -r requirements.txt
+          python -m pytest --pyargs spacy
+        displayName: "Run tests"
