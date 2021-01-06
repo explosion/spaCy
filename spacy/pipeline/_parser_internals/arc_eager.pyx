@@ -611,7 +611,7 @@ cdef class ArcEager(TransitionSystem):
         return gold
 
     def init_gold_batch(self, examples):
-        # TODO: Projectivitity?
+        # TODO: Projectivity?
         all_states = self.init_batch([eg.predicted for eg in examples])
         golds = []
         states = []

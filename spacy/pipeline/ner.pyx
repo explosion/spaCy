@@ -1,4 +1,5 @@
 # cython: infer_types=True, profile=True, binding=True
+from collections import defaultdict
 from typing import Optional, Iterable
 from thinc.api import Model, Config
 
@@ -197,3 +198,16 @@ cdef class EntityRecognizer(Parser):
         """
         validate_examples(examples, "EntityRecognizer.score")
         return get_ner_prf(examples)
+
+    def scored_ents(self, beams):
+        """Return a dictionary of (start, end, label) tuples with corresponding scores
+        for each beam/doc that was processed.
+        """
+        entity_scores = []
+        for beam in beams:
+            score_dict = defaultdict(float)
+            for score, ents in self.moves.get_beam_parses(beam):
+                for start, end, label in ents:
+                    score_dict[(start, end, label)] += score
+            entity_scores.append(score_dict)
+        return entity_scores

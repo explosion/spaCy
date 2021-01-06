@@ -255,7 +255,7 @@ def get_gradient(nr_class, beam_maps, histories, losses):
     for a beam state -- so we have "the gradient of loss for taking
     action i given history H."
 
-    Histories: Each hitory is a list of actions
+    Histories: Each history is a list of actions
     Each candidate has a history
     Each beam has multiple candidates
     Each batch has multiple beams
