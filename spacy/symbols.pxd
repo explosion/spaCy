@@ -467,3 +467,4 @@ cdef enum symbol_t:
 
     IDX
     _
+    MISSING_LABEL

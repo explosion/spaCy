@@ -45,7 +45,17 @@ CONFLICTING_DATA = [
     ),
 ]
 
-eps = 0.01
+PARTIAL_DATA = [
+    (
+        "I like London.",
+        {
+            "heads": [1, 1, 1, None],
+            "deps": ["nsubj", "ROOT", "dobj", None],
+        },
+    ),
+]
+
+eps = 0.1
 
 
 def test_parser_root(en_vocab):
@@ -203,6 +213,32 @@ def test_parser_set_sent_starts(en_vocab):
     for sent in doc.sents:
         for token in sent:
             assert token.head in sent
+
+
+@pytest.mark.parametrize("pipe_name", ["parser", "beam_parser"])
+def test_incomplete_data(pipe_name):
+    # Test that the parser works with incomplete information
+    nlp = English()
+    parser = nlp.add_pipe(pipe_name)
+    train_examples = []
+    for text, annotations in PARTIAL_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
+        for dep in annotations.get("deps", []):
+            if dep is not None:
+                parser.add_label(dep)
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+    for i in range(150):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+    assert losses[pipe_name] < 0.0001
+
+    # test the trained model
+    test_text = "I like securities."
+    doc = nlp(test_text)
+    assert doc[0].dep_ == "nsubj"
+    assert doc[2].dep_ == "dobj"
+    assert doc[0].head.i == 1
+    assert doc[2].head.i == 1
 
 
 @pytest.mark.parametrize("pipe_name", ["parser", "beam_parser"])

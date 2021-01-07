@@ -639,13 +639,16 @@ cdef class Token:
         return any(ancestor.i == self.i for ancestor in descendant.ancestors)
 
     property head:
-        """The syntactic parent, or "governor", of this token.
+        """The syntactic parent, or "governor", of this token. 
 
         RETURNS (Token): The token predicted by the parser to be the head of
-            the current token.
+            the current token. Returns None if unknown.
         """
         def __get__(self):
-            return self.doc[self.i + self.c.head]
+            head_i = self.i + self.c.head
+            if head_i == -1:
+                return None
+            return self.doc[head_i]
 
         def __set__(self, Token new_head):
             # This function sets the head of self to new_head and updates the
