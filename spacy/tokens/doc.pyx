@@ -1098,7 +1098,7 @@ cdef class Doc:
         (vocab,) = vocab
 
         if attrs is None:
-            attrs = Doc._get_array_attrs()
+            attrs = list(Doc._get_array_attrs())
         else:
             if any(isinstance(attr, str) for attr in attrs):     # resolve attribute names
                 attrs = [intify_attr(attr) for attr in attrs]    # intify_attr returns None for invalid attrs
