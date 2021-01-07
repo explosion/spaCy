@@ -129,13 +129,13 @@ the entity recognizer, use a
 factory = "tok2vec"
 
 [components.tok2vec.model]
-@architectures = "spacy.Tok2Vec.v1"
+@architectures = "spacy.Tok2Vec.v2"
 
 [components.tok2vec.model.embed]
 @architectures = "spacy.MultiHashEmbed.v1"
 
 [components.tok2vec.model.encode]
-@architectures = "spacy.MaxoutWindowEncoder.v1"
+@architectures = "spacy.MaxoutWindowEncoder.v2"
 
 [components.ner]
 factory = "ner"
@@ -161,13 +161,13 @@ factory = "ner"
 @architectures = "spacy.TransitionBasedParser.v1"
 
 [components.ner.model.tok2vec]
-@architectures = "spacy.Tok2Vec.v1"
+@architectures = "spacy.Tok2Vec.v2"
 
 [components.ner.model.tok2vec.embed]
 @architectures = "spacy.MultiHashEmbed.v1"
 
 [components.ner.model.tok2vec.encode]
-@architectures = "spacy.MaxoutWindowEncoder.v1"
+@architectures = "spacy.MaxoutWindowEncoder.v2"
 ```
 
 <!-- TODO: Once rehearsal is tested, mention it here. -->

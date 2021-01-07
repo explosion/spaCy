@@ -26,20 +26,20 @@ usage documentation on
 
 ## Tok2Vec architectures {#tok2vec-arch source="spacy/ml/models/tok2vec.py"}
 
-### spacy.Tok2Vec.v1 {#Tok2Vec}
+### spacy.Tok2Vec.v2 {#Tok2Vec}
 
 > #### Example config
 >
 > ```ini
 > [model]
-> @architectures = "spacy.Tok2Vec.v1"
+> @architectures = "spacy.Tok2Vec.v2"
 >
 > [model.embed]
 > @architectures = "spacy.CharacterEmbed.v1"
 > # ...
 >
 > [model.encode]
-> @architectures = "spacy.MaxoutWindowEncoder.v1"
+> @architectures = "spacy.MaxoutWindowEncoder.v2"
 > # ...
 > ```
 
@@ -197,13 +197,13 @@ network to construct a single vector to represent the information.
 | `nC`        | The number of UTF-8 bytes to embed per word. Recommended values are between `3` and `8`, although it may depend on the length of words in the language. ~~int~~ |
 | **CREATES** | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                          |
 
-### spacy.MaxoutWindowEncoder.v1 {#MaxoutWindowEncoder}
+### spacy.MaxoutWindowEncoder.v2 {#MaxoutWindowEncoder}
 
 > #### Example config
 >
 > ```ini
 > [model]
-> @architectures = "spacy.MaxoutWindowEncoder.v1"
+> @architectures = "spacy.MaxoutWindowEncoder.v2"
 > width = 128
 > window_size = 1
 > maxout_pieces = 3
@@ -221,13 +221,13 @@ and residual connections.
 | `depth`         | The number of convolutional layers. Recommended value is `4`. ~~int~~                                                                                                                                          |
 | **CREATES**     | The model using the architecture. ~~Model[List[Floats2d], List[Floats2d]]~~                                                                                                                                    |
 
-### spacy.MishWindowEncoder.v1 {#MishWindowEncoder}
+### spacy.MishWindowEncoder.v2 {#MishWindowEncoder}
 
 > #### Example config
 >
 > ```ini
 > [model]
-> @architectures = "spacy.MishWindowEncoder.v1"
+> @architectures = "spacy.MishWindowEncoder.v2"
 > width = 64
 > window_size = 1
 > depth = 4
@@ -252,19 +252,19 @@ and residual connections.
 > [model]
 > @architectures = "spacy.TorchBiLSTMEncoder.v1"
 > width = 64
-> window_size = 1
-> depth = 4
+> depth = 2
+> dropout = 0.0
 > ```
 
 Encode context using bidirectional LSTM layers. Requires
 [PyTorch](https://pytorch.org).
 
-| Name          | Description                                                                                                                                                                                                    |
-| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `width`       | The input and output width. These are required to be the same, to allow residual connections. This value will be determined by the width of the inputs. Recommended values are between `64` and `300`. ~~int~~ |
-| `window_size` | The number of words to concatenate around each token to construct the convolution. Recommended value is `1`. ~~int~~                                                                                           |
-| `depth`       | The number of convolutional layers. Recommended value is `4`. ~~int~~                                                                                                                                          |
-| **CREATES**   | The model using the architecture. ~~Model[List[Floats2d], List[Floats2d]]~~                                                                                                                                    |
+| Name        | Description                                                                                                                                                                                                    |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `width`     | The input and output width. These are required to be the same, to allow residual connections. This value will be determined by the width of the inputs. Recommended values are between `64` and `300`. ~~int~~ |
+| `depth`     | The number of recurrent layers, for instance `depth=2` results in stacking two LSTMs together. ~~int~~                                                                                                         |
+| `dropout`   | Creates a Dropout layer on the outputs of each LSTM layer except the last layer. Set to 0.0 to disable this functionality. ~~float~~                                                                           |
+| **CREATES** | The model using the architecture. ~~Model[List[Floats2d], List[Floats2d]]~~                                                                                                                                    |
 
 ### spacy.StaticVectors.v1 {#StaticVectors}
 
@@ -600,7 +600,7 @@ specific data and challenge.
 > no_output_layer = false
 >
 > [model.tok2vec]
-> @architectures = "spacy.Tok2Vec.v1"
+> @architectures = "spacy.Tok2Vec.v2"
 >
 > [model.tok2vec.embed]
 > @architectures = "spacy.MultiHashEmbed.v1"
@@ -610,7 +610,7 @@ specific data and challenge.
 > include_static_vectors = false
 >
 > [model.tok2vec.encode]
-> @architectures = "spacy.MaxoutWindowEncoder.v1"
+> @architectures = "spacy.MaxoutWindowEncoder.v2"
 > width = ${model.tok2vec.embed.width}
 > window_size = 1
 > maxout_pieces = 3

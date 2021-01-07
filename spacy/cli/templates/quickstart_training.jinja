@@ -205,7 +205,7 @@ no_output_layer = false
 factory = "tok2vec"
 
 [components.tok2vec.model]
-@architectures = "spacy.Tok2Vec.v1"
+@architectures = "spacy.Tok2Vec.v2"
 
 [components.tok2vec.model.embed]
 @architectures = "spacy.MultiHashEmbed.v1"
@@ -220,7 +220,7 @@ rows = [5000, 2500]
 include_static_vectors = {{ "true" if optimize == "accuracy" else "false" }}
 
 [components.tok2vec.model.encode]
-@architectures = "spacy.MaxoutWindowEncoder.v1"
+@architectures = "spacy.MaxoutWindowEncoder.v2"
 width = {{ 96 if optimize == "efficiency" else 256 }}
 depth = {{ 4 if optimize == "efficiency" else 8 }}
 window_size = 1
