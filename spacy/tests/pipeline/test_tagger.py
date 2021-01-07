@@ -37,7 +37,16 @@ TRAIN_DATA = [
 ]
 
 PARTIAL_DATA = [
+    # partial annotation
     ("I like green eggs", {"tags": ["", "V", "J", ""]}),
+    # misaligned partial annotation
+    (
+        "He hates green eggs",
+        {
+            "words": ["He", "hate", "s", "green", "eggs"],
+            "tags": ["", "V", "S", "J", ""],
+        },
+    ),
 ]
 
 

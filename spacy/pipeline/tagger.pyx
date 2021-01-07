@@ -256,8 +256,14 @@ class Tagger(TrainablePipe):
         DOCS: https://nightly.spacy.io/api/tagger#get_loss
         """
         validate_examples(examples, "Tagger.get_loss")
-        loss_func = SequenceCategoricalCrossentropy(names=self.labels, normalize=False, missing_value="")
-        truths = [eg.get_aligned("TAG", as_string=True) for eg in examples]
+        loss_func = SequenceCategoricalCrossentropy(names=self.labels, normalize=False)
+        # Convert empty tag "" to missing value None so that both misaligned
+        # tokens and tokens with missing annotation have the default missing
+        # value None.
+        truths = []
+        for eg in examples:
+            eg_truths = [tag if tag is not "" else None for tag in eg.get_aligned("TAG", as_string=True)]
+            truths.append(eg_truths)
         d_scores, loss = loss_func(scores, truths)
         if self.model.ops.xp.isnan(loss):
             raise ValueError(Errors.E910.format(name=self.name))
