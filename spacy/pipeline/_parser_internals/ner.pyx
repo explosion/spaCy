@@ -257,7 +257,8 @@ cdef class BiluoPushDown(TransitionSystem):
                 parse = []
                 for j in range(state._ents.size()):
                     ent = state._ents.at(j)
-                    parse.append((ent.start, ent.end, self.strings[ent.label]))
+                    if ent.start != -1 and ent.end != -1:
+                        parse.append((ent.start, ent.end, self.strings[ent.label]))
                 parses.append((prob, parse))
         return parses
 
