@@ -118,10 +118,9 @@ def train(
         nlp.use_params(optimizer.averages)
     if output_path is not None:
         stdout.write(
-            msg.good(
-                "Saved pipeline to output directory",
-                output_path / DIR_MODEL_LAST) + "\n"
-            )
+            msg.good("Saved pipeline to output directory", output_path / DIR_MODEL_LAST)
+            + "\n"
+        )
         return (nlp, output_path / DIR_MODEL_LAST)
     else:
         return (nlp, None)
