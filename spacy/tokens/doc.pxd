@@ -34,17 +34,6 @@ cdef int token_by_end(const TokenC* tokens, int length, int end_char) except -2
 cdef int [:,:] _get_lca_matrix(Doc, int start, int end)
 
 
-cdef class _Spans:
-    cdef readonly Pool mem
-    cdef SpanC* c
-    cdef int size
-    cdef int _capacity
-
-    cdef void push_back(self, SpanC span) nogil
-    
-    cpdef int _double_capacity(self) except -1
-
-
 cdef class Doc:
     cdef readonly Pool mem
     cdef readonly Vocab vocab
@@ -55,9 +44,9 @@ cdef class Doc:
     cdef public object tensor
     cdef public object cats
     cdef public object user_data
+    cdef public object span_groups
 
     cdef TokenC* c
-    cdef readonly _Spans _spans
 
     cdef public float sentiment
 

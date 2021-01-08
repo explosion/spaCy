@@ -31,6 +31,7 @@ from .. import util
 from .underscore import Underscore, get_ext_args
 from ._retokenize import Retokenizer
 from ._serialize import ALL_ATTRS as DOCBIN_ALL_ATTRS
+from .span_group cimport SpanGroup
 
 
 DEF PADDING = 5
@@ -222,7 +223,7 @@ cdef class Doc:
         self.vocab = vocab
         size = max(20, (len(words) if words is not None else 0))
         self.mem = Pool()
-        self._spans = _Spans(mem=self.mem)
+        self.span_groups = {}
         # Guarantee self.lex[i-x], for any i >= 0 and x < padding is in bounds
         # However, we need to remember the true starting places, so that we can
         # realloc.
@@ -807,6 +808,21 @@ cdef class Doc:
                     self.c[i+1].ent_iob == 1:
                 self.c[i+1].ent_iob = 3
 
+    def create_span_group(self, str name, attrs=None):
+        if name in self.span_groups:
+            raise KeyError(
+                f"Span group with name '{name}' already exists. "
+                f"Choose a new key, or remove the existing group. You can "
+                f"modify the doc.span_groups dict directly."
+            )
+        span_group = SpanGroup(
+            self,
+            name=name if name is not None else name,
+            attrs=attrs
+        )
+        self.span_groups[name] = span_group
+        return span_group
+
     @property
     def noun_chunks(self):
         """Iterate over the base noun phrases in the document. Yields base
@@ -1256,6 +1272,9 @@ cdef class Doc:
             strings.add(token.ent_kb_id_)
             strings.add(token.ent_id_)
             strings.add(token.norm_)
+        for span_group in self.span_groups.values():
+            for span in span_group.to_list():
+                strings.add(span.label_)
         # Msgpack doesn't distinguish between lists and tuples, which is
         # vexing for user data. As a best guess, we *know* that within
         # keys, we must have tuples. In values we just have to hope
@@ -1267,6 +1286,9 @@ cdef class Doc:
             "sentiment": lambda: self.sentiment,
             "tensor": lambda: self.tensor,
             "cats": lambda: self.cats,
+            "span_groups": lambda: {
+                name: sg.to_json() for name, sg in self.span_groups.items()
+            },
             "strings": lambda: list(strings),
             "has_unknown_spaces": lambda: self.has_unknown_spaces
         }
@@ -1477,40 +1499,6 @@ cdef class Doc:
         attrs = [LENGTH, SPACY]
         attrs.extend(intify_attr(x) for x in DOCBIN_ALL_ATTRS)
         return tuple(attrs)
-
-
-cdef class _Spans:
-    def __init__(self, spans=[], *, Pool mem=None):
-        if mem is None:
-            mem = Pool()
-        self.mem = mem
-        self.size = len(spans)
-        self._capacity = min(1, len(spans))
-        self.c = <SpanC*>self.mem.alloc(self._capacity, sizeof(self.c[0]))
-        cdef Span span
-        for i, span in enumerate(spans):
-            self.c[i] = span.c
-
-    def __len__(self):
-        return self.size
-
-    def append(self, Span span):
-        if (self.size + 1) < self._capacity:
-            self._double_capacity()
-        self.push_back(span.c)
-
-    def to_list(self, Doc doc):
-        return [Span.from_struct(doc, self.c[i]) for i in range(self.size)]
-
-    cdef void push_back(self, SpanC span) nogil:
-        if (self.size + 1) < self._capacity:
-            with gil:
-                self._double_capacity()
-        self.c[self.size] = span
-        self.size += 1
-
-    cpdef int _double_capacity(self) except -1:
-        new_capacity = self._capacity * 2
 
 
 cdef int token_by_start(const TokenC* tokens, int length, int start_char) except -2:
