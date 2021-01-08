@@ -215,7 +215,7 @@ def _get_aligned_sent_starts(example):
     """
     if example.y.has_annotation("SENT_START"):
         align = example.alignment.y2x
-        sent_starts = [False] * len(self.x)
+        sent_starts = [False] * len(example.x)
         seen_words = set()
         for y_sent in example.y.sents:
             x_indices = list(align[y_sent.start : y_sent.end].dataXd)
