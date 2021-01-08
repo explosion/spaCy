@@ -716,7 +716,7 @@ that we want to classify as being related or not. As these candidate pairs are
 typically formed within one document, this function takes a [`Doc`](/api/doc) as
 input and outputs a `List` of `Span` tuples. For instance, the following
 implementation takes any two entities from the same document, as long as they
-are within a **maximum distance** (in number of tokens) of eachother:
+are within a **maximum distance** (in number of tokens) of each other:
 
 > #### config.cfg (excerpt)
 >
@@ -742,7 +742,7 @@ def create_instances(max_length: int) -> Callable[[Doc], List[Tuple[Span, Span]]
     return get_candidates
 ```
 
-This function in added to the [`@misc` registry](/api/top-level#registry) so we
+This function is added to the [`@misc` registry](/api/top-level#registry) so we
 can refer to it from the config, and easily swap it out for any other candidate
 generation function.
 

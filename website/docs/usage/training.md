@@ -1029,7 +1029,7 @@ In this example we assume a custom function `read_custom_data` which loads or
 generates texts with relevant text classification annotations. Then, small
 lexical variations of the input text are created before generating the final
 [`Example`](/api/example) objects. The `@spacy.registry.readers` decorator lets
-you register the function creating the custom reader in the `readers`
+you register the function creating the custom reader in the `readers` 
 [registry](/api/top-level#registry) and assign it a string name, so it can be
 used in your config. All arguments on the registered function become available
 as **config settings** – in this case, `source`.
