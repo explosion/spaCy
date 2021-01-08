@@ -1,19 +1,17 @@
-import React, { Fragment } from 'react'
+import React from 'react'
 import classNames from 'classnames'
 
 import pattern from '../images/pattern_blue.jpg'
 import patternNightly from '../images/pattern_nightly.jpg'
 import patternOverlay from '../images/pattern_landing.jpg'
 import patternOverlayNightly from '../images/pattern_landing_nightly.jpg'
-import logoSvgs from '../images/logos'
 
 import Grid from './grid'
 import { Content } from './main'
 import Button from './button'
 import CodeBlock from './code'
-import { H1, H2, H3, Label, InlineList } from './typography'
+import { H1, H2, H3 } from './typography'
 import Link from './link'
-import { chunkArray } from './util'
 import classes from '../styles/landing.module.sass'
 
 export const LandingHeader = ({ nightly, style = {}, children }) => {
@@ -39,9 +37,9 @@ export const LandingSubtitle = ({ children }) => (
     </h2>
 )
 
-export const LandingGrid = ({ cols = 3, blocks = false, children }) => (
-    <Content className={classNames(classes.grid, { [classes.blocks]: blocks })}>
-        <Grid cols={cols} narrow={blocks}>
+export const LandingGrid = ({ cols = 3, blocks = false, style, children }) => (
+    <Content className={classNames({ [classes.blocks]: blocks })}>
+        <Grid cols={cols} narrow={blocks} className={classes.grid} style={style}>
             {children}
         </Grid>
     </Content>
@@ -142,33 +140,3 @@ export const LandingBannerButton = ({ to, small, children }) => (
         </Button>
     </div>
 )
-
-export const LandingLogos = ({ logos = [], title, maxRow = 4, children }) => {
-    const rows = chunkArray(logos, maxRow)
-    return (
-        <Content className={classes.logos}>
-            {title && <Label>{title}</Label>}
-            {rows.map((logos, i) => (
-                <Fragment key={i}>
-                    <InlineList className={classes.logosContent}>
-                        {logos.map(({ id, url }, j) => {
-                            const Component = logoSvgs[id]
-                            return !Component ? null : (
-                                <Link
-                                    to={url}
-                                    key={j}
-                                    aria-label={id}
-                                    hidden
-                                    className={classes.logo}
-                                >
-                                    <Component />
-                                </Link>
-                            )
-                        })}
-                        {i === rows.length - 1 && children}
-                    </InlineList>
-                </Fragment>
-            ))}
-        </Content>
-    )
-}

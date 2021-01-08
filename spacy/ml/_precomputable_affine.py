@@ -1,13 +1,14 @@
 from thinc.api import Model, normal_init
 
 
-def PrecomputableAffine(nO, nI, nF, nP):
+def PrecomputableAffine(nO, nI, nF, nP, dropout=0.1):
     model = Model(
         "precomputable_affine",
         forward,
         init=init,
         dims={"nO": nO, "nI": nI, "nF": nF, "nP": nP},
         params={"W": None, "b": None, "pad": None},
+        attrs={"dropout_rate": dropout},
     )
     return model
 
@@ -48,17 +49,14 @@ def forward(model, X, is_train):
         model.inc_grad("b", dY.sum(axis=0))
         dY = dY.reshape((dY.shape[0], nO * nP))
 
-        Wopfi = model.ops.as_contig(W.transpose((1, 2, 0, 3)))
+        Wopfi = W.transpose((1, 2, 0, 3))
         Wopfi = Wopfi.reshape((nO * nP, nF * nI))
         dXf = model.ops.gemm(dY.reshape((dY.shape[0], nO * nP)), Wopfi)
 
-        # Reuse the buffer
-        dWopfi = Wopfi
-        dWopfi.fill(0.0)
-        model.ops.gemm(dY, Xf, out=dWopfi, trans1=True)
+        dWopfi = model.ops.gemm(dY, Xf, trans1=True)
         dWopfi = dWopfi.reshape((nO, nP, nF, nI))
         # (o, p, f, i) --> (f, o, p, i)
-        dWopfi = model.ops.as_contig(dWopfi.transpose((2, 0, 1, 3)))
+        dWopfi = dWopfi.transpose((2, 0, 1, 3))
         model.inc_grad("W", dWopfi)
         return dXf.reshape((dXf.shape[0], nF, nI))
 

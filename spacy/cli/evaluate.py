@@ -1,13 +1,13 @@
 from typing import Optional, List, Dict
-from timeit import default_timer as timer
 from wasabi import Printer
 from pathlib import Path
 import re
 import srsly
+from thinc.api import fix_random_seed
 
-from ..gold import Corpus
+from ..training import Corpus
 from ..tokens import Doc
-from ._app import app, Arg, Opt
+from ._util import app, Arg, Opt, setup_gpu, import_code
 from ..scorer import Scorer
 from .. import util
 from .. import displacy
@@ -17,23 +17,33 @@ from .. import displacy
 def evaluate_cli(
     # fmt: off
     model: str = Arg(..., help="Model name or path"),
-    data_path: Path = Arg(..., help="Location of JSON-formatted evaluation data", exists=True),
+    data_path: Path = Arg(..., help="Location of binary evaluation data in .spacy format", exists=True),
     output: Optional[Path] = Opt(None, "--output", "-o", help="Output JSON file for metrics", dir_okay=False),
-    gpu_id: int = Opt(-1, "--gpu-id", "-g", help="Use GPU"),
+    code_path: Optional[Path] = Opt(None, "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
+    use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU"),
     gold_preproc: bool = Opt(False, "--gold-preproc", "-G", help="Use gold preprocessing"),
     displacy_path: Optional[Path] = Opt(None, "--displacy-path", "-dp", help="Directory to output rendered parses as HTML", exists=True, file_okay=False),
     displacy_limit: int = Opt(25, "--displacy-limit", "-dl", help="Limit of parses to render as HTML"),
     # fmt: on
 ):
     """
-    Evaluate a model. To render a sample of parses in a HTML file, set an
-    output directory as the displacy_path argument.
+    Evaluate a trained pipeline. Expects a loadable spaCy pipeline and evaluation
+    data in the binary .spacy format. The --gold-preproc option sets up the
+    evaluation examples with gold-standard sentences and tokens for the
+    predictions. Gold preprocessing helps the annotations align to the
+    tokenization, and may result in sequences of more consistent length. However,
+    it may reduce runtime accuracy due to train/test skew. To render a sample of
+    dependency parses in a HTML file, set as output directory as the
+    displacy_path argument.
+
+    DOCS: https://nightly.spacy.io/api/cli#evaluate
     """
+    import_code(code_path)
     evaluate(
         model,
         data_path,
         output=output,
-        gpu_id=gpu_id,
+        use_gpu=use_gpu,
         gold_preproc=gold_preproc,
         displacy_path=displacy_path,
         displacy_limit=displacy_limit,
@@ -44,18 +54,16 @@ def evaluate_cli(
 def evaluate(
     model: str,
     data_path: Path,
-    output: Optional[Path],
-    gpu_id: int = -1,
+    output: Optional[Path] = None,
+    use_gpu: int = -1,
     gold_preproc: bool = False,
     displacy_path: Optional[Path] = None,
     displacy_limit: int = 25,
     silent: bool = True,
 ) -> Scorer:
     msg = Printer(no_print=silent, pretty=not silent)
-    util.fix_random_seed()
-    if gpu_id >= 0:
-        util.use_gpu(gpu_id)
-    util.set_env_log(False)
+    fix_random_seed()
+    setup_gpu(use_gpu)
     data_path = util.ensure_path(data_path)
     output_path = util.ensure_path(output)
     displacy_path = util.ensure_path(displacy_path)
@@ -63,50 +71,70 @@ def evaluate(
         msg.fail("Evaluation data not found", data_path, exits=1)
     if displacy_path and not displacy_path.exists():
         msg.fail("Visualization output directory not found", displacy_path, exits=1)
-    corpus = Corpus(data_path, data_path)
+    corpus = Corpus(data_path, gold_preproc=gold_preproc)
     nlp = util.load_model(model)
-    dev_dataset = list(corpus.dev_dataset(nlp, gold_preproc=gold_preproc))
-    begin = timer()
-    scorer = nlp.evaluate(dev_dataset, verbose=False)
-    end = timer()
-    nwords = sum(len(ex.predicted) for ex in dev_dataset)
-    results = {
-        "Time": f"{end - begin:.2f} s",
-        "Words": nwords,
-        "Words/s": f"{nwords / (end - begin):.0f}",
-        "TOK": f"{scorer.token_acc:.2f}",
-        "TAG": f"{scorer.tags_acc:.2f}",
-        "POS": f"{scorer.pos_acc:.2f}",
-        "MORPH": f"{scorer.morphs_acc:.2f}",
-        "UAS": f"{scorer.uas:.2f}",
-        "LAS": f"{scorer.las:.2f}",
-        "NER P": f"{scorer.ents_p:.2f}",
-        "NER R": f"{scorer.ents_r:.2f}",
-        "NER F": f"{scorer.ents_f:.2f}",
-        "Textcat AUC": f"{scorer.textcat_auc:.2f}",
-        "Textcat F": f"{scorer.textcat_f:.2f}",
-        "Sent P": f"{scorer.sent_p:.2f}",
-        "Sent R": f"{scorer.sent_r:.2f}",
-        "Sent F": f"{scorer.sent_f:.2f}",
+    dev_dataset = list(corpus(nlp))
+    scores = nlp.evaluate(dev_dataset)
+    metrics = {
+        "TOK": "token_acc",
+        "TAG": "tag_acc",
+        "POS": "pos_acc",
+        "MORPH": "morph_acc",
+        "LEMMA": "lemma_acc",
+        "UAS": "dep_uas",
+        "LAS": "dep_las",
+        "NER P": "ents_p",
+        "NER R": "ents_r",
+        "NER F": "ents_f",
+        "TEXTCAT": "cats_score",
+        "SENT P": "sents_p",
+        "SENT R": "sents_r",
+        "SENT F": "sents_f",
+        "SPEED": "speed",
     }
-    data = {re.sub(r"[\s/]", "_", k.lower()): v for k, v in results.items()}
+    results = {}
+    data = {}
+    for metric, key in metrics.items():
+        if key in scores:
+            if key == "cats_score":
+                metric = metric + " (" + scores.get("cats_score_desc", "unk") + ")"
+            if isinstance(scores[key], (int, float)):
+                if key == "speed":
+                    results[metric] = f"{scores[key]:.0f}"
+                else:
+                    results[metric] = f"{scores[key]*100:.2f}"
+            else:
+                results[metric] = "-"
+            data[re.sub(r"[\s/]", "_", key.lower())] = scores[key]
 
     msg.table(results, title="Results")
 
-    if scorer.ents_per_type:
-        data["ents_per_type"] = scorer.ents_per_type
-        print_ents_per_type(msg, scorer.ents_per_type)
-    if scorer.textcats_f_per_cat:
-        data["textcats_f_per_cat"] = scorer.textcats_f_per_cat
-        print_textcats_f_per_cat(msg, scorer.textcats_f_per_cat)
-    if scorer.textcats_auc_per_cat:
-        data["textcats_auc_per_cat"] = scorer.textcats_auc_per_cat
-        print_textcats_auc_per_cat(msg, scorer.textcats_auc_per_cat)
+    if "morph_per_feat" in scores:
+        if scores["morph_per_feat"]:
+            print_prf_per_type(msg, scores["morph_per_feat"], "MORPH", "feat")
+            data["morph_per_feat"] = scores["morph_per_feat"]
+    if "dep_las_per_type" in scores:
+        if scores["dep_las_per_type"]:
+            print_prf_per_type(msg, scores["dep_las_per_type"], "LAS", "type")
+            data["dep_las_per_type"] = scores["dep_las_per_type"]
+    if "ents_per_type" in scores:
+        if scores["ents_per_type"]:
+            print_prf_per_type(msg, scores["ents_per_type"], "NER", "type")
+            data["ents_per_type"] = scores["ents_per_type"]
+    if "cats_f_per_type" in scores:
+        if scores["cats_f_per_type"]:
+            print_prf_per_type(msg, scores["cats_f_per_type"], "Textcat F", "label")
+            data["cats_f_per_type"] = scores["cats_f_per_type"]
+    if "cats_auc_per_type" in scores:
+        if scores["cats_auc_per_type"]:
+            print_textcats_auc_per_cat(msg, scores["cats_auc_per_type"])
+            data["cats_auc_per_type"] = scores["cats_auc_per_type"]
 
     if displacy_path:
+        factory_names = [nlp.get_pipe_meta(pipe).factory for pipe in nlp.pipe_names]
         docs = [ex.predicted for ex in dev_dataset]
-        render_deps = "parser" in nlp.meta.get("pipeline", [])
-        render_ents = "ner" in nlp.meta.get("pipeline", [])
+        render_deps = "parser" in factory_names
+        render_ents = "ner" in factory_names
         render_parses(
             docs,
             displacy_path,
@@ -144,29 +172,18 @@ def render_parses(
             file_.write(html)
 
 
-def print_ents_per_type(msg: Printer, scores: Dict[str, Dict[str, float]]) -> None:
+def print_prf_per_type(
+    msg: Printer, scores: Dict[str, Dict[str, float]], name: str, type: str
+) -> None:
     data = [
-        (k, f"{v['p']:.2f}", f"{v['r']:.2f}", f"{v['f']:.2f}")
+        (k, f"{v['p']*100:.2f}", f"{v['r']*100:.2f}", f"{v['f']*100:.2f}")
         for k, v in scores.items()
     ]
     msg.table(
         data,
         header=("", "P", "R", "F"),
         aligns=("l", "r", "r", "r"),
-        title="NER (per type)",
-    )
-
-
-def print_textcats_f_per_cat(msg: Printer, scores: Dict[str, Dict[str, float]]) -> None:
-    data = [
-        (k, f"{v['p']:.2f}", f"{v['r']:.2f}", f"{v['f']:.2f}")
-        for k, v in scores.items()
-    ]
-    msg.table(
-        data,
-        header=("", "P", "R", "F"),
-        aligns=("l", "r", "r", "r"),
-        title="Textcat F (per type)",
+        title=f"{name} (per {type})",
     )
 
 
@@ -174,7 +191,7 @@ def print_textcats_auc_per_cat(
     msg: Printer, scores: Dict[str, Dict[str, float]]
 ) -> None:
     msg.table(
-        [(k, f"{v['roc_auc_score']:.2f}") for k, v in scores.items()],
+        [(k, f"{v:.2f}") for k, v in scores.items()],
         header=("", "ROC AUC"),
         aligns=("l", "r"),
         title="Textcat ROC AUC (per label)",

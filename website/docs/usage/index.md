@@ -8,65 +8,76 @@ menu:
   - ['Changelog', 'changelog']
 ---
 
-spaCy is compatible with **64-bit CPython 3.6+** and runs on **Unix/Linux**,
-**macOS/OS X** and **Windows**. The latest spaCy releases are available over
-[pip](https://pypi.python.org/pypi/spacy) and
-[conda](https://anaconda.org/conda-forge/spacy).
+## Quickstart {hidden="true"}
 
 > #### 📖 Looking for the old docs?
 >
 > To help you make the transition from v2.x to v3.0, we've uploaded the old
 > website to [**v2.spacy.io**](https://v2.spacy.io/docs). To see what's changed
-> and how to migrate, see the guide on [v3.0 guide](/usage/v3).
-
-## Quickstart {hidden="true"}
+> and how to migrate, see the [v3.0 guide](/usage/v3).
 
 import QuickstartInstall from 'widgets/quickstart-install.js'
 
-<QuickstartInstall title="Quickstart" id="quickstart" />
+<QuickstartInstall id="quickstart" />
 
 ## Installation instructions {#installation}
 
+spaCy is compatible with **64-bit CPython 3.6+** and runs on **Unix/Linux**,
+**macOS/OS X** and **Windows**. The latest spaCy releases are available over
+[pip](https://pypi.python.org/pypi/spacy) and
+[conda](https://anaconda.org/conda-forge/spacy).
+
 ### pip {#pip}
 
-Using pip, spaCy releases are available as source packages and binary wheels (as
-of v2.0.13).
+Using pip, spaCy releases are available as source packages and binary wheels.
+Before you install spaCy and its dependencies, make sure that your `pip`,
+`setuptools` and `wheel` are up to date.
 
-```bash
-$ pip install -U spacy
-```
-
-> #### Download models
+> #### Download pipelines
 >
-> After installation you need to download a language model. For more info and
-> available models, see the [docs on models](/models).
+> After installation you typically want to download a trained pipeline. For more
+> info and available packages, see the [models directory](/models).
 >
-> ```bash
+> ```cli
 > $ python -m spacy download en_core_web_sm
 >
 > >>> import spacy
 > >>> nlp = spacy.load("en_core_web_sm")
 > ```
 
-<Infobox variant="warning">
-
-To install additional data tables for lemmatization in **spaCy v2.2+** you can
-run `pip install spacy[lookups]` or install
-[`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data)
-separately. The lookups package is needed to create blank models with
-lemmatization data, and to lemmatize in languages that don't yet come with
-pretrained models and aren't powered by third-party libraries.
-
-</Infobox>
+```bash
+$ pip install -U pip setuptools wheel
+$ pip install -U %%SPACY_PKG_NAME%%SPACY_PKG_FLAGS
+```
 
 When using pip it is generally recommended to install packages in a virtual
 environment to avoid modifying system state:
 
 ```bash
-python -m venv .env
-source .env/bin/activate
-pip install spacy
+$ python -m venv .env
+$ source .env/bin/activate
+$ pip install -U pip setuptools wheel
+$ pip install -U %%SPACY_PKG_NAME%%SPACY_PKG_FLAGS
 ```
+
+spaCy also lets you install extra dependencies by specifying the following
+keywords in brackets, e.g. `spacy[ja]` or `spacy[lookups,transformers]` (with
+multiple comma-separated extras). See the `[options.extras_require]` section in
+spaCy's [`setup.cfg`](%%GITHUB_SPACY/setup.cfg) for details on what's included.
+
+> #### Example
+>
+> ```bash
+> $ pip install %%SPACY_PKG_NAME[lookups,transformers]%%SPACY_PKG_FLAGS
+> ```
+
+| Name                   | Description                                                                                                                                                                                                                                                    |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lookups`              | Install [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) for data tables for lemmatization and lexeme normalization. The data is serialized with trained pipelines, so you only need this package if you want to train your own models. |
+| `transformers`         | Install [`spacy-transformers`](https://github.com/explosion/spacy-transformers). The package will be installed automatically when you install a transformer-based pipeline.                                                                                    |
+| `ray`                  | Install [`spacy-ray`](https://github.com/explosion/spacy-ray) to add CLI commands for [parallel training](/usage/training#parallel-training).                                                                                                                  |
+| `cuda`, ...            | Install spaCy with GPU support provided by [CuPy](https://cupy.chainer.org) for your given CUDA version. See the GPU [installation instructions](#gpu) for details and options.                                                                                |
+| `ja`, `ko`, `th`, `zh` | Install additional dependencies required for tokenization for the [languages](/usage/models#languages).                                                                                                                                                        |
 
 ### conda {#conda}
 
@@ -78,8 +89,8 @@ $ conda install -c conda-forge spacy
 ```
 
 For the feedstock including the build recipe and configuration, check out
-[this repository](https://github.com/conda-forge/spacy-feedstock). Improvements
-and pull requests to the recipe and setup are always appreciated.
+[this repository](https://github.com/conda-forge/spacy-feedstock). Note that we
+currently don't publish any [pre-releases](#changelog-pre) on conda.
 
 ### Upgrading spaCy {#upgrading}
 
@@ -89,52 +100,50 @@ and pull requests to the recipe and setup are always appreciated.
 > spaCy v2.x to v3.x may still require some changes to your code base. For
 > details see the sections on [backwards incompatibilities](/usage/v3#incompat)
 > and [migrating](/usage/v3#migrating). Also remember to download the new
-> models, and retrain your own models.
+> trained pipelines, and retrain your own pipelines.
 
 When updating to a newer version of spaCy, it's generally recommended to start
 with a clean virtual environment. If you're upgrading to a new major version,
-make sure you have the latest **compatible models** installed, and that there
-are no old and incompatible model packages left over in your environment, as
-this can often lead to unexpected results and errors. If you've trained your own
-models, keep in mind that your train and runtime inputs must match. This means
-you'll have to **retrain your models** with the new version.
+make sure you have the latest **compatible trained pipelines** installed, and
+that there are no old and incompatible packages left over in your environment,
+as this can often lead to unexpected results and errors. If you've trained your
+own models, keep in mind that your train and runtime inputs must match. This
+means you'll have to **retrain your pipelines** with the new version.
 
 spaCy also provides a [`validate`](/api/cli#validate) command, which lets you
-verify that all installed models are compatible with your spaCy version. If
-incompatible models are found, tips and installation instructions are printed.
-The command is also useful to detect out-of-sync model links resulting from
-links created in different virtual environments. It's recommended to run the
-command with `python -m` to make sure you're executing the correct version of
-spaCy.
+verify that all installed pipeline packages are compatible with your spaCy
+version. If incompatible packages are found, tips and installation instructions
+are printed. It's recommended to run the command with `python -m` to make sure
+you're executing the correct version of spaCy.
 
-```bash
-pip install -U spacy
-python -m spacy validate
+```cli
+$ pip install -U %%SPACY_PKG_NAME%%SPACY_PKG_FLAGS
+$ python -m spacy validate
 ```
 
 ### Run spaCy with GPU {#gpu new="2.0.14"}
 
 As of v2.0, spaCy comes with neural network models that are implemented in our
-machine learning library, [Thinc](https://github.com/explosion/thinc). For GPU
-support, we've been grateful to use the work of Chainer's
-[CuPy](https://cupy.chainer.org) module, which provides a numpy-compatible
-interface for GPU arrays.
+machine learning library, [Thinc](https://thinc.ai). For GPU support, we've been
+grateful to use the work of Chainer's [CuPy](https://cupy.chainer.org) module,
+which provides a numpy-compatible interface for GPU arrays.
 
 spaCy can be installed on GPU by specifying `spacy[cuda]`, `spacy[cuda90]`,
-`spacy[cuda91]`, `spacy[cuda92]`, `spacy[cuda100]`, `spacy[cuda101]` or
-`spacy[cuda102]`. If you know your cuda version, using the more explicit
-specifier allows cupy to be installed via wheel, saving some compilation time.
-The specifiers should install [`cupy`](https://cupy.chainer.org).
+`spacy[cuda91]`, `spacy[cuda92]`, `spacy[cuda100]`, `spacy[cuda101]`,
+`spacy[cuda102]`, `spacy[cuda110]` or `spacy[cuda111]`. If you know your cuda
+version, using the more explicit specifier allows cupy to be installed via
+wheel, saving some compilation time. The specifiers should install
+[`cupy`](https://cupy.chainer.org).
 
 ```bash
-$ pip install -U spacy[cuda92]
+$ pip install -U %%SPACY_PKG_NAME[cuda92]%%SPACY_PKG_FLAGS
 ```
 
 Once you have a GPU-enabled installation, the best way to activate it is to call
 [`spacy.prefer_gpu`](/api/top-level#spacy.prefer_gpu) or
 [`spacy.require_gpu()`](/api/top-level#spacy.require_gpu) somewhere in your
-script before any models have been loaded. `require_gpu` will raise an error if
-no GPU is available.
+script before any pipelines have been loaded. `require_gpu` will raise an error
+if no GPU is available.
 
 ```python
 import spacy
@@ -150,80 +159,165 @@ The other way to install spaCy is to clone its
 source. That is the common way if you want to make changes to the code base.
 You'll need to make sure that you have a development environment consisting of a
 Python distribution including header files, a compiler,
-[pip](https://pip.pypa.io/en/latest/installing/),
-[virtualenv](https://virtualenv.pypa.io/) and [git](https://git-scm.com)
-installed. The compiler part is the trickiest. How to do that depends on your
-system. See notes on [Ubuntu](#source-ubuntu), [macOS / OS X](#source-osx) and
+[pip](https://pip.pypa.io/en/stable/) and [git](https://git-scm.com) installed.
+The compiler part is the trickiest. How to do that depends on your system. See
+notes on [Ubuntu](#source-ubuntu), [macOS / OS X](#source-osx) and
 [Windows](#source-windows) for details.
 
 ```bash
-python -m pip install -U pip                   # update pip
-git clone https://github.com/explosion/spaCy   # clone spaCy
-cd spaCy                                       # navigate into directory
-
-python -m venv .env                            # create environment in .env
-source .env/bin/activate                       # activate virtual environment
-\export PYTHONPATH=`pwd`                        # set Python path to spaCy directory
-pip install -r requirements.txt                # install all requirements
-python setup.py build_ext --inplace            # compile spaCy
+$ python -m pip install -U pip setuptools wheel # install/update build tools
+$ git clone https://github.com/explosion/spaCy  # clone spaCy
+$ cd spaCy                                      # navigate into dir
+$ python -m venv .env                           # create environment in .env
+$ source .env/bin/activate                      # activate virtual env
+$ pip install .                                 # compile and install spaCy
 ```
 
-Compared to regular install via pip, the
-[`requirements.txt`](https://github.com/explosion/spaCy/tree/master/requirements.txt)
-additionally installs developer dependencies such as Cython. See the the
-[quickstart widget](#quickstart) to get the right commands for your platform and
-Python version.
-
-#### Ubuntu {#source-ubuntu}
-
-Install system-level dependencies via `apt-get`:
+To install with extras:
 
 ```bash
-$ sudo apt-get install build-essential python-dev git
+$ pip install .[lookups,cuda102]                # install spaCy with extras
 ```
 
-#### macOS / OS X {#source-osx}
+To install all dependencies required for development:
 
-Install a recent version of [XCode](https://developer.apple.com/xcode/),
-including the so-called "Command Line Tools". macOS and OS X ship with Python
-and git preinstalled.
+```bash
+$ pip install -r requirements.txt
+```
 
-#### Windows {#source-windows}
+Compared to a regular install via pip, the
+[`requirements.txt`](%%GITHUB_SPACY/requirements.txt) additionally includes
+developer dependencies such as Cython and the libraries required to run the test
+suite. See the [quickstart widget](#quickstart) to get the right commands for
+your platform and Python version.
 
-Install a version of the
-[Visual C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
-or
-[Visual Studio Express](https://www.visualstudio.com/vs/visual-studio-express/)
-that matches the version that was used to compile your Python interpreter.
+<a id="source-ubuntu"></a><a id="source-osx"></a><a id="source-windows"></a>
+
+- **Ubuntu:** Install system-level dependencies via `apt-get`:
+  `sudo apt-get install build-essential python-dev git`
+- **macOS / OS X:** Install a recent version of
+  [XCode](https://developer.apple.com/xcode/), including the so-called "Command
+  Line Tools". macOS and OS X ship with Python and Git preinstalled.
+- **Windows:** Install a version of the
+  [Visual C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
+  or
+  [Visual Studio Express](https://www.visualstudio.com/vs/visual-studio-express/)
+  that matches the version that was used to compile your Python interpreter.
+
+#### Additional options for developers {#source-developers}
+
+Some additional options may be useful for spaCy developers who are editing the
+source code and recompiling frequently.
+
+- Install in editable mode. Changes to `.py` files will be reflected as soon as
+  the files are saved, but edits to Cython files (`.pxd`, `.pyx`) will require
+  the `pip install` or `python setup.py build_ext` command below to be run
+  again. Before installing in editable mode, be sure you have removed any
+  previous installs with `pip uninstall spacy`, which you may need to run
+  multiple times to remove all traces of earlier installs.
+
+  ```bash
+  $ pip install -r requirements.txt
+  $ pip install --no-build-isolation --editable .
+  ```
+
+- Build in parallel using `N` CPUs to speed up compilation and then install in
+  editable mode:
+
+  ```bash
+  $ pip install -r requirements.txt
+  $ python setup.py build_ext --inplace -j N
+  $ pip install --no-build-isolation --editable .
+  ```
+
+### Building an executable {#executable}
+
+The spaCy repository includes a [`Makefile`](%%GITHUB_SPACY/Makefile) that
+builds an executable zip file using [`pex`](https://github.com/pantsbuild/pex)
+(**P**ython **Ex**ecutable). The executable includes spaCy and all its package
+dependencies and only requires the system Python at runtime. Building an
+executable `.pex` file is often the most convenient way to deploy spaCy, as it
+lets you separate the build from the deployment process.
+
+> #### Usage
+>
+> To use a `.pex` file, just replace `python` with the path to the file when you
+> execute your code or CLI commands. This is equivalent to running Python in a
+> virtual environment with spaCy installed.
+>
+> ```bash
+> $ ./spacy.pex my_script.py
+> $ ./spacy.pex -m spacy info
+> ```
+
+```bash
+$ git clone https://github.com/explosion/spaCy
+$ cd spaCy
+$ make
+```
+
+You can configure the build process with the following environment variables:
+
+| Variable       | Description                                                                                                                                                                                                 |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SPACY_EXTRAS` | Additional Python packages to install alongside spaCy with optional version specifications. Should be a string that can be passed to `pip install`. See [`Makefile`](%%GITHUB_SPACY/Makefile) for defaults. |
+| `PYVER`        | The Python version to build against. This version needs to be available on your build and runtime machines. Defaults to `3.6`.                                                                              |
+| `WHEELHOUSE`   | Directory to store the wheel files during compilation. Defaults to `./wheelhouse`.                                                                                                                          |
+
+#### Additional options for developers {#source-developers}
+
+Some additional options may be useful for spaCy developers who are editing the
+source code and recompiling frequently.
+
+- Install in editable mode. Changes to `.py` files will be reflected as soon as
+  the files are saved, but edits to Cython files (`.pxd`, `.pyx`) will require
+  the `pip install` or `python setup.py build_ext` command below to be run
+  again. Before installing in editable mode, be sure you have removed any
+  previous installs with `pip uninstall spacy`, which you may need to run
+  multiple times to remove all traces of earlier installs.
+
+  ```diff
+    pip install -U pip setuptools wheel
+  - pip install .
+  + pip install -r requirements.txt
+  + pip install --no-build-isolation --editable .
+  ```
+
+- Build in parallel using `N` CPUs to speed up compilation and then install in
+  editable mode:
+
+  ```diff
+    pip install -U pip setuptools wheel
+  - pip install .
+  + pip install -r requirements.txt
+  + python setup.py build_ext --inplace -j N
+  + python setup.py develop
+  ```
 
 ### Run tests {#run-tests}
 
-spaCy comes with an
-[extensive test suite](https://github.com/explosion/spaCy/tree/master/spacy/tests).
-In order to run the tests, you'll usually want to clone the
-[repository](https://github.com/explosion/spaCy/tree/master/) and
-[build spaCy from source](#source). This will also install the required
+spaCy comes with an [extensive test suite](%%GITHUB_SPACY/spacy/tests). In order
+to run the tests, you'll usually want to clone the [repository](%%GITHUB_SPACY)
+and [build spaCy from source](#source). This will also install the required
 development dependencies and test utilities defined in the `requirements.txt`.
 
 Alternatively, you can find out where spaCy is installed and run `pytest` on
 that directory. Don't forget to also install the test utilities via spaCy's
-[`requirements.txt`](https://github.com/explosion/spaCy/tree/master/requirements.txt):
+[`requirements.txt`](%%GITHUB_SPACY/requirements.txt):
 
 ```bash
-python -c "import os; import spacy; print(os.path.dirname(spacy.__file__))"
-pip install -r path/to/requirements.txt
-python -m pytest [spacy directory]
+$ python -c "import os; import spacy; print(os.path.dirname(spacy.__file__))"
+$ pip install -r path/to/requirements.txt
+$ python -m pytest --pyargs %%SPACY_PKG_NAME
 ```
 
 Calling `pytest` on the spaCy directory will run only the basic tests. The flag
 `--slow` is optional and enables additional tests that take longer.
 
 ```bash
-# make sure you are using recent pytest version
-python -m pip install -U pytest
-
-python -m pytest [spacy directory]                 # basic tests
-python -m pytest [spacy directory] --slow          # basic and slow tests
+$ python -m pip install -U pytest               # update pytest
+$ python -m pytest --pyargs %%SPACY_PKG_NAME               # basic tests
+$ python -m pytest --pyargs %%SPACY_PKG_NAME --slow        # basic and slow tests
 ```
 
 ## Troubleshooting guide {#troubleshooting}
@@ -241,16 +335,16 @@ installing, loading and using spaCy, as well as their solutions.
 <Accordion title="No compatible model found" id="compatible-model">
 
 ```
-No compatible model found for [lang] (spaCy vX.X.X).
+No compatible package found for [lang] (spaCy vX.X.X).
 ```
 
-This usually means that the model you're trying to download does not exist, or
-isn't available for your version of spaCy. Check the
+This usually means that the trained pipeline you're trying to download does not
+exist, or isn't available for your version of spaCy. Check the
 [compatibility table](https://github.com/explosion/spacy-models/tree/master/compatibility.json)
-to see which models are available for your spaCy version. If you're using an old
-version, consider upgrading to the latest release. Note that while spaCy
+to see which packages are available for your spaCy version. If you're using an
+old version, consider upgrading to the latest release. Note that while spaCy
 supports tokenization for [a variety of languages](/usage/models#languages), not
-all of them come with statistical models. To only use the tokenizer, import the
+all of them come with trained pipelines. To only use the tokenizer, import the
 language's `Language` class instead, for example
 `from spacy.lang.fr import French`.
 
@@ -262,7 +356,7 @@ language's `Language` class instead, for example
 no such option: --no-cache-dir
 ```
 
-The `download` command uses pip to install the models and sets the
+The `download` command uses pip to install the pipeline packages and sets the
 `--no-cache-dir` flag to prevent it from requiring too much memory.
 [This setting](https://pip.pypa.io/en/stable/reference/pip_install/#caching)
 requires pip v6.0 or newer. Run `pip install -U pip` to upgrade to the latest
@@ -284,7 +378,7 @@ only 65535 in a narrow unicode build. You can check this by running the
 following command:
 
 ```bash
-python -c "import sys; print(sys.maxunicode)"
+$ python -c "import sys; print(sys.maxunicode)"
 ```
 
 If you're running a narrow unicode build, reinstall Python and use a wide
@@ -306,8 +400,8 @@ run `source ~/.bash_profile` or `source ~/.zshrc`. Make sure to add **both
 lines** for `LC_ALL` and `LANG`.
 
 ```bash
-\export LC_ALL=en_US.UTF-8
-\export LANG=en_US.UTF-8
+$ export LC_ALL=en_US.UTF-8
+$ export LANG=en_US.UTF-8
 ```
 
 </Accordion>
@@ -326,19 +420,19 @@ also run `which python` to find out where your Python executable is located.
 
 </Accordion>
 
-<Accordion title="Import error: No module named [model]" id="import-error-models">
+<Accordion title="Import error: No module named [name]" id="import-error-models">
 
 ```
 ImportError: No module named 'en_core_web_sm'
 ```
 
-As of spaCy v1.7, all models can be installed as Python packages. This means
-that they'll become importable modules of your application. If this fails, it's
-usually a sign that the package is not installed in the current environment. Run
-`pip list` or `pip freeze` to check which model packages you have installed, and
-install the [correct models](/models) if necessary. If you're importing a model
-manually at the top of a file, make sure to use the name of the package, not the
-shortcut link you've created.
+As of spaCy v1.7, all trained pipelines can be installed as Python packages.
+This means that they'll become importable modules of your application. If this
+fails, it's usually a sign that the package is not installed in the current
+environment. Run `pip list` or `pip freeze` to check which pipeline packages you
+have installed, and install the [correct package](/models) if necessary. If
+you're importing a package manually at the top of a file, make sure to use the
+full name of the package.
 
 </Accordion>
 
@@ -352,7 +446,7 @@ This error may occur when running the `spacy` command from the command line.
 spaCy does not currently add an entry to your `PATH` environment variable, as
 this can lead to unexpected results, especially when using a virtual
 environment. Instead, spaCy adds an auto-alias that maps `spacy` to
-`python -m spacy]`. If this is not working as expected, run the command with
+`python -m spacy`. If this is not working as expected, run the command with
 `python -m`, yourself – for example `python -m spacy download en_core_web_sm`.
 For more info on this, see the [`download`](/api/cli#download) command.
 
@@ -371,24 +465,7 @@ from is called `spacy`. So, when using spaCy, never call anything else `spacy`.
 
 </Accordion>
 
-<Accordion title="Pronoun lemma is returned as -PRON-" id="pron-lemma">
-
-```python
-doc = nlp("They are")
-print(doc[0].lemma_)
-# -PRON-
-```
-
-This is in fact expected behavior and not a bug. Unlike verbs and common nouns,
-there's no clear base form of a personal pronoun. Should the lemma of "me" be
-"I", or should we normalize person as well, giving "it" — or maybe "he"? spaCy's
-solution is to introduce a novel symbol, `-PRON-`, which is used as the lemma
-for all personal pronouns. For more info on this, see the
-[lemmatization specs](/api/annotation#lemmatization).
-
-</Accordion>
-
-<Accordion title="NER model doesn't recognise other entities anymore after training" id="catastrophic-forgetting">
+<Accordion title="NER model doesn't recognize other entities anymore after training" id="catastrophic-forgetting">
 
 If your training data only contained new entities and you didn't mix in any
 examples the model previously recognized, it can cause the model to "forget"
@@ -416,8 +493,8 @@ disk has some binary files that should not go through this conversion. When they
 do, you get the error above. You can fix it by either changing your
 [`core.autocrlf`](https://git-scm.com/book/en/v2/Customizing-Git-Git-Configuration)
 setting to `"false"`, or by committing a
-[`.gitattributes`](https://git-scm.com/docs/gitattributes) file] to your
-repository to tell git on which files or folders it shouldn't do LF-to-CRLF
+[`.gitattributes`](https://git-scm.com/docs/gitattributes) file to your
+repository to tell Git on which files or folders it shouldn't do LF-to-CRLF
 conversion, with an entry like `path/to/spacy/model/** -text`. After you've done
 either of these, clone your repository again.
 

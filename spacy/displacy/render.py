@@ -1,27 +1,44 @@
+from typing import Dict, Any, List, Optional, Union
 import uuid
 
-from .templates import (
-    TPL_DEP_SVG,
-    TPL_DEP_WORDS,
-    TPL_DEP_WORDS_LEMMA,
-    TPL_DEP_ARCS,
-    TPL_ENTS,
-)
+from .templates import TPL_DEP_SVG, TPL_DEP_WORDS, TPL_DEP_WORDS_LEMMA, TPL_DEP_ARCS
 from .templates import TPL_ENT, TPL_ENT_RTL, TPL_FIGURE, TPL_TITLE, TPL_PAGE
+from .templates import TPL_ENTS
 from ..util import minify_html, escape_html, registry
 from ..errors import Errors
 
 
 DEFAULT_LANG = "en"
 DEFAULT_DIR = "ltr"
+DEFAULT_ENTITY_COLOR = "#ddd"
+DEFAULT_LABEL_COLORS = {
+    "ORG": "#7aecec",
+    "PRODUCT": "#bfeeb7",
+    "GPE": "#feca74",
+    "LOC": "#ff9561",
+    "PERSON": "#aa9cfc",
+    "NORP": "#c887fb",
+    "FACILITY": "#9cc9cc",
+    "EVENT": "#ffeb80",
+    "LAW": "#ff8197",
+    "LANGUAGE": "#ff8197",
+    "WORK_OF_ART": "#f0d0ff",
+    "DATE": "#bfe1d9",
+    "TIME": "#bfe1d9",
+    "MONEY": "#e4e7d2",
+    "QUANTITY": "#e4e7d2",
+    "ORDINAL": "#e4e7d2",
+    "CARDINAL": "#e4e7d2",
+    "PERCENT": "#e4e7d2",
+}
 
 
-class DependencyRenderer(object):
+class DependencyRenderer:
     """Render dependency parses as SVGs."""
 
     style = "dep"
 
-    def __init__(self, options={}):
+    def __init__(self, options: Dict[str, Any] = {}) -> None:
         """Initialise dependency renderer.
 
         options (dict): Visualiser-specific options (compact, word_spacing,
@@ -41,7 +58,9 @@ class DependencyRenderer(object):
         self.direction = DEFAULT_DIR
         self.lang = DEFAULT_LANG
 
-    def render(self, parsed, page=False, minify=False):
+    def render(
+        self, parsed: List[Dict[str, Any]], page: bool = False, minify: bool = False
+    ) -> str:
         """Render complete markup.
 
         parsed (list): Dependency parses to render.
@@ -72,10 +91,15 @@ class DependencyRenderer(object):
             return minify_html(markup)
         return markup
 
-    def render_svg(self, render_id, words, arcs):
+    def render_svg(
+        self,
+        render_id: Union[int, str],
+        words: List[Dict[str, Any]],
+        arcs: List[Dict[str, Any]],
+    ) -> str:
         """Render SVG.
 
-        render_id (int): Unique ID, typically index of document.
+        render_id (Union[int, str]): Unique ID, typically index of document.
         words (list): Individual words and their tags.
         arcs (list): Individual arcs and their start, end, direction and label.
         RETURNS (str): Rendered SVG markup.
@@ -86,15 +110,15 @@ class DependencyRenderer(object):
         self.width = self.offset_x + len(words) * self.distance
         self.height = self.offset_y + 3 * self.word_spacing
         self.id = render_id
-        words = [
+        words_svg = [
             self.render_word(w["text"], w["tag"], w.get("lemma", None), i)
             for i, w in enumerate(words)
         ]
-        arcs = [
+        arcs_svg = [
             self.render_arrow(a["label"], a["start"], a["end"], a["dir"], i)
             for i, a in enumerate(arcs)
         ]
-        content = "".join(words) + "".join(arcs)
+        content = "".join(words_svg) + "".join(arcs_svg)
         return TPL_DEP_SVG.format(
             id=self.id,
             width=self.width,
@@ -107,9 +131,7 @@ class DependencyRenderer(object):
             lang=self.lang,
         )
 
-    def render_word(
-        self, text, tag, lemma, i,
-    ):
+    def render_word(self, text: str, tag: str, lemma: str, i: int) -> str:
         """Render individual word.
 
         text (str): Word text.
@@ -128,7 +150,9 @@ class DependencyRenderer(object):
             )
         return TPL_DEP_WORDS.format(text=html_text, tag=tag, x=x, y=y)
 
-    def render_arrow(self, label, start, end, direction, i):
+    def render_arrow(
+        self, label: str, start: int, end: int, direction: str, i: int
+    ) -> str:
         """Render individual arrow.
 
         label (str): Dependency label.
@@ -172,7 +196,7 @@ class DependencyRenderer(object):
             arc=arc,
         )
 
-    def get_arc(self, x_start, y, y_curve, x_end):
+    def get_arc(self, x_start: int, y: int, y_curve: int, x_end: int) -> str:
         """Render individual arc.
 
         x_start (int): X-coordinate of arrow start point.
@@ -186,7 +210,7 @@ class DependencyRenderer(object):
             template = "M{x},{y} {x},{c} {e},{c} {e},{y}"
         return template.format(x=x_start, y=y, c=y_curve, e=x_end)
 
-    def get_arrowhead(self, direction, x, y, end):
+    def get_arrowhead(self, direction: str, x: int, y: int, end: int) -> str:
         """Render individual arrow head.
 
         direction (str): Arrow direction, 'left' or 'right'.
@@ -196,24 +220,12 @@ class DependencyRenderer(object):
         RETURNS (str): Definition of the arrow head path ('d' attribute).
         """
         if direction == "left":
-            pos1, pos2, pos3 = (x, x - self.arrow_width + 2, x + self.arrow_width - 2)
+            p1, p2, p3 = (x, x - self.arrow_width + 2, x + self.arrow_width - 2)
         else:
-            pos1, pos2, pos3 = (
-                end,
-                end + self.arrow_width - 2,
-                end - self.arrow_width + 2,
-            )
-        arrowhead = (
-            pos1,
-            y + 2,
-            pos2,
-            y - self.arrow_width,
-            pos3,
-            y - self.arrow_width,
-        )
-        return "M{},{} L{},{} {},{}".format(*arrowhead)
+            p1, p2, p3 = (end, end + self.arrow_width - 2, end - self.arrow_width + 2)
+        return f"M{p1},{y + 2} L{p2},{y - self.arrow_width} {p3},{y - self.arrow_width}"
 
-    def get_levels(self, arcs):
+    def get_levels(self, arcs: List[Dict[str, Any]]) -> List[int]:
         """Calculate available arc height "levels".
         Used to calculate arrow heights dynamically and without wasting space.
 
@@ -224,46 +236,34 @@ class DependencyRenderer(object):
         return sorted(list(levels))
 
 
-class EntityRenderer(object):
+class EntityRenderer:
     """Render named entities as HTML."""
 
     style = "ent"
 
-    def __init__(self, options={}):
+    def __init__(self, options: Dict[str, Any] = {}) -> None:
         """Initialise dependency renderer.
 
         options (dict): Visualiser-specific options (colors, ents)
         """
-        colors = {
-            "ORG": "#7aecec",
-            "PRODUCT": "#bfeeb7",
-            "GPE": "#feca74",
-            "LOC": "#ff9561",
-            "PERSON": "#aa9cfc",
-            "NORP": "#c887fb",
-            "FACILITY": "#9cc9cc",
-            "EVENT": "#ffeb80",
-            "LAW": "#ff8197",
-            "LANGUAGE": "#ff8197",
-            "WORK_OF_ART": "#f0d0ff",
-            "DATE": "#bfe1d9",
-            "TIME": "#bfe1d9",
-            "MONEY": "#e4e7d2",
-            "QUANTITY": "#e4e7d2",
-            "ORDINAL": "#e4e7d2",
-            "CARDINAL": "#e4e7d2",
-            "PERCENT": "#e4e7d2",
-        }
+        colors = dict(DEFAULT_LABEL_COLORS)
         user_colors = registry.displacy_colors.get_all()
         for user_color in user_colors.values():
+            if callable(user_color):
+                # Since this comes from the function registry, we want to make
+                # sure we support functions that *return* a dict of colors
+                user_color = user_color()
+            if not isinstance(user_color, dict):
+                raise ValueError(Errors.E925.format(obj=type(user_color)))
             colors.update(user_color)
         colors.update(options.get("colors", {}))
-        self.default_color = "#ddd"
-        self.colors = colors
+        self.default_color = DEFAULT_ENTITY_COLOR
+        self.colors = {label.upper(): color for label, color in colors.items()}
         self.ents = options.get("ents", None)
+        if self.ents is not None:
+            self.ents = [ent.upper() for ent in self.ents]
         self.direction = DEFAULT_DIR
         self.lang = DEFAULT_LANG
-
         template = options.get("template")
         if template:
             self.ent_template = template
@@ -273,7 +273,9 @@ class EntityRenderer(object):
             else:
                 self.ent_template = TPL_ENT
 
-    def render(self, parsed, page=False, minify=False):
+    def render(
+        self, parsed: List[Dict[str, Any]], page: bool = False, minify: bool = False
+    ) -> str:
         """Render complete markup.
 
         parsed (list): Dependency parses to render.
@@ -297,7 +299,9 @@ class EntityRenderer(object):
             return minify_html(markup)
         return markup
 
-    def render_ents(self, text, spans, title):
+    def render_ents(
+        self, text: str, spans: List[Dict[str, Any]], title: Optional[str]
+    ) -> str:
         """Render entities in text.
 
         text (str): Original text.
@@ -325,7 +329,11 @@ class EntityRenderer(object):
             else:
                 markup += entity
             offset = end
-        markup += escape_html(text[offset:])
+        fragments = text[offset:].split("\n")
+        for i, fragment in enumerate(fragments):
+            markup += escape_html(fragment)
+            if len(fragments) > 1 and i != len(fragments) - 1:
+                markup += "</br>"
         markup = TPL_ENTS.format(content=markup, dir=self.direction)
         if title:
             markup = TPL_TITLE.format(title=title) + markup

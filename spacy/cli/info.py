@@ -1,10 +1,10 @@
-from typing import Optional, Dict, Any, Union
+from typing import Optional, Dict, Any, Union, List
 import platform
 from pathlib import Path
-from wasabi import Printer
+from wasabi import Printer, MarkdownRenderer
 import srsly
 
-from ._app import app, Arg, Opt
+from ._util import app, Arg, Opt, string_to_list
 from .. import util
 from .. import about
 
@@ -12,39 +12,45 @@ from .. import about
 @app.command("info")
 def info_cli(
     # fmt: off
-    model: Optional[str] = Arg(None, help="Optional model name"),
+    model: Optional[str] = Arg(None, help="Optional loadable spaCy pipeline"),
     markdown: bool = Opt(False, "--markdown", "-md", help="Generate Markdown for GitHub issues"),
     silent: bool = Opt(False, "--silent", "-s", "-S", help="Don't print anything (just return)"),
+    exclude: Optional[str] = Opt("labels", "--exclude", "-e", help="Comma-separated keys to exclude from the print-out"),
     # fmt: on
 ):
     """
-    Print info about spaCy installation. If a model is speficied as an argument,
-    print model information. Flag --markdown prints details in Markdown for easy
+    Print info about spaCy installation. If a pipeline is specified as an argument,
+    print its meta information. Flag --markdown prints details in Markdown for easy
     copy-pasting to GitHub issues.
+
+    DOCS: https://nightly.spacy.io/api/cli#info
     """
-    info(model, markdown=markdown, silent=silent)
+    exclude = string_to_list(exclude)
+    info(model, markdown=markdown, silent=silent, exclude=exclude)
 
 
 def info(
-    model: Optional[str] = None, *, markdown: bool = False, silent: bool = True
+    model: Optional[str] = None, *, markdown: bool = False, silent: bool = True, exclude: List[str]
 ) -> Union[str, dict]:
     msg = Printer(no_print=silent, pretty=not silent)
     if model:
-        title = f"Info about model '{model}'"
+        title = f"Info about pipeline '{model}'"
         data = info_model(model, silent=silent)
     else:
         title = "Info about spaCy"
         data = info_spacy()
     raw_data = {k.lower().replace(" ", "_"): v for k, v in data.items()}
-    if "Models" in data and isinstance(data["Models"], dict):
-        data["Models"] = ", ".join(f"{n} ({v})" for n, v in data["Models"].items())
-    markdown_data = get_markdown(data, title=title)
+    if "Pipelines" in data and isinstance(data["Pipelines"], dict):
+        data["Pipelines"] = ", ".join(
+            f"{n} ({v})" for n, v in data["Pipelines"].items()
+        )
+    markdown_data = get_markdown(data, title=title, exclude=exclude)
     if markdown:
         if not silent:
             print(markdown_data)
         return markdown_data
     if not silent:
-        table_data = dict(data)
+        table_data = {k: v for k, v in data.items() if k not in exclude}
         msg.table(table_data, title=title)
     return raw_data
 
@@ -63,7 +69,7 @@ def info_spacy() -> Dict[str, any]:
         "Location": str(Path(__file__).parent.parent),
         "Platform": platform.platform(),
         "Python version": platform.python_version(),
-        "Models": all_models,
+        "Pipelines": all_models,
     }
 
 
@@ -78,32 +84,42 @@ def info_model(model: str, *, silent: bool = True) -> Dict[str, Any]:
     if util.is_package(model):
         model_path = util.get_package_path(model)
     else:
-        model_path = model
+        model_path = Path(model)
     meta_path = model_path / "meta.json"
     if not meta_path.is_file():
-        msg.fail("Can't find model meta.json", meta_path, exits=1)
+        msg.fail("Can't find pipeline meta.json", meta_path, exits=1)
     meta = srsly.read_json(meta_path)
     if model_path.resolve() != model_path:
-        meta["link"] = str(model_path)
         meta["source"] = str(model_path.resolve())
     else:
         meta["source"] = str(model_path)
-    return {k: v for k, v in meta.items() if k not in ("accuracy", "speed")}
+    return {
+        k: v for k, v in meta.items() if k not in ("accuracy", "performance", "speed")
+    }
 
 
-def get_markdown(data: Dict[str, Any], title: Optional[str] = None) -> str:
+def get_markdown(data: Dict[str, Any], title: Optional[str] = None, exclude: List[str] = None) -> str:
     """Get data in GitHub-flavoured Markdown format for issues etc.
 
     data (dict or list of tuples): Label/value pairs.
     title (str / None): Title, will be rendered as headline 2.
     RETURNS (str): The Markdown string.
     """
-    markdown = []
-    for key, value in data.items():
-        if isinstance(value, str) and Path(value).exists():
-            continue
-        markdown.append(f"* **{key}:** {value}")
-    result = "\n{}\n".format("\n".join(markdown))
+    md = MarkdownRenderer()
     if title:
-        result = f"\n## {title}\n{result}"
-    return result
+        md.add(md.title(2, title))
+    items = []
+    for key, value in data.items():
+        if exclude and key in exclude:
+            continue
+        if isinstance(value, str):
+            try:
+                existing_path = Path(value).exists()
+            except:
+                # invalid Path, like a URL string
+                existing_path = False
+            if existing_path:
+                continue
+        items.append(f"{md.bold(f'{key}:')} {value}")
+    md.add(md.list(items))
+    return f"\n{md.text}\n"

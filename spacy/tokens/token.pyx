@@ -1,6 +1,4 @@
 # cython: infer_types=True
-from libc.string cimport memcpy
-from cpython.mem cimport PyMem_Malloc, PyMem_Free
 # Compiler crashes on memory view coercion without this. Should report bug.
 from cython.view cimport array as cvarray
 cimport numpy as np
@@ -14,14 +12,13 @@ from ..typedefs cimport hash_t
 from ..lexeme cimport Lexeme
 from ..attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
 from ..attrs cimport IS_BRACKET, IS_QUOTE, IS_LEFT_PUNCT, IS_RIGHT_PUNCT
-from ..attrs cimport IS_TITLE, IS_UPPER, IS_CURRENCY, LIKE_URL, LIKE_NUM, LIKE_EMAIL
-from ..attrs cimport IS_STOP, ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX
-from ..attrs cimport LENGTH, CLUSTER, LEMMA, POS, TAG, DEP
+from ..attrs cimport IS_TITLE, IS_UPPER, IS_CURRENCY, IS_STOP
+from ..attrs cimport LIKE_URL, LIKE_NUM, LIKE_EMAIL
 from ..symbols cimport conj
 from .morphanalysis cimport MorphAnalysis
+from .doc cimport set_children_from_heads
 
 from .. import parts_of_speech
-from .. import util
 from ..errors import Errors, Warnings
 from .underscore import Underscore, get_ext_args
 
@@ -30,7 +27,7 @@ cdef class Token:
     """An individual token – i.e. a word, punctuation symbol, whitespace,
     etc.
 
-    DOCS: https://spacy.io/api/token
+    DOCS: https://nightly.spacy.io/api/token
     """
     @classmethod
     def set_extension(cls, name, **kwargs):
@@ -43,8 +40,8 @@ cdef class Token:
         method (callable): Optional method for method extension.
         force (bool): Force overwriting existing attribute.
 
-        DOCS: https://spacy.io/api/token#set_extension
-        USAGE: https://spacy.io/usage/processing-pipelines#custom-components-attributes
+        DOCS: https://nightly.spacy.io/api/token#set_extension
+        USAGE: https://nightly.spacy.io/usage/processing-pipelines#custom-components-attributes
         """
         if cls.has_extension(name) and not kwargs.get("force", False):
             raise ValueError(Errors.E090.format(name=name, obj="Token"))
@@ -57,7 +54,7 @@ cdef class Token:
         name (str): Name of the extension.
         RETURNS (tuple): A `(default, method, getter, setter)` tuple.
 
-        DOCS: https://spacy.io/api/token#get_extension
+        DOCS: https://nightly.spacy.io/api/token#get_extension
         """
         return Underscore.token_extensions.get(name)
 
@@ -68,7 +65,7 @@ cdef class Token:
         name (str): Name of the extension.
         RETURNS (bool): Whether the extension has been registered.
 
-        DOCS: https://spacy.io/api/token#has_extension
+        DOCS: https://nightly.spacy.io/api/token#has_extension
         """
         return name in Underscore.token_extensions
 
@@ -80,7 +77,7 @@ cdef class Token:
         RETURNS (tuple): A `(default, method, getter, setter)` tuple of the
             removed extension.
 
-        DOCS: https://spacy.io/api/token#remove_extension
+        DOCS: https://nightly.spacy.io/api/token#remove_extension
         """
         if not cls.has_extension(name):
             raise ValueError(Errors.E046.format(name=name))
@@ -93,7 +90,7 @@ cdef class Token:
         doc (Doc): The parent document.
         offset (int): The index of the token within the document.
 
-        DOCS: https://spacy.io/api/token#init
+        DOCS: https://nightly.spacy.io/api/token#init
         """
         self.vocab = vocab
         self.doc = doc
@@ -108,7 +105,7 @@ cdef class Token:
 
         RETURNS (int): The number of unicode characters in the token.
 
-        DOCS: https://spacy.io/api/token#len
+        DOCS: https://nightly.spacy.io/api/token#len
         """
         return self.c.lex.length
 
@@ -171,7 +168,7 @@ cdef class Token:
         flag_id (int): The ID of the flag attribute.
         RETURNS (bool): Whether the flag is set.
 
-        DOCS: https://spacy.io/api/token#check_flag
+        DOCS: https://nightly.spacy.io/api/token#check_flag
         """
         return Lexeme.c_check_flag(self.c.lex, flag_id)
 
@@ -181,7 +178,7 @@ cdef class Token:
         i (int): The relative position of the token to get. Defaults to 1.
         RETURNS (Token): The token at position `self.doc[self.i+i]`.
 
-        DOCS: https://spacy.io/api/token#nbor
+        DOCS: https://nightly.spacy.io/api/token#nbor
         """
         if self.i+i < 0 or (self.i+i >= len(self.doc)):
             raise IndexError(Errors.E042.format(i=self.i, j=i, length=len(self.doc)))
@@ -195,7 +192,7 @@ cdef class Token:
             `Span`, `Token` and `Lexeme` objects.
         RETURNS (float): A scalar similarity score. Higher is more similar.
 
-        DOCS: https://spacy.io/api/token#similarity
+        DOCS: https://nightly.spacy.io/api/token#similarity
         """
         if "similarity" in self.doc.user_token_hooks:
             return self.doc.user_token_hooks["similarity"](self, other)
@@ -214,17 +211,32 @@ cdef class Token:
         xp = get_array_module(vector)
         return (xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm))
 
-    @property
-    def morph(self):
-        return MorphAnalysis.from_id(self.vocab, self.c.morph)
-
-    property morph_:
+    property morph:
         def __get__(self):
-            return str(MorphAnalysis.from_id(self.vocab, self.c.morph))
+            return MorphAnalysis.from_id(self.vocab, self.c.morph)
 
-        def __set__(self, features):
-            cdef hash_t key = self.vocab.morphology.add(features)
+        def __set__(self, MorphAnalysis morph):
+            # Check that the morph has the same vocab
+            if self.vocab != morph.vocab:
+                raise ValueError(Errors.E1013)
+            self.c.morph = morph.c.key
+
+    def set_morph(self, features):
+        cdef hash_t key
+        if features is None:
+            self.c.morph = 0
+        elif isinstance(features, MorphAnalysis):
+            self.morph = features
+        else:
+            if isinstance(features, int):
+                features = self.vocab.strings[features]
+            key = self.vocab.morphology.add(features)
             self.c.morph = key
+
+    @property
+    def lex(self):
+        """RETURNS (Lexeme): The underlying lexeme."""
+        return self.vocab[self.c.lex.orth]
 
     @property
     def lex_id(self):
@@ -236,11 +248,6 @@ cdef class Token:
         """RETURNS (int): Sequential ID of the token's lexical type, used to
         index into tables, e.g. for word vectors."""
         return self.c.lex.id
-
-    @property
-    def string(self):
-        """Deprecated: Use Token.text_with_ws instead."""
-        return self.text_with_ws
 
     @property
     def text(self):
@@ -337,11 +344,7 @@ cdef class Token:
             inflectional suffixes.
         """
         def __get__(self):
-            if self.c.lemma == 0:
-                lemma_ = self.vocab.morphology.lemmatizer.lookup(self.orth_, orth=self.orth)
-                return self.vocab.strings[lemma_]
-            else:
-                return self.c.lemma
+            return self.c.lemma
 
         def __set__(self, attr_t lemma):
             self.c.lemma = lemma
@@ -360,7 +363,7 @@ cdef class Token:
             return self.c.tag
 
         def __set__(self, attr_t tag):
-            self.vocab.morphology.assign_tag(self.c, tag)
+            self.c.tag = tag
 
     property dep:
         """RETURNS (uint64): ID of syntactic dependency label."""
@@ -377,7 +380,7 @@ cdef class Token:
 
         RETURNS (bool): Whether a word vector is associated with the object.
 
-        DOCS: https://spacy.io/api/token#has_vector
+        DOCS: https://nightly.spacy.io/api/token#has_vector
         """
         if "has_vector" in self.doc.user_token_hooks:
             return self.doc.user_token_hooks["has_vector"](self)
@@ -392,7 +395,7 @@ cdef class Token:
         RETURNS (numpy.ndarray[ndim=1, dtype='float32']): A 1D numpy array
             representing the token's semantics.
 
-        DOCS: https://spacy.io/api/token#vector
+        DOCS: https://nightly.spacy.io/api/token#vector
         """
         if "vector" in self.doc.user_token_hooks:
             return self.doc.user_token_hooks["vector"](self)
@@ -407,7 +410,7 @@ cdef class Token:
 
         RETURNS (float): The L2 norm of the vector representation.
 
-        DOCS: https://spacy.io/api/token#vector_norm
+        DOCS: https://nightly.spacy.io/api/token#vector_norm
         """
         if "vector_norm" in self.doc.user_token_hooks:
             return self.doc.user_token_hooks["vector_norm"](self)
@@ -430,7 +433,7 @@ cdef class Token:
         RETURNS (int): The number of leftward immediate children of the
             word, in the syntactic dependency parse.
 
-        DOCS: https://spacy.io/api/token#n_lefts
+        DOCS: https://nightly.spacy.io/api/token#n_lefts
         """
         return self.c.l_kids
 
@@ -442,7 +445,7 @@ cdef class Token:
         RETURNS (int): The number of rightward immediate children of the
             word, in the syntactic dependency parse.
 
-        DOCS: https://spacy.io/api/token#n_rights
+        DOCS: https://nightly.spacy.io/api/token#n_rights
         """
         return self.c.r_kids
 
@@ -474,7 +477,7 @@ cdef class Token:
         RETURNS (bool / None): Whether the token starts a sentence.
             None if unknown.
 
-        DOCS: https://spacy.io/api/token#is_sent_start
+        DOCS: https://nightly.spacy.io/api/token#is_sent_start
         """
         def __get__(self):
             if self.c.sent_start == 0:
@@ -485,7 +488,7 @@ cdef class Token:
                 return True
 
         def __set__(self, value):
-            if self.doc.is_parsed:
+            if self.doc.has_annotation("DEP"):
                 raise ValueError(Errors.E043)
             if value is None:
                 self.c.sent_start = 0
@@ -503,7 +506,7 @@ cdef class Token:
         RETURNS (bool / None): Whether the token ends a sentence.
             None if unknown.
 
-        DOCS: https://spacy.io/api/token#is_sent_end
+        DOCS: https://nightly.spacy.io/api/token#is_sent_end
         """
         def __get__(self):
             if self.i + 1 == len(self.doc):
@@ -525,7 +528,7 @@ cdef class Token:
 
         YIELDS (Token): A left-child of the token.
 
-        DOCS: https://spacy.io/api/token#lefts
+        DOCS: https://nightly.spacy.io/api/token#lefts
         """
         cdef int nr_iter = 0
         cdef const TokenC* ptr = self.c - (self.i - self.c.l_edge)
@@ -545,7 +548,7 @@ cdef class Token:
 
         YIELDS (Token): A right-child of the token.
 
-        DOCS: https://spacy.io/api/token#rights
+        DOCS: https://nightly.spacy.io/api/token#rights
         """
         cdef const TokenC* ptr = self.c + (self.c.r_edge - self.i)
         tokens = []
@@ -567,7 +570,7 @@ cdef class Token:
 
         YIELDS (Token): A child token such that `child.head==self`.
 
-        DOCS: https://spacy.io/api/token#children
+        DOCS: https://nightly.spacy.io/api/token#children
         """
         yield from self.lefts
         yield from self.rights
@@ -580,7 +583,7 @@ cdef class Token:
         YIELDS (Token): A descendent token such that
             `self.is_ancestor(descendent) or token == self`.
 
-        DOCS: https://spacy.io/api/token#subtree
+        DOCS: https://nightly.spacy.io/api/token#subtree
         """
         for word in self.lefts:
             yield from word.subtree
@@ -611,7 +614,7 @@ cdef class Token:
         YIELDS (Token): A sequence of ancestor tokens such that
             `ancestor.is_ancestor(self)`.
 
-        DOCS: https://spacy.io/api/token#ancestors
+        DOCS: https://nightly.spacy.io/api/token#ancestors
         """
         cdef const TokenC* head_ptr = self.c
         # Guard against infinite loop, no token can have
@@ -629,7 +632,7 @@ cdef class Token:
         descendant (Token): Another token.
         RETURNS (bool): Whether this token is the ancestor of the descendant.
 
-        DOCS: https://spacy.io/api/token#is_ancestor
+        DOCS: https://nightly.spacy.io/api/token#is_ancestor
         """
         if self.doc is not descendant.doc:
             return False
@@ -654,78 +657,19 @@ cdef class Token:
             # Do nothing if old head is new head
             if self.i + self.c.head == new_head.i:
                 return
-            cdef Token old_head = self.head
-            cdef int rel_newhead_i = new_head.i - self.i
-            # Is the new head a descendant of the old head
-            cdef bint is_desc = old_head.is_ancestor(new_head)
-            cdef int new_edge
-            cdef Token anc, child
-            # Update number of deps of old head
-            if self.c.head > 0:  # left dependent
-                old_head.c.l_kids -= 1
-                if self.c.l_edge == old_head.c.l_edge:
-                    # The token dominates the left edge so the left edge of
-                    # the head may change when the token is reattached, it may
-                    # not change if the new head is a descendant of the current
-                    # head.
-                    new_edge = self.c.l_edge
-                    # The new l_edge is the left-most l_edge on any of the
-                    # other dependents where the l_edge is left of the head,
-                    # otherwise it is the head
-                    if not is_desc:
-                        new_edge = old_head.i
-                        for child in old_head.children:
-                            if child == self:
-                                continue
-                            if child.c.l_edge < new_edge:
-                                new_edge = child.c.l_edge
-                        old_head.c.l_edge = new_edge
-                    # Walk up the tree from old_head and assign new l_edge to
-                    # ancestors until an ancestor already has an l_edge that's
-                    # further left
-                    for anc in old_head.ancestors:
-                        if anc.c.l_edge <= new_edge:
-                            break
-                        anc.c.l_edge = new_edge
-            elif self.c.head < 0:  # right dependent
-                old_head.c.r_kids -= 1
-                # Do the same thing as for l_edge
-                if self.c.r_edge == old_head.c.r_edge:
-                    new_edge = self.c.r_edge
-                    if not is_desc:
-                        new_edge = old_head.i
-                        for child in old_head.children:
-                            if child == self:
-                                continue
-                            if child.c.r_edge > new_edge:
-                                new_edge = child.c.r_edge
-                        old_head.c.r_edge = new_edge
-                    for anc in old_head.ancestors:
-                        if anc.c.r_edge >= new_edge:
-                            break
-                        anc.c.r_edge = new_edge
-            # Update number of deps of new head
-            if rel_newhead_i > 0:  # left dependent
-                new_head.c.l_kids += 1
-                # Walk up the tree from new head and set l_edge to self.l_edge
-                # until you hit a token with an l_edge further to the left
-                if self.c.l_edge < new_head.c.l_edge:
-                    new_head.c.l_edge = self.c.l_edge
-                    for anc in new_head.ancestors:
-                        if anc.c.l_edge <= self.c.l_edge:
-                            break
-                        anc.c.l_edge = self.c.l_edge
-            elif rel_newhead_i < 0:  # right dependent
-                new_head.c.r_kids += 1
-                # Do the same as for l_edge
-                if self.c.r_edge > new_head.c.r_edge:
-                    new_head.c.r_edge = self.c.r_edge
-                    for anc in new_head.ancestors:
-                        if anc.c.r_edge >= self.c.r_edge:
-                            break
-                        anc.c.r_edge = self.c.r_edge
+            # Find the widest l/r_edges of the roots of the two tokens involved
+            # to limit the number of tokens for set_children_from_heads
+            cdef Token self_root, new_head_root
+            self_ancestors = list(self.ancestors)
+            new_head_ancestors = list(new_head.ancestors)
+            self_root = self_ancestors[-1] if self_ancestors else self
+            new_head_root = new_head_ancestors[-1] if new_head_ancestors else new_head
+            start = self_root.c.l_edge if self_root.c.l_edge < new_head_root.c.l_edge else new_head_root.c.l_edge
+            end = self_root.c.r_edge if self_root.c.r_edge > new_head_root.c.r_edge else new_head_root.c.r_edge
             # Set new head
-            self.c.head = rel_newhead_i
+            self.c.head = new_head.i - self.i
+            # Adjust parse properties and sentence starts
+            set_children_from_heads(self.doc.c, start, end + 1)
 
     @property
     def conjuncts(self):
@@ -733,7 +677,7 @@ cdef class Token:
 
         RETURNS (tuple): The coordinated tokens.
 
-        DOCS: https://spacy.io/api/token#conjuncts
+        DOCS: https://nightly.spacy.io/api/token#conjuncts
         """
         cdef Token word, child
         if "conjuncts" in self.doc.user_token_hooks:
@@ -893,10 +837,7 @@ cdef class Token:
             with no inflectional suffixes.
         """
         def __get__(self):
-            if self.c.lemma == 0:
-                return self.vocab.morphology.lemmatizer.lookup(self.orth_, orth=self.orth)
-            else:
-                return self.vocab.strings[self.c.lemma]
+            return self.vocab.strings[self.c.lemma]
 
         def __set__(self, unicode lemma_):
             self.c.lemma = self.vocab.strings.add(lemma_)
@@ -928,7 +869,7 @@ cdef class Token:
     @property
     def is_oov(self):
         """RETURNS (bool): Whether the token is out-of-vocabulary."""
-        return self.c.lex.orth in self.vocab.vectors
+        return self.c.lex.orth not in self.vocab.vectors
 
     @property
     def is_stop(self):

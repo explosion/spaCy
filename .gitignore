@@ -18,8 +18,7 @@ website/.npm
 website/logs
 *.log
 npm-debug.log*
-website/www/
-website/_deploy.sh
+quickstart-training-generator.js
 
 # Cython / C extensions
 cythonize.json
@@ -51,6 +50,8 @@ env3.*/
 .denv
 .pypyenv
 .pytest_cache/
+.mypy_cache/
+.hypothesis/
 
 # Distribution / packaging
 env/
@@ -71,6 +72,7 @@ Pipfile.lock
 *.egg
 .eggs
 MANIFEST
+spacy/git_info.py
 
 # Temporary files
 *.~*

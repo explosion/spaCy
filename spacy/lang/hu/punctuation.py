@@ -7,6 +7,7 @@ _concat_icons = CONCAT_ICONS.replace("\u00B0", "")
 
 _currency = r"\$¢£€¥฿"
 _quotes = CONCAT_QUOTES.replace("'", "")
+_units = UNITS.replace("%", "")
 
 _prefixes = (
     LIST_PUNCT
@@ -26,7 +27,7 @@ _suffixes = (
         r"(?<=[0-9])\+",
         r"(?<=°[FfCcKk])\.",
         r"(?<=[0-9])(?:[{c}])".format(c=_currency),
-        r"(?<=[0-9])(?:{u})".format(u=UNITS),
+        r"(?<=[0-9])(?:{u})".format(u=_units),
         r"(?<=[{al}{e}{q}(?:{c})])\.".format(
             al=ALPHA_LOWER, e=r"%²\-\+", q=CONCAT_QUOTES, c=_currency
         ),

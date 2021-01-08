@@ -1,7 +1,8 @@
 import pytest
+from spacy import registry
 from spacy.lang.en import English
 from spacy.lang.de import German
-from spacy.pipeline.defaults import default_ner
+from spacy.pipeline.ner import DEFAULT_NER_MODEL
 from spacy.pipeline import EntityRuler, EntityRecognizer
 from spacy.matcher import Matcher, PhraseMatcher
 from spacy.tokens import Doc
@@ -9,11 +10,8 @@ from spacy.vocab import Vocab
 from spacy.attrs import ENT_IOB, ENT_TYPE
 from spacy.compat import pickle
 from spacy import displacy
-from spacy.util import decaying
-import numpy
-
 from spacy.vectors import Vectors
-from ..util import get_doc
+import numpy
 
 
 def test_issue3002():
@@ -28,16 +26,16 @@ def test_issue3002():
 def test_issue3009(en_vocab):
     """Test problem with matcher quantifiers"""
     patterns = [
-        [{"LEMMA": "have"}, {"LOWER": "to"}, {"LOWER": "do"}, {"TAG": "IN"}],
+        [{"ORTH": "has"}, {"LOWER": "to"}, {"LOWER": "do"}, {"TAG": "IN"}],
         [
-            {"LEMMA": "have"},
+            {"ORTH": "has"},
             {"IS_ASCII": True, "IS_PUNCT": False, "OP": "*"},
             {"LOWER": "to"},
             {"LOWER": "do"},
             {"TAG": "IN"},
         ],
         [
-            {"LEMMA": "have"},
+            {"ORTH": "has"},
             {"IS_ASCII": True, "IS_PUNCT": False, "OP": "?"},
             {"LOWER": "to"},
             {"LOWER": "do"},
@@ -46,7 +44,8 @@ def test_issue3009(en_vocab):
     ]
     words = ["also", "has", "to", "do", "with"]
     tags = ["RB", "VBZ", "TO", "VB", "IN"]
-    doc = get_doc(en_vocab, words=words, tags=tags)
+    pos = ["ADV", "VERB", "ADP", "VERB", "ADP"]
+    doc = Doc(en_vocab, words=words, tags=tags, pos=pos)
     matcher = Matcher(en_vocab)
     for i, pattern in enumerate(patterns):
         matcher.add(str(i), [pattern])
@@ -60,19 +59,15 @@ def test_issue3012(en_vocab):
     words = ["This", "is", "10", "%", "."]
     tags = ["DT", "VBZ", "CD", "NN", "."]
     pos = ["DET", "VERB", "NUM", "NOUN", "PUNCT"]
-    ents = [(2, 4, "PERCENT")]
-    doc = get_doc(en_vocab, words=words, tags=tags, pos=pos, ents=ents)
-    assert doc.is_tagged
-
+    ents = ["O", "O", "B-PERCENT", "I-PERCENT", "O"]
+    doc = Doc(en_vocab, words=words, tags=tags, pos=pos, ents=ents)
+    assert doc.has_annotation("TAG")
     expected = ("10", "NUM", "CD", "PERCENT")
     assert (doc[2].text, doc[2].pos_, doc[2].tag_, doc[2].ent_type_) == expected
-
     header = [ENT_IOB, ENT_TYPE]
     ent_array = doc.to_array(header)
     doc.from_array(header, ent_array)
-
     assert (doc[2].text, doc[2].pos_, doc[2].tag_, doc[2].ent_type_) == expected
-
     # Serializing then deserializing
     doc_bytes = doc.to_bytes()
     doc2 = Doc(en_vocab).from_bytes(doc_bytes)
@@ -82,10 +77,10 @@ def test_issue3012(en_vocab):
 def test_issue3199():
     """Test that Span.noun_chunks works correctly if no noun chunks iterator
     is available. To make this test future-proof, we're constructing a Doc
-    with a new Vocab here and setting is_parsed to make sure the noun chunks run.
+    with a new Vocab here and a parse tree to make sure the noun chunks run.
     """
-    doc = Doc(Vocab(), words=["This", "is", "a", "sentence"])
-    doc.is_parsed = True
+    words = ["This", "is", "a", "sentence"]
+    doc = Doc(Vocab(), words=words, heads=[0] * len(words), deps=["dep"] * len(words))
     assert list(doc[0:3].noun_chunks) == []
 
 
@@ -95,19 +90,17 @@ def test_issue3209():
     were added using ner.add_label().
     """
     nlp = English()
-    ner = nlp.create_pipe("ner")
-    nlp.add_pipe(ner)
-
+    ner = nlp.add_pipe("ner")
     ner.add_label("ANIMAL")
-    nlp.begin_training()
+    nlp.initialize()
     move_names = ["O", "B-ANIMAL", "I-ANIMAL", "L-ANIMAL", "U-ANIMAL"]
     assert ner.move_names == move_names
     nlp2 = English()
-    nlp2.add_pipe(nlp2.create_pipe("ner"))
-    model = nlp2.get_pipe("ner").model
+    ner2 = nlp2.add_pipe("ner")
+    model = ner2.model
     model.attrs["resize_output"](model, ner.moves.n_moves)
     nlp2.from_bytes(nlp.to_bytes())
-    assert nlp2.get_pipe("ner").move_names == move_names
+    assert ner2.move_names == move_names
 
 
 def test_issue3248_1():
@@ -144,9 +137,9 @@ def test_issue3288(en_vocab):
     """Test that retokenization works correctly via displaCy when punctuation
     is merged onto the preceeding token and tensor is resized."""
     words = ["Hello", "World", "!", "When", "is", "this", "breaking", "?"]
-    heads = [1, 0, -1, 1, 0, 1, -2, -3]
+    heads = [1, 1, 1, 4, 4, 6, 4, 4]
     deps = ["intj", "ROOT", "punct", "advmod", "ROOT", "det", "nsubj", "punct"]
-    doc = get_doc(en_vocab, words=words, heads=heads, deps=deps)
+    doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
     doc.tensor = numpy.zeros((len(words), 96), dtype="float32")
     displacy.render(doc)
 
@@ -155,10 +148,10 @@ def test_issue3289():
     """Test that Language.to_bytes handles serializing a pipeline component
     with an uninitialized model."""
     nlp = English()
-    nlp.add_pipe(nlp.create_pipe("textcat"))
+    nlp.add_pipe("textcat")
     bytes_data = nlp.to_bytes()
     new_nlp = English()
-    new_nlp.add_pipe(nlp.create_pipe("textcat"))
+    new_nlp.add_pipe("textcat")
     new_nlp.from_bytes(bytes_data)
 
 
@@ -199,10 +192,11 @@ def test_issue3345():
     config = {
         "learn_tokens": False,
         "min_action_freq": 30,
-        "beam_width": 1,
-        "beam_update_prob": 1.0,
+        "update_with_oracle_cut_size": 100,
     }
-    ner = EntityRecognizer(doc.vocab, default_ner(), **config)
+    cfg = {"model": DEFAULT_NER_MODEL}
+    model = registry.resolve(cfg, validate=True)["model"]
+    ner = EntityRecognizer(doc.vocab, model, **config)
     # Add the OUT action. I wouldn't have thought this would be necessary...
     ner.moves.add_action(5, "")
     ner.add_label("GPE")
@@ -216,21 +210,6 @@ def test_issue3345():
     assert ner.moves.is_valid(state, "B-GPE")
 
 
-def test_issue3410():
-    texts = ["Hello world", "This is a test"]
-    nlp = English()
-    matcher = Matcher(nlp.vocab)
-    phrasematcher = PhraseMatcher(nlp.vocab)
-    with pytest.deprecated_call():
-        docs = list(nlp.pipe(texts, n_threads=4))
-    with pytest.deprecated_call():
-        docs = list(nlp.tokenizer.pipe(texts, n_threads=4))
-    with pytest.deprecated_call():
-        list(matcher.pipe(docs, n_threads=4))
-    with pytest.deprecated_call():
-        list(phrasematcher.pipe(docs, n_threads=4))
-
-
 def test_issue3412():
     data = numpy.asarray([[0, 0, 0], [1, 2, 3], [9, 8, 7]], dtype="f")
     vectors = Vectors(data=data, keys=["A", "B", "C"])
@@ -240,20 +219,10 @@ def test_issue3412():
     assert best_rows[0] == 2
 
 
-def test_issue3447():
-    sizes = decaying(10.0, 1.0, 0.5)
-    size = next(sizes)
-    assert size == 10.0
-    size = next(sizes)
-    assert size == 10.0 - 0.5
-    size = next(sizes)
-    assert size == 10.0 - 0.5 - 0.5
-
-
-@pytest.mark.xfail(reason="default suffix rules avoid one upper-case letter before dot")
+@pytest.mark.skip(reason="default suffix rules avoid one upper-case letter before dot")
 def test_issue3449():
     nlp = English()
-    nlp.add_pipe(nlp.create_pipe("sentencizer"))
+    nlp.add_pipe("sentencizer")
     text1 = "He gave the ball to I. Do you want to go to the movies with I?"
     text2 = "He gave the ball to I.  Do you want to go to the movies with I?"
     text3 = "He gave the ball to I.\nDo you want to go to the movies with I?"
@@ -265,26 +234,26 @@ def test_issue3449():
     assert t3[5].text == "I"
 
 
-@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_issue3456():
     # this crashed because of a padding error in layer.ops.unflatten in thinc
     nlp = English()
-    nlp.add_pipe(nlp.create_pipe("tagger"))
-    nlp.begin_training()
+    tagger = nlp.add_pipe("tagger")
+    tagger.add_label("A")
+    nlp.initialize()
     list(nlp.pipe(["hi", ""]))
 
 
 def test_issue3468():
-    """Test that sentence boundaries are set correctly so Doc.is_sentenced can
+    """Test that sentence boundaries are set correctly so Doc.has_annotation("SENT_START") can
     be restored after serialization."""
     nlp = English()
-    nlp.add_pipe(nlp.create_pipe("sentencizer"))
+    nlp.add_pipe("sentencizer")
     doc = nlp("Hello world")
     assert doc[0].is_sent_start
-    assert doc.is_sentenced
+    assert doc.has_annotation("SENT_START")
     assert len(list(doc.sents)) == 1
     doc_bytes = doc.to_bytes()
     new_doc = Doc(nlp.vocab).from_bytes(doc_bytes)
     assert new_doc[0].is_sent_start
-    assert new_doc.is_sentenced
+    assert new_doc.has_annotation("SENT_START")
     assert len(list(new_doc.sents)) == 1

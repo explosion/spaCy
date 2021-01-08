@@ -22,7 +22,7 @@ const Language = ({ name, code, models }) => (
         <Td>
             {models && models.length ? (
                 <Link to={`/models/${code}`}>
-                    {models.length} {models.length === 1 ? 'model' : 'models'}
+                    {models.length} {models.length === 1 ? 'package' : 'packages'}
                 </Link>
             ) : (
                 <em>none yet</em>
@@ -51,7 +51,7 @@ const Languages = () => (
                                 <Th>Language</Th>
                                 <Th>Code</Th>
                                 <Th>Language Data</Th>
-                                <Th>Models</Th>
+                                <Th>Pipelines</Th>
                             </Tr>
                         </thead>
                         <tbody>

@@ -18,7 +18,7 @@ def test_ja_tokenizer_serialize(ja_tokenizer):
         assert nlp.tokenizer.split_mode is None
 
     # split mode is (de)serialized correctly
-    nlp = Japanese(meta={"tokenizer": {"config": {"split_mode": "B"}}})
+    nlp = Japanese.from_config({"nlp": {"tokenizer": {"split_mode": "B"}}})
     nlp_r = Japanese()
     nlp_bytes = nlp.to_bytes()
     nlp_r.from_bytes(nlp_bytes)

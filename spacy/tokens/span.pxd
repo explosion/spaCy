@@ -22,5 +22,4 @@ cdef class Span:
         self.c = span
         return self
 
-    cpdef int _recalculate_indices(self) except -1
     cpdef np.ndarray to_array(self, object features)

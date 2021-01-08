@@ -15,7 +15,7 @@ def test_issue768(text, expected_tokens):
         class Defaults(Language.Defaults):
             infixes = TOKENIZER_INFIXES + [SPLIT_INFIX]
 
-    fr_tokenizer_w_infix = FrenchTest.Defaults.create_tokenizer()
+    fr_tokenizer_w_infix = FrenchTest().tokenizer
     tokens = fr_tokenizer_w_infix(text)
     assert len(tokens) == 2
     assert [t.text for t in tokens] == expected_tokens

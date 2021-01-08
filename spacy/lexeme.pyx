@@ -30,7 +30,7 @@ cdef class Lexeme:
     tag, dependency parse, or lemma (lemmatization depends on the
     part-of-speech tag).
 
-    DOCS: https://spacy.io/api/lexeme
+    DOCS: https://nightly.spacy.io/api/lexeme
     """
     def __init__(self, Vocab vocab, attr_t orth):
         """Create a Lexeme object.
@@ -251,11 +251,11 @@ cdef class Lexeme:
     property cluster:
         """RETURNS (int): Brown cluster ID."""
         def __get__(self):
-            cluster_table = self.vocab.load_extra_lookups("lexeme_cluster")
+            cluster_table = self.vocab.lookups.get_table("lexeme_cluster", {})
             return cluster_table.get(self.c.orth, 0)
 
         def __set__(self, int x):
-            cluster_table = self.vocab.load_extra_lookups("lexeme_cluster")
+            cluster_table = self.vocab.lookups.get_table("lexeme_cluster", {})
             cluster_table[self.c.orth] = x
 
     property lang:
@@ -270,13 +270,13 @@ cdef class Lexeme:
         """RETURNS (float): Smoothed log probability estimate of the lexeme's
             type."""
         def __get__(self):
-            prob_table = self.vocab.load_extra_lookups("lexeme_prob")
-            settings_table = self.vocab.load_extra_lookups("lexeme_settings")
+            prob_table = self.vocab.lookups.get_table("lexeme_prob", {})
+            settings_table = self.vocab.lookups.get_table("lexeme_settings", {})
             default_oov_prob = settings_table.get("oov_prob", -20.0)
             return prob_table.get(self.c.orth, default_oov_prob)
 
         def __set__(self, float x):
-            prob_table = self.vocab.load_extra_lookups("lexeme_prob")
+            prob_table = self.vocab.lookups.get_table("lexeme_prob", {})
             prob_table[self.c.orth] = x
 
     property lower_:
@@ -346,7 +346,7 @@ cdef class Lexeme:
     @property
     def is_oov(self):
         """RETURNS (bool): Whether the lexeme is out-of-vocabulary."""
-        return self.orth in self.vocab.vectors
+        return self.orth not in self.vocab.vectors
 
     property is_stop:
         """RETURNS (bool): Whether the lexeme is a stop word."""

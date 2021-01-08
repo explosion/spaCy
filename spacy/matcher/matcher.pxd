@@ -26,6 +26,7 @@ cdef enum quantifier_t:
     ZERO_PLUS
     ONE
     ONE_PLUS
+    FINAL_ID
 
 
 cdef struct AttrValueC:
@@ -66,6 +67,7 @@ cdef class Matcher:
     cdef public object validate
     cdef public object _patterns
     cdef public object _callbacks
+    cdef public object _filter
     cdef public object _extensions
     cdef public object _extra_predicates
     cdef public object _seen_attrs

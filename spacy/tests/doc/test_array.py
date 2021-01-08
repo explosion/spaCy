@@ -2,8 +2,6 @@ import pytest
 from spacy.tokens import Doc
 from spacy.attrs import ORTH, SHAPE, POS, DEP, MORPH
 
-from ..util import get_doc
-
 
 def test_doc_array_attr_of_token(en_vocab):
     doc = Doc(en_vocab, words=["An", "example", "sentence"])
@@ -35,7 +33,7 @@ def test_doc_scalar_attr_of_token(en_vocab):
 def test_doc_array_tag(en_vocab):
     words = ["A", "nice", "sentence", "."]
     pos = ["DET", "ADJ", "NOUN", "PUNCT"]
-    doc = get_doc(en_vocab, words=words, pos=pos)
+    doc = Doc(en_vocab, words=words, pos=pos)
     assert doc[0].pos != doc[1].pos != doc[2].pos != doc[3].pos
     feats_array = doc.to_array((ORTH, POS))
     assert feats_array[0][1] == doc[0].pos
@@ -47,10 +45,10 @@ def test_doc_array_tag(en_vocab):
 def test_doc_array_morph(en_vocab):
     words = ["Eat", "blue", "ham"]
     morph = ["Feat=V", "Feat=J", "Feat=N"]
-    doc = get_doc(en_vocab, words=words, morphs=morph)
-    assert morph[0] == doc[0].morph_
-    assert morph[1] == doc[1].morph_
-    assert morph[2] == doc[2].morph_
+    doc = Doc(en_vocab, words=words, morphs=morph)
+    assert morph[0] == str(doc[0].morph)
+    assert morph[1] == str(doc[1].morph)
+    assert morph[2] == str(doc[2].morph)
 
     feats_array = doc.to_array((ORTH, MORPH))
     assert feats_array[0][1] == doc[0].morph.key
@@ -61,7 +59,7 @@ def test_doc_array_morph(en_vocab):
 def test_doc_array_dep(en_vocab):
     words = ["A", "nice", "sentence", "."]
     deps = ["det", "amod", "ROOT", "punct"]
-    doc = get_doc(en_vocab, words=words, deps=deps)
+    doc = Doc(en_vocab, words=words, deps=deps)
     feats_array = doc.to_array((ORTH, DEP))
     assert feats_array[0][1] == doc[0].dep
     assert feats_array[1][1] == doc[1].dep

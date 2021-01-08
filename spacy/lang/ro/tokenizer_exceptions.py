@@ -1,4 +1,6 @@
+from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...symbols import ORTH
+from ...util import update_exc
 from .punctuation import _make_ro_variants
 
 
@@ -91,4 +93,4 @@ for orth in [
         _exc[variant] = [{ORTH: variant}]
 
 
-TOKENIZER_EXCEPTIONS = _exc
+TOKENIZER_EXCEPTIONS = update_exc(BASE_EXCEPTIONS, _exc)

@@ -4,7 +4,7 @@ teaser: Visualize dependencies and entities in your browser or in a notebook
 new: 2
 menu:
   - ['Dependencies', 'dep']
-  - ['Entities', 'ent']
+  - ['Named Entities', 'ent']
   - ['Jupyter Notebooks', 'jupyter']
   - ['Rendering HTML', 'html']
   - ['Web app usage', 'webapp']
@@ -23,10 +23,10 @@ The quickest way to visualize `Doc` is to use
 [`displacy.serve`](/api/top-level#displacy.serve). This will spin up a simple
 web server and let you view the result straight from your browser. displaCy can
 either take a single `Doc` or a list of `Doc` objects as its first argument.
-This lets you construct them however you like – using any model or modifications
-you like. If you're using [Streamlit](https://streamlit.io), check out the
-[`spacy-streamlit`](https://github.com/explosion/spacy-streamlit) package that
-helps you integrate spaCy visualizations into your apps!
+This lets you construct them however you like – using any pipeline or
+modifications you like. If you're using [Streamlit](https://streamlit.io), check
+out the [`spacy-streamlit`](https://github.com/explosion/spacy-streamlit)
+package that helps you integrate spaCy visualizations into your apps!
 
 ## Visualizing the dependency parse {#dep}
 
@@ -58,12 +58,12 @@ arcs.
 
 </Infobox>
 
-| Argument  | Type | Description                                                 | Default     |
-| --------- | ---- | ----------------------------------------------------------- | ----------- |
-| `compact` | bool | "Compact mode" with square arrows that takes up less space. | `False`     |
-| `color`   | str  | Text color (HEX, RGB or color names).                       | `"#000000"` |
-| `bg`      | str  | Background color (HEX, RGB or color names).                 | `"#ffffff"` |
-| `font`    | str  | Font name or font family for all text.                      | `"Arial"`   |
+| Argument  | Description                                                                               |
+| --------- | ----------------------------------------------------------------------------------------- |
+| `compact` | "Compact mode" with square arrows that takes up less space. Defaults to `False`. ~~bool~~ |
+| `color`   | Text color (HEX, RGB or color names). Defaults to `"#000000"`. ~~str~~                    |
+| `bg`      | Background color (HEX, RGB or color names). Defaults to `"#ffffff"`. ~~str~~              |
+| `font`    | Font name or font family for all text. Defaults to `"Arial"`. ~~str~~                     |
 
 For a list of all available options, see the
 [`displacy` API documentation](/api/top-level#displacy_options).
@@ -121,19 +121,18 @@ import DisplacyEntHtml from 'images/displacy-ent2.html'
 
 The entity visualizer lets you customize the following `options`:
 
-| Argument | Type | Description                                                                           | Default |
-| -------- | ---- | ------------------------------------------------------------------------------------- | ------- |
-| `ents`   | list |  Entity types to highlight (`None` for all types).                                    | `None`  |
-| `colors` | dict | Color overrides. Entity types in uppercase should be mapped to color names or values. | `{}`    |
+| Argument | Description                                                                                                   |
+| -------- | ------------------------------------------------------------------------------------------------------------- |
+| `ents`   | Entity types to highlight (`None` for all types). Defaults to `None`. ~~Optional[List[str]]~~                 | `None` |
+| `colors` | Color overrides. Entity types should be mapped to color names or values. Defaults to `{}`. ~~Dict[str, str]~~ |
 
 If you specify a list of `ents`, only those entity types will be rendered – for
 example, you can choose to display `PERSON` entities. Internally, the visualizer
 knows nothing about available entity types and will render whichever spans and
 labels it receives. This makes it especially easy to work with custom entity
-types. By default, displaCy comes with colors for all
-[entity types supported by spaCy](/api/annotation#named-entities). If you're
-using custom entity types, you can use the `colors` setting to add your own
-colors for them.
+types. By default, displaCy comes with colors for all entity types used by
+[trained spaCy pipelines](/models). If you're using custom entity types, you can
+use the `colors` setting to add your own colors for them.
 
 > #### Options example
 >
@@ -150,7 +149,7 @@ import DisplacyEntCustomHtml from 'images/displacy-ent-custom.html'
 The above example uses a little trick: Since the background color values are
 added as the `background` style attribute, you can use any
 [valid background value](https://tympanus.net/codrops/css_reference/background/)
-or shorthand — including gradients and even images!
+or shorthand – including gradients and even images!
 
 ### Adding titles to documents {#ent-titles}
 
@@ -177,7 +176,7 @@ visualizations will be included as HTML.
 
 ```python
 ### Jupyter example
-# Don't forget to install a model, e.g.: python -m spacy download en
+# Don't forget to install a trained pipeline, e.g.: python -m spacy download en
 
 # In[1]:
 import spacy
@@ -258,7 +257,7 @@ output_path.open("w", encoding="utf-8").write(svg)
 Since each visualization is generated as a separate SVG, exporting `.svg` files
 only works if you're rendering **one single doc** at a time. (This makes sense –
 after all, each visualization should be a standalone graphic.) So instead of
-rendering all `Doc`s at one, loop over them and export them separately.
+rendering all `Doc`s at once, loop over them and export them separately.
 
 </Infobox>
 
@@ -357,6 +356,6 @@ Alternatively, if you're using [Streamlit](https://streamlit.io), check out the
 helps you integrate spaCy visualizations into your apps. It includes a full
 embedded visualizer, as well as individual components.
 
-![](../images/spacy-streamlit.png)]
+![](../images/spacy-streamlit.png)
 
 </Grid>

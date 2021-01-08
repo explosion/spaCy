@@ -1,6 +1,11 @@
 const autoprefixer = require('autoprefixer')
 const path = require('path')
 
+// https://florian.ec/blog/gatsby-build-netlify-segmentation-fault/
+const sharp = require('sharp')
+sharp.cache(false)
+sharp.simd(false)
+
 // Markdown plugins
 const wrapSectionPlugin = require('./src/plugins/remark-wrap-section.js')
 const customAttrsPlugin = require('./src/plugins/remark-custom-attrs.js')
@@ -8,7 +13,6 @@ const codeBlocksPlugin = require('./src/plugins/remark-code-blocks.js')
 
 // Import metadata
 const site = require('./meta/site.json')
-const logos = require('./meta/logos.json')
 const sidebars = require('./meta/sidebars.json')
 const models = require('./meta/languages.json')
 const universe = require('./meta/universe.json')
@@ -19,13 +23,34 @@ const isNightly = !!+process.env.SPACY_NIGHTLY || site.nightlyBranches.includes(
 const favicon = isNightly ? `src/images/icon_nightly.png` : `src/images/icon.png`
 const binderBranch = isNightly ? 'nightly' : site.binderBranch
 const siteUrl = isNightly ? site.siteUrlNightly : site.siteUrl
+const domain = isNightly ? site.domainNightly : site.domain
+const branch = isNightly ? 'develop' : 'master'
+
+// Those variables are going to be replaced in the Markdown, e.g. %%GITHUB_SPACY
+const replacements = {
+    GITHUB_SPACY: `https://github.com/explosion/spaCy/tree/${branch}`,
+    GITHUB_PROJECTS: `https://github.com/${site.projectsRepo}`,
+    SPACY_PKG_NAME: isNightly ? 'spacy-nightly' : 'spacy',
+    SPACY_PKG_FLAGS: isNightly ? ' --pre' : '',
+}
+
+/**
+ * Compute the overall total counts of models and languages
+ */
+function getCounts(langs = []) {
+    return {
+        langs: langs.length,
+        modelLangs: langs.filter(({ models }) => models && !!models.length).length,
+        models: langs.map(({ models }) => (models ? models.length : 0)).reduce((a, b) => a + b, 0),
+    }
+}
 
 module.exports = {
     siteMetadata: {
         ...site,
-        ...logos,
         sidebars,
         ...models,
+        counts: getCounts(models.languages),
         universe,
         nightly: isNightly,
         binderBranch,
@@ -120,6 +145,13 @@ module.exports = {
                     {
                         resolve: `gatsby-remark-copy-linked-files`,
                     },
+                    {
+                        resolve: 'gatsby-remark-find-replace',
+                        options: {
+                            replacements,
+                            prefix: '%%',
+                        },
+                    },
                 ],
             },
         },
@@ -140,13 +172,8 @@ module.exports = {
             },
         },
         {
-            resolve: `gatsby-plugin-google-analytics`,
-            options: {
-                trackingId: site.analytics,
-                head: false,
-                anonymize: true,
-                respectDNT: true,
-            },
+            resolve: `gatsby-plugin-plausible`,
+            options: { domain },
         },
         {
             resolve: 'gatsby-plugin-robots-txt',
@@ -160,7 +187,10 @@ module.exports = {
                         policy: [{ userAgent: '*', allow: '/' }],
                     },
                     development: {
-                        policy: [{ userAgent: '*', disallow: ['/'] }],
+                        policy: [
+                            { userAgent: '*', disallow: ['/'] },
+                            { userAgent: 'Twitterbot', allow: '/' },
+                        ],
                     },
                 },
             },

@@ -1,12 +1,14 @@
 import pytest
 
-from spacy.gold import Example
-from spacy.pipeline.defaults import default_parser, default_tok2vec
+from spacy import registry
+from spacy.training import Example
 from spacy.vocab import Vocab
-from spacy.syntax.arc_eager import ArcEager
-from spacy.syntax.nn_parser import Parser
+from spacy.pipeline._parser_internals.arc_eager import ArcEager
+from spacy.pipeline.transition_parser import Parser
 from spacy.tokens.doc import Doc
 from thinc.api import Model
+from spacy.pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
+from spacy.pipeline.dep_parser import DEFAULT_PARSER_MODEL
 
 
 @pytest.fixture
@@ -22,7 +24,8 @@ def arc_eager(vocab):
 
 @pytest.fixture
 def tok2vec():
-    tok2vec = default_tok2vec()
+    cfg = {"model": DEFAULT_TOK2VEC_MODEL}
+    tok2vec = registry.resolve(cfg, validate=True)["model"]
     tok2vec.initialize()
     return tok2vec
 
@@ -32,15 +35,17 @@ def parser(vocab, arc_eager):
     config = {
         "learn_tokens": False,
         "min_action_freq": 30,
-        "beam_width": 1,
-        "beam_update_prob": 1.0,
+        "update_with_oracle_cut_size": 100,
     }
-    return Parser(vocab, model=default_parser(), moves=arc_eager, **config)
+    cfg = {"model": DEFAULT_PARSER_MODEL}
+    model = registry.resolve(cfg, validate=True)["model"]
+    return Parser(vocab, model, moves=arc_eager, **config)
 
 
 @pytest.fixture
 def model(arc_eager, tok2vec, vocab):
-    model = default_parser()
+    cfg = {"model": DEFAULT_PARSER_MODEL}
+    model = registry.resolve(cfg, validate=True)["model"]
     model.attrs["resize_output"](model, arc_eager.n_moves)
     model.initialize()
     return model
@@ -61,7 +66,14 @@ def test_can_init_nn_parser(parser):
 
 
 def test_build_model(parser, vocab):
-    parser.model = Parser(vocab, model=default_parser(), moves=parser.moves).model
+    config = {
+        "learn_tokens": False,
+        "min_action_freq": 0,
+        "update_with_oracle_cut_size": 100,
+    }
+    cfg = {"model": DEFAULT_PARSER_MODEL}
+    model = registry.resolve(cfg, validate=True)["model"]
+    parser.model = Parser(vocab, model=model, moves=parser.moves, **config).model
     assert parser.model is not None
 
 
@@ -82,13 +94,13 @@ def test_update_doc(parser, model, doc, gold):
     parser.update([example], sgd=optimize)
 
 
-@pytest.mark.xfail
+@pytest.mark.skip(reason="No longer supported")
 def test_predict_doc_beam(parser, model, doc):
     parser.model = model
     parser(doc, beam_width=32, beam_density=0.001)
 
 
-@pytest.mark.xfail
+@pytest.mark.skip(reason="No longer supported")
 def test_update_doc_beam(parser, model, doc, gold):
     parser.model = model
 

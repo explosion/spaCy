@@ -4,7 +4,14 @@ import classNames from 'classnames'
 
 import classes from '../styles/grid.module.sass'
 
-const Grid = ({ cols, narrow, gutterBottom, className, children }) => {
+export default function Grid({
+    cols = 1,
+    narrow = false,
+    gutterBottom = true,
+    className,
+    style,
+    children,
+}) {
     const gridClassNames = classNames(classes.root, className, {
         [classes.narrow]: narrow,
         [classes.spacing]: gutterBottom,
@@ -12,13 +19,11 @@ const Grid = ({ cols, narrow, gutterBottom, className, children }) => {
         [classes.third]: cols === 3,
         [classes.quarter]: cols === 4,
     })
-    return <div className={gridClassNames}>{children}</div>
-}
-
-Grid.defaultProps = {
-    cols: 1,
-    narrow: false,
-    gutterBottom: true,
+    return (
+        <div className={gridClassNames} style={style}>
+            {children}
+        </div>
+    )
 }
 
 Grid.propTypes = {
@@ -26,5 +31,3 @@ Grid.propTypes = {
     narrow: PropTypes.bool,
     gutterBottom: PropTypes.bool,
 }
-
-export default Grid

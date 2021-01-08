@@ -4,7 +4,7 @@ import copy
 from ..errors import Errors
 
 
-class Underscore(object):
+class Underscore:
     mutable_types = (dict, list, set)
     doc_extensions = {}
     span_extensions = {}

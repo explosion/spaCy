@@ -1,5 +1,4 @@
 from .stop_words import STOP_WORDS
-
 from ...language import Language
 
 

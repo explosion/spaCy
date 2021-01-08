@@ -59,3 +59,12 @@ def test_minimal_pattern_validation(en_vocab, pattern, n_errors, n_min_errors):
             matcher.add("TEST", [pattern])
     elif n_errors == 0:
         matcher.add("TEST", [pattern])
+
+
+def test_pattern_errors(en_vocab):
+    matcher = Matcher(en_vocab)
+    # normalize "regex" to upper like "text"
+    matcher.add("TEST1", [[{"text": {"regex": "regex"}}]])
+    # error if subpattern attribute isn't recognized and processed
+    with pytest.raises(MatchPatternError):
+        matcher.add("TEST2", [[{"TEXT": {"XX": "xx"}}]])

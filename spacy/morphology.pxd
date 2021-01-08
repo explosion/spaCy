@@ -20,18 +20,12 @@ cdef class Morphology:
     cdef readonly object tag_map
     cdef readonly object tag_names
     cdef readonly object reverse_index
-    cdef readonly object exc
+    cdef readonly object _exc
     cdef readonly PreshMapArray _cache
     cdef readonly int n_tags
 
     cdef MorphAnalysisC create_morph_tag(self, field_feature_pairs) except *
     cdef int insert(self, MorphAnalysisC tag) except -1
-
-    cdef int assign_untagged(self, TokenC* token) except -1
-    cdef int assign_tag(self, TokenC* token, tag) except -1
-    cdef int assign_tag_id(self, TokenC* token, int tag_id) except -1
-
-    cdef int _assign_tag_from_exceptions(self, TokenC* token, int tag_id) except -1
 
 
 cdef int check_feature(const MorphAnalysisC* morph, attr_t feature) nogil

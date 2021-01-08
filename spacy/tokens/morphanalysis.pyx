@@ -2,6 +2,7 @@ from libc.string cimport memset
 cimport numpy as np
 
 from ..errors import Errors
+from ..morphology import Morphology
 from ..vocab cimport Vocab
 from ..typedefs cimport hash_t, attr_t
 from ..morphology cimport list_features, check_feature, get_by_field
@@ -58,10 +59,11 @@ cdef class MorphAnalysis:
         return self.key != other.key
 
     def get(self, field):
-        """Retrieve a feature by field."""
+        """Retrieve feature values by field."""
         cdef attr_t field_id = self.vocab.strings.as_int(field)
         cdef np.ndarray results = get_by_field(&self.c, field_id)
-        return [self.vocab.strings[result] for result in results]
+        features = [self.vocab.strings[result] for result in results]
+        return [f.split(Morphology.FIELD_SEP)[1] for f in features]
 
     def to_json(self):
         """Produce a json serializable representation as a UD FEATS-style

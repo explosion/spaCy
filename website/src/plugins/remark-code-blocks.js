@@ -38,7 +38,10 @@ function remarkCodeBlocks(userOptions = {}) {
                     }
                     // Overwrite the code text with the rest of the lines
                     node.value = lines.slice(1).join('\n')
-                } else if (firstLine && /^https:\/\/github.com/.test(firstLine)) {
+                } else if (
+                    (firstLine && /^https:\/\/github.com/.test(firstLine)) ||
+                    firstLine.startsWith('%%GITHUB_')
+                ) {
                     // GitHub URL
                     attrs.github = 'true'
                 }

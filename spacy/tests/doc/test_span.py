@@ -4,19 +4,17 @@ from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
 from spacy.util import filter_spans
 
-from ..util import get_doc
-
 
 @pytest.fixture
 def doc(en_tokenizer):
     # fmt: off
     text = "This is a sentence. This is another sentence. And a third."
-    heads = [1, 0, 1, -2, -3, 1, 0, 1, -2, -3, 0, 1, -2, -1]
+    heads = [1, 1, 3, 1, 1, 6, 6, 8, 6, 6, 12, 12, 12, 12]
     deps = ["nsubj", "ROOT", "det", "attr", "punct", "nsubj", "ROOT", "det",
             "attr", "punct", "ROOT", "det", "npadvmod", "punct"]
     # fmt: on
     tokens = en_tokenizer(text)
-    return get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
+    return Doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
 
 
 @pytest.fixture
@@ -24,7 +22,6 @@ def doc_not_parsed(en_tokenizer):
     text = "This is a sentence. This is another sentence. And a third."
     tokens = en_tokenizer(text)
     doc = Doc(tokens.vocab, words=[t.text for t in tokens])
-    doc.is_parsed = False
     return doc
 
 
@@ -66,15 +63,14 @@ def test_spans_string_fn(doc):
     span = doc[0:4]
     assert len(span) == 4
     assert span.text == "This is a sentence"
-    assert span.upper_ == "THIS IS A SENTENCE"
-    assert span.lower_ == "this is a sentence"
 
 
 def test_spans_root2(en_tokenizer):
     text = "through North and South Carolina"
-    heads = [0, 3, -1, -2, -4]
+    heads = [0, 4, 1, 1, 0]
+    deps = ["dep"] * len(heads)
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
+    doc = Doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
     assert doc[-2:].root.text == "Carolina"
 
 
@@ -94,7 +90,12 @@ def test_spans_span_sent(doc, doc_not_parsed):
 def test_spans_lca_matrix(en_tokenizer):
     """Test span's lca matrix generation"""
     tokens = en_tokenizer("the lazy dog slept")
-    doc = get_doc(tokens.vocab, words=[t.text for t in tokens], heads=[2, 1, 1, 0])
+    doc = Doc(
+        tokens.vocab,
+        words=[t.text for t in tokens],
+        heads=[2, 2, 3, 3],
+        deps=["dep"] * 4,
+    )
     lca = doc[:2].get_lca_matrix()
     assert lca.shape == (2, 2)
     assert lca[0, 0] == 0  # the & the -> the
@@ -164,7 +165,32 @@ def test_spans_are_hashable(en_tokenizer):
 
 def test_spans_by_character(doc):
     span1 = doc[1:-2]
+
+    # default and specified alignment mode "strict"
     span2 = doc.char_span(span1.start_char, span1.end_char, label="GPE")
+    assert span1.start_char == span2.start_char
+    assert span1.end_char == span2.end_char
+    assert span2.label_ == "GPE"
+
+    span2 = doc.char_span(
+        span1.start_char, span1.end_char, label="GPE", alignment_mode="strict"
+    )
+    assert span1.start_char == span2.start_char
+    assert span1.end_char == span2.end_char
+    assert span2.label_ == "GPE"
+
+    # alignment mode "contract"
+    span2 = doc.char_span(
+        span1.start_char - 3, span1.end_char, label="GPE", alignment_mode="contract"
+    )
+    assert span1.start_char == span2.start_char
+    assert span1.end_char == span2.end_char
+    assert span2.label_ == "GPE"
+
+    # alignment mode "expand"
+    span2 = doc.char_span(
+        span1.start_char + 1, span1.end_char, label="GPE", alignment_mode="expand"
+    )
     assert span1.start_char == span2.start_char
     assert span1.end_char == span2.end_char
     assert span2.label_ == "GPE"
@@ -284,3 +310,23 @@ def test_span_eq_hash(doc, doc_not_parsed):
     assert hash(doc[0:2]) == hash(doc[0:2])
     assert hash(doc[0:2]) != hash(doc[1:3])
     assert hash(doc[0:2]) != hash(doc_not_parsed[0:2])
+
+
+def test_span_boundaries(doc):
+    start = 1
+    end = 5
+    span = doc[start:end]
+    for i in range(start, end):
+        assert span[i - start] == doc[i]
+    with pytest.raises(IndexError):
+        span[-5]
+    with pytest.raises(IndexError):
+        span[5]
+
+
+def test_sent(en_tokenizer):
+    doc = en_tokenizer("Check span.sent raises error if doc is not sentencized.")
+    span = doc[1:3]
+    assert not span.doc.has_annotation("SENT_START")
+    with pytest.raises(ValueError):
+        span.sent

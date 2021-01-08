@@ -3,6 +3,8 @@ redirects = [
     {from = "https://spacy.netlify.com/*", to="https://spacy.io/:splat", force = true },
     # Subdomain for branches
     {from = "https://nightly.spacy.io/*", to="https://nightly-spacy-io.spacy.io/:splat", force = true, status = 200},
+    # TODO: update this with the v2 branch build once v3 is live (status = 200)
+    {from = "https://v2.spacy.io/*", to="https://spacy.io/:splat", force = true},
     # Old subdomains
     {from = "https://survey.spacy.io/*", to = "https://spacy.io", force = true},
     {from = "http://survey.spacy.io/*", to = "https://spacy.io", force = true},
@@ -24,7 +26,7 @@ redirects = [
     {from = "/docs/usage/customizing-tokenizer", to = "/usage/linguistic-features#tokenization", force = true},
     {from = "/docs/usage/language-processing-pipeline", to = "/usage/processing-pipelines", force = true},
     {from = "/docs/usage/customizing-pipeline", to = "/usage/processing-pipelines", force = true},
-    {from = "/docs/usage/training-ner", to = "/usage/training#ner", force = true},
+    {from = "/docs/usage/training-ner", to = "/usage/training", force = true},
     {from = "/docs/usage/tutorials", to = "/usage/examples", force = true},
     {from = "/docs/usage/data-model", to = "/api", force = true},
     {from = "/docs/usage/cli", to = "/api/cli", force = true},
@@ -36,10 +38,15 @@ redirects = [
     {from = "/docs/api/features", to = "/models/#architecture", force = true},
     {from = "/docs/api/philosophy", to = "/usage/spacy-101", force = true},
     {from = "/docs/usage/showcase", to = "/universe", force = true},
-    {from = "/tutorials/load-new-word-vectors", to = "/usage/vectors-similarity#custom", force = true},
+    {from = "/tutorials/load-new-word-vectors", to = "/usage/linguistic-features", force = true},
     {from = "/tutorials", to = "/usage/examples", force = true},
     # Old documentation pages (v2.x)
     {from = "/usage/adding-languages", to = "/usage/linguistic-features", force = true},
+    {from = "/usage/vectors-similarity", to = "/usage/linguistic-features#vectors-similarity", force = true},
+    {from = "/api/goldparse", to = "/api/top-level", force = true},
+    {from = "/api/goldcorpus", to = "/api/corpus", force = true},
+    {from = "/api/annotation", to = "/api/data-formats", force = true},
+    {from = "/usage/examples", to = "/usage/projects", force = true},
     # Rewrite all other docs pages to /
     {from = "/docs/*", to = "/:splat"},
     # Updated documentation pages
@@ -53,5 +60,7 @@ redirects = [
     {from = "/universe", to = "/universe/project/:id", query = {id = ":id"}, force = true},
     {from = "/universe", to = "/universe/category/:category", query = {category = ":category"}, force = true},
     # Renamed universe projects
-    {from = "/universe/project/spacy-pytorch-transformers", to = "/universe/project/spacy-transformers", force = true}
+    {from = "/universe/project/spacy-pytorch-transformers", to = "/universe/project/spacy-transformers", force = true},
+    # Old model pages
+    {from = "/models/en-starters", to = "/models/en", force = true},
 ]

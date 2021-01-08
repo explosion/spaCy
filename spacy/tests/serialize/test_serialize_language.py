@@ -62,7 +62,3 @@ def test_serialize_language_exclude(meta_data):
     assert not new_nlp.meta["name"] == name
     new_nlp = Language().from_bytes(nlp.to_bytes(exclude=["meta"]))
     assert not new_nlp.meta["name"] == name
-    with pytest.raises(ValueError):
-        nlp.to_bytes(meta=False)
-    with pytest.raises(ValueError):
-        Language().from_bytes(nlp.to_bytes(), meta=False)

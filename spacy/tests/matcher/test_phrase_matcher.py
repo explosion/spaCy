@@ -2,8 +2,7 @@ import pytest
 import srsly
 from mock import Mock
 from spacy.matcher import PhraseMatcher
-from spacy.tokens import Doc
-from ..util import get_doc
+from spacy.tokens import Doc, Span
 
 
 def test_matcher_phrase_matcher(en_vocab):
@@ -140,10 +139,10 @@ def test_phrase_matcher_string_attrs(en_vocab):
     pos1 = ["PRON", "VERB", "NOUN"]
     words2 = ["Yes", ",", "you", "hate", "dogs", "very", "much"]
     pos2 = ["INTJ", "PUNCT", "PRON", "VERB", "NOUN", "ADV", "ADV"]
-    pattern = get_doc(en_vocab, words=words1, pos=pos1)
+    pattern = Doc(en_vocab, words=words1, pos=pos1)
     matcher = PhraseMatcher(en_vocab, attr="POS")
     matcher.add("TEST", [pattern])
-    doc = get_doc(en_vocab, words=words2, pos=pos2)
+    doc = Doc(en_vocab, words=words2, pos=pos2)
     matches = matcher(doc)
     assert len(matches) == 1
     match_id, start, end = matches[0]
@@ -158,10 +157,10 @@ def test_phrase_matcher_string_attrs_negative(en_vocab):
     pos1 = ["PRON", "VERB", "NOUN"]
     words2 = ["matcher:POS-PRON", "matcher:POS-VERB", "matcher:POS-NOUN"]
     pos2 = ["X", "X", "X"]
-    pattern = get_doc(en_vocab, words=words1, pos=pos1)
+    pattern = Doc(en_vocab, words=words1, pos=pos1)
     matcher = PhraseMatcher(en_vocab, attr="POS")
     matcher.add("TEST", [pattern])
-    doc = get_doc(en_vocab, words=words2, pos=pos2)
+    doc = Doc(en_vocab, words=words2, pos=pos2)
     matches = matcher(doc)
     assert len(matches) == 0
 
@@ -187,9 +186,11 @@ def test_phrase_matcher_bool_attrs(en_vocab):
 
 def test_phrase_matcher_validation(en_vocab):
     doc1 = Doc(en_vocab, words=["Test"])
-    doc1.is_parsed = True
+    doc1[0].dep_ = "ROOT"
     doc2 = Doc(en_vocab, words=["Test"])
-    doc2.is_tagged = True
+    doc2[0].tag_ = "TAG"
+    doc2[0].pos_ = "X"
+    doc2[0].set_morph("Feat=Val")
     doc3 = Doc(en_vocab, words=["Test"])
     matcher = PhraseMatcher(en_vocab, validate=True)
     with pytest.warns(UserWarning):
@@ -212,18 +213,21 @@ def test_attr_validation(en_vocab):
 
 def test_attr_pipeline_checks(en_vocab):
     doc1 = Doc(en_vocab, words=["Test"])
-    doc1.is_parsed = True
+    doc1[0].dep_ = "ROOT"
     doc2 = Doc(en_vocab, words=["Test"])
-    doc2.is_tagged = True
+    doc2[0].tag_ = "TAG"
+    doc2[0].pos_ = "X"
+    doc2[0].set_morph("Feat=Val")
+    doc2[0].lemma_ = "LEMMA"
     doc3 = Doc(en_vocab, words=["Test"])
-    # DEP requires is_parsed
+    # DEP requires DEP
     matcher = PhraseMatcher(en_vocab, attr="DEP")
     matcher.add("TEST1", [doc1])
     with pytest.raises(ValueError):
         matcher.add("TEST2", [doc2])
     with pytest.raises(ValueError):
         matcher.add("TEST3", [doc3])
-    # TAG, POS, LEMMA require is_tagged
+    # TAG, POS, LEMMA require those values
     for attr in ("TAG", "POS", "LEMMA"):
         matcher = PhraseMatcher(en_vocab, attr=attr)
         matcher.add("TEST2", [doc2])
@@ -287,3 +291,30 @@ def test_phrase_matcher_pickle(en_vocab):
     # clunky way to vaguely check that callback is unpickled
     (vocab, docs, callbacks, attr) = matcher_unpickled.__reduce__()[1]
     assert isinstance(callbacks.get("TEST2"), Mock)
+
+
+def test_phrase_matcher_as_spans(en_vocab):
+    """Test the new as_spans=True API."""
+    matcher = PhraseMatcher(en_vocab)
+    matcher.add("A", [Doc(en_vocab, words=["hello", "world"])])
+    matcher.add("B", [Doc(en_vocab, words=["test"])])
+    doc = Doc(en_vocab, words=["...", "hello", "world", "this", "is", "a", "test"])
+    matches = matcher(doc, as_spans=True)
+    assert len(matches) == 2
+    assert isinstance(matches[0], Span)
+    assert matches[0].text == "hello world"
+    assert matches[0].label_ == "A"
+    assert isinstance(matches[1], Span)
+    assert matches[1].text == "test"
+    assert matches[1].label_ == "B"
+
+
+def test_phrase_matcher_deprecated(en_vocab):
+    matcher = PhraseMatcher(en_vocab)
+    matcher.add("TEST", [Doc(en_vocab, words=["helllo"])])
+    doc = Doc(en_vocab, words=["hello", "world"])
+    with pytest.warns(DeprecationWarning) as record:
+        for _ in matcher.pipe([doc]):
+            pass
+        assert record.list
+        assert "spaCy v3.0" in str(record.list[0].message)

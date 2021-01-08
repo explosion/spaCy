@@ -1,52 +1,67 @@
-from typing import Optional, List, Sequence, Dict, Any, Tuple
+from typing import List, Sequence, Dict, Any, Tuple, Optional
 from pathlib import Path
 from collections import Counter
 import sys
 import srsly
-from wasabi import Printer, MESSAGES
+from wasabi import Printer, MESSAGES, msg
+import typer
 
-from ._app import app, Arg, Opt
-from ..gold import Corpus, Example
-from ..syntax import nonproj
+from ._util import app, Arg, Opt, show_validation_error, parse_config_overrides
+from ._util import import_code, debug_cli
+from ..training import Example
+from ..training.initialize import get_sourced_components
+from ..schemas import ConfigSchemaTraining
+from ..pipeline._parser_internals import nonproj
 from ..language import Language
-from ..util import load_model, get_lang_class
+from ..util import registry, resolve_dot_names
+from .. import util
 
 
 # Minimum number of expected occurrences of NER label in data to train new label
 NEW_LABEL_THRESHOLD = 50
 # Minimum number of expected occurrences of dependency labels
 DEP_LABEL_THRESHOLD = 20
-# Minimum number of expected examples to train a blank model
+# Minimum number of expected examples to train a new pipeline
 BLANK_MODEL_MIN_THRESHOLD = 100
 BLANK_MODEL_THRESHOLD = 2000
 
 
-@app.command("debug-data")
+@debug_cli.command(
+    "data", context_settings={"allow_extra_args": True, "ignore_unknown_options": True}
+)
+@app.command(
+    "debug-data",
+    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+    hidden=True,  # hide this from main CLI help but still allow it to work with warning
+)
 def debug_data_cli(
     # fmt: off
-    lang: str = Arg(..., help="Model language"),
-    train_path: Path = Arg(..., help="Location of JSON-formatted training data", exists=True),
-    dev_path: Path = Arg(..., help="Location of JSON-formatted development data", exists=True),
-    tag_map_path: Optional[Path] = Opt(None, "--tag-map-path", "-tm", help="Location of JSON-formatted tag map", exists=True, dir_okay=False),
-    base_model: Optional[str] = Opt(None, "--base-model", "-b", help="Name of model to update (optional)"),
-    pipeline: str = Opt("tagger,parser,ner", "--pipeline", "-p", help="Comma-separated names of pipeline components to train"),
+    ctx: typer.Context,  # This is only used to read additional arguments
+    config_path: Path = Arg(..., help="Path to config file", exists=True, allow_dash=True),
+    code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     ignore_warnings: bool = Opt(False, "--ignore-warnings", "-IW", help="Ignore warnings, only show stats and errors"),
     verbose: bool = Opt(False, "--verbose", "-V", help="Print additional information and explanations"),
     no_format: bool = Opt(False, "--no-format", "-NF", help="Don't pretty-print the results"),
     # fmt: on
 ):
     """
-    Analyze, debug and validate your training and development data, get useful
-    stats, and find problems like invalid entity annotations, cyclic
-    dependencies, low data labels and more.
+    Analyze, debug and validate your training and development data. Outputs
+    useful stats, and can help you find problems like invalid entity annotations,
+    cyclic dependencies, low data labels and more.
+
+    DOCS: https://nightly.spacy.io/api/cli#debug-data
     """
+    if ctx.command.name == "debug-data":
+        msg.warn(
+            "The debug-data command is now available via the 'debug data' "
+            "subcommand (without the hyphen). You can run python -m spacy debug "
+            "--help for an overview of the other available debugging commands."
+        )
+    overrides = parse_config_overrides(ctx.args)
+    import_code(code_path)
     debug_data(
-        lang,
-        train_path,
-        dev_path,
-        tag_map_path=tag_map_path,
-        base_model=base_model,
-        pipeline=[p.strip() for p in pipeline.split(",")],
+        config_path,
+        config_overrides=overrides,
         ignore_warnings=ignore_warnings,
         verbose=verbose,
         no_format=no_format,
@@ -55,13 +70,9 @@ def debug_data_cli(
 
 
 def debug_data(
-    lang: str,
-    train_path: Path,
-    dev_path: Path,
+    config_path: Path,
     *,
-    tag_map_path: Optional[Path] = None,
-    base_model: Optional[str] = None,
-    pipeline: List[str] = ["tagger", "parser", "ner"],
+    config_overrides: Dict[str, Any] = {},
     ignore_warnings: bool = False,
     verbose: bool = False,
     no_format: bool = True,
@@ -71,67 +82,47 @@ def debug_data(
         no_print=silent, pretty=not no_format, ignore_warnings=ignore_warnings
     )
     # Make sure all files and paths exists if they are needed
-    if not train_path.exists():
-        msg.fail("Training data not found", train_path, exits=1)
-    if not dev_path.exists():
-        msg.fail("Development data not found", dev_path, exits=1)
-
-    tag_map = {}
-    if tag_map_path is not None:
-        tag_map = srsly.read_json(tag_map_path)
-
-    # Initialize the model and pipeline
-    if base_model:
-        nlp = load_model(base_model)
-    else:
-        lang_cls = get_lang_class(lang)
-        nlp = lang_cls()
-    # Update tag map with provided mapping
-    nlp.vocab.morphology.tag_map.update(tag_map)
-
-    msg.divider("Data format validation")
-
-    # TODO: Validate data format using the JSON schema
-    # TODO: update once the new format is ready
-    # TODO: move validation to GoldCorpus in order to be able to load from dir
+    with show_validation_error(config_path):
+        cfg = util.load_config(config_path, overrides=config_overrides)
+        nlp = util.load_model_from_config(cfg)
+        config = nlp.config.interpolate()
+        T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
+    # Use original config here, not resolved version
+    sourced_components = get_sourced_components(cfg)
+    frozen_components = T["frozen_components"]
+    resume_components = [p for p in sourced_components if p not in frozen_components]
+    pipeline = nlp.pipe_names
+    factory_names = [nlp.get_pipe_meta(pipe).factory for pipe in nlp.pipe_names]
+    msg.divider("Data file validation")
 
     # Create the gold corpus to be able to better analyze data
-    loading_train_error_message = ""
-    loading_dev_error_message = ""
-    with msg.loading("Loading corpus..."):
-        corpus = Corpus(train_path, dev_path)
-        try:
-            train_dataset = list(corpus.train_dataset(nlp))
-        except ValueError as e:
-            loading_train_error_message = f"Training data cannot be loaded: {e}"
-        try:
-            dev_dataset = list(corpus.dev_dataset(nlp))
-        except ValueError as e:
-            loading_dev_error_message = f"Development data cannot be loaded: {e}"
-    if loading_train_error_message or loading_dev_error_message:
-        if loading_train_error_message:
-            msg.fail(loading_train_error_message)
-        if loading_dev_error_message:
-            msg.fail(loading_dev_error_message)
-        sys.exit(1)
+    dot_names = [T["train_corpus"], T["dev_corpus"]]
+    train_corpus, dev_corpus = resolve_dot_names(config, dot_names)
+    train_dataset = list(train_corpus(nlp))
+    dev_dataset = list(dev_corpus(nlp))
     msg.good("Corpus is loadable")
 
+    nlp.initialize(lambda: train_dataset)
+    msg.good("Pipeline can be initialized with data")
+
     # Create all gold data here to avoid iterating over the train_dataset constantly
-    gold_train_data = _compile_gold(train_dataset, pipeline, nlp, make_proj=True)
-    gold_train_unpreprocessed_data = _compile_gold(train_dataset, pipeline, nlp, make_proj=False)
-    gold_dev_data = _compile_gold(dev_dataset, pipeline, nlp, make_proj=True)
+    gold_train_data = _compile_gold(train_dataset, factory_names, nlp, make_proj=True)
+    gold_train_unpreprocessed_data = _compile_gold(
+        train_dataset, factory_names, nlp, make_proj=False
+    )
+    gold_dev_data = _compile_gold(dev_dataset, factory_names, nlp, make_proj=True)
 
     train_texts = gold_train_data["texts"]
     dev_texts = gold_dev_data["texts"]
+    frozen_components = T["frozen_components"]
 
     msg.divider("Training stats")
+    msg.text(f"Language: {nlp.lang}")
     msg.text(f"Training pipeline: {', '.join(pipeline)}")
-    for pipe in [p for p in pipeline if p not in nlp.factories]:
-        msg.fail(f"Pipeline component '{pipe}' not available in factories")
-    if base_model:
-        msg.text(f"Starting with base model '{base_model}'")
-    else:
-        msg.text(f"Starting with blank model '{lang}'")
+    if resume_components:
+        msg.text(f"Components from other pipelines: {', '.join(resume_components)}")
+    if frozen_components:
+        msg.text(f"Frozen components: {', '.join(frozen_components)}")
     msg.text(f"{len(train_dataset)} training docs")
     msg.text(f"{len(dev_dataset)} evaluation docs")
 
@@ -142,10 +133,10 @@ def debug_data(
         msg.warn(f"{overlap} training examples also in evaluation data")
     else:
         msg.good("No overlap between training and evaluation data")
-    if not base_model and len(train_dataset) < BLANK_MODEL_THRESHOLD:
-        text = (
-            f"Low number of examples to train from a blank model ({len(train_dataset)})"
-        )
+    # TODO: make this feedback more fine-grained and report on updated
+    # components vs. blank components
+    if not resume_components and len(train_dataset) < BLANK_MODEL_THRESHOLD:
+        text = f"Low number of examples to train a new pipeline ({len(train_dataset)})"
         if len(train_dataset) < BLANK_MODEL_MIN_THRESHOLD:
             msg.fail(text)
         else:
@@ -180,7 +171,7 @@ def debug_data(
         n_missing_vectors = sum(gold_train_data["words_missing_vectors"].values())
         msg.warn(
             "{} words in training data without vectors ({:0.2f}%)".format(
-                n_missing_vectors, n_missing_vectors / gold_train_data["n_words"],
+                n_missing_vectors, n_missing_vectors / gold_train_data["n_words"]
             ),
         )
         msg.text(
@@ -193,9 +184,9 @@ def debug_data(
             show=verbose,
         )
     else:
-        msg.info("No word vectors present in the model")
+        msg.info("No word vectors present in the package")
 
-    if "ner" in pipeline:
+    if "ner" in factory_names:
         # Get all unique NER labels present in the data
         labels = set(
             label for label in gold_train_data["ner"] if label not in ("O", "-", None)
@@ -283,7 +274,7 @@ def debug_data(
                 "with punctuation can not be trained with a noise level > 0."
             )
 
-    if "textcat" in pipeline:
+    if "textcat" in factory_names:
         msg.divider("Text Classification")
         labels = [label for label in gold_train_data["cats"]]
         model_labels = _get_labels_from_model(nlp, "textcat")
@@ -330,22 +321,17 @@ def debug_data(
                     "contains only instances with mutually-exclusive classes."
                 )
 
-    if "tagger" in pipeline:
+    if "tagger" in factory_names:
         msg.divider("Part-of-speech Tagging")
         labels = [label for label in gold_train_data["tags"]]
-        tag_map = nlp.vocab.morphology.tag_map
-        msg.info(f"{len(labels)} label(s) in data ({len(tag_map)} label(s) in tag map)")
+        # TODO: does this need to be updated?
+        msg.info(f"{len(labels)} label(s) in data")
         labels_with_counts = _format_labels(
             gold_train_data["tags"].most_common(), counts=True
         )
         msg.text(labels_with_counts, show=verbose)
-        non_tagmap = [l for l in labels if l not in tag_map]
-        if not non_tagmap:
-            msg.good(f"All labels present in tag map for language '{nlp.lang}'")
-        for label in non_tagmap:
-            msg.fail(f"Label '{label}' not found in tag map for language '{nlp.lang}'")
 
-    if "parser" in pipeline:
+    if "parser" in factory_names:
         has_low_data_warning = False
         msg.divider("Dependency Parsing")
 
@@ -378,7 +364,7 @@ def debug_data(
         if gold_dev_data["n_nonproj"] > 0:
             n_nonproj = gold_dev_data["n_nonproj"]
             msg.info(f"Found {n_nonproj} nonprojective dev sentence(s)")
-        msg.info(f"{labels_train_unpreprocessed} label(s) in train data")
+        msg.info(f"{len(labels_train_unpreprocessed)} label(s) in train data")
         msg.info(f"{len(labels_train)} label(s) in projectivized train data")
         labels_with_counts = _format_labels(
             gold_train_unpreprocessed_data["deps"].most_common(), counts=True
@@ -492,7 +478,10 @@ def _load_file(file_path: Path, msg: Printer) -> None:
 
 
 def _compile_gold(
-    examples: Sequence[Example], pipeline: List[str], nlp: Language, make_proj: bool
+    examples: Sequence[Example],
+    factory_names: List[str],
+    nlp: Language,
+    make_proj: bool,
 ) -> Dict[str, Any]:
     data = {
         "ner": Counter(),
@@ -515,16 +504,21 @@ def _compile_gold(
     for eg in examples:
         gold = eg.reference
         doc = eg.predicted
-        valid_words = [x for x in gold if x is not None]
+        valid_words = [x.text for x in gold]
         data["words"].update(valid_words)
         data["n_words"] += len(valid_words)
-        data["n_misaligned_words"] += len(gold) - len(valid_words)
+        align = eg.alignment
+        for token in doc:
+            if token.orth_.isspace():
+                continue
+            if align.x2y.lengths[token.i] != 1:
+                data["n_misaligned_words"] += 1
         data["texts"].add(doc.text)
         if len(nlp.vocab.vectors):
-            for word in valid_words:
+            for word in [t.text for t in doc]:
                 if nlp.vocab.strings[word] not in nlp.vocab.vectors:
                     data["words_missing_vectors"].update([word])
-        if "ner" in pipeline:
+        if "ner" in factory_names:
             for i, label in enumerate(eg.get_aligned_ner()):
                 if label is None:
                     continue
@@ -546,14 +540,14 @@ def _compile_gold(
                     data["ner"][combined_label] += 1
                 elif label == "-":
                     data["ner"]["-"] += 1
-        if "textcat" in pipeline:
+        if "textcat" in factory_names:
             data["cats"].update(gold.cats)
             if list(gold.cats.values()).count(1.0) != 1:
                 data["n_cats_multilabel"] += 1
-        if "tagger" in pipeline:
+        if "tagger" in factory_names:
             tags = eg.get_aligned("TAG", as_string=True)
             data["tags"].update([x for x in tags if x is not None])
-        if "parser" in pipeline:
+        if "parser" in factory_names:
             aligned_heads, aligned_deps = eg.get_aligned_parse(projectivize=make_proj)
             data["deps"].update([x for x in aligned_deps if x is not None])
             for i, (dep, head) in enumerate(zip(aligned_deps, aligned_heads)):

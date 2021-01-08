@@ -1,28 +1,33 @@
+from typing import Optional
+from thinc.api import Model
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
-from .tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
-
-from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...language import Language
-from ...attrs import LANG
-from ...util import update_exc
+from ...pipeline import Lemmatizer
 
 
 class BengaliDefaults(Language.Defaults):
-    lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters[LANG] = lambda text: "bn"
-    tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
-    tag_map = TAG_MAP
-    stop_words = STOP_WORDS
+    tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     prefixes = TOKENIZER_PREFIXES
     suffixes = TOKENIZER_SUFFIXES
     infixes = TOKENIZER_INFIXES
+    stop_words = STOP_WORDS
 
 
 class Bengali(Language):
     lang = "bn"
     Defaults = BengaliDefaults
+
+
+@Bengali.factory(
+    "lemmatizer",
+    assigns=["token.lemma"],
+    default_config={"model": None, "mode": "rule"},
+    default_score_weights={"lemma_acc": 1.0},
+)
+def make_lemmatizer(nlp: Language, model: Optional[Model], name: str, mode: str):
+    return Lemmatizer(nlp.vocab, model, name, mode=mode)
 
 
 __all__ = ["Bengali"]

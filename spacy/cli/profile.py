@@ -7,50 +7,64 @@ import pstats
 import sys
 import itertools
 from wasabi import msg, Printer
+import typer
 
-from ._app import app, Arg, Opt
+from ._util import app, debug_cli, Arg, Opt, NAME
 from ..language import Language
 from ..util import load_model
 
 
-@app.command("profile")
+@debug_cli.command("profile")
+@app.command("profile", hidden=True)
 def profile_cli(
     # fmt: off
-    model: str = Arg(..., help="Model to load"),
+    ctx: typer.Context,  # This is only used to read current calling context
+    model: str = Arg(..., help="Trained pipeline to load"),
     inputs: Optional[Path] = Arg(None, help="Location of input file. '-' for stdin.", exists=True, allow_dash=True),
     n_texts: int = Opt(10000, "--n-texts", "-n", help="Maximum number of texts to use if available"),
     # fmt: on
 ):
     """
-    Profile a spaCy pipeline, to find out which functions take the most time.
+    Profile which functions take the most time in a spaCy pipeline.
     Input should be formatted as one JSON object per line with a key "text".
     It can either be provided as a JSONL file, or be read from sys.sytdin.
     If no input file is specified, the IMDB dataset is loaded via Thinc.
+
+    DOCS: https://nightly.spacy.io/api/cli#debug-profile
     """
+    if ctx.parent.command.name == NAME:  # called as top-level command
+        msg.warn(
+            "The profile command is now available via the 'debug profile' "
+            "subcommand. You can run python -m spacy debug --help for an "
+            "overview of the other available debugging commands."
+        )
     profile(model, inputs=inputs, n_texts=n_texts)
 
 
 def profile(model: str, inputs: Optional[Path] = None, n_texts: int = 10000) -> None:
-    try:
-        import ml_datasets
-    except ImportError:
-        msg.fail(
-            "This command requires the ml_datasets library to be installed:"
-            "pip install ml_datasets",
-            exits=1,
-        )
+
     if inputs is not None:
         inputs = _read_inputs(inputs, msg)
     if inputs is None:
+        try:
+            import ml_datasets
+        except ImportError:
+            msg.fail(
+                "This command, when run without an input file, "
+                "requires the ml_datasets library to be installed: "
+                "pip install ml_datasets",
+                exits=1,
+            )
+
         n_inputs = 25000
         with msg.loading("Loading IMDB dataset via Thinc..."):
             imdb_train, _ = ml_datasets.imdb()
             inputs, _ = zip(*imdb_train)
         msg.info(f"Loaded IMDB dataset and using {n_inputs} examples")
         inputs = inputs[:n_inputs]
-    with msg.loading(f"Loading model '{model}'..."):
+    with msg.loading(f"Loading pipeline '{model}'..."):
         nlp = load_model(model)
-    msg.good(f"Loaded model '{model}'")
+    msg.good(f"Loaded pipeline '{model}'")
     texts = list(itertools.islice(inputs, n_texts))
     cProfile.runctx("parse_texts(nlp, texts)", globals(), locals(), "Profile.prof")
     s = pstats.Stats("Profile.prof")

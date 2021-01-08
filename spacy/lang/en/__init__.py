@@ -1,42 +1,36 @@
+from typing import Optional
+from thinc.api import Model
+
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
-from .tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
-from .morph_rules import MORPH_RULES
 from .syntax_iterators import SYNTAX_ITERATORS
-
-from ..tokenizer_exceptions import BASE_EXCEPTIONS
+from .punctuation import TOKENIZER_INFIXES
+from .lemmatizer import EnglishLemmatizer
 from ...language import Language
-from ...attrs import LANG
-from ...util import update_exc
-
-
-def _return_en(_):
-    return "en"
 
 
 class EnglishDefaults(Language.Defaults):
-    lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters.update(LEX_ATTRS)
-    lex_attr_getters[LANG] = _return_en
-    tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
-    tag_map = TAG_MAP
-    stop_words = STOP_WORDS
-    morph_rules = MORPH_RULES
+    tokenizer_exceptions = TOKENIZER_EXCEPTIONS
+    infixes = TOKENIZER_INFIXES
+    lex_attr_getters = LEX_ATTRS
     syntax_iterators = SYNTAX_ITERATORS
-    single_orth_variants = [
-        {"tags": ["NFP"], "variants": ["…", "..."]},
-        {"tags": [":"], "variants": ["-", "—", "–", "--", "---", "——"]},
-    ]
-    paired_orth_variants = [
-        {"tags": ["``", "''"], "variants": [("'", "'"), ("‘", "’")]},
-        {"tags": ["``", "''"], "variants": [('"', '"'), ("“", "”")]},
-    ]
+    stop_words = STOP_WORDS
 
 
 class English(Language):
     lang = "en"
     Defaults = EnglishDefaults
+
+
+@English.factory(
+    "lemmatizer",
+    assigns=["token.lemma"],
+    default_config={"model": None, "mode": "rule"},
+    default_score_weights={"lemma_acc": 1.0},
+)
+def make_lemmatizer(nlp: Language, model: Optional[Model], name: str, mode: str):
+    return EnglishLemmatizer(nlp.vocab, model, name, mode=mode)
 
 
 __all__ = ["English"]

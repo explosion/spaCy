@@ -32,6 +32,37 @@ _num_words = [
 ]
 
 
+_ordinal_words = [
+    "birinci",
+    "ikinci",
+    "üçüncü",
+    "dördüncü",
+    "beşinci",
+    "altıncı",
+    "yedinci",
+    "sekizinci",
+    "dokuzuncu",
+    "onuncu",
+    "yirminci",
+    "otuzuncu",
+    "kırkıncı",
+    "ellinci",
+    "altmışıncı",
+    "yetmişinci",
+    "sekseninci",
+    "doksanıncı",
+    "yüzüncü",
+    "bininci",
+    "mliyonuncu",
+    "milyarıncı",
+    "trilyonuncu",
+    "katrilyonuncu",
+    "kentilyonuncu",
+]
+
+_ordinal_endings = ("inci", "ıncı", "nci", "ncı", "uncu", "üncü")
+
+
 def like_num(text):
     if text.startswith(("+", "-", "±", "~")):
         text = text[1:]
@@ -42,8 +73,16 @@ def like_num(text):
         num, denom = text.split("/")
         if num.isdigit() and denom.isdigit():
             return True
-    if text.lower() in _num_words:
+    text_lower = text.lower()
+    # Check cardinal number
+    if text_lower in _num_words:
         return True
+    # Check ordinal number
+    if text_lower in _ordinal_words:
+        return True
+    if text_lower.endswith(_ordinal_endings):
+        if text_lower[:-3].isdigit() or text_lower[:-4].isdigit():
+            return True
     return False
 
 
