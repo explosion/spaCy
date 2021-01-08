@@ -68,7 +68,8 @@ def train(
         if is_best:
             # Avoid saving twice (saving will be more expensive than
             # the dir copy)
-            shutil.rmtree(output_path / DIR_MODEL_BEST)
+            if (output_path / DIR_MODEL_BEST).exists():
+                shutil.rmtree(output_path / DIR_MODEL_BEST)
             shutil.copytree(output_path / DIR_MODEL_LAST, output_path / DIR_MODEL_BEST)
 
     # Components that shouldn't be updated during training
