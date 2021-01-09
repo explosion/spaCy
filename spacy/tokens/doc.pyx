@@ -1287,7 +1287,7 @@ cdef class Doc:
             "tensor": lambda: self.tensor,
             "cats": lambda: self.cats,
             "span_groups": lambda: {
-                name: sg.to_json() for name, sg in self.span_groups.items()
+                name: group.to_bytes() for name, group in self.span_groups.items()
             },
             "strings": lambda: list(strings),
             "has_unknown_spaces": lambda: self.has_unknown_spaces
@@ -1313,18 +1313,6 @@ cdef class Doc:
         """
         if self.length != 0:
             raise ValueError(Errors.E033.format(length=self.length))
-        deserializers = {
-            "text": lambda b: None,
-            "array_head": lambda b: None,
-            "array_body": lambda b: None,
-            "sentiment": lambda b: None,
-            "tensor": lambda b: None,
-            "cats": lambda b: None,
-            "strings": lambda b: None,
-            "user_data_keys": lambda b: None,
-            "user_data_values": lambda b: None,
-            "has_unknown_spaces": lambda b: None
-        }
         # Msgpack doesn't distinguish between lists and tuples, which is
         # vexing for user data. As a best guess, we *know* that within
         # keys, we must have tuples. In values we just have to hope
@@ -1359,8 +1347,11 @@ cdef class Doc:
             self.push_back(lex, has_space)
             start = end + has_space
         self.from_array(msg["array_head"][2:], attrs[:, 2:])
+        self.span_groups = {
+            key: SpanGroup(self).from_bytes(value)
+            for key, value in msg.get("span_groups", {}).items()
+        }
         return self
-
 
     def extend_tensor(self, tensor):
         """Concatenate a new tensor onto the doc.tensor object.

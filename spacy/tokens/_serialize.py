@@ -6,6 +6,7 @@ import srsly
 from thinc.api import NumpyOps
 
 from .doc import Doc
+from .span_group import SpanGroup
 from ..vocab import Vocab
 from ..compat import copy_reg
 from ..attrs import SPACY, ORTH, intify_attr
@@ -107,13 +108,13 @@ class DocBin:
             self.strings.add(token.dep_)
             self.strings.add(token.ent_type_)
             self.strings.add(token.ent_kb_id_)
-        for key, spans in doc.span_groups.items():
-            self.strings.add(key)
-        self.span_groups.append(
-            {key: spans.to_bytes() for key, spans in doc.span_groups.items()}
-        )
         self.cats.append(doc.cats)
         self.user_data.append(srsly.msgpack_dumps(doc.user_data))
+        self.span_groups.append({})
+        for key, group in doc.span_groups.items():
+            for span in group.to_list():
+                self.strings.add(span.label_)
+            self.span_groups[-1][key] = group.to_bytes()
 
     def get_docs(self, vocab: Vocab) -> Iterator[Doc]:
         """Recover Doc objects from the annotations, using the given vocab.
@@ -197,6 +198,7 @@ class DocBin:
             "strings": list(sorted(self.strings)),
             "cats": self.cats,
             "flags": self.flags,
+            "span_groups": self.span_groups
         }
         if self.store_user_data:
             msg["user_data"] = self.user_data
