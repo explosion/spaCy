@@ -27,6 +27,7 @@ cdef class DependencyMatcher:
     cdef public object _patterns
     cdef public object _raw_patterns
     cdef public object _keys_to_token
+    cdef public object _tokens_to_key
     cdef public object _root
     cdef public object _callbacks
     cdef public object _nodes
@@ -56,6 +57,10 @@ cdef class DependencyMatcher:
         # the pattern
         # e.g. {'key': [ {'token_key': 2, ... }, ... ], ... }
         self._keys_to_token = defaultdict(list)
+
+        # Like _keys_to_token but the other way around
+        # e.g. {'key': [ {2: 'token_key', ... }, ... ], ... }
+        self._tokens_to_key = defaultdict(list)
 
         # Associates each key to a list of ints where each int corresponds
         # to the position of the root token within the pattern
@@ -149,6 +154,16 @@ cdef class DependencyMatcher:
                 visited_nodes[relation["LEFT_ID"]] = True
             idx = idx + 1
 
+    def _get_matcher_key(self, key, pattern_idx, token_idx):
+        """
+        Creates a token key to be used by the matcher
+        """
+        return self._normalize_key(
+            unicode(key) + DELIMITER + 
+            unicode(pattern_idx) + DELIMITER + 
+            unicode(token_idx)
+        )
+
     def add(self, key, patterns, *, on_match=None):
         """Add a new matcher rule to the matcher.
 
@@ -185,15 +200,23 @@ cdef class DependencyMatcher:
         # matcher. This enables only a single instance of Matcher to be used.
         # Multiple adds are required to track each node pattern.
         keys_to_token_list = []
+        tokens_to_key_list = []
         for i in range(len(_patterns)):
             keys_to_token = {}
+            tokens_to_key = {}
+
             # TODO: Better ways to hash edges in pattern?
             for j in range(len(_patterns[i])):
-                k = self._normalize_key(unicode(key) + DELIMITER + unicode(i) + DELIMITER + unicode(j))
+                k = self._get_matcher_key(key, i, j)
                 self.matcher.add(k, [_patterns[i][j]])
                 keys_to_token[k] = j
+                tokens_to_key[j] = k
+
             keys_to_token_list.append(keys_to_token)
+            tokens_to_key_list.append(tokens_to_key)
+
         self._keys_to_token[key].extend(keys_to_token_list)
+        self._tokens_to_key[key].extend(tokens_to_key_list)
 
         # Add token position to self._nodes[key][id]
         nodes_list = []
@@ -268,6 +291,18 @@ cdef class DependencyMatcher:
         self._nodes.pop(key)
         self._tree.pop(key)
         self._root.pop(key)
+        self._keys_to_token.pop(key)
+        self._tokens_to_key.pop(key)
+
+    def _get_keys_to_position_map(self, matches):
+        """
+        Given a list of matches, creates a dict mapping each matcher id
+        to a list of positions in the doc
+        """
+        keys_to_position = defaultdict(list)
+        for match_id, start, _ in matches:
+            keys_to_position[match_id].append(start)
+        return keys_to_position
 
     def __call__(self, object doclike):
         """Find all token sequences matching the supplied pattern.
@@ -283,40 +318,33 @@ cdef class DependencyMatcher:
             doc = doclike.as_doc()
         else:
             raise ValueError(Errors.E195.format(good="Doc or Span", got=type(doclike).__name__))
+
         matched_key_trees = []
-        matches = self.matcher(doc)
+        keys_to_position = self._get_keys_to_position_map(self.matcher(doc))
 
         for key in list(self._patterns.keys()):
             patterns_list = self._patterns[key]
             keys_to_token_list = self._keys_to_token[key]
+            tokens_to_key_list = self._tokens_to_key[key]
             root_list = self._root[key]
             tree_list = self._tree[key]
-            nodes_list = self._nodes[key]
 
             for i in range(len(patterns_list)):
+                pattern = patterns_list[i]
                 keys_to_token = keys_to_token_list[i]
+                tokens_to_key = tokens_to_key_list[i]
                 root = root_list[i]
                 tree = tree_list[i]
-                nodes = nodes_list[i]
-
-                # Creates a id_to_position dict, mapping each token id
-                # to a list of positions in the doc
-                # TODO: This could be taken outside to improve running time..?
-                id_to_position = defaultdict(list)
-                for match_id, start, end in matches:
-                    if match_id in keys_to_token:
-                        id_to_position[keys_to_token[match_id]].append(start)
 
                 node_operator_map = self._get_node_operator_map(
                     doc,
                     tree,
-                    id_to_position,
-                    nodes,
-                    root,
+                    keys_to_token,
+                    keys_to_position,
                 )
 
                 matched_trees = []
-                self._recurse(tree, id_to_position, node_operator_map, 0, [], matched_trees)
+                self._recurse(tree, tokens_to_key, keys_to_token, keys_to_position, node_operator_map, 0, [], matched_trees)
                 for matched_tree in matched_trees:
                     matched_key_trees.append((key, matched_tree))
 
@@ -326,9 +354,9 @@ cdef class DependencyMatcher:
                     on_match(self, doc, i, matched_key_trees)
         return matched_key_trees
 
-    def _recurse(self, tree, id_to_position, node_operator_map, int patternLength, visited_nodes, matched_trees):
+    def _recurse(self, tree, tokens_to_key, keys_to_token, keys_to_position, node_operator_map, int patternLength, visited_nodes, matched_trees):
         cdef bint isValid
-        if patternLength == len(id_to_position.keys()):
+        if patternLength == len(tokens_to_key):
             isValid = True
             for node in range(patternLength):
                 if node in tree:
@@ -343,10 +371,12 @@ cdef class DependencyMatcher:
                 matched_trees.append(visited_nodes)
             return
 
-        for patternNode in id_to_position[patternLength]:
-            self._recurse(tree, id_to_position, node_operator_map, patternLength+1, visited_nodes+[patternNode], matched_trees)
+        matcher_key = tokens_to_key[patternLength]
+        for patternNode in keys_to_position[matcher_key]:
+            self._recurse(tree, tokens_to_key, keys_to_token, keys_to_position, node_operator_map, patternLength+1, visited_nodes+[patternNode], matched_trees)
 
-    def _get_node_operator_map(self, doc, tree, id_to_position, nodes, root):
+
+    def _get_node_operator_map(self, doc, tree, keys_to_token, keys_to_position):
         """
         Creates a dict of dicts which, given a node and an edge operator, contains
         the list of nodes from the doc that belong to node+operator. 
@@ -358,14 +388,14 @@ cdef class DependencyMatcher:
 
         all_operators = {
             child[INDEX_RELOP]
-            for node in nodes.values()
-            for child in tree[node]
+            for node_idx in keys_to_token.values()
+            for child in tree[node_idx]
         }
 
         all_nodes = {
-            node_position 
-            for node in nodes.values()
-            for node_position in id_to_position[node]
+            node
+            for matcher_key in keys_to_token.keys()
+            for node in keys_to_position[matcher_key]
         }
 
         # Create the actual node_operator_map
