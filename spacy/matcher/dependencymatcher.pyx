@@ -30,7 +30,6 @@ cdef class DependencyMatcher:
     cdef public object _tokens_to_key
     cdef public object _root
     cdef public object _callbacks
-    cdef public object _nodes
     cdef public object _tree
     cdef public object _ops
 
@@ -66,11 +65,6 @@ cdef class DependencyMatcher:
         # to the position of the root token within the pattern
         # e.g. {'key': [3, 1, 4, ... ], ... }
         self._root = defaultdict(list)
-
-        # Associates each key to a list of dicts where each dict associates
-        # a token 'RIGHT_ID' to its position within the pattern
-        # e.g. {'key': [{'right_id': 2, ...}, ... ], ...}
-        self._nodes = defaultdict(list)
 
         # Associates each key to a list of dicts where each dict describes all
         # branches from a token (identifed by its position) to other tokens as
@@ -218,21 +212,12 @@ cdef class DependencyMatcher:
         self._keys_to_token[key].extend(keys_to_token_list)
         self._tokens_to_key[key].extend(tokens_to_key_list)
 
-        # Add token position to self._nodes[key][id]
-        nodes_list = []
-        for pattern in patterns:
-            nodes = {}
-            for i in range(len(pattern)):
-                nodes[pattern[i]["RIGHT_ID"]] = i
-            nodes_list.append(nodes)
-        self._nodes[key].extend(nodes_list)
-
         # Create an object tree to traverse later on. This data structure
         # enables easy tree pattern match. Doc-Token based tree cannot be
         # reused since it is memory-heavy and tightly coupled with the Doc.
-        self._retrieve_tree(patterns, nodes_list, key)
+        self._retrieve_tree(patterns, key)
 
-    def _retrieve_tree(self, patterns, nodes_list, key):
+    def _retrieve_tree(self, patterns, key):
 
         # New trees belonging to this key
         tree_list = []
@@ -245,12 +230,16 @@ cdef class DependencyMatcher:
             tree = defaultdict(list)
             root = -1
 
+            right_id_to_token = {}
+            for j in range(len(patterns[i])):
+                right_id_to_token[patterns[i][j]["RIGHT_ID"]] = j
+
             for j in range(len(patterns[i])):
                 token_pattern = patterns[i][j]
 
                 if "REL_OP" in token_pattern:
                     # Add tree branch
-                    tree[nodes_list[i][token_pattern["LEFT_ID"]]].append(
+                    tree[right_id_to_token[token_pattern["LEFT_ID"]]].append(
                         (token_pattern["REL_OP"], j),
                     )
                 else:
@@ -288,7 +277,6 @@ cdef class DependencyMatcher:
             raise ValueError(Errors.E175.format(key=key))
         self._patterns.pop(key)
         self._raw_patterns.pop(key)
-        self._nodes.pop(key)
         self._tree.pop(key)
         self._root.pop(key)
         self._keys_to_token.pop(key)
