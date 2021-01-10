@@ -45,33 +45,33 @@ cdef class DependencyMatcher:
 
         # Associates each key to the raw patterns list added by the user
         # e.g. {'key': [[{'RIGHT_ID': ..., 'RIGHT_ATTRS': ... }, ... ], ... ], ... }
-        self._raw_patterns = {}
+        self._raw_patterns = defaultdict(list)
 
         # Associating each key to a list of lists of 'RIGHT_ATTRS'
         # e.g. {'key': [[{'POS': ... }, ... ], ... ], ... }
-        self._patterns = {}
+        self._patterns = defaultdict(list)
 
         # Associates each key to a list of dicts where each dict associates
         # a token key (used by the internal matcher) to its position within
         # the pattern
         # e.g. {'key': [ {'token_key': 2, ... }, ... ], ... }
-        self._keys_to_token = {}
+        self._keys_to_token = defaultdict(list)
 
         # Associates each key to a list of ints where each int corresponds
         # to the position of the root token within the pattern
         # e.g. {'key': [3, 1, 4, ... ], ... }
-        self._root = {}
+        self._root = defaultdict(list)
 
         # Associates each key to a list of dicts where each dict associates
         # a token 'RIGHT_ID' to its position within the pattern
         # e.g. {'key': [{'right_id': 2, ...}, ... ], ...}
-        self._nodes = {}
+        self._nodes = defaultdict(list)
 
         # Associates each key to a list of dicts where each dict describes all
         # branches from a token (identifed by its position) to other tokens as
         # a list of tuples: ('REL_OP', 'LEFT_ID')
         # e.g. {'key': [{2: [('<', 'left_id'), ...] ...}, ... ], ...}
-        self._tree = {}
+        self._tree = defaultdict(list)
 
         # Associates each key to its on_match callback
         # e.g. {'key': on_match_callback, ...}
@@ -168,7 +168,6 @@ cdef class DependencyMatcher:
         key = self._normalize_key(key)
 
         # Save raw patterns and on_match callback
-        self._raw_patterns.setdefault(key, [])
         self._raw_patterns[key].extend(patterns)
         self._callbacks[key] = on_match
 
@@ -180,7 +179,6 @@ cdef class DependencyMatcher:
                 token_pattern = [pattern[i]["RIGHT_ATTRS"]]
                 token_patterns.append(token_pattern)
             _patterns.append(token_patterns)
-        self._patterns.setdefault(key, [])
         self._patterns[key].extend(_patterns)
 
         # Add each node pattern of all the input patterns individually to the
@@ -195,7 +193,6 @@ cdef class DependencyMatcher:
                 self.matcher.add(k, [_patterns[i][j]])
                 _keys_to_token[k] = j
             _keys_to_token_list.append(_keys_to_token)
-        self._keys_to_token.setdefault(key, [])
         self._keys_to_token[key].extend(_keys_to_token_list)
 
         # Add token position to self._nodes[key][id]
@@ -205,7 +202,6 @@ cdef class DependencyMatcher:
             for i in range(len(pattern)):
                 nodes[pattern[i]["RIGHT_ID"]] = i
             _nodes_list.append(nodes)
-        self._nodes.setdefault(key, [])
         self._nodes[key].extend(_nodes_list)
 
         # Create an object tree to traverse later on. This data structure
@@ -257,9 +253,7 @@ cdef class DependencyMatcher:
                 tree[head[INDEX_HEAD]].append((head[INDEX_RELOP], j))
 
             _tree_list.append(tree)
-        self._tree.setdefault(key, [])
         self._tree[key].extend(_tree_list)
-        self._root.setdefault(key, [])
         self._root[key].extend(_root_list)
 
     def has_key(self, key):
