@@ -308,19 +308,13 @@ cdef class DependencyMatcher:
         matched_key_trees = []
         keys_to_position = self._get_keys_to_position_map(self.matcher(doc))
 
-        for key in list(self._patterns.keys()):
-            patterns_list = self._patterns[key]
-            keys_to_token_list = self._keys_to_token[key]
-            tokens_to_key_list = self._tokens_to_key[key]
-            root_list = self._root[key]
-            tree_list = self._tree[key]
-
-            for i in range(len(patterns_list)):
-                pattern = patterns_list[i]
-                keys_to_token = keys_to_token_list[i]
-                tokens_to_key = tokens_to_key_list[i]
-                root = root_list[i]
-                tree = tree_list[i]
+        for key in self._patterns.keys():
+            for root, tree, keys_to_token, tokens_to_key in zip(
+                self._root[key],
+                self._tree[key],
+                self._keys_to_token[key],
+                self._tokens_to_key[key],
+            ):
 
                 node_operator_map = self._get_node_operator_map(
                     doc,
@@ -330,7 +324,7 @@ cdef class DependencyMatcher:
                 )
 
                 matched_trees = []
-                self._recurse(tree, tokens_to_key, keys_to_token, keys_to_position, node_operator_map, 0, [], matched_trees)
+                self._recurse(tree, tokens_to_key, keys_to_position, node_operator_map, [], matched_trees)
                 for matched_tree in matched_trees:
                     matched_key_trees.append((key, matched_tree))
 
@@ -340,26 +334,26 @@ cdef class DependencyMatcher:
                     on_match(self, doc, i, matched_key_trees)
         return matched_key_trees
 
-    def _recurse(self, tree, tokens_to_key, keys_to_token, keys_to_position, node_operator_map, int patternLength, visited_nodes, matched_trees):
-        cdef bint isValid
-        if patternLength == len(tokens_to_key):
-            isValid = True
-            for node in range(patternLength):
+    def _recurse(self, tree, tokens_to_key, keys_to_position, node_operator_map, visited_nodes, matched_trees):
+        cdef bint is_valid
+        if len(visited_nodes) == len(tokens_to_key):
+            is_valid = True
+            for node in range(len(visited_nodes)):
                 if node in tree:
-                    for idx, (relop,nbor) in enumerate(tree[node]):
+                    for idx, (relop, nbor) in enumerate(tree[node]):
                         computed_nbors = node_operator_map[visited_nodes[node]][relop]
-                        isNbor = False
+                        is_nbor = False
                         for computed_nbor in computed_nbors:
                             if computed_nbor.i == visited_nodes[nbor]:
-                                isNbor = True
-                        isValid = isValid & isNbor
-            if isValid:
+                                is_nbor = True
+                        is_valid = is_valid & is_nbor
+            if is_valid:
                 matched_trees.append(visited_nodes)
             return
 
-        matcher_key = tokens_to_key[patternLength]
-        for patternNode in keys_to_position[matcher_key]:
-            self._recurse(tree, tokens_to_key, keys_to_token, keys_to_position, node_operator_map, patternLength+1, visited_nodes+[patternNode], matched_trees)
+        matcher_key = tokens_to_key[len(visited_nodes)]
+        for pattern_node in keys_to_position[matcher_key]:
+            self._recurse(tree, tokens_to_key, keys_to_position, node_operator_map, visited_nodes+[pattern_node], matched_trees)
 
 
     def _get_node_operator_map(self, doc, tree, keys_to_token, keys_to_position):
