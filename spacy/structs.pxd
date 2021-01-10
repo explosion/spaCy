@@ -2,7 +2,7 @@ from libc.stdint cimport uint8_t, uint32_t, int32_t, uint64_t
 from libcpp.vector cimport vector
 from libc.stdint cimport int32_t, int64_t
 
-from .typedefs cimport flags_t, attr_t, hash_t
+from .typedefs cimport flags_t, attr_t, hash_t, weight_t
 from .parts_of_speech cimport univ_pos_t
 
 
@@ -91,3 +91,19 @@ cdef struct AliasC:
 
     # Prior probability P(entity|alias) - should sum up to (at most) 1.
     vector[float] probs
+
+
+cdef struct EdgeC:
+    hash_t label
+    int32_t parent
+    int32_t child
+
+
+cdef struct GraphC:
+    vector[vector[int32_t]] nodes
+    vector[EdgeC] edges
+    vector[weight_t] weights
+    vector[int] n_parents
+    vector[int] n_children
+    vector[int] first_parent
+    vector[int] first_child
