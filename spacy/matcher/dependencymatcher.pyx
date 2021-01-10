@@ -1,5 +1,6 @@
 # cython: infer_types=True, profile=True
 from typing import List
+from collections import defaultdict
 
 import numpy
 
@@ -40,15 +41,42 @@ cdef class DependencyMatcher:
         validate (bool): Whether patterns should be validated, passed to
             Matcher as `validate`
         """
-        size = 20
         self.matcher = Matcher(vocab, validate=validate)
-        self._keys_to_token = {}
-        self._patterns = {}
+
+        # Associates each key to the raw patterns list added by the user
+        # e.g. {'key': [[{'RIGHT_ID': ..., 'RIGHT_ATTRS': ... }, ... ], ... ], ... }
         self._raw_patterns = {}
+
+        # Associating each key to a list of lists of 'RIGHT_ATTRS'
+        # e.g. {'key': [[{'POS': ... }, ... ], ... ], ... }
+        self._patterns = {}
+
+        # Associates each key to a list of dicts where each dict associates
+        # a token key (used by the internal matcher) to its position within
+        # the pattern
+        # e.g. {'key': [ {'token_key': 2, ... }, ... ], ... }
+        self._keys_to_token = {}
+
+        # Associates each key to a list of ints where each int corresponds
+        # to the position of the root token within the pattern
+        # e.g. {'key': [3, 1, 4, ... ], ... }
         self._root = {}
+
+        # Associates each key to a list of dicts where each dict associates
+        # a token 'RIGHT_ID' to its position within the pattern
+        # e.g. {'key': [{'right_id': 2, ...}, ... ], ...}
         self._nodes = {}
+
+        # Associates each key to a list of dicts where each dict describes all
+        # branches from a token (identifed by its position) to other tokens as
+        # a list of tuples: ('REL_OP', 'LEFT_ID')
+        # e.g. {'key': [{2: [('<', 'left_id'), ...] ...}, ... ], ...}
         self._tree = {}
+
+        # Associates each key to its on_match callback
+        # e.g. {'key': on_match_callback, ...}
         self._callbacks = {}
+
         self.vocab = vocab
         self.mem = Pool()
         self._ops = {
@@ -136,9 +164,15 @@ cdef class DependencyMatcher:
             if len(pattern) == 0:
                 raise ValueError(Errors.E012.format(key=key))
             self.validate_input(pattern, key)
+
         key = self._normalize_key(key)
+
+        # Save raw patterns and on_match callback
         self._raw_patterns.setdefault(key, [])
         self._raw_patterns[key].extend(patterns)
+        self._callbacks[key] = on_match
+
+        # Add 'RIGHT_ATTRS' to self._patterns[key]
         _patterns = []
         for pattern in patterns:
             token_patterns = []
@@ -147,8 +181,8 @@ cdef class DependencyMatcher:
                 token_patterns.append(token_pattern)
             _patterns.append(token_patterns)
         self._patterns.setdefault(key, [])
-        self._callbacks[key] = on_match
         self._patterns[key].extend(_patterns)
+
         # Add each node pattern of all the input patterns individually to the
         # matcher. This enables only a single instance of Matcher to be used.
         # Multiple adds are required to track each node pattern.
@@ -163,6 +197,8 @@ cdef class DependencyMatcher:
             _keys_to_token_list.append(_keys_to_token)
         self._keys_to_token.setdefault(key, [])
         self._keys_to_token[key].extend(_keys_to_token_list)
+
+        # Add token position to self._nodes[key][id]
         _nodes_list = []
         for pattern in patterns:
             nodes = {}
@@ -171,39 +207,55 @@ cdef class DependencyMatcher:
             _nodes_list.append(nodes)
         self._nodes.setdefault(key, [])
         self._nodes[key].extend(_nodes_list)
+
         # Create an object tree to traverse later on. This data structure
         # enables easy tree pattern match. Doc-Token based tree cannot be
         # reused since it is memory-heavy and tightly coupled with the Doc.
-        self.retrieve_tree(patterns, _nodes_list, key)
+        self._retrieve_tree(patterns, _nodes_list, key)
 
-    def retrieve_tree(self, patterns, _nodes_list, key):
-        _heads_list = []
+    def _retrieve_tree(self, patterns, _nodes_list, key):
+
+        # List of dict of tuples
+        # e.g. _heads_list = [ {token_position: [ (REL_OP, LEFT_ID), ...], ...}, ...]
+        _heads_list = [] 
+
+        # List of indices to root tokens
         _root_list = []
+
+        # Populate _heads_list and _root_list
         for i in range(len(patterns)):
             heads = {}
             root = -1
             for j in range(len(patterns[i])):
                 token_pattern = patterns[i][j]
-                if ("REL_OP" not in token_pattern):
+
+                if "REL_OP" not in token_pattern:
+                    # If 'REL_OP' is not defined, consider this the root
                     heads[j] = ('root', j)
                     root = j
                 else:
+                    # otherwise, we simply add a head
                     heads[j] = (
                         token_pattern["REL_OP"],
                         _nodes_list[i][token_pattern["LEFT_ID"]]
                     )
             _heads_list.append(heads)
             _root_list.append(root)
+
+        # Group heads by left token id to create trees 
         _tree_list = []
         for i in range(len(patterns)):
-            tree = {}
+            tree = defaultdict(list)
             for j in range(len(patterns[i])):
-                if(_heads_list[i][j][INDEX_HEAD] == j):
+                head = _heads_list[i][j]
+
+                # This is the root, skip it 
+                if head[INDEX_HEAD] == j:
                     continue
-                head = _heads_list[i][j][INDEX_HEAD]
-                if(head not in tree):
-                    tree[head] = []
-                tree[head].append((_heads_list[i][j][INDEX_RELOP], j))
+
+                # Add head to tree
+                tree[head[INDEX_HEAD]].append((head[INDEX_RELOP], j))
+
             _tree_list.append(tree)
         self._tree.setdefault(key, [])
         self._tree[key].extend(_tree_list)
@@ -255,89 +307,97 @@ cdef class DependencyMatcher:
             raise ValueError(Errors.E195.format(good="Doc or Span", got=type(doclike).__name__))
         matched_key_trees = []
         matches = self.matcher(doc)
+
         for key in list(self._patterns.keys()):
             _patterns_list = self._patterns[key]
             _keys_to_token_list = self._keys_to_token[key]
             _root_list = self._root[key]
             _tree_list = self._tree[key]
             _nodes_list = self._nodes[key]
-            length = len(_patterns_list)
-            for i in range(length):
+
+            for i in range(len(_patterns_list)):
                 _keys_to_token = _keys_to_token_list[i]
                 _root = _root_list[i]
                 _tree = _tree_list[i]
                 _nodes = _nodes_list[i]
-                id_to_position = {}
-                for i in range(len(_nodes)):
-                    id_to_position[i]=[]
+
+                # Creates a id_to_position dict, mapping each token id
+                # to a list of positions in the doc
                 # TODO: This could be taken outside to improve running time..?
+                id_to_position = defaultdict(list)
                 for match_id, start, end in matches:
                     if match_id in _keys_to_token:
                         id_to_position[_keys_to_token[match_id]].append(start)
-                _node_operator_map = self.get_node_operator_map(
+
+                node_operator_map = self._get_node_operator_map(
                     doc,
                     _tree,
                     id_to_position,
-                    _nodes,_root
+                    _nodes,
+                    _root,
                 )
-                length = len(_nodes)
 
                 matched_trees = []
-                self.recurse(_tree, id_to_position, _node_operator_map, 0, [], matched_trees)
+                self._recurse(_tree, id_to_position, node_operator_map, 0, [], matched_trees)
                 for matched_tree in matched_trees:
                     matched_key_trees.append((key, matched_tree))
+
             for i, (match_id, nodes) in enumerate(matched_key_trees):
                 on_match = self._callbacks.get(match_id)
                 if on_match is not None:
                     on_match(self, doc, i, matched_key_trees)
         return matched_key_trees
 
-    def recurse(self, tree, id_to_position, _node_operator_map, int patternLength, visited_nodes, matched_trees):
-        cdef bint isValid;
+    def _recurse(self, tree, id_to_position, node_operator_map, int patternLength, visited_nodes, matched_trees):
+        cdef bint isValid
         if patternLength == len(id_to_position.keys()):
             isValid = True
             for node in range(patternLength):
                 if node in tree:
                     for idx, (relop,nbor) in enumerate(tree[node]):
-                        computed_nbors = numpy.asarray(_node_operator_map[visited_nodes[node]][relop])
+                        computed_nbors = node_operator_map[visited_nodes[node]][relop]
                         isNbor = False
                         for computed_nbor in computed_nbors:
                             if computed_nbor.i == visited_nodes[nbor]:
                                 isNbor = True
                         isValid = isValid & isNbor
-            if(isValid):
+            if isValid:
                 matched_trees.append(visited_nodes)
             return
-        allPatternNodes = numpy.asarray(id_to_position[patternLength])
-        for patternNode in allPatternNodes:
-            self.recurse(tree, id_to_position, _node_operator_map, patternLength+1, visited_nodes+[patternNode], matched_trees)
 
-    # Given a node and an edge operator, to return the list of nodes
-    # from the doc that belong to node+operator. This is used to store
-    # all the results beforehand to prevent unnecessary computation while
-    # pattern matching
-    # _node_operator_map[node][operator] = [...]
-    def get_node_operator_map(self, doc, tree, id_to_position, nodes, root):
-        _node_operator_map = {}
-        all_node_indices = nodes.values()
-        all_operators = []
-        for node in all_node_indices:
-            if node in tree:
-                for child in tree[node]:
-                    all_operators.append(child[INDEX_RELOP])
-        all_operators = list(set(all_operators))
-        all_nodes = []
-        for node in all_node_indices:
-            all_nodes = all_nodes + id_to_position[node]
-        all_nodes = list(set(all_nodes))
+        for patternNode in id_to_position[patternLength]:
+            self._recurse(tree, id_to_position, node_operator_map, patternLength+1, visited_nodes+[patternNode], matched_trees)
+
+    def _get_node_operator_map(self, doc, tree, id_to_position, nodes, root):
+        """
+        Creates a dict of dicts which, given a node and an edge operator, contains
+        the list of nodes from the doc that belong to node+operator. 
+        This is used to store all the results beforehand to prevent unnecessary
+        computation while pattern matching
+
+        e.g. node_operator_map[node][operator] = [...]
+        """
+
+        all_operators = {
+            child[INDEX_RELOP]
+            for node in nodes.values()
+            for child in tree[node]
+        }
+
+        all_nodes = {
+            node_position 
+            for node in nodes.values()
+            for node_position in id_to_position[node]
+        }
+
+        # Create the actual node_operator_map
+        node_operator_map = {}
         for node in all_nodes:
-            _node_operator_map[node] = {}
+            node_operator_map[node] = {}
             for operator in all_operators:
-                _node_operator_map[node][operator] = []
-        for operator in all_operators:
-            for node in all_nodes:
-                _node_operator_map[node][operator] = self._ops.get(operator)(doc, node)
-        return _node_operator_map
+                node_operator_map[node][operator] = self._ops[operator](doc, node)
+
+        return node_operator_map
 
     def dep(self, doc, node):
         if doc[node].head == doc[node]:
