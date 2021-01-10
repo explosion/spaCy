@@ -226,21 +226,19 @@ cdef class DependencyMatcher:
         root_list = []
 
         # Group token id to create trees 
-        for i in range(len(patterns)):
+        for i, pattern in enumerate(patterns):
             tree = defaultdict(list)
             root = -1
 
             right_id_to_token = {}
-            for j in range(len(patterns[i])):
-                right_id_to_token[patterns[i][j]["RIGHT_ID"]] = j
+            for j, token in enumerate(pattern):
+                right_id_to_token[token["RIGHT_ID"]] = j
 
-            for j in range(len(patterns[i])):
-                token_pattern = patterns[i][j]
-
-                if "REL_OP" in token_pattern:
+            for j, token in enumerate(pattern):
+                if "REL_OP" in token:
                     # Add tree branch
-                    tree[right_id_to_token[token_pattern["LEFT_ID"]]].append(
-                        (token_pattern["REL_OP"], j),
+                    tree[right_id_to_token[token["LEFT_ID"]]].append(
+                        (token["REL_OP"], j),
                     )
                 else:
                     # No 'REL_OP', this is the root
