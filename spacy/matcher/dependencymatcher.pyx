@@ -211,48 +211,32 @@ cdef class DependencyMatcher:
 
     def _retrieve_tree(self, patterns, _nodes_list, key):
 
-        # List of dict of tuples
-        # e.g. _heads_list = [ {token_position: [ (REL_OP, LEFT_ID), ...], ...}, ...]
-        _heads_list = [] 
+        # New trees belonging to this key
+        _tree_list = []
 
-        # List of indices to root tokens
+        # List of indices to the root nodes
         _root_list = []
 
-        # Populate _heads_list and _root_list
+        # Group token id to create trees 
         for i in range(len(patterns)):
-            heads = {}
+            tree = defaultdict(list)
             root = -1
+
             for j in range(len(patterns[i])):
                 token_pattern = patterns[i][j]
 
-                if "REL_OP" not in token_pattern:
-                    # If 'REL_OP' is not defined, consider this the root
-                    heads[j] = ('root', j)
-                    root = j
-                else:
-                    # otherwise, we simply add a head
-                    heads[j] = (
-                        token_pattern["REL_OP"],
-                        _nodes_list[i][token_pattern["LEFT_ID"]]
+                if "REL_OP" in token_pattern:
+                    # Add tree branch
+                    tree[_nodes_list[i][token_pattern["LEFT_ID"]]].append(
+                        (token_pattern["REL_OP"], j),
                     )
-            _heads_list.append(heads)
-            _root_list.append(root)
-
-        # Group heads by left token id to create trees 
-        _tree_list = []
-        for i in range(len(patterns)):
-            tree = defaultdict(list)
-            for j in range(len(patterns[i])):
-                head = _heads_list[i][j]
-
-                # This is the root, skip it 
-                if head[INDEX_HEAD] == j:
-                    continue
-
-                # Add head to tree
-                tree[head[INDEX_HEAD]].append((head[INDEX_RELOP], j))
+                else:
+                    # No 'REL_OP', this is the root
+                    root = j
 
             _tree_list.append(tree)
+            _root_list.append(root)
+
         self._tree[key].extend(_tree_list)
         self._root[key].extend(_root_list)
 
