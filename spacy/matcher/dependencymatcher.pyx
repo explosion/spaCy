@@ -27,7 +27,6 @@ cdef class DependencyMatcher:
     cdef readonly Matcher matcher
     cdef public object _patterns
     cdef public object _raw_patterns
-    cdef public object _keys_to_token
     cdef public object _tokens_to_key
     cdef public object _root
     cdef public object _callbacks
@@ -48,17 +47,12 @@ cdef class DependencyMatcher:
         # e.g. {'key': [[{'RIGHT_ID': ..., 'RIGHT_ATTRS': ... }, ... ], ... ], ... }
         self._raw_patterns = defaultdict(list)
 
-        # Associating each key to a list of lists of 'RIGHT_ATTRS'
+        # Associates each key to a list of lists of 'RIGHT_ATTRS'
         # e.g. {'key': [[{'POS': ... }, ... ], ... ], ... }
         self._patterns = defaultdict(list)
 
         # Associates each key to a list of dicts where each dict associates
-        # a token key (used by the internal matcher) to its position within
-        # the pattern
-        # e.g. {'key': [ {'token_key': 2, ... }, ... ], ... }
-        self._keys_to_token = defaultdict(list)
-
-        # Like _keys_to_token but the other way around
+        # a token position within the pattern to the key used by the internal matcher) 
         # e.g. {'key': [ {2: 'token_key', ... }, ... ], ... }
         self._tokens_to_key = defaultdict(list)
 
@@ -194,23 +188,18 @@ cdef class DependencyMatcher:
         # Add each node pattern of all the input patterns individually to the
         # matcher. This enables only a single instance of Matcher to be used.
         # Multiple adds are required to track each node pattern.
-        keys_to_token_list = []
         tokens_to_key_list = []
         for i in range(len(_patterns)):
-            keys_to_token = {}
             tokens_to_key = {}
 
             # TODO: Better ways to hash edges in pattern?
             for j in range(len(_patterns[i])):
                 k = self._get_matcher_key(key, i, j)
                 self.matcher.add(k, [_patterns[i][j]])
-                keys_to_token[k] = j
                 tokens_to_key[j] = k
 
-            keys_to_token_list.append(keys_to_token)
             tokens_to_key_list.append(tokens_to_key)
 
-        self._keys_to_token[key].extend(keys_to_token_list)
         self._tokens_to_key[key].extend(tokens_to_key_list)
 
         # Create an object tree to traverse later on. This data structure
@@ -278,7 +267,6 @@ cdef class DependencyMatcher:
         self._raw_patterns.pop(key)
         self._tree.pop(key)
         self._root.pop(key)
-        self._keys_to_token.pop(key)
         self._tokens_to_key.pop(key)
 
     def _get_keys_to_position_maps(self, doc):
@@ -315,10 +303,9 @@ cdef class DependencyMatcher:
         keys_to_position_maps = self._get_keys_to_position_maps(doc)
 
         for key in self._patterns.keys():
-            for root, tree, keys_to_token, tokens_to_key in zip(
+            for root, tree, tokens_to_key in zip(
                 self._root[key],
                 self._tree[key],
-                self._keys_to_token[key],
                 self._tokens_to_key[key],
             ):
 
