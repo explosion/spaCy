@@ -53,6 +53,18 @@ cdef class Graph:
                 weight=self.c.weights[i]
             )
 
+    def node(self, tuple indices):
+        cdef vector[int32_t] node 
+        node.reserve(len(indices))
+        for i, idx in enumerate(indices):
+            node[i] = idx
+        return add_node(&self.c, node)
+
+    def get_siblings(self, tuple indices):
+        cdef vector[int] siblings
+        get_sibling_nodes(siblings, &self.c, self.node(indices))
+        return [tuple(self.c.nodes[siblings[i]]) for i in range(siblings.size())]
+
     def get_edge(self, int i):
         edge = self.c.edges[i]
         return Edge(
@@ -97,13 +109,6 @@ cdef class Graph:
         weight_float = weight if weight is not None else 0.0
         add_edge(&self.c, EdgeC(head=head, tail=tail, label=label), weight_float)
     
-    def add_node(self, tuple indices):
-        cdef vector[int32_t] node 
-        node.reserve(len(indices))
-        for i, idx in enumerate(indices):
-            node[i] = idx
-        return add_node(&self.c, node)
-
 
 cdef int add_node(GraphC* graph, vector[int32_t] node) nogil:
     key = hash64(&node[0], node.size() * sizeof(node[0]), 0)
