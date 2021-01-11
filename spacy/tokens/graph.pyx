@@ -1,26 +1,29 @@
 from libc.stdint cimport int32_t, int64_t
+from libcpp.pair cimport pair
+from cython.operator cimport dereference
 import weakref
 from preshed.maps cimport map_get_unless_missing
 from murmurhash.mrmr cimport hash64
+from ..typedefs cimport hash_t
 from ..strings import get_string_id
 from ..structs cimport EdgeC
 
 
 class Edge:
-    def __init__(self, doc, parent, child, label, weight):
+    def __init__(self, doc, head, tail, label, weight):
         self.doc = doc
-        self.parent_indices = parent
-        self.child_indices = child
+        self.head_indices = head
+        self.tail_indices = tail
         self.label = label
         self.weight = weight
 
     @property
-    def parent(self):
-        return tuple([self.doc[i] for i in self.parent_indices])
+    def head(self):
+        return tuple([self.doc[i] for i in self.head_indices])
     
     @property
-    def child(self):
-        return tuple([self.doc[i] for i in self.child_indices])
+    def tail(self):
+        return tuple([self.doc[i] for i in self.tail_indices])
 
     @property
     def label_(self):
@@ -28,16 +31,10 @@ class Edge:
 
 
 cdef class Graph:
-    """A set of relationships between tokens. Relationships (edges)
-    can be anchored by sequences of tokens (nodes). Nodes can be empty, so the
-    graph can attach labels to a group of tokens that aren't connected to
-    another group."""
+    """A set of directed labelled relationships between sets of tokens."""
     def __init__(self, doc, name=""):
-        self.mem = Pool()
         self.name = name
         self.doc_ref = weakref.ref(doc)
-        self.node_map = PreshMap()
-        self.edge_map = PreshMap()
 
     @property
     def doc(self):
@@ -49,8 +46,8 @@ cdef class Graph:
             edge = self.c.edges[i]
             yield Edge(
                 doc,
-                tuple(self.c.nodes[edge.parent]),
-                tuple(self.c.nodes[edge.child]),
+                tuple(self.c.nodes[edge.head]),
+                tuple(self.c.nodes[edge.tail]),
                 label=edge.label,
                 weight=self.c.weights[i]
             )
@@ -59,96 +56,150 @@ cdef class Graph:
         edge = self.c.edges[i]
         return Edge(
             self.doc,
-            self.c.nodes[edge.parent],
-            tuple(self.c.nodes[edge.child]),
+            self.c.nodes[edge.head],
+            tuple(self.c.nodes[edge.tail]),
             label=edge.label,
             weight=self.c.weights[i]
         )
 
-    def parents(self, int node):
-        output = []
-        n_parents = self.c.n_parents[node]
-        for i in range(self.c.first_parent[node], self.c.edges.size()):
-            if len(output) >= n_parents:
-                break
-            output.append(self.get_edge(i))
-        return output
+    def head_edges(self, int node):
+        cdef vector[EdgeC] output
+        size = get_head_edges(output, &self.c, node)
+        return list(output)
 
-    def children(self, int node):
-        output = []
-        n_children = self.c.n_children[node]
-        for i in range(self.c.first_children[node], self.c.edges.size()):
-            if len(output) >= n_children:
-                break
-            output.append(self.get_edge(i))
-        return output
+    def tail_edges(self, int node):
+        cdef vector[EdgeC] output
+        size = get_tail_edges(output, &self.c, node)
+        return list(output)
  
-    def ancestors(self, int node):
-        queue = self.parents(node)
+    def walk_head_edges(self, int node):
+        queue = self.heads(node)
         for edge in queue:
             yield edge
-            queue.extend(self.parents(edge.parent_index))
+            queue.extend(self.heads(edge.head_index))
 
-    def descendents(self, int node):
-        queue = self.children(node)
+    def walk_tail_edges(self, int node):
+        queue = self.tails(node)
         for edge in queue:
             yield edge
-            queue.extend(self.children(edge.child_index))
+            queue.extend(self.tails(edge.tail_index))
 
-    def has_edge(self, int parent, int child, label=""):
-        cdef EdgeC edge
-        edge.parent = parent
-        edge.child = child
-        edge.label = get_string_id(label)
-        key = hash64(&edge, sizeof(edge), 0)
-        return key in self.edge_map
-
-    def add_edge(self, int parent, int child, *, label="", weight=None):
+    def has_edge(self, int head, int tail, label=""):
+        return has_edge(
+            &self.c,
+            EdgeC(head=head, tail=tail, label=get_string_id(label))
+        )
+    
+    def add_edge(self, int head, int tail, *, label="", weight=None):
         """Add an arc to the graph, connecting two spans or tokens."""
-        doc = self.doc
-        cdef EdgeC edge
-        edge.parent = parent
-        edge.child = child
-        edge.label = doc.vocab.strings.as_int(label)
-        key = hash64(&edge, sizeof(edge), 0)
-        # Avoid adding duplicate edges.
-        result = map_get_unless_missing(self.edge_map.c_map, key)
-        if result.found:
-            edge_index = <int64_t>result.value
-            if weight is not None:
-                # Set the weight to the last seen value.
-                self.c.weights[edge_index] = weight
-        else:
-            edge_index = self.c.edges.size()
-            self.edge_map[key] = edge_index
-            self.c.edges.push_back(edge)
-            if self.c.n_children[edge.parent] == 0:
-                self.c.first_child[edge.parent] = edge_index
-            if self.c.n_parents[edge.child] == 0:
-                self.c.first_parent[edge.child] = edge_index
-            self.c.n_children[edge.parent] += 1
-            self.c.n_parents[edge.child] += 1
-            self.c.weights.push_back(weight if weight is not None else 0.0)
-            if child in self.roots:
-                self.roots.pop(child)
-            if self.c.n_parents[edge.parent] == 0:
-                self.roots.add(edge.parent)
-
+        label_hash = self.doc.vocab.string.as_int(label)
+        weight_float = weight if weight is not None else 0.0
+        add_edge(&self.c, EdgeC(head=head, tail=tail, label=label), weight_float)
+    
     def add_node(self, tuple indices):
         cdef vector[int32_t] node 
         node.reserve(len(indices))
         for i, idx in enumerate(indices):
             node[i] = idx
-        key = hash64(&node[0], sizeof(node[0]), 0)
-        result = map_get_unless_missing(self.node_map.c_map, key)
-        if result.found:
-            return <int64_t>result.value
-        else:
-            index = self.c.nodes.size()
-            self.c.nodes.push_back(node)
-            self.node_map[key] = index
-            self.c.n_parents.push_back(0)
-            self.c.n_children.push_back(0)
-            self.c.first_parent.push_back(0)
-            self.c.first_child.push_back(0)
-            return index
+        return add_node(&self.c, node)
+
+
+cdef int add_node(GraphC* graph, vector[int32_t] node) nogil:
+    key = hash64(&node[0], node.size() * sizeof(node[0]), 0)
+    it = graph.node_map.find(key)
+    if it != graph.node_map.end():
+        # Item found. Convert the iterator to an index value.
+        return dereference(it).second
+    else:
+        index = graph.nodes.size()
+        graph.nodes.push_back(node)
+        graph.n_heads.push_back(0)
+        graph.n_tails.push_back(0)
+        graph.first_head.push_back(0)
+        graph.first_tail.push_back(0)
+        graph.roots.insert(index)
+        graph.node_map.insert(pair[hash_t, int](key, index))
+        return index
+ 
+
+cdef int add_edge(GraphC* graph, EdgeC edge, float weight) nogil:
+    edge_index = graph.edges.size()
+    graph.edges.push_back(edge)
+    if graph.n_tails[edge.head] == 0:
+        graph.first_tail[edge.head] = edge_index
+    if graph.n_heads[edge.tail] == 0:
+        graph.first_head[edge.tail] = edge_index
+    graph.n_tails[edge.head] += 1
+    graph.n_heads[edge.tail] += 1
+    graph.weights.push_back(weight)
+    # If we had the tail marked as a root, remove it.
+    tail_root_index = graph.roots.find(edge.tail)
+    if tail_root_index != graph.roots.end():
+        graph.roots.erase(tail_root_index)
+    return edge_index
+
+
+cdef int has_edge(const GraphC* graph, EdgeC edge) nogil:
+    key = hash64(&edge, sizeof(edge), 0)
+    return graph.edge_map.find(key) != graph.edge_map.end()
+
+
+cdef int has_node(const GraphC* graph, vector[int32_t] node) nogil:
+    key = hash64(&node, node.size() * sizeof(node[0]), 0)
+    return graph.node_map.find(key) != graph.edge_map.end()
+
+
+cdef int get_head_nodes(vector[int]& output, const GraphC* graph, int node) nogil:
+    n_head = graph.n_heads[node]
+    output.reserve(n_head)
+    start = graph.first_head[node] 
+    end = graph.edges.size()
+    cdef int j = 0
+    for i in range(start, end):
+        if j >= n_head:
+            break
+        output[j] = graph.edges[i].head
+        j += 1
+    return j
+
+
+cdef int get_tail_nodes(vector[int]& output, const GraphC* graph, int node) nogil:
+    n_tail = graph.n_tails[node]
+    output.reserve(n_tail)
+    start = graph.first_tail[node] 
+    end = graph.edges.size()
+    cdef int j = 0
+    for i in range(start, end):
+        if j >= n_tail:
+            break
+        output[j] = graph.edges[i].tail
+        j += 1
+    return j
+
+
+cdef int get_head_edges(vector[EdgeC]& output, const GraphC* graph, int node) nogil:
+    n_head = graph.n_heads[node]
+    output.reserve(n_head)
+    start = graph.first_head[node] 
+    end = graph.edges.size()
+    cdef int j = 0
+    for i in range(start, end):
+        if j >= n_head:
+            break
+        output[j] = graph.edges[i]
+        j += 1
+    return j
+
+
+cdef int get_tail_edges(vector[EdgeC]& output, const GraphC* graph, int node) nogil:
+    n_tail = graph.n_tails[node]
+    output.reserve(n_tail)
+    start = graph.first_tail[node] 
+    end = graph.edges.size()
+    cdef int j = 0
+    for i in range(start, end):
+        if j >= n_tail:
+            break
+        output[j] = graph.edges[i]
+        j += 1
+    return j

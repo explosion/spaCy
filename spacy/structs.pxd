@@ -1,8 +1,10 @@
 from libc.stdint cimport uint8_t, uint32_t, int32_t, uint64_t
 from libcpp.vector cimport vector
+from libcpp.unordered_set cimport unordered_set
+from libcpp.unordered_map cimport unordered_map
 from libc.stdint cimport int32_t, int64_t
 
-from .typedefs cimport flags_t, attr_t, hash_t, weight_t
+from .typedefs cimport flags_t, attr_t, hash_t
 from .parts_of_speech cimport univ_pos_t
 
 
@@ -95,15 +97,19 @@ cdef struct AliasC:
 
 cdef struct EdgeC:
     hash_t label
-    int32_t parent
-    int32_t child
+    int32_t head
+    int32_t tail
 
 
 cdef struct GraphC:
     vector[vector[int32_t]] nodes
     vector[EdgeC] edges
-    vector[weight_t] weights
-    vector[int] n_parents
-    vector[int] n_children
-    vector[int] first_parent
-    vector[int] first_child
+    vector[float] weights
+    vector[int] n_heads
+    vector[int] n_tails
+    vector[int] first_head
+    vector[int] first_tail
+    unordered_set[int] roots
+    unordered_map[hash_t, int] node_map
+    unordered_map[hash_t, int] edge_map
+
