@@ -51,9 +51,9 @@ cdef class DependencyMatcher:
         # e.g. {'key': [[{'POS': ... }, ... ], ... ], ... }
         self._patterns = defaultdict(list)
 
-        # Associates each key to a list of dicts where each dict associates
+        # Associates each key to a list of lists where each list associates
         # a token position within the pattern to the key used by the internal matcher) 
-        # e.g. {'key': [ {2: 'token_key', ... }, ... ], ... }
+        # e.g. {'key': [ ['token_key', ... ], ... ], ... }
         self._tokens_to_key = defaultdict(list)
 
         # Associates each key to a list of ints where each int corresponds
@@ -190,7 +190,9 @@ cdef class DependencyMatcher:
         # Multiple adds are required to track each node pattern.
         tokens_to_key_list = []
         for i in range(len(_patterns)):
-            tokens_to_key = {}
+
+            # Preallocate list space
+            tokens_to_key = [None]*len(_patterns[i])
 
             # TODO: Better ways to hash edges in pattern?
             for j in range(len(_patterns[i])):
