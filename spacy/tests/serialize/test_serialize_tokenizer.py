@@ -24,14 +24,15 @@ def test_serialize_custom_tokenizer(en_vocab, en_tokenizer):
     Tokenizer(en_vocab).from_bytes(tokenizer_bytes)
 
     # test that empty/unset values are set correctly on deserialization
-    en_tokenizer.token_match = re.compile("test").match
-    assert en_tokenizer.rules != {}
-    assert en_tokenizer.token_match is not None
-    assert en_tokenizer.url_match is not None
-    en_tokenizer.from_bytes(tokenizer_bytes)
-    assert en_tokenizer.rules == {}
-    assert en_tokenizer.token_match is None
-    assert en_tokenizer.url_match is None
+    tokenizer = get_lang_class("en").Defaults.create_tokenizer()
+    tokenizer.token_match = re.compile("test").match
+    assert tokenizer.rules != {}
+    assert tokenizer.token_match is not None
+    assert tokenizer.url_match is not None
+    tokenizer.from_bytes(tokenizer_bytes)
+    assert tokenizer.rules == {}
+    assert tokenizer.token_match is None
+    assert tokenizer.url_match is None
 
     tokenizer = Tokenizer(en_vocab, rules={"ABC.": [{"ORTH": "ABC"}, {"ORTH": "."}]})
     tokenizer.rules = {}
