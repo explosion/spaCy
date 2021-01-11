@@ -22,7 +22,7 @@ INDEX_RELOP = 0
 cdef class DependencyMatcher:
     """Match dependency parse tree based on pattern rules."""
     cdef readonly Vocab vocab
-    cdef readonly Matcher matcher
+    cdef readonly Matcher _matcher
     cdef public object _patterns
     cdef public object _raw_patterns
     cdef public object _tokens_to_key
@@ -39,7 +39,7 @@ cdef class DependencyMatcher:
         validate (bool): Whether patterns should be validated, passed to
             Matcher as `validate`
         """
-        self.matcher = Matcher(vocab, validate=validate)
+        self._matcher = Matcher(vocab, validate=validate)
 
         # Associates each key to the raw patterns list added by the user
         # e.g. {'key': [[{'RIGHT_ID': ..., 'RIGHT_ATTRS': ... }, ... ], ... ], ... }
@@ -71,18 +71,18 @@ cdef class DependencyMatcher:
 
         self.vocab = vocab
         self._ops = {
-            "<": self.dep,
-            ">": self.gov,
-            "<<": self.dep_chain,
-            ">>": self.gov_chain,
-            ".": self.imm_precede,
-            ".*": self.precede,
-            ";": self.imm_follow,
-            ";*": self.follow,
-            "$+": self.imm_right_sib,
-            "$-": self.imm_left_sib,
-            "$++": self.right_sib,
-            "$--": self.left_sib,
+            "<": self._dep,
+            ">": self._gov,
+            "<<": self._dep_chain,
+            ">>": self._gov_chain,
+            ".": self._imm_precede,
+            ".*": self._precede,
+            ";": self._imm_follow,
+            ";*": self._follow,
+            "$+": self._imm_right_sib,
+            "$-": self._imm_left_sib,
+            "$++": self._right_sib,
+            "$--": self._left_sib,
         }
 
     def __reduce__(self):
@@ -105,7 +105,7 @@ cdef class DependencyMatcher:
         """
         return self.has_key(key)
 
-    def validate_input(self, pattern, key):
+    def _validate_input(self, pattern, key):
         idx = 0
         visited_nodes = {}
         for relation in pattern:
@@ -164,7 +164,7 @@ cdef class DependencyMatcher:
         for pattern in patterns:
             if len(pattern) == 0:
                 raise ValueError(Errors.E012.format(key=key))
-            self.validate_input(pattern, key)
+            self._validate_input(pattern, key)
 
         key = self._normalize_key(key)
 
@@ -194,7 +194,7 @@ cdef class DependencyMatcher:
             # TODO: Better ways to hash edges in pattern?
             for j in range(len(_patterns[i])):
                 k = self._get_matcher_key(key, i, j)
-                self.matcher.add(k, [_patterns[i][j]])
+                self._matcher.add(k, [_patterns[i][j]])
                 tokens_to_key[j] = k
 
             tokens_to_key_list.append(tokens_to_key)
@@ -278,7 +278,7 @@ cdef class DependencyMatcher:
         e.g. keys_to_position_maps[root_index][match_id] = [...]
         """
         keys_to_position_maps = defaultdict(lambda: defaultdict(list))
-        for match_id, start, _ in self.matcher(doc):
+        for match_id, start, _ in self._matcher(doc):
             root = doc[start].root
             keys_to_position_maps[root.i][match_id].append(start)
         return keys_to_position_maps
@@ -349,60 +349,60 @@ cdef class DependencyMatcher:
         """
         return self._ops[operator](doc, node)
 
-    def dep(self, doc, node):
+    def _dep(self, doc, node):
         if doc[node].head == doc[node]:
             return []
         return [doc[node].head]
 
-    def gov(self,doc,node):
+    def _gov(self,doc,node):
         return list(doc[node].children)
 
-    def dep_chain(self, doc, node):
+    def _dep_chain(self, doc, node):
         return list(doc[node].ancestors)
 
-    def gov_chain(self, doc, node):
+    def _gov_chain(self, doc, node):
         return [t for t in doc[node].subtree if t != doc[node]]
 
-    def imm_precede(self, doc, node):
+    def _imm_precede(self, doc, node):
         sent = self._get_sent(doc[node])
         if node < len(doc) - 1 and doc[node + 1] in sent:
             return [doc[node + 1]]
         return []
 
-    def precede(self, doc, node):
+    def _precede(self, doc, node):
         sent = self._get_sent(doc[node])
         return [doc[i] for i in range(node + 1, sent.end)]
 
-    def imm_follow(self, doc, node):
+    def _imm_follow(self, doc, node):
         sent = self._get_sent(doc[node])
         if node > 0 and doc[node - 1] in sent:
             return [doc[node - 1]]
         return []
 
-    def follow(self, doc, node):
+    def _follow(self, doc, node):
         sent = self._get_sent(doc[node])
         return [doc[i] for i in range(sent.start, node)]
 
-    def imm_right_sib(self, doc, node):
+    def _imm_right_sib(self, doc, node):
         for child in list(doc[node].head.children):
             if child.i == node + 1:
                 return [doc[child.i]]
         return []
 
-    def imm_left_sib(self, doc, node):
+    def _imm_left_sib(self, doc, node):
         for child in list(doc[node].head.children):
             if child.i == node - 1:
                 return [doc[child.i]]
         return []
 
-    def right_sib(self, doc, node):
+    def _right_sib(self, doc, node):
         candidate_children = []
         for child in list(doc[node].head.children):
             if child.i > node:
                 candidate_children.append(doc[child.i])
         return candidate_children
 
-    def left_sib(self, doc, node):
+    def _left_sib(self, doc, node):
         candidate_children = []
         for child in list(doc[node].head.children):
             if child.i < node:
