@@ -311,11 +311,8 @@ cdef class DependencyMatcher:
                 self._tree[key],
                 self._tokens_to_key[key],
             ):
-
                 for keys_to_position in keys_to_position_maps.values():
-                    matched_trees = []
-                    self._get_matches(doc, tree, tokens_to_key, keys_to_position, matched_trees)
-                    for matched_tree in matched_trees:
+                    for matched_tree in self._get_matches(doc, tree, tokens_to_key, keys_to_position):
                         matched_key_trees.append((key, matched_tree))
 
             for i, (match_id, nodes) in enumerate(matched_key_trees):
@@ -329,7 +326,7 @@ cdef class DependencyMatcher:
 
         return matched_key_trees
 
-    def _get_matches(self, doc, tree, tokens_to_key, keys_to_position, matched_trees):
+    def _get_matches(self, doc, tree, tokens_to_key, keys_to_position):
         cdef bint is_valid
 
         all_positions = [keys_to_position[key] for key in tokens_to_key]
@@ -346,7 +343,7 @@ cdef class DependencyMatcher:
                             break
                     is_valid = is_valid & is_nbor
             if is_valid:
-                matched_trees.append(list(potential_match))
+                yield list(potential_match)
 
     @lru_cache(maxsize=None)
     def _resolve_node_operator(self, doc, node, operator):
