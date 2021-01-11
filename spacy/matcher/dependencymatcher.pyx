@@ -2,6 +2,7 @@
 from typing import List
 from collections import defaultdict
 from functools import lru_cache
+from itertools import product
 
 import numpy
 
@@ -313,7 +314,7 @@ cdef class DependencyMatcher:
 
                 for keys_to_position in keys_to_position_maps.values():
                     matched_trees = []
-                    self._recurse(doc, tree, tokens_to_key, keys_to_position, [], matched_trees)
+                    self._get_matches(doc, tree, tokens_to_key, keys_to_position, matched_trees)
                     for matched_tree in matched_trees:
                         matched_key_trees.append((key, matched_tree))
 
@@ -328,26 +329,24 @@ cdef class DependencyMatcher:
 
         return matched_key_trees
 
-    def _recurse(self, doc, tree, tokens_to_key, keys_to_position, visited_nodes, matched_trees):
+    def _get_matches(self, doc, tree, tokens_to_key, keys_to_position, matched_trees):
         cdef bint is_valid
-        if len(visited_nodes) == len(tokens_to_key):
-            is_valid = True
-            for node in range(len(visited_nodes)):
-                if node in tree:
-                    for idx, (relop, nbor) in enumerate(tree[node]):
-                        computed_nbors = self._resolve_node_operator(doc, visited_nodes[node], relop)
-                        is_nbor = False
-                        for computed_nbor in computed_nbors:
-                            if computed_nbor.i == visited_nodes[nbor]:
-                                is_nbor = True
-                        is_valid = is_valid & is_nbor
-            if is_valid:
-                matched_trees.append(visited_nodes)
-            return
 
-        matcher_key = tokens_to_key[len(visited_nodes)]
-        for pattern_node in keys_to_position[matcher_key]:
-            self._recurse(doc, tree, tokens_to_key, keys_to_position, visited_nodes+[pattern_node], matched_trees)
+        all_positions = [keys_to_position[key] for key in tokens_to_key]
+
+        for potential_match in product(*all_positions):
+            is_valid = True
+            for node_idx, node in enumerate(potential_match):
+                for relop, nbor in tree[node_idx]:
+                    computed_nbors = self._resolve_node_operator(doc, node, relop)
+                    is_nbor = False
+                    for computed_nbor in computed_nbors:
+                        if computed_nbor.i == potential_match[nbor]:
+                            is_nbor = True
+                            break
+                    is_valid = is_valid & is_nbor
+            if is_valid:
+                matched_trees.append(list(potential_match))
 
     @lru_cache(maxsize=None)
     def _resolve_node_operator(self, doc, node, operator):
