@@ -86,7 +86,7 @@ def like_num(text):
     if text in _num_words:
         return True
 
-    # CHeck ordinal number
+    # Check ordinal number
     if text in _ordinal_words:
         return True
     return False

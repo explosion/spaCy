@@ -74,16 +74,6 @@ def test_issue3012(en_vocab):
     assert (doc2[2].text, doc2[2].pos_, doc2[2].tag_, doc2[2].ent_type_) == expected
 
 
-def test_issue3199():
-    """Test that Span.noun_chunks works correctly if no noun chunks iterator
-    is available. To make this test future-proof, we're constructing a Doc
-    with a new Vocab here and a parse tree to make sure the noun chunks run.
-    """
-    words = ["This", "is", "a", "sentence"]
-    doc = Doc(Vocab(), words=words, heads=[0] * len(words), deps=["dep"] * len(words))
-    assert list(doc[0:3].noun_chunks) == []
-
-
 def test_issue3209():
     """Test issue that occurred in spaCy nightly where NER labels were being
     mapped to classes incorrectly after loading the model, when the labels

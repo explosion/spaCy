@@ -463,6 +463,8 @@ class Errors:
             "issue tracker: http://github.com/explosion/spaCy/issues")
 
     # TODO: fix numbering after merging develop into master
+    E894 = ("The 'noun_chunks' syntax iterator is not implemented for language "
+            "'{lang}'.")
     E895 = ("The 'textcat' component received gold-standard annotations with "
             "multiple labels per document. In spaCy 3 you should use the "
             "'textcat_multilabel' component for this instead. "

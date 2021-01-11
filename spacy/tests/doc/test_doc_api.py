@@ -2,6 +2,8 @@ import pytest
 import numpy
 import logging
 import mock
+
+from spacy.lang.xx import MultiLanguage
 from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
 from spacy.lexeme import Lexeme
@@ -177,6 +179,15 @@ def test_doc_api_sents_empty_string(en_tokenizer):
     doc = en_tokenizer("")
     sents = list(doc.sents)
     assert len(sents) == 0
+
+
+def test_doc_noun_chunks_not_implemented():
+    """Test that a language without noun_chunk iterator, throws a NotImplementedError"""
+    text = "Může data vytvářet a spravovat, ale především je dokáže analyzovat, najít v nich nové vztahy a vše přehledně vizualizovat."
+    nlp = MultiLanguage()
+    doc = nlp(text)
+    with pytest.raises(NotImplementedError):
+        chunks = list(doc.noun_chunks)
 
 
 def test_doc_api_runtime_error(en_tokenizer):

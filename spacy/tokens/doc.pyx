@@ -821,14 +821,15 @@ cdef class Doc:
         """
 
         # Accumulate the result before beginning to iterate over it. This
-        # prevents the tokenisation from being changed out from under us
+        # prevents the tokenization from being changed out from under us
         # during the iteration. The tricky thing here is that Span accepts
-        # its tokenisation changing, so it's okay once we have the Span
+        # its tokenization changing, so it's okay once we have the Span
         # objects. See Issue #375.
+        if self.noun_chunks_iterator is None:
+            raise NotImplementedError(Errors.E894.format(lang=self.vocab.lang))
         spans = []
-        if self.noun_chunks_iterator is not None:
-            for start, end, label in self.noun_chunks_iterator(self):
-                spans.append(Span(self, start, end, label=label))
+        for start, end, label in self.noun_chunks_iterator(self):
+            spans.append(Span(self, start, end, label=label))
         for span in spans:
             yield span
 
