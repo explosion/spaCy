@@ -625,6 +625,18 @@ cdef class Token:
             yield self.doc[head_ptr - (self.c - self.i)]
             i += 1
 
+    @property
+    def root(self):
+        """The furthermost syntactic ancestor of this token.
+
+        YIELDS Token: A token such that
+            `root.is_ancestor(self)`.
+
+        DOCS: https://nightly.spacy.io/api/token#root
+        """
+        self_ancestors = list(self.ancestors)
+        return self_ancestors[-1] if self_ancestors else self
+
     def is_ancestor(self, descendant):
         """Check whether this token is a parent, grandparent, etc. of another
         in the dependency tree.
@@ -660,9 +672,8 @@ cdef class Token:
             # Find the widest l/r_edges of the roots of the two tokens involved
             # to limit the number of tokens for set_children_from_heads
             cdef Token self_root, new_head_root
-            self_ancestors = list(self.ancestors)
+            self_root = self.root
             new_head_ancestors = list(new_head.ancestors)
-            self_root = self_ancestors[-1] if self_ancestors else self
             new_head_root = new_head_ancestors[-1] if new_head_ancestors else new_head
             start = self_root.c.l_edge if self_root.c.l_edge < new_head_root.c.l_edge else new_head_root.c.l_edge
             end = self_root.c.r_edge if self_root.c.r_edge > new_head_root.c.r_edge else new_head_root.c.r_edge
