@@ -1,6 +1,7 @@
 # cython: infer_types=True, profile=True
 from typing import List
 from collections import defaultdict
+from functools import lru_cache
 
 import numpy
 
@@ -316,15 +317,8 @@ cdef class DependencyMatcher:
                 self._tokens_to_key[key],
             ):
 
-                node_operator_map = self._get_node_operator_map(
-                    doc,
-                    tree,
-                    keys_to_token,
-                    keys_to_position,
-                )
-
                 matched_trees = []
-                self._recurse(tree, tokens_to_key, keys_to_position, node_operator_map, [], matched_trees)
+                self._recurse(doc, tree, tokens_to_key, keys_to_position, [], matched_trees)
                 for matched_tree in matched_trees:
                     matched_key_trees.append((key, matched_tree))
 
@@ -332,16 +326,21 @@ cdef class DependencyMatcher:
                 on_match = self._callbacks.get(match_id)
                 if on_match is not None:
                     on_match(self, doc, i, matched_key_trees)
+
+        # Clear cache, this is needed to avoid a too-large memory footprint if the same
+        # DependencyMatcher instance is used to process multiple documents
+        self._resolve_node_operator.cache_clear()
+
         return matched_key_trees
 
-    def _recurse(self, tree, tokens_to_key, keys_to_position, node_operator_map, visited_nodes, matched_trees):
+    def _recurse(self, doc, tree, tokens_to_key, keys_to_position, visited_nodes, matched_trees):
         cdef bint is_valid
         if len(visited_nodes) == len(tokens_to_key):
             is_valid = True
             for node in range(len(visited_nodes)):
                 if node in tree:
                     for idx, (relop, nbor) in enumerate(tree[node]):
-                        computed_nbors = node_operator_map[visited_nodes[node]][relop]
+                        computed_nbors = self._resolve_node_operator(doc, visited_nodes[node], relop)
                         is_nbor = False
                         for computed_nbor in computed_nbors:
                             if computed_nbor.i == visited_nodes[nbor]:
@@ -353,39 +352,15 @@ cdef class DependencyMatcher:
 
         matcher_key = tokens_to_key[len(visited_nodes)]
         for pattern_node in keys_to_position[matcher_key]:
-            self._recurse(tree, tokens_to_key, keys_to_position, node_operator_map, visited_nodes+[pattern_node], matched_trees)
+            self._recurse(doc, tree, tokens_to_key, keys_to_position, visited_nodes+[pattern_node], matched_trees)
 
-
-    def _get_node_operator_map(self, doc, tree, keys_to_token, keys_to_position):
+    @lru_cache(maxsize=None)
+    def _resolve_node_operator(self, doc, node, operator):
         """
-        Creates a dict of dicts which, given a node and an edge operator, contains
-        the list of nodes from the doc that belong to node+operator. 
-        This is used to store all the results beforehand to prevent unnecessary
-        computation while pattern matching
-
-        e.g. node_operator_map[node][operator] = [...]
+        Given a doc, a node (as a index in the doc) and a REL_OP operator
+        returns the list of nodes from the doc that belong to node+operator. 
         """
-
-        all_operators = {
-            child[INDEX_RELOP]
-            for node_idx in keys_to_token.values()
-            for child in tree[node_idx]
-        }
-
-        all_nodes = {
-            node
-            for matcher_key in keys_to_token.keys()
-            for node in keys_to_position[matcher_key]
-        }
-
-        # Create the actual node_operator_map
-        node_operator_map = {}
-        for node in all_nodes:
-            node_operator_map[node] = {}
-            for operator in all_operators:
-                node_operator_map[node][operator] = self._ops[operator](doc, node)
-
-        return node_operator_map
+        return self._ops[operator](doc, node)
 
     def dep(self, doc, node):
         if doc[node].head == doc[node]:
