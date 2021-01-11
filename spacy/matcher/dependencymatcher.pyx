@@ -6,8 +6,6 @@ from itertools import product
 
 import numpy
 
-from cymem.cymem cimport Pool
-
 from .matcher cimport Matcher
 from ..vocab cimport Vocab
 from ..tokens.doc cimport Doc
@@ -23,7 +21,6 @@ INDEX_RELOP = 0
 
 cdef class DependencyMatcher:
     """Match dependency parse tree based on pattern rules."""
-    cdef Pool mem
     cdef readonly Vocab vocab
     cdef readonly Matcher matcher
     cdef public object _patterns
@@ -73,7 +70,6 @@ cdef class DependencyMatcher:
         self._callbacks = {}
 
         self.vocab = vocab
-        self.mem = Pool()
         self._ops = {
             "<": self.dep,
             ">": self.gov,
