@@ -281,15 +281,20 @@ cdef class DependencyMatcher:
         self._keys_to_token.pop(key)
         self._tokens_to_key.pop(key)
 
-    def _get_keys_to_position_map(self, matches):
+    def _get_keys_to_position_maps(self, doc):
         """
-        Given a list of matches, creates a dict mapping each matcher id
-        to a list of positions in the doc
+        Processes the doc and groups all matches by their root and match id.
+        Returns a dict mapping each (root, match id) pair to the list of
+        tokens indices which are descendants of root and match the token
+        pattern identified by the given match id.
+
+        e.g. keys_to_position_maps[root_index][match_id] = [...]
         """
-        keys_to_position = defaultdict(list)
-        for match_id, start, _ in matches:
-            keys_to_position[match_id].append(start)
-        return keys_to_position
+        keys_to_position_maps = defaultdict(lambda: defaultdict(list))
+        for match_id, start, _ in self.matcher(doc):
+            root = doc[start].root
+            keys_to_position_maps[root.i][match_id].append(start)
+        return keys_to_position_maps
 
     def __call__(self, object doclike):
         """Find all token sequences matching the supplied pattern.
@@ -307,7 +312,7 @@ cdef class DependencyMatcher:
             raise ValueError(Errors.E195.format(good="Doc or Span", got=type(doclike).__name__))
 
         matched_key_trees = []
-        keys_to_position = self._get_keys_to_position_map(self.matcher(doc))
+        keys_to_position_maps = self._get_keys_to_position_maps(doc)
 
         for key in self._patterns.keys():
             for root, tree, keys_to_token, tokens_to_key in zip(
@@ -317,10 +322,11 @@ cdef class DependencyMatcher:
                 self._tokens_to_key[key],
             ):
 
-                matched_trees = []
-                self._recurse(doc, tree, tokens_to_key, keys_to_position, [], matched_trees)
-                for matched_tree in matched_trees:
-                    matched_key_trees.append((key, matched_tree))
+                for keys_to_position in keys_to_position_maps.values():
+                    matched_trees = []
+                    self._recurse(doc, tree, tokens_to_key, keys_to_position, [], matched_trees)
+                    for matched_tree in matched_trees:
+                        matched_key_trees.append((key, matched_tree))
 
             for i, (match_id, nodes) in enumerate(matched_key_trees):
                 on_match = self._callbacks.get(match_id)
