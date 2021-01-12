@@ -16,6 +16,7 @@ from thinc.util import copy_array
 import warnings
 
 from .span cimport Span
+from ._dict_proxies import SpanGroups
 from .token cimport Token
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
@@ -31,7 +32,6 @@ from .. import util
 from .underscore import Underscore, get_ext_args
 from ._retokenize import Retokenizer
 from ._serialize import ALL_ATTRS as DOCBIN_ALL_ATTRS
-from .span_group cimport SpanGroup
 
 
 DEF PADDING = 5
@@ -223,7 +223,7 @@ cdef class Doc:
         self.vocab = vocab
         size = max(20, (len(words) if words is not None else 0))
         self.mem = Pool()
-        self.span_groups = {}
+        self.spans = SpanGroups(self)
         # Guarantee self.lex[i-x], for any i >= 0 and x < padding is in bounds
         # However, we need to remember the true starting places, so that we can
         # realloc.
@@ -808,21 +808,6 @@ cdef class Doc:
                     self.c[i+1].ent_iob == 1:
                 self.c[i+1].ent_iob = 3
 
-    def create_span_group(self, str name, attrs=None):
-        if name in self.span_groups:
-            raise KeyError(
-                f"Span group with name '{name}' already exists. "
-                f"Choose a new key, or remove the existing group. You can "
-                f"modify the doc.span_groups dict directly."
-            )
-        span_group = SpanGroup(
-            self,
-            name=name if name is not None else name,
-            attrs=attrs
-        )
-        self.span_groups[name] = span_group
-        return span_group
-
     @property
     def noun_chunks(self):
         """Iterate over the base noun phrases in the document. Yields base
@@ -1272,8 +1257,8 @@ cdef class Doc:
             strings.add(token.ent_kb_id_)
             strings.add(token.ent_id_)
             strings.add(token.norm_)
-        for span_group in self.span_groups.values():
-            for span in span_group.to_list():
+        for group in self.spans.values():
+            for span in group.to_list():
                 strings.add(span.label_)
         # Msgpack doesn't distinguish between lists and tuples, which is
         # vexing for user data. As a best guess, we *know* that within
@@ -1286,9 +1271,7 @@ cdef class Doc:
             "sentiment": lambda: self.sentiment,
             "tensor": lambda: self.tensor,
             "cats": lambda: self.cats,
-            "span_groups": lambda: {
-                name: group.to_bytes() for name, group in self.span_groups.items()
-            },
+            "spans": lambda: self.spans.to_bytes(),
             "strings": lambda: list(strings),
             "has_unknown_spaces": lambda: self.has_unknown_spaces
         }
@@ -1347,10 +1330,10 @@ cdef class Doc:
             self.push_back(lex, has_space)
             start = end + has_space
         self.from_array(msg["array_head"][2:], attrs[:, 2:])
-        self.span_groups = {
-            key: SpanGroup(self).from_bytes(value)
-            for key, value in msg.get("span_groups", {}).items()
-        }
+        if "spans" in msg:
+            self.spans.from_bytes(msg["spans"])
+        else:
+            self.spans.clear()
         return self
 
     def extend_tensor(self, tensor):
