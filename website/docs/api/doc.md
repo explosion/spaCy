@@ -676,6 +676,7 @@ The L2 norm of the document's vector representation.
 | `vocab`                              | The store of lexical types. ~~Vocab~~                                                                                                       |
 | `tensor` <Tag variant="new">2</Tag>  | Container for dense vector representations. ~~numpy.ndarray~~                                                                               |
 | `cats` <Tag variant="new">2</Tag>    | Maps a label to a score for categories applied to the document. The label is a string and the score should be a float. ~~Dict[str, float]~~ |
+| `spans` <Tag variant="new">3</Tag>   | A dictionary of named span groups, to store and access additional annotations. |
 | `user_data`                          | A generic storage area, for user custom data. ~~Dict[str, Any]~~                                                                            |
 | `lang` <Tag variant="new">2.1</Tag>  | Language of the document's vocabulary. ~~int~~                                                                                              |
 | `lang_` <Tag variant="new">2.1</Tag> | Language of the document's vocabulary. ~~str~~                                                                                              |
