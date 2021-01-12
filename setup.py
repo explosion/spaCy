@@ -66,9 +66,9 @@ MOD_NAMES = [
     "spacy.vectors",
 ]
 COMPILE_OPTIONS = {
-    "msvc": ["/Ox", "/EHsc"],
-    "mingw32": ["-O2", "-Wno-strict-prototypes", "-Wno-unused-function"],
-    "other": ["-O2", "-Wno-strict-prototypes", "-Wno-unused-function"],
+    "msvc": ["/Ox", "/EHsc", "-std=c++11"],
+    "mingw32": ["-O2", "-Wno-strict-prototypes", "-Wno-unused-function", "-std=c++11"],
+    "other": ["-O2", "-Wno-strict-prototypes", "-Wno-unused-function", "-std=c++11"],
 }
 LINK_OPTIONS = {"msvc": [], "mingw32": [], "other": []}
 COMPILER_DIRECTIVES = {
