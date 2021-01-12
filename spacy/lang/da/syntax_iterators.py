@@ -9,12 +9,6 @@ def noun_chunks(doclike):
     def is_verb_token(tok):
         return tok.pos in [VERB, AUX]
 
-    def next_token(tok):
-        try:
-            return tok.nbor()
-        except IndexError:
-            return None
-
     def get_left_bound(doc, root):
         left_bound = root
         for tok in reversed(list(root.lefts)):
@@ -67,7 +61,6 @@ def noun_chunks(doclike):
     np_right_deps = [doc.vocab.strings.add(label) for label in right_labels]
     stop_deps = [doc.vocab.strings.add(label) for label in stop_labels]
 
-    chunks = []
     prev_right = -1
     for token in doclike:
         if token.pos in [PROPN, NOUN, PRON]:

@@ -20,25 +20,21 @@ def noun_chunks(doclike):
     np_left_deps = [doc.vocab.strings.add(label) for label in left_labels]
     np_right_deps = [doc.vocab.strings.add(label) for label in right_labels]
     stop_deps = [doc.vocab.strings.add(label) for label in stop_labels]
+
+    prev_right = -1
     for token in doclike:
         if token.pos in [PROPN, NOUN, PRON]:
             left, right = noun_bounds(
                 doc, token, np_left_deps, np_right_deps, stop_deps
             )
+            if left.i <= prev_right:
+                continue
             yield left.i, right.i + 1, np_label
-            token = right
-        token = next_token(token)
+            prev_right = right.i
 
 
 def is_verb_token(token):
     return token.pos in [VERB, AUX]
-
-
-def next_token(token):
-    try:
-        return token.nbor()
-    except IndexError:
-        return None
 
 
 def noun_bounds(doc, root, np_left_deps, np_right_deps, stop_deps):
