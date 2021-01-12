@@ -44,7 +44,7 @@ cdef class Doc:
     cdef public object tensor
     cdef public object cats
     cdef public object user_data
-    cdef public object span_groups
+    cdef readonly object spans
 
     cdef TokenC* c
 
