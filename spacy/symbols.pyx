@@ -466,7 +466,6 @@ IDS = {
     "LAW": LAW,
     "MORPH": MORPH,
     "_": _,
-    "MISSING_LABEL": MISSING_LABEL,
 }
 
 

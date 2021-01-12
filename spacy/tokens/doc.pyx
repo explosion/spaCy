@@ -16,6 +16,7 @@ from thinc.util import copy_array
 import warnings
 
 from .span cimport Span
+from .token import MISSING_DEP_
 from .token cimport Token
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
@@ -266,7 +267,9 @@ cdef class Doc:
             self.push_back(lexeme, has_space)
 
         if heads is not None:
-            heads = [head - i if head is not None else None for i, head in enumerate(heads)]
+            heads = [head - i if head is not None else 0 for i, head in enumerate(heads)]
+        if deps is not None:
+            deps = [dep if dep is not None else MISSING_DEP_ for dep in deps]
         if deps and not heads:
             heads = [0] * len(deps)
         if sent_starts is not None:
@@ -1040,8 +1043,7 @@ cdef class Doc:
                 # cast index to signed int
                 abs_head_index = <int32_t>values[col * stride + i]
                 abs_head_index += i
-                # abs_head_index -1 refers to missing value
-                if abs_head_index < -1 or abs_head_index >= length:
+                if abs_head_index < 0 or abs_head_index >= length:
                     raise ValueError(
                         Errors.E190.format(
                             index=i,

@@ -22,6 +22,8 @@ from .. import parts_of_speech
 from ..errors import Errors, Warnings
 from .underscore import Underscore, get_ext_args
 
+MISSING_DEP_ = ""
+
 
 cdef class Token:
     """An individual token – i.e. a word, punctuation symbol, whitespace,
@@ -638,17 +640,27 @@ cdef class Token:
             return False
         return any(ancestor.i == self.i for ancestor in descendant.ancestors)
 
+
+    def has_head(self):
+        """Check whether the token has annotated head information.
+
+        RETURNS (bool): Whether the head annotation is valid or not.
+        """
+        return self.dep_ != MISSING_DEP_
+
+
     property head:
         """The syntactic parent, or "governor", of this token. 
+        If token.has_head() is `False`, this method will return itself. 
 
         RETURNS (Token): The token predicted by the parser to be the head of
-            the current token. Returns None if unknown.
+            the current token.
         """
         def __get__(self):
-            head_i = self.i + self.c.head
-            if head_i == -1:
-                return None
-            return self.doc[head_i]
+            if not self.has_head():
+                return self
+            else:
+                return self.doc[self.i + self.c.head]
 
         def __set__(self, Token new_head):
             # This function sets the head of self to new_head and updates the

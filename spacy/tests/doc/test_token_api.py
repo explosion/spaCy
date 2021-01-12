@@ -4,6 +4,8 @@ from spacy.attrs import IS_ALPHA, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_TITLE, IS_STO
 from spacy.symbols import VERB
 from spacy.vocab import Vocab
 from spacy.tokens import Doc
+from spacy.tokens.token import MISSING_DEP_
+from spacy.training import Example
 
 
 @pytest.fixture
@@ -250,3 +252,23 @@ def test_token_api_non_conjuncts(en_vocab):
     doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
     assert [w.text for w in doc[0].conjuncts] == []
     assert [w.text for w in doc[1].conjuncts] == []
+
+
+def test_missing_head_dep(en_vocab):
+    heads = [1, 1, 1, 1, 2, None]
+    deps = ["nsubj", "ROOT", "dobj", "cc", "conj", None]
+    words = ["I", "like", "London", "and", "Berlin", "."]
+    doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
+    pred_has_heads =  [t.has_head() for t in doc]
+    pred_deps =  [t.dep_ for t in doc]
+    assert pred_has_heads == [True, True, True, True, True, False]
+    assert pred_deps == ["nsubj", "ROOT", "dobj", "cc", "conj", MISSING_DEP_]
+    example = Example.from_dict(doc, {"heads": heads, "deps": deps})
+    ref_heads = [t.head.i for t in example.reference]
+    ref_deps = [t.dep_ for t in example.reference]
+    ref_has_heads = [t.has_head() for t in example.reference]
+    assert ref_deps == ["nsubj", "ROOT", "dobj", "cc", "conj", MISSING_DEP_]
+    assert ref_has_heads == [True, True, True, True, True, False]
+    aligned_heads, aligned_deps = example.get_aligned_parse(projectivize=True)
+    assert aligned_heads[5] == ref_heads[5]
+    assert aligned_deps[5] == MISSING_DEP_

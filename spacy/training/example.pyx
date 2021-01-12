@@ -11,8 +11,8 @@ from .alignment import Alignment
 from .iob_utils import biluo_to_iob, offsets_to_biluo_tags, doc_to_biluo_tags
 from .iob_utils import biluo_tags_to_spans
 from ..errors import Errors, Warnings
-from ..symbols import MISSING_LABEL
 from ..pipeline._parser_internals import nonproj
+from ..tokens.token import MISSING_DEP_
 from ..util import logger
 
 
@@ -180,18 +180,15 @@ cdef class Example:
         gold_to_cand = self.alignment.y2x
         aligned_heads = [None] * self.x.length
         aligned_deps = [None] * self.x.length
-        heads = [token.head.i if token.head is not None else -1 for token in self.y]
+        has_heads = [token.has_head() for token in self.y]
+        heads = [token.head.i for token in self.y]
         deps = [token.dep_ for token in self.y]
         if projectivize:
-            proj_heads, proj_deps = nonproj.projectivize(heads, deps)
-            # don't touch the missing data
-            heads = [h if heads[i] != -1 else -1 for i, h in enumerate(proj_heads)]
-            MISSING = self.x.vocab.strings[MISSING_LABEL]
-            deps = [d if deps[i] != MISSING else MISSING for i, d in enumerate(proj_deps)]
+            heads, deps = nonproj.projectivize(heads, deps)
         for cand_i in range(self.x.length):
             if cand_to_gold.lengths[cand_i] == 1:
                 gold_i = cand_to_gold[cand_i].dataXd[0, 0]
-                if heads[gold_i] != -1 and gold_to_cand.lengths[heads[gold_i]] == 1:
+                if gold_to_cand.lengths[heads[gold_i]] == 1:
                     aligned_heads[cand_i] = int(gold_to_cand[heads[gold_i]].dataXd[0, 0])
                     aligned_deps[cand_i] = deps[gold_i]
         return aligned_heads, aligned_deps
@@ -334,10 +331,11 @@ def _annot2array(vocab, tok_annot, doc_annot):
             pass
         elif key == "HEAD":
             attrs.append(key)
-            values.append([h-i if h is not None else -(i+1) for i, h in enumerate(value)])
+            values.append([h-i if h is not None else 0 for i, h in enumerate(value)])
         elif key == "DEP":
             attrs.append(key)
-            values.append([vocab.strings.add(h) if h is not None else MISSING_LABEL for h in value])
+            value = [v if v is not None else MISSING_DEP_ for v in value]
+            values.append([vocab.strings.add(h) for h in value])
         elif key == "SENT_START":
             attrs.append(key)
             values.append(value)

@@ -98,15 +98,9 @@ def test_doc_from_array_heads_in_bounds(en_vocab):
     doc_from_array = Doc(en_vocab, words=words)
     doc_from_array.from_array(["HEAD"], arr)
 
-    # head before start is used to denote a missing value
+    # head before start
     arr = doc.to_array(["HEAD"])
     arr[0] = -1
-    doc_from_array = Doc(en_vocab, words=words)
-    doc_from_array.from_array(["HEAD"], arr)
-
-    # other negative values are invalid
-    arr = doc.to_array(["HEAD"])
-    arr[0] = -2
     doc_from_array = Doc(en_vocab, words=words)
     with pytest.raises(ValueError):
         doc_from_array.from_array(["HEAD"], arr)

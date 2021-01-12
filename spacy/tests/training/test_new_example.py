@@ -263,3 +263,22 @@ def test_Example_from_dict_sentences():
     annots = {"sent_starts": [1, -1, 0, 0, 0]}
     ex = Example.from_dict(predicted, annots)
     assert len(list(ex.reference.sents)) == 1
+
+
+def test_Example_from_dict_with_parse():
+    vocab = Vocab()
+    words = ["I", "like", "London", "and", "Berlin", "."]
+    deps = ["nsubj", "ROOT", "dobj", "cc", "conj", "punct"]
+    heads = [1, 1, 1, 2, 2, 1]
+    annots_head_only = {"words": words, "heads": heads}
+    annots_head_dep = {"words": words, "heads": heads, "deps": deps}
+    predicted = Doc(vocab, words=words)
+
+    # when not providing deps, the head information is considered to be missing
+    # in this case, the token's heads refer to themselves
+    example_1 = Example.from_dict(predicted, annots_head_only)
+    assert [t.head.i for t in example_1.reference] == [0, 1, 2, 3, 4, 5]
+
+    # when providing deps, the head information is actually used
+    example_2 = Example.from_dict(predicted, annots_head_dep)
+    assert [t.head.i for t in example_2.reference] == heads
