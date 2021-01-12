@@ -6,10 +6,28 @@ from libc.stdint cimport uint64_t, uint32_t, int32_t
 
 
 cdef class SpanGroup:
-    """A group of spans that all refer to the same Doc object.
+    """A group of spans that all belong to the same Doc object. The group
+    can be named, and you can attach additional attributes to it. Span groups
+    are generally accessed via the `doc.spans` attribute. The `doc.spans`
+    attribute will convert lists of spans into a `SpanGroup` object for you
+    automatically on assignment.
 
-    Span groups can be used to manage various types of annotations. The group
-    can be named, and you can attach additional attributes to it.
+    Example:
+        Construction 1
+        >>> doc = nlp("Their goi ng insane")
+        >>> doc.spans["errors"] = SpanGroup(
+            doc,
+            name="errors",
+            spans=[doc[0:1], doc[2:4]],
+            attrs={"annotator": "matt"}
+        )
+
+        Construction 2
+        >>> doc = nlp("Their goi ng insane")
+        >>> doc.spans["errors"] = [doc[0:1], doc[2:4]]
+        >>> assert isinstance(doc.spans["errors"], SpanGroup)
+
+    DOCS: https://nightly.spacy.io/api/span-group
     """
     def __init__(self, doc, name="", attrs={}, spans=[]):
         # We need to make this a weak reference, so that the Doc object can
@@ -19,7 +37,7 @@ cdef class SpanGroup:
         self.name = name
         self.attrs = dict(attrs) if attrs is not None else {}
         cdef Span span
-        for i, span in enumerate(spans):
+        for span in spans:
             self.push_back(span.c)
 
     @property
@@ -27,17 +45,25 @@ cdef class SpanGroup:
         return self._doc_ref()
 
     def __len__(self):
+        """The number of spans in the group."""
         return self.c.size()
 
     def append(self, Span span):
+        """Add a span to the group. The span must refer to the same Doc
+        object as the span group."""
+        if span.doc is not self.doc:
+            raise ValueError("Cannot add span to group: refers to different Doc.")
         self.push_back(span.c)
 
     def extend(self, spans):
+        """Add multiple spans to the group. All spans must refer to the same 
+        Doc object as the span group."""
         cdef Span span
         for span in spans:
             self.append(span)
 
-    def __getitem__(self, int i):
+    def __getitem__(self, int i) -> Span:
+        """Get a span from the group."""
         cdef int size = self.c.size()
         if i < -size or i >= size:
             raise IndexError(f"list index {i} out of range")
@@ -45,10 +71,8 @@ cdef class SpanGroup:
             i += size
         return Span.cinit(self.doc, self.c[i])
 
-    def to_list(self):
-        return [self[i] for i in range(len(self))]
-
-    def to_bytes(self):
+    def to_bytes(self) -> bytes:
+        """Serialize the SpanGroup's contents to a byte string."""
         output = {"name": self.name, "attrs": self.attrs, "spans": []}
         for i in range(self.c.size()):
             span = self.c[i]
@@ -74,6 +98,7 @@ cdef class SpanGroup:
         return srsly.msgpack_dumps(output)
 
     def from_bytes(self, byte_string):
+        """Deserialize the SpanGroup's contents from a byte string."""
         msg = srsly.msgpack_loads(byte_string)
         self.name = msg["name"]
         self.attrs = dict(msg["attrs"])
