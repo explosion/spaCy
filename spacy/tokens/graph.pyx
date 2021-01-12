@@ -35,12 +35,24 @@ class Edge:
 
 cdef class Graph:
     """A set of directed labelled relationships between sets of tokens."""
-    def __init__(self, doc, name=""):
+    def __init__(self, doc, *, name="", nodes=[], edges=[], labels=None, weights=None):
+        if weights is not None:
+            assert len(weights) == len(edges)
+        else:
+            weights = [0.0] * len(edges)
+        if labels is not None:
+            assert len(labels) == len(edges)
+        else:
+            labels = [""] * len(edges)
         self.c.node_map = unordered_map[hash_t, int]()
         self.c.edge_map = unordered_map[hash_t, int]()
         self.c.roots = unordered_set[int]()
         self.name = name
         self.doc_ref = weakref.ref(doc)
+        for node in nodes:
+            self.node(node)
+        for (head, tail), label, weight in zip(edges, labels, weights):
+            self.add_edge(head, tail, label=label, weight=weight)
 
     @property
     def doc(self):
