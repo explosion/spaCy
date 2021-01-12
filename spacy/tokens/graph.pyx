@@ -112,17 +112,25 @@ cdef class Graph:
         get_tail_edges(edge_indices, &self.c, node)
         return [self.edge(edge_indices[i]) for i in range(edge_indices.size())]
  
+    def walk_head_nodes(self, int node):
+        cdef vector[int] node_indices
+        walk_head_nodes(node_indices, &self.c, node)
+        return [tuple(self.c.nodes[i]) for i in node_indices]
+
+    def walk_tail_nodes(self, int node):
+        cdef vector[int] node_indices
+        walk_tail_nodes(node_indices, &self.c, node)
+        return [tuple(self.c.nodes[i]) for i in node_indices]
+
     def walk_head_edges(self, int node):
-        queue = self.heads(node)
-        for edge in queue:
-            yield edge
-            queue.extend(self.heads(edge.head_index))
+        cdef vector[int] edge_indices
+        walk_head_edges(edge_indices, &self.c, node)
+        return [self.edge(i) for i in edge_indices]
 
     def walk_tail_edges(self, int node):
-        queue = self.tails(node)
-        for edge in queue:
-            yield edge
-            queue.extend(self.tails(edge.tail_index))
+        cdef vector[int] edge_indices
+        walk_tail_edges(edge_indices, &self.c, node)
+        return [self.edge(i) for i in edge_indices]
 
     def has_edge(self, int head, int tail, label=""):
         return has_edge(
@@ -191,31 +199,35 @@ cdef int has_node(const GraphC* graph, vector[int32_t] node) nogil:
 
 
 cdef int get_head_nodes(vector[int]& output, const GraphC* graph, int node) nogil:
-    n_head = graph.n_heads[node]
-    if n_head == 0:
+    todo = graph.n_heads[node]
+    if todo == 0:
         return 0
-    output.reserve(output.size() + n_head)
+    output.reserve(output.size() + todo)
     start = graph.first_head[node] 
     end = graph.edges.size()
     for i in range(start, end):
-        if output.size() >= n_head:
+        if todo <= 0:
             break
-        output.push_back(graph.edges[i].head)
-    return output.size()
+        elif graph.edges[i].tail == node:
+            output.push_back(graph.edges[i].head)
+            todo -= 1
+    return todo
 
 
 cdef int get_tail_nodes(vector[int]& output, const GraphC* graph, int node) nogil:
-    n_tail = graph.n_tails[node]
-    if n_tail == 0:
+    todo = graph.n_tails[node]
+    if todo == 0:
         return 0
-    output.reserve(output.size() + n_tail)
+    output.reserve(output.size() + todo)
     start = graph.first_tail[node] 
     end = graph.edges.size()
     for i in range(start, end):
-        if output.size() >= n_tail:
+        if todo <= 0:
             break
-        output.push_back(graph.edges[i].tail)
-    return output.size()
+        elif graph.edges[i].head == node:
+            output.push_back(graph.edges[i].tail)
+            todo -= 1
+    return todo
 
 
 cdef int get_sibling_nodes(vector[int]& output, const GraphC* graph, int node) nogil:
@@ -232,38 +244,45 @@ cdef int get_sibling_nodes(vector[int]& output, const GraphC* graph, int node) n
 
 
 cdef int get_head_edges(vector[int]& output, const GraphC* graph, int node) nogil:
-    n_head = graph.n_heads[node]
-    if n_head == 0:
+    todo = graph.n_heads[node]
+    if todo == 0:
         return 0
-    output.reserve(output.size() + n_head)
+    output.reserve(output.size() + todo)
     start = graph.first_head[node] 
     end = graph.edges.size()
     for i in range(start, end):
-        if output.size() >= n_head:
+        if todo <= 0:
             break
-        output.push_back(i)
-    return output.size()
+        elif graph.edges[i].tail == node:
+            output.push_back(i)
+            todo -= 1
+    return todo
 
 
 cdef int get_tail_edges(vector[int]& output, const GraphC* graph, int node) nogil:
-    n_tail = graph.n_tails[node]
-    if n_tail == 0:
+    todo = graph.n_tails[node]
+    if todo == 0:
         return 0
-    output.reserve(output.size() + n_tail)
-    cdef int start = graph.first_tail[node] 
-    cdef int end = graph.edges.size()
+    output.reserve(output.size() + todo)
+    start = graph.first_tail[node] 
+    end = graph.edges.size()
     for i in range(start, end):
-        if output.size() >= n_tail:
+        if todo <= 0:
             break
-        output.push_back(i)
-    return output.size()
+        elif graph.edges[i].head == node:
+            output.push_back(i)
+            todo -= 1
+    return todo
 
 
 cdef int walk_head_nodes(vector[int]& output, const GraphC* graph, int node) nogil:
     cdef unordered_set[int] seen = unordered_set[int]()
-    output.push_back(node)
-    cdef int i = 0
+    get_head_nodes(output, graph, node)
+    seen.insert(node)
+    i = 0
     while i < output.size():
+        with gil:
+            print("Walk up from", output[i])
         if seen.find(output[i]) == seen.end():
             seen.insert(output[i])
             get_head_nodes(output, graph, output[i])
@@ -273,8 +292,9 @@ cdef int walk_head_nodes(vector[int]& output, const GraphC* graph, int node) nog
 
 cdef int walk_tail_nodes(vector[int]& output, const GraphC* graph, int node) nogil:
     cdef unordered_set[int] seen = unordered_set[int]()
-    output.push_back(node)
-    cdef int i = 0
+    get_tail_nodes(output, graph, node)
+    seen.insert(node)
+    i = 0
     while i < output.size():
         if seen.find(output[i]) == seen.end():
             seen.insert(output[i])
@@ -286,11 +306,12 @@ cdef int walk_tail_nodes(vector[int]& output, const GraphC* graph, int node) nog
 cdef int walk_head_edges(vector[int]& output, const GraphC* graph, int node) nogil:
     cdef unordered_set[int] seen = unordered_set[int]()
     get_head_edges(output, graph, node)
+    seen.insert(node)
     i = 0
     while i < output.size():
         if seen.find(output[i]) == seen.end():
             seen.insert(output[i])
-            get_head_edges(output, graph, graph.edges[output[i]].head)
+            get_head_edges(output, graph, output[i])
         i += 1
     return i
 
@@ -298,10 +319,11 @@ cdef int walk_head_edges(vector[int]& output, const GraphC* graph, int node) nog
 cdef int walk_tail_edges(vector[int]& output, const GraphC* graph, int node) nogil:
     cdef unordered_set[int] seen = unordered_set[int]()
     get_tail_edges(output, graph, node)
+    seen.insert(node)
     i = 0
     while i < output.size():
         if seen.find(output[i]) == seen.end():
             seen.insert(output[i])
-            get_tail_edges(output, graph, graph.edges[output[i]].tail)
+            get_tail_edges(output, graph, output[i])
         i += 1
     return i
