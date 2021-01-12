@@ -66,11 +66,11 @@ MOD_NAMES = [
     "spacy.vectors",
 ]
 COMPILE_OPTIONS = {
-    "msvc": ["/Ox", "/EHsc", "-std=c++11"],
-    "mingw32": ["-O2", "-Wno-strict-prototypes", "-Wno-unused-function", "-std=c++11"],
-    "other": ["-O2", "-Wno-strict-prototypes", "-Wno-unused-function", "-std=c++11"],
+    "msvc": ["/Ox", "/EHsc"],
+    "mingw32": ["-O2", "-Wno-strict-prototypes", "-Wno-unused-function"],
+    "other": ["-O2", "-Wno-strict-prototypes", "-Wno-unused-function"],
 }
-LINK_OPTIONS = {"msvc": [], "mingw32": [], "other": []}
+LINK_OPTIONS = {"msvc": ["-std=c++11"], "mingw32": ["-std=c++11"], "other": []}
 COMPILER_DIRECTIVES = {
     "language_level": -3,
     "embedsignature": True,
@@ -203,7 +203,7 @@ def setup_package():
     ext_modules = []
     for name in MOD_NAMES:
         mod_path = name.replace(".", "/") + ".pyx"
-        ext = Extension(name, [mod_path], language="c++")
+        ext = Extension(name, [mod_path], language="c++", extra_compile_args=["-std=c++11"])
         ext_modules.append(ext)
     print("Cythonizing sources")
     ext_modules = cythonize(ext_modules, compiler_directives=COMPILER_DIRECTIVES)
