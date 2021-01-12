@@ -635,10 +635,7 @@ def test_doc_set_ents_invalid_spans(en_tokenizer):
 
 def test_span_groups(en_tokenizer):
     doc = en_tokenizer("Some text about Colombia and the Czech Republic")
-    span_group = doc.create_span_group("hi")
-    span_group.append(Span(doc, 3, 4, label="bye"))
-    assert "hi" in doc.span_groups
-    assert len(doc.span_groups["hi"]) == 1
-    assert doc.span_groups["hi"][0].label_ == "bye"
-    with pytest.raises(KeyError):
-        doc.create_span_group("hi")
+    doc.spans["hi"] = [Span(doc, 3, 4, label="bye")]
+    assert "hi" in doc.spans
+    assert len(doc.spans["hi"]) == 1
+    assert doc.spans["hi"][0].label_ == "bye"
