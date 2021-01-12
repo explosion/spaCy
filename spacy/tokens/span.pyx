@@ -471,6 +471,25 @@ cdef class Span:
 
 
     @property
+    def noun_chunks(self):
+        """Iterate over the base noun phrases in the span. Yields base
+        noun-phrase #[code Span] objects, if the language has a noun chunk iterator.
+        Raises a NotImplementedError otherwise.
+
+        A base noun phrase, or "NP chunk", is a noun
+        phrase that does not permit other NPs to be nested within it – so no
+        NP-level coordination, no prepositional phrases, and no relative
+        clauses.
+
+        YIELDS (Span): Noun chunks in the span.
+
+        DOCS: https://nightly.spacy.io/api/span#noun_chunks
+        """
+        for span in self.doc.noun_chunks:
+            if span.start >= self.start and span.end <= self.end:
+                yield span
+
+    @property
     def root(self):
         """The token with the shortest path to the root of the
         sentence (or the root itself). If multiple tokens are equally

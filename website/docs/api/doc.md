@@ -591,6 +591,7 @@ not been implemeted for the given language, a `NotImplementedError` is raised.
 > ```python
 > doc = nlp("A phrase with another phrase occurs.")
 > chunks = list(doc.noun_chunks)
+> assert len(chunks) == 2
 > assert chunks[0].text == "A phrase"
 > assert chunks[1].text == "another phrase"
 > ```
