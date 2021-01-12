@@ -6,7 +6,7 @@ import srsly
 from thinc.api import NumpyOps
 
 from .doc import Doc
-from .span_group import SpanGroup
+from ._dict_proxies import SpanGroups
 from ..vocab import Vocab
 from ..compat import copy_reg
 from ..attrs import SPACY, ORTH, intify_attr
@@ -110,11 +110,10 @@ class DocBin:
             self.strings.add(token.ent_kb_id_)
         self.cats.append(doc.cats)
         self.user_data.append(srsly.msgpack_dumps(doc.user_data))
-        self.span_groups.append({})
-        for key, group in doc.span_groups.items():
-            for span in group.to_list():
+        self.span_groups.append(doc.spans.to_bytes())
+        for key, group in doc.spans.items():
+            for span in group:
                 self.strings.add(span.label_)
-            self.span_groups[-1][key] = group.to_bytes()
 
     def get_docs(self, vocab: Vocab) -> Iterator[Doc]:
         """Recover Doc objects from the annotations, using the given vocab.
@@ -138,10 +137,10 @@ class DocBin:
             doc = Doc(vocab, words=tokens[:, orth_col], spaces=spaces)
             doc = doc.from_array(self.attrs, tokens)
             doc.cats = self.cats[i]
-            doc.span_groups = {
-                key: SpanGroup(doc).from_bytes(data)
-                for key, data in self.span_groups[i].items()
-            }
+            if self.span_groups[i]:
+                doc.spans.from_bytes(self.span_groups[i])
+            else:
+                doc.spans.clear()
             if i < len(self.user_data) and self.user_data[i] is not None:
                 user_data = srsly.msgpack_loads(self.user_data[i], use_list=False)
                 doc.user_data.update(user_data)
@@ -227,7 +226,7 @@ class DocBin:
         self.tokens = NumpyOps().unflatten(flat_tokens, lengths)
         self.spaces = NumpyOps().unflatten(flat_spaces, lengths)
         self.cats = msg["cats"]
-        self.span_groups = msg.get("span_groups", [{} for _ in lengths])
+        self.span_groups = msg.get("span_groups", [b"" for _ in lengths])
         self.flags = msg.get("flags", [{} for _ in lengths])
         if "user_data" in msg:
             self.user_data = list(msg["user_data"])
