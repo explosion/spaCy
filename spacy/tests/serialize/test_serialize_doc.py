@@ -58,9 +58,9 @@ def test_serialize_doc_exclude(en_vocab):
 
 def test_serialize_doc_span_groups(en_vocab):
     doc = Doc(en_vocab, words=["hello", "world", "!"])
-    doc.create_span_group("content").append(doc[0:2])
+    doc.spans["content"] = [doc[0:2]]
     new_doc = Doc(en_vocab).from_bytes(doc.to_bytes())
-    assert len(new_doc.span_groups["content"]) == 1
+    assert len(new_doc.spans["content"]) == 1
 
 
 def test_serialize_doc_bin():
@@ -70,7 +70,7 @@ def test_serialize_doc_bin():
     nlp = English()
     for doc in nlp.pipe(texts):
         doc.cats = cats
-        doc.create_span_group("start").append(doc[0:2])
+        doc.spans["start"] = [doc[0:2]]
         doc_bin.add(doc)
     bytes_data = doc_bin.to_bytes()
 
@@ -81,7 +81,7 @@ def test_serialize_doc_bin():
     for i, doc in enumerate(reloaded_docs):
         assert doc.text == texts[i]
         assert doc.cats == cats
-        assert len(doc.span_groups) == 1
+        assert len(doc.spans) == 1
 
 
 def test_serialize_doc_bin_unknown_spaces(en_vocab):
