@@ -327,27 +327,52 @@ cdef class DependencyMatcher:
 
         all_positions = [keys_to_position[key] for key in tokens_to_key]
 
-        for potential_match in product(*all_positions):
+        # Generate all potential matches by computing the cartesian product of all
+        # position of the matched tokens
+        for candidate_match in product(*all_positions):
+
+            # A potential match is a valid match if all relationhips between the
+            # matched tokens are satisfied.
             is_valid = True
-            for node_idx, node in enumerate(potential_match):
-                for relop, nbor in tree[node_idx]:
-                    computed_nbors = self._resolve_node_operator(doc, node, relop)
-                    is_nbor = False
-                    for computed_nbor in computed_nbors:
-                        if computed_nbor.i == potential_match[nbor]:
-                            is_nbor = True
-                            break
-                    is_valid = is_valid & is_nbor
+            for left_idx in range(len(candidate_match)):
+                is_valid = self._check_relationships(doc, candidate_match, left_idx, tree)
+
+                if not is_valid:
+                    break
+
             if is_valid:
-                yield list(potential_match)
+                yield list(candidate_match)
+
+    def _check_relationships(self, doc, candidate_match, left_idx, tree):
+        # Position of the left operand within the document
+        left_pos = candidate_match[left_idx]
+
+        for relop, right_idx in tree[left_idx]:
+
+            # Position of the left operand within the document
+            right_pos = candidate_match[right_idx]
+
+            # List of valid right matches
+            valid_right_matches = self._resolve_node_operator(doc, left_pos, relop)
+
+            # If the proposed right token is not within the valid ones, fail
+            if right_pos not in valid_right_matches:
+                return False
+
+        return True
+
 
     @lru_cache(maxsize=None)
     def _resolve_node_operator(self, doc, node, operator):
         """
         Given a doc, a node (as a index in the doc) and a REL_OP operator
         returns the list of nodes from the doc that belong to node+operator. 
+
+        The result is memoized using an unbounded cache, therefore the cache
+        must be cleared after finishing processing a doc:
+            self._resolve_node_operator.cache_clear()
         """
-        return self._ops[operator](doc, node)
+        return [token.i for token in self._ops[operator](doc, node)]
 
     def _dep(self, doc, node):
         if doc[node].head == doc[node]:
