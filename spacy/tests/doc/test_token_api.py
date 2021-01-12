@@ -259,8 +259,8 @@ def test_missing_head_dep(en_vocab):
     deps = ["nsubj", "ROOT", "dobj", "cc", "conj", None]
     words = ["I", "like", "London", "and", "Berlin", "."]
     doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
-    pred_has_heads =  [t.has_head() for t in doc]
-    pred_deps =  [t.dep_ for t in doc]
+    pred_has_heads = [t.has_head() for t in doc]
+    pred_deps = [t.dep_ for t in doc]
     assert pred_has_heads == [True, True, True, True, True, False]
     assert pred_deps == ["nsubj", "ROOT", "dobj", "cc", "conj", MISSING_DEP_]
     example = Example.from_dict(doc, {"heads": heads, "deps": deps})

@@ -265,7 +265,7 @@ def test_Example_from_dict_sentences():
     assert len(list(ex.reference.sents)) == 1
 
 
-def test_Example_from_dict_with_parse():
+def test_Example_missing_deps():
     vocab = Vocab()
     words = ["I", "like", "London", "and", "Berlin", "."]
     deps = ["nsubj", "ROOT", "dobj", "cc", "conj", "punct"]

@@ -9,6 +9,7 @@ from ...typedefs cimport hash_t, attr_t
 from ...strings cimport hash_string
 from ...structs cimport TokenC
 from ...tokens.doc cimport Doc, set_children_from_heads
+from ...tokens.token import MISSING_DEP_
 from ...training.example cimport Example
 from .stateclass cimport StateClass
 from ._state cimport StateC, ArcC
@@ -195,7 +196,8 @@ cdef class ArcEagerGold:
     def __init__(self, ArcEager moves, StateClass stcls, Example example):
         self.mem = Pool()
         heads, labels = example.get_aligned_parse(projectivize=True)
-        labels = [example.x.vocab.strings.add(label) if label is not None else 0 for label in labels]
+        labels = [label if label is not None else MISSING_DEP_ for label in labels]
+        labels = [example.x.vocab.strings.add(label) for label in labels]
         sent_starts = example.get_aligned_sent_starts()
         assert len(heads) == len(labels) == len(sent_starts), (len(heads), len(labels), len(sent_starts))
         self.c = create_gold_state(self.mem, stcls.c, heads, labels, sent_starts)
