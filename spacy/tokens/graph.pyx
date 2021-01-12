@@ -33,6 +33,19 @@ class Edge:
         return self.doc.vocab.strings[self.label]
 
 
+# TODO:
+# I think we should have:
+#
+# graph.nodes: Iterate, add, lookup nodes. Returns Node objects.
+# graph.edges: Iterate, add, lookup edges. Returns Edge objects.
+# node.heads: View of node's heads.
+# node.tails: View of node's tails.
+# node.siblings: View of node's siblings.
+# node.ancestors: View of node's ancestors.
+# node.descendents: View of node's descendents.
+# node.head_edges: View of node's incoming edges.
+# node.tail_edges: View of node's outgoing edges.
+
 cdef class Graph:
     """A set of directed labelled relationships between sets of tokens."""
     def __init__(self, doc, *, name="", nodes=[], edges=[], labels=None, weights=None):
@@ -44,15 +57,20 @@ cdef class Graph:
             assert len(labels) == len(edges)
         else:
             labels = [""] * len(edges)
-        self.c.node_map = unordered_map[hash_t, int]()
-        self.c.edge_map = unordered_map[hash_t, int]()
-        self.c.roots = unordered_set[int]()
+        self.c.node_map = new unordered_map[hash_t, int]()
+        self.c.edge_map = new unordered_map[hash_t, int]()
+        self.c.roots = new unordered_set[int]()
         self.name = name
         self.doc_ref = weakref.ref(doc)
         for node in nodes:
             self.node(node)
         for (head, tail), label, weight in zip(edges, labels, weights):
             self.add_edge(head, tail, label=label, weight=weight)
+
+    def __dealloc__(self):
+        del self.c.node_map
+        del self.c.edge_map
+        del self.c.roots
 
     @property
     def doc(self):

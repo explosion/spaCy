@@ -109,7 +109,6 @@ cdef struct GraphC:
     vector[int] n_tails
     vector[int] first_head
     vector[int] first_tail
-    unordered_set[int] roots
-    unordered_map[hash_t, int] node_map
-    unordered_map[hash_t, int] edge_map
-
+    unordered_set[int]* roots
+    unordered_map[hash_t, int]* node_map
+    unordered_map[hash_t, int]* edge_map
