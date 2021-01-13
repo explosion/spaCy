@@ -184,7 +184,10 @@ cdef class Example:
         heads = [token.head.i for token in self.y]
         deps = [token.dep_ for token in self.y]
         if projectivize:
-            heads, deps = nonproj.projectivize(heads, deps)
+            proj_heads, proj_deps = nonproj.projectivize(heads, deps)
+            # ensure that data that was previously missing, remains missing
+            heads = [h if has_heads[i] else heads[i] for i, h in enumerate(proj_heads)]
+            deps = [d if deps[i] != MISSING_DEP_ else MISSING_DEP_ for i, d in enumerate(proj_deps)]
         for cand_i in range(self.x.length):
             if cand_to_gold.lengths[cand_i] == 1:
                 gold_i = cand_to_gold[cand_i].dataXd[0, 0]

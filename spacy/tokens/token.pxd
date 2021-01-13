@@ -94,3 +94,10 @@ cdef class Token:
             token.ent_kb_id = value
         elif feat_name == SENT_START:
             token.sent_start = value
+
+    @staticmethod
+    cdef inline int missing_head(const TokenC* token) nogil:
+        if token.dep == 0:
+            return 1
+        else:
+            return 0

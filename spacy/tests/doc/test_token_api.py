@@ -261,14 +261,18 @@ def test_missing_head_dep(en_vocab):
     doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
     pred_has_heads = [t.has_head() for t in doc]
     pred_deps = [t.dep_ for t in doc]
+    pred_sent_starts = [t.is_sent_start for t in doc]
     assert pred_has_heads == [True, True, True, True, True, False]
     assert pred_deps == ["nsubj", "ROOT", "dobj", "cc", "conj", MISSING_DEP_]
+    assert pred_sent_starts == [True, False, False, False, False, False]
     example = Example.from_dict(doc, {"heads": heads, "deps": deps})
     ref_heads = [t.head.i for t in example.reference]
     ref_deps = [t.dep_ for t in example.reference]
     ref_has_heads = [t.has_head() for t in example.reference]
+    ref_sent_starts = [t.is_sent_start for t in example.reference]
     assert ref_deps == ["nsubj", "ROOT", "dobj", "cc", "conj", MISSING_DEP_]
     assert ref_has_heads == [True, True, True, True, True, False]
+    assert ref_sent_starts == [True, False, False, False, False, False]
     aligned_heads, aligned_deps = example.get_aligned_parse(projectivize=True)
     assert aligned_heads[5] == ref_heads[5]
     assert aligned_deps[5] == MISSING_DEP_

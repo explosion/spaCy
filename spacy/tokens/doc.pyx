@@ -1540,7 +1540,7 @@ cdef int set_children_from_heads(TokenC* tokens, int start, int end) except -1:
     for i in range(start, end):
         tokens[i].sent_start = -1
     for i in range(start, end):
-        if tokens[i].head == 0:
+        if tokens[i].head == 0 and not Token.missing_head(&tokens[i]):
             tokens[tokens[i].l_edge].sent_start = 1
 
 
