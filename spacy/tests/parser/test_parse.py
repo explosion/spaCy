@@ -253,7 +253,7 @@ def test_overfitting_IO(pipe_name):
             parser.add_label(dep)
     optimizer = nlp.initialize()
     # run overfitting
-    for i in range(150):
+    for i in range(200):
         losses = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)
     assert losses[pipe_name] < 0.0001

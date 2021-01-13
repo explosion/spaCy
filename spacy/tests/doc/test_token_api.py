@@ -4,7 +4,6 @@ from spacy.attrs import IS_ALPHA, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_TITLE, IS_STO
 from spacy.symbols import VERB
 from spacy.vocab import Vocab
 from spacy.tokens import Doc
-from spacy.tokens.token import MISSING_DEP_
 from spacy.training import Example
 
 
@@ -255,24 +254,35 @@ def test_token_api_non_conjuncts(en_vocab):
 
 
 def test_missing_head_dep(en_vocab):
-    heads = [1, 1, 1, 1, 2, None]
-    deps = ["nsubj", "ROOT", "dobj", "cc", "conj", None]
+    """ Check that the Doc constructor and Example.from_dict parse missing information the same"""
+    heads = [1, 1, 1, 1, 2, None]                           # element 5 is missing
+    deps = ["", "ROOT", "dobj", "cc", "conj", None]         # element 0 and 5 are missing
     words = ["I", "like", "London", "and", "Berlin", "."]
     doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
     pred_has_heads = [t.has_head() for t in doc]
+    pred_has_deps = [t.has_dep() for t in doc]
+    pred_heads = [t.head.i for t in doc]
     pred_deps = [t.dep_ for t in doc]
     pred_sent_starts = [t.is_sent_start for t in doc]
-    assert pred_has_heads == [True, True, True, True, True, False]
-    assert pred_deps == ["nsubj", "ROOT", "dobj", "cc", "conj", MISSING_DEP_]
+    assert pred_has_heads == [False, True, True, True, True, False]
+    assert pred_has_deps == [False, True, True, True, True, False]
+    assert pred_heads[1:5] == [1, 1, 1, 2]
+    assert pred_deps[1:5] == ["ROOT", "dobj", "cc", "conj"]
     assert pred_sent_starts == [True, False, False, False, False, False]
     example = Example.from_dict(doc, {"heads": heads, "deps": deps})
+    ref_has_heads = [t.has_head() for t in example.reference]
+    ref_has_deps = [t.has_dep() for t in example.reference]
     ref_heads = [t.head.i for t in example.reference]
     ref_deps = [t.dep_ for t in example.reference]
-    ref_has_heads = [t.has_head() for t in example.reference]
     ref_sent_starts = [t.is_sent_start for t in example.reference]
-    assert ref_deps == ["nsubj", "ROOT", "dobj", "cc", "conj", MISSING_DEP_]
-    assert ref_has_heads == [True, True, True, True, True, False]
-    assert ref_sent_starts == [True, False, False, False, False, False]
+    assert ref_has_heads == pred_has_heads
+    assert ref_has_deps == pred_has_heads
+    assert ref_heads == pred_heads
+    assert ref_deps == pred_deps
+    assert ref_sent_starts == pred_sent_starts
+    # check that the aligned parse preserves the missing information
     aligned_heads, aligned_deps = example.get_aligned_parse(projectivize=True)
+    assert aligned_deps[0] == ref_deps[0]
+    assert aligned_heads[0] == ref_heads[0]
+    assert aligned_deps[5] == ref_deps[5]
     assert aligned_heads[5] == ref_heads[5]
-    assert aligned_deps[5] == MISSING_DEP_

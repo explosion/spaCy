@@ -16,7 +16,7 @@ from thinc.util import copy_array
 import warnings
 
 from .span cimport Span
-from .token import MISSING_DEP_
+from .token cimport MISSING_DEP
 from .token cimport Token
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
@@ -269,6 +269,7 @@ cdef class Doc:
         if heads is not None:
             heads = [head - i if head is not None else 0 for i, head in enumerate(heads)]
         if deps is not None:
+            MISSING_DEP_ = self.vocab.strings[MISSING_DEP]
             deps = [dep if dep is not None else MISSING_DEP_ for dep in deps]
         if deps and not heads:
             heads = [0] * len(deps)

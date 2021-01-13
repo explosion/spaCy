@@ -12,7 +12,7 @@ from .iob_utils import biluo_to_iob, offsets_to_biluo_tags, doc_to_biluo_tags
 from .iob_utils import biluo_tags_to_spans
 from ..errors import Errors, Warnings
 from ..pipeline._parser_internals import nonproj
-from ..tokens.token import MISSING_DEP_
+from ..tokens.token cimport MISSING_DEP
 from ..util import logger
 
 
@@ -180,14 +180,15 @@ cdef class Example:
         gold_to_cand = self.alignment.y2x
         aligned_heads = [None] * self.x.length
         aligned_deps = [None] * self.x.length
+        has_deps = [token.has_dep() for token in self.y]
         has_heads = [token.has_head() for token in self.y]
         heads = [token.head.i for token in self.y]
         deps = [token.dep_ for token in self.y]
         if projectivize:
             proj_heads, proj_deps = nonproj.projectivize(heads, deps)
-            # ensure that data that was previously missing, remains missing
+            # ensure that missing data remains missing
             heads = [h if has_heads[i] else heads[i] for i, h in enumerate(proj_heads)]
-            deps = [d if deps[i] != MISSING_DEP_ else MISSING_DEP_ for i, d in enumerate(proj_deps)]
+            deps = [d if has_deps[i] else deps[i] for i, d in enumerate(proj_deps)]
         for cand_i in range(self.x.length):
             if cand_to_gold.lengths[cand_i] == 1:
                 gold_i = cand_to_gold[cand_i].dataXd[0, 0]
@@ -337,8 +338,7 @@ def _annot2array(vocab, tok_annot, doc_annot):
             values.append([h-i if h is not None else 0 for i, h in enumerate(value)])
         elif key == "DEP":
             attrs.append(key)
-            value = [v if v is not None else MISSING_DEP_ for v in value]
-            values.append([vocab.strings.add(h) for h in value])
+            values.append([vocab.strings.add(h) if h is not None else MISSING_DEP for h in value])
         elif key == "SENT_START":
             attrs.append(key)
             values.append(value)

@@ -22,8 +22,6 @@ from .. import parts_of_speech
 from ..errors import Errors, Warnings
 from .underscore import Underscore, get_ext_args
 
-MISSING_DEP_ = ""
-
 
 cdef class Token:
     """An individual token – i.e. a word, punctuation symbol, whitespace,
@@ -640,14 +638,13 @@ cdef class Token:
             return False
         return any(ancestor.i == self.i for ancestor in descendant.ancestors)
 
-
     def has_head(self):
         """Check whether the token has annotated head information.
+        Return False when the head annotation is unset/missing.
 
         RETURNS (bool): Whether the head annotation is valid or not.
         """
-        return self.dep_ != MISSING_DEP_
-
+        return not Token.missing_head(self.c)
 
     property head:
         """The syntactic parent, or "governor", of this token. 
@@ -872,6 +869,14 @@ cdef class Token:
 
         def __set__(self, tag):
             self.tag = self.vocab.strings.add(tag)
+
+    def has_dep(self):
+        """Check whether the token has annotated dep information.
+        Returns False when the dep label is unset/missing.
+
+        RETURNS (bool): Whether the dep label is valid or not.
+        """
+        return not Token.missing_dep(self.c)
 
     property dep_:
         """RETURNS (str): The syntactic dependency label."""
