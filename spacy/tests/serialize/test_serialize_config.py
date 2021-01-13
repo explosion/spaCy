@@ -8,6 +8,7 @@ from spacy.util import registry, load_model_from_config, load_config
 from spacy.ml.models import build_Tok2Vec_model, build_tb_parser_model
 from spacy.ml.models import MultiHashEmbed, MaxoutWindowEncoder
 from spacy.schemas import ConfigSchema, ConfigSchemaPretrain
+from catalogue import RegistryError
 
 
 from ..util import make_tempdir
@@ -291,7 +292,6 @@ def test_serialize_parser(parser_config_string):
         assert model.get_ref("lower").get_dim("nI") == 66
 
 
-
 def test_config_nlp_roundtrip():
     """Test that a config prduced by the nlp object passes training config
     validation."""
@@ -447,3 +447,21 @@ def test_config_validate_literal(parser_config_string):
         nlp.add_pipe("parser", config=config)
     config["model"]["state_type"] = "ner"
     nlp.add_pipe("parser", config=config)
+
+
+def test_config_only_resolve_relevant_blocks():
+    """Test that only the relevant blocks are resolved in the different methods
+    and that invalid blocks are ignored if needed. For instance, the [initialize]
+    shouldn't be resolved at runtime.
+    """
+    nlp = English()
+    config = nlp.config
+    config["training"]["before_to_disk"] = {"@misc": "nonexistent"}
+    config["initialize"]["lookups"] = {"@misc": "nonexistent"}
+    # This shouldn't resolve [training] or [initialize]
+    nlp = load_model_from_config(config, auto_fill=True)
+    # This will raise for nonexistent value
+    with pytest.raises(RegistryError):
+        nlp.initialize()
+    nlp.config["initialize"]["lookups"] = None
+    nlp.initialize()
