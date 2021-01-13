@@ -45,7 +45,7 @@ _abbr_period_exc = [
     {ORTH: "Doç.", NORM: "doçent"},
     {ORTH: "doğ."},
     {ORTH: "Dr.", NORM: "doktor"},
-    {ORTH: "dr.", NORM:"doktor"},
+    {ORTH: "dr.", NORM: "doktor"},
     {ORTH: "drl.", NORM: "derleyen"},
     {ORTH: "Dz.", NORM: "deniz"},
     {ORTH: "Dz.K.K.lığı"},
@@ -118,7 +118,7 @@ _abbr_period_exc = [
     {ORTH: "Uzm.", NORM: "uzman"},
     {ORTH: "Üçvş.", NORM: "üstçavuş"},
     {ORTH: "Üni.", NORM: "üniversitesi"},
-    {ORTH: "Ütğm.", NORM:  "üsteğmen"},
+    {ORTH: "Ütğm.", NORM: "üsteğmen"},
     {ORTH: "vb."},
     {ORTH: "vs.", NORM: "vesaire"},
     {ORTH: "Yard.", NORM: "yardımcı"},
@@ -163,19 +163,29 @@ for abbr in _abbr_exc:
     _exc[abbr[ORTH]] = [abbr]
 
 
-
 _num = r"[+-]?\d+([,.]\d+)*"
 _ord_num = r"(\d+\.)"
 _date = r"(((\d{1,2}[./-]){2})?(\d{4})|(\d{1,2}[./]\d{1,2}(\.)?))"
 _dash_num = r"(([{al}\d]+/\d+)|(\d+/[{al}]))".format(al=ALPHA)
-_roman_num =  "M{0,3}(?:C[MD]|D?C{0,3})(?:X[CL]|L?X{0,3})(?:I[XV]|V?I{0,3})"
+_roman_num = "M{0,3}(?:C[MD]|D?C{0,3})(?:X[CL]|L?X{0,3})(?:I[XV]|V?I{0,3})"
 _roman_ord = r"({rn})\.".format(rn=_roman_num)
 _time_exp = r"\d+(:\d+)*"
 
 _inflections = r"'[{al}]+".format(al=ALPHA_LOWER)
 _abbrev_inflected = r"[{a}]+\.'[{al}]+".format(a=ALPHA, al=ALPHA_LOWER)
 
-_nums = r"(({d})|({dn})|({te})|({on})|({n})|({ro})|({rn}))({inf})?".format(d=_date, dn=_dash_num, te=_time_exp, on=_ord_num, n=_num, ro=_roman_ord, rn=_roman_num, inf=_inflections)
+_nums = r"(({d})|({dn})|({te})|({on})|({n})|({ro})|({rn}))({inf})?".format(
+    d=_date,
+    dn=_dash_num,
+    te=_time_exp,
+    on=_ord_num,
+    n=_num,
+    ro=_roman_ord,
+    rn=_roman_num,
+    inf=_inflections,
+)
 
 TOKENIZER_EXCEPTIONS = _exc
-TOKEN_MATCH = re.compile(r"^({abbr})|({n})$".format(n=_nums, abbr=_abbrev_inflected)).match
+TOKEN_MATCH = re.compile(
+    r"^({abbr})|({n})$".format(n=_nums, abbr=_abbrev_inflected)
+).match

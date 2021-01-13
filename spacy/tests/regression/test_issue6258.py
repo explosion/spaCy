@@ -1,4 +1,3 @@
-import pydantic
 import pytest
 from pydantic import ValidationError
 from spacy.schemas import TokenPattern, TokenPatternSchema

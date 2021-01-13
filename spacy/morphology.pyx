@@ -133,8 +133,9 @@ cdef class Morphology:
         """
         cdef MorphAnalysisC tag
         tag.length = len(field_feature_pairs)
-        tag.fields = <attr_t*>self.mem.alloc(tag.length, sizeof(attr_t))
-        tag.features = <attr_t*>self.mem.alloc(tag.length, sizeof(attr_t))
+        if tag.length > 0:
+            tag.fields = <attr_t*>self.mem.alloc(tag.length, sizeof(attr_t))
+            tag.features = <attr_t*>self.mem.alloc(tag.length, sizeof(attr_t))
         for i, (field, feature) in enumerate(field_feature_pairs):
             tag.fields[i] = field
             tag.features[i] = feature

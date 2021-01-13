@@ -164,7 +164,7 @@ cdef class Vocab:
         if len(string) < 3 or self.length < 10000:
             mem = self.mem
         cdef bint is_oov = mem is not self.mem
-        lex = <LexemeC*>mem.alloc(sizeof(LexemeC), 1)
+        lex = <LexemeC*>mem.alloc(1, sizeof(LexemeC))
         lex.orth = self.strings.add(string)
         lex.length = len(string)
         if self.vectors is not None:

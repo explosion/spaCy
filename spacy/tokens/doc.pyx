@@ -225,6 +225,7 @@ cdef class Doc:
         # Guarantee self.lex[i-x], for any i >= 0 and x < padding is in bounds
         # However, we need to remember the true starting places, so that we can
         # realloc.
+        assert size + (PADDING*2) > 0
         data_start = <TokenC*>self.mem.alloc(size + (PADDING*2), sizeof(TokenC))
         cdef int i
         for i in range(size + (PADDING*2)):
@@ -1097,7 +1098,7 @@ cdef class Doc:
         (vocab,) = vocab
 
         if attrs is None:
-            attrs = Doc._get_array_attrs()
+            attrs = list(Doc._get_array_attrs())
         else:
             if any(isinstance(attr, str) for attr in attrs):     # resolve attribute names
                 attrs = [intify_attr(attr) for attr in attrs]    # intify_attr returns None for invalid attrs
@@ -1177,6 +1178,7 @@ cdef class Doc:
         other.length = self.length
         other.max_length = self.max_length
         buff_size = other.max_length + (PADDING*2)
+        assert buff_size > 0
         tokens = <TokenC*>other.mem.alloc(buff_size, sizeof(TokenC))
         memcpy(tokens, self.c - PADDING, buff_size * sizeof(TokenC))
         other.c = &tokens[PADDING]

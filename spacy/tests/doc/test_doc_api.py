@@ -154,10 +154,10 @@ def test_doc_api_serialize(en_tokenizer, text):
 
     logger = logging.getLogger("spacy")
     with mock.patch.object(logger, "warning") as mock_warning:
-        _ = tokens.to_bytes()
+        _ = tokens.to_bytes()  # noqa: F841
         mock_warning.assert_not_called()
         tokens.user_hooks["similarity"] = inner_func
-        _ = tokens.to_bytes()
+        _ = tokens.to_bytes()  # noqa: F841
         mock_warning.assert_called_once()
 
 

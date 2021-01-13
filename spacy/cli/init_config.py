@@ -32,6 +32,7 @@ def init_config_cli(
     optimize: Optimizations = Opt(Optimizations.efficiency.value, "--optimize", "-o", help="Whether to optimize for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger and slower model). This will impact the choice of architecture, pretrained weights and related hyperparameters."),
     gpu: bool = Opt(False, "--gpu", "-G", help="Whether the model can run on GPU. This will impact the choice of architecture, pretrained weights and related hyperparameters."),
     pretraining: bool = Opt(False, "--pretraining", "-pt", help="Include config for pretraining (with 'spacy pretrain')"),
+    force_overwrite: bool = Opt(False, "--force", "-F", help="Force overwriting the output file"),
     # fmt: on
 ):
     """
@@ -46,6 +47,12 @@ def init_config_cli(
         optimize = optimize.value
     pipeline = string_to_list(pipeline)
     is_stdout = str(output_file) == "-"
+    if not is_stdout and output_file.exists() and not force_overwrite:
+        msg = Printer()
+        msg.fail(
+            "The provided output file already exists. To force overwriting the config file, set the --force or -F flag.",
+            exits=1,
+        )
     config = init_config(
         lang=lang,
         pipeline=pipeline,
@@ -162,7 +169,7 @@ def init_config(
         "Hardware": variables["hardware"].upper(),
         "Transformer": template_vars.transformer.get("name", False),
     }
-    msg.info("Generated template specific for your use case")
+    msg.info("Generated config template specific for your use case")
     for label, value in use_case.items():
         msg.text(f"- {label}: {value}")
     with show_validation_error(hint_fill=False):

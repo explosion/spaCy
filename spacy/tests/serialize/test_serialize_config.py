@@ -208,7 +208,7 @@ def test_create_nlp_from_pretraining_config():
     config = Config().from_str(pretrain_config_string)
     pretrain_config = load_config(DEFAULT_CONFIG_PRETRAIN_PATH)
     filled = config.merge(pretrain_config)
-    resolved = registry.resolve(filled["pretraining"], schema=ConfigSchemaPretrain)
+    registry.resolve(filled["pretraining"], schema=ConfigSchemaPretrain)
 
 
 def test_create_nlp_from_config_multiple_instances():

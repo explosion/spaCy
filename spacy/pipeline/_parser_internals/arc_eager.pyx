@@ -1,6 +1,7 @@
 # cython: profile=True, cdivision=True, infer_types=True
 from cymem.cymem cimport Pool, Address
 from libc.stdint cimport int32_t
+from libcpp.vector cimport vector
 
 from collections import defaultdict, Counter
 
@@ -10,9 +11,9 @@ from ...structs cimport TokenC
 from ...tokens.doc cimport Doc, set_children_from_heads
 from ...training.example cimport Example
 from .stateclass cimport StateClass
-from ._state cimport StateC
-
+from ._state cimport StateC, ArcC
 from ...errors import Errors
+from thinc.extra.search cimport Beam
 
 cdef weight_t MIN_SCORE = -90000
 cdef attr_t SUBTOK_LABEL = hash_string(u'subtok')
@@ -65,6 +66,7 @@ cdef GoldParseStateC create_gold_state(Pool mem, const StateC* state,
     cdef GoldParseStateC gs
     gs.length = len(heads)
     gs.stride = 1
+    assert gs.length > 0
     gs.labels = <attr_t*>mem.alloc(gs.length, sizeof(gs.labels[0]))
     gs.heads = <int32_t*>mem.alloc(gs.length, sizeof(gs.heads[0]))
     gs.n_kids = <int32_t*>mem.alloc(gs.length, sizeof(gs.n_kids[0]))
@@ -126,6 +128,7 @@ cdef GoldParseStateC create_gold_state(Pool mem, const StateC* state,
                 1
             )
     # Make an array of pointers, pointing into the gs_kids_flat array.
+    assert gs.length > 0
     gs.kids = <int32_t**>mem.alloc(gs.length, sizeof(int32_t*))
     for i in range(gs.length):
         if gs.n_kids[i] != 0:
@@ -609,7 +612,7 @@ cdef class ArcEager(TransitionSystem):
         return gold
 
     def init_gold_batch(self, examples):
-        # TODO: Projectivitity?
+        # TODO: Projectivity?
         all_states = self.init_batch([eg.predicted for eg in examples])
         golds = []
         states = []
@@ -704,6 +707,28 @@ cdef class ArcEager(TransitionSystem):
             if doc.c[i].head == 0:
                 doc.c[i].dep = self.root_label
         set_children_from_heads(doc.c, 0, doc.length)
+
+    def get_beam_parses(self, Beam beam):
+        parses = []
+        probs = beam.probs
+        for i in range(beam.size):
+            state = <StateC*>beam.at(i)
+            if state.is_final():
+                prob = probs[i]
+                parse = []
+                arcs = self.get_arcs(state)
+                if arcs:
+                    for arc in arcs:
+                        dep = arc["label"]
+                        label = self.strings[dep]
+                        parse.append((arc["head"], arc["child"], label))
+                    parses.append((prob, parse))
+        return parses
+
+    cdef get_arcs(self, StateC* state):
+        cdef vector[ArcC] arcs
+        state.get_arcs(&arcs)
+        return list(arcs)
 
     def has_gold(self, Example eg, start=0, end=None):
         for word in eg.y[start:end]:

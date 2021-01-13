@@ -21,14 +21,14 @@ def transition_parser_v1(
     nO: Optional[int] = None,
 ) -> Model:
     return build_tb_parser_model(
-    tok2vec,
-    state_type,
-    extra_state_tokens,
-    hidden_width,
-    maxout_pieces,
-    use_upper,
-    nO,
-)
+        tok2vec,
+        state_type,
+        extra_state_tokens,
+        hidden_width,
+        maxout_pieces,
+        use_upper,
+        nO,
+    )
 
 
 @registry.architectures.register("spacy.TransitionBasedParser.v2")
@@ -42,14 +42,15 @@ def transition_parser_v2(
     nO: Optional[int] = None,
 ) -> Model:
     return build_tb_parser_model(
-    tok2vec,
-    state_type,
-    extra_state_tokens,
-    hidden_width,
-    maxout_pieces,
-    use_upper,
-    nO,
-)
+        tok2vec,
+        state_type,
+        extra_state_tokens,
+        hidden_width,
+        maxout_pieces,
+        use_upper,
+        nO,
+    )
+
 
 def build_tb_parser_model(
     tok2vec: Model[List[Doc], List[Floats2d]],
@@ -162,8 +163,8 @@ def _resize_upper(model, new_nO):
         # just adding rows here.
         if smaller.has_dim("nO"):
             old_nO = smaller.get_dim("nO")
-            larger_W[: old_nO] = smaller_W
-            larger_b[: old_nO] = smaller_b
+            larger_W[:old_nO] = smaller_W
+            larger_b[:old_nO] = smaller_b
             for i in range(old_nO, new_nO):
                 model.attrs["unseen_classes"].add(i)
 

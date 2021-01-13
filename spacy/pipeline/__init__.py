@@ -11,6 +11,7 @@ from .senter import SentenceRecognizer
 from .sentencizer import Sentencizer
 from .tagger import Tagger
 from .textcat import TextCategorizer
+from .textcat_multilabel import MultiLabel_TextCategorizer
 from .tok2vec import Tok2Vec
 from .functions import merge_entities, merge_noun_chunks, merge_subtokens
 
@@ -22,13 +23,14 @@ __all__ = [
     "EntityRuler",
     "Morphologizer",
     "Lemmatizer",
-    "TrainablePipe",
+    "MultiLabel_TextCategorizer",
     "Pipe",
     "SentenceRecognizer",
     "Sentencizer",
     "Tagger",
     "TextCategorizer",
     "Tok2Vec",
+    "TrainablePipe",
     "merge_entities",
     "merge_noun_chunks",
     "merge_subtokens",

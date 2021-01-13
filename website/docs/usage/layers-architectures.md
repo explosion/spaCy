@@ -134,7 +134,7 @@ labels = []
 nO = null
 
 [components.textcat.model.tok2vec]
-@architectures = "spacy.Tok2Vec.v1"
+@architectures = "spacy.Tok2Vec.v2"
 
 [components.textcat.model.tok2vec.embed]
 @architectures = "spacy.MultiHashEmbed.v1"
@@ -144,7 +144,7 @@ attrs = ["ORTH", "LOWER", "PREFIX", "SUFFIX", "SHAPE", "ID"]
 include_static_vectors = false
 
 [components.textcat.model.tok2vec.encode]
-@architectures = "spacy.MaxoutWindowEncoder.v1"
+@architectures = "spacy.MaxoutWindowEncoder.v2"
 width = ${components.textcat.model.tok2vec.embed.width}
 window_size = 1
 maxout_pieces = 3
@@ -152,7 +152,7 @@ depth = 2
 
 [components.textcat.model.linear_model]
 @architectures = "spacy.TextCatBOW.v1"
-exclusive_classes = false
+exclusive_classes = true
 ngram_size = 1
 no_output_layer = false
 ```
@@ -170,7 +170,7 @@ labels = []
 
 [components.textcat.model]
 @architectures = "spacy.TextCatBOW.v1"
-exclusive_classes = false
+exclusive_classes = true
 ngram_size = 1
 no_output_layer = false
 nO = null
@@ -201,14 +201,14 @@ tokens, and their combination forms a typical
 factory = "tok2vec"
 
 [components.tok2vec.model]
-@architectures = "spacy.Tok2Vec.v1"
+@architectures = "spacy.Tok2Vec.v2"
 
 [components.tok2vec.model.embed]
 @architectures = "spacy.MultiHashEmbed.v1"
 # ...
 
 [components.tok2vec.model.encode]
-@architectures = "spacy.MaxoutWindowEncoder.v1"
+@architectures = "spacy.MaxoutWindowEncoder.v2"
 # ...
 ```
 
@@ -224,7 +224,7 @@ architecture:
 # ...
 
 [components.tok2vec.model.encode]
-@architectures = "spacy.MaxoutWindowEncoder.v1"
+@architectures = "spacy.MaxoutWindowEncoder.v2"
 # ...
 ```
 
@@ -716,7 +716,7 @@ that we want to classify as being related or not. As these candidate pairs are
 typically formed within one document, this function takes a [`Doc`](/api/doc) as
 input and outputs a `List` of `Span` tuples. For instance, the following
 implementation takes any two entities from the same document, as long as they
-are within a **maximum distance** (in number of tokens) of eachother:
+are within a **maximum distance** (in number of tokens) of each other:
 
 > #### config.cfg (excerpt)
 >
@@ -742,7 +742,7 @@ def create_instances(max_length: int) -> Callable[[Doc], List[Tuple[Span, Span]]
     return get_candidates
 ```
 
-This function in added to the [`@misc` registry](/api/top-level#registry) so we
+This function is added to the [`@misc` registry](/api/top-level#registry) so we
 can refer to it from the config, and easily swap it out for any other candidate
 generation function.
 

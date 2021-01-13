@@ -1,8 +1,10 @@
-from thinc.api import Model, noop, use_ops, Linear
+from thinc.api import Model, noop
 from .parser_model import ParserStepModel
 
 
-def TransitionModel(tok2vec, lower, upper, resize_output, dropout=0.2, unseen_classes=set()):
+def TransitionModel(
+    tok2vec, lower, upper, resize_output, dropout=0.2, unseen_classes=set()
+):
     """Set up a stepwise transition-based model"""
     if upper is None:
         has_upper = False
@@ -44,4 +46,3 @@ def init(model, X=None, Y=None):
     if model.attrs["has_upper"]:
         statevecs = model.ops.alloc2f(2, lower.get_dim("nO"))
         model.get_ref("upper").initialize(X=statevecs)
-

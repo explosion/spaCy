@@ -4,7 +4,7 @@ from spacy.pipeline import Tagger, DependencyParser, EntityRecognizer
 from spacy.pipeline import TextCategorizer, SentenceRecognizer, TrainablePipe
 from spacy.pipeline.dep_parser import DEFAULT_PARSER_MODEL
 from spacy.pipeline.tagger import DEFAULT_TAGGER_MODEL
-from spacy.pipeline.textcat import DEFAULT_TEXTCAT_MODEL
+from spacy.pipeline.textcat import DEFAULT_SINGLE_TEXTCAT_MODEL
 from spacy.pipeline.senter import DEFAULT_SENTER_MODEL
 from spacy.lang.en import English
 from thinc.api import Linear
@@ -24,7 +24,7 @@ def parser(en_vocab):
         "update_with_oracle_cut_size": 100,
         "beam_width": 1,
         "beam_update_prob": 1.0,
-        "beam_density": 0.0
+        "beam_density": 0.0,
     }
     cfg = {"model": DEFAULT_PARSER_MODEL}
     model = registry.resolve(cfg, validate=True)["model"]
@@ -41,7 +41,7 @@ def blank_parser(en_vocab):
         "update_with_oracle_cut_size": 100,
         "beam_width": 1,
         "beam_update_prob": 1.0,
-        "beam_density": 0.0
+        "beam_density": 0.0,
     }
     cfg = {"model": DEFAULT_PARSER_MODEL}
     model = registry.resolve(cfg, validate=True)["model"]
@@ -66,7 +66,7 @@ def test_serialize_parser_roundtrip_bytes(en_vocab, Parser):
         "update_with_oracle_cut_size": 100,
         "beam_width": 1,
         "beam_update_prob": 1.0,
-        "beam_density": 0.0
+        "beam_density": 0.0,
     }
     cfg = {"model": DEFAULT_PARSER_MODEL}
     model = registry.resolve(cfg, validate=True)["model"]
@@ -90,7 +90,7 @@ def test_serialize_parser_strings(Parser):
         "update_with_oracle_cut_size": 100,
         "beam_width": 1,
         "beam_update_prob": 1.0,
-        "beam_density": 0.0
+        "beam_density": 0.0,
     }
     cfg = {"model": DEFAULT_PARSER_MODEL}
     model = registry.resolve(cfg, validate=True)["model"]
@@ -112,7 +112,7 @@ def test_serialize_parser_roundtrip_disk(en_vocab, Parser):
         "update_with_oracle_cut_size": 100,
         "beam_width": 1,
         "beam_update_prob": 1.0,
-        "beam_density": 0.0
+        "beam_density": 0.0,
     }
     cfg = {"model": DEFAULT_PARSER_MODEL}
     model = registry.resolve(cfg, validate=True)["model"]
@@ -140,9 +140,6 @@ def test_to_from_bytes(parser, blank_parser):
     assert blank_parser.moves.n_moves == parser.moves.n_moves
 
 
-@pytest.mark.skip(
-    reason="This seems to be a dict ordering bug somewhere. Only failing on some platforms."
-)
 def test_serialize_tagger_roundtrip_bytes(en_vocab, taggers):
     tagger1 = taggers[0]
     tagger1_b = tagger1.to_bytes()
@@ -191,7 +188,7 @@ def test_serialize_tagger_strings(en_vocab, de_vocab, taggers):
 
 def test_serialize_textcat_empty(en_vocab):
     # See issue #1105
-    cfg = {"model": DEFAULT_TEXTCAT_MODEL}
+    cfg = {"model": DEFAULT_SINGLE_TEXTCAT_MODEL}
     model = registry.resolve(cfg, validate=True)["model"]
     textcat = TextCategorizer(en_vocab, model, threshold=0.5)
     textcat.to_bytes(exclude=["vocab"])

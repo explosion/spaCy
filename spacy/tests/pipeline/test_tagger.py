@@ -37,7 +37,16 @@ TRAIN_DATA = [
 ]
 
 PARTIAL_DATA = [
+    # partial annotation
     ("I like green eggs", {"tags": ["", "V", "J", ""]}),
+    # misaligned partial annotation
+    (
+        "He hates green eggs",
+        {
+            "words": ["He", "hate", "s", "green", "eggs"],
+            "tags": ["", "V", "S", "J", ""],
+        },
+    ),
 ]
 
 
@@ -125,6 +134,7 @@ def test_incomplete_data():
     doc = nlp(test_text)
     assert doc[1].tag_ is "V"
     assert doc[2].tag_ is "J"
+
 
 def test_overfitting_IO():
     # Simple test to try and quickly overfit the tagger - ensuring the ML models work correctly

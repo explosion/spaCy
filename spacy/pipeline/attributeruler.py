@@ -226,6 +226,7 @@ class AttributeRuler(Pipe):
 
         DOCS: https://nightly.spacy.io/api/tagger#score
         """
+
         def morph_key_getter(token, attr):
             return getattr(token, attr).key
 
@@ -240,8 +241,16 @@ class AttributeRuler(Pipe):
             elif attr == POS:
                 results.update(Scorer.score_token_attr(examples, "pos", **kwargs))
             elif attr == MORPH:
-                results.update(Scorer.score_token_attr(examples, "morph", getter=morph_key_getter, **kwargs))
-                results.update(Scorer.score_token_attr_per_feat(examples, "morph", getter=morph_key_getter, **kwargs))
+                results.update(
+                    Scorer.score_token_attr(
+                        examples, "morph", getter=morph_key_getter, **kwargs
+                    )
+                )
+                results.update(
+                    Scorer.score_token_attr_per_feat(
+                        examples, "morph", getter=morph_key_getter, **kwargs
+                    )
+                )
             elif attr == LEMMA:
                 results.update(Scorer.score_token_attr(examples, "lemma", **kwargs))
         return results

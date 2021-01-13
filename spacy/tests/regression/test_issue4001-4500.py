@@ -288,34 +288,32 @@ def test_multiple_predictions():
     dummy_pipe(doc)
 
 
-@pytest.mark.skip(reason="removed Beam stuff during the Example/GoldParse refactor")
 def test_issue4313():
     """ This should not crash or exit with some strange error code """
     beam_width = 16
     beam_density = 0.0001
     nlp = English()
-    config = {}
-    ner = nlp.create_pipe("ner", config=config)
+    config = {
+        "beam_width": beam_width,
+        "beam_density": beam_density,
+    }
+    ner = nlp.add_pipe("beam_ner", config=config)
     ner.add_label("SOME_LABEL")
-    ner.initialize(lambda: [])
+    nlp.initialize()
     # add a new label to the doc
     doc = nlp("What do you think about Apple ?")
     assert len(ner.labels) == 1
     assert "SOME_LABEL" in ner.labels
+    ner.add_label("MY_ORG")   # TODO: not sure if we want this to be necessary...
     apple_ent = Span(doc, 5, 6, label="MY_ORG")
     doc.ents = list(doc.ents) + [apple_ent]
 
     # ensure the beam_parse still works with the new label
     docs = [doc]
-    beams = nlp.entity.beam_parse(
-        docs, beam_width=beam_width, beam_density=beam_density
+    ner = nlp.get_pipe("beam_ner")
+    beams = ner.beam_parse(
+        docs, drop=0.0, beam_width=beam_width, beam_density=beam_density
     )
-
-    for doc, beam in zip(docs, beams):
-        entity_scores = defaultdict(float)
-        for score, ents in nlp.entity.moves.get_beam_parses(beam):
-            for start, end, label in ents:
-                entity_scores[(start, end, label)] += score
 
 
 def test_issue4348():

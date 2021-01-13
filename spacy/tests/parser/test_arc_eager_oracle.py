@@ -7,7 +7,6 @@ from spacy.tokens import Doc
 from spacy.pipeline._parser_internals.nonproj import projectivize
 from spacy.pipeline._parser_internals.arc_eager import ArcEager
 from spacy.pipeline.dep_parser import DEFAULT_PARSER_MODEL
-from spacy.pipeline._parser_internals.stateclass import StateClass
 
 
 def get_sequence_costs(M, words, heads, deps, transitions):
@@ -59,7 +58,7 @@ def test_oracle_four_words(arc_eager, vocab):
         ["S"],
         ["L-left"],
         ["S"],
-        ["D"]
+        ["D"],
     ]
     assert state.is_final()
     for i, state_costs in enumerate(cost_history):
@@ -185,9 +184,9 @@ def test_oracle_dev_sentence(vocab, arc_eager):
         "L-nn",  # Attach 'Cars' to 'Inc.'
         "L-nn",  # Attach 'Motor' to 'Inc.'
         "L-nn",  # Attach 'Rolls-Royce' to 'Inc.'
-        "S",     # Shift "Inc."
+        "S",  # Shift "Inc."
         "L-nsubj",  # Attach 'Inc.' to 'said'
-        "S",        # Shift 'said'
+        "S",  # Shift 'said'
         "S",  # Shift 'it'
         "L-nsubj",  # Attach 'it.' to 'expects'
         "R-ccomp",  # Attach 'expects' to 'said'
@@ -251,7 +250,7 @@ def test_oracle_bad_tokenization(vocab, arc_eager):
         is root is
         bad comp is
     """
- 
+
     gold_words = []
     gold_deps = []
     gold_heads = []
@@ -268,7 +267,9 @@ def test_oracle_bad_tokenization(vocab, arc_eager):
         arc_eager.add_action(2, dep)  # Left
         arc_eager.add_action(3, dep)  # Right
     reference = Doc(Vocab(), words=gold_words, deps=gold_deps, heads=gold_heads)
-    predicted = Doc(reference.vocab, words=["[", "catalase", "]", ":", "that", "is", "bad"])
+    predicted = Doc(
+        reference.vocab, words=["[", "catalase", "]", ":", "that", "is", "bad"]
+    )
     example = Example(predicted=predicted, reference=reference)
     ae_oracle_actions = arc_eager.get_oracle_sequence(example, _debug=False)
     ae_oracle_actions = [arc_eager.get_class_name(i) for i in ae_oracle_actions]
