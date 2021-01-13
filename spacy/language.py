@@ -1209,6 +1209,9 @@ class Language:
         config = self.config.interpolate()
         # These are the settings provided in the [initialize] block in the config
         I = registry.resolve(config["initialize"], schema=ConfigSchemaInit)
+        before_init = I["before_init"]
+        if before_init is not None:
+            before_init(self)
         init_vocab(
             self, data=I["vocab_data"], lookups=I["lookups"], vectors=I["vectors"]
         )
@@ -1240,6 +1243,9 @@ class Language:
             self._optimizer = sgd
         elif self._optimizer is None:
             self._optimizer = self.create_optimizer()
+        after_init = I["after_init"]
+        if after_init is not None:
+            after_init(self)
         return self._optimizer
 
     def resume_training(self, *, sgd: Optional[Optimizer] = None) -> Optimizer:
