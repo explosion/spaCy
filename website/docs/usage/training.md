@@ -611,14 +611,16 @@ subclass and language data from scratch – it's often enough to make a few smal
 modifications, like adjusting the
 [tokenization rules](/usage/linguistic-features#native-tokenizer-additions) or
 [language defaults](/api/language#defaults) like stop words. The config lets you
-provide three optional **callback functions** that give you access to the
+provide five optional **callback functions** that give you access to the
 language class and `nlp` object at different points of the lifecycle:
 
-| Callback                  | Description                                                                                                                                                                              |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `before_creation`         | Called before the `nlp` object is created and receives the language subclass like `English` (not the instance). Useful for writing to the [`Language.Defaults`](/api/language#defaults). |
-| `after_creation`          | Called right after the `nlp` object is created, but before the pipeline components are added to the pipeline and receives the `nlp` object. Useful for modifying the tokenizer.          |
-| `after_pipeline_creation` | Called right after the pipeline components are created and added and receives the `nlp` object. Useful for modifying pipeline components.                                                |
+| Callback                      | Description                                                                                                                                                                                                                |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `nlp.before_creation`         | Called before the `nlp` object is created and receives the language subclass like `English` (not the instance). Useful for writing to the [`Language.Defaults`](/api/language#defaults) aside from the tokenizer settings. |
+| `nlp.after_creation`          | Called right after the `nlp` object is created, but before the pipeline components are added to the pipeline and receives the `nlp` object.                                                                                |
+| `nlp.after_pipeline_creation` | Called right after the pipeline components are created and added and receives the `nlp` object. Useful for modifying pipeline components.                                                                                  |
+| `initialize.before_init`      | Called before the pipeline components are initialized and receives the `nlp` object for in-place modification. Useful for modifying the tokenizer settings, similar to the v2 base model option.                           |
+| `initialize.after_init`       | Called after the pipeline components are initialized and receives the `nlp` object for in-place modification.                                                                                                              |
 
 The `@spacy.registry.callbacks` decorator lets you register your custom function
 in the `callbacks` [registry](/api/top-level#registry) under a given name. You
@@ -626,8 +628,8 @@ can then reference the function in a config block using the `@callbacks` key. If
 a block contains a key starting with an `@`, it's interpreted as a reference to
 a function. Because you've registered the function, spaCy knows how to create it
 when you reference `"customize_language_data"` in your config. Here's an example
-of a callback that runs before the `nlp` object is created and adds a few custom
-tokenization rules to the defaults:
+of a callback that runs before the `nlp` object is created and adds a custom
+stop word to the defaults:
 
 > #### config.cfg
 >
@@ -643,7 +645,7 @@ import spacy
 @spacy.registry.callbacks("customize_language_data")
 def create_callback():
     def customize_language_data(lang_cls):
-        lang_cls.Defaults.suffixes = lang_cls.Defaults.suffixes + (r"-+$",)
+        lang_cls.Defaults.stop_words.add("good")
         return lang_cls
 
     return customize_language_data
@@ -674,17 +676,16 @@ we're adding the arguments `extra_stop_words` (a list of strings) and `debug`
 > ```
 
 ```python
-### functions.py {highlight="5,8-10"}
+### functions.py {highlight="5,7-9"}
 from typing import List
 import spacy
 
 @spacy.registry.callbacks("customize_language_data")
 def create_callback(extra_stop_words: List[str] = [], debug: bool = False):
     def customize_language_data(lang_cls):
-        lang_cls.Defaults.suffixes = lang_cls.Defaults.suffixes + (r"-+$",)
-        lang_cls.Defaults.stop_words.add(extra_stop_words)
+        lang_cls.Defaults.stop_words.update(extra_stop_words)
         if debug:
-            print("Updated stop words and tokenizer suffixes")
+            print("Updated stop words")
         return lang_cls
 
     return customize_language_data
@@ -714,6 +715,65 @@ to your Python file. Before loading the config, spaCy will import the
 ```cli
 $ python -m spacy train config.cfg --output ./output --code ./functions.py
 ```
+
+#### Example: Modifying tokenizer settings {#custom-tokenizer}
+
+Use the `initialize.before_init` callback to modify the tokenizer settings when
+training a new pipeline. Write a registered callback that modifies the tokenizer
+settings and specify this callback in your config:
+
+> #### config.cfg
+>
+> ```ini
+> [initialize]
+>
+> [initialize.before_init]
+> @callbacks = "customize_tokenizer"
+> ```
+
+```python
+### functions.py
+from spacy.util import registry, compile_suffix_regex
+
+@registry.callbacks("customize_tokenizer")
+def make_customize_tokenizer():
+    def customize_tokenizer(nlp):
+        # remove a suffix
+        suffixes = list(nlp.Defaults.suffixes)
+        suffixes.remove("\\[")
+        suffix_regex = compile_suffix_regex(suffixes)
+        nlp.tokenizer.suffix_search = suffix_regex.search
+
+        # add a special case
+        nlp.tokenizer.add_special_case("_SPECIAL_", [{"ORTH": "_SPECIAL_"}])
+    return customize_tokenizer
+```
+
+When training, provide the function above with the `--code` option:
+
+```cli
+$ python -m spacy train config.cfg --code ./functions.py
+```
+
+Because this callback is only called in the one-time initialization step before
+training, the callback code does not need to be packaged with the final pipeline
+package. However, to make it easier for others to replicate your training setup,
+you can choose to package the initialization callbacks with the pipeline package
+or to publish them separately.
+
+<Infobox variant="warning" title="nlp.before_creation vs. initialize.before_init">
+
+- `nlp.before_creation` is the best place to modify language defaults other than
+  the tokenizer settings.
+- `initialize.before_init` is the best place to modify tokenizer settings when
+  training a new pipeline.
+
+Unlike the other language defaults, the tokenizer settings are saved with the
+pipeline with `nlp.to_disk()`, so modifications made in `nlp.before_creation`
+will be clobbered by the saved settings when the trained pipeline is loaded from
+disk.
+
+</Infobox>
 
 #### Example: Custom logging function {#custom-logging}
 
