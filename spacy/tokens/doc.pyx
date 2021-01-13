@@ -1258,7 +1258,7 @@ cdef class Doc:
             strings.add(token.ent_id_)
             strings.add(token.norm_)
         for group in self.spans.values():
-            for span in group.to_list():
+            for span in group:
                 strings.add(span.label_)
         # Msgpack doesn't distinguish between lists and tuples, which is
         # vexing for user data. As a best guess, we *know* that within
