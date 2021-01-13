@@ -60,6 +60,22 @@ cdef class SpanGroup:
         """
         return self._doc_ref()
 
+    @property
+    def has_overlap(self):
+        """RETURNS (bool): Whether the group contains overlapping spans.
+
+        DOCS: https://nightly.spacy.io/api/spangroup#has_overlap
+        """
+        if not len(self):
+            return False
+        sorted_spans = list(sorted(self))
+        last_end = sorted_spans[0].end
+        for span in sorted_spans[1:]:
+            if span.start < last_end:
+                return True
+            last_end = span.end
+        return False
+
     def __len__(self):
         """RETURNS (int): The number of spans in the group.
 

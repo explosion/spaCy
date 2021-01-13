@@ -58,6 +58,24 @@ The [`Doc`](/api/doc) object the span group is referring to.
 | ----------- | ------------------------------- |
 | **RETURNS** | The reference document. ~~Doc~~ |
 
+## SpanGroup.has_overlap {#has_overlap tag="property"}
+
+Check whether the span group contains overlapping spans.
+
+> #### Example
+>
+> ```python
+> doc = nlp("Their goi ng home")
+> doc.spans["errors"] = [doc[0:1], doc[2:4]]
+> assert not doc.spans["errors"].has_overlap
+> doc.spans["errors"].append(doc[1:2])
+> assert doc.spans["errors"].has_overlap
+> ```
+
+| Name        | Description                                        |
+| ----------- | -------------------------------------------------- |
+| **RETURNS** | Whether the span group contains overlaps. ~~bool~~ |
+
 ## SpanGroup.\_\_len\_\_ {#len tag="method"}
 
 Get the number of spans in the group.
