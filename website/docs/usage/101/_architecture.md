@@ -18,15 +18,16 @@ It also orchestrates training and serialization.
 
 ### Container objects {#architecture-containers}
 
-| Name                        | Description                                                                                                                                             |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`Doc`](/api/doc)           | A container for accessing linguistic annotations.                                                                                                       |
-| [`DocBin`](/api/docbin)     | A collection of `Doc` objects for efficient binary serialization. Also used for [training data](/api/data-formats#binary-training).                     |
-| [`Example`](/api/example)   | A collection of training annotations, containing two `Doc` objects: the reference data and the predictions.                                             |
-| [`Language`](/api/language) | Processing class that turns text into `Doc` objects. Different languages implement their own subclasses of it. The variable is typically called `nlp`.  |
-| [`Lexeme`](/api/lexeme)     | An entry in the vocabulary. It's a word type with no context, as opposed to a word token. It therefore has no part-of-speech tag, dependency parse etc. |
-| [`Span`](/api/span)         | A slice from a `Doc` object.                                                                                                                            |
-| [`Token`](/api/token)       | An individual token — i.e. a word, punctuation symbol, whitespace, etc.                                                                                 |
+| Name                          | Description                                                                                                                                             |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`Doc`](/api/doc)             | A container for accessing linguistic annotations.                                                                                                       |
+| [`DocBin`](/api/docbin)       | A collection of `Doc` objects for efficient binary serialization. Also used for [training data](/api/data-formats#binary-training).                     |
+| [`Example`](/api/example)     | A collection of training annotations, containing two `Doc` objects: the reference data and the predictions.                                             |
+| [`Language`](/api/language)   | Processing class that turns text into `Doc` objects. Different languages implement their own subclasses of it. The variable is typically called `nlp`.  |
+| [`Lexeme`](/api/lexeme)       | An entry in the vocabulary. It's a word type with no context, as opposed to a word token. It therefore has no part-of-speech tag, dependency parse etc. |
+| [`Span`](/api/span)           | A slice from a `Doc` object.                                                                                                                            |
+| [`SpanGroup`](/api/spangroup) | A named collection of spans belonging to a `Doc`.                                                                                                       |
+| [`Token`](/api/token)         | An individual token — i.e. a word, punctuation symbol, whitespace, etc.                                                                                 |
 
 ### Processing pipeline {#architecture-pipeline}
 

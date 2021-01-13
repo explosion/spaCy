@@ -6,7 +6,6 @@ import srsly
 from thinc.api import NumpyOps
 
 from .doc import Doc
-from ._dict_proxies import SpanGroups
 from ..vocab import Vocab
 from ..compat import copy_reg
 from ..attrs import SPACY, ORTH, intify_attr
@@ -197,7 +196,7 @@ class DocBin:
             "strings": list(sorted(self.strings)),
             "cats": self.cats,
             "flags": self.flags,
-            "span_groups": self.span_groups
+            "span_groups": self.span_groups,
         }
         if self.store_user_data:
             msg["user_data"] = self.user_data

@@ -2,6 +2,7 @@
     "Doc": "/api/doc",
     "Token": "/api/token",
     "Span": "/api/span",
+    "SpanGroup": "/api/spangroup",
     "Lexeme": "/api/lexeme",
     "Example": "/api/example",
     "Alignment": "/api/example#alignment-object",
