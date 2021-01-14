@@ -20,9 +20,13 @@ cdef class Edge:
     cdef readonly Graph graph
     cdef readonly int i
     
-    def __cinit__(self, Graph graph, int i):
+    def __init__(self, Graph graph, int i):
         self.graph = graph
         self.i = i
+
+    @property
+    def is_none(self) -> bool:
+        return False
 
     @property
     def doc(self) -> "Doc":
@@ -54,7 +58,7 @@ cdef class Node:
     cdef readonly Graph graph
     cdef readonly int i
 
-    def __cinit__(self, Graph graph, int i):
+    def __init__(self, Graph graph, int i):
         """A reference to a node of an annotation graph. Each node is made up of
         an ordered set of zero or more token indices.
         
@@ -62,13 +66,23 @@ cdef class Node:
         the Node or Edge objects. You usually won't need to instantiate this
         class yourself.
         """
-        length = graph.c.nodes.size()
+        cdef int length = graph.c.nodes.size()
         if i >= length or -i >= length:
             raise IndexError(f"Node index {i} out of bounds ({length})")
         if i < 0:
             i += length
         self.graph = graph
         self.i = i
+
+    def __eq__(self, other):
+        if self.graph is not other.graph:
+            return False
+        else:
+            return self.i == other.i
+
+    def __iter__(self) -> Generator[int]:
+        for i in self.graph.c.nodes[self.i]:
+            yield i
 
     def __getitem__(self, int i) -> int:
         """Get a token index from the node's set of tokens."""
@@ -257,7 +271,7 @@ cdef class NoneEdge(Edge):
     API as other Edge instances, but always returns NoneEdge, NoneNode, or empty
     lists.
     """
-    def __cinit__(self, graph):
+    def __init__(self, graph):
         self.graph = graph
         self.i = -1
    
@@ -287,7 +301,7 @@ cdef class NoneEdge(Edge):
 
 
 cdef class NoneNode(Node):
-    def __cinit__(self, graph):
+    def __init__(self, graph):
         self.graph = graph
         self.i = -1
 
@@ -341,7 +355,12 @@ cdef class Graph:
         for node in nodes:
             self.add_node(node)
         for (head, tail), label, weight in zip(edges, labels, weights):
-            self.add_edge(head, tail, label=label, weight=weight)
+            self.add_edge(
+                Node(self, head),
+                Node(self, tail),
+                label=label,
+                weight=weight
+            )
 
     def __dealloc__(self):
         del self.c.node_map
@@ -365,7 +384,7 @@ cdef class Graph:
         for i in range(self.c.nodes.size()):
             yield Node(self, i)
 
-    def add_edge(self, tuple head, tuple tail, *, label="", weight=None) -> Edge:
+    def add_edge(self, head, tail, *, label="", weight=None) -> Edge:
         """Add an edge to the graph, connecting two groups of tokens.
        
         If there is already an edge for the (head, tail, label) triple, it will
@@ -408,18 +427,21 @@ cdef class Graph:
         """Check whether a (head, tail, label) triple is an edge in the graph."""
         return not self.get_edge(head, tail, label=label).is_none
     
-    def add_node(self, tuple indices) -> Node:
+    def add_node(self, indices) -> Node:
         """Add a node to the graph and return it. Nodes refer to ordered sets
         of token indices.
         
         This method is idempotent: if there is already a node for the given
         indices, it is returned without a new node being created.
         """
+        if isinstance(indices, Node):
+            return indices
         cdef vector[int32_t] node 
         node.reserve(len(indices))
-        for i, idx in enumerate(indices):
+        for idx in indices:
             node.push_back(idx)
         i = add_node(&self.c, node)
+        print("Add node", indices, i)
         return Node(self, i)
 
     def get_node(self, indices) -> Node:
@@ -430,12 +452,13 @@ cdef class Graph:
             return indices
         cdef vector[int32_t] node 
         node.reserve(len(indices))
-        for i, idx in enumerate(indices):
+        for idx in indices:
             node.push_back(idx)
         node_index = get_node(&self.c, node)
         if node_index < 0:
             return NoneNode(self)
         else:
+            print("Get node", indices, node_index)
             return Node(self, node_index)
  
     def has_node(self, tuple indices) -> bool:
@@ -500,9 +523,9 @@ cdef int add_node(GraphC* graph, vector[int32_t]& node) nogil:
  
 
 cdef int get_node(const GraphC* graph, vector[int32_t] node) nogil:
-    key = hash64(&node, node.size() * sizeof(node[0]), 0)
+    key = hash64(&node[0], node.size() * sizeof(node[0]), 0)
     it = graph.node_map.find(key)
-    if it == graph.edge_map.end():
+    if it == graph.node_map.end():
         return -1
     else:
         return dereference(it).second
