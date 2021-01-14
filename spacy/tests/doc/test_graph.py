@@ -13,9 +13,10 @@ def test_graph_init():
 def test_graph_edges_and_nodes():
     doc = Doc(Vocab(), words=["a", "b", "c", "d"])
     graph = Graph(doc, name="hello")
-    node1 = graph.node((0,))
-    assert graph.node((0,)) == node1
-    node2 = graph.node((1, 3))
+    node1 = graph.add_node((0,))
+    assert graph.get_node((0,)) == node1
+    node2 = graph.add_node((1, 3))
+    assert list(node2) == [1, 3]
     graph.add_edge(
         node1,
         node2,
@@ -27,10 +28,10 @@ def test_graph_edges_and_nodes():
         node2,
         label="one"
     )
-    assert graph.head_nodes(node1) == []
-    assert graph.head_nodes(node2) == [(0,)]
-    assert graph.tail_nodes(node1) == [(1, 3)]
-    assert graph.tail_nodes(node2) == []
+    assert node1.heads() == []
+    assert [tuple(h) for h in node2.heads()] == [(0,)]
+    assert [tuple(t) for t in node1.tails()] == [(1, 3)]
+    assert [tuple(t) for t in node2.tails()] == []
 
 
 def test_graph_walk():
@@ -39,15 +40,18 @@ def test_graph_walk():
         doc,
         name="hello",
         nodes=[(0,), (1,), (2,), (3,)],
-        edges=[(0, 1), (0, 2), (0, 3), (3, 0)]
+        edges=[(0, 1), (0, 2), (0, 3), (3, 0)],
+        labels=None,
+        weights=None
     )
-    assert graph.head_nodes(0) == [(3,)]
-    assert graph.head_nodes(1) == [(0,)]
-    assert graph.walk_head_nodes(0) == [(3,), (0,)]
-    assert graph.walk_head_nodes(1) == [(0,), (3,), (0,)]
-    assert graph.walk_head_nodes(2) == [(0,), (3,), (0,)]
-    assert graph.walk_head_nodes(3) == [(0,), (3,)]
-    assert graph.walk_tail_nodes(0) == [(1,), (2,), (3,), (0,)]
-    assert graph.walk_tail_nodes(1) == []
-    assert graph.walk_tail_nodes(2) == []
-    assert graph.walk_tail_nodes(3) == [(0,), (1,), (2,), (3,)]
+    node0, node1, node2, node3 = list(graph.nodes)
+    assert [tuple(h) for h in node0.heads()] == [(3,)]
+    assert [tuple(h) for h in node1.heads()] == [(0,)]
+    assert [tuple(h) for h in node0.walk_heads()] == [(3,), (0,)]
+    assert [tuple(h) for h in node1.walk_heads()] == [(0,), (3,), (0,)]
+    assert [tuple(h) for h in node2.walk_heads()] == [(0,), (3,), (0,)]
+    assert [tuple(h) for h in node3.walk_heads()] == [(0,), (3,)]
+    assert [tuple(t) for t in node0.walk_tails()] == [(1,), (2,), (3,), (0,)]
+    assert [tuple(t) for t in node1.walk_tails()] == []
+    assert [tuple(t) for t in node2.walk_tails()] == []
+    assert [tuple(t) for t in node3.walk_tails()] == [(0,), (1,), (2,), (3,)]
