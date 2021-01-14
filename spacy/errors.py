@@ -730,6 +730,8 @@ class Errors:
              "DocBin (.spacy) format. If your data is in spaCy v2's JSON "
              "training format, convert it using `python -m spacy convert "
              "file.json .`.")
+    E1015 = ("Can't initialize model from config: no {value} found. For more "
+             "information, run: python -m spacy debug config config.cfg")
 
 
 # Deprecated model shortcuts, only used in errors and warnings
