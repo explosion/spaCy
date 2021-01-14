@@ -7,6 +7,7 @@ from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .morph_rules import MORPH_RULES
 from ..tag_map import TAG_MAP
+from .syntax_iterators import SYNTAX_ITERATORS
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...language import Language
@@ -24,6 +25,7 @@ class DanishDefaults(Language.Defaults):
     suffixes = TOKENIZER_SUFFIXES
     tag_map = TAG_MAP
     stop_words = STOP_WORDS
+    syntax_iterators = SYNTAX_ITERATORS
 
 
 class Danish(Language):
