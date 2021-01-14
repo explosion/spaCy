@@ -337,8 +337,51 @@ cdef class NoneNode(Node):
  
 
 cdef class Graph:
-    """A set of directed labelled relationships between sets of tokens."""
+    """A set of directed labelled relationships between sets of tokens.
+    
+    EXAMPLE:
+        Construction 1
+        >>> graph = Graph(doc, name="srl")
+
+        Construction 2
+        >>> graph = Graph(
+            doc,
+            name="srl",
+            nodes=[(0,), (1, 3), (,)],
+            edges=[(0, 2), (2, 1)]
+        )
+
+        Construction 3
+        >>> graph = Graph(
+            doc,
+            name="srl",
+            nodes=[(0,), (1, 3), (,)],
+            edges=[(2, 0), (0, 1)],
+            labels=["word sense ID 1675", "agent"],
+            weights=[-42.6, -1.7]
+        )
+        >>> assert graph.has_node((0,))
+        >>> assert graph.has_edge((0,), (1,3), label="agent")
+    """
     def __init__(self, doc, *, name="", nodes=[], edges=[], labels=None, weights=None):
+        """Create a Graph object.
+
+        doc (Doc): The Doc object the graph will refer to.
+        name (str): A string name to help identify the graph. Defaults to "".
+        nodes (List[Tuple[int]]): A list of token-index tuples to add to the graph
+            as nodes. Defaults to [].
+        edges (List[Tuple[int, int]]): A list of edges between the provided nodes.
+            Each edge should be a (head, tail) tuple, where `head` and `tail`
+            are integers pointing into the `nodes` list. Defaults to [].
+        labels (Optional[List[str]]): A list of labels for the provided edges.
+            If None, all of the edges specified by the edges argument will have
+            be labelled with the empty string (""). If `labels` is not `None`,
+            it must have the same length as the `edges` argument.
+        weights (Optional[List[float]]): A list of weights for the provided edges.
+            If None, all of the edges specified by the edges argument will 
+            have the weight 0.0. If `weights` is not `None`, it must have the
+            same length as the `edges` argument.
+        """
         if weights is not None:
             assert len(weights) == len(edges)
         else:
