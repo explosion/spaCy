@@ -1,50 +1,310 @@
 # cython: infer_types=True, cdivision=True, boundscheck=False, binding=True
+from typing import List, Tuple, Generator
 from libc.stdint cimport int32_t, int64_t
 from libcpp.pair cimport pair
 from libcpp.unordered_map cimport unordered_map
 from libcpp.unordered_set cimport unordered_set
 from cython.operator cimport dereference
+cimport cython
 import weakref
 from preshed.maps cimport map_get_unless_missing
 from murmurhash.mrmr cimport hash64
 from ..typedefs cimport hash_t
 from ..strings import get_string_id
 from ..structs cimport EdgeC, GraphC
+from .token import Token
 
 
-class Edge:
-    def __init__(self, doc, head, tail, label, weight):
-        self.doc = doc
-        self.head_indices = head
-        self.tail_indices = tail
-        self.label = label
-        self.weight = weight
+@cython.freelist(8)
+cdef class Edge:
+    cdef readonly Graph graph
+    cdef readonly int i
+    
+    def __cinit__(self, Graph graph, int i):
+        self.graph = graph
+        self.i = i
 
     @property
-    def head(self):
-        return tuple([self.doc[i] for i in self.head_indices])
+    def doc(self) -> "Doc":
+        return self.graph.doc
+
+    @property
+    def head(self) -> "Node":
+        return Node(self.graph, self.graph.c.edges[self.i].head)
     
     @property
-    def tail(self):
-        return tuple([self.doc[i] for i in self.tail_indices])
+    def tail(self) -> "Tail":
+        return Node(self.graph, self.graph.c.edges[self.i].tail)
 
     @property
-    def label_(self):
+    def label(self) -> int:
+        return self.graph.c.edges[self.i].label
+
+    @property
+    def weight(self) -> float:
+        return self.graph.c.weights[self.i]
+
+    @property
+    def label_(self) -> str:
         return self.doc.vocab.strings[self.label]
 
 
-# TODO:
-# I think we should have:
-#
-# graph.nodes: Iterate, add, lookup nodes. Returns Node objects.
-# graph.edges: Iterate, add, lookup edges. Returns Edge objects.
-# node.heads: View of node's heads.
-# node.tails: View of node's tails.
-# node.siblings: View of node's siblings.
-# node.ancestors: View of node's ancestors.
-# node.descendents: View of node's descendents.
-# node.head_edges: View of node's incoming edges.
-# node.tail_edges: View of node's outgoing edges.
+@cython.freelist(8)
+cdef class Node:
+    cdef readonly Graph graph
+    cdef readonly int i
+
+    def __cinit__(self, Graph graph, int i):
+        """A reference to a node of an annotation graph. Each node is made up of
+        an ordered set of zero or more token indices.
+        
+        Node references are usually created by the Graph object itself, or from
+        the Node or Edge objects. You usually won't need to instantiate this
+        class yourself.
+        """
+        length = graph.c.nodes.size()
+        if i >= length or -i >= length:
+            raise IndexError(f"Node index {i} out of bounds ({length})")
+        if i < 0:
+            i += length
+        self.graph = graph
+        self.i = i
+
+    def __getitem__(self, int i) -> int:
+        """Get a token index from the node's set of tokens."""
+        length = self.graph.c.nodes[self.i].size()
+        if i >= length or -i >= length:
+            raise IndexError(f"Token index {i} out of bounds ({length})")
+        if i < 0:
+            i += length
+        return self.graph.c.nodes[self.i][i]
+
+    def __len__(self) -> int:
+        """The number of tokens that make up the node."""
+        return self.graph.c.nodes[self.i].size()
+
+    @property
+    def is_none(self) -> bool:
+        """Whether the node is a special value, indicating 'none'.
+        
+        The NoneNode type is returned by the Graph, Edge and Node objects when
+        there is no match to a query. It has the same API as Node, but it always
+        returns NoneNode, NoneEdge or empty lists for its queries.
+        """
+        return False
+ 
+    @property
+    def doc(self) -> "Doc":
+        """The Doc object that the graph refers to."""
+        return self.graph.doc
+
+    @property
+    def tokens(self) -> Tuple[Token]:
+        """A tuple of Token objects that make up the node."""
+        doc = self.doc
+        return tuple([doc[i] for i in self])
+
+    def head(self, i=None, label=None) -> "Node":
+        """Get the head of the first matching edge, searching by index, label,
+        both or neither.
+        
+        For instance, `node.head(i=1)` will get the head of the second edge that
+        this node is a tail of. `node.head(i=1, label="ARG0")` will further
+        check that the second edge has the label `"ARG0"`. 
+        
+        If no matching node can be found, the graph's NoneNode is returned. 
+        """
+        return self.headed(i=i, label=label)
+    
+    def tail(self, i=None, label=None) -> "Node":
+        """Get the tail of the first matching edge, searching by index, label,
+        both or neither.
+ 
+        If no matching node can be found, the graph's NoneNode is returned. 
+        """
+        return self.tailed(i=i, label=label).tail
+
+    def sibling(self, i=None, label=None):
+        """Get the first matching sibling node. Two nodes are siblings if they
+        are both tails of the same head.
+        If no matching node can be found, the graph's NoneNode is returned. 
+        """
+        if i is None:
+            siblings = self.siblings(label=label)
+            return siblings[0] if siblings else NoneNode(self)
+        else:
+            edges = []
+            for h in self.headed():
+                edges.extend([e for e in h.tailed() if e.tail.i != self.i])
+            if i >= len(edges):
+                return NoneNode(self)
+            elif label is not None and edges[i].label != label:
+                return NoneNode(self)
+            else:
+                return edges[i].tail
+
+    def heads(self, label=None) -> List["Node"]:
+        """Find all matching heads of this node."""
+        cdef vector[int] edge_indices
+        self._find_edges(edge_indices, "head", label)
+        return [Node(self.graph, self.graph.c.edges[i].head) for i in edge_indices]
+     
+    def tails(self, label=None) -> List["Node"]:
+        """Find all matching tails of this node."""
+        cdef vector[int] edge_indices
+        self._find_edges(edge_indices, "tail", label)
+        return [Node(self.graph, self.graph.c.edges[i].tail) for i in edge_indices]
+
+    def siblings(self, label=None) -> List["Node"]:
+        """Find all maching siblings of this node. Two nodes are siblings if they
+        are tails of the same head.
+        """
+        edges = []
+        for h in self.headed():
+            edges.extend([e for e in h.tailed() if e.tail.i != self.i])
+        if label is None:
+            return [e.tail for e in edges]
+        else:
+            return [e.tail for e in edges if e.label == label]
+
+    def headed(self, i=None, label=None) -> Edge:
+        """Find the first matching edge headed by this node.
+        If no matching edge can be found, the graph's NoneEdge is returned.
+        """
+        start, end = self._find_range(i, self.c.n_head[self.i])
+        idx = self._find_edge("head", start, end, label)
+        if idx == -1:
+            return NoneEdge(self.graph)
+        else:
+            return Edge(self.graph, idx)
+    
+    def tailed(self, i=None, label=None) -> Edge:
+        """Find the first matching edge tailed by this node.
+        If no matching edge can be found, the graph's NoneEdge is returned.
+        """
+        start, end = self._find_range(i, self.c.n_tail[self.i])
+        idx = self._find_edge("tail", start, end, label)
+        if idx == -1:
+            return NoneEdge(self.graph)
+        else:
+            return Edge(self.graph, idx)
+
+    def headeds(self, label=None) -> List[Edge]:
+        """Find all matching edges headed by this node."""
+        cdef vector[int] edge_indices
+        self._find_edges(edge_indices, "head", label)
+        return [Edge(self.graph, i) for i in edge_indices]
+
+    def taileds(self, label=None) -> List["Edge"]:
+        """Find all matching edges headed by this node."""
+        cdef vector[int] edge_indices
+        self._find_edges(edge_indices, "tail", label)
+        return [Edge(self.graph, i) for i in edge_indices]
+
+    cdef (int, int) _get_range(self, i, n):
+        if i is None:
+            return (0, n)
+        elif i < n:
+            return (i, i+1)
+        else:
+            return (0, 0)
+
+    cdef int _find_edge(self, str direction, int start, int end, label) except -2:
+        if direction == "head":
+            get_edges = get_head_edges
+        else:
+            get_edges = get_tail_edges
+        cdef vector[int] edge_indices
+        get_edges(edge_indices, &self.graph.c, self.i)
+        if label is None:
+            return edge_indices[start]
+        for edge_index in edge_indices[start:end]:
+            if self.graph.c.edges[edge_index].label == label:
+                return edge_index
+        else:
+            return -1
+
+    cdef int _find_edges(self, vector[int]& edge_indices, str direction, label):
+        if direction == "head":
+            get_edges = get_head_edges
+        else:
+            get_edges = get_tail_edges
+        if label is None:
+            get_edges(edge_indices, &self.graph.c, self.i)
+            return edge_indices.size()
+        cdef vector[int] unfiltered
+        get_edges(unfiltered, &self.graph.c, self.i)
+        for edge_index in unfiltered:
+            if self.graph.c.edges[edge_index].label == label:
+                edge_indices.push_back(edge_index)
+        return edge_indices.size()
+
+
+@cython.freelist(8)
+cdef class NoneEdge(Edge):
+    """An Edge subclass, representing a non-result. The NoneEdge has the same
+    API as other Edge instances, but always returns NoneEdge, NoneNode, or empty
+    lists.
+    """
+    def __cinit__(self, graph):
+        self.graph = graph
+        self.i = -1
+   
+    @property
+    def doc(self) -> "Doc":
+        return self.graph.doc
+
+    @property
+    def head(self) -> "NoneNode":
+        return NoneNode(self.graph)
+    
+    @property
+    def tail(self) -> "NoneNode":
+        return NoneNode(self.graph)
+
+    @property
+    def label(self) -> int:
+        return 0
+
+    @property
+    def weight(self) -> float:
+        return 0.0
+
+    @property
+    def label_(self) -> str:
+        return ""
+
+
+@cython.freelist(8)
+cdef class NoneNode(Node):
+    def __cinit__(self, graph):
+        self.graph = graph
+        self.i = -1
+
+    def __getitem__(self, int i):
+        raise IndexError("Cannot index into NoneNode.")
+
+    def __len__(self):
+        return 0
+ 
+    @property
+    def is_none(self):
+        return -1
+
+    @property
+    def doc(self):
+        return self.graph.doc
+
+    @property
+    def tokens(self):
+        return tuple()
+
+    def head(self, i=None, label=None):
+        return self
+
+    def tail(self, i=None, label=None):
+        return self
+ 
 
 cdef class Graph:
     """A set of directed labelled relationships between sets of tokens."""
@@ -63,7 +323,7 @@ cdef class Graph:
         self.name = name
         self.doc_ref = weakref.ref(doc)
         for node in nodes:
-            self.node(node)
+            self.add_node(node)
         for (head, tail), label, weight in zip(edges, labels, weights):
             self.add_edge(head, tail, label=label, weight=weight)
 
@@ -73,113 +333,97 @@ cdef class Graph:
         del self.c.roots
 
     @property
-    def doc(self):
+    def doc(self) -> "Doc":
+        """The Doc object the graph refers to."""
         return self.doc_ref()
 
-    def __iter__(self):
-        doc = self.doc
+    @property
+    def edges(self) -> Generator[Edge]:
+        """Iterate over the edges in the graph."""
         for i in range(self.c.edges.size()):
-            edge = self.c.edges[i]
-            yield Edge(
-                doc,
-                tuple(self.c.nodes[edge.head]),
-                tuple(self.c.nodes[edge.tail]),
-                label=edge.label,
-                weight=self.c.weights[i]
-            )
+            yield Edge(self, i)
 
-    def node(self, tuple indices):
+    @property
+    def nodes(self) -> Generator[Node]:
+        """Iterate over the nodes in the graph."""
+        for i in range(self.c.nodes.size()):
+            yield Node(self, i)
+
+    def add_edge(self, tuple head, tuple tail, *, label="", weight=None) -> Edge:
+        """Add an edge to the graph, connecting two groups of tokens.
+       
+        If there is already an edge for the (head, tail, label) triple, it will
+        be returned, and no new edge will be created. The weight of the edge
+        will be updated if a weight is specified.
+        """
+        label_hash = self.doc.vocab.strings.as_int(label)
+        weight_float = weight if weight is not None else 0.0
+        edge_index = add_edge(
+            &self.c,
+            EdgeC(
+                head=self.add_node(head).i,
+                tail=self.add_node(tail).i,
+                label=self.doc.vocab.strings.as_int(label),
+            ),
+            weight=weight if weight is not None else 0.0
+        )
+        return Edge(self, edge_index)
+
+    def get_edge(self, tuple head, tuple tail, *, label="") -> Edge:
+        """Look up an edge in the graph. If the graph has no matching edge,
+        the NoneEdge object is returned.
+        """
+        head_node = self.get_node(head)
+        if head_node.is_none:
+            return NoneEdge(self)
+        tail_node = self.get_node(tail)
+        if tail_node.is_none:
+            return NoneEdge(self)
+        edge_index = get_edge(
+            &self.c,
+            EdgeC(head=head_node.i, tail=tail_node.i, label=get_string_id(label))
+        )
+        if edge_index < 0:
+            return NoneEdge(self)
+        else:
+            return Edge(self, edge_index)
+
+    def has_edge(self, head, tail, label) -> bool:
+        """Check whether a (head, tail, label) triple is an edge in the graph."""
+        return not self.get_edge(head, tail, label=label).is_none
+    
+    def add_node(self, tuple indices) -> Node:
+        """Add a node to the graph and return it. Nodes refer to ordered sets
+        of token indices.
+        
+        This method is idempotent: if there is already a node for the given
+        indices, it is returned without a new node being created.
+        """
         cdef vector[int32_t] node 
         node.reserve(len(indices))
         for i, idx in enumerate(indices):
             node.push_back(idx)
-        return add_node(&self.c, node)
+        i = add_node(&self.c, node)
+        return Node(self, i)
 
-    def edge(self, int i):
-        edge = self.c.edges[i]
-        return Edge(
-            self.doc,
-            self.c.nodes[edge.head],
-            tuple(self.c.nodes[edge.tail]),
-            label=edge.label,
-            weight=self.c.weights[i]
-        )
-
-    def siblings(self, tuple indices):
-        cdef vector[int] siblings
-        get_sibling_nodes(siblings, &self.c, self.node(indices))
-        return [tuple(self.c.nodes[siblings[i]]) for i in range(siblings.size())]
-   
-    def head_nodes(self, int node):
-        cdef vector[int] output
-        size = get_head_nodes(output, &self.c, node)
-        return [tuple(self.c.nodes[output[i]]) for i in range(output.size())]
-
-    def tail_nodes(self, int node):
-        cdef vector[int] output
-        size = get_tail_nodes(output, &self.c, node)
-        return [tuple(self.c.nodes[output[i]]) for i in range(output.size())]
-
-    def head_edges(self, int node):
-        cdef vector[int] edge_indices
-        get_head_edges(edge_indices, &self.c, node)
-        return [self.edge(edge_indices[i]) for i in range(edge_indices.size())]
-
-    def tail_edges(self, int node):
-        cdef vector[int] edge_indices
-        get_tail_edges(edge_indices, &self.c, node)
-        return [self.edge(edge_indices[i]) for i in range(edge_indices.size())]
+    def get_node(self, tuple indices) -> Node:
+        """Get a node from the graph, or the NoneNode if there is no node for
+        the given indices.
+        """
+        cdef vector[int32_t] node 
+        node.reserve(len(indices))
+        for i, idx in enumerate(indices):
+            node.push_back(idx)
+        node_index = get_node(&self.c, node)
+        if node_index < 0:
+            return NoneNode(self)
+        else:
+            return Node(self, node_index)
  
-    def walk_head_nodes(self, int node):
-        cdef vector[int] node_indices
-        walk_head_nodes(node_indices, &self.c, node)
-        return [tuple(self.c.nodes[i]) for i in node_indices]
+    def has_node(self, tuple indices) -> bool:
+        """Check whether the graph has a node for the given indices."""
+        return not self.get_node(indices).is_none
 
-    def walk_tail_nodes(self, int node):
-        cdef vector[int] node_indices
-        walk_tail_nodes(node_indices, &self.c, node)
-        return [tuple(self.c.nodes[i]) for i in node_indices]
-
-    def walk_head_edges(self, int node):
-        cdef vector[int] edge_indices
-        walk_head_edges(edge_indices, &self.c, node)
-        return [self.edge(i) for i in edge_indices]
-
-    def walk_tail_edges(self, int node):
-        cdef vector[int] edge_indices
-        walk_tail_edges(edge_indices, &self.c, node)
-        return [self.edge(i) for i in edge_indices]
-
-    def has_edge(self, int head, int tail, label=""):
-        return has_edge(
-            &self.c,
-            EdgeC(head=head, tail=tail, label=get_string_id(label))
-        )
-    
-    def add_edge(self, int head, int tail, *, label="", weight=None):
-        """Add an arc to the graph, connecting two spans or tokens."""
-        label_hash = self.doc.vocab.strings.as_int(label)
-        weight_float = weight if weight is not None else 0.0
-        add_edge(&self.c, EdgeC(head=head, tail=tail, label=label_hash), weight_float)
-    
-
-cdef int add_node(GraphC* graph, vector[int32_t]& node) nogil:
-    key = hash64(&node[0], node.size() * sizeof(node[0]), 0)
-    it = graph.node_map.find(key)
-    if it != graph.node_map.end():
-        # Item found. Convert the iterator to an index value.
-        return dereference(it).second
-    else:
-        index = graph.nodes.size()
-        graph.nodes.push_back(node)
-        graph.n_heads.push_back(0)
-        graph.n_tails.push_back(0)
-        graph.first_head.push_back(0)
-        graph.first_tail.push_back(0)
-        graph.roots.insert(index)
-        graph.node_map.insert(pair[hash_t, int](key, index))
-        return index
- 
 
 cdef int add_edge(GraphC* graph, EdgeC edge, float weight) nogil:
     key = hash64(&edge, sizeof(edge), 0)
@@ -206,14 +450,48 @@ cdef int add_edge(GraphC* graph, EdgeC edge, float weight) nogil:
         return edge_index
 
 
-cdef int has_edge(const GraphC* graph, EdgeC edge) nogil:
+cdef int get_edge(const GraphC* graph, EdgeC edge) nogil:
     key = hash64(&edge, sizeof(edge), 0)
-    return graph.edge_map.find(key) != graph.edge_map.end()
+    it = graph.edge_map.find(key)
+    if it == graph.edge_map.end():
+        return -1
+    else:
+        return dereference(it).second
+
+
+cdef int has_edge(const GraphC* graph, EdgeC edge) nogil:
+    return get_edge(graph, edge) >= 0
+
+
+cdef int add_node(GraphC* graph, vector[int32_t]& node) nogil:
+    key = hash64(&node[0], node.size() * sizeof(node[0]), 0)
+    it = graph.node_map.find(key)
+    if it != graph.node_map.end():
+        # Item found. Convert the iterator to an index value.
+        return dereference(it).second
+    else:
+        index = graph.nodes.size()
+        graph.nodes.push_back(node)
+        graph.n_heads.push_back(0)
+        graph.n_tails.push_back(0)
+        graph.first_head.push_back(0)
+        graph.first_tail.push_back(0)
+        graph.roots.insert(index)
+        graph.node_map.insert(pair[hash_t, int](key, index))
+        return index
+ 
+
+cdef int get_node(const GraphC* graph, vector[int32_t] node) nogil:
+    key = hash64(&node, node.size() * sizeof(node[0]), 0)
+    it = graph.node_map.find(key)
+    if it == graph.edge_map.end():
+        return -1
+    else:
+        return dereference(it).second
 
 
 cdef int has_node(const GraphC* graph, vector[int32_t] node) nogil:
-    key = hash64(&node, node.size() * sizeof(node[0]), 0)
-    return graph.node_map.find(key) != graph.edge_map.end()
+    return get_node(graph, node) >= 0
 
 
 cdef int get_head_nodes(vector[int]& output, const GraphC* graph, int node) nogil:
