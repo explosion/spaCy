@@ -1,7 +1,11 @@
+import srsly
+from thinc.api import Config
+from typing import Dict, Any
 from ..language import Language
 from ..matcher import Matcher
 from ..tokens import Doc
 from ..util import filter_spans
+from .. import util
 
 
 @Language.component(
@@ -65,3 +69,88 @@ def merge_subtokens(doc: Doc, label: str = "subtok") -> Doc:
         for span in spans:
             retokenizer.merge(span)
     return doc
+
+
+default_long_token_splitter_config = """
+[config]
+long_token_length = 25
+split_length = 10
+"""
+
+DEFAULT_LONG_TOKEN_SPLITTER_CONFIG = Config().from_str(
+    default_long_token_splitter_config
+)["config"]
+
+
+@Language.factory(
+    "long_token_splitter",
+    default_config=DEFAULT_LONG_TOKEN_SPLITTER_CONFIG,
+    retokenizes=True,
+)
+def make_long_token_splitter(
+    nlp: Language,
+    name: str,
+    *,
+    long_token_length=0,
+    split_length=0,
+):
+    return LongTokenSplitter(
+        long_token_length=long_token_length, split_length=split_length
+    )
+
+
+class LongTokenSplitter:
+    def __init__(self, long_token_length: int = 0, split_length: int = 0):
+        self.long_token_length = long_token_length
+        self.split_length = split_length
+
+    def __call__(self, doc: Doc) -> Doc:
+        if self.long_token_length > 0 and self.split_length > 0:
+            with doc.retokenize() as retokenizer:
+                for t in doc:
+                    if len(t.text) >= self.long_token_length:
+                        orths = []
+                        heads = []
+                        attrs = {}
+                        for i in range(0, len(t.text), self.split_length):
+                            orths.append(t.text[i : i + self.split_length])
+                            heads.append((t, i / self.split_length))
+                        retokenizer.split(t, orths, heads, attrs)
+        return doc
+
+    def _get_config(self) -> Dict[str, Any]:
+        return {
+            "long_token_length": self.long_token_length,
+            "split_length": self.split_length,
+        }
+
+    def _set_config(self, config: Dict[str, Any] = {}) -> None:
+        self.long_token_length = config.get("long_token_length", 0)
+        self.split_length = config.get("split_length", 0)
+
+    def to_bytes(self, **kwargs):
+        serializers = {
+            "cfg": lambda: srsly.json_dumps(self._get_config()),
+        }
+        return util.to_bytes(serializers, [])
+
+    def from_bytes(self, data, **kwargs):
+        deserializers = {
+            "cfg": lambda b: self._set_config(srsly.json_loads(b)),
+        }
+        util.from_bytes(data, deserializers, [])
+        return self
+
+    def to_disk(self, path, **kwargs):
+        path = util.ensure_path(path)
+        serializers = {
+            "cfg": lambda p: srsly.write_json(p, self._get_config()),
+        }
+        return util.to_disk(path, serializers, [])
+
+    def from_disk(self, path, **kwargs):
+        path = util.ensure_path(path)
+        serializers = {
+            "cfg": lambda p: self._set_config(srsly.read_json(p)),
+        }
+        util.from_disk(path, serializers, [])
