@@ -1,6 +1,8 @@
-@unpublished{spacy2,
-    AUTHOR = {Honnibal, Matthew and Montani, Ines},
-    TITLE  = {{spaCy 2}: Natural language understanding with {B}loom embeddings, convolutional neural networks and incremental parsing},
-    YEAR   = {2017},
-    Note   = {To appear}
+@software{spacy,
+  author = {Honnibal, Matthew and Montani, Ines and Van Landeghem, Sofie and Boyd, Adriane},
+  title = {{spaCy: Industrial-strength Natural Language Processing in Python}},
+  year = 2020,
+  publisher = {Zenodo},
+  doi = {10.5281/zenodo.1212303},
+  url = {https://doi.org/10.5281/zenodo.1212303}
 }
