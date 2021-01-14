@@ -201,6 +201,18 @@ cdef class Node:
         self._find_edges(edge_indices, "tail", label)
         return [Edge(self.graph, i) for i in edge_indices]
 
+    def walk_heads(self):
+        cdef vector[int] node_indices
+        walk_head_nodes(node_indices, &self.graph.c, self.i)
+        for i in node_indices:
+            yield Node(self.graph, i)
+
+    def walk_tails(self):
+        cdef vector[int] node_indices
+        walk_tail_nodes(node_indices, &self.graph.c, self.i)
+        for i in node_indices:
+            yield Node(self.graph, i)
+
     cdef (int, int) _get_range(self, i, n):
         if i is None:
             return (0, n)
@@ -240,7 +252,6 @@ cdef class Node:
         return edge_indices.size()
 
 
-@cython.freelist(8)
 cdef class NoneEdge(Edge):
     """An Edge subclass, representing a non-result. The NoneEdge has the same
     API as other Edge instances, but always returns NoneEdge, NoneNode, or empty
@@ -275,7 +286,6 @@ cdef class NoneEdge(Edge):
         return ""
 
 
-@cython.freelist(8)
 cdef class NoneNode(Node):
     def __cinit__(self, graph):
         self.graph = graph
@@ -304,6 +314,12 @@ cdef class NoneNode(Node):
 
     def tail(self, i=None, label=None):
         return self
+
+    def walk_heads(self):
+        yield from [] 
+    
+    def walk_tails(self):
+        yield from [] 
  
 
 cdef class Graph:
@@ -369,7 +385,7 @@ cdef class Graph:
         )
         return Edge(self, edge_index)
 
-    def get_edge(self, tuple head, tuple tail, *, label="") -> Edge:
+    def get_edge(self, head, tail, *, label="") -> Edge:
         """Look up an edge in the graph. If the graph has no matching edge,
         the NoneEdge object is returned.
         """
@@ -406,10 +422,12 @@ cdef class Graph:
         i = add_node(&self.c, node)
         return Node(self, i)
 
-    def get_node(self, tuple indices) -> Node:
+    def get_node(self, indices) -> Node:
         """Get a node from the graph, or the NoneNode if there is no node for
         the given indices.
         """
+        if isinstance(indices, Node):
+            return indices
         cdef vector[int32_t] node 
         node.reserve(len(indices))
         for i, idx in enumerate(indices):
