@@ -631,3 +631,24 @@ def test_doc_set_ents_invalid_spans(en_tokenizer):
             retokenizer.merge(span)
     with pytest.raises(IndexError):
         doc.ents = spans
+
+
+def test_span_groups(en_tokenizer):
+    doc = en_tokenizer("Some text about Colombia and the Czech Republic")
+    doc.spans["hi"] = [Span(doc, 3, 4, label="bye")]
+    assert "hi" in doc.spans
+    assert "bye" not in doc.spans
+    assert len(doc.spans["hi"]) == 1
+    assert doc.spans["hi"][0].label_ == "bye"
+    doc.spans["hi"].append(doc[0:3])
+    assert len(doc.spans["hi"]) == 2
+    assert doc.spans["hi"][1].text == "Some text about"
+    assert [span.text for span in doc.spans["hi"]] == ["Colombia", "Some text about"]
+    assert not doc.spans["hi"].has_overlap
+    doc.ents = [Span(doc, 3, 4, label="GPE"), Span(doc, 6, 8, label="GPE")]
+    doc.spans["hi"].extend(doc.ents)
+    assert len(doc.spans["hi"]) == 4
+    assert [span.label_ for span in doc.spans["hi"]] == ["bye", "", "GPE", "GPE"]
+    assert doc.spans["hi"].has_overlap
+    del doc.spans["hi"]
+    assert "hi" not in doc.spans
