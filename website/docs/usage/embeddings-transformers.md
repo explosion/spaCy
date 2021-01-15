@@ -513,12 +513,12 @@ pipeline** like `en_core_web_trf` with a fixed `window` size for
 pipeline so that you have shorter spaCy tokens. Some options:
 
 - Preprocess your texts to clean up noise and split long tokens with whitespace
-- Add a `long_token_splitter` to the beginning of your pipeline to break up
+- Add a `token_splitter` to the beginning of your pipeline to break up
   tokens that are longer than a specified length:
 
   ```python
-  config={"long_token_length": 20, "split_length": 5}
-  nlp.add_pipe("long_token_splitter", config=config, first=True)
+  config={"min_length": 20, "split_length": 5}
+  nlp.add_pipe("token_splitter", config=config, first=True)
   ```
 
   In this example, tokens that are at least 20 characters long will be split up

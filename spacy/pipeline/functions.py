@@ -71,44 +71,33 @@ def merge_subtokens(doc: Doc, label: str = "subtok") -> Doc:
     return doc
 
 
-default_long_token_splitter_config = """
-[config]
-long_token_length = 25
-split_length = 10
-"""
-
-DEFAULT_LONG_TOKEN_SPLITTER_CONFIG = Config().from_str(
-    default_long_token_splitter_config
-)["config"]
-
-
 @Language.factory(
-    "long_token_splitter",
-    default_config=DEFAULT_LONG_TOKEN_SPLITTER_CONFIG,
+    "token_splitter",
+    default_config={"min_length": 25, "split_length": 10},
     retokenizes=True,
 )
 def make_long_token_splitter(
     nlp: Language,
     name: str,
     *,
-    long_token_length=0,
+    min_length=0,
     split_length=0,
 ):
-    return LongTokenSplitter(
-        long_token_length=long_token_length, split_length=split_length
+    return TokenSplitter(
+        min_length=min_length, split_length=split_length
     )
 
 
-class LongTokenSplitter:
-    def __init__(self, long_token_length: int = 0, split_length: int = 0):
-        self.long_token_length = long_token_length
+class TokenSplitter:
+    def __init__(self, min_length: int = 0, split_length: int = 0):
+        self.min_length = min_length
         self.split_length = split_length
 
     def __call__(self, doc: Doc) -> Doc:
-        if self.long_token_length > 0 and self.split_length > 0:
+        if self.min_length > 0 and self.split_length > 0:
             with doc.retokenize() as retokenizer:
                 for t in doc:
-                    if len(t.text) >= self.long_token_length:
+                    if len(t.text) >= self.min_length:
                         orths = []
                         heads = []
                         attrs = {}
@@ -120,12 +109,12 @@ class LongTokenSplitter:
 
     def _get_config(self) -> Dict[str, Any]:
         return {
-            "long_token_length": self.long_token_length,
+            "min_length": self.min_length,
             "split_length": self.split_length,
         }
 
     def _set_config(self, config: Dict[str, Any] = {}) -> None:
-        self.long_token_length = config.get("long_token_length", 0)
+        self.min_length = config.get("min_length", 0)
         self.split_length = config.get("split_length", 0)
 
     def to_bytes(self, **kwargs):
