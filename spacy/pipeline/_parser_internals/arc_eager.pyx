@@ -9,6 +9,7 @@ from ...typedefs cimport hash_t, attr_t
 from ...strings cimport hash_string
 from ...structs cimport TokenC
 from ...tokens.doc cimport Doc, set_children_from_heads
+from ...tokens.token cimport MISSING_DEP
 from ...training.example cimport Example
 from .stateclass cimport StateClass
 from ._state cimport StateC, ArcC
@@ -195,9 +196,8 @@ cdef class ArcEagerGold:
     def __init__(self, ArcEager moves, StateClass stcls, Example example):
         self.mem = Pool()
         heads, labels = example.get_aligned_parse(projectivize=True)
-        labels = [label if label is not None else "" for label in labels]
-        labels = [example.x.vocab.strings.add(label) for label in labels]
-        sent_starts = _get_aligned_sent_starts(example)
+        labels = [example.x.vocab.strings.add(label) if label is not None else MISSING_DEP for label in labels]
+        sent_starts = example.get_aligned_sent_starts()
         assert len(heads) == len(labels) == len(sent_starts), (len(heads), len(labels), len(sent_starts))
         self.c = create_gold_state(self.mem, stcls.c, heads, labels, sent_starts)
 
@@ -809,7 +809,7 @@ cdef class ArcEager(TransitionSystem):
             for i in range(self.n_moves):
                 print(self.get_class_name(i), is_valid[i], costs[i])
             print("Gold sent starts?", is_sent_start(&gold_state, state.B(0)), is_sent_start(&gold_state, state.B(1)))
-            raise ValueError
+            raise ValueError("Could not find gold transition - see logs above.")
 
     def get_oracle_sequence_from_state(self, StateClass state, ArcEagerGold gold, _debug=None):
         cdef int i

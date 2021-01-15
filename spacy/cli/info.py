@@ -30,7 +30,11 @@ def info_cli(
 
 
 def info(
-    model: Optional[str] = None, *, markdown: bool = False, silent: bool = True, exclude: List[str]
+    model: Optional[str] = None,
+    *,
+    markdown: bool = False,
+    silent: bool = True,
+    exclude: List[str],
 ) -> Union[str, dict]:
     msg = Printer(no_print=silent, pretty=not silent)
     if model:
@@ -98,7 +102,9 @@ def info_model(model: str, *, silent: bool = True) -> Dict[str, Any]:
     }
 
 
-def get_markdown(data: Dict[str, Any], title: Optional[str] = None, exclude: List[str] = None) -> str:
+def get_markdown(
+    data: Dict[str, Any], title: Optional[str] = None, exclude: List[str] = None
+) -> str:
     """Get data in GitHub-flavoured Markdown format for issues etc.
 
     data (dict or list of tuples): Label/value pairs.
@@ -115,7 +121,7 @@ def get_markdown(data: Dict[str, Any], title: Optional[str] = None, exclude: Lis
         if isinstance(value, str):
             try:
                 existing_path = Path(value).exists()
-            except:
+            except Exception:
                 # invalid Path, like a URL string
                 existing_path = False
             if existing_path:

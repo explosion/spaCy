@@ -12,6 +12,7 @@ from ..training import Example
 from ..training.initialize import get_sourced_components
 from ..schemas import ConfigSchemaTraining
 from ..pipeline._parser_internals import nonproj
+from ..pipeline._parser_internals.nonproj import DELIMITER
 from ..language import Language
 from ..util import registry, resolve_dot_names
 from .. import util
@@ -383,7 +384,10 @@ def debug_data(
         # rare labels in projectivized train
         rare_projectivized_labels = []
         for label in gold_train_data["deps"]:
-            if gold_train_data["deps"][label] <= DEP_LABEL_THRESHOLD and "||" in label:
+            if (
+                gold_train_data["deps"][label] <= DEP_LABEL_THRESHOLD
+                and DELIMITER in label
+            ):
                 rare_projectivized_labels.append(
                     f"{label}: {gold_train_data['deps'][label]}"
                 )

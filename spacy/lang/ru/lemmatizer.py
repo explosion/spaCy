@@ -30,9 +30,7 @@ class RussianLemmatizer(Lemmatizer):
         except ImportError:
             raise ImportError(
                 "The Russian lemmatizer requires the pymorphy2 library: "
-                'try to fix it with "pip install pymorphy2==0.8" '
-                'or "pip install git+https://github.com/kmike/pymorphy2.git pymorphy2-dicts-uk"'
-                "if you need Ukrainian too"
+                'try to fix it with "pip install pymorphy2"'
             ) from None
         if RussianLemmatizer._morph is None:
             RussianLemmatizer._morph = MorphAnalyzer()

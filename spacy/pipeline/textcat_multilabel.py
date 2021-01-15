@@ -187,5 +187,5 @@ class MultiLabel_TextCategorizer(TextCategorizer):
 
     def _validate_categories(self, examples: List[Example]):
         """This component allows any type of single- or multi-label annotations.
-        This method overwrites the more strict one from 'textcat'. """
+        This method overwrites the more strict one from 'textcat'."""
         pass

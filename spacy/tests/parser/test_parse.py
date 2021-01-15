@@ -45,7 +45,17 @@ CONFLICTING_DATA = [
     ),
 ]
 
-eps = 0.01
+PARTIAL_DATA = [
+    (
+        "I like London.",
+        {
+            "heads": [1, 1, 1, None],
+            "deps": ["nsubj", "ROOT", "dobj", None],
+        },
+    ),
+]
+
+eps = 0.1
 
 
 def test_parser_root(en_vocab):
@@ -206,6 +216,32 @@ def test_parser_set_sent_starts(en_vocab):
 
 
 @pytest.mark.parametrize("pipe_name", ["parser", "beam_parser"])
+def test_incomplete_data(pipe_name):
+    # Test that the parser works with incomplete information
+    nlp = English()
+    parser = nlp.add_pipe(pipe_name)
+    train_examples = []
+    for text, annotations in PARTIAL_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
+        for dep in annotations.get("deps", []):
+            if dep is not None:
+                parser.add_label(dep)
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+    for i in range(150):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+    assert losses[pipe_name] < 0.0001
+
+    # test the trained model
+    test_text = "I like securities."
+    doc = nlp(test_text)
+    assert doc[0].dep_ == "nsubj"
+    assert doc[2].dep_ == "dobj"
+    assert doc[0].head.i == 1
+    assert doc[2].head.i == 1
+
+
+@pytest.mark.parametrize("pipe_name", ["parser", "beam_parser"])
 def test_overfitting_IO(pipe_name):
     # Simple test to try and quickly overfit the dependency parser (normal or beam)
     nlp = English()
@@ -217,7 +253,7 @@ def test_overfitting_IO(pipe_name):
             parser.add_label(dep)
     optimizer = nlp.initialize()
     # run overfitting
-    for i in range(150):
+    for i in range(200):
         losses = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)
     assert losses[pipe_name] < 0.0001
@@ -324,25 +360,25 @@ def test_beam_overfitting_IO():
     head_scores = head_scores[0]
     label_scores = label_scores[0]
     # test label annotations: 0=nsubj, 2=dobj, 3=punct
-    assert label_scores[(0, "nsubj")] == pytest.approx(1.0, eps)
-    assert label_scores[(0, "dobj")] == pytest.approx(0.0, eps)
-    assert label_scores[(0, "punct")] == pytest.approx(0.0, eps)
-    assert label_scores[(2, "nsubj")] == pytest.approx(0.0, eps)
-    assert label_scores[(2, "dobj")] == pytest.approx(1.0, eps)
-    assert label_scores[(2, "punct")] == pytest.approx(0.0, eps)
-    assert label_scores[(3, "nsubj")] == pytest.approx(0.0, eps)
-    assert label_scores[(3, "dobj")] == pytest.approx(0.0, eps)
-    assert label_scores[(3, "punct")] == pytest.approx(1.0, eps)
+    assert label_scores[(0, "nsubj")] == pytest.approx(1.0, abs=eps)
+    assert label_scores[(0, "dobj")] == pytest.approx(0.0, abs=eps)
+    assert label_scores[(0, "punct")] == pytest.approx(0.0, abs=eps)
+    assert label_scores[(2, "nsubj")] == pytest.approx(0.0, abs=eps)
+    assert label_scores[(2, "dobj")] == pytest.approx(1.0, abs=eps)
+    assert label_scores[(2, "punct")] == pytest.approx(0.0, abs=eps)
+    assert label_scores[(3, "nsubj")] == pytest.approx(0.0, abs=eps)
+    assert label_scores[(3, "dobj")] == pytest.approx(0.0, abs=eps)
+    assert label_scores[(3, "punct")] == pytest.approx(1.0, abs=eps)
     # test head annotations: the root is token at index 1
-    assert head_scores[(0, 0)] == pytest.approx(0.0, eps)
-    assert head_scores[(0, 1)] == pytest.approx(1.0, eps)
-    assert head_scores[(0, 2)] == pytest.approx(0.0, eps)
-    assert head_scores[(2, 0)] == pytest.approx(0.0, eps)
-    assert head_scores[(2, 1)] == pytest.approx(1.0, eps)
-    assert head_scores[(2, 2)] == pytest.approx(0.0, eps)
-    assert head_scores[(3, 0)] == pytest.approx(0.0, eps)
-    assert head_scores[(3, 1)] == pytest.approx(1.0, eps)
-    assert head_scores[(3, 2)] == pytest.approx(0.0, eps)
+    assert head_scores[(0, 0)] == pytest.approx(0.0, abs=eps)
+    assert head_scores[(0, 1)] == pytest.approx(1.0, abs=eps)
+    assert head_scores[(0, 2)] == pytest.approx(0.0, abs=eps)
+    assert head_scores[(2, 0)] == pytest.approx(0.0, abs=eps)
+    assert head_scores[(2, 1)] == pytest.approx(1.0, abs=eps)
+    assert head_scores[(2, 2)] == pytest.approx(0.0, abs=eps)
+    assert head_scores[(3, 0)] == pytest.approx(0.0, abs=eps)
+    assert head_scores[(3, 1)] == pytest.approx(1.0, abs=eps)
+    assert head_scores[(3, 2)] == pytest.approx(0.0, abs=eps)
 
     # Also test the results are still the same after IO
     with make_tempdir() as tmp_dir:
@@ -356,21 +392,21 @@ def test_beam_overfitting_IO():
         head_scores2 = head_scores2[0]
         label_scores2 = label_scores2[0]
         # check the results again
-        assert label_scores2[(0, "nsubj")] == pytest.approx(1.0, eps)
-        assert label_scores2[(0, "dobj")] == pytest.approx(0.0, eps)
-        assert label_scores2[(0, "punct")] == pytest.approx(0.0, eps)
-        assert label_scores2[(2, "nsubj")] == pytest.approx(0.0, eps)
-        assert label_scores2[(2, "dobj")] == pytest.approx(1.0, eps)
-        assert label_scores2[(2, "punct")] == pytest.approx(0.0, eps)
-        assert label_scores2[(3, "nsubj")] == pytest.approx(0.0, eps)
-        assert label_scores2[(3, "dobj")] == pytest.approx(0.0, eps)
-        assert label_scores2[(3, "punct")] == pytest.approx(1.0, eps)
-        assert head_scores2[(0, 0)] == pytest.approx(0.0, eps)
-        assert head_scores2[(0, 1)] == pytest.approx(1.0, eps)
-        assert head_scores2[(0, 2)] == pytest.approx(0.0, eps)
-        assert head_scores2[(2, 0)] == pytest.approx(0.0, eps)
-        assert head_scores2[(2, 1)] == pytest.approx(1.0, eps)
-        assert head_scores2[(2, 2)] == pytest.approx(0.0, eps)
-        assert head_scores2[(3, 0)] == pytest.approx(0.0, eps)
-        assert head_scores2[(3, 1)] == pytest.approx(1.0, eps)
-        assert head_scores2[(3, 2)] == pytest.approx(0.0, eps)
+        assert label_scores2[(0, "nsubj")] == pytest.approx(1.0, abs=eps)
+        assert label_scores2[(0, "dobj")] == pytest.approx(0.0, abs=eps)
+        assert label_scores2[(0, "punct")] == pytest.approx(0.0, abs=eps)
+        assert label_scores2[(2, "nsubj")] == pytest.approx(0.0, abs=eps)
+        assert label_scores2[(2, "dobj")] == pytest.approx(1.0, abs=eps)
+        assert label_scores2[(2, "punct")] == pytest.approx(0.0, abs=eps)
+        assert label_scores2[(3, "nsubj")] == pytest.approx(0.0, abs=eps)
+        assert label_scores2[(3, "dobj")] == pytest.approx(0.0, abs=eps)
+        assert label_scores2[(3, "punct")] == pytest.approx(1.0, abs=eps)
+        assert head_scores2[(0, 0)] == pytest.approx(0.0, abs=eps)
+        assert head_scores2[(0, 1)] == pytest.approx(1.0, abs=eps)
+        assert head_scores2[(0, 2)] == pytest.approx(0.0, abs=eps)
+        assert head_scores2[(2, 0)] == pytest.approx(0.0, abs=eps)
+        assert head_scores2[(2, 1)] == pytest.approx(1.0, abs=eps)
+        assert head_scores2[(2, 2)] == pytest.approx(0.0, abs=eps)
+        assert head_scores2[(3, 0)] == pytest.approx(0.0, abs=eps)
+        assert head_scores2[(3, 1)] == pytest.approx(1.0, abs=eps)
+        assert head_scores2[(3, 2)] == pytest.approx(0.0, abs=eps)

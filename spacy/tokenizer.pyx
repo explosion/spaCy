@@ -785,10 +785,16 @@ cdef class Tokenizer:
             self.suffix_search = re.compile(data["suffix_search"]).search
         if "infix_finditer" in data and isinstance(data["infix_finditer"], str):
             self.infix_finditer = re.compile(data["infix_finditer"]).finditer
+        # for token_match and url_match, set to None to override the language
+        # defaults if no regex is provided
         if "token_match" in data and isinstance(data["token_match"], str):
             self.token_match = re.compile(data["token_match"]).match
+        else:
+            self.token_match = None
         if "url_match" in data and isinstance(data["url_match"], str):
             self.url_match = re.compile(data["url_match"]).match
+        else:
+            self.url_match = None
         if "rules" in data and isinstance(data["rules"], dict):
             # make sure to hard reset the cache to remove data from the default exceptions
             self._rules = {}

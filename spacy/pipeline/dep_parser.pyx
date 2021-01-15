@@ -9,6 +9,7 @@ from ._parser_internals.arc_eager cimport ArcEager
 from .functions import merge_subtokens
 from ..language import Language
 from ._parser_internals import nonproj
+from ._parser_internals.nonproj import DELIMITER
 from ..scorer import Scorer
 from ..training import validate_examples
 
@@ -230,8 +231,8 @@ cdef class DependencyParser(Parser):
         for move in self.move_names:
             if "-" in move:
                 label = move.split("-")[1]
-                if "||" in label:
-                    label = label.split("||")[1]
+                if DELIMITER in label:
+                    label = label.split(DELIMITER)[1]
                 labels.add(label)
         return tuple(sorted(labels))
 

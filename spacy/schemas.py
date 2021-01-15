@@ -369,6 +369,8 @@ class ConfigSchemaInit(BaseModel):
     init_tok2vec: Optional[StrictStr] = Field(..., title="Path to pretrained tok2vec weights")
     tokenizer: Dict[StrictStr, Any] = Field(..., help="Arguments to be passed into Tokenizer.initialize")
     components: Dict[StrictStr, Dict[StrictStr, Any]] = Field(..., help="Arguments for TrainablePipe.initialize methods of pipeline components, keyed by component")
+    before_init: Optional[Callable[["Language"], "Language"]] = Field(..., title="Optional callback to modify nlp object before initialization")
+    after_init: Optional[Callable[["Language"], "Language"]] = Field(..., title="Optional callback to modify nlp object after initialization")
     # fmt: on
 
     class Config:
