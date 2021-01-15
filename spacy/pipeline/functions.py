@@ -76,7 +76,7 @@ def merge_subtokens(doc: Doc, label: str = "subtok") -> Doc:
     default_config={"min_length": 25, "split_length": 10},
     retokenizes=True,
 )
-def make_long_token_splitter(
+def make_token_splitter(
     nlp: Language,
     name: str,
     *,
