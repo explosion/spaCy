@@ -330,7 +330,6 @@ for exc_data in [
 # Other contractions with leading apostrophe
 
 for exc_data in [
-    {ORTH: "cause", NORM: "because"},
     {ORTH: "em", NORM: "them"},
     {ORTH: "ll", NORM: "will"},
     {ORTH: "nuff", NORM: "enough"},
