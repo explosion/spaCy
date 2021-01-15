@@ -89,7 +89,7 @@ def build_hash_embed_cnn_tok2vec(
 
 # TODO: archive
 @registry.architectures.register("spacy.Tok2Vec.v1")
-def build_Tok2Vec_model(
+def _build_Tok2Vec_model(
     embed: Model[List[Doc], List[Floats2d]],
     encode: Model[List[Floats2d], List[Floats2d]],
 ) -> Model[List[Doc], List[Floats2d]]:
@@ -107,7 +107,6 @@ def build_Tok2Vec_model(
     tok2vec.set_ref("embed", embed)
     tok2vec.set_ref("encode", encode)
     return tok2vec
-
 
 
 @registry.architectures.register("spacy.Tok2Vec.v2")
@@ -128,7 +127,6 @@ def build_Tok2Vec_model(
     tok2vec.set_ref("embed", embed)
     tok2vec.set_ref("encode", encode)
     return tok2vec
-
 
 
 @registry.architectures.register("spacy.MultiHashEmbed.v1")
@@ -280,7 +278,7 @@ def CharacterEmbed(
 
 # TODO: archive
 @registry.architectures.register("spacy.MaxoutWindowEncoder.v1")
-def MaxoutWindowEncoder(
+def _MaxoutWindowEncoder(
     width: int, window_size: int, maxout_pieces: int, depth: int
 ) -> Model[List[Floats2d], List[Floats2d]]:
     """Encode context using convolutions with maxout activation, layer
@@ -309,6 +307,7 @@ def MaxoutWindowEncoder(
     model.set_dim("nO", width)
     model.attrs["receptive_field"] = window_size * depth
     return model
+
 
 @registry.architectures.register("spacy.MaxoutWindowEncoder.v2")
 def MaxoutWindowEncoder(
@@ -344,7 +343,7 @@ def MaxoutWindowEncoder(
 
 # TODO: archive
 @registry.architectures.register("spacy.MishWindowEncoder.v1")
-def MishWindowEncoder(
+def _MishWindowEncoder(
     width: int, window_size: int, depth: int
 ) -> Model[List[Floats2d], List[Floats2d]]:
     """Encode context using convolutions with mish activation, layer

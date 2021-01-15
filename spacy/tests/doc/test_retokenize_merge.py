@@ -89,8 +89,9 @@ def test_doc_retokenize_lex_attrs(en_tokenizer):
 def test_doc_retokenize_spans_merge_tokens(en_tokenizer):
     text = "Los Angeles start."
     heads = [1, 2, 2, 2]
+    deps = ["dep"] * len(heads)
     tokens = en_tokenizer(text)
-    doc = Doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
+    doc = Doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
     assert len(doc) == 4
     assert doc[0].head.text == "Angeles"
     assert doc[1].head.text == "start"
@@ -145,7 +146,8 @@ def test_doc_retokenize_spans_merge_tokens_default_attrs(en_vocab):
 def test_doc_retokenize_spans_merge_heads(en_vocab):
     words = ["I", "found", "a", "pilates", "class", "near", "work", "."]
     heads = [1, 1, 4, 6, 1, 4, 5, 1]
-    doc = Doc(en_vocab, words=words, heads=heads)
+    deps = ["dep"] * len(heads)
+    doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
     assert len(doc) == 8
     with doc.retokenize() as retokenizer:
         attrs = {"tag": doc[4].tag_, "lemma": "pilates class", "ent_type": "O"}
@@ -177,8 +179,9 @@ def test_doc_retokenize_spans_merge_non_disjoint(en_tokenizer):
 def test_doc_retokenize_span_np_merges(en_tokenizer):
     text = "displaCy is a parse tool built with Javascript"
     heads = [1, 1, 4, 4, 1, 4, 5, 6]
+    deps = ["dep"] * len(heads)
     tokens = en_tokenizer(text)
-    doc = Doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
+    doc = Doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
     assert doc[4].head.i == 1
     with doc.retokenize() as retokenizer:
         attrs = {"tag": "NP", "lemma": "tool", "ent_type": "O"}

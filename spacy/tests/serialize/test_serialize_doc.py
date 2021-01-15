@@ -56,6 +56,13 @@ def test_serialize_doc_exclude(en_vocab):
     assert not new_doc.user_data
 
 
+def test_serialize_doc_span_groups(en_vocab):
+    doc = Doc(en_vocab, words=["hello", "world", "!"])
+    doc.spans["content"] = [doc[0:2]]
+    new_doc = Doc(en_vocab).from_bytes(doc.to_bytes())
+    assert len(new_doc.spans["content"]) == 1
+
+
 def test_serialize_doc_bin():
     doc_bin = DocBin(attrs=["LEMMA", "ENT_IOB", "ENT_TYPE"], store_user_data=True)
     texts = ["Some text", "Lots of texts...", "..."]
@@ -63,6 +70,7 @@ def test_serialize_doc_bin():
     nlp = English()
     for doc in nlp.pipe(texts):
         doc.cats = cats
+        doc.spans["start"] = [doc[0:2]]
         doc_bin.add(doc)
     bytes_data = doc_bin.to_bytes()
 
@@ -73,6 +81,7 @@ def test_serialize_doc_bin():
     for i, doc in enumerate(reloaded_docs):
         assert doc.text == texts[i]
         assert doc.cats == cats
+        assert len(doc.spans) == 1
 
 
 def test_serialize_doc_bin_unknown_spaces(en_vocab):

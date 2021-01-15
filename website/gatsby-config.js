@@ -59,15 +59,6 @@ module.exports = {
 
     plugins: [
         {
-            resolve: `gatsby-plugin-svgr`,
-            options: {
-                svgo: false,
-                svgoConfig: {
-                    removeViewBox: false,
-                },
-            },
-        },
-        {
             resolve: `gatsby-plugin-sass`,
             options: {
                 indentedSyntax: true,
@@ -107,6 +98,14 @@ module.exports = {
             options: {
                 name: `docsImages`,
                 path: `${__dirname}/docs/images`,
+            },
+        },
+        {
+            resolve: 'gatsby-plugin-react-svg',
+            options: {
+                rule: {
+                    include: /src\/images\/(.*)\.svg/,
+                },
             },
         },
         {

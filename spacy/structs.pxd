@@ -1,5 +1,7 @@
 from libc.stdint cimport uint8_t, uint32_t, int32_t, uint64_t
 from libcpp.vector cimport vector
+from libcpp.unordered_set cimport unordered_set
+from libcpp.unordered_map cimport unordered_map
 from libc.stdint cimport int32_t, int64_t
 
 from .typedefs cimport flags_t, attr_t, hash_t
@@ -91,3 +93,22 @@ cdef struct AliasC:
 
     # Prior probability P(entity|alias) - should sum up to (at most) 1.
     vector[float] probs
+
+
+cdef struct EdgeC:
+    hash_t label
+    int32_t head
+    int32_t tail
+
+
+cdef struct GraphC:
+    vector[vector[int32_t]] nodes
+    vector[EdgeC] edges
+    vector[float] weights
+    vector[int] n_heads
+    vector[int] n_tails
+    vector[int] first_head
+    vector[int] first_tail
+    unordered_set[int]* roots
+    unordered_map[hash_t, int]* node_map
+    unordered_map[hash_t, int]* edge_map

@@ -16,6 +16,8 @@ from thinc.util import copy_array
 import warnings
 
 from .span cimport Span
+from .token cimport MISSING_DEP
+from ._dict_proxies import SpanGroups
 from .token cimport Token
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
@@ -222,6 +224,7 @@ cdef class Doc:
         self.vocab = vocab
         size = max(20, (len(words) if words is not None else 0))
         self.mem = Pool()
+        self.spans = SpanGroups(self)
         # Guarantee self.lex[i-x], for any i >= 0 and x < padding is in bounds
         # However, we need to remember the true starting places, so that we can
         # realloc.
@@ -266,7 +269,10 @@ cdef class Doc:
             self.push_back(lexeme, has_space)
 
         if heads is not None:
-            heads = [head - i for i, head in enumerate(heads)]
+            heads = [head - i if head is not None else 0 for i, head in enumerate(heads)]
+        if deps is not None:
+            MISSING_DEP_ = self.vocab.strings[MISSING_DEP]
+            deps = [dep if dep is not None else MISSING_DEP_ for dep in deps]
         if deps and not heads:
             heads = [0] * len(deps)
         if sent_starts is not None:
@@ -328,7 +334,8 @@ cdef class Doc:
                 if annot is not heads and annot is not sent_starts and annot is not ent_iobs:
                     values.extend(annot)
         for value in values:
-            self.vocab.strings.add(value)
+            if value is not None:
+                self.vocab.strings.add(value)
 
         # if there are any other annotations, set them
         if headings:
@@ -1255,6 +1262,9 @@ cdef class Doc:
             strings.add(token.ent_kb_id_)
             strings.add(token.ent_id_)
             strings.add(token.norm_)
+        for group in self.spans.values():
+            for span in group:
+                strings.add(span.label_)
         # Msgpack doesn't distinguish between lists and tuples, which is
         # vexing for user data. As a best guess, we *know* that within
         # keys, we must have tuples. In values we just have to hope
@@ -1266,6 +1276,7 @@ cdef class Doc:
             "sentiment": lambda: self.sentiment,
             "tensor": lambda: self.tensor,
             "cats": lambda: self.cats,
+            "spans": lambda: self.spans.to_bytes(),
             "strings": lambda: list(strings),
             "has_unknown_spaces": lambda: self.has_unknown_spaces
         }
@@ -1290,18 +1301,6 @@ cdef class Doc:
         """
         if self.length != 0:
             raise ValueError(Errors.E033.format(length=self.length))
-        deserializers = {
-            "text": lambda b: None,
-            "array_head": lambda b: None,
-            "array_body": lambda b: None,
-            "sentiment": lambda b: None,
-            "tensor": lambda b: None,
-            "cats": lambda b: None,
-            "strings": lambda b: None,
-            "user_data_keys": lambda b: None,
-            "user_data_values": lambda b: None,
-            "has_unknown_spaces": lambda b: None
-        }
         # Msgpack doesn't distinguish between lists and tuples, which is
         # vexing for user data. As a best guess, we *know* that within
         # keys, we must have tuples. In values we just have to hope
@@ -1336,8 +1335,11 @@ cdef class Doc:
             self.push_back(lex, has_space)
             start = end + has_space
         self.from_array(msg["array_head"][2:], attrs[:, 2:])
+        if "spans" in msg:
+            self.spans.from_bytes(msg["spans"])
+        else:
+            self.spans.clear()
         return self
-
 
     def extend_tensor(self, tensor):
         """Concatenate a new tensor onto the doc.tensor object.
@@ -1536,7 +1538,7 @@ cdef int set_children_from_heads(TokenC* tokens, int start, int end) except -1:
     for i in range(start, end):
         tokens[i].sent_start = -1
     for i in range(start, end):
-        if tokens[i].head == 0:
+        if tokens[i].head == 0 and not Token.missing_head(&tokens[i]):
             tokens[tokens[i].l_edge].sent_start = 1
 
 
