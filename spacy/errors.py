@@ -463,6 +463,12 @@ class Errors:
             "issue tracker: http://github.com/explosion/spaCy/issues")
 
     # TODO: fix numbering after merging develop into master
+    E893 = ("Could not find function '{name}' in function registry '{reg_name}'. "
+            "If you're using a custom function, make sure the code is available. "
+            "If the function is provided by a third-party package, e.g. "
+            "spacy-transformers, make sure the package is installed in your "
+            "environment.\n\nAvailable names: {available}")
+    E894 = ("Unknown function registry: '{name}'.")
     E895 = ("The 'textcat' component received gold-standard annotations with "
             "multiple labels per document. In spaCy 3 you should use the "
             "'textcat_multilabel' component for this instead. "

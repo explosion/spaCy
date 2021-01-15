@@ -105,6 +105,42 @@ class registry(thinc.registry):
     models = catalogue.create("spacy", "models", entry_points=True)
     cli = catalogue.create("spacy", "cli", entry_points=True)
 
+    @classmethod
+    def get(cls, registry_name: str, func_name: str) -> Callable:
+        """Get a registered function from the registry."""
+        # We're overwriting this classmethod so we're able to provide more
+        # specific error messages and implement a fallback to spacy-legacy.
+        if not hasattr(cls, registry_name):
+            raise ValueError(Errors.E894.format(name=registry_name))
+        reg = getattr(cls, registry_name)
+        try:
+            func = reg.get(func_name)
+        except catalogue.RegistryError:
+            if func_name.startswith("spacy."):
+                legacy_name = func_name.replace("spacy.", "spacy-legacy.")
+                try:
+                    return reg.get(legacy_name)
+                except catalogue.RegistryError:
+                    pass
+            available = ", ".join(sorted(reg.get_all().keys())) or "none"
+            raise ValueError(
+                Errors.E893.format(
+                    name=func_name, reg_name=registry_name, available=available
+                )
+            ) from None
+        return func
+
+    @classmethod
+    def has(cls, registry_name: str, func_name: str) -> bool:
+        """Check whether a function is available in a registry."""
+        if not hasattr(cls, registry_name):
+            return False
+        reg = getattr(cls, registry_name)
+        if func_name.startswith("spacy."):
+            legacy_name = func_name.replace("spacy.", "spacy-legacy.")
+            return func_name in reg or legacy_name in reg
+        return func_name in reg
+
 
 class SimpleFrozenDict(dict):
     """Simplified implementation of a frozen dict, mainly used as default
