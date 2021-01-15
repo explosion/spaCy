@@ -255,8 +255,8 @@ def test_token_api_non_conjuncts(en_vocab):
 
 def test_missing_head_dep(en_vocab):
     """ Check that the Doc constructor and Example.from_dict parse missing information the same"""
-    heads = [1, 1, 1, 1, 2, None]                           # element 5 is missing
-    deps = ["", "ROOT", "dobj", "cc", "conj", None]         # element 0 and 5 are missing
+    heads = [1, 1, 1, 1, 2, None]  # element 5 is missing
+    deps = ["", "ROOT", "dobj", "cc", "conj", None]  # element 0 and 5 are missing
     words = ["I", "like", "London", "and", "Berlin", "."]
     doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
     pred_has_heads = [t.has_head() for t in doc]

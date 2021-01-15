@@ -1,4 +1,4 @@
-from typing import Union, Iterator, Optional, List, Tuple
+from typing import Union, Iterator
 
 from ...symbols import NOUN, PROPN, PRON, VERB, AUX
 from ...errors import Errors

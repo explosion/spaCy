@@ -389,7 +389,7 @@ def test_beam_ner_scores():
 
     for j in range(len(doc)):
         for label in ner.labels:
-            score = entity_scores[(j, j+1, label)]
+            score = entity_scores[(j, j + 1, label)]
             eps = 0.00001
             assert 0 - eps <= score <= 1 + eps
 

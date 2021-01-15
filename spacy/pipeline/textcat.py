@@ -388,7 +388,6 @@ class TextCategorizer(TrainablePipe):
             **kwargs,
         )
 
-
     def _validate_categories(self, examples: List[Example]):
         """Check whether the provided examples all have single-label cats annotations."""
         for ex in examples:

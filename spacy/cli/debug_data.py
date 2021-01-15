@@ -384,7 +384,10 @@ def debug_data(
         # rare labels in projectivized train
         rare_projectivized_labels = []
         for label in gold_train_data["deps"]:
-            if gold_train_data["deps"][label] <= DEP_LABEL_THRESHOLD and DELIMITER in label:
+            if (
+                gold_train_data["deps"][label] <= DEP_LABEL_THRESHOLD
+                and DELIMITER in label
+            ):
                 rare_projectivized_labels.append(
                     f"{label}: {gold_train_data['deps'][label]}"
                 )
