@@ -5,7 +5,6 @@ from thinc.api import SequenceCategoricalCrossentropy, Model, Config
 from itertools import islice
 
 from ..tokens.doc cimport Doc
-from ..tokens.token cimport Token
 from ..vocab cimport Vocab
 from ..morphology cimport Morphology
 
@@ -137,7 +136,6 @@ class Morphologizer(Tagger):
 
         DOCS: https://nightly.spacy.io/api/morphologizer#initialize
         """
-        cdef Token token
         validate_get_examples(get_examples, "Morphologizer.initialize")
         if labels is not None:
             self.cfg["labels_morph"] = labels["morph"]
@@ -149,7 +147,7 @@ class Morphologizer(Tagger):
                     pos = token.pos_
                     # if both are unset, annotation is missing, so do not add
                     # an empty label
-                    if pos == "" and token.c.morph == 0:
+                    if pos == "" and not token.has_morph():
                         continue
                     morph = str(token.morph)
                     # create and add the combined morph+POS label
