@@ -697,6 +697,8 @@ class Language:
         source_config = source.config.interpolate()
         pipe_config = util.copy_config(source_config["components"][source_name])
         self._pipe_configs[name] = pipe_config
+        for s in source.vocab.strings:
+            self.vocab.strings.add(s)
         return pipe, pipe_config["factory"]
 
     def add_pipe(
@@ -1619,9 +1621,7 @@ class Language:
                     if model not in source_nlps:
                         # We only need the components here and we need to init
                         # model with the same vocab as the current nlp object
-                        source_nlps[model] = util.load_model(
-                            model, vocab=nlp.vocab, disable=["vocab", "tokenizer"]
-                        )
+                        source_nlps[model] = util.load_model(model, vocab=nlp.vocab)
                     source_name = pipe_cfg.get("component", pipe_name)
                     nlp.add_pipe(source_name, source=source_nlps[model], name=pipe_name)
         disabled_pipes = [*config["nlp"]["disabled"], *disable]
