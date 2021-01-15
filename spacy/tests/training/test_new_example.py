@@ -263,3 +263,43 @@ def test_Example_from_dict_sentences():
     annots = {"sent_starts": [1, -1, 0, 0, 0]}
     ex = Example.from_dict(predicted, annots)
     assert len(list(ex.reference.sents)) == 1
+
+
+def test_Example_missing_deps():
+    vocab = Vocab()
+    words = ["I", "like", "London", "and", "Berlin", "."]
+    deps = ["nsubj", "ROOT", "dobj", "cc", "conj", "punct"]
+    heads = [1, 1, 1, 2, 2, 1]
+    annots_head_only = {"words": words, "heads": heads}
+    annots_head_dep = {"words": words, "heads": heads, "deps": deps}
+    predicted = Doc(vocab, words=words)
+
+    # when not providing deps, the head information is considered to be missing
+    # in this case, the token's heads refer to themselves
+    example_1 = Example.from_dict(predicted, annots_head_only)
+    assert [t.head.i for t in example_1.reference] == [0, 1, 2, 3, 4, 5]
+
+    # when providing deps, the head information is actually used
+    example_2 = Example.from_dict(predicted, annots_head_dep)
+    assert [t.head.i for t in example_2.reference] == heads
+
+
+def test_Example_missing_heads():
+    vocab = Vocab()
+    words = ["I", "like", "London", "and", "Berlin", "."]
+    deps = ["nsubj", "ROOT", "dobj", None, "conj", "punct"]
+    heads = [1, 1, 1, None, 2, 1]
+    annots = {"words": words, "heads": heads, "deps": deps}
+    predicted = Doc(vocab, words=words)
+
+    example = Example.from_dict(predicted, annots)
+    parsed_heads = [t.head.i for t in example.reference]
+    assert parsed_heads[0] == heads[0]
+    assert parsed_heads[1] == heads[1]
+    assert parsed_heads[2] == heads[2]
+    assert parsed_heads[4] == heads[4]
+    assert parsed_heads[5] == heads[5]
+    assert [t.has_head() for t in example.reference] == [True, True, True, False, True, True]
+
+    # Ensure that the missing head doesn't create an artificial new sentence start
+    assert example.get_aligned_sent_starts() == [True, False, False, False, False, False]

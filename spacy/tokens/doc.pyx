@@ -16,6 +16,7 @@ from thinc.util import copy_array
 import warnings
 
 from .span cimport Span
+from .token cimport MISSING_DEP
 from ._dict_proxies import SpanGroups
 from .token cimport Token
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
@@ -268,7 +269,10 @@ cdef class Doc:
             self.push_back(lexeme, has_space)
 
         if heads is not None:
-            heads = [head - i for i, head in enumerate(heads)]
+            heads = [head - i if head is not None else 0 for i, head in enumerate(heads)]
+        if deps is not None:
+            MISSING_DEP_ = self.vocab.strings[MISSING_DEP]
+            deps = [dep if dep is not None else MISSING_DEP_ for dep in deps]
         if deps and not heads:
             heads = [0] * len(deps)
         if sent_starts is not None:
@@ -330,7 +334,8 @@ cdef class Doc:
                 if annot is not heads and annot is not sent_starts and annot is not ent_iobs:
                     values.extend(annot)
         for value in values:
-            self.vocab.strings.add(value)
+            if value is not None:
+                self.vocab.strings.add(value)
 
         # if there are any other annotations, set them
         if headings:
@@ -1533,7 +1538,7 @@ cdef int set_children_from_heads(TokenC* tokens, int start, int end) except -1:
     for i in range(start, end):
         tokens[i].sent_start = -1
     for i in range(start, end):
-        if tokens[i].head == 0:
+        if tokens[i].head == 0 and not Token.missing_head(&tokens[i]):
             tokens[tokens[i].l_edge].sent_start = 1
 
 
