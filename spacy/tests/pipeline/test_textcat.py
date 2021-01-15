@@ -146,12 +146,12 @@ def test_no_resize(name):
 
 def test_error_with_multi_labels():
     nlp = Language()
-    textcat = nlp.add_pipe("textcat")
+    nlp.add_pipe("textcat")
     train_examples = []
     for text, annotations in TRAIN_DATA_MULTI_LABEL:
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
     with pytest.raises(ValueError):
-        optimizer = nlp.initialize(get_examples=lambda: train_examples)
+        nlp.initialize(get_examples=lambda: train_examples)
 
 
 @pytest.mark.parametrize(
@@ -273,7 +273,7 @@ def test_overfitting_IO_multi():
     assert_equal(batch_cats_1, no_batch_cats)
 
 
-def test_overfitting_IO_multi():
+def test_overfitting_IO_multi_2():
     # Simple test to try and quickly overfit the multi-label textcat component - ensuring the ML models work correctly
     fix_random_seed(0)
     nlp = English()
@@ -362,7 +362,9 @@ def test_positive_class():
     textcat_multilabel = nlp.add_pipe("textcat_multilabel")
     get_examples = make_get_examples_multi_label(nlp)
     with pytest.raises(TypeError):
-        textcat_multilabel.initialize(get_examples, labels=["POS", "NEG"], positive_label="POS")
+        textcat_multilabel.initialize(
+            get_examples, labels=["POS", "NEG"], positive_label="POS"
+        )
     textcat_multilabel.initialize(get_examples, labels=["FICTION", "DRAMA"])
     assert textcat_multilabel.labels == ("FICTION", "DRAMA")
     assert "positive_label" not in textcat_multilabel.cfg
@@ -381,7 +383,9 @@ def test_positive_class_not_binary():
     textcat = nlp.add_pipe("textcat")
     get_examples = make_get_examples_multi_label(nlp)
     with pytest.raises(ValueError):
-        textcat.initialize(get_examples, labels=["SOME", "THING", "POS"], positive_label="POS")
+        textcat.initialize(
+            get_examples, labels=["SOME", "THING", "POS"], positive_label="POS"
+        )
 
 
 def test_textcat_evaluation():

@@ -71,17 +71,19 @@ def build_text_classifier_v2(
     exclusive_classes = not linear_model.attrs["multi_label"]
     with Model.define_operators({">>": chain, "|": concatenate}):
         width = tok2vec.maybe_get_dim("nO")
-        attention_layer = ParametricAttention(width)   # TODO: benchmark performance difference of this layer
+        attention_layer = ParametricAttention(
+            width
+        )  # TODO: benchmark performance difference of this layer
         maxout_layer = Maxout(nO=width, nI=width)
         linear_layer = Linear(nO=nO, nI=width)
         cnn_model = (
-                tok2vec
-                >> list2ragged()
-                >> attention_layer
-                >> reduce_sum()
-                >> residual(maxout_layer)
-                >> linear_layer
-                >> Dropout(0.0)
+            tok2vec
+            >> list2ragged()
+            >> attention_layer
+            >> reduce_sum()
+            >> residual(maxout_layer)
+            >> linear_layer
+            >> Dropout(0.0)
         )
 
         nO_double = nO * 2 if nO else None

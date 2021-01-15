@@ -17,17 +17,8 @@ def test_graph_edges_and_nodes():
     assert graph.get_node((0,)) == node1
     node2 = graph.add_node((1, 3))
     assert list(node2) == [1, 3]
-    graph.add_edge(
-        node1,
-        node2,
-        label="one",
-        weight=-10.5
-    )
-    assert graph.has_edge(
-        node1,
-        node2,
-        label="one"
-    )
+    graph.add_edge(node1, node2, label="one", weight=-10.5)
+    assert graph.has_edge(node1, node2, label="one")
     assert node1.heads() == []
     assert [tuple(h) for h in node2.heads()] == [(0,)]
     assert [tuple(t) for t in node1.tails()] == [(1, 3)]
@@ -42,7 +33,7 @@ def test_graph_walk():
         nodes=[(0,), (1,), (2,), (3,)],
         edges=[(0, 1), (0, 2), (0, 3), (3, 0)],
         labels=None,
-        weights=None
+        weights=None,
     )
     node0, node1, node2, node3 = list(graph.nodes)
     assert [tuple(h) for h in node0.heads()] == [(3,)]

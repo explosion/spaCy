@@ -166,19 +166,11 @@ def test_Example_from_dict_with_entities(annots):
     vocab = Vocab()
     predicted = Doc(vocab, words=annots["words"])
     example = Example.from_dict(predicted, annots)
-
     assert len(list(example.reference.ents)) == 2
-    assert [example.reference[i].ent_iob_ for i in range(7)] == [
-        "O",
-        "O",
-        "B",
-        "I",
-        "O",
-        "B",
-        "O",
-    ]
+    # fmt: off
+    assert [example.reference[i].ent_iob_ for i in range(7)] == ["O", "O", "B", "I", "O", "B", "O"]
     assert example.get_aligned("ENT_IOB") == [2, 2, 3, 1, 2, 3, 2]
-
+    # fmt: on
     assert example.reference[2].ent_type_ == "LOC"
     assert example.reference[3].ent_type_ == "LOC"
     assert example.reference[5].ent_type_ == "LOC"
@@ -299,7 +291,8 @@ def test_Example_missing_heads():
     assert parsed_heads[2] == heads[2]
     assert parsed_heads[4] == heads[4]
     assert parsed_heads[5] == heads[5]
-    assert [t.has_head() for t in example.reference] == [True, True, True, False, True, True]
-
+    expected = [True, True, True, False, True, True]
+    assert [t.has_head() for t in example.reference] == expected
     # Ensure that the missing head doesn't create an artificial new sentence start
-    assert example.get_aligned_sent_starts() == [True, False, False, False, False, False]
+    expected = [True, False, False, False, False, False]
+    assert example.get_aligned_sent_starts() == expected

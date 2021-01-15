@@ -251,7 +251,9 @@ def test_language_from_config_before_after_init():
     nlp.initialize()
     assert nlp.meta["before_init"] == "before"
     assert nlp.meta["after_init"] == "after"
-    assert all([ran_before, ran_after, ran_after_pipeline, ran_before_init, ran_after_init])
+    assert all(
+        [ran_before, ran_after, ran_after_pipeline, ran_before_init, ran_after_init]
+    )
 
 
 def test_language_from_config_before_after_init_invalid():

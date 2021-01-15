@@ -5,9 +5,8 @@ _exc = {}
 
 
 for exc_data in [
-    {ORTH: "ት/ቤት"},    
+    {ORTH: "ት/ቤት"},
     {ORTH: "ወ/ሮ", NORM: "ወይዘሮ"},
-
 ]:
     _exc[exc_data[ORTH]] = [exc_data]
 

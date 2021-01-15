@@ -28,9 +28,11 @@ def pytest_runtest_setup(item):
 def tokenizer():
     return get_lang_class("xx")().tokenizer
 
+
 @pytest.fixture(scope="session")
 def am_tokenizer():
     return get_lang_class("am")().tokenizer
+
 
 @pytest.fixture(scope="session")
 def ar_tokenizer():
@@ -247,9 +249,11 @@ def th_tokenizer():
     pytest.importorskip("pythainlp")
     return get_lang_class("th")().tokenizer
 
+
 @pytest.fixture(scope="session")
 def ti_tokenizer():
     return get_lang_class("ti")().tokenizer
+
 
 @pytest.fixture(scope="session")
 def tr_tokenizer():
