@@ -226,7 +226,8 @@ def test_overfitting_IO():
     assert_equal(batch_cats_1, no_batch_cats)
 
 
-def test_overfitting_IO_multi():
+@pytest.mark.skip(reason="TODO: Can this be removed?")
+def test_overfitting_IO_multi_old():
     # Simple test to try and quickly overfit the multi-label textcat component - ensuring the ML models work correctly
     fix_random_seed(0)
     nlp = English()
@@ -273,7 +274,7 @@ def test_overfitting_IO_multi():
     assert_equal(batch_cats_1, no_batch_cats)
 
 
-def test_overfitting_IO_multi_2():
+def test_overfitting_IO_multi():
     # Simple test to try and quickly overfit the multi-label textcat component - ensuring the ML models work correctly
     fix_random_seed(0)
     nlp = English()
