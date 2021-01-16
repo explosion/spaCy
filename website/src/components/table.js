@@ -11,6 +11,23 @@ function isNum(children) {
     return isString(children) && /^\d+[.,]?[\dx]+?(|x|ms|mb|gb|k|m)?$/i.test(children)
 }
 
+function getCellContent(children) {
+    const icons = {
+        '✅': { name: 'yes', variant: 'success' },
+        '❌': { name: 'no', variant: 'error' },
+    }
+
+    if (isString(children) && icons[children.trim()]) {
+        const iconProps = icons[children.trim()]
+        return <Icon {...iconProps} />
+    }
+    // Work around prettier auto-escape
+    if (isString(children) && children.startsWith('\\')) {
+        return children.slice(1)
+    }
+    return children
+}
+
 function isDividerRow(children) {
     if (children.length && children[0].props && children[0].props.name == 'td') {
         const tdChildren = children[0].props.children
@@ -78,7 +95,7 @@ export const Tr = ({ evenodd = true, children, ...props }) => {
 }
 
 export const Td = ({ num, nowrap, className, children, ...props }) => {
-    const { content } = replaceEmoji(children)
+    const content = getCellContent(children)
     const tdClassNames = classNames(classes.td, className, {
         [classes.num]: num || isNum(children),
         [classes.nowrap]: nowrap,
