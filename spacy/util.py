@@ -15,6 +15,7 @@ import numpy.random
 import numpy
 import srsly
 import catalogue
+from catalogue import RegistryError
 import sys
 import warnings
 from packaging.specifiers import SpecifierSet, InvalidSpecifier
@@ -111,11 +112,11 @@ class registry(thinc.registry):
         # We're overwriting this classmethod so we're able to provide more
         # specific error messages and implement a fallback to spacy-legacy.
         if not hasattr(cls, registry_name):
-            raise ValueError(Errors.E894.format(name=registry_name))
+            raise RegistryError(Errors.E894.format(name=registry_name))
         reg = getattr(cls, registry_name)
         try:
             func = reg.get(func_name)
-        except catalogue.RegistryError:
+        except RegistryError:
             if func_name.startswith("spacy."):
                 legacy_name = func_name.replace("spacy.", "spacy-legacy.")
                 try:
@@ -123,7 +124,7 @@ class registry(thinc.registry):
                 except catalogue.RegistryError:
                     pass
             available = ", ".join(sorted(reg.get_all().keys())) or "none"
-            raise ValueError(
+            raise RegistryError(
                 Errors.E893.format(
                     name=func_name, reg_name=registry_name, available=available
                 )
