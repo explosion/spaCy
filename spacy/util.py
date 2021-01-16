@@ -15,7 +15,7 @@ import numpy.random
 import numpy
 import srsly
 import catalogue
-from catalogue import RegistryError
+from catalogue import RegistryError, Registry
 import sys
 import warnings
 from packaging.specifiers import SpecifierSet, InvalidSpecifier
@@ -107,12 +107,22 @@ class registry(thinc.registry):
     cli = catalogue.create("spacy", "cli", entry_points=True)
 
     @classmethod
+    def get_registry_names(cls) -> List[str]:
+        """List all available registries."""
+        names = []
+        for name, value in inspect.getmembers(cls):
+            if not name.startswith("_") and isinstance(value, Registry):
+                names.append(name)
+        return sorted(names)
+
+    @classmethod
     def get(cls, registry_name: str, func_name: str) -> Callable:
         """Get a registered function from the registry."""
         # We're overwriting this classmethod so we're able to provide more
         # specific error messages and implement a fallback to spacy-legacy.
         if not hasattr(cls, registry_name):
-            raise RegistryError(Errors.E894.format(name=registry_name))
+            names = ", ".join(cls.get_registry_names()) or "none"
+            raise RegistryError(Errors.E894.format(name=registry_name, available=names))
         reg = getattr(cls, registry_name)
         try:
             func = reg.get(func_name)

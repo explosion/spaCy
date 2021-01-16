@@ -468,7 +468,7 @@ class Errors:
             "If the function is provided by a third-party package, e.g. "
             "spacy-transformers, make sure the package is installed in your "
             "environment.\n\nAvailable names: {available}")
-    E894 = ("Unknown function registry: '{name}'.")
+    E894 = ("Unknown function registry: '{name}'.\n\nAvailable names: {available}")
     E895 = ("The 'textcat' component received gold-standard annotations with "
             "multiple labels per document. In spaCy 3 you should use the "
             "'textcat_multilabel' component for this instead. "
