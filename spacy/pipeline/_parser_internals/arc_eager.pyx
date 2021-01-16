@@ -812,7 +812,6 @@ cdef class ArcEager(TransitionSystem):
             raise ValueError("Could not find gold transition - see logs above.")
 
     def get_oracle_sequence_from_state(self, StateClass state, ArcEagerGold gold, _debug=None):
-        assert _debug is not None
         cdef int i
         cdef Pool mem = Pool()
         # n_moves should not be zero at this point, but make sure to avoid zero-length mem alloc
