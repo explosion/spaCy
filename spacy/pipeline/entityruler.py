@@ -10,7 +10,7 @@ from ..errors import Errors
 from ..util import ensure_path, to_disk, from_disk, SimpleFrozenList
 from ..tokens import Doc, Span
 from ..matcher import Matcher, PhraseMatcher
-from ..scorer import Scorer
+from ..scorer import get_ner_prf
 from ..training import validate_examples
 
 
@@ -261,7 +261,11 @@ class EntityRuler(Pipe):
 
         # disable the nlp components after this one in case they hadn't been initialized / deserialised yet
         try:
-            current_index = self.nlp.pipe_names.index(self.name)
+            current_index = -1
+            for i, (name, pipe) in enumerate(self.nlp.pipeline):
+                if self == pipe:
+                    current_index = i
+                    break
             subsequent_pipes = [
                 pipe for pipe in self.nlp.pipe_names[current_index + 1 :]
             ]
@@ -340,7 +344,7 @@ class EntityRuler(Pipe):
 
     def score(self, examples, **kwargs):
         validate_examples(examples, "EntityRuler.score")
-        return Scorer.score_spans(examples, "ents", **kwargs)
+        return get_ner_prf(examples)
 
     def from_bytes(
         self, patterns_bytes: bytes, *, exclude: Iterable[str] = SimpleFrozenList()

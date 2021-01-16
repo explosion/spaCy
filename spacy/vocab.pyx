@@ -164,7 +164,7 @@ cdef class Vocab:
         if len(string) < 3 or self.length < 10000:
             mem = self.mem
         cdef bint is_oov = mem is not self.mem
-        lex = <LexemeC*>mem.alloc(sizeof(LexemeC), 1)
+        lex = <LexemeC*>mem.alloc(1, sizeof(LexemeC))
         lex.orth = self.strings.add(string)
         lex.length = len(string)
         if self.vectors is not None:
@@ -305,6 +305,9 @@ cdef class Vocab:
         DOCS: https://nightly.spacy.io/api/vocab#prune_vectors
         """
         xp = get_array_module(self.vectors.data)
+        # Make sure all vectors are in the vocab
+        for orth in self.vectors:
+            self[orth]
         # Make prob negative so it sorts by rank ascending
         # (key2row contains the rank)
         priority = [(-lex.prob, self.vectors.key2row[lex.orth], lex.orth)

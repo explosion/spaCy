@@ -121,7 +121,7 @@ def test_parser_pseudoprojectivity(en_vocab):
     assert undeco_labels == ["det", "nsubj", "root", "det", "dobj", "aux",
                              "nsubj", "acl", "punct"]
     # if there are two potential new heads, the first one is chosen even if
-    # it"s wrong
+    # it's wrong
     proj_heads = [1, 1, 3, 1, 5, 6, 9, 8, 6, 1, 9, 12, 13, 10, 1]
     deco_labels = ["advmod||aux", "root", "det", "aux", "advmod", "det",
                    "dobj", "det", "nmod", "aux", "nmod||dobj", "advmod",

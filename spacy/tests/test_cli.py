@@ -3,16 +3,28 @@ from click import NoSuchOption
 from spacy.training import docs_to_json, offsets_to_biluo_tags
 from spacy.training.converters import iob_to_docs, conll_ner_to_docs, conllu_to_docs
 from spacy.schemas import ProjectConfigSchema, RecommendationSchema, validate
+from spacy.lang.nl import Dutch
 from spacy.util import ENV_VARS
+from spacy.cli import info
 from spacy.cli.init_config import init_config, RECOMMENDATIONS
 from spacy.cli._util import validate_project_commands, parse_config_overrides
 from spacy.cli._util import load_project_config, substitute_project_variables
 from spacy.cli._util import string_to_list
-from thinc.api import ConfigValidationError
+from thinc.api import ConfigValidationError, Config
 import srsly
 import os
 
 from .util import make_tempdir
+
+
+def test_cli_info():
+    nlp = Dutch()
+    nlp.add_pipe("textcat")
+    with make_tempdir() as tmp_dir:
+        nlp.to_disk(tmp_dir)
+        raw_data = info(tmp_dir, exclude=[""])
+        assert raw_data["lang"] == "nl"
+        assert raw_data["components"] == ["textcat"]
 
 
 def test_cli_converters_conllu_to_docs():
@@ -24,7 +36,7 @@ def test_cli_converters_conllu_to_docs():
         "4\tavstår\tavstå\tVERB\t_\tMood=Ind|Tense=Pres|VerbForm=Fin\t0\troot\t_\tO",
     ]
     input_data = "\n".join(lines)
-    converted_docs = conllu_to_docs(input_data, n_sents=1)
+    converted_docs = list(conllu_to_docs(input_data, n_sents=1))
     assert len(converted_docs) == 1
     converted = [docs_to_json(converted_docs)]
     assert converted[0]["id"] == 0
@@ -65,8 +77,8 @@ def test_cli_converters_conllu_to_docs():
 )
 def test_cli_converters_conllu_to_docs_name_ner_map(lines):
     input_data = "\n".join(lines)
-    converted_docs = conllu_to_docs(
-        input_data, n_sents=1, ner_map={"PER": "PERSON", "BAD": ""}
+    converted_docs = list(
+        conllu_to_docs(input_data, n_sents=1, ner_map={"PER": "PERSON", "BAD": ""})
     )
     assert len(converted_docs) == 1
     converted = [docs_to_json(converted_docs)]
@@ -99,8 +111,10 @@ def test_cli_converters_conllu_to_docs_subtokens():
         "5\t.\t$.\tPUNCT\t_\t_\t4\tpunct\t_\tname=O",
     ]
     input_data = "\n".join(lines)
-    converted_docs = conllu_to_docs(
-        input_data, n_sents=1, merge_subtokens=True, append_morphology=True
+    converted_docs = list(
+        conllu_to_docs(
+            input_data, n_sents=1, merge_subtokens=True, append_morphology=True
+        )
     )
     assert len(converted_docs) == 1
     converted = [docs_to_json(converted_docs)]
@@ -145,7 +159,7 @@ def test_cli_converters_iob_to_docs():
         "I|PRP|O like|VBP|O London|NNP|B-GPE and|CC|O New|NNP|B-GPE York|NNP|I-GPE City|NNP|I-GPE .|.|O",
     ]
     input_data = "\n".join(lines)
-    converted_docs = iob_to_docs(input_data, n_sents=10)
+    converted_docs = list(iob_to_docs(input_data, n_sents=10))
     assert len(converted_docs) == 1
     converted = docs_to_json(converted_docs)
     assert converted["id"] == 0
@@ -212,7 +226,7 @@ def test_cli_converters_conll_ner_to_docs():
         ".\t.\t_\tO",
     ]
     input_data = "\n".join(lines)
-    converted_docs = conll_ner_to_docs(input_data, n_sents=10)
+    converted_docs = list(conll_ner_to_docs(input_data, n_sents=10))
     assert len(converted_docs) == 1
     converted = docs_to_json(converted_docs)
     assert converted["id"] == 0
@@ -368,7 +382,8 @@ def test_parse_cli_overrides():
 @pytest.mark.parametrize("optimize", ["efficiency", "accuracy"])
 def test_init_config(lang, pipeline, optimize):
     # TODO: add more tests and also check for GPU with transformers
-    init_config("-", lang=lang, pipeline=pipeline, optimize=optimize, cpu=True)
+    config = init_config(lang=lang, pipeline=pipeline, optimize=optimize, gpu=False)
+    assert isinstance(config, Config)
 
 
 def test_model_recommendations():

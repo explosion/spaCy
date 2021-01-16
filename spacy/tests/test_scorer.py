@@ -277,6 +277,62 @@ def test_tag_score(tagged_doc):
     assert results["morph_per_feat"]["Number"]["f"] == approx(0.72727272)
 
 
+def test_partial_annotation(en_tokenizer):
+    pred_doc = en_tokenizer("a b c d e")
+    pred_doc[0].tag_ = "A"
+    pred_doc[0].pos_ = "X"
+    pred_doc[0].set_morph("Feat=Val")
+    pred_doc[0].dep_ = "dep"
+
+    # unannotated reference
+    ref_doc = en_tokenizer("a b c d e")
+    ref_doc.has_unknown_spaces = True
+    example = Example(pred_doc, ref_doc)
+    scorer = Scorer()
+    scores = scorer.score([example])
+    for key in scores:
+        # cats doesn't have an unset state
+        if key.startswith("cats"):
+            continue
+        assert scores[key] is None
+
+    # partially annotated reference, not overlapping with predicted annotation
+    ref_doc = en_tokenizer("a b c d e")
+    ref_doc.has_unknown_spaces = True
+    ref_doc[1].tag_ = "A"
+    ref_doc[1].pos_ = "X"
+    ref_doc[1].set_morph("Feat=Val")
+    ref_doc[1].dep_ = "dep"
+    example = Example(pred_doc, ref_doc)
+    scorer = Scorer()
+    scores = scorer.score([example])
+    assert scores["token_acc"] is None
+    assert scores["tag_acc"] == 0.0
+    assert scores["pos_acc"] == 0.0
+    assert scores["morph_acc"] == 0.0
+    assert scores["dep_uas"] == 1.0
+    assert scores["dep_las"] == 0.0
+    assert scores["sents_f"] is None
+
+    # partially annotated reference, overlapping with predicted annotation
+    ref_doc = en_tokenizer("a b c d e")
+    ref_doc.has_unknown_spaces = True
+    ref_doc[0].tag_ = "A"
+    ref_doc[0].pos_ = "X"
+    ref_doc[1].set_morph("Feat=Val")
+    ref_doc[1].dep_ = "dep"
+    example = Example(pred_doc, ref_doc)
+    scorer = Scorer()
+    scores = scorer.score([example])
+    assert scores["token_acc"] is None
+    assert scores["tag_acc"] == 1.0
+    assert scores["pos_acc"] == 1.0
+    assert scores["morph_acc"] == 0.0
+    assert scores["dep_uas"] == 1.0
+    assert scores["dep_las"] == 0.0
+    assert scores["sents_f"] is None
+
+
 def test_roc_auc_score():
     # Binary classification, toy tests from scikit-learn test suite
     y_true = [0, 1]
@@ -335,7 +391,7 @@ def test_roc_auc_score():
     score.score_set(0.25, 0)
     score.score_set(0.75, 0)
     with pytest.raises(ValueError):
-        s = score.score
+        _ = score.score  # noqa: F841
 
     y_true = [1, 1]
     y_score = [0.25, 0.75]
@@ -346,4 +402,4 @@ def test_roc_auc_score():
     score.score_set(0.25, 1)
     score.score_set(0.75, 1)
     with pytest.raises(ValueError):
-        s = score.score
+        _ = score.score  # noqa: F841

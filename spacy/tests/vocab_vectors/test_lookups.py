@@ -71,7 +71,6 @@ def test_table_api_to_from_bytes():
     assert "def" not in new_table2
 
 
-@pytest.mark.skip(reason="This fails on Python 3.5")
 def test_lookups_to_from_bytes():
     lookups = Lookups()
     lookups.add_table("table1", {"foo": "bar", "hello": "world"})
@@ -91,7 +90,6 @@ def test_lookups_to_from_bytes():
     assert new_lookups.to_bytes() == lookups_bytes
 
 
-@pytest.mark.skip(reason="This fails on Python 3.5")
 def test_lookups_to_from_disk():
     lookups = Lookups()
     lookups.add_table("table1", {"foo": "bar", "hello": "world"})
@@ -111,7 +109,6 @@ def test_lookups_to_from_disk():
     assert table2["b"] == 2
 
 
-@pytest.mark.skip(reason="This fails on Python 3.5")
 def test_lookups_to_from_bytes_via_vocab():
     table_name = "test"
     vocab = Vocab()
@@ -128,7 +125,6 @@ def test_lookups_to_from_bytes_via_vocab():
     assert new_vocab.to_bytes() == vocab_bytes
 
 
-@pytest.mark.skip(reason="This fails on Python 3.5")
 def test_lookups_to_from_disk_via_vocab():
     table_name = "test"
     vocab = Vocab()

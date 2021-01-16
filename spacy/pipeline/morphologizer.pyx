@@ -24,7 +24,7 @@ default_model_config = """
 @architectures = "spacy.Tagger.v1"
 
 [model.tok2vec]
-@architectures = "spacy.Tok2Vec.v1"
+@architectures = "spacy.Tok2Vec.v2"
 
 [model.tok2vec.embed]
 @architectures = "spacy.CharacterEmbed.v1"
@@ -35,7 +35,7 @@ nC = 8
 include_static_vectors = false
 
 [model.tok2vec.encode]
-@architectures = "spacy.MaxoutWindowEncoder.v1"
+@architectures = "spacy.MaxoutWindowEncoder.v2"
 width = 128
 depth = 4
 window_size = 1
@@ -67,9 +67,6 @@ class Morphologizer(Tagger):
         vocab: Vocab,
         model: Model,
         name: str = "morphologizer",
-        *,
-        labels_morph: Optional[dict] = None,
-        labels_pos: Optional[dict] = None,
     ):
         """Initialize a morphologizer.
 
@@ -77,8 +74,6 @@ class Morphologizer(Tagger):
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
         name (str): The component instance name, used to add entries to the
             losses during training.
-        labels_morph (dict): Mapping of morph + POS tags to morph labels.
-        labels_pos (dict): Mapping of morph + POS tags to POS tags.
 
         DOCS: https://nightly.spacy.io/api/morphologizer#init
         """
@@ -90,11 +85,8 @@ class Morphologizer(Tagger):
         # store mappings from morph+POS labels to token-level annotations:
         # 1) labels_morph stores a mapping from morph+POS->morph
         # 2) labels_pos stores a mapping from morph+POS->POS
-        cfg = {"labels_morph": labels_morph or {}, "labels_pos": labels_pos or {}}
+        cfg = {"labels_morph": {}, "labels_pos": {}}
         self.cfg = dict(sorted(cfg.items()))
-        # add mappings for empty morph
-        self.cfg["labels_morph"][Morphology.EMPTY_MORPH] = Morphology.EMPTY_MORPH
-        self.cfg["labels_pos"][Morphology.EMPTY_MORPH] = POS_IDS[""]
 
     @property
     def labels(self):
@@ -153,6 +145,10 @@ class Morphologizer(Tagger):
             for example in get_examples():
                 for i, token in enumerate(example.reference):
                     pos = token.pos_
+                    # if both are unset, annotation is missing, so do not add
+                    # an empty label
+                    if pos == "" and not token.has_morph():
+                        continue
                     morph = str(token.morph)
                     # create and add the combined morph+POS label
                     morph_dict = Morphology.feats_to_dict(morph)
@@ -163,7 +159,7 @@ class Morphologizer(Tagger):
                     if norm_label not in self.cfg["labels_morph"]:
                         self.cfg["labels_morph"][norm_label] = morph
                         self.cfg["labels_pos"][norm_label] = POS_IDS[pos]
-        if len(self.labels) <= 1:
+        if len(self.labels) < 1:
             raise ValueError(Errors.E143.format(name=self.name))
         doc_sample = []
         label_sample = []
@@ -201,8 +197,8 @@ class Morphologizer(Tagger):
                 doc_tag_ids = doc_tag_ids.get()
             for j, tag_id in enumerate(doc_tag_ids):
                 morph = self.labels[tag_id]
-                doc.c[j].morph = self.vocab.morphology.add(self.cfg["labels_morph"][morph])
-                doc.c[j].pos = self.cfg["labels_pos"][morph]
+                doc.c[j].morph = self.vocab.morphology.add(self.cfg["labels_morph"].get(morph, 0))
+                doc.c[j].pos = self.cfg["labels_pos"].get(morph, 0)
 
     def get_loss(self, examples, scores):
         """Find the loss and gradient of loss for the batch of documents and
@@ -225,15 +221,24 @@ class Morphologizer(Tagger):
                 pos = pos_tags[i]
                 morph = morphs[i]
                 # POS may align (same value for multiple tokens) when morph
-                # doesn't, so if either is None, treat both as None here so that
-                # truths doesn't end up with an unknown morph+POS combination
+                # doesn't, so if either is misaligned (None), treat the
+                # annotation as missing so that truths doesn't end up with an
+                # unknown morph+POS combination
                 if pos is None or morph is None:
-                    pos = None
-                    morph = None
-                label_dict = Morphology.feats_to_dict(morph)
-                if pos:
-                    label_dict[self.POS_FEAT] = pos
-                label = self.vocab.strings[self.vocab.morphology.add(label_dict)]
+                    label = None
+                # If both are unset, the annotation is missing (empty morph
+                # converted from int is "_" rather than "")
+                elif pos == "" and morph == "":
+                    label = None
+                # Otherwise, generate the combined label
+                else:
+                    label_dict = Morphology.feats_to_dict(morph)
+                    if pos:
+                        label_dict[self.POS_FEAT] = pos
+                    label = self.vocab.strings[self.vocab.morphology.add(label_dict)]
+                    # As a fail-safe, skip any unrecognized labels
+                    if label not in self.labels:
+                        label = None
                 eg_truths.append(label)
             truths.append(eg_truths)
         d_scores, loss = loss_func(scores, truths)
@@ -251,10 +256,13 @@ class Morphologizer(Tagger):
 
         DOCS: https://nightly.spacy.io/api/morphologizer#score
         """
+        def morph_key_getter(token, attr):
+            return getattr(token, attr).key
+
         validate_examples(examples, "Morphologizer.score")
         results = {}
         results.update(Scorer.score_token_attr(examples, "pos", **kwargs))
-        results.update(Scorer.score_token_attr(examples, "morph", **kwargs))
+        results.update(Scorer.score_token_attr(examples, "morph", getter=morph_key_getter, **kwargs))
         results.update(Scorer.score_token_attr_per_feat(examples,
-            "morph", **kwargs))
+            "morph", getter=morph_key_getter, **kwargs))
         return results

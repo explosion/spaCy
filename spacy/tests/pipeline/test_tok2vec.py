@@ -113,7 +113,7 @@ cfg_string = """
     factory = "tok2vec"
 
     [components.tok2vec.model]
-    @architectures = "spacy.Tok2Vec.v1"
+    @architectures = "spacy.Tok2Vec.v2"
 
     [components.tok2vec.model.embed]
     @architectures = "spacy.MultiHashEmbed.v1"
@@ -123,7 +123,7 @@ cfg_string = """
     include_static_vectors = false
 
     [components.tok2vec.model.encode]
-    @architectures = "spacy.MaxoutWindowEncoder.v1"
+    @architectures = "spacy.MaxoutWindowEncoder.v2"
     width = 96
     depth = 4
     window_size = 1

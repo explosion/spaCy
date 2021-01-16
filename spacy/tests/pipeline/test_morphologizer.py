@@ -116,3 +116,48 @@ def test_overfitting_IO():
     no_batch_deps = [doc.to_array([MORPH]) for doc in [nlp(text) for text in texts]]
     assert_equal(batch_deps_1, batch_deps_2)
     assert_equal(batch_deps_1, no_batch_deps)
+
+    # Test without POS
+    nlp.remove_pipe("morphologizer")
+    nlp.add_pipe("morphologizer")
+    for example in train_examples:
+        for token in example.reference:
+            token.pos_ = ""
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+    for i in range(50):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+    assert losses["morphologizer"] < 0.00001
+
+    # Test the trained model
+    test_text = "I like blue ham"
+    doc = nlp(test_text)
+    gold_morphs = ["Feat=N", "Feat=V", "", ""]
+    gold_pos_tags = ["", "", "", ""]
+    assert [str(t.morph) for t in doc] == gold_morphs
+    assert [t.pos_ for t in doc] == gold_pos_tags
+
+    # Test with unset morph and partial POS
+    nlp.remove_pipe("morphologizer")
+    nlp.add_pipe("morphologizer")
+    for example in train_examples:
+        for token in example.reference:
+            if token.text == "ham":
+                token.pos_ = "NOUN"
+            else:
+                token.pos_ = ""
+            token.set_morph(None)
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+    print(nlp.get_pipe("morphologizer").labels)
+    for i in range(50):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+    assert losses["morphologizer"] < 0.00001
+
+    # Test the trained model
+    test_text = "I like blue ham"
+    doc = nlp(test_text)
+    gold_morphs = ["", "", "", ""]
+    gold_pos_tags = ["NOUN", "NOUN", "NOUN", "NOUN"]
+    assert [str(t.morph) for t in doc] == gold_morphs
+    assert [t.pos_ for t in doc] == gold_pos_tags

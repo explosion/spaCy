@@ -2,6 +2,7 @@ import pytest
 from spacy.vocab import Vocab
 from spacy.tokenizer import Tokenizer
 from spacy.util import ensure_path
+from spacy.lang.en import English
 
 
 def test_tokenizer_handles_no_word(tokenizer):
@@ -150,6 +151,22 @@ def test_tokenizer_special_cases_with_affixes(tokenizer):
     ]
 
 
+def test_tokenizer_special_cases_with_affixes_preserve_spacy():
+    tokenizer = English().tokenizer
+    # reset all special cases
+    tokenizer.rules = {}
+
+    # in-place modification (only merges)
+    text = "''a'' "
+    tokenizer.add_special_case("''", [{"ORTH": "''"}])
+    assert tokenizer(text).text == text
+
+    # not in-place (splits and merges)
+    tokenizer.add_special_case("ab", [{"ORTH": "a"}, {"ORTH": "b"}])
+    text = "ab ab ab ''ab ab'' ab'' ''ab"
+    assert tokenizer(text).text == text
+
+
 def test_tokenizer_special_cases_with_period(tokenizer):
     text = "_SPECIAL_."
     tokenizer.add_special_case("_SPECIAL_", [{"orth": "_SPECIAL_"}])
@@ -163,3 +180,9 @@ def test_tokenizer_special_cases_idx(tokenizer):
     doc = tokenizer(text)
     assert doc[1].idx == 4
     assert doc[2].idx == 7
+
+
+def test_tokenizer_special_cases_spaces(tokenizer):
+    assert [t.text for t in tokenizer("a b c")] == ["a", "b", "c"]
+    tokenizer.add_special_case("a b c", [{"ORTH": "a b c"}])
+    assert [t.text for t in tokenizer("a b c")] == ["a b c"]

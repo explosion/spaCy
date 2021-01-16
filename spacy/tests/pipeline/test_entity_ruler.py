@@ -197,3 +197,17 @@ def test_entity_ruler_overlapping_spans(nlp):
     doc = ruler(nlp.make_doc("foo bar baz"))
     assert len(doc.ents) == 1
     assert doc.ents[0].label_ == "FOOBAR"
+
+
+@pytest.mark.parametrize("n_process", [1, 2])
+def test_entity_ruler_multiprocessing(nlp, n_process):
+    texts = ["I enjoy eating Pizza Hut pizza."]
+
+    patterns = [{"label": "FASTFOOD", "pattern": "Pizza Hut", "id": "1234"}]
+
+    ruler = nlp.add_pipe("entity_ruler")
+    ruler.add_patterns(patterns)
+
+    for doc in nlp.pipe(texts, n_process=2):
+        for ent in doc.ents:
+            assert ent.ent_id_ == "1234"

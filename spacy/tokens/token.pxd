@@ -9,6 +9,7 @@ from ..lexeme cimport Lexeme
 
 from ..errors import Errors
 
+cdef int MISSING_DEP = 0
 
 cdef class Token:
     cdef readonly Vocab vocab
@@ -94,3 +95,13 @@ cdef class Token:
             token.ent_kb_id = value
         elif feat_name == SENT_START:
             token.sent_start = value
+
+
+    @staticmethod
+    cdef inline int missing_dep(const TokenC* token) nogil:
+        return token.dep == MISSING_DEP
+
+
+    @staticmethod
+    cdef inline int missing_head(const TokenC* token) nogil:
+        return Token.missing_dep(token)

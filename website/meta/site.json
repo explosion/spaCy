@@ -56,6 +56,10 @@
             "label": "Community",
             "items": [
                 { "text": "Universe", "url": "/universe" },
+                {
+                    "text": "GitHub Discussions",
+                    "url": "https://github.com/explosion/spaCy/discussions"
+                },
                 { "text": "Issue Tracker", "url": "https://github.com/explosion/spaCy/issues" },
                 {
                     "text": "Stack Overflow",

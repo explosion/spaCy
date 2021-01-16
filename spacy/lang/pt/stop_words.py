@@ -1,6 +1,6 @@
 STOP_WORDS = set(
     """
-à às área acerca ademais adeus agora ainda algo algumas alguns ali além ambas ambos antes
+a à às área acerca ademais adeus agora ainda algo algumas alguns ali além ambas ambos antes
 ao aos apenas apoia apoio apontar após aquela aquelas aquele aqueles aqui aquilo
 as assim através atrás até aí
 
@@ -14,7 +14,7 @@ da daquela daquele dar das de debaixo demais dentro depois des desde dessa desse
 desta deste deve devem deverá dez dezanove dezasseis dezassete dezoito diante
 direita disso diz dizem dizer do dois dos doze duas dá dão
 
-é és ela elas ele eles em embora enquanto entre então era essa essas esse esses esta
+e é és ela elas ele eles em embora enquanto entre então era essa essas esse esses esta
 estado estar estará estas estava este estes esteve estive estivemos estiveram
 estiveste estivestes estou está estás estão eu eventual exemplo
 
@@ -36,7 +36,7 @@ na nada naquela naquele nas nem nenhuma nessa nesse nesta neste no nos nossa
 nossas nosso nossos nova novas nove novo novos num numa nunca nuns não nível nós
 número números
 
-obrigada obrigado oitava oitavo oito onde ontem onze ora os ou outra outras outros
+o obrigada obrigado oitava oitavo oito onde ontem onze ora os ou outra outras outros
 
 para parece parte partir pegar pela pelas pelo pelos perto pode podem poder poderá
 podia pois ponto pontos por porquanto porque porquê portanto porém posição

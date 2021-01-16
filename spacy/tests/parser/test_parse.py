@@ -28,6 +28,36 @@ TRAIN_DATA = [
 ]
 
 
+CONFLICTING_DATA = [
+    (
+        "I like London and Berlin.",
+        {
+            "heads": [1, 1, 1, 2, 2, 1],
+            "deps": ["nsubj", "ROOT", "dobj", "cc", "conj", "punct"],
+        },
+    ),
+    (
+        "I like London and Berlin.",
+        {
+            "heads": [0, 0, 0, 0, 0, 0],
+            "deps": ["ROOT", "nsubj", "nsubj", "cc", "conj", "punct"],
+        },
+    ),
+]
+
+PARTIAL_DATA = [
+    (
+        "I like London.",
+        {
+            "heads": [1, 1, 1, None],
+            "deps": ["nsubj", "ROOT", "dobj", None],
+        },
+    ),
+]
+
+eps = 0.1
+
+
 def test_parser_root(en_vocab):
     words = ["i", "do", "n't", "have", "other", "assistance"]
     heads = [3, 3, 3, 3, 5, 3]
@@ -185,26 +215,57 @@ def test_parser_set_sent_starts(en_vocab):
             assert token.head in sent
 
 
-def test_overfitting_IO():
-    # Simple test to try and quickly overfit the dependency parser - ensuring the ML models work correctly
+@pytest.mark.parametrize("pipe_name", ["parser", "beam_parser"])
+def test_incomplete_data(pipe_name):
+    # Test that the parser works with incomplete information
     nlp = English()
-    parser = nlp.add_pipe("parser")
+    parser = nlp.add_pipe(pipe_name)
+    train_examples = []
+    for text, annotations in PARTIAL_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
+        for dep in annotations.get("deps", []):
+            if dep is not None:
+                parser.add_label(dep)
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+    for i in range(150):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+    assert losses[pipe_name] < 0.0001
+
+    # test the trained model
+    test_text = "I like securities."
+    doc = nlp(test_text)
+    assert doc[0].dep_ == "nsubj"
+    assert doc[2].dep_ == "dobj"
+    assert doc[0].head.i == 1
+    assert doc[2].head.i == 1
+
+
+@pytest.mark.parametrize("pipe_name", ["parser", "beam_parser"])
+def test_overfitting_IO(pipe_name):
+    # Simple test to try and quickly overfit the dependency parser (normal or beam)
+    nlp = English()
+    parser = nlp.add_pipe(pipe_name)
     train_examples = []
     for text, annotations in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
         for dep in annotations.get("deps", []):
             parser.add_label(dep)
     optimizer = nlp.initialize()
-    for i in range(100):
+    # run overfitting
+    for i in range(200):
         losses = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)
-    assert losses["parser"] < 0.0001
+    assert losses[pipe_name] < 0.0001
     # test the trained model
     test_text = "I like securities."
     doc = nlp(test_text)
     assert doc[0].dep_ == "nsubj"
     assert doc[2].dep_ == "dobj"
     assert doc[3].dep_ == "punct"
+    assert doc[0].head.i == 1
+    assert doc[2].head.i == 1
+    assert doc[3].head.i == 1
     # Also test the results are still the same after IO
     with make_tempdir() as tmp_dir:
         nlp.to_disk(tmp_dir)
@@ -213,6 +274,9 @@ def test_overfitting_IO():
         assert doc2[0].dep_ == "nsubj"
         assert doc2[2].dep_ == "dobj"
         assert doc2[3].dep_ == "punct"
+        assert doc2[0].head.i == 1
+        assert doc2[2].head.i == 1
+        assert doc2[3].head.i == 1
 
     # Make sure that running pipe twice, or comparing to call, always amounts to the same predictions
     texts = [
@@ -226,3 +290,123 @@ def test_overfitting_IO():
     no_batch_deps = [doc.to_array([DEP]) for doc in [nlp(text) for text in texts]]
     assert_equal(batch_deps_1, batch_deps_2)
     assert_equal(batch_deps_1, no_batch_deps)
+
+
+def test_beam_parser_scores():
+    # Test that we can get confidence values out of the beam_parser pipe
+    beam_width = 16
+    beam_density = 0.0001
+    nlp = English()
+    config = {
+        "beam_width": beam_width,
+        "beam_density": beam_density,
+    }
+    parser = nlp.add_pipe("beam_parser", config=config)
+    train_examples = []
+    for text, annotations in CONFLICTING_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
+        for dep in annotations.get("deps", []):
+            parser.add_label(dep)
+    optimizer = nlp.initialize()
+
+    # update a bit with conflicting data
+    for i in range(10):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+
+    # test the scores from the beam
+    test_text = "I like securities."
+    doc = nlp.make_doc(test_text)
+    docs = [doc]
+    beams = parser.predict(docs)
+    head_scores, label_scores = parser.scored_parses(beams)
+
+    for j in range(len(doc)):
+        for label in parser.labels:
+            label_score = label_scores[0][(j, label)]
+            assert 0 - eps <= label_score <= 1 + eps
+        for i in range(len(doc)):
+            head_score = head_scores[0][(j, i)]
+            assert 0 - eps <= head_score <= 1 + eps
+
+
+def test_beam_overfitting_IO():
+    # Simple test to try and quickly overfit the Beam dependency parser
+    nlp = English()
+    beam_width = 16
+    beam_density = 0.0001
+    config = {
+        "beam_width": beam_width,
+        "beam_density": beam_density,
+    }
+    parser = nlp.add_pipe("beam_parser", config=config)
+    train_examples = []
+    for text, annotations in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
+        for dep in annotations.get("deps", []):
+            parser.add_label(dep)
+    optimizer = nlp.initialize()
+    # run overfitting
+    for i in range(150):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+    assert losses["beam_parser"] < 0.0001
+    # test the scores from the beam
+    test_text = "I like securities."
+    docs = [nlp.make_doc(test_text)]
+    beams = parser.predict(docs)
+    head_scores, label_scores = parser.scored_parses(beams)
+    # we only processed one document
+    head_scores = head_scores[0]
+    label_scores = label_scores[0]
+    # test label annotations: 0=nsubj, 2=dobj, 3=punct
+    assert label_scores[(0, "nsubj")] == pytest.approx(1.0, abs=eps)
+    assert label_scores[(0, "dobj")] == pytest.approx(0.0, abs=eps)
+    assert label_scores[(0, "punct")] == pytest.approx(0.0, abs=eps)
+    assert label_scores[(2, "nsubj")] == pytest.approx(0.0, abs=eps)
+    assert label_scores[(2, "dobj")] == pytest.approx(1.0, abs=eps)
+    assert label_scores[(2, "punct")] == pytest.approx(0.0, abs=eps)
+    assert label_scores[(3, "nsubj")] == pytest.approx(0.0, abs=eps)
+    assert label_scores[(3, "dobj")] == pytest.approx(0.0, abs=eps)
+    assert label_scores[(3, "punct")] == pytest.approx(1.0, abs=eps)
+    # test head annotations: the root is token at index 1
+    assert head_scores[(0, 0)] == pytest.approx(0.0, abs=eps)
+    assert head_scores[(0, 1)] == pytest.approx(1.0, abs=eps)
+    assert head_scores[(0, 2)] == pytest.approx(0.0, abs=eps)
+    assert head_scores[(2, 0)] == pytest.approx(0.0, abs=eps)
+    assert head_scores[(2, 1)] == pytest.approx(1.0, abs=eps)
+    assert head_scores[(2, 2)] == pytest.approx(0.0, abs=eps)
+    assert head_scores[(3, 0)] == pytest.approx(0.0, abs=eps)
+    assert head_scores[(3, 1)] == pytest.approx(1.0, abs=eps)
+    assert head_scores[(3, 2)] == pytest.approx(0.0, abs=eps)
+
+    # Also test the results are still the same after IO
+    with make_tempdir() as tmp_dir:
+        nlp.to_disk(tmp_dir)
+        nlp2 = util.load_model_from_path(tmp_dir)
+        docs2 = [nlp2.make_doc(test_text)]
+        parser2 = nlp2.get_pipe("beam_parser")
+        beams2 = parser2.predict(docs2)
+        head_scores2, label_scores2 = parser2.scored_parses(beams2)
+        # we only processed one document
+        head_scores2 = head_scores2[0]
+        label_scores2 = label_scores2[0]
+        # check the results again
+        assert label_scores2[(0, "nsubj")] == pytest.approx(1.0, abs=eps)
+        assert label_scores2[(0, "dobj")] == pytest.approx(0.0, abs=eps)
+        assert label_scores2[(0, "punct")] == pytest.approx(0.0, abs=eps)
+        assert label_scores2[(2, "nsubj")] == pytest.approx(0.0, abs=eps)
+        assert label_scores2[(2, "dobj")] == pytest.approx(1.0, abs=eps)
+        assert label_scores2[(2, "punct")] == pytest.approx(0.0, abs=eps)
+        assert label_scores2[(3, "nsubj")] == pytest.approx(0.0, abs=eps)
+        assert label_scores2[(3, "dobj")] == pytest.approx(0.0, abs=eps)
+        assert label_scores2[(3, "punct")] == pytest.approx(1.0, abs=eps)
+        assert head_scores2[(0, 0)] == pytest.approx(0.0, abs=eps)
+        assert head_scores2[(0, 1)] == pytest.approx(1.0, abs=eps)
+        assert head_scores2[(0, 2)] == pytest.approx(0.0, abs=eps)
+        assert head_scores2[(2, 0)] == pytest.approx(0.0, abs=eps)
+        assert head_scores2[(2, 1)] == pytest.approx(1.0, abs=eps)
+        assert head_scores2[(2, 2)] == pytest.approx(0.0, abs=eps)
+        assert head_scores2[(3, 0)] == pytest.approx(0.0, abs=eps)
+        assert head_scores2[(3, 1)] == pytest.approx(1.0, abs=eps)
+        assert head_scores2[(3, 2)] == pytest.approx(0.0, abs=eps)

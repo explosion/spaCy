@@ -191,6 +191,15 @@ the morph to an unset state.
 | -------- | --------------------------------------------------------------------------------- |
 | features | The morphological features to set. ~~Union[int, dict, str, MorphAnalysis, None]~~ |
 
+## Token.has_morph {#has_morph tag="method"}
+
+Check whether the token has annotated morph information. Return `False` when the
+morph annotation is unset/missing.
+
+| Name        | Description                                   |
+| ----------- | --------------------------------------------- |
+| **RETURNS** | Whether the morph annotation is set. ~~bool~~ |
+
 ## Token.is_ancestor {#is_ancestor tag="method" model="parser"}
 
 Check whether this token is a parent, grandparent, etc. of another in the

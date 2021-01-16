@@ -12,6 +12,7 @@ from ..training import Example
 from ..training.initialize import get_sourced_components
 from ..schemas import ConfigSchemaTraining
 from ..pipeline._parser_internals import nonproj
+from ..pipeline._parser_internals.nonproj import DELIMITER
 from ..language import Language
 from ..util import registry, resolve_dot_names
 from .. import util
@@ -37,7 +38,7 @@ BLANK_MODEL_THRESHOLD = 2000
 def debug_data_cli(
     # fmt: off
     ctx: typer.Context,  # This is only used to read additional arguments
-    config_path: Path = Arg(..., help="Path to config file", exists=True),
+    config_path: Path = Arg(..., help="Path to config file", exists=True, allow_dash=True),
     code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     ignore_warnings: bool = Opt(False, "--ignore-warnings", "-IW", help="Ignore warnings, only show stats and errors"),
     verbose: bool = Opt(False, "--verbose", "-V", help="Print additional information and explanations"),
@@ -383,7 +384,10 @@ def debug_data(
         # rare labels in projectivized train
         rare_projectivized_labels = []
         for label in gold_train_data["deps"]:
-            if gold_train_data["deps"][label] <= DEP_LABEL_THRESHOLD and "||" in label:
+            if (
+                gold_train_data["deps"][label] <= DEP_LABEL_THRESHOLD
+                and DELIMITER in label
+            ):
                 rare_projectivized_labels.append(
                     f"{label}: {gold_train_data['deps'][label]}"
                 )
@@ -504,13 +508,18 @@ def _compile_gold(
     for eg in examples:
         gold = eg.reference
         doc = eg.predicted
-        valid_words = [x for x in gold if x is not None]
+        valid_words = [x.text for x in gold]
         data["words"].update(valid_words)
         data["n_words"] += len(valid_words)
-        data["n_misaligned_words"] += len(gold) - len(valid_words)
+        align = eg.alignment
+        for token in doc:
+            if token.orth_.isspace():
+                continue
+            if align.x2y.lengths[token.i] != 1:
+                data["n_misaligned_words"] += 1
         data["texts"].add(doc.text)
         if len(nlp.vocab.vectors):
-            for word in valid_words:
+            for word in [t.text for t in doc]:
                 if nlp.vocab.strings[word] not in nlp.vocab.vectors:
                     data["words_missing_vectors"].update([word])
         if "ner" in factory_names:

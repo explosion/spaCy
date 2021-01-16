@@ -98,10 +98,13 @@ def evaluate(
         if key in scores:
             if key == "cats_score":
                 metric = metric + " (" + scores.get("cats_score_desc", "unk") + ")"
-            if key == "speed":
-                results[metric] = f"{scores[key]:.0f}"
+            if isinstance(scores[key], (int, float)):
+                if key == "speed":
+                    results[metric] = f"{scores[key]:.0f}"
+                else:
+                    results[metric] = f"{scores[key]*100:.2f}"
             else:
-                results[metric] = f"{scores[key]*100:.2f}"
+                results[metric] = "-"
             data[re.sub(r"[\s/]", "_", key.lower())] = scores[key]
 
     msg.table(results, title="Results")
@@ -169,7 +172,9 @@ def render_parses(
             file_.write(html)
 
 
-def print_prf_per_type(msg: Printer, scores: Dict[str, Dict[str, float]], name: str, type: str) -> None:
+def print_prf_per_type(
+    msg: Printer, scores: Dict[str, Dict[str, float]], name: str, type: str
+) -> None:
     data = [
         (k, f"{v['p']*100:.2f}", f"{v['r']*100:.2f}", f"{v['f']*100:.2f}")
         for k, v in scores.items()

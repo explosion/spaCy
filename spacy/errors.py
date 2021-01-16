@@ -119,14 +119,21 @@ class Warnings:
             "call the {matcher} on each Doc object.")
     W107 = ("The property `Doc.{prop}` is deprecated. Use "
             "`Doc.has_annotation(\"{attr}\")` instead.")
+    W108 = ("The rule-based lemmatizer did not find POS annotation for the "
+            "token '{text}'. Check that your pipeline includes components that "
+            "assign token.pos, typically 'tagger'+'attribute_ruler' or "
+            "'morphologizer'.")
+    W109 = ("Unable to save user hooks while serializing the doc. Re-add any "
+            "required user hooks to the doc after processing.")
 
 
 @add_codes
 class Errors:
     E001 = ("No component '{name}' found in pipeline. Available names: {opts}")
     E002 = ("Can't find factory for '{name}' for language {lang} ({lang_code}). "
-            "This usually happens when spaCy calls `nlp.{method}` with custom "
+            "This usually happens when spaCy calls `nlp.{method}` with a custom "
             "component name that's not registered on the current language class. "
+            "If you're using a Transformer, make sure to install 'spacy-transformers'. "
             "If you're using a custom component, make sure you've added the "
             "decorator `@Language.component` (for function components) or "
             "`@Language.factory` (for class components).\n\nAvailable "
@@ -456,6 +463,13 @@ class Errors:
             "issue tracker: http://github.com/explosion/spaCy/issues")
 
     # TODO: fix numbering after merging develop into master
+    E895 = ("The 'textcat' component received gold-standard annotations with "
+            "multiple labels per document. In spaCy 3 you should use the "
+            "'textcat_multilabel' component for this instead. "
+            "Example of an offending annotation: {value}")
+    E896 = ("There was an error using the static vectors. Ensure that the vectors "
+            "of the vocab are properly initialized, or set 'include_static_vectors' "
+            "to False.")
     E897 = ("Field '{field}' should be a dot-notation string referring to the "
             "relevant section in the config, but found type {type} instead.")
     E898 = ("Can't serialize trainable pipe '{name}': the `model` attribute "
@@ -483,8 +497,8 @@ class Errors:
             "has been applied.")
     E905 = ("Cannot initialize StaticVectors layer: nM dimension unset. This "
             "dimension refers to the width of the vectors table.")
-    E906 = ("Unexpected `loss` value in pretraining objective: {loss_type}")
-    E907 = ("Unexpected `objective_type` value in pretraining objective: {objective_type}")
+    E906 = ("Unexpected `loss` value in pretraining objective: '{found}'. Supported values "
+            "are: {supported}")
     E908 = ("Can't set `spaces` without `words` in `Doc.__init__`.")
     E909 = ("Expected {name} in parser internals. This is likely a bug in spaCy.")
     E910 = ("Encountered NaN value when computing loss for component '{name}'.")
@@ -564,7 +578,10 @@ class Errors:
             "a string value from {expected} but got: '{arg}'")
     E948 = ("`Matcher.add` received invalid 'patterns' argument: expected "
             "a list, but got: {arg_type}")
-    E949 = ("Can only create an alignment when the texts are the same.")
+    E949 = ("Unable to align tokens for the predicted and reference docs. It "
+            "is only possible to align the docs when both texts are the same "
+            "except for whitespace and capitalization. The predicted tokens "
+            "start with: {x}. The reference tokens start with: {y}.")
     E952 = ("The section '{name}' is not a valid section in the provided config.")
     E953 = ("Mismatched IDs received by the Tok2Vec listener: {id1} vs. {id2}")
     E954 = ("The Tok2Vec listener did not receive any valid input from an upstream "
@@ -709,6 +726,12 @@ class Errors:
     E1013 = ("Invalid morph: the MorphAnalysis must have the same vocab as the "
              "token itself. To set the morph from this MorphAnalysis, set from "
              "the string value with: `token.set_morph(str(other_morph))`.")
+    E1014 = ("Error loading DocBin data. It doesn't look like the data is in "
+             "DocBin (.spacy) format. If your data is in spaCy v2's JSON "
+             "training format, convert it using `python -m spacy convert "
+             "file.json .`.")
+    E1015 = ("Can't initialize model from config: no {value} found. For more "
+             "information, run: python -m spacy debug config config.cfg")
 
 
 # Deprecated model shortcuts, only used in errors and warnings

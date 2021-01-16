@@ -1,6 +1,7 @@
 # cython: profile=True, cdivision=True, infer_types=True
 from cymem.cymem cimport Pool, Address
 from libc.stdint cimport int32_t
+from libcpp.vector cimport vector
 
 from collections import defaultdict, Counter
 
@@ -8,22 +9,18 @@ from ...typedefs cimport hash_t, attr_t
 from ...strings cimport hash_string
 from ...structs cimport TokenC
 from ...tokens.doc cimport Doc, set_children_from_heads
+from ...tokens.token cimport MISSING_DEP
 from ...training.example cimport Example
 from .stateclass cimport StateClass
-from ._state cimport StateC
-
+from ._state cimport StateC, ArcC
 from ...errors import Errors
+from thinc.extra.search cimport Beam
 
-# Calculate cost as gold/not gold. We don't use scalar value anyway.
-cdef int BINARY_COSTS = 1
 cdef weight_t MIN_SCORE = -90000
 cdef attr_t SUBTOK_LABEL = hash_string(u'subtok')
 
 DEF NON_MONOTONIC = True
-DEF USE_BREAK = True
 
-# Break transition from here
-# http://www.aclweb.org/anthology/P13-1074
 cdef enum:
     SHIFT
     REDUCE
@@ -61,13 +58,16 @@ cdef struct GoldParseStateC:
     int32_t* n_kids
     int32_t length
     int32_t stride
+    weight_t push_cost
+    weight_t pop_cost
 
 
-cdef GoldParseStateC create_gold_state(Pool mem, StateClass stcls,
+cdef GoldParseStateC create_gold_state(Pool mem, const StateC* state,
         heads, labels, sent_starts) except *:
     cdef GoldParseStateC gs
     gs.length = len(heads)
     gs.stride = 1
+    assert gs.length > 0
     gs.labels = <attr_t*>mem.alloc(gs.length, sizeof(gs.labels[0]))
     gs.heads = <int32_t*>mem.alloc(gs.length, sizeof(gs.heads[0]))
     gs.n_kids = <int32_t*>mem.alloc(gs.length, sizeof(gs.n_kids[0]))
@@ -129,6 +129,7 @@ cdef GoldParseStateC create_gold_state(Pool mem, StateClass stcls,
                 1
             )
     # Make an array of pointers, pointing into the gs_kids_flat array.
+    assert gs.length > 0
     gs.kids = <int32_t**>mem.alloc(gs.length, sizeof(int32_t*))
     for i in range(gs.length):
         if gs.n_kids[i] != 0:
@@ -142,10 +143,12 @@ cdef GoldParseStateC create_gold_state(Pool mem, StateClass stcls,
             if head != i:
                 gs.kids[head][js[head]] = i
                 js[head] += 1
+    gs.push_cost = push_cost(state, &gs)
+    gs.pop_cost = pop_cost(state, &gs)
     return gs
 
 
-cdef void update_gold_state(GoldParseStateC* gs, StateClass stcls) nogil:
+cdef void update_gold_state(GoldParseStateC* gs, const StateC* s) nogil:
     for i in range(gs.length):
         gs.state_bits[i] = set_state_flag(
             gs.state_bits[i],
@@ -160,9 +163,9 @@ cdef void update_gold_state(GoldParseStateC* gs, StateClass stcls) nogil:
         gs.n_kids_in_stack[i] = 0
         gs.n_kids_in_buffer[i] = 0
 
-    for i in range(stcls.stack_depth()):
-        s_i = stcls.S(i)
-        if not is_head_unknown(gs, s_i):
+    for i in range(s.stack_depth()):
+        s_i = s.S(i)
+        if not is_head_unknown(gs, s_i) and gs.heads[s_i] != s_i:
             gs.n_kids_in_stack[gs.heads[s_i]] += 1
         for kid in gs.kids[s_i][:gs.n_kids[s_i]]:
             gs.state_bits[kid] = set_state_flag(
@@ -170,9 +173,11 @@ cdef void update_gold_state(GoldParseStateC* gs, StateClass stcls) nogil:
                 HEAD_IN_STACK,
                 1
             )
-    for i in range(stcls.buffer_length()):
-        b_i = stcls.B(i)
-        if not is_head_unknown(gs, b_i):
+    for i in range(s.buffer_length()):
+        b_i = s.B(i)
+        if s.is_sent_start(b_i):
+            break
+        if not is_head_unknown(gs, b_i) and gs.heads[b_i] != b_i:
             gs.n_kids_in_buffer[gs.heads[b_i]] += 1
         for kid in gs.kids[b_i][:gs.n_kids[b_i]]:
             gs.state_bits[kid] = set_state_flag(
@@ -180,6 +185,8 @@ cdef void update_gold_state(GoldParseStateC* gs, StateClass stcls) nogil:
                 HEAD_IN_BUFFER,
                 1
             )
+    gs.push_cost = push_cost(s, gs)
+    gs.pop_cost = pop_cost(s, gs)
 
 
 cdef class ArcEagerGold:
@@ -189,19 +196,44 @@ cdef class ArcEagerGold:
     def __init__(self, ArcEager moves, StateClass stcls, Example example):
         self.mem = Pool()
         heads, labels = example.get_aligned_parse(projectivize=True)
-        labels = [label if label is not None else "" for label in labels]
-        labels = [example.x.vocab.strings.add(label) for label in labels]
-        sent_starts = example.get_aligned("SENT_START")
-        assert len(heads) == len(labels) == len(sent_starts)
-        self.c = create_gold_state(self.mem, stcls, heads, labels, sent_starts)
+        labels = [example.x.vocab.strings.add(label) if label is not None else MISSING_DEP for label in labels]
+        sent_starts = _get_aligned_sent_starts(example)
+        assert len(heads) == len(labels) == len(sent_starts), (len(heads), len(labels), len(sent_starts))
+        self.c = create_gold_state(self.mem, stcls.c, heads, labels, sent_starts)
 
     def update(self, StateClass stcls):
-        update_gold_state(&self.c, stcls)
+        update_gold_state(&self.c, stcls.c)
+
+def _get_aligned_sent_starts(example):
+    """Get list of SENT_START attributes aligned to the predicted tokenization.
+    If the reference has not sentence starts, return a list of None values.
+
+    This function is slightly different from the one on Example, because we also
+    check whether the reference sentences align across multiple sentences,
+    and return missing values if they do. This prevents a problem where you have
+    the start of a sentence merged onto a token that belongs to two sentences.
+    """
+    if example.y.has_annotation("SENT_START"):
+        align = example.alignment.y2x
+        sent_starts = [False] * len(example.x)
+        seen_words = set()
+        for y_sent in example.y.sents:
+            x_indices = list(align[y_sent.start : y_sent.end].dataXd)
+            if any(x_idx in seen_words for x_idx in x_indices):
+                # If there are any tokens in X that align across two sentences,
+                # regard the sentence annotations as missing, as we can't
+                # reliably use them.
+                return [None] * len(example.x)
+            seen_words.update(x_indices)
+            sent_starts[x_indices[0]] = True
+        return sent_starts
+    else:
+        return [None] * len(example.x)
 
 
 cdef int check_state_gold(char state_bits, char flag) nogil:
     cdef char one = 1
-    return state_bits & (one << flag)
+    return 1 if (state_bits & (one << flag)) else 0
 
 
 cdef int set_state_flag(char state_bits, char flag, int value) nogil:
@@ -232,39 +264,28 @@ cdef int is_sent_start_unknown(const GoldParseStateC* gold, int i) nogil:
 
 # Helper functions for the arc-eager oracle
 
-cdef weight_t push_cost(StateClass stcls, const void* _gold, int target) nogil:
-    gold = <const GoldParseStateC*>_gold
+cdef weight_t push_cost(const StateC* state, const GoldParseStateC* gold) nogil:
     cdef weight_t cost = 0
-    if is_head_in_stack(gold, target):
+    b0 = state.B(0)
+    if b0 < 0:
+        return 9000
+    if is_head_in_stack(gold, b0):
         cost += 1
-    cost += gold.n_kids_in_stack[target]
-    if Break.is_valid(stcls.c, 0) and Break.move_cost(stcls, gold) == 0:
+    cost += gold.n_kids_in_stack[b0]
+    if Break.is_valid(state, 0) and is_sent_start(gold, state.B(1)):
         cost += 1
     return cost
 
 
-cdef weight_t pop_cost(StateClass stcls, const void* _gold, int target) nogil:
-    gold = <const GoldParseStateC*>_gold
+cdef weight_t pop_cost(const StateC* state, const GoldParseStateC* gold) nogil:
     cdef weight_t cost = 0
-    if is_head_in_buffer(gold, target):
+    s0 = state.S(0)
+    if s0 < 0:
+        return 9000
+    if is_head_in_buffer(gold, s0):
         cost += 1
-    cost += gold[0].n_kids_in_buffer[target]
-    if Break.is_valid(stcls.c, 0) and Break.move_cost(stcls, gold) == 0:
-        cost += 1
+    cost += gold.n_kids_in_buffer[s0]
     return cost
-
-
-cdef weight_t arc_cost(StateClass stcls, const void* _gold, int head, int child) nogil:
-    gold = <const GoldParseStateC*>_gold
-    if arc_is_gold(gold, head, child):
-        return 0
-    elif stcls.H(child) == gold.heads[child]:
-        return 1
-    # Head in buffer
-    elif is_head_in_buffer(gold, child):
-        return 1
-    else:
-        return 0
 
 
 cdef bint arc_is_gold(const GoldParseStateC* gold, int head, int child) nogil:
@@ -276,7 +297,7 @@ cdef bint arc_is_gold(const GoldParseStateC* gold, int head, int child) nogil:
         return False
 
 
-cdef bint label_is_gold(const GoldParseStateC* gold, int head, int child, attr_t label) nogil:
+cdef bint label_is_gold(const GoldParseStateC* gold, int child, attr_t label) nogil:
     if is_head_unknown(gold, child):
         return True
     elif label == 0:
@@ -292,218 +313,251 @@ cdef bint _is_gold_root(const GoldParseStateC* gold, int word) nogil:
 
 
 cdef class Shift:
+    """Move the first word of the buffer onto the stack and mark it as "shifted"
+
+    Validity:
+    * If stack is empty
+    * At least two words in sentence
+    * Word has not been shifted before
+
+    Cost: push_cost 
+
+    Action:
+    * Mark B[0] as 'shifted'
+    * Push stack
+    * Advance buffer
+    """
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
-        sent_start = st._sent[st.B_(0).l_edge].sent_start
-        return st.buffer_length() >= 2 and not st.shifted[st.B(0)] and sent_start != 1
+        if st.stack_depth() == 0:
+            return 1
+        elif st.buffer_length() < 2:
+            return 0
+        elif st.is_sent_start(st.B(0)):
+            return 0
+        elif st.is_unshiftable(st.B(0)):
+            return 0
+        else:
+            return 1
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
         st.push()
-        st.fast_forward()
 
     @staticmethod
-    cdef weight_t cost(StateClass st, const void* _gold, attr_t label) nogil:
+    cdef weight_t cost(const StateC* state, const void* _gold, attr_t label) nogil:
         gold = <const GoldParseStateC*>_gold
-        return Shift.move_cost(st, gold) + Shift.label_cost(st, gold, label)
-
-    @staticmethod
-    cdef inline weight_t move_cost(StateClass s, const void* _gold) nogil:
-        gold = <const GoldParseStateC*>_gold
-        return push_cost(s, gold, s.B(0))
-
-    @staticmethod
-    cdef inline weight_t label_cost(StateClass s, const void* _gold, attr_t label) nogil:
-        return 0
+        return gold.push_cost
 
 
 cdef class Reduce:
+    """
+    Pop from the stack. If it has no head and the stack isn't empty, place
+    it back on the buffer.
+
+    Validity:
+    * Stack not empty
+    * Buffer nt empty
+    * Stack depth 1 and cannot sent start l_edge(st.B(0))
+
+    Cost:
+    * If B[0] is the start of a sentence, cost is 0
+    * Arcs between stack and buffer
+    * If arc has no head, we're saving arcs between S[0] and S[1:], so decrement
+        cost by those arcs.
+    """
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
-        return st.stack_depth() >= 2
-
-    @staticmethod
-    cdef int transition(StateC* st, attr_t label) nogil:
-        if st.has_head(st.S(0)):
-            st.pop()
-        else:
-            st.unshift()
-        st.fast_forward()
-
-    @staticmethod
-    cdef weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
-        gold = <const GoldParseStateC*>_gold
-        return Reduce.move_cost(s, gold) + Reduce.label_cost(s, gold, label)
-
-    @staticmethod
-    cdef inline weight_t move_cost(StateClass st, const void* _gold) nogil:
-        gold = <const GoldParseStateC*>_gold
-        s0 = st.S(0)
-        cost = pop_cost(st, gold, s0)
-        return_to_buffer = not st.has_head(s0)
-        if return_to_buffer:
-            # Decrement cost for the arcs we save, as we'll be putting this
-            # back to the buffer
-            if is_head_in_stack(gold, s0):
-                cost -= 1
-            cost -= gold.n_kids_in_stack[s0]
-            if Break.is_valid(st.c, 0) and Break.move_cost(st, gold) == 0:
-                cost -= 1
-        return cost
-
-    @staticmethod
-    cdef inline weight_t label_cost(StateClass s, const void* gold, attr_t label) nogil:
-        return 0
-
-
-cdef class LeftArc:
-    @staticmethod
-    cdef bint is_valid(const StateC* st, attr_t label) nogil:
-        if label == SUBTOK_LABEL and st.S(0) != (st.B(0)-1):
-            return 0
-        sent_start = st._sent[st.B_(0).l_edge].sent_start
-        return sent_start != 1
-
-    @staticmethod
-    cdef int transition(StateC* st, attr_t label) nogil:
-        st.add_arc(st.B(0), st.S(0), label)
-        st.pop()
-        st.fast_forward()
-
-    @staticmethod
-    cdef inline weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
-        gold = <const GoldParseStateC*>_gold
-        return LeftArc.move_cost(s, gold) + LeftArc.label_cost(s, gold, label)
-
-    @staticmethod
-    cdef inline weight_t move_cost(StateClass s, const GoldParseStateC* gold) nogil:
-        cdef weight_t cost = 0
-        s0 = s.S(0)
-        b0 = s.B(0)
-        if arc_is_gold(gold, b0, s0):
-            # Have a negative cost if we 'recover' from the wrong dependency
-            return 0 if not s.has_head(s0) else -1
-        else:
-            # Account for deps we might lose between S0 and stack
-            if not s.has_head(s0):
-                cost += gold.n_kids_in_stack[s0]
-                if is_head_in_buffer(gold, s0):
-                    cost += 1
-            return cost + pop_cost(s, gold, s.S(0)) + arc_cost(s, gold, s.B(0), s.S(0))
-
-    @staticmethod
-    cdef inline weight_t label_cost(StateClass s, const GoldParseStateC* gold, attr_t label) nogil:
-        return arc_is_gold(gold, s.B(0), s.S(0)) and not label_is_gold(gold, s.B(0), s.S(0), label)
-
-
-cdef class RightArc:
-    @staticmethod
-    cdef bint is_valid(const StateC* st, attr_t label) nogil:
-        # If there's (perhaps partial) parse pre-set, don't allow cycle.
-        if label == SUBTOK_LABEL and st.S(0) != (st.B(0)-1):
-            return 0
-        sent_start = st._sent[st.B_(0).l_edge].sent_start
-        return sent_start != 1 and st.H(st.S(0)) != st.B(0)
-
-    @staticmethod
-    cdef int transition(StateC* st, attr_t label) nogil:
-        st.add_arc(st.S(0), st.B(0), label)
-        st.push()
-        st.fast_forward()
-
-    @staticmethod
-    cdef inline weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
-        gold = <const GoldParseStateC*>_gold
-        return RightArc.move_cost(s, gold) + RightArc.label_cost(s, gold, label)
-
-    @staticmethod
-    cdef inline weight_t move_cost(StateClass s, const void* _gold) nogil:
-        gold = <const GoldParseStateC*>_gold
-        if arc_is_gold(gold, s.S(0), s.B(0)):
-            return 0
-        elif s.c.shifted[s.B(0)]:
-            return push_cost(s, gold, s.B(0))
-        else:
-            return push_cost(s, gold, s.B(0)) + arc_cost(s, gold, s.S(0), s.B(0))
-
-    @staticmethod
-    cdef weight_t label_cost(StateClass s, const void* _gold, attr_t label) nogil:
-        gold = <const GoldParseStateC*>_gold
-        return arc_is_gold(gold, s.S(0), s.B(0)) and not label_is_gold(gold, s.S(0), s.B(0), label)
-
-
-cdef class Break:
-    @staticmethod
-    cdef bint is_valid(const StateC* st, attr_t label) nogil:
-        cdef int i
-        if not USE_BREAK:
+        if st.stack_depth() == 0:
             return False
-        elif st.at_break():
-            return False
-        elif st.stack_depth() < 1:
-            return False
-        elif st.B_(0).l_edge < 0:
-            return False
-        elif st._sent[st.B_(0).l_edge].sent_start < 0:
+        elif st.buffer_length() == 0:
+            return True
+        elif st.stack_depth() == 1 and st.cannot_sent_start(st.l_edge(st.B(0))):
             return False
         else:
             return True
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
-        st.set_break(st.B_(0).l_edge)
-        st.fast_forward()
-
-    @staticmethod
-    cdef weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
-        gold = <const GoldParseStateC*>_gold
-        return Break.move_cost(s, gold) + Break.label_cost(s, gold, label)
-
-    @staticmethod
-    cdef inline weight_t move_cost(StateClass s, const void* _gold) nogil:
-        gold = <const GoldParseStateC*>_gold
-        cost = 0
-        for i in range(s.stack_depth()):
-            S_i = s.S(i)
-            cost += gold.n_kids_in_buffer[S_i]
-            if is_head_in_buffer(gold, S_i):
-                cost += 1
-        # It's weird not to check the gold sentence boundaries but if we do,
-        # we can't account for "sunk costs", i.e. situations where we're already
-        # wrong.
-        s0_root = _get_root(s.S(0), gold)
-        b0_root = _get_root(s.B(0), gold)
-        if s0_root != b0_root or s0_root == -1 or b0_root == -1:
-            return cost
+        if st.has_head(st.S(0)) or st.stack_depth() == 1:
+            st.pop()
         else:
-            return cost + 1
+            st.unshift()
 
     @staticmethod
-    cdef inline weight_t label_cost(StateClass s, const void* gold, attr_t label) nogil:
-        return 0
+    cdef weight_t cost(const StateC* state, const void* _gold, attr_t label) nogil:
+        gold = <const GoldParseStateC*>_gold
+        if state.is_sent_start(state.B(0)):
+            return 0
+        s0 = state.S(0)
+        cost = gold.pop_cost
+        if not state.has_head(s0):
+            # Decrement cost for the arcs we save, as we'll be putting this
+            # back to the buffer
+            if is_head_in_stack(gold, s0):
+                cost -= 1
+            cost -= gold.n_kids_in_stack[s0]
+        return cost
 
-cdef int _get_root(int word, const GoldParseStateC* gold) nogil:
-    if is_head_unknown(gold, word):
-        return -1
-    while gold.heads[word] != word and word >= 0:
-        word = gold.heads[word]
-        if is_head_unknown(gold, word):
-            return -1
-    else:
-        return word
+
+cdef class LeftArc:
+    """Add an arc between B[0] and S[0], replacing the previous head of S[0] if
+    one is set. Pop S[0] from the stack.
+
+    Validity:
+    * len(S) >= 1
+    * len(B) >= 1
+    * not is_sent_start(B[0])
+
+    Cost:
+        pop_cost - Arc(B[0], S[0], label) + (Arc(S[1], S[0]) if H(S[0]) else Arcs(S, S[0]))
+    """
+    @staticmethod
+    cdef bint is_valid(const StateC* st, attr_t label) nogil:
+        if st.stack_depth() == 0:
+            return 0
+        elif st.buffer_length() == 0:
+            return 0
+        elif st.is_sent_start(st.B(0)):
+            return 0
+        elif label == SUBTOK_LABEL and st.S(0) != (st.B(0)-1):
+            return 0
+        else:
+            return 1
+
+    @staticmethod
+    cdef int transition(StateC* st, attr_t label) nogil:
+        st.add_arc(st.B(0), st.S(0), label)
+        # If we change the stack, it's okay to remove the shifted mark, as
+        # we can't get in an infinite loop this way.
+        st.set_reshiftable(st.B(0))
+        st.pop()
+
+    @staticmethod
+    cdef inline weight_t cost(const StateC* state, const void* _gold, attr_t label) nogil:
+        gold = <const GoldParseStateC*>_gold
+        cdef weight_t cost = gold.pop_cost
+        s0 = state.S(0)
+        s1 = state.S(1)
+        b0 = state.B(0)
+        if state.has_head(s0):
+            # Increment cost if we're clobbering a correct arc
+            cost += gold.heads[s0] == s1
+        else:
+            # If there's no head, we're losing arcs between S0 and S[1:].
+            cost += is_head_in_stack(gold, s0)
+            cost += gold.n_kids_in_stack[s0]
+        if b0 != -1 and s0 != -1 and gold.heads[s0] == b0:
+            cost -= 1
+            cost += not label_is_gold(gold, s0, label)
+        return cost
+
+
+cdef class RightArc:
+    """
+    Add an arc from S[0] to B[0]. Push B[0].
+
+    Validity:
+    * len(S) >= 1
+    * len(B) >= 1
+    * not is_sent_start(B[0])
+
+    Cost:
+        push_cost + (not shifted[b0] and Arc(B[1:], B[0])) - Arc(S[0], B[0], label)
+    """
+    @staticmethod
+    cdef bint is_valid(const StateC* st, attr_t label) nogil:
+        if st.stack_depth() == 0:
+            return 0
+        elif st.buffer_length() == 0:
+            return 0
+        elif st.is_sent_start(st.B(0)):
+            return 0
+        elif label == SUBTOK_LABEL and st.S(0) != (st.B(0)-1):
+            # If there's (perhaps partial) parse pre-set, don't allow cycle.
+            return 0
+        else:
+            return 1
+
+    @staticmethod
+    cdef int transition(StateC* st, attr_t label) nogil:
+        st.add_arc(st.S(0), st.B(0), label)
+        st.push()
+
+    @staticmethod
+    cdef inline weight_t cost(const StateC* state, const void* _gold, attr_t label) nogil:
+        gold = <const GoldParseStateC*>_gold
+        cost = gold.push_cost
+        s0 = state.S(0)
+        b0 = state.B(0)
+        if s0 != -1 and b0 != -1 and gold.heads[b0] == s0:
+            cost -= 1
+            cost += not label_is_gold(gold, b0, label)
+        elif is_head_in_buffer(gold, b0) and not state.is_unshiftable(b0):
+            cost += 1
+        return cost
+
+
+cdef class Break:
+    """Mark the second word of the buffer as the start of a 
+    sentence. 
+
+    Validity:
+    * len(buffer) >= 2
+    * B[1] == B[0] + 1
+    * not is_sent_start(B[1])
+    * not cannot_sent_start(B[1])
+
+    Action:
+    * mark_sent_start(B[1])
+
+    Cost:
+    * not is_sent_start(B[1])
+    * Arcs between B[0] and B[1:]
+    * Arcs between S and B[1]
+    """
+    @staticmethod
+    cdef bint is_valid(const StateC* st, attr_t label) nogil:
+        cdef int i
+        if st.buffer_length() < 2:
+            return False
+        elif st.B(1) != st.B(0) + 1:
+            return False
+        elif st.is_sent_start(st.B(1)):
+            return False
+        elif st.cannot_sent_start(st.B(1)):
+            return False
+        else:
+            return True
+
+    @staticmethod
+    cdef int transition(StateC* st, attr_t label) nogil:
+        st.set_sent_start(st.B(1), 1)
+
+    @staticmethod
+    cdef weight_t cost(const StateC* state, const void* _gold, attr_t label) nogil:
+        gold = <const GoldParseStateC*>_gold
+        cdef int b0 = state.B(0)
+        cdef int cost = 0
+        cdef int si
+        for i in range(state.stack_depth()):
+            si = state.S(i)
+            if is_head_in_buffer(gold, si):
+                cost += 1
+            cost += gold.n_kids_in_buffer[si]
+            # We need to score into B[1:], so subtract deps that are at b0
+            if gold.heads[b0] == si:
+                cost -= 1
+            if gold.heads[si] == b0:
+                cost -= 1
+        if not is_sent_start(gold, state.B(1)) \
+        and not is_sent_start_unknown(gold, state.B(1)):
+            cost += 1
+        return cost
 
 
 cdef void* _init_state(Pool mem, int length, void* tokens) except NULL:
     st = new StateC(<const TokenC*>tokens, length)
-    for i in range(st.length):
-        if st._sent[i].dep == 0:
-            st._sent[i].l_edge = i
-            st._sent[i].r_edge = i
-            st._sent[i].head = 0
-            st._sent[i].dep = 0
-            st._sent[i].l_kids = 0
-            st._sent[i].r_kids = 0
-    st.fast_forward()
     return <void*>st
 
 
@@ -515,6 +569,8 @@ cdef int _del_state(Pool mem, void* state, void* x) except -1:
 cdef class ArcEager(TransitionSystem):
     def __init__(self, *args, **kwargs):
         TransitionSystem.__init__(self, *args, **kwargs)
+        self.init_beam_state = _init_state
+        self.del_beam_state = _del_state
 
     @classmethod
     def get_actions(cls, **kwargs):
@@ -537,7 +593,7 @@ cdef class ArcEager(TransitionSystem):
                     label = 'ROOT'
                 if head == child:
                     actions[BREAK][label] += 1
-                elif head < child:
+                if head < child:
                     actions[RIGHT][label] += 1
                     actions[REDUCE][''] += 1
                 elif head > child:
@@ -567,8 +623,14 @@ cdef class ArcEager(TransitionSystem):
         t.do(state.c, t.label)
         return state
 
-    def is_gold_parse(self, StateClass state, gold):
-        raise NotImplementedError
+    def is_gold_parse(self, StateClass state, ArcEagerGold gold):
+        for i in range(state.c.length):
+            token = state.c.safe_get(i)
+            if not arc_is_gold(&gold.c, i, i+token.head):
+                return False
+            elif not label_is_gold(&gold.c, i, token.dep):
+                return False
+        return True
 
     def init_gold(self, StateClass state, Example example):
         gold = ArcEagerGold(self, state, example)
@@ -576,6 +638,7 @@ cdef class ArcEager(TransitionSystem):
         return gold
 
     def init_gold_batch(self, examples):
+        # TODO: Projectivity?
         all_states = self.init_batch([eg.predicted for eg in examples])
         golds = []
         states = []
@@ -662,25 +725,36 @@ cdef class ArcEager(TransitionSystem):
             raise ValueError(Errors.E019.format(action=move, src='arc_eager'))
         return t
 
-    cdef int initialize_state(self, StateC* st) nogil:
-        for i in range(st.length):
-            if st._sent[i].dep == 0:
-                st._sent[i].l_edge = i
-                st._sent[i].r_edge = i
-                st._sent[i].head = 0
-                st._sent[i].dep = 0
-                st._sent[i].l_kids = 0
-                st._sent[i].r_kids = 0
-        st.fast_forward()
-
-    cdef int finalize_state(self, StateC* st) nogil:
-        cdef int i
-        for i in range(st.length):
-            if st._sent[i].head == 0:
-                st._sent[i].dep = self.root_label
-
-    def finalize_doc(self, Doc doc):
+    def set_annotations(self, StateClass state, Doc doc):
+        for arc in state.arcs:
+            doc.c[arc["child"]].head = arc["head"] - arc["child"]
+            doc.c[arc["child"]].dep = arc["label"]
+        for i in range(doc.length):
+            if doc.c[i].head == 0:
+                doc.c[i].dep = self.root_label
         set_children_from_heads(doc.c, 0, doc.length)
+
+    def get_beam_parses(self, Beam beam):
+        parses = []
+        probs = beam.probs
+        for i in range(beam.size):
+            state = <StateC*>beam.at(i)
+            if state.is_final():
+                prob = probs[i]
+                parse = []
+                arcs = self.get_arcs(state)
+                if arcs:
+                    for arc in arcs:
+                        dep = arc["label"]
+                        label = self.strings[dep]
+                        parse.append((arc["head"], arc["child"], label))
+                    parses.append((prob, parse))
+        return parses
+
+    cdef get_arcs(self, StateC* state):
+        cdef vector[ArcC] arcs
+        state.get_arcs(&arcs)
+        return list(arcs)
 
     def has_gold(self, Example eg, start=0, end=None):
         for word in eg.y[start:end]:
@@ -690,7 +764,7 @@ cdef class ArcEager(TransitionSystem):
             return False
 
     cdef int set_valid(self, int* output, const StateC* st) nogil:
-        cdef bint[N_MOVES] is_valid
+        cdef int[N_MOVES] is_valid
         is_valid[SHIFT] = Shift.is_valid(st, 0)
         is_valid[REDUCE] = Reduce.is_valid(st, 0)
         is_valid[LEFT] = LeftArc.is_valid(st, 0)
@@ -710,30 +784,32 @@ cdef class ArcEager(TransitionSystem):
         gold_state = gold_.c
         n_gold = 0
         if self.c[i].is_valid(stcls.c, self.c[i].label):
-            cost = self.c[i].get_cost(stcls, &gold_state, self.c[i].label)
+            cost = self.c[i].get_cost(stcls.c, &gold_state, self.c[i].label)
         else:
             cost = 9000
         return cost
 
     cdef int set_costs(self, int* is_valid, weight_t* costs,
-                       StateClass stcls, gold) except -1:
+                       const StateC* state, gold) except -1:
         if not isinstance(gold, ArcEagerGold):
             raise TypeError(Errors.E909.format(name="ArcEagerGold"))
         cdef ArcEagerGold gold_ = gold
-        gold_.update(stcls)
         gold_state = gold_.c
+        update_gold_state(&gold_state, state)
+        self.set_valid(is_valid, state)
         cdef int n_gold = 0
         for i in range(self.n_moves):
-            if self.c[i].is_valid(stcls.c, self.c[i].label):
-                is_valid[i] = True
-                costs[i] = self.c[i].get_cost(stcls, &gold_state, self.c[i].label)
+            if is_valid[i]:
+                costs[i] = self.c[i].get_cost(state, &gold_state, self.c[i].label)
                 if costs[i] <= 0:
                     n_gold += 1
             else:
-                is_valid[i] = False
                 costs[i] = 9000
         if n_gold < 1:
-            raise ValueError
+            for i in range(self.n_moves):
+                print(self.get_class_name(i), is_valid[i], costs[i])
+            print("Gold sent starts?", is_sent_start(&gold_state, state.B(0)), is_sent_start(&gold_state, state.B(1)))
+            raise ValueError("Could not find gold transition - see logs above.")
 
     def get_oracle_sequence_from_state(self, StateClass state, ArcEagerGold gold, _debug=None):
         cdef int i
@@ -748,12 +824,13 @@ cdef class ArcEager(TransitionSystem):
         failed = False
         while not state.is_final():
             try:
-                self.set_costs(is_valid, costs, state, gold)
+                self.set_costs(is_valid, costs, state.c, gold)
             except ValueError:
                 failed = True
                 break
+            min_cost = min(costs[i] for i in range(self.n_moves))
             for i in range(self.n_moves):
-                if is_valid[i] and costs[i] <= 0:
+                if is_valid[i] and costs[i] <= min_cost:
                     action = self.c[i]
                     history.append(i)
                     s0 = state.S(0)
@@ -762,16 +839,14 @@ cdef class ArcEager(TransitionSystem):
                         example = _debug
                         debug_log.append(" ".join((
                             self.get_class_name(i),
-                            "S0=", (example.x[s0].text if s0 >= 0 else "__"),
-                            "B0=", (example.x[b0].text if b0 >= 0 else "__"),
-                            "S0 head?", str(state.has_head(state.S(0))),
+                            state.print_state()
                         )))
                     action.do(state.c, action.label)
                     break
             else:
                 failed = False
                 break
-        if failed:
+        if failed and _debug not in (False, None):
             example = _debug
             print("Actions")
             for i in range(self.n_moves):
@@ -783,6 +858,8 @@ cdef class ArcEager(TransitionSystem):
             print("Aligned heads")
             for i, head in enumerate(aligned_heads):
                 print(example.x[i], example.x[head] if head is not None else "__")
+            print("Aligned sent starts")
+            print(example.get_aligned_sent_starts())
 
             print("Predicted tokens")
             print([(w.i, w.text) for w in example.x])

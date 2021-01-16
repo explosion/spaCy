@@ -159,8 +159,12 @@ def test_pipe_class_component_model():
         "model": {
             "@architectures": "spacy.TextCatEnsemble.v2",
             "tok2vec": DEFAULT_TOK2VEC_MODEL,
-            "linear_model": {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": False, "ngram_size": 1,
-                      "no_output_layer": False},
+            "linear_model": {
+                "@architectures": "spacy.TextCatBOW.v1",
+                "exclusive_classes": False,
+                "ngram_size": 1,
+                "no_output_layer": False,
+            },
         },
         "value1": 10,
     }

@@ -4,8 +4,8 @@ from ...language import Language
 
 
 class CzechDefaults(Language.Defaults):
-    stop_words = STOP_WORDS
     lex_attr_getters = LEX_ATTRS
+    stop_words = STOP_WORDS
 
 
 class Czech(Language):

@@ -6,7 +6,7 @@ import classNames from 'classnames'
 import Link from './link'
 import Grid from './grid'
 import Newsletter from './newsletter'
-import { ReactComponent as ExplosionLogo } from '../images/explosion.svg'
+import ExplosionLogo from '-!svg-react-loader!../images/explosion.svg'
 import classes from '../styles/footer.module.sass'
 
 export default function Footer({ wide = false }) {

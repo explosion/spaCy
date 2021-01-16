@@ -311,10 +311,10 @@ cdef class DependencyMatcher:
                     for matched_tree in self._get_matches(doc, tree, tokens_to_key, keys_to_position):
                         matched_key_trees.append((key, matched_tree))
 
-            for i, (match_id, nodes) in enumerate(matched_key_trees):
-                on_match = self._callbacks.get(match_id)
-                if on_match is not None:
-                    on_match(self, doc, i, matched_key_trees)
+        for i, (match_id, nodes) in enumerate(matched_key_trees):
+            on_match = self._callbacks.get(match_id)
+            if on_match is not None:
+                on_match(self, doc, i, matched_key_trees)
 
         # Clear cache, this is needed to avoid a too-large memory footprint if the same
         # DependencyMatcher instance is used to process multiple documents
