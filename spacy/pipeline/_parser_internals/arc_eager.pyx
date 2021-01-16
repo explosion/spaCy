@@ -197,7 +197,7 @@ cdef class ArcEagerGold:
         self.mem = Pool()
         heads, labels = example.get_aligned_parse(projectivize=True)
         labels = [example.x.vocab.strings.add(label) if label is not None else MISSING_DEP for label in labels]
-        sent_starts = example.get_aligned_sent_starts()
+        sent_starts = _get_aligned_sent_starts(example)
         assert len(heads) == len(labels) == len(sent_starts), (len(heads), len(labels), len(sent_starts))
         self.c = create_gold_state(self.mem, stcls.c, heads, labels, sent_starts)
 
@@ -812,6 +812,7 @@ cdef class ArcEager(TransitionSystem):
             raise ValueError("Could not find gold transition - see logs above.")
 
     def get_oracle_sequence_from_state(self, StateClass state, ArcEagerGold gold, _debug=None):
+        assert _debug is not None
         cdef int i
         cdef Pool mem = Pool()
         # n_moves should not be zero at this point, but make sure to avoid zero-length mem alloc
@@ -846,7 +847,7 @@ cdef class ArcEager(TransitionSystem):
             else:
                 failed = False
                 break
-        if failed:
+        if failed and _debug not in (False, None):
             example = _debug
             print("Actions")
             for i in range(self.n_moves):
