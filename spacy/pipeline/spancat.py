@@ -1,11 +1,11 @@
 import numpy
 from typing import List, Callable, Tuple, Optional, Iterable
 from thinc.api import Config, Model, get_current_ops, set_dropout_rate
-from thinc.types import Ragged, Ints1d, Ints2d, Floats2d
+from thinc.types import Ragged, Ints2d, Floats2d
 from ..language import Language
 from .trainable_pipe import TrainablePipe
 from ..tokens import Doc, SpanGroup, Span
-from ..training import Example, validate_examples, validate_get_examples
+from ..training import Example, validate_examples
 from ..util import registry
 
 
