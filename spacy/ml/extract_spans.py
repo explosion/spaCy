@@ -31,6 +31,7 @@ def forward(
     """Get subsequences from source vectors."""
     ops = model.ops
     X, spans = source_spans
+    assert spans.dataXd.ndim == 2
     indices = _get_span_indices(ops, spans, X.lengths)
     Y = Ragged(X.dataXd[indices], spans.dataXd[:, 1] - spans.dataXd[:, 0])
     x_shape = X.dataXd.shape
@@ -53,7 +54,7 @@ def _get_span_indices(ops, spans: Ragged, lengths: Ints1d) -> Ints1d:
     offset = 0
     for i, length in enumerate(lengths):
         spans_i = spans[i].dataXd + offset
-        for start, end in spans_i:
-            indices.append(ops.xp.arange(start, end))
+        for i in range(spans_i.shape[0]):
+            indices.append(ops.xp.arange(spans_i[i, 0], spans_i[i, 1]))
         offset += length
     return ops.flatten(indices)
