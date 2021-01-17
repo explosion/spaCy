@@ -217,11 +217,10 @@ def test_extract_spans_forward_backward():
         model.ops.asarray([[0, 3], [2, 3], [5, 7]], dtype="i"),
         model.ops.asarray([2, 1], dtype="i")
     )
-    (Y, spans2), backprop = model.begin_update((X, spans))
-    assert spans is spans2
+    Y, backprop = model.begin_update((X, spans))
     assert list(Y.lengths) == [3, 1, 2]
     assert Y.dataXd.shape == (6, 4)
-    dX, spans3 = backprop(Y)
-    assert spans3 is spans
+    dX, spans2 = backprop(Y)
+    assert spans2 is spans
     assert dX.dataXd.shape == X.dataXd.shape
     assert list(dX.lengths) == list(X.lengths)

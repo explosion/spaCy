@@ -27,7 +27,7 @@ def forward(
     model: Model,
     source_spans: Tuple[Ragged, Ragged],
     is_train: bool
-) -> Tuple[Ragged, Ragged]:
+) -> Ragged:
     """Get subsequences from source vectors."""
     ops = model.ops
     X, spans = source_spans
@@ -41,7 +41,7 @@ def forward(
         ops.scatter_add(dX.dataXd, indices, dY.dataXd)
         return (dX, spans)
 
-    return (Y, spans), backprop_windows
+    return Y, backprop_windows
 
 
 def _get_span_indices(ops, spans: Ragged, lengths: Ints1d) -> Ints1d:
