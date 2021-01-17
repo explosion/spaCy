@@ -1,6 +1,6 @@
 from typing import List, Tuple
 from thinc.api import Model, with_getitem, chain, list2ragged, Logistic
-from thinc.api import Maxout
+from thinc.api import Maxout, Relu, Linear, Softmax
 from thinc.types import Ragged, Floats2d
 from ...util import registry
 from ...tokens import Doc
@@ -8,8 +8,12 @@ from ..extract_spans import extract_spans
 
 
 @registry.architectures.register("spacy.MaxoutLogistic.v1")
-def build_MaxoutLogistic(nI=None, nO=None, pieces=3):
-    return chain(Maxout(nI=nI, nO=nO, pieces=pieces), Logistic())
+def build_MaxoutLogistic(nI=None, nO=None, pieces=2):
+    return chain(
+        Maxout(nI=nI, nO=nI, normalize=False),
+        Linear(nO=nO, nI=nI),
+        Logistic()
+    )
 
 
 @registry.architectures.register("spacy.SpanCategorizer.v1")
