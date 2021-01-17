@@ -12,7 +12,7 @@ from ..util import registry
 spancat_default_config = """
 [model]
 @architectures = "spacy.SpanCategorizer.v1"
-reducer = {"@layers": "reduce_sum.v1"}
+reducer = {"@layers": "reduce_max.v1"}
 scorer = {"@architectures": "spacy.MaxoutLogistic.v1"}
 
 [model.tok2vec]
