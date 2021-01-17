@@ -513,7 +513,7 @@ def minibatch(items, size=8):
         size_ = size
     items = iter(items)
     while True:
-        batch_size = next(size_)
+        batch_size = next(size_, 0)  # StopIteration isn't handled in generators in Python >= 3.7.
         batch = list(itertools.islice(items, int(batch_size)))
         if len(batch) == 0:
             break
