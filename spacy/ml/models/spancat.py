@@ -1,6 +1,6 @@
 from typing import List, Tuple
 from thinc.api import Model, with_getitem, chain, list2ragged, Logistic
-from thinc.api import Maxout, Relu, Linear, Softmax
+from thinc.api import Maxout, Linear
 from thinc.types import Ragged, Floats2d
 from ...util import registry
 from ...tokens import Doc
