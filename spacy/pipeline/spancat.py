@@ -1,14 +1,18 @@
-from thinc.v2v import Maxout, Affine, Model
-from thinc.t2v import Pooling, sum_pool
-from thinc.api import layerize, chain
-from thinc.misc import LayerNorm, Residual
-from .pipes import Pipe
-from .._ml import logistic, zero_init, Tok2Vec
+import numpy
+from typing import List, Callable, Tuple, Optional, Iterable
+from thinc.api import Config, Model, get_current_ops, set_dropout_rate
+from thinc.types import Ragged, Ints1d, Ints2d, Floats2d
+from ..language import Language
+from .trainable_pipe import TrainablePipe
+from ..tokens import Doc, SpanGroup, Span
+from ..training import Example, validate_examples, validate_get_examples
+from ..util import registry
+
 
 spancat_default_config = """
 [model]
 @architectures = "spacy.SpanCategorizer.v1"
-reducer = {"@architectures": "reduce_mean.v1"}
+reducer = {"@layers": "reduce_sum.v1"}
 scorer = {"@architectures": "spacy.MaxoutLogistic.v1"}
 
 [model.tok2vec]
@@ -28,20 +32,56 @@ window_size = 1
 maxout_pieces = 3
 depth = 2
 """
-DEFAULT_MULTI_TEXTCAT_MODEL = Config().from_str(multi_label_default_config)["model"]
 
+DEFAULT_SPANCAT_MODEL = Config().from_str(spancat_default_config)["model"]
+
+
+@registry.misc("ngram_suggester.v1")
+def build_ngram_suggester(sizes: List[int]) -> Ragged:
+    """Suggest all spans of the given lengths. Spans are returned as a ragged
+    array of integers. The array has two columns, indicating the start and end
+    position."""
+    def ngram_suggester(docs: List[Doc], *, ops=None) -> Ragged:
+        if ops is None:
+            ops = get_current_ops()
+        spans = []
+        lengths = []
+        for doc in docs:
+            starts = ops.xp.arange(len(doc), dtype="i")
+            starts = starts.reshape((-1, 1))
+            length = 0
+            for size in sizes:
+                if size < len(doc):
+                    starts_size = starts[:-size]
+                    spans.append(ops.xp.hstack((starts_size, starts_size+size)))
+                    length += spans[-1].shape[0]
+                assert spans[-1].ndim == 2, spans[-1].shape
+            lengths.append(length)
+        output = Ragged(ops.xp.vstack(spans), ops.asarray(lengths, dtype="i"))
+        assert output.dataXd.ndim == 2
+        return output
+    return ngram_suggester
 
 
 @Language.factory(
     "spancat",
     assigns=["doc.spans"],
-    default_config={},
+    default_config={
+        "threshold": 0.5,
+        "spans_key": "spans",
+        "max_positive": None,
+        "model": DEFAULT_SPANCAT_MODEL,
+        "suggester": {
+            "@misc": "ngram_suggester.v1",
+            "sizes": [1, 2]
+        }
+    },
     default_score_weights={},
 )
 def make_spancat(
     nlp: Language,
     name: str,
-    suggester: Callable[List[Doc], Ragged],
+    suggester: Callable[[List[Doc]], Ragged],
     model: Model[Tuple[List[Doc], Ragged], List[Ragged]],
     spans_key: str,
     threshold: float=0.5,
@@ -73,7 +113,7 @@ def make_spancat(
         model,
         spans_key,
         threshold=threshold,
-        max_positive=max_positive
+        max_positive=max_positive,
         name=name,
     )
 
@@ -100,25 +140,41 @@ class SpanCategorizer(TrainablePipe):
         self.vocab = vocab
         self.suggester = suggester
         self.model = model
+        self.name = name
+
+    @property
+    def key(self):
+        return self.cfg["spans_key"]
+
+    def add_label(self, label: str):
+        if label not in self.cfg["labels"]:
+            self.cfg["labels"].append(label)
+
+    @property
+    def labels(self):
+        return self.cfg["labels"]
 
     def predict(self, docs, drop=0.0):
-        indices = self.suggester(docs)
+        indices = self.suggester(docs, ops=self.model.ops)
         scores = self.model.predict((docs, indices))
         return (indices, scores)
 
     def set_annotations(self, docs, indices_scores):
         labels = self.labels
         indices, scores = indices_scores
+        offset = 0
         for i, doc in enumerate(docs):
+            indices_i = indices[i].dataXd
             doc.spans[self.key] = self._make_span_group(
                 doc,
-                indices[i].dataXd,
-                scores[i].dataXd,
+                indices_i,
+                scores[offset:offset+indices.lengths[i]],
                 labels
             )
+            offset += indices.lengths[i]
         return docs
 
-    def update(self, examples, sgd=None, drop=0.0, losses=None):
+    def update(self, examples, sgd=None, drop=0.0, losses=None, set_annotations=False):
         if losses is None:
             losses = {}
         losses.setdefault(self.name, 0.0)
@@ -128,7 +184,7 @@ class SpanCategorizer(TrainablePipe):
             # Handle cases where there are no tokens in any docs.
             return losses
         docs = [eg.predicted for eg in examples]
-        spans = self.suggester(docs)
+        spans = self.suggester(docs, ops=self.model.ops)
         if spans.lengths.sum() == 0:
             return losses
         set_dropout_rate(self.model, drop)
@@ -150,7 +206,10 @@ class SpanCategorizer(TrainablePipe):
             # so that we can adjust the gradient for predictions that were 
             # in the gold standard.
             spans_index = {}
-            for j, (start, end) in enumerate(spans[i]):
+            spans_i = spans[i].dataXd
+            for j in range(spans.lengths[i]):
+                start = int(spans_i[j, 0])
+                end = int(spans_i[j, 1])
                 spans_index[(start, end)] = offset + j
             for gold_span in self._get_aligned_spans(eg):
                 key = (gold_span.start, gold_span.end)
@@ -161,7 +220,7 @@ class SpanCategorizer(TrainablePipe):
             # The target is a flat array for all docs. Track the position
             # we're at within the flat array.
             offset += spans.lengths[i]
-        target = model.ops.asarray(target)
+        target = self.model.ops.asarray(target, dtype="f")
         # The target will have the values 0 (for untrue predictions) or 1
         # (for true predictions).
         # The scores should be in the range [0, 1].
@@ -169,7 +228,7 @@ class SpanCategorizer(TrainablePipe):
         # will be -0.1 (0.9 - 1.0).
         # If the prediction is 0.9 and it's false, the gradient will be
         # 0.9 (0.9 - 0.0)
-        d_scores = scores - target
+        d_scores = (scores - target) / target.shape[0]
         loss = float((d_scores**2).sum())
         return loss, d_scores
 
@@ -183,12 +242,23 @@ class SpanCategorizer(TrainablePipe):
         subbatch = []
         for eg in get_examples():
             for span in eg.reference.spans[self.key]:
-                self.add_label(label)
+                self.add_label(span.label_)
             if len(subbatch) < 10:
                 subbatch.append(eg)
-        docs = [eg.x for eg in subbatch]
-        Ys = self._get_aligned_spans([eg.y for y in subbatch])
-        self.model.initialize((docs, self.suggester(docs)), Ys)
+        if subbatch:
+            docs = [eg.x for eg in subbatch]
+            spans = self.suggester(docs)
+            Y = self.model.ops.alloc2f(spans.dataXd.shape[0], len(self.labels))
+            self.model.initialize(X=(docs, spans), Y=Y)
+        else:
+            self.model.initialize()
+
+    def _validate_categories(self, examples):
+        # TODO
+        pass
+
+    def _get_aligned_spans(self, eg):
+        return eg.get_aligned_spans_y2x(eg.reference.spans.get(self.key, []))
 
     def _make_span_group(
         self,
@@ -198,14 +268,18 @@ class SpanCategorizer(TrainablePipe):
         labels: List[str]
     ):
         spans = SpanGroup(doc, name=self.key)
-        for i, (start, end) in enumerate(indices):
+        max_positive = self.cfg["max_positive"]
+        threshold = self.cfg["threshold"]
+        for i in range(indices.shape[0]):
+            start = int(indices[i, 0])
+            end = int(indices[i, 1])
             positives = []
             for j, score in enumerate(scores[i]):
-                if score >= self.positive:
+                if score >= threshold:
                     positives.append((score, start, end, labels[j]))
             positives.sort(reverse=True)
-            if self.max_positive:
-                positives = positives[:self.max_positive]
+            if max_positive:
+                positives = positives[:max_positive]
             for score, start, end, label in positives:
                 spans.append(Span(doc, start, end, label=label))
         return spans
