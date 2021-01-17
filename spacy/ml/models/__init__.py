@@ -4,3 +4,4 @@ from .parser import *  # noqa
 from .tagger import *  # noqa
 from .textcat import *  # noqa
 from .tok2vec import *  # noqa
+from .spancat import * # noqa
