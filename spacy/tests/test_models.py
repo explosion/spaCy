@@ -1,11 +1,13 @@
 from typing import List
 import pytest
 from thinc.api import fix_random_seed, Adam, set_dropout_rate
+from thinc.api import Logistic, reduce_mean, Relu, chain
 from thinc.types import Ragged
 from numpy.testing import assert_array_equal
 import numpy
 from spacy.ml.models import build_Tok2Vec_model, MultiHashEmbed, MaxoutWindowEncoder
 from spacy.ml.models import build_bow_text_classifier, build_simple_cnn_text_classifier
+from spacy.ml.models import build_spancat_model
 from spacy.ml.staticvectors import StaticVectors
 from spacy.ml.extract_spans import extract_spans, _get_span_indices
 from spacy.lang.en import English
@@ -224,3 +226,36 @@ def test_extract_spans_forward_backward():
     assert spans2 is spans
     assert dX.dataXd.shape == X.dataXd.shape
     assert list(dX.lengths) == list(X.lengths)
+
+
+def test_spancat_model_init():
+    model = build_spancat_model(
+        build_Tok2Vec_model(**get_tok2vec_kwargs()),
+        reduce_mean(),
+        Logistic()
+    )
+    model.initialize()
+
+
+def test_spancat_model_forward_backward(nO=5):
+    tok2vec = build_Tok2Vec_model(**get_tok2vec_kwargs())
+    docs = get_docs()
+    spans_list = []
+    lengths = []
+    for doc in docs:
+        spans_list.append(doc[:2])
+        spans_list.append(doc[1:4])
+        lengths.append(2)
+    spans = Ragged(
+        tok2vec.ops.asarray([[s.start, s.end] for s in spans_list], dtype="i"),
+        tok2vec.ops.asarray(lengths, dtype="i")
+    )
+    model = build_spancat_model(
+        tok2vec,
+        reduce_mean(),
+        chain(Relu(nO=nO), Logistic())
+    ).initialize(X=(docs, spans))
+
+    Y, backprop = model((docs, spans), is_train=True)
+    assert Y.shape == (spans.dataXd.shape[0], nO)
+    backprop(Y)
