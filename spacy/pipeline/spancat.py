@@ -5,6 +5,32 @@ from thinc.misc import LayerNorm, Residual
 from .pipes import Pipe
 from .._ml import logistic, zero_init, Tok2Vec
 
+spancat_default_config = """
+[model]
+@architectures = "spacy.SpanCategorizer.v1"
+reducer = {"@architectures": "reduce_mean.v1"}
+scorer = {"@architectures": "spacy.MaxoutLogistic.v1"}
+
+[model.tok2vec]
+@architectures = "spacy.Tok2Vec.v1"
+
+[model.tok2vec.embed]
+@architectures = "spacy.MultiHashEmbed.v1"
+width = 64
+rows = [2000, 2000, 1000, 1000, 1000, 1000]
+attrs = ["ORTH", "LOWER", "PREFIX", "SUFFIX", "SHAPE", "ID"]
+include_static_vectors = false
+
+[model.tok2vec.encode]
+@architectures = "spacy.MaxoutWindowEncoder.v1"
+width = ${model.tok2vec.embed.width}
+window_size = 1
+maxout_pieces = 3
+depth = 2
+"""
+DEFAULT_MULTI_TEXTCAT_MODEL = Config().from_str(multi_label_default_config)["model"]
+
+
 
 @Language.factory(
     "spancat",
@@ -28,15 +54,18 @@ def make_spancat(
     suggester (Callable[List[Doc], Ragged]): A function that suggests spans.
         Spans are returned as a ragged array with two integer columns, for the
         start and end positions.
-    model (Model[Tuple[List[Doc], Ragged], Ragged]): A model instance that
+    model (Model[Tuple[List[Doc], Ragged], Floats2d]): A model instance that
         is given a a list of documents and (start, end) indices representing
-        candidate span offsets. The model predicts a score for each category
+        candidate span offsets. The model predicts a probability for each category
         for each span.
     spans_key (str): Key of the doc.spans dict to save the spans under. During
         initialization and training, the component will look for spans on the
         reference document under the same key.
-    threshold (float): 
-    max_positive (int):
+    threshold (float): Minimum probability to consider a prediction positive.
+        Spans with a positive prediction will be saved on the Doc. Defaults to
+        0.5.
+    max_positive (int): Maximum number of labels to consider positive per span.
+        Defaults to None, indicating no limit.
     """
     return SpanCategorizer(
         nlp.vocab,
@@ -57,7 +86,7 @@ class SpanCategorizer(TrainablePipe):
         vocab,
         suggester,
         model,
-        annotation_setter,
+        spans_key,
         name="spancat",
         threshold=0.5,
         max_positive=None
@@ -91,31 +120,58 @@ class SpanCategorizer(TrainablePipe):
 
     def update(self, examples, sgd=None, drop=0.0, losses=None):
         if losses is None:
-            losses = {self.name: 0.0}
-        set_dropout_rate(self.model, drop)
-        docs = [example.x for example in examples]
+            losses = {}
+        losses.setdefault(self.name, 0.0)
+        validate_examples(examples, "SpanCategorizer.update")
+        self._validate_categories(examples)
+        if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
+            # Handle cases where there are no tokens in any docs.
+            return losses
+        docs = [eg.predicted for eg in examples]
         spans = self.suggester(docs)
-        spans_scores, backprop_scores = self.model((docs, spans))
-        d_scores = self.get_loss(examples, spans_scores)
+        if spans.lengths.sum() == 0:
+            return losses
+        set_dropout_rate(self.model, drop)
+        scores, backprop_scores = self.model.begin_update((docs, spans))
+        loss, d_scores = self.get_loss(examples, (spans, scores))
         backprop_scores(d_scores)
+        if sgd is not None:
+            self.finish_update(sgd)
+        losses[self.name] += loss
         return losses
 
-    def get_loss(self, examples, spans_scores):
-        """Predict what % of a span's tokens are in a
-        gold-standard span of a given type, in order to give partial credit"""
-        # TODO: This is almost surely all wrong? It's cut and paste from the
-        # previous code.
+    def get_loss(self, examples, spans_scores: Tuple[Ragged, Ragged]):
         spans, scores = spans_scores
-        token_label_matrix = _get_token_label_matrix(
-            [self._get_aligned_spans(eg) for eg in examples],
-            [len(eg.x) for eg in examples],
-            self.labels
-        )
-        d_scores = numpy.zeros(scores.shape, dtype=scores.dtype)
-        for i, (start, end) in enumerate(spans):
-            target = token_label_matrix[start:end].sum(axis=0)
-            d_scores[i] = scores - target
-        return self.model.ops.asarray(d_scores)
+        label_map = {label: i for i, label in enumerate(self.labels)}
+        target = numpy.zeros(scores.shape, dtype=scores.dtype)
+        offset = 0 
+        for i, eg in enumerate(examples):
+            # Map (start, end) offset of spans to the row in the d_scores array,
+            # so that we can adjust the gradient for predictions that were 
+            # in the gold standard.
+            spans_index = {}
+            for j, (start, end) in enumerate(spans[i]):
+                spans_index[(start, end)] = offset + j
+            for gold_span in self._get_aligned_spans(eg):
+                key = (gold_span.start, gold_span.end)
+                if key in spans_index:
+                    row = spans_index[key]
+                    k = label_map[gold_span.label_]
+                    target[row, k] = 1.0
+            # The target is a flat array for all docs. Track the position
+            # we're at within the flat array.
+            offset += spans.lengths[i]
+        target = model.ops.asarray(target)
+        # The target will have the values 0 (for untrue predictions) or 1
+        # (for true predictions).
+        # The scores should be in the range [0, 1].
+        # If the prediction is 0.9 and it's true, the gradient
+        # will be -0.1 (0.9 - 1.0).
+        # If the prediction is 0.9 and it's false, the gradient will be
+        # 0.9 (0.9 - 0.0)
+        d_scores = scores - target
+        loss = float((d_scores**2).sum())
+        return loss, d_scores
 
     def initialize(
         self,
@@ -151,49 +207,5 @@ class SpanCategorizer(TrainablePipe):
             if self.max_positive:
                 positives = positives[:self.max_positive]
             for score, start, end, label in positives:
-                spans.append(Span(doc, start, end, label))
+                spans.append(Span(doc, start, end, label=label))
         return spans
-
-
-def _get_token_label_matrix(gold_phrases, lengths, labels):
-    """Figure out how each token should be labelled w.r.t. some gold-standard
-    spans, where the labels indicate whether that token is part of the span."""
-    output = numpy.zeros((sum(lengths), len(labels)), dtype="i")
-    label2class = {label: i for i, label in enumerate(labels)}
-    offset = 0
-    for doc_phrases, length in gold_phrases:
-        for phrase in phrases:
-            clas = label2class[phrase.label_]
-            for i in range(phrase.start, phrase.end):
-                output[offset + i, clas] = 1
-        offset += length
-    return output
-
-"""
-    def get_spans(self, docs):
-        if self.span_getter is not None:
-            return self.span_getter(docs)
-        spans = []
-        offset = 0
-        for doc in docs:
-            spans.extend(_get_all_spans(len(doc), self.max_length, offset=offset))
-            offset += len(doc)
-        return spans
-
-
-        backprop_scores(d_scores)
-
-        for indices, starts, length in _batch_spans_by_length(spans):
-            X = _get_span_batch(tokvecs, starts, length)
-            Y, backprop = self.model.spans2scores.begin_update(X, drop=drop)
-            dY = self.get_loss((indices, Y), token_label_matrix)
-            dX = backprop(dY, sgd=get_grads)
-            for i, start in enumerate(starts):
-                d_tokvecs[start : start + length] += dX[i]
-            losses[self.name] += (dY ** 2).sum()
-        backprop_tokvecs(d_tokvecs, sgd=get_grads)
-        if sgd is not None:
-            for key, (W, dW) in grads.items():
-                sgd(W, dW, key=key)
-        return losses
-"""
