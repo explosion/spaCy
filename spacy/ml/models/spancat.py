@@ -1,18 +1,37 @@
 from typing import List, Tuple
 from thinc.api import Model, with_getitem, chain, list2ragged, Logistic
-from thinc.api import Maxout, Linear
+from thinc.api import Maxout, Linear, Relu, Mish, ParametricAttention, concatenate
+from thinc.api import reduce_mean, reduce_max
+# TODO: Uncomment these when next Thinc makes them available.
+#from thinc.api import reduce_first, reduce_last
+from thinc.api import zero_init, residual
 from thinc.types import Ragged, Floats2d
 from ...util import registry
 from ...tokens import Doc
 from ..extract_spans import extract_spans
 
 
-@registry.architectures.register("spacy.MaxoutLogistic.v1")
-def build_MaxoutLogistic(nI=None, nO=None, pieces=2):
+@registry.architectures.register("spacy.LinearLogistic.v1")
+def build_linear_logistic(nO=None, nI=None):
+    """An output layer for multi-label classification. It uses a linear layer
+    followed by a logistic activation.
+    """
     return chain(
-        Maxout(nI=nI, nO=nI, normalize=False),
-        Linear(nO=nO, nI=nI),
+        Linear(nO=nO, nI=nI, init_W=zero_init),
         Logistic()
+    )
+
+
+@registry.architectures.register("spacy.mean_max_reducer.v1")
+def build_mean_max_reducer(hidden_size: int):
+    """Reduce sequences by concatenating their mean and max pooled vectors,
+    and then combine the concatenated vectors with a hidden layer.
+    """
+    return chain(
+        # TODO: Add reduce_first and reduce_last when Thinc has them.
+        #concatenate(reduce_last(), reduce_first(), reduce_mean(), reduce_max()),
+        concatenate(reduce_mean(), reduce_max()),
+        Maxout(nO=hidden_size, normalize=True, dropout=0.0)
     )
 
 
