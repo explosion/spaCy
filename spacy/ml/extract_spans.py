@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Callable
 from thinc.api import Model
 from thinc.types import Ragged, Ints1d
 
@@ -9,13 +9,7 @@ def extract_spans() -> Model[Tuple[Ragged, Ragged], Ragged]:
     extracted spans.
     """
     return Model(
-        "extract_spans",
-        forward,
-        layers=[],
-        refs={},
-        attrs={},
-        dims={},
-        init=init
+        "extract_spans", forward, layers=[], refs={}, attrs={}, dims={}, init=init
     )
 
 
@@ -24,9 +18,7 @@ def init(model, X=None, Y=None):
 
 
 def forward(
-    model: Model,
-    source_spans: Tuple[Ragged, Ragged],
-    is_train: bool
+    model: Model, source_spans: Tuple[Ragged, Ragged], is_train: bool
 ) -> Tuple[Ragged, Callable]:
     """Get subsequences from source vectors."""
     ops = model.ops
