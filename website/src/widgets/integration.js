@@ -2,12 +2,12 @@ import React from 'react'
 
 import Card from '../components/card'
 
-import { ReactComponent as DVCLogo } from '../images/logos/dvc.svg'
-import { ReactComponent as ProdigyLogo } from '../images/logos/prodigy.svg'
-import { ReactComponent as StreamlitLogo } from '../images/logos/streamlit.svg'
-import { ReactComponent as FastAPILogo } from '../images/logos/fastapi.svg'
-import { ReactComponent as WandBLogo } from '../images/logos/wandb.svg'
-import { ReactComponent as RayLogo } from '../images/logos/ray.svg'
+import DVCLogo from '-!svg-react-loader!../images/logos/dvc.svg'
+import ProdigyLogo from '-!svg-react-loader!../images/logos/prodigy.svg'
+import StreamlitLogo from '-!svg-react-loader!../images/logos/streamlit.svg'
+import FastAPILogo from '-!svg-react-loader!../images/logos/fastapi.svg'
+import WandBLogo from '-!svg-react-loader!../images/logos/wandb.svg'
+import RayLogo from '-!svg-react-loader!../images/logos/ray.svg'
 
 const LOGOS = {
     dvc: DVCLogo,
