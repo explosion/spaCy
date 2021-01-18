@@ -27,7 +27,7 @@ def forward(
     model: Model,
     source_spans: Tuple[Ragged, Ragged],
     is_train: bool
-) -> Ragged:
+) -> Tuple[Ragged, Callable]:
     """Get subsequences from source vectors."""
     ops = model.ops
     X, spans = source_spans
