@@ -122,7 +122,7 @@ class registry(thinc.registry):
         # specific error messages and implement a fallback to spacy-legacy.
         if not hasattr(cls, registry_name):
             names = ", ".join(cls.get_registry_names()) or "none"
-            raise RegistryError(Errors.E894.format(name=registry_name, available=names))
+            raise RegistryError(Errors.E892.format(name=registry_name, available=names))
         reg = getattr(cls, registry_name)
         try:
             func = reg.get(func_name)
