@@ -11,7 +11,7 @@ api_trainable: true
 
 A span categorizer consists of two parts: a [suggester function](#suggesters)
 that proposes candidate spans, which may or may not overlap, and a labeler model
-that predicts one or more labels for each span.
+that predicts zero or more labels for each candidate.
 
 ## Config and implementation {#config}
 
