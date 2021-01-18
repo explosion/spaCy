@@ -21,7 +21,7 @@ def build_linear_logistic(nO=None, nI=None) -> Model[Floats2d, Floats2d]:
 
 
 @registry.architectures.register("spacy.mean_max_reducer.v1")
-def build_mean_max_reducer(hidden_size: int):
+def build_mean_max_reducer(hidden_size: int) -> Model[Ragged, Floats2d]:
     """Reduce sequences by concatenating their mean and max pooled vectors,
     and then combine the concatenated vectors with a hidden layer.
     """
