@@ -197,12 +197,38 @@ cdef class ArcEagerGold:
         self.mem = Pool()
         heads, labels = example.get_aligned_parse(projectivize=True)
         labels = [example.x.vocab.strings.add(label) if label is not None else MISSING_DEP for label in labels]
-        sent_starts = example.get_aligned_sent_starts()
+        sent_starts = _get_aligned_sent_starts(example)
         assert len(heads) == len(labels) == len(sent_starts), (len(heads), len(labels), len(sent_starts))
         self.c = create_gold_state(self.mem, stcls.c, heads, labels, sent_starts)
 
     def update(self, StateClass stcls):
         update_gold_state(&self.c, stcls.c)
+
+def _get_aligned_sent_starts(example):
+    """Get list of SENT_START attributes aligned to the predicted tokenization.
+    If the reference has not sentence starts, return a list of None values.
+
+    This function is slightly different from the one on Example, because we also
+    check whether the reference sentences align across multiple sentences,
+    and return missing values if they do. This prevents a problem where you have
+    the start of a sentence merged onto a token that belongs to two sentences.
+    """
+    if example.y.has_annotation("SENT_START"):
+        align = example.alignment.y2x
+        sent_starts = [False] * len(example.x)
+        seen_words = set()
+        for y_sent in example.y.sents:
+            x_indices = list(align[y_sent.start : y_sent.end].dataXd)
+            if any(x_idx in seen_words for x_idx in x_indices):
+                # If there are any tokens in X that align across two sentences,
+                # regard the sentence annotations as missing, as we can't
+                # reliably use them.
+                return [None] * len(example.x)
+            seen_words.update(x_indices)
+            sent_starts[x_indices[0]] = True
+        return sent_starts
+    else:
+        return [None] * len(example.x)
 
 
 cdef int check_state_gold(char state_bits, char flag) nogil:
@@ -820,7 +846,7 @@ cdef class ArcEager(TransitionSystem):
             else:
                 failed = False
                 break
-        if failed:
+        if failed and _debug not in (False, None):
             example = _debug
             print("Actions")
             for i in range(self.n_moves):

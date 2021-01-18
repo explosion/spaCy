@@ -18,8 +18,6 @@ class MacedonianLemmatizer(Lemmatizer):
             string = string[:-3]
             univ_pos = "verb"
 
-        if callable(self.is_base_form) and self.is_base_form(univ_pos, morphology):
-            return [string.lower()]
         index_table = self.lookups.get_table("lemma_index", {})
         exc_table = self.lookups.get_table("lemma_exc", {})
         rules_table = self.lookups.get_table("lemma_rules", {})

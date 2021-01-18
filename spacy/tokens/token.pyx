@@ -211,6 +211,14 @@ cdef class Token:
         xp = get_array_module(vector)
         return (xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm))
 
+    def has_morph(self):
+        """Check whether the token has annotated morph information.
+        Return False when the morph annotation is unset/missing.
+
+        RETURNS (bool): Whether the morph annotation is set.
+        """
+        return not self.c.morph == 0
+
     property morph:
         def __get__(self):
             return MorphAnalysis.from_id(self.vocab, self.c.morph)

@@ -136,3 +136,28 @@ def test_overfitting_IO():
     gold_pos_tags = ["", "", "", ""]
     assert [str(t.morph) for t in doc] == gold_morphs
     assert [t.pos_ for t in doc] == gold_pos_tags
+
+    # Test with unset morph and partial POS
+    nlp.remove_pipe("morphologizer")
+    nlp.add_pipe("morphologizer")
+    for example in train_examples:
+        for token in example.reference:
+            if token.text == "ham":
+                token.pos_ = "NOUN"
+            else:
+                token.pos_ = ""
+            token.set_morph(None)
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+    print(nlp.get_pipe("morphologizer").labels)
+    for i in range(50):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+    assert losses["morphologizer"] < 0.00001
+
+    # Test the trained model
+    test_text = "I like blue ham"
+    doc = nlp(test_text)
+    gold_morphs = ["", "", "", ""]
+    gold_pos_tags = ["NOUN", "NOUN", "NOUN", "NOUN"]
+    assert [str(t.morph) for t in doc] == gold_morphs
+    assert [t.pos_ for t in doc] == gold_pos_tags

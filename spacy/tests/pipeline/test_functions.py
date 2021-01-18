@@ -53,3 +53,24 @@ def test_factories_merge_ents(doc2):
     assert len(doc2) == 6
     assert len(list(doc2.ents)) == 1
     assert doc2[2].text == "New York"
+
+
+def test_token_splitter():
+    nlp = Language()
+    config = {"min_length": 20, "split_length": 5}
+    token_splitter = nlp.add_pipe("token_splitter", config=config)
+    doc = nlp("aaaaabbbbbcccccdddd e f g")
+    assert [t.text for t in doc] == ["aaaaabbbbbcccccdddd", "e", "f", "g"]
+    doc = nlp("aaaaabbbbbcccccdddddeeeeeff g h i")
+    assert [t.text for t in doc] == [
+        "aaaaa",
+        "bbbbb",
+        "ccccc",
+        "ddddd",
+        "eeeee",
+        "ff",
+        "g",
+        "h",
+        "i",
+    ]
+    assert all(len(t.text) <= token_splitter.split_length for t in doc)
