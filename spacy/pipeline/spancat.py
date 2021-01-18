@@ -1,12 +1,16 @@
 import numpy
 from typing import List, Dict, Callable, Tuple, Optional, Iterable, Any
-from thinc.api import Config, Model, get_current_ops, set_dropout_rate
+from thinc.api import Config, Model, get_current_ops, set_dropout_rate, Ops
+from thinc.api import Optimizer
 from thinc.types import Ragged, Ints2d, Floats2d
+
 from ..scorer import Scorer
 from ..language import Language
 from .trainable_pipe import TrainablePipe
 from ..tokens import Doc, SpanGroup, Span
+from ..vocab import Vocab
 from ..training import Example, validate_examples
+from ..errors import Errors
 from ..util import registry
 
 
@@ -14,12 +18,7 @@ spancat_default_config = """
 [model]
 @architectures = "spacy.SpanCategorizer.v1"
 scorer = {"@architectures": "spacy.MaxoutLogistic.v1"}
-
-[model.reducer]
-@architctures = "spacy.mean_max_reducer.v1"
-
-[model.scorer]
-@architectures = "spacy.LinearLogistic.v1"
+reducer = {"@architectures": "spacy.mean_max_reducer.v1"}
 
 [model.tok2vec]
 @architectures = "spacy.Tok2Vec.v1"
@@ -43,11 +42,12 @@ DEFAULT_SPANCAT_MODEL = Config().from_str(spancat_default_config)["model"]
 
 
 @registry.misc("ngram_suggester.v1")
-def build_ngram_suggester(sizes: List[int]) -> Ragged:
+def build_ngram_suggester(sizes: List[int]) -> Callable[[List[Doc]], Ragged]:
     """Suggest all spans of the given lengths. Spans are returned as a ragged
     array of integers. The array has two columns, indicating the start and end
     position."""
-    def ngram_suggester(docs: List[Doc], *, ops=None) -> Ragged:
+
+    def ngram_suggester(docs: List[Doc], *, ops: Optional[Ops] = None) -> Ragged:
         if ops is None:
             ops = get_current_ops()
         spans = []
@@ -59,7 +59,7 @@ def build_ngram_suggester(sizes: List[int]) -> Ragged:
             for size in sizes:
                 if size < len(doc):
                     starts_size = starts[:-size]
-                    spans.append(ops.xp.hstack((starts_size, starts_size+size)))
+                    spans.append(ops.xp.hstack((starts_size, starts_size + size)))
                     length += spans[-1].shape[0]
                 if spans:
                     assert spans[-1].ndim == 2, spans[-1].shape
@@ -67,6 +67,7 @@ def build_ngram_suggester(sizes: List[int]) -> Ragged:
         output = Ragged(ops.xp.vstack(spans), ops.asarray(lengths, dtype="i"))
         assert output.dataXd.ndim == 2
         return output
+
     return ngram_suggester
 
 
@@ -78,16 +79,9 @@ def build_ngram_suggester(sizes: List[int]) -> Ragged:
         "spans_key": "spans",
         "max_positive": None,
         "model": DEFAULT_SPANCAT_MODEL,
-        "suggester": {
-            "@misc": "ngram_suggester.v1",
-            "sizes": [1, 2]
-        }
+        "suggester": {"@misc": "ngram_suggester.v1", "sizes": [1, 2]},
     },
-    default_score_weights={
-        "spans_f": 1.0,
-        "spans_p": 0.0,
-        "spans_r": 0.0,
-    }
+    default_score_weights={"spans_f": 1.0, "spans_p": 0.0, "spans_r": 0.0},
 )
 def make_spancat(
     nlp: Language,
@@ -95,12 +89,12 @@ def make_spancat(
     suggester: Callable[[List[Doc]], Ragged],
     model: Model[Tuple[List[Doc], Ragged], List[Ragged]],
     spans_key: str,
-    threshold: float=0.5,
-    max_positive: Optional[int]=None
+    threshold: float = 0.5,
+    max_positive: Optional[int] = None,
 ) -> "SpanCategorizer":
     """Create a SpanCategorizer compoment. The span categorizer consists of two
-    components: a suggester function that proposes candidate spans, and a labeller
-    model that predicts one or more label for each span.
+    parts: a suggester function that proposes candidate spans, and a labeller
+    model that predicts one or more labels for each span.
 
     suggester (Callable[List[Doc], Ragged]): A function that suggests spans.
         Spans are returned as a ragged array with two integer columns, for the
@@ -120,9 +114,9 @@ def make_spancat(
     """
     return SpanCategorizer(
         nlp.vocab,
-        suggester,
-        model,
-        spans_key,
+        suggester=suggester,
+        model=model,
+        spans_key=spans_key,
         threshold=threshold,
         max_positive=max_positive,
         name=name,
@@ -130,23 +124,31 @@ def make_spancat(
 
 
 class SpanCategorizer(TrainablePipe):
-    """Pipeline component to label spans of text."""
+    """Pipeline component to label spans of text.
+
+    DOCS: https://nightly.spacy.io/api/spancategorizer
+    """
 
     def __init__(
         self,
-        vocab,
-        suggester,
-        model,
-        spans_key,
-        name="spancat",
-        threshold=0.5,
-        max_positive=None
-    ):
+        vocab: Vocab,
+        model: Model[Tuple[List[Doc], Ragged], List[Ragged]],
+        suggester: Callable[[List[Doc]], Ragged],
+        name: str = "spancat",
+        *,
+        spans_key: str = "spans",
+        threshold: float = 0.5,
+        max_positive: Optional[int] = None,
+    ) -> None:
+        """Initialize the span categorizer.
+
+        DOCS: https://nightly.spacy.io/api/spancategorizer#init
+        """
         self.cfg = {
             "labels": [],
             "spans_key": spans_key,
             "threshold": threshold,
-            "max_positive": max_positive
+            "max_positive": max_positive,
         }
         self.vocab = vocab
         self.suggester = suggester
@@ -154,38 +156,98 @@ class SpanCategorizer(TrainablePipe):
         self.name = name
 
     @property
-    def key(self):
+    def key(self) -> str:
+        """Key of the doc.spans dict to save the spans under. During
+        initialization and training, the component will look for spans on the
+        reference document under the same key.
+        """
         return self.cfg["spans_key"]
 
-    def add_label(self, label: str):
-        if label not in self.cfg["labels"]:
-            self.cfg["labels"].append(label)
+    def add_label(self, label: str) -> int:
+        """Add a new label to the pipe.
+
+        label (str): The label to add.
+        RETURNS (int): 0 if label is already present, otherwise 1.
+
+        DOCS: https://nightly.spacy.io/api/spancategorizer#add_label
+        """
+        if not isinstance(label, str):
+            raise ValueError(Errors.E187)
+        if label in self.labels:
+            return 0
+        self.cfg["labels"].append(label)
+        self.vocab.strings.add(label)
+        return 1
 
     @property
-    def labels(self):
-        return self.cfg["labels"]
+    def labels(self) -> Tuple[str]:
+        """RETURNS (Tuple[str]): The labels currently added to the component.
 
-    def predict(self, docs, drop=0.0):
+        DOCS: https://nightly.spacy.io/api/spancategorizer#labels
+        """
+        return tuple(self.cfg["labels"])
+
+    @property
+    def label_data(self) -> List[str]:
+        """RETURNS (List[str]): Information about the component's labels.
+
+        DOCS: https://nightly.spacy.io/api/spancategorizer#label_data
+        """
+        return self.labels
+
+    def predict(self, docs: Iterable[Doc]):
+        """Apply the pipeline's model to a batch of docs, without modifying them.
+
+        docs (Iterable[Doc]): The documents to predict.
+        RETURNS: The models prediction for each document.
+
+        DOCS: https://nightly.spacy.io/api/spancategorizer#predict
+        """
         indices = self.suggester(docs, ops=self.model.ops)
         scores = self.model.predict((docs, indices))
         return (indices, scores)
 
-    def set_annotations(self, docs, indices_scores):
+    def set_annotations(self, docs: Iterable[Doc], indices_scores) -> None:
+        """Modify a batch of Doc objects, using pre-computed scores.
+
+        docs (Iterable[Doc]): The documents to modify.
+        scores: The scores to set, produced by SpanCategorizer.predict.
+
+        DOCS: https://nightly.spacy.io/api/spancategorizer#set_annotations
+        """
         labels = self.labels
         indices, scores = indices_scores
         offset = 0
         for i, doc in enumerate(docs):
             indices_i = indices[i].dataXd
             doc.spans[self.key] = self._make_span_group(
-                doc,
-                indices_i,
-                scores[offset:offset+indices.lengths[i]],
-                labels
+                doc, indices_i, scores[offset : offset + indices.lengths[i]], labels
             )
             offset += indices.lengths[i]
-        return docs
 
-    def update(self, examples, sgd=None, drop=0.0, losses=None, set_annotations=False):
+    def update(
+        self,
+        examples: Iterable[Example],
+        *,
+        drop: float = 0.0,
+        set_annotations: bool = False,
+        sgd: Optional[Optimizer] = None,
+        losses: Optional[Dict[str, float]] = None,
+    ) -> Dict[str, float]:
+        """Learn from a batch of documents and gold-standard information,
+        updating the pipe's model. Delegates to predict and get_loss.
+
+        examples (Iterable[Example]): A batch of Example objects.
+        drop (float): The dropout rate.
+        set_annotations (bool): Whether or not to update the Example objects
+            with the predictions.
+        sgd (thinc.api.Optimizer): The optimizer.
+        losses (Dict[str, float]): Optional record of the loss during training.
+            Updated using the component name as the key.
+        RETURNS (Dict[str, float]): The updated losses dictionary.
+
+        DOCS: https://nightly.spacy.io/api/spancategorizer#update
+        """
         if losses is None:
             losses = {}
         losses.setdefault(self.name, 0.0)
@@ -207,14 +269,25 @@ class SpanCategorizer(TrainablePipe):
         losses[self.name] += loss
         return losses
 
-    def get_loss(self, examples, spans_scores: Tuple[Ragged, Ragged]):
+    def get_loss(
+        self, examples: Iterable[Example], spans_scores: Tuple[Ragged, Ragged]
+    ) -> Tuple[float, float]:
+        """Find the loss and gradient of loss for the batch of documents and
+        their predicted scores.
+
+        examples (Iterable[Examples]): The batch of examples.
+        spans_scores: Scores representing the model's predictions.
+        RETURNS (Tuple[float, float]): The loss and the gradient.
+
+        DOCS: https://nightly.spacy.io/api/spancategorizer#get_loss
+        """
         spans, scores = spans_scores
         label_map = {label: i for i, label in enumerate(self.labels)}
         target = numpy.zeros(scores.shape, dtype=scores.dtype)
-        offset = 0 
+        offset = 0
         for i, eg in enumerate(examples):
             # Map (start, end) offset of spans to the row in the d_scores array,
-            # so that we can adjust the gradient for predictions that were 
+            # so that we can adjust the gradient for predictions that were
             # in the gold standard.
             spans_index = {}
             spans_i = spans[i].dataXd
@@ -240,20 +313,36 @@ class SpanCategorizer(TrainablePipe):
         # If the prediction is 0.9 and it's false, the gradient will be
         # 0.9 (0.9 - 0.0)
         d_scores = (scores - target) / target.shape[0]
-        loss = float((d_scores**2).sum())
+        loss = float((d_scores ** 2).sum())
         return loss, d_scores
 
     def initialize(
         self,
         get_examples: Callable[[], Iterable[Example]],
         *,
-        nlp: Language=None
-    ):
-        """Initialize the pipe for training, using data examples if available."""
+        nlp: Language = None,
+        labels: Optional[Dict] = None,
+    ) -> None:
+        """Initialize the pipe for training, using a representative set
+        of data examples.
+
+        get_examples (Callable[[], Iterable[Example]]): Function that
+            returns a representative sample of gold-standard Example objects.
+        nlp (Language): The current nlp object the component is part of.
+        labels: The labels to add to the component, typically generated by the
+            `init labels` command. If no labels are provided, the get_examples
+            callback is used to extract the labels from the data.
+
+        DOCS: https://nightly.spacy.io/api/spancategorizer#initialize
+        """
         subbatch = []
+        if labels is not None:
+            for label in labels:
+                self.add_label(label)
         for eg in get_examples():
-            for span in eg.reference.spans[self.key]:
-                self.add_label(span.label_)
+            if labels is None:
+                for span in eg.reference.spans[self.key]:
+                    self.add_label(span.label_)
             if len(subbatch) < 10:
                 subbatch.append(eg)
         if subbatch:
@@ -270,7 +359,7 @@ class SpanCategorizer(TrainablePipe):
         examples (Iterable[Example]): The examples to score.
         RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_cats.
 
-        DOCS: https://nightly.spacy.io/api/textcategorizer#score
+        DOCS: https://nightly.spacy.io/api/spancategorizer#score
         """
         validate_examples(examples, "SpanCategorizer.score")
         self._validate_categories(examples)
@@ -287,16 +376,12 @@ class SpanCategorizer(TrainablePipe):
         # TODO
         pass
 
-    def _get_aligned_spans(self, eg):
+    def _get_aligned_spans(self, eg: Example):
         return eg.get_aligned_spans_y2x(eg.reference.spans.get(self.key, []))
 
     def _make_span_group(
-        self,
-        doc: Doc,
-        indices: Ints2d,
-        scores: Floats2d,
-        labels: List[str]
-    ):
+        self, doc: Doc, indices: Ints2d, scores: Floats2d, labels: List[str]
+    ) -> SpanGroup:
         spans = SpanGroup(doc, name=self.key)
         max_positive = self.cfg["max_positive"]
         threshold = self.cfg["threshold"]

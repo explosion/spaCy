@@ -1,11 +1,12 @@
 from typing import List, Tuple
 from thinc.api import Model, with_getitem, chain, list2ragged, Logistic
-from thinc.api import Maxout, Linear, Relu, Mish, ParametricAttention, concatenate
-from thinc.api import reduce_mean, reduce_max
-# TODO: Uncomment these when next Thinc makes them available.
-#from thinc.api import reduce_first, reduce_last
-from thinc.api import zero_init, residual
+from thinc.api import Maxout, Linear, concatenate
+from thinc.api import reduce_mean, reduce_max, zero_init
 from thinc.types import Ragged, Floats2d
+
+# TODO: Uncomment these when next Thinc makes them available.
+# from thinc.api import reduce_first, reduce_last
+
 from ...util import registry
 from ...tokens import Doc
 from ..extract_spans import extract_spans
@@ -16,10 +17,7 @@ def build_linear_logistic(nO=None, nI=None):
     """An output layer for multi-label classification. It uses a linear layer
     followed by a logistic activation.
     """
-    return chain(
-        Linear(nO=nO, nI=nI, init_W=zero_init),
-        Logistic()
-    )
+    return chain(Linear(nO=nO, nI=nI, init_W=zero_init), Logistic())
 
 
 @registry.architectures.register("spacy.mean_max_reducer.v1")
@@ -29,9 +27,9 @@ def build_mean_max_reducer(hidden_size: int):
     """
     return chain(
         # TODO: Add reduce_first and reduce_last when Thinc has them.
-        #concatenate(reduce_last(), reduce_first(), reduce_mean(), reduce_max()),
+        # concatenate(reduce_last(), reduce_first(), reduce_mean(), reduce_max()),
         concatenate(reduce_mean(), reduce_max()),
-        Maxout(nO=hidden_size, normalize=True, dropout=0.0)
+        Maxout(nO=hidden_size, normalize=True, dropout=0.0),
     )
 
 
@@ -39,9 +37,9 @@ def build_mean_max_reducer(hidden_size: int):
 def build_spancat_model(
     tok2vec: Model[List[Doc], List[Floats2d]],
     reducer: Model[Ragged, Floats2d],
-    scorer: Model[Floats2d, Floats2d]
+    scorer: Model[Floats2d, Floats2d],
 ) -> Model[Tuple[List[Doc], Ragged], Floats2d]:
-    """Build a span categorizer model, given a token-to-vector model, a 
+    """Build a span categorizer model, given a token-to-vector model, a
     reducer model to map the sequence of vectors for each span down to a single
     vector, and a scorer model to map the vectors to probabilities.
 
