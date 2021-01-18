@@ -13,7 +13,7 @@ from ..extract_spans import extract_spans
 
 
 @registry.architectures.register("spacy.LinearLogistic.v1")
-def build_linear_logistic(nO=None, nI=None):
+def build_linear_logistic(nO=None, nI=None) -> Model[Floats2d, Floats2d]:
     """An output layer for multi-label classification. It uses a linear layer
     followed by a logistic activation.
     """
