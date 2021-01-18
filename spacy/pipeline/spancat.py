@@ -1,7 +1,8 @@
 import numpy
-from typing import List, Callable, Tuple, Optional, Iterable
+from typing import List, Dict, Callable, Tuple, Optional, Iterable, Any
 from thinc.api import Config, Model, get_current_ops, set_dropout_rate
 from thinc.types import Ragged, Ints2d, Floats2d
+from ..scorer import Scorer
 from ..language import Language
 from .trainable_pipe import TrainablePipe
 from ..tokens import Doc, SpanGroup, Span
@@ -12,17 +13,22 @@ from ..util import registry
 spancat_default_config = """
 [model]
 @architectures = "spacy.SpanCategorizer.v1"
-reducer = {"@layers": "reduce_max.v1"}
 scorer = {"@architectures": "spacy.MaxoutLogistic.v1"}
+
+[model.reducer]
+@architctures = "spacy.mean_max_reducer.v1"
+
+[model.scorer]
+@architectures = "spacy.LinearLogistic.v1"
 
 [model.tok2vec]
 @architectures = "spacy.Tok2Vec.v1"
 
 [model.tok2vec.embed]
 @architectures = "spacy.MultiHashEmbed.v1"
-width = 64
-rows = [2000, 2000, 1000, 1000, 1000, 1000]
-attrs = ["ORTH", "LOWER", "PREFIX", "SUFFIX", "SHAPE", "ID"]
+width = 128
+rows = [5000, 2000, 1000, 1000]
+attrs = ["ORTH", "PREFIX", "SUFFIX", "SHAPE"]
 include_static_vectors = false
 
 [model.tok2vec.encode]
@@ -30,7 +36,7 @@ include_static_vectors = false
 width = ${model.tok2vec.embed.width}
 window_size = 1
 maxout_pieces = 3
-depth = 2
+depth = 4
 """
 
 DEFAULT_SPANCAT_MODEL = Config().from_str(spancat_default_config)["model"]
@@ -55,7 +61,8 @@ def build_ngram_suggester(sizes: List[int]) -> Ragged:
                     starts_size = starts[:-size]
                     spans.append(ops.xp.hstack((starts_size, starts_size+size)))
                     length += spans[-1].shape[0]
-                assert spans[-1].ndim == 2, spans[-1].shape
+                if spans:
+                    assert spans[-1].ndim == 2, spans[-1].shape
             lengths.append(length)
         output = Ragged(ops.xp.vstack(spans), ops.asarray(lengths, dtype="i"))
         assert output.dataXd.ndim == 2
@@ -76,7 +83,11 @@ def build_ngram_suggester(sizes: List[int]) -> Ragged:
             "sizes": [1, 2]
         }
     },
-    default_score_weights={},
+    default_score_weights={
+        "spans_f": 1.0,
+        "spans_p": 0.0,
+        "spans_r": 0.0,
+    }
 )
 def make_spancat(
     nlp: Language,
@@ -252,6 +263,25 @@ class SpanCategorizer(TrainablePipe):
             self.model.initialize(X=(docs, spans), Y=Y)
         else:
             self.model.initialize()
+
+    def score(self, examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
+        """Score a batch of examples.
+
+        examples (Iterable[Example]): The examples to score.
+        RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_cats.
+
+        DOCS: https://nightly.spacy.io/api/textcategorizer#score
+        """
+        validate_examples(examples, "SpanCategorizer.score")
+        self._validate_categories(examples)
+        kwargs = dict(kwargs)
+        kwargs.setdefault("attr", self.key)
+        kwargs.setdefault("labels", self.labels)
+        kwargs.setdefault("multi_label", True)
+        kwargs.setdefault("threshold", self.cfg["threshold"])
+        kwargs.setdefault("getter", lambda doc, key: doc.spans.get(key, []))
+        kwargs.setdefault("has_annotation", lambda doc: self.key in doc.spans)
+        return Scorer.score_spans(examples, **kwargs)
 
     def _validate_categories(self, examples):
         # TODO
