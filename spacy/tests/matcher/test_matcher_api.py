@@ -493,3 +493,13 @@ def test_matcher_remove_zero_operator(en_vocab):
     assert "Rule" in matcher
     matcher.remove("Rule")
     assert "Rule" not in matcher
+
+
+def test_matcher_no_zero_length(en_vocab):
+    doc = Doc(en_vocab, words=["a", "b"])
+    doc[0].tag_ = "A"
+    doc[1].tag_ = "B"
+    doc.is_tagged = True
+    matcher = Matcher(en_vocab)
+    matcher.add("TEST", [[{"TAG": "C", "OP": "?"}]])
+    assert len(matcher(doc)) == 0
