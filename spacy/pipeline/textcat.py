@@ -138,7 +138,10 @@ class TextCategorizer(TrainablePipe):
 
     @property
     def label_data(self) -> List[str]:
-        """RETURNS (List[str]): Information about the component's labels."""
+        """RETURNS (List[str]): Information about the component's labels.
+
+        DOCS: https://nightly.spacy.io/api/textcategorizer#label_data
+        """
         return self.labels
 
     def pipe(self, stream: Iterable[Doc], *, batch_size: int = 128) -> Iterator[Doc]:
@@ -176,7 +179,7 @@ class TextCategorizer(TrainablePipe):
         return scores
 
     def set_annotations(self, docs: Iterable[Doc], scores) -> None:
-        """Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
+        """Modify a batch of Doc objects, using pre-computed scores.
 
         docs (Iterable[Doc]): The documents to modify.
         scores: The scores to set, produced by TextCategorizer.predict.
@@ -330,7 +333,7 @@ class TextCategorizer(TrainablePipe):
         nlp: Optional[Language] = None,
         labels: Optional[Dict] = None,
         positive_label: Optional[str] = None,
-    ):
+    ) -> None:
         """Initialize the pipe for training, using a representative set
         of data examples.
 
