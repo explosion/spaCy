@@ -119,7 +119,7 @@ exceed the transformer model max length. See
 > #### Example
 >
 > ```python
-> config={"min_length": 20, "split_length": 5}
+> config = {"min_length": 20, "split_length": 5}
 > nlp.add_pipe("token_splitter", config=config, first=True)
 > doc = nlp("aaaaabbbbbcccccdddddee")
 > print([token.text for token in doc])
@@ -130,3 +130,4 @@ exceed the transformer model max length. See
 | -------------- | --------------------------------------------------------------------- |
 | `min_length`   | The minimum length for a token to be split. Defaults to `25`. ~~int~~ |
 | `split_length` | The length of the split tokens. Defaults to `5`. ~~int~~              |
+| **RETURNS**    | The modified `Doc` with the split tokens. ~~Doc~~                     |
