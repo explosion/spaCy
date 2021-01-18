@@ -4,7 +4,7 @@ import Grid from '../components/grid'
 import { Label } from '../components/typography'
 import Link from '../components/link'
 
-import { ReactComponent as Logo } from '../images/logo.svg'
+import Logo from '-!svg-react-loader!../images/logo.svg'
 import patternBlue from '../images/pattern_blue.jpg'
 import patternGreen from '../images/pattern_green.jpg'
 import patternPurple from '../images/pattern_purple.jpg'
