@@ -81,7 +81,8 @@ def test_issue3199():
     """
     words = ["This", "is", "a", "sentence"]
     doc = Doc(Vocab(), words=words, heads=[0] * len(words), deps=["dep"] * len(words))
-    assert list(doc[0:3].noun_chunks) == []
+    with pytest.raises(NotImplementedError):
+        list(doc[0:3].noun_chunks)
 
 
 def test_issue3209():

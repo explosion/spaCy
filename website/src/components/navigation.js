@@ -6,7 +6,7 @@ import Link from './link'
 import Icon from './icon'
 import Dropdown from './dropdown'
 import { github } from './util'
-import Logo from '-!svg-react-loader!../images/logo.svg'
+import { ReactComponent as Logo } from '../images/logo.svg'
 import classes from '../styles/navigation.module.sass'
 
 const NavigationDropdown = ({ items = [], section }) => {
