@@ -79,10 +79,10 @@ class Tok2Vec(TrainablePipe):
         """
         return list(self.listener_map.keys())
 
-    def add_listener(self, listener: "Tok2VecListener", component: str) -> None:
+    def add_listener(self, listener: "Tok2VecListener", component_name: str) -> None:
         """Add a listener for a downstream component. Usually internals."""
-        self.listener_map.setdefault(component, [])
-        self.listener_map[component].append(listener)
+        self.listener_map.setdefault(component_name, [])
+        self.listener_map[component_name].append(listener)
 
     def find_listeners(self, component) -> None:
         """Walk over a model of a processing component, looking for layers that are Tok2vecListener
