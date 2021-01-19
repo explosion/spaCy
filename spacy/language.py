@@ -1051,7 +1051,6 @@ class Language:
                 Errors.E088.format(length=len(text), max_length=self.max_length)
             )
         return self.tokenizer(text)
-        return self.tokenizer(text)
 
     def update(
         self,
