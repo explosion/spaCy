@@ -1,5 +1,36 @@
 {
     "resources": [
+    	{
+            "id": "spacy-textblob",
+            "title": "spaCyTextBlob",
+            "slogan": "Easy sentiment analysis for spaCy using TextBlob",
+            "description": "spaCyTextBlob is a pipeline component that enables sentiment analysis using the [TextBlob](https://github.com/sloria/TextBlob) library. It will add the additional extenstion `._.sentiment` to `Doc`, `Span`, and `Token` objects.",
+            "github": "SamEdwardes/spaCyTextBlob",
+            "pip": "spacytextblob",
+            "code_example": [
+            "import spacy",
+            "from spacytextblob.spacytextblob import SpacyTextBlob",
+            "",
+            "nlp = spacy.load('en_core_web_sm')",
+            "spacy_text_blob = SpacyTextBlob()",
+            "nlp.add_pipe(spacy_text_blob)",
+            "text = 'I had a really horrible day. It was the worst day ever! But every now and then I have a really good day that makes me happy.'",
+            "doc = nlp(text)",
+            "doc._.sentiment.polarity      # Polarity: -0.125",
+            "doc._.sentiment.subjectivity  # Sujectivity: 0.9",
+            "doc._.sentiment.assessments   # Assessments: [(['really', 'horrible'], -1.0, 1.0, None), (['worst', '!'], -1.0, 1.0, None), (['really', 'good'], 0.7, 0.6000000000000001, None), (['happy'], 0.8, 1.0, None)]"
+            ],
+            "code_language": "python",
+            "url": "https://spacytextblob.netlify.app/",
+            "author": "Sam Edwardes",
+            "author_links": {
+            "twitter": "TheReaLSamlam",
+            "github": "SamEdwardes",
+            "website": "https://samedwardes.com"
+            },
+            "category": ["pipeline"],
+            "tags": ["sentiment", "textblob"]
+	    },
         {
             "id": "spacy-ray",
             "title": "spacy-ray",
@@ -787,6 +818,22 @@
             },
             "category": ["conversational"],
             "tags": ["chatbots"]
+        },
+        {
+            "id": "mindmeld",
+            "title": "MindMeld - Conversational AI platform",
+            "slogan": "Conversational AI platform for deep-domain voice interfaces and chatbots",
+            "description": "The MindMeld Conversational AI platform is among the most advanced AI platforms for building production-quality conversational applications. It is a Python-based machine learning framework which encompasses all of the algorithms and utilities required for this purpose. (https://github.com/cisco/mindmeld)",
+            "github": "cisco/mindmeld",
+            "pip": "mindmeld",
+            "thumb": "https://www.mindmeld.com/img/mindmeld-logo.png",
+            "category": ["conversational", "ner"],
+            "tags": ["chatbots"],
+            "author": "Cisco",
+            "author_links": {
+                "github": "cisco/mindmeld",
+                "website": "https://www.mindmeld.com/"
+            }
         },
         {
             "id": "torchtext",
@@ -1648,7 +1695,7 @@
                 "",
                 "nlp = spacy.load('en')",
                 "nlp.add_pipe(BeneparComponent('benepar_en'))",
-                "doc = nlp('The time for action is now. It's never too late to do something.')",
+                "doc = nlp('The time for action is now. It is never too late to do something.')",
                 "sent = list(doc.sents)[0]",
                 "print(sent._.parse_string)",
                 "# (S (NP (NP (DT The) (NN time)) (PP (IN for) (NP (NN action)))) (VP (VBZ is) (ADVP (RB now))) (. .))",
@@ -2527,20 +2574,49 @@
             "description": "A spaCy rule-based pipeline for identifying positive cases of COVID-19 from clinical text. A version of this system was deployed as part of the US Department of Veterans Affairs biosurveillance response to COVID-19.",
             "pip": "cov-bsv",
             "code_example": [
-                "import cov_bsv",
-                "",
-                "nlp = cov_bsv.load()",
-                "text = 'Pt tested for COVID-19. His wife was recently diagnosed with novel coronavirus. SARS-COV-2: Detected'",
-                "",
-                "print(doc.ents)",
-                "print(doc._.cov_classification)",
-                "cov_bsv.visualize_doc(doc)"
+              "import cov_bsv",
+              "",
+              "nlp = cov_bsv.load()",
+              "doc = nlp('Pt tested for COVID-19. His wife was recently diagnosed with novel coronavirus. SARS-COV-2: Detected')",
+              "",
+              "print(doc.ents)",
+              "print(doc._.cov_classification)",
+              "cov_bsv.visualize_doc(doc)"
             ],
             "category": ["pipeline", "standalone", "biomedical", "scientific"],
             "tags": ["clinical", "epidemiology", "covid-19", "surveillance"],
             "author": "Alec Chapman",
             "author_links": {
                 "github": "abchapman93"
+            }
+        },
+        {
+            "id": "medspacy",
+            "title": "medspaCy",
+            "thumb": "https://raw.githubusercontent.com/medspacy/medspacy/master/images/medspacy_logo.png",
+            "slogan": "A toolkit for clinical NLP with spaCy.",
+            "github": "medspacy/medspacy",
+            "description": "A toolkit for clinical NLP with spaCy. Features include sentence splitting, section detection, and asserting negation, family history, and uncertainty.",
+            "pip": "medspacy",
+            "code_example": [
+              "import medspacy",
+              "from medspacy.ner import TargetRule",
+              "",
+              "nlp = medspacy.load()",
+              "print(nlp.pipe_names)",
+              "",
+              "nlp.get_pipe('target_matcher').add([TargetRule('stroke', 'CONDITION'), TargetRule('diabetes', 'CONDITION'), TargetRule('pna', 'CONDITION')])",
+              "doc = nlp('Patient has hx of stroke. Mother diagnosed with diabetes. No evidence of pna.')",
+              "",
+              "for ent in doc.ents:",
+              "    print(ent, ent._.is_negated, ent._.is_family, ent._.is_historical)",
+              "medspacy.visualization.visualize_ent(doc)"
+            ],
+            "category": ["biomedical", "scientific", "research"],
+            "tags": ["clinical"],
+            "author": "medspacy",
+            "author_links": {
+                "github": "medspacy"
             }
         },
 	      {
@@ -2578,6 +2654,86 @@
             "author_links": {
                 "github": "zaibacu"
             }
+        },
+        {
+            "id": "PatternOmatic",
+            "title": "PatternOmatic",
+            "slogan": "Finds linguistic patterns effortlessly",
+            "description": "Discover spaCy's linguistic patterns matching a given set of String samples to be used by the spaCy's Rule Based Matcher",
+            "github": "revuel/PatternOmatic",
+            "pip": "PatternOmatic",
+            "code_example": [
+                "from PatternOmatic.api import find_patterns",
+                "",
+                "samples = ['I am a cat!', 'You are a dog!', 'She is an owl!']",
+                "",
+                "patterns_found, _ = find_patterns(samples)",
+                "",
+                "print(f'Patterns found: {patterns_found}')"
+            ],
+            "code_language": "python",
+            "thumb": "https://svgshare.com/i/R3P.svg",
+            "image": "https://svgshare.com/i/R3P.svg",
+            "author": "Miguel Revuelta Espinosa",
+            "author_links": {
+                "github": "revuel"
+            },
+            "category": ["scientific", "research", "standalone"],
+            "tags": ["Evolutionary Computation", "Grammatical Evolution"]
+        },
+        {
+            "id": "SpacyDotNet",
+            "title": "spaCy .NET Wrapper",
+            "slogan": "SpacyDotNet is a .NET Core compatible wrapper for spaCy, based on Python.NET",
+            "description": "This projects relies on [Python.NET](http://pythonnet.github.io/) to interop with spaCy. It's not meant to be a complete and exhaustive implementation of all spaCy features and [APIs](https://spacy.io/api). Although it should be enough for basic tasks, it's considered as a starting point if you need to build a complex project using spaCy in .NET Most of the basic features in _Spacy101_ are available. All `Container` classes are present (`Doc`, `Token`, `Span` and `Lexeme`) with their basic properties/methods running and also `Vocab` and `StringStore` in a limited form. Anyway, any developer should be ready to add the missing properties or classes in a very straightforward manner.",
+            "github": "AMArostegui/SpacyDotNet",
+            "thumb": "https://raw.githubusercontent.com/AMArostegui/SpacyDotNet/master/cslogo.png",
+            "code_example": [
+                "var spacy = new Spacy();",
+                "",
+                "var nlp = spacy.Load(\"en_core_web_sm\");",
+                "var doc = nlp.GetDocument(\"Apple is looking at buying U.K. startup for $1 billion\");",
+                "",
+                "foreach (Token token in doc.Tokens)",
+                "    Console.WriteLine($\"{token.Text} {token.Lemma} {token.PoS} {token.Tag} {token.Dep} {token.Shape} {token.IsAlpha} {token.IsStop}\");",
+                "",
+                "Console.WriteLine(\"\");",
+                "foreach (Span ent in doc.Ents)",
+                "    Console.WriteLine($\"{ent.Text} {ent.StartChar} {ent.EndChar} {ent.Label}\");",
+                "",
+                "nlp = spacy.Load(\"en_core_web_md\");",
+                "var tokens = nlp.GetDocument(\"dog cat banana afskfsd\");",
+                "",
+                "Console.WriteLine(\"\");",
+                "foreach (Token token in tokens.Tokens)",
+                "    Console.WriteLine($\"{token.Text} {token.HasVector} {token.VectorNorm}, {token.IsOov}\");",
+                "",
+                "tokens = nlp.GetDocument(\"dog cat banana\");",
+                "Console.WriteLine(\"\");",
+                "foreach (Token token1 in tokens.Tokens)",
+                "{",
+                "    foreach (Token token2 in tokens.Tokens)",
+                "        Console.WriteLine($\"{token1.Text} {token2.Text} {token1.Similarity(token2) }\");",
+                "}",
+                "",
+                "doc = nlp.GetDocument(\"I love coffee\");",
+                "Console.WriteLine(\"\");",
+                "Console.WriteLine(doc.Vocab.Strings[\"coffee\"]);",
+                "Console.WriteLine(doc.Vocab.Strings[3197928453018144401]);",
+                "",
+                "Console.WriteLine(\"\");",
+                "foreach (Token word in doc.Tokens)",
+                "{",
+                "    var lexeme = doc.Vocab[word.Text];",
+                "    Console.WriteLine($@\"{lexeme.Text} {lexeme.Orth} {lexeme.Shape} {lexeme.Prefix} {lexeme.Suffix} {lexeme.IsAlpha} {lexeme.IsDigit} {lexeme.IsTitle} {lexeme.Lang}\");",
+                "}"                
+            ],    
+            "code_language": "csharp",
+            "author": "Antonio Miras",
+            "author_links": {
+                "github": "AMArostegui"
+            },
+            "category": ["nonpython"]
         }
     ],
 

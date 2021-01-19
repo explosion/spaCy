@@ -30,8 +30,9 @@ def init_config_cli(
     lang: Optional[str] = Opt("en", "--lang", "-l", help="Two-letter code of the language to use"),
     pipeline: Optional[str] = Opt("tagger,parser,ner", "--pipeline", "-p", help="Comma-separated names of trainable pipeline components to include (without 'tok2vec' or 'transformer')"),
     optimize: Optimizations = Opt(Optimizations.efficiency.value, "--optimize", "-o", help="Whether to optimize for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger and slower model). This will impact the choice of architecture, pretrained weights and related hyperparameters."),
-    cpu: bool = Opt(False, "--cpu", "-C", help="Whether the model needs to run on CPU. This will impact the choice of architecture, pretrained weights and related hyperparameters."),
+    gpu: bool = Opt(False, "--gpu", "-G", help="Whether the model can run on GPU. This will impact the choice of architecture, pretrained weights and related hyperparameters."),
     pretraining: bool = Opt(False, "--pretraining", "-pt", help="Include config for pretraining (with 'spacy pretrain')"),
+    force_overwrite: bool = Opt(False, "--force", "-F", help="Force overwriting the output file"),
     # fmt: on
 ):
     """
@@ -45,14 +46,22 @@ def init_config_cli(
     if isinstance(optimize, Optimizations):  # instance of enum from the CLI
         optimize = optimize.value
     pipeline = string_to_list(pipeline)
-    init_config(
-        output_file,
+    is_stdout = str(output_file) == "-"
+    if not is_stdout and output_file.exists() and not force_overwrite:
+        msg = Printer()
+        msg.fail(
+            "The provided output file already exists. To force overwriting the config file, set the --force or -F flag.",
+            exits=1,
+        )
+    config = init_config(
         lang=lang,
         pipeline=pipeline,
         optimize=optimize,
-        cpu=cpu,
+        gpu=gpu,
         pretraining=pretraining,
+        silent=is_stdout,
     )
+    save_config(config, output_file, is_stdout=is_stdout)
 
 
 @init_cli.command("fill-config")
@@ -118,16 +127,15 @@ def fill_config(
 
 
 def init_config(
-    output_file: Path,
     *,
     lang: str,
     pipeline: List[str],
     optimize: str,
-    cpu: bool,
+    gpu: bool,
     pretraining: bool = False,
-) -> None:
-    is_stdout = str(output_file) == "-"
-    msg = Printer(no_print=is_stdout)
+    silent: bool = True,
+) -> Config:
+    msg = Printer(no_print=silent)
     with TEMPLATE_PATH.open("r") as f:
         template = Template(f.read())
     # Filter out duplicates since tok2vec and transformer are added by template
@@ -137,7 +145,7 @@ def init_config(
         "lang": lang,
         "components": pipeline,
         "optimize": optimize,
-        "hardware": "cpu" if cpu else "gpu",
+        "hardware": "gpu" if gpu else "cpu",
         "transformer_data": reco["transformer"],
         "word_vectors": reco["word_vectors"],
         "has_letters": reco["has_letters"],
@@ -161,7 +169,7 @@ def init_config(
         "Hardware": variables["hardware"].upper(),
         "Transformer": template_vars.transformer.get("name", False),
     }
-    msg.info("Generated template specific for your use case")
+    msg.info("Generated config template specific for your use case")
     for label, value in use_case.items():
         msg.text(f"- {label}: {value}")
     with show_validation_error(hint_fill=False):
@@ -173,7 +181,7 @@ def init_config(
             pretrain_config = util.load_config(DEFAULT_CONFIG_PRETRAIN_PATH)
             config = pretrain_config.merge(config)
     msg.good("Auto-filled config with all values")
-    save_config(config, output_file, is_stdout=is_stdout)
+    return config
 
 
 def save_config(

@@ -19,6 +19,7 @@ lang = "{{ lang }}"
 {%- set full_pipeline = ["transformer" if use_transformer else "tok2vec"] + components %}
 pipeline = {{ full_pipeline|pprint()|replace("'", '"')|safe }}
 tokenizer = {"@tokenizers": "spacy.Tokenizer.v1"}
+batch_size = {{ 128 if hardware == "gpu" else 1000 }}
 
 [components]
 
@@ -74,7 +75,7 @@ grad_factor = 1.0
 factory = "parser"
 
 [components.parser.model]
-@architectures = "spacy.TransitionBasedParser.v1"
+@architectures = "spacy.TransitionBasedParser.v2"
 state_type = "parser"
 extra_state_tokens = false
 hidden_width = 128
@@ -95,7 +96,7 @@ grad_factor = 1.0
 factory = "ner"
 
 [components.ner.model]
-@architectures = "spacy.TransitionBasedParser.v1"
+@architectures = "spacy.TransitionBasedParser.v2"
 state_type = "ner"
 extra_state_tokens = false
 hidden_width = 64
@@ -148,12 +149,43 @@ grad_factor = 1.0
 
 [components.textcat.model.linear_model]
 @architectures = "spacy.TextCatBOW.v1"
-exclusive_classes = false
+exclusive_classes = true
 ngram_size = 1
 no_output_layer = false
 
 {% else -%}
 [components.textcat.model]
+@architectures = "spacy.TextCatBOW.v1"
+exclusive_classes = true
+ngram_size = 1
+no_output_layer = false
+{%- endif %}
+{%- endif %}
+
+{% if "textcat_multilabel" in components %}
+[components.textcat_multilabel]
+factory = "textcat_multilabel"
+
+{% if optimize == "accuracy" %}
+[components.textcat_multilabel.model]
+@architectures = "spacy.TextCatEnsemble.v2"
+nO = null
+
+[components.textcat_multilabel.model.tok2vec]
+@architectures = "spacy-transformers.TransformerListener.v1"
+grad_factor = 1.0
+
+[components.textcat_multilabel.model.tok2vec.pooling]
+@layers = "reduce_mean.v1"
+
+[components.textcat_multilabel.model.linear_model]
+@architectures = "spacy.TextCatBOW.v1"
+exclusive_classes = false
+ngram_size = 1
+no_output_layer = false
+
+{% else -%}
+[components.textcat_multilabel.model]
 @architectures = "spacy.TextCatBOW.v1"
 exclusive_classes = false
 ngram_size = 1
@@ -173,7 +205,7 @@ no_output_layer = false
 factory = "tok2vec"
 
 [components.tok2vec.model]
-@architectures = "spacy.Tok2Vec.v1"
+@architectures = "spacy.Tok2Vec.v2"
 
 [components.tok2vec.model.embed]
 @architectures = "spacy.MultiHashEmbed.v1"
@@ -188,7 +220,7 @@ rows = [5000, 2500]
 include_static_vectors = {{ "true" if optimize == "accuracy" else "false" }}
 
 [components.tok2vec.model.encode]
-@architectures = "spacy.MaxoutWindowEncoder.v1"
+@architectures = "spacy.MaxoutWindowEncoder.v2"
 width = {{ 96 if optimize == "efficiency" else 256 }}
 depth = {{ 4 if optimize == "efficiency" else 8 }}
 window_size = 1
@@ -225,7 +257,7 @@ width = ${components.tok2vec.model.encode.width}
 factory = "parser"
 
 [components.parser.model]
-@architectures = "spacy.TransitionBasedParser.v1"
+@architectures = "spacy.TransitionBasedParser.v2"
 state_type = "parser"
 extra_state_tokens = false
 hidden_width = 128
@@ -243,7 +275,7 @@ width = ${components.tok2vec.model.encode.width}
 factory = "ner"
 
 [components.ner.model]
-@architectures = "spacy.TransitionBasedParser.v1"
+@architectures = "spacy.TransitionBasedParser.v2"
 state_type = "ner"
 extra_state_tokens = false
 hidden_width = 64
@@ -287,12 +319,40 @@ width = ${components.tok2vec.model.encode.width}
 
 [components.textcat.model.linear_model]
 @architectures = "spacy.TextCatBOW.v1"
-exclusive_classes = false
+exclusive_classes = true
 ngram_size = 1
 no_output_layer = false
 
 {% else -%}
 [components.textcat.model]
+@architectures = "spacy.TextCatBOW.v1"
+exclusive_classes = true
+ngram_size = 1
+no_output_layer = false
+{%- endif %}
+{%- endif %}
+
+{% if "textcat_multilabel" in components %}
+[components.textcat_multilabel]
+factory = "textcat_multilabel"
+
+{% if optimize == "accuracy" %}
+[components.textcat_multilabel.model]
+@architectures = "spacy.TextCatEnsemble.v2"
+nO = null
+
+[components.textcat_multilabel.model.tok2vec]
+@architectures = "spacy.Tok2VecListener.v1"
+width = ${components.tok2vec.model.encode.width}
+
+[components.textcat_multilabel.model.linear_model]
+@architectures = "spacy.TextCatBOW.v1"
+exclusive_classes = false
+ngram_size = 1
+no_output_layer = false
+
+{% else -%}
+[components.textcat_multilabel.model]
 @architectures = "spacy.TextCatBOW.v1"
 exclusive_classes = false
 ngram_size = 1
@@ -302,7 +362,7 @@ no_output_layer = false
 {% endif %}
 
 {% for pipe in components %}
-{% if pipe not in ["tagger", "morphologizer", "parser", "ner", "textcat", "entity_linker"] %}
+{% if pipe not in ["tagger", "morphologizer", "parser", "ner", "textcat", "textcat_multilabel", "entity_linker"] %}
 {# Other components defined by the user: we just assume they're factories #}
 [components.{{ pipe }}]
 factory = "{{ pipe }}"

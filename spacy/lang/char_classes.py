@@ -2,6 +2,8 @@ split_chars = lambda char: list(char.strip().split(" "))
 merge_chars = lambda char: char.strip().replace(" ", "|")
 group_chars = lambda char: char.strip().replace(" ", "")
 
+_ethiopic = r"\u1200-\u137F"
+
 _bengali = r"\u0980-\u09FF"
 
 _hebrew = r"\u0591-\u05F4\uFB1D-\uFB4F"
@@ -210,11 +212,30 @@ _ukrainian_lower = r"а-щюяіїєґ"
 _ukrainian_upper = r"А-ЩЮЯІЇЄҐ"
 _ukrainian = r"а-щюяіїєґА-ЩЮЯІЇЄҐ"
 
-_upper = LATIN_UPPER + _russian_upper + _tatar_upper + _greek_upper + _ukrainian_upper
-_lower = LATIN_LOWER + _russian_lower + _tatar_lower + _greek_lower + _ukrainian_lower
+_macedonian_lower = r"ѓѕјљњќѐѝ"
+_macedonian_upper = r"ЃЅЈЉЊЌЀЍ"
+_macedonian = r"ѓѕјљњќѐѝЃЅЈЉЊЌЀЍ"
+
+_upper = (
+    LATIN_UPPER
+    + _russian_upper
+    + _tatar_upper
+    + _greek_upper
+    + _ukrainian_upper
+    + _macedonian_upper
+)
+_lower = (
+    LATIN_LOWER
+    + _russian_lower
+    + _tatar_lower
+    + _greek_lower
+    + _ukrainian_lower
+    + _macedonian_lower
+)
 
 _uncased = (
-    _bengali
+    _ethiopic
+    + _bengali
     + _hebrew
     + _persian
     + _sinhala
@@ -226,7 +247,9 @@ _uncased = (
     + _cjk
 )
 
-ALPHA = group_chars(LATIN + _russian + _tatar + _greek + _ukrainian + _uncased)
+ALPHA = group_chars(
+    LATIN + _russian + _tatar + _greek + _ukrainian + _macedonian + _uncased
+)
 ALPHA_LOWER = group_chars(_lower + _uncased)
 ALPHA_UPPER = group_chars(_upper + _uncased)
 

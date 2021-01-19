@@ -129,13 +129,13 @@ the entity recognizer, use a
 factory = "tok2vec"
 
 [components.tok2vec.model]
-@architectures = "spacy.Tok2Vec.v1"
+@architectures = "spacy.Tok2Vec.v2"
 
 [components.tok2vec.model.embed]
 @architectures = "spacy.MultiHashEmbed.v1"
 
 [components.tok2vec.model.encode]
-@architectures = "spacy.MaxoutWindowEncoder.v1"
+@architectures = "spacy.MaxoutWindowEncoder.v2"
 
 [components.ner]
 factory = "ner"
@@ -161,13 +161,13 @@ factory = "ner"
 @architectures = "spacy.TransitionBasedParser.v1"
 
 [components.ner.model.tok2vec]
-@architectures = "spacy.Tok2Vec.v1"
+@architectures = "spacy.Tok2Vec.v2"
 
 [components.ner.model.tok2vec.embed]
 @architectures = "spacy.MultiHashEmbed.v1"
 
 [components.ner.model.tok2vec.encode]
-@architectures = "spacy.MaxoutWindowEncoder.v1"
+@architectures = "spacy.MaxoutWindowEncoder.v2"
 ```
 
 <!-- TODO: Once rehearsal is tested, mention it here. -->
@@ -481,6 +481,50 @@ custom learning rate for each component. Instead of a constant, you can also
 provide a schedule, allowing you to freeze the shared parameters at the start of
 training.
 
+### Managing transformer model max length limitations {#transformer-max-length}
+
+Many transformer models have a limit on the maximum number of tokens that the
+model can process, for example BERT models are limited to 512 tokens. This limit
+refers to the number of transformer tokens (BPE, WordPiece, etc.), not the
+number of spaCy tokens.
+
+To be able to process longer texts, the spaCy [`transformer`](/api/transformer)
+component uses [`span_getters`](/api/transformer#span_getters) to convert a
+batch of [`Doc`](/api/doc) objects into lists of [`Span`](/api/span) objects. A
+span may correspond to a doc (for `doc_spans`), a sentence (for `sent_spans`) or
+a window of spaCy tokens (`strided_spans`). If a single span corresponds to more
+transformer tokens than the transformer model supports, the spaCy pipeline can't
+process the text because some spaCy tokens would be left without an analysis.
+
+In general, it is up to the transformer pipeline user to manage the input texts
+so that the model max length is not exceeded. If you're training a **new
+pipeline**, you have a number of options to handle the max length limit:
+
+- Use `doc_spans` with short texts only
+- Use `sent_spans` with short sentences only
+- For `strided_spans`, lower the `window` size to be short enough for your input
+  texts (and don't forget to lower the `stride` correspondingly)
+- Implement a [custom span getter](#transformers-training-custom-settings)
+
+You may still run into the max length limit if a single spaCy token is very
+long, like a long URL or a noisy string, or if you're using a **pretrained
+pipeline** like `en_core_web_trf` with a fixed `window` size for
+`strided_spans`. In this case, you need to modify either your texts or your
+pipeline so that you have shorter spaCy tokens. Some options:
+
+- Preprocess your texts to clean up noise and split long tokens with whitespace
+- Add a `token_splitter` to the beginning of your pipeline to break up
+  tokens that are longer than a specified length:
+
+  ```python
+  config={"min_length": 20, "split_length": 5}
+  nlp.add_pipe("token_splitter", config=config, first=True)
+  ```
+
+  In this example, tokens that are at least 20 characters long will be split up
+  into smaller tokens of 5 characters each, resulting in strided spans that
+  correspond to fewer transformer tokens.
+
 ## Static vectors {#static-vectors}
 
 If your pipeline includes a **word vectors table**, you'll be able to use the
@@ -713,34 +757,39 @@ layer = "tok2vec"
 
 #### Pretraining objectives {#pretraining-details}
 
-Two pretraining objectives are available, both of which are variants of the
-cloze task [Devlin et al. (2018)](https://arxiv.org/abs/1810.04805) introduced
-for BERT. The objective can be defined and configured via the
-`[pretraining.objective]` config block.
-
 > ```ini
 > ### Characters objective
 > [pretraining.objective]
-> type = "characters"
+> @architectures = "spacy.PretrainCharacters.v1"
+> maxout_pieces = 3
+> hidden_size = 300
 > n_characters = 4
 > ```
 >
 > ```ini
 > ### Vectors objective
 > [pretraining.objective]
-> type = "vectors"
+> @architectures = "spacy.PretrainVectors.v1"
+> maxout_pieces = 3
+> hidden_size = 300
 > loss = "cosine"
 > ```
 
-- **Characters:** The `"characters"` objective asks the model to predict some
-  number of leading and trailing UTF-8 bytes for the words. For instance,
-  setting `n_characters = 2`, the model will try to predict the first two and
-  last two characters of the word.
+Two pretraining objectives are available, both of which are variants of the
+cloze task [Devlin et al. (2018)](https://arxiv.org/abs/1810.04805) introduced
+for BERT. The objective can be defined and configured via the
+`[pretraining.objective]` config block.
 
-- **Vectors:** The `"vectors"` objective asks the model to predict the word's
-  vector, from a static embeddings table. This requires a word vectors model to
-  be trained and loaded. The vectors objective can optimize either a cosine or
-  an L2 loss. We've generally found cosine loss to perform better.
+- [`PretrainCharacters`](/api/architectures#pretrain_chars): The `"characters"`
+  objective asks the model to predict some number of leading and trailing UTF-8
+  bytes for the words. For instance, setting `n_characters = 2`, the model will
+  try to predict the first two and last two characters of the word.
+
+- [`PretrainVectors`](/api/architectures#pretrain_vectors): The `"vectors"`
+  objective asks the model to predict the word's vector, from a static
+  embeddings table. This requires a word vectors model to be trained and loaded.
+  The vectors objective can optimize either a cosine or an L2 loss. We've
+  generally found cosine loss to perform better.
 
 These pretraining objectives use a trick that we term **language modelling with
 approximate outputs (LMAO)**. The motivation for the trick is that predicting an

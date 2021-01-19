@@ -6,7 +6,8 @@ from spacy.tokens import Doc, Token
 def test_doc_retokenize_split(en_vocab):
     words = ["LosAngeles", "start", "."]
     heads = [1, 2, 2]
-    doc = Doc(en_vocab, words=words, heads=heads)
+    deps = ["dep"] * len(heads)
+    doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
     assert len(doc) == 3
     assert len(str(doc)) == 19
     assert doc[0].head.text == "start"
@@ -37,6 +38,36 @@ def test_doc_retokenize_split(en_vocab):
     assert doc[3].text == "."
     assert doc[3].head.text == "."
     assert len(str(doc)) == 19
+
+
+def test_doc_retokenize_split_lemmas(en_vocab):
+    # If lemmas are not set, leave unset
+    words = ["LosAngeles", "start", "."]
+    heads = [1, 2, 2]
+    doc = Doc(en_vocab, words=words, heads=heads)
+    with doc.retokenize() as retokenizer:
+        retokenizer.split(
+            doc[0],
+            ["Los", "Angeles"],
+            [(doc[0], 1), doc[1]],
+        )
+    assert doc[0].lemma_ == ""
+    assert doc[1].lemma_ == ""
+
+    # If lemmas are set, use split orth as default lemma
+    words = ["LosAngeles", "start", "."]
+    heads = [1, 2, 2]
+    doc = Doc(en_vocab, words=words, heads=heads)
+    for t in doc:
+        t.lemma_ = "a"
+    with doc.retokenize() as retokenizer:
+        retokenizer.split(
+            doc[0],
+            ["Los", "Angeles"],
+            [(doc[0], 1), doc[1]],
+        )
+    assert doc[0].lemma_ == "Los"
+    assert doc[1].lemma_ == "Angeles"
 
 
 def test_doc_retokenize_split_dependencies(en_vocab):

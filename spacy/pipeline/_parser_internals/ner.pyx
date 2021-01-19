@@ -2,10 +2,14 @@ from libc.stdint cimport int32_t
 from cymem.cymem cimport Pool
 
 from collections import Counter
+from thinc.extra.search cimport Beam
 
+from ...tokens.doc cimport Doc
+from ...tokens.span import Span
 from ...typedefs cimport weight_t, attr_t
 from ...lexeme cimport Lexeme
 from ...attrs cimport IS_SPACE
+from ...structs cimport TokenC
 from ...training.example cimport Example
 from .stateclass cimport StateClass
 from ._state cimport StateC
@@ -46,20 +50,21 @@ cdef class BiluoGold:
 
     def __init__(self, BiluoPushDown moves, StateClass stcls, Example example):
         self.mem = Pool()
-        self.c = create_gold_state(self.mem, moves, stcls, example)
+        self.c = create_gold_state(self.mem, moves, stcls.c, example)
 
     def update(self, StateClass stcls):
-        update_gold_state(&self.c, stcls)
+        update_gold_state(&self.c, stcls.c)
 
 
 
 cdef GoldNERStateC create_gold_state(
     Pool mem,
     BiluoPushDown moves,
-    StateClass stcls,
+    const StateC* stcls,
     Example example
 ) except *:
     cdef GoldNERStateC gs
+    assert example.x.length > 0
     gs.ner = <Transition*>mem.alloc(example.x.length, sizeof(Transition))
     ner_tags = example.get_aligned_ner()
     for i, ner_tag in enumerate(ner_tags):
@@ -67,7 +72,7 @@ cdef GoldNERStateC create_gold_state(
     return gs
 
 
-cdef void update_gold_state(GoldNERStateC* gs, StateClass stcls) except *:
+cdef void update_gold_state(GoldNERStateC* gs, const StateC* state) except *:
     # We don't need to update each time, unlike the parser.
     pass
 
@@ -75,14 +80,15 @@ cdef void update_gold_state(GoldNERStateC* gs, StateClass stcls) except *:
 cdef do_func_t[N_MOVES] do_funcs
 
 
-cdef bint _entity_is_sunk(StateClass st, Transition* golds) nogil:
-    if not st.entity_is_open():
+cdef bint _entity_is_sunk(const StateC* state, Transition* golds) nogil:
+    if not state.entity_is_open():
         return False
 
-    cdef const Transition* gold = &golds[st.E(0)]
+    cdef const Transition* gold = &golds[state.E(0)]
+    ent = state.get_ent()
     if gold.move != BEGIN and gold.move != UNIT:
         return True
-    elif gold.label != st.E_(0).ent_type:
+    elif gold.label != ent.label:
         return True
     else:
         return False
@@ -228,15 +234,33 @@ cdef class BiluoPushDown(TransitionSystem):
             self.labels[action][label_name] = -1
         return 1
 
-    cdef int initialize_state(self, StateC* st) nogil:
-        # This is especially necessary when we use limited training data.
-        for i in range(st.length):
-            if st._sent[i].ent_type != 0:
-                with gil:
-                    self.add_action(BEGIN, st._sent[i].ent_type)
-                    self.add_action(IN, st._sent[i].ent_type)
-                    self.add_action(UNIT, st._sent[i].ent_type)
-                    self.add_action(LAST, st._sent[i].ent_type)
+    def set_annotations(self, StateClass state, Doc doc):
+        cdef int i
+        ents = []
+        for i in range(state.c._ents.size()):
+            ent = state.c._ents.at(i)
+            if ent.start != -1 and ent.end != -1:
+                ents.append(Span(doc, ent.start, ent.end, label=ent.label))
+        doc.set_ents(ents, default="unmodified")
+        # Set non-blocked tokens to O
+        for i in range(doc.length):
+            if doc.c[i].ent_iob == 0:
+                doc.c[i].ent_iob = 2
+
+    def get_beam_parses(self, Beam beam):
+        parses = []
+        probs = beam.probs
+        for i in range(beam.size):
+            state = <StateC*>beam.at(i)
+            if state.is_final():
+                prob = probs[i]
+                parse = []
+                for j in range(state._ents.size()):
+                    ent = state._ents.at(j)
+                    if ent.start != -1 and ent.end != -1:
+                        parse.append((ent.start, ent.end, self.strings[ent.label]))
+                parses.append((prob, parse))
+        return parses
 
     def init_gold(self, StateClass state, Example example):
         return BiluoGold(self, state, example)
@@ -255,26 +279,25 @@ cdef class BiluoPushDown(TransitionSystem):
         gold_state = gold_.c
         n_gold = 0
         if self.c[i].is_valid(stcls.c, self.c[i].label):
-            cost = self.c[i].get_cost(stcls, &gold_state, self.c[i].label)
+            cost = self.c[i].get_cost(stcls.c, &gold_state, self.c[i].label)
         else:
             cost = 9000
         return cost
 
     cdef int set_costs(self, int* is_valid, weight_t* costs,
-                       StateClass stcls, gold) except -1:
+                       const StateC* state, gold) except -1:
         if not isinstance(gold, BiluoGold):
             raise TypeError(Errors.E909.format(name="BiluoGold"))
         cdef BiluoGold gold_ = gold
-        gold_.update(stcls)
         gold_state = gold_.c
+        update_gold_state(&gold_state, state)
         n_gold = 0
+        self.set_valid(is_valid, state)
         for i in range(self.n_moves):
-            if self.c[i].is_valid(stcls.c, self.c[i].label):
-                is_valid[i] = 1
-                costs[i] = self.c[i].get_cost(stcls, &gold_state, self.c[i].label)
+            if is_valid[i]:
+                costs[i] = self.c[i].get_cost(state, &gold_state, self.c[i].label)
                 n_gold += costs[i] <= 0
             else:
-                is_valid[i] = 0
                 costs[i] = 9000
         if n_gold < 1:
             raise ValueError
@@ -290,7 +313,7 @@ cdef class Missing:
         pass
 
     @staticmethod
-    cdef weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
+    cdef weight_t cost(const StateC* s, const void* _gold, attr_t label) nogil:
         return 9000
 
 
@@ -299,10 +322,10 @@ cdef class Begin:
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
         cdef int preset_ent_iob = st.B_(0).ent_iob
         cdef attr_t preset_ent_label = st.B_(0).ent_type
-        # If we're the last token of the input, we can't B -- must U or O.
-        if st.B(1) == -1:
+        if st.entity_is_open():
             return False
-        elif st.entity_is_open():
+        if st.buffer_length() < 2:
+            # If we're the last token of the input, we can't B -- must U or O.
             return False
         elif label == 0:
             return False
@@ -337,12 +360,11 @@ cdef class Begin:
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
         st.open_ent(label)
-        st.set_ent_tag(st.B(0), 3, label)
         st.push()
         st.pop()
 
     @staticmethod
-    cdef weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
+    cdef weight_t cost(const StateC* s, const void* _gold, attr_t label) nogil:
         gold = <GoldNERStateC*>_gold
         cdef int g_act = gold.ner[s.B(0)].move
         cdef attr_t g_tag = gold.ner[s.B(0)].label
@@ -366,16 +388,17 @@ cdef class Begin:
 cdef class In:
     @staticmethod
     cdef bint is_valid(const StateC* st, attr_t label) nogil:
+        if not st.entity_is_open():
+            return False
+        if st.buffer_length() < 2:
+            # If we're at the end, we can't I.
+            return False
+        ent = st.get_ent()
         cdef int preset_ent_iob = st.B_(0).ent_iob
         cdef attr_t preset_ent_label = st.B_(0).ent_type
         if label == 0:
             return False
-        elif st.E_(0).ent_type != label:
-            return False
-        elif not st.entity_is_open():
-            return False
-        elif st.B(1) == -1:
-            # If we're at the end, we can't I.
+        elif ent.label != label:
             return False
         elif preset_ent_iob == 3:
             return False
@@ -401,12 +424,11 @@ cdef class In:
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
-        st.set_ent_tag(st.B(0), 1, label)
         st.push()
         st.pop()
 
     @staticmethod
-    cdef weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
+    cdef weight_t cost(const StateC* s, const void* _gold, attr_t label) nogil:
         gold = <GoldNERStateC*>_gold
         move = IN
         cdef int next_act = gold.ner[s.B(1)].move if s.B(1) >= 0 else OUT
@@ -457,7 +479,7 @@ cdef class Last:
                 # Otherwise, force acceptance, even if we're across a sentence
                 # boundary or the token is whitespace.
                 return True
-        elif st.E_(0).ent_type != label:
+        elif st.get_ent().label != label:
             return False
         elif st.B_(1).ent_iob == 1:
             # If a preset entity has I next, we can't L here.
@@ -468,12 +490,11 @@ cdef class Last:
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
         st.close_ent()
-        st.set_ent_tag(st.B(0), 1, label)
         st.push()
         st.pop()
 
     @staticmethod
-    cdef weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
+    cdef weight_t cost(const StateC* s, const void* _gold, attr_t label) nogil:
         gold = <GoldNERStateC*>_gold
         move = LAST
 
@@ -537,12 +558,11 @@ cdef class Unit:
     cdef int transition(StateC* st, attr_t label) nogil:
         st.open_ent(label)
         st.close_ent()
-        st.set_ent_tag(st.B(0), 3, label)
         st.push()
         st.pop()
 
     @staticmethod
-    cdef weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
+    cdef weight_t cost(const StateC* s, const void* _gold, attr_t label) nogil:
         gold = <GoldNERStateC*>_gold
         cdef int g_act = gold.ner[s.B(0)].move
         cdef attr_t g_tag = gold.ner[s.B(0)].label
@@ -578,12 +598,11 @@ cdef class Out:
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
-        st.set_ent_tag(st.B(0), 2, 0)
         st.push()
         st.pop()
 
     @staticmethod
-    cdef weight_t cost(StateClass s, const void* _gold, attr_t label) nogil:
+    cdef weight_t cost(const StateC* s, const void* _gold, attr_t label) nogil:
         gold = <GoldNERStateC*>_gold
         cdef int g_act = gold.ner[s.B(0)].move
         cdef attr_t g_tag = gold.ner[s.B(0)].label

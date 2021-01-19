@@ -5,6 +5,7 @@ source: spacy/ml/models
 menu:
   - ['Tok2Vec', 'tok2vec-arch']
   - ['Transformers', 'transformers']
+  - ['Pretraining', 'pretrain']
   - ['Parser & NER', 'parser']
   - ['Tagging', 'tagger']
   - ['Text Classification', 'textcat']
@@ -25,20 +26,20 @@ usage documentation on
 
 ## Tok2Vec architectures {#tok2vec-arch source="spacy/ml/models/tok2vec.py"}
 
-### spacy.Tok2Vec.v1 {#Tok2Vec}
+### spacy.Tok2Vec.v2 {#Tok2Vec}
 
 > #### Example config
 >
 > ```ini
 > [model]
-> @architectures = "spacy.Tok2Vec.v1"
+> @architectures = "spacy.Tok2Vec.v2"
 >
 > [model.embed]
 > @architectures = "spacy.CharacterEmbed.v1"
 > # ...
 >
 > [model.encode]
-> @architectures = "spacy.MaxoutWindowEncoder.v1"
+> @architectures = "spacy.MaxoutWindowEncoder.v2"
 > # ...
 > ```
 
@@ -196,13 +197,13 @@ network to construct a single vector to represent the information.
 | `nC`        | The number of UTF-8 bytes to embed per word. Recommended values are between `3` and `8`, although it may depend on the length of words in the language. ~~int~~ |
 | **CREATES** | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                          |
 
-### spacy.MaxoutWindowEncoder.v1 {#MaxoutWindowEncoder}
+### spacy.MaxoutWindowEncoder.v2 {#MaxoutWindowEncoder}
 
 > #### Example config
 >
 > ```ini
 > [model]
-> @architectures = "spacy.MaxoutWindowEncoder.v1"
+> @architectures = "spacy.MaxoutWindowEncoder.v2"
 > width = 128
 > window_size = 1
 > maxout_pieces = 3
@@ -220,13 +221,13 @@ and residual connections.
 | `depth`         | The number of convolutional layers. Recommended value is `4`. ~~int~~                                                                                                                                          |
 | **CREATES**     | The model using the architecture. ~~Model[List[Floats2d], List[Floats2d]]~~                                                                                                                                    |
 
-### spacy.MishWindowEncoder.v1 {#MishWindowEncoder}
+### spacy.MishWindowEncoder.v2 {#MishWindowEncoder}
 
 > #### Example config
 >
 > ```ini
 > [model]
-> @architectures = "spacy.MishWindowEncoder.v1"
+> @architectures = "spacy.MishWindowEncoder.v2"
 > width = 64
 > window_size = 1
 > depth = 4
@@ -251,19 +252,19 @@ and residual connections.
 > [model]
 > @architectures = "spacy.TorchBiLSTMEncoder.v1"
 > width = 64
-> window_size = 1
-> depth = 4
+> depth = 2
+> dropout = 0.0
 > ```
 
 Encode context using bidirectional LSTM layers. Requires
 [PyTorch](https://pytorch.org).
 
-| Name          | Description                                                                                                                                                                                                    |
-| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `width`       | The input and output width. These are required to be the same, to allow residual connections. This value will be determined by the width of the inputs. Recommended values are between `64` and `300`. ~~int~~ |
-| `window_size` | The number of words to concatenate around each token to construct the convolution. Recommended value is `1`. ~~int~~                                                                                           |
-| `depth`       | The number of convolutional layers. Recommended value is `4`. ~~int~~                                                                                                                                          |
-| **CREATES**   | The model using the architecture. ~~Model[List[Floats2d], List[Floats2d]]~~                                                                                                                                    |
+| Name        | Description                                                                                                                                                                                                    |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `width`     | The input and output width. These are required to be the same, to allow residual connections. This value will be determined by the width of the inputs. Recommended values are between `64` and `300`. ~~int~~ |
+| `depth`     | The number of recurrent layers, for instance `depth=2` results in stacking two LSTMs together. ~~int~~                                                                                                         |
+| `dropout`   | Creates a Dropout layer on the outputs of each LSTM layer except the last layer. Set to 0.0 to disable this functionality. ~~float~~                                                                           |
+| **CREATES** | The model using the architecture. ~~Model[List[Floats2d], List[Floats2d]]~~                                                                                                                                    |
 
 ### spacy.StaticVectors.v1 {#StaticVectors}
 
@@ -426,19 +427,85 @@ one component.
 | `grad_factor`      | Reweight gradients from the component before passing them upstream. You can set this to `0` to "freeze" the transformer weights with respect to the component, or use it to make some components more significant than others. Leaving it at `1.0` is usually fine. ~~float~~ |
 | **CREATES**        | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                        |
 
+## Pretraining architectures {#pretrain source="spacy/ml/models/multi_task.py"}
+
+The spacy `pretrain` command lets you initialize a `Tok2Vec` layer in your
+pipeline with information from raw text. To this end, additional layers are
+added to build a network for a temporary task that forces the `Tok2Vec` layer to
+learn something about sentence structure and word cooccurrence statistics. Two
+pretraining objectives are available, both of which are variants of the cloze
+task [Devlin et al. (2018)](https://arxiv.org/abs/1810.04805) introduced for
+BERT.
+
+For more information, see the section on
+[pretraining](/usage/embeddings-transformers#pretraining).
+
+### spacy.PretrainVectors.v1 {#pretrain_vectors}
+
+> #### Example config
+>
+> ```ini
+> [pretraining]
+> component = "tok2vec"
+> ...
+>
+> [pretraining.objective]
+> @architectures = "spacy.PretrainVectors.v1"
+> maxout_pieces = 3
+> hidden_size = 300
+> loss = "cosine"
+> ```
+
+Predict the word's vector from a static embeddings table as pretraining
+objective for a Tok2Vec layer.
+
+| Name            | Description                                                                                                                                               |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `maxout_pieces` | The number of maxout pieces to use. Recommended values are `2` or `3`. ~~int~~                                                                            |
+| `hidden_size`   | Size of the hidden layer of the model. ~~int~~                                                                                                            |
+| `loss`          | The loss function can be either "cosine" or "L2". We typically recommend to use "cosine". ~~~str~~                                                        |
+| **CREATES**     | A callable function that can create the Model, given the `vocab` of the pipeline and the `tok2vec` layer to pretrain. ~~Callable[[Vocab, Model], Model]~~ |
+
+### spacy.PretrainCharacters.v1 {#pretrain_chars}
+
+> #### Example config
+>
+> ```ini
+> [pretraining]
+> component = "tok2vec"
+> ...
+>
+> [pretraining.objective]
+> @architectures = "spacy.PretrainCharacters.v1"
+> maxout_pieces = 3
+> hidden_size = 300
+> n_characters = 4
+> ```
+
+Predict some number of leading and trailing UTF-8 bytes as pretraining objective
+for a Tok2Vec layer.
+
+| Name            | Description                                                                                                                                               |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `maxout_pieces` | The number of maxout pieces to use. Recommended values are `2` or `3`. ~~int~~                                                                            |
+| `hidden_size`   | Size of the hidden layer of the model. ~~int~~                                                                                                            |
+| `n_characters`  | The window of characters - e.g. if `n_characters = 2`, the model will try to predict the first two and last two characters of the word. ~~int~~           |
+| **CREATES**     | A callable function that can create the Model, given the `vocab` of the pipeline and the `tok2vec` layer to pretrain. ~~Callable[[Vocab, Model], Model]~~ |
+
 ## Parser & NER architectures {#parser}
 
-### spacy.TransitionBasedParser.v1 {#TransitionBasedParser source="spacy/ml/models/parser.py"}
+### spacy.TransitionBasedParser.v2 {#TransitionBasedParser source="spacy/ml/models/parser.py"}
 
 > #### Example Config
 >
 > ```ini
 > [model]
-> @architectures = "spacy.TransitionBasedParser.v1"
+> @architectures = "spacy.TransitionBasedParser.v2"
 > state_type = "ner"
 > extra_state_tokens = false
 > hidden_width = 64
 > maxout_pieces = 2
+> use_upper = true
 >
 > [model.tok2vec]
 > @architectures = "spacy.HashEmbedCNN.v1"
@@ -533,7 +600,7 @@ specific data and challenge.
 > no_output_layer = false
 >
 > [model.tok2vec]
-> @architectures = "spacy.Tok2Vec.v1"
+> @architectures = "spacy.Tok2Vec.v2"
 >
 > [model.tok2vec.embed]
 > @architectures = "spacy.MultiHashEmbed.v1"
@@ -543,7 +610,7 @@ specific data and challenge.
 > include_static_vectors = false
 >
 > [model.tok2vec.encode]
-> @architectures = "spacy.MaxoutWindowEncoder.v1"
+> @architectures = "spacy.MaxoutWindowEncoder.v2"
 > width = ${model.tok2vec.embed.width}
 > window_size = 1
 > maxout_pieces = 3

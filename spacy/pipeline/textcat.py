@@ -14,12 +14,12 @@ from ..tokens import Doc
 from ..vocab import Vocab
 
 
-default_model_config = """
+single_label_default_config = """
 [model]
 @architectures = "spacy.TextCatEnsemble.v2"
 
 [model.tok2vec]
-@architectures = "spacy.Tok2Vec.v1"
+@architectures = "spacy.Tok2Vec.v2"
 
 [model.tok2vec.embed]
 @architectures = "spacy.MultiHashEmbed.v1"
@@ -29,7 +29,7 @@ attrs = ["ORTH", "LOWER", "PREFIX", "SUFFIX", "SHAPE", "ID"]
 include_static_vectors = false
 
 [model.tok2vec.encode]
-@architectures = "spacy.MaxoutWindowEncoder.v1"
+@architectures = "spacy.MaxoutWindowEncoder.v2"
 width = ${model.tok2vec.embed.width}
 window_size = 1
 maxout_pieces = 3
@@ -37,24 +37,24 @@ depth = 2
 
 [model.linear_model]
 @architectures = "spacy.TextCatBOW.v1"
-exclusive_classes = false
+exclusive_classes = true
 ngram_size = 1
 no_output_layer = false
 """
-DEFAULT_TEXTCAT_MODEL = Config().from_str(default_model_config)["model"]
+DEFAULT_SINGLE_TEXTCAT_MODEL = Config().from_str(single_label_default_config)["model"]
 
-bow_model_config = """
+single_label_bow_config = """
 [model]
 @architectures = "spacy.TextCatBOW.v1"
-exclusive_classes = false
+exclusive_classes = true
 ngram_size = 1
 no_output_layer = false
 """
 
-cnn_model_config = """
+single_label_cnn_config = """
 [model]
 @architectures = "spacy.TextCatCNN.v1"
-exclusive_classes = false
+exclusive_classes = true
 
 [model.tok2vec]
 @architectures = "spacy.HashEmbedCNN.v1"
@@ -71,7 +71,7 @@ subword_features = true
 @Language.factory(
     "textcat",
     assigns=["doc.cats"],
-    default_config={"threshold": 0.5, "model": DEFAULT_TEXTCAT_MODEL},
+    default_config={"threshold": 0.5, "model": DEFAULT_SINGLE_TEXTCAT_MODEL},
     default_score_weights={
         "cats_score": 1.0,
         "cats_score_desc": None,
@@ -103,7 +103,7 @@ def make_textcat(
 
 
 class TextCategorizer(TrainablePipe):
-    """Pipeline component for text classification.
+    """Pipeline component for single-label text classification.
 
     DOCS: https://nightly.spacy.io/api/textcategorizer
     """
@@ -111,7 +111,7 @@ class TextCategorizer(TrainablePipe):
     def __init__(
         self, vocab: Vocab, model: Model, name: str = "textcat", *, threshold: float
     ) -> None:
-        """Initialize a text categorizer.
+        """Initialize a text categorizer for single-label classification.
 
         vocab (Vocab): The shared vocabulary.
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
@@ -138,7 +138,10 @@ class TextCategorizer(TrainablePipe):
 
     @property
     def label_data(self) -> List[str]:
-        """RETURNS (List[str]): Information about the component's labels."""
+        """RETURNS (List[str]): Information about the component's labels.
+
+        DOCS: https://nightly.spacy.io/api/textcategorizer#label_data
+        """
         return self.labels
 
     def pipe(self, stream: Iterable[Doc], *, batch_size: int = 128) -> Iterator[Doc]:
@@ -176,7 +179,7 @@ class TextCategorizer(TrainablePipe):
         return scores
 
     def set_annotations(self, docs: Iterable[Doc], scores) -> None:
-        """Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
+        """Modify a batch of Doc objects, using pre-computed scores.
 
         docs (Iterable[Doc]): The documents to modify.
         scores: The scores to set, produced by TextCategorizer.predict.
@@ -214,6 +217,7 @@ class TextCategorizer(TrainablePipe):
             losses = {}
         losses.setdefault(self.name, 0.0)
         validate_examples(examples, "TextCategorizer.update")
+        self._validate_categories(examples)
         if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
             # Handle cases where there are no tokens in any docs.
             return losses
@@ -256,6 +260,7 @@ class TextCategorizer(TrainablePipe):
         if self._rehearsal_model is None:
             return losses
         validate_examples(examples, "TextCategorizer.rehearse")
+        self._validate_categories(examples)
         docs = [eg.predicted for eg in examples]
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
@@ -296,6 +301,7 @@ class TextCategorizer(TrainablePipe):
         DOCS: https://nightly.spacy.io/api/textcategorizer#get_loss
         """
         validate_examples(examples, "TextCategorizer.get_loss")
+        self._validate_categories(examples)
         truths, not_missing = self._examples_to_truth(examples)
         not_missing = self.model.ops.asarray(not_missing)
         d_scores = (scores - truths) / scores.shape[0]
@@ -327,7 +333,7 @@ class TextCategorizer(TrainablePipe):
         nlp: Optional[Language] = None,
         labels: Optional[Dict] = None,
         positive_label: Optional[str] = None,
-    ):
+    ) -> None:
         """Initialize the pipe for training, using a representative set
         of data examples.
 
@@ -341,6 +347,7 @@ class TextCategorizer(TrainablePipe):
         DOCS: https://nightly.spacy.io/api/textcategorizer#initialize
         """
         validate_get_examples(get_examples, "TextCategorizer.initialize")
+        self._validate_categories(get_examples())
         if labels is None:
             for example in get_examples():
                 for cat in example.y.cats:
@@ -373,12 +380,19 @@ class TextCategorizer(TrainablePipe):
         DOCS: https://nightly.spacy.io/api/textcategorizer#score
         """
         validate_examples(examples, "TextCategorizer.score")
+        self._validate_categories(examples)
         return Scorer.score_cats(
             examples,
             "cats",
             labels=self.labels,
-            multi_label=self.model.attrs["multi_label"],
+            multi_label=False,
             positive_label=self.cfg["positive_label"],
             threshold=self.cfg["threshold"],
             **kwargs,
         )
+
+    def _validate_categories(self, examples: List[Example]):
+        """Check whether the provided examples all have single-label cats annotations."""
+        for ex in examples:
+            if list(ex.reference.cats.values()).count(1.0) > 1:
+                raise ValueError(Errors.E895.format(value=ex.reference.cats))

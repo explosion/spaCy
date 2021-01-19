@@ -239,7 +239,6 @@ it.
 | `infix_finditer` | A function to find internal segment separators, e.g. hyphens. Returns a (possibly empty) sequence of `re.MatchObject` objects. ~~Optional[Callable[[str], Iterator[Match]]]~~ |
 | `token_match`    | A function matching the signature of `re.compile(string).match` to find token matches. Returns an `re.MatchObject` or `None`. ~~Optional[Callable[[str], Optional[Match]]]~~  |
 | `rules`          | A dictionary of tokenizer exceptions and special cases. ~~Optional[Dict[str, List[Dict[int, str]]]]~~                                                                         |
-
 ## Serialization fields {#serialization-fields}
 
 During serialization, spaCy will export several data fields used to restore

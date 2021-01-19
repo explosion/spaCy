@@ -16,6 +16,8 @@ from thinc.util import copy_array
 import warnings
 
 from .span cimport Span
+from .token cimport MISSING_DEP
+from ._dict_proxies import SpanGroups
 from .token cimport Token
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
@@ -222,9 +224,11 @@ cdef class Doc:
         self.vocab = vocab
         size = max(20, (len(words) if words is not None else 0))
         self.mem = Pool()
+        self.spans = SpanGroups(self)
         # Guarantee self.lex[i-x], for any i >= 0 and x < padding is in bounds
         # However, we need to remember the true starting places, so that we can
         # realloc.
+        assert size + (PADDING*2) > 0
         data_start = <TokenC*>self.mem.alloc(size + (PADDING*2), sizeof(TokenC))
         cdef int i
         for i in range(size + (PADDING*2)):
@@ -265,7 +269,10 @@ cdef class Doc:
             self.push_back(lexeme, has_space)
 
         if heads is not None:
-            heads = [head - i for i, head in enumerate(heads)]
+            heads = [head - i if head is not None else 0 for i, head in enumerate(heads)]
+        if deps is not None:
+            MISSING_DEP_ = self.vocab.strings[MISSING_DEP]
+            deps = [dep if dep is not None else MISSING_DEP_ for dep in deps]
         if deps and not heads:
             heads = [0] * len(deps)
         if sent_starts is not None:
@@ -327,7 +334,8 @@ cdef class Doc:
                 if annot is not heads and annot is not sent_starts and annot is not ent_iobs:
                     values.extend(annot)
         for value in values:
-            self.vocab.strings.add(value)
+            if value is not None:
+                self.vocab.strings.add(value)
 
         # if there are any other annotations, set them
         if headings:
@@ -808,8 +816,10 @@ cdef class Doc:
     @property
     def noun_chunks(self):
         """Iterate over the base noun phrases in the document. Yields base
-        noun-phrase #[code Span] objects, if the document has been
-        syntactically parsed. A base noun phrase, or "NP chunk", is a noun
+        noun-phrase #[code Span] objects, if the language has a noun chunk iterator.
+        Raises a NotImplementedError otherwise.
+
+        A base noun phrase, or "NP chunk", is a noun
         phrase that does not permit other NPs to be nested within it – so no
         NP-level coordination, no prepositional phrases, and no relative
         clauses.
@@ -818,16 +828,17 @@ cdef class Doc:
 
         DOCS: https://nightly.spacy.io/api/doc#noun_chunks
         """
+        if self.noun_chunks_iterator is None:
+            raise NotImplementedError(Errors.E894.format(lang=self.vocab.lang))
 
         # Accumulate the result before beginning to iterate over it. This
-        # prevents the tokenisation from being changed out from under us
+        # prevents the tokenization from being changed out from under us
         # during the iteration. The tricky thing here is that Span accepts
-        # its tokenisation changing, so it's okay once we have the Span
+        # its tokenization changing, so it's okay once we have the Span
         # objects. See Issue #375.
         spans = []
-        if self.noun_chunks_iterator is not None:
-            for start, end, label in self.noun_chunks_iterator(self):
-                spans.append(Span(self, start, end, label=label))
+        for start, end, label in self.noun_chunks_iterator(self):
+            spans.append(Span(self, start, end, label=label))
         for span in spans:
             yield span
 
@@ -1097,7 +1108,7 @@ cdef class Doc:
         (vocab,) = vocab
 
         if attrs is None:
-            attrs = Doc._get_array_attrs()
+            attrs = list(Doc._get_array_attrs())
         else:
             if any(isinstance(attr, str) for attr in attrs):     # resolve attribute names
                 attrs = [intify_attr(attr) for attr in attrs]    # intify_attr returns None for invalid attrs
@@ -1177,6 +1188,7 @@ cdef class Doc:
         other.length = self.length
         other.max_length = self.max_length
         buff_size = other.max_length + (PADDING*2)
+        assert buff_size > 0
         tokens = <TokenC*>other.mem.alloc(buff_size, sizeof(TokenC))
         memcpy(tokens, self.c - PADDING, buff_size * sizeof(TokenC))
         other.c = &tokens[PADDING]
@@ -1253,6 +1265,9 @@ cdef class Doc:
             strings.add(token.ent_kb_id_)
             strings.add(token.ent_id_)
             strings.add(token.norm_)
+        for group in self.spans.values():
+            for span in group:
+                strings.add(span.label_)
         # Msgpack doesn't distinguish between lists and tuples, which is
         # vexing for user data. As a best guess, we *know* that within
         # keys, we must have tuples. In values we just have to hope
@@ -1264,6 +1279,7 @@ cdef class Doc:
             "sentiment": lambda: self.sentiment,
             "tensor": lambda: self.tensor,
             "cats": lambda: self.cats,
+            "spans": lambda: self.spans.to_bytes(),
             "strings": lambda: list(strings),
             "has_unknown_spaces": lambda: self.has_unknown_spaces
         }
@@ -1273,6 +1289,8 @@ cdef class Doc:
                 serializers["user_data_keys"] = lambda: srsly.msgpack_dumps(user_data_keys)
             if "user_data_values" not in exclude:
                 serializers["user_data_values"] = lambda: srsly.msgpack_dumps(user_data_values)
+        if "user_hooks" not in exclude and any((self.user_hooks, self.user_token_hooks, self.user_span_hooks)):
+            util.logger.warning(Warnings.W109)
         return util.to_dict(serializers, exclude)
 
     def from_dict(self, msg, *, exclude=tuple()):
@@ -1286,18 +1304,6 @@ cdef class Doc:
         """
         if self.length != 0:
             raise ValueError(Errors.E033.format(length=self.length))
-        deserializers = {
-            "text": lambda b: None,
-            "array_head": lambda b: None,
-            "array_body": lambda b: None,
-            "sentiment": lambda b: None,
-            "tensor": lambda b: None,
-            "cats": lambda b: None,
-            "strings": lambda b: None,
-            "user_data_keys": lambda b: None,
-            "user_data_values": lambda b: None,
-            "has_unknown_spaces": lambda b: None
-        }
         # Msgpack doesn't distinguish between lists and tuples, which is
         # vexing for user data. As a best guess, we *know* that within
         # keys, we must have tuples. In values we just have to hope
@@ -1332,8 +1338,11 @@ cdef class Doc:
             self.push_back(lex, has_space)
             start = end + has_space
         self.from_array(msg["array_head"][2:], attrs[:, 2:])
+        if "spans" in msg:
+            self.spans.from_bytes(msg["spans"])
+        else:
+            self.spans.clear()
         return self
-
 
     def extend_tensor(self, tensor):
         """Concatenate a new tensor onto the doc.tensor object.
@@ -1532,7 +1541,7 @@ cdef int set_children_from_heads(TokenC* tokens, int start, int end) except -1:
     for i in range(start, end):
         tokens[i].sent_start = -1
     for i in range(start, end):
-        if tokens[i].head == 0:
+        if tokens[i].head == 0 and not Token.missing_head(&tokens[i]):
             tokens[tokens[i].l_edge].sent_start = 1
 
 
@@ -1649,7 +1658,7 @@ cdef int [:,:] _get_lca_matrix(Doc doc, int start, int end):
 
 
 def pickle_doc(doc):
-    bytes_data = doc.to_bytes(exclude=["vocab", "user_data"])
+    bytes_data = doc.to_bytes(exclude=["vocab", "user_data", "user_hooks"])
     hooks_and_data = (doc.user_data, doc.user_hooks, doc.user_span_hooks,
                       doc.user_token_hooks)
     return (unpickle_doc, (doc.vocab, srsly.pickle_dumps(hooks_and_data), bytes_data))

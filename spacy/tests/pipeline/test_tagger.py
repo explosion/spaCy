@@ -36,6 +36,19 @@ TRAIN_DATA = [
     ("Eat blue ham", {"tags": ["V", "J", "N"]}),
 ]
 
+PARTIAL_DATA = [
+    # partial annotation
+    ("I like green eggs", {"tags": ["", "V", "J", ""]}),
+    # misaligned partial annotation
+    (
+        "He hates green eggs",
+        {
+            "words": ["He", "hate", "s", "green", "eggs"],
+            "tags": ["", "V", "S", "J", ""],
+        },
+    ),
+]
+
 
 def test_no_label():
     nlp = Language()
@@ -85,6 +98,42 @@ def test_initialize_examples():
         nlp.initialize(get_examples=lambda: [])
     with pytest.raises(TypeError):
         nlp.initialize(get_examples=train_examples)
+
+
+def test_no_data():
+    # Test that the tagger provides a nice error when there's no tagging data / labels
+    TEXTCAT_DATA = [
+        ("I'm so happy.", {"cats": {"POSITIVE": 1.0, "NEGATIVE": 0.0}}),
+        ("I'm so angry", {"cats": {"POSITIVE": 0.0, "NEGATIVE": 1.0}}),
+    ]
+    nlp = English()
+    nlp.add_pipe("tagger")
+    nlp.add_pipe("textcat")
+    train_examples = []
+    for t in TEXTCAT_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+    with pytest.raises(ValueError):
+        nlp.initialize(get_examples=lambda: train_examples)
+
+
+def test_incomplete_data():
+    # Test that the tagger works with incomplete information
+    nlp = English()
+    nlp.add_pipe("tagger")
+    train_examples = []
+    for t in PARTIAL_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+    for i in range(50):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+    assert losses["tagger"] < 0.00001
+
+    # test the trained model
+    test_text = "I like blue eggs"
+    doc = nlp(test_text)
+    assert doc[1].tag_ is "V"
+    assert doc[2].tag_ is "J"
 
 
 def test_overfitting_IO():

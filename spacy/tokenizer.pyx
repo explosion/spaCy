@@ -258,6 +258,7 @@ cdef class Tokenizer:
             tokens = doc.c
         # Otherwise create a separate array to store modified tokens
         else:
+            assert max_length > 0
             tokens = <TokenC*>mem.alloc(max_length, sizeof(TokenC))
         # Modify tokenization according to filtered special cases
         offset = self._retokenize_special_spans(doc, tokens, span_data)
@@ -404,9 +405,7 @@ cdef class Tokenizer:
         cdef unicode minus_suf
         cdef size_t last_size = 0
         while string and len(string) != last_size:
-            if self.token_match and self.token_match(string) \
-                    and not self.find_prefix(string) \
-                    and not self.find_suffix(string):
+            if self.token_match and self.token_match(string):
                 break
             if with_special_cases and self._specials.get(hash_string(string)) != NULL:
                 break
@@ -612,7 +611,7 @@ cdef class Tokenizer:
             self.mem.free(stale_special)
         self._rules[string] = substrings
         self._flush_cache()
-        if self.find_prefix(string) or self.find_infix(string) or self.find_suffix(string):
+        if self.find_prefix(string) or self.find_infix(string) or self.find_suffix(string) or " " in string:
             self._special_matcher.add(string, None, self._tokenize_affixes(string, False))
 
     def _reload_special_cases(self):
@@ -679,6 +678,8 @@ cdef class Tokenizer:
                             break
                         suffixes.append(("SUFFIX", substring[split:]))
                         substring = substring[:split]
+                if len(substring) == 0:
+                    continue
                 if token_match(substring):
                     tokens.append(("TOKEN_MATCH", substring))
                     substring = ''
@@ -784,10 +785,16 @@ cdef class Tokenizer:
             self.suffix_search = re.compile(data["suffix_search"]).search
         if "infix_finditer" in data and isinstance(data["infix_finditer"], str):
             self.infix_finditer = re.compile(data["infix_finditer"]).finditer
+        # for token_match and url_match, set to None to override the language
+        # defaults if no regex is provided
         if "token_match" in data and isinstance(data["token_match"], str):
             self.token_match = re.compile(data["token_match"]).match
+        else:
+            self.token_match = None
         if "url_match" in data and isinstance(data["url_match"], str):
             self.url_match = re.compile(data["url_match"]).match
+        else:
+            self.url_match = None
         if "rules" in data and isinstance(data["rules"], dict):
             # make sure to hard reset the cache to remove data from the default exceptions
             self._rules = {}

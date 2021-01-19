@@ -1,5 +1,9 @@
 import pytest
 import numpy
+import logging
+import mock
+
+from spacy.lang.xx import MultiLanguage
 from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
 from spacy.lexeme import Lexeme
@@ -123,6 +127,7 @@ def test_doc_api_serialize(en_tokenizer, text):
     tokens[0].norm_ = "norm"
     tokens.ents = [(tokens.vocab.strings["PRODUCT"], 0, 1)]
     tokens[0].ent_kb_id_ = "ent_kb_id"
+    tokens[0].ent_id_ = "ent_id"
     new_tokens = Doc(tokens.vocab).from_bytes(tokens.to_bytes())
     assert tokens.text == new_tokens.text
     assert [t.text for t in tokens] == [t.text for t in new_tokens]
@@ -130,6 +135,7 @@ def test_doc_api_serialize(en_tokenizer, text):
     assert new_tokens[0].lemma_ == "lemma"
     assert new_tokens[0].norm_ == "norm"
     assert new_tokens[0].ent_kb_id_ == "ent_kb_id"
+    assert new_tokens[0].ent_id_ == "ent_id"
 
     new_tokens = Doc(tokens.vocab).from_bytes(
         tokens.to_bytes(exclude=["tensor"]), exclude=["tensor"]
@@ -144,6 +150,17 @@ def test_doc_api_serialize(en_tokenizer, text):
     assert tokens.text == new_tokens.text
     assert [t.text for t in tokens] == [t.text for t in new_tokens]
     assert [t.orth for t in tokens] == [t.orth for t in new_tokens]
+
+    def inner_func(d1, d2):
+        return "hello!"
+
+    logger = logging.getLogger("spacy")
+    with mock.patch.object(logger, "warning") as mock_warning:
+        _ = tokens.to_bytes()  # noqa: F841
+        mock_warning.assert_not_called()
+        tokens.user_hooks["similarity"] = inner_func
+        _ = tokens.to_bytes()  # noqa: F841
+        mock_warning.assert_called_once()
 
 
 def test_doc_api_set_ents(en_tokenizer):
@@ -616,3 +633,32 @@ def test_doc_set_ents_invalid_spans(en_tokenizer):
             retokenizer.merge(span)
     with pytest.raises(IndexError):
         doc.ents = spans
+
+
+def test_doc_noun_chunks_not_implemented():
+    """Test that a language without noun_chunk iterator, throws a NotImplementedError"""
+    text = "Může data vytvářet a spravovat, ale především je dokáže analyzovat, najít v nich nové vztahy a vše přehledně vizualizovat."
+    nlp = MultiLanguage()
+    doc = nlp(text)
+    with pytest.raises(NotImplementedError):
+        chunks = list(doc.noun_chunks)
+
+def test_span_groups(en_tokenizer):
+    doc = en_tokenizer("Some text about Colombia and the Czech Republic")
+    doc.spans["hi"] = [Span(doc, 3, 4, label="bye")]
+    assert "hi" in doc.spans
+    assert "bye" not in doc.spans
+    assert len(doc.spans["hi"]) == 1
+    assert doc.spans["hi"][0].label_ == "bye"
+    doc.spans["hi"].append(doc[0:3])
+    assert len(doc.spans["hi"]) == 2
+    assert doc.spans["hi"][1].text == "Some text about"
+    assert [span.text for span in doc.spans["hi"]] == ["Colombia", "Some text about"]
+    assert not doc.spans["hi"].has_overlap
+    doc.ents = [Span(doc, 3, 4, label="GPE"), Span(doc, 6, 8, label="GPE")]
+    doc.spans["hi"].extend(doc.ents)
+    assert len(doc.spans["hi"]) == 4
+    assert [span.label_ for span in doc.spans["hi"]] == ["bye", "", "GPE", "GPE"]
+    assert doc.spans["hi"].has_overlap
+    del doc.spans["hi"]
+    assert "hi" not in doc.spans

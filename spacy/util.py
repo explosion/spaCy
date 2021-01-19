@@ -15,6 +15,7 @@ import numpy.random
 import numpy
 import srsly
 import catalogue
+from catalogue import RegistryError, Registry
 import sys
 import warnings
 from packaging.specifiers import SpecifierSet, InvalidSpecifier
@@ -67,8 +68,10 @@ CONFIG_SECTION_ORDER = ["paths", "variables", "system", "nlp", "components", "co
 # fmt: on
 
 
-logging.basicConfig(format="%(message)s")
 logger = logging.getLogger("spacy")
+logger_stream_handler = logging.StreamHandler()
+logger_stream_handler.setFormatter(logging.Formatter("%(message)s"))
+logger.addHandler(logger_stream_handler)
 
 
 class ENV_VARS:
@@ -102,6 +105,52 @@ class registry(thinc.registry):
     # themselves via entry points.
     models = catalogue.create("spacy", "models", entry_points=True)
     cli = catalogue.create("spacy", "cli", entry_points=True)
+
+    @classmethod
+    def get_registry_names(cls) -> List[str]:
+        """List all available registries."""
+        names = []
+        for name, value in inspect.getmembers(cls):
+            if not name.startswith("_") and isinstance(value, Registry):
+                names.append(name)
+        return sorted(names)
+
+    @classmethod
+    def get(cls, registry_name: str, func_name: str) -> Callable:
+        """Get a registered function from the registry."""
+        # We're overwriting this classmethod so we're able to provide more
+        # specific error messages and implement a fallback to spacy-legacy.
+        if not hasattr(cls, registry_name):
+            names = ", ".join(cls.get_registry_names()) or "none"
+            raise RegistryError(Errors.E892.format(name=registry_name, available=names))
+        reg = getattr(cls, registry_name)
+        try:
+            func = reg.get(func_name)
+        except RegistryError:
+            if func_name.startswith("spacy."):
+                legacy_name = func_name.replace("spacy.", "spacy-legacy.")
+                try:
+                    return reg.get(legacy_name)
+                except catalogue.RegistryError:
+                    pass
+            available = ", ".join(sorted(reg.get_all().keys())) or "none"
+            raise RegistryError(
+                Errors.E893.format(
+                    name=func_name, reg_name=registry_name, available=available
+                )
+            ) from None
+        return func
+
+    @classmethod
+    def has(cls, registry_name: str, func_name: str) -> bool:
+        """Check whether a function is available in a registry."""
+        if not hasattr(cls, registry_name):
+            return False
+        reg = getattr(cls, registry_name)
+        if func_name.startswith("spacy."):
+            legacy_name = func_name.replace("spacy.", "spacy-legacy.")
+            return func_name in reg or legacy_name in reg
+        return func_name in reg
 
 
 class SimpleFrozenDict(dict):
@@ -465,18 +514,24 @@ def load_config(
 ) -> Config:
     """Load a config file. Takes care of path validation and section order.
 
-    path (Union[str, Path]): Path to the config file.
+    path (Union[str, Path]): Path to the config file or "-" to read from stdin.
     overrides: (Dict[str, Any]): Config overrides as nested dict or
         dict keyed by section values in dot notation.
     interpolate (bool): Whether to interpolate and resolve variables.
     RETURNS (Config): The loaded config.
     """
     config_path = ensure_path(path)
-    if not config_path.exists() or not config_path.is_file():
-        raise IOError(Errors.E053.format(path=config_path, name="config.cfg"))
-    return Config(section_order=CONFIG_SECTION_ORDER).from_disk(
-        config_path, overrides=overrides, interpolate=interpolate
-    )
+    config = Config(section_order=CONFIG_SECTION_ORDER)
+    if str(config_path) == "-":  # read from standard input
+        return config.from_str(
+            sys.stdin.read(), overrides=overrides, interpolate=interpolate
+        )
+    else:
+        if not config_path or not config_path.exists() or not config_path.is_file():
+            raise IOError(Errors.E053.format(path=config_path, name="config.cfg"))
+        return config.from_disk(
+            config_path, overrides=overrides, interpolate=interpolate
+        )
 
 
 def load_config_from_str(
@@ -1289,6 +1344,13 @@ def combine_score_weights(
 
 
 class DummyTokenizer:
+    def __call__(self, text):
+        raise NotImplementedError
+
+    def pipe(self, texts, **kwargs):
+        for text in texts:
+            yield self(text)
+
     # add dummy methods for to_bytes, from_bytes, to_disk and from_disk to
     # allow serialization (see #1557)
     def to_bytes(self, **kwargs):

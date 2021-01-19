@@ -30,6 +30,11 @@ def tokenizer():
 
 
 @pytest.fixture(scope="session")
+def am_tokenizer():
+    return get_lang_class("am")().tokenizer
+
+
+@pytest.fixture(scope="session")
 def ar_tokenizer():
     return get_lang_class("ar")().tokenizer
 
@@ -173,6 +178,11 @@ def lt_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def mk_tokenizer():
+    return get_lang_class("mk")().tokenizer
+
+
+@pytest.fixture(scope="session")
 def ml_tokenizer():
     return get_lang_class("ml")().tokenizer
 
@@ -238,6 +248,11 @@ def sv_tokenizer():
 def th_tokenizer():
     pytest.importorskip("pythainlp")
     return get_lang_class("th")().tokenizer
+
+
+@pytest.fixture(scope="session")
+def ti_tokenizer():
+    return get_lang_class("ti")().tokenizer
 
 
 @pytest.fixture(scope="session")

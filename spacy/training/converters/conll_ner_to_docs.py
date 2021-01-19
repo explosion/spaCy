@@ -87,7 +87,6 @@ def conll_ner_to_docs(
         nlp = load_model(model)
     else:
         nlp = get_lang_class("xx")()
-    output_docs = []
     for conll_doc in input_data.strip().split(doc_delimiter):
         conll_doc = conll_doc.strip()
         if not conll_doc:
@@ -116,8 +115,7 @@ def conll_ner_to_docs(
             token.is_sent_start = sent_starts[i]
         entities = tags_to_entities(biluo_tags)
         doc.ents = [Span(doc, start=s, end=e + 1, label=L) for L, s, e in entities]
-        output_docs.append(doc)
-    return output_docs
+        yield doc
 
 
 def segment_sents_and_docs(doc, n_sents, doc_delimiter, model=None, msg=None):

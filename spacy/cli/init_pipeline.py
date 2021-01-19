@@ -62,7 +62,7 @@ def update_lexemes(nlp: Language, jsonl_loc: Path) -> None:
 def init_pipeline_cli(
     # fmt: off
     ctx: typer.Context,  # This is only used to read additional arguments
-    config_path: Path = Arg(..., help="Path to config file", exists=True),
+    config_path: Path = Arg(..., help="Path to config file", exists=True, allow_dash=True),
     output_path: Path = Arg(..., help="Output directory for the prepared data"),
     code_path: Optional[Path] = Opt(None, "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
@@ -88,7 +88,7 @@ def init_pipeline_cli(
 def init_labels_cli(
     # fmt: off
     ctx: typer.Context,  # This is only used to read additional arguments
-    config_path: Path = Arg(..., help="Path to config file", exists=True),
+    config_path: Path = Arg(..., help="Path to config file", exists=True, allow_dash=True),
     output_path: Path = Arg(..., help="Output directory for the labels"),
     code_path: Optional[Path] = Opt(None, "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),

@@ -26,11 +26,11 @@ also often include helpful tips and solutions to common problems. You should
 also check the [troubleshooting guide](https://spacy.io/usage/#troubleshooting)
 to see if your problem is already listed there.
 
-If you're looking for help with your code, consider posting a question on
-[Stack Overflow](http://stackoverflow.com/questions/tagged/spacy) instead. If you
-tag it `spacy` and `python`, more people will see it and hopefully be able to
-help. Please understand that we won't be able to provide individual support via
-email. We also believe that help is much more valuable if it's **shared publicly**,
+If you're looking for help with your code, consider posting a question on the
+[GitHub Discussions board](https://github.com/explosion/spaCy/discussions) or
+[Stack Overflow](http://stackoverflow.com/questions/tagged/spacy). Please
+understand that we won't be able to provide individual support via email. We
+also believe that help is much more valuable if it's **shared publicly**,
 so that more people can benefit from it.
 
 ### Submitting issues

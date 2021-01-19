@@ -1,4 +1,3 @@
-import numpy
 from thinc.api import Model
 
 from ..attrs import LOWER
@@ -23,10 +22,7 @@ def forward(model: Model, docs, is_train: bool):
         keys, vals = model.ops.xp.unique(keys, return_counts=True)
         batch_keys.append(keys)
         batch_vals.append(vals)
-    # The dtype here matches what thinc is expecting -- which differs per
-    # platform (by int definition). This should be fixed once the problem
-    # is fixed on Thinc's side.
-    lengths = model.ops.asarray([arr.shape[0] for arr in batch_keys], dtype=numpy.int_)
+    lengths = model.ops.asarray([arr.shape[0] for arr in batch_keys], dtype="int32")
     batch_keys = model.ops.xp.concatenate(batch_keys)
     batch_vals = model.ops.asarray(model.ops.xp.concatenate(batch_vals), dtype="f")
 

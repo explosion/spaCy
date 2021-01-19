@@ -15,15 +15,31 @@ from spacy.training import Example
 from ..util import make_tempdir
 
 
-TRAIN_DATA = [
+TRAIN_DATA_SINGLE_LABEL = [
     ("I'm so happy.", {"cats": {"POSITIVE": 1.0, "NEGATIVE": 0.0}}),
     ("I'm so angry", {"cats": {"POSITIVE": 0.0, "NEGATIVE": 1.0}}),
 ]
 
+TRAIN_DATA_MULTI_LABEL = [
+    ("I'm angry and confused", {"cats": {"ANGRY": 1.0, "CONFUSED": 1.0, "HAPPY": 0.0}}),
+    ("I'm confused but happy", {"cats": {"ANGRY": 0.0, "CONFUSED": 1.0, "HAPPY": 1.0}}),
+]
 
-def make_get_examples(nlp):
+
+def make_get_examples_single_label(nlp):
     train_examples = []
-    for t in TRAIN_DATA:
+    for t in TRAIN_DATA_SINGLE_LABEL:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+
+    def get_examples():
+        return train_examples
+
+    return get_examples
+
+
+def make_get_examples_multi_label(nlp):
+    train_examples = []
+    for t in TRAIN_DATA_MULTI_LABEL:
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
 
     def get_examples():
@@ -85,49 +101,75 @@ def test_textcat_learns_multilabel():
                     assert score > 0.5
 
 
-def test_label_types():
+@pytest.mark.parametrize("name", ["textcat", "textcat_multilabel"])
+def test_label_types(name):
     nlp = Language()
-    textcat = nlp.add_pipe("textcat")
+    textcat = nlp.add_pipe(name)
     textcat.add_label("answer")
     with pytest.raises(ValueError):
         textcat.add_label(9)
 
 
-def test_no_label():
+@pytest.mark.parametrize("name", ["textcat", "textcat_multilabel"])
+def test_no_label(name):
     nlp = Language()
-    nlp.add_pipe("textcat")
+    nlp.add_pipe(name)
     with pytest.raises(ValueError):
         nlp.initialize()
 
 
-def test_implicit_label():
+@pytest.mark.parametrize(
+    "name,get_examples",
+    [
+        ("textcat", make_get_examples_single_label),
+        ("textcat_multilabel", make_get_examples_multi_label),
+    ],
+)
+def test_implicit_label(name, get_examples):
     nlp = Language()
-    nlp.add_pipe("textcat")
-    nlp.initialize(get_examples=make_get_examples(nlp))
+    nlp.add_pipe(name)
+    nlp.initialize(get_examples=get_examples(nlp))
 
 
-def test_no_resize():
+@pytest.mark.parametrize("name", ["textcat", "textcat_multilabel"])
+def test_no_resize(name):
     nlp = Language()
-    textcat = nlp.add_pipe("textcat")
+    textcat = nlp.add_pipe(name)
     textcat.add_label("POSITIVE")
     textcat.add_label("NEGATIVE")
     nlp.initialize()
-    assert textcat.model.get_dim("nO") == 2
+    assert textcat.model.get_dim("nO") >= 2
     # this throws an error because the textcat can't be resized after initialization
     with pytest.raises(ValueError):
         textcat.add_label("NEUTRAL")
 
 
-def test_initialize_examples():
+def test_error_with_multi_labels():
     nlp = Language()
-    textcat = nlp.add_pipe("textcat")
-    for text, annotations in TRAIN_DATA:
+    nlp.add_pipe("textcat")
+    train_examples = []
+    for text, annotations in TRAIN_DATA_MULTI_LABEL:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
+    with pytest.raises(ValueError):
+        nlp.initialize(get_examples=lambda: train_examples)
+
+
+@pytest.mark.parametrize(
+    "name,get_examples, train_data",
+    [
+        ("textcat", make_get_examples_single_label, TRAIN_DATA_SINGLE_LABEL),
+        ("textcat_multilabel", make_get_examples_multi_label, TRAIN_DATA_MULTI_LABEL),
+    ],
+)
+def test_initialize_examples(name, get_examples, train_data):
+    nlp = Language()
+    textcat = nlp.add_pipe(name)
+    for text, annotations in train_data:
         for label, value in annotations.get("cats").items():
             textcat.add_label(label)
     # you shouldn't really call this more than once, but for testing it should be fine
     nlp.initialize()
-    get_examples = make_get_examples(nlp)
-    nlp.initialize(get_examples=get_examples)
+    nlp.initialize(get_examples=get_examples(nlp))
     with pytest.raises(TypeError):
         nlp.initialize(get_examples=lambda: None)
     with pytest.raises(TypeError):
@@ -135,15 +177,13 @@ def test_initialize_examples():
 
 
 def test_overfitting_IO():
-    # Simple test to try and quickly overfit the textcat component - ensuring the ML models work correctly
+    # Simple test to try and quickly overfit the single-label textcat component - ensuring the ML models work correctly
     fix_random_seed(0)
     nlp = English()
-    nlp.config["initialize"]["components"]["textcat"] = {"positive_label": "POSITIVE"}
-    # Set exclusive labels
-    config = {"model": {"linear_model": {"exclusive_classes": True}}}
-    textcat = nlp.add_pipe("textcat", config=config)
+    textcat = nlp.add_pipe("textcat")
+
     train_examples = []
-    for text, annotations in TRAIN_DATA:
+    for text, annotations in TRAIN_DATA_SINGLE_LABEL:
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
     optimizer = nlp.initialize(get_examples=lambda: train_examples)
     assert textcat.model.get_dim("nO") == 2
@@ -172,7 +212,105 @@ def test_overfitting_IO():
     # Test scoring
     scores = nlp.evaluate(train_examples)
     assert scores["cats_micro_f"] == 1.0
+    assert scores["cats_macro_f"] == 1.0
+    assert scores["cats_macro_auc"] == 1.0
     assert scores["cats_score"] == 1.0
+    assert "cats_score_desc" in scores
+
+    # Make sure that running pipe twice, or comparing to call, always amounts to the same predictions
+    texts = ["Just a sentence.", "I like green eggs.", "I am happy.", "I eat ham."]
+    batch_cats_1 = [doc.cats for doc in nlp.pipe(texts)]
+    batch_cats_2 = [doc.cats for doc in nlp.pipe(texts)]
+    no_batch_cats = [doc.cats for doc in [nlp(text) for text in texts]]
+    assert_equal(batch_cats_1, batch_cats_2)
+    assert_equal(batch_cats_1, no_batch_cats)
+
+
+@pytest.mark.skip(reason="TODO: Can this be removed?")
+def test_overfitting_IO_multi_old():
+    # Simple test to try and quickly overfit the multi-label textcat component - ensuring the ML models work correctly
+    fix_random_seed(0)
+    nlp = English()
+    # Set exclusive labels to False
+    config = {"model": {"linear_model": {"exclusive_classes": False}}}
+    textcat = nlp.add_pipe("textcat", config=config)
+    train_examples = []
+    for text, annotations in TRAIN_DATA_MULTI_LABEL:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+    assert textcat.model.get_dim("nO") == 2
+
+    for i in range(50):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+    assert losses["textcat"] < 0.01
+
+    # test the trained model
+    test_text = "I am happy."
+    doc = nlp(test_text)
+    cats = doc.cats
+    assert cats["POSITIVE"] > 0.9
+
+    # Also test the results are still the same after IO
+    with make_tempdir() as tmp_dir:
+        nlp.to_disk(tmp_dir)
+        nlp2 = util.load_model_from_path(tmp_dir)
+        doc2 = nlp2(test_text)
+        cats2 = doc2.cats
+        assert cats2["POSITIVE"] > 0.9
+
+    # Test scoring
+    scores = nlp.evaluate(train_examples)
+    assert scores["cats_micro_f"] == 1.0
+    assert scores["cats_score"] == 1.0
+    assert "cats_score_desc" in scores
+
+    # Make sure that running pipe twice, or comparing to call, always amounts to the same predictions
+    texts = ["Just a sentence.", "I like green eggs.", "I am happy.", "I eat ham."]
+    batch_cats_1 = [doc.cats for doc in nlp.pipe(texts)]
+    batch_cats_2 = [doc.cats for doc in nlp.pipe(texts)]
+    no_batch_cats = [doc.cats for doc in [nlp(text) for text in texts]]
+    assert_equal(batch_cats_1, batch_cats_2)
+    assert_equal(batch_cats_1, no_batch_cats)
+
+
+def test_overfitting_IO_multi():
+    # Simple test to try and quickly overfit the multi-label textcat component - ensuring the ML models work correctly
+    fix_random_seed(0)
+    nlp = English()
+    textcat = nlp.add_pipe("textcat_multilabel")
+
+    train_examples = []
+    for text, annotations in TRAIN_DATA_MULTI_LABEL:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+    assert textcat.model.get_dim("nO") == 3
+
+    for i in range(100):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+    assert losses["textcat_multilabel"] < 0.01
+
+    # test the trained model
+    test_text = "I am confused but happy."
+    doc = nlp(test_text)
+    cats = doc.cats
+    assert cats["HAPPY"] > 0.9
+    assert cats["CONFUSED"] > 0.9
+
+    # Also test the results are still the same after IO
+    with make_tempdir() as tmp_dir:
+        nlp.to_disk(tmp_dir)
+        nlp2 = util.load_model_from_path(tmp_dir)
+        doc2 = nlp2(test_text)
+        cats2 = doc2.cats
+        assert cats2["HAPPY"] > 0.9
+        assert cats2["CONFUSED"] > 0.9
+
+    # Test scoring
+    scores = nlp.evaluate(train_examples)
+    assert scores["cats_micro_f"] == 1.0
+    assert scores["cats_macro_f"] == 1.0
     assert "cats_score_desc" in scores
 
     # Make sure that running pipe twice, or comparing to call, always amounts to the same predictions
@@ -186,25 +324,25 @@ def test_overfitting_IO():
 
 # fmt: off
 @pytest.mark.parametrize(
-    "textcat_config",
+    "name,train_data,textcat_config",
     [
-        {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": False, "ngram_size": 1, "no_output_layer": False},
-        {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": True, "ngram_size": 4, "no_output_layer": False},
-        {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": False, "ngram_size": 3, "no_output_layer": True},
-        {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": True, "ngram_size": 2, "no_output_layer": True},
-        {"@architectures": "spacy.TextCatEnsemble.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": False, "ngram_size": 1, "no_output_layer": False}},
-        {"@architectures": "spacy.TextCatEnsemble.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": True, "ngram_size": 5, "no_output_layer": False}},
-        {"@architectures": "spacy.TextCatCNN.v1", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": True},
-        {"@architectures": "spacy.TextCatCNN.v1", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": False},
+        ("textcat_multilabel", TRAIN_DATA_MULTI_LABEL, {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": False, "ngram_size": 1, "no_output_layer": False}),
+        ("textcat", TRAIN_DATA_SINGLE_LABEL, {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": True, "ngram_size": 4, "no_output_layer": False}),
+        ("textcat_multilabel", TRAIN_DATA_MULTI_LABEL, {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": False, "ngram_size": 3, "no_output_layer": True}),
+        ("textcat", TRAIN_DATA_SINGLE_LABEL, {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": True, "ngram_size": 2, "no_output_layer": True}),
+        ("textcat_multilabel", TRAIN_DATA_MULTI_LABEL, {"@architectures": "spacy.TextCatEnsemble.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": False, "ngram_size": 1, "no_output_layer": False}}),
+        ("textcat", TRAIN_DATA_SINGLE_LABEL, {"@architectures": "spacy.TextCatEnsemble.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": True, "ngram_size": 5, "no_output_layer": False}}),
+        ("textcat", TRAIN_DATA_SINGLE_LABEL, {"@architectures": "spacy.TextCatCNN.v1", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": True}),
+        ("textcat_multilabel", TRAIN_DATA_MULTI_LABEL, {"@architectures": "spacy.TextCatCNN.v1", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": False}),
     ],
 )
 # fmt: on
-def test_textcat_configs(textcat_config):
+def test_textcat_configs(name, train_data, textcat_config):
     pipe_config = {"model": textcat_config}
     nlp = English()
-    textcat = nlp.add_pipe("textcat", config=pipe_config)
+    textcat = nlp.add_pipe(name, config=pipe_config)
     train_examples = []
-    for text, annotations in TRAIN_DATA:
+    for text, annotations in train_data:
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
         for label, value in annotations.get("cats").items():
             textcat.add_label(label)
@@ -217,15 +355,26 @@ def test_textcat_configs(textcat_config):
 def test_positive_class():
     nlp = English()
     textcat = nlp.add_pipe("textcat")
-    get_examples = make_get_examples(nlp)
+    get_examples = make_get_examples_single_label(nlp)
     textcat.initialize(get_examples, labels=["POS", "NEG"], positive_label="POS")
     assert textcat.labels == ("POS", "NEG")
+    assert textcat.cfg["positive_label"] == "POS"
+
+    textcat_multilabel = nlp.add_pipe("textcat_multilabel")
+    get_examples = make_get_examples_multi_label(nlp)
+    with pytest.raises(TypeError):
+        textcat_multilabel.initialize(
+            get_examples, labels=["POS", "NEG"], positive_label="POS"
+        )
+    textcat_multilabel.initialize(get_examples, labels=["FICTION", "DRAMA"])
+    assert textcat_multilabel.labels == ("FICTION", "DRAMA")
+    assert "positive_label" not in textcat_multilabel.cfg
 
 
 def test_positive_class_not_present():
     nlp = English()
     textcat = nlp.add_pipe("textcat")
-    get_examples = make_get_examples(nlp)
+    get_examples = make_get_examples_single_label(nlp)
     with pytest.raises(ValueError):
         textcat.initialize(get_examples, labels=["SOME", "THING"], positive_label="POS")
 
@@ -233,7 +382,7 @@ def test_positive_class_not_present():
 def test_positive_class_not_binary():
     nlp = English()
     textcat = nlp.add_pipe("textcat")
-    get_examples = make_get_examples(nlp)
+    get_examples = make_get_examples_multi_label(nlp)
     with pytest.raises(ValueError):
         textcat.initialize(
             get_examples, labels=["SOME", "THING", "POS"], positive_label="POS"

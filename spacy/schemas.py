@@ -273,6 +273,7 @@ class ModelMetaSchema(BaseModel):
     version: StrictStr = Field(..., title="Model version")
     spacy_version: StrictStr = Field("", title="Compatible spaCy version identifier")
     parent_package: StrictStr = Field("spacy", title="Name of parent spaCy package, e.g. spacy or spacy-nightly")
+    requirements: List[StrictStr] = Field([], title="Additional Python package dependencies, used for the Python package setup")
     pipeline: List[StrictStr] = Field([], title="Names of pipeline components")
     description: StrictStr = Field("", title="Model description")
     license: StrictStr = Field("", title="Model license")
@@ -329,6 +330,7 @@ class ConfigSchemaNlp(BaseModel):
     before_creation: Optional[Callable[[Type["Language"]], Type["Language"]]] = Field(..., title="Optional callback to modify Language class before initialization")
     after_creation: Optional[Callable[["Language"], "Language"]] = Field(..., title="Optional callback to modify nlp object after creation and before the pipeline is constructed")
     after_pipeline_creation: Optional[Callable[["Language"], "Language"]] = Field(..., title="Optional callback to modify nlp object after the pipeline is constructed")
+    batch_size: Optional[int] = Field(..., title="Default batch size")
     # fmt: on
 
     class Config:
@@ -367,6 +369,8 @@ class ConfigSchemaInit(BaseModel):
     init_tok2vec: Optional[StrictStr] = Field(..., title="Path to pretrained tok2vec weights")
     tokenizer: Dict[StrictStr, Any] = Field(..., help="Arguments to be passed into Tokenizer.initialize")
     components: Dict[StrictStr, Dict[StrictStr, Any]] = Field(..., help="Arguments for TrainablePipe.initialize methods of pipeline components, keyed by component")
+    before_init: Optional[Callable[["Language"], "Language"]] = Field(..., title="Optional callback to modify nlp object before initialization")
+    after_init: Optional[Callable[["Language"], "Language"]] = Field(..., title="Optional callback to modify nlp object after initialization")
     # fmt: on
 
     class Config:

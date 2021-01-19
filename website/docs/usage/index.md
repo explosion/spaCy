@@ -129,10 +129,11 @@ grateful to use the work of Chainer's [CuPy](https://cupy.chainer.org) module,
 which provides a numpy-compatible interface for GPU arrays.
 
 spaCy can be installed on GPU by specifying `spacy[cuda]`, `spacy[cuda90]`,
-`spacy[cuda91]`, `spacy[cuda92]`, `spacy[cuda100]`, `spacy[cuda101]` or
-`spacy[cuda102]`. If you know your cuda version, using the more explicit
-specifier allows cupy to be installed via wheel, saving some compilation time.
-The specifiers should install [`cupy`](https://cupy.chainer.org).
+`spacy[cuda91]`, `spacy[cuda92]`, `spacy[cuda100]`, `spacy[cuda101]`,
+`spacy[cuda102]`, `spacy[cuda110]` or `spacy[cuda111]`. If you know your cuda
+version, using the more explicit specifier allows cupy to be installed via
+wheel, saving some compilation time. The specifiers should install
+[`cupy`](https://cupy.chainer.org).
 
 ```bash
 $ pip install -U %%SPACY_PKG_NAME[cuda92]%%SPACY_PKG_FLAGS
@@ -263,6 +264,36 @@ You can configure the build process with the following environment variables:
 | `PYVER`        | The Python version to build against. This version needs to be available on your build and runtime machines. Defaults to `3.6`.                                                                              |
 | `WHEELHOUSE`   | Directory to store the wheel files during compilation. Defaults to `./wheelhouse`.                                                                                                                          |
 
+#### Additional options for developers {#source-developers}
+
+Some additional options may be useful for spaCy developers who are editing the
+source code and recompiling frequently.
+
+- Install in editable mode. Changes to `.py` files will be reflected as soon as
+  the files are saved, but edits to Cython files (`.pxd`, `.pyx`) will require
+  the `pip install` or `python setup.py build_ext` command below to be run
+  again. Before installing in editable mode, be sure you have removed any
+  previous installs with `pip uninstall spacy`, which you may need to run
+  multiple times to remove all traces of earlier installs.
+
+  ```diff
+    pip install -U pip setuptools wheel
+  - pip install .
+  + pip install -r requirements.txt
+  + pip install --no-build-isolation --editable .
+  ```
+
+- Build in parallel using `N` CPUs to speed up compilation and then install in
+  editable mode:
+
+  ```diff
+    pip install -U pip setuptools wheel
+  - pip install .
+  + pip install -r requirements.txt
+  + python setup.py build_ext --inplace -j N
+  + python setup.py develop
+  ```
+
 ### Run tests {#run-tests}
 
 spaCy comes with an [extensive test suite](%%GITHUB_SPACY/spacy/tests). In order
@@ -277,7 +308,7 @@ that directory. Don't forget to also install the test utilities via spaCy's
 ```bash
 $ python -c "import os; import spacy; print(os.path.dirname(spacy.__file__))"
 $ pip install -r path/to/requirements.txt
-$ python -m pytest [spacy directory]
+$ python -m pytest --pyargs %%SPACY_PKG_NAME
 ```
 
 Calling `pytest` on the spaCy directory will run only the basic tests. The flag
@@ -285,8 +316,8 @@ Calling `pytest` on the spaCy directory will run only the basic tests. The flag
 
 ```bash
 $ python -m pip install -U pytest               # update pytest
-$ python -m pytest [spacy directory]            # basic tests
-$ python -m pytest [spacy directory] --slow     # basic and slow tests
+$ python -m pytest --pyargs %%SPACY_PKG_NAME               # basic tests
+$ python -m pytest --pyargs %%SPACY_PKG_NAME --slow        # basic and slow tests
 ```
 
 ## Troubleshooting guide {#troubleshooting}

@@ -264,6 +264,26 @@ defined in the config file.
 $ SPACY_CONFIG_OVERRIDES="--system.gpu_allocator pytorch --training.batch_size 128" ./your_script.sh
 ```
 
+### Reading from standard input {#config-stdin}
+
+Setting the config path to `-` on the command line lets you read the config from
+standard input and pipe it forward from a different process, like
+[`init config`](/api/cli#init-config) or your own custom script. This is
+especially useful for quick experiments, as it lets you generate a config on the
+fly without having to save to and load from disk.
+
+> #### 💡 Tip: Writing to stdout
+>
+> When you run `init config`, you can set the output path to `-` to write to
+> stdout. In a custom script, you can print the string config, e.g.
+> `print(nlp.config.to_str())`.
+
+```cli
+$ python -m spacy init config - --lang en --pipeline ner,textcat --optimize accuracy | python -m spacy train - --paths.train ./corpus/train.spacy --paths.dev ./corpus/dev.spacy
+```
+
+<!-- TODO: add reference to Prodigy's commands once Prodigy nightly is available -->
+
 ### Using variable interpolation {#config-interpolation}
 
 Another very useful feature of the config system is that it supports variable
@@ -378,7 +398,8 @@ weights and [resume training](/api/language#resume_training).
 If you don't want a component to be updated, you can **freeze** it by adding it
 to the `frozen_components` list in the `[training]` block. Frozen components are
 **not updated** during training and are included in the final trained pipeline
-as-is. They are also excluded when calling [`nlp.initialize`](/api/language#initialize).
+as-is. They are also excluded when calling
+[`nlp.initialize`](/api/language#initialize).
 
 > #### Note on frozen components
 >
@@ -551,8 +572,8 @@ or TensorFlow, make **custom modifications** to the `nlp` object, create custom
 optimizers or schedules, or **stream in data** and preprocesses it on the fly
 while training.
 
-Each custom function can have any number of arguments that are passed in via
-the [config](#config), just the built-in functions. If your function defines
+Each custom function can have any number of arguments that are passed in via the
+[config](#config), just the built-in functions. If your function defines
 **default argument values**, spaCy is able to auto-fill your config when you run
 [`init fill-config`](/api/cli#init-fill-config). If you want to make sure that a
 given parameter is always explicitly set in the config, avoid setting a default
@@ -560,10 +581,14 @@ value for it.
 
 ### Training with custom code {#custom-code}
 
-> #### Example
+> ```cli
+> ### Training
+> $ python -m spacy train config.cfg --code functions.py
+> ```
 >
 > ```cli
-> $ python -m spacy train config.cfg --code functions.py
+> ### Packaging
+> $ python -m spacy package ./model-best ./packages --code functions.py
 > ```
 
 The [`spacy train`](/api/cli#train) recipe lets you specify an optional argument
@@ -571,7 +596,13 @@ The [`spacy train`](/api/cli#train) recipe lets you specify an optional argument
 allows you to add custom functions and architectures to the function registry
 that can then be referenced from your `config.cfg`. This lets you train spaCy
 pipelines with custom components, without having to re-implement the whole
-training workflow.
+training workflow. When you package your trained pipeline later using
+[`spacy package`](/api/cli#package), you can provide one or more Python files to
+be included in the package and imported in its `__init__.py`. This means that
+any custom architectures, functions or
+[components](/usage/processing-pipelines#custom-components) will be shipped with
+your pipeline and registered when it's loaded. See the documentation on
+[saving and loading pipelines](/usage/saving-loading#models-custom) for details.
 
 #### Example: Modifying the nlp object {#custom-code-nlp-callbacks}
 
@@ -580,14 +611,16 @@ subclass and language data from scratch – it's often enough to make a few smal
 modifications, like adjusting the
 [tokenization rules](/usage/linguistic-features#native-tokenizer-additions) or
 [language defaults](/api/language#defaults) like stop words. The config lets you
-provide three optional **callback functions** that give you access to the
+provide five optional **callback functions** that give you access to the
 language class and `nlp` object at different points of the lifecycle:
 
-| Callback                  | Description                                                                                                                                                                              |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `before_creation`         | Called before the `nlp` object is created and receives the language subclass like `English` (not the instance). Useful for writing to the [`Language.Defaults`](/api/language#defaults). |
-| `after_creation`          | Called right after the `nlp` object is created, but before the pipeline components are added to the pipeline and receives the `nlp` object. Useful for modifying the tokenizer.          |
-| `after_pipeline_creation` | Called right after the pipeline components are created and added and receives the `nlp` object. Useful for modifying pipeline components.                                                |
+| Callback                      | Description                                                                                                                                                                                                                |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `nlp.before_creation`         | Called before the `nlp` object is created and receives the language subclass like `English` (not the instance). Useful for writing to the [`Language.Defaults`](/api/language#defaults) aside from the tokenizer settings. |
+| `nlp.after_creation`          | Called right after the `nlp` object is created, but before the pipeline components are added to the pipeline and receives the `nlp` object.                                                                                |
+| `nlp.after_pipeline_creation` | Called right after the pipeline components are created and added and receives the `nlp` object. Useful for modifying pipeline components.                                                                                  |
+| `initialize.before_init`      | Called before the pipeline components are initialized and receives the `nlp` object for in-place modification. Useful for modifying the tokenizer settings, similar to the v2 base model option.                           |
+| `initialize.after_init`       | Called after the pipeline components are initialized and receives the `nlp` object for in-place modification.                                                                                                              |
 
 The `@spacy.registry.callbacks` decorator lets you register your custom function
 in the `callbacks` [registry](/api/top-level#registry) under a given name. You
@@ -595,8 +628,8 @@ can then reference the function in a config block using the `@callbacks` key. If
 a block contains a key starting with an `@`, it's interpreted as a reference to
 a function. Because you've registered the function, spaCy knows how to create it
 when you reference `"customize_language_data"` in your config. Here's an example
-of a callback that runs before the `nlp` object is created and adds a few custom
-tokenization rules to the defaults:
+of a callback that runs before the `nlp` object is created and adds a custom
+stop word to the defaults:
 
 > #### config.cfg
 >
@@ -612,7 +645,7 @@ import spacy
 @spacy.registry.callbacks("customize_language_data")
 def create_callback():
     def customize_language_data(lang_cls):
-        lang_cls.Defaults.suffixes = lang_cls.Defaults.suffixes + (r"-+$",)
+        lang_cls.Defaults.stop_words.add("good")
         return lang_cls
 
     return customize_language_data
@@ -643,17 +676,16 @@ we're adding the arguments `extra_stop_words` (a list of strings) and `debug`
 > ```
 
 ```python
-### functions.py {highlight="5,8-10"}
+### functions.py {highlight="5,7-9"}
 from typing import List
 import spacy
 
 @spacy.registry.callbacks("customize_language_data")
 def create_callback(extra_stop_words: List[str] = [], debug: bool = False):
     def customize_language_data(lang_cls):
-        lang_cls.Defaults.suffixes = lang_cls.Defaults.suffixes + (r"-+$",)
-        lang_cls.Defaults.stop_words.add(extra_stop_words)
+        lang_cls.Defaults.stop_words.update(extra_stop_words)
         if debug:
-            print("Updated stop words and tokenizer suffixes")
+            print("Updated stop words")
         return lang_cls
 
     return customize_language_data
@@ -683,6 +715,65 @@ to your Python file. Before loading the config, spaCy will import the
 ```cli
 $ python -m spacy train config.cfg --output ./output --code ./functions.py
 ```
+
+#### Example: Modifying tokenizer settings {#custom-tokenizer}
+
+Use the `initialize.before_init` callback to modify the tokenizer settings when
+training a new pipeline. Write a registered callback that modifies the tokenizer
+settings and specify this callback in your config:
+
+> #### config.cfg
+>
+> ```ini
+> [initialize]
+>
+> [initialize.before_init]
+> @callbacks = "customize_tokenizer"
+> ```
+
+```python
+### functions.py
+from spacy.util import registry, compile_suffix_regex
+
+@registry.callbacks("customize_tokenizer")
+def make_customize_tokenizer():
+    def customize_tokenizer(nlp):
+        # remove a suffix
+        suffixes = list(nlp.Defaults.suffixes)
+        suffixes.remove("\\[")
+        suffix_regex = compile_suffix_regex(suffixes)
+        nlp.tokenizer.suffix_search = suffix_regex.search
+
+        # add a special case
+        nlp.tokenizer.add_special_case("_SPECIAL_", [{"ORTH": "_SPECIAL_"}])
+    return customize_tokenizer
+```
+
+When training, provide the function above with the `--code` option:
+
+```cli
+$ python -m spacy train config.cfg --code ./functions.py
+```
+
+Because this callback is only called in the one-time initialization step before
+training, the callback code does not need to be packaged with the final pipeline
+package. However, to make it easier for others to replicate your training setup,
+you can choose to package the initialization callbacks with the pipeline package
+or to publish them separately.
+
+<Infobox variant="warning" title="nlp.before_creation vs. initialize.before_init">
+
+- `nlp.before_creation` is the best place to modify language defaults other than
+  the tokenizer settings.
+- `initialize.before_init` is the best place to modify tokenizer settings when
+  training a new pipeline.
+
+Unlike the other language defaults, the tokenizer settings are saved with the
+pipeline with `nlp.to_disk()`, so modifications made in `nlp.before_creation`
+will be clobbered by the saved settings when the trained pipeline is loaded from
+disk.
+
+</Infobox>
 
 #### Example: Custom logging function {#custom-logging}
 
@@ -958,10 +1049,10 @@ data assets, track changes and share your end-to-end processes with your team.
 </Infobox>
 
 The binary `.spacy` format is a serialized [`DocBin`](/api/docbin) containing
-one or more [`Doc`](/api/doc) objects. It's extremely **efficient in
-storage**, especially when packing multiple documents together. You can also
-create `Doc` objects manually, so you can write your own custom logic to convert
-and store existing annotations for use in spaCy.
+one or more [`Doc`](/api/doc) objects. It's extremely **efficient in storage**,
+especially when packing multiple documents together. You can also create `Doc`
+objects manually, so you can write your own custom logic to convert and store
+existing annotations for use in spaCy.
 
 ```python
 ### Training data from Doc objects {highlight="6-9"}
@@ -1300,10 +1391,10 @@ mapping so they know which worker owns which parameter.
 As training proceeds, every worker will be computing gradients for **all** of
 the model parameters. When they compute gradients for parameters they don't own,
 they'll **send them to the worker** that does own that parameter, along with a
-version identifier so that the owner can decide whether to discard the
-gradient. Workers use the gradients they receive and the ones they compute
-locally to update the parameters they own, and then broadcast the updated array
-and a new version ID to the other workers.
+version identifier so that the owner can decide whether to discard the gradient.
+Workers use the gradients they receive and the ones they compute locally to
+update the parameters they own, and then broadcast the updated array and a new
+version ID to the other workers.
 
 This training procedure is **asynchronous** and **non-blocking**. Workers always
 push their gradient increments and parameter updates, they do not have to pull

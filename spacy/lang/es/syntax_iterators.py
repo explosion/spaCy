@@ -1,4 +1,4 @@
-from typing import Union, Iterator, Optional, List, Tuple
+from typing import Union, Iterator
 
 from ...symbols import NOUN, PROPN, PRON, VERB, AUX
 from ...errors import Errors
@@ -19,34 +19,24 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
     np_left_deps = [doc.vocab.strings.add(label) for label in left_labels]
     np_right_deps = [doc.vocab.strings.add(label) for label in right_labels]
     stop_deps = [doc.vocab.strings.add(label) for label in stop_labels]
+
+    prev_right = -1
     for token in doclike:
         if token.pos in [PROPN, NOUN, PRON]:
             left, right = noun_bounds(
                 doc, token, np_left_deps, np_right_deps, stop_deps
             )
+            if left.i <= prev_right:
+                continue
             yield left.i, right.i + 1, np_label
-            token = right
-        token = next_token(token)
+            prev_right = right.i
 
 
 def is_verb_token(token: Token) -> bool:
     return token.pos in [VERB, AUX]
 
 
-def next_token(token: Token) -> Optional[Token]:
-    try:
-        return token.nbor()
-    except IndexError:
-        return None
-
-
-def noun_bounds(
-    doc: Doc,
-    root: Token,
-    np_left_deps: List[str],
-    np_right_deps: List[str],
-    stop_deps: List[str],
-) -> Tuple[Token, Token]:
+def noun_bounds(doc, root, np_left_deps, np_right_deps, stop_deps):
     left_bound = root
     for token in reversed(list(root.lefts)):
         if token.dep in np_left_deps:

@@ -6,6 +6,7 @@ menu:
   - ['merge_noun_chunks', 'merge_noun_chunks']
   - ['merge_entities', 'merge_entities']
   - ['merge_subtokens', 'merge_subtokens']
+  - ['token_splitter', 'token_splitter']
 ---
 
 ## merge_noun_chunks {#merge_noun_chunks tag="function"}
@@ -107,3 +108,26 @@ end of the pipeline and after all other components.
 | `doc`       | The `Doc` object to process, e.g. the `Doc` in the pipeline. ~~Doc~~ |
 | `label`     | The subtoken dependency label. Defaults to `"subtok"`. ~~str~~       |
 | **RETURNS** | The modified `Doc` with merged subtokens. ~~Doc~~                    |
+
+## token_splitter {#token_splitter tag="function" new="3.0"}
+
+Split tokens longer than a minimum length into shorter tokens. Intended for use
+with transformer pipelines where long spaCy tokens lead to input text that
+exceed the transformer model max length. See
+[managing transformer model max length limitations](/usage/embeddings-transformers#transformer-max-length).
+
+> #### Example
+>
+> ```python
+> config = {"min_length": 20, "split_length": 5}
+> nlp.add_pipe("token_splitter", config=config, first=True)
+> doc = nlp("aaaaabbbbbcccccdddddee")
+> print([token.text for token in doc])
+> # ['aaaaa', 'bbbbb', 'ccccc', 'ddddd', 'ee']
+> ```
+
+| Setting        | Description                                                           |
+| -------------- | --------------------------------------------------------------------- |
+| `min_length`   | The minimum length for a token to be split. Defaults to `25`. ~~int~~ |
+| `split_length` | The length of the split tokens. Defaults to `5`. ~~int~~              |
+| **RETURNS**    | The modified `Doc` with the split tokens. ~~Doc~~                     |

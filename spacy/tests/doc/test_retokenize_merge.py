@@ -21,11 +21,13 @@ def test_doc_retokenize_merge(en_tokenizer):
     assert doc[4].text == "the beach boys"
     assert doc[4].text_with_ws == "the beach boys "
     assert doc[4].tag_ == "NAMED"
+    assert doc[4].lemma_ == "LEMMA"
     assert str(doc[4].morph) == "Number=Plur"
     assert doc[5].text == "all night"
     assert doc[5].text_with_ws == "all night"
     assert doc[5].tag_ == "NAMED"
     assert str(doc[5].morph) == "Number=Plur"
+    assert doc[5].lemma_ == "LEMMA"
 
 
 def test_doc_retokenize_merge_children(en_tokenizer):
@@ -87,8 +89,9 @@ def test_doc_retokenize_lex_attrs(en_tokenizer):
 def test_doc_retokenize_spans_merge_tokens(en_tokenizer):
     text = "Los Angeles start."
     heads = [1, 2, 2, 2]
+    deps = ["dep"] * len(heads)
     tokens = en_tokenizer(text)
-    doc = Doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
+    doc = Doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
     assert len(doc) == 4
     assert doc[0].head.text == "Angeles"
     assert doc[1].head.text == "start"
@@ -103,25 +106,29 @@ def test_doc_retokenize_spans_merge_tokens(en_tokenizer):
 
 def test_doc_retokenize_spans_merge_tokens_default_attrs(en_vocab):
     words = ["The", "players", "start", "."]
+    lemmas = [t.lower() for t in words]
     heads = [1, 2, 2, 2]
     tags = ["DT", "NN", "VBZ", "."]
     pos = ["DET", "NOUN", "VERB", "PUNCT"]
-    doc = Doc(en_vocab, words=words, tags=tags, pos=pos, heads=heads)
+    doc = Doc(en_vocab, words=words, tags=tags, pos=pos, heads=heads, lemmas=lemmas)
     assert len(doc) == 4
     assert doc[0].text == "The"
     assert doc[0].tag_ == "DT"
     assert doc[0].pos_ == "DET"
+    assert doc[0].lemma_ == "the"
     with doc.retokenize() as retokenizer:
         retokenizer.merge(doc[0:2])
     assert len(doc) == 3
     assert doc[0].text == "The players"
     assert doc[0].tag_ == "NN"
     assert doc[0].pos_ == "NOUN"
-    doc = Doc(en_vocab, words=words, tags=tags, pos=pos, heads=heads)
+    assert doc[0].lemma_ == "the players"
+    doc = Doc(en_vocab, words=words, tags=tags, pos=pos, heads=heads, lemmas=lemmas)
     assert len(doc) == 4
     assert doc[0].text == "The"
     assert doc[0].tag_ == "DT"
     assert doc[0].pos_ == "DET"
+    assert doc[0].lemma_ == "the"
     with doc.retokenize() as retokenizer:
         retokenizer.merge(doc[0:2])
         retokenizer.merge(doc[2:4])
@@ -129,15 +136,18 @@ def test_doc_retokenize_spans_merge_tokens_default_attrs(en_vocab):
     assert doc[0].text == "The players"
     assert doc[0].tag_ == "NN"
     assert doc[0].pos_ == "NOUN"
+    assert doc[0].lemma_ == "the players"
     assert doc[1].text == "start ."
     assert doc[1].tag_ == "VBZ"
     assert doc[1].pos_ == "VERB"
+    assert doc[1].lemma_ == "start ."
 
 
 def test_doc_retokenize_spans_merge_heads(en_vocab):
     words = ["I", "found", "a", "pilates", "class", "near", "work", "."]
     heads = [1, 1, 4, 6, 1, 4, 5, 1]
-    doc = Doc(en_vocab, words=words, heads=heads)
+    deps = ["dep"] * len(heads)
+    doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
     assert len(doc) == 8
     with doc.retokenize() as retokenizer:
         attrs = {"tag": doc[4].tag_, "lemma": "pilates class", "ent_type": "O"}
@@ -169,8 +179,9 @@ def test_doc_retokenize_spans_merge_non_disjoint(en_tokenizer):
 def test_doc_retokenize_span_np_merges(en_tokenizer):
     text = "displaCy is a parse tool built with Javascript"
     heads = [1, 1, 4, 4, 1, 4, 5, 6]
+    deps = ["dep"] * len(heads)
     tokens = en_tokenizer(text)
-    doc = Doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
+    doc = Doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
     assert doc[4].head.i == 1
     with doc.retokenize() as retokenizer:
         attrs = {"tag": "NP", "lemma": "tool", "ent_type": "O"}
@@ -416,6 +427,13 @@ def test_doc_retokenizer_merge_lex_attrs(en_vocab):
     assert doc[1].is_stop
     assert not doc[0].is_stop
     assert not doc[1].like_num
+    # Test that norm is only set on tokens
+    doc = Doc(en_vocab, words=["eins", "zwei", "!", "!"])
+    assert doc[0].norm_ == "eins"
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[0:1], attrs={"norm": "1"})
+    assert doc[0].norm_ == "1"
+    assert en_vocab["eins"].norm_ == "eins"
 
 
 def test_retokenize_skip_duplicates(en_vocab):

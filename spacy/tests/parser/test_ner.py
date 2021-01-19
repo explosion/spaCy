@@ -54,7 +54,7 @@ def tsys(vocab, entity_types):
 
 def test_get_oracle_moves(tsys, doc, entity_annots):
     example = Example.from_dict(doc, {"entities": entity_annots})
-    act_classes = tsys.get_oracle_sequence(example)
+    act_classes = tsys.get_oracle_sequence(example, _debug=False)
     names = [tsys.get_class_name(act) for act in act_classes]
     assert names == ["U-PERSON", "O", "O", "B-GPE", "L-GPE", "O"]
 
@@ -301,10 +301,11 @@ def test_block_ner():
     assert [token.ent_type_ for token in doc] == expected_types
 
 
-def test_overfitting_IO():
-    # Simple test to try and quickly overfit the NER component - ensuring the ML models work correctly
+@pytest.mark.parametrize("use_upper", [True, False])
+def test_overfitting_IO(use_upper):
+    # Simple test to try and quickly overfit the NER component
     nlp = English()
-    ner = nlp.add_pipe("ner")
+    ner = nlp.add_pipe("ner", config={"model": {"use_upper": use_upper}})
     train_examples = []
     for text, annotations in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
@@ -334,6 +335,15 @@ def test_overfitting_IO():
         assert len(ents2) == 1
         assert ents2[0].text == "London"
         assert ents2[0].label_ == "LOC"
+        # Ensure that the predictions are still the same, even after adding a new label
+        ner2 = nlp2.get_pipe("ner")
+        assert ner2.model.attrs["has_upper"] == use_upper
+        ner2.add_label("RANDOM_NEW_LABEL")
+        doc3 = nlp2(test_text)
+        ents3 = doc3.ents
+        assert len(ents3) == 1
+        assert ents3[0].text == "London"
+        assert ents3[0].label_ == "LOC"
 
     # Make sure that running pipe twice, or comparing to call, always amounts to the same predictions
     texts = [
@@ -347,6 +357,84 @@ def test_overfitting_IO():
     no_batch_deps = [doc.to_array([ENT_IOB]) for doc in [nlp(text) for text in texts]]
     assert_equal(batch_deps_1, batch_deps_2)
     assert_equal(batch_deps_1, no_batch_deps)
+
+
+def test_beam_ner_scores():
+    # Test that we can get confidence values out of the beam_ner pipe
+    beam_width = 16
+    beam_density = 0.0001
+    nlp = English()
+    config = {
+        "beam_width": beam_width,
+        "beam_density": beam_density,
+    }
+    ner = nlp.add_pipe("beam_ner", config=config)
+    train_examples = []
+    for text, annotations in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
+        for ent in annotations.get("entities"):
+            ner.add_label(ent[2])
+    optimizer = nlp.initialize()
+
+    # update once
+    losses = {}
+    nlp.update(train_examples, sgd=optimizer, losses=losses)
+
+    # test the scores from the beam
+    test_text = "I like London."
+    doc = nlp.make_doc(test_text)
+    docs = [doc]
+    beams = ner.predict(docs)
+    entity_scores = ner.scored_ents(beams)[0]
+
+    for j in range(len(doc)):
+        for label in ner.labels:
+            score = entity_scores[(j, j + 1, label)]
+            eps = 0.00001
+            assert 0 - eps <= score <= 1 + eps
+
+
+def test_beam_overfitting_IO():
+    # Simple test to try and quickly overfit the Beam NER component
+    nlp = English()
+    beam_width = 16
+    beam_density = 0.0001
+    config = {
+        "beam_width": beam_width,
+        "beam_density": beam_density,
+    }
+    ner = nlp.add_pipe("beam_ner", config=config)
+    train_examples = []
+    for text, annotations in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
+        for ent in annotations.get("entities"):
+            ner.add_label(ent[2])
+    optimizer = nlp.initialize()
+
+    # run overfitting
+    for i in range(50):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+    assert losses["beam_ner"] < 0.0001
+
+    # test the scores from the beam
+    test_text = "I like London."
+    docs = [nlp.make_doc(test_text)]
+    beams = ner.predict(docs)
+    entity_scores = ner.scored_ents(beams)[0]
+    assert entity_scores[(2, 3, "LOC")] == 1.0
+    assert entity_scores[(2, 3, "PERSON")] == 0.0
+
+    # Also test the results are still the same after IO
+    with make_tempdir() as tmp_dir:
+        nlp.to_disk(tmp_dir)
+        nlp2 = util.load_model_from_path(tmp_dir)
+        docs2 = [nlp2.make_doc(test_text)]
+        ner2 = nlp2.get_pipe("beam_ner")
+        beams2 = ner2.predict(docs2)
+        entity_scores2 = ner2.scored_ents(beams2)[0]
+        assert entity_scores2[(2, 3, "LOC")] == 1.0
+        assert entity_scores2[(2, 3, "PERSON")] == 0.0
 
 
 def test_ner_warns_no_lookups(caplog):

@@ -272,7 +272,11 @@ def show_validation_error(
         msg.fail(title)
         print(err.text.strip())
         if hint_fill and "value_error.missing" in err.error_types:
-            config_path = file_path if file_path is not None else "config.cfg"
+            config_path = (
+                file_path
+                if file_path is not None and str(file_path) != "-"
+                else "config.cfg"
+            )
             msg.text(
                 "If your config contains missing values, you can run the 'init "
                 "fill-config' command to fill in all the defaults, if possible:",

@@ -575,6 +575,39 @@ objects, if the entity recognizer has been applied.
 | ----------- | --------------------------------------------------------------------- |
 | **RETURNS** | Entities in the document, one `Span` per entity. ~~Tuple[Span, ...]~~ |
 
+## Doc.spans {#spans tag="property"}
+
+A dictionary of named span groups, to store and access additional span
+annotations. You can write to it by assigning a list of [`Span`](/api/span)
+objects or a [`SpanGroup`](/api/spangroup) to a given key.
+
+> #### Example
+>
+> ```python
+> doc = nlp("Their goi ng home")
+> doc.spans["errors"] = [doc[0:1], doc[2:4]]
+> ```
+
+| Name        | Description                                                        |
+| ----------- | ------------------------------------------------------------------ |
+| **RETURNS** | The span groups assigned to the document. ~~Dict[str, SpanGroup]~~ |
+
+## Doc.cats {#cats tag="property" model="text classifier"}
+
+Maps a label to a score for categories applied to the document. Typically set by
+the [`TextCategorizer`](/api/textcategorizer).
+
+> #### Example
+>
+> ```python
+> doc = nlp("This is a text about football.")
+> print(doc.cats)
+> ```
+
+| Name        | Description                                                |
+| ----------- | ---------------------------------------------------------- |
+| **RETURNS** | The text categories mapped to scores. ~~Dict[str, float]~~ |
+
 ## Doc.noun_chunks {#noun_chunks tag="property" model="parser"}
 
 Iterate over the base noun phrases in the document. Yields base noun-phrase
@@ -583,11 +616,15 @@ phrase, or "NP chunk", is a noun phrase that does not permit other NPs to be
 nested within it – so no NP-level coordination, no prepositional phrases, and no
 relative clauses.
 
+If the `noun_chunk` [syntax iterator](/usage/adding-languages#language-data) has
+not been implemeted for the given language, a `NotImplementedError` is raised.
+
 > #### Example
 >
 > ```python
 > doc = nlp("A phrase with another phrase occurs.")
 > chunks = list(doc.noun_chunks)
+> assert len(chunks) == 2
 > assert chunks[0].text == "A phrase"
 > assert chunks[1].text == "another phrase"
 > ```
@@ -668,23 +705,22 @@ The L2 norm of the document's vector representation.
 
 ## Attributes {#attributes}
 
-| Name                                 | Description                                                                                                                                 |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `text`                               | A string representation of the document text. ~~str~~                                                                                       |
-| `text_with_ws`                       | An alias of `Doc.text`, provided for duck-type compatibility with `Span` and `Token`. ~~str~~                                               |
-| `mem`                                | The document's local memory heap, for all C data it owns. ~~cymem.Pool~~                                                                    |
-| `vocab`                              | The store of lexical types. ~~Vocab~~                                                                                                       |
-| `tensor` <Tag variant="new">2</Tag>  | Container for dense vector representations. ~~numpy.ndarray~~                                                                               |
-| `cats` <Tag variant="new">2</Tag>    | Maps a label to a score for categories applied to the document. The label is a string and the score should be a float. ~~Dict[str, float]~~ |
-| `user_data`                          | A generic storage area, for user custom data. ~~Dict[str, Any]~~                                                                            |
-| `lang` <Tag variant="new">2.1</Tag>  | Language of the document's vocabulary. ~~int~~                                                                                              |
-| `lang_` <Tag variant="new">2.1</Tag> | Language of the document's vocabulary. ~~str~~                                                                                              |
-| `sentiment`                          | The document's positivity/negativity score, if available. ~~float~~                                                                         |
-| `user_hooks`                         | A dictionary that allows customization of the `Doc`'s properties. ~~Dict[str, Callable]~~                                                   |
-| `user_token_hooks`                   | A dictionary that allows customization of properties of `Token` children. ~~Dict[str, Callable]~~                                           |
-| `user_span_hooks`                    | A dictionary that allows customization of properties of `Span` children. ~~Dict[str, Callable]~~                                            |
-| `has_unknown_spaces`                 | Whether the document was constructed without known spacing between tokens (typically when created from gold tokenization). ~~bool~~         |
-| `_`                                  | User space for adding custom [attribute extensions](/usage/processing-pipelines#custom-components-attributes). ~~Underscore~~               |
+| Name                                 | Description                                                                                                                         |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `text`                               | A string representation of the document text. ~~str~~                                                                               |
+| `text_with_ws`                       | An alias of `Doc.text`, provided for duck-type compatibility with `Span` and `Token`. ~~str~~                                       |
+| `mem`                                | The document's local memory heap, for all C data it owns. ~~cymem.Pool~~                                                            |
+| `vocab`                              | The store of lexical types. ~~Vocab~~                                                                                               |
+| `tensor` <Tag variant="new">2</Tag>  | Container for dense vector representations. ~~numpy.ndarray~~                                                                       |
+| `user_data`                          | A generic storage area, for user custom data. ~~Dict[str, Any]~~                                                                    |
+| `lang` <Tag variant="new">2.1</Tag>  | Language of the document's vocabulary. ~~int~~                                                                                      |
+| `lang_` <Tag variant="new">2.1</Tag> | Language of the document's vocabulary. ~~str~~                                                                                      |
+| `sentiment`                          | The document's positivity/negativity score, if available. ~~float~~                                                                 |
+| `user_hooks`                         | A dictionary that allows customization of the `Doc`'s properties. ~~Dict[str, Callable]~~                                           |
+| `user_token_hooks`                   | A dictionary that allows customization of properties of `Token` children. ~~Dict[str, Callable]~~                                   |
+| `user_span_hooks`                    | A dictionary that allows customization of properties of `Span` children. ~~Dict[str, Callable]~~                                    |
+| `has_unknown_spaces`                 | Whether the document was constructed without known spacing between tokens (typically when created from gold tokenization). ~~bool~~ |
+| `_`                                  | User space for adding custom [attribute extensions](/usage/processing-pipelines#custom-components-attributes). ~~Underscore~~       |
 
 ## Serialization fields {#serialization-fields}
 

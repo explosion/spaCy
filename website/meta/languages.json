@@ -117,6 +117,12 @@
             "models": ["lt_core_news_sm", "lt_core_news_md", "lt_core_news_lg"]
         },
         { "code": "lv", "name": "Latvian" },
+        {
+            "code": "mk",
+            "name": "Macedonian",
+            "has_examples": false,
+            "models": ["mk_core_news_sm", "mk_core_news_md", "mk_core_news_lg"]
+        },
         { "code": "ml", "name": "Malayalam", "has_examples": true },
         { "code": "mr", "name": "Marathi" },
         {
@@ -159,7 +165,8 @@
             "code": "ru",
             "name": "Russian",
             "has_examples": true,
-            "dependencies": [{ "name": "pymorphy2", "url": "https://github.com/kmike/pymorphy2" }]
+            "dependencies": [{ "name": "pymorphy2", "url": "https://github.com/kmike/pymorphy2" }],
+            "models": ["ru_core_news_sm", "ru_core_news_md", "ru_core_news_lg"]
         },
         { "code": "sa", "name": "Sanskrit", "has_examples": true },
         { "code": "si", "name": "Sinhala", "example": "මෙය වාක්‍යයකි.", "has_examples": true },
@@ -200,9 +207,39 @@
             "dependencies": [{ "name": "Pyvi", "url": "https://github.com/trungtv/pyvi" }]
         },
         {
+            "code": "lij",
+            "name": "Ligurian",
+            "example": "Sta chì a l'é unna fraxe.",
+            "has_examples": true
+        },
+        {
+            "code": "hy",
+            "name": "Armenian",
+            "has_examples": true
+        },
+        {
+            "code": "gu",
+            "name": "Gujarati",
+            "has_examples": true
+        },
+        {
+            "code": "ml",
+            "name": "Malayalam",
+            "has_examples": true
+        },
+        {
+            "code": "ne",
+            "name": "Nepali",
+            "has_examples": true
+        },
+        {
+            "code": "mk",
+            "name": "Macedonian"
+        },
+        {
             "code": "xx",
             "name": "Multi-language",
-            "models": ["xx_ent_wiki_sm"],
+            "models": ["xx_ent_wiki_sm", "xx_sent_ud_sm"],
             "example": "This is a sentence about Facebook."
         },
         { "code": "yo", "name": "Yoruba", "has_examples": true },
@@ -216,8 +253,8 @@
                     "url": "https://github.com/fxsjy/jieba"
                 },
                 {
-                    "name": "PKUSeg",
-                    "url": "https://github.com/lancopku/PKUSeg-python"
+                    "name": "spacy-pkuseg",
+                    "url": "https://github.com/explosion/spacy-pkuseg"
                 }
             ],
             "has_examples": true

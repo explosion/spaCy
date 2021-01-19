@@ -2,9 +2,9 @@
 from setuptools import Extension, setup, find_packages
 import sys
 import platform
+import numpy
 from distutils.command.build_ext import build_ext
 from distutils.sysconfig import get_python_inc
-import numpy
 from pathlib import Path
 import shutil
 from Cython.Build import cythonize
@@ -48,12 +48,15 @@ MOD_NAMES = [
     "spacy.pipeline._parser_internals._state",
     "spacy.pipeline._parser_internals.stateclass",
     "spacy.pipeline._parser_internals.transition_system",
+    "spacy.pipeline._parser_internals._beam_utils",
     "spacy.tokenizer",
     "spacy.training.align",
     "spacy.training.gold_io",
     "spacy.tokens.doc",
     "spacy.tokens.span",
     "spacy.tokens.token",
+    "spacy.tokens.span_group",
+    "spacy.tokens.graph",
     "spacy.tokens.morphanalysis",
     "spacy.tokens._retokenize",
     "spacy.matcher.matcher",
@@ -67,7 +70,7 @@ COMPILE_OPTIONS = {
     "mingw32": ["-O2", "-Wno-strict-prototypes", "-Wno-unused-function"],
     "other": ["-O2", "-Wno-strict-prototypes", "-Wno-unused-function"],
 }
-LINK_OPTIONS = {"msvc": [], "mingw32": [], "other": []}
+LINK_OPTIONS = {"msvc": ["-std=c++11"], "mingw32": ["-std=c++11"], "other": []}
 COMPILER_DIRECTIVES = {
     "language_level": -3,
     "embedsignature": True,
@@ -194,13 +197,13 @@ def setup_package():
             print(f"Copied {copy_file} -> {target_dir}")
 
     include_dirs = [
-        get_python_inc(plat_specific=True),
         numpy.get_include(),
+        get_python_inc(plat_specific=True),
     ]
     ext_modules = []
     for name in MOD_NAMES:
         mod_path = name.replace(".", "/") + ".pyx"
-        ext = Extension(name, [mod_path], language="c++")
+        ext = Extension(name, [mod_path], language="c++", extra_compile_args=["-std=c++11"])
         ext_modules.append(ext)
     print("Cythonizing sources")
     ext_modules = cythonize(ext_modules, compiler_directives=COMPILER_DIRECTIVES)
@@ -212,7 +215,7 @@ def setup_package():
         ext_modules=ext_modules,
         cmdclass={"build_ext": build_ext_subclass},
         include_dirs=include_dirs,
-        package_data={"": ["*.pyx", "*.pxd", "*.pxi", "*.cpp"]},
+        package_data={"": ["*.pyx", "*.pxd", "*.pxi"]},
     )
 
 

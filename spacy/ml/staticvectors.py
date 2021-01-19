@@ -42,9 +42,12 @@ def forward(
     rows = model.ops.flatten(
         [doc.vocab.vectors.find(keys=doc.to_array(key_attr)) for doc in docs]
     )
+    try:
+        vectors_data = model.ops.gemm(model.ops.as_contig(V[rows]), W, trans2=True)
+    except ValueError:
+        raise RuntimeError(Errors.E896)
     output = Ragged(
-        model.ops.gemm(model.ops.as_contig(V[rows]), W, trans2=True),
-        model.ops.asarray([len(doc) for doc in docs], dtype="i"),
+        vectors_data, model.ops.asarray([len(doc) for doc in docs], dtype="i")
     )
     mask = None
     if is_train:

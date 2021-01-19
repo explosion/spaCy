@@ -39,7 +39,9 @@ rule-based matching are:
 |  `IS_ALPHA`, `IS_ASCII`, `IS_DIGIT`             | Token text consists of alphabetic characters, ASCII characters, digits. ~~bool~~                                          |
 |  `IS_LOWER`, `IS_UPPER`, `IS_TITLE`             | Token text is in lowercase, uppercase, titlecase. ~~bool~~                                                                |
 |  `IS_PUNCT`, `IS_SPACE`, `IS_STOP`              | Token is punctuation, whitespace, stop word. ~~bool~~                                                                     |
+|  `IS_SENT_START`                                | Token is start of sentence. ~~bool~~                                                                                      |
 |  `LIKE_NUM`, `LIKE_URL`, `LIKE_EMAIL`           | Token text resembles a number, URL, email. ~~bool~~                                                                       |
+| `SPACY`                                         | Token has a trailing space. ~~bool~~                                                                                      |
 |  `POS`, `TAG`, `MORPH`, `DEP`, `LEMMA`, `SHAPE` | The token's simple and extended part-of-speech tag, morphological analysis, dependency label, lemma, shape. ~~str~~       |
 | `ENT_TYPE`                                      | The token's entity label. ~~str~~                                                                                         |
 | `_` <Tag variant="new">2.1</Tag>                | Properties in [custom extension attributes](/usage/processing-pipelines#custom-components-attributes). ~~Dict[str, Any]~~ |
@@ -61,7 +63,7 @@ matched:
 | `!` | Negate the pattern, by requiring it to match exactly 0 times.    |
 | `?` | Make the pattern optional, by allowing it to match 0 or 1 times. |
 | `+` | Require the pattern to match 1 or more times.                    |
-| `*` | Allow the pattern to match 0 or more times.                   |
+| `*` | Allow the pattern to match 0 or more times.                      |
 
 Token patterns can also map to a **dictionary of properties** instead of a
 single value to indicate whether the expected value is a member of a list or how

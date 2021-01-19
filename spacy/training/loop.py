@@ -59,6 +59,19 @@ def train(
     batcher = T["batcher"]
     train_logger = T["logger"]
     before_to_disk = create_before_to_disk_callback(T["before_to_disk"])
+
+    # Helper function to save checkpoints. This is a closure for convenience,
+    # to avoid passing in all the args all the time.
+    def save_checkpoint(is_best):
+        with nlp.use_params(optimizer.averages):
+            before_to_disk(nlp).to_disk(output_path / DIR_MODEL_LAST)
+        if is_best:
+            # Avoid saving twice (saving will be more expensive than
+            # the dir copy)
+            if (output_path / DIR_MODEL_BEST).exists():
+                shutil.rmtree(output_path / DIR_MODEL_BEST)
+            shutil.copytree(output_path / DIR_MODEL_LAST, output_path / DIR_MODEL_BEST)
+
     # Components that shouldn't be updated during training
     frozen_components = T["frozen_components"]
     # Create iterator, which yields out info after each optimization step.
@@ -87,36 +100,31 @@ def train(
             if is_best_checkpoint is not None and output_path is not None:
                 with nlp.select_pipes(disable=frozen_components):
                     update_meta(T, nlp, info)
-                with nlp.use_params(optimizer.averages):
-                    nlp = before_to_disk(nlp)
-                    nlp.to_disk(output_path / DIR_MODEL_BEST)
+                save_checkpoint(is_best_checkpoint)
     except Exception as e:
         if output_path is not None:
-            # We don't want to swallow the traceback if we don't have a
-            # specific error, but we do want to warn that we're trying
-            # to do something here.
             stdout.write(
                 msg.warn(
                     f"Aborting and saving the final best model. "
-                    f"Encountered exception: {str(e)}"
+                    f"Encountered exception: {repr(e)}"
                 )
                 + "\n"
             )
         raise e
     finally:
         finalize_logger()
-        if optimizer.averages:
-            nlp.use_params(optimizer.averages)
-        if output_path is not None:
-            final_model_path = output_path / DIR_MODEL_LAST
-            nlp.to_disk(final_model_path)
-            # This will only run if we don't hit an error
-            stdout.write(
-                msg.good("Saved pipeline to output directory", final_model_path) + "\n"
-            )
-            return (nlp, final_model_path)
-        else:
-            return (nlp, None)
+        save_checkpoint(False)
+    # This will only run if we did't hit an error
+    if optimizer.averages:
+        nlp.use_params(optimizer.averages)
+    if output_path is not None:
+        stdout.write(
+            msg.good("Saved pipeline to output directory", output_path / DIR_MODEL_LAST)
+            + "\n"
+        )
+        return (nlp, output_path / DIR_MODEL_LAST)
+    else:
+        return (nlp, None)
 
 
 def train_while_improving(
@@ -249,9 +257,8 @@ def create_evaluation_callback(
     weights = {key: value for key, value in weights.items() if value is not None}
 
     def evaluate() -> Tuple[float, Dict[str, float]]:
-        dev_examples = list(dev_corpus(nlp))
         try:
-            scores = nlp.evaluate(dev_examples)
+            scores = nlp.evaluate(dev_corpus(nlp))
         except KeyError as e:
             raise KeyError(Errors.E900.format(pipeline=nlp.pipe_names)) from e
         # Calculate a weighted sum based on score_weights for the main score.
