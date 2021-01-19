@@ -692,7 +692,7 @@ cdef class Token:
             # Find the widest l/r_edges of the roots of the two tokens involved
             # to limit the number of tokens for set_children_from_heads
             cdef Token self_root, new_head_root
-            self_root = self.root
+            self_root = ([self] + list(self.ancestors))[-1]
             new_head_ancestors = list(new_head.ancestors)
             new_head_root = new_head_ancestors[-1] if new_head_ancestors else new_head
             start = self_root.c.l_edge if self_root.c.l_edge < new_head_root.c.l_edge else new_head_root.c.l_edge
