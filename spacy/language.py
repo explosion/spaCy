@@ -1298,8 +1298,9 @@ class Language:
 
         DOCS: https://nightly.spacy.io/api/language#evaluate
         """
-        examples = _copy_examples(examples)
+        examples = list(examples)
         validate_examples(examples, "Language.evaluate")
+        examples = _copy_examples(examples)
         if batch_size is None:
             batch_size = self.batch_size
         if component_cfg is None:
