@@ -93,12 +93,10 @@ class Tok2Vec(TrainablePipe):
         You're unlikely to ever need multiple `Tok2Vec` components, so it's
         fine to leave your listeners upstream_name on '*'.
         """
+        names = ("*", self.name)
         if isinstance(getattr(component, "model", None), Model):
             for node in component.model.walk():
-                if isinstance(node, Tok2VecListener) and node.upstream_name in (
-                    "*",
-                    self.name,
-                ):
+                if isinstance(node, Tok2VecListener) and node.upstream_name in names:
                     self.add_listener(node, component.name)
 
     def __call__(self, doc: Doc) -> Doc:
