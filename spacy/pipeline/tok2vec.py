@@ -62,15 +62,30 @@ class Tok2Vec(TrainablePipe):
         self.vocab = vocab
         self.model = model
         self.name = name
-        self.listeners = []
+        self.listener_map = {}
         self.cfg = {}
 
-    def add_listener(self, listener: "Tok2VecListener") -> None:
-        """Add a listener for a downstream component. Usually internals."""
-        self.listeners.append(listener)
+    @property
+    def listeners(self) -> List[Model]:
+        """RETURNS (List[Model]): The listener models listening to this
+        component. Usually internals.
+        """
+        return [m for c in self.listening_components for m in self.listener_map[c]]
 
-    def find_listeners(self, model: Model) -> None:
-        """Walk over a model, looking for layers that are Tok2vecListener
+    @property
+    def listening_components(self) -> List[str]:
+        """RETURNS (List[str]): The downstream components listening to this
+        component. Usually internals.
+        """
+        return list(self.listener_map.keys())
+
+    def add_listener(self, listener: "Tok2VecListener", component: str) -> None:
+        """Add a listener for a downstream component. Usually internals."""
+        self.listener_map.setdefault(component, [])
+        self.listener_map[component].append(listener)
+
+    def find_listeners(self, component) -> None:
+        """Walk over a model of a processing component, looking for layers that are Tok2vecListener
         subclasses that have an upstream_name that matches this component.
         Listeners can also set their upstream_name attribute to the wildcard
         string '*' to match any `Tok2Vec`.
@@ -78,12 +93,13 @@ class Tok2Vec(TrainablePipe):
         You're unlikely to ever need multiple `Tok2Vec` components, so it's
         fine to leave your listeners upstream_name on '*'.
         """
-        for node in model.walk():
-            if isinstance(node, Tok2VecListener) and node.upstream_name in (
-                "*",
-                self.name,
-            ):
-                self.add_listener(node)
+        if isinstance(getattr(component, "model", None), Model):
+            for node in component.model.walk():
+                if isinstance(node, Tok2VecListener) and node.upstream_name in (
+                    "*",
+                    self.name,
+                ):
+                    self.add_listener(node, component.name)
 
     def __call__(self, doc: Doc) -> Doc:
         """Add context-sensitive embeddings to the Doc.tensor attribute, allowing
