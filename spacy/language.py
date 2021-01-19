@@ -1084,6 +1084,7 @@ class Language:
         if len(examples) == 0:
             return losses
         validate_examples(examples, "Language.update")
+        examples = _copy_examples(examples)
         if sgd is None:
             if self._optimizer is None:
                 self._optimizer = self.create_optimizer()
@@ -1093,7 +1094,6 @@ class Language:
         for i, (name, proc) in enumerate(self.pipeline):
             component_cfg.setdefault(name, {})
             component_cfg[name].setdefault("drop", drop)
-            component_cfg[name].setdefault("set_annotations", False)
         for name, proc in self.pipeline:
             if name in exclude or not hasattr(proc, "update"):
                 continue
@@ -1299,6 +1299,7 @@ class Language:
         """
         examples = list(examples)
         validate_examples(examples, "Language.evaluate")
+        examples = _copy_examples(examples)
         if batch_size is None:
             batch_size = self.batch_size
         if component_cfg is None:
@@ -1311,8 +1312,6 @@ class Language:
             scorer = Scorer(**kwargs)
         # reset annotation in predicted docs and time tokenization
         start_time = timer()
-        for eg in examples:
-            eg.predicted = self.make_doc(eg.reference.text)
         # apply all pipeline components
         for name, pipe in self.pipeline:
             kwargs = component_cfg.get(name, {})
@@ -1819,6 +1818,15 @@ class DisabledPipes(list):
                 raise ValueError(Errors.E008.format(name=name))
             self.nlp.enable_pipe(name)
         self[:] = []
+
+
+def _copy_examples(examples: Iterable[Example]) -> List[Example]:
+    """Make a copy of a batch of examples, copying the predicted Doc as well.
+    This is used in contexts where we need to take ownership of the examples
+    so that they can be mutated, for instance during Language.evaluate and 
+    Language.update.
+    """
+    return [Example(eg.x.copy(), eg.y) for eg in examples]
 
 
 def _apply_pipes(
