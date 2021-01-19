@@ -279,8 +279,8 @@ cdef class DependencyMatcher:
         """
         keys_to_position_maps = defaultdict(lambda: defaultdict(list))
         for match_id, start, _ in self._matcher(doc):
-            start = doc[start]
-            root = ([start] + list(start.ancestors))[-1]
+            token = doc[start]
+            root = ([token] + list(token.ancestors))[-1]
             keys_to_position_maps[root.i][match_id].append(start)
         return keys_to_position_maps
 
