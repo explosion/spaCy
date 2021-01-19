@@ -66,8 +66,8 @@ class Tok2Vec(TrainablePipe):
         self.cfg = {}
 
     @property
-    def listeners(self) -> List[Model]:
-        """RETURNS (List[Model]): The listener models listening to this
+    def listeners(self) -> List["Tok2VecListener"]:
+        """RETURNS (List[Tok2VecListener]): The listener models listening to this
         component. Usually internals.
         """
         return [m for c in self.listening_components for m in self.listener_map[c]]
