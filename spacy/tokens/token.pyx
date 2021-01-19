@@ -633,18 +633,6 @@ cdef class Token:
             yield self.doc[head_ptr - (self.c - self.i)]
             i += 1
 
-    @property
-    def root(self):
-        """The furthermost syntactic ancestor of this token.
-
-        YIELDS Token: A token such that
-            `root.is_ancestor(self)`.
-
-        DOCS: https://nightly.spacy.io/api/token#root
-        """
-        self_ancestors = list(self.ancestors)
-        return self_ancestors[-1] if self_ancestors else self
-
     def is_ancestor(self, descendant):
         """Check whether this token is a parent, grandparent, etc. of another
         in the dependency tree.
