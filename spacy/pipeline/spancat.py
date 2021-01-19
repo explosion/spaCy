@@ -132,7 +132,7 @@ class SpanCategorizer(TrainablePipe):
     def __init__(
         self,
         vocab: Vocab,
-        model: Model[Tuple[List[Doc], Ragged], List[Ragged]],
+        model: Model[Tuple[List[Doc], Ragged], Floats2d],
         suggester: Callable[[List[Doc]], Ragged],
         name: str = "spancat",
         *,
