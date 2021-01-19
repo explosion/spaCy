@@ -193,7 +193,7 @@ class SpanCategorizer(TrainablePipe):
 
         DOCS: https://nightly.spacy.io/api/spancategorizer#label_data
         """
-        return self.labels
+        return list(self.labels)
 
     def predict(self, docs: Iterable[Doc]):
         """Apply the pipeline's model to a batch of docs, without modifying them.
