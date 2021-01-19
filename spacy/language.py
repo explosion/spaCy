@@ -20,7 +20,7 @@ from .pipe_analysis import validate_attrs, analyze_pipes, print_pipe_analysis
 from .training import Example, validate_examples
 from .training.initialize import init_vocab, init_tok2vec
 from .scorer import Scorer
-from .util import registry, SimpleFrozenList, _pipe, copy_examples
+from .util import registry, SimpleFrozenList, _pipe
 from .util import SimpleFrozenDict, combine_score_weights, CONFIG_SECTION_ORDER
 from .lang.tokenizer_exceptions import URL_MATCH, BASE_EXCEPTIONS
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
@@ -1085,7 +1085,7 @@ class Language:
         if len(examples) == 0:
             return losses
         validate_examples(examples, "Language.update")
-        examples = copy_examples(examples)
+        examples = _copy_examples(examples)
         if sgd is None:
             if self._optimizer is None:
                 self._optimizer = self.create_optimizer()
@@ -1298,7 +1298,7 @@ class Language:
 
         DOCS: https://nightly.spacy.io/api/language#evaluate
         """
-        examples = copy_examples(examples)
+        examples = _copy_examples(examples)
         validate_examples(examples, "Language.evaluate")
         if batch_size is None:
             batch_size = self.batch_size
@@ -1818,6 +1818,15 @@ class DisabledPipes(list):
                 raise ValueError(Errors.E008.format(name=name))
             self.nlp.enable_pipe(name)
         self[:] = []
+
+
+def _copy_examples(examples: Iterable[Example]) -> List[Example]:
+    """Make a copy of a batch of examples, copying the predicted Doc as well.
+    This is used in contexts where we need to take ownership of the examples
+    so that they can be mutated, for instance during Language.evaluate and 
+    Language.update.
+    """
+    return [Example(eg.x.copy(), eg.y) for eg in examples]
 
 
 def _apply_pipes(

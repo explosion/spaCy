@@ -1420,15 +1420,6 @@ def check_bool_env_var(env_var: str) -> bool:
     return bool(value)
 
 
-def copy_examples(examples: Iterable[Example]) -> List[Example]:
-    """Make a copy of a batch of examples, copying the predicted Doc as well.
-    This is used in contexts where we need to take ownership of the examples
-    so that they can be mutated, for instance during Language.evaluate and 
-    Language.update.
-    """
-    return [Example(eg.x.copy(), eg.y) for eg in examples]
-
-
 def _pipe(docs, proc, kwargs):
     if hasattr(proc, "pipe"):
         yield from proc.pipe(docs, **kwargs)
