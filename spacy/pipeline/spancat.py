@@ -345,6 +345,7 @@ class SpanCategorizer(TrainablePipe):
                     self.add_label(span.label_)
             if len(subbatch) < 10:
                 subbatch.append(eg)
+        self._require_labels()
         if subbatch:
             docs = [eg.x for eg in subbatch]
             spans = self.suggester(docs)
