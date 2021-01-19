@@ -239,7 +239,7 @@
         {
             "code": "xx",
             "name": "Multi-language",
-            "models": ["xx_ent_wiki_sm"],
+            "models": ["xx_ent_wiki_sm", "xx_sent_ud_sm"],
             "example": "This is a sentence about Facebook."
         },
         { "code": "yo", "name": "Yoruba", "has_examples": true },
