@@ -46,7 +46,7 @@ def _get_span_indices(ops, spans: Ragged, lengths: Ints1d) -> Ints1d:
     offset = 0
     for i, length in enumerate(lengths):
         spans_i = spans[i].dataXd + offset
-        for i in range(spans_i.shape[0]):
-            indices.append(ops.xp.arange(spans_i[i, 0], spans_i[i, 1]))
+        for j in range(spans_i.shape[0]):
+            indices.append(ops.xp.arange(spans_i[j, 0], spans_i[j, 1]))
         offset += length
     return ops.flatten(indices)
