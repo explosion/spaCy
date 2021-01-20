@@ -220,8 +220,9 @@ Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 ## DependencyParser.update {#update tag="method"}
 
 Learn from a batch of [`Example`](/api/example) objects, updating the pipe's
-model. Delegates to [`predict`](/api/dependencyparser#predict) and
-[`get_loss`](/api/dependencyparser#get_loss).
+model. Delegates to [`predict`](/api/dependencyparser#predict), 
+[`get_loss`](/api/dependencyparser#get_loss) and 
+[`set_annotations`](/api/dependencyparser#set_annotations).
 
 > #### Example
 >
@@ -236,7 +237,6 @@ model. Delegates to [`predict`](/api/dependencyparser#predict) and
 | `examples`        | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                                  |
 | _keyword-only_    |                                                                                                                                    |
 | `drop`            | The dropout rate. ~~float~~                                                                                                        |
-| `set_annotations` | Whether or not to update the `Example` objects with the predictions, delegating to [`set_annotations`](#set_annotations). ~~bool~~ |
 | `sgd`             | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                      |
 | `losses`          | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~           |
 | **RETURNS**       | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                              |

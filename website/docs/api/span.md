@@ -187,7 +187,7 @@ the character indices don't map to a valid span.
 | Name                                 | Description                                                                               |
 | ------------------------------------ | ----------------------------------------------------------------------------------------- |
 | `start`                              | The index of the first character of the span. ~~int~~                                     |
-| `end`                                | The index of the last character after the span. ~~int~~                                    |
+| `end`                                | The index of the last character after the span. ~~int~~                                   |
 | `label`                              | A label to attach to the span, e.g. for named entities. ~~Union[int, str]~~               |
 | `kb_id` <Tag variant="new">2.2</Tag> | An ID from a knowledge base to capture the meaning of a named entity. ~~Union[int, str]~~ |
 | `vector`                             | A meaning representation of the span. ~~numpy.ndarray[ndim=1, dtype=float32]~~            |
@@ -273,6 +273,31 @@ if the entity recognizer has been applied.
 | Name        | Description                                                       |
 | ----------- | ----------------------------------------------------------------- |
 | **RETURNS** | Entities in the span, one `Span` per entity. ~~Tuple[Span, ...]~~ |
+
+## Span.noun_chunks {#noun_chunks tag="property" model="parser"}
+
+Iterate over the base noun phrases in the span. Yields base noun-phrase `Span`
+objects, if the document has been syntactically parsed. A base noun phrase, or
+"NP chunk", is a noun phrase that does not permit other NPs to be nested within
+it – so no NP-level coordination, no prepositional phrases, and no relative
+clauses.
+
+If the `noun_chunk` [syntax iterator](/usage/adding-languages#language-data) has
+not been implemeted for the given language, a `NotImplementedError` is raised.
+
+> #### Example
+>
+> ```python
+> doc = nlp("A phrase with another phrase occurs.")
+> span = doc[3:5]
+> chunks = list(span.noun_chunks)
+> assert len(chunks) == 1
+> assert chunks[0].text == "another phrase"
+> ```
+
+| Name       | Description                       |
+| ---------- | --------------------------------- |
+| **YIELDS** | Noun chunks in the span. ~~Span~~ |
 
 ## Span.as_doc {#as_doc tag="method"}
 

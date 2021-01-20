@@ -816,8 +816,10 @@ cdef class Doc:
     @property
     def noun_chunks(self):
         """Iterate over the base noun phrases in the document. Yields base
-        noun-phrase #[code Span] objects, if the document has been
-        syntactically parsed. A base noun phrase, or "NP chunk", is a noun
+        noun-phrase #[code Span] objects, if the language has a noun chunk iterator.
+        Raises a NotImplementedError otherwise.
+
+        A base noun phrase, or "NP chunk", is a noun
         phrase that does not permit other NPs to be nested within it – so no
         NP-level coordination, no prepositional phrases, and no relative
         clauses.
@@ -826,16 +828,17 @@ cdef class Doc:
 
         DOCS: https://nightly.spacy.io/api/doc#noun_chunks
         """
+        if self.noun_chunks_iterator is None:
+            raise NotImplementedError(Errors.E894.format(lang=self.vocab.lang))
 
         # Accumulate the result before beginning to iterate over it. This
-        # prevents the tokenisation from being changed out from under us
+        # prevents the tokenization from being changed out from under us
         # during the iteration. The tricky thing here is that Span accepts
-        # its tokenisation changing, so it's okay once we have the Span
+        # its tokenization changing, so it's okay once we have the Span
         # objects. See Issue #375.
         spans = []
-        if self.noun_chunks_iterator is not None:
-            for start, end, label in self.noun_chunks_iterator(self):
-                spans.append(Span(self, start, end, label=label))
+        for start, end, label in self.noun_chunks_iterator(self):
+            spans.append(Span(self, start, end, label=label))
         for span in spans:
             yield span
 

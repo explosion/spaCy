@@ -221,7 +221,7 @@ Noun chunks are "base noun phrases" – flat phrases that have a noun as their
 head. You can think of noun chunks as a noun plus the words describing the noun
 – for example, "the lavish green grass" or "the world’s largest tech fund". To
 get the noun chunks in a document, simply iterate over
-[`Doc.noun_chunks`](/api/doc#noun_chunks)
+[`Doc.noun_chunks`](/api/doc#noun_chunks).
 
 ```python
 ### {executable="true"}

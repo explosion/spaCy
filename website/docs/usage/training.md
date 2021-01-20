@@ -419,6 +419,16 @@ pipeline = ["parser", "ner", "textcat", "custom"]
 frozen_components = ["parser", "custom"]
 ```
 
+<Infobox variant="warning" title="Shared Tok2Vec layer">
+
+When the components in your pipeline
+[share an embedding layer](/usage/embeddings-transformers#embedding-layers), the
+**performance** of your frozen component will be **degraded** if you continue training
+other layers with the same underlying `Tok2Vec` instance. As a rule of thumb,
+ensure that your frozen components are truly **independent** in the pipeline.
+
+</Infobox>
+
 ### Using registered functions {#config-functions}
 
 The training configuration defined in the config file doesn't have to only

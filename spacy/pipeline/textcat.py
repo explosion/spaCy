@@ -138,7 +138,10 @@ class TextCategorizer(TrainablePipe):
 
     @property
     def label_data(self) -> List[str]:
-        """RETURNS (List[str]): Information about the component's labels."""
+        """RETURNS (List[str]): Information about the component's labels.
+
+        DOCS: https://nightly.spacy.io/api/textcategorizer#label_data
+        """
         return self.labels
 
     def pipe(self, stream: Iterable[Doc], *, batch_size: int = 128) -> Iterator[Doc]:
@@ -176,7 +179,7 @@ class TextCategorizer(TrainablePipe):
         return scores
 
     def set_annotations(self, docs: Iterable[Doc], scores) -> None:
-        """Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
+        """Modify a batch of Doc objects, using pre-computed scores.
 
         docs (Iterable[Doc]): The documents to modify.
         scores: The scores to set, produced by TextCategorizer.predict.
@@ -192,17 +195,15 @@ class TextCategorizer(TrainablePipe):
         examples: Iterable[Example],
         *,
         drop: float = 0.0,
-        set_annotations: bool = False,
         sgd: Optional[Optimizer] = None,
         losses: Optional[Dict[str, float]] = None,
     ) -> Dict[str, float]:
         """Learn from a batch of documents and gold-standard information,
-        updating the pipe's model. Delegates to predict and get_loss.
+        updating the pipe's model. Delegates to predict, get_loss and
+        set_annotations.
 
         examples (Iterable[Example]): A batch of Example objects.
         drop (float): The dropout rate.
-        set_annotations (bool): Whether or not to update the Example objects
-            with the predictions.
         sgd (thinc.api.Optimizer): The optimizer.
         losses (Dict[str, float]): Optional record of the loss during training.
             Updated using the component name as the key.
@@ -225,9 +226,8 @@ class TextCategorizer(TrainablePipe):
         if sgd is not None:
             self.finish_update(sgd)
         losses[self.name] += loss
-        if set_annotations:
-            docs = [eg.predicted for eg in examples]
-            self.set_annotations(docs, scores=scores)
+        docs = [eg.predicted for eg in examples]
+        self.set_annotations(docs, scores=scores)
         return losses
 
     def rehearse(
@@ -330,7 +330,7 @@ class TextCategorizer(TrainablePipe):
         nlp: Optional[Language] = None,
         labels: Optional[Dict] = None,
         positive_label: Optional[str] = None,
-    ):
+    ) -> None:
         """Initialize the pipe for training, using a representative set
         of data examples.
 

@@ -616,11 +616,15 @@ phrase, or "NP chunk", is a noun phrase that does not permit other NPs to be
 nested within it – so no NP-level coordination, no prepositional phrases, and no
 relative clauses.
 
+If the `noun_chunk` [syntax iterator](/usage/adding-languages#language-data) has
+not been implemeted for the given language, a `NotImplementedError` is raised.
+
 > #### Example
 >
 > ```python
 > doc = nlp("A phrase with another phrase occurs.")
 > chunks = list(doc.noun_chunks)
+> assert len(chunks) == 2
 > assert chunks[0].text == "A phrase"
 > assert chunks[1].text == "another phrase"
 > ```

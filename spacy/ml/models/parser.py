@@ -185,8 +185,7 @@ def _resize_lower(model, new_nO):
     nI = smaller.maybe_get_dim("nI")
     nF = smaller.maybe_get_dim("nF")
     nP = smaller.maybe_get_dim("nP")
-    with use_ops("numpy"):
-        larger = _define_lower(nO=new_nO, nI=nI, nF=nF, nP=nP)
+    larger = _define_lower(nO=new_nO, nI=nI, nF=nF, nP=nP)
     # it could be that the model is not initialized yet, then skip this bit
     if smaller.has_param("W"):
         larger_W = larger.ops.alloc4f(nF, new_nO, nP, nI)
