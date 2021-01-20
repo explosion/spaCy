@@ -63,7 +63,10 @@ cdef class PhraseMatcher:
                 attr = "ORTH"
             if attr not in TOKEN_PATTERN_SCHEMA["items"]["properties"]:
                 raise ValueError(Errors.E152.format(attr=attr))
-            self.attr = self.vocab.strings[attr]
+            try:
+                self.attr = self.vocab.strings[attr]
+            except OverflowError:
+                raise ValueError(Errors.E152.format(attr=attr))
 
     def __len__(self):
         """Get the number of match IDs added to the matcher.
