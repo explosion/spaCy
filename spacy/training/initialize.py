@@ -66,6 +66,20 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
     with nlp.select_pipes(disable=[*frozen_components, *resume_components]):
         nlp.initialize(lambda: train_corpus(nlp), sgd=optimizer)
         logger.info(f"Initialized pipeline components: {nlp.pipe_names}")
+    # Detect components with listeners that are not frozen consistently
+    for name, proc in nlp.pipeline:
+        if getattr(proc, "listening_components", None):
+            for listener in proc.listening_components:
+                if listener in frozen_components and name not in frozen_components:
+                    logger.warn(f"Component '{name}' will be (re)trained, but the "
+                                f"'{listener}' depends on it and is frozen. This means "
+                                f"that the performance of the '{listener}' will be degraded. "
+                                f"You should either freeze both, or neither of the two.")
+
+                if listener not in frozen_components and name in frozen_components:
+                    logger.warn(f"Component '{listener}' will be (re)trained, but it needs the "
+                                f"'{name}' which is frozen. "
+                                f"You should either freeze both, or neither of the two.")
     return nlp
 
 

@@ -400,7 +400,8 @@ vectors available – otherwise, it won't be able to make the same predictions.
 > ```
 >
 > By default, sourced components will be updated with your data during training.
-> If you want to preserve the component as-is, you can "freeze" it:
+> If you want to preserve the component as-is, you can "freeze" it if the pipeline 
+> is not using a shared `Tok2Vec` layer:
 >
 > ```ini
 > [training]
