@@ -1,7 +1,6 @@
 # cython: infer_types=True, profile=True
 from typing import List
 from collections import defaultdict
-from functools import lru_cache
 from itertools import product
 
 import numpy
@@ -301,6 +300,7 @@ cdef class DependencyMatcher:
 
         matched_key_trees = []
         keys_to_position_maps = self._get_keys_to_position_maps(doc)
+        cache = {}
 
         for key in self._patterns.keys():
             for root, tree, tokens_to_key in zip(
@@ -309,7 +309,7 @@ cdef class DependencyMatcher:
                 self._tokens_to_key[key],
             ):
                 for keys_to_position in keys_to_position_maps.values():
-                    for matched_tree in self._get_matches(doc, tree, tokens_to_key, keys_to_position):
+                    for matched_tree in self._get_matches(cache, doc, tree, tokens_to_key, keys_to_position):
                         matched_key_trees.append((key, matched_tree))
 
         for i, (match_id, nodes) in enumerate(matched_key_trees):
@@ -317,13 +317,9 @@ cdef class DependencyMatcher:
             if on_match is not None:
                 on_match(self, doc, i, matched_key_trees)
 
-        # Clear cache, this is needed to avoid a too-large memory footprint if the same
-        # DependencyMatcher instance is used to process multiple documents
-        self._resolve_node_operator.cache_clear()
-
         return matched_key_trees
 
-    def _get_matches(self, doc, tree, tokens_to_key, keys_to_position):
+    def _get_matches(self, cache, doc, tree, tokens_to_key, keys_to_position):
         cdef bint is_valid
 
         all_positions = [keys_to_position[key] for key in tokens_to_key]
@@ -336,7 +332,7 @@ cdef class DependencyMatcher:
             # matched tokens are satisfied.
             is_valid = True
             for left_idx in range(len(candidate_match)):
-                is_valid = self._check_relationships(doc, candidate_match, left_idx, tree)
+                is_valid = self._check_relationships(cache, doc, candidate_match, left_idx, tree)
 
                 if not is_valid:
                     break
@@ -344,7 +340,7 @@ cdef class DependencyMatcher:
             if is_valid:
                 yield list(candidate_match)
 
-    def _check_relationships(self, doc, candidate_match, left_idx, tree):
+    def _check_relationships(self, cache, doc, candidate_match, left_idx, tree):
         # Position of the left operand within the document
         left_pos = candidate_match[left_idx]
 
@@ -354,7 +350,7 @@ cdef class DependencyMatcher:
             right_pos = candidate_match[right_idx]
 
             # List of valid right matches
-            valid_right_matches = self._resolve_node_operator(doc, left_pos, relop)
+            valid_right_matches = self._resolve_node_operator(cache, doc, left_pos, relop)
 
             # If the proposed right token is not within the valid ones, fail
             if right_pos not in valid_right_matches:
@@ -362,18 +358,15 @@ cdef class DependencyMatcher:
 
         return True
 
-
-    @lru_cache(maxsize=None)
-    def _resolve_node_operator(self, doc, node, operator):
+    def _resolve_node_operator(self, cache, doc, node, operator): 
         """
         Given a doc, a node (as a index in the doc) and a REL_OP operator
         returns the list of nodes from the doc that belong to node+operator. 
-
-        The result is memoized using an unbounded cache, therefore the cache
-        must be cleared after finishing processing a doc:
-            self._resolve_node_operator.cache_clear()
         """
-        return [token.i for token in self._ops[operator](doc, node)]
+        key = (node, operator)
+        if key not in cache:
+            cache[key] = [token.i for token in self._ops[operator](doc, node)]
+        return cache[key]
 
     def _dep(self, doc, node):
         if doc[node].head == doc[node]:
