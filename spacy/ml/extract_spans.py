@@ -1,21 +1,15 @@
-from typing import Tuple
+from typing import Tuple, Callable
 from thinc.api import Model
 from thinc.types import Ragged, Ints1d
 
 
-def extract_spans() -> Model[Tuple[Ragged, Ragged], Tuple[Ragged, Ragged]]:
+def extract_spans() -> Model[Tuple[Ragged, Ragged], Ragged]:
     """Extract spans from a sequence of source arrays, as specified by an array
     of (start, end) indices. The output is a ragged array of the
     extracted spans.
     """
     return Model(
-        "extract_spans",
-        forward,
-        layers=[],
-        refs={},
-        attrs={},
-        dims={},
-        init=init
+        "extract_spans", forward, layers=[], refs={}, attrs={}, dims={}, init=init
     )
 
 
@@ -24,10 +18,8 @@ def init(model, X=None, Y=None):
 
 
 def forward(
-    model: Model,
-    source_spans: Tuple[Ragged, Ragged],
-    is_train: bool
-) -> Ragged:
+    model: Model, source_spans: Tuple[Ragged, Ragged], is_train: bool
+) -> Tuple[Ragged, Callable]:
     """Get subsequences from source vectors."""
     ops = model.ops
     X, spans = source_spans
@@ -48,13 +40,13 @@ def forward(
 def _get_span_indices(ops, spans: Ragged, lengths: Ints1d) -> Ints1d:
     """Construct a flat array that has the indices we want to extract from the
     source data. For instance, if we want the spans (5, 9), (8, 10) the
-    indices will be [5, 6, 7, 8, 8, 9, 10].
+    indices will be [5, 6, 7, 8, 8, 9].
     """
     indices = []
     offset = 0
     for i, length in enumerate(lengths):
         spans_i = spans[i].dataXd + offset
-        for i in range(spans_i.shape[0]):
-            indices.append(ops.xp.arange(spans_i[i, 0], spans_i[i, 1]))
+        for j in range(spans_i.shape[0]):
+            indices.append(ops.xp.arange(spans_i[j, 0], spans_i[j, 1]))
         offset += length
     return ops.flatten(indices)
