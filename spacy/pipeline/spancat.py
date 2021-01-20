@@ -193,6 +193,7 @@ class SpanCategorizer(TrainablePipe):
         backprop_scores(d_scores)
         if sgd is not None:
             self.finish_update(sgd)
+        self.set_annotations(examples, (spans, scores))
         losses[self.name] += loss
         return losses
 
