@@ -173,14 +173,13 @@ class Tagger(TrainablePipe):
                 if doc.c[j].tag == 0:
                     doc.c[j].tag = self.vocab.strings[self.labels[tag_id]]
 
-    def update(self, examples, *, drop=0., sgd=None, losses=None, set_annotations=False):
+    def update(self, examples, *, drop=0., sgd=None, losses=None):
         """Learn from a batch of documents and gold-standard information,
-        updating the pipe's model. Delegates to predict and get_loss.
+        updating the pipe's model. Delegates to predict, get_loss and
+        set_annotations.
 
         examples (Iterable[Example]): A batch of Example objects.
         drop (float): The dropout rate.
-        set_annotations (bool): Whether or not to update the Example objects
-            with the predictions.
         sgd (thinc.api.Optimizer): The optimizer.
         losses (Dict[str, float]): Optional record of the loss during training.
             Updated using the component name as the key.
@@ -206,9 +205,8 @@ class Tagger(TrainablePipe):
             self.finish_update(sgd)
 
         losses[self.name] += loss
-        if set_annotations:
-            docs = [eg.predicted for eg in examples]
-            self.set_annotations(docs, self._scores2guesses(tag_scores))
+        docs = [eg.predicted for eg in examples]
+        self.set_annotations(docs, self._scores2guesses(tag_scores))
         return losses
 
     def rehearse(self, examples, *, drop=0., sgd=None, losses=None):

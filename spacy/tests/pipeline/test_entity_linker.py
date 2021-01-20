@@ -425,6 +425,7 @@ GOLD_entities = ["Q2146908", "Q7381115", "Q7381115", "Q2146908"]
 def test_overfitting_IO():
     # Simple test to try and quickly overfit the NEL component - ensuring the ML models work correctly
     nlp = English()
+    nlp.add_pipe("sentencizer", first=True)
     vector_length = 3
     assert "Q2146908" not in nlp.vocab.strings
 
@@ -463,9 +464,6 @@ def test_overfitting_IO():
         losses = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)
     assert losses["entity_linker"] < 0.001
-
-    # adding additional components that are required for the entity_linker
-    nlp.add_pipe("sentencizer", first=True)
 
     # Add a custom component to recognize "Russ Cochran" as an entity for the example training data
     patterns = [

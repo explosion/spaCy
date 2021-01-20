@@ -91,16 +91,14 @@ cdef class TrainablePipe(Pipe):
     def update(self,
                examples: Iterable["Example"],
                *, drop: float=0.0,
-               set_annotations: bool=False,
                sgd: Optimizer=None,
                losses: Optional[Dict[str, float]]=None) -> Dict[str, float]:
         """Learn from a batch of documents and gold-standard information,
-        updating the pipe's model. Delegates to predict and get_loss.
+        updating the pipe's model. Delegates to predict, get_loss and
+        set_annotations.
 
         examples (Iterable[Example]): A batch of Example objects.
         drop (float): The dropout rate.
-        set_annotations (bool): Whether or not to update the Example objects
-            with the predictions.
         sgd (thinc.api.Optimizer): The optimizer.
         losses (Dict[str, float]): Optional record of the loss during training.
             Updated using the component name as the key.
@@ -124,9 +122,8 @@ cdef class TrainablePipe(Pipe):
         if sgd not in (None, False):
             self.finish_update(sgd)
         losses[self.name] += loss
-        if set_annotations:
-            docs = [eg.predicted for eg in examples]
-            self.set_annotations(docs, scores=scores)
+        docs = [eg.predicted for eg in examples]
+        self.set_annotations(docs, scores=scores)
         return losses
 
     def rehearse(self,

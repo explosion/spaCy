@@ -796,7 +796,7 @@ class RelationExtractor(TrainablePipe):
         self.vocab = vocab
         self.name = name
 
-    def update(self, examples, drop=0.0, set_annotations=False, sgd=None, losses=None):
+    def update(self, examples, drop=0.0, sgd=None, losses=None):
         """Learn from a batch of Example objects."""
         ...
 
@@ -901,7 +901,6 @@ def update(
     examples: Iterable[Example],
     *,
     drop: float = 0.0,
-    set_annotations: bool = False,
     sgd: Optional[Optimizer] = None,
     losses: Optional[Dict[str, float]] = None,
 ) -> Dict[str, float]:
