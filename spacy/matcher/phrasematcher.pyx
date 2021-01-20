@@ -8,6 +8,7 @@ from preshed.maps cimport map_init, map_set, map_get, map_clear, map_iter
 
 import warnings
 
+from ..attrs import IDS
 from ..attrs cimport ORTH, POS, TAG, DEP, LEMMA
 from ..structs cimport TokenC
 from ..tokens.token cimport Token
@@ -52,21 +53,17 @@ cdef class PhraseMatcher:
         self._terminal_hash = 826361138722620965
         map_init(self.mem, self.c_map, 8)
 
-        if attr == "IS_SENT_START":
-            attr = "SENT_START"
-
         if isinstance(attr, (int, long)):
             self.attr = attr
         else:
             attr = attr.upper()
             if attr == "TEXT":
                 attr = "ORTH"
+            if attr == "IS_SENT_START":
+                attr = "SENT_START"
             if attr not in TOKEN_PATTERN_SCHEMA["items"]["properties"]:
                 raise ValueError(Errors.E152.format(attr=attr))
-            try:
-                self.attr = self.vocab.strings[attr]
-            except OverflowError:
-                raise ValueError(Errors.E152.format(attr=attr))
+            self.attr = IDS.get(attr)
 
     def __len__(self):
         """Get the number of match IDs added to the matcher.
