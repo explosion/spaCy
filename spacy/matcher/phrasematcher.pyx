@@ -52,6 +52,9 @@ cdef class PhraseMatcher:
         self._terminal_hash = 826361138722620965
         map_init(self.mem, self.c_map, 8)
 
+        if attr == "IS_SENT_START":
+            attr = "SENT_START"
+
         if isinstance(attr, (int, long)):
             self.attr = attr
         else:
