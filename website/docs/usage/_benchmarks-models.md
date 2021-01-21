@@ -4,11 +4,13 @@ import { Help } from 'components/typography'; import Link from 'components/link'
 
 | Pipeline                                                   | Parser | Tagger |  NER |
 | ---------------------------------------------------------- | -----: | -----: | ---: |
-| [`en_core_web_trf`](/models/en#en_core_web_trf) (spaCy v3) |   95.5 |   98.3 | 89.4 |
-| [`en_core_web_lg`](/models/en#en_core_web_lg) (spaCy v3)   |   92.2 |   97.4 | 85.4 |
+| [`en_core_web_trf`](/models/en#en_core_web_trf) (spaCy v3) |   95.2 |   97.8 | 89.9 |
+| [`en_core_web_lg`](/models/en#en_core_web_lg) (spaCy v3)   |   91.9 |   97.4 | 85.5 |
 | `en_core_web_lg` (spaCy v2)                                |   91.9 |   97.2 | 85.5 |
 
 <figcaption class="caption">
+
+<!-- TODO: speed (or update caption below) -->
 
 **Full pipeline accuracy and speed** on the
 [OntoNotes 5.0](https://catalog.ldc.upenn.edu/LDC2013T19) corpus (reported on
