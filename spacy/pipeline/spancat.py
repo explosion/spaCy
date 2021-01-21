@@ -266,7 +266,7 @@ class SpanCategorizer(TrainablePipe):
         backprop_scores(d_scores)
         if sgd is not None:
             self.finish_update(sgd)
-        self.set_annotations(examples, (spans, scores))
+        self.set_annotations([eg.x for eg in examples], (spans, scores))
         losses[self.name] += loss
         return losses
 
@@ -313,7 +313,7 @@ class SpanCategorizer(TrainablePipe):
         # will be -0.1 (0.9 - 1.0).
         # If the prediction is 0.9 and it's false, the gradient will be
         # 0.9 (0.9 - 0.0)
-        d_scores = (scores - target) / target.shape[0]
+        d_scores = scores - target
         loss = float((d_scores ** 2).sum())
         return loss, d_scores
 
