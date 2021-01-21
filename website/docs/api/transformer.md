@@ -56,9 +56,10 @@ on the transformer architectures and their arguments and hyperparameters.
 > #### Example
 >
 > ```python
-> from spacy_transformers import Transformer, DEFAULT_CONFIG
+> from spacy_transformers import Transformer
+> from spacy_transformers.pipeline_component import DEFAULT_CONFIG
 >
-> nlp.add_pipe("transformer", config=DEFAULT_CONFIG)
+> nlp.add_pipe("transformer", config=DEFAULT_CONFIG["transformer"])
 > ```
 
 | Setting                 | Description                                                                                                                                                                                                                                                                                                   |
