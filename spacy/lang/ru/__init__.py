@@ -22,7 +22,7 @@ class Russian(Language):
 @Russian.factory(
     "lemmatizer",
     assigns=["token.lemma"],
-    default_config={"model": None, "mode": "pymorphy2"},
+    default_config={"model": None, "mode": "pymorphy2", "overwrite": False},
     default_score_weights={"lemma_acc": 1.0},
 )
 def make_lemmatizer(
@@ -30,7 +30,7 @@ def make_lemmatizer(
     model: Optional[Model],
     name: str,
     mode: str,
-    overwrite: bool = False,
+    overwrite: bool,
 ):
     return RussianLemmatizer(nlp.vocab, model, name, mode=mode, overwrite=overwrite)
 
