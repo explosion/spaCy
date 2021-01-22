@@ -94,8 +94,8 @@ results. Project template:
 
 ### Speed comparison {#benchmarks-speed}
 
-We compare the speed of different NLP libraries, measured in words per second.
-The evaluation was run on 10,000 Reddit comments.
+We compare the speed of different NLP libraries, measured in words per second
+(WPS) - higher is better. The evaluation was performed on 10,000 Reddit comments.
 
 <figure>
 
