@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 import re
 
 from ...pipeline import Lemmatizer
@@ -48,16 +48,8 @@ class SpanishLemmatizer(Lemmatizer):
         if exc is not None:
             lemmas = list(exc)
         else:
+            rule = self.select_rule(univ_pos, features)
             index = self.lookups.get_table("lemma_index").get(univ_pos, [])
-            groups = self.lookups.get_table("lemma_rules_groups")
-
-            rule = None
-            if univ_pos in groups:
-                for group in groups[univ_pos]:
-                    if set(group[1]).issubset(features):
-                        rule = group[0]
-                        break
-
             lemmas = getattr(self, "lemmatize_" + univ_pos)(
                 string, features, rule, index
             )
@@ -66,6 +58,14 @@ class SpanishLemmatizer(Lemmatizer):
 
         self.cache[cache_key] = lemmas
         return lemmas
+
+    def select_rule(self, univ_pos: str, features: List[str]) -> Optional[str]:
+        groups = self.lookups.get_table("lemma_rules_groups")
+        if univ_pos in groups:
+            for group in groups[univ_pos]:
+                if set(group[1]).issubset(features):
+                    return group[0]
+        return None
 
     def lemmatize_adj(
         self, word: str, features: List[str], rule: str, index: List[str]
@@ -339,6 +339,28 @@ class SpanishLemmatizer(Lemmatizer):
 
         RETURNS (List[str]): The list of lemmas.
         """
+        # Exceptions for pronouns
+        if "PronType=Prs" in features:
+            # Strip and count pronouns
+            pron_patt = "^(.*?)([mts]e|l[aeo]s?|n?os)$"
+            prons = []
+            verb = word
+            m = re.search(pron_patt, verb)
+            while m is not None and len(prons) <= 3:
+                verb = re.sub(m.group(2) + "$", "", verb)
+                prons.append(m.group(2))
+                m = re.search(pron_patt, verb)
+            # Strip accents from verb form
+            for old, new in self.lookups.get_table("lemma_rules").get("accents", []):
+                verb = re.sub(old, new, verb)
+            # Lemmatize the verb and pronouns
+            rule = self.select_rule("verb", features)
+            verb_lemma = self.lemmatize_verb(verb, features - {"PronType=Prs"}, rule, index)[0]
+            pron_lemmas = []
+            for pron in prons:
+                rule = self.select_rule("pron", features)
+                pron_lemmas.append(self.lemmatize_pron(pron, features, rule, index)[0])
+            return [verb_lemma + " " + " ".join(pron_lemmas)]
 
         # Initialize empty sets for the generated lemmas
         possible_lemmas = []
