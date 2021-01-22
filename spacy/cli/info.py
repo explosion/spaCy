@@ -34,7 +34,7 @@ def info(
     *,
     markdown: bool = False,
     silent: bool = True,
-    exclude: List[str],
+    exclude: List[str] = [],
 ) -> Union[str, dict]:
     msg = Printer(no_print=silent, pretty=not silent)
     if model:
