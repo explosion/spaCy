@@ -10,9 +10,7 @@ import { Help } from 'components/typography'; import Link from 'components/link'
 
 <figcaption class="caption">
 
-<!-- TODO: speed (or update caption below) -->
-
-**Full pipeline accuracy and speed** on the
+**Full pipeline accuracy** on the
 [OntoNotes 5.0](https://catalog.ldc.upenn.edu/LDC2013T19) corpus (reported on
 the development set).
 
