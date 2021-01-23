@@ -1,8 +1,6 @@
 # encoding: utf8
 from __future__ import unicode_literals
 
-# Tatar stopwords are from https://github.com/aliiae/stopwords-tt
-
 STOP_WORDS = set(
 """
 ага адам айтты айтымында айтып ал алар
