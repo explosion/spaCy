@@ -8,7 +8,7 @@ import re
 from jinja2 import Template
 
 from .. import util
-from ..language import DEFAULT_CONFIG_PRETRAIN_PATH
+from ..language import Language, DEFAULT_CONFIG_PRETRAIN_PATH
 from ..schemas import RecommendationSchema
 from ._util import init_cli, Arg, Opt, show_validation_error, COMMAND, string_to_list
 
@@ -53,7 +53,7 @@ def init_config_cli(
             "The provided output file already exists. To force overwriting the config file, set the --force or -F flag.",
             exits=1,
         )
-    config = init_config(
+    nlp = init_config(
         lang=lang,
         pipeline=pipeline,
         optimize=optimize,
@@ -61,7 +61,7 @@ def init_config_cli(
         pretraining=pretraining,
         silent=is_stdout,
     )
-    save_config(config, output_file, is_stdout=is_stdout)
+    save_config(nlp.config, output_file, is_stdout=is_stdout)
 
 
 @init_cli.command("fill-config")
@@ -134,7 +134,7 @@ def init_config(
     gpu: bool,
     pretraining: bool = False,
     silent: bool = True,
-) -> Config:
+) -> Language:
     msg = Printer(no_print=silent)
     with TEMPLATE_PATH.open("r") as f:
         template = Template(f.read())
@@ -181,7 +181,7 @@ def init_config(
             pretrain_config = util.load_config(DEFAULT_CONFIG_PRETRAIN_PATH)
             config = pretrain_config.merge(config)
     msg.good("Auto-filled config with all values")
-    return config
+    return nlp
 
 
 def save_config(
