@@ -11,9 +11,9 @@ from ...language import Language
 from ...util import update_exc
 
 
-class TatarDefaults(Language.Defaults):
+class KyrgyzDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters[LANG] = lambda text: "tt"
+    lex_attr_getters[LANG] = lambda text: "ky"
 
     lex_attr_getters.update(LEX_ATTRS)
 
@@ -23,9 +23,9 @@ class TatarDefaults(Language.Defaults):
     stop_words = STOP_WORDS
 
 
-class Tatar(Language):
-    lang = "tt"
-    Defaults = TatarDefaults
+class Kyrgyz(Language):
+    lang = "ky"
+    Defaults = KyrgyzDefaults
 
 
-__all__ = ["Tatar"]
+__all__ = ["Kyrgyz"]
