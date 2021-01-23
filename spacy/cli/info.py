@@ -34,9 +34,11 @@ def info(
     *,
     markdown: bool = False,
     silent: bool = True,
-    exclude: List[str] = [],
+    exclude: List[str] = None,
 ) -> Union[str, dict]:
     msg = Printer(no_print=silent, pretty=not silent)
+    if not exclude:
+        exclude = []
     if model:
         title = f"Info about pipeline '{model}'"
         data = info_model(model, silent=silent)
