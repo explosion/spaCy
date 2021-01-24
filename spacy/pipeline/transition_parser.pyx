@@ -370,7 +370,11 @@ cdef class Parser(TrainablePipe):
         if sgd not in (None, False):
             self.finish_update(sgd)
         docs = [eg.predicted for eg in examples]
-        self.set_annotations(docs, all_states)
+        # TODO: Refactor so we don't have to parse twice like this (ugh)
+        # The issue is that we cut up the gold batch into sub-states, and that
+        # makes it hard to get the actual predicted transition sequence.
+        predicted_states = self.predict(docs)
+        self.set_annotations(docs, predicted_states)
         # Ugh, this is annoying. If we're working on GPU, we want to free the
         # memory ASAP. It seems that Python doesn't necessarily get around to
         # removing these in time if we don't explicitly delete? It's confusing.
