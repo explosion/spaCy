@@ -161,8 +161,11 @@ cdef class Vocab:
             return self._new_lexeme(mem, self.strings[orth])
 
     cdef const LexemeC* _new_lexeme(self, Pool mem, unicode string) except NULL:
-        if len(string) < 3 or self.length < 10000:
-            mem = self.mem
+        #if len(string) < 3 or self.length < 10000:
+        #    mem = self.mem
+        # TODO: Experiment with never allowing the Doc to own lexemes, to see
+        # if it solves the Doc.copy() issue.
+        mem = self.mem
         cdef bint is_oov = mem is not self.mem
         lex = <LexemeC*>mem.alloc(1, sizeof(LexemeC))
         lex.orth = self.strings.add(string)
