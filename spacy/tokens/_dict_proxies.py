@@ -34,7 +34,7 @@ class SpanGroups(UserDict):
         return SpanGroup(self.doc_ref(), name=name, spans=spans)
 
     def copy(self) -> "SpanGroups":
-        return SpanGroup(self.doc_ref()).from_bytes(self.to_bytes())
+        return SpanGroups(self.doc_ref()).from_bytes(self.to_bytes())
 
     def to_bytes(self) -> bytes:
         # We don't need to serialize this as a dict, because the groups
