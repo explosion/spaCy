@@ -1180,12 +1180,12 @@ cdef class Doc:
         other.tensor = copy.deepcopy(self.tensor)
         other.cats = copy.deepcopy(self.cats)
         other.user_data = copy.deepcopy(self.user_data)
+        other.spans = self.spans.copy()
         other.sentiment = self.sentiment
         other.has_unknown_spaces = self.has_unknown_spaces
         other.user_hooks = dict(self.user_hooks)
         other.user_token_hooks = dict(self.user_token_hooks)
         other.user_span_hooks = dict(self.user_span_hooks)
-        other.spans = self.spans.copy()
         other.length = self.length
         other.max_length = self.max_length
         buff_size = other.max_length + (PADDING*2)
