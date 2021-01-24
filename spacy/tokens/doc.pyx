@@ -261,11 +261,11 @@ cdef class Doc:
         cdef const LexemeC* lexeme
         for word, has_space in zip(words, spaces):
             if isinstance(word, unicode):
-                lexeme = self.vocab.get(self.mem, word)
+                lexeme = self.vocab.get(self.vocab.mem, word)
             elif isinstance(word, bytes):
                 raise ValueError(Errors.E028.format(value=word))
             else:
-                lexeme = self.vocab.get_by_orth(self.mem, word)
+                lexeme = self.vocab.get_by_orth(self.vocab.mem, word)
             self.push_back(lexeme, has_space)
 
         if heads is not None:
@@ -1185,6 +1185,7 @@ cdef class Doc:
         other.user_hooks = dict(self.user_hooks)
         other.user_token_hooks = dict(self.user_token_hooks)
         other.user_span_hooks = dict(self.user_span_hooks)
+        other.spans = self.spans.copy()
         other.length = self.length
         other.max_length = self.max_length
         buff_size = other.max_length + (PADDING*2)
@@ -1334,7 +1335,7 @@ cdef class Doc:
             end = start + attrs[i, 0]
             has_space = attrs[i, 1]
             orth_ = text[start:end]
-            lex = self.vocab.get(self.mem, orth_)
+            lex = self.vocab.get(self.vocab.mem, orth_)
             self.push_back(lex, has_space)
             start = end + has_space
         self.from_array(msg["array_head"][2:], attrs[:, 2:])
