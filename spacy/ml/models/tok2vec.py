@@ -101,7 +101,8 @@ def build_Tok2Vec_model(
         embeddings, using an architecture such as a CNN, BiLSTM or transformer.
     """
     tok2vec = chain(embed, encode)
-    tok2vec.set_dim("nO", encode.get_dim("nO"))
+    if encode.has_dim("nO"):
+        tok2vec.set_dim("nO", encode.get_dim("nO"))
     tok2vec.set_ref("embed", embed)
     tok2vec.set_ref("encode", encode)
     return tok2vec
