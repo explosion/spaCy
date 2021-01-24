@@ -193,7 +193,11 @@ def update_beam(TransitionSystem moves, states, golds, model, int width, beam_de
     for i, (d_scores, bp_scores) in enumerate(zip(states_d_scores, backprops)):
         loss += (d_scores**2).mean()
         bp_scores(d_scores)
-    return loss
+    # Return the predicted sequence for each doc.
+    predicted_histories = []
+    for i in range(len(pbeam)):
+        predicted_histories.append(pbeam[i].histories[0])
+    return predicted_histories, loss
 
 
 def collect_states(beams, docs):
