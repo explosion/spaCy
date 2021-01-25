@@ -18,8 +18,9 @@ from ..pipeline._parser_internals.stateclass cimport StateClass
 cdef WeightsC get_c_weights(model) except *:
     cdef WeightsC output
     cdef precompute_hiddens state2vec = model.state2vec
+    cdef np.ndarray bias = state2vec.bias
     output.feat_weights = state2vec.get_feat_weights()
-    output.feat_bias = <const float*>state2vec.bias.data
+    output.feat_bias = <const float*>bias.data
     cdef np.ndarray vec2scores_W
     cdef np.ndarray vec2scores_b
     if model.vec2scores is None:
@@ -220,26 +221,22 @@ class ParserStepModel(Model):
             activation = None
         else:
             activation = "relu"
-        self.state2vec = precompute_hiddens(len(docs), self.tokvecs, layers[1],
-                                            activation=activation, train=train)
+        self.state2vec = precompute_hiddens(
+            len(docs),
+            self.tokvecs,
+            layers[1],
+            activation=activation,
+            train=train
+        )
         if has_upper:
             self.vec2scores = layers[-1]
         else:
             self.vec2scores = None
-        self.cuda_stream = util.get_cuda_stream(non_blocking=True)
-        self.backprops = []
         self._class_mask = numpy.zeros((self.nO,), dtype='f')
         self._class_mask.fill(1)
         if unseen_classes is not None:
             for class_ in unseen_classes:
                 self._class_mask[class_] = 0.
-
-    def clear_memory(self):
-        del self.tokvecs
-        del self.bp_tokvecs
-        del self.state2vec
-        del self.backprops
-        del self._class_mask
 
     @property
     def nO(self):
@@ -247,6 +244,13 @@ class ParserStepModel(Model):
             return self.vec2scores.get_dim("nO")
         else:
             return self.state2vec.get_dim("nO")
+
+    def clear_memory(self):
+        del self.tokvecs
+        del self.bp_tokvecs
+        del self.state2vec
+        del self.backprops
+        del self._class_mask
 
     def class_is_unseen(self, class_):
         return self._class_mask[class_]
@@ -269,54 +273,22 @@ class ParserStepModel(Model):
             c_ids += ids.shape[1]
         return ids
 
-    def backprop_step(self, token_ids, d_vector, get_d_tokvecs):
-        if isinstance(self.state2vec.ops, CupyOps) \
-        and not isinstance(token_ids, self.state2vec.ops.xp.ndarray):
-            # Move token_ids and d_vector to GPU, asynchronously
-            self.backprops.append((
-                util.get_async(self.cuda_stream, token_ids),
-                util.get_async(self.cuda_stream, d_vector),
-                get_d_tokvecs
-            ))
-        else:
-            self.backprops.append((token_ids, d_vector, get_d_tokvecs))
 
-
-    def finish_steps(self, golds):
-        # Add a padding vector to the d_tokvecs gradient, so that missing
-        # values don't affect the real gradient.
-        d_tokvecs = self.ops.alloc((self.tokvecs.shape[0]+1, self.tokvecs.shape[1]))
-        # Tells CUDA to block, so our async copies complete.
-        if self.cuda_stream is not None:
-            self.cuda_stream.synchronize()
-        for ids, d_vector, bp_vector in self.backprops:
-            d_state_features = bp_vector((d_vector, ids))
-            ids = ids.flatten()
-            d_state_features = d_state_features.reshape(
-                (ids.size, d_state_features.shape[2]))
-            self.ops.scatter_add(d_tokvecs, ids,
-                d_state_features)
-        # Padded -- see update()
-        self.bp_tokvecs(d_tokvecs[:-1])
-        return d_tokvecs
-
-NUMPY_OPS = NumpyOps()
-
-def step_forward(model: ParserStepModel, states, is_train):
-    token_ids = model.get_token_ids(states)
+def step_forward(model: ParserStepModel, token_ids, is_train):
     vector, get_d_tokvecs = model.state2vec(token_ids, is_train)
     mask = None
     if model.attrs["has_upper"]:
+        vec2scores = ensure_same_device(model.ops, model.vec2scores)
         dropout_rate = model.attrs["dropout_rate"]
         if is_train and dropout_rate > 0:
-            mask = NUMPY_OPS.get_dropout_mask(vector.shape, 0.1)
+            mask = model.ops.get_dropout_mask(vector.shape, dropout_rate)
             vector *= mask
-        scores, get_d_vector = model.vec2scores(vector, is_train)
+        scores, get_d_vector = vec2scores(vector, is_train)
     else:
-        scores = NumpyOps().asarray(vector)
+        scores = vector
         get_d_vector = lambda d_scores: d_scores
     # If the class is unseen, make sure its score is minimum
-    scores[:, model._class_mask == 0] = numpy.nanmin(scores)
+    scores[:, model._class_mask == 0] = model.ops.xp.nanmin(scores)
 
     def backprop_parser_step(d_scores):
         # Zero vectors for unseen classes
@@ -324,9 +296,16 @@ def step_forward(model: ParserStepModel, states, is_train):
         d_vector = get_d_vector(d_scores)
         if mask is not None:
             d_vector *= mask
-        model.backprop_step(token_ids, d_vector, get_d_tokvecs)
-        return None
+        return get_d_tokvecs(d_vector)
+    
     return scores, backprop_parser_step
+
+
+def ensure_same_device(ops, model):
+    """Ensure a model is on the same device as a given ops"""
+    if not isinstance(model.ops, ops.__class__):
+        model._to_ops(ops)
+    return model
 
 
 cdef class precompute_hiddens:
@@ -347,31 +326,23 @@ cdef class precompute_hiddens:
     and do the hard-to-program parsing on the CPU.
     """
     cdef readonly int nF, nO, nP
-    cdef bint _is_synchronized
     cdef public object ops
-    cdef public object numpy_ops
-    cdef np.ndarray _features
-    cdef np.ndarray _cached
-    cdef np.ndarray bias
-    cdef object _cuda_stream
-    cdef object _bp_hiddens
-    cdef object activation
+    cdef readonly object bias
+    cdef readonly object activation
+    cdef readonly object _features
+    cdef readonly object _cached
+    cdef readonly object _bp_hiddens
 
-    def __init__(self, batch_size, tokvecs, lower_model, cuda_stream=None,
-                 activation="maxout", train=False):
-        gpu_cached, bp_features = lower_model(tokvecs, train)
-        cdef np.ndarray cached
-        if not isinstance(gpu_cached, numpy.ndarray):
-            # Note the passing of cuda_stream here: it lets
-            # cupy make the copy asynchronously.
-            # We then have to block before first use.
-            cached = gpu_cached.get(stream=cuda_stream)
-        else:
-            cached = gpu_cached
-        if not isinstance(lower_model.get_param("b"), numpy.ndarray):
-            self.bias = lower_model.get_param("b").get(stream=cuda_stream)
-        else:
-            self.bias = lower_model.get_param("b")
+    def __init__(
+        self,
+        batch_size,
+        tokvecs,
+        lower_model, 
+        activation="maxout",
+        train=False
+    ):
+        cached, bp_features = lower_model(tokvecs, train)
+        self.bias = lower_model.get_param("b")
         self.nF = cached.shape[1]
         if lower_model.has_dim("nP"):
             self.nP = lower_model.get_dim("nP")
@@ -379,19 +350,18 @@ cdef class precompute_hiddens:
             self.nP = 1
         self.nO = cached.shape[2]
         self.ops = lower_model.ops
-        self.numpy_ops = NumpyOps()
         assert activation in (None, "relu", "maxout")
         self.activation = activation
-        self._is_synchronized = False
-        self._cuda_stream = cuda_stream
         self._cached = cached
         self._bp_hiddens = bp_features
 
     cdef const float* get_feat_weights(self) except NULL:
-        if not self._is_synchronized and self._cuda_stream is not None:
-            self._cuda_stream.synchronize()
-            self._is_synchronized = True
-        return <float*>self._cached.data
+        cdef np.ndarray cached
+        if isinstance(self._cached, numpy.ndarray):
+            cached = self._cached
+        else:
+            cached = self._cached.get()
+        return <float*>cached.data
 
     def has_dim(self, name):
         if name == "nF":
@@ -433,57 +403,25 @@ cdef class precompute_hiddens:
         return self.begin_update(X)[0]
 
     def begin_update(self, token_ids):
-        cdef np.ndarray state_vector = numpy.zeros(
-            (token_ids.shape[0], self.nO, self.nP), dtype='f')
-        # This is tricky, but (assuming GPU available);
-        # - Input to forward on CPU
-        # - Output from forward on CPU
-        # - Input to backward on GPU!
-        # - Output from backward on GPU
+        nO = self.nO
+        nP = self.nP
+        hidden = self.model.ops.alloc2f(
+            token_ids.shape[0],
+            nO * nP
+        ) 
         bp_hiddens = self._bp_hiddens
+        feat_weights = self.cached
+        self.ops.scatter_add(
+            hidden,
+            feat_weights,
+            token_ids
+        )
+        hidden += self.bias
+        statevec, mask = self.ops.maxout(hidden.reshape((-1, nO, nP)))
 
-        feat_weights = self.get_feat_weights()
-        cdef int[:, ::1] ids = token_ids
-        sum_state_features(<float*>state_vector.data,
-            feat_weights, &ids[0,0],
-            token_ids.shape[0], self.nF, self.nO*self.nP)
-        state_vector += self.bias
-        state_vector, bp_nonlinearity = self._nonlinearity(state_vector)
-
-        def backward(d_state_vector_ids):
-            d_state_vector, token_ids = d_state_vector_ids
-            d_state_vector = bp_nonlinearity(d_state_vector)
-            d_tokens = bp_hiddens((d_state_vector, token_ids))
-            return d_tokens
-        return state_vector, backward
-
-    def _nonlinearity(self, state_vector):
-        if self.activation == "maxout":
-            return self._maxout_nonlinearity(state_vector)
-        else:
-            return self._relu_nonlinearity(state_vector)
-
-    def _maxout_nonlinearity(self, state_vector):
-        state_vector, mask = self.numpy_ops.maxout(state_vector)
-        # We're outputting to CPU, but we need this variable on GPU for the
-        # backward pass.
-        mask = self.ops.asarray(mask)
-
-        def backprop_maxout(d_best):
-            return self.ops.backprop_maxout(d_best, mask, self.nP)
+        def backward(d_statevec):
+            return bp_hiddens(
+                self.ops.backprop_maxout(d_statevec, mask, nP)
+            )
         
-        return state_vector, backprop_maxout
-
-    def _relu_nonlinearity(self, state_vector):
-        state_vector = state_vector.reshape((state_vector.shape[0], -1))
-        mask = state_vector >= 0.
-        state_vector *= mask
-        # We're outputting to CPU, but we need this variable on GPU for the
-        # backward pass.
-        mask = self.ops.asarray(mask)
-
-        def backprop_relu(d_best):
-            d_best *= mask
-            return d_best.reshape((d_best.shape + (1,)))
- 
-        return state_vector, backprop_relu
+        return statevec, backward
