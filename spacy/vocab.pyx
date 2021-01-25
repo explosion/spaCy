@@ -161,8 +161,16 @@ cdef class Vocab:
             return self._new_lexeme(mem, self.strings[orth])
 
     cdef const LexemeC* _new_lexeme(self, Pool mem, unicode string) except NULL:
-        if len(string) < 3 or self.length < 10000:
-            mem = self.mem
+        # I think this heuristic is bad, and the Vocab should always
+        # own the lexemes. It avoids weird bugs this way, as it's how the thing
+        # was originally supposed to work. The best solution to the growing
+        # memory use is to periodically reset the vocab, which is an action
+        # that should be up to the user to do (so we don't need to keep track
+        # of the doc ownership).
+        # TODO: Change the C API so that the mem isn't passed in here.
+        mem = self.mem
+        #if len(string) < 3 or self.length < 10000:
+        #    mem = self.mem
         cdef bint is_oov = mem is not self.mem
         lex = <LexemeC*>mem.alloc(1, sizeof(LexemeC))
         lex.orth = self.strings.add(string)
