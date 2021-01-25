@@ -195,7 +195,6 @@ class TextCategorizer(TrainablePipe):
         examples: Iterable[Example],
         *,
         drop: float = 0.0,
-        set_annotations: bool = False,
         sgd: Optional[Optimizer] = None,
         losses: Optional[Dict[str, float]] = None,
     ) -> Dict[str, float]:
