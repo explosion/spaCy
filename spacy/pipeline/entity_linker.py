@@ -193,7 +193,6 @@ class EntityLinker(TrainablePipe):
         self,
         examples: Iterable[Example],
         *,
-        set_annotations: bool = False,
         drop: float = 0.0,
         sgd: Optional[Optimizer] = None,
         losses: Optional[Dict[str, float]] = None,
