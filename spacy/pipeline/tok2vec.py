@@ -209,8 +209,6 @@ class Tok2Vec(TrainablePipe):
             listener.receive(batch_id, tokvecs, accumulate_gradient)
         if self.listeners:
             self.listeners[-1].receive(batch_id, tokvecs, backprop)
-        if set_annotations:
-            self.set_annotations(docs, tokvecs)
         return losses
 
     def get_loss(self, examples, scores) -> None:
