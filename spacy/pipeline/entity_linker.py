@@ -256,8 +256,6 @@ class EntityLinker(TrainablePipe):
         if sgd is not None:
             self.finish_update(sgd)
         losses[self.name] += loss
-        if set_annotations:
-            self.set_annotations(docs, predictions)
         return losses
 
     def get_loss(self, examples: Iterable[Example], sentence_encodings):
