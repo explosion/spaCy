@@ -163,7 +163,6 @@ class Tok2Vec(TrainablePipe):
         drop: float = 0.0,
         sgd: Optional[Optimizer] = None,
         losses: Optional[Dict[str, float]] = None,
-        set_annotations: bool = False,
     ):
         """Learn from a batch of documents and gold-standard information,
         updating the pipe's model.
