@@ -266,6 +266,8 @@ cdef class BiluoPushDown(TransitionSystem):
         return BiluoGold(self, state, example)
 
     def has_gold(self, Example eg, start=0, end=None):
+        if end is not None and end < 0:
+            end = None
         for word in eg.y[start:end]:
             if word.ent_iob != 0:
                 return True
