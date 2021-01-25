@@ -23,11 +23,11 @@ class SpanishLemmatizer(Lemmatizer):
         if cache_key in self.cache:
             return self.cache[cache_key]
         string = token.text
-        univ_pos = token.pos_.lower()
+        pos = token.pos_.lower()
         features = set(token.morph)
-        if univ_pos in ("", "eol", "space"):
+        if pos in ("", "eol", "space"):
             return [string.lower()]
-        if univ_pos in (
+        if pos in (
             "adp",
             "cconj",
             "intj",
@@ -38,23 +38,23 @@ class SpanishLemmatizer(Lemmatizer):
             "sym",
             "x",
         ):
-            if token.is_sent_start and univ_pos != "propn":
+            if token.is_sent_start and pos != "propn":
                 return [string.lower()]
             else:
                 return [string]
 
         string = string.lower()
-        exc = self.lookups.get_table("lemma_exc").get(univ_pos, {}).get(string)
+        exc = self.lookups.get_table("lemma_exc").get(pos, {}).get(string)
         if exc is not None:
             lemmas = list(exc)
         else:
-            if univ_pos == "aux":
+            if pos == "aux":
                 rule_pos = "verb"
             else:
-                rule_pos = univ_pos
+                rule_pos = pos
             rule = self.select_rule(rule_pos, features)
-            index = self.lookups.get_table("lemma_index").get(univ_pos, [])
-            lemmas = getattr(self, "lemmatize_" + univ_pos)(
+            index = self.lookups.get_table("lemma_index").get(rule_pos, [])
+            lemmas = getattr(self, "lemmatize_" + rule_pos)(
                 string, features, rule, index
             )
             # Remove duplicates but preserve the ordering
@@ -63,10 +63,10 @@ class SpanishLemmatizer(Lemmatizer):
         self.cache[cache_key] = lemmas
         return lemmas
 
-    def select_rule(self, univ_pos: str, features: List[str]) -> Optional[str]:
+    def select_rule(self, pos: str, features: List[str]) -> Optional[str]:
         groups = self.lookups.get_table("lemma_rules_groups")
-        if univ_pos in groups:
-            for group in groups[univ_pos]:
+        if pos in groups:
+            for group in groups[pos]:
                 if set(group[1]).issubset(features):
                     return group[0]
         return None
@@ -138,22 +138,6 @@ class SpanishLemmatizer(Lemmatizer):
 
         # If none of the rules applies, return the original word
         return [word]
-
-    def lemmatize_aux(
-        self, word: str, features: List[str], rule: str, index: List[str]
-    ) -> List[str]:
-        """
-        Lemmatize an auxiliary.
-
-        word (str): The word to lemmatize.
-        features (List[str]): The morphological features as a list of Feat=Val
-            pairs.
-        index (List[str]): The POS-specific lookup list.
-
-        RETURNS (List[str]): The list of lemmas.
-        """
-
-        return self.lemmatize_verb(word, features, rule, index)
 
     def lemmatize_det(
         self, word: str, features: List[str], rule: str, index: List[str]
@@ -359,7 +343,9 @@ class SpanishLemmatizer(Lemmatizer):
                 verb = re.sub(old, new, verb)
             # Lemmatize the verb and pronouns
             rule = self.select_rule("verb", features)
-            verb_lemma = self.lemmatize_verb(verb, features - {"PronType=Prs"}, rule, index)[0]
+            verb_lemma = self.lemmatize_verb(
+                verb, features - {"PronType=Prs"}, rule, index
+            )[0]
             pron_lemmas = []
             for pron in prons:
                 rule = self.select_rule("pron", features)
