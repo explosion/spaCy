@@ -369,9 +369,6 @@ cdef class Parser(TrainablePipe):
         backprop_tok2vec(golds)
         if sgd not in (None, False):
             self.finish_update(sgd)
-        if set_annotations:
-            docs = [eg.predicted for eg in examples]
-            self.set_annotations(docs, all_states)
         # Ugh, this is annoying. If we're working on GPU, we want to free the
         # memory ASAP. It seems that Python doesn't necessarily get around to
         # removing these in time if we don't explicitly delete? It's confusing.
