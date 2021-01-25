@@ -604,6 +604,8 @@ cdef class Parser(TrainablePipe):
         for state, eg, history in zip(all_states, examples, oracle_histories):
             if not history:
                 continue
+            if not self.moves.has_gold(eg):
+                continue
             gold = self.moves.init_gold(state, eg)
             if len(history) < max_length:
                 states.append(state)
