@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from copy import deepcopy
 from pathlib import Path
 import warnings
-from thinc.api import Model, get_current_ops, Config, Optimizer
+from thinc.api import get_current_ops, Config, Optimizer
 import srsly
 import multiprocessing as mp
 from itertools import chain, cycle
@@ -20,7 +20,7 @@ from .pipe_analysis import validate_attrs, analyze_pipes, print_pipe_analysis
 from .training import Example, validate_examples
 from .training.initialize import init_vocab, init_tok2vec
 from .scorer import Scorer
-from .util import registry, SimpleFrozenList, _pipe
+from .util import registry, SimpleFrozenList, _pipe, raise_error
 from .util import SimpleFrozenDict, combine_score_weights, CONFIG_SECTION_ORDER
 from .lang.tokenizer_exceptions import URL_MATCH, BASE_EXCEPTIONS
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
@@ -1282,6 +1282,7 @@ class Language:
         scorer: Optional[Scorer] = None,
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
         scorer_cfg: Optional[Dict[str, Any]] = None,
+        error_handler: Callable[[str, List[Doc], Exception], Any] = raise_error,
     ) -> Dict[str, Union[float, dict]]:
         """Evaluate a model's pipeline components.
 
@@ -1293,6 +1294,10 @@ class Language:
             arguments for specific components.
         scorer_cfg (dict): An optional dictionary with extra keyword arguments
             for the scorer.
+        error_handler (Callable[[str, List[Doc], Exception], Any]): Function that
+            deals with a failing batch of documents. The default function just reraises
+            the exception.
+
         RETURNS (Scorer): The scorer containing the evaluation results.
 
         DOCS: https://nightly.spacy.io/api/language#evaluate
@@ -1316,8 +1321,9 @@ class Language:
         for name, pipe in self.pipeline:
             kwargs = component_cfg.get(name, {})
             kwargs.setdefault("batch_size", batch_size)
+            kwargs["error_handler"] = error_handler
             for doc, eg in zip(
-                _pipe((eg.predicted for eg in examples), pipe, kwargs), examples
+                _pipe((eg.predicted for eg in examples), proc=pipe, name=name, kwargs=kwargs), examples
             ):
                 eg.predicted = doc
         end_time = timer()
@@ -1376,6 +1382,7 @@ class Language:
         disable: Iterable[str] = SimpleFrozenList(),
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
         n_process: int = 1,
+        error_handler: Callable[[str, List[Doc], Exception], Any] = raise_error,
     ):
         """Process texts as a stream, and yield `Doc` objects in order.
 
@@ -1388,6 +1395,9 @@ class Language:
         component_cfg (Dict[str, Dict]): An optional dictionary with extra keyword
             arguments for specific components.
         n_process (int): Number of processors to process texts. If -1, set `multiprocessing.cpu_count()`.
+        error_handler (Callable[[str, List[Doc], Exception], Any]): Function that
+            deals with a failing batch of documents. The default function just reraises
+            the exception.
         YIELDS (Doc): Documents in the order of the original text.
 
         DOCS: https://nightly.spacy.io/api/language#pipe
@@ -1404,6 +1414,7 @@ class Language:
                 disable=disable,
                 n_process=n_process,
                 component_cfg=component_cfg,
+                error_handler=error_handler,
             )
             for doc, context in zip(docs, contexts):
                 yield (doc, context)
@@ -1422,7 +1433,8 @@ class Language:
             kwargs = component_cfg.get(name, {})
             # Allow component_cfg to overwrite the top-level kwargs.
             kwargs.setdefault("batch_size", batch_size)
-            f = functools.partial(_pipe, proc=proc, kwargs=kwargs)
+            kwargs["error_handler"] = error_handler
+            f = functools.partial(_pipe, proc=proc, name=name, kwargs=kwargs)
             pipes.append(f)
 
         if n_process != 1:

@@ -1,6 +1,6 @@
-from itertools import islice
-from typing import Optional, Iterable, Callable, Dict, Iterator, Union, List
+from typing import Optional, Iterable, Callable, Dict, Iterator, Union, List, Any
 from pathlib import Path
+from itertools import islice
 import srsly
 import random
 from thinc.api import CosineDistance, Model, Optimizer, Config
@@ -16,7 +16,7 @@ from ..language import Language
 from ..vocab import Vocab
 from ..training import Example, validate_examples, validate_get_examples
 from ..errors import Errors, Warnings
-from ..util import SimpleFrozenList
+from ..util import SimpleFrozenList, raise_error
 from .. import util
 from ..scorer import Scorer
 
@@ -288,21 +288,33 @@ class EntityLinker(TrainablePipe):
         self.set_annotations([doc], kb_ids)
         return doc
 
-    def pipe(self, stream: Iterable[Doc], *, batch_size: int = 128) -> Iterator[Doc]:
+    def pipe(
+        self,
+        stream: Iterable[Doc],
+        *,
+        batch_size: int = 128,
+        error_handler: Callable[[str, List[Doc], Exception], Any] = raise_error,
+    ) -> Iterator[Doc]:
         """Apply the pipe to a stream of documents. This usually happens under
         the hood when the nlp object is called on a text and all components are
         applied to the Doc.
 
         stream (Iterable[Doc]): A stream of documents.
         batch_size (int): The number of documents to buffer.
+        error_handler (Callable[[str, List[Doc], Exception], Any]): Function that
+            deals with a failing batch of documents. The default function just reraises
+            the exception.
         YIELDS (Doc): Processed documents in order.
 
         DOCS: https://nightly.spacy.io/api/entitylinker#pipe
         """
         for docs in util.minibatch(stream, size=batch_size):
-            kb_ids = self.predict(docs)
-            self.set_annotations(docs, kb_ids)
-            yield from docs
+            try:
+                kb_ids = self.predict(docs)
+                self.set_annotations(docs, kb_ids)
+                yield from docs
+            except Exception as e:
+                error_handler(self.name, docs, e)
 
     def predict(self, docs: Iterable[Doc]) -> List[str]:
         """Apply the pipeline's model to a batch of docs, without modifying them.

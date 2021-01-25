@@ -1420,15 +1420,25 @@ def check_bool_env_var(env_var: str) -> bool:
     return bool(value)
 
 
-def _pipe(docs, proc, kwargs):
+def _pipe(docs, proc, name, kwargs):
     if hasattr(proc, "pipe"):
         yield from proc.pipe(docs, **kwargs)
     else:
         # We added some args for pipe that __call__ doesn't expect.
         kwargs = dict(kwargs)
-        for arg in ["batch_size"]:
+        error_handler = kwargs.get("error_handler", None)
+        if not error_handler:
+            error_handler = raise_error
+        for arg in ["batch_size", "error_handler"]:
             if arg in kwargs:
                 kwargs.pop(arg)
         for doc in docs:
-            doc = proc(doc, **kwargs)
+            try:
+                doc = proc(doc, **kwargs)
+            except Exception as e:
+                error_handler(name, [doc], e)
             yield doc
+
+
+def raise_error(proc_name, docs, e):
+    raise e

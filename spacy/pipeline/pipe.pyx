@@ -1,13 +1,14 @@
 # cython: infer_types=True, profile=True
-import warnings
-from typing import Optional, Tuple, Iterable, Iterator, Callable, Union, Dict
+from typing import Optional, Tuple, Iterable, Iterator, Callable, Union, Dict, List, Any
 import srsly
+import warnings
 
 from ..tokens.doc cimport Doc
 
 from ..training import Example
 from ..errors import Errors, Warnings
 from ..language import Language
+from ..util import raise_error
 
 cdef class Pipe:
     """This class is a base class and not instantiated directly. It provides
@@ -37,20 +38,32 @@ cdef class Pipe:
         """
         raise NotImplementedError(Errors.E931.format(parent="Pipe", method="__call__", name=self.name))
 
-    def pipe(self, stream: Iterable[Doc], *, batch_size: int=128) -> Iterator[Doc]:
+    def pipe(
+        self,
+        stream: Iterable[Doc],
+        *,
+        batch_size: int = 128,
+        error_handler: Callable[[str, List[Doc], Exception], Any] = raise_error,
+    ) -> Iterator[Doc]:
         """Apply the pipe to a stream of documents. This usually happens under
         the hood when the nlp object is called on a text and all components are
         applied to the Doc.
 
         stream (Iterable[Doc]): A stream of documents.
         batch_size (int): The number of documents to buffer.
+        error_handler (Callable[[str, List[Doc], Exception], Any]): Function that
+            deals with a failing batch of documents. The default function just reraises
+            the exception.
         YIELDS (Doc): Processed documents in order.
 
         DOCS: https://nightly.spacy.io/api/pipe#pipe
         """
         for doc in stream:
-            doc = self(doc)
-            yield doc
+            try:
+                doc = self(doc)
+                yield doc
+            except Exception as e:
+                error_handler(self.name, [doc], e)
 
     def initialize(self, get_examples: Callable[[], Iterable[Example]], *, nlp: Language=None):
         """Initialize the pipe. For non-trainable components, this method

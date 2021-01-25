@@ -1,5 +1,5 @@
 # cython: infer_types=True, profile=True, binding=True
-from typing import List
+from typing import List, Callable, Any
 import numpy
 import srsly
 from thinc.api import Model, set_dropout_rate, SequenceCategoricalCrossentropy, Config
@@ -9,6 +9,7 @@ from itertools import islice
 
 from ..tokens.doc cimport Doc
 from ..morphology cimport Morphology
+from ..util import raise_error
 from ..vocab cimport Vocab
 
 from .trainable_pipe import TrainablePipe
@@ -107,21 +108,33 @@ class Tagger(TrainablePipe):
         self.set_annotations([doc], tags)
         return doc
 
-    def pipe(self, stream, *, batch_size=128):
+    def pipe(
+        self,
+        stream,
+        *,
+        batch_size = 128,
+        error_handler: Callable[[str, List[Doc], Exception], Any] = raise_error,
+    ):
         """Apply the pipe to a stream of documents. This usually happens under
         the hood when the nlp object is called on a text and all components are
         applied to the Doc.
 
         stream (Iterable[Doc]): A stream of documents.
         batch_size (int): The number of documents to buffer.
+        error_handler (Callable[[str, List[Doc], Exception], Any]): Function that
+            deals with a failing batch of documents. The default function just reraises
+            the exception.
         YIELDS (Doc): Processed documents in order.
 
         DOCS: https://nightly.spacy.io/api/tagger#pipe
         """
         for docs in util.minibatch(stream, size=batch_size):
-            tag_ids = self.predict(docs)
-            self.set_annotations(docs, tag_ids)
-            yield from docs
+            try:
+                tag_ids = self.predict(docs)
+                self.set_annotations(docs, tag_ids)
+                yield from docs
+            except Exception as e:
+                error_handler(self.name, docs, e)
 
     def predict(self, docs):
         """Apply the pipeline's model to a batch of docs, without modifying them.

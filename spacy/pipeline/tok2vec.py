@@ -1,4 +1,4 @@
-from typing import Iterator, Sequence, Iterable, Optional, Dict, Callable, List
+from typing import Iterator, Sequence, Iterable, Optional, Dict, Callable, List, Any
 from thinc.api import Model, set_dropout_rate, Optimizer, Config
 from itertools import islice
 
@@ -8,8 +8,7 @@ from ..tokens import Doc
 from ..vocab import Vocab
 from ..language import Language
 from ..errors import Errors
-from ..util import minibatch
-
+from ..util import minibatch, raise_error
 
 default_model_config = """
 [model]
@@ -112,22 +111,34 @@ class Tok2Vec(TrainablePipe):
         self.set_annotations([doc], tokvecses)
         return doc
 
-    def pipe(self, stream: Iterator[Doc], *, batch_size: int = 128) -> Iterator[Doc]:
+    def pipe(
+        self,
+        stream: Iterator[Doc],
+        *,
+        batch_size: int = 128,
+        error_handler: Callable[[str, List[Doc], Exception], Any] = raise_error,
+    ) -> Iterator[Doc]:
         """Apply the pipe to a stream of documents. This usually happens under
         the hood when the nlp object is called on a text and all components are
         applied to the Doc.
 
         stream (Iterable[Doc]): A stream of documents.
         batch_size (int): The number of documents to buffer.
+        error_handler (Callable[[str, List[Doc], Exception], Any]): Function that
+            deals with a failing batch of documents. The default function just reraises
+            the exception.
         YIELDS (Doc): Processed documents in order.
 
         DOCS: https://nightly.spacy.io/api/tok2vec#pipe
         """
         for docs in minibatch(stream, batch_size):
-            docs = list(docs)
-            tokvecses = self.predict(docs)
-            self.set_annotations(docs, tokvecses)
-            yield from docs
+            try:
+                docs = list(docs)
+                tokvecses = self.predict(docs)
+                self.set_annotations(docs, tokvecses)
+                yield from docs
+            except Exception as e:
+                error_handler(self.name, docs, e)
 
     def predict(self, docs: Iterable[Doc]):
         """Apply the pipeline's model to a batch of docs, without modifying them.
