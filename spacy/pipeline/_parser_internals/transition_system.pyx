@@ -120,16 +120,6 @@ cdef class TransitionSystem:
                 raise ValueError(Errors.E024)
         return history
 
-    def follow_history(self, doc, history):
-        """Get the state that results from following a sequence of actions."""
-        cdef int clas
-        cdef StateClass state
-        state = self.init_batch([doc])[0]
-        for clas in history:
-            action = self.c[clas]
-            action.do(state.c, action.label)
-        return state
-
     def apply_transition(self, StateClass state, name):
         if not self.is_valid(state, name):
             raise ValueError(Errors.E170.format(name=name))

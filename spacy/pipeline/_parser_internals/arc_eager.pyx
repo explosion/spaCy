@@ -638,17 +638,16 @@ cdef class ArcEager(TransitionSystem):
         return gold
 
     def init_gold_batch(self, examples):
+        # TODO: Projectivity?
         all_states = self.init_batch([eg.predicted for eg in examples])
         golds = []
         states = []
-        docs = []
         for state, eg in zip(all_states, examples):
             if self.has_gold(eg) and not state.is_final():
                 golds.append(self.init_gold(state, eg))
                 states.append(state)
-                docs.append(eg.x)
         n_steps = sum([len(s.queue) for s in states])
-        return states, golds, docs
+        return states, golds, n_steps
 
     def _replace_unseen_labels(self, ArcEagerGold gold):
         backoff_label = self.strings["dep"]
