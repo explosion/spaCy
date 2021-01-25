@@ -221,10 +221,6 @@ class EntityLinker(TrainablePipe):
         validate_examples(examples, "EntityLinker.update")
         sentence_docs = []
         docs = [eg.predicted for eg in examples]
-        if set_annotations:
-            # This seems simpler than other ways to get that exact output -- but
-            # it does run the model twice :(
-            predictions = self.model.predict(docs)
         for eg in examples:
             sentences = [s for s in eg.reference.sents]
             kb_ids = eg.get_aligned("ENT_KB_ID", as_string=True)
