@@ -19,7 +19,7 @@ class SpanishLemmatizer(Lemmatizer):
             return super().get_lookups_config(mode)
 
     def rule_lemmatize(self, token: Token) -> List[str]:
-        cache_key = (token.orth, token.pos)
+        cache_key = (token.orth, token.pos, str(token.morph))
         if cache_key in self.cache:
             return self.cache[cache_key]
         string = token.text
