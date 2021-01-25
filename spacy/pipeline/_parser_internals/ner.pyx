@@ -350,9 +350,9 @@ cdef class Begin:
         elif st.B_(1).ent_iob == 3:
             # If the next word is B, we can't B now
             return False
-        elif st.B_(1).sent_start == 1:
-            # Don't allow entities to extend across sentence boundaries
-            return False
+        #elif st.B_(1).sent_start == 1:
+        #    # Don't allow entities to extend across sentence boundaries
+        #    return False
         # Don't allow entities to start on whitespace
         elif Lexeme.get_struct_attr(st.B_(0).lex, IS_SPACE):
             return False
@@ -418,9 +418,9 @@ cdef class In:
                 # Otherwise, force acceptance, even if we're across a sentence
                 # boundary or the token is whitespace.
                 return True
-        elif st.B(1) != -1 and st.B_(1).sent_start == 1:
-            # Don't allow entities to extend across sentence boundaries
-            return False
+        #elif st.B(1) != -1 and st.B_(1).sent_start == 1:
+        #    # Don't allow entities to extend across sentence boundaries
+        #    return False
         else:
             return True
 
