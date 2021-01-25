@@ -328,7 +328,6 @@ cdef class Parser(TrainablePipe):
             return self.update_beam(
                 examples,
                 beam_width=self.cfg["beam_width"],
-                set_annotations=set_annotations,
                 sgd=sgd,
                 losses=losses,
                 beam_density=self.cfg["beam_density"]
