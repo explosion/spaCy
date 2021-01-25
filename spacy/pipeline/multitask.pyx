@@ -199,7 +199,7 @@ class ClozeMultitask(TrainablePipe):
         loss = self.distance.get_loss(prediction, target)
         return loss, gradient
 
-    def update(self, examples, *, drop=0., set_annotations=False, sgd=None, losses=None):
+    def update(self, examples, *, drop=0., sgd=None, losses=None):
         pass
 
     def rehearse(self, examples, drop=0., sgd=None, losses=None):
