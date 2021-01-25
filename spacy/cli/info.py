@@ -34,7 +34,7 @@ def info(
     *,
     markdown: bool = False,
     silent: bool = True,
-    exclude: List[str] = None,
+    exclude: Optional[List[str]] = None,
 ) -> Union[str, dict]:
     msg = Printer(no_print=silent, pretty=not silent)
     if not exclude:
@@ -105,7 +105,7 @@ def info_model(model: str, *, silent: bool = True) -> Dict[str, Any]:
 
 
 def get_markdown(
-    data: Dict[str, Any], title: Optional[str] = None, exclude: List[str] = None
+    data: Dict[str, Any], title: Optional[str] = None, exclude: Optional[List[str]] = None
 ) -> str:
     """Get data in GitHub-flavoured Markdown format for issues etc.
 
