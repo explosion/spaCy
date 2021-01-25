@@ -199,8 +199,7 @@ class TextCategorizer(TrainablePipe):
         losses: Optional[Dict[str, float]] = None,
     ) -> Dict[str, float]:
         """Learn from a batch of documents and gold-standard information,
-        updating the pipe's model. Delegates to predict, get_loss and
-        set_annotations.
+        updating the pipe's model. Delegates to predict and get_loss.
 
         examples (Iterable[Example]): A batch of Example objects.
         drop (float): The dropout rate.
@@ -226,8 +225,6 @@ class TextCategorizer(TrainablePipe):
         if sgd is not None:
             self.finish_update(sgd)
         losses[self.name] += loss
-        docs = [eg.predicted for eg in examples]
-        self.set_annotations(docs, scores=scores)
         return losses
 
     def rehearse(

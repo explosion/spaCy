@@ -237,8 +237,7 @@ entities.
 
 Learn from a batch of [`Example`](/api/example) objects, updating both the
 pipe's entity linking model and context encoder. Delegates to
-[`predict`](/api/entitylinker#predict) and 
-[`set_annotations`](/api/entitylinker#set_annotations).
+[`predict`](/api/entitylinker#predict).
 
 > #### Example
 >

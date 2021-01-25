@@ -220,9 +220,8 @@ Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 ## DependencyParser.update {#update tag="method"}
 
 Learn from a batch of [`Example`](/api/example) objects, updating the pipe's
-model. Delegates to [`predict`](/api/dependencyparser#predict), 
-[`get_loss`](/api/dependencyparser#get_loss) and 
-[`set_annotations`](/api/dependencyparser#set_annotations).
+model. Delegates to [`predict`](/api/dependencyparser#predict) and
+[`get_loss`](/api/dependencyparser#get_loss).
 
 > #### Example
 >

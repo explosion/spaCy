@@ -186,8 +186,7 @@ Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 
 Learn from a batch of [`Example`](/api/example) objects containing the
 predictions and gold-standard annotations, and update the component's model.
-Delegates to [`predict`](/api/tok2vec#predict) and 
-[`set_annotations`](/api/tok2vec#set_annotations).
+Delegates to [`predict`](/api/tok2vec#predict).
 
 > #### Example
 >

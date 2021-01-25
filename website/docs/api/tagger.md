@@ -187,9 +187,8 @@ Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 
 Learn from a batch of [`Example`](/api/example) objects containing the
 predictions and gold-standard annotations, and update the component's model.
-Delegates to [`predict`](/api/tagger#predict), 
-[`get_loss`](/api/tagger#get_loss) and 
-[`set_annotations`](/api/tagger#set_annotations).
+Delegates to [`predict`](/api/tagger#predict) and
+[`get_loss`](/api/tagger#get_loss).
 
 > #### Example
 >

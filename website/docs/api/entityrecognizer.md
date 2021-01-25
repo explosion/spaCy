@@ -209,9 +209,8 @@ Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 ## EntityRecognizer.update {#update tag="method"}
 
 Learn from a batch of [`Example`](/api/example) objects, updating the pipe's
-model. Delegates to [`predict`](/api/entityrecognizer#predict), 
-[`get_loss`](/api/entityrecognizer#get_loss) and 
-[`set_annotations`](/api/entityrecognizer#set_annotations).
+model. Delegates to [`predict`](/api/entityrecognizer#predict) and
+[`get_loss`](/api/entityrecognizer#get_loss).
 
 > #### Example
 >

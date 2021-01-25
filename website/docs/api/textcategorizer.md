@@ -201,9 +201,8 @@ Modify a batch of [`Doc`](/api/doc) objects using pre-computed scores.
 
 Learn from a batch of [`Example`](/api/example) objects containing the
 predictions and gold-standard annotations, and update the component's model.
-Delegates to [`predict`](/api/textcategorizer#predict),
-[`get_loss`](/api/textcategorizer#get_loss) and 
-[`set_annotations`](/api/textcategorizer#set_annotations).
+Delegates to [`predict`](/api/textcategorizer#predict) and
+[`get_loss`](/api/textcategorizer#get_loss).
 
 > #### Example
 >
