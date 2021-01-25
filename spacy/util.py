@@ -1435,10 +1435,13 @@ def _pipe(docs, proc, name, kwargs):
         for doc in docs:
             try:
                 doc = proc(doc, **kwargs)
+                yield doc
             except Exception as e:
                 error_handler(name, [doc], e)
-            yield doc
 
 
 def raise_error(proc_name, docs, e):
     raise e
+
+def ignore_error(proc_name, docs, e):
+    pass
