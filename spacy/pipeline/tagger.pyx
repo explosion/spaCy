@@ -173,7 +173,7 @@ class Tagger(TrainablePipe):
                 if doc.c[j].tag == 0:
                     doc.c[j].tag = self.vocab.strings[self.labels[tag_id]]
 
-    def update(self, examples, *, drop=0., sgd=None, losses=None, set_annotations=False):
+    def update(self, examples, *, drop=0., sgd=None, losses=None):
         """Learn from a batch of documents and gold-standard information,
         updating the pipe's model. Delegates to predict and get_loss.
 
