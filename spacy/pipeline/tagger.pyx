@@ -206,9 +206,6 @@ class Tagger(TrainablePipe):
             self.finish_update(sgd)
 
         losses[self.name] += loss
-        if set_annotations:
-            docs = [eg.predicted for eg in examples]
-            self.set_annotations(docs, self._scores2guesses(tag_scores))
         return losses
 
     def rehearse(self, examples, *, drop=0., sgd=None, losses=None):
