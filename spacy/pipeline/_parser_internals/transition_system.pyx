@@ -67,6 +67,7 @@ cdef class TransitionSystem:
         for clas in history:
             action = self.c[clas]
             action.do(state.c, action.label)
+            state.c.history.push_back(clas)
         return state
 
     def get_oracle_sequence(self, Example example, _debug=False):
@@ -110,6 +111,7 @@ cdef class TransitionSystem:
                             "S0 head?", str(state.has_head(state.S(0))),
                         )))
                     action.do(state.c, action.label)
+                    state.c.history.push_back(i)
                     break
             else:
                 if _debug:
@@ -137,6 +139,7 @@ cdef class TransitionSystem:
             raise ValueError(Errors.E170.format(name=name))
         action = self.lookup_transition(name)
         action.do(state.c, action.label)
+        state.c.history.push_back(action.clas)
 
     cdef Transition lookup_transition(self, object name) except *:
         raise NotImplementedError

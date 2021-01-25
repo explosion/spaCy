@@ -844,6 +844,7 @@ cdef class ArcEager(TransitionSystem):
                             state.print_state()
                         )))
                     action.do(state.c, action.label)
+                    state.c.history.push_back(i)
                     break
             else:
                 failed = False

@@ -203,15 +203,21 @@ cdef class Parser(TrainablePipe):
             )
 
     def greedy_parse(self, docs, drop=0.):
-        cdef vector[StateC*] states
-        cdef StateClass state
         set_dropout_rate(self.model, drop)
-        batch = self.moves.init_batch(docs)
         # This is pretty dirty, but the NER can resize itself in init_batch,
         # if labels are missing. We therefore have to check whether we need to
         # expand our model output.
         self._resize()
         model = self.model.predict(docs)
+        batch = self.moves.init_batch(docs)
+        states = self._predict_states(model, batch)
+        model.clear_memory()
+        del model
+        return states
+
+    def _predict_states(self, model, batch):
+        cdef vector[StateC*] states
+        cdef StateClass state
         weights = get_c_weights(model)
         for state in batch:
             if not state.is_final():
@@ -220,8 +226,6 @@ cdef class Parser(TrainablePipe):
         with nogil:
             self._parseC(&states[0],
                 weights, sizes)
-        model.clear_memory()
-        del model
         return batch
 
     def beam_parse(self, docs, int beam_width, float drop=0., beam_density=0.):
@@ -306,6 +310,7 @@ cdef class Parser(TrainablePipe):
             else:
                 action = self.moves.c[guess]
                 action.do(states[i], action.label)
+                states[i].history.push_back(guess)
         free(is_valid)
 
     def update(self, examples, *, drop=0., sgd=None, losses=None):
@@ -319,7 +324,7 @@ cdef class Parser(TrainablePipe):
         # We need to take care to act on the whole batch, because we might be
         # getting vectors via a listener.
         n_examples = len([eg for eg in examples if self.moves.has_gold(eg)])
-        if len(examples) == 0:
+        if n_examples == 0:
             return losses
         set_dropout_rate(self.model, drop)
         # The probability we use beam update, instead of falling back to
@@ -333,7 +338,11 @@ cdef class Parser(TrainablePipe):
                 losses=losses,
                 beam_density=self.cfg["beam_density"]
             )
-        oracle_histories = [self.moves.get_oracle_sequence(eg) for eg in examples]
+        model, backprop_tok2vec = self.model.begin_update([eg.x for eg in examples])
+        final_states = self.moves.init_batch([eg.x for eg in examples])
+        self._predict_states(model, final_states)
+        histories = [list(state.history) for state in final_states]
+        #oracle_histories = [self.moves.get_oracle_sequence(eg) for eg in examples]
         max_moves = self.cfg["update_with_oracle_cut_size"]
         if max_moves >= 1:
             # Chop sequences into lengths of this many words, to make the
@@ -341,15 +350,13 @@ cdef class Parser(TrainablePipe):
             max_moves = int(random.uniform(max_moves // 2, max_moves * 2))
             states, golds, _ = self._init_gold_batch(
                 examples,
-                oracle_histories,
+                histories,
                 max_length=max_moves
             )
         else:
             states, golds, _ = self.moves.init_gold_batch(examples)
         if not states:
             return losses
-        docs = [eg.predicted for eg in examples]
-        model, backprop_tok2vec = self.model.begin_update(docs)
  
         all_states = list(states)
         states_golds = list(zip(states, golds))
@@ -373,15 +380,7 @@ cdef class Parser(TrainablePipe):
         backprop_tok2vec(golds)
         if sgd not in (None, False):
             self.finish_update(sgd)
-        # If we want to set the annotations based on predictions, it's really
-        # hard to avoid parsing the data twice :(. 
-        # The issue is that we cut up the gold batch into sub-states, and that
-        # means there's no one predicted sequence during the update.
-        gold_states = [
-            self.moves.follow_history(doc, history)
-            for doc, history in zip(docs, oracle_histories)
-        ]
-        self.set_annotations(docs, gold_states)
+        self.set_annotations([eg.x for eg in examples], final_states)
         # Ugh, this is annoying. If we're working on GPU, we want to free the
         # memory ASAP. It seems that Python doesn't necessarily get around to
         # removing these in time if we don't explicitly delete? It's confusing.
@@ -599,6 +598,7 @@ cdef class Parser(TrainablePipe):
             StateClass state
             Transition action
         all_states = self.moves.init_batch([eg.predicted for eg in examples])
+        assert len(all_states) == len(examples) == len(oracle_histories)
         states = []
         golds = []
         for state, eg, history in zip(all_states, examples, oracle_histories):
@@ -616,6 +616,7 @@ cdef class Parser(TrainablePipe):
                 for clas in history[i:i+max_length]:
                     action = self.moves.c[clas]
                     action.do(state.c, action.label)
+                    state.c.history.push_back(clas)
                     if state.is_final():
                         break
                 if self.moves.has_gold(eg, start_state.B(0), state.B(0)):

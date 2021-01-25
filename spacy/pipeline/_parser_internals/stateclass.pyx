@@ -21,6 +21,10 @@ cdef class StateClass:
             del self.c
 
     @property
+    def history(self):
+        return list(self.c.history)
+
+    @property
     def stack(self):
         return [self.S(i) for i in range(self.c.stack_depth())]
 
