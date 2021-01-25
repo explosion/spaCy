@@ -48,7 +48,11 @@ class SpanishLemmatizer(Lemmatizer):
         if exc is not None:
             lemmas = list(exc)
         else:
-            rule = self.select_rule(univ_pos, features)
+            if univ_pos == "aux":
+                rule_pos = "verb"
+            else:
+                rule_pos = univ_pos
+            rule = self.select_rule(rule_pos, features)
             index = self.lookups.get_table("lemma_index").get(univ_pos, [])
             lemmas = getattr(self, "lemmatize_" + univ_pos)(
                 string, features, rule, index
