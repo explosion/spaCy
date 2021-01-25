@@ -432,7 +432,7 @@ cdef class Parser(TrainablePipe):
         return losses
 
     def update_beam(self, examples, *, beam_width,
-            drop=0., sgd=None, losses=None, set_annotations=False, beam_density=0.0):
+            drop=0., sgd=None, losses=None, beam_density=0.0):
         states, golds, _ = self.moves.init_gold_batch(examples)
         if not states:
             return losses
