@@ -97,7 +97,7 @@ def train(
     try:
         for batch, info, is_best_checkpoint in training_step_iterator:
             log_step(info if is_best_checkpoint is not None else None)
-            if is_best_checkpoint is not None and output_path is not None:
+            if is_best_checkpoint is not None:
                 with nlp.select_pipes(disable=frozen_components):
                     update_meta(T, nlp, info)
                 if output_path is not None:
