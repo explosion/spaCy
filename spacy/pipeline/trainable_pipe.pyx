@@ -91,7 +91,6 @@ cdef class TrainablePipe(Pipe):
     def update(self,
                examples: Iterable["Example"],
                *, drop: float=0.0,
-               set_annotations: bool=False,
                sgd: Optimizer=None,
                losses: Optional[Dict[str, float]]=None) -> Dict[str, float]:
         """Learn from a batch of documents and gold-standard information,
