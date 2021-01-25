@@ -70,6 +70,8 @@ cdef class TransitionSystem:
         return state
 
     def get_oracle_sequence(self, Example example, _debug=False):
+        if not self.has_gold(example):
+            return []
         states, golds, _ = self.init_gold_batch([example])
         if not states:
             return []
