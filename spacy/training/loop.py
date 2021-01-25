@@ -100,7 +100,8 @@ def train(
             if is_best_checkpoint is not None and output_path is not None:
                 with nlp.select_pipes(disable=frozen_components):
                     update_meta(T, nlp, info)
-                save_checkpoint(is_best_checkpoint)
+                if output_path is not None:
+                    save_checkpoint(is_best_checkpoint)
     except Exception as e:
         if output_path is not None:
             stdout.write(
@@ -113,7 +114,8 @@ def train(
         raise e
     finally:
         finalize_logger()
-        save_checkpoint(False)
+        if output_path is not None:
+            save_checkpoint(False)
     # This will only run if we did't hit an error
     if optimizer.averages:
         nlp.use_params(optimizer.averages)
