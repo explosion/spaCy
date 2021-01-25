@@ -112,6 +112,6 @@ def init_labels_cli(
         if getattr(component, "label_data", None) is not None:
             output_file = output_path / f"{name}.json"
             srsly.write_json(output_file, component.label_data)
-            msg.good(f"Saving {name} labels to {output_file}")
+            msg.good(f"Saving label data for component '{name}' to {output_file}")
         else:
-            msg.info(f"No labels found for {name}")
+            msg.info(f"No label data found for component '{name}'")
