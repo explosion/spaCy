@@ -81,6 +81,8 @@ cdef class TransitionSystem:
             return self.get_oracle_sequence_from_state(state, gold)
 
     def get_oracle_sequence_from_state(self, StateClass state, gold, _debug=None):
+        if state.is_final():
+            return []
         cdef Pool mem = Pool()
         # n_moves should not be zero at this point, but make sure to avoid zero-length mem alloc
         assert self.n_moves > 0
