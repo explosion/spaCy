@@ -113,8 +113,7 @@ end of the pipeline and after all other components.
 
 Split tokens longer than a minimum length into shorter tokens. Intended for use
 with transformer pipelines where long spaCy tokens lead to input text that
-exceed the transformer model max length. See
-[managing transformer model max length limitations](/usage/embeddings-transformers#transformer-max-length).
+exceed the transformer model max length.
 
 > #### Example
 >
