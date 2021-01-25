@@ -121,9 +121,6 @@ cdef class TrainablePipe(Pipe):
         if sgd not in (None, False):
             self.finish_update(sgd)
         losses[self.name] += loss
-        if set_annotations:
-            docs = [eg.predicted for eg in examples]
-            self.set_annotations(docs, scores=scores)
         return losses
 
     def rehearse(self,
