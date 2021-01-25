@@ -61,6 +61,14 @@ cdef class TransitionSystem:
             offset += len(doc)
         return states
 
+    def follow_history(self, doc, history):
+        cdef int clas
+        cdef StateClass state = StateClass(doc)
+        for clas in history:
+            action = self.c[clas]
+            action.do(state.c, action.label)
+        return state
+
     def get_oracle_sequence(self, Example example, _debug=False):
         states, golds, _ = self.init_gold_batch([example])
         if not states:
