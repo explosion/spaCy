@@ -132,6 +132,11 @@ class Warnings:
             "'morphologizer'.")
     W109 = ("Unable to save user hooks while serializing the doc. Re-add any "
             "required user hooks to the doc after processing.")
+    W110 = ("The DependencyMatcher token pattern {pattern} matched a span "
+            "{tokens} that is 2+ tokens long. Only the first token in the span "
+            "will be included in the results. For better results, token "
+            "patterns should return matches that are each exactly one token "
+            "long.")
 
 
 @add_codes
@@ -747,6 +752,10 @@ class Errors:
              "file.json .`.")
     E1015 = ("Can't initialize model from config: no {value} found. For more "
              "information, run: python -m spacy debug config config.cfg")
+    E1016 = ("The operators 'OP': '?', '*', and '+' are not supported in "
+             "DependencyMatcher token patterns. The token pattern in "
+             "RIGHT_ATTR should return matches that are each exactly one token "
+             "long. Invalid pattern:\n{node}")
 
 
 # Deprecated model shortcuts, only used in errors and warnings

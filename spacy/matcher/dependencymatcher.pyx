@@ -9,8 +9,9 @@ from .matcher cimport Matcher
 from ..vocab cimport Vocab
 from ..tokens.doc cimport Doc
 
-from ..errors import Errors
+from ..errors import Errors, Warnings
 from ..tokens import Span
+from ..util import logger
 
 
 DELIMITER = "||"
@@ -137,6 +138,8 @@ cdef class DependencyMatcher:
                     raise ValueError(Errors.E1007.format(op=relation["REL_OP"]))
                 visited_nodes[relation["RIGHT_ID"]] = True
                 visited_nodes[relation["LEFT_ID"]] = True
+            if relation["RIGHT_ATTRS"].get("OP", "") in ("?", "*", "+"):
+                raise ValueError(Errors.E1016.format(node=relation))
             idx = idx + 1
 
     def _get_matcher_key(self, key, pattern_idx, token_idx):
@@ -277,7 +280,9 @@ cdef class DependencyMatcher:
         e.g. keys_to_position_maps[root_index][match_id] = [...]
         """
         keys_to_position_maps = defaultdict(lambda: defaultdict(list))
-        for match_id, start, _ in self._matcher(doc):
+        for match_id, start, end in self._matcher(doc):
+            if start + 1 != end:
+                logger.warning(Warnings.W110.format(tokens=[t.text for t in doc[start:end]], pattern=self._matcher.get(match_id)[1][0][0]))
             token = doc[start]
             root = ([token] + list(token.ancestors))[-1]
             keys_to_position_maps[root.i][match_id].append(start)
