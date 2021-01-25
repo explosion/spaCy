@@ -308,7 +308,7 @@ cdef class Parser(TrainablePipe):
                 action.do(states[i], action.label)
         free(is_valid)
 
-    def update(self, examples, *, drop=0., sgd=None, losses=None):
+    def update(self, examples, *, drop=0., set_annotations=False, sgd=None, losses=None):
         cdef StateClass state
         if losses is None:
             losses = {}
@@ -328,6 +328,7 @@ cdef class Parser(TrainablePipe):
             return self.update_beam(
                 examples,
                 beam_width=self.cfg["beam_width"],
+                set_annotations=set_annotations,
                 sgd=sgd,
                 losses=losses,
                 beam_density=self.cfg["beam_density"]
@@ -369,8 +370,9 @@ cdef class Parser(TrainablePipe):
         backprop_tok2vec(golds)
         if sgd not in (None, False):
             self.finish_update(sgd)
-        docs = [eg.predicted for eg in examples]
-        self.set_annotations(docs, all_states)
+        if set_annotations:
+            docs = [eg.predicted for eg in examples]
+            self.set_annotations(docs, all_states)
         # Ugh, this is annoying. If we're working on GPU, we want to free the
         # memory ASAP. It seems that Python doesn't necessarily get around to
         # removing these in time if we don't explicitly delete? It's confusing.
@@ -430,7 +432,7 @@ cdef class Parser(TrainablePipe):
         return losses
 
     def update_beam(self, examples, *, beam_width,
-            drop=0., sgd=None, losses=None, beam_density=0.0):
+            drop=0., sgd=None, losses=None, set_annotations=False, beam_density=0.0):
         states, golds, _ = self.moves.init_gold_batch(examples)
         if not states:
             return losses

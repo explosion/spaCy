@@ -199,9 +199,8 @@ Modify a batch of [`Doc`](/api/doc) objects using pre-computed scores.
 
 Learn from a batch of [`Example`](/api/example) objects containing the
 predictions and gold-standard annotations, and update the component's model.
-Delegates to [`predict`](/api/multilabel_textcategorizer#predict),
-[`get_loss`](/api/multilabel_textcategorizer#get_loss) and 
-[`set_annotations`](/api/multilabel_textcategorizer#set_annotations).
+Delegates to [`predict`](/api/multilabel_textcategorizer#predict) and
+[`get_loss`](/api/multilabel_textcategorizer#get_loss).
 
 > #### Example
 >
@@ -216,6 +215,7 @@ Delegates to [`predict`](/api/multilabel_textcategorizer#predict),
 | `examples`        | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                                  |
 | _keyword-only_    |                                                                                                                                    |
 | `drop`            | The dropout rate. ~~float~~                                                                                                        |
+| `set_annotations` | Whether or not to update the `Example` objects with the predictions, delegating to [`set_annotations`](#set_annotations). ~~bool~~ |
 | `sgd`             | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                      |
 | `losses`          | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~           |
 | **RETURNS**       | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                              |

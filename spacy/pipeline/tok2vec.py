@@ -163,12 +163,15 @@ class Tok2Vec(TrainablePipe):
         drop: float = 0.0,
         sgd: Optional[Optimizer] = None,
         losses: Optional[Dict[str, float]] = None,
+        set_annotations: bool = False,
     ):
         """Learn from a batch of documents and gold-standard information,
         updating the pipe's model.
 
         examples (Iterable[Example]): A batch of Example objects.
         drop (float): The dropout rate.
+        set_annotations (bool): Whether or not to update the Example objects
+            with the predictions.
         sgd (thinc.api.Optimizer): The optimizer.
         losses (Dict[str, float]): Optional record of the loss during training.
             Updated using the component name as the key.
@@ -207,7 +210,8 @@ class Tok2Vec(TrainablePipe):
             listener.receive(batch_id, tokvecs, accumulate_gradient)
         if self.listeners:
             self.listeners[-1].receive(batch_id, tokvecs, backprop)
-        self.set_annotations(docs, tokvecs)
+        if set_annotations:
+            self.set_annotations(docs, tokvecs)
         return losses
 
     def get_loss(self, examples, scores) -> None:

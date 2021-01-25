@@ -237,8 +237,7 @@ entities.
 
 Learn from a batch of [`Example`](/api/example) objects, updating both the
 pipe's entity linking model and context encoder. Delegates to
-[`predict`](/api/entitylinker#predict) and 
-[`set_annotations`](/api/entitylinker#set_annotations).
+[`predict`](/api/entitylinker#predict).
 
 > #### Example
 >
@@ -253,6 +252,7 @@ pipe's entity linking model and context encoder. Delegates to
 | `examples`        | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                                  |
 | _keyword-only_    |                                                                                                                                    |
 | `drop`            | The dropout rate. ~~float~~                                                                                                        |
+| `set_annotations` | Whether or not to update the `Example` objects with the predictions, delegating to [`set_annotations`](#set_annotations). ~~bool~~ |
 | `sgd`             | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                      |
 | `losses`          | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~           |
 | **RETURNS**       | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                              |

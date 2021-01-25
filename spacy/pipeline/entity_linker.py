@@ -193,16 +193,18 @@ class EntityLinker(TrainablePipe):
         self,
         examples: Iterable[Example],
         *,
+        set_annotations: bool = False,
         drop: float = 0.0,
         sgd: Optional[Optimizer] = None,
         losses: Optional[Dict[str, float]] = None,
     ) -> Dict[str, float]:
         """Learn from a batch of documents and gold-standard information,
-        updating the pipe's model. Delegates to predict, get_loss and
-        set_annotations.
+        updating the pipe's model. Delegates to predict and get_loss.
 
         examples (Iterable[Example]): A batch of Example objects.
         drop (float): The dropout rate.
+        set_annotations (bool): Whether or not to update the Example objects
+            with the predictions.
         sgd (thinc.api.Optimizer): The optimizer.
         losses (Dict[str, float]): Optional record of the loss during training.
             Updated using the component name as the key.
@@ -218,13 +220,11 @@ class EntityLinker(TrainablePipe):
             return losses
         validate_examples(examples, "EntityLinker.update")
         sentence_docs = []
-        docs = []
-        for eg in examples:
-            eg.predicted.ents = eg.reference.ents
-            docs.append(eg.predicted)
-        # This seems simpler than other ways to get that exact output -- but
-        # it does run the model twice :(
-        predictions = self.predict(docs)
+        docs = [eg.predicted for eg in examples]
+        if set_annotations:
+            # This seems simpler than other ways to get that exact output -- but
+            # it does run the model twice :(
+            predictions = self.model.predict(docs)
         for eg in examples:
             sentences = [s for s in eg.reference.sents]
             kb_ids = eg.get_aligned("ENT_KB_ID", as_string=True)
@@ -260,7 +260,8 @@ class EntityLinker(TrainablePipe):
         if sgd is not None:
             self.finish_update(sgd)
         losses[self.name] += loss
-        self.set_annotations(docs, predictions)
+        if set_annotations:
+            self.set_annotations(docs, predictions)
         return losses
 
     def get_loss(self, examples: Iterable[Example], sentence_encodings):
