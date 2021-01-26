@@ -521,3 +521,22 @@ def test_matcher_deprecated(matcher):
             pass
         assert record.list
         assert "spaCy v3.0" in str(record.list[0].message)
+
+
+def test_matcher_remove_zero_operator(en_vocab):
+    matcher = Matcher(en_vocab)
+    pattern = [{"OP": "!"}]
+    matcher.add("Rule", [pattern])
+    doc = Doc(en_vocab, words=["This", "is", "a", "test", "."])
+    matches = matcher(doc)
+    assert len(matches) == 0
+    assert "Rule" in matcher
+    matcher.remove("Rule")
+    assert "Rule" not in matcher
+
+
+def test_matcher_no_zero_length(en_vocab):
+    doc = Doc(en_vocab, words=["a", "b"], tags=["A", "B"])
+    matcher = Matcher(en_vocab)
+    matcher.add("TEST", [[{"TAG": "C", "OP": "?"}]])
+    assert len(matcher(doc)) == 0

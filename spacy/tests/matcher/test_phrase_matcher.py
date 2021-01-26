@@ -318,3 +318,8 @@ def test_phrase_matcher_deprecated(en_vocab):
             pass
         assert record.list
         assert "spaCy v3.0" in str(record.list[0].message)
+
+
+@pytest.mark.parametrize("attr", ["SENT_START", "IS_SENT_START"])
+def test_phrase_matcher_sent_start(en_vocab, attr):
+    matcher = PhraseMatcher(en_vocab, attr=attr)

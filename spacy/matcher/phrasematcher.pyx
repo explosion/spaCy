@@ -5,6 +5,7 @@ from preshed.maps cimport map_init, map_set, map_get, map_clear, map_iter
 import warnings
 
 from ..attrs cimport ORTH, POS, TAG, DEP, LEMMA, MORPH
+from ..attrs import IDS
 from ..structs cimport TokenC
 from ..tokens.token cimport Token
 from ..tokens.span cimport Span
@@ -52,9 +53,11 @@ cdef class PhraseMatcher:
             attr = attr.upper()
             if attr == "TEXT":
                 attr = "ORTH"
+            if attr == "IS_SENT_START":
+                attr = "SENT_START"
             if attr.lower() not in TokenPattern().dict():
                 raise ValueError(Errors.E152.format(attr=attr))
-            self.attr = self.vocab.strings[attr]
+            self.attr = IDS.get(attr)
 
     def __len__(self):
         """Get the number of match IDs added to the matcher.
