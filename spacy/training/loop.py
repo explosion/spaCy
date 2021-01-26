@@ -259,6 +259,7 @@ def create_evaluation_callback(
     weights = {key: value for key, value in weights.items() if value is not None}
 
     def evaluate() -> Tuple[float, Dict[str, float]]:
+        nonlocal weights
         try:
             scores = nlp.evaluate(dev_corpus(nlp))
         except KeyError as e:
@@ -266,6 +267,8 @@ def create_evaluation_callback(
         # Calculate a weighted sum based on score_weights for the main score.
         # We can only consider scores that are ints/floats, not dicts like
         # entity scores per type etc.
+        scores = {key: value for key, value in scores.items() if value is not None}
+        weights = {key: value for key, value in weights.items() if key in scores}
         for key, value in scores.items():
             if key in weights and not isinstance(value, (int, float)):
                 raise ValueError(Errors.E915.format(name=key, score_type=type(value)))
