@@ -28,11 +28,13 @@ class Greek(Language):
 @Greek.factory(
     "lemmatizer",
     assigns=["token.lemma"],
-    default_config={"model": None, "mode": "rule"},
+    default_config={"model": None, "mode": "rule", "overwrite": False},
     default_score_weights={"lemma_acc": 1.0},
 )
-def make_lemmatizer(nlp: Language, model: Optional[Model], name: str, mode: str):
-    return GreekLemmatizer(nlp.vocab, model, name, mode=mode)
+def make_lemmatizer(
+    nlp: Language, model: Optional[Model], name: str, mode: str, overwrite: bool
+):
+    return GreekLemmatizer(nlp.vocab, model, name, mode=mode, overwrite=overwrite)
 
 
 __all__ = ["Greek"]
