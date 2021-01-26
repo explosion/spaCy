@@ -79,6 +79,13 @@ class Warnings:
             "attribute or operator.")
 
     # TODO: fix numbering after merging develop into master
+    W086 = ("Component '{listener}' will be (re)trained, but it needs the component "
+            "'{name}' which is frozen. You should either freeze both, or neither "
+            "of the two.")
+    W087 = ("Component '{name}' will be (re)trained, but the component '{listener}' "
+            "depends on it and is frozen. This means that the performance of "
+            "'{listener}' will be degraded. You should either freeze both, or "
+            "neither of the two.")
     W088 = ("The pipeline component {name} implements a `begin_training` "
             "method, which won't be called by spaCy. As of v3.0, `begin_training` "
             "has been renamed to `initialize`, so you likely want to rename the "

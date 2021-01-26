@@ -11,7 +11,7 @@ import tqdm
 
 from ..lookups import Lookups
 from ..vectors import Vectors
-from ..errors import Errors
+from ..errors import Errors, Warnings
 from ..schemas import ConfigSchemaTraining
 from ..util import registry, load_model_from_config, resolve_dot_names, logger
 from ..util import load_model, ensure_path, OOV_RANK, DEFAULT_OOV_PROB
@@ -71,15 +71,9 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
         if getattr(proc, "listening_components", None):
             for listener in proc.listening_components:
                 if listener in frozen_components and name not in frozen_components:
-                    logger.warn(f"Component '{name}' will be (re)trained, but the "
-                                f"'{listener}' depends on it and is frozen. This means "
-                                f"that the performance of the '{listener}' will be degraded. "
-                                f"You should either freeze both, or neither of the two.")
-
+                    logger.warning(Warnings.W087.format(name=name, listener=listener))
                 if listener not in frozen_components and name in frozen_components:
-                    logger.warn(f"Component '{listener}' will be (re)trained, but it needs the "
-                                f"'{name}' which is frozen. "
-                                f"You should either freeze both, or neither of the two.")
+                    logger.warning(Warnings.W086.format(name=name, listener=listener))
     return nlp
 
 

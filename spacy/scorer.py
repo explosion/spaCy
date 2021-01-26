@@ -461,7 +461,7 @@ class Scorer:
                 if gold_score is not None and gold_score > 0:
                     f_per_type[gold_label].fn += 1
             elif pred_cats:
-                pred_label, pred_score = max(pred_cats, key=lambda it: it[1])
+                pred_label, pred_score = max(pred_cats.items(), key=lambda it: it[1])
                 if pred_score >= threshold:
                     f_per_type[pred_label].fp += 1
         micro_prf = PRFScore()

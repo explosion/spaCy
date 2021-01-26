@@ -97,10 +97,11 @@ def train(
     try:
         for batch, info, is_best_checkpoint in training_step_iterator:
             log_step(info if is_best_checkpoint is not None else None)
-            if is_best_checkpoint is not None and output_path is not None:
+            if is_best_checkpoint is not None:
                 with nlp.select_pipes(disable=frozen_components):
                     update_meta(T, nlp, info)
-                save_checkpoint(is_best_checkpoint)
+                if output_path is not None:
+                    save_checkpoint(is_best_checkpoint)
     except Exception as e:
         if output_path is not None:
             stdout.write(
@@ -113,7 +114,8 @@ def train(
         raise e
     finally:
         finalize_logger()
-        save_checkpoint(False)
+        if output_path is not None:
+            save_checkpoint(False)
     # This will only run if we did't hit an error
     if optimizer.averages:
         nlp.use_params(optimizer.averages)
@@ -257,6 +259,7 @@ def create_evaluation_callback(
     weights = {key: value for key, value in weights.items() if value is not None}
 
     def evaluate() -> Tuple[float, Dict[str, float]]:
+        nonlocal weights
         try:
             scores = nlp.evaluate(dev_corpus(nlp))
         except KeyError as e:
@@ -264,6 +267,8 @@ def create_evaluation_callback(
         # Calculate a weighted sum based on score_weights for the main score.
         # We can only consider scores that are ints/floats, not dicts like
         # entity scores per type etc.
+        scores = {key: value for key, value in scores.items() if value is not None}
+        weights = {key: value for key, value in weights.items() if key in scores}
         for key, value in scores.items():
             if key in weights and not isinstance(value, (int, float)):
                 raise ValueError(Errors.E915.format(name=key, score_type=type(value)))
