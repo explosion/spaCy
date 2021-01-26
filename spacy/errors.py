@@ -519,13 +519,9 @@ class Errors:
             "return the nlp object but got: {value}. Maybe you forgot to return "
             "the modified object in your function?")
     E915 = ("Can't use score '{name}' to calculate final weighted score. Expected "
-            "float or int returned by nlp.evaluate but got: {score_type}. This "
-            "can happen if your evaluation data doesn't contain any examples for "
-            "the given annotation type, so the score for it can't be included in "
-            "the final weighted score. If this is surprising, double-check your "
-            "evaluation data. If this is expected, exclude the score from the "
-            "final score by setting its weight to null in the "
-            "[training.score_weights] section of your training config.")
+            "float or int but got: {score_type}. To exclude the score from the "
+            "final score, set its weight to null in the [training.score_weights] "
+            "section of your training config.")
     E916 = ("Can't log score for '{name}' in table: not a valid score ({score_type})")
     E917 = ("Received invalid value {value} for `state_type` in "
             "TransitionBasedParser: only 'parser' or 'ner' are valid options.")
