@@ -42,7 +42,7 @@ class Macedonian(Language):
     default_score_weights={"lemma_acc": 1.0},
 )
 def make_lemmatizer(
-    nlp: Language, model: Optional[Model], name: str, mode: str, overwrite: bool
+    nlp: Language, model: Optional[Model], name: str, mode: str, overwrite: bool = False
 ):
     return MacedonianLemmatizer(nlp.vocab, model, name, mode=mode, overwrite=overwrite)
 

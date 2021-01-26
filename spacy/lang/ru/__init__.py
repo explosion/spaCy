@@ -30,7 +30,7 @@ def make_lemmatizer(
     model: Optional[Model],
     name: str,
     mode: str,
-    overwrite: bool,
+    overwrite: bool = False,
 ):
     return RussianLemmatizer(nlp.vocab, model, name, mode=mode, overwrite=overwrite)
 
