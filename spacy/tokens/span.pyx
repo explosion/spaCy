@@ -563,7 +563,7 @@ cdef class Span:
         """
         start_idx += self.c.start_char
         end_idx += self.c.start_char
-        return self.doc.char_span(start_idx, end_idx)
+        return self.doc.char_span(start_idx, end_idx, label=label, kb_id=kb_id, vector=vector)
 
     @property
     def conjuncts(self):
