@@ -1,5 +1,5 @@
 # cython: infer_types=True, profile=True
-from typing import Iterable, Iterator, Optional, Dict, Tuple, Callable, List, Any
+from typing import Iterable, Iterator, Optional, Dict, Tuple, Callable
 import srsly
 from thinc.api import set_dropout_rate, Model, Optimizer
 
@@ -9,7 +9,6 @@ from ..training import validate_examples
 from ..errors import Errors
 from .pipe import Pipe, deserialize_config
 from .. import util
-from ..util import raise_error
 from ..vocab import Vocab
 from ..language import Language
 from ..training import Example

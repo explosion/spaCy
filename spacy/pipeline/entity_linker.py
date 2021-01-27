@@ -1,4 +1,4 @@
-from typing import Optional, Iterable, Callable, Dict, Iterator, Union, List, Any
+from typing import Optional, Iterable, Callable, Dict, Union, List
 from pathlib import Path
 from itertools import islice
 import srsly
@@ -16,7 +16,7 @@ from ..language import Language
 from ..vocab import Vocab
 from ..training import Example, validate_examples, validate_get_examples
 from ..errors import Errors, Warnings
-from ..util import SimpleFrozenList, raise_error
+from ..util import SimpleFrozenList
 from .. import util
 from ..scorer import Scorer
 

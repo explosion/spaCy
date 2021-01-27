@@ -1,5 +1,4 @@
 # cython: infer_types=True, profile=True, binding=True
-from typing import List, Callable, Any
 import numpy
 import srsly
 from thinc.api import Model, set_dropout_rate, SequenceCategoricalCrossentropy, Config
@@ -9,7 +8,6 @@ from itertools import islice
 
 from ..tokens.doc cimport Doc
 from ..morphology cimport Morphology
-from ..util import raise_error
 from ..vocab cimport Vocab
 
 from .trainable_pipe import TrainablePipe

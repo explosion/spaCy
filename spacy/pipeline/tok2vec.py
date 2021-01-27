@@ -1,4 +1,4 @@
-from typing import Iterator, Sequence, Iterable, Optional, Dict, Callable, List, Any
+from typing import Sequence, Iterable, Optional, Dict, Callable, List
 from thinc.api import Model, set_dropout_rate, Optimizer, Config
 from itertools import islice
 
@@ -8,7 +8,6 @@ from ..tokens import Doc
 from ..vocab import Vocab
 from ..language import Language
 from ..errors import Errors
-from ..util import minibatch, raise_error
 
 default_model_config = """
 [model]

@@ -1,5 +1,5 @@
 from itertools import islice
-from typing import Iterable, Tuple, Optional, Dict, List, Callable, Iterator, Any
+from typing import Iterable, Tuple, Optional, Dict, List, Callable, Any
 from thinc.api import get_array_module, Model, Optimizer, set_dropout_rate, Config
 from thinc.types import Floats2d
 import numpy
@@ -9,9 +9,7 @@ from ..language import Language
 from ..training import Example, validate_examples, validate_get_examples
 from ..errors import Errors
 from ..scorer import Scorer
-from .. import util
 from ..tokens import Doc
-from ..util import raise_error
 from ..vocab import Vocab
 
 

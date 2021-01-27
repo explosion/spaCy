@@ -1,6 +1,5 @@
 # cython: infer_types=True, cdivision=True, boundscheck=False, binding=True
 from __future__ import print_function
-from typing import Optional, Callable, List, Any
 from cymem.cymem cimport Pool
 cimport numpy as np
 from itertools import islice
@@ -29,7 +28,6 @@ from ._parser_internals import _beam_utils
 from ..training import validate_examples, validate_get_examples
 from ..errors import Errors, Warnings
 from .. import util
-from ..util import raise_error
 
 cdef class Parser(TrainablePipe):
     """
@@ -175,9 +173,7 @@ cdef class Parser(TrainablePipe):
         YIELDS (Doc): Documents, in order.
         """
         cdef Doc doc
-        error_handler = raise_error
-        if hasattr(self, "get_error_handler"):
-            error_handler = self.get_error_handler()
+        error_handler = self.get_error_handler()
         for batch in util.minibatch(docs, size=batch_size):
             batch_in_order = list(batch)
             try:

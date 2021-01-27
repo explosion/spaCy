@@ -1,5 +1,5 @@
 # cython: infer_types=True, profile=True, binding=True
-from typing import Optional, List, Callable, Any
+from typing import Optional, List
 import srsly
 
 from ..tokens.doc cimport Doc
@@ -8,7 +8,6 @@ from ..language import Language
 from ..scorer import Scorer
 from ..training import validate_examples
 from .. import util
-from ..util import raise_error
 
 @Language.factory(
     "sentencizer",

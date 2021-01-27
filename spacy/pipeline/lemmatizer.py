@@ -12,7 +12,7 @@ from ..scorer import Scorer
 from ..tokens import Doc, Token
 from ..vocab import Vocab
 from ..training import validate_examples
-from ..util import logger, SimpleFrozenList, raise_error
+from ..util import logger, SimpleFrozenList
 from .. import util
 
 
