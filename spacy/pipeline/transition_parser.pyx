@@ -205,7 +205,6 @@ cdef class Parser(TrainablePipe):
     def predict(self, docs):
         if isinstance(docs, Doc):
             docs = [docs]
-        self._ensure_labels_are_added(docs)
         if not any(len(doc) for doc in docs):
             result = self.moves.init_batch(docs)
             return result
@@ -222,6 +221,7 @@ cdef class Parser(TrainablePipe):
     def greedy_parse(self, docs, drop=0.):
         cdef vector[StateC*] states
         cdef StateClass state
+        self._ensure_labels_are_added(docs)
         set_dropout_rate(self.model, drop)
         batch = self.moves.init_batch(docs)
         model = self.model.predict(docs)
@@ -240,6 +240,7 @@ cdef class Parser(TrainablePipe):
     def beam_parse(self, docs, int beam_width, float drop=0., beam_density=0.):
         cdef Beam beam
         cdef Doc doc
+        self._ensure_labels_are_added(docs)
         batch = _beam_utils.BeamBatch(
             self.moves,
             self.moves.init_batch(docs),
