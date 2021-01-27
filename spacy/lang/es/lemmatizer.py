@@ -85,16 +85,18 @@ class SpanishLemmatizer(Lemmatizer):
         RETURNS (List[str]): The list of lemmas.
         """
 
-        # Initialize empty sets for the generated lemmas
+        # Initialize empty lists for the generated lemmas
         possible_lemmas = []
         selected_lemmas = []
 
         # Apply lemmatization rules
         for old, new in self.lookups.get_table("lemma_rules").get(rule, []):
             possible_lemma = re.sub(old + "$", new, word)
-            possible_lemmas.append(possible_lemma)
+            if possible_lemma != word:
+                possible_lemmas.append(possible_lemma)
 
-        # Additional rule for plurals that go from esdrújula to grave and end in        # 'n' or 's', e.g., jóvenes -> joven
+        # Additional rule for plurals that go from esdrújula to grave and end in
+        # 'n' or 's', e.g., jóvenes -> joven
         additional_lemmas = []
         if "Number=Plur" in features:
             for possible_lemma in possible_lemmas:
@@ -153,7 +155,7 @@ class SpanishLemmatizer(Lemmatizer):
         RETURNS (List[str]): The list of lemmas.
         """
 
-        # Initialize empty sets for the generated lemmas
+        # Initialize empty lists for the generated lemmas
         possible_lemmas = []
         selected_lemmas = []
 
@@ -204,16 +206,18 @@ class SpanishLemmatizer(Lemmatizer):
         RETURNS (List[str]): The list of lemmas.
         """
 
-        # Initialize empty sets for the generated lemmas
+        # Initialize empty lists for the generated lemmas
         possible_lemmas = []
         selected_lemmas = []
 
         # Apply lemmatization rules
         for old, new in self.lookups.get_table("lemma_rules").get(rule, []):
             possible_lemma = re.sub(old + "$", new, word)
-            possible_lemmas.append(possible_lemma)
+            if possible_lemma != word:
+                possible_lemmas.append(possible_lemma)
 
-        # Additional rule for plurals that go from esdrújula to grave and end in        # 'n' or 's', e.g., órdenes -> orden, exámenes -> examen
+        # Additional rule for plurals that go from esdrújula to grave and end in
+        # 'n' or 's', e.g., órdenes -> orden, exámenes -> examen
         additional_lemmas = []
         if "Number=Plur" in features:
             for possible_lemma in possible_lemmas:
@@ -277,7 +281,7 @@ class SpanishLemmatizer(Lemmatizer):
         RETURNS (List[str]): The list of lemmas.
         """
 
-        # Initialize empty sets for the generated lemmas
+        # Initialize empty lists for the generated lemmas
         possible_lemmas = []
         selected_lemmas = []
 
@@ -295,12 +299,14 @@ class SpanishLemmatizer(Lemmatizer):
             if word == old:
                 return [new]
         # If the word is not in the list of unique determiners and pronouns,
-        # apply general rules of lemmatization. Include the original word in the        # list of possible lemmas.
+        # apply general rules of lemmatization. Include the original word in the
+        # list of possible lemmas.
         for old, new in self.lookups.get_table("lemma_rules").get(
             "det_and_pron_general", []
         ):
             possible_lemma = re.sub(old + "$", new, word)
-            possible_lemmas.append(possible_lemma)
+            if possible_lemma != word:
+                possible_lemmas.append(possible_lemma)
         possible_lemmas.append(word)
 
         if len(possible_lemmas) == 1:
@@ -331,14 +337,15 @@ class SpanishLemmatizer(Lemmatizer):
         if "PronType=Prs" in features:
             return self.lemmatize_verb_pron(word, features, rule, index)
 
-        # Initialize empty sets for the generated lemmas
+        # Initialize empty lists for the generated lemmas
         possible_lemmas = []
         selected_lemmas = []
 
         # Apply lemmatization rules
         for old, new in self.lookups.get_table("lemma_rules").get(rule, []):
             possible_lemma = re.sub(old + "$", new, word)
-            possible_lemmas.append(possible_lemma)
+            if possible_lemma != word:
+                possible_lemmas.append(possible_lemma)
 
         for lemma in possible_lemmas:
             if lemma in index:
