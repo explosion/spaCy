@@ -1,7 +1,7 @@
 {# This is a template for training configs used for the quickstart widget in
 the docs and the init config command. It encodes various best practices and
 can help generate the best possible configuration, given a user's requirements. #}
-{%- set use_transformer = (transformer_data and hardware != "cpu") -%}
+{%- set use_transformer = hardware != "cpu" -%}
 {%- set transformer = transformer_data[optimize] if use_transformer else {} -%}
 [paths]
 train = null
@@ -195,11 +195,6 @@ no_output_layer = false
 
 {# NON-TRANSFORMER PIPELINE #}
 {% else -%}
-
-{%- if hardware == "gpu" -%}
-# There are no recommended transformer weights available for language '{{ lang }}'
-# yet, so the pipeline described here is not transformer-based.
-{%- endif %}
 
 [components.tok2vec]
 factory = "tok2vec"

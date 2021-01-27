@@ -7,7 +7,7 @@ import generator, { DATA as GENERATOR_DATA } from './quickstart-training-generat
 import { htmlToReact } from '../components/util'
 
 const DEFAULT_LANG = 'en'
-const DEFAULT_HARDWARE = 'gpu'
+const DEFAULT_HARDWARE = 'cpu'
 const DEFAULT_OPT = 'efficiency'
 const COMPONENTS = ['tagger', 'parser', 'ner', 'textcat']
 const COMMENT = `# This is an auto-generated partial config. To use it with 'spacy train'
@@ -31,8 +31,8 @@ const DATA = [
         id: 'hardware',
         title: 'Hardware',
         options: [
-            { id: 'cpu', title: 'CPU preferred', checked: DEFAULT_HARDWARE === 'cpu' },
-            { id: 'gpu', title: 'GPU', checked: DEFAULT_HARDWARE === 'gpu' },
+            { id: 'cpu', title: 'CPU', checked: DEFAULT_HARDWARE === 'cpu' },
+            { id: 'gpu', title: 'GPU (transformer)', checked: DEFAULT_HARDWARE === 'gpu' },
         ],
     },
     {
@@ -58,7 +58,7 @@ export default function QuickstartTraining({ id, title, download = 'base_config.
         hardware: setHardware,
         optimize: setOptimize,
     }
-    const reco = GENERATOR_DATA[lang] || {}
+    const reco = GENERATOR_DATA[lang] || GENERATOR_DATA.__default__
     const content = generator({
         lang,
         components,

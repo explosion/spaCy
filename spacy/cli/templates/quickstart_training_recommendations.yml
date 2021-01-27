@@ -1,6 +1,15 @@
 # Recommended settings and available resources for each language, if available.
 # Not all languages have recommended word vectors or transformers and for some,
 # the recommended transformer for efficiency and accuracy may be the same.
+__default__:
+  word_vectors: null
+  transformer:
+    efficiency:
+      name: bert-base-multilingual-uncased
+      size_factor: 3
+    accuracy:
+      name: bert-base-multilingual-uncased
+      size_factor: 3
 ar:
   word_vectors: null
   transformer:

@@ -140,7 +140,8 @@ def init_config(
         template = Template(f.read())
     # Filter out duplicates since tok2vec and transformer are added by template
     pipeline = [pipe for pipe in pipeline if pipe not in ("tok2vec", "transformer")]
-    reco = RecommendationSchema(**RECOMMENDATIONS.get(lang, {})).dict()
+    defaults = RECOMMENDATIONS["__default__"]
+    reco = RecommendationSchema(**RECOMMENDATIONS.get(lang, defaults)).dict()
     variables = {
         "lang": lang,
         "components": pipeline,
@@ -167,7 +168,9 @@ def init_config(
         "Pipeline": ", ".join(pipeline),
         "Optimize for": optimize,
         "Hardware": variables["hardware"].upper(),
-        "Transformer": template_vars.transformer.get("name", False),
+        "Transformer": template_vars.transformer.get("name")
+        if template_vars.use_transformer
+        else None,
     }
     msg.info("Generated config template specific for your use case")
     for label, value in use_case.items():
