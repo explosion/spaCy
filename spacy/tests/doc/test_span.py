@@ -197,6 +197,12 @@ def test_spans_by_character(doc):
     assert span1.end_char == span2.end_char
     assert span2.label_ == "GPE"
 
+    # unsupported alignment mode
+    with pytest.raises(ValueError):
+        span2 = doc.char_span(
+            span1.start_char + 1, span1.end_char, label="GPE", alignment_mode="unk"
+        )
+
 
 def test_span_to_array(doc):
     span = doc[1:-2]

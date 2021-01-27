@@ -591,6 +591,7 @@ class Errors(object):
     E200 = ("Specifying a base model with a pretrained component '{component}' "
             "can not be combined with adding a pretrained Tok2Vec layer.")
     E201 = ("Span index out of range.")
+    E202 = ("Unsupported alignment mode '{mode}'. Supported modes: {modes}.")
 
 
 @add_codes
