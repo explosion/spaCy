@@ -303,14 +303,14 @@ def test_issue4313():
     doc = nlp("What do you think about Apple ?")
     assert len(ner.labels) == 1
     assert "SOME_LABEL" in ner.labels
-    ner.add_label("MY_ORG")  # TODO: not sure if we want this to be necessary...
     apple_ent = Span(doc, 5, 6, label="MY_ORG")
     doc.ents = list(doc.ents) + [apple_ent]
 
     # ensure the beam_parse still works with the new label
     docs = [doc]
-    ner = nlp.get_pipe("beam_ner")
     ner.beam_parse(docs, drop=0.0, beam_width=beam_width, beam_density=beam_density)
+    assert len(ner.labels) == 2
+    assert "MY_ORG" in ner.labels
 
 
 def test_issue4348():

@@ -138,6 +138,28 @@ def test_ner_labels_added_implicitly_on_predict():
     assert "D" in ner.labels
 
 
+def test_ner_labels_added_implicitly_on_beam_parse():
+    nlp = Language()
+    ner = nlp.add_pipe("beam_ner")
+    for label in ["A", "B", "C"]:
+        ner.add_label(label)
+    nlp.initialize()
+    doc = Doc(nlp.vocab, words=["hello", "world"], ents=["B-D", "O"])
+    ner.beam_parse([doc], beam_width=32)
+    assert "D" in ner.labels
+
+
+def test_ner_labels_added_implicitly_on_greedy_parse():
+    nlp = Language()
+    ner = nlp.add_pipe("beam_ner")
+    for label in ["A", "B", "C"]:
+        ner.add_label(label)
+    nlp.initialize()
+    doc = Doc(nlp.vocab, words=["hello", "world"], ents=["B-D", "O"])
+    ner.greedy_parse([doc])
+    assert "D" in ner.labels
+
+
 def test_ner_labels_added_implicitly_on_update():
     nlp = Language()
     ner = nlp.add_pipe("ner")
