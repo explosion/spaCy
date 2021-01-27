@@ -151,6 +151,12 @@
         { "code": "fa", "name": "Persian", "has_examples": true },
         { "code": "ur", "name": "Urdu", "example": "یہ ایک جملہ ہے", "has_examples": true },
         { "code": "tt", "name": "Tatar", "has_examples": true },
+        {
+            "code": "ky",
+            "name": "Kyrgyz",
+            "example": "Адамга эң кыйыны — күн сайын адам болуу",
+            "has_examples": true
+        },
         { "code": "te", "name": "Telugu", "example": "ఇది ఒక వాక్యం.", "has_examples": true },
         { "code": "si", "name": "Sinhala", "example": "මෙය වාක්‍යයකි.", "has_examples": true },
         { "code": "ga", "name": "Irish" },
