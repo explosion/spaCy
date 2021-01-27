@@ -267,7 +267,7 @@ def tt_tokenizer():
 
 @pytest.fixture(scope="session")
 def ky_tokenizer():
-    return get_lang_class("ky").Defaults.create_tokenizer()
+    return get_lang_class("ky")().tokenizer
 
 
 @pytest.fixture(scope="session")
