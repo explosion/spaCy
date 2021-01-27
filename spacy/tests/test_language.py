@@ -174,10 +174,14 @@ def test_language_pipe_error_handler():
         nlp(texts[0])
     with pytest.raises(ValueError):
         list(nlp.pipe(texts))
+    nlp.set_error_handler(raise_error)
     with pytest.raises(ValueError):
-        list(nlp.pipe(texts, error_handler=raise_error))
-    docs = list(nlp.pipe(texts, error_handler=ignore_error))
+        list(nlp.pipe(texts))
+    # set explicitely to ignoring
+    nlp.set_error_handler(ignore_error)
+    docs = list(nlp.pipe(texts))
     assert len(docs) == 0
+    nlp(texts[0])
 
 
 def test_language_pipe_error_handler_custom(en_vocab):
@@ -188,7 +192,7 @@ def test_language_pipe_error_handler_custom(en_vocab):
             raise ValueError("no dice")
         return doc
 
-    def warn_error(proc_name, docs, e):
+    def warn_error(proc_name, proc, docs, e):
         from spacy.util import logger
         logger.warning(f"Trouble with component {proc_name}.")
 
@@ -200,10 +204,11 @@ def test_language_pipe_error_handler_custom(en_vocab):
         # the evil custom component throws an error
         list(nlp.pipe(texts))
 
+    nlp.set_error_handler(warn_error)
     logger = logging.getLogger("spacy")
     with mock.patch.object(logger, "warning") as mock_warning:
         # the errors by the evil custom component raise a warning for each bad batch
-        docs = list(nlp.pipe(texts, error_handler=warn_error))
+        docs = list(nlp.pipe(texts))
         mock_warning.assert_called()
         assert mock_warning.call_count == 2
         assert len(docs) + mock_warning.call_count == len(texts)
@@ -227,7 +232,8 @@ def test_language_pipe_error_handler_pipe(en_vocab):
     with pytest.raises(ValueError):
         # the entity linker requires sentence boundaries, will throw an error otherwise
         docs = list(nlp.pipe(texts, batch_size=10))
-    docs = list(nlp.pipe(texts, batch_size=10, error_handler=ignore_error))
+    nlp.set_error_handler(ignore_error)
+    docs = list(nlp.pipe(texts, batch_size=10))
     # we lose/ignore the failing 0-9 and 40-49 batches
     assert len(docs) == 80
 

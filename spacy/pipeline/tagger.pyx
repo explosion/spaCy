@@ -96,18 +96,6 @@ class Tagger(TrainablePipe):
         """Data about the labels currently added to the component."""
         return tuple(self.cfg["labels"])
 
-    def __call__(self, doc):
-        """Apply the pipe to a Doc.
-
-        doc (Doc): The document to process.
-        RETURNS (Doc): The processed Doc.
-
-        DOCS: https://nightly.spacy.io/api/tagger#call
-        """
-        tags = self.predict([doc])
-        self.set_annotations([doc], tags)
-        return doc
-
     def predict(self, docs):
         """Apply the pipeline's model to a batch of docs, without modifying them.
 

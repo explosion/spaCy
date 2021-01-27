@@ -29,7 +29,7 @@ cdef class TrainablePipe(Pipe):
         vocab (Vocab): The shared vocabulary.
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
         name (str): The component instance name.
-        **cfg: Additonal settings and config parameters.
+        **cfg: Additional settings and config parameters.
 
         DOCS: https://nightly.spacy.io/api/pipe#init
         """
@@ -48,16 +48,19 @@ cdef class TrainablePipe(Pipe):
 
         DOCS: https://nightly.spacy.io/api/pipe#call
         """
-        scores = self.predict([doc])
-        self.set_annotations([doc], scores)
-        return doc
+        error_handler = self.get_error_handler()
+        try:
+            scores = self.predict([doc])
+            self.set_annotations([doc], scores)
+            return doc
+        except Exception as e:
+            error_handler(self.name, self, [doc], e)
 
     def pipe(
         self,
         stream: Iterable[Doc],
         *,
         batch_size: int = 128,
-        error_handler: Callable[[str, List[Doc], Exception], Any] = raise_error,
     ) -> Iterator[Doc]:
         """Apply the pipe to a stream of documents. This usually happens under
         the hood when the nlp object is called on a text and all components are
@@ -72,13 +75,14 @@ cdef class TrainablePipe(Pipe):
 
         DOCS: https://nightly.spacy.io/api/pipe#pipe
         """
+        error_handler = self.get_error_handler()
         for docs in util.minibatch(stream, size=batch_size):
             try:
                 scores = self.predict(docs)
                 self.set_annotations(docs, scores)
                 yield from docs
             except Exception as e:
-                error_handler(self.name, docs, e)
+                error_handler(self.name, self, docs, e)
 
     def predict(self, docs: Iterable[Doc]):
         """Apply the pipeline's model to a batch of docs, without modifying them.

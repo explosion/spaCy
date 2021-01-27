@@ -65,20 +65,24 @@ class Sentencizer(Pipe):
 
         DOCS: https://nightly.spacy.io/api/sentencizer#call
         """
-        start = 0
-        seen_period = False
-        for i, token in enumerate(doc):
-            is_in_punct_chars = token.text in self.punct_chars
-            token.is_sent_start = i == 0
-            if seen_period and not token.is_punct and not is_in_punct_chars:
+        error_handler = self.get_error_handler()
+        try:
+            start = 0
+            seen_period = False
+            for i, token in enumerate(doc):
+                is_in_punct_chars = token.text in self.punct_chars
+                token.is_sent_start = i == 0
+                if seen_period and not token.is_punct and not is_in_punct_chars:
+                    doc[start].is_sent_start = True
+                    start = token.i
+                    seen_period = False
+                elif is_in_punct_chars:
+                    seen_period = True
+            if start < len(doc):
                 doc[start].is_sent_start = True
-                start = token.i
-                seen_period = False
-            elif is_in_punct_chars:
-                seen_period = True
-        if start < len(doc):
-            doc[start].is_sent_start = True
-        return doc
+            return doc
+        except Exception as e:
+            error_handler(self.name, self, [doc], e)
 
     def predict(self, docs):
         """Apply the pipe to a batch of docs, without modifying them.

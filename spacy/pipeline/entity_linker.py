@@ -276,18 +276,6 @@ class EntityLinker(TrainablePipe):
         loss = loss / len(entity_encodings)
         return loss, gradients
 
-    def __call__(self, doc: Doc) -> Doc:
-        """Apply the pipe to a Doc.
-
-        doc (Doc): The document to process.
-        RETURNS (Doc): The processed Doc.
-
-        DOCS: https://nightly.spacy.io/api/entitylinker#call
-        """
-        kb_ids = self.predict([doc])
-        self.set_annotations([doc], kb_ids)
-        return doc
-
     def predict(self, docs: Iterable[Doc]) -> List[str]:
         """Apply the pipeline's model to a batch of docs, without modifying them.
         Returns the KB IDs for each entity in each doc, including NIL if there is

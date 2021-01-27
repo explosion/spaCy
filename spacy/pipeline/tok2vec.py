@@ -98,19 +98,6 @@ class Tok2Vec(TrainablePipe):
                 if isinstance(node, Tok2VecListener) and node.upstream_name in names:
                     self.add_listener(node, component.name)
 
-    def __call__(self, doc: Doc) -> Doc:
-        """Add context-sensitive embeddings to the Doc.tensor attribute, allowing
-        them to be used as features by downstream components.
-
-        docs (Doc): The Doc to process.
-        RETURNS (Doc): The processed Doc.
-
-        DOCS: https://nightly.spacy.io/api/tok2vec#call
-        """
-        tokvecses = self.predict([doc])
-        self.set_annotations([doc], tokvecses)
-        return doc
-
     def predict(self, docs: Iterable[Doc]):
         """Apply the pipeline's model to a batch of docs, without modifying them.
         Returns a single tensor for a batch of documents.

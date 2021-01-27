@@ -103,10 +103,14 @@ class Lemmatizer(Pipe):
         """
         if not self._validated:
             self._validate_tables(Errors.E1004)
-        for token in doc:
-            if self.overwrite or token.lemma == 0:
-                token.lemma_ = self.lemmatize(token)[0]
-        return doc
+        error_handler = self.get_error_handler()
+        try:
+            for token in doc:
+                if self.overwrite or token.lemma == 0:
+                    token.lemma_ = self.lemmatize(token)[0]
+            return doc
+        except Exception as e:
+            error_handler(self.name, self, [doc], e)
 
     def initialize(
         self,

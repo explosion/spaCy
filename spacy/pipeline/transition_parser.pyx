@@ -158,22 +158,11 @@ cdef class Parser(TrainablePipe):
         with self.model.use_params(params):
             yield
 
-    def __call__(self, Doc doc):
-        """Apply the parser or entity recognizer, setting the annotations onto
-        the `Doc` object.
-
-        doc (Doc): The document to be processed.
-        """
-        states = self.predict([doc])
-        self.set_annotations([doc], states)
-        return doc
-
     def pipe(
         self,
         docs,
         *,
         int batch_size = 256,
-        error_handler: Callable[[str, List[Doc], Exception], Any] = raise_error,
     ):
         """Process a stream of documents.
 
@@ -186,6 +175,9 @@ cdef class Parser(TrainablePipe):
         YIELDS (Doc): Documents, in order.
         """
         cdef Doc doc
+        error_handler = raise_error
+        if hasattr(self, "get_error_handler"):
+            error_handler = self.get_error_handler()
         for batch in util.minibatch(docs, size=batch_size):
             batch_in_order = list(batch)
             try:
@@ -196,7 +188,7 @@ cdef class Parser(TrainablePipe):
                     self.set_annotations(subbatch, parse_states)
                 yield from batch_in_order
             except Exception as e:
-                error_handler(self.name, batch_in_order, e)
+                error_handler(self.name, self, batch_in_order, e)
 
 
     def predict(self, docs):
