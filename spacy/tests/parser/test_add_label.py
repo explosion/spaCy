@@ -1,6 +1,7 @@
 import pytest
 from thinc.api import Adam, fix_random_seed
 from spacy import registry
+from spacy.language import Language
 from spacy.attrs import NORM
 from spacy.vocab import Vocab
 from spacy.training import Example
@@ -123,3 +124,28 @@ def test_add_label_get_label(pipe_cls, n_moves, model_config):
     assert len(pipe.move_names) == len(labels) * n_moves
     pipe_labels = sorted(list(pipe.labels))
     assert pipe_labels == labels
+
+
+def test_ner_labels_added_implicitly_on_predict():
+    nlp = Language()
+    ner = nlp.add_pipe("ner")
+    for label in ["A", "B", "C"]:
+        ner.add_label(label)
+    nlp.initialize()
+    doc = Doc(nlp.vocab, words=["hello", "world"], ents=["B-D", "O"])
+    ner(doc)
+    assert [t.ent_type_ for t in doc] == ["D", ""]
+    assert "D" in ner.labels
+
+
+def test_ner_labels_added_implicitly_on_update():
+    nlp = Language()
+    ner = nlp.add_pipe("ner")
+    for label in ["A", "B", "C"]:
+        ner.add_label(label)
+    nlp.initialize()
+    doc = Doc(nlp.vocab, words=["hello", "world"], ents=["B-D", "O"])
+    example = Example(nlp.make_doc(doc.text), doc)
+    assert "D" not in ner.labels
+    nlp.update([example])
+    assert "D" in ner.labels
