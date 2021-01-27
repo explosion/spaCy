@@ -103,6 +103,12 @@
             "example": "이것은 문장입니다.",
             "has_examples": true
         },
+        {
+            "code": "ky",
+            "name": "Kyrgyz",
+            "example": "Адамга эң кыйыны — күн сайын адам болуу",
+            "has_examples": true
+        },
         { "code": "lb", "name": "Luxembourgish", "has_examples": true },
         {
             "code": "lij",
@@ -273,6 +279,9 @@
         { "id": "GPU GPL 3.0", "url": "https://www.gnu.org/licenses/gpl-3.0.en.html" },
         { "id": "LGPL", "url": "https://www.gnu.org/licenses/lgpl.html" },
         { "id": "MIT", "url": "https://opensource.org/licenses/MIT" },
-        { "id": "LGPL-LR", "url": "https://github.com/UniversalDependencies/UD_French-Sequoia/blob/master/LICENSE.txt" }
+        {
+            "id": "LGPL-LR",
+            "url": "https://github.com/UniversalDependencies/UD_French-Sequoia/blob/master/LICENSE.txt"
+        }
     ]
 }

@@ -266,6 +266,11 @@ def tt_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def ky_tokenizer():
+    return get_lang_class("ky")().tokenizer
+
+
+@pytest.fixture(scope="session")
 def uk_tokenizer():
     pytest.importorskip("pymorphy2")
     return get_lang_class("uk")().tokenizer
