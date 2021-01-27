@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 # Source: https://github.com/stopwords/vietnamese-stopwords
 STOP_WORDS = set(
     """

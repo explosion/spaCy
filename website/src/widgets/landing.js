@@ -12,24 +12,28 @@ import {
     LandingDemo,
     LandingBannerGrid,
     LandingBanner,
-    LandingLogos,
 } from '../components/landing'
 import { H2 } from '../components/typography'
-import { Ul, Li } from '../components/list'
+import { InlineCode } from '../components/code'
 import Button from '../components/button'
 import Link from '../components/link'
 
+import QuickstartTraining from './quickstart-training'
+import Project from './project'
+import Features from './features'
 import courseImage from '../../docs/images/course.jpg'
 import prodigyImage from '../../docs/images/prodigy_overview.jpg'
+import projectsImage from '../../docs/images/projects.png'
+import irlBackground from '../images/spacy-irl.jpg'
 
-import BenchmarksChoi from 'usage/_benchmarks-choi.md'
+import Benchmarks from 'usage/_benchmarks-models.md'
 
-const CODE_EXAMPLE = `# pip install spacy
+function getCodeExample(nightly) {
+    return `# pip install -U ${nightly ? 'spacy-nightly --pre' : 'spacy'}
 # python -m spacy download en_core_web_sm
-
 import spacy
 
-# Load English tokenizer, tagger, parser, NER and word vectors
+# Load English tokenizer, tagger, parser and NER
 nlp = spacy.load("en_core_web_sm")
 
 # Process whole documents
@@ -49,27 +53,14 @@ print("Verbs:", [token.lemma_ for token in doc if token.pos_ == "VERB"])
 for entity in doc.ents:
     print(entity.text, entity.label_)
 `
-
-/**
- * Compute the overall total counts of models and languages
- */
-function getCounts(langs = []) {
-    return {
-        langs: langs.length,
-        modelLangs: langs.filter(({ models }) => models && !!models.length).length,
-        starterLangs: langs.filter(({ starters }) => starters && !!starters.length).length,
-        models: langs.map(({ models }) => (models ? models.length : 0)).reduce((a, b) => a + b, 0),
-        starters: langs
-            .map(({ starters }) => (starters ? starters.length : 0))
-            .reduce((a, b) => a + b, 0),
-    }
 }
 
 const Landing = ({ data }) => {
-    const counts = getCounts(data.languages)
+    const { nightly } = data
+    const codeExample = getCodeExample(nightly)
     return (
         <>
-            <LandingHeader>
+            <LandingHeader nightly={data.nightly}>
                 <LandingTitle>
                     Industrial-Strength
                     <br />
@@ -83,8 +74,7 @@ const Landing = ({ data }) => {
                 <LandingCard title="Get things done" url="/usage/spacy-101" button="Get started">
                     spaCy is designed to help you do real work — to build real products, or gather
                     real insights. The library respects your time, and tries to avoid wasting it.
-                    It's easy to install, and its API is simple and productive. We like to think of
-                    spaCy as the Ruby on Rails of Natural Language Processing.
+                    It's easy to install, and its API is simple and productive.
                 </LandingCard>
                 <LandingCard
                     title="Blazing fast"
@@ -92,59 +82,126 @@ const Landing = ({ data }) => {
                     button="Facts &amp; Figures"
                 >
                     spaCy excels at large-scale information extraction tasks. It's written from the
-                    ground up in carefully memory-managed Cython. Independent research in 2015 found
-                    spaCy to be the fastest in the world. If your application needs to process
-                    entire web dumps, spaCy is the library you want to be using.
+                    ground up in carefully memory-managed Cython. If your application needs to
+                    process entire web dumps, spaCy is the library you want to be using.
                 </LandingCard>
 
-                <LandingCard title="Deep learning" url="/usage/training" button="Read more">
-                    spaCy is the best way to prepare text for deep learning. It interoperates
-                    seamlessly with TensorFlow, PyTorch, scikit-learn, Gensim and the rest of
-                    Python's awesome AI ecosystem. With spaCy, you can easily construct
-                    linguistically sophisticated statistical models for a variety of NLP problems.
+                <LandingCard title="Awesome ecosystem" url="/usage/projects" button="Read more">
+                    In the five years since its release, spaCy has become an industry standard with
+                    a huge ecosystem. Choose from a variety of plugins, integrate with your machine
+                    learning stack and build custom components and workflows.
                 </LandingCard>
             </LandingGrid>
 
             <LandingGrid>
-                <LandingDemo title="Edit the code & try spaCy">{CODE_EXAMPLE}</LandingDemo>
+                <LandingDemo title="Edit the code &amp; try spaCy">{codeExample}</LandingDemo>
 
                 <LandingCol>
                     <H2>Features</H2>
-                    <Ul>
-                        <Li>
-                            Non-destructive <strong>tokenization</strong>
-                        </Li>
-                        <Li>
-                            <strong>Named entity</strong> recognition
-                        </Li>
-                        <Li>
-                            Support for <strong>{counts.langs}+ languages</strong>
-                        </Li>
-                        <Li>
-                            <strong>{counts.models} statistical models</strong> for{' '}
-                            {counts.modelLangs} languages
-                        </Li>
-                        <Li>
-                            Pretrained <strong>word vectors</strong>
-                        </Li>
-                        <Li>State-of-the-art speed</Li>
-                        <Li>
-                            Easy <strong>deep learning</strong> integration
-                        </Li>
-                        <Li>Part-of-speech tagging</Li>
-                        <Li>Labelled dependency parsing</Li>
-                        <Li>Syntax-driven sentence segmentation</Li>
-                        <Li>
-                            Built in <strong>visualizers</strong> for syntax and NER
-                        </Li>
-                        <Li>Convenient string-to-hash mapping</Li>
-                        <Li>Export to numpy data arrays</Li>
-                        <Li>Efficient binary serialization</Li>
-                        <Li>
-                            Easy <strong>model packaging</strong> and deployment
-                        </Li>
-                        <Li>Robust, rigorously evaluated accuracy</Li>
-                    </Ul>
+                    <Features />
+                </LandingCol>
+            </LandingGrid>
+
+            <LandingBannerGrid>
+                <LandingBanner
+                    label="New in v3.0"
+                    title="Transformer-based pipelines, new training system, project templates &amp; more"
+                    to="/usage/v3"
+                    button="See what's new"
+                    small
+                >
+                    spaCy v3.0 features all new <strong>transformer-based pipelines</strong> that
+                    bring spaCy's accuracy right up to the current <strong>state-of-the-art</strong>
+                    . You can use any pretrained transformer to train your own pipelines, and even
+                    share one transformer between multiple components with{' '}
+                    <strong>multi-task learning</strong>. Training is now fully configurable and
+                    extensible, and you can define your own custom models using{' '}
+                    <strong>PyTorch</strong>, <strong>TensorFlow</strong> and other frameworks. The
+                    new spaCy projects system lets you describe whole{' '}
+                    <strong>end-to-end workflows</strong> in a single file, giving you an easy path
+                    from prototype to production, and making it easy to clone and adapt
+                    best-practice projects for your own use cases.
+                </LandingBanner>
+
+                <LandingBanner
+                    title="Prodigy: Radically efficient machine teaching"
+                    label="From the makers of spaCy"
+                    to="https://prodi.gy"
+                    button="Try it out"
+                    background="#f6f6f6"
+                    color="#000"
+                    small
+                >
+                    <Link to="https://prodi.gy" hidden>
+                        {/** Update image */}
+                        <img
+                            src={prodigyImage}
+                            alt="Prodigy: Radically efficient machine teaching"
+                        />
+                    </Link>
+                    <br />
+                    <br />
+                    Prodigy is an <strong>annotation tool</strong> so efficient that data scientists
+                    can do the annotation themselves, enabling a new level of rapid iteration.
+                    Whether you're working on entity recognition, intent detection or image
+                    classification, Prodigy can help you <strong>train and evaluate</strong> your
+                    models faster.
+                </LandingBanner>
+            </LandingBannerGrid>
+
+            <LandingGrid cols={2} style={{ gridTemplateColumns: '1fr calc(80ch + 14rem)' }}>
+                <LandingCol>
+                    <H2>Reproducible training for custom pipelines</H2>
+                    <p>
+                        spaCy v3.0 introduces a comprehensive and extensible system for{' '}
+                        <strong>configuring your training runs</strong>. Your configuration file
+                        will describe every detail of your training run, with no hidden defaults,
+                        making it easy to <strong>rerun your experiments</strong> and track changes.
+                        You can use the quickstart widget or the{' '}
+                        <Link to="/api/cli#init-config">
+                            <InlineCode>init config</InlineCode>
+                        </Link>{' '}
+                        command to get started, or clone a project template for an end-to-end
+                        workflow.
+                    </p>
+                    <p>
+                        <Button to="/usage/training">Get started</Button>
+                    </p>
+                </LandingCol>
+                <LandingCol>
+                    <QuickstartTraining />
+                </LandingCol>
+            </LandingGrid>
+
+            <LandingGrid cols={2}>
+                <LandingCol>
+                    <Link to="/usage/projects" hidden>
+                        <img src={projectsImage} />
+                    </Link>
+                    <br />
+                    <br />
+                    <br />
+                    <Project id="pipelines/tagger_parser_ud" title="Get started">
+                        The easiest way to get started is to clone a project template and run it
+                        – for example, this template for training a{' '}
+                        <strong>part-of-speech tagger</strong> and{' '}
+                        <strong>dependency parser</strong> on a Universal Dependencies treebank.
+                    </Project>
+                </LandingCol>
+                <LandingCol>
+                    <H2>End-to-end workflows from prototype to production</H2>
+                    <p>
+                        spaCy's new project system gives you a smooth path from prototype to
+                        production. It lets you keep track of all those{' '}
+                        <strong>data transformation</strong>, preprocessing and{' '}
+                        <strong>training steps</strong>, so you can make sure your project is always
+                        ready to hand over for automation. It features source asset download,
+                        command execution, checksum verification, and caching with a variety of
+                        backends and integrations.
+                    </p>
+                    <p>
+                        <Button to="/usage/projects">Try it out</Button>
+                    </p>
                 </LandingCol>
             </LandingGrid>
 
@@ -196,73 +253,22 @@ const Landing = ({ data }) => {
                 </LandingBanner>
             </LandingBannerGrid>
 
-            <LandingLogos title="spaCy is trusted by" logos={data.logosUsers}>
-                <Button to={`https://github.com/${data.repo}/stargazers`}>and many more</Button>
-            </LandingLogos>
-            <LandingLogos title="Featured on" logos={data.logosPublications} />
-
-            <LandingBannerGrid>
-                <LandingBanner
-                    to="https://course.spacy.io"
-                    button="Start the course"
-                    background="#f6f6f6"
-                    color="#252a33"
-                    small
-                >
-                    <Link to="https://course.spacy.io" hidden>
-                        <img
-                            src={courseImage}
-                            alt="Advanced NLP with spaCy: A free online course"
-                        />
-                    </Link>
-                    <br />
-                    <br />
-                    In this <strong>free and interactive online course</strong> you’ll learn how to
-                    use spaCy to build advanced natural language understanding systems, using both
-                    rule-based and machine learning approaches. It includes{' '}
-                    <strong>55 exercises</strong> featuring videos, slide decks, multiple-choice
-                    questions and interactive coding practice in the browser.
-                </LandingBanner>
-                <LandingBanner
-                    title="BERT-style language model pretraining"
-                    label="New in v2.1"
-                    to="/usage/v2-1"
-                    button="Read more"
-                    small
-                >
-                    Learn more from small training corpora by initializing your models with{' '}
-                    <strong>knowledge from raw text</strong>. The new pretrain command teaches
-                    spaCy's CNN model to predict words based on their context, producing
-                    representations of words in contexts. If you've seen Google's BERT system or
-                    fast.ai's ULMFiT, spaCy's pretraining is similar – but much more efficient. It's
-                    still experimental, but users are already reporting good results, so give it a
-                    try!
-                </LandingBanner>
-            </LandingBannerGrid>
-
-            <LandingGrid cols={2}>
+            <LandingGrid cols={2} style={{ gridTemplateColumns: '1fr 60%' }}>
                 <LandingCol>
                     <H2>Benchmarks</H2>
                     <p>
-                        In 2015, independent researchers from Emory University and Yahoo! Labs
-                        showed that spaCy offered the{' '}
-                        <strong>fastest syntactic parser in the world</strong> and that its accuracy
-                        was <strong>within 1% of the best</strong> available (
-                        <Link to="https://aclweb.org/anthology/P/P15/P15-1038.pdf">
-                            Choi et al., 2015
-                        </Link>
-                        ). spaCy v2.0, released in 2017, is more accurate than any of the systems
-                        Choi et al. evaluated.
+                        spaCy v3.0 introduces transformer-based pipelines that bring spaCy's
+                        accuracy right up to the current <strong>state-of-the-art</strong>. You can
+                        also use a CPU-optimized pipeline, which is less accurate but much cheaper
+                        to run.
                     </p>
                     <p>
-                        <Button to="/usage/facts-figures#benchmarks" large>
-                            See details
-                        </Button>
+                        <Button to="/usage/facts-figures#benchmarks">More results</Button>
                     </p>
                 </LandingCol>
 
                 <LandingCol>
-                    <BenchmarksChoi />
+                    <Benchmarks />
                 </LandingCol>
             </LandingGrid>
         </>
@@ -277,18 +283,6 @@ Landing.propTypes = {
                 models: PropTypes.arrayOf(PropTypes.string),
             })
         ),
-        logosUsers: PropTypes.arrayOf(
-            PropTypes.shape({
-                id: PropTypes.string.isRequired,
-                url: PropTypes.string.isRequired,
-            })
-        ),
-        logosPublications: PropTypes.arrayOf(
-            PropTypes.shape({
-                id: PropTypes.string.isRequired,
-                url: PropTypes.string.isRequired,
-            })
-        ),
     }),
 }
 
@@ -300,19 +294,8 @@ const landingQuery = graphql`
     query LandingQuery {
         site {
             siteMetadata {
+                nightly
                 repo
-                languages {
-                    models
-                    starters
-                }
-                logosUsers {
-                    id
-                    url
-                }
-                logosPublications {
-                    id
-                    url
-                }
             }
         }
     }

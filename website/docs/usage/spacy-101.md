@@ -6,12 +6,11 @@ menu:
   - ['Features', 'features']
   - ['Linguistic Annotations', 'annotations']
   - ['Pipelines', 'pipelines']
+  - ['Architecture', 'architecture']
   - ['Vocab', 'vocab']
   - ['Serialization', 'serialization']
   - ['Training', 'training']
   - ['Language Data', 'language-data']
-  - ['Lightning Tour', 'lightning-tour']
-  - ['Architecture', 'architecture']
   - ['Community & FAQ', 'community-faq']
 ---
 
@@ -72,12 +71,11 @@ systems, or to pre-process text for **deep learning**.
 - [Named entities](#annotations-ner)
 - [Word vectors and similarity](#vectors-similarity)
 - [Pipelines](#pipelines)
+- [Library architecture](#architecture)
 - [Vocab, hashes and lexemes](#vocab)
 - [Serialization](#serialization)
 - [Training](#training)
 - [Language data](#language-data)
-- [Lightning tour](#lightning-tour)
-- [Architecture](#architecture)
 - [Community & FAQ](#community)
 
 </Infobox>
@@ -86,15 +84,13 @@ systems, or to pre-process text for **deep learning**.
 
 ### What spaCy isn't {#what-spacy-isnt}
 
-- **spaCy is not a platform or "an API"**. Unlike a platform, spaCy does not
+- ❌ **spaCy is not a platform or "an API"**. Unlike a platform, spaCy does not
   provide a software as a service, or a web application. It's an open-source
   library designed to help you build NLP applications, not a consumable service.
-
-- **spaCy is not an out-of-the-box chat bot engine**. While spaCy can be used to
-  power conversational applications, it's not designed specifically for chat
+- ❌ **spaCy is not an out-of-the-box chat bot engine**. While spaCy can be used
+  to power conversational applications, it's not designed specifically for chat
   bots, and only provides the underlying text processing capabilities.
-
-- **spaCy is not research software**. It's built on the latest research, but
+- ❌**spaCy is not research software**. It's built on the latest research, but
   it's designed to get things done. This leads to fairly different design
   decisions than [NLTK](https://github.com/nltk/nltk) or
   [CoreNLP](https://stanfordnlp.github.io/CoreNLP/), which were created as
@@ -103,10 +99,9 @@ systems, or to pre-process text for **deep learning**.
   between multiple algorithms that deliver equivalent functionality. Keeping the
   menu small lets spaCy deliver generally better performance and developer
   experience.
-
-- **spaCy is not a company**. It's an open-source library. Our company
+- ❌ **spaCy is not a company**. It's an open-source library. Our company
   publishing spaCy and other software is called
-  [Explosion AI](https://explosion.ai).
+  [Explosion](https://explosion.ai).
 
 ## Features {#features}
 
@@ -122,7 +117,7 @@ related to more general machine learning functionality.
 | **Lemmatization**                     | Assigning the base forms of words. For example, the lemma of "was" is "be", and the lemma of "rats" is "rat".      |
 | **Sentence Boundary Detection** (SBD) | Finding and segmenting individual sentences.                                                                       |
 | **Named Entity Recognition** (NER)    | Labelling named "real-world" objects, like persons, companies or locations.                                        |
-| **Entity Linking** (EL)               | Disambiguating textual entities to unique identifiers in a Knowledge Base.                                         |
+| **Entity Linking** (EL)               | Disambiguating textual entities to unique identifiers in a knowledge base.                                         |
 | **Similarity**                        | Comparing words, text spans and documents and how similar they are to each other.                                  |
 | **Text Classification**               | Assigning categories or labels to a whole document, or parts of a document.                                        |
 | **Rule-based Matching**               | Finding sequences of tokens based on their texts and linguistic annotations, similar to regular expressions.       |
@@ -132,14 +127,15 @@ related to more general machine learning functionality.
 ### Statistical models {#statistical-models}
 
 While some of spaCy's features work independently, others require
-[ statistical models](/models) to be loaded, which enable spaCy to **predict**
-linguistic annotations – for example, whether a word is a verb or a noun. spaCy
-currently offers statistical models for a variety of languages, which can be
-installed as individual Python modules. Models can differ in size, speed, memory
-usage, accuracy and the data they include. The model you choose always depends
-on your use case and the texts you're working with. For a general-purpose use
-case, the small, default models are always a good start. They typically include
-the following components:
+[trained pipelines](/models) to be loaded, which enable spaCy to **predict**
+linguistic annotations – for example, whether a word is a verb or a noun. A
+trained pipeline can consist of multiple components that use a statistical model
+trained on labeled data. spaCy currently offers trained pipelines for a variety
+of languages, which can be installed as individual Python modules. Pipeline
+packages can differ in size, speed, memory usage, accuracy and the data they
+include. The package you choose always depends on your use case and the texts
+you're working with. For a general-purpose use case, the small, default packages
+are always a good start. They typically include the following components:
 
 - **Binary weights** for the part-of-speech tagger, dependency parser and named
   entity recognizer to predict those annotations in context.
@@ -148,8 +144,9 @@ the following components:
 - **Data files** like lemmatization rules and lookup tables.
 - **Word vectors**, i.e. multi-dimensional meaning representations of words that
   let you determine how similar they are to each other.
-- **Configuration** options, like the language and processing pipeline settings,
-  to put spaCy in the correct state when you load in the model.
+- **Configuration** options, like the language and processing pipeline settings
+  and model implementations to use, to put spaCy in the correct state when you
+  load the pipeline.
 
 ## Linguistic annotations {#annotations}
 
@@ -160,20 +157,20 @@ analyzing text, it makes a huge difference whether a noun is the subject of a
 sentence, or the object – or whether "google" is used as a verb, or refers to
 the website or company in a specific context.
 
-> #### Loading models
+> #### Loading pipelines
 >
-> ```bash
+> ```cli
 > $ python -m spacy download en_core_web_sm
 >
 > >>> import spacy
 > >>> nlp = spacy.load("en_core_web_sm")
 > ```
 
-Once you've [downloaded and installed](/usage/models) a model, you can load it
-via [`spacy.load()`](/api/top-level#spacy.load). This will return a `Language`
-object containing all components and data needed to process text. We usually
-call it `nlp`. Calling the `nlp` object on a string of text will return a
-processed `Doc`:
+Once you've [downloaded and installed](/usage/models) a trained pipeline, you
+can load it via [`spacy.load`](/api/top-level#spacy.load). This will return a
+`Language` object containing all components and data needed to process text. We
+usually call it `nlp`. Calling the `nlp` object on a string of text will return
+a processed `Doc`:
 
 ```python
 ### {executable="true"}
@@ -198,12 +195,12 @@ import Tokenization101 from 'usage/101/\_tokenization.md'
 
 <Tokenization101 />
 
-<Infobox title="📖 Tokenization rules">
+<Infobox title="Tokenization rules" emoji="📖">
 
 To learn more about how spaCy's tokenization rules work in detail, how to
 **customize and replace** the default tokenizer and how to **add
 language-specific data**, see the usage guides on
-[adding languages](/usage/adding-languages) and
+[language data](/usage/linguistic-features#language-data) and
 [customizing the tokenizer](/usage/linguistic-features#tokenization).
 
 </Infobox>
@@ -214,7 +211,7 @@ import PosDeps101 from 'usage/101/\_pos-deps.md'
 
 <PosDeps101 />
 
-<Infobox title="📖 Part-of-speech tagging and morphology">
+<Infobox title="Part-of-speech tagging and morphology" emoji="📖">
 
 To learn more about **part-of-speech tagging** and rule-based morphology, and
 how to **navigate and use the parse tree** effectively, see the usage guides on
@@ -229,13 +226,13 @@ import NER101 from 'usage/101/\_named-entities.md'
 
 <NER101 />
 
-<Infobox title="📖 Named Entity Recognition">
+<Infobox title="Named Entity Recognition" emoji="📖">
 
 To learn more about entity recognition in spaCy, how to **add your own
 entities** to a document and how to **train and update** the entity predictions
 of a model, see the usage guides on
 [named entity recognition](/usage/linguistic-features#named-entities) and
-[training the named entity recognizer](/usage/training#ner).
+[training pipelines](/usage/training).
 
 </Infobox>
 
@@ -245,11 +242,11 @@ import Vectors101 from 'usage/101/\_vectors-similarity.md'
 
 <Vectors101 />
 
-<Infobox title="📖 Word vectors">
+<Infobox title="Word vectors" emoji="📖">
 
 To learn more about word vectors, how to **customize them** and how to load
 **your own vectors** into spaCy, see the usage guide on
-[using word vectors and semantic similarities](/usage/vectors-similarity).
+[using word vectors and semantic similarities](/usage/linguistic-features#vectors-similarity).
 
 </Infobox>
 
@@ -259,13 +256,19 @@ import Pipelines101 from 'usage/101/\_pipelines.md'
 
 <Pipelines101 />
 
-<Infobox title="📖 Processing pipelines">
+<Infobox title="Processing pipelines" emoji="📖">
 
 To learn more about **how processing pipelines work** in detail, how to enable
 and disable their components, and how to **create your own**, see the usage
 guide on [language processing pipelines](/usage/processing-pipelines).
 
 </Infobox>
+
+## Architecture {#architecture}
+
+import Architecture101 from 'usage/101/\_architecture.md'
+
+<Architecture101 />
 
 ## Vocab, hashes and lexemes {#vocab}
 
@@ -303,12 +306,6 @@ doc = nlp("I love coffee")
 print(doc.vocab.strings["coffee"])  # 3197928453018144401
 print(doc.vocab.strings[3197928453018144401])  # 'coffee'
 ```
-
-> #### What does 'L' at the end of a hash mean?
->
-> If you return a hash value in the **Python 2 interpreter**, it'll show up as
-> `3197928453018144401L`. The `L` just means "long integer" – it's **not**
-> actually a part of the hash value.
 
 Now that all strings are encoded, the entries in the vocabulary **don't need to
 include the word text** themselves. Instead, they can look it up in the
@@ -348,7 +345,7 @@ The mapping of words to hashes doesn't depend on any state. To make sure each
 value is unique, spaCy uses a
 [hash function](https://en.wikipedia.org/wiki/Hash_function) to calculate the
 hash **based on the word string**. This also means that the hash for "coffee"
-will always be the same, no matter which model you're using or how you've
+will always be the same, no matter which pipeline you're using or how you've
 configured spaCy.
 
 However, hashes **cannot be reversed** and there's no way to resolve
@@ -385,88 +382,15 @@ spaCy will also export the `Vocab` when you save a `Doc` or `nlp` object. This
 will give you the object and its encoded annotations, plus the "key" to decode
 it.
 
-## Knowledge Base {#kb}
-
-To support the entity linking task, spaCy stores external knowledge in a
-[`KnowledgeBase`](/api/kb). The knowledge base (KB) uses the `Vocab` to store
-its data efficiently.
-
-> - **Mention**: A textual occurrence of a named entity, e.g. 'Miss Lovelace'.
-> - **KB ID**: A unique identifier referring to a particular real-world concept,
->   e.g. 'Q7259'.
-> - **Alias**: A plausible synonym or description for a certain KB ID, e.g. 'Ada
->   Lovelace'.
-> - **Prior probability**: The probability of a certain mention resolving to a
->   certain KB ID, prior to knowing anything about the context in which the
->   mention is used.
-> - **Entity vector**: A pretrained word vector capturing the entity
->   description.
-
-A knowledge base is created by first adding all entities to it. Next, for each
-potential mention or alias, a list of relevant KB IDs and their prior
-probabilities is added. The sum of these prior probabilities should never exceed
-1 for any given alias.
-
-```python
-### {executable="true"}
-import spacy
-from spacy.kb import KnowledgeBase
-
-# load the model and create an empty KB
-nlp = spacy.load('en_core_web_sm')
-kb = KnowledgeBase(vocab=nlp.vocab, entity_vector_length=3)
-
-# adding entities
-kb.add_entity(entity="Q1004791", freq=6, entity_vector=[0, 3, 5])
-kb.add_entity(entity="Q42", freq=342, entity_vector=[1, 9, -3])
-kb.add_entity(entity="Q5301561", freq=12, entity_vector=[-2, 4, 2])
-
-# adding aliases
-kb.add_alias(alias="Douglas", entities=["Q1004791", "Q42", "Q5301561"], probabilities=[0.6, 0.1, 0.2])
-kb.add_alias(alias="Douglas Adams", entities=["Q42"], probabilities=[0.9])
-
-print()
-print("Number of entities in KB:",kb.get_size_entities()) # 3
-print("Number of aliases in KB:", kb.get_size_aliases()) # 2
-```
-
-### Candidate generation
-
-Given a textual entity, the Knowledge Base can provide a list of plausible
-candidates or entity identifiers. The [`EntityLinker`](/api/entitylinker) will
-take this list of candidates as input, and disambiguate the mention to the most
-probable identifier, given the document context.
-
-```python
-### {executable="true"}
-import spacy
-from spacy.kb import KnowledgeBase
-
-nlp = spacy.load('en_core_web_sm')
-kb = KnowledgeBase(vocab=nlp.vocab, entity_vector_length=3)
-
-# adding entities
-kb.add_entity(entity="Q1004791", freq=6, entity_vector=[0, 3, 5])
-kb.add_entity(entity="Q42", freq=342, entity_vector=[1, 9, -3])
-kb.add_entity(entity="Q5301561", freq=12, entity_vector=[-2, 4, 2])
-
-# adding aliases
-kb.add_alias(alias="Douglas", entities=["Q1004791", "Q42", "Q5301561"], probabilities=[0.6, 0.1, 0.2])
-
-candidates = kb.get_candidates("Douglas")
-for c in candidates:
-    print(" ", c.entity_, c.prior_prob, c.entity_vector)
-```
-
 ## Serialization {#serialization}
 
 import Serialization101 from 'usage/101/\_serialization.md'
 
 <Serialization101 />
 
-<Infobox title="📖 Saving and loading">
+<Infobox title="Saving and loading" emoji="📖">
 
-To learn more about how to **save and load your own models**, see the usage
+To learn more about how to **save and load your own pipelines**, see the usage
 guide on [saving and loading](/usage/saving-loading#models).
 
 </Infobox>
@@ -477,11 +401,76 @@ import Training101 from 'usage/101/\_training.md'
 
 <Training101 />
 
-<Infobox title="📖 Training statistical models">
+<Infobox title="Training pipelines and models" emoji="📖">
 
-To learn more about **training and updating** models, how to create training
-data and how to improve spaCy's named entity recognition models, see the usage
-guides on [training](/usage/training).
+To learn more about **training and updating** pipelines, how to create training
+data and how to improve spaCy's named models, see the usage guides on
+[training](/usage/training).
+
+</Infobox>
+
+### Training config and lifecycle {#training-config}
+
+Training config files include all **settings and hyperparameters** for training
+your pipeline. Instead of providing lots of arguments on the command line, you
+only need to pass your `config.cfg` file to [`spacy train`](/api/cli#train).
+This also makes it easy to integrate custom models and architectures, written in
+your framework of choice. A pipeline's `config.cfg` is considered the "single
+source of truth", both at **training** and **runtime**.
+
+> ```ini
+> ### config.cfg (excerpt)
+> [training]
+> accumulate_gradient = 3
+>
+> [training.optimizer]
+> @optimizers = "Adam.v1"
+>
+> [training.optimizer.learn_rate]
+> @schedules = "warmup_linear.v1"
+> warmup_steps = 250
+> total_steps = 20000
+> initial_rate = 0.01
+> ```
+
+![Illustration of pipeline lifecycle](../images/lifecycle.svg)
+
+<Infobox title="Training configuration system" emoji="📖">
+
+For more details on spaCy's **configuration system** and how to use it to
+customize your pipeline components, component models, training settings and
+hyperparameters, see the [training config](/usage/training#config) usage guide.
+
+</Infobox>
+
+### Trainable components {#training-components}
+
+spaCy's [`Pipe`](/api/pipe) class helps you implement your own trainable
+components that have their own model instance, make predictions over `Doc`
+objects and can be updated using [`spacy train`](/api/cli#train). This lets you
+plug fully custom machine learning components into your pipeline that can be
+configured via a single training config.
+
+> #### config.cfg (excerpt)
+>
+> ```ini
+> [components.my_component]
+> factory = "my_component"
+>
+> [components.my_component.model]
+> @architectures = "my_model.v1"
+> width = 128
+> ```
+
+![Illustration of Pipe methods](../images/trainable_component.svg)
+
+<Infobox title="Custom trainable components" emoji="📖">
+
+To learn more about how to implement your own **model architectures** and use
+them to power custom **trainable components**, see the usage guides on the
+[trainable component API](/usage/processing-pipelines#trainable-components) and
+implementing [layers and architectures](/usage/layers-architectures#components)
+for trainable components.
 
 </Infobox>
 
@@ -490,397 +479,6 @@ guides on [training](/usage/training).
 import LanguageData101 from 'usage/101/\_language-data.md'
 
 <LanguageData101 />
-
-<Infobox title="📖 Language data">
-
-To learn more about the individual components of the language data and how to
-**add a new language** to spaCy in preparation for training a language model,
-see the usage guide on [adding languages](/usage/adding-languages).
-
-</Infobox>
-
-## Lightning tour {#lightning-tour}
-
-The following examples and code snippets give you an overview of spaCy's
-functionality and its usage.
-
-### Install models and process text {#lightning-tour-models}
-
-```bash
-python -m spacy download en_core_web_sm
-python -m spacy download de_core_news_sm
-```
-
-```python
-### {executable="true"}
-import spacy
-
-nlp = spacy.load("en_core_web_sm")
-doc = nlp("Hello, world. Here are two sentences.")
-print([t.text for t in doc])
-
-nlp_de = spacy.load("de_core_news_sm")
-doc_de = nlp_de("Ich bin ein Berliner.")
-print([t.text for t in doc_de])
-
-```
-
-<Infobox>
-
-**API:** [`spacy.load()`](/api/top-level#spacy.load) **Usage:**
-[Models](/usage/models), [spaCy 101](/usage/spacy-101)
-
-</Infobox>
-
-### Get tokens, noun chunks & sentences {#lightning-tour-tokens-sentences model="parser"}
-
-```python
-### {executable="true"}
-import spacy
-
-nlp = spacy.load("en_core_web_sm")
-doc = nlp("Peach emoji is where it has always been. Peach is the superior "
-          "emoji. It's outranking eggplant 🍑 ")
-print(doc[0].text)          # 'Peach'
-print(doc[1].text)          # 'emoji'
-print(doc[-1].text)         # '🍑'
-print(doc[17:19].text)      # 'outranking eggplant'
-
-noun_chunks = list(doc.noun_chunks)
-print(noun_chunks[0].text)  # 'Peach emoji'
-
-sentences = list(doc.sents)
-assert len(sentences) == 3
-print(sentences[1].text)    # 'Peach is the superior emoji.'
-```
-
-<Infobox>
-
-**API:** [`Doc`](/api/doc), [`Token`](/api/token) **Usage:**
-[spaCy 101](/usage/spacy-101)
-
-</Infobox>
-
-### Get part-of-speech tags and flags {#lightning-tour-pos-tags model="tagger"}
-
-```python
-### {executable="true"}
-import spacy
-
-nlp = spacy.load("en_core_web_sm")
-doc = nlp("Apple is looking at buying U.K. startup for $1 billion")
-apple = doc[0]
-print("Fine-grained POS tag", apple.pos_, apple.pos)
-print("Coarse-grained POS tag", apple.tag_, apple.tag)
-print("Word shape", apple.shape_, apple.shape)
-print("Alphabetic characters?", apple.is_alpha)
-print("Punctuation mark?", apple.is_punct)
-
-billion = doc[10]
-print("Digit?", billion.is_digit)
-print("Like a number?", billion.like_num)
-print("Like an email address?", billion.like_email)
-```
-
-<Infobox>
-
-**API:** [`Token`](/api/token) **Usage:**
-[Part-of-speech tagging](/usage/linguistic-features#pos-tagging)
-
-</Infobox>
-
-### Use hash values for any string {#lightning-tour-hashes}
-
-```python
-### {executable="true"}
-import spacy
-
-nlp = spacy.load("en_core_web_sm")
-doc = nlp("I love coffee")
-
-coffee_hash = nlp.vocab.strings["coffee"]  # 3197928453018144401
-coffee_text = nlp.vocab.strings[coffee_hash]  # 'coffee'
-print(coffee_hash, coffee_text)
-print(doc[2].orth, coffee_hash)  # 3197928453018144401
-print(doc[2].text, coffee_text)  # 'coffee'
-
-beer_hash = doc.vocab.strings.add("beer")  # 3073001599257881079
-beer_text = doc.vocab.strings[beer_hash]  # 'beer'
-print(beer_hash, beer_text)
-
-unicorn_hash = doc.vocab.strings.add("🦄")  # 18234233413267120783
-unicorn_text = doc.vocab.strings[unicorn_hash]  # '🦄'
-print(unicorn_hash, unicorn_text)
-```
-
-<Infobox>
-
-**API:** [`StringStore`](/api/stringstore) **Usage:**
-[Vocab, hashes and lexemes 101](/usage/spacy-101#vocab)
-
-</Infobox>
-
-### Recognize and update named entities {#lightning-tour-entities model="ner"}
-
-```python
-### {executable="true"}
-import spacy
-from spacy.tokens import Span
-
-nlp = spacy.load("en_core_web_sm")
-doc = nlp("San Francisco considers banning sidewalk delivery robots")
-for ent in doc.ents:
-    print(ent.text, ent.start_char, ent.end_char, ent.label_)
-
-doc = nlp("FB is hiring a new VP of global policy")
-doc.ents = [Span(doc, 0, 1, label="ORG")]
-for ent in doc.ents:
-    print(ent.text, ent.start_char, ent.end_char, ent.label_)
-```
-
-<Infobox>
-
-**Usage:** [Named entity recognition](/usage/linguistic-features#named-entities)
-
-</Infobox>
-
-### Train and update neural network models {#lightning-tour-training"}
-
-```python
-import spacy
-import random
-
-nlp = spacy.load("en_core_web_sm")
-train_data = [("Uber blew through $1 million", {"entities": [(0, 4, "ORG")]})]
-
-other_pipes = [pipe for pipe in nlp.pipe_names if pipe != "ner"]
-with nlp.disable_pipes(*other_pipes):
-    optimizer = nlp.begin_training()
-    for i in range(10):
-        random.shuffle(train_data)
-        for text, annotations in train_data:
-            nlp.update([text], [annotations], sgd=optimizer)
-nlp.to_disk("/model")
-```
-
-<Infobox>
-
-**API:** [`Language.update`](/api/language#update) **Usage:**
-[Training spaCy's statistical models](/usage/training)
-
-</Infobox>
-
-### Visualize a dependency parse and named entities in your browser {#lightning-tour-displacy model="parser, ner" new="2"}
-
-> #### Output
->
-> ![displaCy visualization](../images/displacy-small.svg)
-
-```python
-from spacy import displacy
-
-doc_dep = nlp("This is a sentence.")
-displacy.serve(doc_dep, style="dep")
-
-doc_ent = nlp("When Sebastian Thrun started working on self-driving cars at Google "
-              "in 2007, few people outside of the company took him seriously.")
-displacy.serve(doc_ent, style="ent")
-```
-
-<Infobox>
-
-**API:** [`displacy`](/api/top-level#displacy) **Usage:**
-[Visualizers](/usage/visualizers)
-
-</Infobox>
-
-### Get word vectors and similarity {#lightning-tour-word-vectors model="vectors"}
-
-```python
-### {executable="true"}
-import spacy
-
-nlp = spacy.load("en_core_web_md")
-doc = nlp("Apple and banana are similar. Pasta and hippo aren't.")
-
-apple = doc[0]
-banana = doc[2]
-pasta = doc[6]
-hippo = doc[8]
-
-print("apple <-> banana", apple.similarity(banana))
-print("pasta <-> hippo", pasta.similarity(hippo))
-print(apple.has_vector, banana.has_vector, pasta.has_vector, hippo.has_vector)
-```
-
-For the best results, you should run this example using the
-[`en_vectors_web_lg`](/models/en-starters#en_vectors_web_lg) model (currently
-not available in the live demo).
-
-<Infobox>
-
-**Usage:** [Word vectors and similarity](/usage/vectors-similarity)
-
-</Infobox>
-
-### Simple and efficient serialization {#lightning-tour-serialization}
-
-```python
-import spacy
-from spacy.tokens import Doc
-from spacy.vocab import Vocab
-
-nlp = spacy.load("en_core_web_sm")
-customer_feedback = open("customer_feedback_627.txt").read()
-doc = nlp(customer_feedback)
-doc.to_disk("/tmp/customer_feedback_627.bin")
-
-new_doc = Doc(Vocab()).from_disk("/tmp/customer_feedback_627.bin")
-```
-
-<Infobox>
-
-**API:** [`Language`](/api/language), [`Doc`](/api/doc) **Usage:**
-[Saving and loading models](/usage/saving-loading#models)
-
-</Infobox>
-
-### Match text with token rules {#lightning-tour-rule-matcher}
-
-```python
-### {executable="true"}
-import spacy
-from spacy.matcher import Matcher
-
-nlp = spacy.load("en_core_web_sm")
-matcher = Matcher(nlp.vocab)
-
-def set_sentiment(matcher, doc, i, matches):
-    doc.sentiment += 0.1
-
-pattern1 = [{"ORTH": "Google"}, {"ORTH": "I"}, {"ORTH": "/"}, {"ORTH": "O"}]
-pattern2 = [[{"ORTH": emoji, "OP": "+"}] for emoji in ["😀", "😂", "🤣", "😍"]]
-matcher.add("GoogleIO", None, pattern1)  # Match "Google I/O" or "Google i/o"
-matcher.add("HAPPY", set_sentiment, *pattern2)  # Match one or more happy emoji
-
-doc = nlp("A text about Google I/O 😀😀")
-matches = matcher(doc)
-
-for match_id, start, end in matches:
-    string_id = nlp.vocab.strings[match_id]
-    span = doc[start:end]
-    print(string_id, span.text)
-print("Sentiment", doc.sentiment)
-```
-
-<Infobox>
-
-**API:** [`Matcher`](/api/matcher) **Usage:**
-[Rule-based matching](/usage/rule-based-matching)
-
-</Infobox>
-
-### Minibatched stream processing {#lightning-tour-minibatched}
-
-```python
-texts = ["One document.", "...", "Lots of documents"]
-# .pipe streams input, and produces streaming output
-iter_texts = (texts[i % 3] for i in range(100000000))
-for i, doc in enumerate(nlp.pipe(iter_texts, batch_size=50)):
-    assert doc.is_parsed
-    if i == 100:
-        break
-```
-
-### Get syntactic dependencies {#lightning-tour-dependencies model="parser"}
-
-```python
-### {executable="true"}
-import spacy
-
-nlp = spacy.load("en_core_web_sm")
-doc = nlp("When Sebastian Thrun started working on self-driving cars at Google "
-          "in 2007, few people outside of the company took him seriously.")
-
-dep_labels = []
-for token in doc:
-    while token.head != token:
-        dep_labels.append(token.dep_)
-        token = token.head
-print(dep_labels)
-```
-
-<Infobox>
-
-**API:** [`Token`](/api/token) **Usage:**
-[Using the dependency parse](/usage/linguistic-features#dependency-parse)
-
-</Infobox>
-
-### Export to numpy arrays {#lightning-tour-numpy-arrays}
-
-```python
-### {executable="true"}
-import spacy
-from spacy.attrs import ORTH, LIKE_URL
-
-nlp = spacy.load("en_core_web_sm")
-doc = nlp("Check out https://spacy.io")
-for token in doc:
-    print(token.text, token.orth, token.like_url)
-
-attr_ids = [ORTH, LIKE_URL]
-doc_array = doc.to_array(attr_ids)
-print(doc_array.shape)
-print(len(doc), len(attr_ids))
-
-assert doc[0].orth == doc_array[0, 0]
-assert doc[1].orth == doc_array[1, 0]
-assert doc[0].like_url == doc_array[0, 1]
-
-assert list(doc_array[:, 1]) == [t.like_url for t in doc]
-print(list(doc_array[:, 1]))
-```
-
-### Calculate inline markup on original string {#lightning-tour-inline}
-
-```python
-### {executable="true"}
-import spacy
-
-def put_spans_around_tokens(doc):
-    """Here, we're building a custom "syntax highlighter" for
-    part-of-speech tags and dependencies. We put each token in a
-    span element, with the appropriate classes computed. All whitespace is
-    preserved, outside of the spans. (Of course, HTML will only display
-    multiple whitespace if enabled – but the point is, no information is lost
-    and you can calculate what you need, e.g. <br />, <p> etc.)
-    """
-    output = []
-    html = '<span class="{classes}">{word}</span>{space}'
-    for token in doc:
-        if token.is_space:
-            output.append(token.text)
-        else:
-            classes = "pos-{} dep-{}".format(token.pos_, token.dep_)
-            output.append(html.format(classes=classes, word=token.text, space=token.whitespace_))
-    string = "".join(output)
-    string = string.replace("\\n", "")
-    string = string.replace("\\t", "    ")
-    return "<pre>{}</pre>".format(string)
-
-
-nlp = spacy.load("en_core_web_sm")
-doc = nlp("This is a test.\\n\\nHello   world.")
-html = put_spans_around_tokens(doc)
-print(html)
-```
-
-## Architecture {#architecture}
-
-import Architecture101 from 'usage/101/\_architecture.md'
-
-<Architecture101 />
 
 ## Community & FAQ {#community-faq}
 
@@ -921,8 +519,8 @@ via the following platforms:
   projects/plugins, support more languages, and share best practices.
 - [GitHub issue tracker](https://github.com/explosion/spaCy/issues): **Bug
   reports** and **improvement suggestions**, i.e. everything that's likely
-  spaCy's fault. This also includes problems with the models beyond statistical
-  imprecisions, like patterns that point to a bug.
+  spaCy's fault. This also includes problems with the trained pipelines beyond
+  statistical imprecisions, like patterns that point to a bug.
 
 <Infobox title="Important note" variant="warning">
 
@@ -947,19 +545,19 @@ find a "Suggest edits" link at the bottom of each page that points you to the
 source.
 
 Another way of getting involved is to help us improve the
-[language data](/usage/adding-languages#language-data) – especially if you
+[language data](/usage/linguistic-features#language-data) – especially if you
 happen to speak one of the languages currently in
 [alpha support](/usage/models#languages). Even adding simple tokenizer
 exceptions, stop words or lemmatizer data can make a big difference. It will
-also make it easier for us to provide a statistical model for the language in
-the future. Submitting a test that documents a bug or performance issue, or
-covers functionality that's especially important for your application is also
-very helpful. This way, you'll also make sure we never accidentally introduce
+also make it easier for us to provide a trained pipeline for the language in the
+future. Submitting a test that documents a bug or performance issue, or covers
+functionality that's especially important for your application is also very
+helpful. This way, you'll also make sure we never accidentally introduce
 regressions to the parts of the library that you care about the most.
 
 **For more details on the types of contributions we're looking for, the code
 conventions and other useful tips, make sure to check out the
-[contributing guidelines](https://github.com/explosion/spaCy/tree/master/CONTRIBUTING.md).**
+[contributing guidelines](%%GITHUB_SPACY/CONTRIBUTING.md).**
 
 <Infobox title="Code of Conduct" variant="warning">
 

@@ -16,17 +16,18 @@
 .code,
 .juniper-input pre,
 .juniper-output
-    font: var(--font-size-xs)/var(--line-height-lg) var(--font-code) !important
+    font: var(--font-size-code)/var(--line-height-code) var(--font-code) !important
+    font-variant-ligatures: none !important
     -webkit-font-smoothing: subpixel-antialiased
     -moz-osx-font-smoothing: auto
 
 .code,
 .juniper-input pre
     display: block
-    padding: 1.75em 2em
+    padding: 1.75em 1.5em
 
 .code
-    &[data-prompt]:before,
+    &[data-prompt]:before, span[data-prompt]:before
         content: attr(data-prompt)
         margin-right: 0.65em
         display: inline-block
@@ -44,6 +45,7 @@
     box-decoration-break: clone
     white-space: nowrap
     text-shadow: none
+    font-variant-ligatures: none
     -webkit-font-smoothing: subpixel-antialiased
     -moz-osx-font-smoothing: auto
 
@@ -54,9 +56,45 @@
     --color-inline-code-text: var(--color-back)
     --color-inline-code-bg: var(--color-dark-secondary)
 
+.type-annotation,
+    white-space: pre-wrap
+    font-family: var(--font-code)
+
+    &.wrap
+        word-wrap: break-word
+
+    a
+        border: 0
+
+    // Special style for types in API tables
+    td:not(:first-child) > &:last-child
+        display: block
+        border-top: 1px dotted var(--color-subtle)
+        border-radius: 0
+        background: none
+        width: calc(100% + 2rem)
+        margin-left: -1rem
+        padding-left: 1rem
+        padding-top: 5px
+        margin-top: 5px
+        margin-bottom: -5px
+
+        &:before
+            content: "Type: "
+            opacity: 0.75
+            font-family: var(--font-primary)
+            color: var(--color-dark-secondary)
+            font-weight: bold
+            text-transform: uppercase
+            margin-right: 5px
+
+.type-annotation-meta
+    font-size: 90%
+    color: var(--color-subtle-dark)
+
 .wrap
     white-space: pre-wrap
-    word-wrap: break-word
+    word-wrap: anywhere
 
 .title,
 .juniper-button
@@ -125,3 +163,31 @@
     font-weight: normal
     padding-top: 0.1rem
     color: var(--color-subtle-dark)
+
+.cli
+    padding-top: calc(var(--spacing-sm) - 6px)
+    padding-bottom: calc(var(--spacing-sm) - 12px)
+
+    [data-prompt]:before
+        color: var(--color-subtle)
+
+.cli-arg
+    border: 1px solid var(--color-dark)
+    padding: 1px 6px
+    margin-bottom: 5px
+    border-radius: 0.5em
+    display: inline-block
+
+    a
+        color: inherit !important
+
+.cli-arg-highlight
+    background: var(--color-theme)
+    border-color: var(--color-theme)
+    color: var(--color-back) !important
+
+.cli-arg-subtle
+    color: var(--syntax-comment)
+
+.cli-arg-emphasis
+    font-style: italic

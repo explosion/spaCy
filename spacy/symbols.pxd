@@ -108,282 +108,282 @@ cdef enum symbol_t:
     EOL
     SPACE
 
-    Animacy_anim
-    Animacy_inan
-    Animacy_hum # U20
-    Animacy_nhum
-    Aspect_freq
-    Aspect_imp
-    Aspect_mod
-    Aspect_none
-    Aspect_perf
-    Aspect_iter # U20
-    Aspect_hab # U20
-    Case_abe
-    Case_abl
-    Case_abs
-    Case_acc
-    Case_ade
-    Case_all
-    Case_cau
-    Case_com
-    Case_cmp # U20
-    Case_dat
-    Case_del
-    Case_dis
-    Case_ela
-    Case_equ # U20
-    Case_ess
-    Case_gen
-    Case_ill
-    Case_ine
-    Case_ins
-    Case_loc
-    Case_lat
-    Case_nom
-    Case_par
-    Case_sub
-    Case_sup
-    Case_tem
-    Case_ter
-    Case_tra
-    Case_voc
-    Definite_two
-    Definite_def
-    Definite_red
-    Definite_cons # U20
-    Definite_ind
-    Definite_spec # U20
-    Degree_cmp
-    Degree_comp
-    Degree_none
-    Degree_pos
-    Degree_sup
-    Degree_abs
-    Degree_com
-    Degree_dim # du
-    Degree_equ # U20
-    Evident_nfh # U20
-    Gender_com
-    Gender_fem
-    Gender_masc
-    Gender_neut
-    Mood_cnd
-    Mood_imp
-    Mood_ind
-    Mood_n
-    Mood_pot
-    Mood_sub
-    Mood_opt
-    Mood_prp # U20
-    Mood_adm # U20
-    Negative_neg
-    Negative_pos
-    Negative_yes
-    Polarity_neg # U20
-    Polarity_pos # U20
-    Number_com
-    Number_dual
-    Number_none
-    Number_plur
-    Number_sing
-    Number_ptan # bg
-    Number_count # bg, U20
-    Number_tri # U20
-    NumType_card
-    NumType_dist
-    NumType_frac
-    NumType_gen
-    NumType_mult
-    NumType_none
-    NumType_ord
-    NumType_sets
-    Person_one
-    Person_two
-    Person_three
-    Person_none
-    Poss_yes
-    PronType_advPart
-    PronType_art
-    PronType_default
-    PronType_dem
-    PronType_ind
-    PronType_int
-    PronType_neg
-    PronType_prs
-    PronType_rcp
-    PronType_rel
-    PronType_tot
-    PronType_clit
-    PronType_exc # es, ca, it, fa, U20
-    PronType_emp # U20
-    Reflex_yes
-    Tense_fut
-    Tense_imp
-    Tense_past
-    Tense_pres
-    VerbForm_fin
-    VerbForm_ger
-    VerbForm_inf
-    VerbForm_none
-    VerbForm_part
-    VerbForm_partFut
-    VerbForm_partPast
-    VerbForm_partPres
-    VerbForm_sup
-    VerbForm_trans
-    VerbForm_conv # U20
-    VerbForm_gdv # la
-    VerbForm_vnoun # U20
-    Voice_act
-    Voice_cau
-    Voice_pass
-    Voice_mid # gkc, U20
-    Voice_int # hb
-    Voice_antip # U20
-    Voice_dir # U20
-    Voice_inv # U20
-    Abbr_yes # cz, fi, sl, U
-    AdpType_prep # cz, U
-    AdpType_post # U
-    AdpType_voc # cz
-    AdpType_comprep # cz
-    AdpType_circ # U
-    AdvType_man
-    AdvType_loc
-    AdvType_tim
-    AdvType_deg
-    AdvType_cau
-    AdvType_mod
-    AdvType_sta
-    AdvType_ex
-    AdvType_adadj
-    ConjType_oper # cz, U
-    ConjType_comp # cz, U
-    Connegative_yes # fi
-    Derivation_minen # fi
-    Derivation_sti # fi
-    Derivation_inen # fi
-    Derivation_lainen # fi
-    Derivation_ja # fi
-    Derivation_ton # fi
-    Derivation_vs # fi
-    Derivation_ttain # fi
-    Derivation_ttaa # fi
-    Echo_rdp # U
-    Echo_ech # U
-    Foreign_foreign # cz, fi, U
-    Foreign_fscript # cz, fi, U
-    Foreign_tscript # cz, U
-    Foreign_yes # sl
-    Gender_dat_masc # bq, U
-    Gender_dat_fem # bq, U
-    Gender_erg_masc # bq
-    Gender_erg_fem # bq
-    Gender_psor_masc # cz, sl, U
-    Gender_psor_fem # cz, sl, U
-    Gender_psor_neut # sl
-    Hyph_yes # cz, U
-    InfForm_one # fi
-    InfForm_two # fi
-    InfForm_three # fi
-    NameType_geo # U, cz
-    NameType_prs # U, cz
-    NameType_giv # U, cz
-    NameType_sur # U, cz
-    NameType_nat # U, cz
-    NameType_com # U, cz
-    NameType_pro # U, cz
-    NameType_oth # U, cz
-    NounType_com # U
-    NounType_prop # U
-    NounType_class # U
-    Number_abs_sing # bq, U
-    Number_abs_plur # bq, U
-    Number_dat_sing # bq, U
-    Number_dat_plur # bq, U
-    Number_erg_sing # bq, U
-    Number_erg_plur # bq, U
-    Number_psee_sing # U
-    Number_psee_plur # U
-    Number_psor_sing # cz, fi, sl, U
-    Number_psor_plur # cz, fi, sl, U
-    Number_pauc # U20
-    Number_grpa # U20
-    Number_grpl # U20
-    Number_inv # U20
-    NumForm_digit # cz, sl, U
-    NumForm_roman # cz, sl, U
-    NumForm_word # cz, sl, U
-    NumValue_one # cz, U
-    NumValue_two # cz, U
-    NumValue_three # cz, U
-    PartForm_pres # fi
-    PartForm_past # fi
-    PartForm_agt # fi
-    PartForm_neg # fi
-    PartType_mod # U
-    PartType_emp # U
-    PartType_res # U
-    PartType_inf # U
-    PartType_vbp # U
-    Person_abs_one # bq, U
-    Person_abs_two # bq, U
-    Person_abs_three # bq, U
-    Person_dat_one # bq, U
-    Person_dat_two # bq, U
-    Person_dat_three # bq, U
-    Person_erg_one # bq, U
-    Person_erg_two # bq, U
-    Person_erg_three # bq, U
-    Person_psor_one # fi, U
-    Person_psor_two # fi, U
-    Person_psor_three # fi, U
-    Person_zero # U20
-    Person_four # U20
-    Polite_inf # bq, U
-    Polite_pol # bq, U
-    Polite_abs_inf # bq, U
-    Polite_abs_pol # bq, U
-    Polite_erg_inf # bq, U
-    Polite_erg_pol # bq, U
-    Polite_dat_inf # bq, U
-    Polite_dat_pol # bq, U
-    Polite_infm # U20
-    Polite_form # U20
-    Polite_form_elev # U20
-    Polite_form_humb # U20
-    Prefix_yes # U
-    PrepCase_npr # cz
-    PrepCase_pre # U
-    PunctSide_ini # U
-    PunctSide_fin # U
-    PunctType_peri # U
-    PunctType_qest # U
-    PunctType_excl # U
-    PunctType_quot # U
-    PunctType_brck # U
-    PunctType_comm # U
-    PunctType_colo # U
-    PunctType_semi # U
-    PunctType_dash # U
-    Style_arch # cz, fi, U
-    Style_rare # cz, fi, U
-    Style_poet # cz, U
-    Style_norm # cz, U
-    Style_coll # cz, U
-    Style_vrnc # cz, U
-    Style_sing # cz, U
-    Style_expr # cz, U
-    Style_derg # cz, U
-    Style_vulg # cz, U
-    Style_yes # fi, U
-    StyleVariant_styleShort # cz
-    StyleVariant_styleBound # cz, sl
-    VerbType_aux # U
-    VerbType_cop # U
-    VerbType_mod # U
-    VerbType_light # U
+    DEPRECATED001
+    DEPRECATED002
+    DEPRECATED003
+    DEPRECATED004
+    DEPRECATED005
+    DEPRECATED006
+    DEPRECATED007
+    DEPRECATED008
+    DEPRECATED009
+    DEPRECATED010
+    DEPRECATED011
+    DEPRECATED012
+    DEPRECATED013
+    DEPRECATED014
+    DEPRECATED015
+    DEPRECATED016
+    DEPRECATED017
+    DEPRECATED018
+    DEPRECATED019
+    DEPRECATED020
+    DEPRECATED021
+    DEPRECATED022
+    DEPRECATED023
+    DEPRECATED024
+    DEPRECATED025
+    DEPRECATED026
+    DEPRECATED027
+    DEPRECATED028
+    DEPRECATED029
+    DEPRECATED030
+    DEPRECATED031
+    DEPRECATED032
+    DEPRECATED033
+    DEPRECATED034
+    DEPRECATED035
+    DEPRECATED036
+    DEPRECATED037
+    DEPRECATED038
+    DEPRECATED039
+    DEPRECATED040
+    DEPRECATED041
+    DEPRECATED042
+    DEPRECATED043
+    DEPRECATED044
+    DEPRECATED045
+    DEPRECATED046
+    DEPRECATED047
+    DEPRECATED048
+    DEPRECATED049
+    DEPRECATED050
+    DEPRECATED051
+    DEPRECATED052
+    DEPRECATED053
+    DEPRECATED054
+    DEPRECATED055
+    DEPRECATED056
+    DEPRECATED057
+    DEPRECATED058
+    DEPRECATED059
+    DEPRECATED060
+    DEPRECATED061
+    DEPRECATED062
+    DEPRECATED063
+    DEPRECATED064
+    DEPRECATED065
+    DEPRECATED066
+    DEPRECATED067
+    DEPRECATED068
+    DEPRECATED069
+    DEPRECATED070
+    DEPRECATED071
+    DEPRECATED072
+    DEPRECATED073
+    DEPRECATED074
+    DEPRECATED075
+    DEPRECATED076
+    DEPRECATED077
+    DEPRECATED078
+    DEPRECATED079
+    DEPRECATED080
+    DEPRECATED081
+    DEPRECATED082
+    DEPRECATED083
+    DEPRECATED084
+    DEPRECATED085
+    DEPRECATED086
+    DEPRECATED087
+    DEPRECATED088
+    DEPRECATED089
+    DEPRECATED090
+    DEPRECATED091
+    DEPRECATED092
+    DEPRECATED093
+    DEPRECATED094
+    DEPRECATED095
+    DEPRECATED096
+    DEPRECATED097
+    DEPRECATED098
+    DEPRECATED099
+    DEPRECATED100
+    DEPRECATED101
+    DEPRECATED102
+    DEPRECATED103
+    DEPRECATED104
+    DEPRECATED105
+    DEPRECATED106
+    DEPRECATED107
+    DEPRECATED108
+    DEPRECATED109
+    DEPRECATED110
+    DEPRECATED111
+    DEPRECATED112
+    DEPRECATED113
+    DEPRECATED114
+    DEPRECATED115
+    DEPRECATED116
+    DEPRECATED117
+    DEPRECATED118
+    DEPRECATED119
+    DEPRECATED120
+    DEPRECATED121
+    DEPRECATED122
+    DEPRECATED123
+    DEPRECATED124
+    DEPRECATED125
+    DEPRECATED126
+    DEPRECATED127
+    DEPRECATED128
+    DEPRECATED129
+    DEPRECATED130
+    DEPRECATED131
+    DEPRECATED132
+    DEPRECATED133
+    DEPRECATED134
+    DEPRECATED135
+    DEPRECATED136
+    DEPRECATED137
+    DEPRECATED138
+    DEPRECATED139
+    DEPRECATED140
+    DEPRECATED141
+    DEPRECATED142
+    DEPRECATED143
+    DEPRECATED144
+    DEPRECATED145
+    DEPRECATED146
+    DEPRECATED147
+    DEPRECATED148
+    DEPRECATED149
+    DEPRECATED150
+    DEPRECATED151
+    DEPRECATED152
+    DEPRECATED153
+    DEPRECATED154
+    DEPRECATED155
+    DEPRECATED156
+    DEPRECATED157
+    DEPRECATED158
+    DEPRECATED159
+    DEPRECATED160
+    DEPRECATED161
+    DEPRECATED162
+    DEPRECATED163
+    DEPRECATED164
+    DEPRECATED165
+    DEPRECATED166
+    DEPRECATED167
+    DEPRECATED168
+    DEPRECATED169
+    DEPRECATED170
+    DEPRECATED171
+    DEPRECATED172
+    DEPRECATED173
+    DEPRECATED174
+    DEPRECATED175
+    DEPRECATED176
+    DEPRECATED177
+    DEPRECATED178
+    DEPRECATED179
+    DEPRECATED180
+    DEPRECATED181
+    DEPRECATED182
+    DEPRECATED183
+    DEPRECATED184
+    DEPRECATED185
+    DEPRECATED186
+    DEPRECATED187
+    DEPRECATED188
+    DEPRECATED189
+    DEPRECATED190
+    DEPRECATED191
+    DEPRECATED192
+    DEPRECATED193
+    DEPRECATED194
+    DEPRECATED195
+    DEPRECATED196
+    DEPRECATED197
+    DEPRECATED198
+    DEPRECATED199
+    DEPRECATED200
+    DEPRECATED201
+    DEPRECATED202
+    DEPRECATED203
+    DEPRECATED204
+    DEPRECATED205
+    DEPRECATED206
+    DEPRECATED207
+    DEPRECATED208
+    DEPRECATED209
+    DEPRECATED210
+    DEPRECATED211
+    DEPRECATED212
+    DEPRECATED213
+    DEPRECATED214
+    DEPRECATED215
+    DEPRECATED216
+    DEPRECATED217
+    DEPRECATED218
+    DEPRECATED219
+    DEPRECATED220
+    DEPRECATED221
+    DEPRECATED222
+    DEPRECATED223
+    DEPRECATED224
+    DEPRECATED225
+    DEPRECATED226
+    DEPRECATED227
+    DEPRECATED228
+    DEPRECATED229
+    DEPRECATED230
+    DEPRECATED231
+    DEPRECATED232
+    DEPRECATED233
+    DEPRECATED234
+    DEPRECATED235
+    DEPRECATED236
+    DEPRECATED237
+    DEPRECATED238
+    DEPRECATED239
+    DEPRECATED240
+    DEPRECATED241
+    DEPRECATED242
+    DEPRECATED243
+    DEPRECATED244
+    DEPRECATED245
+    DEPRECATED246
+    DEPRECATED247
+    DEPRECATED248
+    DEPRECATED249
+    DEPRECATED250
+    DEPRECATED251
+    DEPRECATED252
+    DEPRECATED253
+    DEPRECATED254
+    DEPRECATED255
+    DEPRECATED256
+    DEPRECATED257
+    DEPRECATED258
+    DEPRECATED259
+    DEPRECATED260
+    DEPRECATED261
+    DEPRECATED262
+    DEPRECATED263
+    DEPRECATED264
+    DEPRECATED265
+    DEPRECATED266
+    DEPRECATED267
+    DEPRECATED268
+    DEPRECATED269
+    DEPRECATED270
+    DEPRECATED271
+    DEPRECATED272
+    DEPRECATED273
+    DEPRECATED274
+    DEPRECATED275
+    DEPRECATED276
 
     PERSON
     NORP
@@ -462,6 +462,8 @@ cdef enum symbol_t:
     acl
 
     ENT_KB_ID
+    MORPH
     ENT_ID
 
     IDX
+    _

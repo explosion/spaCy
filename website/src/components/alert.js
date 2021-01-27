@@ -5,7 +5,7 @@ import classNames from 'classnames'
 import Icon from './icon'
 import classes from '../styles/alert.module.sass'
 
-const Alert = ({ title, icon, variant, closeOnClick, children }) => {
+export default function Alert({ title, icon, variant, closeOnClick = true, children }) {
     const [visible, setVisible] = useState(true)
     const alertClassNames = classNames(classes.root, {
         [classes.warning]: variant === 'warning',
@@ -20,10 +20,6 @@ const Alert = ({ title, icon, variant, closeOnClick, children }) => {
     )
 }
 
-Alert.defaultProps = {
-    closeOnClick: true,
-}
-
 Alert.propTypes = {
     title: PropTypes.string,
     icon: PropTypes.string,
@@ -31,5 +27,3 @@ Alert.propTypes = {
     closeOnClick: PropTypes.bool,
     children: PropTypes.node,
 }
-
-export default Alert

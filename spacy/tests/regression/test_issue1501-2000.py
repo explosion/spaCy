@@ -1,10 +1,9 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import pytest
 import gc
 import numpy
 import copy
+
+from spacy.training import Example
 from spacy.lang.en import English
 from spacy.lang.en.stop_words import STOP_WORDS
 from spacy.lang.lex_attrs import is_stop
@@ -12,7 +11,6 @@ from spacy.vectors import Vectors
 from spacy.vocab import Vocab
 from spacy.language import Language
 from spacy.tokens import Doc, Span, Token
-from spacy.pipeline import Tagger, EntityRecognizer
 from spacy.attrs import HEAD, DEP
 from spacy.matcher import Matcher
 
@@ -100,15 +98,20 @@ def test_issue1612(en_tokenizer):
 def test_issue1654():
     nlp = Language(Vocab())
     assert not nlp.pipeline
-    nlp.add_pipe(lambda doc: doc, name="1")
-    nlp.add_pipe(lambda doc: doc, name="2", after="1")
-    nlp.add_pipe(lambda doc: doc, name="3", after="2")
+
+    @Language.component("component")
+    def component(doc):
+        return doc
+
+    nlp.add_pipe("component", name="1")
+    nlp.add_pipe("component", name="2", after="1")
+    nlp.add_pipe("component", name="3", after="2")
     assert nlp.pipe_names == ["1", "2", "3"]
     nlp2 = Language(Vocab())
     assert not nlp2.pipeline
-    nlp2.add_pipe(lambda doc: doc, name="3")
-    nlp2.add_pipe(lambda doc: doc, name="2", before="3")
-    nlp2.add_pipe(lambda doc: doc, name="1", before="2")
+    nlp2.add_pipe("component", name="3")
+    nlp2.add_pipe("component", name="2", before="3")
+    nlp2.add_pipe("component", name="1", before="2")
     assert nlp2.pipe_names == ["1", "2", "3"]
 
 
@@ -122,17 +125,16 @@ def test_issue1698(en_tokenizer, text):
 def test_issue1727():
     """Test that models with no pretrained vectors can be deserialized
     correctly after vectors are added."""
+    nlp = Language(Vocab())
     data = numpy.ones((3, 300), dtype="f")
     vectors = Vectors(data=data, keys=["I", "am", "Matt"])
-    tagger = Tagger(Vocab())
+    tagger = nlp.create_pipe("tagger")
     tagger.add_label("PRP")
-    with pytest.warns(UserWarning):
-        tagger.begin_training()
     assert tagger.cfg.get("pretrained_dims", 0) == 0
     tagger.vocab.vectors = vectors
     with make_tempdir() as path:
         tagger.to_disk(path)
-        tagger = Tagger(Vocab()).from_disk(path)
+        tagger = nlp.create_pipe("tagger").from_disk(path)
         assert tagger.cfg.get("pretrained_dims", 0) == 0
 
 
@@ -153,8 +155,6 @@ def test_issue1758(en_tokenizer):
     """Test that "would've" is handled by the English tokenizer exceptions."""
     tokens = en_tokenizer("would've")
     assert len(tokens) == 2
-    assert tokens[0].tag_ == "MD"
-    assert tokens[1].lemma_ == "have"
 
 
 def test_issue1773(en_tokenizer):
@@ -197,18 +197,24 @@ def test_issue1807():
 def test_issue1834():
     """Test that sentence boundaries & parse/tag flags are not lost
     during serialization."""
-    string = "This is a first sentence . And another one"
-    doc = Doc(Vocab(), words=string.split())
-    doc[6].sent_start = True
+    words = ["This", "is", "a", "first", "sentence", ".", "And", "another", "one"]
+    doc = Doc(Vocab(), words=words)
+    doc[6].is_sent_start = True
     new_doc = Doc(doc.vocab).from_bytes(doc.to_bytes())
     assert new_doc[6].sent_start
-    assert not new_doc.is_parsed
-    assert not new_doc.is_tagged
-    doc.is_parsed = True
-    doc.is_tagged = True
+    assert not new_doc.has_annotation("DEP")
+    assert not new_doc.has_annotation("TAG")
+    doc = Doc(
+        Vocab(),
+        words=words,
+        tags=["TAG"] * len(words),
+        heads=[0, 0, 0, 0, 0, 0, 6, 6, 6],
+        deps=["dep"] * len(words),
+    )
     new_doc = Doc(doc.vocab).from_bytes(doc.to_bytes())
-    assert new_doc.is_parsed
-    assert new_doc.is_tagged
+    assert new_doc[6].sent_start
+    assert new_doc.has_annotation("DEP")
+    assert new_doc.has_annotation("TAG")
 
 
 def test_issue1868():
@@ -237,13 +243,14 @@ def test_issue1889(word):
     assert is_stop(word, STOP_WORDS) == is_stop(word.upper(), STOP_WORDS)
 
 
+@pytest.mark.skip(reason="obsolete with the config refactor of v.3")
 def test_issue1915():
     cfg = {"hidden_depth": 2}  # should error out
     nlp = Language()
-    nlp.add_pipe(nlp.create_pipe("ner"))
-    nlp.get_pipe("ner").add_label("answer")
+    ner = nlp.add_pipe("ner")
+    ner.add_label("answer")
     with pytest.raises(ValueError):
-        nlp.begin_training(**cfg)
+        nlp.initialize(**cfg)
 
 
 def test_issue1945():
@@ -269,10 +276,21 @@ def test_issue1963(en_tokenizer):
 
 @pytest.mark.parametrize("label", ["U-JOB-NAME"])
 def test_issue1967(label):
-    ner = EntityRecognizer(Vocab())
-    entry = ([0], ["word"], ["tag"], [0], ["dep"], [label])
-    gold_parses = [(None, [(entry, None)])]
-    ner.moves.get_actions(gold_parses=gold_parses)
+    nlp = Language()
+    config = {}
+    ner = nlp.create_pipe("ner", config=config)
+    example = Example.from_dict(
+        Doc(ner.vocab, words=["word"]),
+        {
+            "ids": [0],
+            "words": ["word"],
+            "tags": ["tag"],
+            "heads": [0],
+            "deps": ["dep"],
+            "entities": [label],
+        },
+    )
+    assert "JOB-NAME" in ner.moves.get_actions(examples=[example])[1]
 
 
 def test_issue1971(en_vocab):

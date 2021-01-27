@@ -1,15 +1,34 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
+from click import NoSuchOption
+from spacy.training import docs_to_json, offsets_to_biluo_tags
+from spacy.training.converters import iob_to_docs, conll_ner_to_docs, conllu_to_docs
+from spacy.schemas import ProjectConfigSchema, RecommendationSchema, validate
+from spacy.lang.nl import Dutch
+from spacy.util import ENV_VARS
+from spacy.cli import info
+from spacy.cli.init_config import init_config, RECOMMENDATIONS
+from spacy.cli._util import validate_project_commands, parse_config_overrides
+from spacy.cli._util import load_project_config, substitute_project_variables
+from spacy.cli._util import string_to_list
+from thinc.api import ConfigValidationError, Config
+import srsly
+import os
 
-from spacy.lang.en import English
-from spacy.cli.converters import conllu2json, iob2json, conll_ner2json
-from spacy.cli.pretrain import make_docs
+from .util import make_tempdir
 
 
-def test_cli_converters_conllu2json():
-    # https://raw.githubusercontent.com/ohenrik/nb_news_ud_sm/master/original_data/no-ud-dev-ner.conllu
+def test_cli_info():
+    nlp = Dutch()
+    nlp.add_pipe("textcat")
+    with make_tempdir() as tmp_dir:
+        nlp.to_disk(tmp_dir)
+        raw_data = info(tmp_dir, exclude=[""])
+        assert raw_data["lang"] == "nl"
+        assert raw_data["components"] == ["textcat"]
+
+
+def test_cli_converters_conllu_to_docs():
+    # from NorNE: https://github.com/ltgoslo/norne/blob/3d23274965f513f23aa48455b28b1878dad23c05/ud/nob/no_bokmaal-ud-dev.conllu
     lines = [
         "1\tDommer\tdommer\tNOUN\t_\tDefinite=Ind|Gender=Masc|Number=Sing\t2\tappos\t_\tO",
         "2\tFinn\tFinn\tPROPN\t_\tGender=Masc\t4\tnsubj\t_\tB-PER",
@@ -17,8 +36,9 @@ def test_cli_converters_conllu2json():
         "4\tavstår\tavstå\tVERB\t_\tMood=Ind|Tense=Pres|VerbForm=Fin\t0\troot\t_\tO",
     ]
     input_data = "\n".join(lines)
-    converted = conllu2json(input_data, n_sents=1)
-    assert len(converted) == 1
+    converted_docs = list(conllu_to_docs(input_data, n_sents=1))
+    assert len(converted_docs) == 1
+    converted = [docs_to_json(converted_docs)]
     assert converted[0]["id"] == 0
     assert len(converted[0]["paragraphs"]) == 1
     assert len(converted[0]["paragraphs"][0]["sentences"]) == 1
@@ -29,10 +49,109 @@ def test_cli_converters_conllu2json():
     assert [t["tag"] for t in tokens] == ["NOUN", "PROPN", "PROPN", "VERB"]
     assert [t["head"] for t in tokens] == [1, 2, -1, 0]
     assert [t["dep"] for t in tokens] == ["appos", "nsubj", "name", "ROOT"]
-    assert [t["ner"] for t in tokens] == ["O", "B-PER", "L-PER", "O"]
+    ent_offsets = [
+        (e[0], e[1], e[2]) for e in converted[0]["paragraphs"][0]["entities"]
+    ]
+    biluo_tags = offsets_to_biluo_tags(converted_docs[0], ent_offsets, missing="O")
+    assert biluo_tags == ["O", "B-PER", "L-PER", "O"]
 
 
-def test_cli_converters_iob2json():
+@pytest.mark.parametrize(
+    "lines",
+    [
+        (
+            "1\tDommer\tdommer\tNOUN\t_\tDefinite=Ind|Gender=Masc|Number=Sing\t2\tappos\t_\tname=O",
+            "2\tFinn\tFinn\tPROPN\t_\tGender=Masc\t4\tnsubj\t_\tSpaceAfter=No|name=B-PER",
+            "3\tEilertsen\tEilertsen\tPROPN\t_\t_\t2\tname\t_\tname=I-PER",
+            "4\tavstår\tavstå\tVERB\t_\tMood=Ind|Tense=Pres|VerbForm=Fin\t0\troot\t_\tSpaceAfter=No|name=O",
+            "5\t.\t$.\tPUNCT\t_\t_\t4\tpunct\t_\tname=B-BAD",
+        ),
+        (
+            "1\tDommer\tdommer\tNOUN\t_\tDefinite=Ind|Gender=Masc|Number=Sing\t2\tappos\t_\t_",
+            "2\tFinn\tFinn\tPROPN\t_\tGender=Masc\t4\tnsubj\t_\tSpaceAfter=No|NE=B-PER",
+            "3\tEilertsen\tEilertsen\tPROPN\t_\t_\t2\tname\t_\tNE=L-PER",
+            "4\tavstår\tavstå\tVERB\t_\tMood=Ind|Tense=Pres|VerbForm=Fin\t0\troot\t_\tSpaceAfter=No",
+            "5\t.\t$.\tPUNCT\t_\t_\t4\tpunct\t_\tNE=B-BAD",
+        ),
+    ],
+)
+def test_cli_converters_conllu_to_docs_name_ner_map(lines):
+    input_data = "\n".join(lines)
+    converted_docs = list(
+        conllu_to_docs(input_data, n_sents=1, ner_map={"PER": "PERSON", "BAD": ""})
+    )
+    assert len(converted_docs) == 1
+    converted = [docs_to_json(converted_docs)]
+    assert converted[0]["id"] == 0
+    assert len(converted[0]["paragraphs"]) == 1
+    assert converted[0]["paragraphs"][0]["raw"] == "Dommer FinnEilertsen avstår. "
+    assert len(converted[0]["paragraphs"][0]["sentences"]) == 1
+    sent = converted[0]["paragraphs"][0]["sentences"][0]
+    assert len(sent["tokens"]) == 5
+    tokens = sent["tokens"]
+    assert [t["orth"] for t in tokens] == ["Dommer", "Finn", "Eilertsen", "avstår", "."]
+    assert [t["tag"] for t in tokens] == ["NOUN", "PROPN", "PROPN", "VERB", "PUNCT"]
+    assert [t["head"] for t in tokens] == [1, 2, -1, 0, -1]
+    assert [t["dep"] for t in tokens] == ["appos", "nsubj", "name", "ROOT", "punct"]
+    ent_offsets = [
+        (e[0], e[1], e[2]) for e in converted[0]["paragraphs"][0]["entities"]
+    ]
+    biluo_tags = offsets_to_biluo_tags(converted_docs[0], ent_offsets, missing="O")
+    assert biluo_tags == ["O", "B-PERSON", "L-PERSON", "O", "O"]
+
+
+def test_cli_converters_conllu_to_docs_subtokens():
+    # https://raw.githubusercontent.com/ohenrik/nb_news_ud_sm/master/original_data/no-ud-dev-ner.conllu
+    lines = [
+        "1\tDommer\tdommer\tNOUN\t_\tDefinite=Ind|Gender=Masc|Number=Sing\t2\tappos\t_\tname=O",
+        "2-3\tFE\t_\t_\t_\t_\t_\t_\t_\t_",
+        "2\tFinn\tFinn\tPROPN\t_\tGender=Masc\t4\tnsubj\t_\tname=B-PER",
+        "3\tEilertsen\tEilertsen\tX\t_\tGender=Fem|Tense=past\t2\tname\t_\tname=I-PER",
+        "4\tavstår\tavstå\tVERB\t_\tMood=Ind|Tense=Pres|VerbForm=Fin\t0\troot\t_\tSpaceAfter=No|name=O",
+        "5\t.\t$.\tPUNCT\t_\t_\t4\tpunct\t_\tname=O",
+    ]
+    input_data = "\n".join(lines)
+    converted_docs = list(
+        conllu_to_docs(
+            input_data, n_sents=1, merge_subtokens=True, append_morphology=True
+        )
+    )
+    assert len(converted_docs) == 1
+    converted = [docs_to_json(converted_docs)]
+
+    assert converted[0]["id"] == 0
+    assert len(converted[0]["paragraphs"]) == 1
+    assert converted[0]["paragraphs"][0]["raw"] == "Dommer FE avstår. "
+    assert len(converted[0]["paragraphs"][0]["sentences"]) == 1
+    sent = converted[0]["paragraphs"][0]["sentences"][0]
+    assert len(sent["tokens"]) == 4
+    tokens = sent["tokens"]
+    print(tokens)
+    assert [t["orth"] for t in tokens] == ["Dommer", "FE", "avstår", "."]
+    assert [t["tag"] for t in tokens] == [
+        "NOUN__Definite=Ind|Gender=Masc|Number=Sing",
+        "PROPN_X__Gender=Fem,Masc|Tense=past",
+        "VERB__Mood=Ind|Tense=Pres|VerbForm=Fin",
+        "PUNCT",
+    ]
+    assert [t["pos"] for t in tokens] == ["NOUN", "PROPN", "VERB", "PUNCT"]
+    assert [t["morph"] for t in tokens] == [
+        "Definite=Ind|Gender=Masc|Number=Sing",
+        "Gender=Fem,Masc|Tense=past",
+        "Mood=Ind|Tense=Pres|VerbForm=Fin",
+        "",
+    ]
+    assert [t["lemma"] for t in tokens] == ["dommer", "Finn Eilertsen", "avstå", "$."]
+    assert [t["head"] for t in tokens] == [1, 1, 0, -1]
+    assert [t["dep"] for t in tokens] == ["appos", "nsubj", "ROOT", "punct"]
+    ent_offsets = [
+        (e[0], e[1], e[2]) for e in converted[0]["paragraphs"][0]["entities"]
+    ]
+    biluo_tags = offsets_to_biluo_tags(converted_docs[0], ent_offsets, missing="O")
+    assert biluo_tags == ["O", "U-PER", "O", "O"]
+
+
+def test_cli_converters_iob_to_docs():
     lines = [
         "I|O like|O London|I-GPE and|O New|B-GPE York|I-GPE City|I-GPE .|O",
         "I|O like|O London|B-GPE and|O New|B-GPE York|I-GPE City|I-GPE .|O",
@@ -40,22 +159,24 @@ def test_cli_converters_iob2json():
         "I|PRP|O like|VBP|O London|NNP|B-GPE and|CC|O New|NNP|B-GPE York|NNP|I-GPE City|NNP|I-GPE .|.|O",
     ]
     input_data = "\n".join(lines)
-    converted = iob2json(input_data, n_sents=10)
-    assert len(converted) == 1
-    assert converted[0]["id"] == 0
-    assert len(converted[0]["paragraphs"]) == 1
-    assert len(converted[0]["paragraphs"][0]["sentences"]) == 4
+    converted_docs = list(iob_to_docs(input_data, n_sents=10))
+    assert len(converted_docs) == 1
+    converted = docs_to_json(converted_docs)
+    assert converted["id"] == 0
+    assert len(converted["paragraphs"]) == 1
+    assert len(converted["paragraphs"][0]["sentences"]) == 4
     for i in range(0, 4):
-        sent = converted[0]["paragraphs"][0]["sentences"][i]
+        sent = converted["paragraphs"][0]["sentences"][i]
         assert len(sent["tokens"]) == 8
         tokens = sent["tokens"]
-        # fmt: off
-        assert [t["orth"] for t in tokens] == ["I", "like", "London", "and", "New", "York", "City", "."]
-        assert [t["ner"] for t in tokens] == ["O", "O", "U-GPE", "O", "B-GPE", "I-GPE", "L-GPE", "O"]
-        # fmt: on
+        expected = ["I", "like", "London", "and", "New", "York", "City", "."]
+        assert [t["orth"] for t in tokens] == expected
+    assert len(converted_docs[0].ents) == 8
+    for ent in converted_docs[0].ents:
+        assert ent.text in ["New York City", "London"]
 
 
-def test_cli_converters_conll_ner2json():
+def test_cli_converters_conll_ner_to_docs():
     lines = [
         "-DOCSTART- -X- O O",
         "",
@@ -105,59 +226,207 @@ def test_cli_converters_conll_ner2json():
         ".\t.\t_\tO",
     ]
     input_data = "\n".join(lines)
-    converted = conll_ner2json(input_data, n_sents=10)
-    print(converted)
-    assert len(converted) == 1
-    assert converted[0]["id"] == 0
-    assert len(converted[0]["paragraphs"]) == 1
-    assert len(converted[0]["paragraphs"][0]["sentences"]) == 5
+    converted_docs = list(conll_ner_to_docs(input_data, n_sents=10))
+    assert len(converted_docs) == 1
+    converted = docs_to_json(converted_docs)
+    assert converted["id"] == 0
+    assert len(converted["paragraphs"]) == 1
+    assert len(converted["paragraphs"][0]["sentences"]) == 5
     for i in range(0, 5):
-        sent = converted[0]["paragraphs"][0]["sentences"][i]
+        sent = converted["paragraphs"][0]["sentences"][i]
         assert len(sent["tokens"]) == 8
         tokens = sent["tokens"]
         # fmt: off
         assert [t["orth"] for t in tokens] == ["I", "like", "London", "and", "New", "York", "City", "."]
-        assert [t["ner"] for t in tokens] == ["O", "O", "U-GPE", "O", "B-GPE", "I-GPE", "L-GPE", "O"]
         # fmt: on
+    assert len(converted_docs[0].ents) == 10
+    for ent in converted_docs[0].ents:
+        assert ent.text in ["New York City", "London"]
 
 
-def test_pretrain_make_docs():
-    nlp = English()
+def test_project_config_validation_full():
+    config = {
+        "vars": {"some_var": 20},
+        "directories": ["assets", "configs", "corpus", "scripts", "training"],
+        "assets": [
+            {
+                "dest": "x",
+                "url": "https://example.com",
+                "checksum": "63373dd656daa1fd3043ce166a59474c",
+            },
+            {
+                "dest": "y",
+                "git": {
+                    "repo": "https://github.com/example/repo",
+                    "branch": "develop",
+                    "path": "y",
+                },
+            },
+        ],
+        "commands": [
+            {
+                "name": "train",
+                "help": "Train a model",
+                "script": ["python -m spacy train config.cfg -o training"],
+                "deps": ["config.cfg", "corpus/training.spcy"],
+                "outputs": ["training/model-best"],
+            },
+            {"name": "test", "script": ["pytest", "custom.py"], "no_skip": True},
+        ],
+        "workflows": {"all": ["train", "test"], "train": ["train"]},
+    }
+    errors = validate(ProjectConfigSchema, config)
+    assert not errors
 
-    valid_jsonl_text = {"text": "Some text"}
-    docs, skip_count = make_docs(nlp, [valid_jsonl_text], 1, 10)
-    assert len(docs) == 1
-    assert skip_count == 0
 
-    valid_jsonl_tokens = {"tokens": ["Some", "tokens"]}
-    docs, skip_count = make_docs(nlp, [valid_jsonl_tokens], 1, 10)
-    assert len(docs) == 1
-    assert skip_count == 0
+@pytest.mark.parametrize(
+    "config",
+    [
+        {"commands": [{"name": "a"}, {"name": "a"}]},
+        {"commands": [{"name": "a"}], "workflows": {"a": []}},
+        {"commands": [{"name": "a"}], "workflows": {"b": ["c"]}},
+    ],
+)
+def test_project_config_validation1(config):
+    with pytest.raises(SystemExit):
+        validate_project_commands(config)
 
-    invalid_jsonl_type = 0
-    with pytest.raises(TypeError):
-        make_docs(nlp, [invalid_jsonl_type], 1, 100)
 
-    invalid_jsonl_key = {"invalid": "Does not matter"}
-    with pytest.raises(ValueError):
-        make_docs(nlp, [invalid_jsonl_key], 1, 100)
+@pytest.mark.parametrize(
+    "config,n_errors",
+    [
+        ({"commands": {"a": []}}, 1),
+        ({"commands": [{"help": "..."}]}, 1),
+        ({"commands": [{"name": "a", "extra": "b"}]}, 1),
+        ({"commands": [{"extra": "b"}]}, 2),
+        ({"commands": [{"name": "a", "deps": [123]}]}, 1),
+    ],
+)
+def test_project_config_validation2(config, n_errors):
+    errors = validate(ProjectConfigSchema, config)
+    assert len(errors) == n_errors
 
-    empty_jsonl_text = {"text": ""}
-    docs, skip_count = make_docs(nlp, [empty_jsonl_text], 1, 10)
-    assert len(docs) == 0
-    assert skip_count == 1
 
-    empty_jsonl_tokens = {"tokens": []}
-    docs, skip_count = make_docs(nlp, [empty_jsonl_tokens], 1, 10)
-    assert len(docs) == 0
-    assert skip_count == 1
+def test_project_config_interpolation():
+    variables = {"a": 10, "b": {"c": "foo", "d": True}}
+    commands = [
+        {"name": "x", "script": ["hello ${vars.a} ${vars.b.c}"]},
+        {"name": "y", "script": ["${vars.b.c} ${vars.b.d}"]},
+    ]
+    project = {"commands": commands, "vars": variables}
+    with make_tempdir() as d:
+        srsly.write_yaml(d / "project.yml", project)
+        cfg = load_project_config(d)
+    assert cfg["commands"][0]["script"][0] == "hello 10 foo"
+    assert cfg["commands"][1]["script"][0] == "foo true"
+    commands = [{"name": "x", "script": ["hello ${vars.a} ${vars.b.e}"]}]
+    project = {"commands": commands, "vars": variables}
+    with pytest.raises(ConfigValidationError):
+        substitute_project_variables(project)
 
-    too_short_jsonl = {"text": "This text is not long enough"}
-    docs, skip_count = make_docs(nlp, [too_short_jsonl], 10, 15)
-    assert len(docs) == 0
-    assert skip_count == 0
 
-    too_long_jsonl = {"text": "This text contains way too much tokens for this test"}
-    docs, skip_count = make_docs(nlp, [too_long_jsonl], 1, 5)
-    assert len(docs) == 0
-    assert skip_count == 0
+@pytest.mark.parametrize(
+    "args,expected",
+    [
+        # fmt: off
+        (["--x.foo", "10"], {"x.foo": 10}),
+        (["--x.foo=10"], {"x.foo": 10}),
+        (["--x.foo", "bar"], {"x.foo": "bar"}),
+        (["--x.foo=bar"], {"x.foo": "bar"}),
+        (["--x.foo", "--x.bar", "baz"], {"x.foo": True, "x.bar": "baz"}),
+        (["--x.foo", "--x.bar=baz"], {"x.foo": True, "x.bar": "baz"}),
+        (["--x.foo", "10.1", "--x.bar", "--x.baz", "false"], {"x.foo": 10.1, "x.bar": True, "x.baz": False}),
+        (["--x.foo", "10.1", "--x.bar", "--x.baz=false"], {"x.foo": 10.1, "x.bar": True, "x.baz": False})
+        # fmt: on
+    ],
+)
+def test_parse_config_overrides(args, expected):
+    assert parse_config_overrides(args) == expected
+
+
+@pytest.mark.parametrize("args", [["--foo"], ["--x.foo", "bar", "--baz"]])
+def test_parse_config_overrides_invalid(args):
+    with pytest.raises(NoSuchOption):
+        parse_config_overrides(args)
+
+
+@pytest.mark.parametrize("args", [["--x.foo", "bar", "baz"], ["x.foo"]])
+def test_parse_config_overrides_invalid_2(args):
+    with pytest.raises(SystemExit):
+        parse_config_overrides(args)
+
+
+def test_parse_cli_overrides():
+    overrides = "--x.foo bar --x.bar=12 --x.baz false --y.foo=hello"
+    os.environ[ENV_VARS.CONFIG_OVERRIDES] = overrides
+    result = parse_config_overrides([])
+    assert len(result) == 4
+    assert result["x.foo"] == "bar"
+    assert result["x.bar"] == 12
+    assert result["x.baz"] is False
+    assert result["y.foo"] == "hello"
+    os.environ[ENV_VARS.CONFIG_OVERRIDES] = "--x"
+    assert parse_config_overrides([], env_var=None) == {}
+    with pytest.raises(SystemExit):
+        parse_config_overrides([])
+    os.environ[ENV_VARS.CONFIG_OVERRIDES] = "hello world"
+    with pytest.raises(SystemExit):
+        parse_config_overrides([])
+    del os.environ[ENV_VARS.CONFIG_OVERRIDES]
+
+
+@pytest.mark.parametrize("lang", ["en", "nl"])
+@pytest.mark.parametrize(
+    "pipeline", [["tagger", "parser", "ner"], [], ["ner", "textcat", "sentencizer"]]
+)
+@pytest.mark.parametrize("optimize", ["efficiency", "accuracy"])
+def test_init_config(lang, pipeline, optimize):
+    # TODO: add more tests and also check for GPU with transformers
+    config = init_config(lang=lang, pipeline=pipeline, optimize=optimize, gpu=False)
+    assert isinstance(config, Config)
+
+
+def test_model_recommendations():
+    for lang, data in RECOMMENDATIONS.items():
+        assert RecommendationSchema(**data)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        # fmt: off
+        "parser,textcat,tagger",
+        " parser, textcat ,tagger ",
+        'parser,textcat,tagger',
+        ' parser, textcat ,tagger ',
+        ' "parser"," textcat " ,"tagger "',
+        " 'parser',' textcat ' ,'tagger '",
+        '[parser,textcat,tagger]',
+        '["parser","textcat","tagger"]',
+        '[" parser" ,"textcat ", " tagger " ]',
+        "[parser,textcat,tagger]",
+        "[ parser, textcat , tagger]",
+        "['parser','textcat','tagger']",
+        "[' parser' , 'textcat', ' tagger ' ]",
+        # fmt: on
+    ],
+)
+def test_string_to_list(value):
+    assert string_to_list(value, intify=False) == ["parser", "textcat", "tagger"]
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        # fmt: off
+        "1,2,3",
+        '[1,2,3]',
+        '["1","2","3"]',
+        '[" 1" ,"2 ", " 3 " ]',
+        "[' 1' , '2', ' 3 ' ]",
+        # fmt: on
+    ],
+)
+def test_string_to_list_intify(value):
+    assert string_to_list(value, intify=False) == ["1", "2", "3"]
+    assert string_to_list(value, intify=True) == [1, 2, 3]

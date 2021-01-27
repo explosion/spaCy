@@ -4,11 +4,15 @@
     "slogan": "Industrial-strength Natural Language Processing in Python",
     "siteUrl": "https://spacy.io",
     "domain": "spacy.io",
+    "siteUrlNightly": "https://nightly.spacy.io",
+    "domainNightly": "nightly.spacy.io",
+    "nightlyBranches": ["nightly.spacy.io"],
     "email": "contact@explosion.ai",
-    "company": "Explosion AI",
+    "company": "Explosion",
     "companyUrl": "https://explosion.ai",
     "repo": "explosion/spaCy",
     "modelsRepo": "explosion/spacy-models",
+    "projectsRepo": "explosion/projects/tree/v3",
     "social": {
         "twitter": "spacy_io",
         "github": "explosion"
@@ -25,7 +29,7 @@
     },
     "binderUrl": "explosion/spacy-io-binder",
     "binderBranch": "live",
-    "binderVersion": "2.3.0",
+    "binderVersion": "3.0.0",
     "sections": [
         { "id": "usage", "title": "Usage Documentation", "theme": "blue" },
         { "id": "models", "title": "Models Documentation", "theme": "blue" },

@@ -8,7 +8,7 @@ import { markdownToReact } from './util'
 
 import classes from '../styles/embed.module.sass'
 
-const YouTube = ({ id, ratio }) => {
+const YouTube = ({ id, ratio = '16x9' }) => {
     const embedClassNames = classNames(classes.root, classes.responsive, {
         [classes.ratio16x9]: ratio === '16x9',
         [classes.ratio4x3]: ratio === '4x3',
@@ -28,16 +28,12 @@ const YouTube = ({ id, ratio }) => {
     )
 }
 
-YouTube.defaultProps = {
-    ratio: '16x9',
-}
-
 YouTube.propTypes = {
     id: PropTypes.string.isRequired,
     ratio: PropTypes.oneOf(['16x9', '4x3']),
 }
 
-const SoundCloud = ({ id, color, title }) => {
+const SoundCloud = ({ id, color = '09a3d5', title }) => {
     const url = `https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/${id}&color=%23${color}&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true`
     return (
         <figure className={classes.root}>
@@ -54,10 +50,6 @@ const SoundCloud = ({ id, color, title }) => {
     )
 }
 
-SoundCloud.defaultProps = {
-    color: '09a3d5',
-}
-
 SoundCloud.propTypes = {
     id: PropTypes.string.isRequired,
     title: PropTypes.string.isRequired,
@@ -69,7 +61,7 @@ function formatHTML(html) {
     return `<html><head><meta charset="UTF-8"></head><body>${encoded}</body></html>`
 }
 
-const Iframe = ({ title, src, html, width, height }) => {
+const Iframe = ({ title, src, html, width = 800, height = 300 }) => {
     const source = html ? `data:text/html,${formatHTML(html)}` : src
     return (
         <iframe
@@ -82,11 +74,6 @@ const Iframe = ({ title, src, html, width, height }) => {
             frameBorder="0"
         />
     )
-}
-
-Iframe.defaultProps = {
-    width: 800,
-    height: 300,
 }
 
 Iframe.propTypes = {

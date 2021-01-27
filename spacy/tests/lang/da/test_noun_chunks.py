@@ -1,9 +1,5 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
-
-from ...util import get_doc
+from spacy.tokens import Doc
 
 
 def test_noun_chunks_is_parsed(da_tokenizer):
@@ -13,31 +9,40 @@ def test_noun_chunks_is_parsed(da_tokenizer):
     to make sure the noun chunks don't run.
     """
     doc = da_tokenizer("Det er en sætning")
-    doc.is_parsed = False
     with pytest.raises(ValueError):
         list(doc.noun_chunks)
-
 
 
 DA_NP_TEST_EXAMPLES = [
     (
         "Hun elsker at plukker frugt.",
-        ['PRON', 'VERB', 'PART', 'VERB', 'NOUN', 'PUNCT'],
-        ['nsubj', 'ROOT', 'mark', 'obj', 'obj', 'punct'],
+        ["PRON", "VERB", "PART", "VERB", "NOUN", "PUNCT"],
+        ["nsubj", "ROOT", "mark", "obj", "obj", "punct"],
         [1, 0, 1, -2, -1, -4],
         ["Hun", "frugt"],
     ),
     (
         "Påfugle er de smukkeste fugle.",
-        ['NOUN', 'AUX', 'DET', 'ADJ', 'NOUN', 'PUNCT'],
-        ['nsubj', 'cop', 'det', 'amod', 'ROOT', 'punct'],
+        ["NOUN", "AUX", "DET", "ADJ", "NOUN", "PUNCT"],
+        ["nsubj", "cop", "det", "amod", "ROOT", "punct"],
         [4, 3, 2, 1, 0, -1],
         ["Påfugle", "de smukkeste fugle"],
     ),
     (
         "Rikke og Jacob Jensen glæder sig til en hyggelig skovtur",
-        ['PROPN', 'CCONJ', 'PROPN', 'PROPN', 'VERB', 'PRON', 'ADP', 'DET', 'ADJ', 'NOUN'],
-        ['nsubj', 'cc', 'conj', 'flat', 'ROOT', 'obj', 'case', 'det', 'amod', 'obl'],
+        [
+            "PROPN",
+            "CCONJ",
+            "PROPN",
+            "PROPN",
+            "VERB",
+            "PRON",
+            "ADP",
+            "DET",
+            "ADJ",
+            "NOUN",
+        ],
+        ["nsubj", "cc", "conj", "flat", "ROOT", "obj", "case", "det", "amod", "obl"],
         [4, 1, -2, -1, 0, -1, 3, 2, 1, -5],
         ["Rikke", "Jacob Jensen", "sig", "en hyggelig skovtur"],
     ),
@@ -51,8 +56,12 @@ def test_da_noun_chunks(da_tokenizer, text, pos, deps, heads, expected_noun_chun
     tokens = da_tokenizer(text)
 
     assert len(heads) == len(pos)
-    doc = get_doc(
-        tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps, pos=pos
+    doc = Doc(
+        tokens.vocab,
+        words=[t.text for t in tokens],
+        heads=[head + i for i, head in enumerate(heads)],
+        deps=deps,
+        pos=pos,
     )
 
     noun_chunks = list(doc.noun_chunks)

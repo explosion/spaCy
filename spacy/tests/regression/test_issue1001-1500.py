@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 import re
 from spacy.tokens import Doc
@@ -9,15 +6,13 @@ from spacy.lang.en import English
 from spacy.lang.lex_attrs import LEX_ATTRS
 from spacy.matcher import Matcher
 from spacy.tokenizer import Tokenizer
-from spacy.lemmatizer import Lemmatizer
-from spacy.lookups import Lookups
-from spacy.symbols import ORTH, LEMMA, POS, VERB, VerbForm_part
+from spacy.symbols import ORTH, LEMMA, POS
 
 
 def test_issue1061():
     """Test special-case works after tokenizing. Was caching problem."""
     text = "I like _MATH_ even _MATH_ when _MATH_, except when _MATH_ is _MATH_! but not _MATH_."
-    tokenizer = English.Defaults.create_tokenizer()
+    tokenizer = English().tokenizer
     doc = tokenizer(text)
     assert "MATH" in [w.text for w in doc]
     assert "_MATH_" not in [w.text for w in doc]
@@ -28,15 +23,15 @@ def test_issue1061():
     assert "MATH" not in [w.text for w in doc]
 
     # For sanity, check it works when pipeline is clean.
-    tokenizer = English.Defaults.create_tokenizer()
+    tokenizer = English().tokenizer
     tokenizer.add_special_case("_MATH_", [{ORTH: "_MATH_"}])
     doc = tokenizer(text)
     assert "_MATH_" in [w.text for w in doc]
     assert "MATH" not in [w.text for w in doc]
 
 
-@pytest.mark.xfail(
-    reason="g is split of as a unit, as the suffix regular expression can not look back further (variable-width)"
+@pytest.mark.skip(
+    reason="Can not be fixed without variable-width look-behind (which we don't want)"
 )
 def test_issue1235():
     """Test that g is not split of if preceded by a number and a letter"""
@@ -60,6 +55,7 @@ def test_issue1242():
     assert len(docs[1]) == 1
 
 
+@pytest.mark.skip(reason="v3 no longer supports LEMMA/POS in tokenizer special cases")
 def test_issue1250():
     """Test cached special cases."""
     special_case = [{ORTH: "reimbur", LEMMA: "reimburse", POS: "VERB"}]
@@ -88,20 +84,6 @@ def test_issue1375():
     with pytest.raises(IndexError):
         assert doc[2].nbor(1)
     assert doc[1].nbor(1).text == "2"
-
-
-def test_issue1387():
-    tag_map = {"VBG": {POS: VERB, VerbForm_part: True}}
-    lookups = Lookups()
-    lookups.add_table("lemma_index", {"verb": ("cope", "cop")})
-    lookups.add_table("lemma_exc", {"verb": {"coping": ("cope",)}})
-    lookups.add_table("lemma_rules", {"verb": [["ing", ""]]})
-    lemmatizer = Lemmatizer(lookups)
-    vocab = Vocab(lemmatizer=lemmatizer, tag_map=tag_map)
-    doc = Doc(vocab, words=["coping"])
-    doc[0].tag_ = "VBG"
-    assert doc[0].text == "coping"
-    assert doc[0].lemma_ == "cope"
 
 
 def test_issue1434():

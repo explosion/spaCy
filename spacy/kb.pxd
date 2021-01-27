@@ -1,15 +1,15 @@
 """Knowledge-base for entity or concept linking."""
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
-
 from libcpp.vector cimport vector
 from libc.stdint cimport int32_t, int64_t
 from libc.stdio cimport FILE
 
 from .vocab cimport Vocab
 from .typedefs cimport hash_t
-
 from .structs cimport KBEntryC, AliasC
+
+
 ctypedef vector[KBEntryC] entry_vec
 ctypedef vector[AliasC] alias_vec
 ctypedef vector[float] float_vec
@@ -140,7 +140,6 @@ cdef class KnowledgeBase:
         self._entries.push_back(entry)
         self._aliases_table.push_back(alias)
 
-    cpdef load_bulk(self, loc)
     cpdef set_entities(self, entity_list, freq_list, vector_list)
 
 

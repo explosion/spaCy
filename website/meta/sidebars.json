@@ -9,10 +9,7 @@
                     { "text": "Models & Languages", "url": "/usage/models" },
                     { "text": "Facts & Figures", "url": "/usage/facts-figures" },
                     { "text": "spaCy 101", "url": "/usage/spacy-101" },
-                    { "text": "New in v2.3", "url": "/usage/v2-3" },
-                    { "text": "New in v2.2", "url": "/usage/v2-2" },
-                    { "text": "New in v2.1", "url": "/usage/v2-1" },
-                    { "text": "New in v2.0", "url": "/usage/v2" }
+                    { "text": "New in v3.0", "url": "/usage/v3" }
                 ]
             },
             {
@@ -21,16 +18,27 @@
                     { "text": "Linguistic Features", "url": "/usage/linguistic-features" },
                     { "text": "Rule-based Matching", "url": "/usage/rule-based-matching" },
                     { "text": "Processing Pipelines", "url": "/usage/processing-pipelines" },
-                    { "text": "Vectors & Similarity", "url": "/usage/vectors-similarity" },
-                    { "text": "Training Models", "url": "/usage/training" },
+                    {
+                        "text": "Embeddings & Transformers",
+                        "url": "/usage/embeddings-transformers",
+                        "tag": "new"
+                    },
+                    { "text": "Training Models", "url": "/usage/training", "tag": "new" },
+                    {
+                        "text": "Layers & Model Architectures",
+                        "url": "/usage/layers-architectures",
+                        "tag": "new"
+                    },
+                    { "text": "spaCy Projects", "url": "/usage/projects", "tag": "new" },
                     { "text": "Saving & Loading", "url": "/usage/saving-loading" },
-                    { "text": "Adding Languages", "url": "/usage/adding-languages" },
                     { "text": "Visualizers", "url": "/usage/visualizers" }
                 ]
             },
             {
-                "label": "In-depth",
-                "items": [{ "text": "Code Examples", "url": "/usage/examples" }]
+                "label": "Resources",
+                "items": [
+                    { "text": "Project Templates", "url": "https://github.com/explosion/projects" }
+                ]
             }
         ]
     },
@@ -42,11 +50,7 @@
                 "items": [{ "text": "Overview", "url": "/models" }]
             },
             {
-                "label": "Core Models",
-                "items": []
-            },
-            {
-                "label": "Starter Models",
+                "label": "Trained Pipelines",
                 "items": []
             }
         ]
@@ -57,8 +61,9 @@
             {
                 "label": "Overview",
                 "items": [
-                    { "text": "Architecture", "url": "/api" },
-                    { "text": "Annotation Specs", "url": "/api/annotation" },
+                    { "text": "Library Architecture", "url": "/api" },
+                    { "text": "Model Architectures", "url": "/api/architectures" },
+                    { "text": "Data Formats", "url": "/api/data-formats" },
                     { "text": "Command Line", "url": "/api/cli" },
                     { "text": "Functions", "url": "/api/top-level" }
                 ]
@@ -67,49 +72,64 @@
                 "label": "Containers",
                 "items": [
                     { "text": "Doc", "url": "/api/doc" },
-                    { "text": "Token", "url": "/api/token" },
+                    { "text": "DocBin", "url": "/api/docbin" },
+                    { "text": "Example", "url": "/api/example" },
+                    { "text": "Language", "url": "/api/language" },
+                    { "text": "Lexeme", "url": "/api/lexeme" },
                     { "text": "Span", "url": "/api/span" },
-                    { "text": "Lexeme", "url": "/api/lexeme" }
+                    { "text": "SpanGroup", "url": "/api/spangroup" },
+                    { "text": "Token", "url": "/api/token" }
                 ]
             },
             {
                 "label": "Pipeline",
                 "items": [
-                    { "text": "Language", "url": "/api/language" },
-                    { "text": "Tokenizer", "url": "/api/tokenizer" },
-                    { "text": "Lemmatizer", "url": "/api/lemmatizer" },
-                    { "text": "Tagger", "url": "/api/tagger" },
+                    { "text": "AttributeRuler", "url": "/api/attributeruler" },
                     { "text": "DependencyParser", "url": "/api/dependencyparser" },
-                    { "text": "EntityRecognizer", "url": "/api/entityrecognizer" },
                     { "text": "EntityLinker", "url": "/api/entitylinker" },
-                    { "text": "TextCategorizer", "url": "/api/textcategorizer" },
-                    { "text": "Matcher", "url": "/api/matcher" },
-                    { "text": "PhraseMatcher", "url": "/api/phrasematcher" },
+                    { "text": "EntityRecognizer", "url": "/api/entityrecognizer" },
                     { "text": "EntityRuler", "url": "/api/entityruler" },
+                    { "text": "Lemmatizer", "url": "/api/lemmatizer" },
+                    { "text": "Morphologizer", "url": "/api/morphologizer" },
+                    { "text": "SentenceRecognizer", "url": "/api/sentencerecognizer" },
                     { "text": "Sentencizer", "url": "/api/sentencizer" },
+                    { "text": "Tagger", "url": "/api/tagger" },
+                    { "text": "TextCategorizer", "url": "/api/textcategorizer" },
+                    { "text": "Tok2Vec", "url": "/api/tok2vec" },
+                    { "text": "Tokenizer", "url": "/api/tokenizer" },
+                    { "text": "TrainablePipe", "url": "/api/pipe" },
+                    { "text": "Transformer", "url": "/api/transformer" },
                     { "text": "Other Functions", "url": "/api/pipeline-functions" }
+                ]
+            },
+            {
+                "label": "Matchers",
+                "items": [
+                    { "text": "DependencyMatcher", "url": "/api/dependencymatcher" },
+                    { "text": "Matcher", "url": "/api/matcher" },
+                    { "text": "PhraseMatcher", "url": "/api/phrasematcher" }
                 ]
             },
             {
                 "label": "Other",
                 "items": [
-                    { "text": "Vocab", "url": "/api/vocab" },
+                    { "text": "Corpus", "url": "/api/corpus" },
+                    { "text": "KnowledgeBase", "url": "/api/kb" },
+                    { "text": "Lookups", "url": "/api/lookups" },
+                    { "text": "MorphAnalysis", "url": "/api/morphology#morphanalysis" },
+                    { "text": "Morphology", "url": "/api/morphology" },
+                    { "text": "Scorer", "url": "/api/scorer" },
                     { "text": "StringStore", "url": "/api/stringstore" },
                     { "text": "Vectors", "url": "/api/vectors" },
-                    { "text": "Lookups", "url": "/api/lookups" },
-                    { "text": "KnowledgeBase", "url": "/api/kb" },
-                    { "text": "GoldParse", "url": "/api/goldparse" },
-                    { "text": "GoldCorpus", "url": "/api/goldcorpus" },
-                    { "text": "Scorer", "url": "/api/scorer" },
-                    { "text": "DocBin", "url": "/api/docbin" }
+                    { "text": "Vocab", "url": "/api/vocab" }
                 ]
             },
             {
                 "label": "Cython",
                 "items": [
                     { "text": "Architecture", "url": "/api/cython" },
-                    { "text": "Structs", "url": "/api/cython-structs" },
-                    { "text": "Classes", "url": "/api/cython-classes" }
+                    { "text": "Classes", "url": "/api/cython-classes" },
+                    { "text": "Structs", "url": "/api/cython-structs" }
                 ]
             }
         ]

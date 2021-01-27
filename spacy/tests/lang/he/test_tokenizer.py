@@ -1,8 +1,5 @@
-# encoding: utf8
-from __future__ import unicode_literals
-from spacy.lang.he.lex_attrs import like_num
-
 import pytest
+from spacy.lang.he.lex_attrs import like_num
 
 
 @pytest.mark.parametrize(
@@ -45,7 +42,6 @@ def test_he_tokenizer_handles_punct(he_tokenizer, text, expected_tokens):
     assert expected_tokens == [token.text for token in tokens]
 
 
-
 @pytest.mark.parametrize(
     "text,match",
     [
@@ -68,16 +64,6 @@ def test_lex_attrs_like_number(he_tokenizer, text, match):
     assert tokens[0].like_num == match
 
 
-@pytest.mark.parametrize(
-    "word",
-    [
-        "שלישי",
-        "מליון",
-        "עשירי",
-        "מאה",
-        "עשר",
-        "אחד עשר",
-    ]
-)
+@pytest.mark.parametrize("word", ["שלישי", "מליון", "עשירי", "מאה", "עשר", "אחד עשר"])
 def test_he_lex_attrs_like_number_for_ordinal(word):
     assert like_num(word)

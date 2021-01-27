@@ -1,11 +1,11 @@
 from libc.stdint cimport uint8_t, uint32_t, int32_t, uint64_t
+from libcpp.vector cimport vector
+from libcpp.unordered_set cimport unordered_set
+from libcpp.unordered_map cimport unordered_map
+from libc.stdint cimport int32_t, int64_t
 
 from .typedefs cimport flags_t, attr_t, hash_t
 from .parts_of_speech cimport univ_pos_t
-
-from libcpp.vector cimport vector
-from libc.stdint cimport int32_t, int64_t
-
 
 
 cdef struct LexemeC:
@@ -59,52 +59,12 @@ cdef struct TokenC:
 
 
 cdef struct MorphAnalysisC:
-    univ_pos_t pos
+    hash_t key
     int length
 
-    attr_t abbr
-    attr_t adp_type
-    attr_t adv_type
-    attr_t animacy
-    attr_t aspect
-    attr_t case
-    attr_t conj_type
-    attr_t connegative
-    attr_t definite
-    attr_t degree
-    attr_t derivation
-    attr_t echo
-    attr_t foreign
-    attr_t gender
-    attr_t hyph
-    attr_t inf_form
-    attr_t mood
-    attr_t negative
-    attr_t number
-    attr_t name_type
-    attr_t noun_type
-    attr_t num_form
-    attr_t num_type
-    attr_t num_value
-    attr_t part_form
-    attr_t part_type
-    attr_t person
-    attr_t polite
-    attr_t polarity
-    attr_t poss
-    attr_t prefix
-    attr_t prep_case
-    attr_t pron_type
-    attr_t punct_side
-    attr_t punct_type
-    attr_t reflex
-    attr_t style
-    attr_t style_variant
-    attr_t tense
-    attr_t typo
-    attr_t verb_form
-    attr_t voice
-    attr_t verb_type
+    attr_t* fields
+    attr_t* features
+
 
 # Internal struct, for storage and disambiguation of entities.
 cdef struct KBEntryC:
@@ -133,3 +93,22 @@ cdef struct AliasC:
 
     # Prior probability P(entity|alias) - should sum up to (at most) 1.
     vector[float] probs
+
+
+cdef struct EdgeC:
+    hash_t label
+    int32_t head
+    int32_t tail
+
+
+cdef struct GraphC:
+    vector[vector[int32_t]] nodes
+    vector[EdgeC] edges
+    vector[float] weights
+    vector[int] n_heads
+    vector[int] n_tails
+    vector[int] first_head
+    vector[int] first_tail
+    unordered_set[int]* roots
+    unordered_map[hash_t, int]* node_map
+    unordered_map[hash_t, int]* edge_map

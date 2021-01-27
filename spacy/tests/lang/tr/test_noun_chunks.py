@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 
 
@@ -11,6 +8,5 @@ def test_noun_chunks_is_parsed(tr_tokenizer):
     to make sure the noun chunks don't run.
     """
     doc = tr_tokenizer("Dün seni gördüm.")
-    doc.is_parsed = False
     with pytest.raises(ValueError):
         list(doc.noun_chunks)

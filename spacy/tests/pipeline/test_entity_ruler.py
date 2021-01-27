@@ -1,7 +1,6 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 import pytest
+
+from spacy import registry
 from spacy.tokens import Span
 from spacy.language import Language
 from spacy.pipeline import EntityRuler
@@ -14,6 +13,7 @@ def nlp():
 
 
 @pytest.fixture
+@registry.misc("entity_ruler_patterns")
 def patterns():
     return [
         {"label": "HELLO", "pattern": "hello world"},
@@ -25,13 +25,10 @@ def patterns():
     ]
 
 
-@pytest.fixture
-def add_ent():
-    def add_ent_component(doc):
-        doc.ents = [Span(doc, 0, 3, label=doc.vocab.strings["ORG"])]
-        return doc
-
-    return add_ent_component
+@Language.component("add_ent")
+def add_ent_component(doc):
+    doc.ents = [Span(doc, 0, 3, label="ORG")]
+    return doc
 
 
 def test_entity_ruler_init(nlp, patterns):
@@ -40,27 +37,60 @@ def test_entity_ruler_init(nlp, patterns):
     assert len(ruler.labels) == 4
     assert "HELLO" in ruler
     assert "BYE" in ruler
-    nlp.add_pipe(ruler)
+    ruler = nlp.add_pipe("entity_ruler")
+    ruler.add_patterns(patterns)
     doc = nlp("hello world bye bye")
     assert len(doc.ents) == 2
     assert doc.ents[0].label_ == "HELLO"
     assert doc.ents[1].label_ == "BYE"
 
 
-def test_entity_ruler_existing(nlp, patterns, add_ent):
-    ruler = EntityRuler(nlp, patterns=patterns)
-    nlp.add_pipe(add_ent)
-    nlp.add_pipe(ruler)
+def test_entity_ruler_init_patterns(nlp, patterns):
+    # initialize with patterns
+    ruler = nlp.add_pipe("entity_ruler")
+    assert len(ruler.labels) == 0
+    ruler.initialize(lambda: [], patterns=patterns)
+    assert len(ruler.labels) == 4
+    doc = nlp("hello world bye bye")
+    assert doc.ents[0].label_ == "HELLO"
+    assert doc.ents[1].label_ == "BYE"
+    nlp.remove_pipe("entity_ruler")
+    # initialize with patterns from misc registry
+    nlp.config["initialize"]["components"]["entity_ruler"] = {
+        "patterns": {"@misc": "entity_ruler_patterns"}
+    }
+    ruler = nlp.add_pipe("entity_ruler")
+    assert len(ruler.labels) == 0
+    nlp.initialize()
+    assert len(ruler.labels) == 4
+    doc = nlp("hello world bye bye")
+    assert doc.ents[0].label_ == "HELLO"
+    assert doc.ents[1].label_ == "BYE"
+
+
+def test_entity_ruler_init_clear(nlp, patterns):
+    """Test that initialization clears patterns."""
+    ruler = nlp.add_pipe("entity_ruler")
+    ruler.add_patterns(patterns)
+    assert len(ruler.labels) == 4
+    ruler.initialize(lambda: [])
+    assert len(ruler.labels) == 0
+
+
+def test_entity_ruler_existing(nlp, patterns):
+    ruler = nlp.add_pipe("entity_ruler")
+    ruler.add_patterns(patterns)
+    nlp.add_pipe("add_ent", before="entity_ruler")
     doc = nlp("OH HELLO WORLD bye bye")
     assert len(doc.ents) == 2
     assert doc.ents[0].label_ == "ORG"
     assert doc.ents[1].label_ == "BYE"
 
 
-def test_entity_ruler_existing_overwrite(nlp, patterns, add_ent):
-    ruler = EntityRuler(nlp, patterns=patterns, overwrite_ents=True)
-    nlp.add_pipe(add_ent)
-    nlp.add_pipe(ruler)
+def test_entity_ruler_existing_overwrite(nlp, patterns):
+    ruler = nlp.add_pipe("entity_ruler", config={"overwrite_ents": True})
+    ruler.add_patterns(patterns)
+    nlp.add_pipe("add_ent", before="entity_ruler")
     doc = nlp("OH HELLO WORLD bye bye")
     assert len(doc.ents) == 2
     assert doc.ents[0].label_ == "HELLO"
@@ -68,10 +98,10 @@ def test_entity_ruler_existing_overwrite(nlp, patterns, add_ent):
     assert doc.ents[1].label_ == "BYE"
 
 
-def test_entity_ruler_existing_complex(nlp, patterns, add_ent):
-    ruler = EntityRuler(nlp, patterns=patterns, overwrite_ents=True)
-    nlp.add_pipe(add_ent)
-    nlp.add_pipe(ruler)
+def test_entity_ruler_existing_complex(nlp, patterns):
+    ruler = nlp.add_pipe("entity_ruler", config={"overwrite_ents": True})
+    ruler.add_patterns(patterns)
+    nlp.add_pipe("add_ent", before="entity_ruler")
     doc = nlp("foo foo bye bye")
     assert len(doc.ents) == 2
     assert doc.ents[0].label_ == "COMPLEX"
@@ -81,8 +111,8 @@ def test_entity_ruler_existing_complex(nlp, patterns, add_ent):
 
 
 def test_entity_ruler_entity_id(nlp, patterns):
-    ruler = EntityRuler(nlp, patterns=patterns, overwrite_ents=True)
-    nlp.add_pipe(ruler)
+    ruler = nlp.add_pipe("entity_ruler", config={"overwrite_ents": True})
+    ruler.add_patterns(patterns)
     doc = nlp("Apple is a technology company")
     assert len(doc.ents) == 1
     assert doc.ents[0].label_ == "TECH_ORG"
@@ -90,9 +120,10 @@ def test_entity_ruler_entity_id(nlp, patterns):
 
 
 def test_entity_ruler_cfg_ent_id_sep(nlp, patterns):
-    ruler = EntityRuler(nlp, patterns=patterns, overwrite_ents=True, ent_id_sep="**")
+    config = {"overwrite_ents": True, "ent_id_sep": "**"}
+    ruler = nlp.add_pipe("entity_ruler", config=config)
+    ruler.add_patterns(patterns)
     assert "TECH_ORG**a1" in ruler.phrase_patterns
-    nlp.add_pipe(ruler)
     doc = nlp("Apple is a technology company")
     assert len(doc.ents) == 1
     assert doc.ents[0].label_ == "TECH_ORG"
@@ -170,17 +201,12 @@ def test_entity_ruler_overlapping_spans(nlp):
 
 @pytest.mark.parametrize("n_process", [1, 2])
 def test_entity_ruler_multiprocessing(nlp, n_process):
-    ruler = EntityRuler(nlp)
-    texts = [
-        "I enjoy eating Pizza Hut pizza."
-    ]
+    texts = ["I enjoy eating Pizza Hut pizza."]
 
-    patterns = [
-        {"label": "FASTFOOD", "pattern": "Pizza Hut", "id": "1234"}
-    ]
+    patterns = [{"label": "FASTFOOD", "pattern": "Pizza Hut", "id": "1234"}]
 
+    ruler = nlp.add_pipe("entity_ruler")
     ruler.add_patterns(patterns)
-    nlp.add_pipe(ruler)
 
     for doc in nlp.pipe(texts, n_process=2):
         for ent in doc.ents:
