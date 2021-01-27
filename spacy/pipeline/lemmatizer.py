@@ -150,33 +150,6 @@ class Lemmatizer(Pipe):
                 )
         self._validated = True
 
-    def pipe(
-        self,
-        stream: Iterable[Doc],
-        *,
-        batch_size: int = 128,
-        error_handler: Callable[[str, List[Doc], Exception], Any] = raise_error,
-    ) -> Iterator[Doc]:
-        """Apply the pipe to a stream of documents. This usually happens under
-        the hood when the nlp object is called on a text and all components are
-        applied to the Doc.
-
-        stream (Iterable[Doc]): A stream of documents.
-        batch_size (int): The number of documents to buffer.
-        error_handler (Callable[[str, List[Doc], Exception], Any]): Function that
-            deals with a failing batch of documents. The default function just reraises
-            the exception.
-        YIELDS (Doc): Processed documents in order.
-
-        DOCS: https://nightly.spacy.io/api/lemmatizer#pipe
-        """
-        for doc in stream:
-            try:
-                doc = self(doc)
-                yield doc
-            except Exception as e:
-                error_handler(self.name, [doc], e)
-
     def lookup_lemmatize(self, token: Token) -> List[str]:
         """Lemmatize using a lookup-based approach.
 

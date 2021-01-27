@@ -288,34 +288,6 @@ class EntityLinker(TrainablePipe):
         self.set_annotations([doc], kb_ids)
         return doc
 
-    def pipe(
-        self,
-        stream: Iterable[Doc],
-        *,
-        batch_size: int = 128,
-        error_handler: Callable[[str, List[Doc], Exception], Any] = raise_error,
-    ) -> Iterator[Doc]:
-        """Apply the pipe to a stream of documents. This usually happens under
-        the hood when the nlp object is called on a text and all components are
-        applied to the Doc.
-
-        stream (Iterable[Doc]): A stream of documents.
-        batch_size (int): The number of documents to buffer.
-        error_handler (Callable[[str, List[Doc], Exception], Any]): Function that
-            deals with a failing batch of documents. The default function just reraises
-            the exception.
-        YIELDS (Doc): Processed documents in order.
-
-        DOCS: https://nightly.spacy.io/api/entitylinker#pipe
-        """
-        for docs in util.minibatch(stream, size=batch_size):
-            try:
-                kb_ids = self.predict(docs)
-                self.set_annotations(docs, kb_ids)
-                yield from docs
-            except Exception as e:
-                error_handler(self.name, docs, e)
-
     def predict(self, docs: Iterable[Doc]) -> List[str]:
         """Apply the pipeline's model to a batch of docs, without modifying them.
         Returns the KB IDs for each entity in each doc, including NIL if there is
