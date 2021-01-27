@@ -95,7 +95,8 @@ results. Project template:
 ### Speed comparison {#benchmarks-speed}
 
 We compare the speed of different NLP libraries, measured in words per second
-(WPS) - higher is better. The evaluation was performed on 10,000 Reddit comments.
+(WPS) - higher is better. The evaluation was performed on 10,000 Reddit
+comments.
 
 <figure>
 
@@ -105,7 +106,7 @@ We compare the speed of different NLP libraries, measured in words per second
 | spaCy   | [`en_core_web_trf`](/models/en#en_core_web_trf) |                                                            684 |                                                          3,768 |
 | Stanza  | `en_ewt`                                        |                                                            878 |                                                          2,180 |
 | Flair   | `pos`(`-fast`) & `ner`(`-fast`)                 |                                                            323 |                                                          1,184 |
-| UDPipe  | `english-ewt-ud-2.5`                            |                                                          1,101 |                                                             NA |
+| UDPipe  | `english-ewt-ud-2.5`                            |                                                          1,101 |                                                          _n/a_ |
 
 <figcaption class="caption">
 
