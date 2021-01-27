@@ -26,12 +26,18 @@ const NavigationDropdown = ({ items = [], section }) => {
     )
 }
 
-export default function Navigation({ title, items = [], section, search, children }) {
+export default function Navigation({ title, items = [], section, search, alert, children }) {
     return (
         <nav className={classes.root}>
-            <Link to="/" aria-label={title} hidden>
+            <Link
+                to="/"
+                aria-label={title}
+                hidden
+                className={classNames({ [classes.hasAlert]: !!alert })}
+            >
                 <h1 className={classes.title}>{title}</h1>
                 <Logo className={classes.logo} width={300} height={96} />
+                {alert && <span className={classes.alert}>{alert}</span>}
             </Link>
 
             <div className={classes.menu}>

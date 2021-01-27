@@ -108,6 +108,12 @@ const AlertSpace = ({ nightly }) => {
     )
 }
 
+const navAlert = (
+    <Link to="/usage/v3" hidden>
+        <strong>💥 Out now:</strong> spaCy v3.0
+    </Link>
+)
+
 class Layout extends React.Component {
     static defaultProps = {
         scope: {},
@@ -177,6 +183,7 @@ class Layout extends React.Component {
                     items={meta.navigation}
                     section={section}
                     search={<Search settings={meta.docSearch} />}
+                    alert={navAlert}
                 >
                     <Progress key={location.href} />
                 </Navigation>

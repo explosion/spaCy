@@ -109,16 +109,18 @@ export const LandingBanner = ({
     return (
         <div className={classes.banner} style={style}>
             <Grid cols={small ? null : 3} narrow className={contentClassNames}>
-                <Heading Component="h3" className={classes.bannerTitle}>
-                    {label && (
-                        <div className={classes.bannerLabel}>
-                            <span className={classes.label}>{label}</span>
-                        </div>
-                    )}
-                    <Link to={to} hidden>
-                        {title}
-                    </Link>
-                </Heading>
+                {(title || label) && (
+                    <Heading Component="h3" className={classes.bannerTitle}>
+                        {label && (
+                            <div className={classes.bannerLabel}>
+                                <span className={classes.label}>{label}</span>
+                            </div>
+                        )}
+                        <Link to={to} hidden>
+                            {title}
+                        </Link>
+                    </Heading>
+                )}
                 <div className={textClassNames}>
                     <p>{children}</p>
 

@@ -193,6 +193,8 @@ available for the different architectures are documented with the
 
 </Infobox>
 
+<YouTube id="BWhh3r6W-qE"></YouTube>
+
 ### Config lifecycle at runtime and training {#config-lifecycle}
 
 A pipeline's `config.cfg` is considered the "single source of truth", both at
@@ -423,9 +425,10 @@ frozen_components = ["parser", "custom"]
 
 When the components in your pipeline
 [share an embedding layer](/usage/embeddings-transformers#embedding-layers), the
-**performance** of your frozen component will be **degraded** if you continue training
-other layers with the same underlying `Tok2Vec` instance. As a rule of thumb,
-ensure that your frozen components are truly **independent** in the pipeline.
+**performance** of your frozen component will be **degraded** if you continue
+training other layers with the same underlying `Tok2Vec` instance. As a rule of
+thumb, ensure that your frozen components are truly **independent** in the
+pipeline.
 
 </Infobox>
 

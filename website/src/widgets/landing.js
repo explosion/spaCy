@@ -17,6 +17,7 @@ import { H2 } from '../components/typography'
 import { InlineCode } from '../components/code'
 import Button from '../components/button'
 import Link from '../components/link'
+import { YouTube } from '../components/embed'
 
 import QuickstartTraining from './quickstart-training'
 import Project from './project'
@@ -24,7 +25,6 @@ import Features from './features'
 import courseImage from '../../docs/images/course.jpg'
 import prodigyImage from '../../docs/images/prodigy_overview.jpg'
 import projectsImage from '../../docs/images/projects.png'
-import irlBackground from '../images/spacy-irl.jpg'
 
 import Benchmarks from 'usage/_benchmarks-models.md'
 
@@ -206,50 +206,29 @@ const Landing = ({ data }) => {
             </LandingGrid>
 
             <LandingBannerGrid>
-                <LandingBanner
-                    title="spaCy v3.0 nightly: Transformer-based pipelines, new training system, project templates &amp; more"
-                    label="Try the pre-release"
-                    to="https://nightly.spacy.io"
-                    button="See what's new"
-                    background="#8758fe"
-                    color="#ffffff"
-                    small
-                >
-                    spaCy v3.0 features all new <strong>transformer-based pipelines</strong> that
-                    bring spaCy's accuracy right up to the current <strong>state-of-the-art</strong>
-                    . You can use any pretrained transformer to train your own pipelines, and even
-                    share one transformer between multiple components with{' '}
-                    <strong>multi-task learning</strong>. Training is now fully configurable and
-                    extensible, and you can define your own custom models using{' '}
-                    <strong>PyTorch</strong>, <strong>TensorFlow</strong> and other frameworks. The
-                    new spaCy projects system lets you describe whole{' '}
-                    <strong>end-to-end workflows</strong> in a single file, giving you an easy path
-                    from prototype to production, and making it easy to clone and adapt
-                    best-practice projects for your own use cases.
+                <LandingBanner background="#0099dd" color="#ffffff" small>
+                    <YouTube id="9k_EfV7Cns0" />
                 </LandingBanner>
-
                 <LandingBanner
-                    title="Prodigy: Radically efficient machine teaching"
-                    label="From the makers of spaCy"
-                    to="https://prodi.gy"
-                    button="Try it out"
+                    to="https://course.spacy.io"
+                    button="Start the course"
                     background="#f6f6f6"
-                    color="#000"
+                    color="#252a33"
                     small
                 >
-                    <Link to="https://prodi.gy" hidden>
+                    <Link to="https://course.spacy.io" hidden>
                         <img
-                            src={prodigyImage}
-                            alt="Prodigy: Radically efficient machine teaching"
+                            src={courseImage}
+                            alt="Advanced NLP with spaCy: A free online course"
                         />
                     </Link>
                     <br />
                     <br />
-                    Prodigy is an <strong>annotation tool</strong> so efficient that data scientists
-                    can do the annotation themselves, enabling a new level of rapid iteration.
-                    Whether you're working on entity recognition, intent detection or image
-                    classification, Prodigy can help you <strong>train and evaluate</strong> your
-                    models faster.
+                    In this <strong>free and interactive online course</strong> you’ll learn how to
+                    use spaCy to build advanced natural language understanding systems, using both
+                    rule-based and machine learning approaches. It includes{' '}
+                    <strong>55 exercises</strong> featuring videos, slide decks, multiple-choice
+                    questions and interactive coding practice in the browser.
                 </LandingBanner>
             </LandingBannerGrid>
 

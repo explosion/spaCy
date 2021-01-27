@@ -537,14 +537,16 @@ two major steps required:
    pass through the `nlp` pipeline.
 
 <Project id="tutorials/rel_component">
-Run this example use-case by using our project template. It includes all the 
+Run this example use-case by using our project template. It includes all the
 code to create the ML model and the pipeline component from scratch.
-It also contains two config files to train the model: 
+It also contains two config files to train the model:
 one to run on CPU with a Tok2Vec layer, and one for the GPU using a transformer.
-The project applies the relation extraction component to identify biomolecular 
-interactions in a sample dataset, but you can easily swap in your own dataset 
+The project applies the relation extraction component to identify biomolecular
+interactions in a sample dataset, but you can easily swap in your own dataset
 for your experiments in any other domain.
 </Project>
+
+<YouTube id="8HL-Ap5_Axo"></YouTube>
 
 #### Step 1: Implementing the Model {#component-rel-model}
 
@@ -824,7 +826,7 @@ will predict scores for each label. We add convenience methods to easily
 retrieve and add to them.
 
 ```python
-### The constructor (continued) 
+### The constructor (continued)
     def __init__(self, vocab, model, name="rel"):
         """Create a component instance."""
         # ...
@@ -1041,11 +1043,11 @@ def make_relation_extractor(nlp, name, model):
 ```
 
 <Project id="tutorials/rel_component">
-Run this example use-case by using our project template. It includes all the 
+Run this example use-case by using our project template. It includes all the
 code to create the ML model and the pipeline component from scratch.
-It contains two config files to train the model: 
+It contains two config files to train the model:
 one to run on CPU with a Tok2Vec layer, and one for the GPU using a transformer.
-The project applies the relation extraction component to identify biomolecular 
-interactions, but you can easily swap in your own dataset for your experiments 
+The project applies the relation extraction component to identify biomolecular
+interactions, but you can easily swap in your own dataset for your experiments
 in any other domain.
 </Project>
