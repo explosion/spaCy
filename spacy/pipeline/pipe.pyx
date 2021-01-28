@@ -111,7 +111,7 @@ cdef class Pipe:
             the component's name, the component itself, the offending batch of documents, and the exception
             that was thrown.
 
-        DOCS: https://nightly.spacy.io/api/pipe#set_error_handler (TODO)
+        DOCS: https://nightly.spacy.io/api/pipe#set_error_handler
         """
         self.error_handler = error_handler
 
@@ -120,7 +120,7 @@ cdef class Pipe:
 
         RETURNS (Callable): The error handler, or if it's not set a default function that just reraises.
 
-        DOCS: https://nightly.spacy.io/api/pipe#get_error_handler (TODO)
+        DOCS: https://nightly.spacy.io/api/pipe#get_error_handler
         """
         if hasattr(self, "error_handler"):
             return self.error_handler

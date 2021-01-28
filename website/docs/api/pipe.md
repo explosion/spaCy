@@ -100,6 +100,47 @@ applied to the `Doc` in order. Both [`__call__`](/api/pipe#call) and
 | `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
 | **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
+## TrainablePipe.set_error_handler {#set_error_handler tag="method"}
+
+Define a callback that will be invoked when an error is thrown during processing
+of one or more documents with either [`__call__`](/api/pipe#call) or
+[`pipe`](/api/pipe#pipe). The error handler will be invoked with the original
+component's name, the component itself, the list of documents that was being
+processed, and the original error.
+
+> #### Example
+>
+> ```python
+> def warn_error(proc_name, proc, docs, e):
+>     print(f"An error occurred when applying component {proc_name}.")
+>
+> pipe = nlp.add_pipe("ner")
+> pipe.set_error_handler(warn_error)
+> ```
+
+| Name            | Description                                                                                                    |
+| --------------- | -------------------------------------------------------------------------------------------------------------- |
+| `error_handler` | A function that performs custom error handling. ~~Callable[[str, Callable[[Doc], Doc], List[Doc], Exception]~~ |
+
+## TrainablePipe.get_error_handler {#get_error_handler tag="method"}
+
+Retrieve the callback that performs error handling for this component's
+[`__call__`](/api/pipe#call) and [`pipe`](/api/pipe#pipe) methods. If no custom
+function was previously defined with
+[`set_error_handler`](/api/pipe#set_error_handler), a default function is
+returned that simply reraises the exception.
+
+> #### Example
+>
+> ```python
+> pipe = nlp.add_pipe("ner")
+> error_handler = pipe.get_error_handler()
+> ```
+
+| Name        | Description                                                                                                      |
+| ----------- | ---------------------------------------------------------------------------------------------------------------- |
+| **RETURNS** | The function that performs custom error handling. ~~Callable[[str, Callable[[Doc], Doc], List[Doc], Exception]~~ |
+
 ## TrainablePipe.initialize {#initialize tag="method" new="3"}
 
 Initialize the component for training. `get_examples` should be a function that
@@ -190,14 +231,14 @@ predictions and gold-standard annotations, and update the component's model.
 > losses = pipe.update(examples, sgd=optimizer)
 > ```
 
-| Name              | Description                                                                                                                        |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `examples`        | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                                  |
-| _keyword-only_    |                                                                                                                                    |
-| `drop`            | The dropout rate. ~~float~~                                                                                                        |
-| `sgd`             | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                      |
-| `losses`          | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~           |
-| **RETURNS**       | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                              |
+| Name           | Description                                                                                                              |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `examples`     | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                        |
+| _keyword-only_ |                                                                                                                          |
+| `drop`         | The dropout rate. ~~float~~                                                                                              |
+| `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~            |
+| `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
+| **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
 
 ## TrainablePipe.rehearse {#rehearse tag="method,experimental" new="3"}
 

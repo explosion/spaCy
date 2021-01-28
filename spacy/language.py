@@ -1293,7 +1293,7 @@ class Language:
             Function that deals with a failing batch of documents. This callable function should take in
             the component's name, the component itself, the offending batch of documents, and the exception
             that was thrown.
-        DOCS: https://nightly.spacy.io/api/language#set_error_handler (TODO)
+        DOCS: https://nightly.spacy.io/api/language#set_error_handler
         """
         self.default_error_handler = error_handler
         for name, pipe in self.pipeline:
