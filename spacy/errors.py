@@ -470,6 +470,10 @@ class Errors:
             "issue tracker: http://github.com/explosion/spaCy/issues")
 
     # TODO: fix numbering after merging develop into master
+    E890 = ("Can not add the alias '{alias}' to the Knowledge base. "
+            "Each alias should be a meaningful string.")
+    E891 = ("Alias '{alias}' could not be added to the Knowledge base. "
+            "This is likely a bug in spaCy.")
     E892 = ("Unknown function registry: '{name}'.\n\nAvailable names: {available}")
     E893 = ("Could not find function '{name}' in function registry '{reg_name}'. "
             "If you're using a custom function, make sure the code is available. "
