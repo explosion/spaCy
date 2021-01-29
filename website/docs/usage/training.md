@@ -419,13 +419,29 @@ pipeline = ["parser", "ner", "textcat", "custom"]
 frozen_components = ["parser", "custom"]
 ```
 
-<Infobox variant="warning" title="Shared Tok2Vec layer">
+<Infobox variant="warning" title="Shared Tok2Vec listener layer">
 
 When the components in your pipeline
 [share an embedding layer](/usage/embeddings-transformers#embedding-layers), the
-**performance** of your frozen component will be **degraded** if you continue training
-other layers with the same underlying `Tok2Vec` instance. As a rule of thumb,
-ensure that your frozen components are truly **independent** in the pipeline.
+**performance** of your frozen component will be **degraded** if you continue
+training other layers with the same underlying `Tok2Vec` instance. As a rule of
+thumb, ensure that your frozen components are truly **independent** in the
+pipeline.
+
+To automatically replace a shared token-to-vector listener with an independent
+copy of the token-to-vector layer, you can use the `replace_listeners` setting
+of a sourced component, pointing to the listener layer(s) in the config. For
+more details on how this works under the hood, see
+[`Language.replace_listeners`](/api/language#replace_listeners).
+
+```ini
+[training]
+frozen_components = ["tagger"]
+
+[components.tagger]
+source = "en_core_web_sm"
+replace_listeners = ["model.tok2vec"]
+```
 
 </Infobox>
 

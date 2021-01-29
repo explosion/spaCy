@@ -833,6 +833,51 @@ token.ent_iob, token.ent_type
 | `pretty`       | Pretty-print the results as a table. Defaults to `False`. ~~bool~~                                                                                                                                                                          |
 | **RETURNS**    | Dictionary containing the pipe analysis, keyed by `"summary"` (component meta by pipe), `"problems"` (attribute names by pipe) and `"attrs"` (pipes that assign and require an attribute, keyed by attribute). ~~Optional[Dict[str, Any]]~~ |
 
+## Language.replace_listeners {#replace_listeners tag="method" new="3"}
+
+Find [listener layers](/usage/embeddings-transformers#embedding-layers)
+(connecting to a shared token-to-vector embedding component) of a given pipeline
+component model and replace them with a standalone copy of the token-to-vector
+layer. The listener layer allows other components to connect to a shared
+token-to-vector embedding component like [`Tok2Vec`](/api/tok2vec) or
+[`Transformer`](/api/transformer). Replacing listeners can be useful when
+training a pipeline with components sourced from an existing pipeline: if
+multiple components (e.g. tagger, parser, NER) listen to the same
+token-to-vector component, but some of them are frozen and not updated, their
+performance may degrade significally as the token-to-vector component is updated
+with new data. To prevent this, listeners can be replaced with a standalone
+token-to-vector layer that is owned by the component and doesn't change if the
+component isn't updated.
+
+This method is typically not called directly and only executed under the hood
+when loading a config with
+[sourced components](/usage/training#config-components) that define
+`replace_listeners`.
+
+> ```python
+> ### Example
+> nlp = spacy.load("en_core_web_sm")
+> nlp.replace_listeners("tok2vec", "tagger", ["model.tok2vec"])
+> ```
+>
+> ```ini
+> ### config.cfg (excerpt)
+> [training]
+> frozen_components = ["tagger"]
+>
+> [components]
+>
+> [components.tagger]
+> source = "en_core_web_sm"
+> replace_listeners = ["model.tok2vec"]
+> ```
+
+| Name           | Description                                                                                                                                                                                                                                                                                                                                                                                                    |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tok2vec_name` | Name of the token-to-vector component, typically `"tok2vec"` or `"transformer"`.~~str~~                                                                                                                                                                                                                                                                                                                        |
+| `pipe_name`    | Name of pipeline component to replace listeners for. ~~str~~                                                                                                                                                                                                                                                                                                                                                   |
+| `listeners`    | The paths to the listeners, relative to the component config, e.g. `["model.tok2vec"]`. Typically, implementations will only connect to one tok2vec component, `model.tok2vec`, but in theory, custom models can use multiple listeners. The value here can either be an empty list to not replace any listeners, or a _complete_ list of the paths to all listener layers used by the model.~~Iterable[str]~~ |
+
 ## Language.meta {#meta tag="property"}
 
 Meta data for the `Language` class, including name, version, data sources,
