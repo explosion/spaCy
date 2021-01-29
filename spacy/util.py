@@ -434,6 +434,20 @@ def load_model_from_config(
     return nlp
 
 
+def get_sourced_components(
+    config: Union[Dict[str, Any], Config]
+) -> Dict[str, Dict[str, Any]]:
+    """RETURNS (List[str]): All sourced components in the original config,
+    e.g. {"source": "en_core_web_sm"}. If the config contains a key
+    "factory", we assume it refers to a component factory.
+    """
+    return {
+        name: cfg
+        for name, cfg in config.get("components", {}).items()
+        if "factory" not in cfg and "source" in cfg
+    }
+
+
 def resolve_dot_names(config: Config, dot_names: List[Optional[str]]) -> Tuple[Any]:
     """Resolve one or more "dot notation" names, e.g. corpora.train.
     The paths could point anywhere into the config, so we don't know which
@@ -1479,6 +1493,7 @@ def _pipe(docs, proc, name, default_error_handler, kwargs):
 
 def raise_error(proc_name, proc, docs, e):
     raise e
+
 
 def ignore_error(proc_name, proc, docs, e):
     pass

@@ -1629,6 +1629,7 @@ class Language:
         # Later we replace the component config with the raw config again.
         interpolated = filled.interpolate() if not filled.is_interpolated else filled
         pipeline = interpolated.get("components", {})
+        sourced = util.get_sourced_components(interpolated)
         # If components are loaded from a source (existing models), we cache
         # them here so they're only loaded once
         source_nlps = {}
@@ -1671,6 +1672,17 @@ class Language:
                 raise ValueError(
                     Errors.E942.format(name="pipeline_creation", value=type(nlp))
                 )
+        # Detect components with listeners that are not frozen consistently
+        for name, proc in nlp.pipeline:
+            if getattr(proc, "listening_components", None):  # e.g. tok2vec/transformer
+                for listener in proc.listening_components:
+                    # If it's a component sourced from another pipeline, we check if
+                    # the tok2vec listeners should be replaced with standalone tok2vec
+                    # models (e.g. so component can be frozen without its performance
+                    # degrading when other components/tok2vec are updated)
+                    paths = sourced.get(listener, {}).get("replace_listeners", [])
+                    if paths:
+                        nlp.replace_listeners(name, listener, paths)
         return nlp
 
     def replace_listeners(
@@ -1744,6 +1756,7 @@ class Language:
             # Go over the listener layers and replace them
             for listener in pipe_listeners:
                 util.replace_model_node(pipe.model, listener, tok2vec.model.copy())
+                tok2vec.remove_listener(listener, pipe_name)
 
     def to_disk(
         self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList()

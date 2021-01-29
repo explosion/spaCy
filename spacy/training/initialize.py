@@ -14,7 +14,8 @@ from ..vectors import Vectors
 from ..errors import Errors, Warnings
 from ..schemas import ConfigSchemaTraining
 from ..util import registry, load_model_from_config, resolve_dot_names, logger
-from ..util import load_model, ensure_path, OOV_RANK, DEFAULT_OOV_PROB
+from ..util import load_model, ensure_path, get_sourced_components
+from ..util import OOV_RANK, DEFAULT_OOV_PROB
 
 if TYPE_CHECKING:
     from ..language import Language  # noqa: F401
@@ -70,14 +71,7 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
     for name, proc in nlp.pipeline:
         if getattr(proc, "listening_components", None):  # e.g. tok2vec/transformer
             for listener in proc.listening_components:
-                # If it's a component sourced from another pipeline, we check if
-                # the tok2vec listeners should be replaced with standalone tok2vec
-                # models (e.g. so component can be frozen without its performance
-                # degrading when other components/tok2vec are updated)
-                paths = sourced.get(listener, {}).get("replace_listeners", [])
-                if paths:
-                    nlp.replace_listeners(name, listener, paths)
-                elif listener in frozen_components and name not in frozen_components:
+                if listener in frozen_components and name not in frozen_components:
                     logger.warning(Warnings.W087.format(name=name, listener=listener))
                 # We always check this regardless, in case user freezes tok2vec
                 if listener not in frozen_components and name in frozen_components:
@@ -179,20 +173,6 @@ def init_tok2vec(
         layer.from_bytes(weights_data)
         return True
     return False
-
-
-def get_sourced_components(
-    config: Union[Dict[str, Any], Config]
-) -> Dict[str, Dict[str, Any]]:
-    """RETURNS (List[str]): All sourced components in the original config,
-    e.g. {"source": "en_core_web_sm"}. If the config contains a key
-    "factory", we assume it refers to a component factory.
-    """
-    return {
-        name: cfg
-        for name, cfg in config.get("components", {}).items()
-        if "factory" not in cfg and "source" in cfg
-    }
 
 
 def convert_vectors(
