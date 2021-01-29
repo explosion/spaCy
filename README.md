@@ -22,7 +22,7 @@ spaCy is commercial open-source software, released under the MIT license.
 [![conda Version](https://img.shields.io/conda/vn/conda-forge/spacy.svg?style=flat-square&logo=conda-forge&logoColor=white)](https://anaconda.org/conda-forge/spacy)
 [![Python wheels](https://img.shields.io/badge/wheels-%E2%9C%93-4c1.svg?longCache=true&style=flat-square&logo=python&logoColor=white)](https://github.com/explosion/wheelwright/releases)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square)](https://github.com/ambv/black)
-
+<br />
 [![PyPi downloads](https://img.shields.io/pypi/dm/spacy?style=flat-square&logo=pypi&logoColor=white)](https://pypi.org/project/spacy/)
 [![Conda downloads](https://img.shields.io/conda/dn/conda-forge/spacy?style=flat-square&logo=conda-forge&logoColor=white)](https://anaconda.org/conda-forge/spacy)
 [![Model downloads](https://img.shields.io/github/downloads/explosion/spacy-models/total?style=flat-square&label=model+downloads)](https://github.com/explosion/spacy-models/releases)
@@ -30,17 +30,18 @@ spaCy is commercial open-source software, released under the MIT license.
 
 ## 📖 Documentation
 
-| Documentation       |                                                                |
-| ------------------- | -------------------------------------------------------------- |
-| [spaCy 101]         | New to spaCy? Here's everything you need to know!              |
-| [Usage Guides]      | How to use spaCy and its features.                             |
-| [New in v3.0]       | New features, backwards incompatibilities and migration guide. |
-| [Project Templates] | End-to-end workflows you can clone, modify and run.            |
-| [API Reference]     | The detailed reference for spaCy's API.                        |
-| [Models]            | Download statistical language models for spaCy.                |
-| [Universe]          | Libraries, extensions, demos, books and courses.               |
-| [Changelog]         | Changes and version history.                                   |
-| [Contribute]        | How to contribute to the spaCy project and code base.          |
+| Documentation              |                                                                |
+| -------------------------- | -------------------------------------------------------------- |
+| ⭐️ **[spaCy 101]**        | New to spaCy? Here's everything you need to know!              |
+| 📚 **[Usage Guides]**      | How to use spaCy and its features.                             |
+| 🚀 **[New in v3.0]**       | New features, backwards incompatibilities and migration guide. |
+| 🪐 **[Project Templates]** | End-to-end workflows you can clone, modify and run.            |
+| 🎛 **[API Reference]**      | The detailed reference for spaCy's API.                        |
+| 📦 **[Models]**            | Download statistical language models for spaCy.                |
+| 🌌 **[Universe]**          | Libraries, extensions, demos, books and courses.               |
+| 👩‍🏫 **[Online Course]**     | Learn spaCy in this free and interactive online course.        |
+| 🛠 **[Changelog]**          | Changes and version history.                                   |
+| 💝 **[Contribute]**        | How to contribute to the spaCy project and code base.          |
 
 [spacy 101]: https://spacy.io/usage/spacy-101
 [new in v3.0]: https://spacy.io/usage/v3
@@ -48,15 +49,16 @@ spaCy is commercial open-source software, released under the MIT license.
 [api reference]: https://spacy.io/api/
 [models]: https://spacy.io/models
 [universe]: https://spacy.io/universe
+[online course]: https://course.spacy.io
 [project templates]: https://github.com/explosion/projects
 [changelog]: https://spacy.io/usage#changelog
 [contribute]: https://github.com/explosion/spaCy/blob/master/CONTRIBUTING.md
 
 ## 💬 Where to ask questions
 
-The spaCy project is maintained by [@honnibal](https://github.com/honnibal),
-[@ines](https://github.com/ines), [@svlandeg](https://github.com/svlandeg) and
-[@adrianeboyd](https://github.com/adrianeboyd). Please understand that we won't
+The spaCy project is maintained by **[@honnibal](https://github.com/honnibal)**,
+**[@ines](https://github.com/ines)**, **[@svlandeg](https://github.com/svlandeg)** and
+**[@adrianeboyd](https://github.com/adrianeboyd)**. Please understand that we won't
 be able to provide individual support via email. We also believe that help is
 much more valuable if it's shared publicly, so that more people can benefit from
 it.
