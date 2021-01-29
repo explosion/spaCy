@@ -82,7 +82,7 @@ class Tok2Vec(TrainablePipe):
         self.listener_map.setdefault(component_name, [])
         self.listener_map[component_name].append(listener)
 
-    def remove_listener(self, listener: "Tok2VecListener", component_name: str) -> None:
+    def remove_listener(self, listener: "Tok2VecListener", component_name: str) -> bool:
         """Remove a listener for a downstream component. Usually internals."""
         if component_name in self.listener_map:
             if listener in self.listener_map[component_name]:
@@ -90,6 +90,8 @@ class Tok2Vec(TrainablePipe):
                 # If no listeners are left, remove entry
                 if not self.listener_map[component_name]:
                     del self.listener_map[component_name]
+                return True
+        return False
 
     def find_listeners(self, component) -> None:
         """Walk over a model of a processing component, looking for layers that
