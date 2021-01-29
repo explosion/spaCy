@@ -1732,6 +1732,7 @@ class Language:
         if (
             not hasattr(tok2vec, "model")
             or not hasattr(tok2vec, "listener_map")
+            or not hasattr(tok2vec, "remove_listener")
             or "model" not in tok2vec_cfg
         ):
             raise ValueError(Errors.E888.format(name=tok2vec_name, pipe=type(tok2vec)))
