@@ -1528,7 +1528,7 @@ class Language:
             for proc in procs:
                 proc.terminate()
 
-    def link_components(self) -> None:
+    def _link_components(self) -> None:
         """Register 'listeners' within pipeline components, to allow them to
         effectively share weights.
         """
