@@ -204,8 +204,7 @@ drop-in replacements that let you achieve **higher accuracy** in exchange for
 > downloaded: 3GB CUDA runtime, 800MB PyTorch, 400MB CuPy, 500MB weights, 200MB
 > spaCy and dependencies.
 
-Once you have CUDA installed, we recommend installing PyTorch separately
-following the
+Once you have CUDA installed, we recommend installing PyTorch following the
 [PyTorch installation guidelines](https://pytorch.org/get-started/locally/) for
 your package manager and CUDA version. If you skip this step, pip will install
 PyTorch as a dependency below, but it may not find the best version for your
@@ -213,6 +212,7 @@ setup.
 
 ```bash
 ### Example: Install PyTorch 1.7.1 for CUDA 10.1 with pip
+# See: https://pytorch.org/get-started/locally/
 $ pip install torch==1.7.1+cu101 torchvision==0.8.2+cu101 torchaudio==0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
 ```
 
