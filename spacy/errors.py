@@ -475,7 +475,18 @@ class Errors:
             "issue tracker: http://github.com/explosion/spaCy/issues")
 
     # TODO: fix numbering after merging develop into master
-    E890 = ("Can not add the alias '{alias}' to the Knowledge base. "
+    E886 = ("Can't replace {name} -> {tok2vec} listeners: path '{path}' not "
+            "found in config for component '{name}'.")
+    E887 = ("Can't replace {name} -> {tok2vec} listeners: the paths to replace "
+            "({paths}) don't match the available listeners in the model ({n_listeners}).")
+    E888 = ("Can't replace listeners for '{name}' ({pipe}): invalid upstream "
+            "component that doesn't seem to support listeners. Expected Tok2Vec "
+            "or Transformer component. If you didn't call nlp.replace_listeners "
+            "manually, this is likely a bug in spaCy.")
+    E889 = ("Can't replace listeners of component '{name}' because it's not "
+            "in the pipeline. Available components: {opts}. If you didn't call "
+            "nlp.replace_listeners manually, this is likely a bug in spaCy.")
+    E890 = ("Cannot add the alias '{alias}' to the Knowledge base. "
             "Each alias should be a meaningful string.")
     E891 = ("Alias '{alias}' could not be added to the Knowledge base. "
             "This is likely a bug in spaCy.")
