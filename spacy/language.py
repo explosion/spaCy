@@ -730,9 +730,6 @@ class Language:
                 )
                 raise ValueError(err)
             pipe = self.get_pipe(pipe_name)
-            # Go over the listener layers and replace them
-            for listener in pipe_listeners:
-                util.replace_model_node(pipe.model, listener, tok2vec.model.copy())
             # Update the config accordingly by coping the tok2vec model to all
             # sections defined in the listener paths
             for listener_path in listeners:
@@ -745,6 +742,9 @@ class Language:
                     )
                     raise ValueError(err)
                 util.set_dot_to_object(pipe_cfg, listener_path, tok2vec_cfg["model"])
+            # Go over the listener layers and replace them
+            for listener in pipe_listeners:
+                util.replace_model_node(pipe.model, listener, tok2vec.model.copy())
 
     def create_pipe_from_source(
         self, source_name: str, source: "Language", *, name: str
