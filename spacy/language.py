@@ -1741,7 +1741,7 @@ class Language:
                 )
                 raise ValueError(err)
             pipe = self.get_pipe(pipe_name)
-            # Update the config accordingly by coping the tok2vec model to all
+            # Update the config accordingly by copying the tok2vec model to all
             # sections defined in the listener paths
             for listener_path in listeners:
                 # Check if the path actually exists in the config
