@@ -419,7 +419,7 @@ pipeline = ["parser", "ner", "textcat", "custom"]
 frozen_components = ["parser", "custom"]
 ```
 
-<Infobox variant="warning" title="Shared Tok2Vec listener layer">
+<Infobox variant="warning" title="Shared Tok2Vec listener layer" id="config-components-listeners">
 
 When the components in your pipeline
 [share an embedding layer](/usage/embeddings-transformers#embedding-layers), the
