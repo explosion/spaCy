@@ -52,8 +52,8 @@ for orth in [
     "Dra.",
     "EE.UU.",
     "Ee.Uu.",
-    "UU.", # For "EE. UU."
-    "Uu.", # For "Ee. Uu."
+    "EE. UU.",
+    "Ee. Uu.",
     "etc.",
     "fig.",
     "Gob.",
