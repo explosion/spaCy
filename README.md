@@ -38,8 +38,9 @@ spaCy is commercial open-source software, released under the MIT license.
 | 🪐 **[Project Templates]** | End-to-end workflows you can clone, modify and run.            |
 | 🎛 **[API Reference]**      | The detailed reference for spaCy's API.                        |
 | 📦 **[Models]**            | Download trained pipelines for spaCy.                          |
-| 🌌 **[Universe]**          | Libraries, extensions, demos, books and courses.               |
+| 🌌 **[Universe]**          | Plugins, extensions, demos and books from the spaCy ecosystem. |
 | 👩‍🏫 **[Online Course]**     | Learn spaCy in this free and interactive online course.        |
+| 📺 **[Videos]**            | Our YouTube channel with video tutorials, talks and more.      |
 | 🛠 **[Changelog]**          | Changes and version history.                                   |
 | 💝 **[Contribute]**        | How to contribute to the spaCy project and code base.          |
 
@@ -49,6 +50,7 @@ spaCy is commercial open-source software, released under the MIT license.
 [api reference]: https://spacy.io/api/
 [models]: https://spacy.io/models
 [universe]: https://spacy.io/universe
+[videos]: https://www.youtube.com/c/ExplosionAI
 [online course]: https://course.spacy.io
 [project templates]: https://github.com/explosion/projects
 [changelog]: https://spacy.io/usage#changelog
