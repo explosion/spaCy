@@ -37,7 +37,7 @@ spaCy is commercial open-source software, released under the MIT license.
 | 🚀 **[New in v3.0]**       | New features, backwards incompatibilities and migration guide. |
 | 🪐 **[Project Templates]** | End-to-end workflows you can clone, modify and run.            |
 | 🎛 **[API Reference]**      | The detailed reference for spaCy's API.                        |
-| 📦 **[Models]**            | Download statistical language models for spaCy.                |
+| 📦 **[Models]**            | Download trained pipelines for spaCy.                          |
 | 🌌 **[Universe]**          | Libraries, extensions, demos, books and courses.               |
 | 👩‍🏫 **[Online Course]**     | Learn spaCy in this free and interactive online course.        |
 | 🛠 **[Changelog]**          | Changes and version history.                                   |
