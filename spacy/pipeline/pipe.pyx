@@ -1,13 +1,14 @@
 # cython: infer_types=True, profile=True
-import warnings
 from typing import Optional, Tuple, Iterable, Iterator, Callable, Union, Dict
 import srsly
+import warnings
 
 from ..tokens.doc cimport Doc
 
 from ..training import Example
 from ..errors import Errors, Warnings
 from ..language import Language
+from ..util import raise_error
 
 cdef class Pipe:
     """This class is a base class and not instantiated directly. It provides
@@ -48,9 +49,13 @@ cdef class Pipe:
 
         DOCS: https://nightly.spacy.io/api/pipe#pipe
         """
+        error_handler = self.get_error_handler()
         for doc in stream:
-            doc = self(doc)
-            yield doc
+            try:
+                doc = self(doc)
+                yield doc
+            except Exception as e:
+                error_handler(self.name, self, [doc], e)
 
     def initialize(self, get_examples: Callable[[], Iterable[Example]], *, nlp: Language=None):
         """Initialize the pipe. For non-trainable components, this method
@@ -97,6 +102,30 @@ cdef class Pipe:
         """Raise an error if this component has no labels defined."""
         if not self.labels or list(self.labels) == [""]:
             raise ValueError(Errors.E143.format(name=self.name))
+
+    def set_error_handler(self, error_handler: Callable) -> None:
+        """Set an error handler function.
+
+        error_handler (Callable[[str, Callable[[Doc], Doc], List[Doc], Exception], None]):
+            Function that deals with a failing batch of documents. This callable function should take in
+            the component's name, the component itself, the offending batch of documents, and the exception
+            that was thrown.
+
+        DOCS: https://nightly.spacy.io/api/pipe#set_error_handler
+        """
+        self.error_handler = error_handler
+
+    def get_error_handler(self) -> Optional[Callable]:
+        """Retrieve the error handler function.
+
+        RETURNS (Callable): The error handler, or if it's not set a default function that just reraises.
+
+        DOCS: https://nightly.spacy.io/api/pipe#get_error_handler
+        """
+        if hasattr(self, "error_handler"):
+            return self.error_handler
+        return raise_error
+
 
 def deserialize_config(path):
     if path.exists():

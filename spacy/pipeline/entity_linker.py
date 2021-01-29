@@ -1,6 +1,6 @@
-from itertools import islice
-from typing import Optional, Iterable, Callable, Dict, Iterator, Union, List
+from typing import Optional, Iterable, Callable, Dict, Union, List
 from pathlib import Path
+from itertools import islice
 import srsly
 import random
 from thinc.api import CosineDistance, Model, Optimizer, Config
@@ -275,34 +275,6 @@ class EntityLinker(TrainablePipe):
         loss = self.distance.get_loss(sentence_encodings, entity_encodings)
         loss = loss / len(entity_encodings)
         return loss, gradients
-
-    def __call__(self, doc: Doc) -> Doc:
-        """Apply the pipe to a Doc.
-
-        doc (Doc): The document to process.
-        RETURNS (Doc): The processed Doc.
-
-        DOCS: https://nightly.spacy.io/api/entitylinker#call
-        """
-        kb_ids = self.predict([doc])
-        self.set_annotations([doc], kb_ids)
-        return doc
-
-    def pipe(self, stream: Iterable[Doc], *, batch_size: int = 128) -> Iterator[Doc]:
-        """Apply the pipe to a stream of documents. This usually happens under
-        the hood when the nlp object is called on a text and all components are
-        applied to the Doc.
-
-        stream (Iterable[Doc]): A stream of documents.
-        batch_size (int): The number of documents to buffer.
-        YIELDS (Doc): Processed documents in order.
-
-        DOCS: https://nightly.spacy.io/api/entitylinker#pipe
-        """
-        for docs in util.minibatch(stream, size=batch_size):
-            kb_ids = self.predict(docs)
-            self.set_annotations(docs, kb_ids)
-            yield from docs
 
     def predict(self, docs: Iterable[Doc]) -> List[str]:
         """Apply the pipeline's model to a batch of docs, without modifying them.

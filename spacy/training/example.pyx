@@ -356,7 +356,9 @@ def _add_entities_to_doc(doc, ner_data):
         return
     elif ner_data == []:
         doc.ents = []
-    elif isinstance(ner_data[0], tuple):
+    elif not isinstance(ner_data, (list, tuple)):
+        raise ValueError(Errors.E973)
+    elif isinstance(ner_data[0], (list, tuple)):
         return _add_entities_to_doc(
             doc,
             offsets_to_biluo_tags(doc, ner_data)

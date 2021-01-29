@@ -1,5 +1,5 @@
 from itertools import islice
-from typing import Iterable, Tuple, Optional, Dict, List, Callable, Iterator, Any
+from typing import Iterable, Tuple, Optional, Dict, List, Callable, Any
 from thinc.api import get_array_module, Model, Optimizer, set_dropout_rate, Config
 from thinc.types import Floats2d
 import numpy
@@ -9,7 +9,6 @@ from ..language import Language
 from ..training import Example, validate_examples, validate_get_examples
 from ..errors import Errors
 from ..scorer import Scorer
-from .. import util
 from ..tokens import Doc
 from ..vocab import Vocab
 
@@ -143,22 +142,6 @@ class TextCategorizer(TrainablePipe):
         DOCS: https://nightly.spacy.io/api/textcategorizer#label_data
         """
         return self.labels
-
-    def pipe(self, stream: Iterable[Doc], *, batch_size: int = 128) -> Iterator[Doc]:
-        """Apply the pipe to a stream of documents. This usually happens under
-        the hood when the nlp object is called on a text and all components are
-        applied to the Doc.
-
-        stream (Iterable[Doc]): A stream of documents.
-        batch_size (int): The number of documents to buffer.
-        YIELDS (Doc): Processed documents in order.
-
-        DOCS: https://nightly.spacy.io/api/textcategorizer#pipe
-        """
-        for docs in util.minibatch(stream, size=batch_size):
-            scores = self.predict(docs)
-            self.set_annotations(docs, scores)
-            yield from docs
 
     def predict(self, docs: Iterable[Doc]):
         """Apply the pipeline's model to a batch of docs, without modifying them.

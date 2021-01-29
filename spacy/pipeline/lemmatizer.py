@@ -23,11 +23,7 @@ from .. import util
     default_score_weights={"lemma_acc": 1.0},
 )
 def make_lemmatizer(
-    nlp: Language,
-    model: Optional[Model],
-    name: str,
-    mode: str,
-    overwrite: bool = False,
+    nlp: Language, model: Optional[Model], name: str, mode: str, overwrite: bool = False
 ):
     return Lemmatizer(nlp.vocab, model, name, mode=mode, overwrite=overwrite)
 
@@ -107,10 +103,14 @@ class Lemmatizer(Pipe):
         """
         if not self._validated:
             self._validate_tables(Errors.E1004)
-        for token in doc:
-            if self.overwrite or token.lemma == 0:
-                token.lemma_ = self.lemmatize(token)[0]
-        return doc
+        error_handler = self.get_error_handler()
+        try:
+            for token in doc:
+                if self.overwrite or token.lemma == 0:
+                    token.lemma_ = self.lemmatize(token)[0]
+            return doc
+        except Exception as e:
+            error_handler(self.name, self, [doc], e)
 
     def initialize(
         self,
@@ -153,21 +153,6 @@ class Lemmatizer(Pipe):
                     )
                 )
         self._validated = True
-
-    def pipe(self, stream: Iterable[Doc], *, batch_size: int = 128) -> Iterator[Doc]:
-        """Apply the pipe to a stream of documents. This usually happens under
-        the hood when the nlp object is called on a text and all components are
-        applied to the Doc.
-
-        stream (Iterable[Doc]): A stream of documents.
-        batch_size (int): The number of documents to buffer.
-        YIELDS (Doc): Processed documents in order.
-
-        DOCS: https://nightly.spacy.io/api/lemmatizer#pipe
-        """
-        for doc in stream:
-            doc = self(doc)
-            yield doc
 
     def lookup_lemmatize(self, token: Token) -> List[str]:
         """Lemmatize using a lookup-based approach.

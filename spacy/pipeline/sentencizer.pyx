@@ -1,15 +1,13 @@
 # cython: infer_types=True, profile=True, binding=True
-import srsly
 from typing import Optional, List
+import srsly
 
 from ..tokens.doc cimport Doc
-
 from .pipe import Pipe
 from ..language import Language
 from ..scorer import Scorer
 from ..training import validate_examples
 from .. import util
-
 
 @Language.factory(
     "sentencizer",
@@ -66,6 +64,14 @@ class Sentencizer(Pipe):
 
         DOCS: https://nightly.spacy.io/api/sentencizer#call
         """
+        error_handler = self.get_error_handler()
+        try:
+            self._call(doc)
+            return doc
+        except Exception as e:
+            error_handler(self.name, self, [doc], e)
+
+    def _call(self, doc):
         start = 0
         seen_period = False
         for i, token in enumerate(doc):
@@ -79,23 +85,6 @@ class Sentencizer(Pipe):
                 seen_period = True
         if start < len(doc):
             doc[start].is_sent_start = True
-        return doc
-
-    def pipe(self, stream, batch_size=128):
-        """Apply the pipe to a stream of documents. This usually happens under
-        the hood when the nlp object is called on a text and all components are
-        applied to the Doc.
-
-        stream (Iterable[Doc]): A stream of documents.
-        batch_size (int): The number of documents to buffer.
-        YIELDS (Doc): Processed documents in order.
-
-        DOCS: https://nightly.spacy.io/api/sentencizer#pipe
-        """
-        for docs in util.minibatch(stream, size=batch_size):
-            predictions = self.predict(docs)
-            self.set_annotations(docs, predictions)
-            yield from docs
 
     def predict(self, docs):
         """Apply the pipe to a batch of docs, without modifying them.

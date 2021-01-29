@@ -132,6 +132,11 @@ class Warnings:
             "'morphologizer'.")
     W109 = ("Unable to save user hooks while serializing the doc. Re-add any "
             "required user hooks to the doc after processing.")
+    W110 = ("The DependencyMatcher token pattern {pattern} matched a span "
+            "{tokens} that is 2+ tokens long. Only the first token in the span "
+            "will be included in the results. For better results, token "
+            "patterns should return matches that are each exactly one token "
+            "long.")
 
 
 @add_codes
@@ -470,6 +475,10 @@ class Errors:
             "issue tracker: http://github.com/explosion/spaCy/issues")
 
     # TODO: fix numbering after merging develop into master
+    E890 = ("Can not add the alias '{alias}' to the Knowledge base. "
+            "Each alias should be a meaningful string.")
+    E891 = ("Alias '{alias}' could not be added to the Knowledge base. "
+            "This is likely a bug in spaCy.")
     E892 = ("Unknown function registry: '{name}'.\n\nAvailable names: {available}")
     E893 = ("Could not find function '{name}' in function registry '{reg_name}'. "
             "If you're using a custom function, make sure the code is available. "
@@ -747,6 +756,10 @@ class Errors:
              "file.json .`.")
     E1015 = ("Can't initialize model from config: no {value} found. For more "
              "information, run: python -m spacy debug config config.cfg")
+    E1016 = ("The operators 'OP': '?', '*', and '+' are not supported in "
+             "DependencyMatcher token patterns. The token pattern in "
+             "RIGHT_ATTR should return matches that are each exactly one token "
+             "long. Invalid pattern:\n{node}")
 
 
 # Deprecated model shortcuts, only used in errors and warnings

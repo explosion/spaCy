@@ -82,7 +82,7 @@ Add an alias or mention to the knowledge base, specifying its potential KB
 identifiers and their prior probabilities. The entity identifiers should refer
 to entities previously added with [`add_entity`](/api/kb#add_entity) or
 [`set_entities`](/api/kb#set_entities). The sum of the prior probabilities
-should not exceed 1.
+should not exceed 1. Note that an empty string can not be used as alias.
 
 > #### Example
 >
@@ -92,7 +92,7 @@ should not exceed 1.
 
 | Name            | Description                                                                       |
 | --------------- | --------------------------------------------------------------------------------- |
-| `alias`         | The textual mention or alias. ~~str~~                                             |
+| `alias`         | The textual mention or alias. Can not be the empty string. ~~str~~                |
 | `entities`      | The potential entities that the alias may refer to. ~~Iterable[Union[str, int]]~~ |
 | `probabilities` | The prior probabilities of each entity. ~~Iterable[float]~~                       |
 

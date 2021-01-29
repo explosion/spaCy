@@ -7,7 +7,6 @@ from libcpp.vector cimport vector
 from libc.string cimport memset, memcpy
 from libc.stdlib cimport calloc, free
 import random
-from typing import Optional
 
 import srsly
 from thinc.api import set_dropout_rate, CupyOps
@@ -29,7 +28,6 @@ from ._parser_internals import _beam_utils
 from ..training import validate_examples, validate_get_examples
 from ..errors import Errors, Warnings
 from .. import util
-
 
 cdef class Parser(TrainablePipe):
     """
@@ -175,32 +173,31 @@ cdef class Parser(TrainablePipe):
         with self.model.use_params(params):
             yield
 
-    def __call__(self, Doc doc):
-        """Apply the parser or entity recognizer, setting the annotations onto
-        the `Doc` object.
-
-        doc (Doc): The document to be processed.
-        """
-        states = self.predict([doc])
-        self.set_annotations([doc], states)
-        return doc
-
     def pipe(self, docs, *, int batch_size=256):
         """Process a stream of documents.
 
         stream: The sequence of documents to process.
         batch_size (int): Number of documents to accumulate into a working set.
+        error_handler (Callable[[str, List[Doc], Exception], Any]): Function that
+            deals with a failing batch of documents. The default function just reraises
+            the exception.
+
         YIELDS (Doc): Documents, in order.
         """
         cdef Doc doc
+        error_handler = self.get_error_handler()
         for batch in util.minibatch(docs, size=batch_size):
             batch_in_order = list(batch)
-            by_length = sorted(batch, key=lambda doc: len(doc))
-            for subbatch in util.minibatch(by_length, size=max(batch_size//4, 2)):
-                subbatch = list(subbatch)
-                parse_states = self.predict(subbatch)
-                self.set_annotations(subbatch, parse_states)
-            yield from batch_in_order
+            try:
+                by_length = sorted(batch, key=lambda doc: len(doc))
+                for subbatch in util.minibatch(by_length, size=max(batch_size//4, 2)):
+                    subbatch = list(subbatch)
+                    parse_states = self.predict(subbatch)
+                    self.set_annotations(subbatch, parse_states)
+                yield from batch_in_order
+            except Exception as e:
+                error_handler(self.name, self, batch_in_order, e)
+
 
     def predict(self, docs):
         if isinstance(docs, Doc):
